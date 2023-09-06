@@ -1,0 +1,16 @@
+**/__pycache__
+workspace.code-workspace
+env
+build
+dist/**
+utaustin.egg-info/**
+res/grammars.so
+res/apps/**
+res/py150/**
+res/cubert/**
+res/cache/**
+!res/cache
+res/typeshed_object
+res/stub_cache
+res/python_grammar.json
+.DS_Store

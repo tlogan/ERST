@@ -1,5 +1,12 @@
 # Lightweight Tapas
 
+## TODO
+- process stream of abstract tokens 
+    - no need to build abstract syntax tree
+    - just build the analysis results
+- find lexer library and define lexing rules 
+- write recursive descent streaming parser 
+
 ## Story
 
 ### Title
@@ -56,6 +63,8 @@ def client x =>
     -- X <: uno//A | dos//B  
     -- y : Y
     -- Y <: {G with X <: uno//A} | {H with X <: dos//B} 
+    ---- OR ----
+    -- union [ X <: uno//A |- Y <: G,  X <: dos//B |- H ]
     ------------------------------------------------
     ---- 2nd order (above) vs 1st order (below) ----
     ------------------------------------------------
@@ -63,23 +72,15 @@ def client x =>
     -- y : {G with x : uno//A} | {H with x : dos//B} 
     match y 
     case ... H ... => hplus(y, boo(x)) ; 
--- client : (uno//A | dos//B) & (dos//A) -> unit
--- client : dos//A -> nat 
+-- client : (uno//A | dos//B) & (dos//B) -> unit
+-- client : dos//B -> nat 
 
 
 
 
 ```
 
-
-
-
-
-
-
-
-
-
+<!-- 
 --------
 OLD
 --------
@@ -274,14 +275,17 @@ example: lenient option
 Γ ⊩ (forall α ≤ ? . list[α]) ≤ list[str] ~> α ≤ (str | α)
 --------------------------------------------------------------------
 Γ ⊢ x : list[str] ≥ (forall α ≤ (str | α) . list[α])
-```
+``` -->
 
 
 ## Artifacts 
 
 ### Representation
 - qualifiers 
-    - first order (typing) vs second order (subtyping)?
+    - second order (subtyping) vs first order (typing)
+    - 2nd order makes annotations more uniform 
+    - can express union types over existing type definitions or primitive constructors 
+    - relies on subtyping qualifiers
 
 ### Token processing thread
 - Parsing:
