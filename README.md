@@ -6,6 +6,8 @@
     - just build the analysis results
 - find lexer library and define lexing rules 
 - write recursive descent streaming parser 
+- write base class for schema definitions
+- use nameless indexing lazily (just for equality modulo alpha renaming)
 
 ## Story
 
