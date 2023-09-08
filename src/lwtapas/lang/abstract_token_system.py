@@ -13,13 +13,13 @@ from pyrsistent.typing import PMap
 from lwtapas.lang import abstract_stream_system as pus 
 from lwtapas.lang import abstract_stream_system
 
-from lwtapas.lang import schema_system
+from lwtapas.lang import typ_schema_system
 
 def dump(instances : tuple[abstract_token, ...]):
-    return lwtapas.base.abstract_token_system.dump(schema_system.node_schema, instances)
+    return lwtapas.base.abstract_token_system.dump(typ_schema_system.node_schema, instances)
 
 def concretize(instances : tuple[abstract_token, ...]):
-    return lwtapas.base.abstract_token_system.concretize(schema_system.node_schema, instances)
+    return lwtapas.base.abstract_token_system.concretize(typ_schema_system.node_schema, instances)
 
 def concretize_old(instances : tuple[abstract_token, ...]):
-    return lwtapas.base.abstract_token_system.concretize_old(schema_system.node_schema, instances)
+    return lwtapas.base.abstract_token_system.concretize_old(typ_schema_system.node_schema, instances)

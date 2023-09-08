@@ -2,8 +2,10 @@ from __future__ import annotations
 from lwtapas.base.rule_construct_autogen import ItemHandlers, Rule, Vocab, Terminal, Nonterm 
 from lwtapas.base.line_format_construct_autogen import NewLine, InLine, IndentLine
 from lwtapas.base import rule_system as rs
+from lwtapas.base.schema_system import Schema 
 
-choices_schema : dict[str, list[Rule]] = {
+content = Schema([],
+{
     "Typ" : [
         Rule("Var", [
             Vocab("name", "identifier"),
@@ -62,5 +64,4 @@ choices_schema : dict[str, list[Rule]] = {
         ]),
     ],
 }
-singles_schema : list[Rule] = [
-]
+)

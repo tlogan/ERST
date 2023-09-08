@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from lwtapas.base.construct_def import Constructor, Field
-from lwtapas.base import construct_def
+from base.construct_def import Constructor, Field
 
-content = construct_def.generate_content("", [], {
-    "abstract_token" : [
+content = {
+    "AbstractToken" : [
         Constructor(
             "Grammar", [], [
                 Field('options', 'str', ""),
@@ -23,5 +22,5 @@ content = construct_def.generate_content("", [], {
             "Hole", [], []
         )
     ]
-})
+}
 

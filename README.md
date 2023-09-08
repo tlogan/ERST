@@ -4,6 +4,7 @@
 - process stream of abstract tokens 
     - no need to build abstract syntax tree
     - just build the analysis results
+    - write generic schema crawler 
 - find lexer library and define lexing rules 
 - write recursive descent streaming parser 
 - write base class for schema definitions

@@ -90,11 +90,11 @@ def generate_choice(
     type_base : str,
     constructors : list[Constructor] 
 ) -> str:
-    handlers_name = f"{inflection.camelize(type_name)}Handlers"
+    handler_name = f"{inflection.camelize(type_name)}Handler"
 
 
     def generate_constructor(constructor : Constructor) -> str:
-        nonlocal handlers_name
+        nonlocal handler_name
         bases_str = ''.join([
             f', {base}'
             for  base in constructor.bases
@@ -107,8 +107,8 @@ class {constructor.name}({type_name}{bases_str}):
     for field in constructor.fields
 ])}
 
-    def match(self, handlers : {handlers_name}[T]) -> T:
-        return handlers.case_{constructor.name}(self)
+    def match(self, handler : {handler_name}[T]) -> T:
+        return handler.case_{constructor.name}(self)
 
 def make_{constructor.name}({", ".join([f'''
     {field.attr} : {field.typ}''' + (f" = {field.default}" if field.default else "")
@@ -138,10 +138,9 @@ def update_{constructor.name}(source_{constructor.name} : {constructor.name}{''.
 # type {type_name}
 @dataclass(frozen=True, eq=True)
 class {type_name}({type_base + ', ' if type_base else ''}ABC):
-    # @abstractmethod
-    def match(self, handlers : {handlers_name}[T]) -> T:
-        raise Exception()
-
+    @abstractmethod
+    def match(self, handler : {handler_name}[T]) -> T:
+        pass
 
 # constructors for type {type_name}
 {nl.join([
@@ -149,31 +148,15 @@ class {type_name}({type_base + ', ' if type_base else ''}ABC):
     for constructor in constructors
 ])}
 
-# case handlers for type {type_name}
-@dataclass(frozen=True, eq=True)
-class {handlers_name}(Generic[T]):
+# case handler for type {type_name}
+class {handler_name}(ABC, Generic[T]):
 {nl.join([
-    f"    case_{constructor.name} : Callable[[{constructor.name}], T]"
+    f"    @abstractmethod" + nl +
+    f"    def case_{constructor.name}(self, o : {constructor.name}) -> T :" + nl +
+    f"        pass"
     for constructor in constructors 
 ])}
 
-
-# matching for type {type_name}
-def match_{type_name}(o : {type_name}, handlers : {handlers_name}[T]) -> T :
-    return o.match(handlers)
-
-
-{type_name}_union = Union[{', '.join([ constructor.name for constructor in constructors ])}]
-
-# unguarding for type {type_name}
-def unguard_{type_name}(o : {type_name}) -> {type_name}_union :
-    return match_{type_name}(o, {handlers_name}(
-{f', {nl}'.join([
-f"        case_{constructor.name} = lambda x : x"
-    for constructor in constructors 
-])}
-
-    ))
     """)
     return code 
 

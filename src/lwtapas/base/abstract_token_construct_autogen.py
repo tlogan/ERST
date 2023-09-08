@@ -22,32 +22,31 @@ class SourceFlag:
 
 
 
-# type abstract_token
+# type AbstractToken
 @dataclass(frozen=True, eq=True)
-class abstract_token(ABC):
-    # @abstractmethod
-    def match(self, handlers : AbstractTokenHandlers[T]) -> T:
-        raise Exception()
+class AbstractToken(ABC):
+    @abstractmethod
+    def match(self, handler : AbstractTokenHandler[T]) -> T:
+        pass
 
-
-# constructors for type abstract_token
+# constructors for type AbstractToken
 
 @dataclass(frozen=True, eq=True)
-class Grammar(abstract_token):
+class Grammar(AbstractToken):
     options : str
     selection : str
     source_start : int
     source_end : int
 
-    def match(self, handlers : AbstractTokenHandlers[T]) -> T:
-        return handlers.case_Grammar(self)
+    def match(self, handler : AbstractTokenHandler[T]) -> T:
+        return handler.case_Grammar(self)
 
 def make_Grammar(
     options : str, 
     selection : str, 
     source_start : int = 0, 
     source_end : int = 0
-) -> abstract_token:
+) -> AbstractToken:
     return Grammar(
         options,
         selection,
@@ -71,17 +70,17 @@ def update_Grammar(source_Grammar : Grammar,
         
 
 @dataclass(frozen=True, eq=True)
-class Vocab(abstract_token):
+class Vocab(AbstractToken):
     options : str
     selection : str
 
-    def match(self, handlers : AbstractTokenHandlers[T]) -> T:
-        return handlers.case_Vocab(self)
+    def match(self, handler : AbstractTokenHandler[T]) -> T:
+        return handler.case_Vocab(self)
 
 def make_Vocab(
     options : str, 
     selection : str
-) -> abstract_token:
+) -> AbstractToken:
     return Vocab(
         options,
         selection
@@ -99,14 +98,14 @@ def update_Vocab(source_Vocab : Vocab,
         
 
 @dataclass(frozen=True, eq=True)
-class Hole(abstract_token):
+class Hole(AbstractToken):
 
 
-    def match(self, handlers : AbstractTokenHandlers[T]) -> T:
-        return handlers.case_Hole(self)
+    def match(self, handler : AbstractTokenHandler[T]) -> T:
+        return handler.case_Hole(self)
 
 def make_Hole(
-) -> abstract_token:
+) -> AbstractToken:
     return Hole(
     )
 
@@ -117,29 +116,18 @@ def update_Hole(source_Hole : Hole
 
         
 
-# case handlers for type abstract_token
-@dataclass(frozen=True, eq=True)
-class AbstractTokenHandlers(Generic[T]):
-    case_Grammar : Callable[[Grammar], T]
-    case_Vocab : Callable[[Vocab], T]
-    case_Hole : Callable[[Hole], T]
+# case handler for type AbstractToken
+class AbstractTokenHandler(ABC, Generic[T]):
+    @abstractmethod
+    def case_Grammar(self, o : Grammar) -> T :
+        pass
+    @abstractmethod
+    def case_Vocab(self, o : Vocab) -> T :
+        pass
+    @abstractmethod
+    def case_Hole(self, o : Hole) -> T :
+        pass
 
-
-# matching for type abstract_token
-def match_abstract_token(o : abstract_token, handlers : AbstractTokenHandlers[T]) -> T :
-    return o.match(handlers)
-
-
-abstract_token_union = Union[Grammar, Vocab, Hole]
-
-# unguarding for type abstract_token
-def unguard_abstract_token(o : abstract_token) -> abstract_token_union :
-    return match_abstract_token(o, AbstractTokenHandlers(
-        case_Grammar = lambda x : x, 
-        case_Vocab = lambda x : x, 
-        case_Hole = lambda x : x
-
-    ))
      
 
  
