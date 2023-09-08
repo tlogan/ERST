@@ -267,53 +267,49 @@ def concretize_old(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_
 
             abstract_token_count += 1
 
-            def concretize_grammar(inst : Grammar):
-                nonlocal stack
-                rule = rule_map[inst.selection]
-                for i, item in enumerate(reversed(rule.content)):
-                    rs.match_item(item, ItemHandlers(
-                        case_Terminal=lambda o : (
-                            j := len(rule.content) - 1 - i,
-                            prefix := (
-                                (
-                                    pred := rule.content[j - 1],
-                                    match_line_format(pred.format, LineFormatHandlers[str](
-                                        case_InLine = lambda _ : "",
-                                        case_NewLine = lambda _ : "\n" + ("    " * format.indent_width),
-                                        case_IndentLine = lambda _ : "\n" + ("    " * format.indent_width)
-                                    ))
-                                    if isinstance(pred, rs.Nonterm) else ""
-                                )[-1]
-                                if i == 0 else "" 
+            class Handler(AbstractTokenHandler):
+                def case_Grammar(inst : Grammar):
+                    nonlocal stack
+                    rule = rule_map[inst.selection]
+                    for i, item in enumerate(reversed(rule.content)):
+                        rs.match_item(item, ItemHandlers(
+                            case_Terminal=lambda o : (
+                                j := len(rule.content) - 1 - i,
+                                prefix := (
+                                    (
+                                        pred := rule.content[j - 1],
+                                        match_line_format(pred.format, LineFormatHandlers[str](
+                                            case_InLine = lambda _ : "",
+                                            case_NewLine = lambda _ : "\n" + ("    " * format.indent_width),
+                                            case_IndentLine = lambda _ : "\n" + ("    " * format.indent_width)
+                                        ))
+                                        if isinstance(pred, rs.Nonterm) else ""
+                                    )[-1]
+                                    if i == 0 else "" 
+                                ),
+                                stack.append(prefix + o.terminal)
                             ),
-                            stack.append(prefix + o.terminal)
-                        ),
-                        case_Nonterm=lambda o : (
-                            child_format := Format(is_inline(o.format), next_indent_width(format.indent_width, o.format)),
-                            stack.append(child_format),
-                        ),
-                        case_Vocab=lambda o : (
-                            stack.append(format)
-                        )
-                    ))
+                            case_Nonterm=lambda o : (
+                                child_format := Format(is_inline(o.format), next_indent_width(format.indent_width, o.format)),
+                                stack.append(child_format),
+                            ),
+                            case_Vocab=lambda o : (
+                                stack.append(format)
+                            )
+                        ))
 
-                prefix = "" if format.inline else "\n" + "    " * format.indent_width
-                stack += [prefix]
-            
-            def concretize_vocab(inst : Vocab):
-                nonlocal stack
-                stack += [inst.selection]
+                    prefix = "" if format.inline else "\n" + "    " * format.indent_width
+                    stack += [prefix]
+                
+                def case_Vocab(inst : Vocab):
+                    nonlocal stack
+                    stack += [inst.selection]
 
-            def concretize_hole(_ : Hole):
-                nonlocal stack
-                stack += ['(HOLE)']
+                def case_Hole(_ : Hole):
+                    nonlocal stack
+                    stack += ['(HOLE)']
 
-
-            match_abstract_token(inst, AbstractTokenHandlers(
-                case_Grammar = concretize_grammar,
-                case_Vocab = concretize_vocab,
-                case_Hole = concretize_hole,
-            ))
+            inst.match(handler)
 
     return result
 

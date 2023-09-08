@@ -7,59 +7,65 @@ from collections.abc import Callable
 from abc import ABC, abstractmethod
 
 from lwtapas.base.rule_construct_autogen import *
-from lwtapas.base import construct_def
+from lwtapas.base import construction_system
 from lwtapas.base import line_format_system as lf
 
 
 def to_dictionary(node: Rule):
+
+    class Handler(ItemHandler):
+        def case_Terminal(o): 
+            return {
+                'kind' : 'terminal',
+                'terminal' : o.terminal
+            }
+        def case_Nonterm(o): 
+            return {
+                'kind' : 'grammar',
+                'relation' : o.relation,
+                'nonterminal' : o.nonterminal,
+                'format' : lf.to_string(o.format),
+            }
+
+        def case_Vocab(o):
+            return {
+                'kind' : 'vocab',
+                'relation' : o.relation,
+                'vocab' : o.vocab
+            }
+
     return {
         'name' : node.name,
         'children' : [
-            match_item(item, ItemHandlers[dict](
-                case_Terminal = lambda o : ({
-                    'kind' : 'terminal',
-                    'terminal' : o.terminal
-                }),
-                case_Nonterm = lambda o : ({
-                    'kind' : 'grammar',
-                    'relation' : o.relation,
-                    'nonterminal' : o.nonterminal,
-                    'format' : lf.to_string(o.format),
-                }),
-                case_Vocab = lambda o : ({
-                    'kind' : 'vocab',
-                    'relation' : o.relation,
-                    'vocab' : o.vocab
-                })
-            )) 
+            item.match(Handler())
             for item in node.content
         ]
 
     }
 
-def to_constructor(n : Rule) -> construct_def.Constructor:
+def to_constructor(n : Rule) -> construction_system.Constructor:
 
     def fail():
         assert False 
 
-    return construct_def.Constructor(
+    return construction_system.Constructor(
         n.name, [], [
-            match_item(item, ItemHandlers[construct_def.Field](
+            match_item(item, ItemHandlers[construction_system.Field](
                 case_Terminal = lambda o : (
                     fail()
                 ),
                 case_Nonterm = lambda o : (
-                    construct_def.Field(attr = o.relation, typ = f'{o.nonterminal} | None', default = "")
+                    construction_system.Field(attr = o.relation, typ = f'{o.nonterminal} | None', default = "")
                 ),
                 case_Vocab = lambda o : (
-                    construct_def.Field(attr = o.relation, typ = 'str', default = "")
+                    construction_system.Field(attr = o.relation, typ = 'str', default = "")
                 )
             )) 
             for item in n.content
             if not isinstance(item, Terminal)
         ] + [
-            construct_def.Field(attr = "source_start", typ = 'int', default = "0"),
-            construct_def.Field(attr = "source_end", typ = 'int', default = "0"),
+            construction_system.Field(attr = "source_start", typ = 'int', default = "0"),
+            construction_system.Field(attr = "source_end", typ = 'int', default = "0"),
         ]
     )
 

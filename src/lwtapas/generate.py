@@ -1,29 +1,26 @@
 from __future__ import annotations
 
-from base.util_system import write_code
-from base import abstract_token_schema
-from base import construct_def
+from lwtapas.base.util_system import write_code
+from lwtapas.base import rule_construction 
+from lwtapas.base import line_format_construction 
+from lwtapas.base import abstract_token_construction
+from lwtapas.base import construction_system 
 
 
 '''
 base generation
 '''
-# write_code('lwtapas/base', "rule_construct", rule_construct_def.content)
-# write_code('lwtapas/base', "line_format_construct", line_format_construct_def.content)
-write_code('base', "abstract_token_construct", 
-    construct_def.generate_content("", [], abstract_token_schema.content)
+write_code('base', "rule",
+    construction_system.generate_content('''
+        from lwtapas.base.line_format_construct_autogen import line_format
+        ''', 
+        rule_construction.singles,
+        rule_construction.choices
+    )
 )
-
-# '''
-# lib generation
-# '''
-# write_code('lwtapas/lib', "abstract_stream_crawl",
-
-#     (
-#         abstract_stream_crawl_def.generate_content(f'''
-#     from tapas_lib.python_ast_construct_autogen import * 
-#             ''', 
-#             schema
-#         )
-#     )
-# )
+write_code('base', "line_format", 
+    construction_system.generate_content("", line_format_construction.singles, line_format_construction.choices)
+)
+write_code('base', "abstract_token", 
+    construction_system.generate_content("", abstract_token_construction.singles, abstract_token_construction.choices)
+)

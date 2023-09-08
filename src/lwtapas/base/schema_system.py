@@ -1,30 +1,30 @@
 from lwtapas.base import rule_system
-from lwtapas.base.rule_construct_autogen import ItemHandlers, Rule, Vocab, Terminal, Nonterm 
+from lwtapas.base.rule_autogen import ItemHandlers, Rule, Vocab, Terminal, Nonterm 
 '''
 map from a node id (sequence id) to node (sequence) 
 '''
 class Schema:
     def __init__(self, 
-        singles_schema : list[Rule], 
-        choices_schema : dict[str, list[Rule]]
+        singles : list[Rule], 
+        choices : dict[str, list[Rule]]
     ):
-        self.singles_schema = singles_schema
-        self.choices_schema = choices_schema
+        self.singles = singles
+        self.choices = choices
         self.nodes =  (
             {
                 r.name : r 
-                for r in self.singles_schema
+                for r in self.singles
             } | {
                 r.name : r 
-                for rs in self.choices_schema.values()
+                for rs in self.choices.values()
                 for r in rs 
             }
         )
 
         self.full = {
             rule.name : [rule]
-            for rule in self.singles_schema 
-        } | self.choices_schema
+            for rule in self.singles 
+        } | self.choices
 
         self.portable = {
             name : [rule_system.to_dictionary(rule) for rule in rules]

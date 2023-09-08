@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from base.construct_def import Constructor, Field
+from base.construction_system import Constructor, Field
+from base.schema_system import Schema 
 
-content = {
+singles = []
+choices = {
     "AbstractToken" : [
         Constructor(
             "Grammar", [], [
