@@ -1,5 +1,5 @@
-from lwtapas.base import rule_system
-from lwtapas.base.rule_autogen import ItemHandlers, Rule, Vocab, Terminal, Nonterm 
+from base import rule_system
+from base.rule_system import Rule
 '''
 map from a node id (sequence id) to node (sequence) 
 '''

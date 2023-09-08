@@ -1,17 +1,16 @@
 from __future__ import annotations
 from typing import Iterator, Optional
 
-from lwtapas.base.line_format_construct_autogen import line_format, LineFormatHandlers, match_line_format
-from lwtapas.base.rule_construct_autogen import ItemHandlers, Terminal
-from lwtapas.base.abstract_token_construct_autogen import *
+# from base.line_format_system import LineFormatHandler
+# from base.rule_system import ItemHandler, Terminal
+from base.abstract_token_autogen import *
 
-from lwtapas.base import rule_system as rs
-from lwtapas.base.rule_system import Rule
-import lwtapas.base.rule_system as rs
+from base.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
+from base.rule_system import Rule, Item, ItemHandler, Terminal, Nonterm
 
 from dataclasses import dataclass
 
-def from_primitive(ptok : list[str]) -> abstract_token:
+def from_primitive(ptok : list[str]) -> AbstractToken:
     assert len(ptok) == 4
     assert ptok[0] == "P"
     if ptok[1] == "grammar":
@@ -24,73 +23,61 @@ def from_primitive(ptok : list[str]) -> abstract_token:
 def raise_exception(e):
     raise e
 
-def to_primitive(inst : abstract_token) -> list[str]:
-    return match_abstract_token(inst, AbstractTokenHandlers[list[str]](
-        case_Grammar=lambda o : (
-            ["P", "grammar", o.options, o.selection]
-        ),
-        case_Vocab=lambda o : (
-            ["P", "vocab", o.options, o.selection]
-        ),
-        case_Hole=lambda o : ["H"]
-    )) 
+def to_primitive(inst : AbstractToken) -> list[str]:
+    class Handler(AbstractTokenHandler):
+        def case_Grammar(self, o):
+            return ["P", "grammar", o.options, o.selection]
 
-def to_string(token : abstract_token) -> str:
-    return match_abstract_token(token, AbstractTokenHandlers[str](
-        case_Grammar= lambda g : f"grammar: {g.selection} <{g.options}>",
-        case_Vocab= lambda v : f"vocab: {v.selection} <{v.options}>",
-        case_Hole= lambda v : f"hole",
-    ))
+        def case_Vocab(self, o): 
+            return ["P", "vocab", o.options, o.selection]
+
+        def case_Hole(self, o): 
+            return ["H"]
+    return inst.match(Handler())
+
+def to_string(token : AbstractToken) -> str:
+    class Handler(AbstractTokenHandler):
+        def case_Grammar(self, g): return f"grammar: {g.selection} <{g.options}>"
+        def case_Vocab(self, v): return f"vocab: {v.selection} <{v.options}>"
+        def case_Hole(self, v): return f"hole"
+    return token.match(Handler())
 
 
-def is_inline(line_form : line_format) -> bool:
-    return match_line_format(line_form, LineFormatHandlers[bool](
-        case_InLine = lambda _ : True,
-        case_NewLine = lambda _ : False, 
-        case_IndentLine = lambda _ : False 
-    ))
-
-def next_indent_width(prev_iw : int, line_form : line_format) -> int:
-    return match_line_format(line_form, LineFormatHandlers[int](
-        case_InLine = lambda _ : prev_iw,
-        case_NewLine = lambda _ : prev_iw, 
-        case_IndentLine = lambda _ : prev_iw + 1 
-    ))
-
-def dump(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_token, ...], indent : int = 4):
+def dump(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...], indent : int = 4):
 
     @dataclass
     class Format:
         relation : str 
         depth : int 
 
-    def dump_abstract_token(inst : abstract_token, format : Format) -> str:
-        return match_abstract_token(inst, AbstractTokenHandlers[str](
-            case_Grammar=lambda o : (
-                indent_str := (' ' * format.depth * indent),
-                relation_str := (' = .' + format.relation if (isinstance(format.relation, str)) else ''),
-                (
+    def dump_AbstractToken(inst : AbstractToken, format : Format) -> str:
+
+        class Handler(AbstractTokenHandler):
+            def case_Grammar(self, o):
+                indent_str = (' ' * format.depth * indent)
+                relation_str = (' = .' + format.relation if (isinstance(format.relation, str)) else '')
+                return (
                     indent_str + o.selection + (' (' + o.options  + ')' if o.options != o.selection else '') +
                     relation_str
                 )
-            )[-1],
-            case_Vocab=lambda o : (
-                indent_str := (' ' * format.depth * indent),
-                relation_str := (' = .' + format.relation if (isinstance(format.relation, str)) else ''),
-                (
+
+            def case_Vocab(self, o):
+                indent_str = (' ' * format.depth * indent)
+                relation_str = (' = .' + format.relation if (isinstance(format.relation, str)) else '')
+                return (
                     indent_str + o.selection + ' (' + o.options  + ')' +
                     relation_str
                 )
-            )[-1],
-            case_Hole=lambda o : (
-                indent_str := (' ' * format.depth * indent),
-                relation_str := (' = .' + format.relation if (isinstance(format.relation, str)) else ''),
-                (
+
+            def case_Hole(self, o):
+                indent_str = (' ' * format.depth * indent)
+                relation_str = (' = .' + format.relation if (isinstance(format.relation, str)) else '')
+                return (
                     indent_str + 'HOLE' + 
                     relation_str
                 )
-            )[-1]
-        ))
+
+        return inst.match(Handler())
 
 
 
@@ -98,7 +85,7 @@ def dump(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_token, ...
 
     result_strs = [] 
 
-    inst_iter = iter(abstract_tokens)
+    inst_iter = iter(AbstractTokens)
 
     stack : list[Format] = [Format("", 0)]
 
@@ -109,54 +96,46 @@ def dump(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_token, ...
         if not inst:
             return '\n'.join(result_strs)
 
-        def format_grammar_children(inst : Grammar):
-            nonlocal stack
-            nonlocal format
-            rule = rule_map[inst.selection]
-            def assert_not_terminal(c : rs.item):
-                assert not isinstance(c, rs.Terminal)
-                raise Exception()
+        class Formatter(AbstractTokenHandler):
+            def case_Grammar(self, inst):
+                nonlocal stack
+                nonlocal format
+                rule = rule_map[inst.selection]
 
-            for item in reversed(rule.content):
-                if not isinstance(item, rs.Terminal):
-                    child_format = rs.match_item(item, ItemHandlers[Format](
-                        case_Terminal=lambda o : (
-                            assert_not_terminal(o)
-                        ),
-                        case_Nonterm=lambda o : (
-                            Format(o.relation, format.depth + 1)
-                        ),
-                        case_Vocab=lambda o : (
-                            Format(o.relation, format.depth + 1)
-                        )
-                    ))
-                    stack += [child_format]
+                for item in reversed(rule.content):
+                    if not isinstance(item, Terminal):
+                        class Handler(ItemHandler):
+                            def case_Terminal(self, o):
+                                raise Exception()
+                            def case_Nonterm(self, o): 
+                                return Format(o.relation, format.depth + 1)
+                            def case_Vocab(self, o):
+                                return Format(o.relation, format.depth + 1)
 
-        def format_vocab_children(inst : Vocab):
-            pass
+                        child_format = item.match(Handler())
+                        stack += [child_format]
 
-        def format_hole_children(inst : Hole):
-            pass
+            def case_Vocab(self, inst):
+                pass
 
-        match_abstract_token(inst, AbstractTokenHandlers(
-            case_Grammar = format_grammar_children,
-            case_Vocab = format_vocab_children, 
-            case_Hole = format_hole_children,
-        ))
+            def case_Hole(self, inst):
+                pass
 
-        result_strs += [dump_abstract_token(inst, format)]
+        inst.match(Formatter())
+
+        result_strs += [dump_AbstractToken(inst, format)]
 
     return '\n'.join(result_strs)
 
 
-def concretize(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_token, ...]) -> str:
+def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
 
     @dataclass
     class Format:
         inline : bool 
         indent_width : int 
 
-    token_iter = iter(abstract_tokens)
+    token_iter = iter(AbstractTokens)
     first_token = next(token_iter)
     assert isinstance(first_token, Grammar)
     stack : list[tuple[Format, Grammar, tuple[str, ...]]] = [(Format(True, 0), first_token, ())]
@@ -180,7 +159,7 @@ def concretize(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_toke
         else:
             item = rule.content[index]
 
-            if isinstance(item, rs.Nonterm):
+            if isinstance(item, Nonterm):
                 child_token = next(token_iter, None)
 
                 stack.append((format, token, children))
@@ -190,7 +169,7 @@ def concretize(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_toke
                 else:
                     break
 
-            elif isinstance(item, rs.Vocab):
+            elif isinstance(item, Vocab):
                 vocab_token = next(token_iter, None)
                 if isinstance(vocab_token, Vocab):
                     if vocab_token.options == "comment" and vocab_token.selection:
@@ -204,19 +183,18 @@ def concretize(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_toke
                 else:
                     break
 
-            elif isinstance(item, rs.Terminal):
-                prefix = (
-                    (
-                        pred := rule.content[index - 1],
-                        match_line_format(pred.format, LineFormatHandlers[str](
-                            case_InLine = lambda _ : "",
-                            case_NewLine = lambda _ : "\n" + ("    " * format.indent_width),
-                            case_IndentLine = lambda _ : "\n" + ("    " * format.indent_width)
-                        ))
-                        if isinstance(pred, rs.Nonterm) else ""
-                    )[-1]
-                    if index != 0 and index == len(rule.content) - 1 else "" 
-                )
+            elif isinstance(item, Terminal):
+                class Handler(LineFormatHandler):
+                    def case_InLine(self, _): return ""
+                    def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
+                    def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
+
+                prefix = ""
+                if index != 0 and index == len(rule.content) - 1:
+                    pred = rule.content[index - 1]
+                    if isinstance(pred, Nonterm):
+                        prefix = pred.format.match(Handler())
+
                 s = (prefix + item.terminal)
                 stack.append((format, token, children + (s,)))
 
@@ -237,7 +215,7 @@ def concretize(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_toke
     assert stack_result != None
     return stack_result
 
-def concretize_old(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_token, ...]) -> str:
+def concretize_old(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
 
     @dataclass
     class Format:
@@ -246,10 +224,10 @@ def concretize_old(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_
 
     result = ""
 
-    token_iter = iter(abstract_tokens)
+    token_iter = iter(AbstractTokens)
 
-    stack : list[Union[str, Format]] = [Format(True, 0)] # str is concrete syntax, and int is indentation of the abstract_token from the iterator 
-    abstract_token_count = 0
+    stack : list[Union[str, Format]] = [Format(True, 0)] # str is concrete syntax, and int is indentation of the AbstractToken from the iterator 
+    AbstractToken_count = 0
 
     while stack:
 
@@ -265,57 +243,56 @@ def concretize_old(rule_map : dict[str, Rule], abstract_tokens : tuple[abstract_
             if not inst:
                 break
 
-            abstract_token_count += 1
+            AbstractToken_count += 1
 
             class Handler(AbstractTokenHandler):
-                def case_Grammar(inst : Grammar):
+                def case_Grammar(self, inst):
                     nonlocal stack
                     rule = rule_map[inst.selection]
                     for i, item in enumerate(reversed(rule.content)):
-                        rs.match_item(item, ItemHandlers(
-                            case_Terminal=lambda o : (
-                                j := len(rule.content) - 1 - i,
-                                prefix := (
-                                    (
-                                        pred := rule.content[j - 1],
-                                        match_line_format(pred.format, LineFormatHandlers[str](
-                                            case_InLine = lambda _ : "",
-                                            case_NewLine = lambda _ : "\n" + ("    " * format.indent_width),
-                                            case_IndentLine = lambda _ : "\n" + ("    " * format.indent_width)
-                                        ))
-                                        if isinstance(pred, rs.Nonterm) else ""
-                                    )[-1]
-                                    if i == 0 else "" 
-                                ),
+                        class Handler(ItemHandler):
+                            def case_Terminal(self, o):
+                                j = len(rule.content) - 1 - i
+                                class Formatter(LineFormatHandler):
+                                    def case_InLine(self, _): return ""
+                                    def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
+                                    def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
+
+                                prefix = ""
+                                if i == 0: 
+                                    pred = rule.content[j - 1]
+                                    if isinstance(pred, Nonterm):
+                                        prefix = pred.format.match(Formatter)
+
                                 stack.append(prefix + o.terminal)
-                            ),
-                            case_Nonterm=lambda o : (
-                                child_format := Format(is_inline(o.format), next_indent_width(format.indent_width, o.format)),
-                                stack.append(child_format),
-                            ),
-                            case_Vocab=lambda o : (
+
+                            def case_Nonterm(self, o):
+                                child_format = Format(is_inline(o.format), next_indent_width(format.indent_width, o.format))
+                                stack.append(child_format)
+
+                            def case_Vocab(self, o):
                                 stack.append(format)
-                            )
-                        ))
+
+                        item.match(Handler())
 
                     prefix = "" if format.inline else "\n" + "    " * format.indent_width
                     stack += [prefix]
                 
-                def case_Vocab(inst : Vocab):
+                def case_Vocab(self, inst):
                     nonlocal stack
                     stack += [inst.selection]
 
-                def case_Hole(_ : Hole):
+                def case_Hole(self, _):
                     nonlocal stack
                     stack += ['(HOLE)']
 
-            inst.match(handler)
+            inst.match(Handler())
 
     return result
 
 
 from typing import Sequence
-def truncate_at_hole(toks : Sequence[abstract_token]) -> Sequence[abstract_token]:
+def truncate_at_hole(toks : Sequence[AbstractToken]) -> Sequence[AbstractToken]:
     hole_index = next((i for i, t in enumerate(toks) if isinstance(t, Hole)), None) 
     if hole_index:
         return toks[0:hole_index]

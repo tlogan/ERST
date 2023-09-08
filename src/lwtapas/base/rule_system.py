@@ -6,28 +6,27 @@ from collections.abc import Callable
 
 from abc import ABC, abstractmethod
 
-from lwtapas.base.rule_construct_autogen import *
-from lwtapas.base import construction_system
-from lwtapas.base import line_format_system as lf
+from base.rule_autogen import *
+from base import construction_system, line_format_system
 
 
 def to_dictionary(node: Rule):
 
     class Handler(ItemHandler):
-        def case_Terminal(o): 
+        def case_Terminal(self, o): 
             return {
                 'kind' : 'terminal',
                 'terminal' : o.terminal
             }
-        def case_Nonterm(o): 
+        def case_Nonterm(self, o): 
             return {
                 'kind' : 'grammar',
                 'relation' : o.relation,
                 'nonterminal' : o.nonterminal,
-                'format' : lf.to_string(o.format),
+                'format' : line_format_system.to_string(o.format),
             }
 
-        def case_Vocab(o):
+        def case_Vocab(self, o):
             return {
                 'kind' : 'vocab',
                 'relation' : o.relation,
@@ -48,19 +47,25 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
     def fail():
         assert False 
 
+    class Handler(ItemHandler):
+        def case_Terminal(self, o):
+            fail()
+        def case_Nonterm(self, o):
+            return construction_system.Field(
+                attr = o.relation, 
+                typ = f'{o.nonterminal} | None', 
+                default = ""
+            )
+        def case_Vocab(self, o):
+            return construction_system.Field(
+                attr = o.relation, 
+                typ = 'str', 
+                default = ""
+            )
+
     return construction_system.Constructor(
         n.name, [], [
-            match_item(item, ItemHandlers[construction_system.Field](
-                case_Terminal = lambda o : (
-                    fail()
-                ),
-                case_Nonterm = lambda o : (
-                    construction_system.Field(attr = o.relation, typ = f'{o.nonterminal} | None', default = "")
-                ),
-                case_Vocab = lambda o : (
-                    construction_system.Field(attr = o.relation, typ = 'str', default = "")
-                )
-            )) 
+            item.match(Handler())
             for item in n.content
             if not isinstance(item, Terminal)
         ] + [
@@ -77,7 +82,7 @@ def get_abstract_items(rule : Rule):
     ]
 
 
-def type_from_item(item : item, prefix : str = ""):
+def type_from_item(item : Item, prefix : str = ""):
     if isinstance(item, Nonterm):
         if prefix:
             return f"{prefix}.{item.nonterminal}"
@@ -89,7 +94,7 @@ def type_from_item(item : item, prefix : str = ""):
     else:
         raise Exception()
 
-def relation_from_item(item : item):
+def relation_from_item(item : Item):
     if isinstance(item, Nonterm):
         return item.relation
     elif isinstance(item, Vocab):

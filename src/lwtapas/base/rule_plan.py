@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-from lwtapas.base.construction_system import Constructor, Field
-from lwtapas.base import construction_system
-from lwtapas.base.schema_system import Schema 
+from base.construction_system import Constructor, Field
 
 singles = [
     Constructor(
         "Rule", [], [
             Field('name', 'str', ""), 
-            Field('content', 'list[item]', "")
+            Field('content', 'list[Item]', "")
         ]
     )
 ]
 
 choices = { 
-    "item" : [
+    "Item" : [
         Constructor(
             "Terminal", [], [
                 Field('terminal', 'str', "")
@@ -25,7 +23,7 @@ choices = {
             "Nonterm", [], [
                 Field('relation', 'str', ""),
                 Field('nonterminal', 'str', ""),
-                Field('format', 'line_format', ""),
+                Field('format', 'LineFormat', ""),
             ]
         ),
 

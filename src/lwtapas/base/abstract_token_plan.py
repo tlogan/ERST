@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from base.construction_system import Constructor, Field
-from base.schema_system import Schema 
 
 singles = []
 choices = {
