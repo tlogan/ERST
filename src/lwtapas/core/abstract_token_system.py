@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Coroutine
 
 from core.abstract_token_autogen import *
 
@@ -7,8 +7,16 @@ from core.line_format_system import LineFormat, LineFormatHandler, is_inline, ne
 from core.rule_system import Rule, Item, ItemHandler, Terminal, Nonterm
 
 from dataclasses import dataclass
+from lwtapas.core.abstract_token_autogen import Grammar, Vocab
 
 from lwtapas.core.rule_autogen import Nonterm, Terminal, Vocab
+
+import asyncio
+
+
+T = TypeVar('T')
+D = TypeVar('D')
+U = TypeVar('U')
 
 def from_primitive(ptok : list[str]) -> AbstractToken:
     assert len(ptok) == 4
@@ -202,6 +210,95 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
     return stack_result
 '''
 end concretize
+'''
+
+
+
+'''
+traverse stack and calling combine_up and guide_down handlers
+combine_up occurs after last child has been popped (i.e. return)
+guide_down occurs before push (i.e. call) 
+'''
+async def analyze(rule_map : dict[str, Rule], input : asyncio.Queue[AbstractToken], output : asyncio.Queue[D]) -> U | None:
+
+    token_init = await input.get()
+    assert isinstance(token_init, Grammar)
+    stack : list[tuple[Grammar, list[U]]] = [(token_init, [])]
+
+    result : U | None = None
+    while stack:
+
+        (gram, children) = stack.pop()
+
+        if result != None:
+            '''
+            get the result from the child in the stack
+            '''
+            children = children + [result]
+            result = None
+
+        rule = rule_map[gram.selection]
+        index = len(children)
+        if index == len(rule.content):
+            methods_name = f"combine_up_{rule.name}"
+            args = children
+            '''
+            TODO: figure out how to define handlers 
+            - maybe can associate handler with rules in rule_map
+            '''
+            pass
+        else:
+            '''
+            TODO: modify to call guide_down before stack.append (i.e. push/call) 
+            '''
+            item = rule.content[index]
+            class ItemAnalyzer(ItemHandler):
+                def case_Nonterm(self, item):
+                    child_token = next(token_iter, None)
+
+                    stack.append((format, token, children))
+                    child_format = Format(is_inline(item.format), next_indent_width(format.indent_width, item.format))
+                    if isinstance(child_token, Grammar):
+                        stack.append((child_format, child_token, ()))
+                    else:
+                        break
+                def case_Terminal(self, item):
+                    class LineFormatConcretizer(LineFormatHandler):
+                        def case_InLine(self, _): return ""
+                        def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
+                        def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
+
+                    prefix = ""
+                    if index != 0 and index == len(rule.content) - 1:
+                        pred = rule.content[index - 1]
+                        if isinstance(pred, Nonterm):
+                            prefix = pred.format.match(LineFormatConcretizer())
+
+                    s = (prefix + item.terminal)
+                    stack.append((format, token, children + (s,)))
+                def case_Vocab(self, item):
+                    vocab_token = next(token_iter, None)
+                    if isinstance(vocab_token, Vocab):
+                        if vocab_token.options == "comment" and vocab_token.selection:
+                            comments = vocab_token.selection.split("\n")
+
+                            comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
+
+                            stack.append((format, token, children + (comment,)))
+                        else:
+                            stack.append((format, token, children + (vocab_token.selection,)))
+                    else:
+                        break
+            item.match(ItemAnalyzer())
+
+
+
+
+
+
+    return result 
+'''
+end analyze 
 '''
 
 # def concretize_old(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
