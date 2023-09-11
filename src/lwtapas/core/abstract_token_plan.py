@@ -19,9 +19,6 @@ construction = Construction(
                     Field('options', 'str', ""),
                     Field('selection', 'str', "")
                 ]
-            ),
-            Constructor(
-                "Hole", [], []
             )
         ]
     }

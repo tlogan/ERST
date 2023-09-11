@@ -7,13 +7,13 @@ from core import construction_system, abstract_token_plan, line_format_plan, rul
 '''
 base generation
 '''
-write_code('base', "abstract_token", 
+write_code('core', "abstract_token", 
     construction_system.generate("", abstract_token_plan.construction)
 )
-write_code('base', "line_format", 
+write_code('core', "line_format", 
     construction_system.generate("", line_format_plan.construction)
 )
-write_code('base', "rule",
+write_code('core', "rule",
     construction_system.generate('''
 from core.line_format_autogen import LineFormat 
         ''', 

@@ -97,25 +97,6 @@ def update_Vocab(source_Vocab : Vocab,
 
         
 
-@dataclass(frozen=True, eq=True)
-class Hole(AbstractToken):
-
-
-    def match(self, handler : AbstractTokenHandler[T]) -> T:
-        return handler.case_Hole(self)
-
-def make_Hole(
-) -> AbstractToken:
-    return Hole(
-    )
-
-def update_Hole(source_Hole : Hole
-) -> Hole:
-    return Hole(
-    )
-
-        
-
 # case handler for type AbstractToken
 class AbstractTokenHandler(ABC, Generic[T]):
     @abstractmethod
@@ -123,9 +104,6 @@ class AbstractTokenHandler(ABC, Generic[T]):
         pass
     @abstractmethod
     def case_Vocab(self, o : Vocab) -> T :
-        pass
-    @abstractmethod
-    def case_Hole(self, o : Hole) -> T :
         pass
 
      
