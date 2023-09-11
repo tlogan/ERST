@@ -6,8 +6,8 @@ from collections.abc import Callable
 
 from abc import ABC, abstractmethod
 
-from base.rule_autogen import *
-from base import construction_system, line_format_system
+from core.rule_autogen import *
+from core import construction_system, line_format_system
 
 
 def to_dictionary(node: Rule):

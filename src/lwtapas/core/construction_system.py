@@ -16,6 +16,11 @@ class Constructor:
     bases : list[str]
     fields: list[Field]
 
+class Construction:
+    def __init__(self, singles: list[Constructor], choices : dict[str, list[Constructor]]):
+        self.singles = singles
+        self.choices = choices 
+
 
 nl = "\n"
 header = ("""
@@ -160,7 +165,7 @@ class {handler_name}(ABC, Generic[T]):
     """)
     return code 
 
-def generate_content(content_header : str, singles : list[Constructor], choices : dict[str, list[Constructor]]) -> str:
+def generate(content_header : str, construction : Construction) -> str:
 
     return (f"""
 
@@ -170,12 +175,12 @@ def generate_content(content_header : str, singles : list[Constructor], choices 
 
 {nl.join([
     generate_choice(type_name, '', cons)
-    for type_name, cons in choices.items()
+    for type_name, cons in construction.choices.items()
 ])} 
 
 {nl.join([
     generate_single(con)
-    for con in singles
+    for con in construction.singles
 ])} 
     """)
 

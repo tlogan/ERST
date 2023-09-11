@@ -1,12 +1,10 @@
 from __future__ import annotations
 from typing import Iterator, Optional
 
-# from base.line_format_system import LineFormatHandler
-# from base.rule_system import ItemHandler, Terminal
-from base.abstract_token_autogen import *
+from core.abstract_token_autogen import *
 
-from base.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
-from base.rule_system import Rule, Item, ItemHandler, Terminal, Nonterm
+from core.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
+from core.rule_system import Rule, Item, ItemHandler, Terminal, Nonterm
 
 from dataclasses import dataclass
 
@@ -199,8 +197,10 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
                 stack.append((format, token, children + (s,)))
 
 
-    # if stack is not empty, then input program must be incomplete
-    # so clean up the stack
+    '''
+    if stack is not empty, then input program must be incomplete
+    so clean up the stack
+    '''
     while stack:
         (format, token, children) = stack.pop()
 
@@ -214,6 +214,9 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
 
     assert stack_result != None
     return stack_result
+'''
+end concretize
+'''
 
 def concretize_old(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
 
@@ -262,7 +265,7 @@ def concretize_old(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractTo
                                 if i == 0: 
                                     pred = rule.content[j - 1]
                                     if isinstance(pred, Nonterm):
-                                        prefix = pred.format.match(Formatter)
+                                        prefix = pred.format.match(Formatter())
 
                                 stack.append(prefix + o.terminal)
 

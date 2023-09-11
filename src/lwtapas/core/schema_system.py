@@ -1,5 +1,5 @@
-from base import rule_system
-from base.rule_system import Rule
+from core import rule_system
+from core.rule_system import Rule
 '''
 map from a node id (sequence id) to node (sequence) 
 '''

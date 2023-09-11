@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Iterator
 
-from base.line_format_autogen import * 
+from core.line_format_autogen import * 
 
 
 def to_string(line_form : LineFormat) -> str:
