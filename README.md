@@ -78,13 +78,9 @@ lenient option. x : list[str | T], y : list[str | int | T]
 
 #### Parameter refinement 
 ```
-#eval infer_reduce 0 [lessterm|
-  let g : (uno : G) -> unit = _ in 
-  let h : (dos : H) -> unit = _ in 
-  let f  = (x => 
-    g(x), h(x)
-  )
-]
+let g : (uno : G) -> unit = _ in 
+let h : (dos : H) -> unit = _ in 
+let f  = (x => g(x), h(x))
 ```
 
 After `let f`, the system infers
@@ -94,9 +90,9 @@ f : (uno : G) & (dos : H) -> unit * unit
 
 #### Overlapping pattern matching
 ```
-def g : A -> G
-def h : B -> H
-def k : C -> K
+let g : A -> G
+let h : B -> H
+let k : C -> K
 
 def foo(x) =  
     match x 
@@ -109,13 +105,13 @@ def boo(x) =
     case tres;c => k(c)  
 
 
-def hplus : (H * H) -> nat 
+let hplus : (H * H) -> nat 
 
 
-def client x => 
+def client(x) =
     let y = foo(x) in
     match y 
-    case ... H ... => hplus(y, boo(x)) ; 
+    case <pattern : H> => hplus(y, boo(x))
 ```
 
 After `def foo`, the system infers
