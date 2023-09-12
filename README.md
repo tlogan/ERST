@@ -39,6 +39,60 @@
 
 ### Motivating examples
 
+#### Heterogeneous generics
+```
+let x = [] 
+
+let first : list[str] * top -> list[str] 
+let first = (a , b) => a 
+
+let _ = first (x, x)  
+
+let y = x ++ [4]
+```
+
+After `let x`, the system infers
+```
+x : list[T]
+```
+
+After `let first`, the system infers
+```
+first : (list[str] * top) -> list[str]
+```
+
+After `let _ = first (x, x)`, the system infers
+```
+x : list[str] 
+ok 
+treat first as a constraint on the type of x
+```
+
+After `let y = x ++ [4]`, the system infers
+```
+++ : [T] list[T] * list[T] -> list[T]
+strict option. error: list[int] ≤ list[str] 
+lenient option. x : list[str | T], y : list[str | int | T]
+```
+
+
+#### Parameter refinement 
+```
+#eval infer_reduce 0 [lessterm|
+  let g : (uno : G) -> unit = _ in 
+  let h : (dos : H) -> unit = _ in 
+  let f  = (x => 
+    g(x), h(x)
+  )
+]
+```
+
+After `let f`, the system infers
+```
+f : (uno : G) & (dos : H) -> unit * unit
+```
+
+#### Overlapping pattern matching
 ```
 def g : A -> G
 def h : B -> H
@@ -48,13 +102,11 @@ def foo(x) =
     match x 
     case uno;a => g(a)  
     case dos;b => h(b)
--- foo : [X] X -> {G with X <: uno//A} | {H with X <: dos//B}  
 
 def boo(x) =  
     match x 
     case dos;b => h(b)
     case tres;c => k(c)  
--- boo : [X] X -> {H with X <: dos//B} | {K with X <: tres//C}
 
 
 def hplus : (H * H) -> nat 
@@ -62,26 +114,37 @@ def hplus : (H * H) -> nat
 
 def client x => 
     let y = foo(x) in
-    -- x : X 
-    -- X <: uno//A | dos//B  
-    -- y : Y
-    -- Y <: {G with X <: uno//A} | {H with X <: dos//B} 
-    ---- OR ----
-    -- union [ X <: uno//A |- Y <: G,  X <: dos//B |- H ]
-    ------------------------------------------------
-    ---- 2nd order (above) vs 1st order (below) ----
-    ------------------------------------------------
-    -- x : uno//A | dos//B  
-    -- y : {G with x : uno//A} | {H with x : dos//B} 
     match y 
     case ... H ... => hplus(y, boo(x)) ; 
--- client : (uno//A | dos//B) & (dos//B) -> unit
--- client : dos//B -> nat 
-
-
-
-
 ```
+
+After `def foo`, the system infers
+```
+foo : [X] X -> {G with X <: uno//A} | {H with X <: dos//B}  
+```
+
+After `def boo`, the system infers
+```
+boo : [X] X -> {H with X <: dos//B} | {K with X <: tres//C}
+```
+
+In `def client`, the system infers
+```
+x : X 
+X <: uno//A | dos//B  
+y : Y
+Y <: {G with X <: uno//A} | {H with X <: dos//B} 
+-- OR ----
+union [ X <: uno//A |- Y <: G,  X <: dos//B |- H ]
+```
+
+Towards the end, the system infers 
+```
+client : (uno//A | dos//B) & (dos//B) -> unit
+client : dos//B -> nat 
+```
+
+
 
 <!-- 
 --------
