@@ -34,24 +34,52 @@ class Item(ABC):
 # constructors for type Item
 
 @dataclass(frozen=True, eq=True)
+class Keyword(Item):
+    content : str
+
+    def match(self, handler : ItemHandler[T]) -> T:
+        return handler.case_Keyword(self)
+
+def make_Keyword(
+    content : str
+) -> Item:
+    return Keyword(
+        content
+    )
+
+def update_Keyword(source_Keyword : Keyword,
+    content : Union[str, SourceFlag] = SourceFlag()
+) -> Keyword:
+    return Keyword(
+        source_Keyword.content if isinstance(content, SourceFlag) else content
+    )
+
+        
+
+@dataclass(frozen=True, eq=True)
 class Terminal(Item):
-    terminal : str
+    relation : str
+    vocab : str
 
     def match(self, handler : ItemHandler[T]) -> T:
         return handler.case_Terminal(self)
 
 def make_Terminal(
-    terminal : str
+    relation : str, 
+    vocab : str
 ) -> Item:
     return Terminal(
-        terminal
+        relation,
+        vocab
     )
 
 def update_Terminal(source_Terminal : Terminal,
-    terminal : Union[str, SourceFlag] = SourceFlag()
+    relation : Union[str, SourceFlag] = SourceFlag(),
+    vocab : Union[str, SourceFlag] = SourceFlag()
 ) -> Terminal:
     return Terminal(
-        source_Terminal.terminal if isinstance(terminal, SourceFlag) else terminal
+        source_Terminal.relation if isinstance(relation, SourceFlag) else relation,
+        source_Terminal.vocab if isinstance(vocab, SourceFlag) else vocab
     )
 
         
@@ -59,7 +87,7 @@ def update_Terminal(source_Terminal : Terminal,
 @dataclass(frozen=True, eq=True)
 class Nonterm(Item):
     relation : str
-    nonterminal : str
+    tag : str
     format : LineFormat
 
     def match(self, handler : ItemHandler[T]) -> T:
@@ -67,52 +95,24 @@ class Nonterm(Item):
 
 def make_Nonterm(
     relation : str, 
-    nonterminal : str, 
+    tag : str, 
     format : LineFormat
 ) -> Item:
     return Nonterm(
         relation,
-        nonterminal,
+        tag,
         format
     )
 
 def update_Nonterm(source_Nonterm : Nonterm,
     relation : Union[str, SourceFlag] = SourceFlag(),
-    nonterminal : Union[str, SourceFlag] = SourceFlag(),
+    tag : Union[str, SourceFlag] = SourceFlag(),
     format : Union[LineFormat, SourceFlag] = SourceFlag()
 ) -> Nonterm:
     return Nonterm(
         source_Nonterm.relation if isinstance(relation, SourceFlag) else relation,
-        source_Nonterm.nonterminal if isinstance(nonterminal, SourceFlag) else nonterminal,
+        source_Nonterm.tag if isinstance(tag, SourceFlag) else tag,
         source_Nonterm.format if isinstance(format, SourceFlag) else format
-    )
-
-        
-
-@dataclass(frozen=True, eq=True)
-class Vocab(Item):
-    relation : str
-    vocab : str
-
-    def match(self, handler : ItemHandler[T]) -> T:
-        return handler.case_Vocab(self)
-
-def make_Vocab(
-    relation : str, 
-    vocab : str
-) -> Item:
-    return Vocab(
-        relation,
-        vocab
-    )
-
-def update_Vocab(source_Vocab : Vocab,
-    relation : Union[str, SourceFlag] = SourceFlag(),
-    vocab : Union[str, SourceFlag] = SourceFlag()
-) -> Vocab:
-    return Vocab(
-        source_Vocab.relation if isinstance(relation, SourceFlag) else relation,
-        source_Vocab.vocab if isinstance(vocab, SourceFlag) else vocab
     )
 
         
@@ -120,13 +120,13 @@ def update_Vocab(source_Vocab : Vocab,
 # case handler for type Item
 class ItemHandler(ABC, Generic[T]):
     @abstractmethod
+    def case_Keyword(self, o : Keyword) -> T :
+        pass
+    @abstractmethod
     def case_Terminal(self, o : Terminal) -> T :
         pass
     @abstractmethod
     def case_Nonterm(self, o : Nonterm) -> T :
-        pass
-    @abstractmethod
-    def case_Vocab(self, o : Vocab) -> T :
         pass
 
      

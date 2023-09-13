@@ -1,5 +1,5 @@
 from __future__ import annotations
-from core.language_system import Rule, Vocab, Terminal, Nonterm, Syntax
+from core.language_system import Rule, Nonterm, Terminal, Syntax
 from core.line_format_system import NewLine, InLine, IndentLine
 
 from core.language_system import Syntax
@@ -8,7 +8,7 @@ content = Syntax([],
 {
     "Typ" : [
         Rule("Var", [
-            Vocab("name", "identifier"),
+            Terminal("name", "identifier"),
         ]),
         Rule("Exis", [
             Nonterm("body", "Typ", InLine()),
@@ -16,12 +16,12 @@ content = Syntax([],
             Nonterm("indicies", "ListIdent", InLine()),
         ]),
         Rule("Univ", [
-            Vocab("index", "identifier"),
+            Terminal("index", "identifier"),
             Nonterm("upper_bound", "Typ", InLine()),
             Nonterm("body", "Typ", InLine()),
         ]),
         Rule("Induc", [
-            Vocab("fixedpoint", "identifier"),
+            Terminal("fixedpoint", "identifier"),
             Nonterm("body", "Typ", InLine()),
         ]),
         Rule("Union", [
@@ -36,11 +36,11 @@ content = Syntax([],
         Rule("Bot", []),
         Rule("Unit", []),
         Rule("Tag", [
-            Vocab("label", "discriminator"),
+            Terminal("label", "discriminator"),
             Nonterm("body", "Typ", InLine()),
         ]),
         Rule("Field", [
-            Vocab("label", "selector"),
+            Terminal("label", "selector"),
             Nonterm("body", "Typ", InLine()),
         ]),
         Rule("Impli", [
@@ -59,25 +59,25 @@ content = Syntax([],
     "ListIdent" : [
         Rule("NilIdent", []),
         Rule("ConsIdent", [
-            Vocab("name", "identifier"),
+            Terminal("name", "identifier"),
             Nonterm("identifiers", "ListIdent", InLine()),
         ]),
     ],
 
     "Expr" : [
         Rule("Var", [
-            Vocab("name", "identifier"),
+            Terminal("name", "identifier"),
         ]),
         Rule("Unit", []),
         Rule("Tag", [
-            Vocab("label", "discriminator"),
+            Terminal("label", "discriminator"),
             Nonterm("body", "Expr", InLine()),
         ]),
         Rule("Record", [
             Nonterm("fields", "ListField", InLine()),
         ]),
         Rule("Function", [
-            Vocab("param", "identifier"),
+            Terminal("param", "identifier"),
             Nonterm("fields", "ListField", InLine()),
         ]),
         Rule("Match", [
@@ -86,14 +86,14 @@ content = Syntax([],
         ]),
         Rule("Project", [
             Nonterm("target", "Expr", InLine()),
-            Vocab("label", "selection"),
+            Terminal("label", "selection"),
         ]),
         Rule("App", [
             Nonterm("function", "Expr", InLine()),
             Nonterm("arg", "Expr", InLine()),
         ]),
         Rule("Letb", [
-            Vocab("param", "identifier"),
+            Terminal("param", "identifier"),
             Nonterm("annotation", "Typ", InLine()),
             Nonterm("arg", "Expr", InLine()),
             Nonterm("body", "Expr", InLine()),
@@ -105,7 +105,7 @@ content = Syntax([],
     "ListField" : [
         Rule("NilField", []),
         Rule("ConsField", [
-            Vocab("label", "discriminator"),
+            Terminal("label", "discriminator"),
             Nonterm("body", "Expr", InLine()),
             Nonterm("fields", "ListField", InLine()),
         ]),

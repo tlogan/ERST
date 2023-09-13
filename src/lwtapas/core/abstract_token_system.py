@@ -4,13 +4,12 @@ from typing import Iterator, Optional, Coroutine
 from core.abstract_token_autogen import *
 
 from core.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
-from core.language_system import Rule, Item, ItemHandler, Terminal, Nonterm, Syntax, Semantics
+from core.language_system import Rule, Item, ItemHandler, Keyword, Terminal, Nonterm, Syntax, Semantics
 
 from dataclasses import dataclass
 from core.abstract_token_autogen import Grammar, Vocab
 
 from core import language_system
-from core.language_system import Nonterm, Terminal, Vocab
 
 import asyncio
 
@@ -101,13 +100,13 @@ def dump(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...],
                 rule = rule_map[inst.selection]
 
                 for item in reversed(rule.content):
-                    if not isinstance(item, Terminal):
+                    if not isinstance(item, Keyword):
                         class Handler(ItemHandler):
-                            def case_Terminal(self, o):
+                            def case_Keyword(self, o):
                                 raise Exception()
-                            def case_Nonterm(self, o): 
+                            def case_Terminal(self, o):
                                 return Format(o.relation, format.depth + 1)
-                            def case_Vocab(self, o):
+                            def case_Nonterm(self, o): 
                                 return Format(o.relation, format.depth + 1)
 
                         child_format = item.match(Handler())
@@ -154,16 +153,7 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
         else:
             item = rule.content[index]
             class ItemConcretizer(ItemHandler):
-                def case_Nonterm(self, item):
-                    child_token = next(token_iter, None)
-
-                    stack.append((format, token, children))
-                    child_format = Format(is_inline(item.format), next_indent_width(format.indent_width, item.format))
-                    if isinstance(child_token, Grammar):
-                        stack.append((child_format, child_token, ()))
-                    else:
-                        break
-                def case_Terminal(self, item):
+                def case_Keyword(self, item):
                     class LineFormatConcretizer(LineFormatHandler):
                         def case_InLine(self, _): return ""
                         def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
@@ -177,7 +167,7 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
 
                     s = (prefix + item.terminal)
                     stack.append((format, token, children + (s,)))
-                def case_Vocab(self, item):
+                def case_Terminal(self, item):
                     vocab_token = next(token_iter, None)
                     if isinstance(vocab_token, Vocab):
                         if vocab_token.options == "comment" and vocab_token.selection:
@@ -188,6 +178,15 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
                             stack.append((format, token, children + (comment,)))
                         else:
                             stack.append((format, token, children + (vocab_token.selection,)))
+                    else:
+                        break
+                def case_Nonterm(self, item):
+                    child_token = next(token_iter, None)
+
+                    stack.append((format, token, children))
+                    child_format = Format(is_inline(item.format), next_indent_width(format.indent_width, item.format))
+                    if isinstance(child_token, Grammar):
+                        stack.append((child_format, child_token, ()))
                     else:
                         break
             item.match(ItemConcretizer())
@@ -222,7 +221,8 @@ guide_down occurs before push (i.e. call)
 '''
 async def analyze(
     syntax : Syntax, 
-    semantics : Semantics[D, U],  
+    semantics : Semantics[D, U], # handles nonterminals 
+    concrete : Any, # handles terminals 
     input : asyncio.Queue[AbstractToken], 
     output : asyncio.Queue[D]
 ) -> U | None:
@@ -251,9 +251,9 @@ async def analyze(
             combine_method_name = f"combine_up_{gram.options}_{gram.selection}"
             combine_args = children
             '''
-            TODO: figure out how to define handlers 
-            - maybe can associate handler with rules in rule_map
+            TODO: use reflection to call combine method 
             '''
+            # result = combine_method_name(*combine_args)
             pass
         else:
             '''
@@ -261,7 +261,48 @@ async def analyze(
             '''
             item = rule.content[index]
             class ItemAnalyzer(ItemHandler):
-                async def case_Nonterm(self, item):
+                async def case_Keyword(self, item : Keyword):
+                    keyword_method_name = f"analyze_keyword_{gram.options}_{gram.selection}"
+                    keyword_args = [item.content] 
+                    keyword_result : U = 
+                    stack.append((context, gram, children + [keyword_result]))
+                    pass
+                    # class LineFormatConcretizer(LineFormatHandler):
+                    #     def case_InLine(self, _): return ""
+                    #     def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
+                    #     def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
+
+                    # prefix = ""
+                    # if index != 0 and index == len(rule.content) - 1:
+                    #     pred = rule.content[index - 1]
+                    #     if isinstance(pred, Nonterm):
+                    #         prefix = pred.format.match(LineFormatConcretizer())
+
+                    # s = (prefix + item.terminal)
+                    # stack.append((format, token, children + (s,)))
+                async def case_Terminal(self, item):
+                    vocab_token = await input.get()
+
+                    if isinstance(vocab_token, Vocab):
+                        terminal_method_name = f"terminate_{gram.options}_{gram.selection}_{item.relation}"
+                        terminal_args = [context, children, vocab_token]
+                        '''
+                        TODO: use reflection to call terminate method
+                        '''
+                        terminal_result : U = 
+                        stack.append((context, gram, children + [terminal_result]))
+
+                    #     if vocab_token.options == "comment" and vocab_token.selection:
+                    #         comments = vocab_token.selection.split("\n")
+
+                    #         comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
+
+                    #         stack.append((format, token, children + (comment,)))
+                    #     else:
+                    #         stack.append((format, token, children + (vocab_token.selection,)))
+                    # else:
+                    #     break
+                async def case_Nonterm(self, item : Nonterm):
                     child_token = await input.get()
 
                     if isinstance(child_token, Grammar):
@@ -273,7 +314,7 @@ async def analyze(
                         '''
                         update context for child token
                         '''
-                        guide_method_name = f"guide_down_{gram.options}_{gram.selection}_{item.name}"
+                        guide_method_name = f"guide_down_{gram.options}_{gram.selection}_{item.relation}"
                         guide_args = [context, children, child_token]
 
                         '''
@@ -289,35 +330,6 @@ async def analyze(
 
                     else:
                         break
-                async def case_Terminal(self, item):
-                    pass
-                    # class LineFormatConcretizer(LineFormatHandler):
-                    #     def case_InLine(self, _): return ""
-                    #     def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
-                    #     def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
-
-                    # prefix = ""
-                    # if index != 0 and index == len(rule.content) - 1:
-                    #     pred = rule.content[index - 1]
-                    #     if isinstance(pred, Nonterm):
-                    #         prefix = pred.format.match(LineFormatConcretizer())
-
-                    # s = (prefix + item.terminal)
-                    # stack.append((format, token, children + (s,)))
-                async def case_Vocab(self, item):
-                    vocab_token = await input.get()
-                    pass
-                    # if isinstance(vocab_token, Vocab):
-                    #     if vocab_token.options == "comment" and vocab_token.selection:
-                    #         comments = vocab_token.selection.split("\n")
-
-                    #         comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
-
-                    #         stack.append((format, token, children + (comment,)))
-                    #     else:
-                    #         stack.append((format, token, children + (vocab_token.selection,)))
-                    # else:
-                    #     break
             item.match(ItemAnalyzer())
 
 

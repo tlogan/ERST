@@ -17,25 +17,25 @@ U = TypeVar('U')
 def to_dictionary(node: Rule):
 
     class Handler(ItemHandler):
-        def case_Terminal(self, o): 
+        def case_Keyword(self, o): 
             return {
-                'kind' : 'terminal',
-                'terminal' : o.terminal
+                'kind' : 'terminal_const',
+                'content' : o.content
+            }
+        def case_Terminal(self, o):
+            return {
+                'kind' : 'terminal_var',
+                'relation' : o.relation,
+                'vocab' : o.vocab
             }
         def case_Nonterm(self, o): 
             return {
                 'kind' : 'grammar',
                 'relation' : o.relation,
-                'nonterminal' : o.nonterminal,
+                'tag' : o.tag,
                 'format' : line_format_system.to_string(o.format),
             }
 
-        def case_Vocab(self, o):
-            return {
-                'kind' : 'vocab',
-                'relation' : o.relation,
-                'vocab' : o.vocab
-            }
 
     return {
         'name' : node.name,
@@ -52,18 +52,18 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
         assert False 
 
     class Handler(ItemHandler):
-        def case_Terminal(self, o):
+        def case_Keyword(self, o):
             fail()
-        def case_Nonterm(self, o):
-            return construction_system.Field(
-                attr = o.relation, 
-                typ = f'{o.nonterminal} | None', 
-                default = ""
-            )
-        def case_Vocab(self, o):
+        def case_Terminal(self, o):
             return construction_system.Field(
                 attr = o.relation, 
                 typ = 'str', 
+                default = ""
+            )
+        def case_Nonterm(self, o):
+            return construction_system.Field(
+                attr = o.relation, 
+                typ = f'{o.tag} | None', 
                 default = ""
             )
 
@@ -71,7 +71,7 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
         n.name, [], [
             item.match(Handler())
             for item in n.content
-            if not isinstance(item, Terminal)
+            if not isinstance(item, Keyword)
         ] + [
             construction_system.Field(attr = "source_start", typ = 'int', default = "0"),
             construction_system.Field(attr = "source_end", typ = 'int', default = "0"),
@@ -82,18 +82,18 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
 def get_abstract_items(rule : Rule): 
     return [item
         for item in rule.content
-        if not isinstance(item, Terminal)
+        if not isinstance(item, Keyword)
     ]
 
 
 def type_from_item(item : Item, prefix : str = ""):
     if isinstance(item, Nonterm):
         if prefix:
-            return f"{prefix}.{item.nonterminal}"
+            return f"{prefix}.{item.tag}"
         else:
-            return item.nonterminal
+            return item.tag
 
-    elif isinstance(item, Vocab):
+    elif isinstance(item, Terminal):
         return "str" 
     else:
         raise Exception()
@@ -101,7 +101,7 @@ def type_from_item(item : Item, prefix : str = ""):
 def relation_from_item(item : Item):
     if isinstance(item, Nonterm):
         return item.relation
-    elif isinstance(item, Vocab):
+    elif isinstance(item, Terminal):
         return item.relation 
     else:
         raise Exception()
@@ -110,7 +110,7 @@ def relation_from_item(item : Item):
 def is_inductive(type_name : str, rules : list[Rule]) -> bool:
     for rule in rules:
         for item in rule.content:
-            if not isinstance(item, Terminal) and type_name == type_from_item(item, ""):
+            if not isinstance(item, Keyword) and type_name == type_from_item(item, ""):
                 return True
     return False
 

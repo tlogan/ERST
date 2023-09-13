@@ -14,25 +14,26 @@ construction = Construction(
     { 
         "Item" : [
             Constructor(
+                "Keyword", [], [
+                    Field('content', 'str', "")
+                ]
+            ),
+
+            Constructor(
                 "Terminal", [], [
-                    Field('terminal', 'str', "")
+                    Field('relation', 'str', ""),
+                    Field('vocab', 'str', ""),
                 ]
             ),
 
             Constructor(
                 "Nonterm", [], [
                     Field('relation', 'str', ""),
-                    Field('nonterminal', 'str', ""),
+                    Field('tag', 'str', ""),
                     Field('format', 'LineFormat', ""),
                 ]
             ),
 
-            Constructor(
-                "Vocab", [], [
-                    Field('relation', 'str', ""),
-                    Field('vocab', 'str', ""),
-                ]
-            )
         ]
     }
 )
