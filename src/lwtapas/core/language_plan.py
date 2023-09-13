@@ -1,10 +1,10 @@
 from __future__ import annotations
-from core.rule_system import Rule, Vocab, Terminal, Nonterm 
+from core.language_system import Rule, Vocab, Terminal, Nonterm, Syntax
 from core.line_format_system import NewLine, InLine, IndentLine
 
-from lwtapas.core.schema_system import Schema
+from core.language_system import Syntax
 
-content = Schema([],
+content = Syntax([],
 {
     "Typ" : [
         Rule("Var", [

@@ -4,12 +4,13 @@ from typing import Iterator, Optional, Coroutine
 from core.abstract_token_autogen import *
 
 from core.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
-from core.rule_system import Rule, Item, ItemHandler, Terminal, Nonterm
+from core.language_system import Rule, Item, ItemHandler, Terminal, Nonterm, Syntax, Semantics
 
 from dataclasses import dataclass
-from lwtapas.core.abstract_token_autogen import Grammar, Vocab
+from core.abstract_token_autogen import Grammar, Vocab
 
-from lwtapas.core.rule_autogen import Nonterm, Terminal, Vocab
+from core import language_system
+from core.language_system import Nonterm, Terminal, Vocab
 
 import asyncio
 
@@ -215,11 +216,16 @@ end concretize
 
 
 '''
-traverse stack and calling combine_up and guide_down handlers
+traverse stack and call combine_up and guide_down handlers
 combine_up occurs after last child has been popped (i.e. return)
 guide_down occurs before push (i.e. call) 
 '''
-async def analyze(rule_map : dict[str, Rule], input : asyncio.Queue[AbstractToken], output : asyncio.Queue[D]) -> U | None:
+async def analyze(
+    syntax : Syntax, 
+    semantics : Semantics[D, U],  
+    input : asyncio.Queue[AbstractToken], 
+    output : asyncio.Queue[D]
+) -> U | None:
 
     token_init = await input.get()
     assert isinstance(token_init, Grammar)
@@ -237,7 +243,7 @@ async def analyze(rule_map : dict[str, Rule], input : asyncio.Queue[AbstractToke
             children = children + [result]
             result = None
 
-        rule = rule_map[gram.selection]
+        rule = schema.rules[gram.selection]
         index = len(children)
         if index == len(rule.content):
             methods_name = f"combine_up_{rule.name}"

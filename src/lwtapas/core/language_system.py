@@ -9,6 +9,10 @@ from abc import ABC, abstractmethod
 from core.rule_autogen import *
 from core import construction_system, line_format_system
 
+T = TypeVar('T')
+D = TypeVar('D')
+U = TypeVar('U')
+
 
 def to_dictionary(node: Rule):
 
@@ -111,3 +115,41 @@ def is_inductive(type_name : str, rules : list[Rule]) -> bool:
     return False
 
 
+class Syntax:
+    def __init__(self, 
+        singles : list[Rule], 
+        choices : dict[str, list[Rule]]
+    ):
+        self.singles = singles
+        self.choices = choices
+        self.rules =  (
+            {
+                r.name : r 
+                for r in self.singles
+            } | {
+                r.name : r 
+                for rs in self.choices.values()
+                for r in rs 
+            }
+        )
+
+        self.full = {
+            rule.name : [rule]
+            for rule in self.singles 
+        } | self.choices
+
+        self.portable = {
+            name : [to_dictionary(rule) for rule in rules]
+            for name, rules in self.full.items()
+        }
+
+class Guide(Generic[U]):
+    pass
+
+class Combiner(Generic[U]):
+    pass
+
+@dataclass
+class Semantics(Generic[D, U]): 
+    guide : Guide[D]
+    combiner : Combiner[U]
