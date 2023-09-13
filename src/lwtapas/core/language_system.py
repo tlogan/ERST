@@ -122,6 +122,21 @@ class Syntax:
     ):
         self.singles = singles
         self.choices = choices
+
+
+        self.map = (
+            {
+                r.name : {r.name : r} 
+                for r in self.singles
+            } | {
+                key : {
+                    r.name : r
+                    for r in rules 
+                }
+                for key, rules in self.choices.items()
+            }
+        )
+
         self.rules =  (
             {
                 r.name : r 

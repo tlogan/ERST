@@ -228,13 +228,14 @@ async def analyze(
 ) -> U | None:
 
     token_init = await input.get()
+    context_init : Optional[D] = None
     assert isinstance(token_init, Grammar)
-    stack : list[tuple[Grammar, list[U]]] = [(token_init, [])]
+    stack : list[tuple[Optional[D], Grammar, list[U]]] = [(context_init, token_init, [])]
 
     result : U | None = None
     while stack:
 
-        (gram, children) = stack.pop()
+        (context, gram, children) = stack.pop()
 
         if result != None:
             '''
@@ -243,11 +244,12 @@ async def analyze(
             children = children + [result]
             result = None
 
-        rule = schema.rules[gram.selection]
+
+        rule : Rule = syntax.map[gram.options][gram.selection]
         index = len(children)
         if index == len(rule.content):
-            methods_name = f"combine_up_{rule.name}"
-            args = children
+            combine_method_name = f"combine_up_{gram.options}_{gram.selection}"
+            combine_args = children
             '''
             TODO: figure out how to define handlers 
             - maybe can associate handler with rules in rule_map
@@ -259,42 +261,63 @@ async def analyze(
             '''
             item = rule.content[index]
             class ItemAnalyzer(ItemHandler):
-                def case_Nonterm(self, item):
-                    child_token = next(token_iter, None)
+                async def case_Nonterm(self, item):
+                    child_token = await input.get()
 
-                    stack.append((format, token, children))
-                    child_format = Format(is_inline(item.format), next_indent_width(format.indent_width, item.format))
                     if isinstance(child_token, Grammar):
-                        stack.append((child_format, child_token, ()))
+                        '''
+                        put back the current gram token
+                        '''
+                        stack.append((context, gram, children))
+
+                        '''
+                        update context for child token
+                        '''
+                        guide_method_name = f"guide_down_{gram.options}_{gram.selection}_{item.name}"
+                        guide_args = [context, children, child_token]
+
+                        '''
+                        TODO: call guide_down method to get child context
+                        '''
+                        child_context : Optional[D] = None
+                        pass
+
+                        '''
+                        put child token on work stack
+                        '''
+                        stack.append((child_context, child_token, []))
+
                     else:
                         break
-                def case_Terminal(self, item):
-                    class LineFormatConcretizer(LineFormatHandler):
-                        def case_InLine(self, _): return ""
-                        def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
-                        def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
+                async def case_Terminal(self, item):
+                    pass
+                    # class LineFormatConcretizer(LineFormatHandler):
+                    #     def case_InLine(self, _): return ""
+                    #     def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
+                    #     def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
 
-                    prefix = ""
-                    if index != 0 and index == len(rule.content) - 1:
-                        pred = rule.content[index - 1]
-                        if isinstance(pred, Nonterm):
-                            prefix = pred.format.match(LineFormatConcretizer())
+                    # prefix = ""
+                    # if index != 0 and index == len(rule.content) - 1:
+                    #     pred = rule.content[index - 1]
+                    #     if isinstance(pred, Nonterm):
+                    #         prefix = pred.format.match(LineFormatConcretizer())
 
-                    s = (prefix + item.terminal)
-                    stack.append((format, token, children + (s,)))
-                def case_Vocab(self, item):
-                    vocab_token = next(token_iter, None)
-                    if isinstance(vocab_token, Vocab):
-                        if vocab_token.options == "comment" and vocab_token.selection:
-                            comments = vocab_token.selection.split("\n")
+                    # s = (prefix + item.terminal)
+                    # stack.append((format, token, children + (s,)))
+                async def case_Vocab(self, item):
+                    vocab_token = await input.get()
+                    pass
+                    # if isinstance(vocab_token, Vocab):
+                    #     if vocab_token.options == "comment" and vocab_token.selection:
+                    #         comments = vocab_token.selection.split("\n")
 
-                            comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
+                    #         comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
 
-                            stack.append((format, token, children + (comment,)))
-                        else:
-                            stack.append((format, token, children + (vocab_token.selection,)))
-                    else:
-                        break
+                    #         stack.append((format, token, children + (comment,)))
+                    #     else:
+                    #         stack.append((format, token, children + (vocab_token.selection,)))
+                    # else:
+                    #     break
             item.match(ItemAnalyzer())
 
 
