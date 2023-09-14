@@ -7,13 +7,45 @@
 import ply.lex as lex
 
 tokens = (
-   'TID',
-   'TUNIT',
-   'TOP',
-   'BOT',
-   'DSLASH',
-
-   'ID',
+  'TID',
+  'UNIT',
+  'TOP'
+  'BOT',
+  
+  'DSLASH',
+  'COLON',
+  'AMP',
+  'STAR',
+  'BAR',
+  'ARROW',
+  'INDUC',
+  
+  'SUBTYP',
+  'LBRACE',
+  'RBRACE',
+  'WITH',
+  'HASH',
+  'LSQ',
+  'RSQ',
+  'LPAREN',
+  'RPAREN',
+  
+  'ID',
+  'SEMI',
+  'COMMA',
+  'DOT',
+  'FIX',
+  
+  'AT',
+  'MATCH',
+  'CASE',
+  'LET',
+  'IN',
+  
+  'TYPE',
+  
+  'EQ',
+  'THARROW',
 )
 
 t_TID = r'[A-Z][a-zA-Z_]*'
@@ -27,6 +59,7 @@ t_AMP = r'&'
 t_STAR = r'\*'
 t_BAR = r'\|'
 t_ARROW = r'->'
+t_INDUC = r'induc'
 
 t_SUBTYP = r'<:'
 t_LBRACE = r'{'
@@ -41,6 +74,7 @@ t_RPAREN = r')'
 t_ID = r'[a-z][a-zA-Z_]*'
 t_SEMI = r';'
 t_COMMA = r';'
+t_DOT = r'.'
 t_FIX = r'fix'
 
 t_AT = r'@'
@@ -54,71 +88,29 @@ t_TYPE = r'type'
 t_EQ = r'='
 t_THARROW = r'=>'
 
-# def t_ID(t):
-#     r'\d+'
-#     r'[a-zA-Z_]+'
-#     t.value = int(t.value)
-#     return t
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
-# # List of token names.   This is always required
-# tokens = (
-#    'NUMBER',
-#    'PLUS',
-#    'MINUS',
-#    'TIMES',
-#    'DIVIDE',
-#    'LPAREN',
-#    'RPAREN',
-# )
+lexer = lex.lex()
 
-# # Regular expression rules for simple tokens
-# t_PLUS    = r'\+'
-# t_MINUS   = r'-'
-# t_TIMES   = r'\*'
-# t_DIVIDE  = r'/'
-# t_LPAREN  = r'\('
-# t_RPAREN  = r'\)'
+#---------------------------------------
+# Test it out
+data = '''
+    type nat_list = induc Self . 
+        (zero//unit * nil//unit) |
+        {succ//N * cons//L with N * L <: Self}
+'''
 
-# # A regular expression rule with some action code
-# def t_NUMBER(t):
-#     r'\d+'
-#     t.value = int(t.value)
-#     return t
+# Give the lexer some input
+lexer.input(data)
 
-# # Define a rule so we can track line numbers
-# def t_newline(t):
-#     r'\n+'
-#     # t.lexer.lineno += len(t.value)
-#     t.lexer.lineno += 1
-
-# # A string containing ignored characters (spaces and tabs)
-# t_ignore  = ' \t'
-
-# # Error handling rule
-# def t_error(t):
-#     print("Illegal character '%s'" % t.value[0])
-#     t.lexer.skip(1)
-
-# lexer = lex.lex()
-
-# #---------------------------------------
-# # Test it out
-# data = '''
-# 3 + 4 * 10
-#   + -20 *2
-# '''
-
-# # Give the lexer some input
-# lexer.input(data)
-
-# # Tokenize
-# while True:
-#     tok = lexer.token()
-#     if not tok:
-#         break      # No more input
-#     print(tok)
+# Tokenize
+while True:
+    tok = lexer.token()
+    if not tok:
+        break      # No more input
+    print(tok)
 
 
-# print(f'lineno: {lexer.lineno}')
-
-# # Build the lexer lexer = lex.lex()
+print(f'lineno: {lexer.lineno}')
