@@ -221,10 +221,9 @@ guide_down occurs before push (i.e. call)
 '''
 async def analyze(
     syntax : Syntax, 
-    semantics : Semantics[D, U], # handles nonterminals 
-    concrete : Any, # handles terminals 
+    semantics : Semantics[D, U],
     input : asyncio.Queue[AbstractToken], 
-    output : asyncio.Queue[D]
+    output : asyncio.Queue[Optional[D]]
 ) -> U | None:
 
     token_init = await input.get()
@@ -232,14 +231,14 @@ async def analyze(
     assert isinstance(token_init, Grammar)
     stack : list[tuple[Optional[D], Grammar, list[U]]] = [(context_init, token_init, [])]
 
-    result : U | None = None
+    result : Optional[U] = None
     while stack:
 
         (context, gram, children) = stack.pop()
 
         if result != None:
             '''
-            get the result from the child in the stack
+            return the result from the sub procedure in the stack
             '''
             children = children + [result]
             result = None
@@ -249,88 +248,37 @@ async def analyze(
         index = len(children)
         if index == len(rule.content):
             combine_method_name = f"combine_up_{gram.options}_{gram.selection}"
-            combine_args = children
-            '''
-            TODO: use reflection to call combine method 
-            '''
-            # result = combine_method_name(*combine_args)
-            pass
+            result = getattr(semantics, combine_method_name)(*children)
         else:
-            '''
-            TODO: modify to call guide_down before stack.append (i.e. push/call) 
-            '''
             item = rule.content[index]
             class ItemAnalyzer(ItemHandler):
                 async def case_Keyword(self, item : Keyword):
                     keyword_method_name = f"analyze_keyword_{gram.options}_{gram.selection}"
-                    keyword_args = [item.content] 
-                    keyword_result : U = 
+                    keyword_result : U = getattr(semantics, keyword_method_name)(item.content) 
                     stack.append((context, gram, children + [keyword_result]))
-                    pass
-                    # class LineFormatConcretizer(LineFormatHandler):
-                    #     def case_InLine(self, _): return ""
-                    #     def case_NewLine(self, _): return "\n" + ("    " * format.indent_width)
-                    #     def case_IndentLine(self, _): return "\n" + ("    " * format.indent_width)
-
-                    # prefix = ""
-                    # if index != 0 and index == len(rule.content) - 1:
-                    #     pred = rule.content[index - 1]
-                    #     if isinstance(pred, Nonterm):
-                    #         prefix = pred.format.match(LineFormatConcretizer())
-
-                    # s = (prefix + item.terminal)
-                    # stack.append((format, token, children + (s,)))
                 async def case_Terminal(self, item):
                     vocab_token = await input.get()
 
                     if isinstance(vocab_token, Vocab):
-                        terminal_method_name = f"terminate_{gram.options}_{gram.selection}_{item.relation}"
+                        terminal_method_name = f"analyze_terminal_{gram.options}_{gram.selection}_{item.relation}"
                         terminal_args = [context, children, vocab_token]
-                        '''
-                        TODO: use reflection to call terminate method
-                        '''
-                        terminal_result : U = 
+                        terminal_result : U = getattr(semantics, terminal_method_name)(*terminal_args) 
                         stack.append((context, gram, children + [terminal_result]))
-
-                    #     if vocab_token.options == "comment" and vocab_token.selection:
-                    #         comments = vocab_token.selection.split("\n")
-
-                    #         comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
-
-                    #         stack.append((format, token, children + (comment,)))
-                    #     else:
-                    #         stack.append((format, token, children + (vocab_token.selection,)))
-                    # else:
-                    #     break
+                    else:
+                        break
                 async def case_Nonterm(self, item : Nonterm):
                     child_token = await input.get()
 
                     if isinstance(child_token, Grammar):
-                        '''
-                        put back the current gram token
-                        '''
                         stack.append((context, gram, children))
-
-                        '''
-                        update context for child token
-                        '''
                         guide_method_name = f"guide_down_{gram.options}_{gram.selection}_{item.relation}"
-                        guide_args = [context, children, child_token]
-
-                        '''
-                        TODO: call guide_down method to get child context
-                        '''
-                        child_context : Optional[D] = None
-                        pass
-
-                        '''
-                        put child token on work stack
-                        '''
+                        child_context : Optional[D] = getattr(semantics, guide_method_name)(context, children, child_token) 
+                        await output.put(child_context)
                         stack.append((child_context, child_token, []))
 
                     else:
                         break
-            item.match(ItemAnalyzer())
+            await item.match(ItemAnalyzer())
 
 
 

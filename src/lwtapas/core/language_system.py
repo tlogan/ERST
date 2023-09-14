@@ -158,13 +158,5 @@ class Syntax:
             for name, rules in self.full.items()
         }
 
-class Guide(Generic[U]):
-    pass
-
-class Combiner(Generic[U]):
-    pass
-
-@dataclass
 class Semantics(Generic[D, U]): 
-    guide : Guide[D]
-    combiner : Combiner[U]
+    pass
