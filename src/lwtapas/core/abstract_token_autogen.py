@@ -35,36 +35,26 @@ class AbstractToken(ABC):
 class Grammar(AbstractToken):
     options : str
     selection : str
-    source_start : int
-    source_end : int
 
     def match(self, handler : AbstractTokenHandler[T]) -> T:
         return handler.case_Grammar(self)
 
 def make_Grammar(
     options : str, 
-    selection : str, 
-    source_start : int = 0, 
-    source_end : int = 0
+    selection : str
 ) -> AbstractToken:
     return Grammar(
         options,
-        selection,
-        source_start,
-        source_end
+        selection
     )
 
 def update_Grammar(source_Grammar : Grammar,
     options : Union[str, SourceFlag] = SourceFlag(),
-    selection : Union[str, SourceFlag] = SourceFlag(),
-    source_start : Union[int, SourceFlag] = SourceFlag(),
-    source_end : Union[int, SourceFlag] = SourceFlag()
+    selection : Union[str, SourceFlag] = SourceFlag()
 ) -> Grammar:
     return Grammar(
         source_Grammar.options if isinstance(options, SourceFlag) else options,
-        source_Grammar.selection if isinstance(selection, SourceFlag) else selection,
-        source_Grammar.source_start if isinstance(source_start, SourceFlag) else source_start,
-        source_Grammar.source_end if isinstance(source_end, SourceFlag) else source_end
+        source_Grammar.selection if isinstance(selection, SourceFlag) else selection
     )
 
         

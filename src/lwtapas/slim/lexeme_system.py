@@ -4,7 +4,15 @@
 # tokenizer for a simple expression evaluator for
 # numbers and +,-,*,/
 # ------------------------------------------------------------
+from __future__ import annotations
+from typing import Iterator, Optional, Coroutine
 import ply.lex as lex
+from ply.lex import LexToken
+
+from core.abstract_token_system import AbstractToken, Grammar
+from core.language_system import Syntax, Rule
+
+import asyncio
 
 tokens = (
   'TID',
@@ -100,7 +108,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex()
-
+##########################################################################
 '''
 testing
 '''
@@ -113,10 +121,62 @@ data = '''
 lexer.input(data)
 
 while True:
-    tok = lexer.token()
+    tok : LexToken = lexer.token()
     if not tok:
         break      # No more input
     print(tok)
 
 
 print(f'lineno: {lexer.lineno}')
+
+##########################################################################
+
+def choose(syntax : Syntax, options : str, token : LexToken) -> str:
+    raise Exception("TODO")
+
+async def parse(
+    syntax : Syntax, 
+    input : asyncio.Queue[LexToken], 
+    output : asyncio.Queue[AbstractToken]
+):
+    '''
+    TODO: construct a stack of abstract tokens
+    '''
+
+    '''
+    stack keeps track of grammatical abstract token and child index to work on 
+    '''
+    token_init = await input.get()
+    options_init = syntax.start
+    selection_init = choose(syntax, options_init, token_init)
+    gram_init = Grammar(options_init, selection_init)
+
+    '''
+    stack keeps track of grammatical abstract token and index of child being worked on 
+    '''
+    await output.put(gram_init)
+    stack : list[tuple[Grammar, int]] = [(gram_init, 0)]
+
+    backtrack_signal : bool = False
+
+
+    while stack:
+        (gram, child_index) = stack.pop()
+
+
+        if backtrack_signal:
+            '''
+            return the result from the sub procedure in the stack
+            '''
+            child_index += 1
+            backtrack_signal = False 
+
+        rule : Rule = syntax.map[gram.options][gram.selection]
+        if child_index == len(rule.content):
+            backtrack_signal = True 
+
+        else:
+            pass
+            '''
+            TODO: parse according to child index
+            '''

@@ -118,10 +118,12 @@ def is_inductive(type_name : str, rules : list[Rule]) -> bool:
 class Syntax:
     def __init__(self, 
         singles : list[Rule], 
-        choices : dict[str, list[Rule]]
+        choices : dict[str, list[Rule]],
+        start : str
     ):
         self.singles = singles
         self.choices = choices
+        self.start = start
 
 
         self.map = (
