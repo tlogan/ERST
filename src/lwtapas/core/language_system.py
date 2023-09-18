@@ -26,13 +26,13 @@ def to_dictionary(node: Rule):
             return {
                 'kind' : 'terminal_var',
                 'relation' : o.relation,
-                'vocab' : o.vocab
+                'vocab_key' : o.vocab_key
             }
         def case_Nonterm(self, o): 
             return {
                 'kind' : 'grammar',
                 'relation' : o.relation,
-                'tag' : o.tag,
+                'grammar_key' : o.grammar_key,
                 'format' : line_format_system.to_string(o.format),
             }
 
@@ -63,7 +63,7 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
         def case_Nonterm(self, o):
             return construction_system.Field(
                 attr = o.relation, 
-                typ = f'{o.tag} | None', 
+                typ = f'{o.grammar_key} | None', 
                 default = ""
             )
 
@@ -89,9 +89,9 @@ def get_abstract_items(rule : Rule):
 def type_from_item(item : Item, prefix : str = ""):
     if isinstance(item, Nonterm):
         if prefix:
-            return f"{prefix}.{item.tag}"
+            return f"{prefix}.{item.grammar_key}"
         else:
-            return item.tag
+            return item.grammar_key
 
     elif isinstance(item, Terminal):
         return "str" 
@@ -117,9 +117,9 @@ def is_inductive(type_name : str, rules : list[Rule]) -> bool:
 
 class Syntax:
     def __init__(self, 
+        start : str,
         singles : list[Rule], 
-        choices : dict[str, list[Rule]],
-        start : str
+        choices : dict[str, Choice],
     ):
         self.singles = singles
         self.choices = choices
@@ -133,9 +133,12 @@ class Syntax:
             } | {
                 key : {
                     r.name : r
-                    for r in rules 
+                    for r in choice.dis_rules.values() 
+                } | {
+                    r.name : r
+                    for r in [choice.fall_rule]
                 }
-                for key, rules in self.choices.items()
+                for key, choice in self.choices.items()
             }
         )
 
@@ -145,15 +148,18 @@ class Syntax:
                 for r in self.singles
             } | {
                 r.name : r 
-                for rs in self.choices.values()
-                for r in rs 
+                for choice in self.choices.values()
+                for r in (list(choice.dis_rules.values()) + [choice.fall_rule]) 
             }
         )
 
         self.full = {
             rule.name : [rule]
             for rule in self.singles 
-        } | self.choices
+        } | {
+            key :  (list(choice.dis_rules.values()) + [choice.fall_rule])
+            for key, choice in self.choices.items() 
+        }
 
         self.portable = {
             name : [to_dictionary(rule) for rule in rules]

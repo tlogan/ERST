@@ -13,6 +13,11 @@ from core import language_system
 
 import asyncio
 
+import ply.lex as lex
+from ply.lex import LexToken
+
+from lwtapas.core.rule_autogen import Keyword, Nonterm, Terminal
+
 
 T = TypeVar('T')
 D = TypeVar('D')
@@ -122,6 +127,9 @@ def dump(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...],
     return '\n'.join(result_strs)
 
 
+'''
+TODO: update to leverage key in choice's dis_rules
+'''
 def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
 
     @dataclass
@@ -288,6 +296,79 @@ async def analyze(
     return result 
 '''
 end analyze 
+'''
+
+
+##########################################################################
+
+'''TODO: implement using choice from syntax '''
+def choose(syntax : Syntax, options : str, token : LexToken) -> str:
+    raise Exception("TODO")
+
+async def parse(
+    syntax : Syntax, 
+    input : asyncio.Queue[LexToken], 
+    output : asyncio.Queue[AbstractToken]
+):
+    '''
+    stack keeps track of grammatical abstract token and child index to work on 
+    '''
+    lex_token_init = await input.get()
+    selection_init = choose(syntax, syntax.start, lex_token_init)
+    gram_init = Grammar(syntax.start, selection_init)
+
+    '''
+    stack keeps track of grammatical abstract token and index of child being worked on 
+    '''
+    await output.put(gram_init)
+    stack : list[tuple[Grammar, int]] = [(gram_init, 0)]
+
+    backtrack_signal : bool = False
+
+
+    while stack:
+        (gram, child_index) = stack.pop()
+
+
+        if backtrack_signal:
+            '''
+            return the result from the sub procedure in the stack
+            '''
+            child_index += 1
+            backtrack_signal = False 
+
+        rule : Rule = syntax.map[gram.options][gram.selection]
+        if child_index == len(rule.content):
+            backtrack_signal = True 
+
+        else:
+
+            lex_token : Any = await input.get()
+            item = rule.content[child_index]
+            class ItemParser(ItemHandler):
+                async def case_Keyword(self, o: Keyword) -> Any:
+                    assert lex_token.type == o.content
+                    stack.append((gram, child_index + 1))
+
+                async def case_Terminal(self, o: Terminal) -> Any:
+                    assert lex_token.type == o.vocab_key
+                    pass
+                    vocab = Vocab(o.vocab_key, lex_token.value)
+                    await output.put(vocab)
+                    stack.append((gram, child_index + 1))
+
+                async def case_Nonterm(self, o: Nonterm) -> Any:
+                    stack.append((gram, child_index))
+                    selection = choose(syntax, o.grammar_key, lex_token_init)
+                    child_gram = Grammar(o.grammar_key, selection)
+                    await output.put(child_gram)
+                    stack.append((child_gram, 0))
+
+
+            await item.match(ItemParser())
+        
+'''
+end parse 
 '''
 
 # def concretize_old(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...]) -> str:
