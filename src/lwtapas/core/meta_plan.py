@@ -28,14 +28,15 @@ construction = Construction(
             Constructor(
                 "Terminal", [], [
                     Field('relation', 'str', ""),
-                    Field('vocab_key', 'str', ""),
+                    Field('key', 'str', ""),
+                    Field('regex', 'str', "")
                 ]
             ),
 
             Constructor(
                 "Nonterm", [], [
                     Field('relation', 'str', ""),
-                    Field('grammar_key', 'str', ""),
+                    Field('key', 'str', ""),
                     Field('format', 'LineFormat', ""),
                 ]
             ),

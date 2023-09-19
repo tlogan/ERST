@@ -59,27 +59,32 @@ def update_Keyword(source_Keyword : Keyword,
 @dataclass(frozen=True, eq=True)
 class Terminal(Item):
     relation : str
-    vocab_key : str
+    key : str
+    regex : str
 
     def match(self, handler : ItemHandler[T]) -> T:
         return handler.case_Terminal(self)
 
 def make_Terminal(
     relation : str, 
-    vocab_key : str
+    key : str, 
+    regex : str
 ) -> Item:
     return Terminal(
         relation,
-        vocab_key
+        key,
+        regex
     )
 
 def update_Terminal(source_Terminal : Terminal,
     relation : Union[str, SourceFlag] = SourceFlag(),
-    vocab_key : Union[str, SourceFlag] = SourceFlag()
+    key : Union[str, SourceFlag] = SourceFlag(),
+    regex : Union[str, SourceFlag] = SourceFlag()
 ) -> Terminal:
     return Terminal(
         source_Terminal.relation if isinstance(relation, SourceFlag) else relation,
-        source_Terminal.vocab_key if isinstance(vocab_key, SourceFlag) else vocab_key
+        source_Terminal.key if isinstance(key, SourceFlag) else key,
+        source_Terminal.regex if isinstance(regex, SourceFlag) else regex
     )
 
         
@@ -87,7 +92,7 @@ def update_Terminal(source_Terminal : Terminal,
 @dataclass(frozen=True, eq=True)
 class Nonterm(Item):
     relation : str
-    grammar_key : str
+    key : str
     format : LineFormat
 
     def match(self, handler : ItemHandler[T]) -> T:
@@ -95,23 +100,23 @@ class Nonterm(Item):
 
 def make_Nonterm(
     relation : str, 
-    grammar_key : str, 
+    key : str, 
     format : LineFormat
 ) -> Item:
     return Nonterm(
         relation,
-        grammar_key,
+        key,
         format
     )
 
 def update_Nonterm(source_Nonterm : Nonterm,
     relation : Union[str, SourceFlag] = SourceFlag(),
-    grammar_key : Union[str, SourceFlag] = SourceFlag(),
+    key : Union[str, SourceFlag] = SourceFlag(),
     format : Union[LineFormat, SourceFlag] = SourceFlag()
 ) -> Nonterm:
     return Nonterm(
         source_Nonterm.relation if isinstance(relation, SourceFlag) else relation,
-        source_Nonterm.grammar_key if isinstance(grammar_key, SourceFlag) else grammar_key,
+        source_Nonterm.key if isinstance(key, SourceFlag) else key,
         source_Nonterm.format if isinstance(format, SourceFlag) else format
     )
 

@@ -15,7 +15,7 @@ from core.language_system import Syntax, Rule
 import asyncio
 
 tokens = (
-  'TID',
+  'tid',
   'UNIT',
   'TOP',
   'BOT',
@@ -55,7 +55,7 @@ tokens = (
   'THARROW',
 )
 
-t_TID = r'[A-Z][a-zA-Z_]*'
+t_tid = r'[A-Z][a-zA-Z_]*'
 t_UNIT = r'unit'
 t_TOP = r'top'
 t_BOT = r'bot'

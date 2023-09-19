@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from abc import ABC, abstractmethod
 
-from core.rule_autogen import *
+from core.meta_autogen import *
 from core import construction_system, line_format_system
 
 T = TypeVar('T')
@@ -26,13 +26,13 @@ def to_dictionary(node: Rule):
             return {
                 'kind' : 'terminal_var',
                 'relation' : o.relation,
-                'vocab_key' : o.vocab_key
+                'vocab_key' : o.key
             }
         def case_Nonterm(self, o): 
             return {
                 'kind' : 'grammar',
                 'relation' : o.relation,
-                'grammar_key' : o.grammar_key,
+                'grammar_key' : o.key,
                 'format' : line_format_system.to_string(o.format),
             }
 
@@ -63,7 +63,7 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
         def case_Nonterm(self, o):
             return construction_system.Field(
                 attr = o.relation, 
-                typ = f'{o.grammar_key} | None', 
+                typ = f'{o.key} | None', 
                 default = ""
             )
 
@@ -89,9 +89,9 @@ def get_abstract_items(rule : Rule):
 def type_from_item(item : Item, prefix : str = ""):
     if isinstance(item, Nonterm):
         if prefix:
-            return f"{prefix}.{item.grammar_key}"
+            return f"{prefix}.{item.key}"
         else:
-            return item.grammar_key
+            return item.key
 
     elif isinstance(item, Terminal):
         return "str" 
@@ -126,7 +126,7 @@ class Syntax:
         self.start = start
 
 
-        self.map = (
+        self.rule_map = (
             {
                 r.name : {r.name : r} 
                 for r in self.singles
@@ -142,29 +142,12 @@ class Syntax:
             }
         )
 
-        self.rules =  (
+        self.total : dict [str, Choice] = (
             {
-                r.name : r 
+                r.name : Choice({}, r)
                 for r in self.singles
-            } | {
-                r.name : r 
-                for choice in self.choices.values()
-                for r in (list(choice.dis_rules.values()) + [choice.fall_rule]) 
-            }
+            } | self.choices
         )
-
-        self.full = {
-            rule.name : [rule]
-            for rule in self.singles 
-        } | {
-            key :  (list(choice.dis_rules.values()) + [choice.fall_rule])
-            for key, choice in self.choices.items() 
-        }
-
-        self.portable = {
-            name : [to_dictionary(rule) for rule in rules]
-            for name, rules in self.full.items()
-        }
 
 class Semantics(Generic[D, U]): 
     pass

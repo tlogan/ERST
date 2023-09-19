@@ -33,27 +33,27 @@ class AbstractToken(ABC):
 
 @dataclass(frozen=True, eq=True)
 class Grammar(AbstractToken):
-    options : str
+    key : str
     selection : str
 
     def match(self, handler : AbstractTokenHandler[T]) -> T:
         return handler.case_Grammar(self)
 
 def make_Grammar(
-    options : str, 
+    key : str, 
     selection : str
 ) -> AbstractToken:
     return Grammar(
-        options,
+        key,
         selection
     )
 
 def update_Grammar(source_Grammar : Grammar,
-    options : Union[str, SourceFlag] = SourceFlag(),
+    key : Union[str, SourceFlag] = SourceFlag(),
     selection : Union[str, SourceFlag] = SourceFlag()
 ) -> Grammar:
     return Grammar(
-        source_Grammar.options if isinstance(options, SourceFlag) else options,
+        source_Grammar.key if isinstance(key, SourceFlag) else key,
         source_Grammar.selection if isinstance(selection, SourceFlag) else selection
     )
 
@@ -61,27 +61,27 @@ def update_Grammar(source_Grammar : Grammar,
 
 @dataclass(frozen=True, eq=True)
 class Vocab(AbstractToken):
-    options : str
+    key : str
     selection : str
 
     def match(self, handler : AbstractTokenHandler[T]) -> T:
         return handler.case_Vocab(self)
 
 def make_Vocab(
-    options : str, 
+    key : str, 
     selection : str
 ) -> AbstractToken:
     return Vocab(
-        options,
+        key,
         selection
     )
 
 def update_Vocab(source_Vocab : Vocab,
-    options : Union[str, SourceFlag] = SourceFlag(),
+    key : Union[str, SourceFlag] = SourceFlag(),
     selection : Union[str, SourceFlag] = SourceFlag()
 ) -> Vocab:
     return Vocab(
-        source_Vocab.options if isinstance(options, SourceFlag) else options,
+        source_Vocab.key if isinstance(key, SourceFlag) else key,
         source_Vocab.selection if isinstance(selection, SourceFlag) else selection
     )
 

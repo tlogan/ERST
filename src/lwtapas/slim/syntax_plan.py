@@ -14,7 +14,7 @@ content = Syntax(
         "Typ" : Choice(
             {
                 "dis_key" : Rule("Var", [ 
-                    Terminal("name", "identifier"), 
+                    Terminal("name", "identifier", r'*'), 
                 ])
             },
             Rule("Exis", [

@@ -4,7 +4,7 @@ from typing import Iterator, Optional, Coroutine
 from core.abstract_token_autogen import *
 
 from core.line_format_system import LineFormat, LineFormatHandler, is_inline, next_indent_width
-from core.language_system import Rule, Item, ItemHandler, Keyword, Terminal, Nonterm, Syntax, Semantics
+from core.language_system import Choice, Rule, Item, ItemHandler, Keyword, Terminal, Nonterm, Syntax, Semantics
 
 from dataclasses import dataclass
 from core.abstract_token_autogen import Grammar, Vocab
@@ -15,8 +15,6 @@ import asyncio
 
 import ply.lex as lex
 from ply.lex import LexToken
-
-from lwtapas.core.rule_autogen import Keyword, Nonterm, Terminal
 
 
 T = TypeVar('T')
@@ -39,17 +37,17 @@ def raise_exception(e):
 def to_primitive(inst : AbstractToken) -> list[str]:
     class Handler(AbstractTokenHandler):
         def case_Grammar(self, o):
-            return ["P", "grammar", o.options, o.selection]
+            return ["P", "grammar", o.key, o.selection]
 
         def case_Vocab(self, o): 
-            return ["P", "vocab", o.options, o.selection]
+            return ["P", "vocab", o.key, o.selection]
 
     return inst.match(Handler())
 
 def to_string(token : AbstractToken) -> str:
     class Handler(AbstractTokenHandler):
-        def case_Grammar(self, g): return f"grammar: {g.selection} <{g.options}>"
-        def case_Vocab(self, v): return f"vocab: {v.selection} <{v.options}>"
+        def case_Grammar(self, g): return f"grammar: {g.selection} <{g.key}>"
+        def case_Vocab(self, v): return f"vocab: {v.selection} <{v.key}>"
     return token.match(Handler())
 
 
@@ -67,7 +65,7 @@ def dump(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...],
                 indent_str = (' ' * format.depth * indent)
                 relation_str = (' = .' + format.relation if (isinstance(format.relation, str)) else '')
                 return (
-                    indent_str + o.selection + (' (' + o.options  + ')' if o.options != o.selection else '') +
+                    indent_str + o.selection + (' (' + o.key  + ')' if o.key != o.selection else '') +
                     relation_str
                 )
 
@@ -75,7 +73,7 @@ def dump(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken, ...],
                 indent_str = (' ' * format.depth * indent)
                 relation_str = (' = .' + format.relation if (isinstance(format.relation, str)) else '')
                 return (
-                    indent_str + o.selection + ' (' + o.options  + ')' +
+                    indent_str + o.selection + ' (' + o.key  + ')' +
                     relation_str
                 )
 
@@ -178,7 +176,7 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
                 def case_Terminal(self, item):
                     vocab_token = next(token_iter, None)
                     if isinstance(vocab_token, Vocab):
-                        if vocab_token.options == "comment" and vocab_token.selection:
+                        if vocab_token.key == "comment" and vocab_token.selection:
                             comments = vocab_token.selection.split("\n")
 
                             comment = ('' if index == 0 else ' ') + ("\n" + ("    " * format.indent_width)).join([c for c in comments if c]) + "\n"
@@ -187,7 +185,8 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
                         else:
                             stack.append((format, token, children + (vocab_token.selection,)))
                     else:
-                        break
+                        # break
+                        pass
                 def case_Nonterm(self, item):
                     child_token = next(token_iter, None)
 
@@ -196,7 +195,8 @@ def concretize(rule_map : dict[str, Rule], AbstractTokens : tuple[AbstractToken,
                     if isinstance(child_token, Grammar):
                         stack.append((child_format, child_token, ()))
                     else:
-                        break
+                        # break
+                        pass
             item.match(ItemConcretizer())
 
     '''
@@ -252,40 +252,42 @@ async def analyze(
             result = None
 
 
-        rule : Rule = syntax.map[gram.options][gram.selection]
+        rule : Rule = syntax.rule_map[gram.key][gram.selection]
         index = len(children)
         if index == len(rule.content):
-            combine_method_name = f"combine_up_{gram.options}_{gram.selection}"
+            combine_method_name = f"combine_up_{gram.key}_{gram.selection}"
             result = getattr(semantics, combine_method_name)(*children)
         else:
             item = rule.content[index]
             class ItemAnalyzer(ItemHandler):
                 async def case_Keyword(self, item : Keyword):
-                    keyword_method_name = f"analyze_keyword_{gram.options}_{gram.selection}"
+                    keyword_method_name = f"analyze_keyword_{gram.key}_{gram.selection}"
                     keyword_result : U = getattr(semantics, keyword_method_name)(item.content) 
                     stack.append((context, gram, children + [keyword_result]))
                 async def case_Terminal(self, item):
                     vocab_token = await input.get()
 
                     if isinstance(vocab_token, Vocab):
-                        terminal_method_name = f"analyze_terminal_{gram.options}_{gram.selection}_{item.relation}"
+                        terminal_method_name = f"analyze_terminal_{gram.key}_{gram.selection}_{item.relation}"
                         terminal_args = [context, children, vocab_token]
                         terminal_result : U = getattr(semantics, terminal_method_name)(*terminal_args) 
                         stack.append((context, gram, children + [terminal_result]))
                     else:
-                        break
+                        # break
+                        pass
                 async def case_Nonterm(self, item : Nonterm):
                     child_token = await input.get()
 
                     if isinstance(child_token, Grammar):
                         stack.append((context, gram, children))
-                        guide_method_name = f"guide_down_{gram.options}_{gram.selection}_{item.relation}"
+                        guide_method_name = f"guide_down_{gram.key}_{gram.selection}_{item.relation}"
                         child_context : Optional[D] = getattr(semantics, guide_method_name)(context, children, child_token) 
                         await output.put(child_context)
                         stack.append((child_context, child_token, []))
 
                     else:
-                        break
+                        # break
+                        pass
             await item.match(ItemAnalyzer())
 
 
@@ -301,9 +303,12 @@ end analyze
 
 ##########################################################################
 
-'''TODO: implement using choice from syntax '''
-def choose(syntax : Syntax, options : str, token : LexToken) -> str:
-    raise Exception("TODO")
+def choose(choice : Choice, lex_token) -> Rule:
+    selection = choice.dis_rules[lex_token.type]
+    if selection:
+        return selection 
+    else:
+       return choice.fall_rule 
 
 async def parse(
     syntax : Syntax, 
@@ -314,8 +319,9 @@ async def parse(
     stack keeps track of grammatical abstract token and child index to work on 
     '''
     lex_token_init = await input.get()
-    selection_init = choose(syntax, syntax.start, lex_token_init)
-    gram_init = Grammar(syntax.start, selection_init)
+    choice = syntax.total[syntax.start]
+    rule = choose(choice, lex_token_init)
+    gram_init = Grammar(syntax.start, rule.name)
 
     '''
     stack keeps track of grammatical abstract token and index of child being worked on 
@@ -337,7 +343,7 @@ async def parse(
             child_index += 1
             backtrack_signal = False 
 
-        rule : Rule = syntax.map[gram.options][gram.selection]
+        rule : Rule = syntax.rule_map[gram.key][gram.selection]
         if child_index == len(rule.content):
             backtrack_signal = True 
 
@@ -351,16 +357,17 @@ async def parse(
                     stack.append((gram, child_index + 1))
 
                 async def case_Terminal(self, o: Terminal) -> Any:
-                    assert lex_token.type == o.vocab_key
+                    assert lex_token.type == o.key
                     pass
-                    vocab = Vocab(o.vocab_key, lex_token.value)
+                    vocab = Vocab(o.key, lex_token.value)
                     await output.put(vocab)
                     stack.append((gram, child_index + 1))
 
                 async def case_Nonterm(self, o: Nonterm) -> Any:
                     stack.append((gram, child_index))
-                    selection = choose(syntax, o.grammar_key, lex_token_init)
-                    child_gram = Grammar(o.grammar_key, selection)
+                    choice = syntax.total[o.key]
+                    selection = choose(choice, lex_token_init)
+                    child_gram = Grammar(o.key, selection.name)
                     await output.put(child_gram)
                     stack.append((child_gram, 0))
 

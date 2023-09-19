@@ -1,10 +1,11 @@
 # Lightweight Tapas
 
 ## TODO
-- use lexer library (PLY) and define lexing rules 
-- write recursive descent streaming parser 
-- write base class for schema definitions
-- use nameless indexing lazily (just for equality modulo alpha renaming)
+- write autogeneration of lexer from syntax_plan? 
+- write autogeneration ast from syntax_plan 
+- write autogeneration of Analyzer base class from syntax_plan 
+- extend analysis base class for schema definitions
+- use renaming lazily (just for equality modulo alpha renaming)
 
 ## Story
 

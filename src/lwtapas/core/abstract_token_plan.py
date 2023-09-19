@@ -8,13 +8,13 @@ construction = Construction(
         "AbstractToken" : [
             Constructor(
                 "Grammar", [], [
-                    Field('options', 'str', ""),
+                    Field('key', 'str', ""),
                     Field('selection', 'str', ""),
                 ]
             ),
             Constructor(
                 "Vocab", [], [
-                    Field('options', 'str', ""),
+                    Field('key', 'str', ""),
                     Field('selection', 'str', "")
                 ]
             )
