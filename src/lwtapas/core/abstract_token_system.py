@@ -320,20 +320,20 @@ async def parse(
     '''
     lex_token_init = await input.get()
     choice = syntax.total[syntax.start]
-    rule = choose(choice, lex_token_init)
-    gram_init = Grammar(syntax.start, rule.name)
+    rule_init = choose(choice, lex_token_init)
+    gram_init = Grammar(syntax.start, rule_init.name)
 
     '''
     stack keeps track of grammatical abstract token and index of child being worked on 
     '''
     await output.put(gram_init)
-    stack : list[tuple[Grammar, int]] = [(gram_init, 0)]
+    stack : list[tuple[Rule, int]] = [(rule_init, 0)]
 
     backtrack_signal : bool = False
 
 
     while stack:
-        (gram, child_index) = stack.pop()
+        (rule, child_index) = stack.pop()
 
 
         if backtrack_signal:
@@ -343,7 +343,6 @@ async def parse(
             child_index += 1
             backtrack_signal = False 
 
-        rule : Rule = syntax.rule_map[gram.key][gram.selection]
         if child_index == len(rule.content):
             backtrack_signal = True 
 
@@ -354,22 +353,22 @@ async def parse(
             class ItemParser(ItemHandler):
                 async def case_Keyword(self, o: Keyword) -> Any:
                     assert lex_token.type == o.content
-                    stack.append((gram, child_index + 1))
+                    stack.append((rule, child_index + 1))
 
                 async def case_Terminal(self, o: Terminal) -> Any:
                     assert lex_token.type == o.key
                     pass
                     vocab = Vocab(o.key, lex_token.value)
                     await output.put(vocab)
-                    stack.append((gram, child_index + 1))
+                    stack.append((rule, child_index + 1))
 
                 async def case_Nonterm(self, o: Nonterm) -> Any:
-                    stack.append((gram, child_index))
+                    stack.append((rule, child_index))
                     choice = syntax.total[o.key]
-                    selection = choose(choice, lex_token_init)
-                    child_gram = Grammar(o.key, selection.name)
+                    child_rule = choose(choice, lex_token_init)
+                    child_gram = Grammar(o.key, child_rule.name)
                     await output.put(child_gram)
-                    stack.append((child_gram, 0))
+                    stack.append((child_rule, 0))
 
 
             await item.match(ItemParser())
