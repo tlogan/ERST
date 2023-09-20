@@ -5,14 +5,8 @@
 # numbers and +,-,*,/
 # ------------------------------------------------------------
 from __future__ import annotations
-from typing import Iterator, Optional, Coroutine
 import ply.lex as lex
 from ply.lex import LexToken
-
-from core.abstract_token_system import AbstractToken, Grammar
-from core.language_system import Syntax, Rule
-
-import asyncio
 
 tokens = (
   'tid',

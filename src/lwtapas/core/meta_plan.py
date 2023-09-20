@@ -3,6 +3,9 @@ from __future__ import annotations
 from core.construction_system import Construction, Constructor, Field
 
 construction = Construction(
+    '''
+from core.line_format_autogen import LineFormat 
+    ''',
     [
         Constructor(
             "Choice", [], [

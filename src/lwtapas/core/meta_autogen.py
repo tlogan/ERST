@@ -21,7 +21,7 @@ class SourceFlag:
 
 
 from core.line_format_autogen import LineFormat 
-        
+    
 
 
 # type Item

@@ -142,12 +142,108 @@ class Syntax:
             }
         )
 
-        self.total : dict [str, Choice] = (
+        self.total : dict[str, Choice] = (
             {
                 r.name : Choice({}, r)
                 for r in self.singles
             } | self.choices
         )
 
+        self.discrim_tokens : list[str] = (
+            [
+                discrim_token
+                for choice in self.total.values()
+                for discrim_token in choice.dis_rules.keys() 
+            ]
+        )
+
+
+        self.keyword_tokens : list[str] = (
+            [
+                item.content
+                for inner_map in self.rule_map.values()
+                for rule in inner_map.values()
+                for item in rule.content
+                if isinstance(item, Keyword)
+            ]
+        )
+
+        self.terminal_token_regex : dict[str,str] = (
+            {
+                item.key : item.regex
+                for inner_map in self.rule_map.values()
+                for rule in inner_map.values()
+                for item in rule.content
+                if isinstance(item, Terminal)
+            }
+        )
+
+        self.lex_tokens : list[str] = (
+            self.discrim_tokens + 
+            self.keyword_tokens +
+            list(self.terminal_token_regex.keys())
+        )
+
+        self.lex_rules : list[tuple[str, str]] = (
+            [
+                (t, t)
+                for t in self.discrim_tokens
+            ] +
+            [
+                (t, t)
+                for t in self.keyword_tokens
+            ] +
+            [
+                (k, v)
+                for k, v in self.terminal_token_regex.items()
+            ]
+        )
+
 class Semantics(Generic[D, U]): 
     pass
+
+def generate_lexeme_code(syntax : Syntax) -> str:
+
+    nl = "\n"
+
+    header = '''
+import ply.lex as lex
+    '''
+
+    code_tokens = f'''
+tokens = (
+{("," + nl).join(
+    "    " + "r'" + token + "'" 
+    for token in syntax.lex_tokens
+)}
+)
+    '''
+
+    code_rules = f'''
+{nl.join(
+    "t_" + key + " = " +  "r'" + regex + "'"
+    for (key, regex) in syntax.lex_rules
+)}
+    '''
+
+    backslash = "\\"
+
+    return f"""
+{header}
+{code_tokens}
+{code_rules}
+
+def t_newline(t):
+    {"r'" + backslash + "n+" + "'"}
+    t.lexer.lineno += len(t.value)
+
+# A string containing ignored characters (spaces and tabs)
+t_ignore  = '{" " + backslash + "t"}'
+
+# Error handling rule
+def t_error(t):
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
+
+lexer = lex.lex()
+    """
