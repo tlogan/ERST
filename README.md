@@ -1,9 +1,7 @@
 # Lightweight Tapas
 
 ## TODO
-- write autogeneration of lexer from syntax_plan? 
-- write autogeneration ast from syntax_plan 
-- write autogeneration of Analyzer base class from syntax_plan 
+- write autogeneration of Semantics base class from syntax_plan 
 - extend analysis base class for schema definitions
 - use renaming lazily (just for equality modulo alpha renaming)
 

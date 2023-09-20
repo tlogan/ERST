@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from core.util_system import write_code
-from core import construction_system, abstract_token_plan, line_format_plan, meta_plan, language_system 
+from core import \
+    language_system, construction_system, abstract_token_plan, \
+    line_format_plan, meta_plan, language_system 
+
 import slim.syntax_plan
 
 
@@ -26,4 +29,10 @@ slim generation
 '''
 write_code('slim', "lexeme", 
     language_system.generate_lexeme_code(slim.syntax_plan.content)
+)
+
+write_code('slim', "syntax", 
+    construction_system.generate(language_system.to_construction(
+        slim.syntax_plan.content
+    ))
 )

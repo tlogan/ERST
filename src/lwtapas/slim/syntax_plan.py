@@ -8,6 +8,7 @@ from core.language_system import Syntax
 TODO: update syntax to use choice with leftward discrimination between rules
 '''
 content = Syntax(
+    '''''',
     "Expr",
     [],
     {

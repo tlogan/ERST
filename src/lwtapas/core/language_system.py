@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod
 
 from core.meta_autogen import *
 from core import construction_system, line_format_system
+from core.construction_system import Construction, Constructor, Field
+from core.meta_autogen import Keyword, Nonterm, Terminal
 
 T = TypeVar('T')
 D = TypeVar('D')
@@ -117,10 +119,12 @@ def is_inductive(type_name : str, rules : list[Rule]) -> bool:
 
 class Syntax:
     def __init__(self, 
+        header : str,
         start : str,
         singles : list[Rule], 
         choices : dict[str, Choice],
     ):
+        self.header = header
         self.singles = singles
         self.choices = choices
         self.start = start
@@ -247,3 +251,71 @@ def t_error(t):
 
 lexer = lex.lex()
     """
+
+def to_construction(syntax : Syntax) -> Construction:
+
+    class ItemToField(ItemHandler):
+        def case_Keyword(self, o: Keyword) -> Field:
+            raise Exception("fail")
+
+        def case_Nonterm(self, o: Nonterm) -> Field:
+            return Field(o.relation, o.key, '')
+
+        def case_Terminal(self, o: Terminal) -> Field:
+            return Field(o.relation, 'str', '')
+
+    def from_rule_to_constructor(rule : Rule) -> Constructor:
+        return Constructor(rule.name, [], [
+            item.match(ItemToField())
+            for item in rule.content
+            if not isinstance(item, Keyword)
+        ]) 
+
+    singles = [
+        from_rule_to_constructor(rule)
+        for rule in syntax.singles
+    ]
+
+    choices = {
+        k : [
+            from_rule_to_constructor(rule)
+            for rule in choice.dis_rules.values()
+        ] + [from_rule_to_constructor(choice.fall_rule)]
+        for k, choice in syntax.choices.items()
+    }
+    return Construction(syntax.header, singles, choices)
+
+def generate_semantics_base_code(syntax : Syntax) -> str:
+    '''
+    TODO
+    '''
+
+    nl = "\n"
+
+    method_codes = [
+        method_code
+        for key, inner_map in syntax.rule_map.items()
+        for tag, rule in inner_map.items()
+        for method_code in [
+            make_combine_up_method(key, tag, rule)
+        ] + [
+            make_guide_down_method(key, tag, rule, item)
+            for item in rule.content
+            if isinstance(item, Nonterm)
+        ] + [
+            make_analyze_terminal_method(key, tag, rule, item)
+            for item in rule.content
+            if isinstance(item, Terminal)
+        ] + [
+            make_analyze_keyword_method(key, tag, rule, item)
+            for item in rule.content
+            if isinstance(item, Keyword)
+        ]
+    ]
+
+    return f'''
+from core import language_system
+class SemanticsBase(language_system.Semantics[D,U]):
+{nl.join(method_codes)}
+    '''
+
