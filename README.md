@@ -1,7 +1,6 @@
 # Lightweight Tapas
 
 ## TODO
-- write autogeneration of Semantics base class from syntax_plan 
 - extend analysis base class for schema definitions
 - use renaming lazily (just for equality modulo alpha renaming)
 

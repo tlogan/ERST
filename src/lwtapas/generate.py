@@ -36,3 +36,9 @@ write_code('slim', "syntax",
         slim.syntax_plan.content
     ))
 )
+
+write_code('slim', "semantics_base", 
+    language_system.generate_semantics_base_code(
+        slim.syntax_plan.content
+    )
+)

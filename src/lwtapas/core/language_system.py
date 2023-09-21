@@ -11,6 +11,8 @@ from core import construction_system, line_format_system
 from core.construction_system import Construction, Constructor, Field
 from core.meta_autogen import Keyword, Nonterm, Terminal
 
+import itertools
+
 T = TypeVar('T')
 D = TypeVar('D')
 U = TypeVar('U')
@@ -285,6 +287,16 @@ def to_construction(syntax : Syntax) -> Construction:
     }
     return Construction(syntax.header, singles, choices)
 
+class ItemToRelation(ItemHandler):
+    def case_Keyword(self, item: Keyword) -> str:
+        raise Exception("superfluous")
+
+    def case_Nonterm(self, item: Nonterm) -> str:
+        return item.relation
+
+    def case_Terminal(self, item: Terminal) -> str:
+        return item.relation 
+
 def generate_semantics_base_code(syntax : Syntax) -> str:
     '''
     TODO
@@ -292,29 +304,93 @@ def generate_semantics_base_code(syntax : Syntax) -> str:
 
     nl = "\n"
 
+    def extract_left_siblings(rule : Rule, relation : str): 
+
+        abstract_items = [
+            item
+            for item in rule.content
+            if not isinstance(item, Keyword)
+        ] 
+
+        def condition(item : Item) -> bool:
+            class ItemToBool(ItemHandler):
+                def case_Keyword(self, item: Keyword) -> bool:
+                    raise Exception("superfluous")
+
+                def case_Nonterm(self, item: Nonterm) -> bool:
+                    return item.relation != relation 
+
+                def case_Terminal(self, item: Terminal) -> bool:
+                    return item.relation != relation 
+            return item.match(ItemToBool())
+
+
+        return [item.match(ItemToRelation()) for item in (itertools.takewhile(condition, abstract_items))]
+
+    def make_combine_up_method(key : str, rule : Rule) -> str:
+
+        params = "self, " + ", ".join([
+            item.match(ItemToRelation()) + " : U"
+            for item in rule.content
+            if not isinstance(item, Keyword)
+        ])
+
+
+        return f'''
+    def combine_up_{key}_{rule.name}_({params}) -> Optional[D]:
+        raise Exception("not yet implemented") 
+        ''' 
+
+    def make_item_method(key : str, rule : Rule, item : Item) -> str:
+
+
+        class ItemToMethod(ItemHandler):
+            def case_Keyword(self, item: Keyword) -> str:
+                raise Exception("superfluous")
+
+            def case_Nonterm(self, item: Nonterm) -> str:
+                left_siblings = extract_left_siblings(rule, item.relation)
+                params = "self, context : D, " + "".join([(ls + " : U, ") for ls in left_siblings]) + "gram : Grammar"
+
+                return f'''
+    def guide_down_{key}_{rule.name}_{item.relation}({params}) -> Optional[D]:
+        raise Exception("not yet implemented") 
+                ''' 
+
+            def case_Terminal(self, item: Terminal) -> str:
+                left_siblings = extract_left_siblings(rule, item.relation)
+                params = "self, context : D, " + "".join([(ls + " : U, ") for ls in left_siblings]) + "vocab : Vocab"
+                return f'''
+    def analyze_terminal_{key}_{rule.name}_{item.relation}({params}) -> U:
+        raise Exception("not yet implemented") 
+                ''' 
+
+        return item.match(ItemToMethod())
+
     method_codes = [
         method_code
         for key, inner_map in syntax.rule_map.items()
-        for tag, rule in inner_map.items()
+        for _, rule in inner_map.items()
         for method_code in [
-            make_combine_up_method(key, tag, rule)
+            make_combine_up_method(key, rule)
         ] + [
-            make_guide_down_method(key, tag, rule, item)
+            make_item_method(key, rule, item)
             for item in rule.content
-            if isinstance(item, Nonterm)
-        ] + [
-            make_analyze_terminal_method(key, tag, rule, item)
-            for item in rule.content
-            if isinstance(item, Terminal)
-        ] + [
-            make_analyze_keyword_method(key, tag, rule, item)
-            for item in rule.content
-            if isinstance(item, Keyword)
+            if not isinstance(item, Keyword)
         ]
     ]
 
     return f'''
 from core import language_system
+from typing import TypeVar, Optional
+from core.abstract_token_system import Grammar, Vocab
+
+D = TypeVar('D')
+U = TypeVar('U')
+
+
+
+
 class SemanticsBase(language_system.Semantics[D,U]):
 {nl.join(method_codes)}
     '''

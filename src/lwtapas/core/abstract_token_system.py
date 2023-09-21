@@ -254,23 +254,25 @@ async def analyze(
 
         rule : Rule = syntax.rule_map[gram.key][gram.selection]
         index = len(children)
-        if index == len(rule.content):
+        abstract_items = [
+            item 
+            for item in rule.content
+            if not isinstance(item, Keyword)
+        ]
+        if index == len(abstract_items):
             combine_method_name = f"combine_up_{gram.key}_{gram.selection}"
             result = getattr(semantics, combine_method_name)(*children)
         else:
-            item = rule.content[index]
+            item = abstract_items[index]
             class ItemAnalyzer(ItemHandler):
                 async def case_Keyword(self, item : Keyword):
-                    keyword_method_name = f"analyze_keyword_{gram.key}_{gram.selection}"
-                    keyword_result : U = getattr(semantics, keyword_method_name)(item.content) 
-                    stack.append((context, gram, children + [keyword_result]))
+                    raise Exception("superfluous")
                 async def case_Terminal(self, item):
                     vocab_token = await input.get()
 
                     if isinstance(vocab_token, Vocab):
                         terminal_method_name = f"analyze_terminal_{gram.key}_{gram.selection}_{item.relation}"
-                        terminal_args = [context, children, vocab_token]
-                        terminal_result : U = getattr(semantics, terminal_method_name)(*terminal_args) 
+                        terminal_result : U = getattr(semantics, terminal_method_name)(context, *children, vocab_token) 
                         stack.append((context, gram, children + [terminal_result]))
                     else:
                         # break
@@ -281,7 +283,7 @@ async def analyze(
                     if isinstance(child_token, Grammar):
                         stack.append((context, gram, children))
                         guide_method_name = f"guide_down_{gram.key}_{gram.selection}_{item.relation}"
-                        child_context : Optional[D] = getattr(semantics, guide_method_name)(context, children, child_token) 
+                        child_context : Optional[D] = getattr(semantics, guide_method_name)(context, *children, child_token) 
                         await output.put(child_context)
                         stack.append((child_context, child_token, []))
 
