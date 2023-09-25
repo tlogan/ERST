@@ -7,7 +7,7 @@ construction = Construction(
     ''',
     [],
     {
-        "AbstractToken" : [
+        "RichToken" : [
             Constructor(
                 "Grammar", [], [
                     Field('key', 'str', ""),

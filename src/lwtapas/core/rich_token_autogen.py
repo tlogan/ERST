@@ -23,27 +23,27 @@ class SourceFlag:
     
 
 
-# type AbstractToken
+# type RichToken
 @dataclass(frozen=True, eq=True)
-class AbstractToken(ABC):
+class RichToken(ABC):
     @abstractmethod
-    def match(self, handler : AbstractTokenHandler[T]) -> T:
+    def match(self, handler : RichTokenHandler[T]) -> T:
         pass
 
-# constructors for type AbstractToken
+# constructors for type RichToken
 
 @dataclass(frozen=True, eq=True)
-class Grammar(AbstractToken):
+class Grammar(RichToken):
     key : str
     selection : str
 
-    def match(self, handler : AbstractTokenHandler[T]) -> T:
+    def match(self, handler : RichTokenHandler[T]) -> T:
         return handler.case_Grammar(self)
 
 def make_Grammar(
     key : str, 
     selection : str
-) -> AbstractToken:
+) -> RichToken:
     return Grammar(
         key,
         selection
@@ -61,17 +61,17 @@ def update_Grammar(source_Grammar : Grammar,
         
 
 @dataclass(frozen=True, eq=True)
-class Vocab(AbstractToken):
+class Vocab(RichToken):
     key : str
     selection : str
 
-    def match(self, handler : AbstractTokenHandler[T]) -> T:
+    def match(self, handler : RichTokenHandler[T]) -> T:
         return handler.case_Vocab(self)
 
 def make_Vocab(
     key : str, 
     selection : str
-) -> AbstractToken:
+) -> RichToken:
     return Vocab(
         key,
         selection
@@ -88,8 +88,8 @@ def update_Vocab(source_Vocab : Vocab,
 
         
 
-# case handler for type AbstractToken
-class AbstractTokenHandler(ABC, Generic[T]):
+# case handler for type RichToken
+class RichTokenHandler(ABC, Generic[T]):
     @abstractmethod
     def case_Grammar(self, o : Grammar) -> T :
         pass

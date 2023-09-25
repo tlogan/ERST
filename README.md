@@ -1,7 +1,10 @@
 # Lightweight Tapas
 
 ## TODO
-- extend analysis base class for schema definitions
+- define language syntax in `syntax_plan.py` 
+- specialize analyze into dumping and concretizing
+- debug parsing, dumping, and concretizing
+- instead of using custom solver, translate leaf subtyping into horn clauses for external solver
 - use renaming lazily (just for equality modulo alpha renaming)
 
 ## Story

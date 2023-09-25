@@ -8,38 +8,29 @@ from core.line_format_autogen import LineFormat
     ''',
     [
         Constructor(
-            "Choice", [], [
-                Field('dis_rules', 'dict[str, Rule]', ""),
-                Field('fall_rule', 'Rule', ""), 
-            ]
-        ),
-        Constructor(
             "Rule", [], [
                 Field('name', 'str', ""), 
                 Field('content', 'list[Item]', "")
             ]
+        ),
+        Constructor(
+            "Item", [], [
+                Field('relation', 'str', ""),
+                Field('key', 'str', ""),
+                Field('pattern', "Pattern", ""),
+            ]
         )
     ],
     { 
-        "Item" : [
-            Constructor(
-                "Keyword", [], [
-                    Field('content', 'str', "")
-                ]
-            ),
-
+        "Pattern" : [
             Constructor(
                 "Terminal", [], [
-                    Field('relation', 'str', ""),
-                    Field('key', 'str', ""),
                     Field('regex', 'str', "")
                 ]
             ),
 
             Constructor(
                 "Nonterm", [], [
-                    Field('relation', 'str', ""),
-                    Field('key', 'str', ""),
                     Field('format', 'LineFormat', ""),
                 ]
             ),

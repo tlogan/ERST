@@ -6,13 +6,11 @@ import ply.lex as lex
     
 
 tokens = (
-    r'dis_key',
-    r'identifier'
+
 )
     
 
-t_dis_key = r'dis_key'
-t_identifier = r'*'
+
     
 
 def t_newline(t):

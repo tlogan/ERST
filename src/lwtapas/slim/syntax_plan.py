@@ -1,29 +1,22 @@
 from __future__ import annotations
-from core.language_system import Rule, Nonterm, Terminal, Syntax, Choice
+from core.meta_system import Rule, Nonterm, Terminal, Syntax
 from core.line_format_system import NewLine, InLine, IndentLine
-
-from core.language_system import Syntax
 
 '''
 TODO: update syntax to use choice with leftward discrimination between rules
+-- use the convention that only the last can begin without a terminal.
 '''
 content = Syntax(
     '''''',
     "Expr",
     [],
     {
-        "Typ" : Choice(
-            {
-                "dis_key" : Rule("Var", [ 
-                    Terminal("name", "identifier", r'*'), 
-                ])
-            },
-            Rule("Exis", [
-                Nonterm("body", "Typ", InLine()),
-                Nonterm("qualifiers", "ListQual", InLine()),
-                Nonterm("indicies", "ListIdent", InLine()),
-            ])
-        )
+        # "Expr" : Choice(
+        #     [
+        #     ],
+        #     Rule("",[
+        #     ]) 
+        # ), 
         #     Rule("Exis", [
         #         Nonterm("body", "Typ", InLine()),
         #         Nonterm("qualifiers", "ListQual", InLine()),
