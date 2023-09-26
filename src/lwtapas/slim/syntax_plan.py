@@ -1,22 +1,31 @@
 from __future__ import annotations
-from core.meta_system import Rule, Nonterm, Terminal, Syntax
+from core.meta_system import Rule, Item, Nonterm, Terminal, Syntax
 from core.line_format_system import NewLine, InLine, IndentLine
 
 '''
 TODO: update syntax to use choice with leftward discrimination between rules
 -- use the convention that only the last can begin without a terminal.
+
+NOTE: need to structure right-associative ops differently using some indirection
 '''
 content = Syntax(
-    '''''',
+    '''
+    ''',
     "Expr",
     [],
     {
-        # "Expr" : Choice(
-        #     [
-        #     ],
-        #     Rule("",[
-        #     ]) 
-        # ), 
+        "Expr" : [
+            Rule("EVar", [
+                Item("id", "identifier", Terminal(r'[a-z][a-zA-Z_]*')),
+            ]),
+            Rule("EUnit", [
+                Item("symbol", "semi", Terminal(r';')),
+            ]),
+            Rule("ETag", [
+                Item("label", "label_semi", Terminal(r'[a-zA-Z_]+ *;')),
+                Item("body", "", Nonterm(InLine())),
+            ]),
+        ], 
         #     Rule("Exis", [
         #         Nonterm("body", "Typ", InLine()),
         #         Nonterm("qualifiers", "ListQual", InLine()),

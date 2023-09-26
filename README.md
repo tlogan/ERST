@@ -24,10 +24,15 @@
 ### Innovation 
 - Type inference for programs with the following combination of features: 
     - streaming/partial programs 
+        - analysis on recursive-decent/leftward parse-tree 
+        - adds layer of complexity that's not apparent in a normalized AST
     - extrinsic types 
     - relational types
-    - upper bound of program completion 
-    - context for program completion 
+    - propagation of types
+        - checking and guiding via propagation 
+        - checking/solving via horn-clause solver when subtyping at leaves
+    - upper bound guidance for completion of program
+    - context for completion of program 
 
 ### Hypothesis
 - Type information must be leniently extracted from programs based on compositions
