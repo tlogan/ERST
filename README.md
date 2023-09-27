@@ -1,9 +1,11 @@
 # Lightweight Tapas
 
 ## TODO
-- try out ANTLR top-down parser
-    - see if grammar can be generated from language_plan
-    - see if parse_tree can be easily converted into rich_tokens
+- try out ANTLR top-down/recursive-descent parser
+    - add listeners to analyze during parsing. avoid EOF.
+    - emit context/type guides on entry (inherited attributes)
+    - build of result on exit (synthesized attributes)
+    - writing custom generation of recursive descent from plan is too complicated to do manually
 - define language syntax in `syntax_plan.py` 
 - specialize analyze into dumping and concretizing
 - debug parsing, dumping, and concretizing

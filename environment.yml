@@ -38,7 +38,10 @@ dependencies:
   - yaml=0.2.5
   - zlib=1.2.11
   - pip:
+    - antlr4-python3-runtime==4.13.1
+    - antlr4-tools==0.2
     - inflection==0.5.1
+    - install-jdk==1.1.0
     - mypy==0.961
     - mypy-extensions==0.4.3
     - nodeenv==1.7.0
