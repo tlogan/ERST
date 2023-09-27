@@ -8,7 +8,16 @@ TODO: update syntax to use choice with leftward discrimination between rules
 
 NOTE: need to structure right-associative ops differently using some indirection
 '''
-content = Syntax(
+
+lexicon = {
+    "identifier" : r'[a-z][a-zA-Z_]*',
+    "semi": r';',
+    "idsemi" : r'[a-zA-Z_]+ *;',
+    "atid" : r'@[a-zA-Z_]+',
+    "eq" : r'=',
+}
+
+syntax = Syntax(
     '''
     ''',
     "Expr",
@@ -16,14 +25,34 @@ content = Syntax(
     {
         "Expr" : [
             Rule("EVar", [
-                Item("id", "identifier", Terminal(r'[a-z][a-zA-Z_]*')),
+                Item("id", Terminal("identifier", )),
             ]),
             Rule("EUnit", [
-                Item("symbol", "semi", Terminal(r';')),
+                Item("symbol", Terminal("semi")),
             ]),
             Rule("ETag", [
-                Item("label", "label_semi", Terminal(r'[a-zA-Z_]+ *;')),
-                Item("body", "", Nonterm(InLine())),
+                Item("label", Terminal("idsemi")),
+                Item("body", Nonterm("Expr", InLine())),
+            ]),
+            Rule("Record", [
+                Item("label", Terminal("atid")),
+                Item("sep", Terminal("eq")),
+                Item("body", Nonterm("Expr", InLine())),
+                Item("remainder", Nonterm("Record | None", NewLine())),
+            ]),
+            Rule("Func", [
+            ]),
+            Rule("Matc", [
+            ]),
+            Rule("Proj", [
+            ]),
+            Rule("Proj", [
+            ]),
+            Rule("App", [
+            ]),
+            Rule("Let", [
+            ]),
+            Rule("Fix", [
             ]),
         ], 
         #     Rule("Exis", [

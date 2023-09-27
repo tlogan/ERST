@@ -16,7 +16,6 @@ from core.line_format_autogen import LineFormat
         Constructor(
             "Item", [], [
                 Field('relation', 'str', ""),
-                Field('key', 'str', ""),
                 Field('pattern', "Pattern", ""),
             ]
         )
@@ -25,12 +24,13 @@ from core.line_format_autogen import LineFormat
         "Pattern" : [
             Constructor(
                 "Terminal", [], [
-                    Field('regex', 'str', "")
+                    Field('vocab', 'str', ""),
                 ]
             ),
 
             Constructor(
                 "Nonterm", [], [
+                    Field('grammar', 'str', ""),
                     Field('format', 'LineFormat', ""),
                 ]
             ),

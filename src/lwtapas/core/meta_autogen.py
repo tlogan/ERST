@@ -35,45 +35,50 @@ class Pattern(ABC):
 
 @dataclass(frozen=True, eq=True)
 class Terminal(Pattern):
-    regex : str
+    vocab : str
 
     def match(self, handler : PatternHandler[T]) -> T:
         return handler.case_Terminal(self)
 
 def make_Terminal(
-    regex : str
+    vocab : str
 ) -> Pattern:
     return Terminal(
-        regex
+        vocab
     )
 
 def update_Terminal(source_Terminal : Terminal,
-    regex : Union[str, SourceFlag] = SourceFlag()
+    vocab : Union[str, SourceFlag] = SourceFlag()
 ) -> Terminal:
     return Terminal(
-        source_Terminal.regex if isinstance(regex, SourceFlag) else regex
+        source_Terminal.vocab if isinstance(vocab, SourceFlag) else vocab
     )
 
         
 
 @dataclass(frozen=True, eq=True)
 class Nonterm(Pattern):
+    grammar : str
     format : LineFormat
 
     def match(self, handler : PatternHandler[T]) -> T:
         return handler.case_Nonterm(self)
 
 def make_Nonterm(
+    grammar : str, 
     format : LineFormat
 ) -> Pattern:
     return Nonterm(
+        grammar,
         format
     )
 
 def update_Nonterm(source_Nonterm : Nonterm,
+    grammar : Union[str, SourceFlag] = SourceFlag(),
     format : Union[LineFormat, SourceFlag] = SourceFlag()
 ) -> Nonterm:
     return Nonterm(
+        source_Nonterm.grammar if isinstance(grammar, SourceFlag) else grammar,
         source_Nonterm.format if isinstance(format, SourceFlag) else format
     )
 
@@ -120,28 +125,23 @@ def update_Rule(source_Rule : Rule,
 @dataclass(frozen=True, eq=True)
 class Item:
     relation : str
-    key : str
     pattern : Pattern
 
 
 def make_Item(
     relation : str,
-    key : str,
     pattern : Pattern
 ) -> Item:
     return Item(
         relation,
-        key,
         pattern)
 
 def update_Item(source_Item : Item,
     relation : Union[str, SourceFlag] = SourceFlag(),
-    key : Union[str, SourceFlag] = SourceFlag(),
     pattern : Union[Pattern, SourceFlag] = SourceFlag()
 ) -> Item:
     return Item(
         source_Item.relation if isinstance(relation, SourceFlag) else relation, 
-        source_Item.key if isinstance(key, SourceFlag) else key, 
         source_Item.pattern if isinstance(pattern, SourceFlag) else pattern)
 
      

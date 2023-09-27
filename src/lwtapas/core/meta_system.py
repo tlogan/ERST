@@ -25,11 +25,12 @@ def to_dictionary(node: Rule):
         def case_Terminal(self, p : Terminal) -> dict:
             return {
                 'kind' : 'terminal',
-                'regex' : p.regex
+                'vocab' : p.vocab
             }
         def case_Nonterm(self, p : Nonterm) -> dict: 
             return {
                 'kind' : 'nonterm',
+                'grammar' : p.grammar,
                 'format' : line_format_system.to_string(p.format),
             }
 
@@ -39,7 +40,6 @@ def to_dictionary(node: Rule):
         'children' : [
             {
                 'relation' : item.relation,
-                'key' : item.key,
                 'pattern' : item.pattern.match(PatternToString())
             }
             for item in node.content
@@ -57,9 +57,9 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
             construction_system.Field(
                 attr = item.relation, 
                 typ = (
+                    f'{item.pattern.grammar} | None'
+                    if isinstance(item.pattern, Nonterm) else
                     'str'
-                    if isinstance(item.pattern, Terminal) else
-                    f'{item.key} | None'
                 ), 
                 default = ""
             )
@@ -72,11 +72,11 @@ def to_constructor(n : Rule) -> construction_system.Constructor:
 
 
 def type_from_item(item : Item, prefix : str = ""):
-    if isinstance(item, Nonterm):
+    if isinstance(item.pattern, Nonterm):
         if prefix:
-            return f"{prefix}.{item.key}"
+            return f"{prefix}.{item.pattern.grammar}"
         else:
-            return item.key
+            return item.pattern.grammar
 
     elif isinstance(item, Terminal):
         return "str" 
@@ -126,18 +126,10 @@ class Syntax:
             }
         )
 
-        self.lex_map = {
-            item.key : item.pattern.regex
-            for inner_map in self.full_map.values()
-            for rule in inner_map.values()
-            for item in rule.content
-            if isinstance(item.pattern, Terminal)
-        }
-
 class Semantics(Generic[D, U]): 
     pass
 
-def generate_lexeme_code(syntax : Syntax) -> str:
+def generate_lexeme_code(lexicon : dict[str,str]) -> str:
 
     nl = "\n"
 
@@ -149,7 +141,7 @@ import ply.lex as lex
 tokens = (
 {("," + nl).join(
     "    " + "r'" + token + "'" 
-    for token in syntax.lex_map.keys()
+    for token in lexicon.keys()
 )}
 )
     '''
@@ -157,7 +149,7 @@ tokens = (
     code_rules = f'''
 {nl.join(
     "t_" + key + " = " +  "r'" + regex + "'"
-    for (key, regex) in syntax.lex_map.items()
+    for (key, regex) in lexicon.items()
 )}
     '''
 
@@ -189,9 +181,9 @@ def to_construction(syntax : Syntax) -> Construction:
         return Constructor(rule.name, [], [
             # item.match(ItemToField())
             Field(item.relation, (
+                item.pattern.grammar
+                if isinstance(item.pattern, Nonterm) else
                 'str'
-                if isinstance(item.pattern, Terminal) else
-                item.key
             ), '')
             for item in rule.content
         ]) 

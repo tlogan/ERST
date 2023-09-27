@@ -1,6 +1,9 @@
 # Lightweight Tapas
 
 ## TODO
+- try out ANTLR top-down parser
+    - see if grammar can be generated from language_plan
+    - see if parse_tree can be easily converted into rich_tokens
 - define language syntax in `syntax_plan.py` 
 - specialize analyze into dumping and concretizing
 - debug parsing, dumping, and concretizing
