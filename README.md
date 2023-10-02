@@ -1,15 +1,10 @@
 # Lightweight Tapas
 
 ## TODO
-- try out ANTLR top-down/recursive-descent parser
-    - get book from UT library
-    - add listeners to analyze during parsing. avoid EOF.
-    - emit context/type guides on entry (inherited attributes)
-    - build of result on exit (synthesized attributes)
-    - writing custom generation of recursive descent from plan is too complicated to do manually
-- define language syntax in `syntax_plan.py` 
-- specialize analyze into dumping and concretizing
-- debug parsing, dumping, and concretizing
+- test out sending in lexemes one by one using async queue
+- write attribute rules for analysis 
+- write tree listener for printing out indented parse tree 
+
 - instead of using custom solver, translate leaf subtyping into horn clauses for external solver
 - use renaming lazily (just for equality modulo alpha renaming)
 

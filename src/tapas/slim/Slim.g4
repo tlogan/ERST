@@ -1,5 +1,8 @@
-grammar Syntax;
-import Lexicon;
+grammar Slim;
+
+ID : [a-zA-Z]+ ;
+INT : [0-9]+ ;
+WS : [ \t\n\r]+ -> skip ;
 
 expr : 
     | ID 
