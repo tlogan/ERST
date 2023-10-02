@@ -2,6 +2,7 @@
 
 ## TODO
 - try out ANTLR top-down/recursive-descent parser
+    - get book from UT library
     - add listeners to analyze during parsing. avoid EOF.
     - emit context/type guides on entry (inherited attributes)
     - build of result on exit (synthesized attributes)
