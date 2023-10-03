@@ -17,14 +17,5 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#typ.
-    def enterTyp(self, ctx:SlimParser.TypContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#typ.
-    def exitTyp(self, ctx:SlimParser.TypContext):
-        pass
-
-
 
 del SlimParser

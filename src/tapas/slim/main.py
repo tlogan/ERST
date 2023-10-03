@@ -90,16 +90,25 @@ async def analyze(input : Queue, output : Queue):
         # TODO: break look if semantic parser has completed
         # TODO: create attribute grammar that takes output queue as parameter 
         ########################
+        print(expr_context.result)
         pass
 
 async def test_analyze_coroutine():
     input : Queue = Queue()
     output : Queue = Queue()
+    # pieces = [
+
+    #     "fix (self =>", " (", "\n",
+    #     "    fun nil;. => zero;. ", "\n",
+    #     "    fun cons;x ", "=>", "succ;", "(self(", "x))", "\n",
+    #     ")", ")"
+    # ]
+
     pieces = [
-        "fix (self =>", " (", "\n",
-        "    fun nil;. => zero;. ", "\n",
-        "    fun cons;x ", "=>", "succ;", "(self(", "x))", "\n",
-        ")", ")"
+    f'''
+        fun :nil () => :zero () 
+        fun :cons () => :succ (self(x))
+    '''
     ]
     await analyze(input, output)
 
@@ -109,15 +118,15 @@ def test_analyze():
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
-    # test_analyze()
+    test_analyze()
 ####################
 
-    test_parse_tree_serialize(f'''
-fix (self => (
-    fun :nil () => :zero () 
-    fun :cons () => :succ (self(x))
-))
-    ''')
+#     test_parse_tree_serialize(f'''
+# fix (self => (
+#     fun :nil () => :zero () 
+#     fun :cons () => :succ (self(x))
+# ))
+#     ''')
 
 ####################
 
