@@ -6,16 +6,17 @@ WS : [ \t\n\r]+ -> skip ;
 
 expr : 
     | ID 
-    | '.' 
-    | ID ';' expr 
+    | '()' 
+    | ':' ID expr 
     | ('.' ID '=' expr)+
-    | ID ':' expr
+    | ID '=>' expr
+    | expr '.' expr
     | expr '(' expr ')'
-    | 'match' expr ('case' expr ':' expr)+
-    | ('fun' expr ':' expr)+
+    | 'match' expr ('case' expr '=>' expr)+
+    | ('fun' expr '=>' expr)+
     | 'if' expr 'then' expr 'else' expr
     | 'fix' '(' expr ')'
-    | 'let' ID ('in' typ)? '=' expr ':' expr   
+    | 'let' ID ('in' typ)? '=' expr expr   
     | '(' expr ')'
     ;
 
@@ -31,5 +32,5 @@ typ :
     | typ '->' typ 
     | '{' ID ('<:' typ)? ('with' typ '<:' typ)* ('#' (ID)+)? '}'
     | '[' ID ('<:' typ)? ']' typ 
-    | 'least' ID ':' typ 
+    | ID '@' typ 
     ;

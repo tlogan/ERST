@@ -2,6 +2,7 @@ import sys
 from antlr4 import *
 from io import StringIO
 
+import asyncio
 from asyncio import Queue
 
 from SlimLexer import SlimLexer
@@ -30,7 +31,11 @@ def test_parse_tree_serialize(code):
     parser = SlimParser(token_stream)
     tree = parser.expr()
 
-    print(tree.toStringTree())
+
+    if parser.getNumberOfSyntaxErrors() > 0:
+        print("syntax errors")
+    else:
+        print(tree.toStringTree())
 
     # lexer = ExprLexer(input_stream)
     # stream = CommonTokenStream(lexer)
@@ -57,7 +62,7 @@ def line_col_pos(x : str) -> tuple[int, int]:
     lines = x.split("\n")
     return (len(lines), len(lines[-1]))
 
-async def analyze(input : Queue):
+async def analyze(input : Queue, output : Queue):
 
     parser = SlimParser(None)
     parser.buildParseTrees = False
@@ -76,23 +81,47 @@ async def analyze(input : Queue):
         token_stream = CommonTokenStream(lexer)
         #############################
         parser.setTokenStream(token_stream)
-        parser.expr()
+        expr_context = parser.expr()
         #############################
         new_line, new_column = line_col_pos(code)
         line = line + new_line -1
         column = column + new_column -1
         ########################
-        # TODO: if semantic parser has completed then break
+        # TODO: break look if semantic parser has completed
         # TODO: create attribute grammar that takes output queue as parameter 
         ########################
         pass
 
+async def test_analyze_coroutine():
+    input : Queue = Queue()
+    output : Queue = Queue()
+    pieces = [
+        "fix (self =>", " (", "\n",
+        "    fun nil;. => zero;. ", "\n",
+        "    fun cons;x ", "=>", "succ;", "(self(", "x))", "\n",
+        ")", ")"
+    ]
+    await analyze(input, output)
+
+def test_analyze():
+    asyncio.run(test_analyze_coroutine())
+
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
+    # test_analyze()
+####################
+
     test_parse_tree_serialize(f'''
 fix (self => (
-    fun nil;. => zero;. 
-    fun cons;x => succ;(self(x))
+    fun :nil () => :zero () 
+    fun :cons () => :succ (self(x))
 ))
     ''')
+
+####################
+
+#     test_parse_tree_serialize(f'''
+# .hello = ()
+# .bye = ()
+#     ''')
