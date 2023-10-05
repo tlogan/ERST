@@ -2,50 +2,60 @@ grammar Slim;
 
 expr returns [str $result] :
     | ID {
-        $result = f'(id)'
-    } 
+    }
+    //     $result = f'(id)'
+    // } 
     | '()' {
-        $result = f'(unit)'
-    } 
-    // | ':' ID expr  {
+    }
+    //     $result = f'(unit)'
+    // } 
+    | ':' ID expr  {
+    }
     //     $result = 'hello'
     // }
-    // | ('.' ID '=' expr)+ {
+    | ('.' ID '=' expr)+ {
+    }
     //     $result = 'hello'
     // }
-    // | ID '=>' expr {
+    | ID '=>' expr {
+    }
     //     $result = 'hello'
     // }
     // | expr '.' expr {
     //     $result = 'hello'
     // }
-    // | expr '(' expr ')' {
+    | expr '(' expr ')' {
+    }
     //     $result = 'hello'
     // }
     // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ {
     //     $result = 'hello'
     // }
-    | ('fun' param = expr '=>' body = expr) + {
-        prefix = '['
-        content = ''.join([
-            '(fun ' + p + ' ' + b + ')'  
-            for p, b in zip($param.result, $body.result)
-        ])
-        suffix = ']'
-        $result = prefix + content + suffix
+    | ('fun' param = expr '=>' body = expr)+ {
     }
+    //     prefix = '['
+    //     content = ''.join([
+    //         '(fun ' + p + ' ' + b + ')'  
+    //         for p, b in zip($param.result, $body.result)
+    //     ])
+    //     suffix = ']'
+    //     $result = prefix + content + suffix
+    // }
     | 'if' cond = expr 'then' t = expr 'else' f = expr {
-        $result = f'(ite {$cond.result} {$t.result} {$f.result})'
     }
+        // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
+    // }
     | 'fix' '(' body = expr ')' {
-        $result = f'(fix {$body.result})'
     }
+        // $result = f'(fix {$body.result})'
+    // }
     // | 'let' ID ('in' typ)? '=' expr expr  {
     //     $result = 'hello'
     // }
     | '(' body = expr ')' {
-        $result = f'(paren {$body.result})' 
     }
+        // $result = f'(paren {$body.result})' 
+    // }
     ;
 
 // thing returns [str result]: 

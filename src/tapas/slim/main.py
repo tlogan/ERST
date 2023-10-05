@@ -64,6 +64,7 @@ def line_col_pos(x : str) -> tuple[int, int]:
 
 async def analyze(input : Queue, output : Queue):
 
+    # result = []
     parser = SlimParser(None)
     parser.buildParseTrees = False
     line = 1
@@ -90,12 +91,12 @@ async def analyze(input : Queue, output : Queue):
         # TODO: break look if semantic parser has completed
         # TODO: create attribute grammar that takes output queue as parameter 
         ########################
-        print(expr_context.result)
+        await output.put(f'processed: {code}')
         pass
 
-async def test_analyze_coroutine():
-    input : Queue = Queue()
-    output : Queue = Queue()
+    return result
+
+async def test_analyze():
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
@@ -104,27 +105,39 @@ async def test_analyze_coroutine():
     #     ")", ")"
     # ]
 
+    results = []
+
+    input : Queue = Queue()
+    output : Queue = Queue()
+    server = asyncio.create_task(analyze(input, output))
+
     pieces = [
     f'''
-        fun :nil () => :zero () 
-        fun :cons () => :succ (self(x))
+    fun :nil () => :zero () 
+    fun :cons () => :succ (self(x))
     '''
     ]
-    await analyze(input, output)
 
-def test_analyze():
-    asyncio.run(test_analyze_coroutine())
+    for piece in pieces:
+        await input.put(piece)
+        result = await output.get()
+        print(f'result: {result}')
+        results.append(result)
+
+    return results 
+
+
 
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
-    test_analyze()
+    asyncio.run(test_analyze())
 ####################
 
 #     test_parse_tree_serialize(f'''
 # fix (self => (
 #     fun :nil () => :zero () 
-#     fun :cons () => :succ (self(x))
+#     fun :cons x => :succ (self(x)) 
 # ))
 #     ''')
 
