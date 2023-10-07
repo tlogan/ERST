@@ -91,7 +91,7 @@ async def analyze(input : Queue, output : Queue):
         # TODO: break look if semantic parser has completed
         # TODO: create attribute grammar that takes output queue as parameter 
         ########################
-        await output.put(f'processed: {code}')
+        await output.put(f'processed: {code}; result: <$${expr_context.result}$$>')
         pass
 
     return result
@@ -100,10 +100,22 @@ async def test_analyze():
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
-    #     "    fun nil;. => zero;. ", "\n",
-    #     "    fun cons;x ", "=>", "succ;", "(self(", "x))", "\n",
+    #     "    fun :nil . => :zero () ", "\n",
+    #     "    fun :cons x ", "=>", ":succ", "(self(", "x))", "\n",
     #     ")", ")"
     # ]
+
+    # pieces = [
+    #     "hello"
+    # ]
+
+    # pieces = [
+    #     ":hello ()"
+    # ]
+
+    pieces = [
+        ".hello = () .world = ()"
+    ]
 
     results = []
 
@@ -111,12 +123,12 @@ async def test_analyze():
     output : Queue = Queue()
     server = asyncio.create_task(analyze(input, output))
 
-    pieces = [
-    f'''
-    fun :nil () => :zero () 
-    fun :cons () => :succ (self(x))
-    '''
-    ]
+    # pieces = [
+    # f'''
+    # fun :nil () => :zero () 
+    # fun :cons () => :succ (self(x))
+    # '''
+    # ]
 
     for piece in pieces:
         await input.put(piece)

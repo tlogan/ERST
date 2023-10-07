@@ -1,62 +1,74 @@
 grammar Slim;
 
-expr returns [str $result] :
-    | ID {
-    }
-    //     $result = f'(id)'
-    // } 
-    | '()' {
-    }
-    //     $result = f'(unit)'
-    // } 
-    | ':' ID expr  {
-    }
-    //     $result = 'hello'
-    // }
-    | ('.' ID '=' expr)+ {
-    }
-    //     $result = 'hello'
-    // }
-    | ID '=>' expr {
-    }
-    //     $result = 'hello'
-    // }
-    // | expr '.' expr {
-    //     $result = 'hello'
-    // }
-    | expr '(' expr ')' {
-    }
-    //     $result = 'hello'
-    // }
-    // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ {
-    //     $result = 'hello'
-    // }
-    | ('fun' param = expr '=>' body = expr)+ {
-    }
-    //     prefix = '['
-    //     content = ''.join([
-    //         '(fun ' + p + ' ' + b + ')'  
-    //         for p, b in zip($param.result, $body.result)
-    //     ])
-    //     suffix = ']'
-    //     $result = prefix + content + suffix
-    // }
-    | 'if' cond = expr 'then' t = expr 'else' f = expr {
-    }
-        // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
-    // }
-    | 'fix' '(' body = expr ')' {
-    }
-        // $result = f'(fix {$body.result})'
-    // }
-    // | 'let' ID ('in' typ)? '=' expr expr  {
-    //     $result = 'hello'
-    // }
-    | '(' body = expr ')' {
-    }
-        // $result = f'(paren {$body.result})' 
-    // }
-    ;
+expr returns [str result] : 
+| ID 
+{
+$result = f'(id {$ID.text})';
+} 
+| '()' 
+{
+$result = f'(unit)'
+} 
+| ':' ID expr  
+{
+$result = f'(tag {$ID.text} {$expr.result})'
+}
+| record 
+{
+$result = $record.result
+}
+| ID '=>' expr 
+// {
+//     $result = 'hello'
+// }
+// | expr '.' expr {
+//     $result = 'hello'
+// }
+| expr '(' expr ')' 
+// {
+//     $result = 'hello'
+// }
+// | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
+//{
+//     $result = 'hello'
+// }
+| ('fun' param = expr '=>' body = expr)+ 
+// {
+//     prefix = '['
+//     content = ''.join([
+//         '(fun ' + p + ' ' + b + ')'  
+//         for p, b in zip($param.result, $body.result)
+//     ])
+//     suffix = ']'
+//     $result = prefix + content + suffix
+// }
+| 'if' cond = expr 'then' t = expr 'else' f = expr 
+// {
+    // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
+// }
+| 'fix' '(' body = expr ')' 
+// {
+    // $result = f'(fix {$body.result})'
+// }
+// | 'let' ID ('in' typ)? '=' expr expr  {
+//     $result = 'hello'
+// }
+| '(' body = expr ')' 
+// {
+    // $result = f'(paren {$body.result})' 
+// }
+;
+
+record returns [str result] :
+| '.' ID '=' expr
+{
+$result = f'(field {$ID.text} {$expr.result})'
+}
+| '.' ID '=' expr record
+{
+$result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
+}
+;
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {
