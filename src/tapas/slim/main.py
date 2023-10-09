@@ -1,6 +1,7 @@
+from typing import *
 import sys
 from antlr4 import *
-from io import StringIO
+import sys
 
 import asyncio
 from asyncio import Queue
@@ -58,43 +59,62 @@ def test_parse_tree_serialize(code):
     #     walker = ParseTreeWalker()
     #     walker.walk(linterp, tree)
 
-def line_col_pos(x : str) -> tuple[int, int]:
+def newline_column_count(x : str) -> tuple[int, int]:
     lines = x.split("\n")
-    return (len(lines), len(lines[-1]))
+    return (len(lines) - 1, len(lines[-1]))
 
 async def analyze(input : Queue, output : Queue):
-
-    # result = []
     parser = SlimParser(None)
-    parser.buildParseTrees = False
-    line = 1
-    column = 1
+    # parser.buildParseTrees = False
+    parser.output = output
+    code = ''
+    ctx = None
     while True:
-        code = await input.get()
+        code += await input.get()
         ############################
         input_stream = InputStream(code)
         #############################
         lexer = SlimLexer(input_stream)
-        lexer.line = line
-        lexer.column = column
+        # lexer.line = line
+        # lexer.column = column 
 
 
-        token_stream = CommonTokenStream(lexer)
+        token_stream : Any = CommonTokenStream(lexer)
         #############################
-        parser.setTokenStream(token_stream)
-        expr_context = parser.expr()
-        #############################
-        new_line, new_column = line_col_pos(code)
-        line = line + new_line -1
-        column = column + new_column -1
-        ########################
-        # TODO: break look if semantic parser has completed
-        # TODO: create attribute grammar that takes output queue as parameter 
-        ########################
-        await output.put(f'processed: {code}; result: <$${expr_context.result}$$>')
-        pass
+        parser.setInputStream(token_stream)
 
-    return result
+        try:
+            ctx = parser.expr() # this is necessary to start parsing
+            # TODO: if parsing incomplete then continue to next iteration
+
+            if parser.getNumberOfSyntaxErrors() > 0:
+                print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
+                pass
+            else:
+                print(f"tree: {ctx.toStringTree(recog=parser)}")
+                break
+        except:
+            print(f"attribute error: {parser.getNumberOfSyntaxErrors()}")
+            pass
+
+        # print(f"current token: {parser.getCurrentToken()}")
+        # print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
+        ################
+        # TODO: if parsing error then terminate with error 
+        # TODO: if no parsing error then terminate with success
+        # TODO: if token stream has been seen before then lookup synt_attr in cache
+        #############################
+        ########################
+        # if parser.getCurrentToken() == parser.EOF:
+        # await output.put(f'DONE')
+        # break
+    #end while
+
+    # assert result
+    # return ctx.synth_attr
+
+#end analyze 
+
 
 async def test_analyze():
     # pieces = [
@@ -114,8 +134,13 @@ async def test_analyze():
     # ]
 
     pieces = [
-        ".hello = () .world = ()"
+        # "fix (())"
+        # "fix (()", ")"
+        # "fix (", "()", ")"
+        # "fix ((", ")", ")"
+        "fix (", "(", ")", ")"
     ]
+
 
     results = []
 
@@ -131,12 +156,17 @@ async def test_analyze():
     # ]
 
     for piece in pieces:
-        await input.put(piece)
-        result = await output.get()
-        print(f'result: {result}')
-        results.append(result)
+        input.put_nowait(piece)
 
-    return results 
+    # while True:
+    #     result = await output.get()
+    #     if result == 'DONE':
+    #         break
+    #     print(f'result: {result}')
+    #     results.append(result)
+
+    # print(results)
+    # return results 
 
 
 

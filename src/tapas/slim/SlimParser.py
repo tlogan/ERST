@@ -8,6 +8,9 @@ if sys.version_info[1] > 5:
 else:
 	from typing.io import TextIO
 
+
+from asyncio import Queue
+
 def serializedATN():
     return [
         4,1,15,74,2,0,7,0,2,1,7,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
@@ -85,6 +88,18 @@ class SlimParser ( Parser ):
 
 
 
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, value : Queue):
+        self._output = value
+
+
+
+
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -148,6 +163,7 @@ class SlimParser ( Parser ):
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.result =  f'(id {(None if localctx._ID is None else localctx._ID.text)})'
+                self.output.put_nowait(localctx.result);
 
                 pass
 
@@ -155,7 +171,8 @@ class SlimParser ( Parser ):
                 self.state = 7
                 self.match(SlimParser.T__0)
 
-                localctx.result = f'(unit)'
+                localctx.result =  f'(unit)'
+                self.output.put_nowait(localctx.result)
 
                 pass
 
@@ -167,7 +184,8 @@ class SlimParser ( Parser ):
                 self.state = 11
                 localctx._expr = self.expr(8)
 
-                localctx.result = f'(tag {(None if localctx._ID is None else localctx._ID.text)} {localctx._expr.result})'
+                localctx.result =  f'(tag {(None if localctx._ID is None else localctx._ID.text)} {localctx._expr.result})'
+                self.output.put_nowait(localctx.result)
 
                 pass
 
@@ -175,7 +193,8 @@ class SlimParser ( Parser ):
                 self.state = 14
                 localctx._record = self.record()
 
-                localctx.result = localctx._record.result
+                localctx.result =  localctx._record.result
+                self.output.put_nowait(localctx.result)
 
                 pass
 

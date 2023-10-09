@@ -5,6 +5,9 @@ if "." in __name__:
 else:
     from SlimParser import SlimParser
 
+from asyncio import Queue
+
+
 # This class defines a complete listener for a parse tree produced by SlimParser.
 class SlimListener(ParseTreeListener):
 

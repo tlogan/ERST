@@ -1,21 +1,43 @@
 grammar Slim;
 
+@header {
+from asyncio import Queue
+}
+
+@parser::members {
+
+
+@property
+def output(self):
+    return self._output
+
+@output.setter
+def output(self, value : Queue):
+    self._output = value
+
+}
+
+
 expr returns [str result] : 
 | ID 
 {
 $result = f'(id {$ID.text})';
+self.output.put_nowait($result);
 } 
 | '()' 
 {
 $result = f'(unit)'
+self.output.put_nowait($result);
 } 
 | ':' ID expr  
 {
 $result = f'(tag {$ID.text} {$expr.result})'
+self.output.put_nowait($result);
 }
 | record 
 {
 $result = $record.result
+self.output.put_nowait($result);
 }
 | ID '=>' expr 
 // {

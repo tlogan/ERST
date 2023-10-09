@@ -1,4 +1,7 @@
 // Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.9.2
+
+from asyncio import Queue
+
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -86,6 +89,18 @@ public class SlimParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
+
+
+
+	@property
+	def output(self):
+	    return self._output
+
+	@output.setter
+	def output(self, value : Queue):
+	    self._output = value
+
+
 	public SlimParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
@@ -145,6 +160,7 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).ID = match(ID);
 
 				((ExprContext)_localctx).result =  f'(id {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)})';
+				self.output.put_nowait(_localctx.result);
 
 				}
 				break;
@@ -153,7 +169,8 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				_localctx.result = f'(unit)'
+				((ExprContext)_localctx).result =  f'(unit)'
+				self.output.put_nowait(_localctx.result);
 
 				}
 				break;
@@ -166,7 +183,8 @@ public class SlimParser extends Parser {
 				setState(11);
 				((ExprContext)_localctx).expr = expr(8);
 
-				_localctx.result = f'(tag {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)} {((ExprContext)_localctx).expr.result})'
+				((ExprContext)_localctx).result =  f'(tag {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)} {((ExprContext)_localctx).expr.result})'
+				self.output.put_nowait(_localctx.result);
 
 				}
 				break;
@@ -175,7 +193,8 @@ public class SlimParser extends Parser {
 				setState(14);
 				((ExprContext)_localctx).record = record();
 
-				_localctx.result = ((ExprContext)_localctx).record.result
+				((ExprContext)_localctx).result =  ((ExprContext)_localctx).record.result
+				self.output.put_nowait(_localctx.result);
 
 				}
 				break;
