@@ -18,83 +18,83 @@ def output(self, value : Queue):
 }
 
 
-expr returns [str result] : 
+expr returns [str synth_attr] : 
 | ID 
 {
-$result = f'(id {$ID.text})';
-self.output.put_nowait($result);
+$synth_attr = f'(id {$ID.text})';
+# self.output.put_nowait($synth_attr);
 } 
 | '()' 
 {
-$result = f'(unit)'
-self.output.put_nowait($result);
+$synth_attr = f'(unit)'
+# self.output.put_nowait($synth_attr);
 } 
 | ':' ID expr  
 {
-$result = f'(tag {$ID.text} {$expr.result})'
-self.output.put_nowait($result);
+$synth_attr = f'(tag {$ID.text} {$expr.synth_attr})'
+# self.output.put_nowait($synth_attr);
 }
 | record 
 {
-$result = $record.result
-self.output.put_nowait($result);
+$synth_attr = $record.synth_attr
+# self.output.put_nowait($synth_attr);
 }
 | ID '=>' expr 
 // {
-//     $result = 'hello'
+//     $synth_attr = 'hello'
 // }
 // | expr '.' expr {
-//     $result = 'hello'
+//     $synth_attr = 'hello'
 // }
 | expr '(' expr ')' 
 // {
-//     $result = 'hello'
+//     $synth_attr = 'hello'
 // }
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
 //{
-//     $result = 'hello'
+//     $synth_attr = 'hello'
 // }
 | ('fun' param = expr '=>' body = expr)+ 
 // {
 //     prefix = '['
 //     content = ''.join([
 //         '(fun ' + p + ' ' + b + ')'  
-//         for p, b in zip($param.result, $body.result)
+//         for p, b in zip($param.synth_attr, $body.synth_attr)
 //     ])
 //     suffix = ']'
-//     $result = prefix + content + suffix
+//     $synth_attr = prefix + content + suffix
 // }
 | 'if' cond = expr 'then' t = expr 'else' f = expr 
 // {
-    // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
+    // $synth_attr = f'(ite {$cond.synth_attr} {$t.synth_attr} {$f.synth_attr})'
 // }
 | 'fix' '(' body = expr ')' 
-// {
-    // $result = f'(fix {$body.result})'
-// }
+{
+$synth_attr = f'(fix {$body.synth_attr})'
+}
 // | 'let' ID ('in' typ)? '=' expr expr  {
-//     $result = 'hello'
+//     $synth_attr = 'hello'
 // }
 | '(' body = expr ')' 
 // {
-    // $result = f'(paren {$body.result})' 
+    // $synth_attr = f'(paren {$body.synth_attr})' 
 // }
 ;
 
-record returns [str result] :
+record returns [str synth_attr] :
 | '.' ID '=' expr
 {
-$result = f'(field {$ID.text} {$expr.result})'
+$synth_attr = f'(field {$ID.text} {$expr.synth_attr})'
 }
 | '.' ID '=' expr record
 {
-$result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
+$synth_attr = f'(field {$ID.text} {$expr.synth_attr})' + ' ' + $record.synth_attr 
 }
 ;
 
-// thing returns [str result]: 
+// thing returns [str synth_attr]: 
 //     | 'fun' param = expr '=>' body = expr {
-//         $result = f'(fun {$param.result} {$body.result})'
+//         $synth_attr = f'(fun {$param.synth_attr} {$body.synth_attr})'
 //     }
 //     ;
 

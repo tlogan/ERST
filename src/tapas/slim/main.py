@@ -8,6 +8,8 @@ from asyncio import Queue
 
 from SlimLexer import SlimLexer
 from SlimParser import SlimParser
+
+from analysis_system import analyze, Kill
 '''
 NOTE: lexer does NOT preserve skipped lexicon (e.g. skipped white space)
 NOTE: there is a built in mechanism to stringify partial parse tree as s-expression
@@ -63,57 +65,6 @@ def newline_column_count(x : str) -> tuple[int, int]:
     lines = x.split("\n")
     return (len(lines) - 1, len(lines[-1]))
 
-async def analyze(input : Queue, output : Queue):
-    parser = SlimParser(None)
-    # parser.buildParseTrees = False
-    parser.output = output
-    code = ''
-    ctx = None
-    while True:
-        code += await input.get()
-        ############################
-        input_stream = InputStream(code)
-        #############################
-        lexer = SlimLexer(input_stream)
-        # lexer.line = line
-        # lexer.column = column 
-
-
-        token_stream : Any = CommonTokenStream(lexer)
-        #############################
-        parser.setInputStream(token_stream)
-
-        try:
-            ctx = parser.expr() # this is necessary to start parsing
-            # TODO: if parsing incomplete then continue to next iteration
-
-            if parser.getNumberOfSyntaxErrors() > 0:
-                print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
-                pass
-            else:
-                print(f"tree: {ctx.toStringTree(recog=parser)}")
-                break
-        except:
-            print(f"attribute error: {parser.getNumberOfSyntaxErrors()}")
-            pass
-
-        # print(f"current token: {parser.getCurrentToken()}")
-        # print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
-        ################
-        # TODO: if parsing error then terminate with error 
-        # TODO: if no parsing error then terminate with success
-        # TODO: if token stream has been seen before then lookup synt_attr in cache
-        #############################
-        ########################
-        # if parser.getCurrentToken() == parser.EOF:
-        # await output.put(f'DONE')
-        # break
-    #end while
-
-    # assert result
-    # return ctx.synth_attr
-
-#end analyze 
 
 
 async def test_analyze():
@@ -139,6 +90,8 @@ async def test_analyze():
         # "fix (", "()", ")"
         # "fix ((", ")", ")"
         "fix (", "(", ")", ")"
+        ,
+        Kill()
     ]
 
 
@@ -146,7 +99,7 @@ async def test_analyze():
 
     input : Queue = Queue()
     output : Queue = Queue()
-    server = asyncio.create_task(analyze(input, output))
+    analyze_task = asyncio.create_task(analyze(input, output))
 
     # pieces = [
     # f'''
@@ -157,6 +110,8 @@ async def test_analyze():
 
     for piece in pieces:
         input.put_nowait(piece)
+
+    return await analyze_task
 
     # while True:
     #     result = await output.get()
