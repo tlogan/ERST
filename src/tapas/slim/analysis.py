@@ -5,10 +5,7 @@ from antlr4 import *
 import sys
 
 import asyncio
-from asyncio import Queue
-
-import asyncio
-from asyncio import Queue
+from asyncio import Queue, Task
 
 from SlimLexer import SlimLexer
 from SlimParser import SlimParser
@@ -25,7 +22,7 @@ SynthAttr = str
 @dataclass(frozen=True, eq=True)
 class InherAttr: pass 
 
-async def analyze(input : Queue[I], output : Queue[InherAttr]) -> str:
+async def server(input : Queue[I], output : Queue[InherAttr]) -> str:
     none : Any = None
     parser = SlimParser(none)
     # parser.buildParseTrees = False
@@ -64,3 +61,37 @@ async def analyze(input : Queue[I], output : Queue[InherAttr]) -> str:
     return ctx.synth_attr
 
 #end analyze 
+
+
+
+
+
+class Client:
+    _input : Queue
+    _output : Queue
+    _task : Task[str]
+
+    def __init__(self, input, output, task):
+        self._input = input
+        self._output = output
+        self._task = task 
+
+    def send(self, item):
+        self._input.put_nowait(item)
+
+    async def recv(self):
+        return await self._output.get()
+
+    def cancel(self):
+        return self._task.cancel()
+        
+    async def get(self):
+        return await self._task
+
+def launch():
+    input : Queue = Queue()
+    output : Queue = Queue()
+    task = asyncio.create_task(server(input, output))
+    return Client(input, output, task)
+
+

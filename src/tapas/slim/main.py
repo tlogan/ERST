@@ -9,7 +9,7 @@ from asyncio import Queue
 from SlimLexer import SlimLexer
 from SlimParser import SlimParser
 
-from analysis_system import analyze, Kill
+from tapas.slim import analysis
 '''
 NOTE: lexer does NOT preserve skipped lexicon (e.g. skipped white space)
 NOTE: there is a built in mechanism to stringify partial parse tree as s-expression
@@ -91,15 +91,13 @@ async def test_analyze():
         # "fix ((", ")", ")"
         "fix (", "(", ")", ")"
         ,
-        Kill()
+        analysis.Kill()
     ]
 
 
     results = []
 
-    input : Queue = Queue()
-    output : Queue = Queue()
-    analyze_task = asyncio.create_task(analyze(input, output))
+    client = analysis.launch()
 
     # pieces = [
     # f'''
@@ -108,10 +106,10 @@ async def test_analyze():
     # '''
     # ]
 
-    for piece in pieces:
-        input.put_nowait(piece)
+    # for piece in pieces:
+    #     input.put_nowait(piece)
 
-    return await analyze_task
+    return await client.get() 
 
     # while True:
     #     result = await output.get()
