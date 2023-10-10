@@ -1,101 +1,124 @@
 grammar Slim;
 
 @header {
-from asyncio import Queue
+from dataclasses import dataclass
+from typing import *
+
+
+@dataclass(frozen=True, eq=True)
+class Symbol:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Terminal:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Nonterm: 
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Guidance:
+    syntax : Union[Symbol, Terminal, Nonterm]
+
 }
 
 @parser::members {
 
+_guidance : Guidance
 
 @property
-def output(self):
-    return self._output
+def guidance(self) -> Guidance:
+    return self._guidance
 
-@output.setter
-def output(self, value : Queue):
-    self._output = value
+@guidance.setter
+def guidance(self, value : Guidance):
+    self._guidance = value
 
 }
 
 
-expr returns [str synth_attr] : 
+expr returns [str result] : 
 | ID 
 {
-$synth_attr = f'(id {$ID.text})';
-self.output.put_nowait($synth_attr);
+$result = f'(id {$ID.text})';
 } 
 | '()' 
 {
-$synth_attr = f'(unit)'
-self.output.put_nowait($synth_attr);
+$result = f'(unit)'
 } 
 | ':' ID expr  
 {
-$synth_attr = f'(tag {$ID.text} {$expr.synth_attr})'
-self.output.put_nowait($synth_attr);
+$result = f'(tag {$ID.text} {$expr.result})'
 }
 | record 
 {
-$synth_attr = $record.synth_attr
-self.output.put_nowait($synth_attr);
+$result = $record.result
 }
 | ID '=>' expr 
 // {
-//     $synth_attr = 'hello'
+//     $result = 'hello'
 // }
 // | expr '.' expr {
-//     $synth_attr = 'hello'
+//     $result = 'hello'
 // }
 | expr '(' expr ')' 
 // {
-//     $synth_attr = 'hello'
+//     $result = 'hello'
 // }
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
 //{
-//     $synth_attr = 'hello'
+//     $result = 'hello'
 // }
 | ('fun' param = expr '=>' body = expr)+ 
 // {
 //     prefix = '['
 //     content = ''.join([
 //         '(fun ' + p + ' ' + b + ')'  
-//         for p, b in zip($param.synth_attr, $body.synth_attr)
+//         for p, b in zip($param.result, $body.result)
 //     ])
 //     suffix = ']'
-//     $synth_attr = prefix + content + suffix
+//     $result = prefix + content + suffix
 // }
 | 'if' cond = expr 'then' t = expr 'else' f = expr 
 // {
-    // $synth_attr = f'(ite {$cond.synth_attr} {$t.synth_attr} {$f.synth_attr})'
+    // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
-| 'fix' '(' body = expr ')' 
+| 'fix' 
+{ 
+self.guidance = Guidance(Symbol("(")); 
+} 
+'(' 
 {
-$synth_attr = f'(fix {$body.synth_attr})'
-self.output.put_nowait($synth_attr);
+self.guidance = Guidance(Nonterm("expr")); 
+}
+body = expr ')' 
+{
+$result = f'(fix {$body.result})'
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
-//     $synth_attr = 'hello'
+//     $result = 'hello'
 // }
 | '(' body = expr ')' 
 // {
-    // $synth_attr = f'(paren {$body.synth_attr})' 
+    // $result = f'(paren {$body.result})' 
 // }
 ;
 
-record returns [str synth_attr] :
+record returns [str result] :
 | '.' ID '=' expr
 {
-$synth_attr = f'(field {$ID.text} {$expr.synth_attr})'
+$result = f'(field {$ID.text} {$expr.result})'
 }
 | '.' ID '=' expr record
 {
-$synth_attr = f'(field {$ID.text} {$expr.synth_attr})' + ' ' + $record.synth_attr 
+$result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
 }
 ;
 
-// thing returns [str synth_attr]: 
+// thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {
-//         $synth_attr = f'(fun {$param.synth_attr} {$body.synth_attr})'
+//         $result = f'(fun {$param.result} {$body.result})'
 //     }
 //     ;
 

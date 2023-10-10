@@ -8,7 +8,26 @@ else:
     from typing.io import TextIO
 
 
-from asyncio import Queue
+from dataclasses import dataclass
+from typing import *
+
+
+@dataclass(frozen=True, eq=True)
+class Symbol:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Terminal:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Nonterm: 
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Guidance:
+    syntax : Union[Symbol, Terminal, Nonterm]
+
 
 
 def serializedATN():

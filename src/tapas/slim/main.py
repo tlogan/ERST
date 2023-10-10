@@ -67,7 +67,7 @@ def newline_column_count(x : str) -> tuple[int, int]:
 
 
 
-async def test_analyze():
+async def mk_client():
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
@@ -89,15 +89,17 @@ async def test_analyze():
         # "fix (()", ")"
         # "fix (", "()", ")"
         # "fix ((", ")", ")"
-        "fix (", "(", ")", ")"
-        ,
+        # "fix ", 
+        "fix (", 
+        # "(", ")", ")"
+        # ,
         analysis.Kill()
     ]
 
 
     results = []
 
-    client = analysis.launch()
+    connection = analysis.launch()
 
     # pieces = [
     # f'''
@@ -107,14 +109,14 @@ async def test_analyze():
     # ]
 
     for piece in pieces:
-        client.send(piece)
+        connection.send(piece)
 
 
-    while not client.done():
-        rcvd = await client.mk_receiver()
+    while not connection.done():
+        rcvd = await connection.mk_receiver()
         print(f'received: {rcvd}')
 
-    result = await client.mk_getter()
+    result = await connection.mk_getter()
 
     print(f'result: {result}')
 
@@ -133,7 +135,7 @@ async def test_analyze():
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
-    asyncio.run(test_analyze())
+    asyncio.run(mk_client())
 ####################
 
 #     test_parse_tree_serialize(f'''

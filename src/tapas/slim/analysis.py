@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import *
-import sys
 from antlr4 import *
 import sys
 
@@ -22,11 +21,10 @@ SynthAttr = str
 @dataclass(frozen=True, eq=True)
 class InherAttr: pass 
 
-async def mk_server(input : Queue[I], output : Queue[InherAttr]) -> str:
+async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     none : Any = None
     parser = SlimParser(none)
     # parser.buildParseTrees = False
-    parser.output = output
     code = ''
     ctx = None
     while True:
@@ -45,19 +43,22 @@ async def mk_server(input : Queue[I], output : Queue[InherAttr]) -> str:
         except:
             ctx = None
 
+        output.put_nowait(parser.guidance)
+
     '''
     end while
     '''
 
-    # if parser.getNumberOfSyntaxErrors() > 0 or ctx == None:
-    #     print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
-    #     pass
-    # else:
-    #     print(f"tree: {ctx.toStringTree(recog=parser)}")
+    if parser.getNumberOfSyntaxErrors() > 0 or ctx == None:
+        print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
+        pass
+    else:
+        print(f"tree: {ctx.toStringTree(recog=parser)}")
 
-    assert ctx
-    assert isinstance(ctx.synth_attr, str)
-    return ctx.synth_attr
+    if ctx:
+        return ctx.result
+    else:
+        return None
 
 #end analyze 
 
@@ -65,7 +66,7 @@ async def mk_server(input : Queue[I], output : Queue[InherAttr]) -> str:
 
 
 
-class Client:
+class Connection:
     _input : Queue
     _output : Queue
     _task : Task[str]
@@ -85,17 +86,15 @@ class Client:
         return self._task.cancel()
 
     def done(self):
-        return self._task.done()
+        return self._task.done() and self._output.empty()
 
     async def mk_getter(self):
         return await self._task
 
-mk_client = Client
-        
 def launch():
     input : Queue = Queue()
     output : Queue = Queue()
     task = asyncio.create_task(mk_server(input, output))
-    return mk_client(input, output, task)
+    return Connection(input, output, task)
 
 

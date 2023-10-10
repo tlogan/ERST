@@ -1,7 +1,8 @@
 # Lightweight Tapas
 
 ## TODO
-- test out sending in lexemes one by one using async queue
+- cache from token sequence to analysis result 
+- lookup result in cache before computing  
 - write attribute rules for analysis 
 - write tree listener for printing out indented parse tree 
 

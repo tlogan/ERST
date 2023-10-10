@@ -1,6 +1,25 @@
 // Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.9.2
 
-from asyncio import Queue
+from dataclasses import dataclass
+from typing import *
+
+
+@dataclass(frozen=True, eq=True)
+class Symbol:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Terminal:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Nonterm: 
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Guidance:
+    syntax : Union[Symbol, Terminal, Nonterm]
+
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

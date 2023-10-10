@@ -5,7 +5,26 @@ if "." in __name__:
 else:
     from SlimParser import SlimParser
 
-from asyncio import Queue
+from dataclasses import dataclass
+from typing import *
+
+
+@dataclass(frozen=True, eq=True)
+class Symbol:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Terminal:
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Nonterm: 
+    content : str
+
+@dataclass(frozen=True, eq=True)
+class Guidance:
+    syntax : Union[Symbol, Terminal, Nonterm]
+
 
 
 # This class defines a complete listener for a parse tree produced by SlimParser.
