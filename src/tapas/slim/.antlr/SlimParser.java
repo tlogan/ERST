@@ -160,7 +160,7 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).ID = match(ID);
 
 				((ExprContext)_localctx).synth_attr =  f'(id {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)})';
-				# self.output.put_nowait(_localctx.synth_attr);
+				self.output.put_nowait(_localctx.synth_attr);
 
 				}
 				break;
@@ -170,7 +170,7 @@ public class SlimParser extends Parser {
 				match(T__0);
 
 				((ExprContext)_localctx).synth_attr =  f'(unit)'
-				# self.output.put_nowait(_localctx.synth_attr);
+				self.output.put_nowait(_localctx.synth_attr);
 
 				}
 				break;
@@ -184,7 +184,7 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).expr = expr(8);
 
 				((ExprContext)_localctx).synth_attr =  f'(tag {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)} {((ExprContext)_localctx).expr.synth_attr})'
-				# self.output.put_nowait(_localctx.synth_attr);
+				self.output.put_nowait(_localctx.synth_attr);
 
 				}
 				break;
@@ -194,7 +194,7 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).record = record();
 
 				((ExprContext)_localctx).synth_attr =  ((ExprContext)_localctx).record.synth_attr
-				# self.output.put_nowait(_localctx.synth_attr);
+				self.output.put_nowait(_localctx.synth_attr);
 
 				}
 				break;
@@ -265,7 +265,8 @@ public class SlimParser extends Parser {
 				setState(39);
 				match(T__4);
 
-				_localctx.synth_attr = f'(fix {((ExprContext)_localctx).body.synth_attr})'
+				((ExprContext)_localctx).synth_attr =  f'(fix {((ExprContext)_localctx).body.synth_attr})'
+				self.output.put_nowait(_localctx.synth_attr);
 
 				}
 				break;

@@ -22,22 +22,22 @@ expr returns [str synth_attr] :
 | ID 
 {
 $synth_attr = f'(id {$ID.text})';
-# self.output.put_nowait($synth_attr);
+self.output.put_nowait($synth_attr);
 } 
 | '()' 
 {
 $synth_attr = f'(unit)'
-# self.output.put_nowait($synth_attr);
+self.output.put_nowait($synth_attr);
 } 
 | ':' ID expr  
 {
 $synth_attr = f'(tag {$ID.text} {$expr.synth_attr})'
-# self.output.put_nowait($synth_attr);
+self.output.put_nowait($synth_attr);
 }
 | record 
 {
 $synth_attr = $record.synth_attr
-# self.output.put_nowait($synth_attr);
+self.output.put_nowait($synth_attr);
 }
 | ID '=>' expr 
 // {
@@ -71,6 +71,7 @@ $synth_attr = $record.synth_attr
 | 'fix' '(' body = expr ')' 
 {
 $synth_attr = f'(fix {$body.synth_attr})'
+self.output.put_nowait($synth_attr);
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $synth_attr = 'hello'

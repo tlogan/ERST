@@ -22,7 +22,7 @@ SynthAttr = str
 @dataclass(frozen=True, eq=True)
 class InherAttr: pass 
 
-async def server(input : Queue[I], output : Queue[InherAttr]) -> str:
+async def mk_server(input : Queue[I], output : Queue[InherAttr]) -> str:
     none : Any = None
     parser = SlimParser(none)
     # parser.buildParseTrees = False
@@ -49,12 +49,11 @@ async def server(input : Queue[I], output : Queue[InherAttr]) -> str:
     end while
     '''
 
-    if parser.getNumberOfSyntaxErrors() > 0 or ctx == None:
-        print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
-        pass
-    else:
-        print(f"tree: {ctx.toStringTree(recog=parser)}")
-        # break
+    # if parser.getNumberOfSyntaxErrors() > 0 or ctx == None:
+    #     print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
+    #     pass
+    # else:
+    #     print(f"tree: {ctx.toStringTree(recog=parser)}")
 
     assert ctx
     assert isinstance(ctx.synth_attr, str)
@@ -79,19 +78,24 @@ class Client:
     def send(self, item):
         self._input.put_nowait(item)
 
-    async def recv(self):
-        return await self._output.get()
+    def mk_receiver(self):
+        return self._output.get()
 
     def cancel(self):
         return self._task.cancel()
-        
-    async def get(self):
+
+    def done(self):
+        return self._task.done()
+
+    async def mk_getter(self):
         return await self._task
 
+mk_client = Client
+        
 def launch():
     input : Queue = Queue()
     output : Queue = Queue()
-    task = asyncio.create_task(server(input, output))
-    return Client(input, output, task)
+    task = asyncio.create_task(mk_server(input, output))
+    return mk_client(input, output, task)
 
 

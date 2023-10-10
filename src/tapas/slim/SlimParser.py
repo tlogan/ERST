@@ -164,7 +164,7 @@ class SlimParser ( Parser ):
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.synth_attr =  f'(id {(None if localctx._ID is None else localctx._ID.text)})'
-                # self.output.put_nowait(localctx.synth_attr);
+                self.output.put_nowait(localctx.synth_attr);
 
                 pass
 
@@ -173,7 +173,7 @@ class SlimParser ( Parser ):
                 self.match(SlimParser.T__0)
 
                 localctx.synth_attr =  f'(unit)'
-                # self.output.put_nowait(localctx.synth_attr)
+                self.output.put_nowait(localctx.synth_attr)
 
                 pass
 
@@ -186,7 +186,7 @@ class SlimParser ( Parser ):
                 localctx._expr = self.expr(8)
 
                 localctx.synth_attr =  f'(tag {(None if localctx._ID is None else localctx._ID.text)} {localctx._expr.synth_attr})'
-                # self.output.put_nowait(localctx.synth_attr)
+                self.output.put_nowait(localctx.synth_attr)
 
                 pass
 
@@ -195,7 +195,7 @@ class SlimParser ( Parser ):
                 localctx._record = self.record()
 
                 localctx.synth_attr =  localctx._record.synth_attr
-                # self.output.put_nowait(localctx.synth_attr)
+                self.output.put_nowait(localctx.synth_attr)
 
                 pass
 
@@ -256,7 +256,8 @@ class SlimParser ( Parser ):
                 self.state = 39
                 self.match(SlimParser.T__4)
 
-                localctx.synth_attr = f'(fix {localctx.body.synth_attr})'
+                localctx.synth_attr =  f'(fix {localctx.body.synth_attr})'
+                self.output.put_nowait(localctx.synth_attr)
 
                 pass
 
