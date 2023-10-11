@@ -37,19 +37,24 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         code += i 
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
+        # token_stream = CommonTokenStream(lexer)
+        # token_stream.tokens
+
         token_stream : Any = CommonTokenStream(lexer)
+        # token_stream.index
         parser.setInputStream(token_stream)
         parser.token_index = 0
         parser.guidance = None 
+        parser.getCurrentToken()
 
         try:
             ctx = parser.expr()
 
             ####################
             ####################
+
             # parser.getCurrentToken()
             # token_stream = ctx.parser.getTokenStream()
-            # token_stream = parser.getTokenStream()
             # lexer = token_stream.tokenSource
             # input_stream = lexer.inputStream
             # # start = ctx.start.start

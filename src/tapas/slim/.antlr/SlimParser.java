@@ -144,6 +144,11 @@ public class SlimParser extends Parser {
 	#    # return input_stream.getText(start, stop)[start:stop]
 
 
+
+	def done(self) -> bool: 
+	    return self.getCurrentToken().type == parser.EOF
+
+
 	public SlimParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
@@ -211,15 +216,16 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				if self.cache.get(self.token_index):
-				    print("CACHE HIT")
-				    _localctx.result = self.cache[self.token_index]
-				else:
-				    print("COMPUTATION")
-				    _localctx.result = f'(unit)'
-				    self.cache[self.token_index] = _localctx.result
-				# self.guidance = None 
-				self.token_index += 1
+				if not self.done():
+				    if self.cache.get(self.token_index):
+				        print("CACHE HIT")
+				        _localctx.result = self.cache[self.token_index]
+				    else:
+				        print("COMPUTATION")
+				        _localctx.result = f'(unit)'
+				        self.cache[self.token_index] = _localctx.result
+				    # self.guidance = None 
+				    self.token_index += 1
 
 				}
 				break;
@@ -306,30 +312,42 @@ public class SlimParser extends Parser {
 				setState(36);
 				match(T__9);
 				 
-				self.guidance = Guidance(Symbol("("))
-				self.token_index += 1
-				# print(f"uno: {self.token_index}")
+				if not self.done():
+				    self.guidance = Guidance(Symbol("("))
+				    self.token_index += 1
+				    # print(f"uno: {self.token_index}")
 
 				setState(38);
 				match(T__3);
 
-				print("ooga booga")
-				self.guidance = Guidance(Nonterm("expr"))
-				self.token_index += 1
-				# print(f"dos: {self.token_index}")
+				print(f"TOKENS former: {len(self.getTokenStream().tokens)}")
+				if not self.done():
+				    print("ooga booga")
+				    self.guidance = Guidance(Nonterm("expr"))
+				    self.token_index += 1
+				    # print(f"dos: {self.token_index}")
 
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
 
 				# TODO: prevent this point from being reached in partial program
-				print("SHOULD NOT REACH HERE")
-				self.guidance = Guidance(Symbol(")"))
+				# guard: if self.token_index < len(token_stream):
+				if not self.done():
+				    print("SHOULD NOT REACH HERE")
+				    print(f"AA: {self.token_index}")
+				    print(f"BB: {self.getTokenStream().index}")
+				    print(f"CC: {len(self.getTokenStream().tokens)}")
+				    print(f"TOKENS latter: {len(self.getTokenStream().tokens)}")
+				    print(f"Current token type: {self.getCurrentToken().type}")
+				    print(f"EOF token: {self.EOF}")
+				    self.guidance = Guidance(Symbol(")"))
 
 				setState(42);
 				match(T__4);
 
 				# self.guidance = None 
-				_localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
+				if not self.done():
+				    _localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
 
 				}
 				break;

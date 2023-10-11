@@ -143,6 +143,11 @@ class SlimParser ( Parser ):
 
 
 
+    def done(self) -> bool: 
+        return self.getCurrentToken().type == parser.EOF
+
+
+
 
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -214,15 +219,16 @@ class SlimParser ( Parser ):
                 self.state = 7
                 self.match(SlimParser.T__0)
 
-                if self.cache.get(self.token_index):
-                    print("CACHE HIT")
-                    localctx.result = self.cache[self.token_index]
-                else:
-                    print("COMPUTATION")
-                    localctx.result = f'(unit)'
-                    self.cache[self.token_index] = localctx.result
-                # self.guidance = None 
-                self.token_index += 1
+                if not self.done():
+                    if self.cache.get(self.token_index):
+                        print("CACHE HIT")
+                        localctx.result = self.cache[self.token_index]
+                    else:
+                        print("COMPUTATION")
+                        localctx.result = f'(unit)'
+                        self.cache[self.token_index] = localctx.result
+                    # self.guidance = None 
+                    self.token_index += 1
 
                 pass
 
@@ -297,29 +303,42 @@ class SlimParser ( Parser ):
                 self.state = 36
                 self.match(SlimParser.T__9)
                  
-                self.guidance = Guidance(Symbol("("))
-                self.token_index += 1
-                # print(f"uno: {self.token_index}")
+                if not self.done():
+                    self.guidance = Guidance(Symbol("("))
+                    self.token_index += 1
+                    # print(f"uno: {self.token_index}")
 
                 self.state = 38
                 self.match(SlimParser.T__3)
 
-                print("ooga booga")
-                self.guidance = Guidance(Nonterm("expr"))
-                self.token_index += 1
-                # print(f"dos: {self.token_index}")
+                print(f"TOKENS former: {len(self.getTokenStream().tokens)}")
+                if not self.done():
+                    print("ooga booga")
+                    self.guidance = Guidance(Nonterm("expr"))
+                    self.token_index += 1
+                    # print(f"dos: {self.token_index}")
 
                 self.state = 40
                 localctx.body = localctx._expr = self.expr(0)
 
-                print("SHOULD NOT REACH HERE")
-                self.guidance = Guidance(Symbol(")"))
+                # TODO: prevent this point from being reached in partial program
+                # guard: if self.token_index < len(token_stream):
+                if not self.done():
+                    print("SHOULD NOT REACH HERE")
+                    print(f"AA: {self.token_index}")
+                    print(f"BB: {self.getTokenStream().index}")
+                    print(f"CC: {len(self.getTokenStream().tokens)}")
+                    print(f"TOKENS latter: {len(self.getTokenStream().tokens)}")
+                    print(f"Current token type: {self.getCurrentToken().type}")
+                    print(f"EOF token: {self.EOF}")
+                    self.guidance = Guidance(Symbol(")"))
 
                 self.state = 42
                 self.match(SlimParser.T__4)
 
                 # self.guidance = None 
-                localctx.result = f'(fix {localctx.body.result})'
+                if not self.done():
+                    localctx.result = f'(fix {localctx.body.result})'
 
                 pass
 

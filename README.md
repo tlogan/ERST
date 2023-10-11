@@ -6,6 +6,7 @@
 - paper by Nov 16.
 
 ## Implementation 
+- TODO: figure out how to detect missing token at EOF
 - TODO: figure out way to avoid repeating guidance
 - TODO: write attribute rules for analysis 
 - TODO: write tree listener for printing out indented parse tree 
