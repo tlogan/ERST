@@ -27,6 +27,8 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     # parser.buildParseTrees = False
     code = ''
     ctx = None
+    parser.cache = {} 
+    # parser.fresh_index = 0
     while True:
         i = await input.get()
         if isinstance(i, Kill):
@@ -38,7 +40,7 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         token_stream : Any = CommonTokenStream(lexer)
         parser.setInputStream(token_stream)
         parser.token_index = 0
-        # parser.guidance = None 
+        parser.guidance = None 
 
         try:
             ctx = parser.expr()
@@ -62,7 +64,10 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         except:
             ctx = None
 
-        output.put_nowait(parser.guidance)
+
+        if parser.guidance:
+            output.put_nowait(parser.guidance)
+        # parser.fresh_index = parser.token_index 
 
     '''
     end while

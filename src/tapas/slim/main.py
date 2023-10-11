@@ -88,12 +88,13 @@ async def mk_client():
         # "fix (())"
         # "fix (()", ")"
         # "fix (", "()", ")"
-        # "fix ((", ")", ")"
+        # "fix (", "()", ")"
+        "fix ("
         # "fix ", 
-        "fix (", 
+        # "fix (", 
         # "fix", " ", "(", 
         # "(", ")", ")"
-        # ,
+        ,
         analysis.Kill()
     ]
 

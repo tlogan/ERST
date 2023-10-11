@@ -111,7 +111,9 @@ public class SlimParser extends Parser {
 
 
 	guidance : Optional[Guidance]
+	fresh_index : int
 	token_index : int
+	cache : dict[int, str] 
 
 	# _guidance : Guidance
 	# @property
@@ -188,7 +190,7 @@ public class SlimParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(48);
+			setState(49);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 			case 1:
@@ -209,7 +211,15 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				_localctx.result = f'(unit)'
+				if self.cache.get(self.token_index):
+				    print("CACHE HIT")
+				    _localctx.result = self.cache[self.token_index]
+				else:
+				    print("COMPUTATION")
+				    _localctx.result = f'(unit)'
+				    self.cache[self.token_index] = _localctx.result
+				# self.guidance = None 
+				self.token_index += 1
 
 				}
 				break;
@@ -298,38 +308,44 @@ public class SlimParser extends Parser {
 				 
 				self.guidance = Guidance(Symbol("("))
 				self.token_index += 1
-				print("uno")
-				print(f"uno: {self.token_index}")
+				# print(f"uno: {self.token_index}")
 
 				setState(38);
 				match(T__3);
 
+				print("ooga booga")
 				self.guidance = Guidance(Nonterm("expr"))
 				self.token_index += 1
-				print(f"dos: {self.token_index}")
+				# print(f"dos: {self.token_index}")
 
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
-				setState(41);
+
+				# TODO: prevent this point from being reached in partial program
+				print("SHOULD NOT REACH HERE")
+				self.guidance = Guidance(Symbol(")"))
+
+				setState(42);
 				match(T__4);
 
+				# self.guidance = None 
 				_localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
 
 				}
 				break;
 			case 10:
 				{
-				setState(44);
-				match(T__3);
 				setState(45);
-				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
+				match(T__3);
 				setState(46);
+				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
+				setState(47);
 				match(T__4);
 				}
 				break;
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(57);
+			setState(58);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -340,18 +356,18 @@ public class SlimParser extends Parser {
 					{
 					_localctx = new ExprContext(_parentctx, _parentState);
 					pushNewRecursionContext(_localctx, _startState, RULE_expr);
-					setState(50);
-					if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 					setState(51);
-					match(T__3);
+					if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 					setState(52);
-					((ExprContext)_localctx).expr = expr(0);
+					match(T__3);
 					setState(53);
+					((ExprContext)_localctx).expr = expr(0);
+					setState(54);
 					match(T__4);
 					}
 					} 
 				}
-				setState(59);
+				setState(60);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			}
@@ -390,7 +406,7 @@ public class SlimParser extends Parser {
 		RecordContext _localctx = new RecordContext(_ctx, getState());
 		enterRule(_localctx, 2, RULE_record);
 		try {
-			setState(74);
+			setState(75);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
 			case 1:
@@ -401,13 +417,13 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(61);
-				match(T__10);
 				setState(62);
-				((RecordContext)_localctx).ID = match(ID);
+				match(T__10);
 				setState(63);
-				match(T__11);
+				((RecordContext)_localctx).ID = match(ID);
 				setState(64);
+				match(T__11);
+				setState(65);
 				((RecordContext)_localctx).expr = expr(0);
 
 				_localctx.result = f'(field {(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)} {((RecordContext)_localctx).expr.result})'
@@ -417,15 +433,15 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(67);
-				match(T__10);
 				setState(68);
-				((RecordContext)_localctx).ID = match(ID);
+				match(T__10);
 				setState(69);
-				match(T__11);
+				((RecordContext)_localctx).ID = match(ID);
 				setState(70);
-				((RecordContext)_localctx).expr = expr(0);
+				match(T__11);
 				setState(71);
+				((RecordContext)_localctx).expr = expr(0);
+				setState(72);
 				((RecordContext)_localctx).record = record();
 
 				_localctx.result = f'(field {(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)} {((RecordContext)_localctx).expr.result})' + ' ' + ((RecordContext)_localctx).record.result 
@@ -461,27 +477,28 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21O\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21P\4\2\t\2\4\3\t"+
 		"\3\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2"+
 		"\3\2\3\2\3\2\3\2\6\2\34\n\2\r\2\16\2\35\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3"+
-		"\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\5\2\63\n\2\3\2\3\2\3\2"+
-		"\3\2\3\2\7\2:\n\2\f\2\16\2=\13\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
-		"\3\3\3\3\3\3\3\3\3\5\3M\n\3\3\3\2\3\2\4\2\4\2\2\2Y\2\62\3\2\2\2\4L\3\2"+
-		"\2\2\6\63\b\2\1\2\7\b\7\17\2\2\b\63\b\2\1\2\t\n\7\3\2\2\n\63\b\2\1\2\13"+
-		"\f\7\4\2\2\f\r\7\17\2\2\r\16\5\2\2\n\16\17\b\2\1\2\17\63\3\2\2\2\20\21"+
-		"\5\4\3\2\21\22\b\2\1\2\22\63\3\2\2\2\23\24\7\17\2\2\24\25\7\5\2\2\25\63"+
-		"\5\2\2\b\26\27\7\b\2\2\27\30\5\2\2\2\30\31\7\5\2\2\31\32\5\2\2\2\32\34"+
-		"\3\2\2\2\33\26\3\2\2\2\34\35\3\2\2\2\35\33\3\2\2\2\35\36\3\2\2\2\36\63"+
-		"\3\2\2\2\37 \7\t\2\2 !\5\2\2\2!\"\7\n\2\2\"#\5\2\2\2#$\7\13\2\2$%\5\2"+
-		"\2\5%\63\3\2\2\2&\'\7\f\2\2\'(\b\2\1\2()\7\6\2\2)*\b\2\1\2*+\5\2\2\2+"+
-		",\7\7\2\2,-\b\2\1\2-\63\3\2\2\2./\7\6\2\2/\60\5\2\2\2\60\61\7\7\2\2\61"+
-		"\63\3\2\2\2\62\6\3\2\2\2\62\7\3\2\2\2\62\t\3\2\2\2\62\13\3\2\2\2\62\20"+
-		"\3\2\2\2\62\23\3\2\2\2\62\33\3\2\2\2\62\37\3\2\2\2\62&\3\2\2\2\62.\3\2"+
-		"\2\2\63;\3\2\2\2\64\65\f\7\2\2\65\66\7\6\2\2\66\67\5\2\2\2\678\7\7\2\2"+
-		"8:\3\2\2\29\64\3\2\2\2:=\3\2\2\2;9\3\2\2\2;<\3\2\2\2<\3\3\2\2\2=;\3\2"+
-		"\2\2>M\3\2\2\2?@\7\r\2\2@A\7\17\2\2AB\7\16\2\2BC\5\2\2\2CD\b\3\1\2DM\3"+
-		"\2\2\2EF\7\r\2\2FG\7\17\2\2GH\7\16\2\2HI\5\2\2\2IJ\5\4\3\2JK\b\3\1\2K"+
-		"M\3\2\2\2L>\3\2\2\2L?\3\2\2\2LE\3\2\2\2M\5\3\2\2\2\6\35\62;L";
+		"\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\5\2\64\n\2\3\2\3\2"+
+		"\3\2\3\2\3\2\7\2;\n\2\f\2\16\2>\13\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
+		"\3\3\3\3\3\3\3\3\3\3\3\5\3N\n\3\3\3\2\3\2\4\2\4\2\2\2Z\2\63\3\2\2\2\4"+
+		"M\3\2\2\2\6\64\b\2\1\2\7\b\7\17\2\2\b\64\b\2\1\2\t\n\7\3\2\2\n\64\b\2"+
+		"\1\2\13\f\7\4\2\2\f\r\7\17\2\2\r\16\5\2\2\n\16\17\b\2\1\2\17\64\3\2\2"+
+		"\2\20\21\5\4\3\2\21\22\b\2\1\2\22\64\3\2\2\2\23\24\7\17\2\2\24\25\7\5"+
+		"\2\2\25\64\5\2\2\b\26\27\7\b\2\2\27\30\5\2\2\2\30\31\7\5\2\2\31\32\5\2"+
+		"\2\2\32\34\3\2\2\2\33\26\3\2\2\2\34\35\3\2\2\2\35\33\3\2\2\2\35\36\3\2"+
+		"\2\2\36\64\3\2\2\2\37 \7\t\2\2 !\5\2\2\2!\"\7\n\2\2\"#\5\2\2\2#$\7\13"+
+		"\2\2$%\5\2\2\5%\64\3\2\2\2&\'\7\f\2\2\'(\b\2\1\2()\7\6\2\2)*\b\2\1\2*"+
+		"+\5\2\2\2+,\b\2\1\2,-\7\7\2\2-.\b\2\1\2.\64\3\2\2\2/\60\7\6\2\2\60\61"+
+		"\5\2\2\2\61\62\7\7\2\2\62\64\3\2\2\2\63\6\3\2\2\2\63\7\3\2\2\2\63\t\3"+
+		"\2\2\2\63\13\3\2\2\2\63\20\3\2\2\2\63\23\3\2\2\2\63\33\3\2\2\2\63\37\3"+
+		"\2\2\2\63&\3\2\2\2\63/\3\2\2\2\64<\3\2\2\2\65\66\f\7\2\2\66\67\7\6\2\2"+
+		"\678\5\2\2\289\7\7\2\29;\3\2\2\2:\65\3\2\2\2;>\3\2\2\2<:\3\2\2\2<=\3\2"+
+		"\2\2=\3\3\2\2\2><\3\2\2\2?N\3\2\2\2@A\7\r\2\2AB\7\17\2\2BC\7\16\2\2CD"+
+		"\5\2\2\2DE\b\3\1\2EN\3\2\2\2FG\7\r\2\2GH\7\17\2\2HI\7\16\2\2IJ\5\2\2\2"+
+		"JK\5\4\3\2KL\b\3\1\2LN\3\2\2\2M?\3\2\2\2M@\3\2\2\2MF\3\2\2\2N\5\3\2\2"+
+		"\2\6\35\63<M";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

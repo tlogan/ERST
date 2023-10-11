@@ -26,7 +26,9 @@ class Guidance:
 @parser::members {
 
 guidance : Optional[Guidance]
+fresh_index : int
 token_index : int
+cache : dict[int, str] 
 
 # _guidance : Guidance
 # @property
@@ -66,7 +68,15 @@ $result = f'(id {$ID.text})';
 } 
 | '()' 
 {
-$result = f'(unit)'
+if self.cache.get(self.token_index):
+    print("CACHE HIT")
+    $result = self.cache[self.token_index]
+else:
+    print("COMPUTATION")
+    $result = f'(unit)'
+    self.cache[self.token_index] = $result
+# self.guidance = None 
+self.token_index += 1
 } 
 | ':' ID expr  
 {
@@ -109,17 +119,24 @@ $result = $record.result
 { 
 self.guidance = Guidance(Symbol("("))
 self.token_index += 1
-print("uno")
-print(f"uno: {self.token_index}")
+# print(f"uno: {self.token_index}")
 } 
 '(' 
 {
+print("ooga booga")
 self.guidance = Guidance(Nonterm("expr"))
 self.token_index += 1
-print(f"dos: {self.token_index}")
+# print(f"dos: {self.token_index}")
 }
-body = expr ')' 
+body = expr 
 {
+# TODO: prevent this point from being reached in partial program
+print("SHOULD NOT REACH HERE")
+self.guidance = Guidance(Symbol(")"))
+}
+')' 
+{
+# self.guidance = None 
 $result = f'(fix {$body.result})'
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
