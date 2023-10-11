@@ -1,15 +1,23 @@
 # Lightweight Tapas
 
-## TODO
-- cache from token sequence to analysis result 
-- lookup result in cache before computing  
-- write attribute rules for analysis 
-- write tree listener for printing out indented parse tree 
 
-- instead of using custom solver, translate leaf subtyping into horn clauses for external solver
-- use renaming lazily (just for equality modulo alpha renaming)
+## Roadmap 
+- implementation by Nov 1.  
+- paper by Nov 16.
+
+## Implementation 
+- TODO: get token sequence up to a point in the grammar
+- TODO: cache from token sequence to analysis result 
+- TODO: lookup result in cache before computing  
+- TODO: write attribute rules for analysis 
+- TODO: write tree listener for printing out indented parse tree 
+
+- TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver
+- TODO: use renaming lazily (just for equality modulo alpha renaming)
 
 ## Story
+- Conjecture: finding necessary intersections during type checking corresponds to craig interpolation extracting a generalization from a proof
+    - the program being type checked behaves as the proof being traversed by craig interpolation.
 
 ### Title
 - Guiding safe generation of untyped programs   

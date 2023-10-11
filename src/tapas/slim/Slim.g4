@@ -25,15 +25,36 @@ class Guidance:
 
 @parser::members {
 
-_guidance : Guidance
+guidance : Optional[Guidance]
+token_index : int
 
-@property
-def guidance(self) -> Guidance:
-    return self._guidance
+# _guidance : Guidance
+# @property
+# def guidance(self) -> Guidance:
+#     return self._guidance
+# 
+# @guidance.setter
+# def guidance(self, value : Guidance):
+#     self._guidance = value
 
-@guidance.setter
-def guidance(self, value : Guidance):
-    self._guidance = value
+#def getAllText(self):  # include hidden channel
+#    # token_stream = ctx.parser.getTokenStream()
+#    token_stream = self.getTokenStream()
+#    lexer = token_stream.tokenSource
+#    input_stream = lexer.inputStream
+#    # start = ctx.start.start
+#    start = 0
+#    # stop = ctx.stop.stop
+#
+#    # TODO: increment token position in attributes
+#    # TODO: map token position to result 
+#    # TODO: figure out a way to get the current position of the parser
+#    stop = self.getRuleIndex()
+#    # return input_stream.getText(start, stop)
+#    print(f"start: {start}")
+#    print(f"stoppy poop: {stop}")
+#    return "<<not yet implemented>>"
+#    # return input_stream.getText(start, stop)[start:stop]
 
 }
 
@@ -86,11 +107,16 @@ $result = $record.result
 // }
 | 'fix' 
 { 
-self.guidance = Guidance(Symbol("(")); 
+self.guidance = Guidance(Symbol("("))
+self.token_index += 1
+print("uno")
+print(f"uno: {self.token_index}")
 } 
 '(' 
 {
-self.guidance = Guidance(Nonterm("expr")); 
+self.guidance = Guidance(Nonterm("expr"))
+self.token_index += 1
+print(f"dos: {self.token_index}")
 }
 body = expr ')' 
 {
