@@ -85,18 +85,9 @@ async def mk_client():
     # ]
 
     pieces = [
-        # "fix (())"
-        # "fix (()", ")"
-        # "fix (", "()", ")"
-        # "fix (", "()", ")"
         # "fix (())",
-        # "fix (", "()",
         "fix (()",
-        # "fix ", 
-        # "fix (", 
-        # "fix", " ", "(", 
-        # "(", ")", ")"
-        # ,
+        # "fix (",
         analysis.Kill()
     ]
 
@@ -117,23 +108,17 @@ async def mk_client():
 
 
     while not connection.done():
+        '''
+        assume that receiver is non-empty if task is not done 
+        '''
+        # not done --> not empty
+        # empty --> done
         rcvd = await connection.mk_receiver()
         print(f'received: {rcvd}')
 
+    print('post while')
     result = await connection.mk_getter()
-
     print(f'result: {result}')
-
-    # while True:
-    #     result = await output.get()
-    #     if result == 'DONE':
-    #         break
-    #     print(f'result: {result}')
-    #     results.append(result)
-
-    # print(results)
-    # return results 
-
 
 
 if __name__ == '__main__':

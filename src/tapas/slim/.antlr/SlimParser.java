@@ -1,4 +1,4 @@
-// Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.9.2
+// Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.13.1
 
 from dataclasses import dataclass
 from typing import *
@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
 
-@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
+@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class SlimParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.9.2", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.13.1", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -111,9 +111,10 @@ public class SlimParser extends Parser {
 
 
 	guidance : Optional[Guidance]
-	fresh_index : int
-	token_index : int
 	cache : dict[int, str] 
+	_overflow = False  
+
+	 
 
 	# _guidance : Guidance
 	# @property
@@ -144,9 +145,17 @@ public class SlimParser extends Parser {
 	#    # return input_stream.getText(start, stop)[start:stop]
 
 
+	def tokenIndex(self):
+	    return self.getCurrentToken().tokenIndex
 
-	def done(self) -> bool: 
-	    return self.getCurrentToken().type == parser.EOF
+	def updateOverflow(self):
+	    tok = self.getCurrentToken()
+	    print(f"TOK (updateOverflow): {tok}")
+	    if not self._overflow and tok.type == self.EOF :
+	        self._overflow = True 
+
+	def overflow(self) -> bool: 
+	    return self._overflow
 
 
 	public SlimParser(TokenStream input) {
@@ -154,6 +163,7 @@ public class SlimParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 
+	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
 		public str result;
 		public Token ID;
@@ -216,16 +226,13 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				if not self.done():
-				    if self.cache.get(self.token_index):
-				        print("CACHE HIT")
-				        _localctx.result = self.cache[self.token_index]
-				    else:
-				        print("COMPUTATION")
-				        _localctx.result = f'(unit)'
-				        self.cache[self.token_index] = _localctx.result
-				    # self.guidance = None 
-				    self.token_index += 1
+				if self.cache.get(self.tokenIndex()):
+				    print("CACHE HIT")
+				    _localctx.result = self.cache[self.tokenIndex()]
+				else:
+				    print("COMPUTATION")
+				    _localctx.result = f'(unit)'
+				    self.cache[self.tokenIndex()] = _localctx.result
 
 				}
 				break;
@@ -312,42 +319,33 @@ public class SlimParser extends Parser {
 				setState(36);
 				match(T__9);
 				 
-				if not self.done():
-				    self.guidance = Guidance(Symbol("("))
-				    self.token_index += 1
-				    # print(f"uno: {self.token_index}")
+				self.guidance = Guidance(Symbol("("))
+				self.updateOverflow()
 
 				setState(38);
 				match(T__3);
 
-				print(f"TOKENS former: {len(self.getTokenStream().tokens)}")
-				if not self.done():
-				    print("ooga booga")
-				    self.guidance = Guidance(Nonterm("expr"))
-				    self.token_index += 1
-				    # print(f"dos: {self.token_index}")
+				self.guidance = Guidance(Nonterm("expr"))
+				self.updateOverflow()
 
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
 
-				# TODO: prevent this point from being reached in partial program
-				# guard: if self.token_index < len(token_stream):
-				if not self.done():
-				    print("SHOULD NOT REACH HERE")
-				    print(f"AA: {self.token_index}")
-				    print(f"BB: {self.getTokenStream().index}")
-				    print(f"CC: {len(self.getTokenStream().tokens)}")
-				    print(f"TOKENS latter: {len(self.getTokenStream().tokens)}")
-				    print(f"Current token type: {self.getCurrentToken().type}")
-				    print(f"EOF token: {self.EOF}")
+				# TODO: need to detect that token index has not changed 
+				# lack of change indicates outofbounds  
+				# set token_index to -1 when out of bounds
+				print("REACHED HERE")
+				print(f"REACHED HERE overflow: {self.overflow()}")
+
+				if not self.overflow(): 
 				    self.guidance = Guidance(Symbol(")"))
+
+				self.updateOverflow()
 
 				setState(42);
 				match(T__4);
 
-				# self.guidance = None 
-				if not self.done():
-				    _localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
+				_localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
 
 				}
 				break;
@@ -402,6 +400,7 @@ public class SlimParser extends Parser {
 		return _localctx;
 	}
 
+	@SuppressWarnings("CheckReturnValue")
 	public static class RecordContext extends ParserRuleContext {
 		public str result;
 		public Token ID;
@@ -495,28 +494,57 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21P\4\2\t\2\4\3\t"+
-		"\3\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2"+
-		"\3\2\3\2\3\2\3\2\6\2\34\n\2\r\2\16\2\35\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3"+
-		"\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\5\2\64\n\2\3\2\3\2"+
-		"\3\2\3\2\3\2\7\2;\n\2\f\2\16\2>\13\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
-		"\3\3\3\3\3\3\3\3\3\3\3\5\3N\n\3\3\3\2\3\2\4\2\4\2\2\2Z\2\63\3\2\2\2\4"+
-		"M\3\2\2\2\6\64\b\2\1\2\7\b\7\17\2\2\b\64\b\2\1\2\t\n\7\3\2\2\n\64\b\2"+
-		"\1\2\13\f\7\4\2\2\f\r\7\17\2\2\r\16\5\2\2\n\16\17\b\2\1\2\17\64\3\2\2"+
-		"\2\20\21\5\4\3\2\21\22\b\2\1\2\22\64\3\2\2\2\23\24\7\17\2\2\24\25\7\5"+
-		"\2\2\25\64\5\2\2\b\26\27\7\b\2\2\27\30\5\2\2\2\30\31\7\5\2\2\31\32\5\2"+
-		"\2\2\32\34\3\2\2\2\33\26\3\2\2\2\34\35\3\2\2\2\35\33\3\2\2\2\35\36\3\2"+
-		"\2\2\36\64\3\2\2\2\37 \7\t\2\2 !\5\2\2\2!\"\7\n\2\2\"#\5\2\2\2#$\7\13"+
-		"\2\2$%\5\2\2\5%\64\3\2\2\2&\'\7\f\2\2\'(\b\2\1\2()\7\6\2\2)*\b\2\1\2*"+
-		"+\5\2\2\2+,\b\2\1\2,-\7\7\2\2-.\b\2\1\2.\64\3\2\2\2/\60\7\6\2\2\60\61"+
-		"\5\2\2\2\61\62\7\7\2\2\62\64\3\2\2\2\63\6\3\2\2\2\63\7\3\2\2\2\63\t\3"+
-		"\2\2\2\63\13\3\2\2\2\63\20\3\2\2\2\63\23\3\2\2\2\63\33\3\2\2\2\63\37\3"+
-		"\2\2\2\63&\3\2\2\2\63/\3\2\2\2\64<\3\2\2\2\65\66\f\7\2\2\66\67\7\6\2\2"+
-		"\678\5\2\2\289\7\7\2\29;\3\2\2\2:\65\3\2\2\2;>\3\2\2\2<:\3\2\2\2<=\3\2"+
-		"\2\2=\3\3\2\2\2><\3\2\2\2?N\3\2\2\2@A\7\r\2\2AB\7\17\2\2BC\7\16\2\2CD"+
-		"\5\2\2\2DE\b\3\1\2EN\3\2\2\2FG\7\r\2\2GH\7\17\2\2HI\7\16\2\2IJ\5\2\2\2"+
-		"JK\5\4\3\2KL\b\3\1\2LN\3\2\2\2M?\3\2\2\2M@\3\2\2\2MF\3\2\2\2N\5\3\2\2"+
-		"\2\6\35\63<M";
+		"\u0004\u0001\u000fN\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0004\u0000\u001a\b\u0000\u000b\u0000\f"+
+		"\u0000\u001b\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u00002\b\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0005\u00009\b\u0000"+
+		"\n\u0000\f\u0000<\t\u0000\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0003\u0001L\b\u0001"+
+		"\u0001\u0001\u0000\u0001\u0000\u0002\u0000\u0002\u0000\u0000X\u00001\u0001"+
+		"\u0000\u0000\u0000\u0002K\u0001\u0000\u0000\u0000\u00042\u0006\u0000\uffff"+
+		"\uffff\u0000\u0005\u0006\u0005\r\u0000\u0000\u00062\u0006\u0000\uffff"+
+		"\uffff\u0000\u0007\b\u0005\u0001\u0000\u0000\b2\u0006\u0000\uffff\uffff"+
+		"\u0000\t\n\u0005\u0002\u0000\u0000\n\u000b\u0005\r\u0000\u0000\u000b\f"+
+		"\u0003\u0000\u0000\b\f\r\u0006\u0000\uffff\uffff\u0000\r2\u0001\u0000"+
+		"\u0000\u0000\u000e\u000f\u0003\u0002\u0001\u0000\u000f\u0010\u0006\u0000"+
+		"\uffff\uffff\u0000\u00102\u0001\u0000\u0000\u0000\u0011\u0012\u0005\r"+
+		"\u0000\u0000\u0012\u0013\u0005\u0003\u0000\u0000\u00132\u0003\u0000\u0000"+
+		"\u0006\u0014\u0015\u0005\u0006\u0000\u0000\u0015\u0016\u0003\u0000\u0000"+
+		"\u0000\u0016\u0017\u0005\u0003\u0000\u0000\u0017\u0018\u0003\u0000\u0000"+
+		"\u0000\u0018\u001a\u0001\u0000\u0000\u0000\u0019\u0014\u0001\u0000\u0000"+
+		"\u0000\u001a\u001b\u0001\u0000\u0000\u0000\u001b\u0019\u0001\u0000\u0000"+
+		"\u0000\u001b\u001c\u0001\u0000\u0000\u0000\u001c2\u0001\u0000\u0000\u0000"+
+		"\u001d\u001e\u0005\u0007\u0000\u0000\u001e\u001f\u0003\u0000\u0000\u0000"+
+		"\u001f \u0005\b\u0000\u0000 !\u0003\u0000\u0000\u0000!\"\u0005\t\u0000"+
+		"\u0000\"#\u0003\u0000\u0000\u0003#2\u0001\u0000\u0000\u0000$%\u0005\n"+
+		"\u0000\u0000%&\u0006\u0000\uffff\uffff\u0000&\'\u0005\u0004\u0000\u0000"+
+		"\'(\u0006\u0000\uffff\uffff\u0000()\u0003\u0000\u0000\u0000)*\u0006\u0000"+
+		"\uffff\uffff\u0000*+\u0005\u0005\u0000\u0000+,\u0006\u0000\uffff\uffff"+
+		"\u0000,2\u0001\u0000\u0000\u0000-.\u0005\u0004\u0000\u0000./\u0003\u0000"+
+		"\u0000\u0000/0\u0005\u0005\u0000\u000002\u0001\u0000\u0000\u00001\u0004"+
+		"\u0001\u0000\u0000\u00001\u0005\u0001\u0000\u0000\u00001\u0007\u0001\u0000"+
+		"\u0000\u00001\t\u0001\u0000\u0000\u00001\u000e\u0001\u0000\u0000\u0000"+
+		"1\u0011\u0001\u0000\u0000\u00001\u0019\u0001\u0000\u0000\u00001\u001d"+
+		"\u0001\u0000\u0000\u00001$\u0001\u0000\u0000\u00001-\u0001\u0000\u0000"+
+		"\u00002:\u0001\u0000\u0000\u000034\n\u0005\u0000\u000045\u0005\u0004\u0000"+
+		"\u000056\u0003\u0000\u0000\u000067\u0005\u0005\u0000\u000079\u0001\u0000"+
+		"\u0000\u000083\u0001\u0000\u0000\u00009<\u0001\u0000\u0000\u0000:8\u0001"+
+		"\u0000\u0000\u0000:;\u0001\u0000\u0000\u0000;\u0001\u0001\u0000\u0000"+
+		"\u0000<:\u0001\u0000\u0000\u0000=L\u0001\u0000\u0000\u0000>?\u0005\u000b"+
+		"\u0000\u0000?@\u0005\r\u0000\u0000@A\u0005\f\u0000\u0000AB\u0003\u0000"+
+		"\u0000\u0000BC\u0006\u0001\uffff\uffff\u0000CL\u0001\u0000\u0000\u0000"+
+		"DE\u0005\u000b\u0000\u0000EF\u0005\r\u0000\u0000FG\u0005\f\u0000\u0000"+
+		"GH\u0003\u0000\u0000\u0000HI\u0003\u0002\u0001\u0000IJ\u0006\u0001\uffff"+
+		"\uffff\u0000JL\u0001\u0000\u0000\u0000K=\u0001\u0000\u0000\u0000K>\u0001"+
+		"\u0000\u0000\u0000KD\u0001\u0000\u0000\u0000L\u0003\u0001\u0000\u0000"+
+		"\u0000\u0004\u001b1:K";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

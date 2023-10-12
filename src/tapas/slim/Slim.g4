@@ -26,9 +26,10 @@ class Guidance:
 @parser::members {
 
 guidance : Optional[Guidance]
-fresh_index : int
-token_index : int
 cache : dict[int, str] 
+_overflow = False  
+
+ 
 
 # _guidance : Guidance
 # @property
@@ -59,12 +60,19 @@ cache : dict[int, str]
 #    # return input_stream.getText(start, stop)[start:stop]
 
 
+def tokenIndex(self):
+    return self.getCurrentToken().tokenIndex
 
-def done(self) -> bool: 
-    return self.getCurrentToken().type == parser.EOF
+def updateOverflow(self):
+    tok = self.getCurrentToken()
+    print(f"TOK (updateOverflow): {tok}")
+    if not self._overflow and tok.type == self.EOF :
+        self._overflow = True 
+
+def overflow(self) -> bool: 
+    return self._overflow
 
 }
-
 
 expr returns [str result] : 
 | ID 
@@ -73,16 +81,13 @@ $result = f'(id {$ID.text})';
 } 
 | '()' 
 {
-if not self.done():
-    if self.cache.get(self.token_index):
-        print("CACHE HIT")
-        $result = self.cache[self.token_index]
-    else:
-        print("COMPUTATION")
-        $result = f'(unit)'
-        self.cache[self.token_index] = $result
-    # self.guidance = None 
-    self.token_index += 1
+if self.cache.get(self.tokenIndex()):
+    print("CACHE HIT")
+    $result = self.cache[self.tokenIndex()]
+else:
+    print("COMPUTATION")
+    $result = f'(unit)'
+    self.cache[self.tokenIndex()] = $result
 } 
 | ':' ID expr  
 {
@@ -123,39 +128,30 @@ $result = $record.result
 // }
 | 'fix' 
 { 
-if not self.done():
-    self.guidance = Guidance(Symbol("("))
-    self.token_index += 1
-    # print(f"uno: {self.token_index}")
+self.guidance = Guidance(Symbol("("))
+self.updateOverflow()
 } 
 '(' 
 {
-print(f"TOKENS former: {len(self.getTokenStream().tokens)}")
-if not self.done():
-    print("ooga booga")
-    self.guidance = Guidance(Nonterm("expr"))
-    self.token_index += 1
-    # print(f"dos: {self.token_index}")
+self.guidance = Guidance(Nonterm("expr"))
+self.updateOverflow()
 }
 body = expr 
 {
-# TODO: prevent this point from being reached in partial program
-# guard: if self.token_index < len(token_stream):
-if not self.done():
-    print("SHOULD NOT REACH HERE")
-    print(f"AA: {self.token_index}")
-    print(f"BB: {self.getTokenStream().index}")
-    print(f"CC: {len(self.getTokenStream().tokens)}")
-    print(f"TOKENS latter: {len(self.getTokenStream().tokens)}")
-    print(f"Current token type: {self.getCurrentToken().type}")
-    print(f"EOF token: {self.EOF}")
+# TODO: need to detect that token index has not changed 
+# lack of change indicates outofbounds  
+# set token_index to -1 when out of bounds
+print("REACHED HERE")
+print(f"REACHED HERE overflow: {self.overflow()}")
+
+if not self.overflow(): 
     self.guidance = Guidance(Symbol(")"))
+
+self.updateOverflow()
 }
 ')' 
 {
-# self.guidance = None 
-if not self.done():
-    $result = f'(fix {$body.result})'
+$result = f'(fix {$body.result})'
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'
@@ -207,14 +203,6 @@ $result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result
 ID : [a-zA-Z]+ ;
 INT : [0-9]+ ;
 WS : [ \t\n\r]+ -> skip ;
-
-
-
-
-
-
-
-
 
 ////////////////////////////////////////////////////
 /** Grammar from tour chapter augmented with actions */

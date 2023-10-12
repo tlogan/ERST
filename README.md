@@ -6,7 +6,9 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: figure out how to detect missing token at EOF
+- NOTE: update guidance before each part of sequence
+- NOTE: update overflow after each guidance update 
+- NOTE: update result after entire sequence
 - TODO: figure out way to avoid repeating guidance
 - TODO: write attribute rules for analysis 
 - TODO: write tree listener for printing out indented parse tree 

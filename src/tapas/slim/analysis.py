@@ -21,6 +21,9 @@ SynthAttr = str
 @dataclass(frozen=True, eq=True)
 class InherAttr: pass 
 
+# async def mk_server(input : Queue, output : Queue) -> Optional[str]:
+#     return "hello"
+
 async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     none : Any = None
     parser = SlimParser(none)
@@ -32,6 +35,8 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     while True:
         i = await input.get()
         if isinstance(i, Kill):
+            print("Killed")
+            output.put_nowait(None)
             break
 
         code += i 
@@ -43,7 +48,6 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         token_stream : Any = CommonTokenStream(lexer)
         # token_stream.index
         parser.setInputStream(token_stream)
-        parser.token_index = 0
         parser.guidance = None 
         parser.getCurrentToken()
 
@@ -70,9 +74,9 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
             ctx = None
 
 
-        if parser.guidance:
-            output.put_nowait(parser.guidance)
-        # parser.fresh_index = parser.token_index 
+        # if parser.guidance:
+        output.put_nowait(parser.guidance)
+
 
     '''
     end while
@@ -89,7 +93,9 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     else:
         return None
 
-#end analyze 
+'''
+end mk_server 
+'''
 
 
 

@@ -109,9 +109,10 @@ class SlimParser ( Parser ):
 
 
     guidance : Optional[Guidance]
-    fresh_index : int
-    token_index : int
     cache : dict[int, str] 
+    _overflow = False  
+
+     
 
     # _guidance : Guidance
     # @property
@@ -142,9 +143,17 @@ class SlimParser ( Parser ):
     #    # return input_stream.getText(start, stop)[start:stop]
 
 
+    def tokenIndex(self):
+        return self.getCurrentToken().tokenIndex
 
-    def done(self) -> bool: 
-        return self.getCurrentToken().type == parser.EOF
+    def updateOverflow(self):
+        tok = self.getCurrentToken()
+        print(f"TOK (updateOverflow): {tok}")
+        if not self._overflow and tok.type == self.EOF :
+            self._overflow = True 
+
+    def overflow(self) -> bool: 
+        return self._overflow
 
 
 
@@ -219,16 +228,13 @@ class SlimParser ( Parser ):
                 self.state = 7
                 self.match(SlimParser.T__0)
 
-                if not self.done():
-                    if self.cache.get(self.token_index):
-                        print("CACHE HIT")
-                        localctx.result = self.cache[self.token_index]
-                    else:
-                        print("COMPUTATION")
-                        localctx.result = f'(unit)'
-                        self.cache[self.token_index] = localctx.result
-                    # self.guidance = None 
-                    self.token_index += 1
+                if self.cache.get(self.tokenIndex()):
+                    print("CACHE HIT")
+                    localctx.result = self.cache[self.tokenIndex()]
+                else:
+                    print("COMPUTATION")
+                    localctx.result = f'(unit)'
+                    self.cache[self.tokenIndex()] = localctx.result
 
                 pass
 
@@ -303,42 +309,33 @@ class SlimParser ( Parser ):
                 self.state = 36
                 self.match(SlimParser.T__9)
                  
-                if not self.done():
-                    self.guidance = Guidance(Symbol("("))
-                    self.token_index += 1
-                    # print(f"uno: {self.token_index}")
+                self.guidance = Guidance(Symbol("("))
+                self.updateOverflow()
 
                 self.state = 38
                 self.match(SlimParser.T__3)
 
-                print(f"TOKENS former: {len(self.getTokenStream().tokens)}")
-                if not self.done():
-                    print("ooga booga")
-                    self.guidance = Guidance(Nonterm("expr"))
-                    self.token_index += 1
-                    # print(f"dos: {self.token_index}")
+                self.guidance = Guidance(Nonterm("expr"))
+                self.updateOverflow()
 
                 self.state = 40
                 localctx.body = localctx._expr = self.expr(0)
 
-                # TODO: prevent this point from being reached in partial program
-                # guard: if self.token_index < len(token_stream):
-                if not self.done():
-                    print("SHOULD NOT REACH HERE")
-                    print(f"AA: {self.token_index}")
-                    print(f"BB: {self.getTokenStream().index}")
-                    print(f"CC: {len(self.getTokenStream().tokens)}")
-                    print(f"TOKENS latter: {len(self.getTokenStream().tokens)}")
-                    print(f"Current token type: {self.getCurrentToken().type}")
-                    print(f"EOF token: {self.EOF}")
+                # TODO: need to detect that token index has not changed 
+                # lack of change indicates outofbounds  
+                # set token_index to -1 when out of bounds
+                print("REACHED HERE")
+                print(f"REACHED HERE overflow: {self.overflow()}")
+
+                if not self.overflow(): 
                     self.guidance = Guidance(Symbol(")"))
+
+                self.updateOverflow()
 
                 self.state = 42
                 self.match(SlimParser.T__4)
 
-                # self.guidance = None 
-                if not self.done():
-                    localctx.result = f'(fix {localctx.body.result})'
+                localctx.result = f'(fix {localctx.body.result})'
 
                 pass
 
