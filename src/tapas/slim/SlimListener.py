@@ -21,10 +21,6 @@ class Terminal:
 class Nonterm: 
     content : str
 
-@dataclass(frozen=True, eq=True)
-class Guidance:
-    syntax : Union[Symbol, Terminal, Nonterm]
-
 
 
 # This class defines a complete listener for a parse tree produced by SlimParser.

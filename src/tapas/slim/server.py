@@ -7,12 +7,18 @@ import asyncio
 from asyncio import Queue, Task
 
 from SlimLexer import SlimLexer
-from SlimParser import SlimParser
+from SlimParser import SlimParser, Nonterm, Symbol, Terminal 
 
 @dataclass(frozen=True, eq=True)
-class Kill: pass 
+class Kill: 
+    pass 
+
+@dataclass(frozen=True, eq=True)
+class Done: 
+    pass
 
 I = Union[Kill, str]
+O = Union[Nonterm, Symbol, Terminal, AttributeError, Done]
 
 # @dataclass(frozen=True, eq=True)
 # class SynthAttr: pass 
@@ -21,10 +27,10 @@ SynthAttr = str
 @dataclass(frozen=True, eq=True)
 class InherAttr: pass 
 
-# async def mk_server(input : Queue, output : Queue) -> Optional[str]:
+# async def mk_task(input : Queue, output : Queue) -> Optional[str]:
 #     return "hello"
 
-async def mk_server(input : Queue, output : Queue) -> Optional[str]:
+async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     none : Any = None
     parser = SlimParser(none)
     # parser.buildParseTrees = False
@@ -33,10 +39,13 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
     parser.cache = {} 
     # parser.fresh_index = 0
     while True:
+        print("")
+        print("")
+        print("--------- NEXT PIECE ----------------")
         i = await input.get()
         if isinstance(i, Kill):
             print("Killed")
-            output.put_nowait(None)
+            output.put_nowait(Done())
             break
 
         code += i 
@@ -48,34 +57,19 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         token_stream : Any = CommonTokenStream(lexer)
         # token_stream.index
         parser.setInputStream(token_stream)
-        parser.guidance = None 
+        parser.guidance = Nonterm("expr")
         parser.getCurrentToken()
 
         try:
             ctx = parser.expr()
+            await output.put(parser.guidance)
 
-            ####################
-            ####################
-
-            # parser.getCurrentToken()
-            # token_stream = ctx.parser.getTokenStream()
-            # lexer = token_stream.tokenSource
-            # input_stream = lexer.inputStream
-            # # start = ctx.start.start
-            # start = 0
-            # # stop = ctx.stop.stop
-            # stop = parser.state - 1
-            # # return input_stream.getText(start, stop)
-            # print(f"start: {start}")
-            # print(f"stop: {stop}")
-            # return input_stream.getText(start, stop)[start:stop]
-
-        except:
+        except AttributeError as e : 
+            print(f"OOGA EXCEPTION: {type(e)} // {e.args}")
+            await output.put(e)
             ctx = None
 
 
-        # if parser.guidance:
-        output.put_nowait(parser.guidance)
 
 
     '''
@@ -94,7 +88,7 @@ async def mk_server(input : Queue, output : Queue) -> Optional[str]:
         return None
 
 '''
-end mk_server 
+end mk_task 
 '''
 
 
@@ -112,7 +106,10 @@ class Connection:
         self._task = task 
 
     def send(self, item):
-        self._input.put_nowait(item)
+        return self._input.put_nowait(item)
+
+    def mk_sender(self, item):
+        return self._input.put(item)
 
     def mk_receiver(self):
         return self._output.get()
@@ -129,7 +126,7 @@ class Connection:
 def launch():
     input : Queue = Queue()
     output : Queue = Queue()
-    task = asyncio.create_task(mk_server(input, output))
+    task = asyncio.create_task(_mk_task(input, output))
     return Connection(input, output, task)
 
 

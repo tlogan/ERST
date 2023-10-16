@@ -24,10 +24,6 @@ class Terminal:
 class Nonterm: 
     content : str
 
-@dataclass(frozen=True, eq=True)
-class Guidance:
-    syntax : Union[Symbol, Terminal, Nonterm]
-
 
 
 def serializedATN():

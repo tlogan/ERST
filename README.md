@@ -6,10 +6,11 @@
 - paper by Nov 16.
 
 ## Implementation 
-- NOTE: update guidance before each part of sequence
+- NOTE: update guidance before each part of a sequence
 - NOTE: update overflow after each guidance update 
 - NOTE: update result after entire sequence
-- TODO: figure out way to avoid repeating guidance
+- TODO: factor out analysis (guide/infer) from grammar
+- TODO: use python context to wrap each part's analysis without needing lambdas
 - TODO: write attribute rules for analysis 
 - TODO: write tree listener for printing out indented parse tree 
 

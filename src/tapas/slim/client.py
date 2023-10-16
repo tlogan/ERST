@@ -9,7 +9,7 @@ from asyncio import Queue
 from SlimLexer import SlimLexer
 from SlimParser import SlimParser
 
-import analysis
+import server
 '''
 NOTE: lexer does NOT preserve skipped lexicon (e.g. skipped white space)
 NOTE: there is a built in mechanism to stringify partial parse tree as s-expression
@@ -67,7 +67,7 @@ def newline_column_count(x : str) -> tuple[int, int]:
 
 
 
-async def mk_client():
+async def _mk_task():
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
@@ -86,15 +86,17 @@ async def mk_client():
 
     pieces = [
         # "fix (())",
-        "fix (()",
-        # "fix (",
-        analysis.Kill()
+        "fix (",
+        # "fix (()",
+        # "fix (", "()",
+        # "fix (", "(", ")",
+        server.Kill()
     ]
 
 
     results = []
 
-    connection = analysis.launch()
+    connection = server.launch()
 
     # pieces = [
     # f'''
@@ -104,7 +106,7 @@ async def mk_client():
     # ]
 
     for piece in pieces:
-        connection.send(piece)
+        await connection.mk_sender(piece)
 
 
     while not connection.done():
@@ -121,10 +123,13 @@ async def mk_client():
     print(f'result: {result}')
 
 
+def interact():
+    asyncio.run(_mk_task())
+
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
-    asyncio.run(mk_client())
+    interact()
 ####################
 
 #     test_parse_tree_serialize(f'''

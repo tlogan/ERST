@@ -16,10 +16,6 @@ class Terminal:
 class Nonterm: 
     content : str
 
-@dataclass(frozen=True, eq=True)
-class Guidance:
-    syntax : Union[Symbol, Terminal, Nonterm]
-
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

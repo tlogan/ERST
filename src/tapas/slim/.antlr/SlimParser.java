@@ -16,10 +16,6 @@ class Terminal:
 class Nonterm: 
     content : str
 
-@dataclass(frozen=True, eq=True)
-class Guidance:
-    syntax : Union[Symbol, Terminal, Nonterm]
-
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -110,19 +106,19 @@ public class SlimParser extends Parser {
 
 
 
-	guidance : Optional[Guidance]
+	guidance : Union[Symbol, Terminal, Nonterm]
 	cache : dict[int, str] 
 	_overflow = False  
 
 	 
 
-	# _guidance : Guidance
+	# _guidance : Union[Symbol, Terminal, Nonterm]
 	# @property
-	# def guidance(self) -> Guidance:
+	# def guidance(self) -> Union[Symbol, Terminal, Nonterm]:
 	#     return self._guidance
 	# 
 	# @guidance.setter
-	# def guidance(self, value : Guidance):
+	# def guidance(self, value : Union[Symbol, Terminal, Nonterm]):
 	#     self._guidance = value
 
 	#def getAllText(self):  # include hidden channel
@@ -151,6 +147,7 @@ public class SlimParser extends Parser {
 	def updateOverflow(self):
 	    tok = self.getCurrentToken()
 	    print(f"TOK (updateOverflow): {tok}")
+	    print(f"_overflow: : {self._overflow}")
 	    if not self._overflow and tok.type == self.EOF :
 	        self._overflow = True 
 
@@ -319,13 +316,16 @@ public class SlimParser extends Parser {
 				setState(36);
 				match(T__9);
 				 
-				self.guidance = Guidance(Symbol("("))
+				self.guidance = Symbol("(")
 				self.updateOverflow()
 
 				setState(38);
 				match(T__3);
 
-				self.guidance = Guidance(Nonterm("expr"))
+				if not self.overflow(): 
+				    self.guidance = Nonterm("expr")
+				    # print(f"GUIDANCE: {self.guidance}")
+
 				self.updateOverflow()
 
 				setState(40);
@@ -338,7 +338,8 @@ public class SlimParser extends Parser {
 				print(f"REACHED HERE overflow: {self.overflow()}")
 
 				if not self.overflow(): 
-				    self.guidance = Guidance(Symbol(")"))
+				    self.guidance = Symbol(")")
+				    # print(f"GUIDANCE: {self.guidance}")
 
 				self.updateOverflow()
 
