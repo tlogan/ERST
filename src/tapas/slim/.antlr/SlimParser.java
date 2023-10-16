@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from typing import *
+from tapas.util_system import box, unbox
 
 
 @dataclass(frozen=True, eq=True)
@@ -346,7 +347,10 @@ public class SlimParser extends Parser {
 				setState(42);
 				match(T__4);
 
-				_localctx.result = f'(fix {((ExprContext)_localctx).body.result})'
+				_localctx.result = unbox(
+				    f'(fix {body})'
+				    for body in box(((ExprContext)_localctx).body.result) 
+				)
 
 				}
 				break;

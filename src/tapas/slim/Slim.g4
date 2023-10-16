@@ -3,6 +3,7 @@ grammar Slim;
 @header {
 from dataclasses import dataclass
 from typing import *
+from tapas.util_system import box, unbox
 
 
 @dataclass(frozen=True, eq=True)
@@ -153,7 +154,10 @@ self.updateOverflow()
 }
 ')' 
 {
-$result = f'(fix {$body.result})'
+$result = unbox(
+    f'(fix {body})'
+    for body in box($body.result) 
+)
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'

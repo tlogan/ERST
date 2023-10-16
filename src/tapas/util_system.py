@@ -20,6 +20,21 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 
+
+def box(x : Optional[T]) -> Iterable[T]:
+    if x:
+        return [x]
+    else:
+        return []
+
+def unbox(xs : Iterable[T]) -> Optional[T]:
+    return next((x for x in xs), None)
+
+
+# x = unbox(for thing in box(x)
+# )
+
+
 def linearize_dict(d : dict) -> list: 
     return ['{'] + [
         item

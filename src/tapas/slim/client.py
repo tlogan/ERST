@@ -6,10 +6,12 @@ import sys
 import asyncio
 from asyncio import Queue
 
-from SlimLexer import SlimLexer
-from SlimParser import SlimParser
+from tapas.slim.SlimLexer import SlimLexer
+from tapas.slim.SlimParser import SlimParser
 
-import server
+import tapas.util_system
+
+from tapas.slim import server
 '''
 NOTE: lexer does NOT preserve skipped lexicon (e.g. skipped white space)
 NOTE: there is a built in mechanism to stringify partial parse tree as s-expression
@@ -20,46 +22,6 @@ TODO: determine how to build parse tree of incomplete token stream?
 TODO: determine how to use BufferedInputStream to put tokens on the stream one by one 
 '''
 
-def test_parse_tree_serialize(code):
-
-    # input_stream : InputStream = FileStream(argv[1])
-    # input_stream : InputStream = StdinStream()
-    # input_stream = InputStream(incomplete_code)
-    input_stream = InputStream(code)
-
-    #############################
-    lexer = SlimLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    #############################
-    parser = SlimParser(token_stream)
-    tree = parser.expr()
-
-
-    if parser.getNumberOfSyntaxErrors() > 0:
-        print("syntax errors")
-    else:
-        print(tree.toStringTree())
-
-    # lexer = ExprLexer(input_stream)
-    # stream = CommonTokenStream(lexer)
-    # parser = ExprParser(stream)
-    # tree = parser.start_()
-
-
-
-    # linterp = ListenerDump()
-    # walker = ParseTreeWalker()
-    # walker.walk(linterp, tree)
-
-    ####################################
-
-
-    # if parser.getNumberOfSyntaxErrors() > 0:
-    #     print("syntax errors")
-    # else:
-    #     linterp = ListenerDump()
-    #     walker = ParseTreeWalker()
-    #     walker.walk(linterp, tree)
 
 def newline_column_count(x : str) -> tuple[int, int]:
     lines = x.split("\n")
@@ -85,12 +47,9 @@ async def _mk_task():
     # ]
 
     pieces = [
-        # "fix (())",
-        "fix (",
-        # "fix (()",
-        # "fix (", "()",
-        # "fix (", "(", ")",
-        server.Kill()
+        "fix (())"
+        # ,
+        # server.Kill()
     ]
 
 
@@ -105,18 +64,13 @@ async def _mk_task():
     # '''
     # ]
 
+
     for piece in pieces:
-        await connection.mk_sender(piece)
+        answr = await connection.mk_caller(piece)
+        print(f'answr: {answr}')
+        if isinstance(answr, server.Done):
+            break
 
-
-    while not connection.done():
-        '''
-        assume that receiver is non-empty if task is not done 
-        '''
-        # not done --> not empty
-        # empty --> done
-        rcvd = await connection.mk_receiver()
-        print(f'received: {rcvd}')
 
     print('post while')
     result = await connection.mk_getter()
@@ -125,23 +79,3 @@ async def _mk_task():
 
 def interact():
     asyncio.run(_mk_task())
-
-if __name__ == '__main__':
-    # main(sys.argv)
-####################
-    interact()
-####################
-
-#     test_parse_tree_serialize(f'''
-# fix (self => (
-#     fun :nil () => :zero () 
-#     fun :cons x => :succ (self(x)) 
-# ))
-#     ''')
-
-####################
-
-#     test_parse_tree_serialize(f'''
-# .hello = ()
-# .bye = ()
-#     ''')

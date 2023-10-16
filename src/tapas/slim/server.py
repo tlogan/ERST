@@ -6,19 +6,23 @@ import sys
 import asyncio
 from asyncio import Queue, Task
 
-from SlimLexer import SlimLexer
-from SlimParser import SlimParser, Nonterm, Symbol, Terminal 
+from tapas.slim.SlimLexer import SlimLexer
+from tapas.slim.SlimParser import SlimParser, Nonterm, Symbol, Terminal 
 
 @dataclass(frozen=True, eq=True)
 class Kill: 
     pass 
 
 @dataclass(frozen=True, eq=True)
+class Killed(): 
+    pass
+
+@dataclass(frozen=True, eq=True)
 class Done: 
     pass
 
 I = Union[Kill, str]
-O = Union[Nonterm, Symbol, Terminal, AttributeError, Done]
+O = Union[Nonterm, Symbol, Terminal, AttributeError, Killed, Done]
 
 # @dataclass(frozen=True, eq=True)
 # class SynthAttr: pass 
@@ -41,11 +45,11 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     while True:
         print("")
         print("")
-        print("--------- NEXT PIECE ----------------")
         i = await input.get()
+        print(f"--- GOT: {i} ------")
         if isinstance(i, Kill):
             print("Killed")
-            output.put_nowait(Done())
+            await output.put(Killed())
             break
 
         code += i 
@@ -62,13 +66,16 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
 
         try:
             ctx = parser.expr()
-            await output.put(parser.guidance)
+            if ctx.result: 
+                await output.put(Done())
+                break
+            else:
+                await output.put(parser.guidance)
 
         except AttributeError as e : 
             print(f"OOGA EXCEPTION: {type(e)} // {e.args}")
             await output.put(e)
             ctx = None
-
 
 
 
@@ -105,11 +112,9 @@ class Connection:
         self._output = output
         self._task = task 
 
-    def send(self, item):
-        return self._input.put_nowait(item)
-
-    def mk_sender(self, item):
-        return self._input.put(item)
+    async def mk_caller(self, item):
+        await self._input.put(item)
+        return await self._output.get()
 
     def mk_receiver(self):
         return self._output.get()

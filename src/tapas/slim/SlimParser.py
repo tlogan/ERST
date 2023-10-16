@@ -11,6 +11,7 @@ else:
 
 from dataclasses import dataclass
 from typing import *
+from tapas.util_system import box, unbox
 
 
 @dataclass(frozen=True, eq=True)
@@ -336,7 +337,10 @@ class SlimParser ( Parser ):
                 self.state = 42
                 self.match(SlimParser.T__4)
 
-                localctx.result = f'(fix {localctx.body.result})'
+                localctx.result = unbox(
+                    f'(fix {body})'
+                    for body in box(localctx.body.result) 
+                )
 
                 pass
 
