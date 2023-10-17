@@ -26,6 +26,8 @@ class Terminal:
 class Nonterm: 
     content : str
 
+from tapas.slim import analysis 
+
 
 
 

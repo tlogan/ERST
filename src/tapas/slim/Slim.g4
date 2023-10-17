@@ -19,6 +19,8 @@ class Terminal:
 class Nonterm: 
     content : str
 
+from tapas.slim import analysis 
+
 
 }
 
@@ -65,8 +67,6 @@ def tokenIndex(self):
 
 def updateOverflow(self):
     tok = self.getCurrentToken()
-    print(f"TOK (updateOverflow): {tok}")
-    print(f"_overflow: : {self._overflow}")
     if not self._overflow and tok.type == self.EOF :
         self._overflow = True 
 
@@ -80,25 +80,21 @@ def overflow(self) -> bool:
 #         yield
 #     self.updateOverflow()
 
-def guide(self, g : Callable):
+def guard_down(self, f : Callable, *args):
     if not self.overflow():
-        self.guidance = g()
+        self.guidance = f(*args)
     self.updateOverflow()
 
-def gather(self, f : Callable):
-
-    print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
+def guard_up(self, f : Callable, *args):
     if self.overflow():
         return None
     else:
         index = self.tokenIndex()
         cache_result = self.cache.get(index)
         if cache_result:
-            print(f"CACHE HIT: {index}")
             return cache_result
         else:
-            print(f"COMPUTATION: {index}")
-            result = f()
+            result = f(*args)
             self.cache[index] = result
             return result
 
@@ -111,7 +107,7 @@ $result = f'(id {$ID.text})';
 } 
 | '()' 
 {
-$result = self.gather(lambda: f'(unit)')
+$result = self.guard_up(analysis.gather_expr_unit)
 } 
 | ':' ID expr  
 {
@@ -152,29 +148,19 @@ $result = $record.result
 // }
 | 'fix' 
 { 
-self.guide(lambda: Symbol("("))
+self.guard_down(lambda: Symbol("("))
 } 
 '(' 
 {
-self.guide(lambda: Nonterm("expr"))
-
-# with self.manage_guidance():
-#     self.guidance = Nonterm("expr")
-#     # print(f"GUIDANCE: {self.guidance}")
-
+self.guard_down(lambda: Nonterm("expr"))
 }
 body = expr 
 {
-self.guide(lambda: Symbol(')'))
+self.guard_down(lambda: Symbol(')'))
 }
 ')' 
 {
-$result = self.gather(lambda:
-    unbox(
-        f'(fix {body})'
-        for body in box($body.result) 
-    )
-)
+$result = self.guard_up(analysis.gather_expr_fix, $body.result)
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'

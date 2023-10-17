@@ -6,7 +6,6 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: factor out analysis (guide/infer) from grammar
 - TODO: write attribute rules for analysis 
 - TODO: write tree listener for printing out indented parse tree 
 ------

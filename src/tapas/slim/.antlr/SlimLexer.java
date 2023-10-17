@@ -18,6 +18,8 @@ class Terminal:
 class Nonterm: 
     content : str
 
+from tapas.slim import analysis 
+
 
 
 import org.antlr.v4.runtime.Lexer;

@@ -18,6 +18,8 @@ class Terminal:
 class Nonterm: 
     content : str
 
+from tapas.slim import analysis 
+
 
 
 import org.antlr.v4.runtime.atn.*;
@@ -149,8 +151,6 @@ public class SlimParser extends Parser {
 
 	def updateOverflow(self):
 	    tok = self.getCurrentToken()
-	    print(f"TOK (updateOverflow): {tok}")
-	    print(f"_overflow: : {self._overflow}")
 	    if not self._overflow and tok.type == self.EOF :
 	        self._overflow = True 
 
@@ -164,25 +164,21 @@ public class SlimParser extends Parser {
 	#         yield
 	#     self.updateOverflow()
 
-	def guide(self, g : Callable):
+	def guard_down(self, f : Callable, *args):
 	    if not self.overflow():
-	        self.guidance = g()
+	        self.guidance = f(*args)
 	    self.updateOverflow()
 
-	def gather(self, f : Callable):
-
-	    print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
+	def guard_up(self, f : Callable, *args):
 	    if self.overflow():
 	        return None
 	    else:
 	        index = self.tokenIndex()
 	        cache_result = self.cache.get(index)
 	        if cache_result:
-	            print(f"CACHE HIT: {index}")
 	            return cache_result
 	        else:
-	            print(f"COMPUTATION: {index}")
-	            result = f()
+	            result = f(*args)
 	            self.cache[index] = result
 	            return result
 
@@ -255,7 +251,7 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				_localctx.result = self.gather(lambda: f'(unit)')
+				_localctx.result = self.guard_up(analysis.gather_expr_unit)
 
 				}
 				break;
@@ -342,32 +338,22 @@ public class SlimParser extends Parser {
 				setState(36);
 				match(T__9);
 				 
-				self.guide(lambda: Symbol("("))
+				self.guard_down(lambda: Symbol("("))
 
 				setState(38);
 				match(T__3);
 
-				self.guide(lambda: Nonterm("expr"))
-
-				# with self.manage_guidance():
-				#     self.guidance = Nonterm("expr")
-				#     # print(f"GUIDANCE: {self.guidance}")
-
+				self.guard_down(lambda: Nonterm("expr"))
 
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
 
-				self.guide(lambda: Symbol(')'))
+				self.guard_down(lambda: Symbol(')'))
 
 				setState(42);
 				match(T__4);
 
-				_localctx.result = self.gather(lambda:
-				    unbox(
-				        f'(fix {body})'
-				        for body in box(((ExprContext)_localctx).body.result) 
-				    )
-				)
+				_localctx.result = self.guard_up(analysis.gather_expr_fix, ((ExprContext)_localctx).body.result)
 
 				}
 				break;

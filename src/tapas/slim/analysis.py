@@ -6,10 +6,16 @@ import sys
 import asyncio
 from asyncio import Queue
 
-from tapas.slim.SlimLexer import SlimLexer
-from tapas.slim.SlimParser import SlimParser
-
-import tapas.util_system
-from tapas.slim import server
+from tapas.util_system import unbox, box  
 
 from contextlib import contextmanager
+
+
+def gather_expr_unit():
+    return f'(unit)'
+
+def gather_expr_fix(op_body):
+    return unbox(
+        f'(fix {body})'
+        for body in box(op_body) 
+    )
