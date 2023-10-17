@@ -162,12 +162,12 @@ class SlimParser ( Parser ):
     #         yield
     #     self.updateOverflow()
 
-    def guide(self, g):
+    def guide(self, g : Callable):
         if not self.overflow():
-            self.guidance = g
+            self.guidance = g()
         self.updateOverflow()
 
-    def gather(self, f):
+    def gather(self, f : Callable):
 
         print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
         if self.overflow():
@@ -332,12 +332,12 @@ class SlimParser ( Parser ):
                 self.state = 36
                 self.match(SlimParser.T__9)
                  
-                self.guide(Symbol("("))
+                self.guide(lambda: Symbol("("))
 
                 self.state = 38
                 self.match(SlimParser.T__3)
 
-                self.guide(Nonterm("expr"))
+                self.guide(lambda: Nonterm("expr"))
 
                 # with self.manage_guidance():
                 #     self.guidance = Nonterm("expr")
@@ -347,7 +347,7 @@ class SlimParser ( Parser ):
                 self.state = 40
                 localctx.body = localctx._expr = self.expr(0)
 
-                self.guide(Symbol(')'))
+                self.guide(lambda: Symbol(')'))
 
                 self.state = 42
                 self.match(SlimParser.T__4)
