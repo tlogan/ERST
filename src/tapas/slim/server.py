@@ -62,6 +62,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         # token_stream.index
         parser.setInputStream(token_stream)
         parser.guidance = Nonterm("expr")
+        parser._overflow = False
         parser.getCurrentToken()
 
         try:

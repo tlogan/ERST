@@ -4,6 +4,7 @@ grammar Slim;
 from dataclasses import dataclass
 from typing import *
 from tapas.util_system import box, unbox
+from contextlib import contextmanager
 
 
 @dataclass(frozen=True, eq=True)
@@ -17,6 +18,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm: 
     content : str
+
 
 }
 
@@ -70,6 +72,25 @@ def updateOverflow(self):
 
 def overflow(self) -> bool: 
     return self._overflow
+
+
+# @contextmanager
+# def manage_guidance(self):
+#     if not self.overflow():
+#         yield
+#     self.updateOverflow()
+
+def guide(self, g):
+    if not self.overflow():
+        self.guidance = g
+    self.updateOverflow()
+
+# @contextmanager
+# def gather(self) -> Optional:
+#     if not self.overflow():
+#         return
+#     else
+#       return None
 
 }
 
@@ -127,16 +148,16 @@ $result = $record.result
 // }
 | 'fix' 
 { 
-self.guidance = Symbol("(")
-self.updateOverflow()
+self.guide(Symbol("("))
 } 
 '(' 
 {
-if not self.overflow(): 
-    self.guidance = Nonterm("expr")
-    # print(f"GUIDANCE: {self.guidance}")
+self.guide(Nonterm("expr"))
 
-self.updateOverflow()
+# with self.manage_guidance():
+#     self.guidance = Nonterm("expr")
+#     # print(f"GUIDANCE: {self.guidance}")
+
 }
 body = expr 
 {
@@ -145,19 +166,22 @@ body = expr
 # set token_index to -1 when out of bounds
 print("REACHED HERE")
 print(f"REACHED HERE overflow: {self.overflow()}")
+print(f"CURRENT TOKEN: {self.getCurrentToken()}")
 
-if not self.overflow(): 
-    self.guidance = Symbol(")")
-    # print(f"GUIDANCE: {self.guidance}")
-
-self.updateOverflow()
+# if not self.overflow(): 
+#     self.guidance = Symbol(")")
+#     # print(f"GUIDANCE: {self.guidance}")
+# 
+# self.updateOverflow()
+self.guide(Symbol(')'))
 }
 ')' 
 {
-$result = unbox(
-    f'(fix {body})'
-    for body in box($body.result) 
-)
+if not self.overflow(): 
+    $result = unbox(
+        f'(fix {body})'
+        for body in box($body.result) 
+    )
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'

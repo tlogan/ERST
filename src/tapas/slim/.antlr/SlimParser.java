@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import *
 from tapas.util_system import box, unbox
+from contextlib import contextmanager
 
 
 @dataclass(frozen=True, eq=True)
@@ -16,6 +17,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm: 
     content : str
+
 
 
 import org.antlr.v4.runtime.atn.*;
@@ -154,6 +156,25 @@ public class SlimParser extends Parser {
 
 	def overflow(self) -> bool: 
 	    return self._overflow
+
+
+	# @contextmanager
+	# def manage_guidance(self):
+	#     if not self.overflow():
+	#         yield
+	#     self.updateOverflow()
+
+	def guide(self, g):
+	    if not self.overflow():
+	        self.guidance = g
+	    self.updateOverflow()
+
+	# @contextmanager
+	# def gather(self) -> Optional:
+	#     if not self.overflow():
+	#         return
+	#     else
+	#       return None
 
 
 	public SlimParser(TokenStream input) {
@@ -317,17 +338,17 @@ public class SlimParser extends Parser {
 				setState(36);
 				match(T__9);
 				 
-				self.guidance = Symbol("(")
-				self.updateOverflow()
+				self.guide(Symbol("("))
 
 				setState(38);
 				match(T__3);
 
-				if not self.overflow(): 
-				    self.guidance = Nonterm("expr")
-				    # print(f"GUIDANCE: {self.guidance}")
+				self.guide(Nonterm("expr"))
 
-				self.updateOverflow()
+				# with self.manage_guidance():
+				#     self.guidance = Nonterm("expr")
+				#     # print(f"GUIDANCE: {self.guidance}")
+
 
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
@@ -337,20 +358,23 @@ public class SlimParser extends Parser {
 				# set token_index to -1 when out of bounds
 				print("REACHED HERE")
 				print(f"REACHED HERE overflow: {self.overflow()}")
+				print(f"CURRENT TOKEN: {self.getCurrentToken()}")
 
-				if not self.overflow(): 
-				    self.guidance = Symbol(")")
-				    # print(f"GUIDANCE: {self.guidance}")
-
-				self.updateOverflow()
+				# if not self.overflow(): 
+				#     self.guidance = Symbol(")")
+				#     # print(f"GUIDANCE: {self.guidance}")
+				# 
+				# self.updateOverflow()
+				self.guide(Symbol(')'))
 
 				setState(42);
 				match(T__4);
 
-				_localctx.result = unbox(
-				    f'(fix {body})'
-				    for body in box(((ExprContext)_localctx).body.result) 
-				)
+				if not self.overflow(): 
+				    _localctx.result = unbox(
+				        f'(fix {body})'
+				        for body in box(((ExprContext)_localctx).body.result) 
+				    )
 
 				}
 				break;

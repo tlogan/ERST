@@ -12,6 +12,7 @@ else:
 from dataclasses import dataclass
 from typing import *
 from tapas.util_system import box, unbox
+from contextlib import contextmanager
 
 
 @dataclass(frozen=True, eq=True)
@@ -25,6 +26,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm: 
     content : str
+
 
 
 def serializedATN():
@@ -152,6 +154,25 @@ class SlimParser ( Parser ):
 
     def overflow(self) -> bool: 
         return self._overflow
+
+
+    # @contextmanager
+    # def manage_guidance(self):
+    #     if not self.overflow():
+    #         yield
+    #     self.updateOverflow()
+
+    def guide(self, g):
+        if not self.overflow():
+            self.guidance = g
+        self.updateOverflow()
+
+    # @contextmanager
+    # def gather(self) -> Optional:
+    #     if not self.overflow():
+    #         return
+    #     else
+    #       return None
 
 
 
@@ -307,17 +328,17 @@ class SlimParser ( Parser ):
                 self.state = 36
                 self.match(SlimParser.T__9)
                  
-                self.guidance = Symbol("(")
-                self.updateOverflow()
+                self.guide(Symbol("("))
 
                 self.state = 38
                 self.match(SlimParser.T__3)
 
-                if not self.overflow(): 
-                    self.guidance = Nonterm("expr")
-                    # print(f"GUIDANCE: {self.guidance}")
+                self.guide(Nonterm("expr"))
 
-                self.updateOverflow()
+                # with self.manage_guidance():
+                #     self.guidance = Nonterm("expr")
+                #     # print(f"GUIDANCE: {self.guidance}")
+
 
                 self.state = 40
                 localctx.body = localctx._expr = self.expr(0)
@@ -327,20 +348,23 @@ class SlimParser ( Parser ):
                 # set token_index to -1 when out of bounds
                 print("REACHED HERE")
                 print(f"REACHED HERE overflow: {self.overflow()}")
+                print(f"CURRENT TOKEN: {self.getCurrentToken()}")
 
-                if not self.overflow(): 
-                    self.guidance = Symbol(")")
-                    # print(f"GUIDANCE: {self.guidance}")
-
-                self.updateOverflow()
+                # if not self.overflow(): 
+                #     self.guidance = Symbol(")")
+                #     # print(f"GUIDANCE: {self.guidance}")
+                # 
+                # self.updateOverflow()
+                self.guide(Symbol(')'))
 
                 self.state = 42
                 self.match(SlimParser.T__4)
 
-                localctx.result = unbox(
-                    f'(fix {body})'
-                    for body in box(localctx.body.result) 
-                )
+                if not self.overflow(): 
+                    localctx.result = unbox(
+                        f'(fix {body})'
+                        for body in box(localctx.body.result) 
+                    )
 
                 pass
 

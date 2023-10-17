@@ -6,14 +6,15 @@
 - paper by Nov 16.
 
 ## Implementation 
+- TODO: factor out analysis (guide/infer) from grammar
+- TODO: write attribute rules for analysis 
+- TODO: write tree listener for printing out indented parse tree 
+------
 - NOTE: update guidance before each part of a sequence
 - NOTE: update overflow after each guidance update 
 - NOTE: update result after entire sequence
 - NOTE: after each call to server, server responds with some guidance, completion status, or acknowledgment of killing.   
-- TODO: factor out analysis (guide/infer) from grammar
-- TODO: use python context to wrap each part's analysis without needing lambdas
-- TODO: write attribute rules for analysis 
-- TODO: write tree listener for printing out indented parse tree 
+
 
 - TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver
 - TODO: use renaming lazily (just for equality modulo alpha renaming)
