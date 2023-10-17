@@ -169,12 +169,22 @@ public class SlimParser extends Parser {
 	        self.guidance = g
 	    self.updateOverflow()
 
-	# @contextmanager
-	# def gather(self) -> Optional:
-	#     if not self.overflow():
-	#         return
-	#     else
-	#       return None
+	def gather(self, f):
+
+	    print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
+	    if self.overflow():
+	        return None
+	    else:
+	        index = self.tokenIndex()
+	        cache_result = self.cache.get(index)
+	        if cache_result:
+	            print(f"CACHE HIT: {index}")
+	            return cache_result
+	        else:
+	            print(f"COMPUTATION: {index}")
+	            result = f()
+	            self.cache[index] = result
+	            return result
 
 
 	public SlimParser(TokenStream input) {
@@ -245,13 +255,7 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				if self.cache.get(self.tokenIndex()):
-				    print("CACHE HIT")
-				    _localctx.result = self.cache[self.tokenIndex()]
-				else:
-				    print("COMPUTATION")
-				    _localctx.result = f'(unit)'
-				    self.cache[self.tokenIndex()] = _localctx.result
+				_localctx.result = self.gather(lambda: f'(unit)')
 
 				}
 				break;
@@ -353,28 +357,17 @@ public class SlimParser extends Parser {
 				setState(40);
 				((ExprContext)_localctx).body = ((ExprContext)_localctx).expr = expr(0);
 
-				# TODO: need to detect that token index has not changed 
-				# lack of change indicates outofbounds  
-				# set token_index to -1 when out of bounds
-				print("REACHED HERE")
-				print(f"REACHED HERE overflow: {self.overflow()}")
-				print(f"CURRENT TOKEN: {self.getCurrentToken()}")
-
-				# if not self.overflow(): 
-				#     self.guidance = Symbol(")")
-				#     # print(f"GUIDANCE: {self.guidance}")
-				# 
-				# self.updateOverflow()
 				self.guide(Symbol(')'))
 
 				setState(42);
 				match(T__4);
 
-				if not self.overflow(): 
-				    _localctx.result = unbox(
+				_localctx.result = self.gather(lambda:
+				    unbox(
 				        f'(fix {body})'
 				        for body in box(((ExprContext)_localctx).body.result) 
 				    )
+				)
 
 				}
 				break;

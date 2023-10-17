@@ -47,9 +47,9 @@ async def _mk_task():
     # ]
 
     pieces = [
-        "fix (", "("
-        ,
-        server.Kill()
+        "fix (", "()", ")"
+        # ,
+        # server.Kill()
     ]
 
 

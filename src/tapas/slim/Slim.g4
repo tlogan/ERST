@@ -85,12 +85,22 @@ def guide(self, g):
         self.guidance = g
     self.updateOverflow()
 
-# @contextmanager
-# def gather(self) -> Optional:
-#     if not self.overflow():
-#         return
-#     else
-#       return None
+def gather(self, f):
+
+    print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
+    if self.overflow():
+        return None
+    else:
+        index = self.tokenIndex()
+        cache_result = self.cache.get(index)
+        if cache_result:
+            print(f"CACHE HIT: {index}")
+            return cache_result
+        else:
+            print(f"COMPUTATION: {index}")
+            result = f()
+            self.cache[index] = result
+            return result
 
 }
 
@@ -101,13 +111,7 @@ $result = f'(id {$ID.text})';
 } 
 | '()' 
 {
-if self.cache.get(self.tokenIndex()):
-    print("CACHE HIT")
-    $result = self.cache[self.tokenIndex()]
-else:
-    print("COMPUTATION")
-    $result = f'(unit)'
-    self.cache[self.tokenIndex()] = $result
+$result = self.gather(lambda: f'(unit)')
 } 
 | ':' ID expr  
 {
@@ -161,27 +165,16 @@ self.guide(Nonterm("expr"))
 }
 body = expr 
 {
-# TODO: need to detect that token index has not changed 
-# lack of change indicates outofbounds  
-# set token_index to -1 when out of bounds
-print("REACHED HERE")
-print(f"REACHED HERE overflow: {self.overflow()}")
-print(f"CURRENT TOKEN: {self.getCurrentToken()}")
-
-# if not self.overflow(): 
-#     self.guidance = Symbol(")")
-#     # print(f"GUIDANCE: {self.guidance}")
-# 
-# self.updateOverflow()
 self.guide(Symbol(')'))
 }
 ')' 
 {
-if not self.overflow(): 
-    $result = unbox(
+$result = self.gather(lambda:
+    unbox(
         f'(fix {body})'
         for body in box($body.result) 
     )
+)
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'

@@ -167,12 +167,22 @@ class SlimParser ( Parser ):
             self.guidance = g
         self.updateOverflow()
 
-    # @contextmanager
-    # def gather(self) -> Optional:
-    #     if not self.overflow():
-    #         return
-    #     else
-    #       return None
+    def gather(self, f):
+
+        print(f"GATHER: {self.getTokenStream().getText(0, self.tokenIndex())}")
+        if self.overflow():
+            return None
+        else:
+            index = self.tokenIndex()
+            cache_result = self.cache.get(index)
+            if cache_result:
+                print(f"CACHE HIT: {index}")
+                return cache_result
+            else:
+                print(f"COMPUTATION: {index}")
+                result = f()
+                self.cache[index] = result
+                return result
 
 
 
@@ -247,13 +257,7 @@ class SlimParser ( Parser ):
                 self.state = 7
                 self.match(SlimParser.T__0)
 
-                if self.cache.get(self.tokenIndex()):
-                    print("CACHE HIT")
-                    localctx.result = self.cache[self.tokenIndex()]
-                else:
-                    print("COMPUTATION")
-                    localctx.result = f'(unit)'
-                    self.cache[self.tokenIndex()] = localctx.result
+                localctx.result = self.gather(lambda: f'(unit)')
 
                 pass
 
@@ -343,28 +347,17 @@ class SlimParser ( Parser ):
                 self.state = 40
                 localctx.body = localctx._expr = self.expr(0)
 
-                # TODO: need to detect that token index has not changed 
-                # lack of change indicates outofbounds  
-                # set token_index to -1 when out of bounds
-                print("REACHED HERE")
-                print(f"REACHED HERE overflow: {self.overflow()}")
-                print(f"CURRENT TOKEN: {self.getCurrentToken()}")
-
-                # if not self.overflow(): 
-                #     self.guidance = Symbol(")")
-                #     # print(f"GUIDANCE: {self.guidance}")
-                # 
-                # self.updateOverflow()
                 self.guide(Symbol(')'))
 
                 self.state = 42
                 self.match(SlimParser.T__4)
 
-                if not self.overflow(): 
-                    localctx.result = unbox(
+                localctx.result = self.gather(lambda:
+                    unbox(
                         f'(fix {body})'
                         for body in box(localctx.body.result) 
                     )
+                )
 
                 pass
 
