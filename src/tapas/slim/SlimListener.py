@@ -10,21 +10,7 @@ from typing import *
 from tapas.util_system import box, unbox
 from contextlib import contextmanager
 
-
-@dataclass(frozen=True, eq=True)
-class Symbol:
-    content : str
-
-@dataclass(frozen=True, eq=True)
-class Terminal:
-    content : str
-
-@dataclass(frozen=True, eq=True)
-class Nonterm: 
-    content : str
-
-from tapas.slim import analysis 
-
+from tapas.slim.analysis import * 
 
 
 
@@ -37,15 +23,6 @@ class SlimListener(ParseTreeListener):
 
     # Exit a parse tree produced by SlimParser#expr.
     def exitExpr(self, ctx:SlimParser.ExprContext):
-        pass
-
-
-    # Enter a parse tree produced by SlimParser#record.
-    def enterRecord(self, ctx:SlimParser.RecordContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#record.
-    def exitRecord(self, ctx:SlimParser.RecordContext):
         pass
 
 

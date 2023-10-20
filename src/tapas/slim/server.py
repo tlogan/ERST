@@ -7,7 +7,7 @@ import asyncio
 from asyncio import Queue, Task
 
 from tapas.slim.SlimLexer import SlimLexer
-from tapas.slim.SlimParser import SlimParser, Nonterm, Symbol, Terminal 
+from tapas.slim.SlimParser import SlimParser, Guidance
 
 @dataclass(frozen=True, eq=True)
 class Kill: 
@@ -22,7 +22,7 @@ class Done:
     pass
 
 I = Union[Kill, str]
-O = Union[Nonterm, Symbol, Terminal, AttributeError, Killed, Done]
+O = Union[Guidance, AttributeError, Killed, Done]
 
 # @dataclass(frozen=True, eq=True)
 # class SynthAttr: pass 
@@ -40,7 +40,6 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     # parser.buildParseTrees = False
     code = ''
     ctx = None
-    parser.cache = {} 
     # parser.fresh_index = 0
     while True:
         print("")
@@ -59,12 +58,8 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         # token_stream.tokens
 
         token_stream : Any = CommonTokenStream(lexer)
-        # token_stream.index
         parser.setInputStream(token_stream)
-        parser.guidance = Nonterm("expr")
-        parser._overflow = False
-        # parser.getCurrentToken()
-        # parser.getTokenStream()
+        parser.reset()
 
         try:
             ctx = parser.expr()
@@ -72,7 +67,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
                 await output.put(Done())
                 break
             else:
-                await output.put(parser.guidance)
+                await output.put(parser.getGuidance())
 
         except AttributeError as e : 
             print(f"OOGA EXCEPTION: {type(e)} // {e.args}")

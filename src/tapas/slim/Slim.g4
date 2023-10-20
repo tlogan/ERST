@@ -6,61 +6,28 @@ from typing import *
 from tapas.util_system import box, unbox
 from contextlib import contextmanager
 
-
-@dataclass(frozen=True, eq=True)
-class Symbol:
-    content : str
-
-@dataclass(frozen=True, eq=True)
-class Terminal:
-    content : str
-
-@dataclass(frozen=True, eq=True)
-class Nonterm: 
-    content : str
-
-from tapas.slim import analysis 
-
+from tapas.slim.analysis import * 
 
 }
 
 
 @parser::members {
 
-guidance : Union[Symbol, Terminal, Nonterm]
-cache : dict[int, str] 
+_guidance : Guidance 
+_cache : dict[int, str] = {}
 _overflow = False  
 
- 
+def reset(self): 
+    # self.setInputStream(token_stream)
+    self._guidance = NontermExpr(Top)
+    self._overflow = False
+    # self.getCurrentToken()
+    # self.getTokenStream()
 
-# _guidance : Union[Symbol, Terminal, Nonterm]
-# @property
-# def guidance(self) -> Union[Symbol, Terminal, Nonterm]:
-#     return self._guidance
-# 
-# @guidance.setter
-# def guidance(self, value : Union[Symbol, Terminal, Nonterm]):
-#     self._guidance = value
 
-#def getAllText(self):  # include hidden channel
-#    # token_stream = ctx.parser.getTokenStream()
-#    token_stream = self.getTokenStream()
-#    lexer = token_stream.tokenSource
-#    input_stream = lexer.inputStream
-#    # start = ctx.start.start
-#    start = 0
-#    # stop = ctx.stop.stop
-#
-#    # TODO: increment token position in attributes
-#    # TODO: map token position to result 
-#    # TODO: figure out a way to get the current position of the parser
-#    stop = self.getRuleIndex()
-#    # return input_stream.getText(start, stop)
-#    print(f"start: {start}")
-#    print(f"stoppy poop: {stop}")
-#    return "<<not yet implemented>>"
-#    # return input_stream.getText(start, stop)[start:stop]
 
+def getGuidance(self):
+    return self._guidance
 
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
@@ -82,7 +49,7 @@ def overflow(self) -> bool:
 
 def guard_down(self, f : Callable, *args):
     if not self.overflow():
-        self.guidance = f(*args)
+        self._guidance = f(*args)
     self.updateOverflow()
 
 def guard_up(self, f : Callable, *args):
@@ -90,41 +57,41 @@ def guard_up(self, f : Callable, *args):
         return None
     else:
         index = self.tokenIndex()
-        cache_result = self.cache.get(index)
+        cache_result = self._cache.get(index)
         if cache_result:
             return cache_result
         else:
             result = f(*args)
-            self.cache[index] = result
+            self._cache[index] = result
             return result
 
 }
 
 expr returns [str result] : 
 | ID 
-{
-$result = f'(id {$ID.text})';
-} 
+// {
+// $result = f'(id {$ID.text})';
+// } 
 | '()' 
 {
-$result = self.guard_up(analysis.gather_expr_unit)
+$result = self.guard_up(gather_expr_unit)
 } 
-| ':' ID expr  
-{
-$result = f'(tag {$ID.text} {$expr.result})'
-}
-| record 
-{
-$result = $record.result
-}
-| ID '=>' expr 
+// | ':' ID expr  
+// {
+// $result = f'(tag {$ID.text} {$expr.result})'
+// }
+// | record 
+// {
+// $result = $record.result
+// }
+// | ID '=>' expr 
 // {
 //     $result = 'hello'
 // }
 // | expr '.' expr {
 //     $result = 'hello'
 // }
-| expr '(' expr ')' 
+// | expr '(' expr ')' 
 // {
 //     $result = 'hello'
 // }
@@ -132,7 +99,7 @@ $result = $record.result
 //{
 //     $result = 'hello'
 // }
-| ('fun' param = expr '=>' body = expr)+ 
+// | ('fun' param = expr '=>' body = expr)+ 
 // {
 //     prefix = '['
 //     content = ''.join([
@@ -142,7 +109,7 @@ $result = $record.result
 //     suffix = ']'
 //     $result = prefix + content + suffix
 // }
-| 'if' cond = expr 'then' t = expr 'else' f = expr 
+// | 'if' cond = expr 'then' t = expr 'else' f = expr 
 // {
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
@@ -152,7 +119,7 @@ self.guard_down(lambda: Symbol("("))
 } 
 '(' 
 {
-self.guard_down(lambda: Nonterm("expr"))
+self.guard_down(lambda: NontermExpr(Top))
 }
 body = expr 
 {
@@ -160,27 +127,27 @@ self.guard_down(lambda: Symbol(')'))
 }
 ')' 
 {
-$result = self.guard_up(analysis.gather_expr_fix, $body.result)
+$result = self.guard_up(gather_expr_fix, $body.result)
 }
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'
 // }
-| '(' body = expr ')' 
+// | '(' body = expr ')' 
 // {
     // $result = f'(paren {$body.result})' 
 // }
 ;
 
-record returns [str result] :
-| '.' ID '=' expr
-{
-$result = f'(field {$ID.text} {$expr.result})'
-}
-| '.' ID '=' expr record
-{
-$result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
-}
-;
+// record returns [str result] :
+// | '.' ID '=' expr
+// {
+// $result = f'(field {$ID.text} {$expr.result})'
+// }
+// | '.' ID '=' expr record
+// {
+// $result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
+// }
+// ;
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {
