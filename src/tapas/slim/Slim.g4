@@ -8,6 +8,9 @@ from contextlib import contextmanager
 
 from tapas.slim.analysis import * 
 
+from pyrsistent import m, pmap, v
+from pyrsistent.typing import PMap 
+
 }
 
 
@@ -18,8 +21,7 @@ _cache : dict[int, str] = {}
 _overflow = False  
 
 def reset(self): 
-    # self.setInputStream(token_stream)
-    self._guidance = NontermExpr(Top)
+    self._guidance = NontermExpr(m(), Top())
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -41,45 +43,51 @@ def overflow(self) -> bool:
     return self._overflow
 
 
-# @contextmanager
-# def manage_guidance(self):
-#     if not self.overflow():
-#         yield
-#     self.updateOverflow()
-
 def guard_down(self, f : Callable, *args):
     if not self.overflow():
         self._guidance = f(*args)
+
     self.updateOverflow()
 
 def guard_up(self, f : Callable, *args):
     if self.overflow():
         return None
     else:
-        index = self.tokenIndex()
-        cache_result = self._cache.get(index)
-        if cache_result:
-            return cache_result
-        else:
-            result = f(*args)
-            self._cache[index] = result
-            return result
+
+        return f(*args)
+        # TODO: caching is broken; tokenIndex does not change 
+        # index = self.tokenIndex() 
+        # cache_result = self._cache.get(index)
+        # print(f"CACHE: {self._cache}")
+        # if False: # cache_result:
+        #     return cache_result
+        # else:
+        #     result = f(*args)
+        #     self._cache[index] = result
+        #     return result
 
 }
 
-expr returns [str result] : 
+expr [PMap[str, Typ] env] returns [Typ typ] : 
 | ID 
-// {
-// $result = f'(id {$ID.text})';
-// } 
+{
+$typ = self.guard_up(gather_expr_id, env, $ID.text)
+} 
+
 | '()' 
 {
-$result = self.guard_up(gather_expr_unit)
+$typ = self.guard_up(gather_expr_unit)
 } 
-// | ':' ID expr  
-// {
-// $result = f'(tag {$ID.text} {$expr.result})'
-// }
+
+| ':' ID body = expr[env] 
+{
+
+print(f"TAG body type: {$body.typ}")
+$typ = self.guard_up(gather_expr_tag, env, $ID.text, $body.typ)
+
+print(f"TAG \$typ: {$typ}")
+}
+
 // | record 
 // {
 // $result = $record.result
@@ -113,22 +121,35 @@ $result = self.guard_up(gather_expr_unit)
 // {
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
+
+| 'let' ID '=' target = expr[env] 
+{
+self.guard_down(guide_expr_let_body, env, $ID.text, $target.typ)
+if isinstance(self._guidance, NontermExpr):
+    env = self._guidance.env
+}
+body = expr[env]
+{
+$typ = self.guard_up(lambda: NontermExpr(env, $body.typ))
+}
+
 | 'fix' 
 { 
 self.guard_down(lambda: Symbol("("))
 } 
 '(' 
 {
-self.guard_down(lambda: NontermExpr(Top))
+self.guard_down(lambda: NontermExpr(env, Top()))
 }
-body = expr 
+body = expr[env]
 {
 self.guard_down(lambda: Symbol(')'))
 }
 ')' 
 {
-$result = self.guard_up(gather_expr_fix, $body.result)
+$typ = self.guard_up(gather_expr_fix, $body.typ)
 }
+
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'
 // }

@@ -12,6 +12,9 @@ from contextlib import contextmanager
 
 from tapas.slim.analysis import * 
 
+from pyrsistent import m, pmap, v
+from pyrsistent.typing import PMap 
+
 
 
 # This class defines a complete listener for a parse tree produced by SlimParser.

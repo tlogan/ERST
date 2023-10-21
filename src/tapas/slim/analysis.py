@@ -10,6 +10,8 @@ from asyncio import Queue
 
 from tapas.util_system import unbox, box  
 
+from pyrsistent.typing import PMap 
+
 from contextlib import contextmanager
 
 
@@ -63,19 +65,36 @@ class Terminal:
 
 @dataclass(frozen=True, eq=True)
 class NontermExpr: 
+    env : PMap[str, Typ] 
     typ : Typ 
 
 Guidance = Union[Symbol, Terminal, NontermExpr]
+
+
 
 """
 Gathering
 """
 
+def gather_expr_id(env : PMap[str, Typ], text : str) -> Optional[Typ]:
+    return env[text]
+
 def gather_expr_unit() -> Optional[Typ]:
     return TUnit() 
+
+def gather_expr_tag(env : PMap[str, Typ], label : str, body : Typ) -> Optional[Typ]:
+    return TTag(label, body) 
 
 def gather_expr_fix(op_body) -> Optional[Typ]:
     return unbox(
         Induc(body)
         for body in box(op_body) 
     )
+
+"""
+Guiding
+"""
+
+def guide_expr_let_body(env : PMap[str, Typ], id : str, target : Typ) -> Guidance:
+    env = env.set(id, target)
+    return NontermExpr(env, Top())

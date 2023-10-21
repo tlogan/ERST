@@ -47,9 +47,14 @@ async def _mk_task():
     # ]
 
     pieces = [
-        "fix (", "()", ")"
-        # ,
-        # server.Kill()
+        '''
+        let y = :foo ()
+        y 
+        ''' 
+        # "fix (", "()", ")"
+        # 'x'
+        ,
+        server.Kill()
     ]
 
 

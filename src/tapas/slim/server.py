@@ -8,6 +8,10 @@ from asyncio import Queue, Task
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser, Guidance
+from tapas.slim.analysis import * 
+
+from pyrsistent.typing import PMap 
+from pyrsistent import m, pmap, v
 
 @dataclass(frozen=True, eq=True)
 class Kill: 
@@ -62,8 +66,8 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         parser.reset()
 
         try:
-            ctx = parser.expr()
-            if ctx.result: 
+            ctx = parser.expr(m())
+            if ctx.typ: 
                 await output.put(Done())
                 break
             else:
@@ -87,7 +91,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         print(f"tree: {ctx.toStringTree(recog=parser)}")
 
     if ctx:
-        return ctx.result
+        return ctx.typ
     else:
         return None
 

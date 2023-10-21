@@ -13,6 +13,8 @@ from tapas.slim import client
 
 from tapas.util_system import box, unbox
 
+from pyrsistent import m, pmap, v
+
 
 
 def test_parse_tree_serialize(code):
@@ -27,7 +29,7 @@ def test_parse_tree_serialize(code):
     token_stream = CommonTokenStream(lexer)
     #############################
     parser = SlimParser(token_stream)
-    tree = parser.expr()
+    tree = parser.expr(m())
 
 
     if parser.getNumberOfSyntaxErrors() > 0:
@@ -115,3 +117,9 @@ if __name__ == '__main__':
 #    print(f"stoppy poop: {stop}")
 #    return "<<not yet implemented>>"
 #    # return input_stream.getText(start, stop)[start:stop]
+
+# @contextmanager
+# def manage_guidance(self):
+#     if not self.overflow():
+#         yield
+#     self.updateOverflow()
