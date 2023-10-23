@@ -94,27 +94,20 @@ class SlimParser ( Parser ):
     def tokenIndex(self):
         return self.getCurrentToken().tokenIndex
 
-    def updateOverflow(self):
-        tok = self.getCurrentToken()
-        if not self._overflow and tok.type == self.EOF :
-            self._overflow = True 
-
-    def overflow(self) -> bool: 
-        return self._overflow
-
-
     def guard_down(self, f : Callable, *args):
         for arg in args:
             if arg == None:
                 self._overflow = True
 
-        if not self.overflow():
+        if not self._overflow:
             self._guidance = f(*args)
 
-        self.updateOverflow()
+        tok = self.getCurrentToken()
+        if not self._overflow and tok.type == self.EOF :
+            self._overflow = True 
 
     def guard_up(self, f : Callable, *args):
-        if self.overflow():
+        if self._overflow:
             return None
         else:
 
@@ -188,8 +181,6 @@ class SlimParser ( Parser ):
                 self.state = 3
                 localctx._ID = self.match(SlimParser.ID)
 
-                print(f"OOGA ID !!!!: {(None if localctx._ID is None else localctx._ID.text)}")
-                print(f"OOGA ENV !!!!: {env}")
                 localctx.typ = self.guard_up(gather_expr_id, env, (None if localctx._ID is None else localctx._ID.text))
 
                 pass

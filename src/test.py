@@ -82,10 +82,15 @@ async def _mk_task():
 
     pieces = (x for x in [
 "let x = :boo ()",
-"x",
+'''
+let y = :foo x
+''',
+"y",
+
 # '''
-# let x = :boo ()
-# x
+#  let x = :boo ()
+# let y = :foo x
+# y 
 # ''',
 # "x",
 # "let y = :foo x",
