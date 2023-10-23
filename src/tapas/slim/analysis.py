@@ -21,6 +21,10 @@ Typ data types
 """
 
 @dataclass(frozen=True, eq=True)
+class TVar:
+    id : str
+
+@dataclass(frozen=True, eq=True)
 class Top:
     pass
 
@@ -48,7 +52,7 @@ class Induc:
     body : Typ 
 
 
-Typ = Union[Top, TUnit, TTag, TField, Inter, Induc]
+Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Induc]
 
 """
 Expr data types
@@ -79,36 +83,65 @@ class ExprGuide:
 Guidance = Union[SymbolGuide, TerminalGuide, ExprGuide]
 
 
+class Analysis:
 
-"""
-Gathering
-"""
+    _type_id : int = 0 
 
-def gather_expr_id(guide : ExprGuide, text : str) -> Optional[Typ]:
-    return guide.env[text]
+    # def __init__(self, type_id : int):
+    #     self._type_id = type_id
 
-def gather_expr_unit(guide : ExprGuide) -> Optional[Typ]:
-    return TUnit() 
+    """
+    State 
+    """
 
-def gather_expr_tag(guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
-    return TTag(label, body) 
+    def fresh_type_var(self) -> Typ:
+        self._type_id += 1
+        return TVar(f"_{self._type_id}")
 
-def gather_record_single(guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
-    return TField(label, body) 
 
-def gather_record_cons(guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Optional[Typ]:
-    return Inter(TField(label, body), cons)  
+    """
+    Gathering
+    """
 
-def gather_expr_fix(guide : ExprGuide, op_body) -> Optional[Typ]:
-    return unbox(
-        Induc(body)
-        for body in box(op_body) 
-    )
+    def combine_expr_id(self, guide : ExprGuide, text : str) -> Optional[Typ]:
+        return guide.env[text]
 
-"""
-Guiding
-"""
+    def combine_expr_unit(self, guide : ExprGuide) -> Optional[Typ]:
+        return TUnit() 
 
-def guide_expr_let_body(guide : ExprGuide, id : str, target : Typ) -> Guidance:
-    env = guide.env.set(id, target)
-    return ExprGuide(env, Top())
+    def combine_expr_tag(self, guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
+        return TTag(label, body) 
+
+    def combine_record_single(self, guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
+        return TField(label, body) 
+
+    def combine_record_cons(self, guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Optional[Typ]:
+        return Inter(TField(label, body), cons)  
+
+    def combine_expr_fix(self, guide : ExprGuide, op_body) -> Optional[Typ]:
+        return unbox(
+            Induc(body)
+            for body in box(op_body) 
+        )
+
+    """
+    Guiding
+    """
+
+    def distill_expr_function_body(self, guide : ExprGuide, id : str) -> Guidance:
+        '''
+        TODO: decompose guide.typ into expected typ of the body
+        '''
+        typ_in = self.fresh_type_var()
+        typ_out = self.fresh_type_var()
+        """
+        TODO: unify to the consequent of the expected type: unify(guide.typ, Imp(typ_in, typ_out))
+        can basically move antecedent into qualifier of consequent 
+        e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
+        """
+        env = guide.env.set(id, typ_in)
+        return ExprGuide(env, typ_out)
+
+    def distill_expr_let_body(self, guide : ExprGuide, id : str, target : Typ) -> Guidance:
+        env = guide.env.set(id, target)
+        return ExprGuide(env, guide.typ)

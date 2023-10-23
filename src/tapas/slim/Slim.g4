@@ -16,9 +16,17 @@ from pyrsistent.typing import PMap
 
 @parser::members {
 
-_guidance : Guidance 
+_analysis : Analysis
 _cache : dict[int, str] = {}
+
+_guidance : Guidance 
 _overflow = False  
+
+def init(self): 
+    self._analysis = Analysis() 
+    self._cache = {}
+    self._guidance = ExprGuide(m(), Top())
+    self._overflow = False  
 
 def reset(self): 
     self._guidance = ExprGuide(m(), Top())
@@ -73,17 +81,17 @@ def guard_up(self, f : Callable, *args):
 expr returns [Typ typ] : 
 | ID 
 {
-$typ = self.guard_up(gather_expr_id, $ID.text)
+$typ = self.guard_up(self._analysis.combine_expr_id, $ID.text)
 } 
 
 | '()' 
 {
-$typ = self.guard_up(gather_expr_unit)
+$typ = self.guard_up(self._analysis.combine_expr_unit)
 } 
 
 | ':' ID body = expr 
 {
-$typ = self.guard_up(gather_expr_tag, $ID.text, $body.typ)
+$typ = self.guard_up(self._analysis.combine_expr_tag, $ID.text, $body.typ)
 }
 
 | record 
@@ -91,13 +99,19 @@ $typ = self.guard_up(gather_expr_tag, $ID.text, $body.typ)
 $typ = $record.typ
 }
 
-// | ID '=>' expr 
-// {
-//     $result = 'hello'
-// }
+| ID '=>' 
+{
+self.guard_down(self._analysis.distill_expr_function_body, $ID.text)
+}
+body = expr 
+{
+$typ = $body.typ
+}
+
 // | expr '.' expr {
 //     $result = 'hello'
 // }
+
 // | expr '(' expr ')' 
 // {
 //     $result = 'hello'
@@ -123,7 +137,7 @@ $typ = $record.typ
 
 | 'let' ID '=' target = expr 
 {
-self.guard_down(guide_expr_let_body, $ID.text, $target.typ)
+self.guard_down(self._analysis.distill_expr_let_body, $ID.text, $target.typ)
 }
 body = expr
 {
@@ -144,7 +158,7 @@ self.guard_down(lambda: SymbolGuide(')'))
 }
 ')' 
 {
-$typ = self.guard_up(gather_expr_fix, $body.typ)
+$typ = self.guard_up(self._analysis.combine_expr_fix, $body.typ)
 }
 
 // | 'let' ID ('in' typ)? '=' expr expr  {
@@ -159,11 +173,11 @@ $typ = self.guard_up(gather_expr_fix, $body.typ)
 record returns [Typ typ] :
 | '.' ID '=' expr
 {
-$typ = self.guard_up(gather_record_single, $ID.text, $expr.typ)
+$typ = self.guard_up(self._analysis.combine_record_single, $ID.text, $expr.typ)
 }
 | '.' ID '=' expr record
 {
-$typ = self.guard_up(gather_record_cons, $ID.text, $expr.typ, $record.typ)
+$typ = self.guard_up(self._analysis.combine_record_cons, $ID.text, $expr.typ, $record.typ)
 }
 ;
 

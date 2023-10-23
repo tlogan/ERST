@@ -41,6 +41,7 @@ class InherAttr: pass
 async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     none : Any = None
     parser = SlimParser(none)
+    parser.init()
     # parser.buildParseTrees = False
     code = ''
     ctx = None
