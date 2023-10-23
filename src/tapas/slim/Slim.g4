@@ -21,7 +21,7 @@ _cache : dict[int, str] = {}
 _overflow = False  
 
 def reset(self): 
-    self._guidance = NontermExpr(m(), Top())
+    self._guidance = ExprGuide(m(), Top())
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -35,23 +35,28 @@ def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
 def guard_down(self, f : Callable, *args):
+    assert isinstance(self._guidance, ExprGuide)
+
     for arg in args:
         if arg == None:
             self._overflow = True
 
     if not self._overflow:
-        self._guidance = f(*args)
+        self._guidance = f(self._guidance, *args)
 
     tok = self.getCurrentToken()
     if not self._overflow and tok.type == self.EOF :
         self._overflow = True 
 
 def guard_up(self, f : Callable, *args):
+
+    assert isinstance(self._guidance, ExprGuide)
+    
     if self._overflow:
         return None
     else:
 
-        return f(*args)
+        return f(self._guidance, *args)
         # TODO: caching is broken; tokenIndex does not change 
         # index = self.tokenIndex() 
         # cache_result = self._cache.get(index)
@@ -65,10 +70,10 @@ def guard_up(self, f : Callable, *args):
 
 }
 
-expr [PMap[str, Typ] env] returns [Typ typ] : 
+expr returns [Typ typ] : 
 | ID 
 {
-$typ = self.guard_up(gather_expr_id, env, $ID.text)
+$typ = self.guard_up(gather_expr_id, $ID.text)
 } 
 
 | '()' 
@@ -76,13 +81,9 @@ $typ = self.guard_up(gather_expr_id, env, $ID.text)
 $typ = self.guard_up(gather_expr_unit)
 } 
 
-| ':' ID body = expr[env] 
+| ':' ID body = expr 
 {
-
-print(f"TAG body type: {$body.typ}")
-$typ = self.guard_up(gather_expr_tag, env, $ID.text, $body.typ)
-
-print(f"TAG \$typ: {$typ}")
+$typ = self.guard_up(gather_expr_tag, $ID.text, $body.typ)
 }
 
 // | record 
@@ -119,28 +120,26 @@ print(f"TAG \$typ: {$typ}")
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
 
-| 'let' ID '=' target = expr[env] 
+| 'let' ID '=' target = expr 
 {
-self.guard_down(guide_expr_let_body, env, $ID.text, $target.typ)
-if isinstance(self._guidance, NontermExpr):
-    env = self._guidance.env
+self.guard_down(guide_expr_let_body, $ID.text, $target.typ)
 }
-body = expr[env]
+body = expr
 {
-$typ = self.guard_up(gather_expr_let, env, $body.typ)
+$typ = self.guard_up(gather_expr_let, $body.typ)
 }
 
 | 'fix' 
 { 
-self.guard_down(lambda: Symbol("("))
+self.guard_down(lambda: SymbolGuide("("))
 } 
 '(' 
 {
-self.guard_down(lambda: NontermExpr(env, Top()))
+self.guard_down(lambda g: ExprGuide(g.env, Top()))
 }
-body = expr[env]
+body = expr
 {
-self.guard_down(lambda: Symbol(')'))
+self.guard_down(lambda: SymbolGuide(')'))
 }
 ')' 
 {

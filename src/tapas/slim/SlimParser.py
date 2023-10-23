@@ -81,7 +81,7 @@ class SlimParser ( Parser ):
     _overflow = False  
 
     def reset(self): 
-        self._guidance = NontermExpr(m(), Top())
+        self._guidance = ExprGuide(m(), Top())
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -95,23 +95,28 @@ class SlimParser ( Parser ):
         return self.getCurrentToken().tokenIndex
 
     def guard_down(self, f : Callable, *args):
+        assert isinstance(self._guidance, ExprGuide)
+
         for arg in args:
             if arg == None:
                 self._overflow = True
 
         if not self._overflow:
-            self._guidance = f(*args)
+            self._guidance = f(self._guidance, *args)
 
         tok = self.getCurrentToken()
         if not self._overflow and tok.type == self.EOF :
             self._overflow = True 
 
     def guard_up(self, f : Callable, *args):
+
+        assert isinstance(self._guidance, ExprGuide)
+        
         if self._overflow:
             return None
         else:
 
-            return f(*args)
+            return f(self._guidance, *args)
             # TODO: caching is broken; tokenIndex does not change 
             # index = self.tokenIndex() 
             # cache_result = self._cache.get(index)
@@ -129,15 +134,13 @@ class SlimParser ( Parser ):
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, env:PMap[str, Typ]=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.env = None
             self.typ = None
             self._ID = None # Token
             self.body = None # ExprContext
             self.target = None # ExprContext
-            self.env = env
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -163,9 +166,9 @@ class SlimParser ( Parser ):
 
 
 
-    def expr(self, env:PMap[str, Typ]):
+    def expr(self):
 
-        localctx = SlimParser.ExprContext(self, self._ctx, self.state, env)
+        localctx = SlimParser.ExprContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_expr)
         try:
             self.state = 29
@@ -181,7 +184,7 @@ class SlimParser ( Parser ):
                 self.state = 3
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.typ = self.guard_up(gather_expr_id, env, (None if localctx._ID is None else localctx._ID.text))
+                localctx.typ = self.guard_up(gather_expr_id, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -201,13 +204,9 @@ class SlimParser ( Parser ):
                 self.state = 8
                 localctx._ID = self.match(SlimParser.ID)
                 self.state = 9
-                localctx.body = self.expr(env)
+                localctx.body = self.expr()
 
-
-                print(f"TAG body type: {localctx.body.typ}")
-                localctx.typ = self.guard_up(gather_expr_tag, env, (None if localctx._ID is None else localctx._ID.text), localctx.body.typ)
-
-                print(f"TAG $typ: {localctx.typ}")
+                localctx.typ = self.guard_up(gather_expr_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.typ)
 
                 pass
 
@@ -220,16 +219,14 @@ class SlimParser ( Parser ):
                 self.state = 14
                 self.match(SlimParser.T__3)
                 self.state = 15
-                localctx.target = self.expr(env)
+                localctx.target = self.expr()
 
-                self.guard_down(guide_expr_let_body, env, (None if localctx._ID is None else localctx._ID.text), localctx.target.typ)
-                if isinstance(self._guidance, NontermExpr):
-                    env = self._guidance.env
+                self.guard_down(guide_expr_let_body, (None if localctx._ID is None else localctx._ID.text), localctx.target.typ)
 
                 self.state = 17
-                localctx.body = self.expr(env)
+                localctx.body = self.expr()
 
-                localctx.typ = self.guard_up(gather_expr_let, env, localctx.body.typ)
+                localctx.typ = self.guard_up(gather_expr_let, localctx.body.typ)
 
                 pass
 
@@ -238,17 +235,17 @@ class SlimParser ( Parser ):
                 self.state = 20
                 self.match(SlimParser.T__4)
                  
-                self.guard_down(lambda: Symbol("("))
+                self.guard_down(lambda: SymbolGuide("("))
 
                 self.state = 22
                 self.match(SlimParser.T__5)
 
-                self.guard_down(lambda: NontermExpr(env, Top()))
+                self.guard_down(lambda g: ExprGuide(g.env, Top()))
 
                 self.state = 24
-                localctx.body = self.expr(env)
+                localctx.body = self.expr()
 
-                self.guard_down(lambda: Symbol(')'))
+                self.guard_down(lambda: SymbolGuide(')'))
 
                 self.state = 26
                 self.match(SlimParser.T__6)

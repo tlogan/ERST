@@ -29,7 +29,7 @@ def test_parse_tree_serialize(code):
     token_stream = CommonTokenStream(lexer)
     #############################
     parser = SlimParser(token_stream)
-    tree = parser.expr(m())
+    tree = parser.expr()
 
 
     if parser.getNumberOfSyntaxErrors() > 0:

@@ -102,7 +102,7 @@ public class SlimParser extends Parser {
 	_overflow = False  
 
 	def reset(self): 
-	    self._guidance = NontermExpr(m(), Top())
+	    self._guidance = ExprGuide(m(), Top())
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -116,23 +116,28 @@ public class SlimParser extends Parser {
 	    return self.getCurrentToken().tokenIndex
 
 	def guard_down(self, f : Callable, *args):
+	    assert isinstance(self._guidance, ExprGuide)
+
 	    for arg in args:
 	        if arg == None:
 	            self._overflow = True
 
 	    if not self._overflow:
-	        self._guidance = f(*args)
+	        self._guidance = f(self._guidance, *args)
 
 	    tok = self.getCurrentToken()
 	    if not self._overflow and tok.type == self.EOF :
 	        self._overflow = True 
 
 	def guard_up(self, f : Callable, *args):
+
+	    assert isinstance(self._guidance, ExprGuide)
+	    
 	    if self._overflow:
 	        return None
 	    else:
 
-	        return f(*args)
+	        return f(self._guidance, *args)
 	        # TODO: caching is broken; tokenIndex does not change 
 	        # index = self.tokenIndex() 
 	        # cache_result = self._cache.get(index)
@@ -152,7 +157,6 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
-		public PMap[str, Typ] env;
 		public Typ typ;
 		public Token ID;
 		public ExprContext body;
@@ -164,16 +168,14 @@ public class SlimParser extends Parser {
 		public ExprContext expr(int i) {
 			return getRuleContext(ExprContext.class,i);
 		}
-		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ExprContext(ParserRuleContext parent, int invokingState, PMap[str, Typ] env) {
+		public ExprContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.env = env;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 	}
 
-	public final ExprContext expr(PMap[str, Typ] env) throws RecognitionException {
-		ExprContext _localctx = new ExprContext(_ctx, getState(), env);
+	public final ExprContext expr() throws RecognitionException {
+		ExprContext _localctx = new ExprContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_expr);
 		try {
 			setState(29);
@@ -190,7 +192,7 @@ public class SlimParser extends Parser {
 				setState(3);
 				((ExprContext)_localctx).ID = match(ID);
 
-				_localctx.typ = self.guard_up(gather_expr_id, env, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				_localctx.typ = self.guard_up(gather_expr_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -212,13 +214,9 @@ public class SlimParser extends Parser {
 				setState(8);
 				((ExprContext)_localctx).ID = match(ID);
 				setState(9);
-				((ExprContext)_localctx).body = expr(env);
+				((ExprContext)_localctx).body = expr();
 
-
-				print(f"TAG body type: {((ExprContext)_localctx).body.typ}")
-				_localctx.typ = self.guard_up(gather_expr_tag, env, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
-
-				print(f"TAG $typ: {_localctx.typ}")
+				_localctx.typ = self.guard_up(gather_expr_tag, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -232,16 +230,14 @@ public class SlimParser extends Parser {
 				setState(14);
 				match(T__3);
 				setState(15);
-				((ExprContext)_localctx).target = expr(env);
+				((ExprContext)_localctx).target = expr();
 
-				self.guard_down(guide_expr_let_body, env, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
-				if isinstance(self._guidance, NontermExpr):
-				    env = self._guidance.env
+				self.guard_down(guide_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
 
 				setState(17);
-				((ExprContext)_localctx).body = expr(env);
+				((ExprContext)_localctx).body = expr();
 
-				_localctx.typ = self.guard_up(gather_expr_let, env, ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.guard_up(gather_expr_let, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -251,17 +247,17 @@ public class SlimParser extends Parser {
 				setState(20);
 				match(T__4);
 				 
-				self.guard_down(lambda: Symbol("("))
+				self.guard_down(lambda: SymbolGuide("("))
 
 				setState(22);
 				match(T__5);
 
-				self.guard_down(lambda: NontermExpr(env, Top()))
+				self.guard_down(lambda g: ExprGuide(g.env, Top()))
 
 				setState(24);
-				((ExprContext)_localctx).body = expr(env);
+				((ExprContext)_localctx).body = expr();
 
-				self.guard_down(lambda: Symbol(')'))
+				self.guard_down(lambda: SymbolGuide(')'))
 
 				setState(26);
 				match(T__6);

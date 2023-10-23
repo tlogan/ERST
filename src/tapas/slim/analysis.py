@@ -56,19 +56,19 @@ Guidance
 """
 
 @dataclass(frozen=True, eq=True)
-class Symbol:
+class SymbolGuide:
     content : str
 
 @dataclass(frozen=True, eq=True)
-class Terminal:
+class TerminalGuide:
     content : str
 
 @dataclass(frozen=True, eq=True)
-class NontermExpr: 
-    env : PMap[str, Typ] 
+class ExprGuide: 
+    env : PMap[str, Typ]
     typ : Typ 
 
-Guidance = Union[Symbol, Terminal, NontermExpr]
+Guidance = Union[SymbolGuide, TerminalGuide, ExprGuide]
 
 
 
@@ -76,22 +76,22 @@ Guidance = Union[Symbol, Terminal, NontermExpr]
 Gathering
 """
 
-def gather_expr_id(env : PMap[str, Typ], text : str) -> Optional[Typ]:
-    return env[text]
+def gather_expr_id(guide : ExprGuide, text : str) -> Optional[Typ]:
+    return guide.env[text]
 
-def gather_expr_unit() -> Optional[Typ]:
+def gather_expr_unit(guide : ExprGuide) -> Optional[Typ]:
     return TUnit() 
 
-def gather_expr_tag(env : PMap[str, Typ], label : str, body : Typ) -> Optional[Typ]:
+def gather_expr_tag(guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
     return TTag(label, body) 
 
-def gather_expr_let(env : PMap[str, Typ], op_body) -> Optional[Typ]:
+def gather_expr_let(guide : ExprGuide, op_body) -> Optional[Typ]:
     return unbox(
         Induc(body)
         for body in box(op_body) 
     )
 
-def gather_expr_fix(op_body) -> Optional[Typ]:
+def gather_expr_fix(guide : ExprGuide, op_body) -> Optional[Typ]:
     return unbox(
         Induc(body)
         for body in box(op_body) 
@@ -101,6 +101,6 @@ def gather_expr_fix(op_body) -> Optional[Typ]:
 Guiding
 """
 
-def guide_expr_let_body(env : PMap[str, Typ], id : str, target : Typ) -> Guidance:
-    env = env.set(id, target)
-    return NontermExpr(env, Top())
+def guide_expr_let_body(guide : ExprGuide, id : str, target : Typ) -> Guidance:
+    env = guide.env.set(id, target)
+    return ExprGuide(env, Top())
