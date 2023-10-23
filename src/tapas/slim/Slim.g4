@@ -86,10 +86,11 @@ $typ = self.guard_up(gather_expr_unit)
 $typ = self.guard_up(gather_expr_tag, $ID.text, $body.typ)
 }
 
-// | record 
-// {
-// $result = $record.result
-// }
+| record 
+{
+$typ = $record.typ
+}
+
 // | ID '=>' expr 
 // {
 //     $result = 'hello'
@@ -126,7 +127,7 @@ self.guard_down(guide_expr_let_body, $ID.text, $target.typ)
 }
 body = expr
 {
-$typ = self.guard_up(gather_expr_let, $body.typ)
+$typ = $body.typ
 }
 
 | 'fix' 
@@ -155,16 +156,16 @@ $typ = self.guard_up(gather_expr_fix, $body.typ)
 // }
 ;
 
-// record returns [str result] :
-// | '.' ID '=' expr
-// {
-// $result = f'(field {$ID.text} {$expr.result})'
-// }
-// | '.' ID '=' expr record
-// {
-// $result = f'(field {$ID.text} {$expr.result})' + ' ' + $record.result 
-// }
-// ;
+record returns [Typ typ] :
+| '.' ID '=' expr
+{
+$typ = self.guard_up(gather_record_single, $ID.text, $expr.typ)
+}
+| '.' ID '=' expr record
+{
+$typ = self.guard_up(gather_record_cons, $ID.text, $expr.typ, $record.typ)
+}
+;
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {

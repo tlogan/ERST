@@ -85,7 +85,7 @@ async def _mk_task():
 '''
 let y = :foo x
 ''',
-"y",
+".uno = y .dos = ()",
 
 # '''
 #  let x = :boo ()

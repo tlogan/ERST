@@ -28,25 +28,26 @@ public class SlimParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, ID=8, INT=9, WS=10;
+		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, ID=9, 
+		INT=10, WS=11;
 	public static final int
-		RULE_expr = 0;
+		RULE_expr = 0, RULE_record = 1;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"expr"
+			"expr", "record"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'()'", "':'", "'let'", "'='", "'fix'", "'('", "')'"
+			null, "'()'", "':'", "'let'", "'='", "'fix'", "'('", "')'", "'.'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, null, null, null, "ID", "INT", "WS"
+			null, null, null, null, null, null, null, null, null, "ID", "INT", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -160,6 +161,7 @@ public class SlimParser extends Parser {
 		public Typ typ;
 		public Token ID;
 		public ExprContext body;
+		public RecordContext record;
 		public ExprContext target;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
 		public List<ExprContext> expr() {
@@ -167,6 +169,9 @@ public class SlimParser extends Parser {
 		}
 		public ExprContext expr(int i) {
 			return getRuleContext(ExprContext.class,i);
+		}
+		public RecordContext record() {
+			return getRuleContext(RecordContext.class,0);
 		}
 		public ExprContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -178,7 +183,7 @@ public class SlimParser extends Parser {
 		ExprContext _localctx = new ExprContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_expr);
 		try {
-			setState(29);
+			setState(34);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 			case 1:
@@ -189,7 +194,7 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(3);
+				setState(5);
 				((ExprContext)_localctx).ID = match(ID);
 
 				_localctx.typ = self.guard_up(gather_expr_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
@@ -199,7 +204,7 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(5);
+				setState(7);
 				match(T__0);
 
 				_localctx.typ = self.guard_up(gather_expr_unit)
@@ -209,11 +214,11 @@ public class SlimParser extends Parser {
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(7);
-				match(T__1);
-				setState(8);
-				((ExprContext)_localctx).ID = match(ID);
 				setState(9);
+				match(T__1);
+				setState(10);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(11);
 				((ExprContext)_localctx).body = expr();
 
 				_localctx.typ = self.guard_up(gather_expr_tag, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
@@ -223,43 +228,53 @@ public class SlimParser extends Parser {
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(12);
-				match(T__2);
-				setState(13);
-				((ExprContext)_localctx).ID = match(ID);
 				setState(14);
-				match(T__3);
-				setState(15);
-				((ExprContext)_localctx).target = expr();
+				((ExprContext)_localctx).record = record();
 
-				self.guard_down(guide_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
-
-				setState(17);
-				((ExprContext)_localctx).body = expr();
-
-				_localctx.typ = self.guard_up(gather_expr_let, ((ExprContext)_localctx).body.typ)
+				_localctx.typ = ((ExprContext)_localctx).record.typ
 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
+				setState(17);
+				match(T__2);
+				setState(18);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(19);
+				match(T__3);
 				setState(20);
+				((ExprContext)_localctx).target = expr();
+
+				self.guard_down(guide_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
+
+				setState(22);
+				((ExprContext)_localctx).body = expr();
+
+				_localctx.typ = ((ExprContext)_localctx).body.typ
+
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(25);
 				match(T__4);
 				 
 				self.guard_down(lambda: SymbolGuide("("))
 
-				setState(22);
+				setState(27);
 				match(T__5);
 
 				self.guard_down(lambda g: ExprGuide(g.env, Top()))
 
-				setState(24);
+				setState(29);
 				((ExprContext)_localctx).body = expr();
 
 				self.guard_down(lambda: SymbolGuide(')'))
 
-				setState(26);
+				setState(31);
 				match(T__6);
 
 				_localctx.typ = self.guard_up(gather_expr_fix, ((ExprContext)_localctx).body.typ)
@@ -279,31 +294,121 @@ public class SlimParser extends Parser {
 		return _localctx;
 	}
 
+	@SuppressWarnings("CheckReturnValue")
+	public static class RecordContext extends ParserRuleContext {
+		public Typ typ;
+		public Token ID;
+		public ExprContext expr;
+		public RecordContext record;
+		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public RecordContext record() {
+			return getRuleContext(RecordContext.class,0);
+		}
+		public RecordContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_record; }
+	}
+
+	public final RecordContext record() throws RecognitionException {
+		RecordContext _localctx = new RecordContext(_ctx, getState());
+		enterRule(_localctx, 2, RULE_record);
+		try {
+			setState(50);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(37);
+				match(T__7);
+				setState(38);
+				((RecordContext)_localctx).ID = match(ID);
+				setState(39);
+				match(T__3);
+				setState(40);
+				((RecordContext)_localctx).expr = expr();
+
+				_localctx.typ = self.guard_up(gather_record_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
+
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(43);
+				match(T__7);
+				setState(44);
+				((RecordContext)_localctx).ID = match(ID);
+				setState(45);
+				match(T__3);
+				setState(46);
+				((RecordContext)_localctx).expr = expr();
+				setState(47);
+				((RecordContext)_localctx).record = record();
+
+				_localctx.typ = self.guard_up(gather_record_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
+
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
 	public static final String _serializedATN =
-		"\u0004\u0001\n \u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0004\u0001\u000b5\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0003\u0000\u001e\b\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000"+
-		"\u0000#\u0000\u001d\u0001\u0000\u0000\u0000\u0002\u001e\u0001\u0000\u0000"+
-		"\u0000\u0003\u0004\u0005\b\u0000\u0000\u0004\u001e\u0006\u0000\uffff\uffff"+
-		"\u0000\u0005\u0006\u0005\u0001\u0000\u0000\u0006\u001e\u0006\u0000\uffff"+
-		"\uffff\u0000\u0007\b\u0005\u0002\u0000\u0000\b\t\u0005\b\u0000\u0000\t"+
-		"\n\u0003\u0000\u0000\u0000\n\u000b\u0006\u0000\uffff\uffff\u0000\u000b"+
-		"\u001e\u0001\u0000\u0000\u0000\f\r\u0005\u0003\u0000\u0000\r\u000e\u0005"+
-		"\b\u0000\u0000\u000e\u000f\u0005\u0004\u0000\u0000\u000f\u0010\u0003\u0000"+
-		"\u0000\u0000\u0010\u0011\u0006\u0000\uffff\uffff\u0000\u0011\u0012\u0003"+
-		"\u0000\u0000\u0000\u0012\u0013\u0006\u0000\uffff\uffff\u0000\u0013\u001e"+
-		"\u0001\u0000\u0000\u0000\u0014\u0015\u0005\u0005\u0000\u0000\u0015\u0016"+
-		"\u0006\u0000\uffff\uffff\u0000\u0016\u0017\u0005\u0006\u0000\u0000\u0017"+
-		"\u0018\u0006\u0000\uffff\uffff\u0000\u0018\u0019\u0003\u0000\u0000\u0000"+
-		"\u0019\u001a\u0006\u0000\uffff\uffff\u0000\u001a\u001b\u0005\u0007\u0000"+
-		"\u0000\u001b\u001c\u0006\u0000\uffff\uffff\u0000\u001c\u001e\u0001\u0000"+
-		"\u0000\u0000\u001d\u0002\u0001\u0000\u0000\u0000\u001d\u0003\u0001\u0000"+
-		"\u0000\u0000\u001d\u0005\u0001\u0000\u0000\u0000\u001d\u0007\u0001\u0000"+
-		"\u0000\u0000\u001d\f\u0001\u0000\u0000\u0000\u001d\u0014\u0001\u0000\u0000"+
-		"\u0000\u001e\u0001\u0001\u0000\u0000\u0000\u0001\u001d";
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003"+
+		"\u0000#\b\u0000\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0003\u00013\b\u0001\u0001"+
+		"\u0001\u0000\u0000\u0002\u0000\u0002\u0000\u0000:\u0000\"\u0001\u0000"+
+		"\u0000\u0000\u00022\u0001\u0000\u0000\u0000\u0004#\u0001\u0000\u0000\u0000"+
+		"\u0005\u0006\u0005\t\u0000\u0000\u0006#\u0006\u0000\uffff\uffff\u0000"+
+		"\u0007\b\u0005\u0001\u0000\u0000\b#\u0006\u0000\uffff\uffff\u0000\t\n"+
+		"\u0005\u0002\u0000\u0000\n\u000b\u0005\t\u0000\u0000\u000b\f\u0003\u0000"+
+		"\u0000\u0000\f\r\u0006\u0000\uffff\uffff\u0000\r#\u0001\u0000\u0000\u0000"+
+		"\u000e\u000f\u0003\u0002\u0001\u0000\u000f\u0010\u0006\u0000\uffff\uffff"+
+		"\u0000\u0010#\u0001\u0000\u0000\u0000\u0011\u0012\u0005\u0003\u0000\u0000"+
+		"\u0012\u0013\u0005\t\u0000\u0000\u0013\u0014\u0005\u0004\u0000\u0000\u0014"+
+		"\u0015\u0003\u0000\u0000\u0000\u0015\u0016\u0006\u0000\uffff\uffff\u0000"+
+		"\u0016\u0017\u0003\u0000\u0000\u0000\u0017\u0018\u0006\u0000\uffff\uffff"+
+		"\u0000\u0018#\u0001\u0000\u0000\u0000\u0019\u001a\u0005\u0005\u0000\u0000"+
+		"\u001a\u001b\u0006\u0000\uffff\uffff\u0000\u001b\u001c\u0005\u0006\u0000"+
+		"\u0000\u001c\u001d\u0006\u0000\uffff\uffff\u0000\u001d\u001e\u0003\u0000"+
+		"\u0000\u0000\u001e\u001f\u0006\u0000\uffff\uffff\u0000\u001f \u0005\u0007"+
+		"\u0000\u0000 !\u0006\u0000\uffff\uffff\u0000!#\u0001\u0000\u0000\u0000"+
+		"\"\u0004\u0001\u0000\u0000\u0000\"\u0005\u0001\u0000\u0000\u0000\"\u0007"+
+		"\u0001\u0000\u0000\u0000\"\t\u0001\u0000\u0000\u0000\"\u000e\u0001\u0000"+
+		"\u0000\u0000\"\u0011\u0001\u0000\u0000\u0000\"\u0019\u0001\u0000\u0000"+
+		"\u0000#\u0001\u0001\u0000\u0000\u0000$3\u0001\u0000\u0000\u0000%&\u0005"+
+		"\b\u0000\u0000&\'\u0005\t\u0000\u0000\'(\u0005\u0004\u0000\u0000()\u0003"+
+		"\u0000\u0000\u0000)*\u0006\u0001\uffff\uffff\u0000*3\u0001\u0000\u0000"+
+		"\u0000+,\u0005\b\u0000\u0000,-\u0005\t\u0000\u0000-.\u0005\u0004\u0000"+
+		"\u0000./\u0003\u0000\u0000\u0000/0\u0003\u0002\u0001\u000001\u0006\u0001"+
+		"\uffff\uffff\u000013\u0001\u0000\u0000\u00002$\u0001\u0000\u0000\u0000"+
+		"2%\u0001\u0000\u0000\u00002+\u0001\u0000\u0000\u00003\u0003\u0001\u0000"+
+		"\u0000\u0000\u0002\"2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

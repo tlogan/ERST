@@ -32,15 +32,23 @@ class TUnit:
 class TTag:
     label : str
     body : Typ 
-    pass
+
+@dataclass(frozen=True, eq=True)
+class TField:
+    label : str
+    body : Typ 
+
+@dataclass(frozen=True, eq=True)
+class Inter:
+    left : Typ 
+    right : Typ 
 
 @dataclass(frozen=True, eq=True)
 class Induc:
     body : Typ 
-    pass
 
 
-Typ = Union[Top, TUnit, TTag, Induc]
+Typ = Union[Top, TUnit, TTag, TField, Inter, Induc]
 
 """
 Expr data types
@@ -85,11 +93,11 @@ def gather_expr_unit(guide : ExprGuide) -> Optional[Typ]:
 def gather_expr_tag(guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
     return TTag(label, body) 
 
-def gather_expr_let(guide : ExprGuide, op_body) -> Optional[Typ]:
-    return unbox(
-        Induc(body)
-        for body in box(op_body) 
-    )
+def gather_record_single(guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
+    return TField(label, body) 
+
+def gather_record_cons(guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Optional[Typ]:
+    return Inter(TField(label, body), cons)  
 
 def gather_expr_fix(guide : ExprGuide, op_body) -> Optional[Typ]:
     return unbox(
