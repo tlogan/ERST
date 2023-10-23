@@ -9,7 +9,7 @@ from asyncio import Queue
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser
-from tapas.slim import client
+from tapas.slim import server 
 
 from tapas.util_system import box, unbox
 
@@ -63,11 +63,72 @@ def test_parse_tree_serialize(code):
 
 
 
+async def _mk_task():
+    # pieces = [
+
+    #     "fix (self =>", " (", "\n",
+    #     "    fun :nil . => :zero () ", "\n",
+    #     "    fun :cons x ", "=>", ":succ", "(self(", "x))", "\n",
+    #     ")", ")"
+    # ]
+
+    # pieces = [
+    #     "hello"
+    # ]
+
+    # pieces = [
+    #     ":hello ()"
+    # ]
+
+    pieces = (x for x in [
+"let x = :boo ()",
+"x",
+# '''
+# let x = :boo ()
+# x
+# ''',
+# "x",
+# "let y = :foo x",
+# "y"
+        # "fix (", "()", ")"
+        # 'x'
+server.Kill()
+    ]) 
+
+
+    results = []
+
+    connection = server.launch()
+
+    # pieces = [
+    # f'''
+    # fun :nil () => :zero () 
+    # fun :cons () => :succ (self(x))
+    # '''
+    # ]
+
+
+    for piece in pieces:
+        answr = await connection.mk_caller(piece)
+        print(f'answr: {answr}')
+        if isinstance(answr, server.Done):
+            break
+
+
+    print('post while')
+    result = await connection.mk_getter()
+    print(f'result: {result}')
+
+
+def interact():
+    asyncio.run(_mk_task())
+
+
 
 if __name__ == '__main__':
     # main(sys.argv)
 ####################
-    client.interact()
+    interact()
 ####################
 
 #     test_parse_tree_serialize(f'''

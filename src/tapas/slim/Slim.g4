@@ -44,6 +44,10 @@ def overflow(self) -> bool:
 
 
 def guard_down(self, f : Callable, *args):
+    for arg in args:
+        if arg == None:
+            self._overflow = True
+
     if not self.overflow():
         self._guidance = f(*args)
 
@@ -71,6 +75,8 @@ def guard_up(self, f : Callable, *args):
 expr [PMap[str, Typ] env] returns [Typ typ] : 
 | ID 
 {
+print(f"OOGA ID !!!!: {$ID.text}")
+print(f"OOGA ENV !!!!: {env}")
 $typ = self.guard_up(gather_expr_id, env, $ID.text)
 } 
 
@@ -123,6 +129,7 @@ print(f"TAG \$typ: {$typ}")
 // }
 
 | 'let' ID '=' target = expr[env] 
+// TODO: need to check if target is empty; signal overflow if empty 
 {
 self.guard_down(guide_expr_let_body, env, $ID.text, $target.typ)
 if isinstance(self._guidance, NontermExpr):
@@ -130,7 +137,7 @@ if isinstance(self._guidance, NontermExpr):
 }
 body = expr[env]
 {
-$typ = self.guard_up(lambda: NontermExpr(env, $body.typ))
+$typ = self.guard_up(gather_expr_let, env, $body.typ)
 }
 
 | 'fix' 

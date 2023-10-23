@@ -125,6 +125,10 @@ public class SlimParser extends Parser {
 
 
 	def guard_down(self, f : Callable, *args):
+	    for arg in args:
+	        if arg == None:
+	            self._overflow = True
+
 	    if not self.overflow():
 	        self._guidance = f(*args)
 
@@ -193,6 +197,8 @@ public class SlimParser extends Parser {
 				setState(3);
 				((ExprContext)_localctx).ID = match(ID);
 
+				print(f"OOGA ID !!!!: {(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)}")
+				print(f"OOGA ENV !!!!: {env}")
 				_localctx.typ = self.guard_up(gather_expr_id, env, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				}
@@ -244,7 +250,7 @@ public class SlimParser extends Parser {
 				setState(17);
 				((ExprContext)_localctx).body = expr(env);
 
-				_localctx.typ = self.guard_up(lambda: NontermExpr(env, ((ExprContext)_localctx).body.typ))
+				_localctx.typ = self.guard_up(gather_expr_let, env, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;

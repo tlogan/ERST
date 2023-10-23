@@ -85,6 +85,12 @@ def gather_expr_unit() -> Optional[Typ]:
 def gather_expr_tag(env : PMap[str, Typ], label : str, body : Typ) -> Optional[Typ]:
     return TTag(label, body) 
 
+def gather_expr_let(env : PMap[str, Typ], op_body) -> Optional[Typ]:
+    return unbox(
+        Induc(body)
+        for body in box(op_body) 
+    )
+
 def gather_expr_fix(op_body) -> Optional[Typ]:
     return unbox(
         Induc(body)
