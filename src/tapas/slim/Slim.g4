@@ -25,11 +25,11 @@ _overflow = False
 def init(self): 
     self._analyzer = Analyzer() 
     self._cache = {}
-    self._guidance = ExprGuide(m(), Top())
+    self._guidance = init_guidance
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = ExprGuide(m(), Top())
+    self._guidance = init_guidance
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -150,7 +150,7 @@ self.guard_down(lambda: SymbolGuide("("))
 } 
 '(' 
 {
-self.guard_down(lambda g: ExprGuide(g.env, Top()))
+self.guard_down(self._analyzer.distill_expr_fix_body)
 }
 body = expr
 {

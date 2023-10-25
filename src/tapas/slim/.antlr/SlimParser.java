@@ -108,11 +108,11 @@ public class SlimParser extends Parser {
 	def init(self): 
 	    self._analyzer = Analyzer() 
 	    self._cache = {}
-	    self._guidance = ExprGuide(m(), Top())
+	    self._guidance = init_guidance
 	    self._overflow = False  
 
 	def reset(self): 
-	    self._guidance = ExprGuide(m(), Top())
+	    self._guidance = init_guidance
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -293,7 +293,7 @@ public class SlimParser extends Parser {
 				setState(33);
 				match(T__6);
 
-				self.guard_down(lambda g: ExprGuide(g.env, Top()))
+				self.guard_down(self._analyzer.distill_expr_fix_body)
 
 				setState(35);
 				((ExprContext)_localctx).body = expr();

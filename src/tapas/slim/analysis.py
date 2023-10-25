@@ -81,12 +81,20 @@ class SymbolGuide:
 class TerminalGuide:
     content : str
 
+# TODO: the interpretation could map type patterns to types, rather than merely strings
+# -- in order to handle subtyping of relational types
+Interp = PMap[str, Typ]
+Enviro = PMap[str, Typ]
+
 @dataclass(frozen=True, eq=True)
 class ExprGuide: 
-    env : PMap[str, Typ]
+    interp : Interp
+    enviro : Enviro 
     typ : Typ 
 
 Guidance = Union[SymbolGuide, TerminalGuide, ExprGuide]
+
+init_guidance = ExprGuide(m(), m(), Top())
 
 
 class Analyzer:
@@ -110,7 +118,7 @@ class Analyzer:
     """
 
     def combine_expr_id(self, guide : ExprGuide, text : str) -> Optional[Typ]:
-        return guide.env[text]
+        return guide.enviro[text]
 
     def combine_expr_unit(self, guide : ExprGuide) -> Optional[Typ]:
         return TUnit() 
@@ -145,22 +153,26 @@ class Analyzer:
         can basically move antecedent into qualifier of consequent 
         e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
         """
-        interp = self.unify(guide.typ, Imp(typ_in, typ_out)) 
-        env = guide.env.set(id, typ_in)
+        interp = self.unify(guide.interp, guide.typ, Imp(typ_in, typ_out)) 
+        enviro = guide.enviro.set(id, typ_in)
 
         # TODO: add interpretation to guidance: ExprGuide(interp, env, typ_out)
-        return ExprGuide(env, typ_out)
+        return ExprGuide(interp, enviro, typ_out)
 
     def distill_expr_let_body(self, guide : ExprGuide, id : str, target : Typ) -> Guidance:
-        env = guide.env.set(id, target)
-        return ExprGuide(env, guide.typ)
+        interp = guide.interp
+        enviro = guide.enviro.set(id, target)
+        return ExprGuide(interp, enviro, guide.typ)
+
+    def distill_expr_fix_body(self, guide : ExprGuide) -> Guidance:
+        return ExprGuide(guide.interp, guide.enviro, Top())
 
 
     """
     Unification 
     """
 
-    # TODO: the interpretation could map type patterns to types, rather than merely strings
-    # -- in order to handle subtyping of relational types
-    def unify(self, lower : Typ, upper : Typ) -> PMap[str, Typ]:
+    # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
+    # TODO: encode problem into Z3; decode back to Slim. 
+    def unify(self, interp : Interp, lower : Typ, upper : Typ) -> PMap[str, Typ]:
         return m()
