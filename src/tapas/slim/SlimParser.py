@@ -88,14 +88,14 @@ class SlimParser ( Parser ):
 
 
 
-    _analysis : Analysis
+    _analyzer : Analyzer
     _cache : dict[int, str] = {}
 
     _guidance : Guidance 
     _overflow = False  
 
     def init(self): 
-        self._analysis = Analysis() 
+        self._analyzer = Analyzer() 
         self._cache = {}
         self._guidance = ExprGuide(m(), Top())
         self._overflow = False  
@@ -209,7 +209,7 @@ class SlimParser ( Parser ):
                 self.state = 5
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.typ = self.guard_up(self._analysis.combine_expr_id, (None if localctx._ID is None else localctx._ID.text))
+                localctx.typ = self.guard_up(self._analyzer.combine_expr_id, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -218,7 +218,7 @@ class SlimParser ( Parser ):
                 self.state = 7
                 self.match(SlimParser.T__0)
 
-                localctx.typ = self.guard_up(self._analysis.combine_expr_unit)
+                localctx.typ = self.guard_up(self._analyzer.combine_expr_unit)
 
                 pass
 
@@ -231,7 +231,7 @@ class SlimParser ( Parser ):
                 self.state = 11
                 localctx.body = self.expr()
 
-                localctx.typ = self.guard_up(self._analysis.combine_expr_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.typ)
+                localctx.typ = self.guard_up(self._analyzer.combine_expr_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.typ)
 
                 pass
 
@@ -251,7 +251,7 @@ class SlimParser ( Parser ):
                 self.state = 18
                 self.match(SlimParser.T__2)
 
-                self.guard_down(self._analysis.distill_expr_function_body, (None if localctx._ID is None else localctx._ID.text))
+                self.guard_down(self._analyzer.distill_expr_function_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 20
                 localctx.body = self.expr()
@@ -271,7 +271,7 @@ class SlimParser ( Parser ):
                 self.state = 26
                 localctx.target = self.expr()
 
-                self.guard_down(self._analysis.distill_expr_let_body, (None if localctx._ID is None else localctx._ID.text), localctx.target.typ)
+                self.guard_down(self._analyzer.distill_expr_let_body, (None if localctx._ID is None else localctx._ID.text), localctx.target.typ)
 
                 self.state = 28
                 localctx.body = self.expr()
@@ -300,7 +300,7 @@ class SlimParser ( Parser ):
                 self.state = 37
                 self.match(SlimParser.T__7)
 
-                localctx.typ = self.guard_up(self._analysis.combine_expr_fix, localctx.body.typ)
+                localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, localctx.body.typ)
 
                 pass
 
@@ -374,7 +374,7 @@ class SlimParser ( Parser ):
                 self.state = 46
                 localctx._expr = self.expr()
 
-                localctx.typ = self.guard_up(self._analysis.combine_record_single, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ)
+                localctx.typ = self.guard_up(self._analyzer.combine_record_single, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ)
 
                 pass
 
@@ -391,7 +391,7 @@ class SlimParser ( Parser ):
                 self.state = 53
                 localctx._record = self.record()
 
-                localctx.typ = self.guard_up(self._analysis.combine_record_cons, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ, localctx._record.typ)
+                localctx.typ = self.guard_up(self._analyzer.combine_record_cons, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ, localctx._record.typ)
 
                 pass
 

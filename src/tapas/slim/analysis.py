@@ -11,6 +11,7 @@ from asyncio import Queue
 from tapas.util_system import unbox, box  
 
 from pyrsistent.typing import PMap 
+from pyrsistent import m 
 
 from contextlib import contextmanager
 
@@ -48,11 +49,16 @@ class Inter:
     right : Typ 
 
 @dataclass(frozen=True, eq=True)
+class Imp:
+    antec : Typ 
+    consq : Typ 
+
+@dataclass(frozen=True, eq=True)
 class Induc:
     body : Typ 
 
 
-Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Induc]
+Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Imp, Induc]
 
 """
 Expr data types
@@ -83,7 +89,7 @@ class ExprGuide:
 Guidance = Union[SymbolGuide, TerminalGuide, ExprGuide]
 
 
-class Analysis:
+class Analyzer:
 
     _type_id : int = 0 
 
@@ -139,9 +145,22 @@ class Analysis:
         can basically move antecedent into qualifier of consequent 
         e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
         """
+        interp = self.unify(guide.typ, Imp(typ_in, typ_out)) 
         env = guide.env.set(id, typ_in)
+
+        # TODO: add interpretation to guidance: ExprGuide(interp, env, typ_out)
         return ExprGuide(env, typ_out)
 
     def distill_expr_let_body(self, guide : ExprGuide, id : str, target : Typ) -> Guidance:
         env = guide.env.set(id, target)
         return ExprGuide(env, guide.typ)
+
+
+    """
+    Unification 
+    """
+
+    # TODO: the interpretation could map type patterns to types, rather than merely strings
+    # -- in order to handle subtyping of relational types
+    def unify(self, lower : Typ, upper : Typ) -> PMap[str, Typ]:
+        return m()

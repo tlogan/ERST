@@ -99,14 +99,14 @@ public class SlimParser extends Parser {
 
 
 
-	_analysis : Analysis
+	_analyzer : Analyzer
 	_cache : dict[int, str] = {}
 
 	_guidance : Guidance 
 	_overflow = False  
 
 	def init(self): 
-	    self._analysis = Analysis() 
+	    self._analyzer = Analyzer() 
 	    self._cache = {}
 	    self._guidance = ExprGuide(m(), Top())
 	    self._overflow = False  
@@ -206,7 +206,7 @@ public class SlimParser extends Parser {
 				setState(5);
 				((ExprContext)_localctx).ID = match(ID);
 
-				_localctx.typ = self.guard_up(self._analysis.combine_expr_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -216,7 +216,7 @@ public class SlimParser extends Parser {
 				setState(7);
 				match(T__0);
 
-				_localctx.typ = self.guard_up(self._analysis.combine_expr_unit)
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_unit)
 
 				}
 				break;
@@ -230,7 +230,7 @@ public class SlimParser extends Parser {
 				setState(11);
 				((ExprContext)_localctx).body = expr();
 
-				_localctx.typ = self.guard_up(self._analysis.combine_expr_tag, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_tag, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -252,7 +252,7 @@ public class SlimParser extends Parser {
 				setState(18);
 				match(T__2);
 
-				self.guard_down(self._analysis.distill_expr_function_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				self.guard_down(self._analyzer.distill_expr_function_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				setState(20);
 				((ExprContext)_localctx).body = expr();
@@ -273,7 +273,7 @@ public class SlimParser extends Parser {
 				setState(26);
 				((ExprContext)_localctx).target = expr();
 
-				self.guard_down(self._analysis.distill_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
+				self.guard_down(self._analyzer.distill_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
 
 				setState(28);
 				((ExprContext)_localctx).body = expr();
@@ -303,7 +303,7 @@ public class SlimParser extends Parser {
 				setState(37);
 				match(T__7);
 
-				_localctx.typ = self.guard_up(self._analysis.combine_expr_fix, ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -363,7 +363,7 @@ public class SlimParser extends Parser {
 				setState(46);
 				((RecordContext)_localctx).expr = expr();
 
-				_localctx.typ = self.guard_up(self._analysis.combine_record_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
+				_localctx.typ = self.guard_up(self._analyzer.combine_record_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
 
 				}
 				break;
@@ -381,7 +381,7 @@ public class SlimParser extends Parser {
 				setState(53);
 				((RecordContext)_localctx).record = record();
 
-				_localctx.typ = self.guard_up(self._analysis.combine_record_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
+				_localctx.typ = self.guard_up(self._analyzer.combine_record_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
 
 				}
 				break;
