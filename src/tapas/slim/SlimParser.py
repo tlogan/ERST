@@ -256,7 +256,7 @@ class SlimParser ( Parser ):
                 self.state = 20
                 localctx.body = self.expr()
 
-                localctx.typ = localctx.body.typ
+                localctx.typ = self.guard_up(self._analyzer.combine_expr_function, (None if localctx._ID is None else localctx._ID.text), localctx.body.typ)
 
                 pass
 

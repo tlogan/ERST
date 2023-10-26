@@ -80,12 +80,17 @@ async def _mk_task():
     #     ":hello ()"
     # ]
 
-    pieces = (x for x in [
-"let x = :boo ()",
-'''
-let y = :foo x
-''',
-".uno = y .dos = ()",
+    pieces = [
+"""
+x => :ooga :booga x 
+""",
+###############
+# "let x = :boo ()",
+# '''
+# let y = :foo x
+# ''',
+# ".uno = y .dos = ()",
+################
 
 # '''
 #  let x = :boo ()
@@ -98,7 +103,7 @@ let y = :foo x
         # "fix (", "()", ")"
         # 'x'
 server.Kill()
-    ]) 
+    ] 
 
 
     results = []

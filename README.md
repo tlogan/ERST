@@ -6,7 +6,9 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: write attribute rules for analysis 
+- TODO: implement inference of application 
+- TODO: write remaining attribute rules for analysis 
+- TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
 ------
 - NOTE: update guidance before each part of a sequence

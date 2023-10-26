@@ -105,7 +105,7 @@ self.guard_down(self._analyzer.distill_expr_function_body, $ID.text)
 }
 body = expr 
 {
-$typ = $body.typ
+$typ = self.guard_up(self._analyzer.combine_expr_function, $ID.text, $body.typ)
 }
 
 // | expr '.' expr {

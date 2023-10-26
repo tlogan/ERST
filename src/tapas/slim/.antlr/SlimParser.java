@@ -257,7 +257,7 @@ public class SlimParser extends Parser {
 				setState(20);
 				((ExprContext)_localctx).body = expr();
 
-				_localctx.typ = ((ExprContext)_localctx).body.typ
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_function, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
 
 				}
 				break;

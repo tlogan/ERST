@@ -114,7 +114,7 @@ class Analyzer:
 
 
     """
-    Gathering
+    Combination 
     """
 
     def combine_expr_id(self, guide : ExprGuide, text : str) -> Optional[Typ]:
@@ -132,6 +132,13 @@ class Analyzer:
     def combine_record_cons(self, guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Optional[Typ]:
         return Inter(TField(label, body), cons)  
 
+    def combine_expr_function(self, guide : ExprGuide, param : str, op_body : Optional[Typ]) -> Optional[Typ]:
+        antec = guide.enviro[param]
+        return unbox(
+            Imp(antec, consq)
+            for consq in box(op_body)
+        )
+
     def combine_expr_fix(self, guide : ExprGuide, op_body) -> Optional[Typ]:
         return unbox(
             Induc(body)
@@ -139,10 +146,10 @@ class Analyzer:
         )
 
     """
-    Guiding
+    Distillation 
     """
 
-    def distill_expr_function_body(self, guide : ExprGuide, id : str) -> Guidance:
+    def distill_expr_function_body(self, guide : ExprGuide, param : str) -> Guidance:
         '''
         TODO: decompose guide.typ into expected typ of the body
         '''
@@ -154,9 +161,8 @@ class Analyzer:
         e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
         """
         interp = self.unify(guide.interp, guide.typ, Imp(typ_in, typ_out)) 
-        enviro = guide.enviro.set(id, typ_in)
+        enviro = guide.enviro.set(param, typ_in)
 
-        # TODO: add interpretation to guidance: ExprGuide(interp, env, typ_out)
         return ExprGuide(interp, enviro, typ_out)
 
     def distill_expr_let_body(self, guide : ExprGuide, id : str, target : Typ) -> Guidance:
