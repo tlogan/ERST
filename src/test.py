@@ -81,10 +81,10 @@ async def _mk_task():
     # ]
 
     pieces = [
-# """
-# let foo = x => :ooga :booga x 
-# foo(())
-# """,
+"""
+let foo = x => :ooga :booga x 
+@foo(())
+""",
 ###############
 # """
 # x => :ooga :booga x 
@@ -96,7 +96,9 @@ async def _mk_task():
 # ''',
 # ".uno = y .dos = ()",
 ################
-"fix (", "()", ")",
+# ".uno = () .dos = ()",
+################
+# "fix (", "()", ")",
 ################
 server.Kill()
     ] 

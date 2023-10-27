@@ -28,25 +28,28 @@ public class SlimParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, ID=5, INT=6, WS=7;
+		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
+		T__9=10, ID=11, INT=12, WS=13;
 	public static final int
-		RULE_expr = 0;
+		RULE_expr = 0, RULE_record = 1;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"expr"
+			"expr", "record"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'()'", "'fix'", "'('", "')'"
+			null, "'()'", "':'", "'=>'", "'@'", "'('", "')'", "'let'", "'='", "'fix'", 
+			"'.'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, "ID", "INT", "WS"
+			null, null, null, null, null, null, null, null, null, null, null, "ID", 
+			"INT", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -187,9 +190,21 @@ public class SlimParser extends Parser {
 	public static class ExprContext extends ParserRuleContext {
 		public Plate plate;
 		public Typ typ;
+		public Token ID;
 		public ExprContext body;
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public RecordContext record;
+		public ExprContext rator;
+		public ExprContext rand;
+		public ExprContext target;
+		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
+		public List<ExprContext> expr() {
+			return getRuleContexts(ExprContext.class);
+		}
+		public ExprContext expr(int i) {
+			return getRuleContext(ExprContext.class,i);
+		}
+		public RecordContext record() {
+			return getRuleContext(RecordContext.class,0);
 		}
 		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public ExprContext(ParserRuleContext parent, int invokingState, Plate plate) {
@@ -203,51 +218,232 @@ public class SlimParser extends Parser {
 		ExprContext _localctx = new ExprContext(_ctx, getState(), plate);
 		enterRule(_localctx, 0, RULE_expr);
 		try {
-			setState(14);
+			setState(50);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case T__3:
+			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
+			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
 				}
 				break;
-			case T__0:
+			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(3);
+				setState(5);
+				((ExprContext)_localctx).ID = match(ID);
+
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_id, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(7);
 				match(T__0);
 
 				_localctx.typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
 
 				}
 				break;
-			case T__1:
-				enterOuterAlt(_localctx, 3);
+			case 4:
+				enterOuterAlt(_localctx, 4);
 				{
-				setState(5);
+				setState(9);
 				match(T__1);
+				setState(10);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(11);
+				((ExprContext)_localctx).body = expr(plate);
+
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_tag, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
+
+				}
+				break;
+			case 5:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(14);
+				((ExprContext)_localctx).record = record(plate);
+
+				_localctx.typ = ((ExprContext)_localctx).record.typ
+
+				}
+				break;
+			case 6:
+				enterOuterAlt(_localctx, 6);
+				{
+				setState(17);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(18);
+				match(T__2);
+
+				plate_body = self.guard_down(self._analyzer.distill_expr_function_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+
+				setState(20);
+				((ExprContext)_localctx).body = expr(plate_body);
+
+				plate = plate_body
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_function, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
+
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(23);
+				match(T__3);
+
+				# TODO
+				plate_rator = plate
+
+				setState(25);
+				((ExprContext)_localctx).rator = expr(plate_rator);
+				setState(26);
+				match(T__4);
+				 \
+				plate_rand = self.guard_down(self._analyzer.distill_expr_application_rand, plate, ((ExprContext)_localctx).rator.typ)
+
+				setState(28);
+				((ExprContext)_localctx).rand = expr(plate_rand);
+				setState(29);
+				match(T__5);
+				 \
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_application, plate, ((ExprContext)_localctx).rator.typ, ((ExprContext)_localctx).rand.typ) 
+
+				}
+				break;
+			case 8:
+				enterOuterAlt(_localctx, 8);
+				{
+				setState(32);
+				match(T__6);
+				setState(33);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(34);
+				match(T__7);
+
+				# TODO
+				plate_target = plate 
+
+				setState(36);
+				((ExprContext)_localctx).target = expr(plate_target);
+
+				plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
+
+				setState(38);
+				((ExprContext)_localctx).body = expr(plate_body);
+
+				_localctx.typ = ((ExprContext)_localctx).body.typ
+
+				}
+				break;
+			case 9:
+				enterOuterAlt(_localctx, 9);
+				{
+				setState(41);
+				match(T__8);
 				 
 				self.shift(Symbol("("))
 
-				setState(7);
-				match(T__2);
+				setState(43);
+				match(T__4);
 
 				plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
 
-				setState(9);
+				setState(45);
 				((ExprContext)_localctx).body = expr(plate_body);
 
 				self.shift(Symbol(')'))
 
-				setState(11);
-				match(T__3);
+				setState(47);
+				match(T__5);
 
 				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, plate, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class RecordContext extends ParserRuleContext {
+		public Plate plate;
+		public Typ typ;
+		public Token ID;
+		public ExprContext expr;
+		public RecordContext record;
+		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public RecordContext record() {
+			return getRuleContext(RecordContext.class,0);
+		}
+		public RecordContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
+		public RecordContext(ParserRuleContext parent, int invokingState, Plate plate) {
+			super(parent, invokingState);
+			this.plate = plate;
+		}
+		@Override public int getRuleIndex() { return RULE_record; }
+	}
+
+	public final RecordContext record(Plate plate) throws RecognitionException {
+		RecordContext _localctx = new RecordContext(_ctx, getState(), plate);
+		enterRule(_localctx, 2, RULE_record);
+		try {
+			setState(66);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(53);
+				match(T__9);
+				setState(54);
+				((RecordContext)_localctx).ID = match(ID);
+				setState(55);
+				match(T__7);
+				setState(56);
+				((RecordContext)_localctx).expr = expr(plate);
+
+				_localctx.typ = self.guard_up(self._analyzer.combine_record_single, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
+
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(59);
+				match(T__9);
+				setState(60);
+				((RecordContext)_localctx).ID = match(ID);
+				setState(61);
+				match(T__7);
+				setState(62);
+				((RecordContext)_localctx).expr = expr(plate);
+				setState(63);
+				((RecordContext)_localctx).record = record(plate);
+
+				_localctx.typ = self.guard_up(self._analyzer.combine_record_cons, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
+
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -262,19 +458,51 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0007\u0011\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000"+
-		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
-		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u0000\u000f\b\u0000"+
-		"\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0011\u0000\u000e\u0001"+
-		"\u0000\u0000\u0000\u0002\u000f\u0001\u0000\u0000\u0000\u0003\u0004\u0005"+
-		"\u0001\u0000\u0000\u0004\u000f\u0006\u0000\uffff\uffff\u0000\u0005\u0006"+
-		"\u0005\u0002\u0000\u0000\u0006\u0007\u0006\u0000\uffff\uffff\u0000\u0007"+
-		"\b\u0005\u0003\u0000\u0000\b\t\u0006\u0000\uffff\uffff\u0000\t\n\u0003"+
-		"\u0000\u0000\u0000\n\u000b\u0006\u0000\uffff\uffff\u0000\u000b\f\u0005"+
-		"\u0004\u0000\u0000\f\r\u0006\u0000\uffff\uffff\u0000\r\u000f\u0001\u0000"+
-		"\u0000\u0000\u000e\u0002\u0001\u0000\u0000\u0000\u000e\u0003\u0001\u0000"+
-		"\u0000\u0000\u000e\u0005\u0001\u0000\u0000\u0000\u000f\u0001\u0001\u0000"+
-		"\u0000\u0000\u0001\u000e";
+		"\u0004\u0001\rE\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u00003\b\u0000\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0003\u0001C\b\u0001\u0001\u0001\u0000\u0000\u0002"+
+		"\u0000\u0002\u0000\u0000L\u00002\u0001\u0000\u0000\u0000\u0002B\u0001"+
+		"\u0000\u0000\u0000\u00043\u0001\u0000\u0000\u0000\u0005\u0006\u0005\u000b"+
+		"\u0000\u0000\u00063\u0006\u0000\uffff\uffff\u0000\u0007\b\u0005\u0001"+
+		"\u0000\u0000\b3\u0006\u0000\uffff\uffff\u0000\t\n\u0005\u0002\u0000\u0000"+
+		"\n\u000b\u0005\u000b\u0000\u0000\u000b\f\u0003\u0000\u0000\u0000\f\r\u0006"+
+		"\u0000\uffff\uffff\u0000\r3\u0001\u0000\u0000\u0000\u000e\u000f\u0003"+
+		"\u0002\u0001\u0000\u000f\u0010\u0006\u0000\uffff\uffff\u0000\u00103\u0001"+
+		"\u0000\u0000\u0000\u0011\u0012\u0005\u000b\u0000\u0000\u0012\u0013\u0005"+
+		"\u0003\u0000\u0000\u0013\u0014\u0006\u0000\uffff\uffff\u0000\u0014\u0015"+
+		"\u0003\u0000\u0000\u0000\u0015\u0016\u0006\u0000\uffff\uffff\u0000\u0016"+
+		"3\u0001\u0000\u0000\u0000\u0017\u0018\u0005\u0004\u0000\u0000\u0018\u0019"+
+		"\u0006\u0000\uffff\uffff\u0000\u0019\u001a\u0003\u0000\u0000\u0000\u001a"+
+		"\u001b\u0005\u0005\u0000\u0000\u001b\u001c\u0006\u0000\uffff\uffff\u0000"+
+		"\u001c\u001d\u0003\u0000\u0000\u0000\u001d\u001e\u0005\u0006\u0000\u0000"+
+		"\u001e\u001f\u0006\u0000\uffff\uffff\u0000\u001f3\u0001\u0000\u0000\u0000"+
+		" !\u0005\u0007\u0000\u0000!\"\u0005\u000b\u0000\u0000\"#\u0005\b\u0000"+
+		"\u0000#$\u0006\u0000\uffff\uffff\u0000$%\u0003\u0000\u0000\u0000%&\u0006"+
+		"\u0000\uffff\uffff\u0000&\'\u0003\u0000\u0000\u0000\'(\u0006\u0000\uffff"+
+		"\uffff\u0000(3\u0001\u0000\u0000\u0000)*\u0005\t\u0000\u0000*+\u0006\u0000"+
+		"\uffff\uffff\u0000+,\u0005\u0005\u0000\u0000,-\u0006\u0000\uffff\uffff"+
+		"\u0000-.\u0003\u0000\u0000\u0000./\u0006\u0000\uffff\uffff\u0000/0\u0005"+
+		"\u0006\u0000\u000001\u0006\u0000\uffff\uffff\u000013\u0001\u0000\u0000"+
+		"\u00002\u0004\u0001\u0000\u0000\u00002\u0005\u0001\u0000\u0000\u00002"+
+		"\u0007\u0001\u0000\u0000\u00002\t\u0001\u0000\u0000\u00002\u000e\u0001"+
+		"\u0000\u0000\u00002\u0011\u0001\u0000\u0000\u00002\u0017\u0001\u0000\u0000"+
+		"\u00002 \u0001\u0000\u0000\u00002)\u0001\u0000\u0000\u00003\u0001\u0001"+
+		"\u0000\u0000\u00004C\u0001\u0000\u0000\u000056\u0005\n\u0000\u000067\u0005"+
+		"\u000b\u0000\u000078\u0005\b\u0000\u000089\u0003\u0000\u0000\u00009:\u0006"+
+		"\u0001\uffff\uffff\u0000:C\u0001\u0000\u0000\u0000;<\u0005\n\u0000\u0000"+
+		"<=\u0005\u000b\u0000\u0000=>\u0005\b\u0000\u0000>?\u0003\u0000\u0000\u0000"+
+		"?@\u0003\u0002\u0001\u0000@A\u0006\u0001\uffff\uffff\u0000AC\u0001\u0000"+
+		"\u0000\u0000B4\u0001\u0000\u0000\u0000B5\u0001\u0000\u0000\u0000B;\u0001"+
+		"\u0000\u0000\u0000C\u0003\u0001\u0000\u0000\u0000\u00022B";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

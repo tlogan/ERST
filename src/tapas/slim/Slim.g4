@@ -99,61 +99,65 @@ def guard_up(self, f : Callable, plate : Plate, *args):
 }
 
 expr [Plate plate] returns [Typ typ] : 
-// | ID 
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_id, $ID.text)
-// } 
+| ID 
+{
+$typ = self.guard_up(self._analyzer.combine_expr_id, plate, $ID.text)
+} 
 
 | '()' 
 {
 $typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
 } 
 
-// | ':' ID body = expr 
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_tag, $ID.text, $body.typ)
-// }
+| ':' ID body = expr[plate]
+{
+$typ = self.guard_up(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ)
+}
 
-// | record 
-// {
-// $typ = $record.typ
-// }
+| record[plate] 
+{
+$typ = $record.typ
+}
 
 // | expr '.' expr {
 //     $result = 'hello'
 // }
 
-// | 
-// // { \
-// // TODO: guide terminal
-// // }
-// ID '=>' 
-// {
-// self.guard_down(self._analyzer.distill_expr_function_body, $ID.text)
-// }
-// body = expr 
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_function, $ID.text, $body.typ)
-// }
-
-// | 
-// rator = expr 
-// '(' 
+| 
 // { \
-// self.guard_down(self._analyzer.distill_expr_application_rand, $rator.typ)
+// TODO: guide terminal
 // }
-// rand = expr 
-// // { \
-// // TODO: guide symbol 
-// // }
-// ')' 
-// { \
-// $typ = self.guard_up(self._analyzer.combine_expr_application, $rator.typ, $rand.typ) 
-// }
+ID '=>' 
+{
+plate_body = self.guard_down(self._analyzer.distill_expr_function_body, plate, $ID.text)
+}
+body = expr[plate_body] 
+{
+plate = plate_body
+$typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ)
+}
 
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_unit)
+| 
+'@'
+// TODO: figure out left-recursion issue  
+{
+# TODO
+plate_rator = plate
+}
+rator = expr[plate_rator] 
+'(' 
+{ \
+plate_rand = self.guard_down(self._analyzer.distill_expr_application_rand, plate, $rator.typ)
+}
+rand = expr[plate_rand] 
+// { \
+// TODO: guide symbol 
 // }
+')' 
+{ \
+$typ = self.guard_up(self._analyzer.combine_expr_application, plate, $rator.typ, $rand.typ) 
+}
+
 
 
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
@@ -175,14 +179,19 @@ $typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
 
-// | 'let' ID '=' target = expr 
-// {
-// self.guard_down(self._analyzer.distill_expr_let_body, $ID.text, $target.typ)
-// }
-// body = expr
-// {
-// $typ = $body.typ
-// }
+| 'let' ID '=' 
+{
+# TODO
+plate_target = plate 
+}
+target = expr[plate_target]
+{
+plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
+}
+body = expr[plate_body]
+{
+$typ = $body.typ
+}
 
 //////////////////////////////////
 
@@ -214,16 +223,16 @@ $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 // }
 ;
 
-// record returns [Typ typ] :
-// | '.' ID '=' expr
-// {
-// $typ = self.guard_up(self._analyzer.combine_record_single, $ID.text, $expr.typ)
-// }
-// | '.' ID '=' expr record
-// {
-// $typ = self.guard_up(self._analyzer.combine_record_cons, $ID.text, $expr.typ, $record.typ)
-// }
-// ;
+record [Plate plate] returns [Typ typ] :
+| '.' ID '=' expr[plate]
+{
+$typ = self.guard_up(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
+}
+| '.' ID '=' expr[plate] record[plate]
+{
+$typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
+}
+;
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {
