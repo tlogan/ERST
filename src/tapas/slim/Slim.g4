@@ -139,7 +139,7 @@ $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $bod
 
 | 
 '@'
-// TODO: figure out left-recursion issue  
+// TODO: figure out left-recursion issue; may need to write multiple custom application rules 
 {
 # TODO
 plate_rator = plate
