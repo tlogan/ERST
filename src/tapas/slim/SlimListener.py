@@ -29,14 +29,5 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#record.
-    def enterRecord(self, ctx:SlimParser.RecordContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#record.
-    def exitRecord(self, ctx:SlimParser.RecordContext):
-        pass
-
-
 
 del SlimParser

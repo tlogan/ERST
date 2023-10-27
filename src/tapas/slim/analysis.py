@@ -8,7 +8,7 @@ import sys
 import asyncio
 from asyncio import Queue
 
-from tapas.util_system import unbox, box  
+# from tapas.util_system import unbox, box  
 
 from pyrsistent.typing import PMap 
 from pyrsistent import m 
@@ -80,12 +80,13 @@ Guidance
 """
 
 @dataclass(frozen=True, eq=True)
-class SymbolGuide:
+class Symbol:
     content : str
 
 @dataclass(frozen=True, eq=True)
-class TerminalGuide:
+class Terminal:
     content : str
+
 
 # TODO: the interpretation could map type patterns to types, rather than merely strings
 # -- in order to handle subtyping of relational types
@@ -93,15 +94,14 @@ Interp = PMap[str, Typ]
 Enviro = PMap[str, Typ]
 
 @dataclass(frozen=True, eq=True)
-class ExprGuide: 
+class Plate: 
     interp : Interp
     enviro : Enviro 
-    typ : Typ 
+    expect : Typ
 
-Guidance = Union[SymbolGuide, TerminalGuide, ExprGuide]
+Guidance = Union[Symbol, Terminal, Plate]
 
-init_guidance = ExprGuide(m(), m(), Top())
-
+plate_default = Plate(m(), m(), Top())
 
 class Analyzer:
 
@@ -123,49 +123,39 @@ class Analyzer:
     Combination 
     """
 
-    def combine_expr_id(self, guide : ExprGuide, text : str) -> Op[Typ]:
-        return guide.enviro[text]
+    def combine_expr_id(self, plate : Plate, text : str) -> Op[Typ]:
+        return plate.enviro[text]
 
-    def combine_expr_unit(self, guide : ExprGuide) -> Op[Typ]:
+    def combine_expr_unit(self, plate : Plate) -> Op[Typ]:
         return TUnit() 
 
-    def combine_expr_tag(self, guide : ExprGuide, label : str, body : Typ) -> Op[Typ]:
+    def combine_expr_tag(self, plate : Plate, label : str, body : Typ) -> Op[Typ]:
         return TTag(label, body) 
 
-    def combine_record_single(self, guide : ExprGuide, label : str, body : Typ) -> Op[Typ]:
+    def combine_record_single(self, plate : Plate, label : str, body : Typ) -> Op[Typ]:
         return TField(label, body) 
 
-    def combine_record_cons(self, guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Op[Typ]:
+    def combine_record_cons(self, plate : Plate, label : str, body : Typ, cons : Typ) -> Op[Typ]:
         return Inter(TField(label, body), cons)  
 
-    def combine_expr_function(self, guide : ExprGuide, param : str, op_consq : Op[Typ]) -> Op[Typ]:
-        antec = guide.enviro[param]
-        return unbox(
-            Imp(antec, consq)
-            for consq in box(op_consq)
-        )
+    def combine_expr_function(self, plate : Plate, param : str, body : Typ) -> Op[Typ]:
+        antec = plate.enviro[param]
+        return Imp(antec, body)
 
-    def combine_expr_application(self, guide : ExprGuide, op_rator : Op[Typ], op_rand : Op[Typ]) -> Op[Typ]: 
+    def combine_expr_application(self, plate : Plate, rator : Typ, rand : Typ) -> Op[Typ]: 
         conclusion = self.fresh_type_var()
-        return unbox(
-            Exis(conclusion, interp)
-            for rator in box(op_rator) 
-            for rand in box(op_rand) 
-            for interp in [self.unify(guide.interp, rator, Imp(rand, conclusion))]  
-        )
+        interp = self.unify(plate.interp, rator, Imp(rand, conclusion))
+        return Exis(conclusion, interp)
 
 
-    def combine_expr_fix(self, guide : ExprGuide, op_body : Op[Typ]) -> Op[Typ]:
-        return unbox(
-            Induc(body)
-            for body in box(op_body) 
-        )
+    def combine_expr_fix(self, plate : Plate, body : Typ) -> Op[Typ]:
+        return Induc(body)
 
     """
     Distillation 
     """
 
-    def distill_expr_function_body(self, guide : ExprGuide, param : str) -> Guidance:
+    def distill_expr_function_body(self, plate : Plate, param : str) -> Plate:
         '''
         TODO: decompose guide.typ into expected typ of the body
         '''
@@ -176,18 +166,23 @@ class Analyzer:
         can basically move antecedent into qualifier of consequent 
         e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
         """
-        interp = self.unify(guide.interp, guide.typ, Imp(typ_in, typ_out)) 
-        enviro = guide.enviro.set(param, typ_in)
+        interp = self.unify(plate.interp, plate.expect, Imp(typ_in, typ_out)) 
+        enviro = plate.enviro.set(param, typ_in)
 
-        return ExprGuide(interp, enviro, typ_out)
+        return Plate(interp, enviro, typ_out)
 
-    def distill_expr_let_body(self, guide : ExprGuide, id : str, target : Typ) -> Guidance:
-        interp = guide.interp
-        enviro = guide.enviro.set(id, target)
-        return ExprGuide(interp, enviro, guide.typ)
+    def distill_expr_application_rand(self, plate : Plate, rator : Typ) -> Plate: 
+        rand = self.fresh_type_var()
+        interp = self.unify(plate.interp, rator, Imp(rand, plate.expect))
+        return Plate(interp, plate.enviro, rand)
 
-    def distill_expr_fix_body(self, guide : ExprGuide) -> Guidance:
-        return ExprGuide(guide.interp, guide.enviro, Top())
+    def distill_expr_let_body(self, plate : Plate, id : str, target : Typ) -> Plate:
+        interp = plate.interp
+        enviro = plate.enviro.set(id, target)
+        return Plate(interp, enviro, plate.expect)
+
+    def distill_expr_fix_body(self, plate : Plate) -> Plate:
+        return Plate(plate.interp, plate.enviro, Top())
 
 
     """
@@ -197,4 +192,4 @@ class Analyzer:
     # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
     # TODO: encode problem into Z3; decode back to Slim. 
     def unify(self, interp : Interp, lower : Typ, upper : Typ) -> Interp:
-        return m()
+        return interp 

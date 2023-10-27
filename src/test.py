@@ -9,7 +9,7 @@ from asyncio import Queue
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser
-from tapas.slim import server 
+from tapas.slim import server, analysis
 
 from tapas.util_system import box, unbox
 
@@ -29,7 +29,7 @@ def test_parse_tree_serialize(code):
     token_stream = CommonTokenStream(lexer)
     #############################
     parser = SlimParser(token_stream)
-    tree = parser.expr()
+    tree = parser.expr(analysis.plate_default)
 
 
     if parser.getNumberOfSyntaxErrors() > 0:
@@ -81,10 +81,10 @@ async def _mk_task():
     # ]
 
     pieces = [
-"""
-let foo = x => :ooga :booga x 
-foo(())
-""",
+# """
+# let foo = x => :ooga :booga x 
+# foo(())
+# """,
 ###############
 # """
 # x => :ooga :booga x 
@@ -96,17 +96,8 @@ foo(())
 # ''',
 # ".uno = y .dos = ()",
 ################
-
-# '''
-#  let x = :boo ()
-# let y = :foo x
-# y 
-# ''',
-# "x",
-# "let y = :foo x",
-# "y"
-        # "fix (", "()", ")"
-        # 'x'
+"fix (", "()", ")",
+################
 server.Kill()
     ] 
 

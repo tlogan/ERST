@@ -25,11 +25,11 @@ _overflow = False
 def init(self): 
     self._analyzer = Analyzer() 
     self._cache = {}
-    self._guidance = init_guidance
+    self._guidance = plate_default 
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = init_guidance
+    self._guidance = plate_default
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -42,29 +42,49 @@ def getGuidance(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def guard_down(self, f : Callable, *args):
-    assert isinstance(self._guidance, ExprGuide)
-
+def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
     for arg in args:
         if arg == None:
             self._overflow = True
 
+    result = None
     if not self._overflow:
-        self._guidance = f(self._guidance, *args)
+        result = f(plate, *args)
+        self._guidance = result
 
-    tok = self.getCurrentToken()
-    if not self._overflow and tok.type == self.EOF :
-        self._overflow = True 
+        # tok = self.getCurrentToken()
+        # if tok.type == self.EOF :
+        #     self._overflow = True 
 
-def guard_up(self, f : Callable, *args):
+    return result
 
-    assert isinstance(self._guidance, ExprGuide)
-    
+
+def shift(self, guidance : Union[Symbol, Terminal]):   
+    if not self._overflow:
+        self._guidance = guidance 
+
+        tok = self.getCurrentToken()
+        if tok.type == self.EOF :
+            self._overflow = True 
+
+
+
+def guard_up(self, f : Callable, plate : Plate, *args):
+
     if self._overflow:
         return None
     else:
 
-        return f(self._guidance, *args)
+        clean = next((
+            False
+            for arg in args
+            if arg == None
+        ), True)
+
+        if clean:
+            return f(plate, *args)
+        else:
+            return None
         # TODO: caching is broken; tokenIndex does not change 
         # index = self.tokenIndex() 
         # cache_result = self._cache.get(index)
@@ -78,72 +98,63 @@ def guard_up(self, f : Callable, *args):
 
 }
 
-expr returns [Typ typ] : 
-| ID 
-{
-$typ = self.guard_up(self._analyzer.combine_expr_id, $ID.text)
-} 
+expr [Plate plate] returns [Typ typ] : 
+// | ID 
+// {
+// $typ = self.guard_up(self._analyzer.combine_expr_id, $ID.text)
+// } 
 
 | '()' 
 {
-$typ = self.guard_up(self._analyzer.combine_expr_unit)
+$typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
 } 
 
-| ':' ID body = expr 
-{
-$typ = self.guard_up(self._analyzer.combine_expr_tag, $ID.text, $body.typ)
-}
+// | ':' ID body = expr 
+// {
+// $typ = self.guard_up(self._analyzer.combine_expr_tag, $ID.text, $body.typ)
+// }
 
-| record 
-{
-$typ = $record.typ
-}
+// | record 
+// {
+// $typ = $record.typ
+// }
 
 // | expr '.' expr {
 //     $result = 'hello'
 // }
 
-| 
-// { \
-// TODO: guide terminal
-// }
-ID '=>' 
-{
-self.guard_down(self._analyzer.distill_expr_function_body, $ID.text)
-}
-body = expr 
-{
-$typ = self.guard_up(self._analyzer.combine_expr_function, $ID.text, $body.typ)
-}
-
-| 
-rator = expr 
-'(' 
-// { \
-// TODO: distill rator type to guide rand 
-// }
-rand = expr 
-// { \
-// TODO: guide symbol 
-// }
-')' 
-{ \
-$typ = self.guard_up(self._analyzer.combine_expr_application, $rator.typ, $rand.typ) 
-}
-
+// | 
+// // { \
+// // TODO: guide terminal
+// // }
+// ID '=>' 
 // {
-// $typ = self.guard_up(self._analyzer.combine_expr_unit)
+// self.guard_down(self._analyzer.distill_expr_function_body, $ID.text)
+// }
+// body = expr 
+// {
+// $typ = self.guard_up(self._analyzer.combine_expr_function, $ID.text, $body.typ)
 // }
 
 // | 
 // rator = expr 
 // '(' 
-// // { # TODO: in distill, extract antec from rator (via unify) }
-// rand = expr 
-// ')' 
-// {
-// $typ = self.guard_up(self.analyzer.combine_expr_application, $rator.typ, $rand.typ) 
+// { \
+// self.guard_down(self._analyzer.distill_expr_application_rand, $rator.typ)
 // }
+// rand = expr 
+// // { \
+// // TODO: guide symbol 
+// // }
+// ')' 
+// { \
+// $typ = self.guard_up(self._analyzer.combine_expr_application, $rator.typ, $rand.typ) 
+// }
+
+// {
+// $typ = self.guard_up(self._analyzer.combine_expr_unit)
+// }
+
 
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
 //{
@@ -164,30 +175,34 @@ $typ = self.guard_up(self._analyzer.combine_expr_application, $rator.typ, $rand.
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
 
-| 'let' ID '=' target = expr 
-{
-self.guard_down(self._analyzer.distill_expr_let_body, $ID.text, $target.typ)
-}
-body = expr
-{
-$typ = $body.typ
-}
+// | 'let' ID '=' target = expr 
+// {
+// self.guard_down(self._analyzer.distill_expr_let_body, $ID.text, $target.typ)
+// }
+// body = expr
+// {
+// $typ = $body.typ
+// }
+
+//////////////////////////////////
 
 | 'fix' 
 { 
-self.guard_down(lambda: SymbolGuide("("))
+self.shift(Symbol("("))
 } 
 '(' 
+// TODO: need to distinguish between context to distill and guidance to send out 
+// need a call stack or use an implicit call stack by parameterizing expr 
 {
-self.guard_down(self._analyzer.distill_expr_fix_body)
+plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
 }
-body = expr
+body = expr[plate_body]
 {
-self.guard_down(lambda: SymbolGuide(')'))
+self.shift(Symbol(')'))
 }
 ')' 
 {
-$typ = self.guard_up(self._analyzer.combine_expr_fix, $body.typ)
+$typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 }
 
 // | 'let' ID ('in' typ)? '=' expr expr  {
@@ -199,16 +214,16 @@ $typ = self.guard_up(self._analyzer.combine_expr_fix, $body.typ)
 // }
 ;
 
-record returns [Typ typ] :
-| '.' ID '=' expr
-{
-$typ = self.guard_up(self._analyzer.combine_record_single, $ID.text, $expr.typ)
-}
-| '.' ID '=' expr record
-{
-$typ = self.guard_up(self._analyzer.combine_record_cons, $ID.text, $expr.typ, $record.typ)
-}
-;
+// record returns [Typ typ] :
+// | '.' ID '=' expr
+// {
+// $typ = self.guard_up(self._analyzer.combine_record_single, $ID.text, $expr.typ)
+// }
+// | '.' ID '=' expr record
+// {
+// $typ = self.guard_up(self._analyzer.combine_record_cons, $ID.text, $expr.typ, $record.typ)
+// }
+// ;
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {

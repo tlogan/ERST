@@ -28,27 +28,25 @@ public class SlimParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		ID=10, INT=11, WS=12;
+		T__0=1, T__1=2, T__2=3, T__3=4, ID=5, INT=6, WS=7;
 	public static final int
-		RULE_expr = 0, RULE_record = 1;
+		RULE_expr = 0;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"expr", "record"
+			"expr"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'()'", "':'", "'=>'", "'('", "')'", "'let'", "'='", "'fix'", "'.'"
+			null, "'()'", "'fix'", "'('", "')'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, null, null, null, null, null, "ID", "INT", 
-			"WS"
+			null, null, null, null, null, "ID", "INT", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -108,11 +106,11 @@ public class SlimParser extends Parser {
 	def init(self): 
 	    self._analyzer = Analyzer() 
 	    self._cache = {}
-	    self._guidance = init_guidance
+	    self._guidance = plate_default 
 	    self._overflow = False  
 
 	def reset(self): 
-	    self._guidance = init_guidance
+	    self._guidance = plate_default
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -125,29 +123,49 @@ public class SlimParser extends Parser {
 	def tokenIndex(self):
 	    return self.getCurrentToken().tokenIndex
 
-	def guard_down(self, f : Callable, *args):
-	    assert isinstance(self._guidance, ExprGuide)
-
+	def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
 	    for arg in args:
 	        if arg == None:
 	            self._overflow = True
 
+	    result = None
 	    if not self._overflow:
-	        self._guidance = f(self._guidance, *args)
+	        result = f(plate, *args)
+	        self._guidance = result
 
-	    tok = self.getCurrentToken()
-	    if not self._overflow and tok.type == self.EOF :
-	        self._overflow = True 
+	        # tok = self.getCurrentToken()
+	        # if tok.type == self.EOF :
+	        #     self._overflow = True 
 
-	def guard_up(self, f : Callable, *args):
+	    return result
 
-	    assert isinstance(self._guidance, ExprGuide)
-	    
+
+	def shift(self, guidance : Union[Symbol, Terminal]):   
+	    if not self._overflow:
+	        self._guidance = guidance 
+
+	        tok = self.getCurrentToken()
+	        if tok.type == self.EOF :
+	            self._overflow = True 
+
+
+
+	def guard_up(self, f : Callable, plate : Plate, *args):
+
 	    if self._overflow:
 	        return None
 	    else:
 
-	        return f(self._guidance, *args)
+	        clean = next((
+	            False
+	            for arg in args
+	            if arg == None
+	        ), True)
+
+	        if clean:
+	            return f(plate, *args)
+	        else:
+	            return None
 	        # TODO: caching is broken; tokenIndex does not change 
 	        # index = self.tokenIndex() 
 	        # cache_result = self._cache.get(index)
@@ -167,261 +185,69 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
+		public Plate plate;
 		public Typ typ;
-		public ExprContext rator;
-		public Token ID;
 		public ExprContext body;
-		public RecordContext record;
-		public ExprContext target;
-		public ExprContext rand;
-		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
 		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
-		}
-		public RecordContext record() {
-			return getRuleContext(RecordContext.class,0);
-		}
-		public ExprContext(ParserRuleContext parent, int invokingState) {
+		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
+		public ExprContext(ParserRuleContext parent, int invokingState, Plate plate) {
 			super(parent, invokingState);
+			this.plate = plate;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 	}
 
-	public final ExprContext expr() throws RecognitionException {
-		return expr(0);
-	}
-
-	private ExprContext expr(int _p) throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		ExprContext _localctx = new ExprContext(_ctx, _parentState);
-		ExprContext _prevctx = _localctx;
-		int _startState = 0;
-		enterRecursionRule(_localctx, 0, RULE_expr, _p);
+	public final ExprContext expr(Plate plate) throws RecognitionException {
+		ExprContext _localctx = new ExprContext(_ctx, getState(), plate);
+		enterRule(_localctx, 0, RULE_expr);
 		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(40);
+			setState(14);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
-			case 1:
-				{
-				}
-				break;
-			case 2:
-				{
-				setState(5);
-				((ExprContext)_localctx).ID = match(ID);
-
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
-
-				}
-				break;
-			case 3:
-				{
-				setState(7);
-				match(T__0);
-
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_unit)
-
-				}
-				break;
-			case 4:
-				{
-				setState(9);
-				match(T__1);
-				setState(10);
-				((ExprContext)_localctx).ID = match(ID);
-				setState(11);
-				((ExprContext)_localctx).body = expr(6);
-
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_tag, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
-
-				}
-				break;
-			case 5:
-				{
-				setState(14);
-				((ExprContext)_localctx).record = record();
-
-				_localctx.typ = ((ExprContext)_localctx).record.typ
-
-				}
-				break;
-			case 6:
-				{
-				setState(17);
-				((ExprContext)_localctx).ID = match(ID);
-				setState(18);
-				match(T__2);
-
-				self.guard_down(self._analyzer.distill_expr_function_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
-
-				setState(20);
-				((ExprContext)_localctx).body = expr(4);
-
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_function, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
-
-				}
-				break;
-			case 7:
-				{
-				setState(23);
-				match(T__5);
-				setState(24);
-				((ExprContext)_localctx).ID = match(ID);
-				setState(25);
-				match(T__6);
-				setState(26);
-				((ExprContext)_localctx).target = expr(0);
-
-				self.guard_down(self._analyzer.distill_expr_let_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
-
-				setState(28);
-				((ExprContext)_localctx).body = expr(2);
-
-				_localctx.typ = ((ExprContext)_localctx).body.typ
-
-				}
-				break;
-			case 8:
-				{
-				setState(31);
-				match(T__7);
-				 
-				self.guard_down(lambda: SymbolGuide("("))
-
-				setState(33);
-				match(T__3);
-
-				self.guard_down(self._analyzer.distill_expr_fix_body)
-
-				setState(35);
-				((ExprContext)_localctx).body = expr(0);
-
-				self.guard_down(lambda: SymbolGuide(')'))
-
-				setState(37);
-				match(T__4);
-
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, ((ExprContext)_localctx).body.typ)
-
-				}
-				break;
-			}
-			_ctx.stop = _input.LT(-1);
-			setState(50);
-			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					if ( _parseListeners!=null ) triggerExitRuleEvent();
-					_prevctx = _localctx;
-					{
-					{
-					_localctx = new ExprContext(_parentctx, _parentState);
-					_localctx.rator = _prevctx;
-					pushNewRecursionContext(_localctx, _startState, RULE_expr);
-					setState(42);
-					if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-					setState(43);
-					match(T__3);
-					setState(44);
-					((ExprContext)_localctx).rand = expr(0);
-					setState(45);
-					match(T__4);
-					 \
-					          _localctx.typ = self.guard_up(self._analyzer.combine_expr_application, ((ExprContext)_localctx).rator.typ, ((ExprContext)_localctx).rand.typ) 
-					          
-					}
-					} 
-				}
-				setState(52);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class RecordContext extends ParserRuleContext {
-		public Typ typ;
-		public Token ID;
-		public ExprContext expr;
-		public RecordContext record;
-		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
-		}
-		public RecordContext record() {
-			return getRuleContext(RecordContext.class,0);
-		}
-		public RecordContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_record; }
-	}
-
-	public final RecordContext record() throws RecognitionException {
-		RecordContext _localctx = new RecordContext(_ctx, getState());
-		enterRule(_localctx, 2, RULE_record);
-		try {
-			setState(67);
-			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
-			case 1:
+			switch (_input.LA(1)) {
+			case T__3:
 				enterOuterAlt(_localctx, 1);
 				{
 				}
 				break;
-			case 2:
+			case T__0:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(54);
-				match(T__8);
-				setState(55);
-				((RecordContext)_localctx).ID = match(ID);
-				setState(56);
-				match(T__6);
-				setState(57);
-				((RecordContext)_localctx).expr = expr(0);
+				setState(3);
+				match(T__0);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_record_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
 
 				}
 				break;
-			case 3:
+			case T__1:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(60);
-				match(T__8);
-				setState(61);
-				((RecordContext)_localctx).ID = match(ID);
-				setState(62);
-				match(T__6);
-				setState(63);
-				((RecordContext)_localctx).expr = expr(0);
-				setState(64);
-				((RecordContext)_localctx).record = record();
+				setState(5);
+				match(T__1);
+				 
+				self.shift(Symbol("("))
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_record_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
+				setState(7);
+				match(T__2);
+
+				plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
+
+				setState(9);
+				((ExprContext)_localctx).body = expr(plate_body);
+
+				self.shift(Symbol(')'))
+
+				setState(11);
+				match(T__3);
+
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, plate, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -435,67 +261,20 @@ public class SlimParser extends Parser {
 		return _localctx;
 	}
 
-	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
-		switch (ruleIndex) {
-		case 0:
-			return expr_sempred((ExprContext)_localctx, predIndex);
-		}
-		return true;
-	}
-	private boolean expr_sempred(ExprContext _localctx, int predIndex) {
-		switch (predIndex) {
-		case 0:
-			return precpred(_ctx, 3);
-		}
-		return true;
-	}
-
 	public static final String _serializedATN =
-		"\u0004\u0001\fF\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003"+
-		"\u0000)\b\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0005\u00001\b\u0000\n\u0000\f\u00004\t\u0000\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0003\u0001D\b\u0001\u0001\u0001\u0000\u0001\u0000"+
-		"\u0002\u0000\u0002\u0000\u0000M\u0000(\u0001\u0000\u0000\u0000\u0002C"+
-		"\u0001\u0000\u0000\u0000\u0004)\u0006\u0000\uffff\uffff\u0000\u0005\u0006"+
-		"\u0005\n\u0000\u0000\u0006)\u0006\u0000\uffff\uffff\u0000\u0007\b\u0005"+
-		"\u0001\u0000\u0000\b)\u0006\u0000\uffff\uffff\u0000\t\n\u0005\u0002\u0000"+
-		"\u0000\n\u000b\u0005\n\u0000\u0000\u000b\f\u0003\u0000\u0000\u0006\f\r"+
-		"\u0006\u0000\uffff\uffff\u0000\r)\u0001\u0000\u0000\u0000\u000e\u000f"+
-		"\u0003\u0002\u0001\u0000\u000f\u0010\u0006\u0000\uffff\uffff\u0000\u0010"+
-		")\u0001\u0000\u0000\u0000\u0011\u0012\u0005\n\u0000\u0000\u0012\u0013"+
-		"\u0005\u0003\u0000\u0000\u0013\u0014\u0006\u0000\uffff\uffff\u0000\u0014"+
-		"\u0015\u0003\u0000\u0000\u0004\u0015\u0016\u0006\u0000\uffff\uffff\u0000"+
-		"\u0016)\u0001\u0000\u0000\u0000\u0017\u0018\u0005\u0006\u0000\u0000\u0018"+
-		"\u0019\u0005\n\u0000\u0000\u0019\u001a\u0005\u0007\u0000\u0000\u001a\u001b"+
-		"\u0003\u0000\u0000\u0000\u001b\u001c\u0006\u0000\uffff\uffff\u0000\u001c"+
-		"\u001d\u0003\u0000\u0000\u0002\u001d\u001e\u0006\u0000\uffff\uffff\u0000"+
-		"\u001e)\u0001\u0000\u0000\u0000\u001f \u0005\b\u0000\u0000 !\u0006\u0000"+
-		"\uffff\uffff\u0000!\"\u0005\u0004\u0000\u0000\"#\u0006\u0000\uffff\uffff"+
-		"\u0000#$\u0003\u0000\u0000\u0000$%\u0006\u0000\uffff\uffff\u0000%&\u0005"+
-		"\u0005\u0000\u0000&\'\u0006\u0000\uffff\uffff\u0000\')\u0001\u0000\u0000"+
-		"\u0000(\u0004\u0001\u0000\u0000\u0000(\u0005\u0001\u0000\u0000\u0000("+
-		"\u0007\u0001\u0000\u0000\u0000(\t\u0001\u0000\u0000\u0000(\u000e\u0001"+
-		"\u0000\u0000\u0000(\u0011\u0001\u0000\u0000\u0000(\u0017\u0001\u0000\u0000"+
-		"\u0000(\u001f\u0001\u0000\u0000\u0000)2\u0001\u0000\u0000\u0000*+\n\u0003"+
-		"\u0000\u0000+,\u0005\u0004\u0000\u0000,-\u0003\u0000\u0000\u0000-.\u0005"+
-		"\u0005\u0000\u0000./\u0006\u0000\uffff\uffff\u0000/1\u0001\u0000\u0000"+
-		"\u00000*\u0001\u0000\u0000\u000014\u0001\u0000\u0000\u000020\u0001\u0000"+
-		"\u0000\u000023\u0001\u0000\u0000\u00003\u0001\u0001\u0000\u0000\u0000"+
-		"42\u0001\u0000\u0000\u00005D\u0001\u0000\u0000\u000067\u0005\t\u0000\u0000"+
-		"78\u0005\n\u0000\u000089\u0005\u0007\u0000\u00009:\u0003\u0000\u0000\u0000"+
-		":;\u0006\u0001\uffff\uffff\u0000;D\u0001\u0000\u0000\u0000<=\u0005\t\u0000"+
-		"\u0000=>\u0005\n\u0000\u0000>?\u0005\u0007\u0000\u0000?@\u0003\u0000\u0000"+
-		"\u0000@A\u0003\u0002\u0001\u0000AB\u0006\u0001\uffff\uffff\u0000BD\u0001"+
-		"\u0000\u0000\u0000C5\u0001\u0000\u0000\u0000C6\u0001\u0000\u0000\u0000"+
-		"C<\u0001\u0000\u0000\u0000D\u0003\u0001\u0000\u0000\u0000\u0003(2C";
+		"\u0004\u0001\u0007\u0011\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u0000\u000f\b\u0000"+
+		"\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0011\u0000\u000e\u0001"+
+		"\u0000\u0000\u0000\u0002\u000f\u0001\u0000\u0000\u0000\u0003\u0004\u0005"+
+		"\u0001\u0000\u0000\u0004\u000f\u0006\u0000\uffff\uffff\u0000\u0005\u0006"+
+		"\u0005\u0002\u0000\u0000\u0006\u0007\u0006\u0000\uffff\uffff\u0000\u0007"+
+		"\b\u0005\u0003\u0000\u0000\b\t\u0006\u0000\uffff\uffff\u0000\t\n\u0003"+
+		"\u0000\u0000\u0000\n\u000b\u0006\u0000\uffff\uffff\u0000\u000b\f\u0005"+
+		"\u0004\u0000\u0000\f\r\u0006\u0000\uffff\uffff\u0000\r\u000f\u0001\u0000"+
+		"\u0000\u0000\u000e\u0002\u0001\u0000\u0000\u0000\u000e\u0003\u0001\u0000"+
+		"\u0000\u0000\u000e\u0005\u0001\u0000\u0000\u0000\u000f\u0001\u0001\u0000"+
+		"\u0000\u0000\u0001\u000e";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

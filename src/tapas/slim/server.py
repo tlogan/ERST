@@ -67,7 +67,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         parser.reset()
 
         try:
-            ctx = parser.expr()
+            ctx = parser.expr(plate_default)
             if ctx.typ: 
                 await output.put(Done())
                 break
