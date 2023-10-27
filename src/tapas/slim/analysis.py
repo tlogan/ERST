@@ -16,6 +16,7 @@ from pyrsistent import m
 from contextlib import contextmanager
 
 
+Op = Optional
 
 """
 Typ data types
@@ -54,11 +55,16 @@ class Imp:
     consq : Typ 
 
 @dataclass(frozen=True, eq=True)
+class Exis:
+    body : Typ 
+    qualifiers : Interp 
+
+@dataclass(frozen=True, eq=True)
 class Induc:
     body : Typ 
 
 
-Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Imp, Induc]
+Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Imp, Exis, Induc]
 
 """
 Expr data types
@@ -117,29 +123,39 @@ class Analyzer:
     Combination 
     """
 
-    def combine_expr_id(self, guide : ExprGuide, text : str) -> Optional[Typ]:
+    def combine_expr_id(self, guide : ExprGuide, text : str) -> Op[Typ]:
         return guide.enviro[text]
 
-    def combine_expr_unit(self, guide : ExprGuide) -> Optional[Typ]:
+    def combine_expr_unit(self, guide : ExprGuide) -> Op[Typ]:
         return TUnit() 
 
-    def combine_expr_tag(self, guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
+    def combine_expr_tag(self, guide : ExprGuide, label : str, body : Typ) -> Op[Typ]:
         return TTag(label, body) 
 
-    def combine_record_single(self, guide : ExprGuide, label : str, body : Typ) -> Optional[Typ]:
+    def combine_record_single(self, guide : ExprGuide, label : str, body : Typ) -> Op[Typ]:
         return TField(label, body) 
 
-    def combine_record_cons(self, guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Optional[Typ]:
+    def combine_record_cons(self, guide : ExprGuide, label : str, body : Typ, cons : Typ) -> Op[Typ]:
         return Inter(TField(label, body), cons)  
 
-    def combine_expr_function(self, guide : ExprGuide, param : str, op_body : Optional[Typ]) -> Optional[Typ]:
+    def combine_expr_function(self, guide : ExprGuide, param : str, op_consq : Op[Typ]) -> Op[Typ]:
         antec = guide.enviro[param]
         return unbox(
             Imp(antec, consq)
-            for consq in box(op_body)
+            for consq in box(op_consq)
         )
 
-    def combine_expr_fix(self, guide : ExprGuide, op_body) -> Optional[Typ]:
+    def combine_expr_application(self, guide : ExprGuide, op_rator : Op[Typ], op_rand : Op[Typ]) -> Op[Typ]: 
+        conclusion = self.fresh_type_var()
+        return unbox(
+            Exis(conclusion, interp)
+            for rator in box(op_rator) 
+            for rand in box(op_rand) 
+            for interp in [self.unify(guide.interp, rator, Imp(rand, conclusion))]  
+        )
+
+
+    def combine_expr_fix(self, guide : ExprGuide, op_body : Op[Typ]) -> Op[Typ]:
         return unbox(
             Induc(body)
             for body in box(op_body) 
@@ -180,5 +196,5 @@ class Analyzer:
 
     # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
     # TODO: encode problem into Z3; decode back to Slim. 
-    def unify(self, interp : Interp, lower : Typ, upper : Typ) -> PMap[str, Typ]:
+    def unify(self, interp : Interp, lower : Typ, upper : Typ) -> Interp:
         return m()

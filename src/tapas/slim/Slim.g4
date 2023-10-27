@@ -99,7 +99,15 @@ $typ = self.guard_up(self._analyzer.combine_expr_tag, $ID.text, $body.typ)
 $typ = $record.typ
 }
 
-| ID '=>' 
+// | expr '.' expr {
+//     $result = 'hello'
+// }
+
+| 
+// { \
+// TODO: guide terminal
+// }
+ID '=>' 
 {
 self.guard_down(self._analyzer.distill_expr_function_body, $ID.text)
 }
@@ -108,14 +116,35 @@ body = expr
 $typ = self.guard_up(self._analyzer.combine_expr_function, $ID.text, $body.typ)
 }
 
-// | expr '.' expr {
-//     $result = 'hello'
+| 
+rator = expr 
+'(' 
+// { \
+// TODO: distill rator type to guide rand 
+// }
+rand = expr 
+// { \
+// TODO: guide symbol 
+// }
+')' 
+{ \
+$typ = self.guard_up(self._analyzer.combine_expr_application, $rator.typ, $rand.typ) 
+}
+
+// {
+// $typ = self.guard_up(self._analyzer.combine_expr_unit)
 // }
 
-// | expr '(' expr ')' 
+// | 
+// rator = expr 
+// '(' 
+// // { # TODO: in distill, extract antec from rator (via unify) }
+// rand = expr 
+// ')' 
 // {
-//     $result = 'hello'
+// $typ = self.guard_up(self.analyzer.combine_expr_application, $rator.typ, $rand.typ) 
 // }
+
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
 //{
 //     $result = 'hello'
