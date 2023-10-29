@@ -147,14 +147,14 @@ class Analyzer:
         antec = plate.enviro[param]
         return Imp(antec, body)
 
-    def combine_expr_application(self, plate : Plate, rator : Typ, rand : Typ) -> Op[Typ]: 
+    def combine_expr_application(self, plate : Plate, applicator : Typ, applicand : Typ) -> Op[Typ]: 
         answr = self.fresh_type_var()
-        interp = self.unify(plate.interp, rator, Imp(rand, answr))
+        interp = self.unify(plate.interp, applicator, Imp(applicand, answr))
         return Exis(answr, interp)
 
-    def combine_expr_call(self, plate : Plate, id : str, rand : Typ) -> Op[Typ]: 
-        rator = plate.enviro[id]
-        return self.combine_expr_application(plate, rator, rand)
+    def combine_expr_call(self, plate : Plate, id : str, applicand : Typ) -> Op[Typ]: 
+        applicator = plate.enviro[id]
+        return self.combine_expr_application(plate, applicator, applicand)
 
     def combine_expr_fix(self, plate : Plate, body : Typ) -> Op[Typ]:
         return Induc(body)
@@ -179,14 +179,14 @@ class Analyzer:
 
         return Plate(interp, enviro, typ_out)
 
-    def distill_expr_application_rand(self, plate : Plate, rator : Typ) -> Plate: 
-        rand = self.fresh_type_var()
-        interp = self.unify(plate.interp, rator, Imp(rand, plate.expect))
-        return Plate(interp, plate.enviro, rand)
+    def distill_expr_application_applicand(self, plate : Plate, applicator : Typ) -> Plate: 
+        applicand = self.fresh_type_var()
+        interp = self.unify(plate.interp, applicator, Imp(applicand, plate.expect))
+        return Plate(interp, plate.enviro, applicand)
 
-    def distill_expr_call_rand(self, plate : Plate, id : str) -> Plate: 
-        rator = plate.enviro[id]
-        return self.distill_expr_application_rand(plate, rator)
+    def distill_expr_call_applicand(self, plate : Plate, id : str) -> Plate: 
+        applicator = plate.enviro[id]
+        return self.distill_expr_application_applicand(plate, applicator)
 
     def distill_expr_let_body(self, plate : Plate, id : str, target : Typ) -> Plate:
         interp = plate.interp

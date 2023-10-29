@@ -137,38 +137,52 @@ body = expr[plate_body]
 plate = plate_body
 $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ)
 }
+//////////////////////////
+
+// | 
+// // NOTE: using prefix syntax as a simple way to avoid problematic left-recursion 
+// '('
+// {
+// # TODO
+// plate_applicator = plate
+// }
+// applicator = expr[plate_applicator] 
+// ')'
+// { \
+// plate_applicand = self.guard_down(self._analyzer.distill_expr_application_applicand, plate, $applicator.typ)
+// }
+// '('
+// applicand = expr[plate_applicand] 
+// ')'
+// { \
+// $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $applicator.typ, $applicand.typ) 
+// }
+
+// | 
+// // NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
+// ID 
+// { \
+// plate_applicand = self.guard_down(self._analyzer.distill_expr_call_applicand, plate, $ID.text)
+// }
+// '('
+// applicand = expr[plate_applicand] 
+// ')'
+// { \
+// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicand.typ) 
+// }
 
 | 
-// NOTE: using prefix syntax as a simple way to avoid problematic left-recursion 
-'('
-{
-# TODO
-plate_rator = plate
-}
-rator = expr[plate_rator] 
-')'
-{ \
-plate_rand = self.guard_down(self._analyzer.distill_expr_application_rand, plate, $rator.typ)
-}
-'('
-rand = expr[plate_rand] 
-')'
-{ \
-$typ = self.guard_up(self._analyzer.combine_expr_application, plate, $rator.typ, $rand.typ) 
-}
-
-| 
-// NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
+// TODO: update plate_applicands to hold type of applicator (ID)      
 ID 
 { \
-plate_rand = self.guard_down(self._analyzer.distill_expr_call_rand, plate, $ID.text)
+plate_applicands = self.guard_down(self._analyzer.distill_expr_call_applicand, plate, $ID.text)
 }
-'('
-rand = expr[plate_rand] 
-')'
+applicands[plate_applicands]
 { \
-$typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $rand.typ) 
+$typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicands.typs) 
 }
+
+//////////////////////////
 
 
 
@@ -239,6 +253,9 @@ $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 // }
 ;
 
+
+
+
 record [Plate plate] returns [Typ typ] :
 | '.' ID '=' expr[plate]
 {
@@ -249,6 +266,39 @@ $typ = self.guard_up(self._analyzer.combine_record_single, plate, $ID.text, $exp
 $typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
 }
 ;
+
+// NOTE: plate.typ represents the type of the rator applied to the next immediate applicand  
+applicands [Plate plate] returns [list[Typ] typs] :
+| 
+{ \
+# TODO : extract antecendent from applicator type - plate.typ
+plate_content = plate 
+}
+'('
+content = expr[plate_content] 
+')'
+{ \
+$typs = [content.typ]
+}
+
+| 
+{ \
+# TODO : extract antecendent from applicator type - plate.typ
+plate_head = plate 
+}
+'('
+head = expr[plate_head] 
+')'
+{ \
+# TODO : extract consequent from applicator type - plate.typ
+plate_tail = plate 
+}
+tail = applicands[plate_tail]
+{
+}
+;
+
+
 
 // thing returns [str result]: 
 //     | 'fun' param = expr '=>' body = expr {

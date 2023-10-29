@@ -6,7 +6,8 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: implement application attribute rules allowing infix chaining without left-recursion
+- TODO: implement application attribute rules with chaining without left-recursion using star
+    - that is, figure out how to squeeze right-recursion syntax into a left-recursive analysis
 - TODO: implement projection attribute rules allowing infix chaining without left-recursion
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
@@ -40,7 +41,8 @@
 ### Innovation 
 - Type inference for programs with the following combination of features: 
     - streaming/partial programs 
-        - analysis on recursive-decent/leftward parse-tree 
+        - analysis on recursive-decent parse-tree 
+        - converting right-recursive parse-tree to left-recursive analysis
         - adds layer of complexity that's not apparent in a normalized AST
     - extrinsic types 
     - relational types
