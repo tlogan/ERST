@@ -81,9 +81,14 @@ async def _mk_task():
     # ]
 
     pieces = [
+# """
+# let rec = .uno @ .dos @ 
+# rec.uno
+# """,
+###############
 """
 let foo = x => :ooga :booga x 
-@foo(())
+foo(@)
 """,
 ###############
 # """

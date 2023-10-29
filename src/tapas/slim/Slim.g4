@@ -104,7 +104,7 @@ expr [Plate plate] returns [Typ typ] :
 $typ = self.guard_up(self._analyzer.combine_expr_id, plate, $ID.text)
 } 
 
-| '()' 
+| '@' 
 {
 $typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
 } 
@@ -119,9 +119,10 @@ $typ = self.guard_up(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ
 $typ = $record.typ
 }
 
-// | expr '.' expr {
-//     $result = 'hello'
-// }
+| '(' expr[plate] ')' '.' ID 
+{ \
+$typ = self.guard_up(self._analyzer.combine_expr_projection, plate, $expr.typ, $ID.text) 
+}
 
 | 
 // { \
@@ -138,24 +139,35 @@ $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $bod
 }
 
 | 
-'@'
-// TODO: figure out left-recursion issue; may need to write multiple custom application rules 
+// NOTE: using prefix syntax as a simple way to avoid problematic left-recursion 
+'('
 {
 # TODO
 plate_rator = plate
 }
 rator = expr[plate_rator] 
-'(' 
+')'
 { \
 plate_rand = self.guard_down(self._analyzer.distill_expr_application_rand, plate, $rator.typ)
 }
+'('
 rand = expr[plate_rand] 
-// { \
-// TODO: guide symbol 
-// }
-')' 
+')'
 { \
 $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $rator.typ, $rand.typ) 
+}
+
+| 
+// NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
+ID 
+{ \
+plate_rand = self.guard_down(self._analyzer.distill_expr_call_rand, plate, $ID.text)
+}
+'('
+rand = expr[plate_rand] 
+')'
+{ \
+$typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $rand.typ) 
 }
 
 
@@ -179,6 +191,8 @@ $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $rator.typ,
     // $result = f'(ite {$cond.result} {$t.result} {$f.result})'
 // }
 
+// TODO: add type annotation syntax
+// | 'let' ID ('in' typ)? '=' expr expr  {
 | 'let' ID '=' 
 {
 # TODO
@@ -213,6 +227,8 @@ self.shift(Symbol(')'))
 {
 $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 }
+
+| '(' expr[plate] ')' 
 
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'

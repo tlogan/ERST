@@ -6,8 +6,9 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: implement distillation within application 
-- TODO: write remaining attribute rules for analysis 
+- TODO: implement application attribute rules allowing infix chaining without left-recursion
+- TODO: implement projection attribute rules allowing infix chaining without left-recursion
+- TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
 ------

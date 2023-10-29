@@ -29,7 +29,7 @@ public class SlimParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		T__9=10, ID=11, INT=12, WS=13;
+		ID=10, INT=11, WS=12;
 	public static final int
 		RULE_expr = 0, RULE_record = 1;
 	private static String[] makeRuleNames() {
@@ -41,15 +41,14 @@ public class SlimParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'()'", "':'", "'=>'", "'@'", "'('", "')'", "'let'", "'='", "'fix'", 
-			"'.'"
+			null, "'@'", "':'", "'('", "')'", "'.'", "'=>'", "'let'", "'='", "'fix'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, null, null, null, null, null, null, "ID", 
-			"INT", "WS"
+			null, null, null, null, null, null, null, null, null, null, "ID", "INT", 
+			"WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -193,6 +192,7 @@ public class SlimParser extends Parser {
 		public Token ID;
 		public ExprContext body;
 		public RecordContext record;
+		public ExprContext expr;
 		public ExprContext rator;
 		public ExprContext rand;
 		public ExprContext target;
@@ -218,7 +218,7 @@ public class SlimParser extends Parser {
 		ExprContext _localctx = new ExprContext(_ctx, getState(), plate);
 		enterRule(_localctx, 0, RULE_expr);
 		try {
-			setState(50);
+			setState(69);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 			case 1:
@@ -274,13 +274,31 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(17);
-				((ExprContext)_localctx).ID = match(ID);
-				setState(18);
 				match(T__2);
+				setState(18);
+				((ExprContext)_localctx).expr = expr(plate);
+				setState(19);
+				match(T__3);
+				setState(20);
+				match(T__4);
+				setState(21);
+				((ExprContext)_localctx).ID = match(ID);
+				 \
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_projection, plate, ((ExprContext)_localctx).expr.typ, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)) 
+
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(24);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(25);
+				match(T__5);
 
 				plate_body = self.guard_down(self._analyzer.distill_expr_function_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
-				setState(20);
+				setState(27);
 				((ExprContext)_localctx).body = expr(plate_body);
 
 				plate = plate_body
@@ -288,79 +306,111 @@ public class SlimParser extends Parser {
 
 				}
 				break;
-			case 7:
-				enterOuterAlt(_localctx, 7);
+			case 8:
+				enterOuterAlt(_localctx, 8);
 				{
-				setState(23);
-				match(T__3);
+				setState(30);
+				match(T__2);
 
 				# TODO
 				plate_rator = plate
 
-				setState(25);
+				setState(32);
 				((ExprContext)_localctx).rator = expr(plate_rator);
-				setState(26);
-				match(T__4);
+				setState(33);
+				match(T__3);
 				 \
 				plate_rand = self.guard_down(self._analyzer.distill_expr_application_rand, plate, ((ExprContext)_localctx).rator.typ)
 
-				setState(28);
+				setState(35);
+				match(T__2);
+				setState(36);
 				((ExprContext)_localctx).rand = expr(plate_rand);
-				setState(29);
-				match(T__5);
+				setState(37);
+				match(T__3);
 				 \
 				_localctx.typ = self.guard_up(self._analyzer.combine_expr_application, plate, ((ExprContext)_localctx).rator.typ, ((ExprContext)_localctx).rand.typ) 
-
-				}
-				break;
-			case 8:
-				enterOuterAlt(_localctx, 8);
-				{
-				setState(32);
-				match(T__6);
-				setState(33);
-				((ExprContext)_localctx).ID = match(ID);
-				setState(34);
-				match(T__7);
-
-				# TODO
-				plate_target = plate 
-
-				setState(36);
-				((ExprContext)_localctx).target = expr(plate_target);
-
-				plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
-
-				setState(38);
-				((ExprContext)_localctx).body = expr(plate_body);
-
-				_localctx.typ = ((ExprContext)_localctx).body.typ
 
 				}
 				break;
 			case 9:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(41);
+				setState(40);
+				((ExprContext)_localctx).ID = match(ID);
+				 \
+				plate_rand = self.guard_down(self._analyzer.distill_expr_call_rand, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+
+				setState(42);
+				match(T__2);
+				setState(43);
+				((ExprContext)_localctx).rand = expr(plate_rand);
+				setState(44);
+				match(T__3);
+				 \
+				_localctx.typ = self.guard_up(self._analyzer.combine_expr_call, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).rand.typ) 
+
+				}
+				break;
+			case 10:
+				enterOuterAlt(_localctx, 10);
+				{
+				setState(47);
+				match(T__6);
+				setState(48);
+				((ExprContext)_localctx).ID = match(ID);
+				setState(49);
+				match(T__7);
+
+				# TODO
+				plate_target = plate 
+
+				setState(51);
+				((ExprContext)_localctx).target = expr(plate_target);
+
+				plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
+
+				setState(53);
+				((ExprContext)_localctx).body = expr(plate_body);
+
+				_localctx.typ = ((ExprContext)_localctx).body.typ
+
+				}
+				break;
+			case 11:
+				enterOuterAlt(_localctx, 11);
+				{
+				setState(56);
 				match(T__8);
 				 
 				self.shift(Symbol("("))
 
-				setState(43);
-				match(T__4);
+				setState(58);
+				match(T__2);
 
 				plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
 
-				setState(45);
+				setState(60);
 				((ExprContext)_localctx).body = expr(plate_body);
 
 				self.shift(Symbol(')'))
 
-				setState(47);
-				match(T__5);
+				setState(62);
+				match(T__3);
 
 				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, plate, ((ExprContext)_localctx).body.typ)
 
+				}
+				break;
+			case 12:
+				enterOuterAlt(_localctx, 12);
+				{
+				setState(65);
+				match(T__2);
+				setState(66);
+				expr(plate);
+				setState(67);
+				match(T__3);
 				}
 				break;
 			}
@@ -402,7 +452,7 @@ public class SlimParser extends Parser {
 		RecordContext _localctx = new RecordContext(_ctx, getState(), plate);
 		enterRule(_localctx, 2, RULE_record);
 		try {
-			setState(66);
+			setState(85);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 			case 1:
@@ -413,13 +463,13 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(53);
-				match(T__9);
-				setState(54);
+				setState(72);
+				match(T__4);
+				setState(73);
 				((RecordContext)_localctx).ID = match(ID);
-				setState(55);
+				setState(74);
 				match(T__7);
-				setState(56);
+				setState(75);
 				((RecordContext)_localctx).expr = expr(plate);
 
 				_localctx.typ = self.guard_up(self._analyzer.combine_record_single, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
@@ -429,15 +479,15 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(59);
-				match(T__9);
-				setState(60);
+				setState(78);
+				match(T__4);
+				setState(79);
 				((RecordContext)_localctx).ID = match(ID);
-				setState(61);
+				setState(80);
 				match(T__7);
-				setState(62);
+				setState(81);
 				((RecordContext)_localctx).expr = expr(plate);
-				setState(63);
+				setState(82);
 				((RecordContext)_localctx).record = record(plate);
 
 				_localctx.typ = self.guard_up(self._analyzer.combine_record_cons, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
@@ -458,7 +508,7 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\rE\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
+		"\u0004\u0001\fX\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
@@ -466,43 +516,55 @@ public class SlimParser extends Parser {
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u00003\b\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u0000F\b"+
+		"\u0000\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
 		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0003\u0001C\b\u0001\u0001\u0001\u0000\u0000\u0002"+
-		"\u0000\u0002\u0000\u0000L\u00002\u0001\u0000\u0000\u0000\u0002B\u0001"+
-		"\u0000\u0000\u0000\u00043\u0001\u0000\u0000\u0000\u0005\u0006\u0005\u000b"+
-		"\u0000\u0000\u00063\u0006\u0000\uffff\uffff\u0000\u0007\b\u0005\u0001"+
-		"\u0000\u0000\b3\u0006\u0000\uffff\uffff\u0000\t\n\u0005\u0002\u0000\u0000"+
-		"\n\u000b\u0005\u000b\u0000\u0000\u000b\f\u0003\u0000\u0000\u0000\f\r\u0006"+
-		"\u0000\uffff\uffff\u0000\r3\u0001\u0000\u0000\u0000\u000e\u000f\u0003"+
-		"\u0002\u0001\u0000\u000f\u0010\u0006\u0000\uffff\uffff\u0000\u00103\u0001"+
-		"\u0000\u0000\u0000\u0011\u0012\u0005\u000b\u0000\u0000\u0012\u0013\u0005"+
-		"\u0003\u0000\u0000\u0013\u0014\u0006\u0000\uffff\uffff\u0000\u0014\u0015"+
-		"\u0003\u0000\u0000\u0000\u0015\u0016\u0006\u0000\uffff\uffff\u0000\u0016"+
-		"3\u0001\u0000\u0000\u0000\u0017\u0018\u0005\u0004\u0000\u0000\u0018\u0019"+
-		"\u0006\u0000\uffff\uffff\u0000\u0019\u001a\u0003\u0000\u0000\u0000\u001a"+
-		"\u001b\u0005\u0005\u0000\u0000\u001b\u001c\u0006\u0000\uffff\uffff\u0000"+
-		"\u001c\u001d\u0003\u0000\u0000\u0000\u001d\u001e\u0005\u0006\u0000\u0000"+
-		"\u001e\u001f\u0006\u0000\uffff\uffff\u0000\u001f3\u0001\u0000\u0000\u0000"+
-		" !\u0005\u0007\u0000\u0000!\"\u0005\u000b\u0000\u0000\"#\u0005\b\u0000"+
-		"\u0000#$\u0006\u0000\uffff\uffff\u0000$%\u0003\u0000\u0000\u0000%&\u0006"+
-		"\u0000\uffff\uffff\u0000&\'\u0003\u0000\u0000\u0000\'(\u0006\u0000\uffff"+
-		"\uffff\u0000(3\u0001\u0000\u0000\u0000)*\u0005\t\u0000\u0000*+\u0006\u0000"+
-		"\uffff\uffff\u0000+,\u0005\u0005\u0000\u0000,-\u0006\u0000\uffff\uffff"+
-		"\u0000-.\u0003\u0000\u0000\u0000./\u0006\u0000\uffff\uffff\u0000/0\u0005"+
-		"\u0006\u0000\u000001\u0006\u0000\uffff\uffff\u000013\u0001\u0000\u0000"+
-		"\u00002\u0004\u0001\u0000\u0000\u00002\u0005\u0001\u0000\u0000\u00002"+
-		"\u0007\u0001\u0000\u0000\u00002\t\u0001\u0000\u0000\u00002\u000e\u0001"+
-		"\u0000\u0000\u00002\u0011\u0001\u0000\u0000\u00002\u0017\u0001\u0000\u0000"+
-		"\u00002 \u0001\u0000\u0000\u00002)\u0001\u0000\u0000\u00003\u0001\u0001"+
-		"\u0000\u0000\u00004C\u0001\u0000\u0000\u000056\u0005\n\u0000\u000067\u0005"+
-		"\u000b\u0000\u000078\u0005\b\u0000\u000089\u0003\u0000\u0000\u00009:\u0006"+
-		"\u0001\uffff\uffff\u0000:C\u0001\u0000\u0000\u0000;<\u0005\n\u0000\u0000"+
-		"<=\u0005\u000b\u0000\u0000=>\u0005\b\u0000\u0000>?\u0003\u0000\u0000\u0000"+
-		"?@\u0003\u0002\u0001\u0000@A\u0006\u0001\uffff\uffff\u0000AC\u0001\u0000"+
-		"\u0000\u0000B4\u0001\u0000\u0000\u0000B5\u0001\u0000\u0000\u0000B;\u0001"+
-		"\u0000\u0000\u0000C\u0003\u0001\u0000\u0000\u0000\u00022B";
+		"\u0001\u0001\u0001\u0001\u0001\u0003\u0001V\b\u0001\u0001\u0001\u0000"+
+		"\u0000\u0002\u0000\u0002\u0000\u0000b\u0000E\u0001\u0000\u0000\u0000\u0002"+
+		"U\u0001\u0000\u0000\u0000\u0004F\u0001\u0000\u0000\u0000\u0005\u0006\u0005"+
+		"\n\u0000\u0000\u0006F\u0006\u0000\uffff\uffff\u0000\u0007\b\u0005\u0001"+
+		"\u0000\u0000\bF\u0006\u0000\uffff\uffff\u0000\t\n\u0005\u0002\u0000\u0000"+
+		"\n\u000b\u0005\n\u0000\u0000\u000b\f\u0003\u0000\u0000\u0000\f\r\u0006"+
+		"\u0000\uffff\uffff\u0000\rF\u0001\u0000\u0000\u0000\u000e\u000f\u0003"+
+		"\u0002\u0001\u0000\u000f\u0010\u0006\u0000\uffff\uffff\u0000\u0010F\u0001"+
+		"\u0000\u0000\u0000\u0011\u0012\u0005\u0003\u0000\u0000\u0012\u0013\u0003"+
+		"\u0000\u0000\u0000\u0013\u0014\u0005\u0004\u0000\u0000\u0014\u0015\u0005"+
+		"\u0005\u0000\u0000\u0015\u0016\u0005\n\u0000\u0000\u0016\u0017\u0006\u0000"+
+		"\uffff\uffff\u0000\u0017F\u0001\u0000\u0000\u0000\u0018\u0019\u0005\n"+
+		"\u0000\u0000\u0019\u001a\u0005\u0006\u0000\u0000\u001a\u001b\u0006\u0000"+
+		"\uffff\uffff\u0000\u001b\u001c\u0003\u0000\u0000\u0000\u001c\u001d\u0006"+
+		"\u0000\uffff\uffff\u0000\u001dF\u0001\u0000\u0000\u0000\u001e\u001f\u0005"+
+		"\u0003\u0000\u0000\u001f \u0006\u0000\uffff\uffff\u0000 !\u0003\u0000"+
+		"\u0000\u0000!\"\u0005\u0004\u0000\u0000\"#\u0006\u0000\uffff\uffff\u0000"+
+		"#$\u0005\u0003\u0000\u0000$%\u0003\u0000\u0000\u0000%&\u0005\u0004\u0000"+
+		"\u0000&\'\u0006\u0000\uffff\uffff\u0000\'F\u0001\u0000\u0000\u0000()\u0005"+
+		"\n\u0000\u0000)*\u0006\u0000\uffff\uffff\u0000*+\u0005\u0003\u0000\u0000"+
+		"+,\u0003\u0000\u0000\u0000,-\u0005\u0004\u0000\u0000-.\u0006\u0000\uffff"+
+		"\uffff\u0000.F\u0001\u0000\u0000\u0000/0\u0005\u0007\u0000\u000001\u0005"+
+		"\n\u0000\u000012\u0005\b\u0000\u000023\u0006\u0000\uffff\uffff\u00003"+
+		"4\u0003\u0000\u0000\u000045\u0006\u0000\uffff\uffff\u000056\u0003\u0000"+
+		"\u0000\u000067\u0006\u0000\uffff\uffff\u00007F\u0001\u0000\u0000\u0000"+
+		"89\u0005\t\u0000\u00009:\u0006\u0000\uffff\uffff\u0000:;\u0005\u0003\u0000"+
+		"\u0000;<\u0006\u0000\uffff\uffff\u0000<=\u0003\u0000\u0000\u0000=>\u0006"+
+		"\u0000\uffff\uffff\u0000>?\u0005\u0004\u0000\u0000?@\u0006\u0000\uffff"+
+		"\uffff\u0000@F\u0001\u0000\u0000\u0000AB\u0005\u0003\u0000\u0000BC\u0003"+
+		"\u0000\u0000\u0000CD\u0005\u0004\u0000\u0000DF\u0001\u0000\u0000\u0000"+
+		"E\u0004\u0001\u0000\u0000\u0000E\u0005\u0001\u0000\u0000\u0000E\u0007"+
+		"\u0001\u0000\u0000\u0000E\t\u0001\u0000\u0000\u0000E\u000e\u0001\u0000"+
+		"\u0000\u0000E\u0011\u0001\u0000\u0000\u0000E\u0018\u0001\u0000\u0000\u0000"+
+		"E\u001e\u0001\u0000\u0000\u0000E(\u0001\u0000\u0000\u0000E/\u0001\u0000"+
+		"\u0000\u0000E8\u0001\u0000\u0000\u0000EA\u0001\u0000\u0000\u0000F\u0001"+
+		"\u0001\u0000\u0000\u0000GV\u0001\u0000\u0000\u0000HI\u0005\u0005\u0000"+
+		"\u0000IJ\u0005\n\u0000\u0000JK\u0005\b\u0000\u0000KL\u0003\u0000\u0000"+
+		"\u0000LM\u0006\u0001\uffff\uffff\u0000MV\u0001\u0000\u0000\u0000NO\u0005"+
+		"\u0005\u0000\u0000OP\u0005\n\u0000\u0000PQ\u0005\b\u0000\u0000QR\u0003"+
+		"\u0000\u0000\u0000RS\u0003\u0002\u0001\u0000ST\u0006\u0001\uffff\uffff"+
+		"\u0000TV\u0001\u0000\u0000\u0000UG\u0001\u0000\u0000\u0000UH\u0001\u0000"+
+		"\u0000\u0000UN\u0001\u0000\u0000\u0000V\u0003\u0001\u0000\u0000\u0000"+
+		"\u0002EU";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
