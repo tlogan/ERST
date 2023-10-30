@@ -87,6 +87,10 @@ async def _mk_task():
 # """,
 ###############
 # """
+# x => :ooga :booga x 
+# """,
+###############
+# """
 # (x => :ooga :booga x)
 # """,
 ##################
@@ -100,14 +104,23 @@ async def _mk_task():
 # """,
 ###############
 # """
-# x => :ooga :booga x 
+# x => y => :ooga :booga (.uno = x .dos = y) 
 # """,
 ###############
-"let x = :boo @ ;",
-'''
-let y = :foo x ;
-''',
-".uno = y .dos = @",
+# """
+# (x => y => :ooga :booga (.uno = x .dos = y)) (:one @) (:two @) 
+# """,
+###############
+"""
+let foo = (x => y => :ooga :booga (.uno = x .dos = y)) ;
+foo(:one @)(:two @)
+""",
+###############
+# "let x = :boo @ ;",
+# '''
+# let y = :foo x ;
+# ''',
+# ".uno = y .dos = @",
 ################
 # ".uno = () .dos = ()",
 ################

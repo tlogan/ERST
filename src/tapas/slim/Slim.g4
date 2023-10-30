@@ -192,26 +192,15 @@ content = applicands[plate_applicands]
 $typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $applicator.typ, $applicands.typs)
 }
 
-// | 
-// applicator = ID 
-// { \
-// plate_applicands = self.guard_down(self._analyzer.distill_expr_callmulti_applicands, plate, $applicator.text)
-// }
-// applicands[plate_applicands]
-// { \
-// $typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $applicator.text, $applicands.typs) 
-// }
-
-// | 
-// // TODO: update plate_applicands to hold type of applicator (ID)      
-// ID 
-// { \
-// plate_applicands = self.guard_down(self._analyzer.distill_expr_call_applicands, plate, $ID.text)
-// }
-// applicands[plate_applicands]
-// { \
-// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicands.typs) 
-// }
+| 
+ID 
+{
+plate_applicands = self.guard_down(self._analyzer.distill_expr_callmulti_applicands, plate, $ID.text)
+}
+applicands[plate_applicands]
+{
+$typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $ID.text, $applicands.typs) 
+}
 
 //////////////////////////
 
