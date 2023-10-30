@@ -237,13 +237,15 @@ $typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $applicator.ty
 // }
 
 // TODO: add type annotation syntax
-// | 'let' ID ('in' typ)? '=' expr expr  {
+// | 'let' ID (';' typ)? '=' expr ; expr  {
+////////
 | 'let' ID '=' 
 {
 # TODO
 plate_target = plate 
 }
 target = expr[plate_target]
+';'
 {
 plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
 }
@@ -303,9 +305,9 @@ applicands [Plate plate] returns [list[Typ] typs] :
 plate_content = plate # self.guard_down(self._analyzer.distill_applicands_single_content, plate) 
 }
 // TODO: figure out how to parse simple parens for arguments/applicands 
-'(--'
+'('
 content = expr[plate_content] 
-'--)'
+')'
 {
 $typs = [$content.typ]
 }

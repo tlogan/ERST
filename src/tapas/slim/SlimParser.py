@@ -22,35 +22,35 @@ from pyrsistent.typing import PMap
 
 def serializedATN():
     return [
-        4,1,14,92,2,0,7,0,2,1,7,1,2,2,7,2,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+        4,1,13,93,2,0,7,0,2,1,7,1,2,2,7,2,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
         0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
         0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
         0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
-        0,1,0,1,0,3,0,65,8,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-        1,1,1,1,1,1,3,1,81,8,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,90,8,2,1,
-        2,0,0,3,0,2,4,0,0,101,0,64,1,0,0,0,2,80,1,0,0,0,4,89,1,0,0,0,6,65,
-        1,0,0,0,7,8,5,12,0,0,8,65,6,0,-1,0,9,10,5,1,0,0,10,65,6,0,-1,0,11,
-        12,5,2,0,0,12,13,5,12,0,0,13,14,3,0,0,0,14,15,6,0,-1,0,15,65,1,0,
-        0,0,16,17,3,2,1,0,17,18,6,0,-1,0,18,65,1,0,0,0,19,20,5,3,0,0,20,
-        21,3,0,0,0,21,22,5,4,0,0,22,23,5,5,0,0,23,24,5,12,0,0,24,25,6,0,
-        -1,0,25,65,1,0,0,0,26,27,5,12,0,0,27,28,5,6,0,0,28,29,6,0,-1,0,29,
-        30,3,0,0,0,30,31,6,0,-1,0,31,65,1,0,0,0,32,33,5,3,0,0,33,34,3,0,
-        0,0,34,35,5,4,0,0,35,36,6,0,-1,0,36,65,1,0,0,0,37,38,6,0,-1,0,38,
-        39,5,3,0,0,39,40,3,0,0,0,40,41,6,0,-1,0,41,42,5,4,0,0,42,43,6,0,
-        -1,0,43,44,3,4,2,0,44,45,6,0,-1,0,45,65,1,0,0,0,46,47,5,7,0,0,47,
-        48,5,12,0,0,48,49,5,8,0,0,49,50,6,0,-1,0,50,51,3,0,0,0,51,52,6,0,
-        -1,0,52,53,3,0,0,0,53,54,6,0,-1,0,54,65,1,0,0,0,55,56,5,9,0,0,56,
-        57,6,0,-1,0,57,58,5,3,0,0,58,59,6,0,-1,0,59,60,3,0,0,0,60,61,6,0,
-        -1,0,61,62,5,4,0,0,62,63,6,0,-1,0,63,65,1,0,0,0,64,6,1,0,0,0,64,
-        7,1,0,0,0,64,9,1,0,0,0,64,11,1,0,0,0,64,16,1,0,0,0,64,19,1,0,0,0,
-        64,26,1,0,0,0,64,32,1,0,0,0,64,37,1,0,0,0,64,46,1,0,0,0,64,55,1,
-        0,0,0,65,1,1,0,0,0,66,81,1,0,0,0,67,68,5,5,0,0,68,69,5,12,0,0,69,
-        70,5,8,0,0,70,71,3,0,0,0,71,72,6,1,-1,0,72,81,1,0,0,0,73,74,5,5,
-        0,0,74,75,5,12,0,0,75,76,5,8,0,0,76,77,3,0,0,0,77,78,3,2,1,0,78,
-        79,6,1,-1,0,79,81,1,0,0,0,80,66,1,0,0,0,80,67,1,0,0,0,80,73,1,0,
-        0,0,81,3,1,0,0,0,82,90,1,0,0,0,83,84,6,2,-1,0,84,85,5,10,0,0,85,
-        86,3,0,0,0,86,87,5,11,0,0,87,88,6,2,-1,0,88,90,1,0,0,0,89,82,1,0,
-        0,0,89,83,1,0,0,0,90,5,1,0,0,0,3,64,80,89
+        0,1,0,1,0,1,0,3,0,66,8,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,3,1,82,8,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,91,8,
+        2,1,2,0,0,3,0,2,4,0,0,102,0,65,1,0,0,0,2,81,1,0,0,0,4,90,1,0,0,0,
+        6,66,1,0,0,0,7,8,5,11,0,0,8,66,6,0,-1,0,9,10,5,1,0,0,10,66,6,0,-1,
+        0,11,12,5,2,0,0,12,13,5,11,0,0,13,14,3,0,0,0,14,15,6,0,-1,0,15,66,
+        1,0,0,0,16,17,3,2,1,0,17,18,6,0,-1,0,18,66,1,0,0,0,19,20,5,3,0,0,
+        20,21,3,0,0,0,21,22,5,4,0,0,22,23,5,5,0,0,23,24,5,11,0,0,24,25,6,
+        0,-1,0,25,66,1,0,0,0,26,27,5,11,0,0,27,28,5,6,0,0,28,29,6,0,-1,0,
+        29,30,3,0,0,0,30,31,6,0,-1,0,31,66,1,0,0,0,32,33,5,3,0,0,33,34,3,
+        0,0,0,34,35,5,4,0,0,35,36,6,0,-1,0,36,66,1,0,0,0,37,38,6,0,-1,0,
+        38,39,5,3,0,0,39,40,3,0,0,0,40,41,6,0,-1,0,41,42,5,4,0,0,42,43,6,
+        0,-1,0,43,44,3,4,2,0,44,45,6,0,-1,0,45,66,1,0,0,0,46,47,5,7,0,0,
+        47,48,5,11,0,0,48,49,5,8,0,0,49,50,6,0,-1,0,50,51,3,0,0,0,51,52,
+        5,9,0,0,52,53,6,0,-1,0,53,54,3,0,0,0,54,55,6,0,-1,0,55,66,1,0,0,
+        0,56,57,5,10,0,0,57,58,6,0,-1,0,58,59,5,3,0,0,59,60,6,0,-1,0,60,
+        61,3,0,0,0,61,62,6,0,-1,0,62,63,5,4,0,0,63,64,6,0,-1,0,64,66,1,0,
+        0,0,65,6,1,0,0,0,65,7,1,0,0,0,65,9,1,0,0,0,65,11,1,0,0,0,65,16,1,
+        0,0,0,65,19,1,0,0,0,65,26,1,0,0,0,65,32,1,0,0,0,65,37,1,0,0,0,65,
+        46,1,0,0,0,65,56,1,0,0,0,66,1,1,0,0,0,67,82,1,0,0,0,68,69,5,5,0,
+        0,69,70,5,11,0,0,70,71,5,8,0,0,71,72,3,0,0,0,72,73,6,1,-1,0,73,82,
+        1,0,0,0,74,75,5,5,0,0,75,76,5,11,0,0,76,77,5,8,0,0,77,78,3,0,0,0,
+        78,79,3,2,1,0,79,80,6,1,-1,0,80,82,1,0,0,0,81,67,1,0,0,0,81,68,1,
+        0,0,0,81,74,1,0,0,0,82,3,1,0,0,0,83,91,1,0,0,0,84,85,6,2,-1,0,85,
+        86,5,3,0,0,86,87,3,0,0,0,87,88,5,4,0,0,88,89,6,2,-1,0,89,91,1,0,
+        0,0,90,83,1,0,0,0,90,84,1,0,0,0,91,5,1,0,0,0,3,65,81,90
     ]
 
 class SlimParser ( Parser ):
@@ -64,12 +64,12 @@ class SlimParser ( Parser ):
     sharedContextCache = PredictionContextCache()
 
     literalNames = [ "<INVALID>", "'@'", "':'", "'('", "')'", "'.'", "'=>'", 
-                     "'let'", "'='", "'fix'", "'(--'", "'--)'" ]
+                     "'let'", "'='", "';'", "'fix'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "ID", "INT", "WS" ]
+                      "<INVALID>", "<INVALID>", "<INVALID>", "ID", "INT", 
+                      "WS" ]
 
     RULE_expr = 0
     RULE_record = 1
@@ -88,10 +88,9 @@ class SlimParser ( Parser ):
     T__7=8
     T__8=9
     T__9=10
-    T__10=11
-    ID=12
-    INT=13
-    WS=14
+    ID=11
+    INT=12
+    WS=13
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -242,7 +241,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.ExprContext(self, self._ctx, self.state, plate)
         self.enterRule(localctx, 0, self.RULE_expr)
         try:
-            self.state = 64
+            self.state = 65
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,0,self._ctx)
             if la_ == 1:
@@ -371,10 +370,12 @@ class SlimParser ( Parser ):
 
                 self.state = 50
                 localctx.target = self.expr(plate_target)
+                self.state = 51
+                self.match(SlimParser.T__8)
 
                 plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, (None if localctx._ID is None else localctx._ID.text), localctx.target.typ)
 
-                self.state = 52
+                self.state = 53
                 localctx.body = self.expr(plate_body)
 
                 localctx.typ = localctx.body.typ
@@ -383,22 +384,22 @@ class SlimParser ( Parser ):
 
             elif la_ == 11:
                 self.enterOuterAlt(localctx, 11)
-                self.state = 55
-                self.match(SlimParser.T__8)
+                self.state = 56
+                self.match(SlimParser.T__9)
                  
                 self.shift(Symbol("("))
 
-                self.state = 57
+                self.state = 58
                 self.match(SlimParser.T__2)
 
                 plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
 
-                self.state = 59
+                self.state = 60
                 localctx.body = self.expr(plate_body)
 
                 self.shift(Symbol(')'))
 
-                self.state = 61
+                self.state = 62
                 self.match(SlimParser.T__3)
 
                 localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, plate, localctx.body.typ)
@@ -458,7 +459,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.RecordContext(self, self._ctx, self.state, plate)
         self.enterRule(localctx, 2, self.RULE_record)
         try:
-            self.state = 80
+            self.state = 81
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,1,self._ctx)
             if la_ == 1:
@@ -468,13 +469,13 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 67
-                self.match(SlimParser.T__4)
                 self.state = 68
-                localctx._ID = self.match(SlimParser.ID)
+                self.match(SlimParser.T__4)
                 self.state = 69
-                self.match(SlimParser.T__7)
+                localctx._ID = self.match(SlimParser.ID)
                 self.state = 70
+                self.match(SlimParser.T__7)
+                self.state = 71
                 localctx._expr = self.expr(plate)
 
                 localctx.typ = self.guard_up(self._analyzer.combine_record_single, plate, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ)
@@ -483,15 +484,15 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 73
-                self.match(SlimParser.T__4)
                 self.state = 74
-                localctx._ID = self.match(SlimParser.ID)
+                self.match(SlimParser.T__4)
                 self.state = 75
-                self.match(SlimParser.T__7)
+                localctx._ID = self.match(SlimParser.ID)
                 self.state = 76
-                localctx._expr = self.expr(plate)
+                self.match(SlimParser.T__7)
                 self.state = 77
+                localctx._expr = self.expr(plate)
+                self.state = 78
                 localctx._record = self.record(plate)
 
                 localctx.typ = self.guard_up(self._analyzer.combine_record_cons, plate, (None if localctx._ID is None else localctx._ID.text), localctx._expr.typ, localctx._record.typ)
@@ -542,24 +543,24 @@ class SlimParser ( Parser ):
         localctx = SlimParser.ApplicandsContext(self, self._ctx, self.state, plate)
         self.enterRule(localctx, 4, self.RULE_applicands)
         try:
-            self.state = 89
+            self.state = 90
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [1, 2, 3, 4, 5, 7, 9, 11, 12]:
+            if token in [4, 5, 9]:
                 self.enterOuterAlt(localctx, 1)
 
                 pass
-            elif token in [10]:
+            elif token in [3]:
                 self.enterOuterAlt(localctx, 2)
 
                 plate_content = plate # self.guard_down(self._analyzer.distill_applicands_single_content, plate) 
 
-                self.state = 84
-                self.match(SlimParser.T__9)
                 self.state = 85
-                localctx.content = self.expr(plate_content)
+                self.match(SlimParser.T__2)
                 self.state = 86
-                self.match(SlimParser.T__10)
+                localctx.content = self.expr(plate_content)
+                self.state = 87
+                self.match(SlimParser.T__3)
 
                 localctx.typs = [localctx.content.typ]
 

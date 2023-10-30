@@ -90,9 +90,9 @@ async def _mk_task():
 # (x => :ooga :booga x)
 # """,
 ##################
-"""
-(x => :ooga :booga x)(--@--)
-""",
+# """
+# (x => :ooga :booga x)(@)
+# """,
 ###############
 # """
 # let foo = x => :ooga :booga x 
@@ -103,11 +103,11 @@ async def _mk_task():
 # x => :ooga :booga x 
 # """,
 ###############
-# "let x = :boo ()",
-# '''
-# let y = :foo x
-# ''',
-# ".uno = y .dos = ()",
+"let x = :boo @ ;",
+'''
+let y = :foo x ;
+''',
+".uno = y .dos = @",
 ################
 # ".uno = () .dos = ()",
 ################
