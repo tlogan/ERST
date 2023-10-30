@@ -42,7 +42,7 @@
 - Type inference for programs with the following combination of features: 
     - streaming/partial programs 
         - analysis on recursive-decent parse-tree 
-        - converting right-recursive parse-tree to left-recursive analysis
+        - analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
         - adds layer of complexity that's not apparent in a normalized AST
     - extrinsic types 
     - relational types

@@ -86,10 +86,18 @@ async def _mk_task():
 # rec.uno
 # """,
 ###############
+# """
+# (x => :ooga :booga x)
+# """,
+##################
 """
-let foo = x => :ooga :booga x 
-foo(@)
+(x => :ooga :booga x)(--@--)
 """,
+###############
+# """
+# let foo = x => :ooga :booga x 
+# foo(@)
+# """,
 ###############
 # """
 # x => :ooga :booga x 

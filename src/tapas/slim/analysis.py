@@ -123,40 +123,46 @@ class Analyzer:
     Combination 
     """
 
-    def combine_expr_id(self, plate : Plate, text : str) -> Op[Typ]:
+    def combine_expr_id(self, plate : Plate, text : str) -> Typ:
         return plate.enviro[text]
 
-    def combine_expr_unit(self, plate : Plate) -> Op[Typ]:
+    def combine_expr_unit(self, plate : Plate) -> Typ:
         return TUnit() 
 
-    def combine_expr_tag(self, plate : Plate, label : str, body : Typ) -> Op[Typ]:
+    def combine_expr_tag(self, plate : Plate, label : str, body : Typ) -> Typ:
         return TTag(label, body) 
 
-    def combine_record_single(self, plate : Plate, label : str, body : Typ) -> Op[Typ]:
+    def combine_record_single(self, plate : Plate, label : str, body : Typ) -> Typ:
         return TField(label, body) 
 
-    def combine_record_cons(self, plate : Plate, label : str, body : Typ, cons : Typ) -> Op[Typ]:
+    def combine_record_cons(self, plate : Plate, label : str, body : Typ, cons : Typ) -> Typ:
         return Inter(TField(label, body), cons)  
 
-    def combine_expr_projection(self, plate : Plate, record : Typ, key : str) -> Op[Typ]: 
+    def combine_expr_projection(self, plate : Plate, record : Typ, key : str) -> Typ: 
         answr = self.fresh_type_var()
         interp = self.unify(plate.interp, record, TField(key, answr))
         return Exis(answr, interp)
 
-    def combine_expr_function(self, plate : Plate, param : str, body : Typ) -> Op[Typ]:
+    def combine_expr_function(self, plate : Plate, param : str, body : Typ) -> Typ:
         antec = plate.enviro[param]
         return Imp(antec, body)
 
-    def combine_expr_application(self, plate : Plate, applicator : Typ, applicand : Typ) -> Op[Typ]: 
-        answr = self.fresh_type_var()
-        interp = self.unify(plate.interp, applicator, Imp(applicand, answr))
-        return Exis(answr, interp)
+    def combine_expr_appmulti(self, plate : Plate, applicator : Typ, applicands : list[Typ]) -> Typ: 
+        interp_i = plate.interp
+        answr_i = applicator 
+        for applicand in applicands:
+            answr = self.fresh_type_var()
+            interp_i = self.unify(interp_i, answr_i, Imp(applicand, answr))
+            answr_i = answr
 
-    def combine_expr_call(self, plate : Plate, id : str, applicand : Typ) -> Op[Typ]: 
+        return Exis(answr_i, interp_i)
+
+    def combine_expr_callmulti(self, plate : Plate, id : str, applicands : list[Typ]) -> Typ: 
         applicator = plate.enviro[id]
-        return self.combine_expr_application(plate, applicator, applicand)
+        return self.combine_expr_appmulti(plate, applicator, applicands)
 
-    def combine_expr_fix(self, plate : Plate, body : Typ) -> Op[Typ]:
+
+    def combine_expr_fix(self, plate : Plate, body : Typ) -> Typ:
         return Induc(body)
 
     """
@@ -179,14 +185,19 @@ class Analyzer:
 
         return Plate(interp, enviro, typ_out)
 
-    def distill_expr_application_applicand(self, plate : Plate, applicator : Typ) -> Plate: 
-        applicand = self.fresh_type_var()
-        interp = self.unify(plate.interp, applicator, Imp(applicand, plate.expect))
-        return Plate(interp, plate.enviro, applicand)
+    def distill_expr_appmulti_applicands(self, plate : Plate, applicator : Typ) -> Plate: 
+        return Plate(plate.interp, plate.enviro, applicator)
 
-    def distill_expr_call_applicand(self, plate : Plate, id : str) -> Plate: 
+    def distill_expr_callmulti_applicands(self, plate : Plate, id : str) -> Plate: 
         applicator = plate.enviro[id]
-        return self.distill_expr_application_applicand(plate, applicator)
+        return self.distill_expr_appmulti_applicands(plate, applicator)
+
+    def distill_applicands_single_content(self, plate : Plate):
+        expect = self.fresh_type_var()
+        interp = self.unify(plate.interp, plate.expect, Imp(expect, Top()))
+        return Plate(interp, plate.enviro, expect)
+
+
 
     def distill_expr_let_body(self, plate : Plate, id : str, target : Typ) -> Plate:
         interp = plate.interp

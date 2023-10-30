@@ -38,5 +38,14 @@ class SlimListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SlimParser#applicands.
+    def enterApplicands(self, ctx:SlimParser.ApplicandsContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#applicands.
+    def exitApplicands(self, ctx:SlimParser.ApplicandsContext):
+        pass
+
+
 
 del SlimParser

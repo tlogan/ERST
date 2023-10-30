@@ -59,7 +59,9 @@ def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
     return result
 
 
+
 def shift(self, guidance : Union[Symbol, Terminal]):   
+    # TODO: construct guidance from self.getCurrentToken()
     if not self._overflow:
         self._guidance = guidance 
 
@@ -120,12 +122,12 @@ $typ = $record.typ
 }
 
 | '(' expr[plate] ')' '.' ID 
-{ \
+{
 $typ = self.guard_up(self._analyzer.combine_expr_projection, plate, $expr.typ, $ID.text) 
 }
 
 | 
-// { \
+// {
 // TODO: guide terminal
 // }
 ID '=>' 
@@ -148,39 +150,68 @@ $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $bod
 // }
 // applicator = expr[plate_applicator] 
 // ')'
-// { \
+// {
 // plate_applicand = self.guard_down(self._analyzer.distill_expr_application_applicand, plate, $applicator.typ)
 // }
 // '('
 // applicand = expr[plate_applicand] 
 // ')'
-// { \
+// {
 // $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $applicator.typ, $applicand.typ) 
 // }
 
 // | 
 // // NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
 // ID 
-// { \
+// {
 // plate_applicand = self.guard_down(self._analyzer.distill_expr_call_applicand, plate, $ID.text)
 // }
 // '('
 // applicand = expr[plate_applicand] 
 // ')'
-// { \
+// {
 // $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicand.typ) 
 // }
 
+| '(' expr[plate] ')'
+{
+$typ = $expr.typ
+} 
+
 | 
-// TODO: update plate_applicands to hold type of applicator (ID)      
-ID 
-{ \
-plate_applicands = self.guard_down(self._analyzer.distill_expr_call_applicand, plate, $ID.text)
+{self.shift(Symbol("("))}
+'('
+applicator = expr[plate]
+{self.shift(Symbol(")"))}
+')'
+{
+plate_applicands = self.guard_down(self._analyzer.distill_expr_appmulti_applicands, plate, $applicator.typ)
 }
-applicands[plate_applicands]
-{ \
-$typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicands.typs) 
+content = applicands[plate_applicands]
+{
+$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $applicator.typ, $applicands.typs)
 }
+
+// | 
+// applicator = ID 
+// { \
+// plate_applicands = self.guard_down(self._analyzer.distill_expr_callmulti_applicands, plate, $applicator.text)
+// }
+// applicands[plate_applicands]
+// { \
+// $typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $applicator.text, $applicands.typs) 
+// }
+
+// | 
+// // TODO: update plate_applicands to hold type of applicator (ID)      
+// ID 
+// { \
+// plate_applicands = self.guard_down(self._analyzer.distill_expr_call_applicands, plate, $ID.text)
+// }
+// applicands[plate_applicands]
+// { \
+// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicands.typs) 
+// }
 
 //////////////////////////
 
@@ -242,8 +273,6 @@ self.shift(Symbol(')'))
 $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 }
 
-| '(' expr[plate] ')' 
-
 // | 'let' ID ('in' typ)? '=' expr expr  {
 //     $result = 'hello'
 // }
@@ -270,32 +299,32 @@ $typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.
 // NOTE: plate.typ represents the type of the rator applied to the next immediate applicand  
 applicands [Plate plate] returns [list[Typ] typs] :
 | 
-{ \
-# TODO : extract antecendent from applicator type - plate.typ
-plate_content = plate 
+{
+plate_content = plate # self.guard_down(self._analyzer.distill_applicands_single_content, plate) 
 }
-'('
+// TODO: figure out how to parse simple parens for arguments/applicands 
+'(--'
 content = expr[plate_content] 
-')'
-{ \
-$typs = [content.typ]
+'--)'
+{
+$typs = [$content.typ]
 }
 
-| 
-{ \
-# TODO : extract antecendent from applicator type - plate.typ
-plate_head = plate 
-}
-'('
-head = expr[plate_head] 
-')'
-{ \
-# TODO : extract consequent from applicator type - plate.typ
-plate_tail = plate 
-}
-tail = applicands[plate_tail]
-{
-}
+// | 
+// { \
+// # TODO : extract antecendent from applicator type - plate.typ
+// plate_head = plate 
+// }
+// '('
+// head = expr[plate_head] 
+// ')'
+// { \
+// # TODO : extract consequent from applicator type - plate.typ
+// plate_tail = plate 
+// }
+// tail = applicands[plate_tail]
+// {
+// }
 ;
 
 
