@@ -6,9 +6,8 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: implement application attribute rules with chaining without left-recursion using star
-    - that is, figure out how to squeeze right-recursion syntax into a left-recursive analysis
-- TODO: implement projection attribute rules allowing infix chaining without left-recursion
+- TODO: complete keychain analysis for projection
+- TODO: complete argchain analysis for application 
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 

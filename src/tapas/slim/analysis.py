@@ -147,23 +147,42 @@ class Analyzer:
         antec = plate.enviro[param]
         return Imp(antec, body)
 
-    def combine_expr_appmulti(self, plate : Plate, applicator : Typ, applicands : list[Typ]) -> Typ: 
+    def combine_expr_projmulti(self, plate : Plate, record : Typ, keys : list[str]) -> Typ: 
         interp_i = plate.interp
-        answr_i = applicator 
-        for applicand in applicands:
+        answr_i = record 
+        for key in keys:
             answr = self.fresh_type_var()
-            interp_i = self.unify(interp_i, answr_i, Imp(applicand, answr))
+            interp_i = self.unify(interp_i, answr_i, TField(key, answr))
             answr_i = answr
 
         return Exis(answr_i, interp_i)
 
-    def combine_expr_callmulti(self, plate : Plate, id : str, applicands : list[Typ]) -> Typ: 
-        applicator = plate.enviro[id]
-        return self.combine_expr_appmulti(plate, applicator, applicands)
+    def combine_keychain_single(self, plate : Plate, key : str) -> list[str]:
+        self.unify(plate.enviro, plate.expect, TField(key, Top())) 
+        return [key]
+
+    def combine_keychain_cons(self, plate : Plate, key : str, keys : list[str]) -> list[str]:
+        self.unify(plate.enviro, plate.expect, TField(key, Top())) 
+        return [key] + keys
+
+    def combine_expr_appmulti(self, plate : Plate, function : Typ, arguments : list[Typ]) -> Typ: 
+        interp_i = plate.interp
+        answr_i = function 
+        for argument in arguments:
+            answr = self.fresh_type_var()
+            interp_i = self.unify(interp_i, answr_i, Imp(argument, answr))
+            answr_i = answr
+
+        return Exis(answr_i, interp_i)
+
+    def combine_expr_callmulti(self, plate : Plate, id : str, arguments : list[Typ]) -> Typ: 
+        function = plate.enviro[id]
+        return self.combine_expr_appmulti(plate, function, arguments)
 
 
     def combine_expr_fix(self, plate : Plate, body : Typ) -> Typ:
         return Induc(body)
+
 
     """
     Distillation 
@@ -185,14 +204,17 @@ class Analyzer:
 
         return Plate(interp, enviro, typ_out)
 
-    def distill_expr_appmulti_applicands(self, plate : Plate, applicator : Typ) -> Plate: 
-        return Plate(plate.interp, plate.enviro, applicator)
+    def distill_expr_projmulti_keychain(self, plate : Plate, record : Typ) -> Plate: 
+        return Plate(plate.interp, plate.enviro, record)
 
-    def distill_expr_callmulti_applicands(self, plate : Plate, id : str) -> Plate: 
-        applicator = plate.enviro[id]
-        return self.distill_expr_appmulti_applicands(plate, applicator)
+    def distill_expr_appmulti_argchain(self, plate : Plate, function : Typ) -> Plate: 
+        return Plate(plate.interp, plate.enviro, function)
 
-    def distill_applicands_single_content(self, plate : Plate):
+    def distill_expr_callmulti_argchain(self, plate : Plate, id : str) -> Plate: 
+        function = plate.enviro[id]
+        return self.distill_expr_appmulti_argchain(plate, function)
+
+    def distill_argchain_single_content(self, plate : Plate):
         expect = self.fresh_type_var()
         interp = self.unify(plate.interp, plate.expect, Imp(expect, Top()))
         return Plate(interp, plate.enviro, expect)

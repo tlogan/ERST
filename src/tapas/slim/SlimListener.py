@@ -38,12 +38,21 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#applicands.
-    def enterApplicands(self, ctx:SlimParser.ApplicandsContext):
+    # Enter a parse tree produced by SlimParser#argchain.
+    def enterArgchain(self, ctx:SlimParser.ArgchainContext):
         pass
 
-    # Exit a parse tree produced by SlimParser#applicands.
-    def exitApplicands(self, ctx:SlimParser.ApplicandsContext):
+    # Exit a parse tree produced by SlimParser#argchain.
+    def exitArgchain(self, ctx:SlimParser.ArgchainContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#keychain.
+    def enterKeychain(self, ctx:SlimParser.KeychainContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#keychain.
+    def exitKeychain(self, ctx:SlimParser.KeychainContext):
         pass
 
 

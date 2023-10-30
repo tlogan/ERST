@@ -82,8 +82,31 @@ async def _mk_task():
 
     pieces = [
 # """
-# let rec = .uno @ .dos @ 
+# (.uno = @ .dos = @).uno
+# """,
+###############
+# """
+# let rec = .uno = @ .dos = @ ;
 # rec.uno
+# """,
+###############
+# """
+# ((.uno = (.one = @)).uno).one
+# """,
+###############
+# TODO: debug this case
+"""
+(.uno = (.one = @)).uno.one
+""",
+###############
+# """
+# let rec = .uno = (.one = @) .dos = @ ;
+# (rec.uno).one
+# """,
+###############
+# """
+# let rec = .uno = (.one = @) .dos = @ ;
+# rec.uno.one
 # """,
 ###############
 # """
@@ -111,10 +134,10 @@ async def _mk_task():
 # (x => y => :ooga :booga (.uno = x .dos = y)) (:one @) (:two @) 
 # """,
 ###############
-"""
-let foo = (x => y => :ooga :booga (.uno = x .dos = y)) ;
-foo(:one @)(:two @)
-""",
+# """
+# let foo = (x => y => :ooga :booga (.uno = x .dos = y)) ;
+# foo(:one @)(:two @)
+# """,
 ###############
 # "let x = :boo @ ;",
 # '''

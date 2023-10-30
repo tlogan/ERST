@@ -121,9 +121,22 @@ $typ = self.guard_up(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ
 $typ = $record.typ
 }
 
-| '(' expr[plate] ')' '.' ID 
+| '(' expr[plate] ')'
 {
-$typ = self.guard_up(self._analyzer.combine_expr_projection, plate, $expr.typ, $ID.text) 
+$typ = $expr.typ
+} 
+
+| 
+{
+plate_expr = plate # TODO
+}
+'(' expr[plate_expr] ')' 
+{
+plate_keychain = self.guard_down(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
+}
+keychain[plate_keychain]
+{
+$typ = self.guard_up(self._analyzer.combine_expr_projmulti, plate, $expr.typ, $keychain.ids) 
 }
 
 | 
@@ -146,60 +159,56 @@ $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $bod
 // '('
 // {
 // # TODO
-// plate_applicator = plate
+// plate_function = plate
 // }
-// applicator = expr[plate_applicator] 
+// function = expr[plate_function] 
 // ')'
 // {
-// plate_applicand = self.guard_down(self._analyzer.distill_expr_application_applicand, plate, $applicator.typ)
+// plate_argument = self.guard_down(self._analyzer.distill_expr_application_argument, plate, $function.typ)
 // }
 // '('
-// applicand = expr[plate_applicand] 
+// argument = expr[plate_argument] 
 // ')'
 // {
-// $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $applicator.typ, $applicand.typ) 
+// $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $function.typ, $argument.typ) 
 // }
 
 // | 
 // // NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
 // ID 
 // {
-// plate_applicand = self.guard_down(self._analyzer.distill_expr_call_applicand, plate, $ID.text)
+// plate_argument = self.guard_down(self._analyzer.distill_expr_call_argument, plate, $ID.text)
 // }
 // '('
-// applicand = expr[plate_applicand] 
+// argument = expr[plate_argument] 
 // ')'
 // {
-// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $applicand.typ) 
+// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $argument.typ) 
 // }
-
-| '(' expr[plate] ')'
-{
-$typ = $expr.typ
-} 
 
 | 
 {self.shift(Symbol("("))}
 '('
-applicator = expr[plate]
+{plate_function = plate # TODO}
+function = expr[plate_function]
 {self.shift(Symbol(")"))}
 ')'
 {
-plate_applicands = self.guard_down(self._analyzer.distill_expr_appmulti_applicands, plate, $applicator.typ)
+plate_argchain = self.guard_down(self._analyzer.distill_expr_appmulti_arguments, plate, $function.typ)
 }
-content = applicands[plate_applicands]
+content = argchain[plate_argchain]
 {
-$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $applicator.typ, $applicands.typs)
+$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $function.typ, $argchain.typs)
 }
 
 | 
 ID 
 {
-plate_applicands = self.guard_down(self._analyzer.distill_expr_callmulti_applicands, plate, $ID.text)
+plate_argchain = self.guard_down(self._analyzer.distill_expr_callmulti_arguments, plate, $ID.text)
 }
-applicands[plate_applicands]
+argchain[plate_argchain]
 {
-$typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $ID.text, $applicands.typs) 
+$typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $ID.text, $argchain.typs) 
 }
 
 //////////////////////////
@@ -287,13 +296,13 @@ $typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.
 }
 ;
 
-// NOTE: plate.typ represents the type of the rator applied to the next immediate applicand  
-applicands [Plate plate] returns [list[Typ] typs] :
+// NOTE: plate.typ represents the type of the rator applied to the next immediate argument  
+argchain [Plate plate] returns [list[Typ] typs] :
 | 
 {
-plate_content = plate # self.guard_down(self._analyzer.distill_applicands_single_content, plate) 
+plate_content = plate # self.guard_down(self._analyzer.distill_argchain_single_content, plate) 
 }
-// TODO: figure out how to parse simple parens for arguments/applicands 
+// TODO: figure out how to parse simple parens for arguments/arguments 
 '('
 content = expr[plate_content] 
 ')'
@@ -301,21 +310,39 @@ content = expr[plate_content]
 $typs = [$content.typ]
 }
 
+
 // | 
 // { \
-// # TODO : extract antecendent from applicator type - plate.typ
+// # TODO : extract antecendent from function type - plate.typ
 // plate_head = plate 
 // }
 // '('
 // head = expr[plate_head] 
 // ')'
 // { \
-// # TODO : extract consequent from applicator type - plate.typ
+// # TODO : extract consequent from function type - plate.typ
 // plate_tail = plate 
 // }
-// tail = applicands[plate_tail]
+// tail = arguments[plate_tail]
 // {
 // }
+;
+
+// NOTE: plate.typ represents the type of the rator applied to the next immediate argument  
+keychain [Plate plate] returns [list[str] ids] :
+| '.' ID
+{
+$ids = self.guard_up(self._analyzer.combine_keychain_single, plate, $ID.text)
+}
+
+| '.' ID
+{
+plate_keychain = plate # TODO
+}
+tail = keychain[plate_keychain]
+{
+$ids = self.guard_up(self._analyzer.combine_keychain_cons, plate, $ID.text, $tail.ids)
+}
 ;
 
 
