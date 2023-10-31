@@ -128,15 +128,25 @@ $typ = $expr.typ
 
 | 
 {
-plate_expr = plate # TODO
+plate_cator = self.guard_down(self._analyzer.distill_expr_projmulti_cator, plate)
 }
-'(' expr[plate_expr] ')' 
+'(' cator = expr[plate_expr] ')' 
 {
 plate_keychain = self.guard_down(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
 }
 keychain[plate_keychain]
 {
 $typ = self.guard_up(self._analyzer.combine_expr_projmulti, plate, $expr.typ, $keychain.ids) 
+}
+
+| 
+ID 
+{
+plate_keychain = self.guard_down(self._analyzer.distill_expr_idprojmulti_keychain, plate, $ID.text)
+}
+keychain[plate_keychain]
+{
+$typ = self.guard_up(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keychain.ids) 
 }
 
 | 
@@ -189,22 +199,24 @@ $typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $bod
 | 
 {self.shift(Symbol("("))}
 '('
-{plate_function = plate # TODO}
-function = expr[plate_function]
+{
+plate_cator = self.guard_down(self._analyzer.distill_expr_appmulti_cator, plate)
+}
+cator = expr[plate_cator]
 {self.shift(Symbol(")"))}
 ')'
 {
-plate_argchain = self.guard_down(self._analyzer.distill_expr_appmulti_arguments, plate, $function.typ)
+plate_argchain = self.guard_down(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.typ)
 }
 content = argchain[plate_argchain]
 {
-$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $function.typ, $argchain.typs)
+$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $cator.typ, $argchain.typs)
 }
 
 | 
 ID 
 {
-plate_argchain = self.guard_down(self._analyzer.distill_expr_callmulti_arguments, plate, $ID.text)
+plate_argchain = self.guard_down(self._analyzer.distill_expr_callmulti_argchain, plate, $ID.text)
 }
 argchain[plate_argchain]
 {
@@ -286,49 +298,47 @@ $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 
 
 record [Plate plate] returns [Typ typ] :
-| '.' ID '=' expr[plate]
+| ':' ID '=' expr[plate]
 {
 $typ = self.guard_up(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
 }
-| '.' ID '=' expr[plate] record[plate]
+| ':' ID '=' expr[plate] record[plate]
 {
 $typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
 }
 ;
 
-// NOTE: plate.typ represents the type of the rator applied to the next immediate argument  
+// NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 argchain [Plate plate] returns [list[Typ] typs] :
 | 
 {
-plate_content = plate # self.guard_down(self._analyzer.distill_argchain_single_content, plate) 
+plate_content = self.guard_down(self._analyzer.distill_argchain_single_content, plate) 
 }
-// TODO: figure out how to parse simple parens for arguments/arguments 
 '('
 content = expr[plate_content] 
 ')'
 {
-$typs = [$content.typ]
+$typs = self.guard_up(self._analyzer.combine_argchain_single, plate, $content.typ)
 }
 
 
-// | 
-// { \
-// # TODO : extract antecendent from function type - plate.typ
-// plate_head = plate 
-// }
-// '('
-// head = expr[plate_head] 
-// ')'
-// { \
-// # TODO : extract consequent from function type - plate.typ
-// plate_tail = plate 
-// }
-// tail = arguments[plate_tail]
-// {
-// }
+| 
+{
+plate_head = self.guard_down(self._analyzer.distill_argchain_cons_head, plate) 
+}
+'('
+head = expr[plate_head] 
+')'
+{
+plate_tail = self.guard_down(self._analyzer.distill_argchain_cons_tail, plate, $head.typ) 
+}
+tail = argchain[plate_tail]
+{
+$typs = self.guard_up(self._analyzer.combine_argchain_cons, plate, $head.typ, $tail.typs)
+}
 ;
 
-// NOTE: plate.typ represents the type of the rator applied to the next immediate argument  
+// NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 keychain [Plate plate] returns [list[str] ids] :
 | '.' ID
 {
@@ -337,9 +347,9 @@ $ids = self.guard_up(self._analyzer.combine_keychain_single, plate, $ID.text)
 
 | '.' ID
 {
-plate_keychain = plate # TODO
+plate_tail = self.guard_down(self._analyzer.distill_keychain_cons_tail, plate, $ID.text) 
 }
-tail = keychain[plate_keychain]
+tail = keychain[plate_tail]
 {
 $ids = self.guard_up(self._analyzer.combine_keychain_cons, plate, $ID.text, $tail.ids)
 }

@@ -31,6 +31,10 @@ class Top:
     pass
 
 @dataclass(frozen=True, eq=True)
+class Bot:
+    pass
+
+@dataclass(frozen=True, eq=True)
 class TUnit:
     pass
 
@@ -64,7 +68,7 @@ class Induc:
     body : Typ 
 
 
-Typ = Union[TVar, Top, TUnit, TTag, TField, Inter, Imp, Exis, Induc]
+Typ = Union[TVar, Top, Bot, TUnit, TTag, TField, Inter, Imp, Exis, Induc]
 
 """
 Expr data types
@@ -157,13 +161,15 @@ class Analyzer:
 
         return Exis(answr_i, interp_i)
 
+    def combine_expr_idprojmulti(self, plate : Plate, id : str, keys : list[str]) -> Typ: 
+        return self.combine_expr_projmulti(plate, plate.enviro[id], keys)
+
     def combine_keychain_single(self, plate : Plate, key : str) -> list[str]:
-        self.unify(plate.enviro, plate.expect, TField(key, Top())) 
+        # self.unify(plate.enviro, plate.expect, TField(key, Top())) 
         return [key]
 
     def combine_keychain_cons(self, plate : Plate, key : str, keys : list[str]) -> list[str]:
-        self.unify(plate.enviro, plate.expect, TField(key, Top())) 
-        return [key] + keys
+        return self.combine_keychain_single(plate, key) + keys
 
     def combine_expr_appmulti(self, plate : Plate, function : Typ, arguments : list[Typ]) -> Typ: 
         interp_i = plate.interp
@@ -174,6 +180,13 @@ class Analyzer:
             answr_i = answr
 
         return Exis(answr_i, interp_i)
+
+    def combine_argchain_single(self, plate : Plate, content : Typ) -> list[Typ]:
+        # self.unify(plate.enviro, plate.expect, Imp(content, Top()))
+        return [content]
+
+    def combine_argchain_cons(self, plate : Plate, head : Typ, tail : list[Typ]) -> list[Typ]:
+        return self.combine_argchain_single(plate, head) + tail
 
     def combine_expr_callmulti(self, plate : Plate, id : str, arguments : list[Typ]) -> Typ: 
         function = plate.enviro[id]
@@ -204,8 +217,26 @@ class Analyzer:
 
         return Plate(interp, enviro, typ_out)
 
+    def distill_expr_projmulti_cator(self, plate : Plate) -> Plate:
+        return Plate(plate.interp, plate.enviro, Top())
+
     def distill_expr_projmulti_keychain(self, plate : Plate, record : Typ) -> Plate: 
         return Plate(plate.interp, plate.enviro, record)
+
+    def distill_expr_idprojmulti_keychain(self, plate : Plate, id : str) -> Plate: 
+        return self.distill_expr_projmulti_keychain(plate, plate.enviro[id])
+
+    '''
+    return the plate with the expectation as the type that the next element in tail cuts
+    '''
+    def distill_keychain_cons_tail(self, plate : Plate, key : str):
+        expect = self.fresh_type_var()
+        interp = self.unify(plate.interp, plate.expect, TField(key, expect))
+        return Plate(interp, plate.enviro, expect)
+
+    
+    def distill_expr_appmulti_cator(self, plate : Plate) -> Plate: 
+        return Plate(plate.interp, plate.enviro, Imp(Bot(), Top()))
 
     def distill_expr_appmulti_argchain(self, plate : Plate, function : Typ) -> Plate: 
         return Plate(plate.interp, plate.enviro, function)
@@ -219,6 +250,20 @@ class Analyzer:
         interp = self.unify(plate.interp, plate.expect, Imp(expect, Top()))
         return Plate(interp, plate.enviro, expect)
 
+
+    def distill_argchain_cons_head(self, plate : Plate):
+        expect = self.fresh_type_var()
+        interp = self.unify(plate.interp, plate.expect, Imp(expect, Top()))
+        return Plate(interp, plate.enviro, expect)
+
+
+    '''
+    return the plate with the expectation as the type that the next element in tail cuts
+    '''
+    def distill_argchain_cons_tail(self, plate : Plate, head : Typ):
+        expect = self.fresh_type_var()
+        interp = self.unify(plate.interp, plate.expect, Imp(head, expect))
+        return Plate(interp, plate.enviro, expect)
 
 
     def distill_expr_let_body(self, plate : Plate, id : str, target : Typ) -> Plate:

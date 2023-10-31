@@ -6,8 +6,6 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: complete keychain analysis for projection
-- TODO: complete argchain analysis for application 
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 

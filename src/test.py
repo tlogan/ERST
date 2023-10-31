@@ -82,30 +82,29 @@ async def _mk_task():
 
     pieces = [
 # """
-# (.uno = @ .dos = @).uno
+# (:uno = @ :dos = @).uno
 # """,
 ###############
 # """
-# let rec = .uno = @ .dos = @ ;
+# let rec = :uno = @ :dos = @ ;
 # rec.uno
 # """,
 ###############
 # """
-# ((.uno = (.one = @)).uno).one
-# """,
-###############
-# TODO: debug this case
-"""
-(.uno = (.one = @)).uno.one
-""",
-###############
-# """
-# let rec = .uno = (.one = @) .dos = @ ;
-# (rec.uno).one
+# ((:uno = (:one = @)).uno).one
 # """,
 ###############
 # """
-# let rec = .uno = (.one = @) .dos = @ ;
+# (:uno = (:one = @)).uno.one
+# """,
+###############
+# """
+# let rec = :uno = (:one = @) :dos = @ ;
+# ((rec).uno).one
+# """,
+###############
+# """
+# let rec = :uno = (:one = @) :dos = @ ;
 # rec.uno.one
 # """,
 ###############
@@ -134,20 +133,20 @@ async def _mk_task():
 # (x => y => :ooga :booga (.uno = x .dos = y)) (:one @) (:two @) 
 # """,
 ###############
-# """
-# let foo = (x => y => :ooga :booga (.uno = x .dos = y)) ;
-# foo(:one @)(:two @)
-# """,
+"""
+let foo = (x => y => :ooga :booga (:uno = x :dos = y)) ;
+foo(:one @)(:two @)
+""",
 ###############
 # "let x = :boo @ ;",
 # '''
 # let y = :foo x ;
 # ''',
-# ".uno = y .dos = @",
+# ":uno = y :dos = @",
 ################
-# ".uno = () .dos = ()",
+# ":uno = @ :dos = @",
 ################
-# "fix (", "()", ")",
+# "fix (", "@", ")",
 ################
 server.Kill()
     ] 
