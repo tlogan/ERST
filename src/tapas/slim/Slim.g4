@@ -193,9 +193,11 @@ $typ = self.mem(self._analyzer.combine_expr_idappmulti, plate, $ID.text, $argcha
 // }
 
 // TODO: add type annotation syntax
-// | 'let' ID (';' typ)? '=' expr ; expr  {
+// | 'let' ID (';' typ)? '=' expr ; expr 
 ////////
-| 'let' ID {
+| 'let' {
+self.guide_terminal('ID')
+} ID {
 self.guide_symbol('=')
 } '=' {
 plate_target = plate #TODO

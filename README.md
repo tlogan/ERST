@@ -6,6 +6,7 @@
 - paper by Nov 16.
 
 ## Implementation 
+- TODO: redo function syntax to be sequence of cases; no need for match syntax
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
@@ -50,8 +51,18 @@
     - propagation of types
         - checking and guiding via propagation 
         - checking/solving via horn-clause solver when subtyping at leaves
+        - type inference of application of cases without a specified upper bound:
+            ```
+            P <: A | C 
+            Q <: {B with A <: P} | {D with C <: P}
+            ---------------------------------------
+            (A -> B) & (C -> D) <: (P -> Q)
+            ```
+            - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
     - upper bound guidance for completion of program
     - context for completion of program 
+
+
 
 ### Hypothesis
 - Type information must be leniently extracted from programs based on compositions
