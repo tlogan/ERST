@@ -144,23 +144,20 @@ public class SlimParser extends Parser {
 
 
 
-	def shift(self, guidance : Union[Symbol, Terminal]):   
-	    tok = self.getCurrentToken()
-	    print(f"guidance: {guidance}")
-	    print(f"current tok: {tok}")
-	    print(f"overflow: {self._overflow}")
+	def guide_lex(self, guidance : Union[Symbol, Terminal]):   
 	    if not self._overflow:
 	        self._guidance = guidance 
 
+	        tok = self.getCurrentToken()
 	        if tok.type == self.EOF :
 	            self._overflow = True 
 
 
-	def shift_symbol(self, text : str):
-	    self.shift(Symbol(text))
+	def guide_symbol(self, text : str):
+	    self.guide_lex(Symbol(text))
 
-	def shift_terminal(self, text : str):
-	    self.shift(Terminal(text))
+	def guide_terminal(self, text : str):
+	    self.guide_lex(Terminal(text))
 
 
 
@@ -300,7 +297,7 @@ public class SlimParser extends Parser {
 				setState(23);
 				((ExprContext)_localctx).expr = expr(plate);
 
-				self.shift_symbol(')')
+				self.guide_symbol(')')
 
 				setState(25);
 				match(T__3);
@@ -320,7 +317,7 @@ public class SlimParser extends Parser {
 				setState(30);
 				((ExprContext)_localctx).cator = ((ExprContext)_localctx).expr = expr(plate_expr);
 
-				self.shift_symbol(')')
+				self.guide_symbol(')')
 
 				setState(32);
 				match(T__3);
@@ -355,7 +352,7 @@ public class SlimParser extends Parser {
 				setState(42);
 				((ExprContext)_localctx).ID = match(ID);
 
-				self.shift_symbol('=>')
+				self.guide_symbol('=>')
 
 				setState(44);
 				match(T__4);
@@ -381,7 +378,7 @@ public class SlimParser extends Parser {
 				setState(51);
 				((ExprContext)_localctx).cator = expr(plate_cator);
 
-				self.shift_symbol(')')
+				self.guide_symbol(')')
 
 				setState(53);
 				match(T__3);
@@ -418,7 +415,7 @@ public class SlimParser extends Parser {
 				setState(64);
 				((ExprContext)_localctx).ID = match(ID);
 
-				self.shift_symbol('=')
+				self.guide_symbol('=')
 
 				setState(66);
 				match(T__6);
@@ -428,7 +425,7 @@ public class SlimParser extends Parser {
 				setState(68);
 				((ExprContext)_localctx).target = expr(plate_target);
 
-				self.shift_symbol(';')
+				self.guide_symbol(';')
 
 				setState(70);
 				match(T__7);
@@ -448,7 +445,7 @@ public class SlimParser extends Parser {
 				setState(75);
 				match(T__8);
 
-				self.shift_symbol('(')
+				self.guide_symbol('(')
 
 				setState(77);
 				match(T__2);
@@ -458,7 +455,7 @@ public class SlimParser extends Parser {
 				setState(79);
 				((ExprContext)_localctx).body = expr(plate_body);
 
-				self.shift_symbol(')')
+				self.guide_symbol(')')
 
 				setState(81);
 				match(T__3);
@@ -506,7 +503,7 @@ public class SlimParser extends Parser {
 		RecordContext _localctx = new RecordContext(_ctx, getState(), plate);
 		enterRule(_localctx, 2, RULE_record);
 		try {
-			setState(100);
+			setState(107);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 			case 1:
@@ -519,12 +516,21 @@ public class SlimParser extends Parser {
 				{
 				setState(87);
 				match(T__1);
-				setState(88);
-				((RecordContext)_localctx).ID = match(ID);
+
+				self.guide_terminal('ID')
+
 				setState(89);
+				((RecordContext)_localctx).ID = match(ID);
+
+				self.guide_symbol('=')
+
+				setState(91);
 				match(T__6);
-				setState(90);
-				((RecordContext)_localctx).expr = expr(plate);
+
+				plate_expr = plate # TODO
+
+				setState(93);
+				((RecordContext)_localctx).expr = expr(plate_expr);
 
 				_localctx.typ = self.mem(self._analyzer.combine_record_single, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
 
@@ -533,15 +539,27 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(93);
-				match(T__1);
-				setState(94);
-				((RecordContext)_localctx).ID = match(ID);
-				setState(95);
-				match(T__6);
 				setState(96);
+				match(T__1);
+
+				self.guide_terminal('ID')
+
+				setState(98);
+				((RecordContext)_localctx).ID = match(ID);
+
+				self.guide_symbol('=')
+
+				setState(100);
+				match(T__6);
+
+				plate_expr = plate # TODO
+
+				setState(102);
 				((RecordContext)_localctx).expr = expr(plate);
-				setState(97);
+
+				plate_record = plate # TODO
+
+				setState(104);
 				((RecordContext)_localctx).record = record(plate);
 
 				_localctx.typ = self.mem(self._analyzer.combine_record_cons, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
@@ -586,7 +604,7 @@ public class SlimParser extends Parser {
 		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), plate);
 		enterRule(_localctx, 4, RULE_argchain);
 		try {
-			setState(117);
+			setState(126);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
 			case 1:
@@ -597,14 +615,17 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
+				setState(110);
+				match(T__2);
 
 				plate_content = self.guide_choice(self._analyzer.distill_argchain_single_content, plate) 
 
-				setState(104);
-				match(T__2);
-				setState(105);
+				setState(112);
 				((ArgchainContext)_localctx).content = expr(plate_content);
-				setState(106);
+
+				self.guide_symbol(')')
+
+				setState(114);
 				match(T__3);
 
 				_localctx.typs = self.mem(self._analyzer.combine_argchain_single, plate, ((ArgchainContext)_localctx).content.typ)
@@ -614,19 +635,22 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
+				setState(117);
+				match(T__2);
 
 				plate_head = self.guide_choice(self._analyzer.distill_argchain_cons_head, plate) 
 
-				setState(110);
-				match(T__2);
-				setState(111);
+				setState(119);
 				((ArgchainContext)_localctx).head = expr(plate_head);
-				setState(112);
+
+				self.guide_symbol(')')
+
+				setState(121);
 				match(T__3);
 
 				plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, ((ArgchainContext)_localctx).head.typ) 
 
-				setState(114);
+				setState(123);
 				((ArgchainContext)_localctx).tail = argchain(plate_tail);
 
 				_localctx.typs = self.mem(self._analyzer.combine_argchain_cons, plate, ((ArgchainContext)_localctx).head.typ, ((ArgchainContext)_localctx).tail.typs)
@@ -668,7 +692,7 @@ public class SlimParser extends Parser {
 		KeychainContext _localctx = new KeychainContext(_ctx, getState(), plate);
 		enterRule(_localctx, 6, RULE_keychain);
 		try {
-			setState(129);
+			setState(138);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
 			case 1:
@@ -679,9 +703,9 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(120);
+				setState(129);
 				match(T__9);
-				setState(121);
+				setState(130);
 				((KeychainContext)_localctx).ID = match(ID);
 
 				_localctx.ids = self.mem(self._analyzer.combine_keychain_single, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
@@ -691,14 +715,14 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(123);
+				setState(132);
 				match(T__9);
-				setState(124);
+				setState(133);
 				((KeychainContext)_localctx).ID = match(ID);
 
 				plate_tail = self.guide_choice(self._analyzer.distill_keychain_cons_tail, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
 
-				setState(126);
+				setState(135);
 				((KeychainContext)_localctx).tail = keychain(plate_tail);
 
 				_localctx.ids = self.mem(self._analyzer.combine_keychain_cons, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.ids)
@@ -719,7 +743,7 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\r\u0084\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001\r\u008d\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
@@ -735,74 +759,81 @@ public class SlimParser extends Parser {
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0003\u0000U\b\u0000\u0001\u0001\u0001\u0001\u0001"+
 		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0003"+
-		"\u0001e\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0003\u0001l\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
 		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
-		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0003\u0002v\b"+
-		"\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0003\u0003\u0082"+
-		"\b\u0003\u0001\u0003\u0000\u0000\u0004\u0000\u0002\u0004\u0006\u0000\u0000"+
-		"\u0091\u0000T\u0001\u0000\u0000\u0000\u0002d\u0001\u0000\u0000\u0000\u0004"+
-		"u\u0001\u0000\u0000\u0000\u0006\u0081\u0001\u0000\u0000\u0000\bU\u0001"+
-		"\u0000\u0000\u0000\t\n\u0005\u000b\u0000\u0000\nU\u0006\u0000\uffff\uffff"+
-		"\u0000\u000b\f\u0005\u0001\u0000\u0000\fU\u0006\u0000\uffff\uffff\u0000"+
-		"\r\u000e\u0005\u0002\u0000\u0000\u000e\u000f\u0005\u000b\u0000\u0000\u000f"+
-		"\u0010\u0003\u0000\u0000\u0000\u0010\u0011\u0006\u0000\uffff\uffff\u0000"+
-		"\u0011U\u0001\u0000\u0000\u0000\u0012\u0013\u0003\u0002\u0001\u0000\u0013"+
-		"\u0014\u0006\u0000\uffff\uffff\u0000\u0014U\u0001\u0000\u0000\u0000\u0015"+
-		"\u0016\u0005\u0003\u0000\u0000\u0016\u0017\u0006\u0000\uffff\uffff\u0000"+
-		"\u0017\u0018\u0003\u0000\u0000\u0000\u0018\u0019\u0006\u0000\uffff\uffff"+
-		"\u0000\u0019\u001a\u0005\u0004\u0000\u0000\u001a\u001b\u0006\u0000\uffff"+
-		"\uffff\u0000\u001bU\u0001\u0000\u0000\u0000\u001c\u001d\u0005\u0003\u0000"+
-		"\u0000\u001d\u001e\u0006\u0000\uffff\uffff\u0000\u001e\u001f\u0003\u0000"+
-		"\u0000\u0000\u001f \u0006\u0000\uffff\uffff\u0000 !\u0005\u0004\u0000"+
-		"\u0000!\"\u0006\u0000\uffff\uffff\u0000\"#\u0003\u0006\u0003\u0000#$\u0006"+
-		"\u0000\uffff\uffff\u0000$U\u0001\u0000\u0000\u0000%&\u0005\u000b\u0000"+
-		"\u0000&\'\u0006\u0000\uffff\uffff\u0000\'(\u0003\u0006\u0003\u0000()\u0006"+
-		"\u0000\uffff\uffff\u0000)U\u0001\u0000\u0000\u0000*+\u0005\u000b\u0000"+
-		"\u0000+,\u0006\u0000\uffff\uffff\u0000,-\u0005\u0005\u0000\u0000-.\u0006"+
-		"\u0000\uffff\uffff\u0000./\u0003\u0000\u0000\u0000/0\u0006\u0000\uffff"+
-		"\uffff\u00000U\u0001\u0000\u0000\u000012\u0005\u0003\u0000\u000023\u0006"+
-		"\u0000\uffff\uffff\u000034\u0003\u0000\u0000\u000045\u0006\u0000\uffff"+
-		"\uffff\u000056\u0005\u0004\u0000\u000067\u0006\u0000\uffff\uffff\u0000"+
-		"78\u0003\u0004\u0002\u000089\u0006\u0000\uffff\uffff\u00009U\u0001\u0000"+
-		"\u0000\u0000:;\u0005\u000b\u0000\u0000;<\u0006\u0000\uffff\uffff\u0000"+
-		"<=\u0003\u0004\u0002\u0000=>\u0006\u0000\uffff\uffff\u0000>U\u0001\u0000"+
-		"\u0000\u0000?@\u0005\u0006\u0000\u0000@A\u0005\u000b\u0000\u0000AB\u0006"+
-		"\u0000\uffff\uffff\u0000BC\u0005\u0007\u0000\u0000CD\u0006\u0000\uffff"+
-		"\uffff\u0000DE\u0003\u0000\u0000\u0000EF\u0006\u0000\uffff\uffff\u0000"+
-		"FG\u0005\b\u0000\u0000GH\u0006\u0000\uffff\uffff\u0000HI\u0003\u0000\u0000"+
-		"\u0000IJ\u0006\u0000\uffff\uffff\u0000JU\u0001\u0000\u0000\u0000KL\u0005"+
-		"\t\u0000\u0000LM\u0006\u0000\uffff\uffff\u0000MN\u0005\u0003\u0000\u0000"+
-		"NO\u0006\u0000\uffff\uffff\u0000OP\u0003\u0000\u0000\u0000PQ\u0006\u0000"+
-		"\uffff\uffff\u0000QR\u0005\u0004\u0000\u0000RS\u0006\u0000\uffff\uffff"+
-		"\u0000SU\u0001\u0000\u0000\u0000T\b\u0001\u0000\u0000\u0000T\t\u0001\u0000"+
-		"\u0000\u0000T\u000b\u0001\u0000\u0000\u0000T\r\u0001\u0000\u0000\u0000"+
-		"T\u0012\u0001\u0000\u0000\u0000T\u0015\u0001\u0000\u0000\u0000T\u001c"+
-		"\u0001\u0000\u0000\u0000T%\u0001\u0000\u0000\u0000T*\u0001\u0000\u0000"+
-		"\u0000T1\u0001\u0000\u0000\u0000T:\u0001\u0000\u0000\u0000T?\u0001\u0000"+
-		"\u0000\u0000TK\u0001\u0000\u0000\u0000U\u0001\u0001\u0000\u0000\u0000"+
-		"Ve\u0001\u0000\u0000\u0000WX\u0005\u0002\u0000\u0000XY\u0005\u000b\u0000"+
-		"\u0000YZ\u0005\u0007\u0000\u0000Z[\u0003\u0000\u0000\u0000[\\\u0006\u0001"+
-		"\uffff\uffff\u0000\\e\u0001\u0000\u0000\u0000]^\u0005\u0002\u0000\u0000"+
-		"^_\u0005\u000b\u0000\u0000_`\u0005\u0007\u0000\u0000`a\u0003\u0000\u0000"+
-		"\u0000ab\u0003\u0002\u0001\u0000bc\u0006\u0001\uffff\uffff\u0000ce\u0001"+
-		"\u0000\u0000\u0000dV\u0001\u0000\u0000\u0000dW\u0001\u0000\u0000\u0000"+
-		"d]\u0001\u0000\u0000\u0000e\u0003\u0001\u0000\u0000\u0000fv\u0001\u0000"+
-		"\u0000\u0000gh\u0006\u0002\uffff\uffff\u0000hi\u0005\u0003\u0000\u0000"+
-		"ij\u0003\u0000\u0000\u0000jk\u0005\u0004\u0000\u0000kl\u0006\u0002\uffff"+
-		"\uffff\u0000lv\u0001\u0000\u0000\u0000mn\u0006\u0002\uffff\uffff\u0000"+
-		"no\u0005\u0003\u0000\u0000op\u0003\u0000\u0000\u0000pq\u0005\u0004\u0000"+
-		"\u0000qr\u0006\u0002\uffff\uffff\u0000rs\u0003\u0004\u0002\u0000st\u0006"+
-		"\u0002\uffff\uffff\u0000tv\u0001\u0000\u0000\u0000uf\u0001\u0000\u0000"+
-		"\u0000ug\u0001\u0000\u0000\u0000um\u0001\u0000\u0000\u0000v\u0005\u0001"+
-		"\u0000\u0000\u0000w\u0082\u0001\u0000\u0000\u0000xy\u0005\n\u0000\u0000"+
-		"yz\u0005\u000b\u0000\u0000z\u0082\u0006\u0003\uffff\uffff\u0000{|\u0005"+
-		"\n\u0000\u0000|}\u0005\u000b\u0000\u0000}~\u0006\u0003\uffff\uffff\u0000"+
-		"~\u007f\u0003\u0006\u0003\u0000\u007f\u0080\u0006\u0003\uffff\uffff\u0000"+
-		"\u0080\u0082\u0001\u0000\u0000\u0000\u0081w\u0001\u0000\u0000\u0000\u0081"+
-		"x\u0001\u0000\u0000\u0000\u0081{\u0001\u0000\u0000\u0000\u0082\u0007\u0001"+
-		"\u0000\u0000\u0000\u0004Tdu\u0081";
+		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
+		"\u0002\u0001\u0002\u0003\u0002\u007f\b\u0002\u0001\u0003\u0001\u0003\u0001"+
+		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
+		"\u0003\u0001\u0003\u0003\u0003\u008b\b\u0003\u0001\u0003\u0000\u0000\u0004"+
+		"\u0000\u0002\u0004\u0006\u0000\u0000\u009a\u0000T\u0001\u0000\u0000\u0000"+
+		"\u0002k\u0001\u0000\u0000\u0000\u0004~\u0001\u0000\u0000\u0000\u0006\u008a"+
+		"\u0001\u0000\u0000\u0000\bU\u0001\u0000\u0000\u0000\t\n\u0005\u000b\u0000"+
+		"\u0000\nU\u0006\u0000\uffff\uffff\u0000\u000b\f\u0005\u0001\u0000\u0000"+
+		"\fU\u0006\u0000\uffff\uffff\u0000\r\u000e\u0005\u0002\u0000\u0000\u000e"+
+		"\u000f\u0005\u000b\u0000\u0000\u000f\u0010\u0003\u0000\u0000\u0000\u0010"+
+		"\u0011\u0006\u0000\uffff\uffff\u0000\u0011U\u0001\u0000\u0000\u0000\u0012"+
+		"\u0013\u0003\u0002\u0001\u0000\u0013\u0014\u0006\u0000\uffff\uffff\u0000"+
+		"\u0014U\u0001\u0000\u0000\u0000\u0015\u0016\u0005\u0003\u0000\u0000\u0016"+
+		"\u0017\u0006\u0000\uffff\uffff\u0000\u0017\u0018\u0003\u0000\u0000\u0000"+
+		"\u0018\u0019\u0006\u0000\uffff\uffff\u0000\u0019\u001a\u0005\u0004\u0000"+
+		"\u0000\u001a\u001b\u0006\u0000\uffff\uffff\u0000\u001bU\u0001\u0000\u0000"+
+		"\u0000\u001c\u001d\u0005\u0003\u0000\u0000\u001d\u001e\u0006\u0000\uffff"+
+		"\uffff\u0000\u001e\u001f\u0003\u0000\u0000\u0000\u001f \u0006\u0000\uffff"+
+		"\uffff\u0000 !\u0005\u0004\u0000\u0000!\"\u0006\u0000\uffff\uffff\u0000"+
+		"\"#\u0003\u0006\u0003\u0000#$\u0006\u0000\uffff\uffff\u0000$U\u0001\u0000"+
+		"\u0000\u0000%&\u0005\u000b\u0000\u0000&\'\u0006\u0000\uffff\uffff\u0000"+
+		"\'(\u0003\u0006\u0003\u0000()\u0006\u0000\uffff\uffff\u0000)U\u0001\u0000"+
+		"\u0000\u0000*+\u0005\u000b\u0000\u0000+,\u0006\u0000\uffff\uffff\u0000"+
+		",-\u0005\u0005\u0000\u0000-.\u0006\u0000\uffff\uffff\u0000./\u0003\u0000"+
+		"\u0000\u0000/0\u0006\u0000\uffff\uffff\u00000U\u0001\u0000\u0000\u0000"+
+		"12\u0005\u0003\u0000\u000023\u0006\u0000\uffff\uffff\u000034\u0003\u0000"+
+		"\u0000\u000045\u0006\u0000\uffff\uffff\u000056\u0005\u0004\u0000\u0000"+
+		"67\u0006\u0000\uffff\uffff\u000078\u0003\u0004\u0002\u000089\u0006\u0000"+
+		"\uffff\uffff\u00009U\u0001\u0000\u0000\u0000:;\u0005\u000b\u0000\u0000"+
+		";<\u0006\u0000\uffff\uffff\u0000<=\u0003\u0004\u0002\u0000=>\u0006\u0000"+
+		"\uffff\uffff\u0000>U\u0001\u0000\u0000\u0000?@\u0005\u0006\u0000\u0000"+
+		"@A\u0005\u000b\u0000\u0000AB\u0006\u0000\uffff\uffff\u0000BC\u0005\u0007"+
+		"\u0000\u0000CD\u0006\u0000\uffff\uffff\u0000DE\u0003\u0000\u0000\u0000"+
+		"EF\u0006\u0000\uffff\uffff\u0000FG\u0005\b\u0000\u0000GH\u0006\u0000\uffff"+
+		"\uffff\u0000HI\u0003\u0000\u0000\u0000IJ\u0006\u0000\uffff\uffff\u0000"+
+		"JU\u0001\u0000\u0000\u0000KL\u0005\t\u0000\u0000LM\u0006\u0000\uffff\uffff"+
+		"\u0000MN\u0005\u0003\u0000\u0000NO\u0006\u0000\uffff\uffff\u0000OP\u0003"+
+		"\u0000\u0000\u0000PQ\u0006\u0000\uffff\uffff\u0000QR\u0005\u0004\u0000"+
+		"\u0000RS\u0006\u0000\uffff\uffff\u0000SU\u0001\u0000\u0000\u0000T\b\u0001"+
+		"\u0000\u0000\u0000T\t\u0001\u0000\u0000\u0000T\u000b\u0001\u0000\u0000"+
+		"\u0000T\r\u0001\u0000\u0000\u0000T\u0012\u0001\u0000\u0000\u0000T\u0015"+
+		"\u0001\u0000\u0000\u0000T\u001c\u0001\u0000\u0000\u0000T%\u0001\u0000"+
+		"\u0000\u0000T*\u0001\u0000\u0000\u0000T1\u0001\u0000\u0000\u0000T:\u0001"+
+		"\u0000\u0000\u0000T?\u0001\u0000\u0000\u0000TK\u0001\u0000\u0000\u0000"+
+		"U\u0001\u0001\u0000\u0000\u0000Vl\u0001\u0000\u0000\u0000WX\u0005\u0002"+
+		"\u0000\u0000XY\u0006\u0001\uffff\uffff\u0000YZ\u0005\u000b\u0000\u0000"+
+		"Z[\u0006\u0001\uffff\uffff\u0000[\\\u0005\u0007\u0000\u0000\\]\u0006\u0001"+
+		"\uffff\uffff\u0000]^\u0003\u0000\u0000\u0000^_\u0006\u0001\uffff\uffff"+
+		"\u0000_l\u0001\u0000\u0000\u0000`a\u0005\u0002\u0000\u0000ab\u0006\u0001"+
+		"\uffff\uffff\u0000bc\u0005\u000b\u0000\u0000cd\u0006\u0001\uffff\uffff"+
+		"\u0000de\u0005\u0007\u0000\u0000ef\u0006\u0001\uffff\uffff\u0000fg\u0003"+
+		"\u0000\u0000\u0000gh\u0006\u0001\uffff\uffff\u0000hi\u0003\u0002\u0001"+
+		"\u0000ij\u0006\u0001\uffff\uffff\u0000jl\u0001\u0000\u0000\u0000kV\u0001"+
+		"\u0000\u0000\u0000kW\u0001\u0000\u0000\u0000k`\u0001\u0000\u0000\u0000"+
+		"l\u0003\u0001\u0000\u0000\u0000m\u007f\u0001\u0000\u0000\u0000no\u0005"+
+		"\u0003\u0000\u0000op\u0006\u0002\uffff\uffff\u0000pq\u0003\u0000\u0000"+
+		"\u0000qr\u0006\u0002\uffff\uffff\u0000rs\u0005\u0004\u0000\u0000st\u0006"+
+		"\u0002\uffff\uffff\u0000t\u007f\u0001\u0000\u0000\u0000uv\u0005\u0003"+
+		"\u0000\u0000vw\u0006\u0002\uffff\uffff\u0000wx\u0003\u0000\u0000\u0000"+
+		"xy\u0006\u0002\uffff\uffff\u0000yz\u0005\u0004\u0000\u0000z{\u0006\u0002"+
+		"\uffff\uffff\u0000{|\u0003\u0004\u0002\u0000|}\u0006\u0002\uffff\uffff"+
+		"\u0000}\u007f\u0001\u0000\u0000\u0000~m\u0001\u0000\u0000\u0000~n\u0001"+
+		"\u0000\u0000\u0000~u\u0001\u0000\u0000\u0000\u007f\u0005\u0001\u0000\u0000"+
+		"\u0000\u0080\u008b\u0001\u0000\u0000\u0000\u0081\u0082\u0005\n\u0000\u0000"+
+		"\u0082\u0083\u0005\u000b\u0000\u0000\u0083\u008b\u0006\u0003\uffff\uffff"+
+		"\u0000\u0084\u0085\u0005\n\u0000\u0000\u0085\u0086\u0005\u000b\u0000\u0000"+
+		"\u0086\u0087\u0006\u0003\uffff\uffff\u0000\u0087\u0088\u0003\u0006\u0003"+
+		"\u0000\u0088\u0089\u0006\u0003\uffff\uffff\u0000\u0089\u008b\u0001\u0000"+
+		"\u0000\u0000\u008a\u0080\u0001\u0000\u0000\u0000\u008a\u0081\u0001\u0000"+
+		"\u0000\u0000\u008a\u0084\u0001\u0000\u0000\u0000\u008b\u0007\u0001\u0000"+
+		"\u0000\u0000\u0004Tk~\u008a";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

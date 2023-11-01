@@ -60,23 +60,20 @@ def guide_choice(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
 
 
 
-def shift(self, guidance : Union[Symbol, Terminal]):   
-    tok = self.getCurrentToken()
-    print(f"guidance: {guidance}")
-    print(f"current tok: {tok}")
-    print(f"overflow: {self._overflow}")
+def guide_lex(self, guidance : Union[Symbol, Terminal]):   
     if not self._overflow:
         self._guidance = guidance 
 
+        tok = self.getCurrentToken()
         if tok.type == self.EOF :
             self._overflow = True 
 
 
-def shift_symbol(self, text : str):
-    self.shift(Symbol(text))
+def guide_symbol(self, text : str):
+    self.guide_lex(Symbol(text))
 
-def shift_terminal(self, text : str):
-    self.shift(Terminal(text))
+def guide_terminal(self, text : str):
+    self.guide_lex(Terminal(text))
 
 
 
@@ -128,7 +125,7 @@ $typ = $record.typ
 
 | '(' {
 } expr[plate] {
-self.shift_symbol(')')
+self.guide_symbol(')')
 } ')' {
 $typ = $expr.typ
 } 
@@ -136,7 +133,7 @@ $typ = $expr.typ
 | '(' {
 plate_cator = self.guide_choice(self._analyzer.distill_expr_projmulti_cator, plate)
 } cator = expr[plate_expr] {
-self.shift_symbol(')')
+self.guide_symbol(')')
 } ')' {
 plate_keychain = self.guide_choice(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
 } keychain[plate_keychain] {
@@ -150,7 +147,7 @@ $typ = self.mem(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keych
 }
 
 | ID {
-self.shift_symbol('=>')
+self.guide_symbol('=>')
 } '=>' {
 plate_body = self.guide_choice(self._analyzer.distill_expr_function_body, plate, $ID.text)
 } body = expr[plate_body] {
@@ -161,7 +158,7 @@ $typ = self.mem(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ
 | '(' {
 plate_cator = self.guide_choice(self._analyzer.distill_expr_appmulti_cator, plate)
 } cator = expr[plate_cator] {
-self.shift_symbol(')')
+self.guide_symbol(')')
 } ')' {
 plate_argchain = self.guide_choice(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.typ)
 } content = argchain[plate_argchain] {
@@ -199,11 +196,11 @@ $typ = self.mem(self._analyzer.combine_expr_idappmulti, plate, $ID.text, $argcha
 // | 'let' ID (';' typ)? '=' expr ; expr  {
 ////////
 | 'let' ID {
-self.shift_symbol('=')
+self.guide_symbol('=')
 } '=' {
 plate_target = plate #TODO
 } target = expr[plate_target] {
-self.shift_symbol(';')
+self.guide_symbol(';')
 } ';' {
 plate_body = self.guide_choice(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
 } body = expr[plate_body] {
@@ -211,17 +208,13 @@ $typ = $body.typ
 }
 
 
-| 'fix' 
-{
-self.shift_symbol('(')
-} '(' 
-{
+| 'fix' {
+self.guide_symbol('(')
+} '(' {
 plate_body = self.guide_choice(self._analyzer.distill_expr_fix_body, plate)
-} body = expr[plate_body] 
-{
-self.shift_symbol(')')
-} ')' 
-{
+} body = expr[plate_body] {
+self.guide_symbol(')')
+} ')' {
 $typ = self.mem(self._analyzer.combine_expr_fix, plate, $body.typ)
 }
 
@@ -231,61 +224,63 @@ $typ = self.mem(self._analyzer.combine_expr_fix, plate, $body.typ)
 
 
 record [Plate plate] returns [Typ typ] :
-| ':' ID '=' expr[plate]
-{
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+plate_expr = plate # TODO
+} expr[plate_expr] {
 $typ = self.mem(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
 }
-| ':' ID '=' expr[plate] record[plate]
-{
+
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+plate_expr = plate # TODO
+} expr[plate] {
+plate_record = plate # TODO
+} record[plate] {
 $typ = self.mem(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
 }
 ;
 
 // NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 argchain [Plate plate] returns [list[Typ] typs] :
-| 
-{
+| '(' {
 plate_content = self.guide_choice(self._analyzer.distill_argchain_single_content, plate) 
-}
-'('
-content = expr[plate_content] 
-')'
-{
+} content = expr[plate_content] {
+self.guide_symbol(')')
+} ')' {
 $typs = self.mem(self._analyzer.combine_argchain_single, plate, $content.typ)
 }
 
 
-| 
-{
+| '(' {
 plate_head = self.guide_choice(self._analyzer.distill_argchain_cons_head, plate) 
-}
-'('
-head = expr[plate_head] 
-')'
-{
+} head = expr[plate_head] {
+self.guide_symbol(')')
+} ')' {
 plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, $head.typ) 
-}
-tail = argchain[plate_tail]
-{
+} tail = argchain[plate_tail] {
 $typs = self.mem(self._analyzer.combine_argchain_cons, plate, $head.typ, $tail.typs)
 }
 ;
 
 // NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 keychain [Plate plate] returns [list[str] ids] :
-| '.' ID
-{
+| '.' ID {
 $ids = self.mem(self._analyzer.combine_keychain_single, plate, $ID.text)
 }
 
-| '.' ID
-{
+| '.' ID {
 plate_tail = self.guide_choice(self._analyzer.distill_keychain_cons_tail, plate, $ID.text) 
-}
-tail = keychain[plate_tail]
-{
+} tail = keychain[plate_tail] {
 $ids = self.mem(self._analyzer.combine_keychain_cons, plate, $ID.text, $tail.ids)
 }
+
 ;
 
 
