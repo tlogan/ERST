@@ -42,7 +42,7 @@ def getGuidance(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
+def guide_choice(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
     for arg in args:
         if arg == None:
             self._overflow = True
@@ -52,26 +52,35 @@ def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
         result = f(plate, *args)
         self._guidance = result
 
-        # tok = self.getCurrentToken()
-        # if tok.type == self.EOF :
-        #     self._overflow = True 
+        tok = self.getCurrentToken()
+        if tok.type == self.EOF :
+            self._overflow = True 
 
     return result
 
 
 
 def shift(self, guidance : Union[Symbol, Terminal]):   
-    # TODO: construct guidance from self.getCurrentToken()
+    tok = self.getCurrentToken()
+    print(f"guidance: {guidance}")
+    print(f"current tok: {tok}")
+    print(f"overflow: {self._overflow}")
     if not self._overflow:
         self._guidance = guidance 
 
-        tok = self.getCurrentToken()
         if tok.type == self.EOF :
             self._overflow = True 
 
 
+def shift_symbol(self, text : str):
+    self.shift(Symbol(text))
 
-def guard_up(self, f : Callable, plate : Plate, *args):
+def shift_terminal(self, text : str):
+    self.shift(Terminal(text))
+
+
+
+def mem(self, f : Callable, plate : Plate, *args):
 
     if self._overflow:
         return None
@@ -101,131 +110,71 @@ def guard_up(self, f : Callable, plate : Plate, *args):
 }
 
 expr [Plate plate] returns [Typ typ] : 
-| ID 
-{
-$typ = self.guard_up(self._analyzer.combine_expr_id, plate, $ID.text)
+| ID {
+$typ = self.mem(self._analyzer.combine_expr_id, plate, $ID.text)
 } 
 
-| '@' 
-{
-$typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
+| '@' {
+$typ = self.mem(self._analyzer.combine_expr_unit, plate)
 } 
 
-| ':' ID body = expr[plate]
-{
-$typ = self.guard_up(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ)
+| ':' ID body = expr[plate] {
+$typ = self.mem(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ)
 }
 
-| record[plate] 
-{
+| record[plate] {
 $typ = $record.typ
 }
 
-| '(' expr[plate] ')'
-{
+| '(' {
+} expr[plate] {
+self.shift_symbol(')')
+} ')' {
 $typ = $expr.typ
 } 
 
-| 
-{
-plate_cator = self.guard_down(self._analyzer.distill_expr_projmulti_cator, plate)
-}
-'(' cator = expr[plate_expr] ')' 
-{
-plate_keychain = self.guard_down(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
-}
-keychain[plate_keychain]
-{
-$typ = self.guard_up(self._analyzer.combine_expr_projmulti, plate, $expr.typ, $keychain.ids) 
+| '(' {
+plate_cator = self.guide_choice(self._analyzer.distill_expr_projmulti_cator, plate)
+} cator = expr[plate_expr] {
+self.shift_symbol(')')
+} ')' {
+plate_keychain = self.guide_choice(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
+} keychain[plate_keychain] {
+$typ = self.mem(self._analyzer.combine_expr_projmulti, plate, $expr.typ, $keychain.ids) 
 }
 
-| 
-ID 
-{
-plate_keychain = self.guard_down(self._analyzer.distill_expr_idprojmulti_keychain, plate, $ID.text)
-}
-keychain[plate_keychain]
-{
-$typ = self.guard_up(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keychain.ids) 
+| ID {
+plate_keychain = self.guide_choice(self._analyzer.distill_expr_idprojmulti_keychain, plate, $ID.text)
+} keychain[plate_keychain] {
+$typ = self.mem(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keychain.ids) 
 }
 
-| 
-// {
-// TODO: guide terminal
-// }
-ID '=>' 
-{
-plate_body = self.guard_down(self._analyzer.distill_expr_function_body, plate, $ID.text)
-}
-body = expr[plate_body] 
-{
+| ID {
+self.shift_symbol('=>')
+} '=>' {
+plate_body = self.guide_choice(self._analyzer.distill_expr_function_body, plate, $ID.text)
+} body = expr[plate_body] {
 plate = plate_body
-$typ = self.guard_up(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ)
-}
-//////////////////////////
-
-// | 
-// // NOTE: using prefix syntax as a simple way to avoid problematic left-recursion 
-// '('
-// {
-// # TODO
-// plate_function = plate
-// }
-// function = expr[plate_function] 
-// ')'
-// {
-// plate_argument = self.guard_down(self._analyzer.distill_expr_application_argument, plate, $function.typ)
-// }
-// '('
-// argument = expr[plate_argument] 
-// ')'
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_application, plate, $function.typ, $argument.typ) 
-// }
-
-// | 
-// // NOTE: repetitive-looking case to avoid extra paren without using left-recursion   
-// ID 
-// {
-// plate_argument = self.guard_down(self._analyzer.distill_expr_call_argument, plate, $ID.text)
-// }
-// '('
-// argument = expr[plate_argument] 
-// ')'
-// {
-// $typ = self.guard_up(self._analyzer.combine_expr_call, plate, $ID.text, $argument.typ) 
-// }
-
-| 
-{self.shift(Symbol("("))}
-'('
-{
-plate_cator = self.guard_down(self._analyzer.distill_expr_appmulti_cator, plate)
-}
-cator = expr[plate_cator]
-{self.shift(Symbol(")"))}
-')'
-{
-plate_argchain = self.guard_down(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.typ)
-}
-content = argchain[plate_argchain]
-{
-$typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, $cator.typ, $argchain.typs)
+$typ = self.mem(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ)
 }
 
-| 
-ID 
-{
-plate_argchain = self.guard_down(self._analyzer.distill_expr_callmulti_argchain, plate, $ID.text)
+| '(' {
+plate_cator = self.guide_choice(self._analyzer.distill_expr_appmulti_cator, plate)
+} cator = expr[plate_cator] {
+self.shift_symbol(')')
+} ')' {
+plate_argchain = self.guide_choice(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.typ)
+} content = argchain[plate_argchain] {
+$typ = self.mem(self._analyzer.combine_expr_appmulti, plate, $cator.typ, $argchain.typs)
 }
-argchain[plate_argchain]
-{
-$typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $ID.text, $argchain.typs) 
+
+| ID {
+plate_argchain = self.guide_choice(self._analyzer.distill_expr_idappmulti_argchain, plate, $ID.text)
+} argchain[plate_argchain] {
+$typ = self.mem(self._analyzer.combine_expr_idappmulti, plate, $ID.text, $argchain.typs) 
 }
 
 //////////////////////////
-
-
 
 // | 'match' switch = expr ('case' param = expr '=>' body = expr)+ 
 //{
@@ -249,49 +198,33 @@ $typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, $ID.text, $ar
 // TODO: add type annotation syntax
 // | 'let' ID (';' typ)? '=' expr ; expr  {
 ////////
-| 'let' ID '=' 
-{
-# TODO
-plate_target = plate 
-}
-target = expr[plate_target]
-';'
-{
-plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
-}
-body = expr[plate_body]
-{
+| 'let' ID {
+self.shift_symbol('=')
+} '=' {
+plate_target = plate #TODO
+} target = expr[plate_target] {
+self.shift_symbol(';')
+} ';' {
+plate_body = self.guide_choice(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
+} body = expr[plate_body] {
 $typ = $body.typ
 }
 
-//////////////////////////////////
 
 | 'fix' 
-{ 
-self.shift(Symbol("("))
-} 
-'(' 
-// TODO: need to distinguish between context to distill and guidance to send out 
-// need a call stack or use an implicit call stack by parameterizing expr 
 {
-plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
-}
-body = expr[plate_body]
+self.shift_symbol('(')
+} '(' 
 {
-self.shift(Symbol(')'))
-}
-')' 
+plate_body = self.guide_choice(self._analyzer.distill_expr_fix_body, plate)
+} body = expr[plate_body] 
 {
-$typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
+self.shift_symbol(')')
+} ')' 
+{
+$typ = self.mem(self._analyzer.combine_expr_fix, plate, $body.typ)
 }
 
-// | 'let' ID ('in' typ)? '=' expr expr  {
-//     $result = 'hello'
-// }
-// | '(' body = expr ')' 
-// {
-    // $result = f'(paren {$body.result})' 
-// }
 ;
 
 
@@ -300,11 +233,11 @@ $typ = self.guard_up(self._analyzer.combine_expr_fix, plate, $body.typ)
 record [Plate plate] returns [Typ typ] :
 | ':' ID '=' expr[plate]
 {
-$typ = self.guard_up(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
+$typ = self.mem(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
 }
 | ':' ID '=' expr[plate] record[plate]
 {
-$typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
+$typ = self.mem(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
 }
 ;
 
@@ -312,29 +245,29 @@ $typ = self.guard_up(self._analyzer.combine_record_cons, plate, $ID.text, $expr.
 argchain [Plate plate] returns [list[Typ] typs] :
 | 
 {
-plate_content = self.guard_down(self._analyzer.distill_argchain_single_content, plate) 
+plate_content = self.guide_choice(self._analyzer.distill_argchain_single_content, plate) 
 }
 '('
 content = expr[plate_content] 
 ')'
 {
-$typs = self.guard_up(self._analyzer.combine_argchain_single, plate, $content.typ)
+$typs = self.mem(self._analyzer.combine_argchain_single, plate, $content.typ)
 }
 
 
 | 
 {
-plate_head = self.guard_down(self._analyzer.distill_argchain_cons_head, plate) 
+plate_head = self.guide_choice(self._analyzer.distill_argchain_cons_head, plate) 
 }
 '('
 head = expr[plate_head] 
 ')'
 {
-plate_tail = self.guard_down(self._analyzer.distill_argchain_cons_tail, plate, $head.typ) 
+plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, $head.typ) 
 }
 tail = argchain[plate_tail]
 {
-$typs = self.guard_up(self._analyzer.combine_argchain_cons, plate, $head.typ, $tail.typs)
+$typs = self.mem(self._analyzer.combine_argchain_cons, plate, $head.typ, $tail.typs)
 }
 ;
 
@@ -342,16 +275,16 @@ $typs = self.guard_up(self._analyzer.combine_argchain_cons, plate, $head.typ, $t
 keychain [Plate plate] returns [list[str] ids] :
 | '.' ID
 {
-$ids = self.guard_up(self._analyzer.combine_keychain_single, plate, $ID.text)
+$ids = self.mem(self._analyzer.combine_keychain_single, plate, $ID.text)
 }
 
 | '.' ID
 {
-plate_tail = self.guard_down(self._analyzer.distill_keychain_cons_tail, plate, $ID.text) 
+plate_tail = self.guide_choice(self._analyzer.distill_keychain_cons_tail, plate, $ID.text) 
 }
 tail = keychain[plate_tail]
 {
-$ids = self.guard_up(self._analyzer.combine_keychain_cons, plate, $ID.text, $tail.ids)
+$ids = self.mem(self._analyzer.combine_keychain_cons, plate, $ID.text, $tail.ids)
 }
 ;
 

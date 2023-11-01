@@ -21,6 +21,9 @@ Op = Optional
 """
 Typ data types
 """
+# TODO: type concrete syntax
+# TField ==> :uno : typ :dos : typ 
+# TTag   ==> :tag? :tag? :tag? typ 
 
 @dataclass(frozen=True, eq=True)
 class TVar:
@@ -188,7 +191,7 @@ class Analyzer:
     def combine_argchain_cons(self, plate : Plate, head : Typ, tail : list[Typ]) -> list[Typ]:
         return self.combine_argchain_single(plate, head) + tail
 
-    def combine_expr_callmulti(self, plate : Plate, id : str, arguments : list[Typ]) -> Typ: 
+    def combine_expr_idappmulti(self, plate : Plate, id : str, arguments : list[Typ]) -> Typ: 
         function = plate.enviro[id]
         return self.combine_expr_appmulti(plate, function, arguments)
 
@@ -241,7 +244,7 @@ class Analyzer:
     def distill_expr_appmulti_argchain(self, plate : Plate, function : Typ) -> Plate: 
         return Plate(plate.interp, plate.enviro, function)
 
-    def distill_expr_callmulti_argchain(self, plate : Plate, id : str) -> Plate: 
+    def distill_expr_idappmulti_argchain(self, plate : Plate, id : str) -> Plate: 
         function = plate.enviro[id]
         return self.distill_expr_appmulti_argchain(plate, function)
 

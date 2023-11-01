@@ -133,20 +133,21 @@ async def _mk_task():
 # (x => y => :ooga :booga (.uno = x .dos = y)) (:one @) (:two @) 
 # """,
 ###############
-"""
-let foo = (x => y => :ooga :booga (:uno = x :dos = y)) ;
-foo(:one @)(:two @)
-""",
+# """
+# let foo = (x => y => :ooga :booga (:uno = x :dos = y)) ;
+# foo(:one @)(:two @)
+# """,
 ###############
 # "let x = :boo @ ;",
 # '''
 # let y = :foo x ;
 # ''',
-# ":uno = y :dos = @",
+# ":uno = y :dos = @", 
 ################
 # ":uno = @ :dos = @",
 ################
 # "fix (", "@", ")",
+"fix", "(",
 ################
 server.Kill()
     ] 
@@ -165,9 +166,13 @@ server.Kill()
 
 
     for piece in pieces:
-        answr = await connection.mk_caller(piece)
-        print(f'answr: {answr}')
-        if isinstance(answr, server.Done):
+        g = await connection.mk_caller(piece)
+        print()
+        print(f"--------------------------")
+        print(f"--- client's guidance: << {g} >>")
+        print(f"--------------------------")
+        print()
+        if isinstance(g, server.Done):
             break
 
 

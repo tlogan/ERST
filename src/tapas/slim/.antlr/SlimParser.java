@@ -126,7 +126,7 @@ public class SlimParser extends Parser {
 	def tokenIndex(self):
 	    return self.getCurrentToken().tokenIndex
 
-	def guard_down(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
+	def guide_choice(self, f : Callable, plate : Plate, *args) -> Optional[Plate]:
 	    for arg in args:
 	        if arg == None:
 	            self._overflow = True
@@ -136,26 +136,35 @@ public class SlimParser extends Parser {
 	        result = f(plate, *args)
 	        self._guidance = result
 
-	        # tok = self.getCurrentToken()
-	        # if tok.type == self.EOF :
-	        #     self._overflow = True 
+	        tok = self.getCurrentToken()
+	        if tok.type == self.EOF :
+	            self._overflow = True 
 
 	    return result
 
 
 
 	def shift(self, guidance : Union[Symbol, Terminal]):   
-	    # TODO: construct guidance from self.getCurrentToken()
+	    tok = self.getCurrentToken()
+	    print(f"guidance: {guidance}")
+	    print(f"current tok: {tok}")
+	    print(f"overflow: {self._overflow}")
 	    if not self._overflow:
 	        self._guidance = guidance 
 
-	        tok = self.getCurrentToken()
 	        if tok.type == self.EOF :
 	            self._overflow = True 
 
 
+	def shift_symbol(self, text : str):
+	    self.shift(Symbol(text))
 
-	def guard_up(self, f : Callable, plate : Plate, *args):
+	def shift_terminal(self, text : str):
+	    self.shift(Terminal(text))
+
+
+
+	def mem(self, f : Callable, plate : Plate, *args):
 
 	    if self._overflow:
 	        return None
@@ -229,7 +238,7 @@ public class SlimParser extends Parser {
 		ExprContext _localctx = new ExprContext(_ctx, getState(), plate);
 		enterRule(_localctx, 0, RULE_expr);
 		try {
-			setState(79);
+			setState(84);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 			case 1:
@@ -243,7 +252,7 @@ public class SlimParser extends Parser {
 				setState(9);
 				((ExprContext)_localctx).ID = match(ID);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_id, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				_localctx.typ = self.mem(self._analyzer.combine_expr_id, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -253,7 +262,7 @@ public class SlimParser extends Parser {
 				setState(11);
 				match(T__0);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_unit, plate)
+				_localctx.typ = self.mem(self._analyzer.combine_expr_unit, plate)
 
 				}
 				break;
@@ -267,7 +276,7 @@ public class SlimParser extends Parser {
 				setState(15);
 				((ExprContext)_localctx).body = expr(plate);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_tag, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.mem(self._analyzer.combine_expr_tag, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -286,9 +295,14 @@ public class SlimParser extends Parser {
 				{
 				setState(21);
 				match(T__2);
-				setState(22);
-				((ExprContext)_localctx).expr = expr(plate);
+
+
 				setState(23);
+				((ExprContext)_localctx).expr = expr(plate);
+
+				self.shift_symbol(')')
+
+				setState(25);
 				match(T__3);
 
 				_localctx.typ = ((ExprContext)_localctx).expr.typ
@@ -298,118 +312,130 @@ public class SlimParser extends Parser {
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
-
-				plate_cator = self.guard_down(self._analyzer.distill_expr_projmulti_cator, plate)
-
-				setState(27);
-				match(T__2);
 				setState(28);
+				match(T__2);
+
+				plate_cator = self.guide_choice(self._analyzer.distill_expr_projmulti_cator, plate)
+
+				setState(30);
 				((ExprContext)_localctx).cator = ((ExprContext)_localctx).expr = expr(plate_expr);
-				setState(29);
+
+				self.shift_symbol(')')
+
+				setState(32);
 				match(T__3);
 
-				plate_keychain = self.guard_down(self._analyzer.distill_expr_projmulti_keychain, plate, ((ExprContext)_localctx).expr.typ)
+				plate_keychain = self.guide_choice(self._analyzer.distill_expr_projmulti_keychain, plate, ((ExprContext)_localctx).expr.typ)
 
-				setState(31);
+				setState(34);
 				((ExprContext)_localctx).keychain = keychain(plate_keychain);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_projmulti, plate, ((ExprContext)_localctx).expr.typ, ((ExprContext)_localctx).keychain.ids) 
+				_localctx.typ = self.mem(self._analyzer.combine_expr_projmulti, plate, ((ExprContext)_localctx).expr.typ, ((ExprContext)_localctx).keychain.ids) 
 
 				}
 				break;
 			case 8:
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(34);
+				setState(37);
 				((ExprContext)_localctx).ID = match(ID);
 
-				plate_keychain = self.guard_down(self._analyzer.distill_expr_idprojmulti_keychain, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				plate_keychain = self.guide_choice(self._analyzer.distill_expr_idprojmulti_keychain, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
-				setState(36);
+				setState(39);
 				((ExprContext)_localctx).keychain = keychain(plate_keychain);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_idprojmulti, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).keychain.ids) 
+				_localctx.typ = self.mem(self._analyzer.combine_expr_idprojmulti, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).keychain.ids) 
 
 				}
 				break;
 			case 9:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(39);
+				setState(42);
 				((ExprContext)_localctx).ID = match(ID);
-				setState(40);
+
+				self.shift_symbol('=>')
+
+				setState(44);
 				match(T__4);
 
-				plate_body = self.guard_down(self._analyzer.distill_expr_function_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				plate_body = self.guide_choice(self._analyzer.distill_expr_function_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
-				setState(42);
+				setState(46);
 				((ExprContext)_localctx).body = expr(plate_body);
 
 				plate = plate_body
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_function, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.mem(self._analyzer.combine_expr_function, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
 			case 10:
 				enterOuterAlt(_localctx, 10);
 				{
-				self.shift(Symbol("("))
-				setState(46);
+				setState(49);
 				match(T__2);
 
-				plate_cator = self.guard_down(self._analyzer.distill_expr_appmulti_cator, plate)
+				plate_cator = self.guide_choice(self._analyzer.distill_expr_appmulti_cator, plate)
 
-				setState(48);
+				setState(51);
 				((ExprContext)_localctx).cator = expr(plate_cator);
-				self.shift(Symbol(")"))
-				setState(50);
+
+				self.shift_symbol(')')
+
+				setState(53);
 				match(T__3);
 
-				plate_argchain = self.guard_down(self._analyzer.distill_expr_appmulti_argchain, plate, ((ExprContext)_localctx).cator.typ)
+				plate_argchain = self.guide_choice(self._analyzer.distill_expr_appmulti_argchain, plate, ((ExprContext)_localctx).cator.typ)
 
-				setState(52);
+				setState(55);
 				((ExprContext)_localctx).content = ((ExprContext)_localctx).argchain = argchain(plate_argchain);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_appmulti, plate, ((ExprContext)_localctx).cator.typ, ((ExprContext)_localctx).argchain.typs)
+				_localctx.typ = self.mem(self._analyzer.combine_expr_appmulti, plate, ((ExprContext)_localctx).cator.typ, ((ExprContext)_localctx).argchain.typs)
 
 				}
 				break;
 			case 11:
 				enterOuterAlt(_localctx, 11);
 				{
-				setState(55);
+				setState(58);
 				((ExprContext)_localctx).ID = match(ID);
 
-				plate_argchain = self.guard_down(self._analyzer.distill_expr_callmulti_argchain, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				plate_argchain = self.guide_choice(self._analyzer.distill_expr_idappmulti_argchain, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
-				setState(57);
+				setState(60);
 				((ExprContext)_localctx).argchain = argchain(plate_argchain);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_callmulti, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).argchain.typs) 
+				_localctx.typ = self.mem(self._analyzer.combine_expr_idappmulti, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).argchain.typs) 
 
 				}
 				break;
 			case 12:
 				enterOuterAlt(_localctx, 12);
 				{
-				setState(60);
+				setState(63);
 				match(T__5);
-				setState(61);
+				setState(64);
 				((ExprContext)_localctx).ID = match(ID);
-				setState(62);
+
+				self.shift_symbol('=')
+
+				setState(66);
 				match(T__6);
 
-				# TODO
-				plate_target = plate 
+				plate_target = plate #TODO
 
-				setState(64);
+				setState(68);
 				((ExprContext)_localctx).target = expr(plate_target);
-				setState(65);
+
+				self.shift_symbol(';')
+
+				setState(70);
 				match(T__7);
 
-				plate_body = self.guard_down(self._analyzer.distill_expr_let_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
+				plate_body = self.guide_choice(self._analyzer.distill_expr_let_body, plate, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.typ)
 
-				setState(67);
+				setState(72);
 				((ExprContext)_localctx).body = expr(plate_body);
 
 				_localctx.typ = ((ExprContext)_localctx).body.typ
@@ -419,25 +445,25 @@ public class SlimParser extends Parser {
 			case 13:
 				enterOuterAlt(_localctx, 13);
 				{
-				setState(70);
+				setState(75);
 				match(T__8);
-				 
-				self.shift(Symbol("("))
 
-				setState(72);
+				self.shift_symbol('(')
+
+				setState(77);
 				match(T__2);
 
-				plate_body = self.guard_down(self._analyzer.distill_expr_fix_body, plate)
+				plate_body = self.guide_choice(self._analyzer.distill_expr_fix_body, plate)
 
-				setState(74);
+				setState(79);
 				((ExprContext)_localctx).body = expr(plate_body);
 
-				self.shift(Symbol(')'))
+				self.shift_symbol(')')
 
-				setState(76);
+				setState(81);
 				match(T__3);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_expr_fix, plate, ((ExprContext)_localctx).body.typ)
+				_localctx.typ = self.mem(self._analyzer.combine_expr_fix, plate, ((ExprContext)_localctx).body.typ)
 
 				}
 				break;
@@ -480,7 +506,7 @@ public class SlimParser extends Parser {
 		RecordContext _localctx = new RecordContext(_ctx, getState(), plate);
 		enterRule(_localctx, 2, RULE_record);
 		try {
-			setState(95);
+			setState(100);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 			case 1:
@@ -491,34 +517,34 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(82);
+				setState(87);
 				match(T__1);
-				setState(83);
+				setState(88);
 				((RecordContext)_localctx).ID = match(ID);
-				setState(84);
+				setState(89);
 				match(T__6);
-				setState(85);
+				setState(90);
 				((RecordContext)_localctx).expr = expr(plate);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_record_single, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
+				_localctx.typ = self.mem(self._analyzer.combine_record_single, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ)
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(88);
+				setState(93);
 				match(T__1);
-				setState(89);
+				setState(94);
 				((RecordContext)_localctx).ID = match(ID);
-				setState(90);
+				setState(95);
 				match(T__6);
-				setState(91);
+				setState(96);
 				((RecordContext)_localctx).expr = expr(plate);
-				setState(92);
+				setState(97);
 				((RecordContext)_localctx).record = record(plate);
 
-				_localctx.typ = self.guard_up(self._analyzer.combine_record_cons, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
+				_localctx.typ = self.mem(self._analyzer.combine_record_cons, plate, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).expr.typ, ((RecordContext)_localctx).record.typ)
 
 				}
 				break;
@@ -560,7 +586,7 @@ public class SlimParser extends Parser {
 		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), plate);
 		enterRule(_localctx, 4, RULE_argchain);
 		try {
-			setState(112);
+			setState(117);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
 			case 1:
@@ -572,16 +598,16 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 
-				plate_content = self.guard_down(self._analyzer.distill_argchain_single_content, plate) 
+				plate_content = self.guide_choice(self._analyzer.distill_argchain_single_content, plate) 
 
-				setState(99);
+				setState(104);
 				match(T__2);
-				setState(100);
+				setState(105);
 				((ArgchainContext)_localctx).content = expr(plate_content);
-				setState(101);
+				setState(106);
 				match(T__3);
 
-				_localctx.typs = self.guard_up(self._analyzer.combine_argchain_single, plate, ((ArgchainContext)_localctx).content.typ)
+				_localctx.typs = self.mem(self._analyzer.combine_argchain_single, plate, ((ArgchainContext)_localctx).content.typ)
 
 				}
 				break;
@@ -589,21 +615,21 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 
-				plate_head = self.guard_down(self._analyzer.distill_argchain_cons_head, plate) 
+				plate_head = self.guide_choice(self._analyzer.distill_argchain_cons_head, plate) 
 
-				setState(105);
+				setState(110);
 				match(T__2);
-				setState(106);
+				setState(111);
 				((ArgchainContext)_localctx).head = expr(plate_head);
-				setState(107);
+				setState(112);
 				match(T__3);
 
-				plate_tail = self.guard_down(self._analyzer.distill_argchain_cons_tail, plate, ((ArgchainContext)_localctx).head.typ) 
+				plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, ((ArgchainContext)_localctx).head.typ) 
 
-				setState(109);
+				setState(114);
 				((ArgchainContext)_localctx).tail = argchain(plate_tail);
 
-				_localctx.typs = self.guard_up(self._analyzer.combine_argchain_cons, plate, ((ArgchainContext)_localctx).head.typ, ((ArgchainContext)_localctx).tail.typs)
+				_localctx.typs = self.mem(self._analyzer.combine_argchain_cons, plate, ((ArgchainContext)_localctx).head.typ, ((ArgchainContext)_localctx).tail.typs)
 
 				}
 				break;
@@ -642,7 +668,7 @@ public class SlimParser extends Parser {
 		KeychainContext _localctx = new KeychainContext(_ctx, getState(), plate);
 		enterRule(_localctx, 6, RULE_keychain);
 		try {
-			setState(124);
+			setState(129);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
 			case 1:
@@ -653,29 +679,29 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(115);
+				setState(120);
 				match(T__9);
-				setState(116);
+				setState(121);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				_localctx.ids = self.guard_up(self._analyzer.combine_keychain_single, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
+				_localctx.ids = self.mem(self._analyzer.combine_keychain_single, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(118);
+				setState(123);
 				match(T__9);
-				setState(119);
+				setState(124);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				plate_tail = self.guard_down(self._analyzer.distill_keychain_cons_tail, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
+				plate_tail = self.guide_choice(self._analyzer.distill_keychain_cons_tail, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
 
-				setState(121);
+				setState(126);
 				((KeychainContext)_localctx).tail = keychain(plate_tail);
 
-				_localctx.ids = self.guard_up(self._analyzer.combine_keychain_cons, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.ids)
+				_localctx.ids = self.mem(self._analyzer.combine_keychain_cons, plate, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.ids)
 
 				}
 				break;
@@ -693,7 +719,7 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\r\u007f\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001\r\u0084\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
@@ -706,73 +732,77 @@ public class SlimParser extends Parser {
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0003\u0000P\b\u0000\u0001\u0001\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0000\u0001\u0000\u0003\u0000U\b\u0000\u0001\u0001\u0001\u0001\u0001"+
 		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0003\u0001`\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0003"+
+		"\u0001e\b\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
 		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
-		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0003"+
-		"\u0002q\b\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0003"+
-		"\u0003}\b\u0003\u0001\u0003\u0000\u0000\u0004\u0000\u0002\u0004\u0006"+
-		"\u0000\u0000\u008c\u0000O\u0001\u0000\u0000\u0000\u0002_\u0001\u0000\u0000"+
-		"\u0000\u0004p\u0001\u0000\u0000\u0000\u0006|\u0001\u0000\u0000\u0000\b"+
-		"P\u0001\u0000\u0000\u0000\t\n\u0005\u000b\u0000\u0000\nP\u0006\u0000\uffff"+
-		"\uffff\u0000\u000b\f\u0005\u0001\u0000\u0000\fP\u0006\u0000\uffff\uffff"+
-		"\u0000\r\u000e\u0005\u0002\u0000\u0000\u000e\u000f\u0005\u000b\u0000\u0000"+
-		"\u000f\u0010\u0003\u0000\u0000\u0000\u0010\u0011\u0006\u0000\uffff\uffff"+
-		"\u0000\u0011P\u0001\u0000\u0000\u0000\u0012\u0013\u0003\u0002\u0001\u0000"+
-		"\u0013\u0014\u0006\u0000\uffff\uffff\u0000\u0014P\u0001\u0000\u0000\u0000"+
-		"\u0015\u0016\u0005\u0003\u0000\u0000\u0016\u0017\u0003\u0000\u0000\u0000"+
-		"\u0017\u0018\u0005\u0004\u0000\u0000\u0018\u0019\u0006\u0000\uffff\uffff"+
-		"\u0000\u0019P\u0001\u0000\u0000\u0000\u001a\u001b\u0006\u0000\uffff\uffff"+
-		"\u0000\u001b\u001c\u0005\u0003\u0000\u0000\u001c\u001d\u0003\u0000\u0000"+
-		"\u0000\u001d\u001e\u0005\u0004\u0000\u0000\u001e\u001f\u0006\u0000\uffff"+
-		"\uffff\u0000\u001f \u0003\u0006\u0003\u0000 !\u0006\u0000\uffff\uffff"+
-		"\u0000!P\u0001\u0000\u0000\u0000\"#\u0005\u000b\u0000\u0000#$\u0006\u0000"+
-		"\uffff\uffff\u0000$%\u0003\u0006\u0003\u0000%&\u0006\u0000\uffff\uffff"+
-		"\u0000&P\u0001\u0000\u0000\u0000\'(\u0005\u000b\u0000\u0000()\u0005\u0005"+
-		"\u0000\u0000)*\u0006\u0000\uffff\uffff\u0000*+\u0003\u0000\u0000\u0000"+
-		"+,\u0006\u0000\uffff\uffff\u0000,P\u0001\u0000\u0000\u0000-.\u0006\u0000"+
-		"\uffff\uffff\u0000./\u0005\u0003\u0000\u0000/0\u0006\u0000\uffff\uffff"+
-		"\u000001\u0003\u0000\u0000\u000012\u0006\u0000\uffff\uffff\u000023\u0005"+
-		"\u0004\u0000\u000034\u0006\u0000\uffff\uffff\u000045\u0003\u0004\u0002"+
-		"\u000056\u0006\u0000\uffff\uffff\u00006P\u0001\u0000\u0000\u000078\u0005"+
-		"\u000b\u0000\u000089\u0006\u0000\uffff\uffff\u00009:\u0003\u0004\u0002"+
-		"\u0000:;\u0006\u0000\uffff\uffff\u0000;P\u0001\u0000\u0000\u0000<=\u0005"+
-		"\u0006\u0000\u0000=>\u0005\u000b\u0000\u0000>?\u0005\u0007\u0000\u0000"+
-		"?@\u0006\u0000\uffff\uffff\u0000@A\u0003\u0000\u0000\u0000AB\u0005\b\u0000"+
-		"\u0000BC\u0006\u0000\uffff\uffff\u0000CD\u0003\u0000\u0000\u0000DE\u0006"+
-		"\u0000\uffff\uffff\u0000EP\u0001\u0000\u0000\u0000FG\u0005\t\u0000\u0000"+
-		"GH\u0006\u0000\uffff\uffff\u0000HI\u0005\u0003\u0000\u0000IJ\u0006\u0000"+
-		"\uffff\uffff\u0000JK\u0003\u0000\u0000\u0000KL\u0006\u0000\uffff\uffff"+
-		"\u0000LM\u0005\u0004\u0000\u0000MN\u0006\u0000\uffff\uffff\u0000NP\u0001"+
-		"\u0000\u0000\u0000O\b\u0001\u0000\u0000\u0000O\t\u0001\u0000\u0000\u0000"+
-		"O\u000b\u0001\u0000\u0000\u0000O\r\u0001\u0000\u0000\u0000O\u0012\u0001"+
-		"\u0000\u0000\u0000O\u0015\u0001\u0000\u0000\u0000O\u001a\u0001\u0000\u0000"+
-		"\u0000O\"\u0001\u0000\u0000\u0000O\'\u0001\u0000\u0000\u0000O-\u0001\u0000"+
-		"\u0000\u0000O7\u0001\u0000\u0000\u0000O<\u0001\u0000\u0000\u0000OF\u0001"+
-		"\u0000\u0000\u0000P\u0001\u0001\u0000\u0000\u0000Q`\u0001\u0000\u0000"+
-		"\u0000RS\u0005\u0002\u0000\u0000ST\u0005\u000b\u0000\u0000TU\u0005\u0007"+
-		"\u0000\u0000UV\u0003\u0000\u0000\u0000VW\u0006\u0001\uffff\uffff\u0000"+
-		"W`\u0001\u0000\u0000\u0000XY\u0005\u0002\u0000\u0000YZ\u0005\u000b\u0000"+
-		"\u0000Z[\u0005\u0007\u0000\u0000[\\\u0003\u0000\u0000\u0000\\]\u0003\u0002"+
-		"\u0001\u0000]^\u0006\u0001\uffff\uffff\u0000^`\u0001\u0000\u0000\u0000"+
-		"_Q\u0001\u0000\u0000\u0000_R\u0001\u0000\u0000\u0000_X\u0001\u0000\u0000"+
-		"\u0000`\u0003\u0001\u0000\u0000\u0000aq\u0001\u0000\u0000\u0000bc\u0006"+
-		"\u0002\uffff\uffff\u0000cd\u0005\u0003\u0000\u0000de\u0003\u0000\u0000"+
-		"\u0000ef\u0005\u0004\u0000\u0000fg\u0006\u0002\uffff\uffff\u0000gq\u0001"+
-		"\u0000\u0000\u0000hi\u0006\u0002\uffff\uffff\u0000ij\u0005\u0003\u0000"+
-		"\u0000jk\u0003\u0000\u0000\u0000kl\u0005\u0004\u0000\u0000lm\u0006\u0002"+
-		"\uffff\uffff\u0000mn\u0003\u0004\u0002\u0000no\u0006\u0002\uffff\uffff"+
-		"\u0000oq\u0001\u0000\u0000\u0000pa\u0001\u0000\u0000\u0000pb\u0001\u0000"+
-		"\u0000\u0000ph\u0001\u0000\u0000\u0000q\u0005\u0001\u0000\u0000\u0000"+
-		"r}\u0001\u0000\u0000\u0000st\u0005\n\u0000\u0000tu\u0005\u000b\u0000\u0000"+
-		"u}\u0006\u0003\uffff\uffff\u0000vw\u0005\n\u0000\u0000wx\u0005\u000b\u0000"+
-		"\u0000xy\u0006\u0003\uffff\uffff\u0000yz\u0003\u0006\u0003\u0000z{\u0006"+
-		"\u0003\uffff\uffff\u0000{}\u0001\u0000\u0000\u0000|r\u0001\u0000\u0000"+
-		"\u0000|s\u0001\u0000\u0000\u0000|v\u0001\u0000\u0000\u0000}\u0007\u0001"+
-		"\u0000\u0000\u0000\u0004O_p|";
+		"\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0003\u0002v\b"+
+		"\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
+		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0003\u0003\u0082"+
+		"\b\u0003\u0001\u0003\u0000\u0000\u0004\u0000\u0002\u0004\u0006\u0000\u0000"+
+		"\u0091\u0000T\u0001\u0000\u0000\u0000\u0002d\u0001\u0000\u0000\u0000\u0004"+
+		"u\u0001\u0000\u0000\u0000\u0006\u0081\u0001\u0000\u0000\u0000\bU\u0001"+
+		"\u0000\u0000\u0000\t\n\u0005\u000b\u0000\u0000\nU\u0006\u0000\uffff\uffff"+
+		"\u0000\u000b\f\u0005\u0001\u0000\u0000\fU\u0006\u0000\uffff\uffff\u0000"+
+		"\r\u000e\u0005\u0002\u0000\u0000\u000e\u000f\u0005\u000b\u0000\u0000\u000f"+
+		"\u0010\u0003\u0000\u0000\u0000\u0010\u0011\u0006\u0000\uffff\uffff\u0000"+
+		"\u0011U\u0001\u0000\u0000\u0000\u0012\u0013\u0003\u0002\u0001\u0000\u0013"+
+		"\u0014\u0006\u0000\uffff\uffff\u0000\u0014U\u0001\u0000\u0000\u0000\u0015"+
+		"\u0016\u0005\u0003\u0000\u0000\u0016\u0017\u0006\u0000\uffff\uffff\u0000"+
+		"\u0017\u0018\u0003\u0000\u0000\u0000\u0018\u0019\u0006\u0000\uffff\uffff"+
+		"\u0000\u0019\u001a\u0005\u0004\u0000\u0000\u001a\u001b\u0006\u0000\uffff"+
+		"\uffff\u0000\u001bU\u0001\u0000\u0000\u0000\u001c\u001d\u0005\u0003\u0000"+
+		"\u0000\u001d\u001e\u0006\u0000\uffff\uffff\u0000\u001e\u001f\u0003\u0000"+
+		"\u0000\u0000\u001f \u0006\u0000\uffff\uffff\u0000 !\u0005\u0004\u0000"+
+		"\u0000!\"\u0006\u0000\uffff\uffff\u0000\"#\u0003\u0006\u0003\u0000#$\u0006"+
+		"\u0000\uffff\uffff\u0000$U\u0001\u0000\u0000\u0000%&\u0005\u000b\u0000"+
+		"\u0000&\'\u0006\u0000\uffff\uffff\u0000\'(\u0003\u0006\u0003\u0000()\u0006"+
+		"\u0000\uffff\uffff\u0000)U\u0001\u0000\u0000\u0000*+\u0005\u000b\u0000"+
+		"\u0000+,\u0006\u0000\uffff\uffff\u0000,-\u0005\u0005\u0000\u0000-.\u0006"+
+		"\u0000\uffff\uffff\u0000./\u0003\u0000\u0000\u0000/0\u0006\u0000\uffff"+
+		"\uffff\u00000U\u0001\u0000\u0000\u000012\u0005\u0003\u0000\u000023\u0006"+
+		"\u0000\uffff\uffff\u000034\u0003\u0000\u0000\u000045\u0006\u0000\uffff"+
+		"\uffff\u000056\u0005\u0004\u0000\u000067\u0006\u0000\uffff\uffff\u0000"+
+		"78\u0003\u0004\u0002\u000089\u0006\u0000\uffff\uffff\u00009U\u0001\u0000"+
+		"\u0000\u0000:;\u0005\u000b\u0000\u0000;<\u0006\u0000\uffff\uffff\u0000"+
+		"<=\u0003\u0004\u0002\u0000=>\u0006\u0000\uffff\uffff\u0000>U\u0001\u0000"+
+		"\u0000\u0000?@\u0005\u0006\u0000\u0000@A\u0005\u000b\u0000\u0000AB\u0006"+
+		"\u0000\uffff\uffff\u0000BC\u0005\u0007\u0000\u0000CD\u0006\u0000\uffff"+
+		"\uffff\u0000DE\u0003\u0000\u0000\u0000EF\u0006\u0000\uffff\uffff\u0000"+
+		"FG\u0005\b\u0000\u0000GH\u0006\u0000\uffff\uffff\u0000HI\u0003\u0000\u0000"+
+		"\u0000IJ\u0006\u0000\uffff\uffff\u0000JU\u0001\u0000\u0000\u0000KL\u0005"+
+		"\t\u0000\u0000LM\u0006\u0000\uffff\uffff\u0000MN\u0005\u0003\u0000\u0000"+
+		"NO\u0006\u0000\uffff\uffff\u0000OP\u0003\u0000\u0000\u0000PQ\u0006\u0000"+
+		"\uffff\uffff\u0000QR\u0005\u0004\u0000\u0000RS\u0006\u0000\uffff\uffff"+
+		"\u0000SU\u0001\u0000\u0000\u0000T\b\u0001\u0000\u0000\u0000T\t\u0001\u0000"+
+		"\u0000\u0000T\u000b\u0001\u0000\u0000\u0000T\r\u0001\u0000\u0000\u0000"+
+		"T\u0012\u0001\u0000\u0000\u0000T\u0015\u0001\u0000\u0000\u0000T\u001c"+
+		"\u0001\u0000\u0000\u0000T%\u0001\u0000\u0000\u0000T*\u0001\u0000\u0000"+
+		"\u0000T1\u0001\u0000\u0000\u0000T:\u0001\u0000\u0000\u0000T?\u0001\u0000"+
+		"\u0000\u0000TK\u0001\u0000\u0000\u0000U\u0001\u0001\u0000\u0000\u0000"+
+		"Ve\u0001\u0000\u0000\u0000WX\u0005\u0002\u0000\u0000XY\u0005\u000b\u0000"+
+		"\u0000YZ\u0005\u0007\u0000\u0000Z[\u0003\u0000\u0000\u0000[\\\u0006\u0001"+
+		"\uffff\uffff\u0000\\e\u0001\u0000\u0000\u0000]^\u0005\u0002\u0000\u0000"+
+		"^_\u0005\u000b\u0000\u0000_`\u0005\u0007\u0000\u0000`a\u0003\u0000\u0000"+
+		"\u0000ab\u0003\u0002\u0001\u0000bc\u0006\u0001\uffff\uffff\u0000ce\u0001"+
+		"\u0000\u0000\u0000dV\u0001\u0000\u0000\u0000dW\u0001\u0000\u0000\u0000"+
+		"d]\u0001\u0000\u0000\u0000e\u0003\u0001\u0000\u0000\u0000fv\u0001\u0000"+
+		"\u0000\u0000gh\u0006\u0002\uffff\uffff\u0000hi\u0005\u0003\u0000\u0000"+
+		"ij\u0003\u0000\u0000\u0000jk\u0005\u0004\u0000\u0000kl\u0006\u0002\uffff"+
+		"\uffff\u0000lv\u0001\u0000\u0000\u0000mn\u0006\u0002\uffff\uffff\u0000"+
+		"no\u0005\u0003\u0000\u0000op\u0003\u0000\u0000\u0000pq\u0005\u0004\u0000"+
+		"\u0000qr\u0006\u0002\uffff\uffff\u0000rs\u0003\u0004\u0002\u0000st\u0006"+
+		"\u0002\uffff\uffff\u0000tv\u0001\u0000\u0000\u0000uf\u0001\u0000\u0000"+
+		"\u0000ug\u0001\u0000\u0000\u0000um\u0001\u0000\u0000\u0000v\u0005\u0001"+
+		"\u0000\u0000\u0000w\u0082\u0001\u0000\u0000\u0000xy\u0005\n\u0000\u0000"+
+		"yz\u0005\u000b\u0000\u0000z\u0082\u0006\u0003\uffff\uffff\u0000{|\u0005"+
+		"\n\u0000\u0000|}\u0005\u000b\u0000\u0000}~\u0006\u0003\uffff\uffff\u0000"+
+		"~\u007f\u0003\u0006\u0003\u0000\u007f\u0080\u0006\u0003\uffff\uffff\u0000"+
+		"\u0080\u0082\u0001\u0000\u0000\u0000\u0081w\u0001\u0000\u0000\u0000\u0081"+
+		"x\u0001\u0000\u0000\u0000\u0081{\u0001\u0000\u0000\u0000\u0082\u0007\u0001"+
+		"\u0000\u0000\u0000\u0004Tdu\u0081";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
