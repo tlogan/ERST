@@ -23,6 +23,8 @@
 ## Story
 - Conjecture: finding necessary intersections during type checking corresponds to craig interpolation extracting a generalization from a proof
     - Floor <: Interpo <: Ceil
+    - failed subtyping causes construction of intersections of necessary conditions
+        - corresponding to the construction of proof of spuriousness
     - the program being type checked behaves as the proof being traversed by craig interpolation.
     - the necessary intersections correspond to the interpolation 
     - the initial condition or floor correspond to the inherent properties of the program or annotations on its variables
