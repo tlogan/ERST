@@ -21,7 +21,11 @@
 
 ## Story
 - Conjecture: finding necessary intersections during type checking corresponds to craig interpolation extracting a generalization from a proof
+    - Floor <: Interpo <: Ceil
     - the program being type checked behaves as the proof being traversed by craig interpolation.
+    - the necessary intersections correspond to the interpolation 
+    - the initial condition or floor correspond to the inherent properties of the program or annotations on its variables
+    - in other words, the floor is raised via bottom-up type inference and the ceiling is lowered via top-down inference
 
 ### Title
 - Guiding safe generation of untyped programs   
