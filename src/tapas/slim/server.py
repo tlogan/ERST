@@ -68,7 +68,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
 
         try:
             ctx = parser.expr(plate_default)
-            if ctx.typ: 
+            if ctx.combo: 
                 await output.put(Done())
                 break
             else:
@@ -92,7 +92,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
         print(f"tree: {ctx.toStringTree(recog=parser)}")
 
     if ctx:
-        return ctx.typ
+        return ctx.combo
     else:
         return None
 

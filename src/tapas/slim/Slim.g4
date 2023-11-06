@@ -106,28 +106,28 @@ def mem(self, f : Callable, plate : Plate, *args):
 
 }
 
-expr [Plate plate] returns [Typ typ] : 
+expr [Plate plate] returns [ECombo combo] : 
 | ID {
-$typ = self.mem(self._analyzer.combine_expr_id, plate, $ID.text)
+$combo = self.mem(self._analyzer.combine_expr_id, plate, $ID.text)
 } 
 
 | '@' {
-$typ = self.mem(self._analyzer.combine_expr_unit, plate)
+$combo = self.mem(self._analyzer.combine_expr_unit, plate)
 } 
 
 | ':' ID body = expr[plate] {
-$typ = self.mem(self._analyzer.combine_expr_tag, plate, $ID.text, $body.typ)
+$combo = self.mem(self._analyzer.combine_expr_tag, plate, $ID.text, $body.combo)
 }
 
 | record[plate] {
-$typ = $record.typ
+$combo = $record.combo
 }
 
 | '(' {
 } expr[plate] {
 self.guide_symbol(')')
 } ')' {
-$typ = $expr.typ
+$combo = $expr.combo
 } 
 
 | '(' {
@@ -135,40 +135,47 @@ plate_cator = self.guide_choice(self._analyzer.distill_expr_projmulti_cator, pla
 } cator = expr[plate_expr] {
 self.guide_symbol(')')
 } ')' {
-plate_keychain = self.guide_choice(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.typ)
+plate_keychain = self.guide_choice(self._analyzer.distill_expr_projmulti_keychain, plate, $expr.combo)
 } keychain[plate_keychain] {
-$typ = self.mem(self._analyzer.combine_expr_projmulti, plate, $expr.typ, $keychain.ids) 
+$combo = self.mem(self._analyzer.combine_expr_projmulti, plate, $expr.combo, $keychain.ids) 
 }
 
 | ID {
 plate_keychain = self.guide_choice(self._analyzer.distill_expr_idprojmulti_keychain, plate, $ID.text)
 } keychain[plate_keychain] {
-$typ = self.mem(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keychain.ids) 
+$combo = self.mem(self._analyzer.combine_expr_idprojmulti, plate, $ID.text, $keychain.ids) 
 }
 
-| ID {
-self.guide_symbol('=>')
-} '=>' {
-plate_body = self.guide_choice(self._analyzer.distill_expr_function_body, plate, $ID.text)
-} body = expr[plate_body] {
-plate = plate_body
-$typ = self.mem(self._analyzer.combine_expr_function, plate, $ID.text, $body.typ)
+| function[plate] {
+$combo = $function.combo
 }
+
+
+/////////////////////////////////
+// | ID {
+// self.guide_symbol('=>')
+// } '=>' {
+// plate_body = self.guide_choice(self._analyzer.distill_expr_function_body, plate, $ID.text)
+// } body = expr[plate_body] {
+// plate = plate_body
+// $combo = self.mem(self._analyzer.combine_expr_function, plate, $ID.text, $body.combo)
+// }
+/////////////////////////////////
 
 | '(' {
 plate_cator = self.guide_choice(self._analyzer.distill_expr_appmulti_cator, plate)
 } cator = expr[plate_cator] {
 self.guide_symbol(')')
 } ')' {
-plate_argchain = self.guide_choice(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.typ)
+plate_argchain = self.guide_choice(self._analyzer.distill_expr_appmulti_argchain, plate, $cator.combo)
 } content = argchain[plate_argchain] {
-$typ = self.mem(self._analyzer.combine_expr_appmulti, plate, $cator.typ, $argchain.typs)
+$combo = self.mem(self._analyzer.combine_expr_appmulti, plate, $cator.combo, $argchain.combos)
 }
 
 | ID {
 plate_argchain = self.guide_choice(self._analyzer.distill_expr_idappmulti_argchain, plate, $ID.text)
 } argchain[plate_argchain] {
-$typ = self.mem(self._analyzer.combine_expr_idappmulti, plate, $ID.text, $argchain.typs) 
+$combo = self.mem(self._analyzer.combine_expr_idappmulti, plate, $ID.text, $argchain.combos) 
 }
 
 //////////////////////////
@@ -204,9 +211,9 @@ plate_target = plate #TODO
 } target = expr[plate_target] {
 self.guide_symbol(';')
 } ';' {
-plate_body = self.guide_choice(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.typ)
+plate_body = self.guide_choice(self._analyzer.distill_expr_let_body, plate, $ID.text, $target.combo)
 } body = expr[plate_body] {
-$typ = $body.typ
+$combo = $body.combo
 }
 
 
@@ -217,15 +224,85 @@ plate_body = self.guide_choice(self._analyzer.distill_expr_fix_body, plate)
 } body = expr[plate_body] {
 self.guide_symbol(')')
 } ')' {
-$typ = self.mem(self._analyzer.combine_expr_fix, plate, $body.typ)
+$combo = self.mem(self._analyzer.combine_expr_fix, plate, $body.combo)
 }
 
+;
+
+pattern [Plate plate] returns [PCombo combo]:  
+| ID {
+$combo = self.mem(self._analyzer.combine_pattern_id, plate, $ID.text)
+} 
+| '@' {
+$combo = self.mem(self._analyzer.combine_pattern_unit, plate)
+} 
+| ':' {
+} ID {
+plate_body = plate # TODO
+} body = pattern[plate_body] {
+$combo = self.mem(self._analyzer.combine_pattern_tag, plate, $body.combo)
+}
+| recpat[plate] {
+$combo = $recpat.combo
+}
+;
+
+function [Plate plate] returns [ECombo combo] :
+| 'case' {
+# TODO
+plate_pattern = self.guide_choice(self._analyzer.distill_function_single_pattern, plate)
+} pattern[plate_pattern] {
+self.guide_symbol('=>')
+} '=>' {
+# TODO
+plate_body = self.guide_choice(self._analyzer.distill_function_single_body, plate, $pattern.combo)
+} body = expr[plate_body] {
+$combo = self.mem(self._analyzer.combine_function_single, plate, $pattern.combo, $body.combo)
+}
+
+| 'case' {
+# TODO
+plate_pattern = self.guide_choice(self._analyzer.distill_function_cons_pattern, plate)
+} pattern[plate_pattern] {
+self.guide_symbol('=>')
+} '=>' {
+# TODO
+plate_body = self.guide_choice(self._analyzer.distill_function_cons_body, plate, $pattern.combo)
+} body = expr[plate_body] {
+plate_function = plate # TODO
+} function[plate] {
+$combo = self.mem(self._analyzer.combine_function_cons, plate, $pattern.combo, $body.combo, $function.combo)
+}
+;
+
+recpat [Plate plate] returns [PCombo combo] :
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+plate_body = plate # TODO
+} body = pattern[plate_body] {
+$combo = self.mem(self._analyzer.combine_recpat_single, plate, $ID.text, $body.combo)
+}
+
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+plate_body = plate # TODO
+} body = pattern[plate_body] {
+plate_tail = plate # TODO
+} tail = recpat[plate_tail] {
+$combo = self.mem(self._analyzer.combine_recpat_cons, plate, $ID.text, $body.combo, $tail.combo)
+}
 ;
 
 
 
 
-record [Plate plate] returns [Typ typ] :
+record [Plate plate] returns [ECombo combo] :
 | ':' {
 self.guide_terminal('ID')
 } ID {
@@ -233,7 +310,7 @@ self.guide_symbol('=')
 } '=' {
 plate_expr = plate # TODO
 } expr[plate_expr] {
-$typ = self.mem(self._analyzer.combine_record_single, plate, $ID.text, $expr.typ)
+$combo = self.mem(self._analyzer.combine_record_single, plate, $ID.text, $expr.combo)
 }
 
 | ':' {
@@ -245,18 +322,18 @@ plate_expr = plate # TODO
 } expr[plate] {
 plate_record = plate # TODO
 } record[plate] {
-$typ = self.mem(self._analyzer.combine_record_cons, plate, $ID.text, $expr.typ, $record.typ)
+$combo = self.mem(self._analyzer.combine_record_cons, plate, $ID.text, $expr.combo, $record.combo)
 }
 ;
 
 // NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
-argchain [Plate plate] returns [list[Typ] typs] :
+argchain [Plate plate] returns [list[ECombo] combos] :
 | '(' {
 plate_content = self.guide_choice(self._analyzer.distill_argchain_single_content, plate) 
 } content = expr[plate_content] {
 self.guide_symbol(')')
 } ')' {
-$typs = self.mem(self._analyzer.combine_argchain_single, plate, $content.typ)
+$combos = self.mem(self._analyzer.combine_argchain_single, plate, $content.combo)
 }
 
 
@@ -265,9 +342,9 @@ plate_head = self.guide_choice(self._analyzer.distill_argchain_cons_head, plate)
 } head = expr[plate_head] {
 self.guide_symbol(')')
 } ')' {
-plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, $head.typ) 
+plate_tail = self.guide_choice(self._analyzer.distill_argchain_cons_tail, plate, $head.combo) 
 } tail = argchain[plate_tail] {
-$typs = self.mem(self._analyzer.combine_argchain_cons, plate, $head.typ, $tail.typs)
+$combos = self.mem(self._analyzer.combine_argchain_cons, plate, $head.combo, $tail.combos)
 }
 ;
 

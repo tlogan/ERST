@@ -6,7 +6,8 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: redo function syntax to be sequence of cases; no need for match syntax
+- TODO: add missing distill calls and distill implementations 
+- TODO: determine rationale for calls to unify in distill, combine, or leaf combine steps.
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
@@ -48,8 +49,9 @@
         - analysis on recursive-decent parse-tree 
         - analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
         - adds layer of complexity that's not apparent in a normalized AST
-    - extrinsic types 
     - relational types
+        - extrinsic types 
+        - unifies/decides/solves subtyping without base types refined by qualifiers
     - propagation of types
         - checking and guiding via propagation 
         - checking/solving via horn-clause solver when subtyping at leaves
