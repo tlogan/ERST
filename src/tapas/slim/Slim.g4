@@ -77,7 +77,7 @@ def guide_terminal(self, text : str):
 
 
 
-def mem(self, f : Callable, *args):
+def collect(self, f : Callable, *args):
 
     if self._overflow:
         return None
@@ -108,15 +108,15 @@ def mem(self, f : Callable, *args):
 
 expr [Plate plate] returns [ECombo combo] : 
 | ID {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_id, $ID.text)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_id, $ID.text)
 } 
 
 | '@' {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_unit)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_unit)
 } 
 
 | ':' ID body = expr[plate] {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_tag, $ID.text, $body.combo)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_tag, $ID.text, $body.combo)
 }
 
 | record[plate] {
@@ -137,13 +137,13 @@ self.guide_symbol(')')
 } ')' {
 plate_keychain = self.guide_choice(ExprAttr(self._solver, plate).distill_projmulti_keychain, $expr.combo)
 } keychain[plate_keychain] {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_projmulti, $expr.combo, $keychain.ids) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_projmulti, $expr.combo, $keychain.ids) 
 }
 
 | ID {
 plate_keychain = self.guide_choice(ExprAttr(self._solver, plate).distill_idprojmulti_keychain, $ID.text)
 } keychain[plate_keychain] {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_idprojmulti, $ID.text, $keychain.ids) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_idprojmulti, $ID.text, $keychain.ids) 
 }
 
 | function[plate] {
@@ -158,7 +158,7 @@ $combo = $function.combo
 // plate_body = self.guide_choice(self._solver.distill_expr_function_body, plate, $ID.text)
 // } body = expr[plate_body] {
 // plate = plate_body
-// $combo = self.mem(self._solver.combine_expr_function, plate, $ID.text, $body.combo)
+// $combo = self.collect(self._solver.combine_expr_function, plate, $ID.text, $body.combo)
 // }
 /////////////////////////////////
 
@@ -169,13 +169,13 @@ self.guide_symbol(')')
 } ')' {
 plate_argchain = self.guide_choice(ExprAttr(self._solver, plate).distill_appmulti_argchain, $cator.combo)
 } content = argchain[plate_argchain] {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_appmulti, $cator.combo, $argchain.combos)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_appmulti, $cator.combo, $argchain.combos)
 }
 
 | ID {
 plate_argchain = self.guide_choice(ExprAttr(self._solver, plate).distill_idappmulti_argchain, $ID.text)
 } argchain[plate_argchain] {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_idappmulti, $ID.text, $argchain.combos) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_idappmulti, $ID.text, $argchain.combos) 
 }
 
 //////////////////////////
@@ -207,7 +207,7 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-plate_target = plate #TODO
+plate_target = self.guide_choice(ExprAttr(self._solver, plate).distill_let_target, $ID.text)
 } target = expr[plate_target] {
 self.guide_symbol(';')
 } ';' {
@@ -224,66 +224,70 @@ plate_body = self.guide_choice(ExprAttr(self._solver, plate).distill_fix_body)
 } body = expr[plate_body] {
 self.guide_symbol(')')
 } ')' {
-$combo = self.mem(ExprAttr(self._solver, plate).combine_fix, $body.combo)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_fix, $body.combo)
 }
 
 ;
 
 pattern [Plate plate] returns [PCombo combo]:  
+
 | ID {
-$combo = self.mem(PatternAttr(self._solver, plate).combine_id, $ID.text)
+$combo = self.collect(PatternAttr(self._solver, plate).combine_id, $ID.text)
 } 
+
 | '@' {
-$combo = self.mem(PatternAttr(self._solver, plate).combine_unit)
+$combo = self.collect(PatternAttr(self._solver, plate).combine_unit)
 } 
+
 | ':' {
 } ID {
-plate_body = plate # TODO
+plate_body = self.guide_choice(PatternAttr(self._solver, plate).distill_tag_body, $ID.text)
 } body = pattern[plate_body] {
-$combo = self.mem(PatternAttr(self._solver, plate).combine_tag, $body.combo)
+$combo = self.collect(PatternAttr(self._solver, plate).combine_tag, $body.combo)
 }
+
 | recpat[plate] {
 $combo = $recpat.combo
 }
+
 ;
 
 function [Plate plate] returns [ECombo combo] :
+
 | 'case' {
-# TODO
 plate_pattern = self.guide_choice(FunctionAttr(self._solver, plate).distill_single_pattern)
 } pattern[plate_pattern] {
 self.guide_symbol('=>')
 } '=>' {
-# TODO
 plate_body = self.guide_choice(FunctionAttr(self._solver, plate).distill_single_body, $pattern.combo)
 } body = expr[plate_body] {
-$combo = self.mem(FunctionAttr(self._solver, plate).combine_single, $pattern.combo, $body.combo)
+$combo = self.collect(FunctionAttr(self._solver, plate).combine_single, $pattern.combo, $body.combo)
 }
 
 | 'case' {
-# TODO
-plate_pattern = self.guide_choice(FunctionAttr(self._solver, plate).distill_cons_pattern, plate)
+plate_pattern = self.guide_choice(FunctionAttr(self._solver, plate).distill_cons_pattern)
 } pattern[plate_pattern] {
 self.guide_symbol('=>')
 } '=>' {
-# TODO
 plate_body = self.guide_choice(FunctionAttr(self._solver, plate).distill_cons_body, $pattern.combo)
 } body = expr[plate_body] {
-plate_function = plate # TODO
-} function[plate] {
-$combo = self.mem(FunctionAttr(self._solver, plate).combine_cons, $pattern.combo, $body.combo, $function.combo)
+plate_tail = self.guide_choice(FunctionAttr(self._solver, plate).distill_cons_tail, $pattern.combo, $body.combo)
+} tail = function[plate] {
+$combo = self.collect(FunctionAttr(self._solver, plate).combine_cons, $pattern.combo, $body.combo, $tail.combo)
 }
+
 ;
 
 recpat [Plate plate] returns [PCombo combo] :
+
 | ':' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-plate_body = plate # TODO
+plate_body = self.guide_choice(RecpatAttr(self._solver, plate).distill_single_body, $ID.text)
 } body = pattern[plate_body] {
-$combo = self.mem(RecpatAttr(self._solver, plate).combine_single, $ID.text, $body.combo)
+$combo = self.collect(RecpatAttr(self._solver, plate).combine_single, $ID.text, $body.combo)
 }
 
 | ':' {
@@ -291,26 +295,26 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-plate_body = plate # TODO
+plate_body = self.guide_choice(RecpatAttr(self._solver, plate).distill_cons_body, $ID.text)
 } body = pattern[plate_body] {
-plate_tail = plate # TODO
+plate_tail = self.guide_choice(RecpatAttr(self._solver, plate).distill_cons_tail, $ID.text, $body.combo)
 } tail = recpat[plate_tail] {
-$combo = self.mem(RecpatAttr(self._solver, plate).combine_cons, $ID.text, $body.combo, $tail.combo)
+$combo = self.collect(RecpatAttr(self._solver, plate).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
+
 ;
 
 
-
-
 record [Plate plate] returns [ECombo combo] :
+
 | ':' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-plate_expr = plate # TODO
-} expr[plate_expr] {
-$combo = self.mem(RecordAttr(self._solver, plate).combine_single, $ID.text, $expr.combo)
+plate_body = self.guide_choice(RecordAttr(self._solver, plate).distill_single_body, $ID.text)
+} body = expr[plate_expr] {
+$combo = self.collect(RecordAttr(self._solver, plate).combine_single, $ID.text, $body.combo)
 }
 
 | ':' {
@@ -318,24 +322,25 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-plate_expr = plate # TODO
-} expr[plate] {
-plate_record = plate # TODO
-} record[plate] {
-$combo = self.mem(RecordAttr(self._solver, plate).combine_cons, $ID.text, $expr.combo, $record.combo)
+plate_body = self.guide_choice(RecordAttr(self._solver, plate).distill_cons_body, $ID.text)
+} body = expr[plate] {
+plate_tail = self.guide_choice(RecordAttr(self._solver, plate).distill_cons_tail, $ID.text, $body.combo)
+} tail = record[plate] {
+$combo = self.collect(RecordAttr(self._solver, plate).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
+
 ;
 
 // NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 argchain [Plate plate] returns [list[ECombo] combos] :
+
 | '(' {
 plate_content = self.guide_choice(ArgchainAttr(self._solver, plate).distill_single_content) 
 } content = expr[plate_content] {
 self.guide_symbol(')')
 } ')' {
-$combos = self.mem(ArgchainAttr(self._solver, plate).combine_single, $content.combo)
+$combos = self.collect(ArgchainAttr(self._solver, plate).combine_single, $content.combo)
 }
-
 
 | '(' {
 plate_head = self.guide_choice(ArgchainAttr(self._solver, plate).distill_cons_head) 
@@ -344,20 +349,23 @@ self.guide_symbol(')')
 } ')' {
 plate_tail = self.guide_choice(ArgchainAttr(self._solver, plate).distill_cons_tail, $head.combo) 
 } tail = argchain[plate_tail] {
-$combos = self.mem(ArgchainAttr(self._solver, plate).combine_cons, $head.combo, $tail.combos)
+$combos = self.collect(ArgchainAttr(self._solver, plate).combine_cons, $head.combo, $tail.combos)
 }
+
 ;
+
 
 // NOTE: plate.expect represents the type of the rator applied to the next immediate argument  
 keychain [Plate plate] returns [list[str] ids] :
+
 | '.' ID {
-$ids = self.mem(KeychainAttr(self._solver, plate).combine_single, $ID.text)
+$ids = self.collect(KeychainAttr(self._solver, plate).combine_single, $ID.text)
 }
 
 | '.' ID {
 plate_tail = self.guide_choice(KeychainAttr(self._solver, plate).distill_cons_tail, $ID.text) 
 } tail = keychain[plate_tail] {
-$ids = self.mem(KeychainAttr(self._solver, plate).combine_cons, $ID.text, $tail.ids)
+$ids = self.collect(KeychainAttr(self._solver, plate).combine_cons, $ID.text, $tail.ids)
 }
 
 ;

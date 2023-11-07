@@ -6,20 +6,22 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: add missing distill calls and distill implementations 
 - TODO: determine rationale for calls to unify in distill, combine, or leaf combine steps.
+- TODO: modify unify to return multiple interpretations 
 - TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
+- TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver
+- TODO: use renaming lazily (just for equality modulo alpha renaming)
 ------
 - NOTE: update guidance before each part of a sequence
 - NOTE: update overflow after each guidance update 
 - NOTE: update result after entire sequence
 - NOTE: after each call to server, server responds with some guidance, completion status, or acknowledgment of killing.   
+- NOTE: inherit attributes via guide and distill methods
+- NOTE: synthesize attributes via collect and combine methods
 
 
-- TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver
-- TODO: use renaming lazily (just for equality modulo alpha renaming)
 
 ## Story
 - Conjecture: finding necessary intersections during type checking corresponds to craig interpolation extracting a generalization from a proof

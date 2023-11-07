@@ -219,6 +219,8 @@ class ExprAttr(Attr):
     def combine_fix(self, body : ECombo) -> ECombo:
         return ECombo(Induc(body.descrip))
     
+    def distill_let_target(self, id : str) -> Plate:
+        return Plate(self.plate.interp, self.plate.enviro, Top())
 
     def distill_let_body(self, id : str, target : Typ) -> Plate:
         interp = self.plate.interp
@@ -228,20 +230,31 @@ class ExprAttr(Attr):
 
 class RecordAttr(Attr):
 
-    def combine_single(self, label : str, body : ECombo) -> ECombo:
-        return ECombo(TField(label, body.descrip)) 
+    def distill_single_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip) 
 
-    def combine_cons(self, label : str, body : ECombo, cons : ECombo) -> ECombo:
-        return ECombo(Inter(TField(label, body.descrip), cons.descrip))
+    def combine_single(self, id : str, body : ECombo) -> ECombo:
+        return ECombo(TField(id, body.descrip)) 
 
-    #####################
+    def distill_cons_body(self, id : str) -> Plate:
+        return self.distill_single_body(id)
+
+    def distill_cons_tail(self, id : str, body : ECombo) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip) 
+
+    def combine_cons(self, id : str, body : ECombo, tail : ECombo) -> ECombo:
+        return ECombo(Inter(TField(id, body.descrip), tail.descrip))
+
 class FunctionAttr(Attr):
 
     def distill_single_pattern(self) -> Plate:
-        antec = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(antec, Top()))
-        return Plate(interp, self.plate.enviro, antec)
-
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
+        return Plate(interp, self.plate.enviro, prescrip)
 
     def distill_single_body(self, pattern : PCombo) -> Plate:
         conclusion = self.solver.fresh_type_var() 
@@ -257,6 +270,17 @@ class FunctionAttr(Attr):
 
     def combine_single(self, pattern : PCombo, body : ECombo) -> ECombo:
         return ECombo(Imp(pattern.descrip, body.descrip))
+
+    def distill_cons_pattern(self) -> Plate:
+        return self.distill_single_pattern()
+
+    def distill_cons_body(self, pattern : PCombo) -> Plate:
+        return self.distill_single_body(pattern)
+
+    def distill_cons_tail(self, pattern : PCombo, body : ECombo) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, Inter(Imp(pattern.descrip, body.descrip), prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_cons(self, pattern : PCombo, body : ECombo, tail : ECombo) -> ECombo:
         return ECombo(Inter(Imp(pattern.descrip, body.descrip), tail.descrip))
@@ -300,13 +324,32 @@ class PatternAttr(Attr):
         interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
         return PCombo(m(), descrip)
 
+    def distill_tag_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip)
+
+
     def combine_tag(self, label : str, body : PCombo) -> PCombo:
         return PCombo(body.enviro, TTag(label, body.descrip))
 
 class RecpatAttr(Attr):
 
+    def distill_single_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip) 
+
     def combine_single(self, label : str, body : PCombo) -> PCombo:
         return PCombo(body.enviro, TField(label, body.descrip))
+
+    def distill_cons_body(self, id : str) -> Plate:
+        return self.distill_cons_body(id)
+
+    def distill_cons_tail(self, id : str, body : PCombo) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip) 
 
     def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
         return PCombo(body.enviro + tail.enviro, Inter(TField(label, body.descrip), tail.descrip))
