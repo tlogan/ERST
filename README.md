@@ -6,9 +6,11 @@
 - paper by Nov 16.
 
 ## Implementation 
+- TODO: write remaining parser rules with calls to attribute rules (without analysis/unify details)
 - TODO: determine rationale for calls to unify in distill, combine, or leaf combine steps.
+- TODO: fill in attribute rule implementation 
+- TODO: update collect and guide_choice rules to memo(r)ize
 - TODO: modify unify to return multiple interpretations 
-- TODO: write remaining attribute rules for analysis (without unify details)
 - TODO: write unification with outsourcing to Z3 
 - TODO: write tree listener for printing out indented parse tree 
 - TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver

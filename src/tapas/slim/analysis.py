@@ -113,6 +113,10 @@ class Symbol:
 class Terminal:
     content : str
 
+class Nonterm:
+    id : str 
+    plate : Plate
+
 
 # TODO: the interpretation could map type patterns to types, rather than merely strings
 # -- in order to handle subtyping of relational types
@@ -125,7 +129,7 @@ class Plate:
     enviro : Enviro 
     prescrip : Typ
 
-Guidance = Union[Symbol, Terminal, Plate]
+Guidance = Union[Symbol, Terminal, Nonterm]
 
 plate_default = Plate(m(), m(), Top())
 
@@ -142,6 +146,9 @@ class Solver:
     # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
     # TODO: encode problem into Z3; decode back to Slim. 
     def unify(self, interp : Interp, lower : Typ, upper : Typ) -> Interp:
+        '''
+        TODO
+        '''
         return interp 
 
 class Attr:

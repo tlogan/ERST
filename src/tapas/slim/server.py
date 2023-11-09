@@ -28,16 +28,6 @@ class Done:
 I = Union[Kill, str]
 O = Union[Guidance, AttributeError, Killed, Done]
 
-# @dataclass(frozen=True, eq=True)
-# class SynthAttr: pass 
-SynthAttr = str
-
-@dataclass(frozen=True, eq=True)
-class InherAttr: pass 
-
-# async def mk_task(input : Queue, output : Queue) -> Optional[str]:
-#     return "hello"
-
 async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     none : Any = None
     parser = SlimParser(none)
