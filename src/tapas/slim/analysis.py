@@ -156,6 +156,27 @@ class Attr:
         self.solver = solver
         self.plate = plate 
 
+class PatternAttr(Attr):
+
+    def combine_id(self, id : str) -> PCombo:
+        descrip = self.solver.fresh_type_var()
+        enviro = m().set(id, descrip)
+        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(enviro, descrip)
+
+    def combine_unit(self) -> PCombo:
+        descrip = TUnit()
+        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(m(), descrip)
+
+    def distill_tag_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip)
+
+    def combine_tag(self, label : str, body : PCombo) -> PCombo:
+        return PCombo(body.enviro, TTag(label, body.descrip))
+
 
 class ExprAttr(Attr):
 
@@ -164,6 +185,11 @@ class ExprAttr(Attr):
 
     def combine_unit(self) -> ECombo:
         return ECombo(TUnit())
+
+    def distill_tag_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_tag(self, label : str, body : ECombo) -> ECombo:
         return ECombo(TTag(label, body.descrip))
@@ -229,8 +255,12 @@ class ExprAttr(Attr):
     def distill_let_target(self, id : str) -> Plate:
         return Plate(self.plate.interp, self.plate.enviro, Top())
 
-    def distill_let_body(self, id : str, target : Typ) -> Plate:
+    def distill_let_contin(self, id : str, target : Typ) -> Plate:
         interp = self.plate.interp
+        '''
+        TODO: generalize target
+        - avoid overgeneralizing by not abstracting variables introduced before target
+        '''
         enviro = self.plate.enviro.set(id, target)
         return Plate(interp, enviro, self.plate.prescrip)
 
@@ -318,27 +348,6 @@ class FunctionAttr(Attr):
 
     #####################
 
-class PatternAttr(Attr):
-
-    def combine_id(self, id : str) -> PCombo:
-        descrip = self.solver.fresh_type_var()
-        enviro = m().set(id, descrip)
-        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(enviro, descrip)
-
-    def combine_unit(self) -> PCombo:
-        descrip = TUnit()
-        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(m(), descrip)
-
-    def distill_tag_body(self, id : str) -> Plate:
-        prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip)
-
-
-    def combine_tag(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TTag(label, body.descrip))
 
 class RecpatAttr(Attr):
 

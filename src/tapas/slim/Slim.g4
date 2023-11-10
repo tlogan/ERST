@@ -116,9 +116,10 @@ $combo = self.collect(ExprAttr(self._solver, plate).combine_unit)
 } 
 
 | ':' {
-} ID {
 self.guide_terminal('ID')
-} body = expr[plate] {
+} ID {
+plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body)
+} body = expr[plate_body] {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_tag, $ID.text, $body.combo)
 }
 
@@ -170,22 +171,32 @@ plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idappm
 $combo = self.collect(ExprAttr(self._solver, plate).combine_idappmulti, $ID.text, $argchain.combos) 
 }
 
-// TODO: add type annotation syntax
-// create new rule with choice directed by ':' vs '='      
-////////
 | 'let' {
 self.guide_terminal('ID')
 } ID {
-self.guide_symbol('=')
-} '=' {
-plate_target = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_let_target, $ID.text)
-} target = expr[plate_target] {
+plate_target = self.guide_nonterm('target', ExprAttr(self._solver, plate).distill_let_target, $ID.text)
+} target[plate_target] {
 self.guide_symbol(';')
 } ';' {
-plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_let_body, $ID.text, $target.combo)
-} body = expr[plate_body] {
-$combo = $body.combo
+plate_contin = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_let_contin, $ID.text, $target.combo)
+} contin = expr[plate_contin] {
+$combo = $contin.combo
 }
+
+
+// | 'let' {
+// self.guide_terminal('ID')
+// } ID {
+// self.guide_symbol('=')
+// } '=' {
+// plate_target = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_let_target, $ID.text)
+// } target = expr[plate_target] {
+// self.guide_symbol(';')
+// } ';' {
+// plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_let_body, $ID.text, $target.combo)
+// } body = expr[plate_body] {
+// $combo = $body.combo
+// }
 
 
 | 'fix' {
@@ -197,6 +208,28 @@ self.guide_symbol(')')
 } ')' {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_fix, $body.combo)
 }
+
+;
+
+target [Plate plate] returns [ECombo combo]:
+
+| '=' {
+plate_expr = self.guide_nonterm('expr', lambda: plate)
+} expr[plate_expr] {
+$combo = $expr.combo
+}
+
+// TODO: add annotation case and type parsing
+// | ':' {
+// # TODO
+// plate_anno = self.guide_nonterm('expr', TargetAttr(self._solver, plate).distill_target_anno)
+// } anno = typ[plate] {
+// } '=' {
+// # TODO
+// plate_body = self.guide_nonterm('expr', TargetAttr(self._solver, plate).distill_target_body, $anno.combo)
+// } body = expr[plate_body] {
+// $combo = $body.combo
+// }
 
 ;
 

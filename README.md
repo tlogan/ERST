@@ -6,7 +6,6 @@
 - paper by Nov 16.
 
 ## Implementation 
-- TODO: write remaining parser rules with calls to attribute rules (without analysis/unify details)
 - TODO: determine rationale for calls to unify in distill, combine, or leaf combine steps.
 - TODO: fill in attribute rule implementation 
 - TODO: update collect and guide_choice rules to memo(r)ize
