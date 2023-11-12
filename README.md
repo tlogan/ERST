@@ -61,6 +61,13 @@
         - propositions are relegated to the semantics of typing and subtyping 
         - the inhabitation of types/predicates may be viewed as existential propositions 
         - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
+        - the relational types of various parts of an untyped program can be expressed as 
+            - a single algebraic datatype representing all possible tag/record constructions 
+            - and various predicates/relations defined by horn clauses over the massive algebraic data type
+        - a record type could be encoded as an uninterpreted function over their payload
+            - e.g. maybe `x : {m1 : T1, m2 : T2}` could become `m1(x) : T1, m2(x) : T2 ==> x : P`
+        - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
+
     - propagation of types
         - checking and guiding via propagation 
         - checking/solving via horn-clause solver when subtyping at leaves
