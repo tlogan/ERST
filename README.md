@@ -55,6 +55,12 @@
     - relational types
         - extrinsic types 
         - unifies/decides/solves subtyping without base types refined by qualifiers
+        - second order qualifiers allow natural expression of relational co-induction
+        - types behave like predicates rather than general propositions
+        - lack of sorts prevents general propositions at type level 
+        - propositions are relegated to the semantics of typing and subtyping 
+        - the inhabitation of types/predicates may be viewed as existential propositions 
+        - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
     - propagation of types
         - checking and guiding via propagation 
         - checking/solving via horn-clause solver when subtyping at leaves
