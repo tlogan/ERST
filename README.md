@@ -25,11 +25,9 @@
 
 
 ## Story
-- Conjecture: bidirectional typing is related to finding an interpolant
-    - the interpolant is a learned upper bound on program term
+- Conjecture: bidirectional typing is related to finding an interpolant via the duality algorithm
+    - the program represents an instance/derivation tree and its type under the interpretation constructed by bidirectional typing represents the interpolation   
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
-    - TODO: finding a more general interpolant `I` only seems necessary if `e` is simply one possible instance, rather the the only instance of `T`.
-
 
 ### Title
 - Guiding safe generation of untyped programs   
@@ -48,7 +46,13 @@
     - spuriousness/incorrectness on an I/O example is a sufficient condition for negating the concrete specification
         - the sufficient condition refines the abstract specification, making verification harder
 
-- interpolation is simply used to find a generalizable refinement from some instance
+- interpolation is the construction of an interpretation and a valid formula from an instance/derivation constrained by a specification      
+    - interpolation is simply used to find a generalizable refinement from some instance
+    - e.g. `P_instance <: P_interp <: P_spec`
+
+- predicate abstraction requires a universe of predicates for constructing the interpolation
+
+- duality does not require a universe of predicates and relies on union/disjunction to construct interpolation
 
 
 ### Gap
