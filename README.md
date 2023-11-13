@@ -30,6 +30,11 @@
     - construction of types with unions or intersections represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
+    - horn clauses map to relational subtyping
+        - e.g. `P(y, y') /\ z = y' + 1 => P(y,z)`
+        - into `(y, y') : P /\ (z, y' + 1) : Eq => (y,z) : P`
+        - into `{Y * Z with (Y * Y') <: P, (Z * Y' + 1) <: Eq} <: P`
+        - into `{Y * Z with (Y * Y') <: P, (Z * (:succ? Y')) <: Eq} <: P`
 
 ### Title
 - Guiding safe generation of untyped programs   
