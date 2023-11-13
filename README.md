@@ -1,40 +1,25 @@
 # Lightweight Tapas
 
 
-## Roadmap 
-- implementation by Nov 1.  
-- paper by Nov 16.
+### TODO
+- read about and understand duality interpolation for horn clauses
+- write first draft of paper for ICFP  
+- determine rationale for calls to unify in distill, combine, or leaf combine steps.
+- fill in attribute rule implementation 
+- update collect and guide_choice rules to memo(r)ize
+- modify unify to return multiple interpretations 
+- write unification with outsourcing to Z3 
+- write tree listener for printing out indented parse tree 
+- instead of using custom solver, translate leaf subtyping into horn clauses for external solver
+- use renaming lazily (just for equality modulo alpha renaming)
 
-## Implementation 
-- TODO: determine rationale for calls to unify in distill, combine, or leaf combine steps.
-- TODO: fill in attribute rule implementation 
-- TODO: update collect and guide_choice rules to memo(r)ize
-- TODO: modify unify to return multiple interpretations 
-- TODO: write unification with outsourcing to Z3 
-- TODO: write tree listener for printing out indented parse tree 
-- TODO: instead of using custom solver, translate leaf subtyping into horn clauses for external solver
-- TODO: use renaming lazily (just for equality modulo alpha renaming)
-------
-- NOTE: update guidance before each part of a sequence
-- NOTE: update overflow after each guidance update 
-- NOTE: update result after entire sequence
-- NOTE: after each call to server, server responds with some guidance, completion status, or acknowledgment of killing.   
-- NOTE: inherit attributes via guide and distill methods
-- NOTE: synthesize attributes via collect and combine methods
-
-
-
-## Story
-- Conjecture: bidirectional typing with unions and intersection is related to finding an interpolant via the duality algorithm
-    - the program represents an instance/derivation tree and its type under the interpretation constructed by bidirectional typing represents the interpolation   
-    - construction of types with unions or intersections represents construction of an interpolant 
-    - updating the interpretation propagates the interpolant to higher levels 
-    - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
-    - horn clauses map to relational subtyping
-        - e.g. `P(y, y') /\ z = y' + 1 => P(y,z)`
-        - into `(y, y') : P /\ (z, y' + 1) : Eq => (y,z) : P`
-        - into `{Y * Z with (Y * Y') <: P, (Z * Y' + 1) <: Eq} <: P`
-        - into `{Y * Z with (Y * Y') <: P, (Z * (:succ? Y')) <: Eq} <: P`
+### Implementation 
+- update guidance before each part of a sequence
+- update overflow after each guidance update 
+- update result after entire sequence
+- after each call to server, server responds with some guidance, completion status, or acknowledgment of killing.   
+- inherit attributes via guide and distill methods
+- synthesize attributes via collect and combine methods
 
 ### Title
 - Guiding safe generation of untyped programs   
@@ -43,6 +28,13 @@
 ### Context
 - Generation of programs one token at a time from left to right
 - Generation can be parameterized by analysis of previous results 
+
+- inductive invariant for expressions is a property that holds for every possible expression that can be constructed according to a recursion 
+
+- Constraints are symbolic representations of interpretations
+
+- Predicates are symbolic representations of sets of expressions
+
 - CEGAR abstracts the model and iteratively refines it  
     - makes the problem hard and iteratively makes it easier
     - refutation of a counter-example is a necessary condition of the concrete model 
@@ -67,41 +59,59 @@
 ### Gap
 - Pure statical-learning methods (LLMs) generate unsafe programs
 - Symbolic generation methods (Synquid) are limited to intrinsically typed languages 
+- Left-to-right guidance (Neural Program Generation Modulo Static Analysis) is limited to heavily annotated programming languages
 - CHC solving methods cannot provide inference to guide program completion 
 
 ### Innovation 
-- Type inference for programs with the following combination of features: 
-    - streaming/partial programs 
-        - analysis on recursive-decent parse-tree 
-        - analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
-        - adds layer of complexity that's not apparent in a normalized AST
-    - relational types
-        - extrinsic types 
-        - unifies/decides/solves subtyping without base types refined by qualifiers
-        - second order qualifiers allow natural expression of relational co-induction
-        - lack of sorts prevents general propositions over proofs
-        - the inhabitation of types/predicates may be viewed as existential propositions 
-        - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
-        - the relational types of various parts of an untyped program can be expressed as 
-            - a single algebraic datatype representing all possible tag/record constructions 
-            - and various predicates/relations defined by horn clauses over the massive algebraic data type
-        - a record type could be encoded as an uninterpreted function over their payload
-            - e.g. maybe `x : {m1 : T1, m2 : T2}` could become `m1(x) : T1, m2(x) : T2 ==> x : P`
-        - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
+- Guidance of program synthesis from context a la duality interpolation 
+    - generalizes the Synquid's notion of synthesis via predicate abstraction to synthesis via duality
+    - generalizes left-to-right guidance to extrinsically typed and unannotated expression languages 
+- Connection of bidirectional typing with unions and intersection to interpolation via the duality algorithm
+    - the program represents an instance/derivation tree and its type under the interpretation constructed by bidirectional typing represents the interpolation   
+    - construction of types with unions or intersections represents construction of an interpolant 
+    - updating the interpretation propagates the interpolant to higher levels 
+    - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
+- Duality analysis on streaming/partial programs 
+    - duality analysis on recursive-decent parse-tree 
+    - duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
+    - adds layer of complexity that's not apparent in a normalized AST
+- Relational types
+    - extrinsic types 
+    - unifies/decides/solves subtyping without base types refined by qualifiers
+    - second order qualifiers allow natural expression of relational co-induction
+    - lack of sorts prevents general propositions over proofs
+    - the inhabitation of types/predicates may be viewed as existential propositions 
+    - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
+    - the relational types of various parts of an untyped program can be expressed as 
+        - a single algebraic datatype representing all possible tag/record constructions 
+        - and various predicates/relations defined by horn clauses over the massive algebraic data type
+    - a record type could be encoded as an uninterpreted function over their payload
+        - e.g. maybe `x : {m1 : T1, m2 : T2}` could become `m1(x) : T1, m2(x) : T2 ==> x : P`
+    - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
 
-    - propagation of types
-        - checking and guiding via propagation 
-        - checking/solving via horn-clause solver when subtyping at leaves
-        - type inference of application of cases without a specified upper bound:
-            ```
-            P <: A | C 
-            Q <: {B with A <: P} | {D with C <: P}
-            ---------------------------------------
-            (A -> B) & (C -> D) <: (P -> Q)
-            ```
-            - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
-    - upper bound guidance for completion of program
-    - context for completion of program 
+    - typing/subtyping behave like constraints, which are symbolic representations of sets of interpretations
+
+    - types behave like predicates, which are symbolic representations of sets of expressions
+
+    - horn clauses map to relational subtyping
+        - e.g. `P(y, y') /\ z = y' + 1 => P(y,z)`
+        - into `(y, y') : P /\ (z, y' + 1) : Eq => (y,z) : P`
+        - into `{Y * Z with (Y * Y') <: P, (Z * Y' + 1) <: Eq} <: P`
+        - into `{Y * Z with (Y * Y') <: P, (Z * (:succ? Y')) <: Eq} <: P`
+    - TODO: what's the advantage of relational subtyping over horn clauses?
+        - provides a more compact representation for annotating programs
+
+- Propagation of types
+    - checking and guiding via propagation 
+    - checking/solving via horn-clause solver when subtyping at leaves
+    - type inference of application of cases without a specified upper bound:
+        ```
+        P <: A | C 
+        Q <: {B with A <: P} | {D with C <: P}
+        ---------------------------------------
+        (A -> B) & (C -> D) <: (P -> Q)
+        ```
+        - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
 
 ### Future work
 - use statistical learning to find necessary types 
