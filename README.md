@@ -25,8 +25,10 @@
 
 
 ## Story
-- Conjecture: bidirectional typing is related to finding an interpolant via the duality algorithm
+- Conjecture: bidirectional typing with unions and intersection is related to finding an interpolant via the duality algorithm
     - the program represents an instance/derivation tree and its type under the interpretation constructed by bidirectional typing represents the interpolation   
+    - construction of types with unions or intersections represents construction of an interpolant 
+    - updating the interpretation propagates the interpolant to higher levels 
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
 
 ### Title
@@ -49,6 +51,8 @@
 - interpolation is the construction of an interpretation and a valid formula from an instance/derivation constrained by a specification      
     - interpolation is simply used to find a generalizable refinement from some instance
     - e.g. `P_instance <: P_interp <: P_spec`
+    - construction of formulas with disjunction and conjunction represents construction of an interpolant 
+    - updating the interpretation propagates the interpolant to higher levels 
 
 - predicate abstraction requires a universe of predicates for constructing the interpolation
 
