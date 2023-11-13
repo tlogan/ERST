@@ -25,21 +25,31 @@
 
 
 ## Story
-- Conjecture: finding necessary intersections during type checking corresponds to craig interpolation extracting a generalization from a proof
-    - Floor <: Interpo <: Ceil
-    - failed subtyping causes construction of intersections of necessary conditions
-        - corresponding to the construction of proof of spuriousness
-    - the program being type checked behaves as the proof being traversed by craig interpolation.
-    - the necessary intersections correspond to the interpolation 
-    - the initial condition or floor correspond to the inherent properties of the program or annotations on its variables
-    - in other words, the floor is raised via bottom-up type inference and the ceiling is lowered via top-down inference
+- Conjecture: bidirectional typing is related to finding an interpolant
+    - the interpolant is a learned upper bound on program term
+    - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
+    - TODO: finding a more general interpolant `I` only seems necessary if `e` is simply one possible instance, rather the the only instance of `T`.
+
 
 ### Title
 - Guiding safe generation of untyped programs   
 
+
 ### Context
 - Generation of programs one token at a time from left to right
 - Generation can be parameterized by analysis of previous results 
+- CEGAR abstracts the model and iteratively refines it  
+    - makes the problem hard and iteratively makes it easier
+    - refutation of a counter-example is a necessary condition of the concrete model 
+        - the necessary condition refines the abstract model, making verification easier
+
+- SYNGAR abstracts the specification and iteratively refines it
+    - makes the problem easy and iteratively makes it harder 
+    - spuriousness/incorrectness on an I/O example is a sufficient condition for negating the concrete specification
+        - the sufficient condition refines the abstract specification, making verification harder
+
+- interpolation is simply used to find a generalizable refinement from some instance
+
 
 ### Gap
 - Pure statical-learning methods (LLMs) generate unsafe programs
@@ -56,9 +66,7 @@
         - extrinsic types 
         - unifies/decides/solves subtyping without base types refined by qualifiers
         - second order qualifiers allow natural expression of relational co-induction
-        - types behave like predicates rather than general propositions
-        - lack of sorts prevents general propositions at type level 
-        - propositions are relegated to the semantics of typing and subtyping 
+        - lack of sorts prevents general propositions over proofs
         - the inhabitation of types/predicates may be viewed as existential propositions 
         - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
         - the relational types of various parts of an untyped program can be expressed as 
@@ -82,6 +90,12 @@
     - upper bound guidance for completion of program
     - context for completion of program 
 
+### Future work
+- use statistical learning to find necessary types 
+    - verify that the found type is actually necessary (of the concrete model): i.e. `T_model <: T_nc`, `T_nc <: T_spec`
+    - (analogous to finding and verifying refutation of a counter-example in CEGAR)
+- use statistical learning to find interpolants, e.g. `T_nc <: T_i <: T_spec` 
+- extend language to handle mutable references in synthesis from context
 
 
 ### Hypothesis
