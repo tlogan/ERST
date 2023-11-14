@@ -48,6 +48,13 @@
 - interpolation is the construction of an interpretation and a valid formula from an instance/derivation constrained by a specification      
     - interpolation is simply used to find a generalizable refinement from some instance
     - e.g. `P_instance <: P_interp <: P_spec`
+    - an interpolant's upper and lower bounds are based on the constraints and interpolants above and below it 
+    - for a node in a tree, the interpolant's:
+        - lower bound is the local constraint and the child interpolants
+            - e.g. `C(n) /\ I(n_m_1) ... /\ I(n_m_n) ==> I(n)`
+        - upper bound is the above level's interpolant minus the above level's local constraints and the sibling interpolants  
+            - e.g. `I(n) = I(n+1_m_i)`, `C(n+1) /\ I(n+1_m_1) ... /\ I(n+1_m_n) ==> I(n+1)`
+            - into `I(n) ==> I(n+1) \ C(n+1) \ I(n+1_m_1) ... \ I(n+1_m_i-1) \ I(n+1_m_i+1) ... \ I(n+1_m_n)`
     - construction of formulas with disjunction and conjunction represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
 
@@ -64,16 +71,17 @@
 
 ### Innovation 
 - Guidance of program synthesis from context a la duality interpolation 
-    - generalizes the Synquid's notion of synthesis via predicate abstraction to synthesis via duality
-    - generalizes left-to-right guidance to extrinsically typed and unannotated expression languages 
+    - related to NSG in left-to-right guidance, but for extrinsically typed and unannotated expression languages 
+    - related to Synquid in bidirectional typing and expressive relations, but with duality-based unification rather tha predicate abstraction
+    - no pre-defined universe of predicates or logical qualifiers or types to choose from for abstracting
 - Connection of bidirectional typing with unions and intersection to interpolation via the duality algorithm
     - the program represents an instance/derivation tree and its type under the interpretation constructed by bidirectional typing represents the interpolation   
     - construction of types with unions or intersections represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
-- Duality analysis on streaming/partial programs 
-    - duality analysis on recursive-decent parse-tree 
-    - duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
+- Bidirectional/Duality analysis on streaming/partial programs 
+    - bidirectional/duality analysis on recursive-decent parse-tree 
+    - bidirectional/duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
     - adds layer of complexity that's not apparent in a normalized AST
 - Relational types
     - extrinsic types 
