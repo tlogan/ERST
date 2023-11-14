@@ -53,14 +53,15 @@
         - lower bound is the local constraint and the child interpolants
             - e.g. `C(n) /\ I(n_m_1) ... /\ I(n_m_n) ==> I(n)`
         - upper bound is the above level's interpolant minus the above level's local constraints and the sibling interpolants  
-            - e.g. `I(n) = I(n+1_m_i)`, `C(n+1) /\ I(n+1_m_1) ... /\ I(n+1_m_n) ==> I(n+1)`
-            - into `I(n) ==> I(n+1) \ C(n+1) \ I(n+1_m_1) ... \ I(n+1_m_i-1) \ I(n+1_m_i+1) ... \ I(n+1_m_n)`
+            - e.g. `I(n) = I(o_m_i)`, `C(o) /\ I(o_m_1) ... /\ I(o_m_n) ==> I(o)`
+            - into `I(n) ==> I(o) \ C(o) \ I(o_m_1) ... \ I(o_m_i-1) \ I(o_m_i+1) ... \ I(o_m_n)`
     - construction of formulas with disjunction and conjunction represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
 
-- predicate abstraction requires a universe of predicates for constructing the interpolation
-
-- duality does not require a universe of predicates and relies on union/disjunction to construct interpolation
+- duality interpolation
+    - finding a derivation tree for cyclic (i.e. inductive) constraints corresponds to unwinding cyclic constraints into DAG-like constraints.
+    - in other words, a DAG-like problem has exactly one derivation tree (per query)
+    - keeps track of interpolant for each node, and conjuctive merges at the end
 
 
 ### Gap
@@ -79,6 +80,11 @@
     - construction of types with unions or intersections represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
+- simple subtyping is handled by unification at program and type language levels
+- relational subtyping is handled by horn clause solving
+    - unwinds and creates fresh predicates 
+    - unrolling an inductive type corresponds to unwinding cyclic constraints into DAG-like constraints
+    - solve by one or more iterations of unwinding, interpolating, and accumulating an inductive subset  
 - Bidirectional/Duality analysis on streaming/partial programs 
     - bidirectional/duality analysis on recursive-decent parse-tree 
     - bidirectional/duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
@@ -96,6 +102,9 @@
     - a record type could be encoded as an uninterpreted function over their payload
         - e.g. maybe `x : {m1 : T1, m2 : T2}` could become `m1(x) : T1, m2(x) : T2 ==> x : P`
     - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
+
+
+    - could use intersection on the fly in order to guide synthesis rather than conjuctive merging at the end
 
     - typing/subtyping behave like constraints, which are symbolic representations of sets of interpretations
 
