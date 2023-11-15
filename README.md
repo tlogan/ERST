@@ -64,7 +64,12 @@
     - keeps track of interpolant for each node, and conjuctive merges at the end
     - solve by one or more iterations of unwinding, interpolating, and refining the inductive subset  
     - the inductive subset is a subset of the solution for the unwinding that constitutes a sufficient solution for the original problem
-    - A solution the unwinding may not always contain a solution to the original problem, since the unwinding may not capture some inductive aspects
+    - an inductive subset is the uncovered subset of the solution
+    - a covered predicate is one that depends on a covered predicate or that is covered predicate or is weaker than a predicate created before it 
+        - this is sufficient because covered predicates should have no effect since all (transitively) imply a single query predicate.  
+    - a forced covering is (partially defined as) a covering between two instances of a predicate 
+    - TODO: does covering make sense for predicates that are not unioned? 
+    - A solution to the unwinding may not always contain a solution to the original problem, since the unwinding may not capture some inductive aspects
     - if there is no solution to the original problem, then the non-solution points to where the next unwinding should occur. 
     - the predicate P_i for a particular unwinding is the intersection of the I(n) where hd(n) = P_i for all n 
     - the predicate P for a particular unwinding is the union of P_i for all i
