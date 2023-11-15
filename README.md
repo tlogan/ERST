@@ -62,6 +62,15 @@
     - finding a derivation tree for cyclic (i.e. inductive) constraints corresponds to unwinding cyclic constraints into DAG-like constraints.
     - in other words, a DAG-like problem has exactly one derivation tree (per query)
     - keeps track of interpolant for each node, and conjuctive merges at the end
+    - solve by one or more iterations of unwinding, interpolating, and refining the inductive subset  
+    - the inductive subset is a subset of the solution for the unwinding that constitutes a sufficient solution for the original problem
+    - A solution the unwinding may not always contain a solution to the original problem, since the unwinding may not capture some inductive aspects
+    - if there is no solution to the original problem, then the non-solution points to where the next unwinding should occur. 
+    - the predicate P_i for a particular unwinding is the intersection of the I(n) where hd(n) = P_i for all n 
+    - the predicate P for a particular unwinding is the union of P_i for all i
+    - interpolation is used when unwinding adds the query to the set of constraints
+    - solving terminates with failure when no derivation of query is found 
+    - solving terminates with solution when inductive subset found 
 
 
 ### Gap
@@ -80,11 +89,12 @@
     - construction of types with unions or intersections represents construction of an interpolant 
     - updating the interpretation propagates the interpolant to higher levels 
     - e.g. for `foo(e)`, `foo : A -> B`, `e : T`, the interpolant is `I` where `T <: I <: A`
+    - intersection from T <: spec corresponds to P_i as intersection of I(n) across nodes in derivation to bidirectional typing's intersection
+    - union from model <: T corresponds to P as union of P_i across i to bidirectional typing's union
 - simple subtyping is handled by unification at program and type language levels
 - relational subtyping is handled by horn clause solving
     - unwinds and creates fresh predicates 
     - unrolling an inductive type corresponds to unwinding cyclic constraints into DAG-like constraints
-    - solve by one or more iterations of unwinding, interpolating, and accumulating an inductive subset  
 - Bidirectional/Duality analysis on streaming/partial programs 
     - bidirectional/duality analysis on recursive-decent parse-tree 
     - bidirectional/duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
