@@ -67,46 +67,107 @@
 \section{Introduction}
 
 \subsection{Context}
-\TODO{blah blah blah}
-- attribute grammars/rules
-- bidirectional typing
-- horn clauses 
-- predicate abstraction 
+Ensuring the correctness of programs is a persistent challenge that has been 
+mitigated by formal specifications and automated reasoning tools. 
+
+Much research has been devoted to automatically verifying the correctness of programs with simple types.
+One of the main tricks for handling the challenge of correctness has been
+to design languages to make verifying correctness easier. Languages, such as Java and ML, 
+are \textit{intrinsically typed}, 
+requiring nearly all terms to be associated with some type specified by the user. 
+The clever design of ML allows annotations to be fairly sparse by 
+having types specified at constructor definitions and relying on type inference elsewhere.
+
+Despite the advantages of intrinsically typed languages,
+untyped or \textit{extrinsically typed} languages, 
+such as Javascript/Typescript and Python, have surged in popularity. 
+Untyped languages place less initial burden on the programmer to define the upper bounds  
+of various parts of their program and allow reusing code in more flexible ways. 
+
+The more expressive the static properties the better the stronger the notion of correctness. 
+Simple types found in ML or Java cannot express relations between values.
+To this end, researchers have extended the simple types found in Java and ML into 
+\textit{refinement types}, \textit{predicate subtyping}, and \textit{dependent types}. 
+Correctness of a program can also be lifted into a purely logical form, such as \textit{horn clauses}. 
+
+Refinement types offer greater precision than simple types, but still rely on intrinsic type specifications.
+Dependent types can express detailed relations, but may require users to provide proofs along with detailed annotations.
+Predicate subtyping offers some of the expressivity of dependent types, but with the automatic subtyping of refinement types.
+All of these techniques are based on intrinsic typing and therefore require users to provide additional specifications 
+beyond the runtime behavior of their programs.
+
+
+Another challenge is guiding the construction of correct programs.
+Subparts of a program can be guided locally with \textit{bidirectional typing}, which decomposes 
+types and propagates expected types down the syntax tree to guide local subparts of the program. 
+Another issue in incomplete programs are the scenarios where the abstract syntax tree cannot be built, 
+do to an incomplete expression represented concretely. In such a case, the analysis can be combined with
+a top-down parser, forming an \textit{attribute grammar}. 
+
 
 \subsection{Gap}
-\TODO{blah blah blah}
+To the best of our knowledge, the problem of guiding the completion of incomplete and untyped programs with relational information  
+has not yet been tackled. The 
+
+\textit{NSG} \cite{} offers a technique for guiding program completion by extracting information 
+from incomplete Java programs to guide the next portion. The analysis for extracting
+information was implemented in the form \textit{attribute rules} mixed in with parsing rules
+to form an \textit{attribute grammar}. However, the information extracted is quite 
+simple and directly available in the syntax of programs due to the intrinsic typing and required
+type annotations of Java. There is no guidance based on relations. 
+
+Synquid \cite{} tackles the problem of synthesis from a formal specification, rather than completion from the left. 
+Since Synquid can construct its program from scratch, its analysis works directly on an AST and it can avoid
+using a complex attribute grammar.
+
+Synquid's guidance can express relations but it requires an intrinsically typed language with 
+an universe of logical qualifiers provided, which it leverages to perform a combination of 
+\textit{Hindley-Milner type inference} and \textit{predicate abstraction}.
+ 
 
 \subsection{Innovation}
-This work introduces a technique for guiding the completion of untyped programs
-by inferring the expectation of next part of the program from the
-portion completed thus far. The expectation may represent the next terminal, symbol, or 
-nonterminal necessary to construct a correct program. If the expectation is an expression 
+This work introduces the first technique for guiding the completion of untyped programs with relational information. 
+
+It is novel in inferring relations without intrinsically typed or provided universes of relational qualifiers 
+in conjunction with performing such an analysis during top-down parsing.
+
+The guidance produces a description of the expectation of the next part of the program.
+The expectation may represent a terminal, a symbol, or 
+a nonterminal necessary to construct a correct program. If the expectation is an expression 
 nonterminal, then an expected type is also generated. The expected type represents an upper bound
 on the value of the next portion to be constructed. The types are expressive enough to represent relations 
 between values rather than merely the shape of values. Thus, a \textit{relational type} can be viewed 
 as a structured representation of a predicate defined by horn clauses. 
 
-This work offers the first technique for inferring relations from incomplete untyped programs. 
-The the object under analysis is a incomplete program constructed by a human or a human-like agent in concrete syntax. Thus, 
-the analysis must be able to operate without a abstract syntax tree. Instead, we implement the analysis 
-as \textit{attribute rules}, interwoven with top-down parsing rules to the form an \textit{attribute grammar}. 
-Due to the left-recursion problem in top-down parsing, the parser consolidates information in right-associative manner.
-Thus, one difference of analysis in a top-down parsing stack vs an recursion over an AST is re-associating program information 
-to the left on the fly. One example of this would be the association of a chain of record selections, e.g.  
+The the object under analysis is a incomplete program constructed by a human or a human-like agent in concrete syntax. 
+Thus, the analysis must be able to operate without a abstract syntax tree. Instead, we implement the analysis 
+as \textit{attribute rules}, interwoven with top-down parsing rules to form an \textit{attribute grammar}. 
+
+Using attribute rules during parsing adds many complications that would not be present for an
+analysis over an AST. 
+The analysis must be separated rules for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
+Additionally, due to the left-recursion problem in top-down parsing, 
+the parser consolidates information in a right-associative manner.
+Thus, one difference of the analysis over a top-down parsing stack compare to recursion over an AST is 
+the re-associating of program information from right to the left on the fly. 
+One example of this would be the association of a chain of record selections, e.g.  
 \[ 
 x.uno.dos.tres 
 \]
+
+\noindent is parsed as
 
 \[ 
 x(.uno(.dos(.tres)))
 \]
 
+\noindent but represents the expression 
+
 \[ 
 ((x.uno).dos).tres
 \]
 
-The automatic analysis of incomplete programs generating expected relations during top-down parsing is novel. 
-Our technique leverages bidirectional typing along with intersection and union types. Union types are necessary in
+Our technique leverages bidirectional typing along with intersection and union types. Union types are necessary due to
 the absence of intrinsic types or a specified universe of logical qualifiers/predicates to choose from. 
 Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \text{duality} method
 of solving horn clauses.
@@ -121,48 +182,18 @@ reasoning techniques are necessary, and the problem is lifted to subtyping. To h
 relations, our technique encodes relational types into horn clauses and leverages the capabilities of established solvers.
 
 
-
-
-
-
-\TODO{blah blah blah}
-
-\TODO{more detail on innovation but still at a high level}
-
-
-
 \section{Overview}
 
 \TODO{blah blah blah}
 
 
 \section{Language}
-The programming language is pure and functional. Its syntax and dynamic semantics 
+The language consists of pure expressions and optional type annotations. 
+Its syntax and dynamic semantics 
 are fairly standard. The main departure from tradition is that its function
 and application rules subsume pattern matching. This departure enables a more direct  
 correspondence between the structures of programs and their types, but it is 
 not a necessary condition.
-The syntax is given in \FIG{fig:syntax}.
-It includes functions with pattern matching, records, a fixed point combinator, let binding, 
-tags for discriminating cases, and application.
-A function consists of a sequence of paths, where each path maps a pattern to an expression.
-A record consists of a sequence of fields, where each field maps a unique label to an expression. 
-The type language includes tag types, field types, implications, unions, intersections, 
-inductions, existentials, universals, top, and bottom. 
-The existential type consists of multiple bound variables, a payload containing the bound variables, 
-and a subtyping constraint over the bound variables. 
-If the bound variables aren't indicated, then all variables in the payload are
-assumed to be bound variables. If the subtyping constraint isn't indicated, then it is assumed to 
-be a tautology, such as (\code{unit<:unit}).
-The universal type consists of a bound variable, the variable's upper bound, and a payload. If the upper
-bound is not indicated, it is assumed to be the top type (\code{top}).
-The typing semantics rely on a typing environment for keeping track of typings of term variables.
-The subtyping semantics rely on subtyping environment for keeping track of and constraints on type variables. 
-Note that the syntax of the subtyping environment allows an upper bound constraint over a type
-rather than merely a type variable to allow for relational constraints. 
-
-
-\TODO{update tag syntax: \code{cons;cons;e:cons//cons//T}\ \ \code{nil;():nil//unit}}
 
 \subsection{Types}
 
