@@ -67,9 +67,6 @@
 \section{Introduction}
 
 \subsection{Context}
-Ensuring the correctness of programs is a persistent challenge that has been 
-mitigated by formal specifications and automated reasoning tools. 
-
 Much research has been devoted to automatically verifying the correctness of programs with simple types.
 One of the main tricks for handling the challenge of correctness has been
 to design languages to make verifying correctness easier. Languages, such as Java and ML, 
@@ -84,7 +81,7 @@ such as Javascript/Typescript and Python, have surged in popularity.
 Untyped languages place less initial burden on the programmer to define the upper bounds  
 of various parts of their program and allow reusing code in more flexible ways. 
 
-The more expressive the static properties the better the stronger the notion of correctness. 
+The more expressive the static properties the stronger the notion of correctness. 
 Simple types found in ML or Java cannot express relations between values.
 To this end, researchers have extended the simple types found in Java and ML into 
 \textit{refinement types}, \textit{predicate subtyping}, and \textit{dependent types}. 
@@ -99,58 +96,57 @@ beyond the runtime behavior of their programs.
 
 Another challenge is guiding the construction of correct programs.
 Subparts of a program can be guided locally with \textit{bidirectional typing}, which decomposes 
-types and propagates expected types down the syntax tree to guide local subparts of the program. 
+types and propagates expected types down the syntax tree to guide subparts of the program. 
 Another issue in incomplete programs are the scenarios where the abstract syntax tree cannot be built, 
-do to an incomplete expression represented concretely. In such a case, the analysis can be combined with
+due to an incomplete expression represented concretely. In such a case, the analysis can be combined with
 a top-down parser, forming an \textit{attribute grammar}. 
 
 
 \subsection{Gap}
 To the best of our knowledge, the problem of guiding the completion of incomplete and untyped programs with relational information  
-has not yet been tackled. The 
+has not yet been tackled.
 
 \textit{NSG} \cite{} offers a technique for guiding program completion by extracting information 
 from incomplete Java programs to guide the next portion. The analysis for extracting
-information was implemented in the form \textit{attribute rules} mixed in with parsing rules
+information takes the form of \textit{attribute rules} mixed in with parsing rules
 to form an \textit{attribute grammar}. However, the information extracted is quite 
 simple and directly available in the syntax of programs due to the intrinsic typing and required
 type annotations of Java. There is no guidance based on relations. 
 
-Synquid \cite{} tackles the problem of synthesis from a formal specification, rather than completion from the left. 
+\textit{Synquid} \cite{} tackles the problem of synthesis from a formal specification, rather than completion from the left. 
 Since Synquid can construct its program from scratch, its analysis works directly on an AST and it can avoid
 using a complex attribute grammar.
 
 Synquid's guidance can express relations but it requires an intrinsically typed language with 
-an universe of logical qualifiers provided, which it leverages to perform a combination of 
+a universe of logical qualifiers provided, which it leverages to perform a combination of 
 \textit{Hindley-Milner type inference} and \textit{predicate abstraction}.
  
 
 \subsection{Innovation}
 This work introduces the first technique for guiding the completion of untyped programs with relational information. 
-
-It is novel in inferring relations without intrinsically typed or provided universes of relational qualifiers 
+It is novel in inferring relations without intrinsic types or declared universes of relational qualifiers 
 in conjunction with performing such an analysis during top-down parsing.
 
-The guidance produces a description of the expectation of the next part of the program.
+The analysis produces a description of the expectation for the next part of the program.
 The expectation may represent a terminal, a symbol, or 
 a nonterminal necessary to construct a correct program. If the expectation is an expression 
 nonterminal, then an expected type is also generated. The expected type represents an upper bound
-on the value of the next portion to be constructed. The types are expressive enough to represent relations 
+on the possible values of the next portion to be constructed. The types are expressive enough to represent relations 
 between values rather than merely the shape of values. Thus, a \textit{relational type} can be viewed 
 as a structured representation of a predicate defined by horn clauses. 
 
-The the object under analysis is a incomplete program constructed by a human or a human-like agent in concrete syntax. 
-Thus, the analysis must be able to operate without a abstract syntax tree. Instead, we implement the analysis 
+The object under analysis is a incomplete program in concrete syntax constructed by a human or a human-like agent. 
+Thus, the analysis must be able to operate without an abstract syntax tree. Instead, we implement the analysis 
 as \textit{attribute rules}, interwoven with top-down parsing rules to form an \textit{attribute grammar}. 
 
 Using attribute rules during parsing adds many complications that would not be present for an
 analysis over an AST. 
-The analysis must be separated rules for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
+The analysis must be separate for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
 Additionally, due to the left-recursion problem in top-down parsing, 
 the parser consolidates information in a right-associative manner.
-Thus, one difference of the analysis over a top-down parsing stack compare to recursion over an AST is 
+Thus, one difference of an analysis over a top-down parsing stack as opposed to recursion over an AST is 
 the re-associating of program information from right to the left on the fly. 
-One example of this would be the association of a chain of record selections, e.g.  
+Consider a chain of record selections:  
 \[ 
 x.uno.dos.tres 
 \]
@@ -169,7 +165,7 @@ x(.uno(.dos(.tres)))
 
 Our technique leverages bidirectional typing along with intersection and union types. Union types are necessary due to
 the absence of intrinsic types or a specified universe of logical qualifiers/predicates to choose from. 
-Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \text{duality} method
+Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \textit{duality} method
 of solving horn clauses.
 
 We have designed a structured language of types in order to express relations and shapes succinctly.
