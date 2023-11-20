@@ -2,10 +2,7 @@
 
 
 ### TODO
-- read about and understand duality interpolation for horn clauses
-- write first draft of paper for ICFP  
-- determine rationale for calls to unify in distill, combine, or leaf combine steps.
-- fill in attribute rule implementation 
+- develop examples and regression tests
 - update collect and guide_choice rules to memo(r)ize
 - modify unify to return multiple interpretations 
 - write unification with outsourcing to Z3 
@@ -132,7 +129,6 @@
         - into `{Y * Z with (Y * Y') <: P, (Z * (:succ? Y')) <: Eq} <: P`
     - TODO: what's the advantage of relational subtyping over horn clauses?
         - provides a more compact representation for annotating programs
-
 - Propagation of types
     - checking and guiding via propagation 
     - checking/solving via horn-clause solver when subtyping at leaves
@@ -144,6 +140,15 @@
         (A -> B) & (C -> D) <: (P -> Q)
         ```
         - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
+
+    - calls to solve are used in both distill/inheriting rules and combine/synthesizing rules.
+        - solves for new prescription in distill
+            - allows for input type to be rewritten into a decomposable form
+            - in contrast to Synquid rules, which have a strict syntactic requirement
+            - places more complexity in subtyping rules and less complexity in typing rules
+        - solves for new description in combine
+        - in other words, solve is called in introduction/distill rules and elimination/combine rules
+
 
 ### Future work
 - use statistical learning to find necessary types 

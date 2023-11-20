@@ -145,7 +145,7 @@ class Solver:
 
     # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
     # TODO: encode problem into Z3; decode back to Slim. 
-    def unify(self, interp : Interp, lower : Typ, upper : Typ) -> Interp:
+    def solve(self, interp : Interp, lower : Typ, upper : Typ) -> Interp:
         '''
         TODO
         '''
@@ -161,17 +161,17 @@ class PatternAttr(Attr):
     def combine_id(self, id : str) -> PCombo:
         descrip = self.solver.fresh_type_var()
         enviro = m().set(id, descrip)
-        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
         return PCombo(enviro, descrip)
 
     def combine_unit(self) -> PCombo:
         descrip = TUnit()
-        interp = self.solver.unify(self.plate.interp, descrip, self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
         return PCombo(m(), descrip)
 
     def distill_tag_body(self, id : str) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_tag(self, label : str, body : PCombo) -> PCombo:
@@ -188,7 +188,7 @@ class ExprAttr(Attr):
 
     def distill_tag_body(self, id : str) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_tag(self, label : str, body : ECombo) -> ECombo:
@@ -196,7 +196,7 @@ class ExprAttr(Attr):
 
     def combine_projection(self, record : Typ, key : str) -> Typ: 
         answr = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, record, TField(key, answr))
+        interp = self.solver.solve(self.plate.interp, record, TField(key, answr))
         return Exis(answr, interp)
 
     def distill_projmulti_cator(self) -> Plate:
@@ -211,7 +211,7 @@ class ExprAttr(Attr):
         answr_i = record.descrip 
         for key in keys:
             answr = self.solver.fresh_type_var()
-            interp_i = self.solver.unify(interp_i, answr_i, TField(key, answr))
+            interp_i = self.solver.solve(interp_i, answr_i, TField(key, answr))
             answr_i = answr
 
         return ECombo(Exis(answr_i, interp_i))
@@ -233,7 +233,7 @@ class ExprAttr(Attr):
         answr_i = function.descrip 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            interp_i = self.solver.unify(interp_i, answr_i, Imp(argument.descrip, answr))
+            interp_i = self.solver.solve(interp_i, answr_i, Imp(argument.descrip, answr))
             answr_i = answr
 
         return ECombo(Exis(answr_i, interp_i))
@@ -269,7 +269,7 @@ class RecordAttr(Attr):
 
     def distill_single_body(self, id : str) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip) 
 
     def combine_single(self, id : str, body : ECombo) -> ECombo:
@@ -280,7 +280,7 @@ class RecordAttr(Attr):
 
     def distill_cons_tail(self, id : str, body : ECombo) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip) 
 
     def combine_cons(self, id : str, body : ECombo, tail : ECombo) -> ECombo:
@@ -290,18 +290,18 @@ class FunctionAttr(Attr):
 
     def distill_single_pattern(self) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
         return Plate(interp, self.plate.enviro, prescrip)
 
     def distill_single_body(self, pattern : PCombo) -> Plate:
         conclusion = self.solver.fresh_type_var() 
 
         """
-        TODO: unify to the consequent of the prescriped type: unify(guide.typ, Imp(typ_in, typ_out))
+        TODO: solve to the consequent of the prescriped type: solve(guide.typ, Imp(typ_in, typ_out))
         can basically move antecedent into qualifier of consequent 
         e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
         """
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(pattern.descrip, conclusion)) 
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(pattern.descrip, conclusion)) 
         enviro = self.plate.enviro + pattern.enviro
         return Plate(interp, enviro, conclusion)
 
@@ -316,7 +316,7 @@ class FunctionAttr(Attr):
 
     def distill_cons_tail(self, pattern : PCombo, body : ECombo) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, Inter(Imp(pattern.descrip, body.descrip), prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, Inter(Imp(pattern.descrip, body.descrip), prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_cons(self, pattern : PCombo, body : ECombo, tail : ECombo) -> ECombo:
@@ -331,11 +331,11 @@ class FunctionAttr(Attr):
     #     typ_in = self.fresh_type_var()
     #     typ_out = self.fresh_type_var()
     #     """
-    #     TODO: unify to the consequent of the prescriped type: unify(guide.typ, Imp(typ_in, typ_out))
+    #     TODO: solve to the consequent of the prescriped type: solve(guide.typ, Imp(typ_in, typ_out))
     #     can basically move antecedent into qualifier of consequent 
     #     e.g. A -> B & C -> D becomes X -> ({B with X <: A} | {D with X <: C} ) 
     #     """
-    #     interp = self.unify(plate.interp, plate.prescrip, Imp(typ_in, typ_out)) 
+    #     interp = self.solve(plate.interp, plate.prescrip, Imp(typ_in, typ_out)) 
     #     enviro = plate.enviro.set(param, typ_in)
 
     #     return Plate(interp, enviro, typ_out)
@@ -353,7 +353,7 @@ class RecpatAttr(Attr):
 
     def distill_single_body(self, id : str) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip) 
 
     def combine_single(self, label : str, body : PCombo) -> PCombo:
@@ -364,7 +364,7 @@ class RecpatAttr(Attr):
 
     def distill_cons_tail(self, id : str, body : PCombo) -> Plate:
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
+        interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
         return Plate(interp, self.plate.enviro, prescrip) 
 
     def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
@@ -373,7 +373,7 @@ class RecpatAttr(Attr):
 class KeychainAttr(Attr):
 
     def combine_single(self, key : str) -> list[str]:
-        # self.solver.unify(plate.enviro, plate.prescrip, TField(key, Top())) 
+        # self.solver.solve(plate.enviro, plate.prescrip, TField(key, Top())) 
         return [key]
 
     '''
@@ -381,7 +381,7 @@ class KeychainAttr(Attr):
     '''
     def distill_cons_tail(self, key : str):
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, TField(key, prescrip))
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, TField(key, prescrip))
         return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
@@ -391,13 +391,13 @@ class ArgchainAttr(Attr):
 
     def distill_single_content(self):
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
         return Plate(interp, self.plate.enviro, prescrip)
 
 
     def distill_cons_head(self):
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
         return Plate(interp, self.plate.enviro, prescrip)
 
     '''
@@ -405,11 +405,11 @@ class ArgchainAttr(Attr):
     '''
     def distill_cons_tail(self, head : Typ):
         prescrip = self.solver.fresh_type_var()
-        interp = self.solver.unify(self.plate.interp, self.plate.prescrip, Imp(head, prescrip))
+        interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(head, prescrip))
         return Plate(interp, self.plate.enviro, prescrip)
 
     def combine_single(self, content : Typ) -> list[Typ]:
-        # self.solver.unify(plate.enviro, plate.prescrip, Imp(content, Top()))
+        # self.solver.solve(plate.enviro, plate.prescrip, Imp(content, Top()))
         return [content]
 
     def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
