@@ -141,7 +141,7 @@ as \textit{attribute rules}, interwoven with top-down parsing rules to form an \
 
 Using attribute rules during parsing adds many complications that would not be present for an
 analysis over an AST. 
-The analysis must be separate for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
+The analysis must be separated into rules for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
 Additionally, due to the left-recursion problem in top-down parsing, 
 the parser consolidates information in a right-associative manner.
 Thus, one difference of an analysis over a top-down parsing stack as opposed to recursion over an AST is 
@@ -163,10 +163,27 @@ x(.uno(.dos(.tres)))
 ((x.uno).dos).tres
 \]
 
-Our technique leverages bidirectional typing along with intersection and union types. Union types are necessary due to
-the absence of intrinsic types or a specified universe of logical qualifiers/predicates to choose from. 
-Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \textit{duality} method
-of solving horn clauses.
+In addition to intersection types, seen in refinement type systems, our system also requires union types
+due to the absence of intrinsic types or a specified universe of logical qualifiers/predicates to choose from. 
+That is, we must be able to start with a strong type and weaken as more use cases are uncovered in the program. 
+In contrast, intrinsic typing explicitly declares a reasonable weakest type, which a refinement type system  
+can strengthen via intersections (or conjunctions).
+
+Additionally, our technique leverages bidirectional typing.
+The inheriting attribute rules include the downward propagation of types. 
+The synthesizing attribute rules include the upward propagation of types. 
+
+For introduction rules, our technique propagates types both downward and upward.
+The original bidirectional typing and Synquid's variation \textit{roundtrip typing} only propagate downward for introduction rules. 
+Our problem requires the additional upward propagation because the specification may need to be extracted from the program,
+whereas previous problems assumed a provided specification (e.g. for a function definition).
+For elimination rules, our technique propagates types both upward and downward.
+The original bidirectional typing only propagates upward for elimination rules, but Synquid's variation \textit{roundtrip typing} 
+introduced propagating in both directions for elimination rules.
+Consider application of a function to an argument. Using downward propagation, 
+type propagation can guide the construction of the applicator's function body,
+rather than waiting for the body's full construction and only checking the correctness of the body 
+once the result of the application is used somewhere else. 
 
 We have designed a structured language of types in order to express relations and shapes succinctly.
 Although horn clauses would be sufficient to express the same semantics, relational types make type annotations easier to write
@@ -176,6 +193,21 @@ The analysis handles the semantics at two levels: typing and subtyping. Typing i
 is syntactically represented by an expression. When types or expressions cannot be decomposed easily, more advanced
 reasoning techniques are necessary, and the problem is lifted to subtyping. To handle subtyping in a rich language that includes  
 relations, our technique encodes relational types into horn clauses and leverages the capabilities of established solvers.
+
+Decomposing types into its constituent parts may be necessary when propagating
+types upward from elimination rules or when propagating types downward over introduction rules. 
+These type propagation rules call the solver to find a decomposition that satisfies a subtyping. 
+Thus, solving subtyping provides a generic interface that type propagation can use for type decomposition
+without having to specify the type syntax restrictions directly. 
+In contrast, Synquid's typing rules specify the syntactic forms of types directly.
+Additionally, Synquid is more limited in the syntactic forms of types that it allows.
+For example, our system allows the type of a function to be constructed as an intersection of implications,
+while Synquid requires the function's type to be a single implication (i.e. arrow) type.
+Our system must be more flexible than Synquid due to the specification being extracted from the program,
+rather than specified by the user (as is the case in Synquid).
+
+Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \textit{duality} method
+of solving horn clauses.
 
 
 \section{Overview}

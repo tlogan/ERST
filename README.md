@@ -132,6 +132,18 @@
 - Propagation of types
     - checking and guiding via propagation 
     - checking/solving via horn-clause solver when subtyping at leaves
+    - uses both distill and combine in introduction rules, since specification may need to be extracted from program.
+        - Synquid does not need to propagate up the type (i.e. combine) in introduction rules
+    - uses both distill and combine in elimination rules.
+        - Synquid's roundtrip typing also propagates in both directions for elimination rules. 
+        - the original bidirectional typing only propagates up for elimination rules.
+    - calls to solve are used in both distill/inheriting rules and combine/synthesizing rules.
+        - solves for new prescription in distill
+            - allows for input type to be rewritten into a decomposable form
+            - in contrast to Synquid rules, which have a strict syntactic requirement
+            - places more complexity in subtyping rules and less complexity in typing rules
+        - solves for new description in combine
+        - in other words, solve is called in introduction/distill rules and elimination/combine rules
     - type inference of application of cases without a specified upper bound:
         ```
         P <: A | C 
@@ -141,13 +153,6 @@
         ```
         - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
 
-    - calls to solve are used in both distill/inheriting rules and combine/synthesizing rules.
-        - solves for new prescription in distill
-            - allows for input type to be rewritten into a decomposable form
-            - in contrast to Synquid rules, which have a strict syntactic requirement
-            - places more complexity in subtyping rules and less complexity in typing rules
-        - solves for new description in combine
-        - in other words, solve is called in introduction/distill rules and elimination/combine rules
 
 
 ### Future work
