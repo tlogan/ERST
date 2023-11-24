@@ -322,7 +322,7 @@ class SlimParser ( Parser ):
                 self.state = 17
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_id, (None if localctx._ID is None else localctx._ID.text))
+                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_var, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -390,7 +390,7 @@ class SlimParser ( Parser ):
                 plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projmulti_cator)
 
                 self.state = 40
-                localctx.cator = localctx._expr = self.expr(plate_expr)
+                localctx.cator = localctx._expr = self.expr(plate_cator)
 
                 self.guide_symbol(')')
 
@@ -652,7 +652,7 @@ class SlimParser ( Parser ):
                 self.state = 100
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_id, (None if localctx._ID is None else localctx._ID.text))
+                localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_var, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1001,7 +1001,7 @@ class SlimParser ( Parser ):
                 plate_body = self.guide_nonterm('expr', RecordAttr(self._solver, plate).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 169
-                localctx.body = self.expr(plate_expr)
+                localctx.body = self.expr(plate_body)
 
                 localctx.combo = self.collect(RecordAttr(self._solver, plate).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 

@@ -256,7 +256,7 @@ public class SlimParser extends Parser {
 				setState(17);
 				((ExprContext)_localctx).ID = match(ID);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_id, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				_localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_var, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -329,7 +329,7 @@ public class SlimParser extends Parser {
 				plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projmulti_cator)
 
 				setState(40);
-				((ExprContext)_localctx).cator = ((ExprContext)_localctx).expr = expr(plate_expr);
+				((ExprContext)_localctx).cator = ((ExprContext)_localctx).expr = expr(plate_cator);
 
 				self.guide_symbol(')')
 
@@ -576,7 +576,7 @@ public class SlimParser extends Parser {
 				setState(100);
 				((PatternContext)_localctx).ID = match(ID);
 
-				_localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_id, (((PatternContext)_localctx).ID!=null?((PatternContext)_localctx).ID.getText():null))
+				_localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_var, (((PatternContext)_localctx).ID!=null?((PatternContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -892,7 +892,7 @@ public class SlimParser extends Parser {
 				plate_body = self.guide_nonterm('expr', RecordAttr(self._solver, plate).distill_single_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
 
 				setState(169);
-				((RecordContext)_localctx).body = expr(plate_expr);
+				((RecordContext)_localctx).body = expr(plate_body);
 
 				_localctx.combo = self.collect(RecordAttr(self._solver, plate).combine_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
 

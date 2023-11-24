@@ -81,19 +81,19 @@ class ECombo:
 
 
 
-"""
-Pat data types
-"""
+# """
+# Pat data types
+# """
 
-@dataclass(frozen=True, eq=True)
-class PVar:
-    id : str
+# @dataclass(frozen=True, eq=True)
+# class PVar:
+#     id : str
 
-@dataclass(frozen=True, eq=True)
-class PUnit:
-    pass
+# @dataclass(frozen=True, eq=True)
+# class PUnit:
+#     pass
 
-Expr = Union[PVar, PUnit]
+# Expr = Union[PVar, PUnit]
 
 @dataclass(frozen=True, eq=True)
 class PCombo:
@@ -161,8 +161,8 @@ class Attr:
 
 class ExprAttr(Attr):
 
-    def combine_id(self, text : str) -> ECombo:
-        return ECombo(self.plate.enviro[text])
+    def combine_var(self, id : str) -> ECombo:
+        return ECombo(self.plate.enviro[id])
 
     def combine_unit(self) -> ECombo:
         return ECombo(TUnit())
@@ -250,7 +250,7 @@ end ExprAttr
 
 class PatternAttr(Attr):
 
-    def combine_id(self, id : str) -> PCombo:
+    def combine_var(self, id : str) -> PCombo:
         descrip = self.solver.fresh_type_var()
         enviro = m().set(id, descrip)
         interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)

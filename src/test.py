@@ -20,52 +20,6 @@ from pyrsistent import m, pmap, v
 
 import pytest
 
-
-
-def test_parse_tree_serialize(code):
-
-    # input_stream : InputStream = FileStream(argv[1])
-    # input_stream : InputStream = StdinStream()
-    # input_stream = InputStream(incomplete_code)
-    input_stream = InputStream(code)
-
-    #############################
-    lexer = SlimLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    #############################
-    parser = SlimParser(token_stream)
-    tree = parser.expr(analysis.plate_default)
-
-
-    if parser.getNumberOfSyntaxErrors() > 0:
-        print("syntax errors")
-    else:
-        print(tree.toStringTree())
-
-    # lexer = ExprLexer(input_stream)
-    # stream = CommonTokenStream(lexer)
-    # parser = ExprParser(stream)
-    # tree = parser.start_()
-
-
-
-    # linterp = ListenerDump()
-    # walker = ParseTreeWalker()
-    # walker.walk(linterp, tree)
-
-    ####################################
-
-
-    # if parser.getNumberOfSyntaxErrors() > 0:
-    #     print("syntax errors")
-    # else:
-    #     linterp = ListenerDump()
-    #     walker = ParseTreeWalker()
-    #     walker.walk(linterp, tree)
-
-
-
-
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
@@ -162,6 +116,10 @@ def test_parse_tree_serialize(code):
 # '''
 # ]
 
+def raise_guide(guides : list[analysis.Guidance]):
+    for guide in guides:
+        if isinstance(guide, Exception):
+            raise guide
 
 def analyze(pieces : list[str]):
     async def _mk_task():
@@ -189,22 +147,43 @@ def analyze(pieces : list[str]):
 tests
 """
 
+def test_var():
+    pieces = ['''
+x
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+    assert isinstance(guides[0], KeyError)
+    assert guides[0].args[0] == 'x'
+    assert guides[-1] == server.Killed()
+    assert not combo
+    assert not parsetree 
+
+def test_unit():
+    pieces = ['''
+@
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr @)"
+
 def test_tag():
     pieces = ['''
 :uno @
     ''']
-    # analyze(pieces)
     (combo, guides, parsetree) = analyze(pieces)
-    print(f"combo: {combo}")
-    print(f"guides: {guides}")
-    print(f"parsetree: {parsetree}")
+    assert parsetree == "(expr : uno (expr @))"
 
-    "(expr : uno (expr @))"
+def test_record():
+    pieces = ['''
+:uno = @ :dos = @
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (record : uno = (expr @) (record : dos = (expr @))))"
 
 
 if __name__ == '__main__':
     pass
-    test_tag()
+    test_record()
 
 
 #######################################################################

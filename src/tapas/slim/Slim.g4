@@ -108,7 +108,7 @@ def collect(self, f : Callable, *args):
 
 expr [Plate plate] returns [ECombo combo] : 
 | ID {
-$combo = self.collect(ExprAttr(self._solver, plate).combine_id, $ID.text)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_var, $ID.text)
 } 
 
 | '@' {
@@ -137,7 +137,7 @@ $combo = $expr.combo
 
 | '(' {
 plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projmulti_cator)
-} cator = expr[plate_expr] {
+} cator = expr[plate_cator] {
 self.guide_symbol(')')
 } ')' {
 plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_projmulti_keychain, $expr.combo)
@@ -236,7 +236,7 @@ $combo = $expr.combo
 pattern [Plate plate] returns [PCombo combo]:  
 
 | ID {
-$combo = self.collect(PatternAttr(self._solver, plate).combine_id, $ID.text)
+$combo = self.collect(PatternAttr(self._solver, plate).combine_var, $ID.text)
 } 
 
 | '@' {
@@ -318,7 +318,7 @@ self.guide_terminal('ID')
 self.guide_symbol('=')
 } '=' {
 plate_body = self.guide_nonterm('expr', RecordAttr(self._solver, plate).distill_single_body, $ID.text)
-} body = expr[plate_expr] {
+} body = expr[plate_body] {
 $combo = self.collect(RecordAttr(self._solver, plate).combine_single, $ID.text, $body.combo)
 }
 

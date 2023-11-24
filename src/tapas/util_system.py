@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, TypeVar, Any, Generic, Union, Optional, Iterable
-from collections.abc import Callable
-from collections import Sequence
+from collections.abc import Callable, Sequence
 
 from abc import ABC, abstractmethod
 import json

@@ -29,10 +29,9 @@ class Done:
     pass
 
 I = Union[Kill, str]
-O = Union[Guidance, AttributeError, Killed, Done]
+O = Union[Guidance, Exception, Killed, Done]
 
 async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> Optional[SlimParser.ExprContext]:
-    none : Any = None
     parser.init()
     # parser.buildParseTrees = False
     code = ''
@@ -62,8 +61,8 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
             else:
                 await output.put(parser.getGuidance())
 
-        except AttributeError as e : 
-            print(f"OOGA EXCEPTION: {type(e)} // {e.args}")
+        except Exception as e : 
+            print(f"EXCEPTION: {type(e)} // {e.args}")
             await output.put(e)
             ctx = None
 
