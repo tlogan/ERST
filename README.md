@@ -116,7 +116,7 @@
     - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
 
 
-    - could use intersection on the fly in order to guide synthesis rather than conjuctive merging at the end
+    - could use intersection on the fly in order to guide synthesis rather than conjunctive merging at the end
 
     - typing/subtyping behave like constraints, which are symbolic representations of sets of interpretations
 

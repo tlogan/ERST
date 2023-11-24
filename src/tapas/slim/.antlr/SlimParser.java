@@ -281,7 +281,7 @@ public class SlimParser extends Parser {
 				setState(23);
 				((ExprContext)_localctx).ID = match(ID);
 
-				plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body)
+				plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				setState(25);
 				((ExprContext)_localctx).body = expr(plate_body);

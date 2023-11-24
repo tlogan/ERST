@@ -10,6 +10,9 @@ from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser, Guidance
 from tapas.slim.analysis import * 
 
+
+T = TypeVar("T")
+
 from pyrsistent.typing import PMap 
 from pyrsistent import m, pmap, v
 
@@ -28,21 +31,16 @@ class Done:
 I = Union[Kill, str]
 O = Union[Guidance, AttributeError, Killed, Done]
 
-async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
+async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> Optional[SlimParser.ExprContext]:
     none : Any = None
-    parser = SlimParser(none)
     parser.init()
     # parser.buildParseTrees = False
     code = ''
     ctx = None
     # parser.fresh_index = 0
     while True:
-        print("")
-        print("")
         i = await input.get()
-        print(f"--- GOT: {i} ------")
         if isinstance(i, Kill):
-            print("Killed")
             await output.put(Killed())
             break
 
@@ -78,13 +76,7 @@ async def _mk_task(input : Queue[I], output : Queue[O]) -> Optional[str]:
     if parser.getNumberOfSyntaxErrors() > 0 or ctx == None:
         print(f"syntax errors: {parser.getNumberOfSyntaxErrors()}")
         pass
-    else:
-        print(f"tree: {ctx.toStringTree(recog=parser)}")
-
-    if ctx:
-        return ctx.combo
-    else:
-        return None
+    return ctx
 
 '''
 end mk_task 
@@ -94,14 +86,16 @@ end mk_task
 
 
 
-class Connection:
+class Connection(Generic[T]):
     _input : Queue
     _output : Queue
-    _task : Task[str]
+    _parser : Parser 
+    _task : Task[T]
 
-    def __init__(self, input, output, task):
+    def __init__(self, input, output, parser, task):
         self._input = input
         self._output = output
+        self._parser = parser 
         self._task = task 
 
     async def mk_caller(self, item):
@@ -117,13 +111,18 @@ class Connection:
     def done(self):
         return self._task.done() and self._output.empty()
 
+    def to_string_tree(self, ctx : ParserRuleContext):
+        return ctx.toStringTree(recog=self._parser)
+
     async def mk_getter(self):
         return await self._task
 
-def launch():
+def launch() -> Connection[Optional[SlimParser.ExprContext]]:
     input : Queue = Queue()
     output : Queue = Queue()
-    task = asyncio.create_task(_mk_task(input, output))
-    return Connection(input, output, task)
+    none : Any = None
+    parser = SlimParser(none)
+    task = asyncio.create_task(_mk_task(parser, input, output))
+    return Connection(input, output, parser, task)
 
 

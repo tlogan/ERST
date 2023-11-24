@@ -345,7 +345,7 @@ class SlimParser ( Parser ):
                 self.state = 23
                 localctx._ID = self.match(SlimParser.ID)
 
-                plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body)
+                plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 25
                 localctx.body = self.expr(plate_body)

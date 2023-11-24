@@ -1,5 +1,8 @@
+from __future__ import annotations
 
 from typing import *
+from dataclasses import dataclass
+
 import sys
 from antlr4 import *
 import sys
@@ -14,6 +17,8 @@ from tapas.slim import server, analysis
 from tapas.util_system import box, unbox
 
 from pyrsistent import m, pmap, v
+
+import pytest
 
 
 
@@ -61,9 +66,6 @@ def test_parse_tree_serialize(code):
 
 
 
-
-
-async def _mk_task():
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
@@ -80,7 +82,7 @@ async def _mk_task():
     #     ":hello ()"
     # ]
 
-    pieces = [
+    # pieces = [
 # """
 # (:uno = @ :dos = @).uno
 # """,
@@ -147,49 +149,68 @@ async def _mk_task():
 # ":uno = @ :dos = @",
 ################
 # "fix (", "@", ")",
-"fix", "(",
 ################
-server.Kill()
-    ] 
+# "fix", "(",
+################
+# server.Kill()
+    # ] 
+
+# pieces = [
+# f'''
+# fun :nil () => :zero () 
+# fun :cons () => :succ (self(x))
+# '''
+# ]
 
 
-    results = []
+def analyze(pieces : list[str]):
+    async def _mk_task():
 
-    connection = server.launch()
+        connection = server.launch()
 
-    # pieces = [
-    # f'''
-    # fun :nil () => :zero () 
-    # fun :cons () => :succ (self(x))
-    # '''
-    # ]
+        guides = []
+        for piece in pieces + [server.Kill()]:
+            g = await connection.mk_caller(piece)
+            guides.append(g)
+            print()
+            print(f"--------------------------")
+            print(f"--- client's guidance: << {g} >>")
+            print(f"--------------------------")
+            print()
+            if isinstance(g, server.Done):
+                break
 
+        ctx = await connection.mk_getter()
+        return (ctx.combo if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None)
 
-    for piece in pieces:
-        g = await connection.mk_caller(piece)
-        print()
-        print(f"--------------------------")
-        print(f"--- client's guidance: << {g} >>")
-        print(f"--------------------------")
-        print()
-        if isinstance(g, server.Done):
-            break
+    return asyncio.run(_mk_task())
 
+"""
+tests
+"""
 
-    print('post while')
-    result = await connection.mk_getter()
-    print(f'result: {result}')
+def test_tag():
+    pieces = ['''
+:uno @
+    ''']
+    # analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces)
+    print(f"combo: {combo}")
+    print(f"guides: {guides}")
+    print(f"parsetree: {parsetree}")
 
-
-def interact():
-    asyncio.run(_mk_task())
-
+    "(expr : uno (expr @))"
 
 
 if __name__ == '__main__':
+    pass
+    test_tag()
+
+
+#######################################################################
     # main(sys.argv)
 ####################
-    interact()
+    # interact()
 ####################
 
 #     test_parse_tree_serialize(f'''

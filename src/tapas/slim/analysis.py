@@ -113,6 +113,7 @@ class Symbol:
 class Terminal:
     content : str
 
+@dataclass(frozen=True, eq=True)
 class Nonterm:
     id : str 
     plate : Plate
@@ -156,26 +157,6 @@ class Attr:
         self.solver = solver
         self.plate = plate 
 
-class PatternAttr(Attr):
-
-    def combine_id(self, id : str) -> PCombo:
-        descrip = self.solver.fresh_type_var()
-        enviro = m().set(id, descrip)
-        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(enviro, descrip)
-
-    def combine_unit(self) -> PCombo:
-        descrip = TUnit()
-        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(m(), descrip)
-
-    def distill_tag_body(self, id : str) -> Plate:
-        prescrip = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip)
-
-    def combine_tag(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TTag(label, body.descrip))
 
 
 class ExprAttr(Attr):
@@ -263,6 +244,33 @@ class ExprAttr(Attr):
         '''
         enviro = self.plate.enviro.set(id, target)
         return Plate(interp, enviro, self.plate.prescrip)
+'''
+end ExprAttr
+'''
+
+class PatternAttr(Attr):
+
+    def combine_id(self, id : str) -> PCombo:
+        descrip = self.solver.fresh_type_var()
+        enviro = m().set(id, descrip)
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(enviro, descrip)
+
+    def combine_unit(self) -> PCombo:
+        descrip = TUnit()
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(m(), descrip)
+
+    def distill_tag_body(self, id : str) -> Plate:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        return Plate(interp, self.plate.enviro, prescrip)
+
+    def combine_tag(self, label : str, body : PCombo) -> PCombo:
+        return PCombo(body.enviro, TTag(label, body.descrip))
+'''
+end PatternAttr
+'''
 
 
 class RecordAttr(Attr):

@@ -118,7 +118,7 @@ $combo = self.collect(ExprAttr(self._solver, plate).combine_unit)
 | ':' {
 self.guide_terminal('ID')
 } ID {
-plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body)
+plate_body = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_tag_body, $ID.text)
 } body = expr[plate_body] {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_tag, $ID.text, $body.combo)
 }
