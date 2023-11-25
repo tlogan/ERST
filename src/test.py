@@ -203,12 +203,72 @@ def test_projection_chain():
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr ( (expr (record : uno = (expr ( (expr : dos (expr @)) )) (record : one = (expr @)))) ) (keychain . uno (keychain . dos)))"
 
+def test_application():
+    pieces = ['''
+(
+case :nil @ => @ 
+case :cons x => x 
+)(:nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_application_chain():
+    pieces = ['''
+(case :nil @ => case :nil @ => @)(:nil @)(:nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_let():
+    pieces = ['''
+let x = @ ;
+x
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr let x (target = (expr @)) ; (expr x))"
+
+def test_idprojection():
+    pieces = ['''
+let r = (:uno = @ :dos = @) ;
+r.uno
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idprojection_chain():
+    pieces = ['''
+let r = (:uno = (:dos @) :one = @) ;
+r.uno.dos
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idapplication():
+    pieces = ['''
+let f = (
+case :nil @ => @ 
+case :cons x => x 
+) ;
+f(:nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idapplication_chain():
+    pieces = ['''
+let f = (case :nil @ => case :nil @ => @) ;
+f(:nil @)(:nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_fix():
+    pieces = ['''
+fix(case self => (
+case :nil @ => :zero @ 
+case :cons x => :succ (self(x)) 
+))
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
 
 if __name__ == '__main__':
     pass
-    test_projection_chain()
-    # test_cases()
-
 
 #######################################################################
     # main(sys.argv)

@@ -2,7 +2,7 @@
 
 
 ### TODO
-- develop examples for all main syntactic features with parsing test for main syntactic pieces
+- add syntax for pairs `,`, if/else, and feed/pipe `|>` 
 - write method to serialize type structure; using while loop over stack.  
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference

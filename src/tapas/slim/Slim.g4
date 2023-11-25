@@ -146,7 +146,7 @@ $combo = self.collect(ExprAttr(self._solver, plate).combine_projection, $cator.c
 }
 
 | ID {
-plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojection_keychain, $ID.text)
+plate_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, plate).distill_idprojection_keychain, $ID.text)
 } keychain[plate_keychain] {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_idprojection, $ID.text, $keychain.ids) 
 }
@@ -160,13 +160,13 @@ plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_a
 } cator = expr[plate_cator] {
 self.guide_symbol(')')
 } ')' {
-plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_application_argchain, $cator.combo)
+plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_application_argchain, $cator.combo)
 } content = argchain[plate_argchain] {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_application, $cator.combo, $argchain.combos)
 }
 
 | ID {
-plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idapplication_argchain, $ID.text)
+plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_idapplication_argchain, $ID.text)
 } argchain[plate_argchain] {
 $combo = self.collect(ExprAttr(self._solver, plate).combine_idapplication, $ID.text, $argchain.combos) 
 }

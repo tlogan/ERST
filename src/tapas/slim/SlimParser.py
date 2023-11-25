@@ -411,7 +411,7 @@ class SlimParser ( Parser ):
                 self.state = 47
                 localctx._ID = self.match(SlimParser.ID)
 
-                plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojection_keychain, (None if localctx._ID is None else localctx._ID.text))
+                plate_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, plate).distill_idprojection_keychain, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 49
                 localctx._keychain = self.keychain(plate_keychain)
@@ -444,7 +444,7 @@ class SlimParser ( Parser ):
                 self.state = 59
                 self.match(SlimParser.T__3)
 
-                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_application_argchain, localctx.cator.combo)
+                plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_application_argchain, localctx.cator.combo)
 
                 self.state = 61
                 localctx.content = localctx._argchain = self.argchain(plate_argchain)
@@ -458,7 +458,7 @@ class SlimParser ( Parser ):
                 self.state = 64
                 localctx._ID = self.match(SlimParser.ID)
 
-                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idapplication_argchain, (None if localctx._ID is None else localctx._ID.text))
+                plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_idapplication_argchain, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 66
                 localctx._argchain = self.argchain(plate_argchain)

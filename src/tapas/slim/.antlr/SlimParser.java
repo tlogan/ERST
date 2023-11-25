@@ -351,7 +351,7 @@ public class SlimParser extends Parser {
 				setState(47);
 				((ExprContext)_localctx).ID = match(ID);
 
-				plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojection_keychain, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				plate_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, plate).distill_idprojection_keychain, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				setState(49);
 				((ExprContext)_localctx).keychain = keychain(plate_keychain);
@@ -386,7 +386,7 @@ public class SlimParser extends Parser {
 				setState(59);
 				match(T__3);
 
-				plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_application_argchain, ((ExprContext)_localctx).cator.combo)
+				plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_application_argchain, ((ExprContext)_localctx).cator.combo)
 
 				setState(61);
 				((ExprContext)_localctx).content = ((ExprContext)_localctx).argchain = argchain(plate_argchain);
@@ -401,7 +401,7 @@ public class SlimParser extends Parser {
 				setState(64);
 				((ExprContext)_localctx).ID = match(ID);
 
-				plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idapplication_argchain, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				plate_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, plate).distill_idapplication_argchain, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				setState(66);
 				((ExprContext)_localctx).argchain = argchain(plate_argchain);
