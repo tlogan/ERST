@@ -181,9 +181,33 @@ def test_record():
     assert parsetree == "(expr (record : uno = (expr @) (record : dos = (expr @))))"
 
 
+def test_function():
+    pieces = ['''
+case :nil @ => @ 
+case :cons x => x 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (function case (pattern : nil (pattern @)) => (expr @) (function case (pattern : cons (pattern x)) => (expr x))))"
+
+def test_projection():
+    pieces = ['''
+(:uno = @ :dos = @).uno
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr ( (expr (record : uno = (expr @) (record : dos = (expr @)))) ) (keychain . uno))"
+
+def test_projection_chain():
+    pieces = ['''
+(:uno = (:dos @) :one = @).uno.dos
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr ( (expr (record : uno = (expr ( (expr : dos (expr @)) )) (record : one = (expr @)))) ) (keychain . uno (keychain . dos)))"
+
+
 if __name__ == '__main__':
     pass
-    test_record()
+    test_projection_chain()
+    # test_cases()
 
 
 #######################################################################

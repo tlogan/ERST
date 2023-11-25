@@ -2,15 +2,18 @@
 
 
 ### TODO
-- develop examples and regression tests
+- develop examples for all main syntactic features with parsing test for main syntactic pieces
+- write method to serialize type structure; using while loop over stack.  
+- update basic examples with test of type inference 
+- develop examples with interesting semantics and test type inference
 - update collect and guide_choice rules to memo(r)ize
 - modify unify to return multiple interpretations 
-- write unification with outsourcing to Z3 
-- write tree listener for printing out indented parse tree 
+- write subtyping solving with outsourcing to Z3 
 - instead of using custom solver, translate leaf subtyping into horn clauses for external solver
 - use renaming lazily (just for equality modulo alpha renaming)
 
 ### Implementation 
+- avoid recursion, which has poor performance in python.
 - update guidance before each part of a sequence
 - update overflow after each guidance update 
 - update result after entire sequence

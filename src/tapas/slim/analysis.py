@@ -175,19 +175,20 @@ class ExprAttr(Attr):
     def combine_tag(self, label : str, body : ECombo) -> ECombo:
         return ECombo(TTag(label, body.descrip))
 
-    def combine_projection(self, record : Typ, key : str) -> Typ: 
-        answr = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.plate.interp, record, TField(key, answr))
-        return Exis(answr, interp)
+    # TODO: remove
+    # def combine_projection(self, record : Typ, key : str) -> Typ: 
+    #     answr = self.solver.fresh_type_var()
+    #     interp = self.solver.solve(self.plate.interp, record, TField(key, answr))
+    #     return Exis(answr, interp)
 
-    def distill_projmulti_cator(self) -> Plate:
+    def distill_projection_cator(self) -> Plate:
         return Plate(self.plate.interp, self.plate.enviro, Top())
 
-    def distill_projmulti_keychain(self, record : Typ) -> Plate: 
+    def distill_projection_keychain(self, record : Typ) -> Plate: 
         return Plate(self.plate.interp, self.plate.enviro, record)
 
 
-    def combine_projmulti(self, record : ECombo, keys : list[str]) -> ECombo: 
+    def combine_projection(self, record : ECombo, keys : list[str]) -> ECombo: 
         interp_i = self.plate.interp
         answr_i = record.descrip 
         for key in keys:
@@ -197,19 +198,19 @@ class ExprAttr(Attr):
 
         return ECombo(Exis(answr_i, interp_i))
 
-    def distill_idprojmulti_keychain(self, id : str) -> Plate: 
-        return self.distill_projmulti_keychain(self.plate.enviro[id])
+    def distill_idprojection_keychain(self, id : str) -> Plate: 
+        return self.distill_projection_keychain(self.plate.enviro[id])
 
-    def combine_idprojmulti(self, id : str, keys : list[str]) -> ECombo: 
-        return self.combine_projmulti(ECombo(self.plate.enviro[id]), keys)
+    def combine_idprojection(self, id : str, keys : list[str]) -> ECombo: 
+        return self.combine_projection(ECombo(self.plate.enviro[id]), keys)
 
-    def distill_appmulti_cator(self) -> Plate: 
+    def distill_application_cator(self) -> Plate: 
         return Plate(self.plate.interp, self.plate.enviro, Imp(Bot(), Top()))
 
-    def distill_appmulti_argchain(self, function : ECombo) -> Plate: 
+    def distill_application_argchain(self, function : ECombo) -> Plate: 
         return Plate(self.plate.interp, self.plate.enviro, function.descrip)
 
-    def combine_appmulti(self, function : ECombo, arguments : list[ECombo]) -> ECombo: 
+    def combine_application(self, function : ECombo, arguments : list[ECombo]) -> ECombo: 
         interp_i = self.plate.interp
         answr_i = function.descrip 
         for argument in arguments:
@@ -219,13 +220,13 @@ class ExprAttr(Attr):
 
         return ECombo(Exis(answr_i, interp_i))
 
-    def distill_idappmulti_argchain(self, id : str) -> Plate: 
+    def distill_idapplication_argchain(self, id : str) -> Plate: 
         function = ECombo(self.plate.enviro[id])
-        return self.distill_appmulti_argchain(function)
+        return self.distill_application_argchain(function)
 
-    def combine_idappmulti(self, id : str, arguments : list[ECombo]) -> ECombo: 
+    def combine_idapplication(self, id : str, arguments : list[ECombo]) -> ECombo: 
         function = ECombo(self.plate.enviro[id])
-        return self.combine_appmulti(function, arguments)
+        return self.combine_application(function, arguments)
 
     def distill_fix_body(self) -> Plate:
         return Plate(self.plate.interp, self.plate.enviro, Top())

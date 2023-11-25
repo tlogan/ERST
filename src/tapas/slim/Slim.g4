@@ -136,19 +136,19 @@ $combo = $expr.combo
 } 
 
 | '(' {
-plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projmulti_cator)
+plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projection_cator)
 } cator = expr[plate_cator] {
 self.guide_symbol(')')
 } ')' {
-plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_projmulti_keychain, $expr.combo)
+plate_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, plate).distill_projection_keychain, $cator.combo)
 } keychain[plate_keychain] {
-$combo = self.collect(ExprAttr(self._solver, plate).combine_projmulti, $expr.combo, $keychain.ids) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_projection, $cator.combo, $keychain.ids) 
 }
 
 | ID {
-plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojmulti_keychain, $ID.text)
+plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojection_keychain, $ID.text)
 } keychain[plate_keychain] {
-$combo = self.collect(ExprAttr(self._solver, plate).combine_idprojmulti, $ID.text, $keychain.ids) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_idprojection, $ID.text, $keychain.ids) 
 }
 
 | function[plate] {
@@ -156,19 +156,19 @@ $combo = $function.combo
 }
 
 | '(' {
-plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_appmulti_cator)
+plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_application_cator)
 } cator = expr[plate_cator] {
 self.guide_symbol(')')
 } ')' {
-plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_appmulti_argchain, $cator.combo)
+plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_application_argchain, $cator.combo)
 } content = argchain[plate_argchain] {
-$combo = self.collect(ExprAttr(self._solver, plate).combine_appmulti, $cator.combo, $argchain.combos)
+$combo = self.collect(ExprAttr(self._solver, plate).combine_application, $cator.combo, $argchain.combos)
 }
 
 | ID {
-plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idappmulti_argchain, $ID.text)
+plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idapplication_argchain, $ID.text)
 } argchain[plate_argchain] {
-$combo = self.collect(ExprAttr(self._solver, plate).combine_idappmulti, $ID.text, $argchain.combos) 
+$combo = self.collect(ExprAttr(self._solver, plate).combine_idapplication, $ID.text, $argchain.combos) 
 }
 
 | 'let' {
@@ -248,7 +248,7 @@ self.guide_terminal('ID')
 } ID {
 plate_body = self.guide_nonterm('pattern', PatternAttr(self._solver, plate).distill_tag_body, $ID.text)
 } body = pattern[plate_body] {
-$combo = self.collect(PatternAttr(self._solver, plate).combine_tag, $body.combo)
+$combo = self.collect(PatternAttr(self._solver, plate).combine_tag, $ID.text, $body.combo)
 }
 
 | recpat[plate] {

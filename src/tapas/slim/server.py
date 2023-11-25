@@ -38,12 +38,12 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
     ctx = None
     # parser.fresh_index = 0
     while True:
-        i = await input.get()
-        if isinstance(i, Kill):
+        piece = await input.get()
+        if isinstance(piece, Kill):
             await output.put(Killed())
             break
 
-        code += i 
+        code += (' ' + piece) 
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
         # token_stream = CommonTokenStream(lexer)

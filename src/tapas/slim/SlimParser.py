@@ -387,22 +387,22 @@ class SlimParser ( Parser ):
                 self.state = 38
                 self.match(SlimParser.T__2)
 
-                plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projmulti_cator)
+                plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_projection_cator)
 
                 self.state = 40
-                localctx.cator = localctx._expr = self.expr(plate_cator)
+                localctx.cator = self.expr(plate_cator)
 
                 self.guide_symbol(')')
 
                 self.state = 42
                 self.match(SlimParser.T__3)
 
-                plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_projmulti_keychain, localctx._expr.combo)
+                plate_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, plate).distill_projection_keychain, localctx.cator.combo)
 
                 self.state = 44
                 localctx._keychain = self.keychain(plate_keychain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_projmulti, localctx._expr.combo, localctx._keychain.ids) 
+                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_projection, localctx.cator.combo, localctx._keychain.ids) 
 
                 pass
 
@@ -411,12 +411,12 @@ class SlimParser ( Parser ):
                 self.state = 47
                 localctx._ID = self.match(SlimParser.ID)
 
-                plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojmulti_keychain, (None if localctx._ID is None else localctx._ID.text))
+                plate_keychain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idprojection_keychain, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 49
                 localctx._keychain = self.keychain(plate_keychain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_idprojmulti, (None if localctx._ID is None else localctx._ID.text), localctx._keychain.ids) 
+                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_idprojection, (None if localctx._ID is None else localctx._ID.text), localctx._keychain.ids) 
 
                 pass
 
@@ -434,7 +434,7 @@ class SlimParser ( Parser ):
                 self.state = 55
                 self.match(SlimParser.T__2)
 
-                plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_appmulti_cator)
+                plate_cator = self.guide_nonterm('expr', ExprAttr(self._solver, plate).distill_application_cator)
 
                 self.state = 57
                 localctx.cator = self.expr(plate_cator)
@@ -444,12 +444,12 @@ class SlimParser ( Parser ):
                 self.state = 59
                 self.match(SlimParser.T__3)
 
-                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_appmulti_argchain, localctx.cator.combo)
+                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_application_argchain, localctx.cator.combo)
 
                 self.state = 61
                 localctx.content = localctx._argchain = self.argchain(plate_argchain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_appmulti, localctx.cator.combo, localctx._argchain.combos)
+                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_application, localctx.cator.combo, localctx._argchain.combos)
 
                 pass
 
@@ -458,12 +458,12 @@ class SlimParser ( Parser ):
                 self.state = 64
                 localctx._ID = self.match(SlimParser.ID)
 
-                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idappmulti_argchain, (None if localctx._ID is None else localctx._ID.text))
+                plate_argchain = self.guide_nonterm(ExprAttr(self._solver, plate).distill_idapplication_argchain, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 66
                 localctx._argchain = self.argchain(plate_argchain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_idappmulti, (None if localctx._ID is None else localctx._ID.text), localctx._argchain.combos) 
+                localctx.combo = self.collect(ExprAttr(self._solver, plate).combine_idapplication, (None if localctx._ID is None else localctx._ID.text), localctx._argchain.combos) 
 
                 pass
 
@@ -680,7 +680,7 @@ class SlimParser ( Parser ):
                 self.state = 108
                 localctx.body = self.pattern(plate_body)
 
-                localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_tag, localctx.body.combo)
+                localctx.combo = self.collect(PatternAttr(self._solver, plate).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 pass
 
