@@ -13,6 +13,7 @@ from asyncio import Queue
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser
 from tapas.slim import server, analysis
+from tapas.slim.analysis import *
 
 from tapas.util_system import box, unbox
 
@@ -266,6 +267,12 @@ case :cons x => :succ (self(x))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
+
+def test_type_implication():
+    typ = Imp(Imp(TVar('X'), TVar('Y')), TVar('Z'))
+    concrete = concretize_type(typ)
+    assert concrete == "((X -> Y) -> Z)"
+    # print(f'<<< {concrete} >>>')
 
 if __name__ == '__main__':
     pass

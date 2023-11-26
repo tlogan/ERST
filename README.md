@@ -2,8 +2,8 @@
 
 
 ### TODO
-- add syntax for pairs `,`, if/else, and feed/pipe `|>` 
 - write method to serialize type structure; using while loop over stack.  
+- add syntax for pairs `,`, if/else, and feed/pipe `|>` 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
 - update collect and guide_choice rules to memo(r)ize

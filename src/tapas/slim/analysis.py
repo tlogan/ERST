@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import *
+from typing import Callable 
 import sys
 from antlr4 import *
 import sys
@@ -16,6 +17,10 @@ from pyrsistent import m
 from contextlib import contextmanager
 
 
+T = TypeVar('T')
+R = TypeVar('R')
+
+
 Op = Optional
 
 """
@@ -28,14 +33,6 @@ Typ data types
 @dataclass(frozen=True, eq=True)
 class TVar:
     id : str
-
-@dataclass(frozen=True, eq=True)
-class Top:
-    pass
-
-@dataclass(frozen=True, eq=True)
-class Bot:
-    pass
 
 @dataclass(frozen=True, eq=True)
 class TUnit:
@@ -70,13 +67,65 @@ class Exis:
 class Induc:
     body : Typ 
 
+@dataclass(frozen=True, eq=True)
+class Top:
+    pass
 
-Typ = Union[TVar, Top, Bot, TUnit, TTag, TField, Inter, Imp, Exis, Induc]
+@dataclass(frozen=True, eq=True)
+class Bot:
+    pass
+
+Typ = Union[TVar, TUnit, TTag, TField, Inter, Imp, Exis, Induc, Top, Bot]
 
 
 @dataclass(frozen=True, eq=True)
 class ECombo:
     descrip : Typ    
+
+def mk_stack_machine(
+    mk_plate : Callable[[T], tuple[list[T], Callable, list[R]]], 
+) -> Callable[[T], R] :
+    def run(start : T):
+        result = None 
+        stack : list[tuple[list[T], Callable, list[R]]]= [([start], (lambda x : x), [])]
+
+        while len(stack) > 0 :
+            (controls, combine, args) = stack.pop()
+
+            if result:
+                args.append(result)
+
+            if len(controls) == 0:
+                result = combine(*args)
+            else:
+                result = None 
+                control = controls.pop(0)
+                plate = mk_plate(control)
+                stack.append((controls, combine, args))
+                stack.append(plate)
+
+            pass
+
+        assert result
+        return result
+    return run
+
+
+def concretize_type(typ : Typ) -> str:
+    def mk_plate (control : Typ):
+        if isinstance(control, TUnit):
+            plate = ([], lambda: "unit", [])  
+        if isinstance(control, TVar):
+            plate = ([], lambda: control.id, [])  
+        elif isinstance(control, Imp):
+            plate = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})", [])  
+        # Typ = Union[TVar, TUnit, TTag, TField, Inter, Imp, Exis, Induc, Top, Bot]
+        else:
+            assert False
+        return plate
+
+    return mk_stack_machine(mk_plate)(typ)
+
 
 
 
@@ -116,7 +165,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm:
     id : str 
-    plate : Plate
+    distillation : Distillation
 
 
 # TODO: the interpretation could map type patterns to types, rather than merely strings
@@ -125,14 +174,14 @@ Interp = PMap[str, Typ]
 Enviro = PMap[str, Typ]
 
 @dataclass(frozen=True, eq=True)
-class Plate: 
+class Distillation: 
     interp : Interp
     enviro : Enviro 
     prescrip : Typ
 
 Guidance = Union[Symbol, Terminal, Nonterm]
 
-plate_default = Plate(m(), m(), Top())
+distillation_default = Distillation(m(), m(), Top())
 
 class Solver:
     _type_id : int = 0 
@@ -153,7 +202,7 @@ class Solver:
         return interp 
 
 class Attr:
-    def __init__(self, solver : Solver, plate : Plate):
+    def __init__(self, solver : Solver, plate : Distillation):
         self.solver = solver
         self.plate = plate 
 
@@ -167,10 +216,10 @@ class ExprAttr(Attr):
     def combine_unit(self) -> ECombo:
         return ECombo(TUnit())
 
-    def distill_tag_body(self, id : str) -> Plate:
+    def distill_tag_body(self, id : str) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     def combine_tag(self, label : str, body : ECombo) -> ECombo:
         return ECombo(TTag(label, body.descrip))
@@ -181,11 +230,11 @@ class ExprAttr(Attr):
     #     interp = self.solver.solve(self.plate.interp, record, TField(key, answr))
     #     return Exis(answr, interp)
 
-    def distill_projection_cator(self) -> Plate:
-        return Plate(self.plate.interp, self.plate.enviro, Top())
+    def distill_projection_cator(self) -> Distillation:
+        return Distillation(self.plate.interp, self.plate.enviro, Top())
 
-    def distill_projection_keychain(self, record : Typ) -> Plate: 
-        return Plate(self.plate.interp, self.plate.enviro, record)
+    def distill_projection_keychain(self, record : Typ) -> Distillation: 
+        return Distillation(self.plate.interp, self.plate.enviro, record)
 
 
     def combine_projection(self, record : ECombo, keys : list[str]) -> ECombo: 
@@ -198,17 +247,17 @@ class ExprAttr(Attr):
 
         return ECombo(Exis(answr_i, interp_i))
 
-    def distill_idprojection_keychain(self, id : str) -> Plate: 
+    def distill_idprojection_keychain(self, id : str) -> Distillation: 
         return self.distill_projection_keychain(self.plate.enviro[id])
 
     def combine_idprojection(self, id : str, keys : list[str]) -> ECombo: 
         return self.combine_projection(ECombo(self.plate.enviro[id]), keys)
 
-    def distill_application_cator(self) -> Plate: 
-        return Plate(self.plate.interp, self.plate.enviro, Imp(Bot(), Top()))
+    def distill_application_cator(self) -> Distillation: 
+        return Distillation(self.plate.interp, self.plate.enviro, Imp(Bot(), Top()))
 
-    def distill_application_argchain(self, function : ECombo) -> Plate: 
-        return Plate(self.plate.interp, self.plate.enviro, function.descrip)
+    def distill_application_argchain(self, function : ECombo) -> Distillation: 
+        return Distillation(self.plate.interp, self.plate.enviro, function.descrip)
 
     def combine_application(self, function : ECombo, arguments : list[ECombo]) -> ECombo: 
         interp_i = self.plate.interp
@@ -220,7 +269,7 @@ class ExprAttr(Attr):
 
         return ECombo(Exis(answr_i, interp_i))
 
-    def distill_idapplication_argchain(self, id : str) -> Plate: 
+    def distill_idapplication_argchain(self, id : str) -> Distillation: 
         function = ECombo(self.plate.enviro[id])
         return self.distill_application_argchain(function)
 
@@ -228,23 +277,23 @@ class ExprAttr(Attr):
         function = ECombo(self.plate.enviro[id])
         return self.combine_application(function, arguments)
 
-    def distill_fix_body(self) -> Plate:
-        return Plate(self.plate.interp, self.plate.enviro, Top())
+    def distill_fix_body(self) -> Distillation:
+        return Distillation(self.plate.interp, self.plate.enviro, Top())
 
     def combine_fix(self, body : ECombo) -> ECombo:
         return ECombo(Induc(body.descrip))
     
-    def distill_let_target(self, id : str) -> Plate:
-        return Plate(self.plate.interp, self.plate.enviro, Top())
+    def distill_let_target(self, id : str) -> Distillation:
+        return Distillation(self.plate.interp, self.plate.enviro, Top())
 
-    def distill_let_contin(self, id : str, target : Typ) -> Plate:
+    def distill_let_contin(self, id : str, target : Typ) -> Distillation:
         interp = self.plate.interp
         '''
         TODO: generalize target
         - avoid overgeneralizing by not abstracting variables introduced before target
         '''
         enviro = self.plate.enviro.set(id, target)
-        return Plate(interp, enviro, self.plate.prescrip)
+        return Distillation(interp, enviro, self.plate.prescrip)
 '''
 end ExprAttr
 '''
@@ -262,10 +311,10 @@ class PatternAttr(Attr):
         interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
         return PCombo(m(), descrip)
 
-    def distill_tag_body(self, id : str) -> Plate:
+    def distill_tag_body(self, id : str) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     def combine_tag(self, label : str, body : PCombo) -> PCombo:
         return PCombo(body.enviro, TTag(label, body.descrip))
@@ -276,33 +325,33 @@ end PatternAttr
 
 class RecordAttr(Attr):
 
-    def distill_single_body(self, id : str) -> Plate:
+    def distill_single_body(self, id : str) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip) 
+        return Distillation(interp, self.plate.enviro, prescrip) 
 
     def combine_single(self, id : str, body : ECombo) -> ECombo:
         return ECombo(TField(id, body.descrip)) 
 
-    def distill_cons_body(self, id : str) -> Plate:
+    def distill_cons_body(self, id : str) -> Distillation:
         return self.distill_single_body(id)
 
-    def distill_cons_tail(self, id : str, body : ECombo) -> Plate:
+    def distill_cons_tail(self, id : str, body : ECombo) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip) 
+        return Distillation(interp, self.plate.enviro, prescrip) 
 
     def combine_cons(self, id : str, body : ECombo, tail : ECombo) -> ECombo:
         return ECombo(Inter(TField(id, body.descrip), tail.descrip))
 
 class FunctionAttr(Attr):
 
-    def distill_single_pattern(self) -> Plate:
+    def distill_single_pattern(self) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
-    def distill_single_body(self, pattern : PCombo) -> Plate:
+    def distill_single_body(self, pattern : PCombo) -> Distillation:
         conclusion = self.solver.fresh_type_var() 
 
         """
@@ -312,28 +361,28 @@ class FunctionAttr(Attr):
         """
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(pattern.descrip, conclusion)) 
         enviro = self.plate.enviro + pattern.enviro
-        return Plate(interp, enviro, conclusion)
+        return Distillation(interp, enviro, conclusion)
 
     def combine_single(self, pattern : PCombo, body : ECombo) -> ECombo:
         return ECombo(Imp(pattern.descrip, body.descrip))
 
-    def distill_cons_pattern(self) -> Plate:
+    def distill_cons_pattern(self) -> Distillation:
         return self.distill_single_pattern()
 
-    def distill_cons_body(self, pattern : PCombo) -> Plate:
+    def distill_cons_body(self, pattern : PCombo) -> Distillation:
         return self.distill_single_body(pattern)
 
-    def distill_cons_tail(self, pattern : PCombo, body : ECombo) -> Plate:
+    def distill_cons_tail(self, pattern : PCombo, body : ECombo) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, Inter(Imp(pattern.descrip, body.descrip), prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     def combine_cons(self, pattern : PCombo, body : ECombo, tail : ECombo) -> ECombo:
         return ECombo(Inter(Imp(pattern.descrip, body.descrip), tail.descrip))
 
     #####################
 
-    # def distill_function_body(self, param : str) -> Plate:
+    # def distill_function_body(self, param : str) -> Distillation:
     #     '''
     #     TODO: decompose guide.typ into prescribed typ of the body
     #     '''
@@ -347,7 +396,7 @@ class FunctionAttr(Attr):
     #     interp = self.solve(plate.interp, plate.prescrip, Imp(typ_in, typ_out)) 
     #     enviro = plate.enviro.set(param, typ_in)
 
-    #     return Plate(interp, enviro, typ_out)
+    #     return Distillation(interp, enviro, typ_out)
 
 
     # def combine_function(self, param : str, body : ECombo) -> ECombo:
@@ -360,21 +409,21 @@ class FunctionAttr(Attr):
 
 class RecpatAttr(Attr):
 
-    def distill_single_body(self, id : str) -> Plate:
+    def distill_single_body(self, id : str) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip) 
+        return Distillation(interp, self.plate.enviro, prescrip) 
 
     def combine_single(self, label : str, body : PCombo) -> PCombo:
         return PCombo(body.enviro, TField(label, body.descrip))
 
-    def distill_cons_body(self, id : str) -> Plate:
+    def distill_cons_body(self, id : str) -> Distillation:
         return self.distill_cons_body(id)
 
-    def distill_cons_tail(self, id : str, body : PCombo) -> Plate:
+    def distill_cons_tail(self, id : str, body : PCombo) -> Distillation:
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
-        return Plate(interp, self.plate.enviro, prescrip) 
+        return Distillation(interp, self.plate.enviro, prescrip) 
 
     def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
         return PCombo(body.enviro + tail.enviro, Inter(TField(label, body.descrip), tail.descrip))
@@ -391,7 +440,7 @@ class KeychainAttr(Attr):
     def distill_cons_tail(self, key : str):
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, TField(key, prescrip))
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
         return self.combine_single(key) + keys
@@ -401,13 +450,13 @@ class ArgchainAttr(Attr):
     def distill_single_content(self):
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
 
     def distill_cons_head(self):
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(prescrip, Top()))
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     '''
     return the plate with the prescripation as the type that the next element in tail cuts
@@ -415,7 +464,7 @@ class ArgchainAttr(Attr):
     def distill_cons_tail(self, head : Typ):
         prescrip = self.solver.fresh_type_var()
         interp = self.solver.solve(self.plate.interp, self.plate.prescrip, Imp(head, prescrip))
-        return Plate(interp, self.plate.enviro, prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.prescrip, Imp(content, Top()))
