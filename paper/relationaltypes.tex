@@ -135,34 +135,6 @@ on the possible values of the next portion to be constructed. The types are expr
 between values rather than merely the shape of values. Thus, a \textit{relational type} can be viewed 
 as a structured representation of a predicate defined by horn clauses. 
 
-The object under analysis is a incomplete program in concrete syntax constructed by a human or a human-like agent. 
-Thus, the analysis must be able to operate without an abstract syntax tree. Instead, we implement the analysis 
-as \textit{attribute rules}, interwoven with top-down parsing rules to form an \textit{attribute grammar}. 
-
-Using attribute rules during parsing adds many complications that would not be present for an
-analysis over an AST. 
-The analysis must be separated into rules for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
-Additionally, due to the left-recursion problem in top-down parsing, 
-the parser consolidates information in a right-associative manner.
-Thus, one difference of an analysis over a top-down parsing stack as opposed to recursion over an AST is 
-the re-associating of program information from right to the left on the fly. 
-Consider a chain of record projections:  
-\[ 
-x.uno.dos.tres 
-\]
-
-\noindent is parsed as
-
-\[ 
-x(.uno(.dos(.tres)))
-\]
-
-\noindent but represents the expression 
-
-\[ 
-((x.uno).dos).tres
-\]
-
 In addition to intersection types, seen in refinement type systems, our system also requires union types
 due to the absence of intrinsic types or a specified universe of logical qualifiers/predicates to choose from. 
 That is, we must be able to start with a strong type and weaken as more use cases are uncovered in the program. 
@@ -205,6 +177,42 @@ For example, our system allows the type of a function to be constructed as an in
 while Synquid requires the function's type to be a single implication (i.e. arrow) type.
 Our system must be more flexible than Synquid due to the specification being extracted from the program,
 rather than specified by the user (as is the case in Synquid).
+
+The object under analysis is a incomplete program in concrete syntax constructed by a human or a human-like agent. 
+Thus, the analysis must be able to operate without an abstract syntax tree. Instead, we implement the analysis 
+as \textit{attribute rules}, interwoven with top-down parsing rules to form an \textit{attribute grammar}. 
+
+Using attribute rules during parsing adds many complications that would not be present for an
+analysis over an AST. 
+The analysis must be separated into rules for \textit{inheriting attributes} and rules for \textit{synthesizing attributes}.
+Additionally, due to the left-recursion problem in top-down parsing, 
+the parser consolidates information in a right-associative manner.
+Thus, one difference of an analysis over a top-down parsing stack as opposed to recursion over an AST is 
+the re-associating of program information from right to the left on the fly. 
+Consider a chain of record projections:  
+\[ 
+x.uno.dos.tres 
+\]
+
+\noindent is parsed as
+
+\[ 
+x(.uno(.dos(.tres)))
+\]
+
+\noindent but represents the expression 
+
+\[ 
+((x.uno).dos).tres
+\]
+
+Propagating types downward over a top-down parse-tree results in a varying interpretations of the downwardly propagated type used for local guidance.
+For syntax that represents complete expressions, e.g. \[ :uno @ \], the inherited type represents the expected type for that expression.
+However, for syntax that cannot represent a complete expression, the inherited type must represent something else. 
+For instance, in the parse tree for a chain of projections, a syntactic subtree of projections, such as \[ .dos.tres \] does not constitute a complete expression.   
+There is no type for this syntax. Thus, the inherited type represents the type that \[ .dos \] is expected to project from (or cut into), 
+e.g. the descriptive type of \[ x.uno \].
+
 
 Our technique's combination of bidirectional typing with union and intersection can be viewed as analogous to the \textit{duality} method
 of solving horn clauses.

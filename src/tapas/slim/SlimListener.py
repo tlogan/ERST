@@ -65,6 +65,15 @@ class SlimListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SlimParser#pipeline.
+    def enterPipeline(self, ctx:SlimParser.PipelineContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#pipeline.
+    def exitPipeline(self, ctx:SlimParser.PipelineContext):
+        pass
+
+
     # Enter a parse tree produced by SlimParser#keychain.
     def enterKeychain(self, ctx:SlimParser.KeychainContext):
         pass

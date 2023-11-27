@@ -117,16 +117,30 @@ $combo = $base.combo
 // Introduction rules
 
 | {
-distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_left)
-} left = base[distillation] {
+distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_head)
+} head = base[distillation] {
 self.guide_symbol(',')
 } ',' {
-distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_right, $left.combo)
-} right = base[distillation] {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $left.combo, $right.combo) 
+distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_tail, $head.combo)
+} tail = base[distillation] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $head.combo, $tail.combo) 
 }
 
 // Elimination rules
+
+| 'if' {
+distillation_condition = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_condition)
+} condition = expr[distillation_condition] {
+self.guide_symbol('then')
+} 'then' {
+distillation_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_true_branch, $condition.combo)
+} true_branch = expr[distillation_true_branch] {
+self.guide_symbol('else')
+} 'else' {
+distillation_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_false_branch, $condition.combo, $true_branch.combo)
+} false_branch = expr[distillation_false_branch] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_ite, $condition.combo, $true_branch.combo, $false_branch.combo) 
+} 
 
 | {
 distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_projection_cator)
@@ -140,8 +154,16 @@ $combo = self.collect(ExprAttr(self._solver, distillation).combine_projection, $
 distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_application_cator)
 } cator = base[distillation_cator] {
 distillation_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, distillation).distill_application_argchain, $cator.combo)
-} content = argchain[distillation_argchain] {
+} argchain[distillation_argchain] {
 $combo = self.collect(ExprAttr(self._solver, distillation).combine_application, $cator.combo, $argchain.combos)
+}
+
+| {
+distillation_arg = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_funnel_arg)
+} cator = base[distillation_arg] {
+distillation_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, distillation).distill_funnel_pipeline, $cator.combo)
+} pipeline[distillation_pipeline] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_funnel, $cator.combo, $pipeline.combos)
 }
 
 | 'let' {
@@ -305,6 +327,24 @@ $combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, $h
 
 ;
 
+pipeline [Distillation distillation] returns [list[ECombo] combos] :
+
+| '|>' {
+distillation_content = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_single_content) 
+} content = expr[distillation_content] {
+$combos = self.collect(PipelineAttr(self._solver, distillation).combine_single, $content.combo)
+}
+
+| '|>' {
+distillation_head = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_cons_head) 
+} head = expr[distillation_head] {
+distillation_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, distillation).distill_cons_tail, $head.combo) 
+} tail = pipeline[distillation_tail] {
+$combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, $head.combo, $tail.combos)
+}
+
+;
+
 
 // NOTE: distillation.expect represents the type of the rator applied to the next immediate argument  
 keychain [Distillation distillation] returns [list[str] ids] :
@@ -356,13 +396,13 @@ $combo = $pattern_base.combo
 }
 
 | {
-distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_left)
-} left = base[distillation] {
+distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_head)
+} head = base[distillation] {
 self.guide_symbol(',')
 } ',' {
-distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_right, $left.combo)
-} right = base[distillation] {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $left.combo, $right.combo) 
+distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_tail, $head.combo)
+} tail = base[distillation] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $head.combo, $tail.combo) 
 }
 
 ;
