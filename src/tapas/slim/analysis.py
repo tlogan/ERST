@@ -208,7 +208,7 @@ class Attr:
 
 
 
-class ExprAttr(Attr):
+class BaseAttr(Attr):
 
     def combine_var(self, id : str) -> ECombo:
         return ECombo(self.plate.enviro[id])
@@ -223,6 +223,21 @@ class ExprAttr(Attr):
 
     def combine_tag(self, label : str, body : ECombo) -> ECombo:
         return ECombo(TTag(label, body.descrip))
+
+class ExprAttr(Attr):
+
+    def distill_tuple_left(self) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, Inter(TField('left', prescrip), TField('right', Bot())), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def distill_tuple_right(self, left : ECombo) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, Inter(TField('left', left.descrip), TField('right', prescrip)), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def combine_tuple(self, left : ECombo, right : ECombo) -> ECombo:
+        return ECombo(Inter(TField('left', left.descrip), TField('right', right.descrip)))
 
     # TODO: remove
     # def combine_projection(self, record : Typ, key : str) -> Typ: 
@@ -247,12 +262,6 @@ class ExprAttr(Attr):
 
         return ECombo(Exis(answr_i, interp_i))
 
-    def distill_idprojection_keychain(self, id : str) -> Distillation: 
-        return self.distill_projection_keychain(self.plate.enviro[id])
-
-    def combine_idprojection(self, id : str, keys : list[str]) -> ECombo: 
-        return self.combine_projection(ECombo(self.plate.enviro[id]), keys)
-
     def distill_application_cator(self) -> Distillation: 
         return Distillation(self.plate.interp, self.plate.enviro, Imp(Bot(), Top()))
 
@@ -268,14 +277,6 @@ class ExprAttr(Attr):
             answr_i = answr
 
         return ECombo(Exis(answr_i, interp_i))
-
-    def distill_idapplication_argchain(self, id : str) -> Distillation: 
-        function = ECombo(self.plate.enviro[id])
-        return self.distill_application_argchain(function)
-
-    def combine_idapplication(self, id : str, arguments : list[ECombo]) -> ECombo: 
-        function = ECombo(self.plate.enviro[id])
-        return self.combine_application(function, arguments)
 
     def distill_fix_body(self) -> Distillation:
         return Distillation(self.plate.interp, self.plate.enviro, Top())
@@ -296,30 +297,6 @@ class ExprAttr(Attr):
         return Distillation(interp, enviro, self.plate.prescrip)
 '''
 end ExprAttr
-'''
-
-class PatternAttr(Attr):
-
-    def combine_var(self, id : str) -> PCombo:
-        descrip = self.solver.fresh_type_var()
-        enviro = m().set(id, descrip)
-        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(enviro, descrip)
-
-    def combine_unit(self) -> PCombo:
-        descrip = TUnit()
-        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
-        return PCombo(m(), descrip)
-
-    def distill_tag_body(self, id : str) -> Distillation:
-        prescrip = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
-        return Distillation(interp, self.plate.enviro, prescrip)
-
-    def combine_tag(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TTag(label, body.descrip))
-'''
-end PatternAttr
 '''
 
 
@@ -407,27 +384,6 @@ class FunctionAttr(Attr):
     #####################
 
 
-class RecpatAttr(Attr):
-
-    def distill_single_body(self, id : str) -> Distillation:
-        prescrip = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
-        return Distillation(interp, self.plate.enviro, prescrip) 
-
-    def combine_single(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TField(label, body.descrip))
-
-    def distill_cons_body(self, id : str) -> Distillation:
-        return self.distill_cons_body(id)
-
-    def distill_cons_tail(self, id : str, body : PCombo) -> Distillation:
-        prescrip = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
-        return Distillation(interp, self.plate.enviro, prescrip) 
-
-    def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
-        return PCombo(body.enviro + tail.enviro, Inter(TField(label, body.descrip), tail.descrip))
-
 class KeychainAttr(Attr):
 
     def combine_single(self, key : str) -> list[str]:
@@ -472,3 +428,71 @@ class ArgchainAttr(Attr):
 
     def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
         return self.combine_single(head) + tail
+
+
+'''
+start Pattern Attributes
+'''
+
+class PatternAttr(Attr):
+    def distill_tuple_left(self) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, Inter(TField('left', prescrip), TField('right', Bot())), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def distill_tuple_right(self, left : PCombo) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, Inter(TField('left', left.descrip), TField('right', prescrip)), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def combine_tuple(self, left : PCombo, right : PCombo) -> PCombo:
+        return PCombo(left.enviro + right.enviro, Inter(TField('left', left.descrip), TField('right', right.descrip)))
+
+'''
+end PatternAttr
+'''
+
+class PatternBaseAttr(Attr):
+
+    def combine_var(self, id : str) -> PCombo:
+        descrip = self.solver.fresh_type_var()
+        enviro = m().set(id, descrip)
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(enviro, descrip)
+
+    def combine_unit(self) -> PCombo:
+        descrip = TUnit()
+        interp = self.solver.solve(self.plate.interp, descrip, self.plate.prescrip)
+        return PCombo(m(), descrip)
+
+    def distill_tag_body(self, id : str) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, TTag(id, prescrip), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip)
+
+    def combine_tag(self, label : str, body : PCombo) -> PCombo:
+        return PCombo(body.enviro, TTag(label, body.descrip))
+'''
+end PatternBaseAttr
+'''
+
+class PatternRecordAttr(Attr):
+
+    def distill_single_body(self, id : str) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, TField(id, prescrip), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def combine_single(self, label : str, body : PCombo) -> PCombo:
+        return PCombo(body.enviro, TField(label, body.descrip))
+
+    def distill_cons_body(self, id : str) -> Distillation:
+        return self.distill_cons_body(id)
+
+    def distill_cons_tail(self, id : str, body : PCombo) -> Distillation:
+        prescrip = self.solver.fresh_type_var()
+        interp = self.solver.solve(self.plate.interp, Inter(TField(id, body.descrip), prescrip), self.plate.prescrip)
+        return Distillation(interp, self.plate.enviro, prescrip) 
+
+    def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
+        return PCombo(body.enviro + tail.enviro, Inter(TField(label, body.descrip), tail.descrip))

@@ -107,68 +107,41 @@ def collect(self, f : Callable, *args):
 }
 
 expr [Distillation distillation] returns [ECombo combo] : 
-| ID {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_var, $ID.text)
-} 
 
-| '@' {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_unit)
-} 
+// Base rules
 
-| ':' {
-self.guide_terminal('ID')
-} ID {
-distillation_body = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tag_body, $ID.text)
-} body = expr[distillation_body] {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_tag, $ID.text, $body.combo)
+| base[distillation] {
+$combo = $base.combo
 }
 
-| record[distillation] {
-$combo = $record.combo
+// Introduction rules
+
+| {
+distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_left)
+} left = base[distillation] {
+self.guide_symbol(',')
+} ',' {
+distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_right, $left.combo)
+} right = base[distillation] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $left.combo, $right.combo) 
 }
 
-| '(' {
-distillation_expr = self.guide_nonterm('expr', lambda: distillation)
-} expr[distillation_expr] {
-self.guide_symbol(')')
-} ')' {
-$combo = $expr.combo
-} 
+// Elimination rules
 
-| '(' {
+| {
 distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_projection_cator)
-} cator = expr[distillation_cator] {
-self.guide_symbol(')')
-} ')' {
+} cator = base[distillation_cator] {
 distillation_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, distillation).distill_projection_keychain, $cator.combo)
 } keychain[distillation_keychain] {
 $combo = self.collect(ExprAttr(self._solver, distillation).combine_projection, $cator.combo, $keychain.ids) 
 }
 
-| ID {
-distillation_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, distillation).distill_idprojection_keychain, $ID.text)
-} keychain[distillation_keychain] {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_idprojection, $ID.text, $keychain.ids) 
-}
-
-| function[distillation] {
-$combo = $function.combo
-}
-
-| '(' {
+| {
 distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_application_cator)
-} cator = expr[distillation_cator] {
-self.guide_symbol(')')
-} ')' {
+} cator = base[distillation_cator] {
 distillation_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, distillation).distill_application_argchain, $cator.combo)
 } content = argchain[distillation_argchain] {
 $combo = self.collect(ExprAttr(self._solver, distillation).combine_application, $cator.combo, $argchain.combos)
-}
-
-| ID {
-distillation_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, distillation).distill_idapplication_argchain, $ID.text)
-} argchain[distillation_argchain] {
-$combo = self.collect(ExprAttr(self._solver, distillation).combine_idapplication, $ID.text, $argchain.combos) 
 }
 
 | 'let' {
@@ -198,7 +171,6 @@ $combo = $contin.combo
 // $combo = $body.combo
 // }
 
-
 | 'fix' {
 self.guide_symbol('(')
 } '(' {
@@ -211,51 +183,50 @@ $combo = self.collect(ExprAttr(self._solver, distillation).combine_fix, $body.co
 
 ;
 
-target [Distillation distillation] returns [ECombo combo]:
-
-| '=' {
-distillation_expr = self.guide_nonterm('expr', lambda: distillation)
-} expr[distillation_expr] {
-$combo = $expr.combo
-}
-
-// TODO: add annotation case and type parsing
-// | ':' {
-// # TODO
-// distillation_anno = self.guide_nonterm('expr', TargetAttr(self._solver, distillation).distill_target_anno)
-// } anno = typ[distillation] {
-// } '=' {
-// # TODO
-// distillation_body = self.guide_nonterm('expr', TargetAttr(self._solver, distillation).distill_target_body, $anno.combo)
-// } body = expr[distillation_body] {
-// $combo = $body.combo
-// }
-
-;
-
-pattern [Distillation distillation] returns [PCombo combo]:  
-
-| ID {
-$combo = self.collect(PatternAttr(self._solver, distillation).combine_var, $ID.text)
-} 
+base [Distillation distillation] returns [ECombo combo] : 
+// Introduction rules
 
 | '@' {
-$combo = self.collect(PatternAttr(self._solver, distillation).combine_unit)
+$combo = self.collect(BaseAttr(self._solver, distillation).combine_unit)
 } 
 
 | ':' {
 self.guide_terminal('ID')
 } ID {
-distillation_body = self.guide_nonterm('pattern', PatternAttr(self._solver, distillation).distill_tag_body, $ID.text)
-} body = pattern[distillation_body] {
-$combo = self.collect(PatternAttr(self._solver, distillation).combine_tag, $ID.text, $body.combo)
+distillation_body = self.guide_nonterm('expr', BaseAttr(self._solver, distillation).distill_tag_body, $ID.text)
+} body = expr[distillation_body] {
+$combo = self.collect(BaseAttr(self._solver, distillation).combine_tag, $ID.text, $body.combo)
 }
 
-| recpat[distillation] {
-$combo = $recpat.combo
+///////
+// PROBLE: left-recursion not allowed
+// | expr[sistillation] ',' expr[sistillation]
+///////
+
+| record[distillation] {
+$combo = $record.combo
 }
+
+| function[distillation] {
+$combo = $function.combo
+}
+
+// Elimination rules
+
+| ID {
+$combo = self.collect(BaseAttr(self._solver, distillation).combine_var, $ID.text)
+} 
+
+| '(' {
+distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+} expr[distillation_expr] {
+self.guide_symbol(')')
+} ')' {
+$combo = $expr.combo
+} 
 
 ;
+
 
 function [Distillation distillation] returns [ECombo combo] :
 
@@ -283,31 +254,6 @@ $combo = self.collect(FunctionAttr(self._solver, distillation).combine_cons, $pa
 
 ;
 
-recpat [Distillation distillation] returns [PCombo combo] :
-
-| ':' {
-self.guide_terminal('ID')
-} ID {
-self.guide_symbol('=')
-} '=' {
-distillation_body = self.guide_nonterm('pattern', RecpatAttr(self._solver, distillation).distill_single_body, $ID.text)
-} body = pattern[distillation_body] {
-$combo = self.collect(RecpatAttr(self._solver, distillation).combine_single, $ID.text, $body.combo)
-}
-
-| ':' {
-self.guide_terminal('ID')
-} ID {
-self.guide_symbol('=')
-} '=' {
-distillation_body = self.guide_nonterm('pattern', RecpatAttr(self._solver, distillation).distill_cons_body, $ID.text)
-} body = pattern[distillation_body] {
-distillation_tail = self.guide_nonterm('recpat', RecpatAttr(self._solver, distillation).distill_cons_tail, $ID.text, $body.combo)
-} tail = recpat[distillation_tail] {
-$combo = self.collect(RecpatAttr(self._solver, distillation).combine_cons, $ID.text, $body.combo, $tail.combo)
-}
-
-;
 
 
 record [Distillation distillation] returns [ECombo combo] :
@@ -375,6 +321,102 @@ self.guide_terminal('ID')
 distillation_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, distillation).distill_cons_tail, $ID.text) 
 } tail = keychain[distillation_tail] {
 $ids = self.collect(KeychainAttr(self._solver, distillation).combine_cons, $ID.text, $tail.ids)
+}
+
+;
+
+target [Distillation distillation] returns [ECombo combo]:
+
+| '=' {
+distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+} expr[distillation_expr] {
+$combo = $expr.combo
+}
+
+// TODO: add annotation case and type parsing
+// | ':' {
+// # TODO
+// distillation_anno = self.guide_nonterm('expr', TargetAttr(self._solver, distillation).distill_target_anno)
+// } anno = typ[distillation] {
+// } '=' {
+// # TODO
+// distillation_body = self.guide_nonterm('expr', TargetAttr(self._solver, distillation).distill_target_body, $anno.combo)
+// } body = expr[distillation_body] {
+// $combo = $body.combo
+// }
+
+;
+
+
+
+pattern [Distillation distillation] returns [PCombo combo]:  
+
+| pattern_base[distillation] {
+$combo = $pattern_base.combo
+}
+
+| {
+distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_left)
+} left = base[distillation] {
+self.guide_symbol(',')
+} ',' {
+distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_right, $left.combo)
+} right = base[distillation] {
+$combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, $left.combo, $right.combo) 
+}
+
+;
+
+pattern_base [Distillation distillation] returns [PCombo combo]:  
+
+| ID {
+$combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, $ID.text)
+} 
+
+| ID {
+$combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, $ID.text)
+} 
+
+| '@' {
+$combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_unit)
+} 
+
+| ':' {
+self.guide_terminal('ID')
+} ID {
+distillation_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, distillation).distill_tag_body, $ID.text)
+} body = pattern[distillation_body] {
+$combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_tag, $ID.text, $body.combo)
+}
+
+| pattern_record[distillation] {
+$combo = $pattern_record.combo
+}
+
+;
+
+pattern_record [Distillation distillation] returns [PCombo combo] :
+
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_single_body, $ID.text)
+} body = pattern[distillation_body] {
+$combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_single, $ID.text, $body.combo)
+}
+
+| ':' {
+self.guide_terminal('ID')
+} ID {
+self.guide_symbol('=')
+} '=' {
+distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_cons_body, $ID.text)
+} body = pattern[distillation_body] {
+distillation_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, distillation).distill_cons_tail, $ID.text, $body.combo)
+} tail = pattern_record[distillation_tail] {
+$combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
 
 ;

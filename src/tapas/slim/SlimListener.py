@@ -29,21 +29,12 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#target.
-    def enterTarget(self, ctx:SlimParser.TargetContext):
+    # Enter a parse tree produced by SlimParser#base.
+    def enterBase(self, ctx:SlimParser.BaseContext):
         pass
 
-    # Exit a parse tree produced by SlimParser#target.
-    def exitTarget(self, ctx:SlimParser.TargetContext):
-        pass
-
-
-    # Enter a parse tree produced by SlimParser#pattern.
-    def enterPattern(self, ctx:SlimParser.PatternContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#pattern.
-    def exitPattern(self, ctx:SlimParser.PatternContext):
+    # Exit a parse tree produced by SlimParser#base.
+    def exitBase(self, ctx:SlimParser.BaseContext):
         pass
 
 
@@ -53,15 +44,6 @@ class SlimListener(ParseTreeListener):
 
     # Exit a parse tree produced by SlimParser#function.
     def exitFunction(self, ctx:SlimParser.FunctionContext):
-        pass
-
-
-    # Enter a parse tree produced by SlimParser#recpat.
-    def enterRecpat(self, ctx:SlimParser.RecpatContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#recpat.
-    def exitRecpat(self, ctx:SlimParser.RecpatContext):
         pass
 
 
@@ -89,6 +71,42 @@ class SlimListener(ParseTreeListener):
 
     # Exit a parse tree produced by SlimParser#keychain.
     def exitKeychain(self, ctx:SlimParser.KeychainContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#target.
+    def enterTarget(self, ctx:SlimParser.TargetContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#target.
+    def exitTarget(self, ctx:SlimParser.TargetContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#pattern.
+    def enterPattern(self, ctx:SlimParser.PatternContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#pattern.
+    def exitPattern(self, ctx:SlimParser.PatternContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#pattern_base.
+    def enterPattern_base(self, ctx:SlimParser.Pattern_baseContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#pattern_base.
+    def exitPattern_base(self, ctx:SlimParser.Pattern_baseContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#pattern_record.
+    def enterPattern_record(self, ctx:SlimParser.Pattern_recordContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#pattern_record.
+    def exitPattern_record(self, ctx:SlimParser.Pattern_recordContext):
         pass
 
 

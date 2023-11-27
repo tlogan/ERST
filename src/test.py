@@ -165,21 +165,29 @@ def test_unit():
 @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr @)"
+    # raise_guide(guides)
+    assert parsetree == "(expr (base @))"
 
 def test_tag():
     pieces = ['''
 :uno @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr : uno (expr @))"
+    assert parsetree == "(expr (base : uno (expr (base @))))"
+
+def test_tuple():
+    pieces = ['''
+@, @, @
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base @) , (base @))"
 
 def test_record():
     pieces = ['''
 :uno = @ :dos = @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (record : uno = (expr @) (record : dos = (expr @))))"
+    assert parsetree == "(expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @))))))"
 
 
 def test_function():
@@ -188,21 +196,21 @@ case :nil @ => @
 case :cons x => x 
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (function case (pattern : nil (pattern @)) => (expr @) (function case (pattern : cons (pattern x)) => (expr x))))"
+    assert parsetree == "(expr (base (function case (pattern (pattern_base : nil (pattern (pattern_base @)))) => (expr (base @)) (function case (pattern (pattern_base : cons (pattern (pattern_base x)))) => (expr (base x))))))"
 
 def test_projection():
     pieces = ['''
 (:uno = @ :dos = @).uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr ( (expr (record : uno = (expr @) (record : dos = (expr @)))) ) (keychain . uno))"
+    assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @)))))) )) (keychain . uno))"
 
 def test_projection_chain():
     pieces = ['''
 (:uno = (:dos @) :one = @).uno.dos
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr ( (expr (record : uno = (expr ( (expr : dos (expr @)) )) (record : one = (expr @)))) ) (keychain . uno (keychain . dos)))"
+    assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base ( (expr (base : dos (expr (base @)))) ))) (record : one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
 
 def test_application():
     pieces = ['''
@@ -225,7 +233,7 @@ let x = @ ;
 x
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr let x (target = (expr @)) ; (expr x))"
+    assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
 
 def test_idprojection():
     pieces = ['''

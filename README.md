@@ -2,8 +2,9 @@
 
 
 ### TODO
-- write method to serialize type structure; using while loop over stack.  
-- add syntax for pairs `,`, if/else, and feed/pipe `|>` 
+- add syntax for pairs if/else, and feed/pipe `|>` 
+- fill out cases of `concretize_type`
+- add concrete syntax parsing for types
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
 - update collect and guide_choice rules to memo(r)ize
