@@ -2,8 +2,7 @@
 
 
 ### TODO
-- add attribute rules for function and if/else 
-- add example programs for, if/else, and funnel X `|>` Y 
+- add example programs for, if-then-else, and funnel X `|>` Y 
 - fill out cases of `concretize_type`
 - add concrete syntax parsing for types
 - update basic examples with test of type inference 

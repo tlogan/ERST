@@ -113,11 +113,11 @@ public class SlimParser extends Parser {
 	def init(self): 
 	    self._solver = Solver() 
 	    self._cache = {}
-	    self._guidance = distillation_default 
+	    self._guidance = disn_default 
 	    self._overflow = False  
 
 	def reset(self): 
-	    self._guidance = distillation_default
+	    self._guidance = disn_default
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -135,16 +135,16 @@ public class SlimParser extends Parser {
 	        if arg == None:
 	            self._overflow = True
 
-	    distillation_result = None
+	    disn_result = None
 	    if not self._overflow:
-	        distillation_result = f(*args)
-	        self._guidance = Nonterm(name, distillation_result)
+	        disn_result = f(*args)
+	        self._guidance = Nonterm(name, disn_result)
 
 	        tok = self.getCurrentToken()
 	        if tok.type == self.EOF :
 	            self._overflow = True 
 
-	    return distillation_result 
+	    return disn_result 
 
 
 
@@ -200,7 +200,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public ECombo combo;
 		public BaseContext base;
 		public BaseContext head;
@@ -242,15 +242,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(TargetContext.class,0);
 		}
 		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ExprContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public ExprContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 	}
 
-	public final ExprContext expr(Distillation distillation) throws RecognitionException {
-		ExprContext _localctx = new ExprContext(_ctx, getState(), distillation);
+	public final ExprContext expr(Distillation disn) throws RecognitionException {
+		ExprContext _localctx = new ExprContext(_ctx, getState(), disn);
 		enterRule(_localctx, 0, RULE_expr);
 		try {
 			setState(85);
@@ -265,7 +265,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(23);
-				((ExprContext)_localctx).base = base(distillation);
+				((ExprContext)_localctx).base = base(disn);
 
 				_localctx.combo = ((ExprContext)_localctx).base.combo
 
@@ -275,22 +275,22 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 
-				distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_head)
+				disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_head)
 
 				setState(27);
-				((ExprContext)_localctx).head = base(distillation);
+				((ExprContext)_localctx).head = base(disn);
 
 				self.guide_symbol(',')
 
 				setState(29);
 				match(T__0);
 
-				distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_tail, ((ExprContext)_localctx).head.combo)
+				disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_tail, ((ExprContext)_localctx).head.combo)
 
 				setState(31);
-				((ExprContext)_localctx).tail = base(distillation);
+				((ExprContext)_localctx).tail = base(disn);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, ((ExprContext)_localctx).head.combo, ((ExprContext)_localctx).tail.combo) 
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, ((ExprContext)_localctx).head.combo, ((ExprContext)_localctx).tail.combo) 
 
 				}
 				break;
@@ -300,32 +300,32 @@ public class SlimParser extends Parser {
 				setState(34);
 				match(T__1);
 
-				distillation_condition = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_condition)
+				disn_condition = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_condition)
 
 				setState(36);
-				((ExprContext)_localctx).condition = expr(distillation_condition);
+				((ExprContext)_localctx).condition = expr(disn_condition);
 
 				self.guide_symbol('then')
 
 				setState(38);
 				match(T__2);
 
-				distillation_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_true_branch, ((ExprContext)_localctx).condition.combo)
+				disn_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_true_branch, ((ExprContext)_localctx).condition.combo)
 
 				setState(40);
-				((ExprContext)_localctx).true_branch = expr(distillation_true_branch);
+				((ExprContext)_localctx).true_branch = expr(disn_true_branch);
 
 				self.guide_symbol('else')
 
 				setState(42);
 				match(T__3);
 
-				distillation_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_false_branch, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo)
+				disn_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_false_branch, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo)
 
 				setState(44);
-				((ExprContext)_localctx).false_branch = expr(distillation_false_branch);
+				((ExprContext)_localctx).false_branch = expr(disn_false_branch);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_ite, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo, ((ExprContext)_localctx).false_branch.combo) 
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo, ((ExprContext)_localctx).false_branch.combo) 
 
 				}
 				break;
@@ -333,17 +333,17 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 5);
 				{
 
-				distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_projection_cator)
+				disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_projection_cator)
 
 				setState(48);
-				((ExprContext)_localctx).cator = base(distillation_cator);
+				((ExprContext)_localctx).cator = base(disn_cator);
 
-				distillation_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, distillation).distill_projection_keychain, ((ExprContext)_localctx).cator.combo)
+				disn_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, disn).distill_projection_keychain, ((ExprContext)_localctx).cator.combo)
 
 				setState(50);
-				((ExprContext)_localctx).keychain = keychain(distillation_keychain);
+				((ExprContext)_localctx).keychain = keychain(disn_keychain);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_projection, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).keychain.ids) 
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_projection, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).keychain.ids) 
 
 				}
 				break;
@@ -351,17 +351,17 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 6);
 				{
 
-				distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_application_cator)
+				disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_application_cator)
 
 				setState(54);
-				((ExprContext)_localctx).cator = base(distillation_cator);
+				((ExprContext)_localctx).cator = base(disn_cator);
 
-				distillation_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, distillation).distill_application_argchain, ((ExprContext)_localctx).cator.combo)
+				disn_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, disn).distill_application_argchain, ((ExprContext)_localctx).cator.combo)
 
 				setState(56);
-				((ExprContext)_localctx).argchain = argchain(distillation_argchain);
+				((ExprContext)_localctx).argchain = argchain(disn_argchain);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_application, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).argchain.combos)
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_application, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).argchain.combos)
 
 				}
 				break;
@@ -369,17 +369,17 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 7);
 				{
 
-				distillation_arg = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_funnel_arg)
+				disn_arg = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_funnel_arg)
 
 				setState(60);
-				((ExprContext)_localctx).cator = base(distillation_arg);
+				((ExprContext)_localctx).cator = base(disn_arg);
 
-				distillation_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, distillation).distill_funnel_pipeline, ((ExprContext)_localctx).cator.combo)
+				disn_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, disn).distill_funnel_pipeline, ((ExprContext)_localctx).cator.combo)
 
 				setState(62);
-				((ExprContext)_localctx).pipeline = pipeline(distillation_pipeline);
+				((ExprContext)_localctx).pipeline = pipeline(disn_pipeline);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_funnel, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).pipeline.combos)
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_funnel, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).pipeline.combos)
 
 				}
 				break;
@@ -394,20 +394,20 @@ public class SlimParser extends Parser {
 				setState(67);
 				((ExprContext)_localctx).ID = match(ID);
 
-				distillation_target = self.guide_nonterm('target', ExprAttr(self._solver, distillation).distill_let_target, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
+				disn_target = self.guide_nonterm('target', ExprAttr(self._solver, disn).distill_let_target, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
 
 				setState(69);
-				((ExprContext)_localctx).target = target(distillation_target);
+				((ExprContext)_localctx).target = target(disn_target);
 
 				self.guide_symbol(';')
 
 				setState(71);
 				match(T__5);
 
-				distillation_contin = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_let_contin, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.combo)
+				disn_contin = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_let_contin, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.combo)
 
 				setState(73);
-				((ExprContext)_localctx).contin = expr(distillation_contin);
+				((ExprContext)_localctx).contin = expr(disn_contin);
 
 				_localctx.combo = ((ExprContext)_localctx).contin.combo
 
@@ -424,17 +424,17 @@ public class SlimParser extends Parser {
 				setState(78);
 				match(T__7);
 
-				distillation_body = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_fix_body)
+				disn_body = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_fix_body)
 
 				setState(80);
-				((ExprContext)_localctx).body = expr(distillation_body);
+				((ExprContext)_localctx).body = expr(disn_body);
 
 				self.guide_symbol(')')
 
 				setState(82);
 				match(T__8);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_fix, ((ExprContext)_localctx).body.combo)
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_fix, ((ExprContext)_localctx).body.combo)
 
 				}
 				break;
@@ -453,7 +453,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class BaseContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public ECombo combo;
 		public Token ID;
 		public ExprContext body;
@@ -471,15 +471,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(FunctionContext.class,0);
 		}
 		public BaseContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public BaseContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public BaseContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_base; }
 	}
 
-	public final BaseContext base(Distillation distillation) throws RecognitionException {
-		BaseContext _localctx = new BaseContext(_ctx, getState(), distillation);
+	public final BaseContext base(Distillation disn) throws RecognitionException {
+		BaseContext _localctx = new BaseContext(_ctx, getState(), disn);
 		enterRule(_localctx, 2, RULE_base);
 		try {
 			setState(112);
@@ -496,7 +496,7 @@ public class SlimParser extends Parser {
 				setState(88);
 				match(T__9);
 
-				_localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_unit)
+				_localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_unit)
 
 				}
 				break;
@@ -511,12 +511,12 @@ public class SlimParser extends Parser {
 				setState(92);
 				((BaseContext)_localctx).ID = match(ID);
 
-				distillation_body = self.guide_nonterm('expr', BaseAttr(self._solver, distillation).distill_tag_body, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('expr', BaseAttr(self._solver, disn).distill_tag_body, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
 
 				setState(94);
-				((BaseContext)_localctx).body = expr(distillation_body);
+				((BaseContext)_localctx).body = expr(disn_body);
 
-				_localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_tag, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null), ((BaseContext)_localctx).body.combo)
+				_localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_tag, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null), ((BaseContext)_localctx).body.combo)
 
 				}
 				break;
@@ -524,7 +524,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(97);
-				((BaseContext)_localctx).record = record(distillation);
+				((BaseContext)_localctx).record = record(disn);
 
 				_localctx.combo = ((BaseContext)_localctx).record.combo
 
@@ -534,7 +534,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(100);
-				((BaseContext)_localctx).function = function(distillation);
+				((BaseContext)_localctx).function = function(disn);
 
 				_localctx.combo = ((BaseContext)_localctx).function.combo
 
@@ -546,7 +546,7 @@ public class SlimParser extends Parser {
 				setState(103);
 				((BaseContext)_localctx).ID = match(ID);
 
-				_localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_var, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
+				_localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_var, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -556,10 +556,10 @@ public class SlimParser extends Parser {
 				setState(105);
 				match(T__7);
 
-				distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+				disn_expr = self.guide_nonterm('expr', lambda: disn)
 
 				setState(107);
-				((BaseContext)_localctx).expr = expr(distillation_expr);
+				((BaseContext)_localctx).expr = expr(disn_expr);
 
 				self.guide_symbol(')')
 
@@ -585,7 +585,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public ECombo combo;
 		public PatternContext pattern;
 		public ExprContext body;
@@ -600,15 +600,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(FunctionContext.class,0);
 		}
 		public FunctionContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public FunctionContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public FunctionContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_function; }
 	}
 
-	public final FunctionContext function(Distillation distillation) throws RecognitionException {
-		FunctionContext _localctx = new FunctionContext(_ctx, getState(), distillation);
+	public final FunctionContext function(Distillation disn) throws RecognitionException {
+		FunctionContext _localctx = new FunctionContext(_ctx, getState(), disn);
 		enterRule(_localctx, 4, RULE_function);
 		try {
 			setState(135);
@@ -625,22 +625,22 @@ public class SlimParser extends Parser {
 				setState(115);
 				match(T__11);
 
-				distillation_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, distillation).distill_single_pattern)
+				disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_single_pattern)
 
 				setState(117);
-				((FunctionContext)_localctx).pattern = pattern(distillation_pattern);
+				((FunctionContext)_localctx).pattern = pattern(disn_pattern);
 
 				self.guide_symbol('=>')
 
 				setState(119);
 				match(T__12);
 
-				distillation_body = self.guide_nonterm('expr', FunctionAttr(self._solver, distillation).distill_single_body, ((FunctionContext)_localctx).pattern.combo)
+				disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_single_body, ((FunctionContext)_localctx).pattern.combo)
 
 				setState(121);
-				((FunctionContext)_localctx).body = expr(distillation_body);
+				((FunctionContext)_localctx).body = expr(disn_body);
 
-				_localctx.combo = self.collect(FunctionAttr(self._solver, distillation).combine_single, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo)
+				_localctx.combo = self.collect(FunctionAttr(self._solver, disn).combine_single, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo)
 
 				}
 				break;
@@ -650,27 +650,27 @@ public class SlimParser extends Parser {
 				setState(124);
 				match(T__11);
 
-				distillation_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, distillation).distill_cons_pattern)
+				disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_cons_pattern)
 
 				setState(126);
-				((FunctionContext)_localctx).pattern = pattern(distillation_pattern);
+				((FunctionContext)_localctx).pattern = pattern(disn_pattern);
 
 				self.guide_symbol('=>')
 
 				setState(128);
 				match(T__12);
 
-				distillation_body = self.guide_nonterm('expr', FunctionAttr(self._solver, distillation).distill_cons_body, ((FunctionContext)_localctx).pattern.combo)
+				disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_cons_body, ((FunctionContext)_localctx).pattern.combo)
 
 				setState(130);
-				((FunctionContext)_localctx).body = expr(distillation_body);
+				((FunctionContext)_localctx).body = expr(disn_body);
 
-				distillation_tail = self.guide_nonterm('function', FunctionAttr(self._solver, distillation).distill_cons_tail, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo)
+				disn_tail = self.guide_nonterm('function', FunctionAttr(self._solver, disn).distill_cons_tail, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo)
 
 				setState(132);
-				((FunctionContext)_localctx).tail = function(distillation);
+				((FunctionContext)_localctx).tail = function(disn);
 
-				_localctx.combo = self.collect(FunctionAttr(self._solver, distillation).combine_cons, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo, ((FunctionContext)_localctx).tail.combo)
+				_localctx.combo = self.collect(FunctionAttr(self._solver, disn).combine_cons, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo, ((FunctionContext)_localctx).tail.combo)
 
 				}
 				break;
@@ -689,7 +689,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class RecordContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public ECombo combo;
 		public Token ID;
 		public ExprContext body;
@@ -702,15 +702,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(RecordContext.class,0);
 		}
 		public RecordContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public RecordContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public RecordContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_record; }
 	}
 
-	public final RecordContext record(Distillation distillation) throws RecognitionException {
-		RecordContext _localctx = new RecordContext(_ctx, getState(), distillation);
+	public final RecordContext record(Distillation disn) throws RecognitionException {
+		RecordContext _localctx = new RecordContext(_ctx, getState(), disn);
 		enterRule(_localctx, 6, RULE_record);
 		try {
 			setState(158);
@@ -737,12 +737,12 @@ public class SlimParser extends Parser {
 				setState(142);
 				match(T__13);
 
-				distillation_body = self.guide_nonterm('expr', RecordAttr(self._solver, distillation).distill_single_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_single_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
 
 				setState(144);
-				((RecordContext)_localctx).body = expr(distillation_body);
+				((RecordContext)_localctx).body = expr(disn_body);
 
-				_localctx.combo = self.collect(RecordAttr(self._solver, distillation).combine_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
+				_localctx.combo = self.collect(RecordAttr(self._solver, disn).combine_single, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
 
 				}
 				break;
@@ -762,17 +762,17 @@ public class SlimParser extends Parser {
 				setState(151);
 				match(T__13);
 
-				distillation_body = self.guide_nonterm('expr', RecordAttr(self._solver, distillation).distill_cons_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_cons_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
 
 				setState(153);
-				((RecordContext)_localctx).body = expr(distillation);
+				((RecordContext)_localctx).body = expr(disn);
 
-				distillation_tail = self.guide_nonterm('record', RecordAttr(self._solver, distillation).distill_cons_tail, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
+				disn_tail = self.guide_nonterm('record', RecordAttr(self._solver, disn).distill_cons_tail, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
 
 				setState(155);
-				((RecordContext)_localctx).tail = record(distillation);
+				((RecordContext)_localctx).tail = record(disn);
 
-				_localctx.combo = self.collect(RecordAttr(self._solver, distillation).combine_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo, ((RecordContext)_localctx).tail.combo)
+				_localctx.combo = self.collect(RecordAttr(self._solver, disn).combine_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo, ((RecordContext)_localctx).tail.combo)
 
 				}
 				break;
@@ -791,7 +791,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ArgchainContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public list[ECombo] combos;
 		public ExprContext content;
 		public ExprContext head;
@@ -803,15 +803,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(ArgchainContext.class,0);
 		}
 		public ArgchainContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ArgchainContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public ArgchainContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_argchain; }
 	}
 
-	public final ArgchainContext argchain(Distillation distillation) throws RecognitionException {
-		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), distillation);
+	public final ArgchainContext argchain(Distillation disn) throws RecognitionException {
+		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), disn);
 		enterRule(_localctx, 8, RULE_argchain);
 		try {
 			setState(177);
@@ -828,17 +828,17 @@ public class SlimParser extends Parser {
 				setState(161);
 				match(T__7);
 
-				distillation_content = self.guide_nonterm('expr', ArgchainAttr(self._solver, distillation).distill_single_content) 
+				disn_content = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_single_content) 
 
 				setState(163);
-				((ArgchainContext)_localctx).content = expr(distillation_content);
+				((ArgchainContext)_localctx).content = expr(disn_content);
 
 				self.guide_symbol(')')
 
 				setState(165);
 				match(T__8);
 
-				_localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_single, ((ArgchainContext)_localctx).content.combo)
+				_localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_single, ((ArgchainContext)_localctx).content.combo)
 
 				}
 				break;
@@ -848,22 +848,22 @@ public class SlimParser extends Parser {
 				setState(168);
 				match(T__7);
 
-				distillation_head = self.guide_nonterm('expr', ArgchainAttr(self._solver, distillation).distill_cons_head) 
+				disn_head = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_cons_head) 
 
 				setState(170);
-				((ArgchainContext)_localctx).head = expr(distillation_head);
+				((ArgchainContext)_localctx).head = expr(disn_head);
 
 				self.guide_symbol(')')
 
 				setState(172);
 				match(T__8);
 
-				distillation_tail = self.guide_nonterm('argchain', ArgchainAttr(self._solver, distillation).distill_cons_tail, ((ArgchainContext)_localctx).head.combo) 
+				disn_tail = self.guide_nonterm('argchain', ArgchainAttr(self._solver, disn).distill_cons_tail, ((ArgchainContext)_localctx).head.combo) 
 
 				setState(174);
-				((ArgchainContext)_localctx).tail = argchain(distillation_tail);
+				((ArgchainContext)_localctx).tail = argchain(disn_tail);
 
-				_localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, ((ArgchainContext)_localctx).head.combo, ((ArgchainContext)_localctx).tail.combos)
+				_localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, ((ArgchainContext)_localctx).head.combo, ((ArgchainContext)_localctx).tail.combos)
 
 				}
 				break;
@@ -882,7 +882,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PipelineContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public list[ECombo] combos;
 		public ExprContext content;
 		public ExprContext head;
@@ -894,15 +894,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(PipelineContext.class,0);
 		}
 		public PipelineContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PipelineContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public PipelineContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_pipeline; }
 	}
 
-	public final PipelineContext pipeline(Distillation distillation) throws RecognitionException {
-		PipelineContext _localctx = new PipelineContext(_ctx, getState(), distillation);
+	public final PipelineContext pipeline(Distillation disn) throws RecognitionException {
+		PipelineContext _localctx = new PipelineContext(_ctx, getState(), disn);
 		enterRule(_localctx, 10, RULE_pipeline);
 		try {
 			setState(192);
@@ -919,12 +919,12 @@ public class SlimParser extends Parser {
 				setState(180);
 				match(T__14);
 
-				distillation_content = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_single_content) 
+				disn_content = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_single_content) 
 
 				setState(182);
-				((PipelineContext)_localctx).content = expr(distillation_content);
+				((PipelineContext)_localctx).content = expr(disn_content);
 
-				_localctx.combos = self.collect(PipelineAttr(self._solver, distillation).combine_single, ((PipelineContext)_localctx).content.combo)
+				_localctx.combos = self.collect(PipelineAttr(self._solver, disn).combine_single, ((PipelineContext)_localctx).content.combo)
 
 				}
 				break;
@@ -934,17 +934,17 @@ public class SlimParser extends Parser {
 				setState(185);
 				match(T__14);
 
-				distillation_head = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_cons_head) 
+				disn_head = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_cons_head) 
 
 				setState(187);
-				((PipelineContext)_localctx).head = expr(distillation_head);
+				((PipelineContext)_localctx).head = expr(disn_head);
 
-				distillation_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, distillation).distill_cons_tail, ((PipelineContext)_localctx).head.combo) 
+				disn_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, disn).distill_cons_tail, ((PipelineContext)_localctx).head.combo) 
 
 				setState(189);
-				((PipelineContext)_localctx).tail = pipeline(distillation_tail);
+				((PipelineContext)_localctx).tail = pipeline(disn_tail);
 
-				_localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, ((PipelineContext)_localctx).head.combo, ((PipelineContext)_localctx).tail.combos)
+				_localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, ((PipelineContext)_localctx).head.combo, ((PipelineContext)_localctx).tail.combos)
 
 				}
 				break;
@@ -963,7 +963,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class KeychainContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public list[str] ids;
 		public Token ID;
 		public KeychainContext tail;
@@ -972,15 +972,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(KeychainContext.class,0);
 		}
 		public KeychainContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public KeychainContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public KeychainContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_keychain; }
 	}
 
-	public final KeychainContext keychain(Distillation distillation) throws RecognitionException {
-		KeychainContext _localctx = new KeychainContext(_ctx, getState(), distillation);
+	public final KeychainContext keychain(Distillation disn) throws RecognitionException {
+		KeychainContext _localctx = new KeychainContext(_ctx, getState(), disn);
 		enterRule(_localctx, 12, RULE_keychain);
 		try {
 			setState(206);
@@ -1002,7 +1002,7 @@ public class SlimParser extends Parser {
 				setState(197);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				_localctx.ids = self.collect(KeychainAttr(self._solver, distillation).combine_single, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
+				_localctx.ids = self.collect(KeychainAttr(self._solver, disn).combine_single, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -1017,12 +1017,12 @@ public class SlimParser extends Parser {
 				setState(201);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				distillation_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, distillation).distill_cons_tail, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
+				disn_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, disn).distill_cons_tail, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
 
 				setState(203);
-				((KeychainContext)_localctx).tail = keychain(distillation_tail);
+				((KeychainContext)_localctx).tail = keychain(disn_tail);
 
-				_localctx.ids = self.collect(KeychainAttr(self._solver, distillation).combine_cons, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.ids)
+				_localctx.ids = self.collect(KeychainAttr(self._solver, disn).combine_cons, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.ids)
 
 				}
 				break;
@@ -1041,22 +1041,22 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class TargetContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public ECombo combo;
 		public ExprContext expr;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
 		public TargetContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public TargetContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public TargetContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_target; }
 	}
 
-	public final TargetContext target(Distillation distillation) throws RecognitionException {
-		TargetContext _localctx = new TargetContext(_ctx, getState(), distillation);
+	public final TargetContext target(Distillation disn) throws RecognitionException {
+		TargetContext _localctx = new TargetContext(_ctx, getState(), disn);
 		enterRule(_localctx, 14, RULE_target);
 		try {
 			setState(214);
@@ -1073,10 +1073,10 @@ public class SlimParser extends Parser {
 				setState(209);
 				match(T__13);
 
-				distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+				disn_expr = self.guide_nonterm('expr', lambda: disn)
 
 				setState(211);
-				((TargetContext)_localctx).expr = expr(distillation_expr);
+				((TargetContext)_localctx).expr = expr(disn_expr);
 
 				_localctx.combo = ((TargetContext)_localctx).expr.combo
 
@@ -1099,7 +1099,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PatternContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public PCombo combo;
 		public Pattern_baseContext pattern_base;
 		public BaseContext head;
@@ -1114,15 +1114,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(BaseContext.class,i);
 		}
 		public PatternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PatternContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public PatternContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern; }
 	}
 
-	public final PatternContext pattern(Distillation distillation) throws RecognitionException {
-		PatternContext _localctx = new PatternContext(_ctx, getState(), distillation);
+	public final PatternContext pattern(Distillation disn) throws RecognitionException {
+		PatternContext _localctx = new PatternContext(_ctx, getState(), disn);
 		enterRule(_localctx, 16, RULE_pattern);
 		try {
 			setState(228);
@@ -1137,7 +1137,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(217);
-				((PatternContext)_localctx).pattern_base = pattern_base(distillation);
+				((PatternContext)_localctx).pattern_base = pattern_base(disn);
 
 				_localctx.combo = ((PatternContext)_localctx).pattern_base.combo
 
@@ -1147,22 +1147,22 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 
-				distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_head)
+				disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_head)
 
 				setState(221);
-				((PatternContext)_localctx).head = base(distillation);
+				((PatternContext)_localctx).head = base(disn);
 
 				self.guide_symbol(',')
 
 				setState(223);
 				match(T__0);
 
-				distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_tail, ((PatternContext)_localctx).head.combo)
+				disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_tail, ((PatternContext)_localctx).head.combo)
 
 				setState(225);
-				((PatternContext)_localctx).tail = base(distillation);
+				((PatternContext)_localctx).tail = base(disn);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, ((PatternContext)_localctx).head.combo, ((PatternContext)_localctx).tail.combo) 
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, ((PatternContext)_localctx).head.combo, ((PatternContext)_localctx).tail.combo) 
 
 				}
 				break;
@@ -1181,7 +1181,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Pattern_baseContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public PCombo combo;
 		public Token ID;
 		public PatternContext body;
@@ -1194,15 +1194,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(Pattern_recordContext.class,0);
 		}
 		public Pattern_baseContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Pattern_baseContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public Pattern_baseContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern_base; }
 	}
 
-	public final Pattern_baseContext pattern_base(Distillation distillation) throws RecognitionException {
-		Pattern_baseContext _localctx = new Pattern_baseContext(_ctx, getState(), distillation);
+	public final Pattern_baseContext pattern_base(Distillation disn) throws RecognitionException {
+		Pattern_baseContext _localctx = new Pattern_baseContext(_ctx, getState(), disn);
 		enterRule(_localctx, 18, RULE_pattern_base);
 		try {
 			setState(247);
@@ -1219,7 +1219,7 @@ public class SlimParser extends Parser {
 				setState(231);
 				((Pattern_baseContext)_localctx).ID = match(ID);
 
-				_localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
+				_localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -1229,7 +1229,7 @@ public class SlimParser extends Parser {
 				setState(233);
 				((Pattern_baseContext)_localctx).ID = match(ID);
 
-				_localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
+				_localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
 
 				}
 				break;
@@ -1239,7 +1239,7 @@ public class SlimParser extends Parser {
 				setState(235);
 				match(T__9);
 
-				_localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_unit)
+				_localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_unit)
 
 				}
 				break;
@@ -1254,12 +1254,12 @@ public class SlimParser extends Parser {
 				setState(239);
 				((Pattern_baseContext)_localctx).ID = match(ID);
 
-				distillation_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, distillation).distill_tag_body, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, disn).distill_tag_body, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
 
 				setState(241);
-				((Pattern_baseContext)_localctx).body = pattern(distillation_body);
+				((Pattern_baseContext)_localctx).body = pattern(disn_body);
 
-				_localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_tag, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null), ((Pattern_baseContext)_localctx).body.combo)
+				_localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_tag, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null), ((Pattern_baseContext)_localctx).body.combo)
 
 				}
 				break;
@@ -1267,7 +1267,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(244);
-				((Pattern_baseContext)_localctx).pattern_record = pattern_record(distillation);
+				((Pattern_baseContext)_localctx).pattern_record = pattern_record(disn);
 
 				_localctx.combo = ((Pattern_baseContext)_localctx).pattern_record.combo
 
@@ -1288,7 +1288,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Pattern_recordContext extends ParserRuleContext {
-		public Distillation distillation;
+		public Distillation disn;
 		public PCombo combo;
 		public Token ID;
 		public PatternContext body;
@@ -1301,15 +1301,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(Pattern_recordContext.class,0);
 		}
 		public Pattern_recordContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Pattern_recordContext(ParserRuleContext parent, int invokingState, Distillation distillation) {
+		public Pattern_recordContext(ParserRuleContext parent, int invokingState, Distillation disn) {
 			super(parent, invokingState);
-			this.distillation = distillation;
+			this.disn = disn;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern_record; }
 	}
 
-	public final Pattern_recordContext pattern_record(Distillation distillation) throws RecognitionException {
-		Pattern_recordContext _localctx = new Pattern_recordContext(_ctx, getState(), distillation);
+	public final Pattern_recordContext pattern_record(Distillation disn) throws RecognitionException {
+		Pattern_recordContext _localctx = new Pattern_recordContext(_ctx, getState(), disn);
 		enterRule(_localctx, 20, RULE_pattern_record);
 		try {
 			setState(270);
@@ -1336,12 +1336,12 @@ public class SlimParser extends Parser {
 				setState(254);
 				match(T__13);
 
-				distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_single_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_single_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
 
 				setState(256);
-				((Pattern_recordContext)_localctx).body = pattern(distillation_body);
+				((Pattern_recordContext)_localctx).body = pattern(disn_body);
 
-				_localctx.combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_single, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
+				_localctx.combo = self.collect(PatternRecordAttr(self._solver, disn).combine_single, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
 
 				}
 				break;
@@ -1361,17 +1361,17 @@ public class SlimParser extends Parser {
 				setState(263);
 				match(T__13);
 
-				distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_cons_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
+				disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_cons_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
 
 				setState(265);
-				((Pattern_recordContext)_localctx).body = pattern(distillation_body);
+				((Pattern_recordContext)_localctx).body = pattern(disn_body);
 
-				distillation_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, distillation).distill_cons_tail, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
+				disn_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, disn).distill_cons_tail, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
 
 				setState(267);
-				((Pattern_recordContext)_localctx).tail = pattern_record(distillation_tail);
+				((Pattern_recordContext)_localctx).tail = pattern_record(disn_tail);
 
-				_localctx.combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_cons, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo, ((Pattern_recordContext)_localctx).tail.combo)
+				_localctx.combo = self.collect(PatternRecordAttr(self._solver, disn).combine_cons, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo, ((Pattern_recordContext)_localctx).tail.combo)
 
 				}
 				break;

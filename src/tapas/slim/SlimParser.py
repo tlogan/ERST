@@ -190,11 +190,11 @@ class SlimParser ( Parser ):
     def init(self): 
         self._solver = Solver() 
         self._cache = {}
-        self._guidance = distillation_default 
+        self._guidance = disn_default 
         self._overflow = False  
 
     def reset(self): 
-        self._guidance = distillation_default
+        self._guidance = disn_default
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -212,16 +212,16 @@ class SlimParser ( Parser ):
             if arg == None:
                 self._overflow = True
 
-        distillation_result = None
+        disn_result = None
         if not self._overflow:
-            distillation_result = f(*args)
-            self._guidance = Nonterm(name, distillation_result)
+            disn_result = f(*args)
+            self._guidance = Nonterm(name, disn_result)
 
             tok = self.getCurrentToken()
             if tok.type == self.EOF :
                 self._overflow = True 
 
-        return distillation_result 
+        return disn_result 
 
 
 
@@ -275,10 +275,10 @@ class SlimParser ( Parser ):
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._base = None # BaseContext
             self.head = None # BaseContext
@@ -294,7 +294,7 @@ class SlimParser ( Parser ):
             self._target = None # TargetContext
             self.contin = None # ExprContext
             self.body = None # ExprContext
-            self.distillation = distillation
+            self.disn = disn
 
         def base(self, i:int=None):
             if i is None:
@@ -343,9 +343,9 @@ class SlimParser ( Parser ):
 
 
 
-    def expr(self, distillation:Distillation):
+    def expr(self, disn:Distillation):
 
-        localctx = SlimParser.ExprContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.ExprContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 0, self.RULE_expr)
         try:
             self.state = 85
@@ -359,7 +359,7 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 23
-                localctx._base = self.base(distillation)
+                localctx._base = self.base(disn)
 
                 localctx.combo = localctx._base.combo
 
@@ -368,22 +368,22 @@ class SlimParser ( Parser ):
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
 
-                distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_head)
+                disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_head)
 
                 self.state = 27
-                localctx.head = self.base(distillation)
+                localctx.head = self.base(disn)
 
                 self.guide_symbol(',')
 
                 self.state = 29
                 self.match(SlimParser.T__0)
 
-                distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_tuple_tail, localctx.head.combo)
+                disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_tail, localctx.head.combo)
 
                 self.state = 31
-                localctx.tail = self.base(distillation)
+                localctx.tail = self.base(disn)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, localctx.head.combo, localctx.tail.combo) 
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, localctx.head.combo, localctx.tail.combo) 
 
                 pass
 
@@ -392,83 +392,83 @@ class SlimParser ( Parser ):
                 self.state = 34
                 self.match(SlimParser.T__1)
 
-                distillation_condition = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_condition)
+                disn_condition = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_condition)
 
                 self.state = 36
-                localctx.condition = self.expr(distillation_condition)
+                localctx.condition = self.expr(disn_condition)
 
                 self.guide_symbol('then')
 
                 self.state = 38
                 self.match(SlimParser.T__2)
 
-                distillation_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_true_branch, localctx.condition.combo)
+                disn_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_true_branch, localctx.condition.combo)
 
                 self.state = 40
-                localctx.true_branch = self.expr(distillation_true_branch)
+                localctx.true_branch = self.expr(disn_true_branch)
 
                 self.guide_symbol('else')
 
                 self.state = 42
                 self.match(SlimParser.T__3)
 
-                distillation_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_ite_false_branch, localctx.condition.combo, localctx.true_branch.combo)
+                disn_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_false_branch, localctx.condition.combo, localctx.true_branch.combo)
 
                 self.state = 44
-                localctx.false_branch = self.expr(distillation_false_branch)
+                localctx.false_branch = self.expr(disn_false_branch)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_ite, localctx.condition.combo, localctx.true_branch.combo, localctx.false_branch.combo) 
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, localctx.condition.combo, localctx.true_branch.combo, localctx.false_branch.combo) 
 
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
 
-                distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_projection_cator)
+                disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_projection_cator)
 
                 self.state = 48
-                localctx.cator = self.base(distillation_cator)
+                localctx.cator = self.base(disn_cator)
 
-                distillation_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, distillation).distill_projection_keychain, localctx.cator.combo)
+                disn_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, disn).distill_projection_keychain, localctx.cator.combo)
 
                 self.state = 50
-                localctx._keychain = self.keychain(distillation_keychain)
+                localctx._keychain = self.keychain(disn_keychain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_projection, localctx.cator.combo, localctx._keychain.ids) 
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_projection, localctx.cator.combo, localctx._keychain.ids) 
 
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
 
-                distillation_cator = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_application_cator)
+                disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_application_cator)
 
                 self.state = 54
-                localctx.cator = self.base(distillation_cator)
+                localctx.cator = self.base(disn_cator)
 
-                distillation_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, distillation).distill_application_argchain, localctx.cator.combo)
+                disn_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, disn).distill_application_argchain, localctx.cator.combo)
 
                 self.state = 56
-                localctx._argchain = self.argchain(distillation_argchain)
+                localctx._argchain = self.argchain(disn_argchain)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_application, localctx.cator.combo, localctx._argchain.combos)
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_application, localctx.cator.combo, localctx._argchain.combos)
 
                 pass
 
             elif la_ == 7:
                 self.enterOuterAlt(localctx, 7)
 
-                distillation_arg = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_funnel_arg)
+                disn_arg = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_funnel_arg)
 
                 self.state = 60
-                localctx.cator = self.base(distillation_arg)
+                localctx.cator = self.base(disn_arg)
 
-                distillation_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, distillation).distill_funnel_pipeline, localctx.cator.combo)
+                disn_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, disn).distill_funnel_pipeline, localctx.cator.combo)
 
                 self.state = 62
-                localctx._pipeline = self.pipeline(distillation_pipeline)
+                localctx._pipeline = self.pipeline(disn_pipeline)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_funnel, localctx.cator.combo, localctx._pipeline.combos)
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_funnel, localctx.cator.combo, localctx._pipeline.combos)
 
                 pass
 
@@ -482,20 +482,20 @@ class SlimParser ( Parser ):
                 self.state = 67
                 localctx._ID = self.match(SlimParser.ID)
 
-                distillation_target = self.guide_nonterm('target', ExprAttr(self._solver, distillation).distill_let_target, (None if localctx._ID is None else localctx._ID.text))
+                disn_target = self.guide_nonterm('target', ExprAttr(self._solver, disn).distill_let_target, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 69
-                localctx._target = self.target(distillation_target)
+                localctx._target = self.target(disn_target)
 
                 self.guide_symbol(';')
 
                 self.state = 71
                 self.match(SlimParser.T__5)
 
-                distillation_contin = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_let_contin, (None if localctx._ID is None else localctx._ID.text), localctx._target.combo)
+                disn_contin = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_let_contin, (None if localctx._ID is None else localctx._ID.text), localctx._target.combo)
 
                 self.state = 73
-                localctx.contin = self.expr(distillation_contin)
+                localctx.contin = self.expr(disn_contin)
 
                 localctx.combo = localctx.contin.combo
 
@@ -511,17 +511,17 @@ class SlimParser ( Parser ):
                 self.state = 78
                 self.match(SlimParser.T__7)
 
-                distillation_body = self.guide_nonterm('expr', ExprAttr(self._solver, distillation).distill_fix_body)
+                disn_body = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_fix_body)
 
                 self.state = 80
-                localctx.body = self.expr(distillation_body)
+                localctx.body = self.expr(disn_body)
 
                 self.guide_symbol(')')
 
                 self.state = 82
                 self.match(SlimParser.T__8)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_fix, localctx.body.combo)
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_fix, localctx.body.combo)
 
                 pass
 
@@ -538,17 +538,17 @@ class SlimParser ( Parser ):
     class BaseContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._ID = None # Token
             self.body = None # ExprContext
             self._record = None # RecordContext
             self._function = None # FunctionContext
             self._expr = None # ExprContext
-            self.distillation = distillation
+            self.disn = disn
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -579,9 +579,9 @@ class SlimParser ( Parser ):
 
 
 
-    def base(self, distillation:Distillation):
+    def base(self, disn:Distillation):
 
-        localctx = SlimParser.BaseContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.BaseContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 2, self.RULE_base)
         try:
             self.state = 112
@@ -597,7 +597,7 @@ class SlimParser ( Parser ):
                 self.state = 88
                 self.match(SlimParser.T__9)
 
-                localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_unit)
+                localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_unit)
 
                 pass
 
@@ -611,19 +611,19 @@ class SlimParser ( Parser ):
                 self.state = 92
                 localctx._ID = self.match(SlimParser.ID)
 
-                distillation_body = self.guide_nonterm('expr', BaseAttr(self._solver, distillation).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('expr', BaseAttr(self._solver, disn).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 94
-                localctx.body = self.expr(distillation_body)
+                localctx.body = self.expr(disn_body)
 
-                localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 97
-                localctx._record = self.record(distillation)
+                localctx._record = self.record(disn)
 
                 localctx.combo = localctx._record.combo
 
@@ -632,7 +632,7 @@ class SlimParser ( Parser ):
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 100
-                localctx._function = self.function(distillation)
+                localctx._function = self.function(disn)
 
                 localctx.combo = localctx._function.combo
 
@@ -643,7 +643,7 @@ class SlimParser ( Parser ):
                 self.state = 103
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(BaseAttr(self._solver, distillation).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.combo = self.collect(BaseAttr(self._solver, disn).combine_var, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -652,10 +652,10 @@ class SlimParser ( Parser ):
                 self.state = 105
                 self.match(SlimParser.T__7)
 
-                distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+                disn_expr = self.guide_nonterm('expr', lambda: disn)
 
                 self.state = 107
-                localctx._expr = self.expr(distillation_expr)
+                localctx._expr = self.expr(disn_expr)
 
                 self.guide_symbol(')')
 
@@ -679,15 +679,15 @@ class SlimParser ( Parser ):
     class FunctionContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._pattern = None # PatternContext
             self.body = None # ExprContext
             self.tail = None # FunctionContext
-            self.distillation = distillation
+            self.disn = disn
 
         def pattern(self):
             return self.getTypedRuleContext(SlimParser.PatternContext,0)
@@ -715,9 +715,9 @@ class SlimParser ( Parser ):
 
 
 
-    def function(self, distillation:Distillation):
+    def function(self, disn:Distillation):
 
-        localctx = SlimParser.FunctionContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.FunctionContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 4, self.RULE_function)
         try:
             self.state = 135
@@ -733,22 +733,22 @@ class SlimParser ( Parser ):
                 self.state = 115
                 self.match(SlimParser.T__11)
 
-                distillation_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, distillation).distill_single_pattern)
+                disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_single_pattern)
 
                 self.state = 117
-                localctx._pattern = self.pattern(distillation_pattern)
+                localctx._pattern = self.pattern(disn_pattern)
 
                 self.guide_symbol('=>')
 
                 self.state = 119
                 self.match(SlimParser.T__12)
 
-                distillation_body = self.guide_nonterm('expr', FunctionAttr(self._solver, distillation).distill_single_body, localctx._pattern.combo)
+                disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_single_body, localctx._pattern.combo)
 
                 self.state = 121
-                localctx.body = self.expr(distillation_body)
+                localctx.body = self.expr(disn_body)
 
-                localctx.combo = self.collect(FunctionAttr(self._solver, distillation).combine_single, localctx._pattern.combo, localctx.body.combo)
+                localctx.combo = self.collect(FunctionAttr(self._solver, disn).combine_single, localctx._pattern.combo, localctx.body.combo)
 
                 pass
 
@@ -757,27 +757,27 @@ class SlimParser ( Parser ):
                 self.state = 124
                 self.match(SlimParser.T__11)
 
-                distillation_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, distillation).distill_cons_pattern)
+                disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_cons_pattern)
 
                 self.state = 126
-                localctx._pattern = self.pattern(distillation_pattern)
+                localctx._pattern = self.pattern(disn_pattern)
 
                 self.guide_symbol('=>')
 
                 self.state = 128
                 self.match(SlimParser.T__12)
 
-                distillation_body = self.guide_nonterm('expr', FunctionAttr(self._solver, distillation).distill_cons_body, localctx._pattern.combo)
+                disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_cons_body, localctx._pattern.combo)
 
                 self.state = 130
-                localctx.body = self.expr(distillation_body)
+                localctx.body = self.expr(disn_body)
 
-                distillation_tail = self.guide_nonterm('function', FunctionAttr(self._solver, distillation).distill_cons_tail, localctx._pattern.combo, localctx.body.combo)
+                disn_tail = self.guide_nonterm('function', FunctionAttr(self._solver, disn).distill_cons_tail, localctx._pattern.combo, localctx.body.combo)
 
                 self.state = 132
-                localctx.tail = self.function(distillation)
+                localctx.tail = self.function(disn)
 
-                localctx.combo = self.collect(FunctionAttr(self._solver, distillation).combine_cons, localctx._pattern.combo, localctx.body.combo, localctx.tail.combo)
+                localctx.combo = self.collect(FunctionAttr(self._solver, disn).combine_cons, localctx._pattern.combo, localctx.body.combo, localctx.tail.combo)
 
                 pass
 
@@ -794,15 +794,15 @@ class SlimParser ( Parser ):
     class RecordContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._ID = None # Token
             self.body = None # ExprContext
             self.tail = None # RecordContext
-            self.distillation = distillation
+            self.disn = disn
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -829,9 +829,9 @@ class SlimParser ( Parser ):
 
 
 
-    def record(self, distillation:Distillation):
+    def record(self, disn:Distillation):
 
-        localctx = SlimParser.RecordContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.RecordContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 6, self.RULE_record)
         try:
             self.state = 158
@@ -857,12 +857,12 @@ class SlimParser ( Parser ):
                 self.state = 142
                 self.match(SlimParser.T__13)
 
-                distillation_body = self.guide_nonterm('expr', RecordAttr(self._solver, distillation).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 144
-                localctx.body = self.expr(distillation_body)
+                localctx.body = self.expr(disn_body)
 
-                localctx.combo = self.collect(RecordAttr(self._solver, distillation).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                localctx.combo = self.collect(RecordAttr(self._solver, disn).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 pass
 
@@ -881,17 +881,17 @@ class SlimParser ( Parser ):
                 self.state = 151
                 self.match(SlimParser.T__13)
 
-                distillation_body = self.guide_nonterm('expr', RecordAttr(self._solver, distillation).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 153
-                localctx.body = self.expr(distillation)
+                localctx.body = self.expr(disn)
 
-                distillation_tail = self.guide_nonterm('record', RecordAttr(self._solver, distillation).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                disn_tail = self.guide_nonterm('record', RecordAttr(self._solver, disn).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 self.state = 155
-                localctx.tail = self.record(distillation)
+                localctx.tail = self.record(disn)
 
-                localctx.combo = self.collect(RecordAttr(self._solver, distillation).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
+                localctx.combo = self.collect(RecordAttr(self._solver, disn).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
 
                 pass
 
@@ -908,15 +908,15 @@ class SlimParser ( Parser ):
     class ArgchainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combos = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # ArgchainContext
-            self.distillation = distillation
+            self.disn = disn
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -940,9 +940,9 @@ class SlimParser ( Parser ):
 
 
 
-    def argchain(self, distillation:Distillation):
+    def argchain(self, disn:Distillation):
 
-        localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 8, self.RULE_argchain)
         try:
             self.state = 177
@@ -958,17 +958,17 @@ class SlimParser ( Parser ):
                 self.state = 161
                 self.match(SlimParser.T__7)
 
-                distillation_content = self.guide_nonterm('expr', ArgchainAttr(self._solver, distillation).distill_single_content) 
+                disn_content = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_single_content) 
 
                 self.state = 163
-                localctx.content = self.expr(distillation_content)
+                localctx.content = self.expr(disn_content)
 
                 self.guide_symbol(')')
 
                 self.state = 165
                 self.match(SlimParser.T__8)
 
-                localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_single, localctx.content.combo)
+                localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_single, localctx.content.combo)
 
                 pass
 
@@ -977,22 +977,22 @@ class SlimParser ( Parser ):
                 self.state = 168
                 self.match(SlimParser.T__7)
 
-                distillation_head = self.guide_nonterm('expr', ArgchainAttr(self._solver, distillation).distill_cons_head) 
+                disn_head = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_cons_head) 
 
                 self.state = 170
-                localctx.head = self.expr(distillation_head)
+                localctx.head = self.expr(disn_head)
 
                 self.guide_symbol(')')
 
                 self.state = 172
                 self.match(SlimParser.T__8)
 
-                distillation_tail = self.guide_nonterm('argchain', ArgchainAttr(self._solver, distillation).distill_cons_tail, localctx.head.combo) 
+                disn_tail = self.guide_nonterm('argchain', ArgchainAttr(self._solver, disn).distill_cons_tail, localctx.head.combo) 
 
                 self.state = 174
-                localctx.tail = self.argchain(distillation_tail)
+                localctx.tail = self.argchain(disn_tail)
 
-                localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, localctx.head.combo, localctx.tail.combos)
+                localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, localctx.head.combo, localctx.tail.combos)
 
                 pass
 
@@ -1009,15 +1009,15 @@ class SlimParser ( Parser ):
     class PipelineContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combos = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # PipelineContext
-            self.distillation = distillation
+            self.disn = disn
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -1041,9 +1041,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pipeline(self, distillation:Distillation):
+    def pipeline(self, disn:Distillation):
 
-        localctx = SlimParser.PipelineContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.PipelineContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 10, self.RULE_pipeline)
         try:
             self.state = 192
@@ -1059,12 +1059,12 @@ class SlimParser ( Parser ):
                 self.state = 180
                 self.match(SlimParser.T__14)
 
-                distillation_content = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_single_content) 
+                disn_content = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_single_content) 
 
                 self.state = 182
-                localctx.content = self.expr(distillation_content)
+                localctx.content = self.expr(disn_content)
 
-                localctx.combos = self.collect(PipelineAttr(self._solver, distillation).combine_single, localctx.content.combo)
+                localctx.combos = self.collect(PipelineAttr(self._solver, disn).combine_single, localctx.content.combo)
 
                 pass
 
@@ -1073,17 +1073,17 @@ class SlimParser ( Parser ):
                 self.state = 185
                 self.match(SlimParser.T__14)
 
-                distillation_head = self.guide_nonterm('expr', PipelineAttr(self._solver, distillation).distill_cons_head) 
+                disn_head = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_cons_head) 
 
                 self.state = 187
-                localctx.head = self.expr(distillation_head)
+                localctx.head = self.expr(disn_head)
 
-                distillation_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, distillation).distill_cons_tail, localctx.head.combo) 
+                disn_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, disn).distill_cons_tail, localctx.head.combo) 
 
                 self.state = 189
-                localctx.tail = self.pipeline(distillation_tail)
+                localctx.tail = self.pipeline(disn_tail)
 
-                localctx.combos = self.collect(ArgchainAttr(self._solver, distillation).combine_cons, localctx.head.combo, localctx.tail.combos)
+                localctx.combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, localctx.head.combo, localctx.tail.combos)
 
                 pass
 
@@ -1100,14 +1100,14 @@ class SlimParser ( Parser ):
     class KeychainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.ids = None
             self._ID = None # Token
             self.tail = None # KeychainContext
-            self.distillation = distillation
+            self.disn = disn
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1130,9 +1130,9 @@ class SlimParser ( Parser ):
 
 
 
-    def keychain(self, distillation:Distillation):
+    def keychain(self, disn:Distillation):
 
-        localctx = SlimParser.KeychainContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.KeychainContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 12, self.RULE_keychain)
         try:
             self.state = 206
@@ -1153,7 +1153,7 @@ class SlimParser ( Parser ):
                 self.state = 197
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.ids = self.collect(KeychainAttr(self._solver, distillation).combine_single, (None if localctx._ID is None else localctx._ID.text))
+                localctx.ids = self.collect(KeychainAttr(self._solver, disn).combine_single, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1167,12 +1167,12 @@ class SlimParser ( Parser ):
                 self.state = 201
                 localctx._ID = self.match(SlimParser.ID)
 
-                distillation_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, distillation).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text)) 
+                disn_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, disn).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text)) 
 
                 self.state = 203
-                localctx.tail = self.keychain(distillation_tail)
+                localctx.tail = self.keychain(disn_tail)
 
-                localctx.ids = self.collect(KeychainAttr(self._solver, distillation).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.tail.ids)
+                localctx.ids = self.collect(KeychainAttr(self._solver, disn).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.tail.ids)
 
                 pass
 
@@ -1189,13 +1189,13 @@ class SlimParser ( Parser ):
     class TargetContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._expr = None # ExprContext
-            self.distillation = distillation
+            self.disn = disn
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -1215,9 +1215,9 @@ class SlimParser ( Parser ):
 
 
 
-    def target(self, distillation:Distillation):
+    def target(self, disn:Distillation):
 
-        localctx = SlimParser.TargetContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.TargetContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 14, self.RULE_target)
         try:
             self.state = 214
@@ -1232,10 +1232,10 @@ class SlimParser ( Parser ):
                 self.state = 209
                 self.match(SlimParser.T__13)
 
-                distillation_expr = self.guide_nonterm('expr', lambda: distillation)
+                disn_expr = self.guide_nonterm('expr', lambda: disn)
 
                 self.state = 211
-                localctx._expr = self.expr(distillation_expr)
+                localctx._expr = self.expr(disn_expr)
 
                 localctx.combo = localctx._expr.combo
 
@@ -1255,15 +1255,15 @@ class SlimParser ( Parser ):
     class PatternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._pattern_base = None # Pattern_baseContext
             self.head = None # BaseContext
             self.tail = None # BaseContext
-            self.distillation = distillation
+            self.disn = disn
 
         def pattern_base(self):
             return self.getTypedRuleContext(SlimParser.Pattern_baseContext,0)
@@ -1290,9 +1290,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pattern(self, distillation:Distillation):
+    def pattern(self, disn:Distillation):
 
-        localctx = SlimParser.PatternContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.PatternContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 16, self.RULE_pattern)
         try:
             self.state = 228
@@ -1306,7 +1306,7 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 217
-                localctx._pattern_base = self.pattern_base(distillation)
+                localctx._pattern_base = self.pattern_base(disn)
 
                 localctx.combo = localctx._pattern_base.combo
 
@@ -1315,22 +1315,22 @@ class SlimParser ( Parser ):
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
 
-                distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_head)
+                disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_head)
 
                 self.state = 221
-                localctx.head = self.base(distillation)
+                localctx.head = self.base(disn)
 
                 self.guide_symbol(',')
 
                 self.state = 223
                 self.match(SlimParser.T__0)
 
-                distillation_cator = self.guide_nonterm('expr', PatternAttr(self._solver, distillation).distill_tuple_tail, localctx.head.combo)
+                disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_tail, localctx.head.combo)
 
                 self.state = 225
-                localctx.tail = self.base(distillation)
+                localctx.tail = self.base(disn)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, distillation).combine_tuple, localctx.head.combo, localctx.tail.combo) 
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, localctx.head.combo, localctx.tail.combo) 
 
                 pass
 
@@ -1347,15 +1347,15 @@ class SlimParser ( Parser ):
     class Pattern_baseContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._ID = None # Token
             self.body = None # PatternContext
             self._pattern_record = None # Pattern_recordContext
-            self.distillation = distillation
+            self.disn = disn
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1382,9 +1382,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pattern_base(self, distillation:Distillation):
+    def pattern_base(self, disn:Distillation):
 
-        localctx = SlimParser.Pattern_baseContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.Pattern_baseContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 18, self.RULE_pattern_base)
         try:
             self.state = 247
@@ -1400,7 +1400,7 @@ class SlimParser ( Parser ):
                 self.state = 231
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1409,7 +1409,7 @@ class SlimParser ( Parser ):
                 self.state = 233
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1418,7 +1418,7 @@ class SlimParser ( Parser ):
                 self.state = 235
                 self.match(SlimParser.T__9)
 
-                localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_unit)
+                localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_unit)
 
                 pass
 
@@ -1432,19 +1432,19 @@ class SlimParser ( Parser ):
                 self.state = 239
                 localctx._ID = self.match(SlimParser.ID)
 
-                distillation_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, distillation).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, disn).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 241
-                localctx.body = self.pattern(distillation_body)
+                localctx.body = self.pattern(disn_body)
 
-                localctx.combo = self.collect(PatternBaseAttr(self._solver, distillation).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                localctx.combo = self.collect(PatternBaseAttr(self._solver, disn).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 244
-                localctx._pattern_record = self.pattern_record(distillation)
+                localctx._pattern_record = self.pattern_record(disn)
 
                 localctx.combo = localctx._pattern_record.combo
 
@@ -1463,15 +1463,15 @@ class SlimParser ( Parser ):
     class Pattern_recordContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, distillation:Distillation=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, disn:Distillation=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.distillation = None
+            self.disn = None
             self.combo = None
             self._ID = None # Token
             self.body = None # PatternContext
             self.tail = None # Pattern_recordContext
-            self.distillation = distillation
+            self.disn = disn
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1498,9 +1498,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pattern_record(self, distillation:Distillation):
+    def pattern_record(self, disn:Distillation):
 
-        localctx = SlimParser.Pattern_recordContext(self, self._ctx, self.state, distillation)
+        localctx = SlimParser.Pattern_recordContext(self, self._ctx, self.state, disn)
         self.enterRule(localctx, 20, self.RULE_pattern_record)
         try:
             self.state = 270
@@ -1526,12 +1526,12 @@ class SlimParser ( Parser ):
                 self.state = 254
                 self.match(SlimParser.T__13)
 
-                distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 256
-                localctx.body = self.pattern(distillation_body)
+                localctx.body = self.pattern(disn_body)
 
-                localctx.combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                localctx.combo = self.collect(PatternRecordAttr(self._solver, disn).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 pass
 
@@ -1550,17 +1550,17 @@ class SlimParser ( Parser ):
                 self.state = 263
                 self.match(SlimParser.T__13)
 
-                distillation_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, distillation).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
+                disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 265
-                localctx.body = self.pattern(distillation_body)
+                localctx.body = self.pattern(disn_body)
 
-                distillation_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, distillation).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                disn_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, disn).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 
                 self.state = 267
-                localctx.tail = self.pattern_record(distillation_tail)
+                localctx.tail = self.pattern_record(disn_tail)
 
-                localctx.combo = self.collect(PatternRecordAttr(self._solver, distillation).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
+                localctx.combo = self.collect(PatternRecordAttr(self._solver, disn).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
 
                 pass
 
