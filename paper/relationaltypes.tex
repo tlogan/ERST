@@ -207,10 +207,10 @@ x(.uno(.dos(.tres)))
 \]
 
 Propagating types downward over a top-down parse-tree results in a varying interpretations of the downwardly propagated type used for local guidance.
-For syntax that represents complete expressions, e.g. \[ :uno @ \], the inherited type represents the expected type for that expression.
+For syntax that represents complete expressions, e.g. \[ x \], the inherited type represents the prescriptive type for that expression.
 However, for syntax that cannot represent a complete expression, the inherited type must represent something else. 
 For instance, in the parse tree for a chain of projections, a syntactic subtree of projections, such as \[ .dos.tres \] does not constitute a complete expression.   
-There is no type for this syntax. Thus, the inherited type represents the type that \[ .dos \] is expected to project from (or cut into), 
+There is no prescriptive type for this syntax. Thus, the inherited type represents the type that \[ .dos \] is expected to project from (or cut into), 
 e.g. the descriptive type of \[ x.uno \].
 
 
@@ -324,7 +324,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 \subsection{Subtype Solving}
 \TODO{type unification}
-\TODO{econding to/decoding from horn clauses}
+\TODO{encoding to/decoding from horn clauses}
 
 
 \section{Experiments}
