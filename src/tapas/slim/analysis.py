@@ -212,9 +212,10 @@ class Solver:
         '''
 
         '''
-        (P -> Q) <: (A -> B) 
-        -- corresponds to --
+        A |- P
         P -> Q, A |- B 
+        -- corresponds to --
+        (P -> Q) <: (A -> B) 
         -- reduces to --
         A <: P
         Q <: B
