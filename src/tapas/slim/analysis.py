@@ -212,14 +212,37 @@ class Solver:
         '''
 
         '''
-        A |- P
-        P -> Q, A |- B 
-        -- corresponds to --
-        (P -> Q) <: (A -> B) 
-        -- reduces to --
-        A <: P
-        Q <: B
+        NOTE: (T |= T) type satisfaction represents subset inclusion of interpretations for types inhabited by some term
         '''
+
+        '''
+        NOTE: (x : T |= x : T) typing satisfaction represents subset inclusion of interpretations for types inhabited by then given term
+        '''
+
+        '''
+        NOTE: (T <: T |= T <: T) subtyping satisfaction represents subset inclusion of interpretations for subtyping
+        '''
+
+        '''
+        NOTE: (M |- T <: T) subtyping entailment represents subset inclusion of terms that inhabit types for some interpretation
+        '''
+
+        '''
+        NOTE: (M |- x : T) typing entailment represents inhabitation of a term in a types for some interpretation
+        '''
+
+        '''
+        A |= P
+        P -> Q, A |= B  
+        -- corresponds to --
+        (A <: P) |= (B <: Q) 
+        -- corresponds to --
+        M |- A <: P
+        M |- Q <: B
+        -- corresponds to --
+        M |- (P -> Q) <: (A -> B) 
+        '''
+
         return interp 
 
 class Attr:
