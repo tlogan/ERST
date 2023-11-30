@@ -275,6 +275,32 @@ case :cons x => :succ (self(x))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
+def test_ite():
+    pieces = ['''
+if :true @ then 
+    :one @
+else
+    :two @
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    # print(parsetree)
+
+def test_funnel():
+    pieces = ['''
+:nil @ |> fix(case self => (
+case :nil @ => :zero @ 
+case :cons x => :succ (self(x)) 
+))
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_funnel_pipeline():
+    pieces = ['''
+:nil @ |> (case :nil @ => @) |> (case :nil @ => @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+
 
 def test_type_implication():
     typ = Imp(Imp(TVar('X'), TVar('Y')), TVar('Z'))

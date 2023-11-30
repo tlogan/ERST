@@ -284,8 +284,8 @@ class SlimParser ( Parser ):
             self.head = None # BaseContext
             self.tail = None # BaseContext
             self.condition = None # ExprContext
-            self.true_branch = None # ExprContext
-            self.false_branch = None # ExprContext
+            self.branch_true = None # ExprContext
+            self.branch_false = None # ExprContext
             self.cator = None # BaseContext
             self._keychain = None # KeychainContext
             self._argchain = None # ArgchainContext
@@ -402,22 +402,22 @@ class SlimParser ( Parser ):
                 self.state = 38
                 self.match(SlimParser.T__2)
 
-                disn_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_true_branch, localctx.condition.combo)
+                disn_branch_true = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_true, localctx.condition.combo)
 
                 self.state = 40
-                localctx.true_branch = self.expr(disn_true_branch)
+                localctx.branch_true = self.expr(disn_branch_true)
 
                 self.guide_symbol('else')
 
                 self.state = 42
                 self.match(SlimParser.T__3)
 
-                disn_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_false_branch, localctx.condition.combo, localctx.true_branch.combo)
+                disn_branch_false = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_false, localctx.condition.combo, localctx.branch_true.combo)
 
                 self.state = 44
-                localctx.false_branch = self.expr(disn_false_branch)
+                localctx.branch_false = self.expr(disn_branch_false)
 
-                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, localctx.condition.combo, localctx.true_branch.combo, localctx.false_branch.combo) 
+                localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, localctx.condition.combo, localctx.branch_true.combo, localctx.branch_false.combo) 
 
                 pass
 

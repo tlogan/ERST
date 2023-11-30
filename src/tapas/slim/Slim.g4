@@ -133,13 +133,13 @@ disn_condition = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill
 } condition = expr[disn_condition] {
 self.guide_symbol('then')
 } 'then' {
-disn_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_true_branch, $condition.combo)
-} true_branch = expr[disn_true_branch] {
+disn_branch_true = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_true, $condition.combo)
+} branch_true = expr[disn_branch_true] {
 self.guide_symbol('else')
 } 'else' {
-disn_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_false_branch, $condition.combo, $true_branch.combo)
-} false_branch = expr[disn_false_branch] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_ite, $condition.combo, $true_branch.combo, $false_branch.combo) 
+disn_branch_false = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_false, $condition.combo, $branch_true.combo)
+} branch_false = expr[disn_branch_false] {
+$combo = self.collect(ExprAttr(self._solver, disn).combine_ite, $condition.combo, $branch_true.combo, $branch_false.combo) 
 } 
 
 | {

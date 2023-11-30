@@ -206,8 +206,8 @@ public class SlimParser extends Parser {
 		public BaseContext head;
 		public BaseContext tail;
 		public ExprContext condition;
-		public ExprContext true_branch;
-		public ExprContext false_branch;
+		public ExprContext branch_true;
+		public ExprContext branch_false;
 		public BaseContext cator;
 		public KeychainContext keychain;
 		public ArgchainContext argchain;
@@ -310,22 +310,22 @@ public class SlimParser extends Parser {
 				setState(38);
 				match(T__2);
 
-				disn_true_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_true_branch, ((ExprContext)_localctx).condition.combo)
+				disn_branch_true = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_true, ((ExprContext)_localctx).condition.combo)
 
 				setState(40);
-				((ExprContext)_localctx).true_branch = expr(disn_true_branch);
+				((ExprContext)_localctx).branch_true = expr(disn_branch_true);
 
 				self.guide_symbol('else')
 
 				setState(42);
 				match(T__3);
 
-				disn_false_branch = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_false_branch, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo)
+				disn_branch_false = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_false, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).branch_true.combo)
 
 				setState(44);
-				((ExprContext)_localctx).false_branch = expr(disn_false_branch);
+				((ExprContext)_localctx).branch_false = expr(disn_branch_false);
 
-				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).true_branch.combo, ((ExprContext)_localctx).false_branch.combo) 
+				_localctx.combo = self.collect(ExprAttr(self._solver, disn).combine_ite, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).branch_true.combo, ((ExprContext)_localctx).branch_false.combo) 
 
 				}
 				break;

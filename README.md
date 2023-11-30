@@ -2,9 +2,9 @@
 
 
 ### TODO
-- add example programs for, if-then-else, and funnel X `|>` Y 
-- fill out cases of `concretize_type`
 - add concrete syntax parsing for types
+- fill out cases of `concretize_type`
+- add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
 - update collect and guide_choice rules to memo(r)ize
