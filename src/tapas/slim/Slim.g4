@@ -106,6 +106,78 @@ def collect(self, f : Callable, *args):
 
 }
 
+
+typ_base returns [ECombo combo] : 
+
+| 'unit'
+
+// Field 
+| ID ':' typ
+
+// Tag 
+| ':' ID  typ
+
+| '(' typ ')'
+
+;
+
+typ returns [ECombo combo] : 
+
+| typ_base {
+$combo = $typ_base.combo
+}
+
+// NOTE: infix type combinators are right-associative  
+| typ_base '|' typ
+
+| typ_base '&' typ
+
+| typ_base '->' typ
+
+// Tuple 
+| typ_base ',' typ
+
+// indexed union
+//  {P <: T, ...}     
+| '{' qualification '}' typ
+
+
+// indexed intersection
+// [P <: T, ...] T 
+// [T <: X -> Y, ...] :a X -> :b Y 
+| '[' qualification ']' typ
+
+//induction // least fixed point; smallest set such that typ <: ID is invariant
+//   
+// least self with 
+// :zero, :nil |  
+// {n, l <: self] succ n, cons l 
+| 'least' ID 'with' typ 
+
+
+//co-induction // greatest fixed point; greatest set such that ID <: typ is invariant
+//
+// greatest self of 
+// nil -> zero &  
+// [self <: n -> l] cons n -> succ l 
+| 'greatest' ID 'of' typ 
+
+;
+
+qualification returns [list[tuple[PCombo, ECombo]] pairs] :
+
+| subtyping
+
+| subtyping ',' qualification
+
+;
+
+subtyping returns [tuple[ECombo, ECombo] pair] :
+
+| typ '<:' typ
+
+;
+
 expr [Distillation disn] returns [ECombo combo] : 
 
 // Base rules
@@ -219,11 +291,6 @@ disn_body = self.guide_nonterm('expr', BaseAttr(self._solver, disn).distill_tag_
 } body = expr[disn_body] {
 $combo = self.collect(BaseAttr(self._solver, disn).combine_tag, $ID.text, $body.combo)
 }
-
-///////
-// PROBLE: left-recursion not allowed
-// | expr[sistillation] ',' expr[sistillation]
-///////
 
 | record[disn] {
 $combo = $record.combo

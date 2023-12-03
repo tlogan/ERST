@@ -27,8 +27,11 @@ Op = Optional
 Typ data types
 """
 # TODO: type concrete syntax
-# TField ==> :uno : typ :dos : typ 
-# TTag   ==> :tag? :tag? :tag? typ 
+# Field ==> - :uno = expr :uno = expr
+# TField ==> uno : typ & dos : typ 
+# Tag  ==> :tag :tag :tag typ 
+# TTag  ==> ^cons x * ^cons y * ^nil unit 
+# TTag  ==> :cons x, :cons y, :nil unit 
 
 @dataclass(frozen=True, eq=True)
 class TVar:
