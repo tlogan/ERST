@@ -69,13 +69,13 @@ class Imp:
 @dataclass(frozen=True, eq=True)
 class IdxUnio:
     ids : list[str]
-    qualifiers : Interp 
+    qualification : list[Subtyping] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
 class IdxInter:
     ids : list[str]
-    qualifiers : Interp 
+    qualification : list[Subtyping] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
@@ -97,6 +97,12 @@ class Bot:
     pass
 
 Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
+
+
+@dataclass(frozen=True, eq=True)
+class Subtyping:
+    lower : Typ
+    upper : Typ
 
 
 def mk_stack_machine(
@@ -127,18 +133,52 @@ def mk_stack_machine(
         return result
     return run
 
+def concretize_ids(ids : list[str]) -> str:
+    return ", ".join(ids)
+
+def concretize_qualification(subtypings : list[Subtyping]) -> str:
+    return ", ".join([
+        concretize_type(st.lower) + " <: " + concretize_type(st.upper)
+        for st in subtypings
+    ])
 
 def concretize_type(typ : Typ) -> str:
     def mk_plate (control : Typ):
-        if isinstance(control, TUnit):
-            plate = ([], lambda: "unit", [])  
-        if isinstance(control, TVar):
+        if False: 
+            pass
+        elif isinstance(control, TVar):
             plate = ([], lambda: control.id, [])  
+        elif isinstance(control, TUnit):
+            plate = ([], lambda: "unit", [])  
+        elif isinstance(control, TTag):
+            plate = ([control.body], lambda body : f":{control.label} {body}", [])  
+        elif isinstance(control, TField):
+            plate = ([control.body], lambda body : f"{control.label} : {body}", [])  
         elif isinstance(control, Imp):
             plate = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})", [])  
-        # Typ = Union[TVar, TUnit, TTag, TField, Inter, Imp, Exis, Induc, Top, Bot]
-        else:
-            assert False
+        elif isinstance(control, Unio):
+            plate = ([control.left,control.right], lambda left, right : f"({left} | {right})", [])  
+        elif isinstance(control, Inter):
+            plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
+        elif isinstance(control, IdxUnio):
+            qualification = concretize_qualification(control.qualification)
+            ids = concretize_ids(control.ids)
+            plate = ([control.body], lambda body : f"{{{ids} . {qualification}}} {body}", [])  
+        elif isinstance(control, IdxInter):
+            qualification = concretize_qualification(control.qualification)
+            ids = concretize_ids(control.ids)
+            plate = ([control.body], lambda body : f"[{ids} . {qualification}] {body}", [])  
+        elif isinstance(control, Least):
+            id = control.id
+            plate = ([control.body], lambda body : f"least {id} with {body}", [])  
+        elif isinstance(control, Greatest):
+            id = control.id
+            plate = ([control.body], lambda body : f"greatest {id} of {body}", [])  
+        elif isinstance(control, Top):
+            plate = ([], lambda: "top", [])  
+        elif isinstance(control, Bot):
+            plate = ([], lambda: "bot", [])  
+
         return plate
 
     return mk_stack_machine(mk_plate)(typ)
