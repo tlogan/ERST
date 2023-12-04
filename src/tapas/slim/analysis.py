@@ -86,10 +86,6 @@ class Bot:
 Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, Exis, Induc, Top, Bot]
 
 
-@dataclass(frozen=True, eq=True)
-class ECombo:
-    typ : Typ    
-
 def mk_stack_machine(
     mk_plate : Callable[[T], tuple[list[T], Callable, list[R]]], 
 ) -> Callable[[T], R] :
@@ -153,7 +149,7 @@ def concretize_type(typ : Typ) -> str:
 # Expr = Union[PVar, PUnit]
 
 @dataclass(frozen=True, eq=True)
-class PCombo:
+class PatternAttr:
     enviro : PMap[str, Typ]
     typ : Typ    
 
@@ -173,7 +169,9 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm:
     id : str 
-    disn : Distillation
+    interp : Interp
+    enviro : Enviro 
+    typ : Typ
 
 
 # TODO: the interpretation could map type patterns to types, rather than merely strings
@@ -181,15 +179,10 @@ class Nonterm:
 Interp = PMap[str, Typ]
 Enviro = PMap[str, Typ]
 
-@dataclass(frozen=True, eq=True)
-class Distillation: 
-    interp : Interp
-    enviro : Enviro 
-    typ : Typ
 
 Guidance = Union[Symbol, Terminal, Nonterm]
 
-disn_default = Distillation(m(), m(), Top())
+nt_default = Nonterm('expr', m(), m(), Top())
 
 class Solver:
     _type_id : int = 0 
@@ -248,208 +241,208 @@ class Solver:
 
         return interp 
 
-class Attr:
-    def __init__(self, solver : Solver, disn : Distillation):
+class Rule:
+    def __init__(self, solver : Solver, nt : Nonterm):
         self.solver = solver
-        self.disn = disn 
+        self.nt = nt 
 
 
 
-class BaseAttr(Attr):
+class BaseRule(Rule):
 
-    def combine_var(self, id : str) -> ECombo:
-        return ECombo(self.disn.enviro[id])
+    def combine_var(self, id : str) -> Typ:
+        return self.nt.enviro[id]
 
-    def combine_unit(self) -> ECombo:
-        return ECombo(TUnit())
+    def combine_unit(self) -> Typ:
+        return TUnit()
 
-    def distill_tag_body(self, id : str) -> Distillation:
+    def distill_tag_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, TTag(id, typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, TTag(id, typ), self.nt.typ)
+        return Nonterm('expr', interp, self.nt.enviro, typ)
 
-    def combine_tag(self, label : str, body : ECombo) -> ECombo:
-        return ECombo(TTag(label, body.typ))
+    def combine_tag(self, label : str, body : Typ) -> Typ:
+        return TTag(label, body)
 
-class ExprAttr(Attr):
+class ExprRule(Rule):
 
-    def distill_tuple_head(self) -> Distillation:
+    def distill_tuple_head(self) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField('head', typ), TField('tail', Bot())), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
+        return Nonterm('expr', interp, self.nt.enviro, typ) 
 
-    def distill_tuple_tail(self, head : ECombo) -> Distillation:
+    def distill_tuple_tail(self, head : Typ) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField('head', head.typ), TField('tail', typ)), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField('head', head), TField('tail', typ)), self.nt.typ)
+        return Nonterm('expr', interp, self.nt.enviro, typ) 
 
-    def combine_tuple(self, head : ECombo, tail : ECombo) -> ECombo:
-        return ECombo(Inter(TField('head', head.typ), TField('tail', tail.typ)))
+    def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
+        return Inter(TField('head', head), TField('tail', tail))
 
-    def distill_ite_condition(self) -> Distillation:
+    def distill_ite_condition(self) -> Nonterm:
         typ = Unio(TTag('false', TUnit()), TTag('true', TUnit()))
-        return Distillation(self.disn.interp, self.disn.enviro, typ)
+        return Nonterm('expr', self.nt.interp, self.nt.enviro, typ)
 
-    def distill_ite_branch_true(self, condition : ECombo) -> Distillation:
+    def distill_ite_branch_true(self, condition : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
         '''
         typ = self.solver.fresh_type_var()
         implication = Imp(TTag('true', TUnit()), typ) 
-        premise_conclusion = Imp(condition.typ, self.disn.typ)
-        interp = self.solver.solve(self.disn.interp, implication, premise_conclusion)
-        return Distillation(interp, self.disn.enviro, typ) 
+        premise_conclusion = Imp(condition, self.nt.typ)
+        interp = self.solver.solve(self.nt.interp, implication, premise_conclusion)
+        return Nonterm('expr', interp, self.nt.enviro, typ) 
 
-    def distill_ite_branch_false(self, condition : ECombo, branch_true : ECombo) -> Distillation:
+    def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
         '''
         typ = self.solver.fresh_type_var()
         implication = Imp(TTag('false', TUnit()), typ) 
-        premise_conclusion = Imp(condition.typ, self.disn.typ)
-        interp = self.solver.solve(self.disn.interp, implication, premise_conclusion)
-        return Distillation(interp, self.disn.enviro, typ) 
+        premise_conclusion = Imp(condition, self.nt.typ)
+        interp = self.solver.solve(self.nt.interp, implication, premise_conclusion)
+        return Nonterm('expr', interp, self.nt.enviro, typ) 
 
-    def combine_ite(self, condition : ECombo, branch_true : ECombo, branch_false : ECombo) -> ECombo: 
-        interp_true = self.solver.solve(self.disn.interp, condition.typ, TTag('true', TUnit()))
-        interp_false = self.solver.solve(self.disn.interp, condition.typ, TTag('false', TUnit()))
-        return ECombo(Unio(
-            Exis(branch_true.typ, interp_true), 
-            Exis(branch_false.typ, interp_false)
-        ))
+    def combine_ite(self, condition : Typ, branch_true : Typ, branch_false : Typ) -> Typ: 
+        interp_true = self.solver.solve(self.nt.interp, condition, TTag('true', TUnit()))
+        interp_false = self.solver.solve(self.nt.interp, condition, TTag('false', TUnit()))
+        return Unio(
+            Exis(branch_true, interp_true), 
+            Exis(branch_false, interp_false)
+        )
 
-    def distill_projection_cator(self) -> Distillation:
-        return Distillation(self.disn.interp, self.disn.enviro, Top())
+    def distill_projection_cator(self) -> Nonterm:
+        return Nonterm('expr', self.nt.interp, self.nt.enviro, Top())
 
-    def distill_projection_keychain(self, record : ECombo) -> Distillation: 
-        return Distillation(self.disn.interp, self.disn.enviro, record.typ)
+    def distill_projection_keychain(self, record : Typ) -> Nonterm: 
+        return Nonterm('keychain', self.nt.interp, self.nt.enviro, record)
 
 
-    def combine_projection(self, record : ECombo, keys : list[str]) -> ECombo: 
-        interp_i = self.disn.interp
-        answr_i = record.typ 
+    def combine_projection(self, record : Typ, keys : list[str]) -> Typ: 
+        interp_i = self.nt.interp
+        answr_i = record 
         for key in keys:
             answr = self.solver.fresh_type_var()
             interp_i = self.solver.solve(interp_i, answr_i, TField(key, answr))
             answr_i = answr
 
-        return ECombo(Exis(answr_i, interp_i))
+        return Exis(answr_i, interp_i)
 
     #########
 
-    def distill_application_cator(self) -> Distillation: 
-        return Distillation(self.disn.interp, self.disn.enviro, Imp(Bot(), Top()))
+    def distill_application_cator(self) -> Nonterm: 
+        return Nonterm('expr', self.nt.interp, self.nt.enviro, Imp(Bot(), Top()))
 
-    def distill_application_argchain(self, cator : ECombo) -> Distillation: 
-        return Distillation(self.disn.interp, self.disn.enviro, cator.typ)
+    def distill_application_argchain(self, cator : Typ) -> Nonterm: 
+        return Nonterm('argchain', self.nt.interp, self.nt.enviro, cator)
 
-    def combine_application(self, cator : ECombo, arguments : list[ECombo]) -> ECombo: 
-        interp_i = self.disn.interp
-        answr_i = cator.typ 
+    def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
+        interp_i = self.nt.interp
+        answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            interp_i = self.solver.solve(interp_i, answr_i, Imp(argument.typ, answr))
+            interp_i = self.solver.solve(interp_i, answr_i, Imp(argument, answr))
             answr_i = answr
 
-        return ECombo(Exis(answr_i, interp_i))
+        return Exis(answr_i, interp_i)
 
 
     #########
-    def distill_funnel_arg(self) -> Distillation: 
-        return Distillation(self.disn.interp, self.disn.enviro, Top())
+    def distill_funnel_arg(self) -> Nonterm: 
+        return Nonterm('expr', self.nt.interp, self.nt.enviro, Top())
 
-    def distill_funnel_pipeline(self, arg : ECombo) -> Distillation: 
-        return Distillation(self.disn.interp, self.disn.enviro, arg.typ)
+    def distill_funnel_pipeline(self, arg : Typ) -> Nonterm: 
+        return Nonterm('pipeline', self.nt.interp, self.nt.enviro, arg)
 
-    def combine_funnel(self, arg : ECombo, cators : list[ECombo]) -> ECombo: 
-        interp_i = self.disn.interp
-        answr_i = arg.typ 
+    def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
+        interp_i = self.nt.interp
+        answr_i = arg 
         for cator in cators:
             answr = self.solver.fresh_type_var()
-            interp_i = self.solver.solve(interp_i, Imp(answr_i, answr), cator.typ)
+            interp_i = self.solver.solve(interp_i, Imp(answr_i, answr), cator)
             answr_i = answr
 
-        return ECombo(Exis(answr_i, interp_i))
+        return Exis(answr_i, interp_i)
     #########
 
 
-    def distill_fix_body(self) -> Distillation:
-        return Distillation(self.disn.interp, self.disn.enviro, Top())
+    def distill_fix_body(self) -> Nonterm:
+        return Nonterm('expr', self.nt.interp, self.nt.enviro, Top())
 
-    def combine_fix(self, body : ECombo) -> ECombo:
-        return ECombo(Induc(body.typ))
+    def combine_fix(self, body : Typ) -> Typ:
+        return Induc(body)
     
-    def distill_let_target(self, id : str) -> Distillation:
-        return Distillation(self.disn.interp, self.disn.enviro, Top())
+    def distill_let_target(self, id : str) -> Nonterm:
+        return Nonterm('target', self.nt.interp, self.nt.enviro, Top())
 
-    def distill_let_contin(self, id : str, target : Typ) -> Distillation:
-        interp = self.disn.interp
+    def distill_let_contin(self, id : str, target : Typ) -> Nonterm:
+        interp = self.nt.interp
         '''
         TODO: generalize target
         - avoid overgeneralizing by not abstracting variables introduced before target
         '''
-        enviro = self.disn.enviro.set(id, target)
-        return Distillation(interp, enviro, self.disn.typ)
+        enviro = self.nt.enviro.set(id, target)
+        return Nonterm('expr', interp, enviro, self.nt.typ)
 '''
-end ExprAttr
+end ExprRule
 '''
 
 
-class RecordAttr(Attr):
+class RecordRule(Rule):
 
-    def distill_single_body(self, id : str) -> Distillation:
+    def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, TField(id, typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, TField(id, typ), self.nt.typ)
+        return Nonterm('expr', interp, self.nt.enviro, typ) 
 
-    def combine_single(self, id : str, body : ECombo) -> ECombo:
-        return ECombo(TField(id, body.typ)) 
+    def combine_single(self, id : str, body : Typ) -> Typ:
+        return TField(id, body) 
 
-    def distill_cons_body(self, id : str) -> Distillation:
+    def distill_cons_body(self, id : str) -> Nonterm:
         return self.distill_single_body(id)
 
-    def distill_cons_tail(self, id : str, body : ECombo) -> Distillation:
+    def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField(id, body.typ), typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField(id, body), typ), self.nt.typ)
+        return Nonterm('record', interp, self.nt.enviro, typ) 
 
-    def combine_cons(self, id : str, body : ECombo, tail : ECombo) -> ECombo:
-        return ECombo(Inter(TField(id, body.typ), tail.typ))
+    def combine_cons(self, id : str, body : Typ, tail : Typ) -> Typ:
+        return Inter(TField(id, body), tail)
 
-class FunctionAttr(Attr):
+class FunctionRule(Rule):
 
-    def distill_single_pattern(self) -> Distillation:
+    def distill_single_pattern(self) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, Imp(typ, Top()))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, Imp(typ, Top()))
+        return Nonterm('pattern', interp, self.nt.enviro, typ)
 
-    def distill_single_body(self, pattern : PCombo) -> Distillation:
+    def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
         conclusion = self.solver.fresh_type_var() 
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, Imp(pattern.typ, conclusion)) 
-        enviro = self.disn.enviro + pattern.enviro
-        return Distillation(interp, enviro, conclusion)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, Imp(pattern.typ, conclusion)) 
+        enviro = self.nt.enviro + pattern.enviro
+        return Nonterm('expr', interp, enviro, conclusion)
 
-    def combine_single(self, pattern : PCombo, body : ECombo) -> ECombo:
-        return ECombo(Imp(pattern.typ, body.typ))
+    def combine_single(self, pattern : PatternAttr, body : Typ) -> Typ:
+        return Imp(pattern.typ, body)
 
-    def distill_cons_pattern(self) -> Distillation:
+    def distill_cons_pattern(self) -> Nonterm:
         return self.distill_single_pattern()
 
-    def distill_cons_body(self, pattern : PCombo) -> Distillation:
+    def distill_cons_body(self, pattern : PatternAttr) -> Nonterm:
         return self.distill_single_body(pattern)
 
-    def distill_cons_tail(self, pattern : PCombo, body : ECombo) -> Distillation:
+    def distill_cons_tail(self, pattern : PatternAttr, body : Typ) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(Imp(pattern.typ, body.typ), typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, Inter(Imp(pattern.typ, body), typ), self.nt.typ)
+        return Nonterm('function', interp, self.nt.enviro, typ)
 
-    def combine_cons(self, pattern : PCombo, body : ECombo, tail : ECombo) -> ECombo:
-        return ECombo(Inter(Imp(pattern.typ, body.typ), tail.typ))
+    def combine_cons(self, pattern : PatternAttr, body : Typ, tail : Typ) -> Typ:
+        return Inter(Imp(pattern.typ, body), tail)
 
 
-class KeychainAttr(Attr):
+class KeychainRule(Rule):
 
     def combine_single(self, key : str) -> list[str]:
         # self.solver.solve(plate.enviro, plate.typ, TField(key, Top())) 
@@ -460,24 +453,24 @@ class KeychainAttr(Attr):
     '''
     def distill_cons_tail(self, key : str):
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, TField(key, typ))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, TField(key, typ))
+        return Nonterm('keychain', interp, self.nt.enviro, typ)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
         return self.combine_single(key) + keys
 
-class ArgchainAttr(Attr):
+class ArgchainRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, Imp(typ, Top()))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, Imp(typ, Top()))
+        return Nonterm('expr', interp, self.nt.enviro, typ)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, Imp(typ, Top()))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, Imp(typ, Top()))
+        return Nonterm('expr', interp, self.nt.enviro, typ)
 
     def distill_cons_tail(self, head : Typ):
         typ = self.solver.fresh_type_var()
@@ -485,8 +478,8 @@ class ArgchainAttr(Attr):
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        interp = self.solver.solve(self.disn.interp, self.disn.typ, Imp(head, typ))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, self.nt.typ, Imp(head, typ))
+        return Nonterm('argchain', interp, self.nt.enviro, typ)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
@@ -497,100 +490,101 @@ class ArgchainAttr(Attr):
 
 ######
 
-class PipelineAttr(Attr):
+class PipelineRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, typ, Imp(self.disn.typ, Top()))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, typ, Imp(self.nt.typ, Top()))
+        return Nonterm('expr', interp, self.nt.enviro, typ)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, typ, Imp(self.disn.typ, Top()))
-        return Distillation(interp, self.disn.enviro, typ)
+        interp = self.solver.solve(self.nt.interp, typ, Imp(self.nt.typ, Top()))
+        return Nonterm('expr', interp, self.nt.enviro, typ)
 
-    def distill_cons_tail(self, head : ECombo):
+    def distill_cons_tail(self, head : Typ):
         typ = self.solver.fresh_type_var()
         '''
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        interp = self.solver.solve(self.disn.interp, head.typ, Imp(self.disn.typ, typ))
+        interp = self.solver.solve(self.nt.interp, head, Imp(self.nt.typ, typ))
 
-        return Distillation(interp, self.disn.enviro, typ)
+        return Nonterm('pipeline', interp, self.nt.enviro, typ)
 
-    def combine_single(self, content : ECombo) -> list[ECombo]:
+    def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
         return [content]
 
-    def combine_cons(self, head : ECombo, tail : list[ECombo]) -> list[ECombo]:
+    def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
         return self.combine_single(head) + tail
 
 
 '''
-start Pattern Attributes
+start Pattern Ruleibutes
 '''
 
-class PatternAttr(Attr):
-    def distill_tuple_head(self) -> Distillation:
+class PatternRule(Rule):
+    def distill_tuple_head(self) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField('head', typ), TField('tail', Bot())), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
+        return Nonterm('pattern', interp, self.nt.enviro, typ) 
 
-    def distill_tuple_tail(self, head : PCombo) -> Distillation:
+    def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField('head', head.typ), TField('tail', typ)), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
+        return Nonterm('pattern', interp, self.nt.enviro, typ) 
 
-    def combine_tuple(self, head : PCombo, tail : PCombo) -> PCombo:
-        return PCombo(head.enviro + tail.enviro, Inter(TField('head', head.typ), TField('tail', tail.typ)))
+    def combine_tuple(self, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
+        return PatternAttr(head.enviro + tail.enviro, Inter(TField('head', head.typ), TField('tail', tail.typ)))
 
 '''
-end PatternAttr
+end PatternRule
 '''
 
-class PatternBaseAttr(Attr):
+class PatternBaseRule(Rule):
 
-    def combine_var(self, id : str) -> PCombo:
+    def combine_var(self, id : str) -> PatternAttr:
         typ = self.solver.fresh_type_var()
         enviro = m().set(id, typ)
-        interp = self.solver.solve(self.disn.interp, typ, self.disn.typ)
-        return PCombo(enviro, typ)
+        interp = self.solver.solve(self.nt.interp, typ, self.nt.typ)
+        return PatternAttr(enviro, typ)
 
-    def combine_unit(self) -> PCombo:
+    def combine_unit(self) -> PatternAttr:
         typ = TUnit()
-        interp = self.solver.solve(self.disn.interp, typ, self.disn.typ)
-        return PCombo(m(), typ)
+        interp = self.solver.solve(self.nt.interp, typ, self.nt.typ)
+        return PatternAttr(m(), typ)
 
-    def distill_tag_body(self, id : str) -> Distillation:
+    def distill_tag_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, TTag(id, typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ)
+        print(f'OOGA: {self.nt}')
+        interp = self.solver.solve(self.nt.interp, TTag(id, typ), self.nt.typ)
+        return Nonterm('pattern', interp, self.nt.enviro, typ)
 
-    def combine_tag(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TTag(label, body.typ))
+    def combine_tag(self, label : str, body : PatternAttr) -> PatternAttr:
+        return PatternAttr(body.enviro, TTag(label, body.typ))
 '''
-end PatternBaseAttr
+end PatternBaseRule
 '''
 
-class PatternRecordAttr(Attr):
+class PatternRecordRule(Rule):
 
-    def distill_single_body(self, id : str) -> Distillation:
+    def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, TField(id, typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, TField(id, typ), self.nt.typ)
+        return Nonterm('pattern_record', interp, self.nt.enviro, typ) 
 
-    def combine_single(self, label : str, body : PCombo) -> PCombo:
-        return PCombo(body.enviro, TField(label, body.typ))
+    def combine_single(self, label : str, body : PatternAttr) -> PatternAttr:
+        return PatternAttr(body.enviro, TField(label, body.typ))
 
-    def distill_cons_body(self, id : str) -> Distillation:
+    def distill_cons_body(self, id : str) -> Nonterm:
         return self.distill_cons_body(id)
 
-    def distill_cons_tail(self, id : str, body : PCombo) -> Distillation:
+    def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        interp = self.solver.solve(self.disn.interp, Inter(TField(id, body.typ), typ), self.disn.typ)
-        return Distillation(interp, self.disn.enviro, typ) 
+        interp = self.solver.solve(self.nt.interp, Inter(TField(id, body.typ), typ), self.nt.typ)
+        return Nonterm('pattern_record', interp, self.nt.enviro, typ) 
 
-    def combine_cons(self, label : str, body : PCombo, tail : PCombo) -> PCombo:
-        return PCombo(body.enviro + tail.enviro, Inter(TField(label, body.typ), tail.typ))
+    def combine_cons(self, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
+        return PatternAttr(body.enviro + tail.enviro, Inter(TField(label, body.typ), tail.typ))

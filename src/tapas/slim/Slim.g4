@@ -25,11 +25,11 @@ _overflow = False
 def init(self): 
     self._solver = Solver() 
     self._cache = {}
-    self._guidance = disn_default 
+    self._guidance = nt_default 
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = disn_default
+    self._guidance = nt_default
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -42,21 +42,21 @@ def getGuidance(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def guide_nonterm(self, name : str, f : Callable, *args) -> Optional[Distillation]:
+def guide_nonterm(self, f : Callable, *args) -> Optional[Nonterm]:
     for arg in args:
         if arg == None:
             self._overflow = True
 
-    disn_result = None
+    nt_result = None
     if not self._overflow:
-        disn_result = f(*args)
-        self._guidance = Nonterm(name, disn_result)
+        nt_result = f(*args)
+        self._guidance = nt_result
 
         tok = self.getCurrentToken()
         if tok.type == self.EOF :
             self._overflow = True 
 
-    return disn_result 
+    return nt_result 
 
 
 
@@ -106,8 +106,20 @@ def collect(self, f : Callable, *args):
 
 }
 
+ids returns [list[str] combo] :
 
-typ_base returns [ECombo combo] : 
+| ID {
+$combo = [$ID.text]
+}
+
+| ID ids {
+$combo = [$ID.text] ++ $ids.combo
+}
+
+;
+
+
+typ_base returns [Typ combo] : 
 
 | 'unit'
 
@@ -121,7 +133,7 @@ typ_base returns [ECombo combo] :
 
 ;
 
-typ returns [ECombo combo] : 
+typ returns [Typ combo] : 
 
 | typ_base {
 $combo = $typ_base.combo
@@ -139,13 +151,13 @@ $combo = $typ_base.combo
 
 // indexed union
 //  {P <: T, ...}     
-| '{' qualification '}' typ
+| '{' ids '.' qualification '}' typ
 
 
 // indexed intersection
 // [P <: T, ...] T 
 // [T <: X -> Y, ...] :a X -> :b Y 
-| '[' qualification ']' typ
+| '[' ids '.' qualification ']' typ
 
 //induction // least fixed point; smallest set such that typ <: ID is invariant
 //   
@@ -164,7 +176,7 @@ $combo = $typ_base.combo
 
 ;
 
-qualification returns [list[tuple[PCombo, ECombo]] pairs] :
+qualification returns [list[tuple[Typ, Typ]] combo] :
 
 | subtyping
 
@@ -172,143 +184,130 @@ qualification returns [list[tuple[PCombo, ECombo]] pairs] :
 
 ;
 
-subtyping returns [tuple[ECombo, ECombo] pair] :
+subtyping returns [tuple[Typ, Typ] combo] :
 
 | typ '<:' typ
 
 ;
 
-expr [Distillation disn] returns [ECombo combo] : 
+expr [Nonterm nt] returns [Typ combo] : 
 
 // Base rules
 
-| base[disn] {
+| base[nt] {
 $combo = $base.combo
 }
 
 // Introduction rules
 
 | {
-disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_head)
-} head = base[disn] {
+nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+} head = base[nt] {
 self.guide_symbol(',')
 } ',' {
-disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_tuple_tail, $head.combo)
-} tail = base[disn] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, $head.combo, $tail.combo) 
+nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = base[nt] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
 // Elimination rules
 
 | 'if' {
-disn_condition = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_condition)
-} condition = expr[disn_condition] {
+nt_condition = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_condition)
+} condition = expr[nt_condition] {
 self.guide_symbol('then')
 } 'then' {
-disn_branch_true = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_true, $condition.combo)
-} branch_true = expr[disn_branch_true] {
+nt_branch_true = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_true, $condition.combo)
+} branch_true = expr[nt_branch_true] {
 self.guide_symbol('else')
 } 'else' {
-disn_branch_false = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_ite_branch_false, $condition.combo, $branch_true.combo)
-} branch_false = expr[disn_branch_false] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_ite, $condition.combo, $branch_true.combo, $branch_false.combo) 
+nt_branch_false = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_false, $condition.combo, $branch_true.combo)
+} branch_false = expr[nt_branch_false] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_ite, $condition.combo, $branch_true.combo, $branch_false.combo) 
 } 
 
 | {
-disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_projection_cator)
-} cator = base[disn_cator] {
-disn_keychain = self.guide_nonterm('keychain', ExprAttr(self._solver, disn).distill_projection_keychain, $cator.combo)
-} keychain[disn_keychain] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_projection, $cator.combo, $keychain.ids) 
+nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_cator)
+} cator = base[nt_cator] {
+nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, $cator.combo)
+} keychain[nt_keychain] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_projection, $cator.combo, $keychain.combo) 
 }
 
 | {
-disn_cator = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_application_cator)
-} cator = base[disn_cator] {
-disn_argchain = self.guide_nonterm('argchain', ExprAttr(self._solver, disn).distill_application_argchain, $cator.combo)
-} argchain[disn_argchain] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_application, $cator.combo, $argchain.combos)
+nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+} cator = base[nt_cator] {
+nt_argchain = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, $cator.combo)
+} argchain[nt_argchain] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_application, $cator.combo, $argchain.combo)
 }
 
 | {
-disn_arg = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_funnel_arg)
-} cator = base[disn_arg] {
-disn_pipeline = self.guide_nonterm('pipeline', ExprAttr(self._solver, disn).distill_funnel_pipeline, $cator.combo)
-} pipeline[disn_pipeline] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_funnel, $cator.combo, $pipeline.combos)
+nt_arg = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_arg)
+} cator = base[nt_arg] {
+nt_pipeline = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_pipeline, $cator.combo)
+} pipeline[nt_pipeline] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_funnel, $cator.combo, $pipeline.combo)
 }
 
 | 'let' {
 self.guide_terminal('ID')
 } ID {
-disn_target = self.guide_nonterm('target', ExprAttr(self._solver, disn).distill_let_target, $ID.text)
-} target[disn_target] {
+nt_target = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_target, $ID.text)
+} target[nt_target] {
 self.guide_symbol(';')
 } ';' {
-disn_contin = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_let_contin, $ID.text, $target.combo)
-} contin = expr[disn_contin] {
+nt_contin = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_contin, $ID.text, $target.combo)
+} contin = expr[nt_contin] {
 $combo = $contin.combo
 }
 
 
-// | 'let' {
-// self.guide_terminal('ID')
-// } ID {
-// self.guide_symbol('=')
-// } '=' {
-// disn_target = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_let_target, $ID.text)
-// } target = expr[disn_target] {
-// self.guide_symbol(';')
-// } ';' {
-// disn_body = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_let_body, $ID.text, $target.combo)
-// } body = expr[disn_body] {
-// $combo = $body.combo
-// }
-
 | 'fix' {
 self.guide_symbol('(')
 } '(' {
-disn_body = self.guide_nonterm('expr', ExprAttr(self._solver, disn).distill_fix_body)
-} body = expr[disn_body] {
+nt_body = self.guide_nonterm(ExprRule(self._solver, nt).distill_fix_body)
+} body = expr[nt_body] {
 self.guide_symbol(')')
 } ')' {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_fix, $body.combo)
+$combo = self.collect(ExprRule(self._solver, nt).combine_fix, $body.combo)
 }
 
 ;
 
-base [Distillation disn] returns [ECombo combo] : 
+base [Nonterm nt] returns [Typ combo] : 
 // Introduction rules
 
 | '@' {
-$combo = self.collect(BaseAttr(self._solver, disn).combine_unit)
+$combo = self.collect(BaseRule(self._solver, nt).combine_unit)
 } 
 
 | ':' {
 self.guide_terminal('ID')
 } ID {
-disn_body = self.guide_nonterm('expr', BaseAttr(self._solver, disn).distill_tag_body, $ID.text)
-} body = expr[disn_body] {
-$combo = self.collect(BaseAttr(self._solver, disn).combine_tag, $ID.text, $body.combo)
+nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, $ID.text)
+} body = expr[nt_body] {
+$combo = self.collect(BaseRule(self._solver, nt).combine_tag, $ID.text, $body.combo)
 }
 
-| record[disn] {
+| record[nt] {
 $combo = $record.combo
 }
 
-| function[disn] {
+| {
+} function[nt] {
 $combo = $function.combo
 }
 
 // Elimination rules
 
 | ID {
-$combo = self.collect(BaseAttr(self._solver, disn).combine_var, $ID.text)
+$combo = self.collect(BaseRule(self._solver, nt).combine_var, $ID.text)
 } 
 
 | '(' {
-disn_expr = self.guide_nonterm('expr', lambda: disn)
-} expr[disn_expr] {
+nt_expr = self.guide_nonterm(lambda: nt)
+} expr[nt_expr] {
 self.guide_symbol(')')
 } ')' {
 $combo = $expr.combo
@@ -317,44 +316,44 @@ $combo = $expr.combo
 ;
 
 
-function [Distillation disn] returns [ECombo combo] :
+function [Nonterm nt] returns [Typ combo] :
 
 | 'case' {
-disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_single_pattern)
-} pattern[disn_pattern] {
+nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_pattern)
+} pattern[nt_pattern] {
 self.guide_symbol('=>')
 } '=>' {
-disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_single_body, $pattern.combo)
-} body = expr[disn_body] {
-$combo = self.collect(FunctionAttr(self._solver, disn).combine_single, $pattern.combo, $body.combo)
+nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_body, $pattern.combo)
+} body = expr[nt_body] {
+$combo = self.collect(FunctionRule(self._solver, nt).combine_single, $pattern.combo, $body.combo)
 }
 
 | 'case' {
-disn_pattern = self.guide_nonterm('pattern', FunctionAttr(self._solver, disn).distill_cons_pattern)
-} pattern[disn_pattern] {
+nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_pattern)
+} pattern[nt_pattern] {
 self.guide_symbol('=>')
 } '=>' {
-disn_body = self.guide_nonterm('expr', FunctionAttr(self._solver, disn).distill_cons_body, $pattern.combo)
-} body = expr[disn_body] {
-disn_tail = self.guide_nonterm('function', FunctionAttr(self._solver, disn).distill_cons_tail, $pattern.combo, $body.combo)
-} tail = function[disn] {
-$combo = self.collect(FunctionAttr(self._solver, disn).combine_cons, $pattern.combo, $body.combo, $tail.combo)
+nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_body, $pattern.combo)
+} body = expr[nt_body] {
+nt_tail = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_tail, $pattern.combo, $body.combo)
+} tail = function[nt] {
+$combo = self.collect(FunctionRule(self._solver, nt).combine_cons, $pattern.combo, $body.combo, $tail.combo)
 }
 
 ;
 
 
 
-record [Distillation disn] returns [ECombo combo] :
+record [Nonterm nt] returns [Typ combo] :
 
 | ':' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_single_body, $ID.text)
-} body = expr[disn_body] {
-$combo = self.collect(RecordAttr(self._solver, disn).combine_single, $ID.text, $body.combo)
+nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_single_body, $ID.text)
+} body = expr[nt_body] {
+$combo = self.collect(RecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
 | ':' {
@@ -362,156 +361,144 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-disn_body = self.guide_nonterm('expr', RecordAttr(self._solver, disn).distill_cons_body, $ID.text)
-} body = expr[disn] {
-disn_tail = self.guide_nonterm('record', RecordAttr(self._solver, disn).distill_cons_tail, $ID.text, $body.combo)
-} tail = record[disn] {
-$combo = self.collect(RecordAttr(self._solver, disn).combine_cons, $ID.text, $body.combo, $tail.combo)
+nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, $ID.text)
+} body = expr[nt] {
+nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
+} tail = record[nt] {
+$combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
 
 ;
 
-// NOTE: disn.expect represents the type of the rator applied to the next immediate argument  
-argchain [Distillation disn] returns [list[ECombo] combos] :
+// NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
+argchain [Nonterm nt] returns [list[Typ] combo] :
 
 | '(' {
-disn_content = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_single_content) 
-} content = expr[disn_content] {
+nt_content = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_content) 
+} content = expr[nt_content] {
 self.guide_symbol(')')
 } ')' {
-$combos = self.collect(ArgchainAttr(self._solver, disn).combine_single, $content.combo)
+$combo = self.collect(ArgchainRule(self._solver, nt).combine_single, $content.combo)
 }
 
 | '(' {
-disn_head = self.guide_nonterm('expr', ArgchainAttr(self._solver, disn).distill_cons_head) 
-} head = expr[disn_head] {
+nt_head = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_head) 
+} head = expr[nt_head] {
 self.guide_symbol(')')
 } ')' {
-disn_tail = self.guide_nonterm('argchain', ArgchainAttr(self._solver, disn).distill_cons_tail, $head.combo) 
-} tail = argchain[disn_tail] {
-$combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, $head.combo, $tail.combos)
+nt_tail = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_tail, $head.combo) 
+} tail = argchain[nt_tail] {
+$combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, $head.combo, $tail.combo)
 }
 
 ;
 
-pipeline [Distillation disn] returns [list[ECombo] combos] :
+pipeline [Nonterm nt] returns [list[Typ] combo] :
 
 | '|>' {
-disn_content = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_single_content) 
-} content = expr[disn_content] {
-$combos = self.collect(PipelineAttr(self._solver, disn).combine_single, $content.combo)
+nt_content = self.guide_nonterm(PipelineRule(self._solver, nt).distill_single_content) 
+} content = expr[nt_content] {
+$combo = self.collect(PipelineRule(self._solver, nt).combine_single, $content.combo)
 }
 
 | '|>' {
-disn_head = self.guide_nonterm('expr', PipelineAttr(self._solver, disn).distill_cons_head) 
-} head = expr[disn_head] {
-disn_tail = self.guide_nonterm('pipeline', PipelineAttr(self._solver, disn).distill_cons_tail, $head.combo) 
-} tail = pipeline[disn_tail] {
-$combos = self.collect(ArgchainAttr(self._solver, disn).combine_cons, $head.combo, $tail.combos)
+nt_head = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_head) 
+} head = expr[nt_head] {
+nt_tail = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_tail, $head.combo) 
+} tail = pipeline[nt_tail] {
+$combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, $head.combo, $tail.combo)
 }
 
 ;
 
 
-// NOTE: disn.expect represents the type of the rator applied to the next immediate argument  
-keychain [Distillation disn] returns [list[str] ids] :
+// NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
+keychain [Nonterm nt] returns [list[str] combo] :
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-$ids = self.collect(KeychainAttr(self._solver, disn).combine_single, $ID.text)
+$combo = self.collect(KeychainRule(self._solver, nt).combine_single, $ID.text)
 }
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-disn_tail = self.guide_nonterm('keychain', KeychainAttr(self._solver, disn).distill_cons_tail, $ID.text) 
-} tail = keychain[disn_tail] {
-$ids = self.collect(KeychainAttr(self._solver, disn).combine_cons, $ID.text, $tail.ids)
+nt_tail = self.guide_nonterm(KeychainRule(self._solver, nt).distill_cons_tail, $ID.text) 
+} tail = keychain[nt_tail] {
+$combo = self.collect(KeychainRule(self._solver, nt).combine_cons, $ID.text, $tail.combo)
 }
 
 ;
 
-target [Distillation disn] returns [ECombo combo]:
+target [Nonterm nt] returns [Typ combo]:
 
 | '=' {
-disn_expr = self.guide_nonterm('expr', lambda: disn)
-} expr[disn_expr] {
+nt_expr = self.guide_nonterm(lambda: nt)
+} expr[nt_expr] {
 $combo = $expr.combo
 }
-
-// TODO: add annotation case and type parsing
-// | ':' {
-// # TODO
-// disn_anno = self.guide_nonterm('expr', TargetAttr(self._solver, disn).distill_target_anno)
-// } anno = typ[disn] {
-// } '=' {
-// # TODO
-// disn_body = self.guide_nonterm('expr', TargetAttr(self._solver, disn).distill_target_body, $anno.combo)
-// } body = expr[disn_body] {
-// $combo = $body.combo
-// }
 
 ;
 
 
 
-pattern [Distillation disn] returns [PCombo combo]:  
+pattern [Nonterm nt] returns [PatternAttr combo]:  
 
-| pattern_base[disn] {
+| pattern_base[nt] {
 $combo = $pattern_base.combo
 }
 
 | {
-disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_head)
-} head = base[disn] {
+nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_head)
+} head = base[nt] {
 self.guide_symbol(',')
 } ',' {
-disn_cator = self.guide_nonterm('expr', PatternAttr(self._solver, disn).distill_tuple_tail, $head.combo)
-} tail = base[disn] {
-$combo = self.collect(ExprAttr(self._solver, disn).combine_tuple, $head.combo, $tail.combo) 
+nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = base[nt] {
+$combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
 ;
 
-pattern_base [Distillation disn] returns [PCombo combo]:  
+pattern_base [Nonterm nt] returns [PatternAttr combo]:  
 
 | ID {
-$combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, $ID.text)
+$combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
 } 
 
 | ID {
-$combo = self.collect(PatternBaseAttr(self._solver, disn).combine_var, $ID.text)
+$combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
 } 
 
 | '@' {
-$combo = self.collect(PatternBaseAttr(self._solver, disn).combine_unit)
+$combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
 } 
 
 | ':' {
 self.guide_terminal('ID')
 } ID {
-disn_body = self.guide_nonterm('pattern', PatternBaseAttr(self._solver, disn).distill_tag_body, $ID.text)
-} body = pattern[disn_body] {
-$combo = self.collect(PatternBaseAttr(self._solver, disn).combine_tag, $ID.text, $body.combo)
+nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, $ID.text)
+} body = pattern[nt_body] {
+$combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, $ID.text, $body.combo)
 }
 
-| pattern_record[disn] {
+| pattern_record[nt] {
 $combo = $pattern_record.combo
 }
 
 ;
 
-pattern_record [Distillation disn] returns [PCombo combo] :
+pattern_record [Nonterm nt] returns [PatternAttr combo] :
 
 | ':' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_single_body, $ID.text)
-} body = pattern[disn_body] {
-$combo = self.collect(PatternRecordAttr(self._solver, disn).combine_single, $ID.text, $body.combo)
+nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_body, $ID.text)
+} body = pattern[nt_body] {
+$combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
 | ':' {
@@ -519,11 +506,11 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-disn_body = self.guide_nonterm('pattern', PatternRecordAttr(self._solver, disn).distill_cons_body, $ID.text)
-} body = pattern[disn_body] {
-disn_tail = self.guide_nonterm('pattern_record', PatternRecordAttr(self._solver, disn).distill_cons_tail, $ID.text, $body.combo)
-} tail = pattern_record[disn_tail] {
-$combo = self.collect(PatternRecordAttr(self._solver, disn).combine_cons, $ID.text, $body.combo, $tail.combo)
+nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_body, $ID.text)
+} body = pattern[nt_body] {
+nt_tail = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
+} tail = pattern_record[nt_tail] {
+$combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
 
 ;

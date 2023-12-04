@@ -8,7 +8,7 @@ from asyncio import Queue, Task
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser, Guidance
-from tapas.slim.analysis import * 
+from tapas.slim import analysis 
 
 
 T = TypeVar("T")
@@ -54,7 +54,7 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
         parser.reset()
 
         try:
-            ctx = parser.expr(disn_default)
+            ctx = parser.expr(analysis.nt_default)
             if ctx.combo: 
                 await output.put(Done())
                 break

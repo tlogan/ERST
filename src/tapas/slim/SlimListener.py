@@ -20,6 +20,51 @@ from pyrsistent.typing import PMap
 # This class defines a complete listener for a parse tree produced by SlimParser.
 class SlimListener(ParseTreeListener):
 
+    # Enter a parse tree produced by SlimParser#ids.
+    def enterIds(self, ctx:SlimParser.IdsContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#ids.
+    def exitIds(self, ctx:SlimParser.IdsContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#typ_base.
+    def enterTyp_base(self, ctx:SlimParser.Typ_baseContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#typ_base.
+    def exitTyp_base(self, ctx:SlimParser.Typ_baseContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#typ.
+    def enterTyp(self, ctx:SlimParser.TypContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#typ.
+    def exitTyp(self, ctx:SlimParser.TypContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#qualification.
+    def enterQualification(self, ctx:SlimParser.QualificationContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#qualification.
+    def exitQualification(self, ctx:SlimParser.QualificationContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#subtyping.
+    def enterSubtyping(self, ctx:SlimParser.SubtypingContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#subtyping.
+    def exitSubtyping(self, ctx:SlimParser.SubtypingContext):
+        pass
+
+
     # Enter a parse tree produced by SlimParser#expr.
     def enterExpr(self, ctx:SlimParser.ExprContext):
         pass
