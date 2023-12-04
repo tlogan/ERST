@@ -121,15 +121,28 @@ $combo = [$ID.text] ++ $ids.combo
 
 typ_base returns [Typ combo] : 
 
-| 'unit'
+| ID {
+$combo = TVar($ID.text) 
+}
 
-// Field 
-| ID ':' typ
+| 'unit' {
+$combo = TUnit() 
+}
 
 // Tag 
-| ':' ID  typ
+| ':' ID typ {
+$combo = TTag($ID.text, $typ.combo) 
+}
 
-| '(' typ ')'
+// Field 
+| ID ':' typ {
+$combo = TField($ID.text, $typ.combo) 
+}
+
+
+| '(' typ ')' {
+$combo = $typ.combo   
+}
 
 ;
 
@@ -140,31 +153,47 @@ $combo = $typ_base.combo
 }
 
 // NOTE: infix type combinators are right-associative  
-| typ_base '|' typ
+| typ_base '|' typ {
+$combo = Unio($typ_base.combo, $typ.combo) 
+}
 
-| typ_base '&' typ
+| typ_base '&' typ {
+$combo = Inter($typ_base.combo, $typ.combo) 
+}
 
-| typ_base '->' typ
+| typ_base '->' typ {
+$combo = Imp($typ_base.combo, $typ.combo) 
+}
+
 
 // Tuple 
-| typ_base ',' typ
+| typ_base ',' typ {
+$combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo)) 
+}
 
 // indexed union
 //  {P <: T, ...}     
-| '{' ids '.' qualification '}' typ
+| '{' ids '.' qualification '}' typ {
+$combo = IdxUnio($ids.combo, $qualification.combo, $typ.combo) 
+}
 
 
 // indexed intersection
 // [P <: T, ...] T 
 // [T <: X -> Y, ...] :a X -> :b Y 
-| '[' ids '.' qualification ']' typ
+| '[' ids '.' qualification ']' typ {
+$combo = IdxInter($ids.combo, $qualification.combo, $typ.combo) 
+}
+
 
 //induction // least fixed point; smallest set such that typ <: ID is invariant
 //   
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'least' ID 'with' typ 
+| 'least' ID 'with' typ {
+$combo = Least($ID.text, $typ.combo) 
+}
 
 
 //co-induction // greatest fixed point; greatest set such that ID <: typ is invariant
@@ -172,7 +201,9 @@ $combo = $typ_base.combo
 // greatest self of 
 // nil -> zero &  
 // [self <: n -> l] cons n -> succ l 
-| 'greatest' ID 'of' typ 
+| 'greatest' ID 'of' typ {
+$combo = Greatest($ID.text, $typ.combo) 
+}
 
 ;
 

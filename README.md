@@ -2,7 +2,6 @@
 
 
 ### TODO
-- add concrete syntax parsing for types
 - fill out cases of `concretize_type`
 - add examples with type annotations 
 - update basic examples with test of type inference 
