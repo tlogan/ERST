@@ -6,7 +6,7 @@ from typing import *
 from tapas.util_system import box, unbox
 from contextlib import contextmanager
 
-from tapas.slim.analysis import * 
+from tapas.slim.analyzer import * 
 
 from pyrsistent import m, pmap, v
 from pyrsistent.typing import PMap 
@@ -125,18 +125,18 @@ typ_base returns [Typ combo] :
 $combo = TVar($ID.text) 
 }
 
-| 'unit' {
+| '@' {
 $combo = TUnit() 
 }
 
 // Tag 
-| ':' ID typ {
-$combo = TTag($ID.text, $typ.combo) 
+| ':' ID typ_base {
+$combo = TTag($ID.text, $typ_base.combo) 
 }
 
 // Field 
-| ID ':' typ {
-$combo = TField($ID.text, $typ.combo) 
+| ID ':' typ_base {
+$combo = TField($ID.text, $typ_base.combo) 
 }
 
 

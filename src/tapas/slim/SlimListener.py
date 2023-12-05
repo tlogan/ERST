@@ -10,7 +10,7 @@ from typing import *
 from tapas.util_system import box, unbox
 from contextlib import contextmanager
 
-from tapas.slim.analysis import * 
+from tapas.slim.analyzer import * 
 
 from pyrsistent import m, pmap, v
 from pyrsistent.typing import PMap 

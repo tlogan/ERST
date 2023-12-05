@@ -12,8 +12,7 @@ from asyncio import Queue
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser
-from tapas.slim import server, analysis
-from tapas.slim.analysis import *
+from tapas.slim import analyzer, language
 
 from tapas.util_system import box, unbox
 
@@ -117,7 +116,7 @@ import pytest
 # '''
 # ]
 
-def raise_guide(guides : list[analysis.Guidance]):
+def raise_guide(guides : list[analyzer.Guidance]):
     for guide in guides:
         if isinstance(guide, Exception):
             raise guide
@@ -125,10 +124,10 @@ def raise_guide(guides : list[analysis.Guidance]):
 def analyze(pieces : list[str]):
     async def _mk_task():
 
-        connection = server.launch()
+        connection = language.launch()
 
         guides = []
-        for piece in pieces + [server.Kill()]:
+        for piece in pieces + [language.Kill()]:
             g = await connection.mk_caller(piece)
             guides.append(g)
             print()
@@ -136,7 +135,7 @@ def analyze(pieces : list[str]):
             print(f"--- client's guidance: << {g} >>")
             print(f"--------------------------")
             print()
-            if isinstance(g, server.Done):
+            if isinstance(g, language.Done):
                 break
 
         ctx = await connection.mk_getter()
@@ -156,7 +155,7 @@ x
 
     assert isinstance(guides[0], KeyError)
     assert guides[0].args[0] == 'x'
-    assert guides[-1] == server.Killed()
+    assert guides[-1] == language.Killed()
     assert not combo
     assert not parsetree 
 
@@ -302,12 +301,26 @@ def test_funnel_pipeline():
 
 
 def test_type_implication():
-    typ = Imp(Imp(TVar('X'), TVar('Y')), TVar('Z'))
-    concrete = concretize_type(typ)
-    assert concrete == "((X -> Y) -> Z)"
-    # print(f'<<< {concrete} >>>')
+
+    p = language.parse_typ("X -> Y -> Z")
+    assert p 
+    c = analyzer.concretize_typ(p) 
+    print(c)
+    assert c == "(X -> (Y -> Z))"
+
+
+
+def test_type_least():
+    p = language.parse_typ('''
+least self with :nil @ | :cons self
+    ''')
+    assert p 
+    c = analyzer.concretize_typ(p) 
+    assert c == "least self with (:nil @ | :cons self)"
 
 if __name__ == '__main__':
+    test_type_least()
+
     pass
 
 #######################################################################

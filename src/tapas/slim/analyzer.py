@@ -138,18 +138,18 @@ def concretize_ids(ids : list[str]) -> str:
 
 def concretize_qualification(subtypings : list[Subtyping]) -> str:
     return ", ".join([
-        concretize_type(st.lower) + " <: " + concretize_type(st.upper)
+        concretize_typ(st.lower) + " <: " + concretize_typ(st.upper)
         for st in subtypings
     ])
 
-def concretize_type(typ : Typ) -> str:
+def concretize_typ(typ : Typ) -> str:
     def mk_plate (control : Typ):
         if False: 
             pass
         elif isinstance(control, TVar):
             plate = ([], lambda: control.id, [])  
         elif isinstance(control, TUnit):
-            plate = ([], lambda: "unit", [])  
+            plate = ([], lambda: "@", [])  
         elif isinstance(control, TTag):
             plate = ([control.body], lambda body : f":{control.label} {body}", [])  
         elif isinstance(control, TField):

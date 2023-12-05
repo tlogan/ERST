@@ -8,7 +8,7 @@ from asyncio import Queue, Task
 
 from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser, Guidance
-from tapas.slim import analysis 
+from tapas.slim import analyzer 
 
 
 T = TypeVar("T")
@@ -54,7 +54,7 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
         parser.reset()
 
         try:
-            ctx = parser.expr(analysis.nt_default)
+            ctx = parser.expr(analyzer.nt_default)
             if ctx.combo: 
                 await output.put(Done())
                 break
@@ -123,5 +123,17 @@ def launch() -> Connection[Optional[SlimParser.ExprContext]]:
     parser = SlimParser(none)
     task = asyncio.create_task(_mk_task(parser, input, output))
     return Connection(input, output, parser, task)
+
+
+
+def parse_typ(code : str) -> Optional[analyzer.Typ]:
+    input_stream = InputStream(code)
+    lexer = SlimLexer(input_stream)
+    token_stream : Any = CommonTokenStream(lexer)
+    parser = SlimParser(token_stream)
+    tc = parser.typ()
+    return tc.combo
+
+
 
 
