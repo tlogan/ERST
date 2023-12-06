@@ -110,18 +110,23 @@
     - lack of sorts prevents general propositions over proofs
     - the inhabitation of types/predicates may be viewed as existential propositions 
     - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
-    - Syntactic encoding (RIGHT): horn clause represents the subtyping semantics: M |= T1 <: T2 is defined by rules: T1 <: T2 :- body 
+
+    - Syntactic encoding: horn clause represents the subtyping semantics: M |= T1 <: T2 is defined by rules: T1 <: T2 :- body 
         - type inference would then be encoded as the query: solve(T1 <: T2) is sat  
         - subtyping rules should be partially evaluated before sending to z3 solver
         - https://www-kb.is.s.u-tokyo.ac.jp/~koba/papers/pldi11.pdf
-    - Semantic encoding (WRONG): horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
-        - a type corresponds to a refinement of some z3 sort
-        - a record type could be encoded as an uninterpreted function over their payload
-        - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(x) :- T1(m1(x)), T2(m2(x))`
+        - offers way to represent the learned type symbolically and compactly.   
+    - Semantic encoding: horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
         - the solution represents set of all possible inhabitants of type P.        
         - type verification (M |= T1 <: T2) would then be encoded as the query:  solve(T1(x) and not T2(x)) is unsat  
-        - PROBLEM: the semantic embedding does not offer a method for updating the meaning of types  
-        - PROBLEM: there is no way to represent an unbounded sort
+        - represents types as a set of terms belonging the Value ADT sort 
+        - a record type could be encoded using uninterpreted functions 
+        - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(Record(x)) :- T1(m1(x)), T2(m2(x))`
+        - a record type could be encoded using uninterpreted functions over domain StringSort
+        - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(Record(x)) :- T1(x(m1)), T2(x(m2))`
+        - a record type could be encoded using pairs 
+        - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(Record(Field(m1, y1)::Field(m2, y2))) :- T1(y1), T2(y2)`
+        - there is no way to represent the type other than as infinite set of values or the constraints themselves.   
 
     - could use intersection on the fly in order to guide synthesis rather than conjunctive merging at the end
 

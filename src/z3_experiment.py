@@ -65,13 +65,7 @@ print (fp.get_answer())
 '''
 NOTE: 
 Syntactic encoding: horn clause represents the subtyping semantics: M |= T1 <: T2 is defined by rules: T1 <: T2 :- body 
-    - type inference would then be encoded as the query: solve(T1 <: T2) is sat  
 Semantic encoding: horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
-    - a record type could be encoded as an uninterpreted function over their payload
-    - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(x) :- T1(m1(x)), T2(m2(x))`
-    - the solution represents set of all possible inhabitants of type P.        
-    - type verification (M |= T1 <: T2) would then be encoded as the query:  solve(T1(x) and not T2(x)) is unsat  
-    - the semantic embedding does not offer a method for updating the meaning of types  
 '''
 
 '''
