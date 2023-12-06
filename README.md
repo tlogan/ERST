@@ -110,13 +110,18 @@
     - lack of sorts prevents general propositions over proofs
     - the inhabitation of types/predicates may be viewed as existential propositions 
     - the inhabitation of a function type may be viewed as an implication between the inhabitation of each of the two subparts
-    - the relational types of various parts of an untyped program can be expressed as 
-        - a single algebraic datatype representing all possible tag/record constructions 
-        - and various predicates/relations defined by horn clauses over the massive algebraic data type
-    - a record type could be encoded as an uninterpreted function over their payload
-        - e.g. maybe `x : {m1 : T1, m2 : T2}` could become `m1(x) : T1, m2(x) : T2 ==> x : P`
-    - TODO: determine if there is an advantage to doing some unification before outsourcing to horn clause solver
-
+    - Syntactic encoding (RIGHT): horn clause represents the subtyping semantics: M |= T1 <: T2 is defined by rules: T1 <: T2 :- body 
+        - type inference would then be encoded as the query: solve(T1 <: T2) is sat  
+        - subtyping rules should be partially evaluated before sending to z3 solver
+        - https://www-kb.is.s.u-tokyo.ac.jp/~koba/papers/pldi11.pdf
+    - Semantic encoding (WRONG): horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
+        - a type corresponds to a refinement of some z3 sort
+        - a record type could be encoded as an uninterpreted function over their payload
+        - e.g. maybe `P = {m1 : T1, m2 : T2}` could become `P(x) :- T1(m1(x)), T2(m2(x))`
+        - the solution represents set of all possible inhabitants of type P.        
+        - type verification (M |= T1 <: T2) would then be encoded as the query:  solve(T1(x) and not T2(x)) is unsat  
+        - PROBLEM: the semantic embedding does not offer a method for updating the meaning of types  
+        - PROBLEM: there is no way to represent an unbounded sort
 
     - could use intersection on the fly in order to guide synthesis rather than conjunctive merging at the end
 

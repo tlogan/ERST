@@ -249,6 +249,43 @@ class Solver:
     # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
     # TODO: encode problem into Z3; decode back to Slim. 
     def solve(self, interp : Interp, lower : Typ, upper : Typ) -> list[Interp]:
+
+        if False: 
+            pass
+        elif isinstance(lower, TVar): 
+            pass
+        elif isinstance(lower, TUnit):
+            pass
+        # elif isinstance(control, TTag):
+        #     plate = ([control.body], lambda body : f":{control.label} {body}", [])  
+        # elif isinstance(control, TField):
+        #     plate = ([control.body], lambda body : f"{control.label} : {body}", [])  
+        # elif isinstance(control, Imp):
+        #     plate = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})", [])  
+        # elif isinstance(control, Unio):
+        #     plate = ([control.left,control.right], lambda left, right : f"({left} | {right})", [])  
+        # elif isinstance(control, Inter):
+        #     plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
+        # elif isinstance(control, IdxUnio):
+        #     qualification = concretize_qualification(control.qualification)
+        #     ids = concretize_ids(control.ids)
+        #     plate = ([control.body], lambda body : f"{{{ids} . {qualification}}} {body}", [])  
+        # elif isinstance(control, IdxInter):
+        #     qualification = concretize_qualification(control.qualification)
+        #     ids = concretize_ids(control.ids)
+        #     plate = ([control.body], lambda body : f"[{ids} . {qualification}] {body}", [])  
+        # elif isinstance(control, Least):
+        #     id = control.id
+        #     plate = ([control.body], lambda body : f"least {id} with {body}", [])  
+        # elif isinstance(control, Greatest):
+        #     id = control.id
+        #     plate = ([control.body], lambda body : f"greatest {id} of {body}", [])  
+        # elif isinstance(control, Top):
+        #     plate = ([], lambda: "top", [])  
+        # elif isinstance(control, Bot):
+        #     plate = ([], lambda: "bot", [])  
+
+
         '''
         TODO
         '''

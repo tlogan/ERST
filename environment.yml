@@ -50,3 +50,4 @@ dependencies:
     - tomli==2.0.1
     - tree-sitter==0.20.0
     - typing-extensions==4.3.0
+    - z3-solver==4.12.1.0
