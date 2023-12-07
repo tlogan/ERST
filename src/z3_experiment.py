@@ -64,8 +64,14 @@ print (fp.get_answer())
 
 '''
 NOTE: 
-Syntactic encoding: horn clause represents the subtyping semantics: M |= T1 <: T2 is defined by rules: T1 <: T2 :- body 
-Semantic encoding: horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
+Syntactic encoding: horn clause represents the subtyping semantics: M |= t1 <: t2 is defined by rules: t1 <: t2 :- body 
+Semantic encoding option 1: horn clause represents the meaning of types: M |= T is defined by rules T(x) :- body(x)     
+Semantic encoding option 2: horn clause represents the meaning of types: M |= t <: T is defined by rules t <: T :- body(t)   
+'''
+
+'''
+The example encoding of program verification is sort of semantic: function Max is encoded as a horn-clause relation over application
+Likewise, a type can be defined by a horn-clause over subtyping/typing with a placeholder variable   
 '''
 
 '''
