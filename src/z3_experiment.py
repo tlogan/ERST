@@ -22,45 +22,210 @@ import pytest
 
 from z3 import *
 
-Expr = Datatype('Expr')
-Expr.declare('Max')
-Expr.declare('f')
-Expr.declare('I', ('i', IntSort()))
-Expr.declare('App', ('fn',Expr),('arg',Expr))
-Expr = Expr.create()
-Max  = Expr.Max
-I    = Expr.I
-App  = Expr.App
-f    = Expr.f
-Eval = Function('Eval',Expr,Expr,Expr,BoolSort())
+######################################################
 
-x   = Const('x',Expr)
-y   = Const('y',Expr)
-z   = Const('z',Expr)
-r1  = Const('r1',Expr)
-r2  = Const('r2',Expr)
-max = Const('max',Expr)
-xi  = Const('xi',IntSort())
-yi  = Const('yi',IntSort())
+# Expr = Datatype('Expr')
+# Expr.declare('Max')
+# Expr.declare('f')
+# Expr.declare('I', ('i', IntSort()))
+# Expr.declare('App', ('fn',Expr),('arg',Expr))
+# Expr = Expr.create()
+# Max  = Expr.Max
+# I    = Expr.I
+# App  = Expr.App
+# f    = Expr.f
+# Eval = Function('Eval',Expr,Expr,Expr,BoolSort())
 
-fp = Fixedpoint()
-fp.register_relation(Eval)
-fp.declare_var(x,y,z,r1,r2,max,xi,yi)
+# x   = Const('x',Expr)
+# y   = Const('y',Expr)
+# z   = Const('z',Expr)
+# r1  = Const('r1',Expr)
+# r2  = Const('r2',Expr)
+# max = Const('max',Expr)
+# xi  = Const('xi',IntSort())
+# yi  = Const('yi',IntSort())
 
-# Max max x y z = max (max x y) z
-fp.rule(Eval(App(App(App(Max,max),x),y), z, r2),
-	[Eval(App(max,x),y,r1),
-	 Eval(App(max,r1),z,r2)])
+# fp = Fixedpoint()
+# fp.register_relation(Eval)
+# fp.declare_var(x,y,z,r1,r2,max,xi,yi)
 
-# f x y = x if x >= y
-# f x y = y if x < y
-fp.rule(Eval(App(f,I(xi)),I(yi),I(xi)),xi >= yi)
-fp.rule(Eval(App(f,I(xi)),I(yi),I(yi)),xi < yi)
+# # Max max x y z = max (max x y) z
+# fp.rule(Eval(App(App(App(Max,max),x),y), z, r2),
+# 	[Eval(App(max,x),y,r1),
+# 	 Eval(App(max,r1),z,r2)])
 
-print(fp.query(And(Eval(App(App(App(Max,f),x),y),z,r1), Eval(App(f,x),r1,r2), r1 != r2)))
+# # f x y = x if x >= y
+# # f x y = y if x < y
+# fp.rule(Eval(App(f,I(xi)),I(yi),I(xi)),xi >= yi)
+# fp.rule(Eval(App(f,I(xi)),I(yi),I(yi)),xi < yi)
 
-print (fp.get_answer())
+# print(fp.query(And(Eval(App(App(App(Max,f),x),y),z,r1), Eval(App(f,x),r1,r2), r1 != r2)))
+
+# print (fp.get_answer())
 # print (fp.get_ground_sat_answer())
+
+######################################################
+
+'''
+least self with
+    :zero @ |
+    :succ self |
+bot
+
+<:
+
+least self with
+    :zero @ |
+    :succ :succ self |
+bot
+
+Typ ::=
+| Nat 
+| Even
+| Tag (str * Typ)
+| Unit
+
+
+
+Subtype(Zero(Unit), Nat)
+Subtype(Succ(n), Nat) :- Subtype(n, Nat)
+
+
+
+'''
+
+Typ = Datatype('Typ')
+Typ.declare('Nat')
+Typ.declare('Even')
+Typ.declare('Zero', ('body', Typ))
+Typ.declare('Succ', ('body', Typ))
+Typ.declare('Unit')
+
+Typ = Typ.create()
+
+Nat = Typ.Nat
+Even = Typ.Even
+Zero = Typ.Zero
+Succ = Typ.Succ
+Unit = Typ.Unit
+
+n = Const('n', Typ)
+m = Const('m', Typ)
+l = Const('l', Typ)
+
+Subtyping = Function('Subtyping', Typ, Typ, BoolSort())
+
+# set_option(dl_engine=1)
+# set_option(dl_pdr_use_farkas=True)
+fp = Fixedpoint()
+# fp.set(engine='datalog')
+fp.register_relation(Subtyping)
+fp.declare_var(n, m, l)
+
+'''
+Nat 
+'''
+fp.rule(
+    Subtyping(Zero(Unit), Nat), [
+    ]
+)
+fp.rule(
+    Subtyping(Succ(n), Nat), [
+        Subtyping(n, Nat)
+    ]
+)
+
+'''
+Even 
+'''
+fp.rule(
+    Subtyping(Zero(Unit), Even)
+)
+fp.rule(
+    Subtyping(Succ(Succ(n)), Even), [
+        Subtyping(n, Even)
+    ]
+)
+
+'''
+Refl
+'''
+fp.rule(
+    Subtyping(n, n)
+)
+
+'''
+Implies
+'''
+fp.rule(
+    Subtyping(n, m), [
+        Implies(Subtyping(l, n), Subtyping(l, m))
+    ]
+)
+
+print('------------------')
+
+print('Query: Zero(n) <: Nat')
+print(fp.query(
+    Subtyping((Zero(n), Nat))
+))
+print('')
+print('Answer:')
+print(fp.get_answer().arg(0).arg(2).arg(0))
+print('')
+
+print('------------------')
+
+print('Query: Nat <: Nat')
+print(fp.query(
+    Subtyping(Nat, Nat)
+))
+print('')
+print('Answer:')
+print(fp.get_answer())
+print('')
+
+print('------------------')
+
+print('Query: Nat <: Even')
+print(fp.query(
+    Subtyping(Nat, Even)
+))
+print('')
+print('Answer:')
+print(fp.get_answer())
+print('')
+
+print('------------------')
+
+# print('Query:')
+# print(fp.query(
+#     Not(And(
+#         Subtyping(n, Nat),
+#         Not(Subtyping(n, Even))
+#     ))
+# ))
+# print('')
+# print('Answer:')
+# print(fp.get_answer())
+# print('')
+
+# print('------------------')
+
+#####################################3
+# fp = Fixedpoint()
+
+# a, b, c = Bools('a b c')
+
+# fp.register_relation(a.decl(), b.decl(), c.decl())
+# fp.rule(a,b)
+# fp.rule(b,c)
+# fp.fact(c)
+# # fp.set(generate_explanations=True, engine='datalog')
+# # fp.set(engine='datalog')
+# print (fp.query(a))
+# print (fp.get_answer())
+
 
 '''
 NOTE: 

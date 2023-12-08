@@ -2,6 +2,7 @@
 
 
 ### TODO
+- resolve the z3 rules using negative predicates (e.g. implies)
 - add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
