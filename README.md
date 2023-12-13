@@ -2,7 +2,8 @@
 
 
 ### TODO
-- resolve the z3 rules using negative predicates (e.g. implies)
+- replace Z3 with RInGen. Z3 is not expressive enough with algebraic datatypes
+    - NOTE: git checkout the tag `chccomp22` for a stable version that executes.
 - add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
@@ -165,6 +166,17 @@
         (A -> B) & (C -> D) <: (P -> Q)
         ```
         - syntactic check at unification; make sure that lhs antecedents are associated with rhs consequent's subparts 
+
+    - Bidirectional
+        - propagating types down corresponds to CDCL or back-jumping
+        - propagating types up corresponds to BCP or unit-propagation
+    - Solving for types directly without SMT
+        - constructing/unrolling a derivation on the LHS of subtyping corresponds to finding a counterexample derivation in CEGAR/interpolation.  
+        - we use backward reasoning on subtyping to construct a subtyping derivation. 
+            - If there is a satisfying type variable assignment that could allow the derivation to hold, then we update the assignment. 
+            - then we repeat the process of constructing derivations until no more new assignments are found or the derivation fails.
+        - failure to find assignment satisfying subtyping unification corresponds to CEGAR's counter-example derivation having only consistent assignments  
+        - success in finding a satisfying assignment for subtyping unification corresponds to CEGAR's counter-example derivation having in an inconsistent assignment
 
 
 

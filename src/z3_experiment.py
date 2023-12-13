@@ -118,7 +118,7 @@ Subtyping = Function('Subtyping', Typ, Typ, BoolSort())
 # set_option(dl_engine=1)
 # set_option(dl_pdr_use_farkas=True)
 fp = Fixedpoint()
-# fp.set(engine='datalog')
+fp.set(engine='spacer')
 fp.register_relation(Subtyping)
 fp.declare_var(n, m, l)
 
@@ -154,14 +154,14 @@ fp.rule(
     Subtyping(n, n)
 )
 
-'''
-Implies
-'''
-fp.rule(
-    Subtyping(n, m), [
-        Implies(Subtyping(l, n), Subtyping(l, m))
-    ]
-)
+# '''
+# Implies
+# '''
+# fp.rule(
+#     Subtyping(n, m), [
+#         Implies(Subtyping(l, n), Subtyping(l, m))
+#     ]
+# )
 
 print('------------------')
 
@@ -187,16 +187,41 @@ print('')
 
 print('------------------')
 
-print('Query: Nat <: Even')
+print('Query: ... <: Nat')
 print(fp.query(
-    Subtyping(Nat, Even)
+    Subtyping(Zero(Unit), Nat),
+    ForAll(n, Subtyping(Succ(Succ(Succ(n))), Nat))
 ))
 print('')
 print('Answer:')
 print(fp.get_answer())
 print('')
 
-print('------------------')
+# print('------------------')
+
+# print('Query: Even <: Nat')
+# print(fp.query(
+#     Subtyping(Even, Nat)
+# ))
+# print('')
+# print('Answer:')
+# print(fp.get_answer())
+# print('')
+
+# print('------------------')
+
+# print('Query: Diverges')
+# print(fp.query(
+#     Subtyping(n, Nat), 
+#     Subtyping(Succ(n), Even),
+#     Subtyping(Succ(Succ(n)), Even)
+# ))
+# print('')
+# print('Answer:')
+# print(fp.get_answer())
+# print('')
+
+# print('------------------')
 
 # print('Query:')
 # print(fp.query(
