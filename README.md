@@ -175,6 +175,9 @@
         - we use backward reasoning on subtyping to construct a subtyping derivation. 
             - If there is a satisfying type variable assignment that could allow the derivation to hold, then we update the assignment. 
             - then we repeat the process of constructing derivations until no more new assignments are found or the derivation fails.
+            - type variables on the LHS can be assigned and strengthened with intersection in terms of the types on the RHS
+            - type variables on the RHS are not assigned or adjusted
+            - union types are constructed from combining solutions from multiple reasoning branches (e.g. solving cases from pattern matching)
         - failure to find assignment satisfying subtyping unification corresponds to CEGAR's counter-example derivation having only consistent assignments  
         - success in finding a satisfying assignment for subtyping unification corresponds to CEGAR's counter-example derivation having in an inconsistent assignment
 
