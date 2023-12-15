@@ -11,8 +11,8 @@ from asyncio import Queue
 
 # from tapas.util_system import unbox, box  
 
-from pyrsistent.typing import PMap 
-from pyrsistent import m 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 from contextlib import contextmanager
 
@@ -228,7 +228,29 @@ class Nonterm:
 
 # TODO: the interpretation could map type patterns to types, rather than merely strings
 # -- in order to handle subtyping of relational types
-Interp = PMap[str, Typ]
+# Interp = PMap[str, Typ]
+
+@dataclass(frozen=True, eq=True)
+class Model:
+    _constraints : PSet[Subtyping]
+
+    def add(self, constraint : Subtyping) -> Model:
+        return Model(self._constraints.add(constraint))
+
+
+def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
+    return pset((
+        st
+        for st in constraints
+        if contains(st.lower, key)
+    )) 
+
+
+def contains(typ : Typ, var : str) -> bool:
+    # TODO: check if the type variable exists in type
+    return False
+
+
 Enviro = PMap[str, Typ]
 
 
@@ -246,16 +268,100 @@ class Solver:
         self._type_id += 1
         return TVar(f"_{self._type_id}")
 
-    # TODO: if using custom unification logic, then use while loop to avoid recursion limit 
-    # TODO: encode problem into Z3; decode back to Slim. 
-    def solve(self, interp : Interp, lower : Typ, upper : Typ) -> list[Interp]:
+    def mk_renaming(self, old_ids) -> PMap[str, str]:
+        '''
+        Map old_ids to fresh ids
+        '''
+        d = {}
+        for old_id in old_ids:
+            fresh = self.fresh_type_var()
+            d[old_id] = fresh.id
+
+        return pmap(d)
+
+    def rename_constraints(self, renaming : PMap[str, str], constraints : list[Subtyping]) -> list[Subtyping]:
+        '''
+        # TODO
+        '''
+        return []
+
+    def rename_typ(self, renaming : PMap[str, str], typ : Typ) -> Typ:
+        '''
+        # TODO: remove bound variables from renaming as it deepens
+        '''
+        return Top()
+
+    '''
+    TODO: if using custom unification logic, then use while loop to avoid recursion limit 
+    TODO: encode problem into Z3; decode back to Slim. 
+    TODO: an interpretation could be constraints indexed by their LHS free variables
+    TODO: constraints should be stored in simplified form 
+    TODO: LHS must be simple pattern: variable; tag; fields; intersection 
+    '''
+
+    '''
+    NOTE: constraints with type variables are simply added to the model
+        - construction of an assignment is handled in the grounding procedure
+        - for a variable that exists on the RHS, its assignment becomes the union of its LHSs
+        - for a variable that exists on the LHS, its assignment becomes the intersection of its RHSs
+    '''
+
+    def solve(self, model : Model, lower : Typ, upper : Typ) -> list[Model]:
+
 
         if False: 
-            pass
+            return [] 
+
+        elif isinstance(upper, TVar): 
+            return [model.add(Subtyping(lower, upper))] 
+
         elif isinstance(lower, TVar): 
-            pass
-        elif isinstance(lower, TUnit):
-            pass
+            return [model.add(Subtyping(lower, upper))] 
+
+        elif isinstance(upper, Top): 
+            return [model] 
+
+        elif isinstance(lower, Bot): 
+            return [model] 
+
+        elif isinstance(upper, IdxUnio): 
+            renaming = self.mk_renaming(upper.ids)
+            constraints = self.rename_constraints(renaming, upper.qualification)
+            body = self.rename_typ(renaming, upper.body)
+
+            result = []
+            for st in constraints:
+                sol = self.solve(model, lower, body)
+                lower_c = self.ground(sol, st.lower)
+                upper_c = self.ground(sol, st.upper)
+                result += self.solve(model, lower_c, upper_c)
+            return result
+
+        elif isinstance(lower, IdxInter): 
+            renaming = self.mk_renaming(lower.ids)
+            constraints = self.rename_constraints(renaming, lower.qualification)
+            body = self.rename_typ(renaming, lower.body)
+
+            result = []
+            for st in constraints:
+                sol = self.solve(model, body, upper)
+                lower_c = self.ground(sol, st.lower)
+                upper_c = self.ground(sol, st.upper)
+                result += self.solve(model, lower_c, upper_c)
+            return result
+
+        '''
+        TODO: WORK ON THIS
+        '''
+
+        # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
+
+        # elif isinstance(lower, TUnit):
+        #     if isinstance(upper, TUnit):
+        #         return [model]
+        #     else:
+        #         return []
+
         # elif isinstance(control, TTag):
         #     plate = ([control.body], lambda body : f":{control.label} {body}", [])  
         # elif isinstance(control, TField):
@@ -330,7 +436,7 @@ class Solver:
 
         return [interp]
 
-    def ground(self, solution : list[Interp], typ : Typ) -> Typ:
+    def ground(self, solution : list[Model], typ : Typ) -> Typ:
         return Top()
 
 class Rule:

@@ -2,8 +2,12 @@
 
 
 ### TODO
-- replace Z3 with RInGen. Z3 is not expressive enough with algebraic datatypes
-    - NOTE: git checkout the tag `chccomp22` for a stable version that executes.
+- implement solving of subtyping directly
+- have cases in solve simply collect constraints on variables
+- implement grounding procedure to construct assignments for variables
+- determine if some notion corresponding to k-induction is necessary
+- implement analysis of the inductive structure of LHS to determine which k-induction to be used.
+- use encode fibonacci as an example to motivate 2-induction.
 - add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
