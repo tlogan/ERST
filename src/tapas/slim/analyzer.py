@@ -69,13 +69,13 @@ class Imp:
 @dataclass(frozen=True, eq=True)
 class IdxUnio:
     ids : list[str]
-    qualification : list[Subtyping] 
+    constraints : list[Subtyping] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
 class IdxInter:
     ids : list[str]
-    qualification : list[Subtyping] 
+    constraints : list[Subtyping] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
@@ -136,7 +136,7 @@ def mk_stack_machine(
 def concretize_ids(ids : list[str]) -> str:
     return ", ".join(ids)
 
-def concretize_qualification(subtypings : list[Subtyping]) -> str:
+def concretize_constraints(subtypings : list[Subtyping]) -> str:
     return ", ".join([
         concretize_typ(st.lower) + " <: " + concretize_typ(st.upper)
         for st in subtypings
@@ -161,13 +161,13 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, Inter):
             plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
         elif isinstance(control, IdxUnio):
-            qualification = concretize_qualification(control.qualification)
+            constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate = ([control.body], lambda body : f"{{{ids} . {qualification}}} {body}", [])  
+            plate = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}", [])  
         elif isinstance(control, IdxInter):
-            qualification = concretize_qualification(control.qualification)
+            constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate = ([control.body], lambda body : f"[{ids} . {qualification}] {body}", [])  
+            plate = ([control.body], lambda body : f"[{ids} . {constraints}] {body}", [])  
         elif isinstance(control, Least):
             id = control.id
             plate = ([control.body], lambda body : f"least {id} with {body}", [])  
@@ -229,6 +229,11 @@ class Nonterm:
 # TODO: the interpretation could map type patterns to types, rather than merely strings
 # -- in order to handle subtyping of relational types
 # Interp = PMap[str, Typ]
+
+
+
+
+Grounding = PMap[str, Typ]
 
 @dataclass(frozen=True, eq=True)
 class Model:
@@ -293,29 +298,29 @@ class Solver:
 
     '''
     TODO: if using custom unification logic, then use while loop to avoid recursion limit 
-    TODO: encode problem into Z3; decode back to Slim. 
-    TODO: an interpretation could be constraints indexed by their LHS free variables
-    TODO: constraints should be stored in simplified form 
-    TODO: LHS must be simple pattern: variable; tag; fields; intersection 
     '''
 
     '''
-    NOTE: constraints with type variables are simply added to the model
-        - construction of an assignment is handled in the grounding procedure
-        - for a variable that exists on the RHS, its assignment becomes the union of its LHSs
-        - for a variable that exists on the LHS, its assignment becomes the intersection of its RHSs
+    TODO: distinguish between adjustable variables and variables with fixed assignments 
+    TODO: create an assignment map (grounding); variables in grounding are fixed; all others may be adjusted! 
     '''
 
-    def solve(self, model : Model, lower : Typ, upper : Typ) -> list[Model]:
+    def solve(self, model : Model, grounding : Grounding, lower : Typ, upper : Typ) -> list[Model]:
 
 
         if False: 
             return [] 
 
         elif isinstance(upper, TVar): 
+            '''
+            TODO: if variables is in grounding (assignment-map) then sub, else add constraint to model
+            '''
             return [model.add(Subtyping(lower, upper))] 
 
         elif isinstance(lower, TVar): 
+            '''
+            TODO: if variables is in grounding (assignment-map) then sub, else add constraint to model
+            '''
             return [model.add(Subtyping(lower, upper))] 
 
         elif isinstance(upper, Top): 
@@ -326,28 +331,34 @@ class Solver:
 
         elif isinstance(upper, IdxUnio): 
             renaming = self.mk_renaming(upper.ids)
-            constraints = self.rename_constraints(renaming, upper.qualification)
-            body = self.rename_typ(renaming, upper.body)
+            upper_constraints = self.rename_constraints(renaming, upper.constraints)
+            upper_body = self.rename_typ(renaming, upper.body)
 
+            '''
+            TODO: construct grounding from lower <: upper_body
+            '''
             result = []
-            for st in constraints:
-                sol = self.solve(model, lower, body)
-                lower_c = self.ground(sol, st.lower)
-                upper_c = self.ground(sol, st.upper)
-                result += self.solve(model, lower_c, upper_c)
+            # for st in constraints:
+            #     sol = self.solve(model, lower, body)
+                # lower_c = self.ground(sol, st.lower)
+                # upper_c = self.ground(sol, st.upper)
+                # result += self.solve(model, lower_c, upper_c)
             return result
 
         elif isinstance(lower, IdxInter): 
             renaming = self.mk_renaming(lower.ids)
-            constraints = self.rename_constraints(renaming, lower.qualification)
-            body = self.rename_typ(renaming, lower.body)
+            lower_constraints = self.rename_constraints(renaming, lower.constraints)
+            lower_body = self.rename_typ(renaming, lower.body)
 
+            '''
+            TODO: construct grounding from lower_body <: upper 
+            '''
             result = []
-            for st in constraints:
-                sol = self.solve(model, body, upper)
-                lower_c = self.ground(sol, st.lower)
-                upper_c = self.ground(sol, st.upper)
-                result += self.solve(model, lower_c, upper_c)
+            # for st in constraints:
+            #     sol = self.solve(model, body, upper)
+                # lower_c = self.ground(sol, st.lower)
+                # upper_c = self.ground(sol, st.upper)
+                # result += self.solve(model, lower_c, upper_c)
             return result
 
         '''
