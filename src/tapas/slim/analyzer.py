@@ -234,14 +234,13 @@ class Nonterm:
 
 
 Grounding = PMap[str, Typ]
+Model = PSet[Subtyping]
+
 
 @dataclass(frozen=True, eq=True)
-class Model:
-    _constraints : PSet[Subtyping]
-
-    def add(self, constraint : Subtyping) -> Model:
-        return Model(self._constraints.add(constraint))
-
+class Premise:
+    model : Model
+    grounding : Grounding 
 
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
     return pset((
@@ -305,65 +304,73 @@ class Solver:
     TODO: create an assignment map (grounding); variables in grounding are fixed; all others may be adjusted! 
     '''
 
-    def solve(self, model : Model, grounding : Grounding, lower : Typ, upper : Typ) -> list[Model]:
+    def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
 
         if False: 
             return [] 
 
         elif isinstance(upper, TVar): 
-            '''
-            TODO: if variables is in grounding (assignment-map) then sub, else add constraint to model
-            '''
-            return [model.add(Subtyping(lower, upper))] 
+            upper_ground = premise.grounding.get(upper.id)
+            if upper_ground:
+                return self.solve(premise, lower, upper_ground) 
+            else:
+                premise = Premise(premise.model.add(Subtyping(lower, upper)), premise.grounding)
+                return [premise]
 
         elif isinstance(lower, TVar): 
-            '''
-            TODO: if variables is in grounding (assignment-map) then sub, else add constraint to model
-            '''
-            return [model.add(Subtyping(lower, upper))] 
+            lower_ground = premise.grounding.get(lower.id)
+            if lower_ground:
+                return self.solve(premise, lower_ground, upper) 
+            else:
+                premise = Premise(premise.model.add(Subtyping(lower, upper)), premise.grounding)
+                return [premise]
 
         elif isinstance(upper, Top): 
-            return [model] 
+            return [premise] 
 
         elif isinstance(lower, Bot): 
-            return [model] 
+            return [premise] 
 
         elif isinstance(upper, IdxUnio): 
             renaming = self.mk_renaming(upper.ids)
             upper_constraints = self.rename_constraints(renaming, upper.constraints)
             upper_body = self.rename_typ(renaming, upper.body)
 
-            '''
-            TODO: construct grounding from lower <: upper_body
-            '''
-            result = []
-            # for st in constraints:
-            #     sol = self.solve(model, lower, body)
-                # lower_c = self.ground(sol, st.lower)
-                # upper_c = self.ground(sol, st.upper)
-                # result += self.solve(model, lower_c, upper_c)
-            return result
+            solution = self.solve(premise, lower, upper_body) 
+            ids_ground = list(renaming.values())
+
+            model = premise.model
+            grounding = premise.grounding + (self.ground(solution, ids_ground))
+            premises = [Premise(model, grounding)]
+
+            for constraint in upper_constraints:
+                new_premises = []
+                for premise in premises:
+                    new_premises.append(self.solve(premise, constraint.lower, constraint.upper))
+                premises = new_premises
+
+            return premises
 
         elif isinstance(lower, IdxInter): 
             renaming = self.mk_renaming(lower.ids)
             lower_constraints = self.rename_constraints(renaming, lower.constraints)
             lower_body = self.rename_typ(renaming, lower.body)
 
-            '''
-            TODO: construct grounding from lower_body <: upper 
-            '''
-            result = []
-            # for st in constraints:
-            #     sol = self.solve(model, body, upper)
-                # lower_c = self.ground(sol, st.lower)
-                # upper_c = self.ground(sol, st.upper)
-                # result += self.solve(model, lower_c, upper_c)
-            return result
+            solution = self.solve(premise, lower_body, upper) 
+            ids_ground = list(renaming.values())
 
-        '''
-        TODO: WORK ON THIS
-        '''
+            model = premise.model
+            grounding = premise.grounding + (self.ground(solution, ids_ground))
+            premises = [Premise(model, grounding)]
+
+            for constraint in lower_constraints:
+                new_premises = []
+                for premise in premises:
+                    new_premises.append(self.solve(premise, constraint.lower, constraint.upper))
+                premises = new_premises
+
+            return premises
 
         # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
 
@@ -447,8 +454,8 @@ class Solver:
 
         return [interp]
 
-    def ground(self, solution : list[Model], typ : Typ) -> Typ:
-        return Top()
+    def ground(self, solution : list[Premise], ids : list[str]) -> Grounding:
+        return pmap() 
 
 class Rule:
     def __init__(self, solver : Solver, nt : Nonterm):
