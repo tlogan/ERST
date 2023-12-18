@@ -304,11 +304,28 @@ class Solver:
     TODO: create an assignment map (grounding); variables in grounding are fixed; all others may be adjusted! 
     '''
 
-    def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
+    def reducible(self, premise : Premise, lower : Typ, upper : Typ) -> bool:
+        # TODO
+        return False
 
+    def match_lower(self, model : Model, lower : Typ) -> Optional[Typ]:
+        for constraint in model:
+            if lower == constraint.lower:
+                return constraint.upper
+        return None
+
+    def constraint_well_formed(self, premise : Premise, lower : Typ, upper : Typ) -> bool:
+        # TODO
+        return False
+
+    def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
         if False: 
             return [] 
+
+        #######################################
+        #### Variable rules: ####
+        #######################################
 
         elif isinstance(upper, TVar): 
             upper_ground = premise.grounding.get(upper.id)
@@ -325,6 +342,14 @@ class Solver:
             else:
                 premise = Premise(premise.model.add(Subtyping(lower, upper)), premise.grounding)
                 return [premise]
+
+        #######################################
+        #### Model rules: ####
+        #######################################
+
+        #######################################
+        #### Grounding rules: ####
+        #######################################
 
         elif isinstance(upper, Top): 
             return [premise] 
@@ -371,6 +396,25 @@ class Solver:
                 premises = new_premises
 
             return premises
+
+        elif isinstance(upper, Least): 
+            if self.reducible(premise, lower, upper):
+                id_fresh = self.fresh_type_var().id
+                grounding = premise.grounding.set(id_fresh, upper)
+                renaming = pmap({upper.id : id_fresh})
+                upper_body = self.rename_typ(renaming, upper.body)
+                premise = Premise(premise.model, grounding)
+                return self.solve(premise, lower, upper_body)
+            else:
+                upper_cache = self.match_lower(premise.model, lower)
+                if upper_cache:
+                    return self.solve(premise, upper_cache, upper)
+                elif self.constraint_well_formed(premise, lower, upper):
+                    model = premise.model.add(Subtyping(lower, upper))
+                    return [Premise(model, premise.grounding)]
+                else:
+                    return []
+
 
         # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
 
