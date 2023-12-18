@@ -410,6 +410,7 @@ class Solver:
                 if upper_cache:
                     return self.solve(premise, upper_cache, upper)
                 elif self.constraint_well_formed(premise, lower, upper):
+                    # TODO: this is questionable: can't be sound to simply strengthen the premise here
                     model = premise.model.add(Subtyping(lower, upper))
                     return [Premise(model, premise.grounding)]
                 else:
