@@ -320,6 +320,38 @@ class Solver:
 
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
+        '''
+        NOTE: (T |= T) type satisfaction represents subset inclusion of interpretations for types inhabited by some term
+        '''
+
+        '''
+        NOTE: (x : T |= x : T) typing satisfaction represents subset inclusion of interpretations for types inhabited by then given term
+        '''
+
+        '''
+        NOTE: (T <: T |= T <: T) subtyping satisfaction represents subset inclusion of interpretations for subtyping
+        '''
+
+        '''
+        NOTE: (M |- T <: T) subtyping entailment represents subset inclusion of terms that inhabit types for some interpretation
+        '''
+
+        '''
+        NOTE: (M |- x : T) typing entailment represents inhabitation of a term in a types for some interpretation
+        '''
+
+        '''
+        A |= P
+        P -> Q, A |= B  
+        -- corresponds to --
+        (A <: P) |= (B <: Q) 
+        -- corresponds to --
+        M |- A <: P
+        M |- Q <: B
+        -- corresponds to --
+        M |- (P -> Q) <: (A -> B) 
+        '''
+
         if False: 
             return [] 
 
@@ -347,8 +379,48 @@ class Solver:
         #### Model rules: ####
         #######################################
 
-        # NOTE: k-induction is simulated by using the pattern on LHS to dictate number of unrollings needed on RHS 
+        # TODO: left idx-union 
+
+        # TODO: right idx-inter
+
+        # TODO: left-least
+        # implement k-induction by using the pattern on LHS to dictate number of unrollings needed on RHS 
         # simply need to sub RHS into LHS's self-referencing variable
+
+        # TODO: right-greatest
+
+        # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            return [
+                p2
+                for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
+                for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
+            ]
+
+        # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
+        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            return [
+                p2
+                for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
+                for p2 in self.solve(p1, lower, Imp(upper.antec, upper.consq.right))
+            ]
+
+        elif isinstance(lower, Unio):
+            return [
+                p2
+                for p1 in self.solve(premise, lower.left, upper)
+                for p2 in self.solve(p1, lower.right, upper)
+            ]
+
+        elif isinstance(upper, Inter):
+            # TODO: rewrite intersection of implication
+            return [
+                p2
+                for p1 in self.solve(premise, lower, upper.left)
+                for p2 in self.solve(p1, lower, upper.right)
+            ]
+
+        
 
         #######################################
         #### Grounding rules: ####
@@ -393,10 +465,11 @@ class Solver:
             premises = [Premise(model, grounding)]
 
             for constraint in lower_constraints:
-                new_premises = []
-                for premise in premises:
-                    new_premises.append(self.solve(premise, constraint.lower, constraint.upper))
-                premises = new_premises
+                premises = [
+                    p1 
+                    for premise in premises
+                    for p1 in self.solve(premise, constraint.lower, constraint.upper)
+                ] 
 
             return premises
 
@@ -434,96 +507,51 @@ class Solver:
             ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
             ## (P OR A) --> (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
             ####################
-
-
             return [] 
+
+        elif isinstance(upper, Unio): 
+            return self.solve(premise, lower, upper.left) + self.solve(premise, lower, upper.right)
+
+        elif isinstance(lower, Inter): 
+            ## TODO:
+            ## solve subtyping of intersection of implication by rewriting into implication 
+            ## e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
+            return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
 
         #######################################
         #### Unification rules: ####
         #######################################
 
+        elif isinstance(lower, TUnit) and isinstance(upper, TUnit): 
+            return [premise] 
 
-        # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
+        elif isinstance(lower, TTag) and isinstance(upper, TTag): 
+            if lower.label == upper.label:
+                return self.solve(premise, lower.body, upper.body) 
+            else:
+                return [] 
 
-        # elif isinstance(lower, TUnit):
-        #     if isinstance(upper, TUnit):
-        #         return [model]
-        #     else:
-        #         return []
-
-        # elif isinstance(control, TTag):
-        #     plate = ([control.body], lambda body : f":{control.label} {body}", [])  
-        # elif isinstance(control, TField):
-        #     plate = ([control.body], lambda body : f"{control.label} : {body}", [])  
-        # elif isinstance(control, Imp):
-        #     plate = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})", [])  
-        # elif isinstance(control, Unio):
-        #     plate = ([control.left,control.right], lambda left, right : f"({left} | {right})", [])  
-        # elif isinstance(control, Inter):
-        #     plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
-        # elif isinstance(control, IdxUnio):
-        #     qualification = concretize_qualification(control.qualification)
-        #     ids = concretize_ids(control.ids)
-        #     plate = ([control.body], lambda body : f"{{{ids} . {qualification}}} {body}", [])  
-        # elif isinstance(control, IdxInter):
-        #     qualification = concretize_qualification(control.qualification)
-        #     ids = concretize_ids(control.ids)
-        #     plate = ([control.body], lambda body : f"[{ids} . {qualification}] {body}", [])  
-        # elif isinstance(control, Least):
-        #     id = control.id
-        #     plate = ([control.body], lambda body : f"least {id} with {body}", [])  
-        # elif isinstance(control, Greatest):
-        #     id = control.id
-        #     plate = ([control.body], lambda body : f"greatest {id} of {body}", [])  
-        # elif isinstance(control, Top):
-        #     plate = ([], lambda: "top", [])  
-        # elif isinstance(control, Bot):
-        #     plate = ([], lambda: "bot", [])  
+        elif isinstance(lower, TField) and isinstance(upper, TField): 
+            if lower.label == upper.label:
+                return self.solve(premise, lower.body, upper.body) 
+            else:
+                return [] 
 
 
-        '''
-        TODO
-        '''
 
-        '''
-        TODO:
-        solve (LOWER <: ARG -> RESULT) for RESULT by rewriting and applying modus ponens
-        e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
-        '''
+        elif isinstance(lower, Imp) and isinstance(upper, Imp): 
+            return [
+                p2
+                for p1 in self.solve(premise, upper.antec, lower.antec) 
+                for p2 in self.solve(p1, lower.consq, upper.consq) 
+            ]
 
-        '''
-        NOTE: (T |= T) type satisfaction represents subset inclusion of interpretations for types inhabited by some term
-        '''
+        return []
 
-        '''
-        NOTE: (x : T |= x : T) typing satisfaction represents subset inclusion of interpretations for types inhabited by then given term
-        '''
+    '''
+    end solve
+    '''
 
-        '''
-        NOTE: (T <: T |= T <: T) subtyping satisfaction represents subset inclusion of interpretations for subtyping
-        '''
-
-        '''
-        NOTE: (M |- T <: T) subtyping entailment represents subset inclusion of terms that inhabit types for some interpretation
-        '''
-
-        '''
-        NOTE: (M |- x : T) typing entailment represents inhabitation of a term in a types for some interpretation
-        '''
-
-        '''
-        A |= P
-        P -> Q, A |= B  
-        -- corresponds to --
-        (A <: P) |= (B <: Q) 
-        -- corresponds to --
-        M |- A <: P
-        M |- Q <: B
-        -- corresponds to --
-        M |- (P -> Q) <: (A -> B) 
-        '''
-
-        return [interp]
 
     def ground(self, solution : list[Premise], ids : list[str]) -> Grounding:
         return pmap() 
