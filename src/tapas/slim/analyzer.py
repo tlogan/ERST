@@ -347,6 +347,9 @@ class Solver:
         #### Model rules: ####
         #######################################
 
+        # NOTE: k-induction is simulated by using the pattern on LHS to dictate number of unrollings needed on RHS 
+        # simply need to sub RHS into LHS's self-referencing variable
+
         #######################################
         #### Grounding rules: ####
         #######################################
@@ -409,10 +412,10 @@ class Solver:
                 upper_cache = self.match_lower(premise.model, lower)
                 if upper_cache:
                     return self.solve(premise, upper_cache, upper)
-                elif self.constraint_well_formed(premise, lower, upper):
-                    # TODO: this is questionable: can't be sound to simply strengthen the premise here
-                    model = premise.model.add(Subtyping(lower, upper))
-                    return [Premise(model, premise.grounding)]
+                # elif self.constraint_well_formed(premise, lower, upper):
+                #     # TODO: this is questionable: can't be sound to simply strengthen the premise here
+                #     model = premise.model.add(Subtyping(lower, upper))
+                #     return [Premise(model, premise.grounding)]
                 else:
                     return []
 
