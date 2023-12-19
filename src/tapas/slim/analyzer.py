@@ -425,13 +425,14 @@ class Solver:
         
             ####################
             ##   ==== greatest (P -> Q) & ... <: U -> W
-            ##   ==== (X -> {Y with X * Y <: least (P * Q) | ...}) <: U -> W 
+            ##   ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y) <: U -> W 
             ##   ~~~~ U <: X, Y <: W  
             ####################
-            ## P -> Q AND A -> B
+            ## P --> Q AND A --> B
             ## (NOT P OR Q) AND (NOT A OR B)
             ## (NOT P OR (P AND Q)) AND (NOT A OR (A AND B))
             ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
+            ## (P OR A) --> (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
             ####################
 
 
