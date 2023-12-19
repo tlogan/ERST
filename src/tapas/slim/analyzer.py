@@ -419,6 +419,28 @@ class Solver:
                 else:
                     return []
 
+        elif isinstance(lower, Greatest): 
+            # TODO: convert into problem with least 
+            # TODO: explain why this is logically sound
+        
+            ####################
+            ##   ==== greatest (P -> Q) & ... <: U -> W
+            ##   ==== (X -> {Y with X * Y <: least (P * Q) | ...}) <: U -> W 
+            ##   ~~~~ U <: X, Y <: W  
+            ####################
+            ## P -> Q AND A -> B
+            ## (NOT P OR Q) AND (NOT A OR B)
+            ## (NOT P OR (P AND Q)) AND (NOT A OR (A AND B))
+            ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
+            ####################
+
+
+            return [] 
+
+        #######################################
+        #### Unification rules: ####
+        #######################################
+
 
         # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
 
