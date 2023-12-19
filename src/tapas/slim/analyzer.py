@@ -318,6 +318,27 @@ class Solver:
         # TODO
         return False
 
+
+    def normalize_implication(self, typ : Typ) -> Imp:
+        ## TODO:
+        ## solve subtyping of intersection of implication by rewriting into implication 
+        ## e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
+
+        ####################
+        ##   ==== greatest (P -> Q) & ... <: U -> W
+        ##   ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y) <: U -> W 
+        ##   ~~~~ U <: X, Y <: W  
+        ####################
+        ## P --> Q AND A --> B
+        ## (NOT P OR Q) AND (NOT A OR B)
+        ## (NOT P OR (P AND Q)) AND (NOT A OR (A AND B))
+        ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
+        ## (P OR A) --> (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
+        ####################
+
+        return Imp(Bot(), Top())
+
+
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
         '''
@@ -389,21 +410,23 @@ class Solver:
 
         # TODO: right-greatest
 
-        # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
-        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-            return [
-                p2
-                for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
-                for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
-            ]
 
-        # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
-        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-            return [
-                p2
-                for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
-                for p2 in self.solve(p1, lower, Imp(upper.antec, upper.consq.right))
-            ]
+        ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
+        # # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
+        # elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+        #     return [
+        #         p2
+        #         for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
+        #         for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
+        #     ]
+
+        # # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
+        # elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+        #     return [
+        #         p2
+        #         for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
+        #         for p2 in self.solve(p1, lower, Imp(upper.antec, upper.consq.right))
+        #     ]
 
         elif isinstance(lower, Unio):
             return [
@@ -413,12 +436,15 @@ class Solver:
             ]
 
         elif isinstance(upper, Inter):
-            # TODO: rewrite intersection of implication
-            return [
-                p2
-                for p1 in self.solve(premise, lower, upper.left)
-                for p2 in self.solve(p1, lower, upper.right)
-            ]
+            imp = self.normalize_implication(upper)
+            if imp:
+                return self.solve(premise, lower, imp) 
+            else:
+                return [
+                    p2
+                    for p1 in self.solve(premise, lower, upper.left)
+                    for p2 in self.solve(p1, lower, upper.right)
+                ]
 
         
 
@@ -493,30 +519,20 @@ class Solver:
                     return []
 
         elif isinstance(lower, Greatest): 
+            imp = self.normalize_implication(lower)
+            return self.solve(premise, imp, upper)
             # TODO: convert into problem with least 
             # TODO: explain why this is logically sound
-        
-            ####################
-            ##   ==== greatest (P -> Q) & ... <: U -> W
-            ##   ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y) <: U -> W 
-            ##   ~~~~ U <: X, Y <: W  
-            ####################
-            ## P --> Q AND A --> B
-            ## (NOT P OR Q) AND (NOT A OR B)
-            ## (NOT P OR (P AND Q)) AND (NOT A OR (A AND B))
-            ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
-            ## (P OR A) --> (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
-            ####################
-            return [] 
 
         elif isinstance(upper, Unio): 
             return self.solve(premise, lower, upper.left) + self.solve(premise, lower, upper.right)
 
         elif isinstance(lower, Inter): 
-            ## TODO:
-            ## solve subtyping of intersection of implication by rewriting into implication 
-            ## e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
-            return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
+            imp = self.normalize_implication(lower)
+            if imp:
+                return self.solve(premise, imp, upper)
+            else:
+                return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
 
         #######################################
         #### Unification rules: ####
