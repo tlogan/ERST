@@ -412,6 +412,9 @@ class Solver:
 
 
         ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
+        ## - this prevents weakening of LHS before weakening of RHS  
+        ## - instead can just use rewriting of intersections to prevent over-weakening of LHS
+        ## - A -> Q & B -> Q ~~~ A | B -> Q
         # # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
         # elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
         #     return [
@@ -420,6 +423,9 @@ class Solver:
         #         for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
         #     ]
 
+        ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
+        ## - need to figure out a general way to handle non-disjoint cases
+        ## - P -> A & P -> B ~~~ P -> A & B 
         # # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
         # elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
         #     return [
