@@ -320,6 +320,10 @@ class Solver:
 
 
     def normalize_implication(self, typ : Typ) -> Imp:
+        '''
+        normalize intersection-like types of implications into a single implication as the outer-most structure 
+        '''
+
         ## TODO:
         ## solve subtyping of intersection of implication by rewriting into implication 
         ## e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
@@ -329,12 +333,13 @@ class Solver:
         ##   ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y) <: U -> W 
         ##   ~~~~ U <: X, Y <: W  
         ####################
-        ## P --> Q AND A --> B
-        ## (NOT P OR Q) AND (NOT A OR B)
-        ## (NOT P OR (P AND Q)) AND (NOT A OR (A AND B))
-        ## (NOT (P OR A) OR (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
-        ## (P OR A) --> (P AND Q AND NOT A) OR (A AND B AND NOT P) OR ...)
-        ####################
+        ## P --> Q & A --> B
+        ## (~P | Q) & (~A | B)
+        ## (~P | (P, Q)) & (~A | (A, B))
+        ## (~P & ~A) | (~P & A, B) | (~A & P, Q) | (P&A,Q&B)
+        ## [X <: (P | A)] X -> ({X <> P, X <: A} B) | ({X <> A, X <: P} Q | ({X <: P, X <: A} (Q & B)
+        ## [X <: (P | A)] X -> ({X <> A, X <: P} Q | ({X <> P, X <: A} B) | ({X <: P, X <: A} (Q & B)
+        ## NOTE: typing functions as intersections of implication results in the strongest possible type
 
         return Imp(Bot(), Top())
 
@@ -409,6 +414,7 @@ class Solver:
         # simply need to sub RHS into LHS's self-referencing variable
 
         # TODO: right-greatest
+
 
 
         ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
