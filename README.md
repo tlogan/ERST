@@ -2,12 +2,9 @@
 
 
 ### TODO
-- remove greatest/co-induction
+- add check for negation/set-diff to restrict to pattern types (tag/field) 
+    - to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
 - modify function's combine rules to construct list of implications, rather than an intersection
-- create negation or set-diff type
-    - restrict to pattern types (tag/field) 
-    - to avoid dealing with negating divergence (soundly fails under even negs, soundly passes under odd negs)
-- add solving rules for negation/set-diff 
 - have cases in solve simply collect constraints on variables
 - implement grounding procedure to construct assignments for variables
 - determine if some notion corresponding to k-induction is necessary

@@ -161,6 +161,10 @@ $combo = Unio($typ_base.combo, $typ.combo)
 $combo = Inter($typ_base.combo, $typ.combo) 
 }
 
+| context = typ_base acc = negchain[$context.combo] {
+$combo = $acc.combo 
+}
+
 | typ_base '->' typ {
 $combo = Imp($typ_base.combo, $typ.combo) 
 }
@@ -203,6 +207,20 @@ $combo = Least($ID.text, $typ.combo)
 // [self <: n -> l] cons n -> succ l 
 | 'greatest' ID 'of' typ {
 $combo = Greatest($ID.text, $typ.combo) 
+}
+
+;
+
+negchain [Typ context] returns [Diff combo] :
+
+| '\\' negation = typ {
+$combo = Diff(context, $negation.combo)
+}
+
+| '\\' negation = typ {
+context_tail = Diff(context, $negation.combo)
+} tail = negchain[context_tail] {
+$combo = Diff(context, $negation.combo)
 }
 
 ;

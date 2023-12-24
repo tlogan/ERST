@@ -62,6 +62,11 @@ class Inter:
     right : Typ 
 
 @dataclass(frozen=True, eq=True)
+class Diff:
+    context : Typ 
+    negation : Typ # NOTE:, restrict to a tag/field pattern that is easy decide anti-unification
+
+@dataclass(frozen=True, eq=True)
 class Imp:
     antec : Typ 
     consq : Typ 
@@ -84,11 +89,6 @@ class Least:
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
-class Greatest:
-    id : str 
-    body : Typ 
-
-@dataclass(frozen=True, eq=True)
 class Top:
     pass
 
@@ -96,7 +96,7 @@ class Top:
 class Bot:
     pass
 
-Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Greatest, Top, Bot]
+Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Top, Bot]
 
 
 @dataclass(frozen=True, eq=True)
@@ -434,6 +434,16 @@ class Solver:
                 for p2 in self.solve(p1, lower, upper.right)
             ]
 
+        elif isinstance(upper, Diff): 
+            '''
+            T <: A \ B === (T <: A), ~(T <: B) 
+            '''
+            # TODO: ensure that upper.negation is a decidable pattern form 
+            return [
+                p1
+                for p1 in self.solve(premise, lower, upper.context)
+                if self.solve(p1, lower, upper.negation) == []
+            ]
         
 
         #######################################
@@ -513,11 +523,19 @@ class Solver:
         #     # TODO: convert into problem with least 
         #     # TODO: explain why this is logically sound
 
+        elif isinstance(lower, Diff): 
+            '''
+            A \ B <: T === A <: T | B  
+            '''
+            return self.solve(premise, lower.context, Unio(upper, lower.negation))
+
+
         elif isinstance(upper, Unio): 
             return self.solve(premise, lower, upper.left) + self.solve(premise, lower, upper.right)
 
         elif isinstance(lower, Inter): 
             return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
+
 
         #######################################
         #### Unification rules: ####
