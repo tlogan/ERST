@@ -2,7 +2,12 @@
 
 
 ### TODO
-- implement solving of subtyping directly
+- remove greatest/co-induction
+- modify function's combine rules to construct list of implications, rather than an intersection
+- create negation or set-diff type
+    - restrict to pattern types (tag/field) 
+    - to avoid dealing with negating divergence (soundly fails under even negs, soundly passes under odd negs)
+- add solving rules for negation/set-diff 
 - have cases in solve simply collect constraints on variables
 - implement grounding procedure to construct assignments for variables
 - determine if some notion corresponding to k-induction is necessary

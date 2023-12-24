@@ -319,30 +319,6 @@ class Solver:
         return False
 
 
-    def normalize_implication(self, typ : Typ) -> Imp:
-        '''
-        normalize intersection-like types of implications into a single implication as the outer-most structure 
-        '''
-
-        ## TODO:
-        ## solve subtyping of intersection of implication by rewriting into implication 
-        ## e.g. lower = A -> B & C -> D becomes lower = X -> ({B with X <: A} | {D with X <: C} ) 
-
-        ####################
-        ##   ==== greatest (P -> Q) & ... <: U -> W
-        ##   ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y) <: U -> W 
-        ##   ~~~~ U <: X, Y <: W  
-        ####################
-        ## P --> Q & A --> B
-        ## (~P | Q) & (~A | B)
-        ## (~P | (P, Q)) & (~A | (A, B))
-        ## (~P & ~A) | (~P & A, B) | (~A & P, Q) | (P&A,Q&B)
-        ## [X <: (P | A)] X -> ({X <> P, X <: A} B) | ({X <> A, X <: P} Q | ({X <: P, X <: A} (Q & B)
-        ## [X <: (P | A)] X -> ({X <> A, X <: P} Q | ({X <> P, X <: A} B) | ({X <: P, X <: A} (Q & B)
-        ## NOTE: typing functions as intersections of implication results in the strongest possible type
-
-        return Imp(Bot(), Top())
-
 
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
@@ -417,28 +393,32 @@ class Solver:
 
 
 
-        ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
-        ## - this prevents weakening of LHS before weakening of RHS  
-        ## - instead can just use rewriting of intersections to prevent over-weakening of LHS
-        ## - A -> Q & B -> Q ~~~ A | B -> Q
-        # # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
-        # elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-        #     return [
-        #         p2
-        #         for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
-        #         for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
-        #     ]
+        # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
+        # - A -> Q & B -> Q ~~~ A | B -> Q
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            return [
+                p2
+                for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
+                for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
+            ]
 
-        ## TODO: consider deprecating special rules; determine if subsumed by implication normalization 
-        ## - need to figure out a general way to handle non-disjoint cases
-        ## - P -> A & P -> B ~~~ P -> A & B 
-        # # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
-        # elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-        #     return [
-        #         p2
-        #         for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
-        #         for p2 in self.solve(p1, lower, Imp(upper.antec, upper.consq.right))
-        #     ]
+        # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
+        # P -> A & P -> B ~~~ P -> A & B 
+        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            return [
+                p2
+                for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
+                for p2 in self.solve(p1, lower, Imp(upper.antec, upper.consq.right))
+            ]
+
+        # NOTE: field body intersection: lower <: (:label = (T1 & T2))
+        # l : A & l : B ~~~ l : A & B 
+        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
+            return [
+                p2
+                for p1 in self.solve(premise, lower, TField(upper.label, upper.body.left))
+                for p2 in self.solve(p1, lower, TField(upper.label, upper.body.right))
+            ]
 
         elif isinstance(lower, Unio):
             return [
@@ -448,15 +428,11 @@ class Solver:
             ]
 
         elif isinstance(upper, Inter):
-            imp = self.normalize_implication(upper)
-            if imp:
-                return self.solve(premise, lower, imp) 
-            else:
-                return [
-                    p2
-                    for p1 in self.solve(premise, lower, upper.left)
-                    for p2 in self.solve(p1, lower, upper.right)
-                ]
+            return [
+                p2
+                for p1 in self.solve(premise, lower, upper.left)
+                for p2 in self.solve(p1, lower, upper.right)
+            ]
 
         
 
@@ -530,21 +506,18 @@ class Solver:
                 else:
                     return []
 
-        elif isinstance(lower, Greatest): 
-            imp = self.normalize_implication(lower)
-            return self.solve(premise, imp, upper)
-            # TODO: convert into problem with least 
-            # TODO: explain why this is logically sound
+        # TODO: remove greatest; doesn't accurately represent functions order-dependent patter matching in functions.
+        # elif isinstance(lower, Greatest): 
+        #     imp = self.normalize_implication(lower)
+        #     return self.solve(premise, imp, upper)
+        #     # TODO: convert into problem with least 
+        #     # TODO: explain why this is logically sound
 
         elif isinstance(upper, Unio): 
             return self.solve(premise, lower, upper.left) + self.solve(premise, lower, upper.right)
 
         elif isinstance(lower, Inter): 
-            imp = self.normalize_implication(lower)
-            if imp:
-                return self.solve(premise, imp, upper)
-            else:
-                return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
+            return self.solve(premise, lower.left, upper) + self.solve(premise, lower.right, upper)
 
         #######################################
         #### Unification rules: ####
@@ -607,6 +580,24 @@ class BaseRule(Rule):
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
         return TTag(label, body)
+
+    def combine_function(self, cases : list[Imp]) -> Typ:
+        # - TODO: solve subtyping of case types from function rewriting into implication 
+        # - view of cases as first-come-first-serve
+        # - e.g. A -> B, C -> D becomes [X <: (A | C)] X -> ({Y . X * Y <: (A * B) | (C\A * D)} Y)
+        #####################
+        # NOTE: alternative view of cases as pure intersection
+        # P --> Q & A --> B
+        # (~P | Q) & (~A | B)
+        # (~P | (P, Q)) & (~A | (A, B))
+        # (~P & ~A) | (~P & A, B) | (~A & P, Q) | (P & A, Q & B)
+        # [X <: (P | A)] X -> ({X <: A\P} B) | ({X <: P\A} Q | ({X <: P, X <: A} (Q & B)
+        # [X <: (P | A)] X -> ({X <: P\A} Q | ({X <: A\P} B) | ({X <: P, X <: A} (Q & B)
+        return Imp(Bot(), Top())
+
+
+
+
 
 class ExprRule(Rule):
 
@@ -720,6 +711,10 @@ class ExprRule(Rule):
 
     def combine_fix(self, body : Typ) -> Typ:
         typ = self.solver.fresh_type_var()
+        # TODO: construct implication of least
+        # ==== cases: (P -> Q), ...
+        # ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y)
+        #####################
         return Least(typ.id, body)
     
     def distill_let_target(self, id : str) -> Nonterm:
@@ -732,6 +727,8 @@ class ExprRule(Rule):
         '''
         enviro = self.nt.enviro.set(id, target)
         return Nonterm('expr', enviro, self.nt.typ)
+
+
 '''
 end ExprRule
 '''

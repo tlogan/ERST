@@ -1011,7 +1011,7 @@ public class SlimParser extends Parser {
 				setState(211);
 				((BaseContext)_localctx).function = function(nt);
 
-				_localctx.combo = ((BaseContext)_localctx).function.combo
+				_localctx.combo = self.collect(BaseRule(self._solver, nt).combine_function, ((BaseContext)_localctx).function.combo)
 
 				}
 				break;

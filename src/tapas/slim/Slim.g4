@@ -327,7 +327,7 @@ $combo = $record.combo
 
 | {
 } function[nt] {
-$combo = $function.combo
+$combo = self.collect(BaseRule(self._solver, nt).combine_function, $function.combo)
 }
 
 // Elimination rules
