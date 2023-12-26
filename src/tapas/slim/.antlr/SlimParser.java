@@ -1152,7 +1152,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
 		public Nonterm nt;
-		public Typ combo;
+		public list[Imp] combo;
 		public PatternContext pattern;
 		public ExprContext body;
 		public FunctionContext tail;

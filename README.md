@@ -2,22 +2,18 @@
 
 
 ### TODO
-- add check for negation/set-diff to restrict to pattern types (tag/field) 
-    - to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
 - modify function's combine rules to construct list of implications, rather than an intersection
-- have cases in solve simply collect constraints on variables
-- implement grounding procedure to construct assignments for variables
-- determine if some notion corresponding to k-induction is necessary
-- implement analysis of the inductive structure of LHS to determine which k-induction to be used.
-- use encode fibonacci as an example to motivate 2-induction.
+- finish implementing solve procedure
+    - have cases in solve simply collect constraints on variables
+- finish implementing combine/distill procedures
+- implement grounding procedure
+- implement caching for streaming parsing
+- encode fibonacci as an example to motivate 2-induction and test k-induction.
 - add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
 - update collect and guide_choice rules to memo(r)ize
-- modify unify to return multiple interpretations 
-- write subtyping solving with outsourcing to Z3 
-- instead of using custom solver, translate leaf subtyping into horn clauses for external solver
-- use renaming lazily (just for equality modulo alpha renaming)
+- use renaming/nameless representation lazily (just for equality modulo alpha renaming)
 
 ### Implementation 
 - avoid recursion, which has poor performance in python.

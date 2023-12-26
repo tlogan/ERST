@@ -365,7 +365,7 @@ $combo = $expr.combo
 ;
 
 
-function [Nonterm nt] returns [Typ combo] :
+function [Nonterm nt] returns [list[Imp] combo] :
 
 | 'case' {
 nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_pattern)
