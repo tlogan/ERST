@@ -333,6 +333,9 @@ class Solver:
 
 
 
+    def from_cases(self, cases : list[Imp]) -> Imp:
+        # TODO
+        return Imp(Bot(), Top())
 
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
@@ -812,8 +815,8 @@ class FunctionRule(Rule):
         enviro = self.nt.enviro + pattern.enviro
         return Nonterm('expr', enviro, conclusion_grounded)
 
-    def combine_single(self, pattern : PatternAttr, body : Typ) -> Typ:
-        return Imp(pattern.typ, body)
+    def combine_single(self, pattern : PatternAttr, body : Typ) -> list[Imp]:
+        return [Imp(pattern.typ, body)]
 
     def distill_cons_pattern(self) -> Nonterm:
         return self.distill_single_pattern()
@@ -822,13 +825,19 @@ class FunctionRule(Rule):
         return self.distill_single_body(pattern)
 
     def distill_cons_tail(self, pattern : PatternAttr, body : Typ) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(Imp(pattern.typ, body), typ), self.nt.typ)
-        typ_grounded = self.solver.ground_typ(solution, typ)
-        return Nonterm('function', self.nt.enviro, typ_grounded)
+        typ_antec = self.solver.fresh_type_var()
+        typ_consq = self.solver.fresh_type_var()
+        typ_imp = self.solver.from_cases([Imp(pattern.typ, body), Imp(typ_antec, typ_consq)])
 
-    def combine_cons(self, pattern : PatternAttr, body : Typ, tail : Typ) -> Typ:
-        return Inter(Imp(pattern.typ, body), tail)
+        solution = self.solver.solve(Premise(s(), m()), typ_imp, self.nt.typ)
+        typ_guide = self.solver.ground_typ(solution, Imp(typ_antec, typ_consq))
+        '''
+        NOTE: the guide is an implication guiding the next case
+        '''
+        return Nonterm('function', self.nt.enviro, typ_guide)
+
+    def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
+        return [Imp(pattern.typ, body)] + tail
 
 
 class KeychainRule(Rule):

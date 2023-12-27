@@ -1234,7 +1234,7 @@ public class SlimParser extends Parser {
 				nt_tail = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_tail, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo)
 
 				setState(262);
-				((FunctionContext)_localctx).tail = function(nt);
+				((FunctionContext)_localctx).tail = function(nt_tail);
 
 				_localctx.combo = self.collect(FunctionRule(self._solver, nt).combine_cons, ((FunctionContext)_localctx).pattern.combo, ((FunctionContext)_localctx).body.combo, ((FunctionContext)_localctx).tail.combo)
 

@@ -2,9 +2,9 @@
 
 
 ### TODO
-- modify function's combine rules to construct list of implications, rather than an intersection
 - finish implementing solve procedure
     - have cases in solve simply collect constraints on variables
+- implement `from_cases` procedure to construct implication with negation of previous antecedents 
 - finish implementing combine/distill procedures
 - implement grounding procedure
 - implement caching for streaming parsing

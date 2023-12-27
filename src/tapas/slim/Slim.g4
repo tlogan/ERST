@@ -385,7 +385,7 @@ self.guide_symbol('=>')
 nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_body, $pattern.combo)
 } body = expr[nt_body] {
 nt_tail = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_tail, $pattern.combo, $body.combo)
-} tail = function[nt] {
+} tail = function[nt_tail] {
 $combo = self.collect(FunctionRule(self._solver, nt).combine_cons, $pattern.combo, $body.combo, $tail.combo)
 }
 
