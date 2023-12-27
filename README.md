@@ -182,6 +182,24 @@
             - union types are constructed from combining solutions from multiple reasoning branches (e.g. solving cases from pattern matching)
         - failure to find assignment satisfying subtyping unification corresponds to CEGAR's counter-example derivation having only consistent assignments  
         - success in finding a satisfying assignment for subtyping unification corresponds to CEGAR's counter-example derivation having in an inconsistent assignment
+        - there is a correspondence between model-based satisfaction and proof-based entailment for typing and subtyping 
+            - `T |= T` type satisfaction represents subset inclusion of interpretations for types inhabited by some term
+            - `x : T |= x : T` typing satisfaction represents subset inclusion of interpretations for types inhabited by then given term
+            - `T <: T |= T <: T`subtyping satisfaction represents subset inclusion of interpretations for subtyping
+            - `M |- T <: T` subtyping entailment represents subset inclusion of terms that inhabit types for some interpretation
+            - `M |- x : T` typing entailment represents inhabitation of a term in a types for some interpretation
+            - ```
+                A |= P
+                P -> Q, A |= B  
+                -- corresponds to --
+                (A <: P) |= (B <: Q) 
+                -- corresponds to --
+                M |- A <: P
+                ----------------
+                M |- Q <: B
+                -- corresponds to --
+                M |- (P -> Q) <: (A -> B) 
+                ```
 
 
 
