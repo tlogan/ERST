@@ -366,30 +366,52 @@ class Solver:
         #### Model rules: ####
         #######################################
 
-        # TODO: left idx-union 
+        elif isinstance(lower, IdxUnio):
+            # TODO
+            renaming = self.mk_renaming(lower.ids)
+            lower_constraints = self.rename_constraints(renaming, lower.constraints)
+            lower_body = self.rename_typ(renaming, lower.body)
 
-        # TODO: right idx-inter
+            premises = [premise]
+            for constraint in lower_constraints:
+                premises = [
+                    p2
+                    for p1 in premises
+                    for p2 in self.solve(p1, constraint.lower, constraint.upper)
+                ]  
 
-        # TODO: left-least
-        # implement k-induction by using the pattern on LHS to dictate number of unrollings needed on RHS 
-        # simply need to sub RHS into LHS's self-referencing variable
+            return [
+                p2
+                for p1 in premises
+                for p2 in self.solve(p1, lower_body, upper)
+            ]
 
-        # TODO: right-greatest
+        elif isinstance(upper, IdxInter):
+            # TODO
+            return []
 
+        elif isinstance(lower, Least):
+            # TODO
+            # implement k-induction by using the pattern on LHS to dictate number of unrollings needed on RHS 
+            # simply need to sub RHS into LHS's self-referencing variable
+            return []
 
-
-        # NOTE: antecedent union: lower <: ((T1 | T2) -> TR)
-        # - A -> Q & B -> Q ~~~ A | B -> Q
         elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            '''
+            antecedent union: lower <: ((T1 | T2) -> TR)
+            A -> Q & B -> Q ~~~ A | B -> Q
+            '''
             return [
                 p2
                 for p1 in self.solve(premise, lower, Imp(upper.antec.left, upper.consq))
                 for p2 in self.solve(p1, lower, Imp(upper.antec.right, upper.consq))
             ]
 
-        # NOTE: consequent intersection: lower <: (TA -> (T1 & T2))
-        # P -> A & P -> B ~~~ P -> A & B 
         elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            '''
+            consequent intersection: lower <: (TA -> (T1 & T2))
+            P -> A & P -> B ~~~ P -> A & B 
+            '''
             return [
                 p2
                 for p1 in self.solve(premise, lower, Imp(upper.antec, upper.consq.left))
@@ -423,7 +445,6 @@ class Solver:
             '''
             T <: A \ B === (T <: A), ~(T <: B) 
             '''
-            # TODO: ensure that upper.negation is a decidable pattern form 
             return [
                 p1
                 for p1 in self.solve(premise, lower, upper.context)
@@ -454,10 +475,11 @@ class Solver:
             premises = [Premise(model, grounding)]
 
             for constraint in upper_constraints:
-                new_premises = []
-                for premise in premises:
-                    new_premises.append(self.solve(premise, constraint.lower, constraint.upper))
-                premises = new_premises
+                premises = [
+                    p2
+                    for p1 in premises
+                    for p2 in self.solve(p1, constraint.lower, constraint.upper)
+                ]
 
             return premises
 
@@ -475,9 +497,9 @@ class Solver:
 
             for constraint in lower_constraints:
                 premises = [
-                    p1 
-                    for premise in premises
-                    for p1 in self.solve(premise, constraint.lower, constraint.upper)
+                    p2 
+                    for p1 in premises
+                    for p2 in self.solve(p1, constraint.lower, constraint.upper)
                 ] 
 
             return premises
@@ -500,13 +522,6 @@ class Solver:
                 #     return [Premise(model, premise.grounding)]
                 else:
                     return []
-
-        # TODO: remove greatest; doesn't accurately represent functions order-dependent patter matching in functions.
-        # elif isinstance(lower, Greatest): 
-        #     imp = self.normalize_implication(lower)
-        #     return self.solve(premise, imp, upper)
-        #     # TODO: convert into problem with least 
-        #     # TODO: explain why this is logically sound
 
         elif isinstance(lower, Diff) and diff_well_formed(lower):
             '''

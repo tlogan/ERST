@@ -3,7 +3,8 @@
 
 ### TODO
 - finish implementing solve procedure
-    - have cases in solve simply collect constraints on variables
+    - right idx-inter
+    - left least
 - implement `from_cases` procedure to construct implication with negation of previous antecedents 
 - finish implementing combine/distill procedures
 - implement grounding procedure
