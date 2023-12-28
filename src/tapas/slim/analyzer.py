@@ -367,7 +367,6 @@ class Solver:
         #######################################
 
         elif isinstance(lower, IdxUnio):
-            # TODO
             renaming = self.mk_renaming(lower.ids)
             lower_constraints = self.rename_constraints(renaming, lower.constraints)
             lower_body = self.rename_typ(renaming, lower.body)
@@ -387,8 +386,23 @@ class Solver:
             ]
 
         elif isinstance(upper, IdxInter):
-            # TODO
-            return []
+            renaming = self.mk_renaming(upper.ids)
+            upper_constraints = self.rename_constraints(renaming, upper.constraints)
+            upper_body = self.rename_typ(renaming, upper.body)
+
+            premises = [premise]
+            for constraint in upper_constraints:
+                premises = [
+                    p2
+                    for p1 in premises
+                    for p2 in self.solve(p1, constraint.lower, constraint.upper)
+                ]  
+
+            return [
+                p2
+                for p1 in premises
+                for p2 in self.solve(p1, lower, upper_body)
+            ]
 
         elif isinstance(lower, Least):
             # TODO

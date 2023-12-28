@@ -3,11 +3,12 @@
 
 ### TODO
 - finish implementing solve procedure
-    - right idx-inter
     - left least
 - implement `from_cases` procedure to construct implication with negation of previous antecedents 
+- implement `ground` procedure
+- implement `rename` procedure
 - finish implementing combine/distill procedures
-- implement grounding procedure
+    - construct inductive type from `fix`
 - implement caching for streaming parsing
 - encode fibonacci as an example to motivate 2-induction and test k-induction.
 - add examples with type annotations 
