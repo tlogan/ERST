@@ -337,6 +337,14 @@ class Solver:
         # TODO
         return Imp(Bot(), Top())
 
+    def factor_least(self, least : Least) -> Typ:
+        # TODO
+        return Top()
+
+    def alpha_equiv(self, lower : Typ, upper : Typ) -> bool:
+        # TODO
+        return False
+
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
         if False: 
@@ -405,10 +413,31 @@ class Solver:
             ]
 
         elif isinstance(lower, Least):
-            # TODO
-            # implement k-induction by using the pattern on LHS to dictate number of unrollings needed on RHS 
-            # simply need to sub RHS into LHS's self-referencing variable
-            return []
+            if self.alpha_equiv(lower, upper):
+                return [premise]
+            else:
+                lower_factored = self.factor_least(lower)
+                solution = self.solve(premise, lower_factored, upper)
+                if solution == []:
+                    '''
+                    NOTE: k-induction
+                    use the pattern on LHS to dictate number of unrollings needed on RHS 
+                    simply need to sub RHS into LHS's self-referencing variable
+                    '''
+                    # TODO: at check for timeout after some number of iterations 
+                    tvar_fresh = self.fresh_type_var()
+                    renaming = pmap({tvar_fresh.id : lower.id})
+                    lower_body = self.rename_typ(renaming, lower.body)
+
+                    '''
+                    add induction hypothesis to premise:
+                    '''
+                    grounding = premise.grounding.set(tvar_fresh.id, upper)
+                    premise = Premise(premise.model, grounding)
+                    return self.solve(premise, lower_body, upper)
+                    
+                else:
+                    return solution
 
         elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
             '''
