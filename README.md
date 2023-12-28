@@ -2,7 +2,6 @@
 
 
 ### TODO
-- implement `from_cases` procedure to construct implication with negation of previous antecedents 
 - implement `ground` procedure
 - implement `rename` procedure
 - implement `factor` procedure

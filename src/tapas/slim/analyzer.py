@@ -96,7 +96,7 @@ class Top:
 class Bot:
     pass
 
-Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Imp, IdxUnio, IdxInter, Least, Top, Bot]
+Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, IdxUnio, IdxInter, Least, Top, Bot]
 
 
 @dataclass(frozen=True, eq=True)
@@ -160,6 +160,8 @@ def concretize_typ(typ : Typ) -> str:
             plate = ([control.left,control.right], lambda left, right : f"({left} | {right})", [])  
         elif isinstance(control, Inter):
             plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
+        elif isinstance(control, Diff):
+            plate = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})", [])  
         elif isinstance(control, IdxUnio):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
@@ -275,6 +277,15 @@ def diff_well_formed(diff : Diff) -> bool:
     '''
     return pattern_type(diff.negation)
 
+def mk_diff(context : Typ, negs : list[Typ]) -> Typ:
+    result = context 
+    for neg in negs:
+        result = Diff(result, neg)
+    return result
+
+def mk_pair_type(left : Typ, right : Typ) -> Typ:
+    return Inter(TField("left", left), TField("right", right))
+
 class Solver:
     _type_id : int = 0 
 
@@ -333,9 +344,21 @@ class Solver:
 
 
 
-    def from_cases(self, cases : list[Imp]) -> Imp:
-        # TODO
-        return Imp(Bot(), Top())
+    def from_cases_to_choices(self, cases : list[Imp]) -> list[tuple[Typ, Typ]]:
+        '''
+        nil -> zero
+        cons X -> succ Y 
+        --------------------
+        (nil,zero) | (cons X\\nil, succ Y)
+        '''
+
+        choices = []
+        negs = []
+
+        for case in cases:
+            choices += [(mk_diff(case.antec, negs), case.consq)]
+            negs += [case.antec]
+        return choices 
 
     def factor_least(self, least : Least) -> Typ:
         # TODO
@@ -851,12 +874,24 @@ class FunctionRule(Rule):
         return self.distill_single_body(pattern)
 
     def distill_cons_tail(self, pattern : PatternAttr, body : Typ) -> Nonterm:
-        typ_antec = self.solver.fresh_type_var()
-        typ_consq = self.solver.fresh_type_var()
-        typ_imp = self.solver.from_cases([Imp(pattern.typ, body), Imp(typ_antec, typ_consq)])
+        case_antec = self.solver.fresh_type_var()
+        case_consq = self.solver.fresh_type_var()
 
-        solution = self.solver.solve(Premise(s(), m()), typ_imp, self.nt.typ)
-        typ_guide = self.solver.ground_typ(solution, Imp(typ_antec, typ_consq))
+        choices = self.solver.from_cases_to_choices([Imp(pattern.typ, body), Imp(case_antec, case_consq)])
+
+
+        typ_left = self.solver.fresh_type_var()
+        typ_right = self.solver.fresh_type_var()
+        typ_pair = mk_pair_type(typ_left, typ_right)
+        typ_imp = Imp(typ_left, typ_right)
+
+        model = pset(
+            Subtyping(typ_pair, mk_pair_type(choice[0], choice[1]))
+            for choice in choices
+        )
+
+        solution = self.solver.solve(Premise(model, m()), typ_imp, self.nt.typ)
+        typ_guide = self.solver.ground_typ(solution, Imp(case_antec, case_consq))
         '''
         NOTE: the guide is an implication guiding the next case
         '''
