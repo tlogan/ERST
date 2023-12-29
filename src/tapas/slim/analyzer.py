@@ -424,25 +424,61 @@ class Solver:
 
         return pmap(d)
 
-    def rename_constraints(self, renaming : PMap[str, str], constraints : list[Subtyping]) -> list[Subtyping]:
-        '''
-        # TODO
-        '''
-        return []
 
     def rename_typ(self, renaming : PMap[str, str], typ : Typ) -> Typ:
+
         '''
         # TODO: remove bound variables from renaming as it deepens
+        renaming: map from old id to new id
         '''
-        return Top()
 
+        if False:
+            assert False
+        elif isinstance(typ, TVar):  
+            if typ.id in renaming:
+                return TVar(renaming[typ.id])
+            else:
+                return typ
+        elif isinstance(typ, TUnit):  
+            return typ
+        elif isinstance(typ, TTag):  
+            return TTag(typ.label, self.rename_typ(renaming, typ.body))
+        elif isinstance(typ, TField):  
+            return TField(typ.label, self.rename_typ(renaming, typ.body))
+        elif isinstance(typ, Unio):  
+            return Unio(self.rename_typ(renaming, typ.left), self.rename_typ(renaming, typ.right))
+        elif isinstance(typ, Inter):  
+            return Inter(self.rename_typ(renaming, typ.left), self.rename_typ(renaming, typ.right))
+        elif isinstance(typ, Diff):  
+            return Diff(self.rename_typ(renaming, typ.context), self.rename_typ(renaming, typ.negation))
+        elif isinstance(typ, Imp):  
+            return Imp(self.rename_typ(renaming, typ.antec), self.rename_typ(renaming, typ.consq))
+        elif isinstance(typ, IdxUnio):  
+            for bid in typ.ids:
+                renaming = renaming.discard(bid)
+            return IdxUnio(typ.ids, self.rename_constraints(renaming, typ.constraints), self.rename_typ(renaming, typ.body)) 
+        elif isinstance(typ, IdxInter):  
+            for bid in typ.ids:
+                renaming = renaming.discard(bid)
+            return IdxInter(typ.ids, self.rename_constraints(renaming, typ.constraints), self.rename_typ(renaming, typ.body)) 
+        elif isinstance(typ, Least):  
+            renaming = renaming.discard(typ.id)
+            return Least(typ.id, self.rename_typ(renaming, typ.body))
+        elif isinstance(typ, Top):  
+            return typ
+        elif isinstance(typ, Bot):  
+            return typ
     '''
-    TODO: if using custom unification logic, then use while loop to avoid recursion limit 
+    end rename_type
     '''
 
+    def rename_constraints(self, renaming : PMap[str, str], constraints : list[Subtyping]) -> list[Subtyping]:
+        return [
+            Subtyping(self.rename_typ(renaming, st.lower), self.rename_typ(renaming, st.upper))
+            for st in constraints
+        ]
     '''
-    TODO: distinguish between adjustable variables and variables with fixed assignments 
-    TODO: create an assignment map (grounding); variables in grounding are fixed; all others may be adjusted! 
+    end rename_constraints
     '''
 
     def reducible(self, premise : Premise, lower : Typ, upper : Typ) -> bool:
