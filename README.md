@@ -5,7 +5,6 @@
 - implement `ground` procedure
 - implement `rename` procedure
 - implement `factor` procedure
-- implement `alpha_equiv` procedure
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
 - implement caching for streaming parsing

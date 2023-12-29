@@ -99,6 +99,123 @@ class Bot:
 Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, IdxUnio, IdxInter, Least, Top, Bot]
 
 
+'''
+Nameless Type
+'''
+@dataclass(frozen=True, eq=True)
+class BVar:
+    id : int 
+
+@dataclass(frozen=True, eq=True)
+class TTagNL:
+    label : str
+    body : NL 
+
+@dataclass(frozen=True, eq=True)
+class TFieldNL:
+    label : str
+    body : NL 
+
+@dataclass(frozen=True, eq=True)
+class UnioNL:
+    left : NL 
+    right : NL 
+
+@dataclass(frozen=True, eq=True)
+class InterNL:
+    left : NL 
+    right : NL 
+
+@dataclass(frozen=True, eq=True)
+class DiffNL:
+    context : NL 
+    negation : NL # NOTE:, restrict to a tag/field pattern that is easy decide anti-unification
+
+@dataclass(frozen=True, eq=True)
+class ImpNL:
+    antec : NL 
+    consq : NL 
+
+@dataclass(frozen=True, eq=True)
+class IdxUnioNL:
+    count : int
+    constraints : list[SubtypingNL] 
+    body : NL 
+
+@dataclass(frozen=True, eq=True)
+class IdxInterNL:
+    count : int
+    constraints : list[SubtypingNL] 
+    body : NL 
+
+@dataclass(frozen=True, eq=True)
+class LeastNL:
+    body : NL 
+
+@dataclass(frozen=True, eq=True)
+class SubtypingNL:
+    lower : NL 
+    upper : NL 
+
+NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, IdxUnioNL, IdxInterNL, LeastNL, Top, Bot]
+
+def to_nameless(bound_ids : list[str], typ : Typ) -> NL:
+    if False: 
+        pass
+    elif isinstance(typ, TVar):  
+        if typ.id in bound_ids:
+            id = bound_ids.index(typ.id)
+            return BVar(id)
+        else:
+            return typ
+    elif isinstance(typ, TUnit):
+        return typ
+    elif isinstance(typ, TTag):
+        return TTagNL(typ.label, to_nameless(bound_ids, typ.body))
+    elif isinstance(typ, TField):
+        return TFieldNL(typ.label, to_nameless(bound_ids, typ.body))
+    elif isinstance(typ, Unio):
+        return UnioNL(to_nameless(bound_ids, typ.left), to_nameless(bound_ids, typ.right))
+    elif isinstance(typ, Inter):
+        return InterNL(to_nameless(bound_ids, typ.left), to_nameless(bound_ids, typ.right))
+    elif isinstance(typ, Diff):
+        return DiffNL(to_nameless(bound_ids, typ.context), to_nameless(bound_ids, typ.negation))
+    elif isinstance(typ, Imp):
+        return ImpNL(to_nameless(bound_ids, typ.antec), to_nameless(bound_ids, typ.consq))
+    elif isinstance(typ, IdxUnio):
+        count = len(typ.ids)
+        bound_ids = typ.ids + bound_ids
+
+        constraints_nl = [
+            SubtypingNL(to_nameless(bound_ids, st.lower), to_nameless(bound_ids, st.upper))
+            for st in typ.constraints
+        ]
+        return IdxUnioNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
+
+    elif isinstance(typ, IdxInter):
+        count = len(typ.ids)
+        bound_ids = typ.ids + bound_ids
+
+        constraints_nl = [
+            SubtypingNL(to_nameless(bound_ids, st.lower), to_nameless(bound_ids, st.upper))
+            for st in typ.constraints
+        ]
+        return IdxInterNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
+
+    elif isinstance(typ, Least):
+        bound_ids = [typ.id] + bound_ids
+        return LeastNL(to_nameless(bound_ids, typ.body))
+
+    elif isinstance(typ, Top):
+        return typ
+
+    elif isinstance(typ, Bot):
+        return typ
+'''
+end to_nameless
+'''
+
+
 @dataclass(frozen=True, eq=True)
 class Subtyping:
     lower : Typ
@@ -364,9 +481,8 @@ class Solver:
         # TODO
         return Top()
 
-    def alpha_equiv(self, lower : Typ, upper : Typ) -> bool:
-        # TODO
-        return False
+    def alpha_equiv(self, t1 : Typ, t2 : Typ) -> bool:
+        return to_nameless([], t1) == to_nameless([], t2)
 
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
