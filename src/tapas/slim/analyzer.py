@@ -403,6 +403,117 @@ def mk_diff(context : Typ, negs : list[Typ]) -> Typ:
 def mk_pair_type(left : Typ, right : Typ) -> Typ:
     return Inter(TField("left", left), TField("right", right))
 
+def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
+    '''
+    nil -> zero
+    cons X -> succ Y 
+    --------------------
+    (nil,zero) | (cons X\\nil, succ Y)
+    '''
+
+    choices = []
+    negs = []
+
+    for case in cases:
+        choices += [(mk_diff(case.antec, negs), case.consq)]
+        negs += [case.antec]
+    return choices 
+
+def linearize_unions(t : Typ) -> list[Typ]:
+    if isinstance(t, Unio):
+        return linearize_unions(t.left) + linearize_unions(t.right)
+    else:
+        return [t]
+
+def extract_labels(t : Typ) -> PSet[str]:  
+    if False:
+        assert False
+    elif isinstance(t, IdxUnio):
+        return extract_labels(t.body)
+    elif isinstance(t, Inter):
+        left = extract_labels(t.left) 
+        right = extract_labels(t.right)
+        return PSet.union(left, right)
+    elif isinstance(t, TField):
+        return pset(t.label)
+    else:
+        raise Exception("extract_labels error")
+
+def extract_field_recurse(label : str, t : Typ) -> Optional[Typ]:
+    if isinstance(t, TField) and t.label == label:
+        return t.body
+    elif isinstance(t, Inter):
+        left = extract_field_recurse(label, t.left)
+        right = extract_field_recurse(label, t.left)
+        if left and right:
+            return Inter(left, right)
+        else:
+            return left or right
+
+
+def extract_field_plain(label : str, t : Typ) -> Typ:
+    result = extract_field_recurse(label, t)
+    if result:
+        return result
+    else:
+        raise Exception("extract_field_plain error")
+
+def extract_field(label : str, id_induc : str, t : Typ) -> Typ:
+    if isinstance(t, IdxUnio):  
+        new_constraints = [
+            (
+            Subtyping(extract_field_plain(label, st.lower), TVar(id_induc))
+            if st.upper == TVar(id_induc) else
+            st
+            )
+            for st in t.constraints
+        ] 
+        new_body = extract_field_plain(label, t.body)
+        return IdxUnio(t.ids, new_constraints, new_body)
+    else:
+        return extract_field_plain(label, t)
+
+
+def extract_column(label, id_induc : str, choices : list[Typ]) -> Typ:
+    choices_column = [
+        extract_field(label, id_induc, choice)
+        for choice in choices
+    ] 
+    typ_unio = choices_column[0]
+    for choice in choices_column[1:]:
+        typ_unio = Unio(typ_unio, choice)
+    return Least(id_induc, typ_unio)
+
+
+def factor_least(least : Least) -> Typ:
+    choices = linearize_unions(least.body)
+    labels = extract_labels(choices[0])
+    labels = list(labels)
+    typ_inter = Top() 
+    for label in labels[1:]:
+        column = extract_column(label, least.id, choices)
+        typ_inter = Inter(typ_inter, column)
+    return typ_inter
+
+
+def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
+    return to_nameless([], t1) == to_nameless([], t2)
+
+def reducible(premise : Premise, lower : Typ, upper : Typ) -> bool:
+    # TODO
+    return False
+
+def match_lower(model : Model, lower : Typ) -> Optional[Typ]:
+    for constraint in model:
+        if lower == constraint.lower:
+            return constraint.upper
+    return None
+
+# def constraint_well_formed(premise : Premise, lower : Typ, upper : Typ) -> bool:
+#     # TODO
+#     return False
+
+
 class Solver:
     _type_id : int = 0 
 
@@ -426,12 +537,9 @@ class Solver:
 
 
     def rename_typ(self, renaming : PMap[str, str], typ : Typ) -> Typ:
-
         '''
-        # TODO: remove bound variables from renaming as it deepens
         renaming: map from old id to new id
         '''
-
         if False:
             assert False
         elif isinstance(typ, TVar):  
@@ -481,101 +589,6 @@ class Solver:
     end rename_constraints
     '''
 
-    def reducible(self, premise : Premise, lower : Typ, upper : Typ) -> bool:
-        # TODO
-        return False
-
-    def match_lower(self, model : Model, lower : Typ) -> Optional[Typ]:
-        for constraint in model:
-            if lower == constraint.lower:
-                return constraint.upper
-        return None
-
-    def constraint_well_formed(self, premise : Premise, lower : Typ, upper : Typ) -> bool:
-        # TODO
-        return False
-
-
-
-    def from_cases_to_choices(self, cases : list[Imp]) -> list[tuple[Typ, Typ]]:
-        '''
-        nil -> zero
-        cons X -> succ Y 
-        --------------------
-        (nil,zero) | (cons X\\nil, succ Y)
-        '''
-
-        choices = []
-        negs = []
-
-        for case in cases:
-            choices += [(mk_diff(case.antec, negs), case.consq)]
-            negs += [case.antec]
-        return choices 
-
-    def linearize_unions(self, t : Typ) -> list[Typ]:
-        if isinstance(t, Unio):
-            return self.linearize_unions(t.left) + self.linearize_unions(t.right)
-        else:
-            return [t]
-
-    def extract_labels(self, t : Typ) -> Optional[PSet[str]]:  
-        if False:
-            assert False
-        elif isinstance(t, IdxUnio):
-            return self.extract_labels(t.body)
-        elif isinstance(t, Inter):
-            left = self.extract_labels(t.left) 
-            right = self.extract_labels(t.right)
-            if left and right:
-                return PSet.union(left, right)
-            else:
-                return None
-        elif isinstance(t, TField):
-            return pset(t.label)
-        else:
-            return None
-
-    def extract_field(self, label : str, t : Typ) -> Optional[Typ]:
-        # TODO: check if item is intersection or existential; pull out all fields with label
-        return None 
-
-
-    def extract_column(self, label, choices : list[Typ]) -> Optional[Typ]:
-        choices_column = [
-            self.extract_field(label, choice)
-            for choice in choices
-        ] 
-        if None in choices_column or choices_column == []:
-            return None
-        else:
-            typ_unio = choices_column[0]
-            assert typ_unio
-            for choice in choices_column[1:]:
-                assert choice 
-                typ_unio = Unio(typ_unio, choice)
-            return typ_unio
-
-
-    def factor_least(self, least : Least) -> Optional[Typ]:
-        choices = self.linearize_unions(least.body)
-        labels = self.extract_labels(choices[0])
-        if labels != None:
-            labels = list(labels)
-            typ_inter = Top() 
-            for label in labels[1:]:
-                column = self.extract_column(label, choices)
-                if column:
-                    typ_inter = Inter(typ_inter, Least(least.id, column))
-                else:
-                    return None
-            return typ_inter
-        else:
-            return None
-
-
-    def alpha_equiv(self, t1 : Typ, t2 : Typ) -> bool:
-        return to_nameless([], t1) == to_nameless([], t2)
 
     def solve(self, premise : Premise, lower : Typ, upper : Typ) -> list[Premise]:
 
@@ -645,11 +658,14 @@ class Solver:
             ]
 
         elif isinstance(lower, Least):
-            if self.alpha_equiv(lower, upper):
+            if alpha_equiv(lower, upper):
                 return [premise]
             else:
-                lower_factored = self.factor_least(lower)
+                solution = []
+
+                lower_factored = factor_least(lower)
                 solution = self.solve(premise, lower_factored, upper)
+
                 if solution == []:
                     '''
                     NOTE: k-induction
@@ -780,7 +796,7 @@ class Solver:
             return premises
 
         elif isinstance(upper, Least): 
-            if self.reducible(premise, lower, upper):
+            if reducible(premise, lower, upper):
                 id_fresh = self.fresh_type_var().id
                 grounding = premise.grounding.set(id_fresh, upper)
                 renaming = pmap({upper.id : id_fresh})
@@ -788,10 +804,10 @@ class Solver:
                 premise = Premise(premise.model, grounding)
                 return self.solve(premise, lower, upper_body)
             else:
-                upper_cache = self.match_lower(premise.model, lower)
+                upper_cache = match_lower(premise.model, lower)
                 if upper_cache:
                     return self.solve(premise, upper_cache, upper)
-                # elif self.constraint_well_formed(premise, lower, upper):
+                # elif constraint_well_formed(premise, lower, upper):
                 #     # TODO: this is questionable: can't be sound to simply strengthen the premise here
                 #     model = premise.model.add(Subtyping(lower, upper))
                 #     return [Premise(model, premise.grounding)]
@@ -1086,7 +1102,7 @@ class FunctionRule(Rule):
         case_antec = self.solver.fresh_type_var()
         case_consq = self.solver.fresh_type_var()
 
-        choices = self.solver.from_cases_to_choices([Imp(pattern.typ, body), Imp(case_antec, case_consq)])
+        choices = from_cases_to_choices([Imp(pattern.typ, body), Imp(case_antec, case_consq)])
 
 
         typ_left = self.solver.fresh_type_var()

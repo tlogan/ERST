@@ -2,8 +2,8 @@
 
 
 ### TODO
-- implement `extract_field ` used in `factor_least` 
 - implement `ground` procedure
+- implement `reducible` procedure
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
 - implement caching for streaming parsing
