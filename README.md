@@ -2,7 +2,7 @@
 
 
 ### TODO
-- implement `factor` procedure
+- implement `extract_field ` used in `factor_least` 
 - implement `ground` procedure
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`

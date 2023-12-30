@@ -513,9 +513,66 @@ class Solver:
             negs += [case.antec]
         return choices 
 
-    def factor_least(self, least : Least) -> Typ:
-        # TODO
-        return Top()
+    def linearize_unions(self, t : Typ) -> list[Typ]:
+        if isinstance(t, Unio):
+            return self.linearize_unions(t.left) + self.linearize_unions(t.right)
+        else:
+            return [t]
+
+    def extract_labels(self, t : Typ) -> Optional[PSet[str]]:  
+        if False:
+            assert False
+        elif isinstance(t, IdxUnio):
+            return self.extract_labels(t.body)
+        elif isinstance(t, Inter):
+            left = self.extract_labels(t.left) 
+            right = self.extract_labels(t.right)
+            if left and right:
+                return PSet.union(left, right)
+            else:
+                return None
+        elif isinstance(t, TField):
+            return pset(t.label)
+        else:
+            return None
+
+    def extract_field(self, label : str, t : Typ) -> Optional[Typ]:
+        # TODO: check if item is intersection or existential; pull out all fields with label
+        return None 
+
+
+    def extract_column(self, label, choices : list[Typ]) -> Optional[Typ]:
+        choices_column = [
+            self.extract_field(label, choice)
+            for choice in choices
+        ] 
+        if None in choices_column or choices_column == []:
+            return None
+        else:
+            typ_unio = choices_column[0]
+            assert typ_unio
+            for choice in choices_column[1:]:
+                assert choice 
+                typ_unio = Unio(typ_unio, choice)
+            return typ_unio
+
+
+    def factor_least(self, least : Least) -> Optional[Typ]:
+        choices = self.linearize_unions(least.body)
+        labels = self.extract_labels(choices[0])
+        if labels != None:
+            labels = list(labels)
+            typ_inter = Top() 
+            for label in labels[1:]:
+                column = self.extract_column(label, choices)
+                if column:
+                    typ_inter = Inter(typ_inter, Least(least.id, column))
+                else:
+                    return None
+            return typ_inter
+        else:
+            return None
+
 
     def alpha_equiv(self, t1 : Typ, t2 : Typ) -> bool:
         return to_nameless([], t1) == to_nameless([], t2)
