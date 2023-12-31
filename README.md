@@ -2,7 +2,9 @@
 
 
 ### TODO
-- implement `ground` procedure
+- replace use of grounding with freezer
+- implement `extract_strongest_weaker` procedure
+- implement `collapse` procedure
 - implement `reducible` procedure
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
