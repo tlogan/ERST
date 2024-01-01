@@ -349,6 +349,13 @@ class Nonterm:
 
 
 
+'''
+NOTE: 
+Freezer dictates when the strongest solution for a variable is found.
+The assignment map could be tracked, or computed lazily when variable is used. 
+
+NOTE: freezing variables corresponds to refining predicates from duality interpolation in CHC
+'''
 Freezer = PSet[str]
 Model = PSet[Subtyping]
 
@@ -716,14 +723,16 @@ class Solver:
                     '''
                     # TODO: at check for timeout after some number of iterations 
                     tvar_fresh = self.fresh_type_var()
-                    renaming = pmap({tvar_fresh.id : lower.id})
+                    renaming = pmap({lower.id : tvar_fresh.id})
                     lower_body = self.rename_typ(renaming, lower.body)
 
                     '''
                     add induction hypothesis to premise:
                     '''
-                    grounding = premise.grounding.set(tvar_fresh.id, upper)
-                    premise = Premise(premise.model, grounding)
+                    IH = Subtyping(tvar_fresh, upper) 
+                    model = premise.model.add(IH)
+                    freezer = premise.freezer.add(tvar_fresh.id)
+                    premise = Premise(model, freezer) 
                     return self.solve(premise, lower_body, upper)
                     
                 else:
@@ -839,11 +848,13 @@ class Solver:
 
         elif isinstance(upper, Least): 
             if reducible(premise, lower, upper):
-                id_fresh = self.fresh_type_var().id
-                grounding = premise.grounding.set(id_fresh, upper)
-                renaming = pmap({upper.id : id_fresh})
+                tvar_fresh = self.fresh_type_var()
+                unrolling = Subtyping(tvar_fresh, upper)
+                model = premise.model.add(unrolling)
+                freezer = premise.freezer.add(tvar_fresh.id)
+                renaming = pmap({upper.id : tvar_fresh.id})
                 upper_body = self.rename_typ(renaming, upper.body)
-                premise = Premise(premise.model, grounding)
+                premise = Premise(model, freezer)
                 return self.solve(premise, lower, upper_body)
             else:
                 upper_cache = match_lower(premise.model, lower)
@@ -931,7 +942,7 @@ class BaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), TTag(id, typ_var), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), TTag(id, typ_var), self.nt.typ)
         typ_guide = self.solver.collapse_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide)
 
@@ -960,13 +971,13 @@ class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField('head', typ_var), TField('tail', Bot())), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', typ_var), TField('tail', Bot())), self.nt.typ)
         typ_guide = self.solver.collapse_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField('head', head), TField('tail', typ_var)), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', head), TField('tail', typ_var)), self.nt.typ)
         typ_guide = self.solver.collapse_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
@@ -985,7 +996,7 @@ class ExprRule(Rule):
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('true', TUnit()), typ_var) 
         premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve(Premise(s(), m()), implication, premise_conclusion)
+        solution = self.solver.solve(Premise(s(), s()), implication, premise_conclusion)
         typ_guide = self.solver.collapse_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
@@ -997,13 +1008,13 @@ class ExprRule(Rule):
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('false', TUnit()), typ_var) 
         premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve(Premise(s(), m()), implication, premise_conclusion)
+        solution = self.solver.solve(Premise(s(), s()), implication, premise_conclusion)
         typ_guide = self.solver.collapse_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def combine_ite(self, condition : Typ, branch_true : Typ, branch_false : Typ) -> Typ: 
-        solution_true = self.solver.solve(Premise(s(), m()), condition, TTag('true', TUnit()))
-        solution_false = self.solver.solve(Premise(s(), m()), condition, TTag('false', TUnit()))
+        solution_true = self.solver.solve(Premise(s(), s()), condition, TTag('true', TUnit()))
+        solution_false = self.solver.solve(Premise(s(), s()), condition, TTag('false', TUnit()))
 
         return Unio(
             self.solver.collapse_typ(solution_true, branch_true), 
@@ -1022,7 +1033,7 @@ class ExprRule(Rule):
         answr_i = record 
         for key in keys:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), m()), answr_i, TField(key, answr))
+            solution = self.solver.solve(Premise(s(), s()), answr_i, TField(key, answr))
             answr_i = self.solver.collapse_typ(solution, answr)
 
         return answr_i
@@ -1039,7 +1050,7 @@ class ExprRule(Rule):
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), m()), answr_i, Imp(argument, answr))
+            solution = self.solver.solve(Premise(s(), s()), answr_i, Imp(argument, answr))
             answr_i = self.solver.collapse_typ(solution, answr)
 
         return answr_i
@@ -1056,7 +1067,7 @@ class ExprRule(Rule):
         answr_i = arg 
         for cator in cators:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), m()), Imp(answr_i, answr), cator)
+            solution = self.solver.solve(Premise(s(), s()), Imp(answr_i, answr), cator)
             answr_i = self.solver.collapse_typ(solution, answr)
 
         return answr_i
@@ -1095,7 +1106,7 @@ class RecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), TField(id, typ), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), TField(id, typ), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded) 
 
@@ -1107,7 +1118,7 @@ class RecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField(id, body), typ), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField(id, body), typ), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('record', self.nt.enviro, typ_grounded) 
 
@@ -1118,14 +1129,14 @@ class FunctionRule(Rule):
 
     def distill_single_pattern(self) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, Imp(typ_var, Top()))
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ_var, Top()))
 
         typ_guide = self.solver.collapse_typ(solution, typ_var)
         return Nonterm('pattern', self.nt.enviro, typ_guide)
 
     def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
         conclusion = self.solver.fresh_type_var() 
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, Imp(pattern.typ, conclusion)) 
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(pattern.typ, conclusion)) 
         conclusion_grounded = self.solver.collapse_typ(solution, conclusion)
         enviro = self.nt.enviro + pattern.enviro
         return Nonterm('expr', enviro, conclusion_grounded)
@@ -1156,7 +1167,7 @@ class FunctionRule(Rule):
             for choice in choices
         )
 
-        solution = self.solver.solve(Premise(model, m()), typ_imp, self.nt.typ)
+        solution = self.solver.solve(Premise(model, s()), typ_imp, self.nt.typ)
         typ_guide = self.solver.collapse_typ(solution, Imp(case_antec, case_consq))
         '''
         NOTE: the guide is an implication guiding the next case
@@ -1178,7 +1189,7 @@ class KeychainRule(Rule):
     '''
     def distill_cons_tail(self, key : str):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, TField(key, typ))
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, TField(key, typ))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('keychain', self.nt.enviro, typ_grounded)
 
@@ -1189,14 +1200,14 @@ class ArgchainRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, Imp(typ, Top()))
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ, Top()))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, Imp(typ, Top()))
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ, Top()))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
@@ -1206,7 +1217,7 @@ class ArgchainRule(Rule):
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        solution = self.solver.solve(Premise(s(), m()), self.nt.typ, Imp(head, typ))
+        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(head, typ))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('argchain', self.nt.enviro, typ_grounded)
 
@@ -1223,14 +1234,14 @@ class PipelineRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), typ, Imp(self.nt.typ, Top()))
+        solution = self.solver.solve(Premise(s(), s()), typ, Imp(self.nt.typ, Top()))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), typ, Imp(self.nt.typ, Top()))
+        solution = self.solver.solve(Premise(s(), s()), typ, Imp(self.nt.typ, Top()))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
@@ -1240,7 +1251,7 @@ class PipelineRule(Rule):
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        solution = self.solver.solve(Premise(s(), m()), head, Imp(self.nt.typ, typ))
+        solution = self.solver.solve(Premise(s(), s()), head, Imp(self.nt.typ, typ))
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pipeline', self.nt.enviro, typ_grounded)
 
@@ -1259,13 +1270,13 @@ start Pattern Ruleibutes
 class PatternRule(Rule):
     def distill_tuple_head(self) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
@@ -1281,7 +1292,7 @@ class PatternBaseRule(Rule):
     def combine_var(self, id : str) -> PatternAttr:
         typ = self.solver.fresh_type_var()
         enviro = m().set(id, typ)
-        solution = self.solver.solve(Premise(s(), m()), typ, self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), typ, self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return PatternAttr(enviro, typ_grounded)
 
@@ -1290,7 +1301,7 @@ class PatternBaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), TTag(id, typ), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), TTag(id, typ), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded)
 
@@ -1304,7 +1315,7 @@ class PatternRecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), TField(id, typ), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), TField(id, typ), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 
@@ -1316,7 +1327,7 @@ class PatternRecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), m()), Inter(TField(id, body.typ), typ), self.nt.typ)
+        solution = self.solver.solve(Premise(s(), s()), Inter(TField(id, body.typ), typ), self.nt.typ)
         typ_grounded = self.solver.collapse_typ(solution, typ)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 

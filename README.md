@@ -2,7 +2,6 @@
 
 
 ### TODO
-- replace use of grounding with freezer
 - implement `extract_strongest_weaker` procedure
 - implement `collapse` procedure
 - implement `reducible` procedure
