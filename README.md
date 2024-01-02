@@ -2,8 +2,7 @@
 
 
 ### TODO
-- implement `extract_strongest_weaker` procedure
-- implement `collapse` procedure
+- implement `package` procedure
 - implement `reducible` procedure
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
