@@ -702,9 +702,7 @@ class Solver:
             frozen = weak.id in premise.freezer
             if frozen:
                 '''
-                package weak 
-                - if the weak has only simple constraints, it will be subbed
-                - if the weak has relational constraints, an IdxUnio will be constructed, and the right IdxUnio rule will specialize its constraints with strong
+                package weak; an IdxUnio will be constructed, and the right IdxUnio rule will specialize its constraints with strong
 
                 e.g.
                 L <: {X . X, Y <: R, X <: T } X
@@ -734,8 +732,8 @@ class Solver:
                 -----------------------
 
                 '''
-                strong_strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
-                return self.solve(premise, strong_strongest_weaker, weak) 
+                strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+                return self.solve(premise, strongest_weaker, weak) 
             else:
                 premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
                 return [premise]
@@ -996,14 +994,99 @@ class Solver:
     end solve
     '''
 
+    # TODO: move outside of class
+    def from_typ_extract_free_vars(self, bound_vars : PSet[str], typ : Typ) -> PSet[str]:
+        if False:
+            assert False
+        elif isinstance(typ, TVar):
+            if typ.id not in bound_vars:
+                return pset(typ.id)
+            else:
+                return pset()
+        elif isinstance(typ, TUnit):
+            return pset()
+        elif isinstance(typ, TTag):
+            return self.from_typ_extract_free_vars(bound_vars, typ.body)
+        elif isinstance(typ, TField):
+            return self.from_typ_extract_free_vars(bound_vars, typ.body)
+        elif isinstance(typ, Unio):
+            return PSet.union(
+                self.from_typ_extract_free_vars(bound_vars, typ.left),
+                self.from_typ_extract_free_vars(bound_vars, typ.right),
+            ) 
+        elif isinstance(typ, Inter):
+            return PSet.union(
+                self.from_typ_extract_free_vars(bound_vars, typ.left),
+                self.from_typ_extract_free_vars(bound_vars, typ.right),
+            ) 
+        elif isinstance(typ, Diff):
+            return PSet.union(
+                self.from_typ_extract_free_vars(bound_vars, typ.context),
+                self.from_typ_extract_free_vars(bound_vars, typ.negation),
+            ) 
+        elif isinstance(typ, Imp):
+            return PSet.union(
+                self.from_typ_extract_free_vars(bound_vars, typ.antec),
+                self.from_typ_extract_free_vars(bound_vars, typ.consq),
+            ) 
+        elif isinstance(typ, IdxUnio):
+            bound_vars = PSet.union(bound_vars, typ.ids)
+            return PSet.union(
+                self.from_constraints_extract_free_vars(bound_vars, typ.constraints),
+                self.from_typ_extract_free_vars(bound_vars, typ.body),
+            )
+        elif isinstance(typ, IdxInter):
+            bound_vars = PSet.union(bound_vars, typ.ids)
+            return PSet.union(
+                self.from_constraints_extract_free_vars(bound_vars, typ.constraints),
+                self.from_typ_extract_free_vars(bound_vars, typ.body),
+            )
+        elif isinstance(typ, Least):
+            bound_vars = bound_vars.add(typ.id)
+            return self.from_typ_extract_free_vars(bound_vars, typ.body)
+        elif isinstance(typ, Bot):
+            return pset()
+        elif isinstance(typ, Top):
+            return pset()
+    '''
+    end from_typ_extract_free_vars
+    '''
 
-    def package_typ(self, solution : list[Premise], typ : Typ) -> Typ:
+
+    def from_constraints_extract_free_vars(self, bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
+        result = pset()
+        for st in constraints:
+            result = PSet.union(result, 
+                PSet.union( self.from_typ_extract_free_vars(bound_vars, st.strong), 
+                    self.from_typ_extract_free_vars(bound_vars, st.weak)))
+
+        return result
+
+    def extract_reachable_constraints(self, model : Model, id : str) -> Sequence[Subtyping]:
         # TODO
+        return [] 
+
+    def package_typ(self, premises : list[Premise], typ : Typ) -> Typ:
         '''
-        if only only simple constraints exist for a frozen variable, sub the intersection of its RHS.  
-        if relational constraints exist, construct IdxUnio type, with frozen variable as bound variable.
+        construct an IdxUnio type, with frozen variables as bound variable.
         '''
-        return Top() 
+
+        typ_result = Bot()
+        ids_base = self.from_typ_extract_free_vars(pset(), typ)
+        for premise in premises:
+            constraints = pset()
+            for id_base in ids_base: 
+                constraints = PSet.union(
+                    constraints, 
+                    self.extract_reachable_constraints(premise.model, id_base)
+                )
+
+            ids_constraints = self.from_constraints_extract_free_vars(pset(), constraints)
+            ids_bound = PSet.intersection(premise.freezer, ids_constraints)
+            typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
+            typ_result = Unio(typ_idx_unio, typ_result)
+
+        return typ_result 
 
 
 class Rule:
