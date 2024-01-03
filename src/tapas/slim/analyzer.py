@@ -432,58 +432,75 @@ def linearize_unions(t : Typ) -> list[Typ]:
     else:
         return [t]
 
-def extract_labels(t : Typ) -> PSet[str]:  
+def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:  
     if False:
         assert False
     elif isinstance(t, IdxUnio):
-        return extract_labels(t.body)
+        return extract_paths(t.body)
     elif isinstance(t, Inter):
-        left = extract_labels(t.left) 
-        right = extract_labels(t.right)
+        left = extract_paths(t.left) 
+        right = extract_paths(t.right)
         return PSet.union(left, right)
     elif isinstance(t, TField):
-        return pset(t.label)
+        body = t.body
+        if isinstance(body, TVar) and (not tvar or tvar.id == body.id):
+            path = [t.label]
+            return pset().add(path)
+        else:
+            paths_tail = extract_paths(t.body)
+            return pset( 
+                [t.label] + path_tail
+                for path_tail in paths_tail
+            )
+
     else:
         raise Exception("extract_labels error")
 
-def extract_field_recurse(t : Typ, label : str) -> Optional[Typ]:
-    if isinstance(t, TField) and t.label == label:
-        return t.body
-    elif isinstance(t, Inter):
-        left = extract_field_recurse(t.left, label)
-        right = extract_field_recurse(t.left, label)
+
+def extract_field_recurse(t : Typ, path : list[str]) -> Optional[Typ]:
+    assert path
+
+    if isinstance(t, Inter):
+        left = extract_field_recurse(t.left, path)
+        right = extract_field_recurse(t.left, path)
         if left and right:
             return Inter(left, right)
         else:
             return left or right
+    elif isinstance(t, TField):
+        label = path[0]
+        if len(path) == 1 and t.label == label:
+            return t.body
+        else:
+            return extract_field_recurse(t.body, path[1:])
 
 
-def extract_field_plain(label : str, t : Typ) -> Typ:
-    result = extract_field_recurse(t, label)
+def extract_field_plain(path : list[str], t : Typ) -> Typ:
+    result = extract_field_recurse(t, path)
     if result:
         return result
     else:
         raise Exception("extract_field_plain error")
 
-def extract_field(label : str, id_induc : str, t : Typ) -> Typ:
+def extract_field(path : list[str], id_induc : str, t : Typ) -> Typ:
     if isinstance(t, IdxUnio):  
         new_constraints = [
             (
-            Subtyping(extract_field_plain(label, st.strong), TVar(id_induc))
+            Subtyping(extract_field_plain(path, st.strong), TVar(id_induc))
             if st.weak == TVar(id_induc) else
             st
             )
             for st in t.constraints
         ] 
-        new_body = extract_field_plain(label, t.body)
+        new_body = extract_field_plain(path, t.body)
         return IdxUnio(t.ids, new_constraints, new_body)
     else:
-        return extract_field_plain(label, t)
+        return extract_field_plain(path, t)
 
 
-def extract_column(label, id_induc : str, choices : list[Typ]) -> Typ:
+def extract_column(path : list[str], id_induc : str, choices : list[Typ]) -> Typ:
     choices_column = [
-        extract_field(label, id_induc, choice)
+        extract_field(path, id_induc, choice)
         for choice in choices
     ] 
     typ_unio = choices_column[0]
@@ -491,28 +508,17 @@ def extract_column(label, id_induc : str, choices : list[Typ]) -> Typ:
         typ_unio = Unio(typ_unio, choice)
     return Least(id_induc, typ_unio)
 
-def extract_labels_recurse(t : Typ, body : Typ) -> list[str]:
-    if isinstance(t, TField) and alpha_equiv(t.body, body):
-        return [t.label]
-    elif isinstance(t, Inter):
-        left = extract_labels_recurse(t.left, body)
-        right = extract_labels_recurse(t.left, body)
-        return left + right
-    else:
-        return []
-
-def factor_label(label : str, least : Least) -> Typ:
+def factor_path(path : list[str], least : Least) -> Typ:
     choices = linearize_unions(least.body)
-    column = extract_column(label, least.id, choices)
+    column = extract_column(path, least.id, choices)
     return column 
 
 def factor_least(least : Least) -> Typ:
     choices = linearize_unions(least.body)
-    labels = extract_labels(choices[0])
-    labels = list(labels)
+    paths = list(extract_paths(choices[0]))
     typ_inter = Top() 
-    for label in labels[1:]:
-        column = extract_column(label, least.id, choices)
+    for path in paths:
+        column = extract_column(path, least.id, choices)
         typ_inter = Inter(typ_inter, column)
     return typ_inter
 
@@ -522,7 +528,7 @@ def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
 
 def is_relational_key(t : Typ) -> bool:
     if isinstance(t, TField):
-        return isinstance(t.body, TVar)
+        return isinstance(t.body, TVar) or is_relational_key(t.body) 
     elif isinstance(t, Inter):
         return is_relational_key(t.left) and is_relational_key(t.right)
     else:
@@ -583,10 +589,10 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
 
     typ_factored = Top()
     for st in constraints_relational:
-        labels = extract_labels_recurse(st.weak, TVar(id)) 
-        for label in labels:
+        paths = extract_paths(st.weak, TVar(id)) 
+        for path in paths:
             assert isinstance(st.strong, Least)
-            typ_labeled = factor_label(label, st.strong)
+            typ_labeled = factor_path(path, st.strong)
             typ_factored = Inter(typ_labeled, typ_factored)
 
 
