@@ -520,9 +520,13 @@ def factor_least(least : Least) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless([], t1) == to_nameless([], t2)
 
-def reducible(premise : Premise, strong : Typ, weak : Typ) -> bool:
-    # TODO
-    return False
+def is_relational_key(t : Typ) -> bool:
+    if isinstance(t, TField):
+        return isinstance(t.body, TVar)
+    elif isinstance(t, Inter):
+        return is_relational_key(t.left) and is_relational_key(t.right)
+    else:
+        return False
 
 def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
     for constraint in model:
@@ -915,7 +919,9 @@ class Solver:
             return premises
 
         elif isinstance(weak, Least): 
-            if reducible(premise, strong, weak):
+            # TODO: add energy check; and energy decrementing
+            # if not relational_key(strong) and self.energy > 0:
+            if not is_relational_key(strong):
                 tvar_fresh = self.fresh_type_var()
                 unrolling = Subtyping(tvar_fresh, weak)
                 model = premise.model.add(unrolling)
@@ -923,6 +929,7 @@ class Solver:
                 renaming = pmap({weak.id : tvar_fresh.id})
                 weak_body = self.rename_typ(renaming, weak.body)
                 premise = Premise(model, freezer)
+
                 return self.solve(premise, strong, weak_body)
             else:
                 weak_cache = match_strong(premise.model, strong)
