@@ -2,11 +2,14 @@
 
 
 ### TODO
+- implement `is_record_type_with_var`
+- implement `contains`
 - implement `extract_constraints_with_id`
-- implement `sub_type`
 - implement `extract_reachable_constraints`
 - finish implementing combine/distill procedures
-    - construct inductive type from `fix`
+    - implement `combine_function`
+    - implement `combine_fix`
+    - implement `distill_let_contin`
 - implement caching for streaming parsing
 - encode fibonacci as an example to motivate 2-induction and test k-induction.
 - add examples with type annotations 

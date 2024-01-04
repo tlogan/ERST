@@ -550,7 +550,6 @@ def is_record_type_with_var(t : Typ, id : str) -> bool:
 
 
 def extract_strongest_weaker(model : Model, id : str) -> Typ:
-    # TODO
     '''
     NOTE: related to strongest-post concept
 
@@ -612,6 +611,157 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
 
     return typ_final 
 
+def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
+    # TODO
+    return pset()
+
+
+def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
+    '''
+    assignment_map: map from old id to new id
+    '''
+    if False:
+        assert False
+    elif isinstance(typ, TVar):  
+        if typ.id in assignment_map:
+            return assignment_map[typ.id]
+        else:
+            return typ
+    elif isinstance(typ, TUnit):  
+        return typ
+    elif isinstance(typ, TTag):  
+        return TTag(typ.label, sub_typ(assignment_map, typ.body))
+    elif isinstance(typ, TField):  
+        return TField(typ.label, sub_typ(assignment_map, typ.body))
+    elif isinstance(typ, Unio):  
+        return Unio(sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right))
+    elif isinstance(typ, Inter):  
+        return Inter(sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right))
+    elif isinstance(typ, Diff):  
+        return Diff(sub_typ(assignment_map, typ.context), sub_typ(assignment_map, typ.negation))
+    elif isinstance(typ, Imp):  
+        return Imp(sub_typ(assignment_map, typ.antec), sub_typ(assignment_map, typ.consq))
+    elif isinstance(typ, IdxUnio):  
+        for bid in typ.ids:
+            assignment_map = assignment_map.discard(bid)
+        return IdxUnio(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
+    elif isinstance(typ, IdxInter):  
+        for bid in typ.ids:
+            assignment_map = assignment_map.discard(bid)
+        return IdxInter(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
+    elif isinstance(typ, Least):  
+        assignment_map = assignment_map.discard(typ.id)
+        return Least(typ.id, sub_typ(assignment_map, typ.body))
+    elif isinstance(typ, Top):  
+        return typ
+    elif isinstance(typ, Bot):  
+        return typ
+'''
+end sub_type
+'''
+
+def sub_constraints(assignment_map : PMap[str, Typ], constraints : list[Subtyping]) -> list[Subtyping]:
+    return [
+        Subtyping(sub_typ(assignment_map, st.strong), sub_typ(assignment_map, st.weak))
+        for st in constraints
+    ]
+'''
+end sub_constraints
+'''
+
+def from_typ_extract_free_vars(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
+    if False:
+        assert False
+    elif isinstance(typ, TVar):
+        if typ.id not in bound_vars:
+            return pset(typ.id)
+        else:
+            return pset()
+    elif isinstance(typ, TUnit):
+        return pset()
+    elif isinstance(typ, TTag):
+        return from_typ_extract_free_vars(bound_vars, typ.body)
+    elif isinstance(typ, TField):
+        return from_typ_extract_free_vars(bound_vars, typ.body)
+    elif isinstance(typ, Unio):
+        return PSet.union(
+            from_typ_extract_free_vars(bound_vars, typ.left),
+            from_typ_extract_free_vars(bound_vars, typ.right),
+        ) 
+    elif isinstance(typ, Inter):
+        return PSet.union(
+            from_typ_extract_free_vars(bound_vars, typ.left),
+            from_typ_extract_free_vars(bound_vars, typ.right),
+        ) 
+    elif isinstance(typ, Diff):
+        return PSet.union(
+            from_typ_extract_free_vars(bound_vars, typ.context),
+            from_typ_extract_free_vars(bound_vars, typ.negation),
+        ) 
+    elif isinstance(typ, Imp):
+        return PSet.union(
+            from_typ_extract_free_vars(bound_vars, typ.antec),
+            from_typ_extract_free_vars(bound_vars, typ.consq),
+        ) 
+    elif isinstance(typ, IdxUnio):
+        bound_vars = PSet.union(bound_vars, typ.ids)
+        return PSet.union(
+            from_constraints_extract_free_vars(bound_vars, typ.constraints),
+            from_typ_extract_free_vars(bound_vars, typ.body),
+        )
+    elif isinstance(typ, IdxInter):
+        bound_vars = PSet.union(bound_vars, typ.ids)
+        return PSet.union(
+            from_constraints_extract_free_vars(bound_vars, typ.constraints),
+            from_typ_extract_free_vars(bound_vars, typ.body),
+        )
+    elif isinstance(typ, Least):
+        bound_vars = bound_vars.add(typ.id)
+        return from_typ_extract_free_vars(bound_vars, typ.body)
+    elif isinstance(typ, Bot):
+        return pset()
+    elif isinstance(typ, Top):
+        return pset()
+'''
+end from_typ_extract_free_vars
+'''
+
+
+def from_constraints_extract_free_vars(bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
+    result = pset()
+    for st in constraints:
+        result = PSet.union(result, 
+            PSet.union(from_typ_extract_free_vars(bound_vars, st.strong), 
+                from_typ_extract_free_vars(bound_vars, st.weak)))
+
+    return result
+
+def extract_reachable_constraints(model : Model, id : str) -> Sequence[Subtyping]:
+    # TODO
+    return [] 
+
+def package_typ(premises : list[Premise], typ : Typ) -> Typ:
+    '''
+    construct an IdxUnio type, with frozen variables as bound variable.
+    '''
+    xs : list = []
+
+    typ_result = Bot()
+    ids_base = from_typ_extract_free_vars(pset(), typ)
+    for premise in premises:
+        constraints = pset()
+        for id_base in ids_base: 
+            constraints_reachable = extract_reachable_constraints(premise.model, id_base)
+            constraints = PSet.union(constraints, constraints_reachable)
+
+        ids_constraints = from_constraints_extract_free_vars(pset(), constraints)
+        ids_bound = PSet.intersection(premise.freezer, ids_constraints)
+
+        typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
+        typ_result = Unio(typ_idx_unio, typ_result)
+
+    return typ_result 
+
 
 class Solver:
     _type_id : int = 0 
@@ -625,70 +775,18 @@ class Solver:
         self._type_id += 1
         return TVar(f"_{self._type_id}")
 
-    def mk_renaming(self, old_ids) -> PMap[str, str]:
+    def mk_renaming(self, old_ids) -> PMap[str, Typ]:
         '''
         Map old_ids to fresh ids
         '''
         d = {}
         for old_id in old_ids:
             fresh = self.fresh_type_var()
-            d[old_id] = fresh.id
+            d[old_id] = fresh
 
         return pmap(d)
 
 
-    def rename_typ(self, renaming : PMap[str, str], typ : Typ) -> Typ:
-        '''
-        renaming: map from old id to new id
-        '''
-        if False:
-            assert False
-        elif isinstance(typ, TVar):  
-            if typ.id in renaming:
-                return TVar(renaming[typ.id])
-            else:
-                return typ
-        elif isinstance(typ, TUnit):  
-            return typ
-        elif isinstance(typ, TTag):  
-            return TTag(typ.label, self.rename_typ(renaming, typ.body))
-        elif isinstance(typ, TField):  
-            return TField(typ.label, self.rename_typ(renaming, typ.body))
-        elif isinstance(typ, Unio):  
-            return Unio(self.rename_typ(renaming, typ.left), self.rename_typ(renaming, typ.right))
-        elif isinstance(typ, Inter):  
-            return Inter(self.rename_typ(renaming, typ.left), self.rename_typ(renaming, typ.right))
-        elif isinstance(typ, Diff):  
-            return Diff(self.rename_typ(renaming, typ.context), self.rename_typ(renaming, typ.negation))
-        elif isinstance(typ, Imp):  
-            return Imp(self.rename_typ(renaming, typ.antec), self.rename_typ(renaming, typ.consq))
-        elif isinstance(typ, IdxUnio):  
-            for bid in typ.ids:
-                renaming = renaming.discard(bid)
-            return IdxUnio(typ.ids, self.rename_constraints(renaming, typ.constraints), self.rename_typ(renaming, typ.body)) 
-        elif isinstance(typ, IdxInter):  
-            for bid in typ.ids:
-                renaming = renaming.discard(bid)
-            return IdxInter(typ.ids, self.rename_constraints(renaming, typ.constraints), self.rename_typ(renaming, typ.body)) 
-        elif isinstance(typ, Least):  
-            renaming = renaming.discard(typ.id)
-            return Least(typ.id, self.rename_typ(renaming, typ.body))
-        elif isinstance(typ, Top):  
-            return typ
-        elif isinstance(typ, Bot):  
-            return typ
-    '''
-    end rename_type
-    '''
-
-    def rename_constraints(self, renaming : PMap[str, str], constraints : list[Subtyping]) -> list[Subtyping]:
-        return [
-            Subtyping(self.rename_typ(renaming, st.strong), self.rename_typ(renaming, st.weak))
-            for st in constraints
-        ]
-    '''
-    end rename_constraints
-    '''
 
 
     def solve(self, premise : Premise, strong : Typ, weak : Typ) -> list[Premise]:
@@ -709,8 +807,8 @@ class Solver:
                 constraints = extract_constraints_with_id(premise.model, weak.id)
                 constraints_subbed = [
                     Subtyping(
-                        sub_type(pmap({weak.id : strong}), st.strong),
-                        sub_type(pmap({weak.id : strong}), st.weak)
+                        sub_typ(pmap({weak.id : strong}), st.strong),
+                        sub_typ(pmap({weak.id : strong}), st.weak)
                     )
                     for st in constraints
 
@@ -744,9 +842,9 @@ class Solver:
 
         elif isinstance(strong, IdxUnio):
             renaming = self.mk_renaming(strong.ids)
-            strong_constraints = self.rename_constraints(renaming, strong.constraints)
-            strong_body = self.rename_typ(renaming, strong.body)
-            freezer = premise.freezer.union(renaming.values())
+            strong_constraints = sub_constraints(renaming, strong.constraints)
+            strong_body = sub_typ(renaming, strong.body)
+            freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
 
             premises = [Premise(premise.model, freezer)]
             for constraint in strong_constraints:
@@ -764,9 +862,9 @@ class Solver:
 
         elif isinstance(weak, IdxInter):
             renaming = self.mk_renaming(weak.ids)
-            weak_constraints = self.rename_constraints(renaming, weak.constraints)
-            weak_body = self.rename_typ(renaming, weak.body)
-            freezer = premise.freezer.union(renaming.values())
+            weak_constraints = sub_constraints(renaming, weak.constraints)
+            weak_body = sub_typ(renaming, weak.body)
+            freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
 
             premises = [Premise(premise.model, freezer)]
             for constraint in weak_constraints:
@@ -797,10 +895,9 @@ class Solver:
                     use the pattern on LHS to dictate number of unrollings needed on RHS 
                     simply need to sub RHS into LHS's self-referencing variable
                     '''
-                    # TODO: at check for timeout after some number of iterations 
                     tvar_fresh = self.fresh_type_var()
-                    renaming = pmap({strong.id : tvar_fresh.id})
-                    strong_body = self.rename_typ(renaming, strong.body)
+                    renaming : PMap[str, Typ] = pmap({strong.id : tvar_fresh})
+                    strong_body = sub_typ(renaming, strong.body)
 
                     '''
                     add induction hypothesis to premise:
@@ -882,11 +979,11 @@ class Solver:
 
         elif isinstance(weak, IdxUnio): 
             renaming = self.mk_renaming(weak.ids)
-            weak_constraints = self.rename_constraints(renaming, weak.constraints)
-            weak_body = self.rename_typ(renaming, weak.body)
+            weak_constraints = sub_constraints(renaming, weak.constraints)
+            weak_body = sub_typ(renaming, weak.body)
 
             solution = self.solve(premise, strong, weak_body) 
-            ids_ground = renaming.values()
+            ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             model = premise.model
             freezer = premise.freezer.union(ids_ground)
@@ -903,11 +1000,11 @@ class Solver:
 
         elif isinstance(strong, IdxInter): 
             renaming = self.mk_renaming(strong.ids)
-            strong_constraints = self.rename_constraints(renaming, strong.constraints)
-            strong_body = self.rename_typ(renaming, strong.body)
+            strong_constraints = sub_constraints(renaming, strong.constraints)
+            strong_body = sub_typ(renaming, strong.body)
 
             solution = self.solve(premise, strong_body, weak) 
-            ids_ground = renaming.values()
+            ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             model = premise.model
             freezer = premise.freezer.union(ids_ground)
@@ -929,8 +1026,8 @@ class Solver:
                 unrolling = Subtyping(tvar_fresh, weak)
                 model = premise.model.add(unrolling)
                 freezer = premise.freezer.add(tvar_fresh.id)
-                renaming = pmap({weak.id : tvar_fresh.id})
-                weak_body = self.rename_typ(renaming, weak.body)
+                renaming : PMap[str, Typ] = pmap({weak.id : tvar_fresh})
+                weak_body = sub_typ(renaming, weak.body)
                 premise = Premise(model, freezer)
 
                 return self.solve(premise, strong, weak_body)
@@ -1002,110 +1099,6 @@ class Solver:
     '''
 
 
-    # TODO: move outside of class
-    def from_typ_extract_free_vars(self, bound_vars : PSet[str], typ : Typ) -> PSet[str]:
-        if False:
-            assert False
-        elif isinstance(typ, TVar):
-            if typ.id not in bound_vars:
-                return pset(typ.id)
-            else:
-                return pset()
-        elif isinstance(typ, TUnit):
-            return pset()
-        elif isinstance(typ, TTag):
-            return self.from_typ_extract_free_vars(bound_vars, typ.body)
-        elif isinstance(typ, TField):
-            return self.from_typ_extract_free_vars(bound_vars, typ.body)
-        elif isinstance(typ, Unio):
-            return PSet.union(
-                self.from_typ_extract_free_vars(bound_vars, typ.left),
-                self.from_typ_extract_free_vars(bound_vars, typ.right),
-            ) 
-        elif isinstance(typ, Inter):
-            return PSet.union(
-                self.from_typ_extract_free_vars(bound_vars, typ.left),
-                self.from_typ_extract_free_vars(bound_vars, typ.right),
-            ) 
-        elif isinstance(typ, Diff):
-            return PSet.union(
-                self.from_typ_extract_free_vars(bound_vars, typ.context),
-                self.from_typ_extract_free_vars(bound_vars, typ.negation),
-            ) 
-        elif isinstance(typ, Imp):
-            return PSet.union(
-                self.from_typ_extract_free_vars(bound_vars, typ.antec),
-                self.from_typ_extract_free_vars(bound_vars, typ.consq),
-            ) 
-        elif isinstance(typ, IdxUnio):
-            bound_vars = PSet.union(bound_vars, typ.ids)
-            return PSet.union(
-                self.from_constraints_extract_free_vars(bound_vars, typ.constraints),
-                self.from_typ_extract_free_vars(bound_vars, typ.body),
-            )
-        elif isinstance(typ, IdxInter):
-            bound_vars = PSet.union(bound_vars, typ.ids)
-            return PSet.union(
-                self.from_constraints_extract_free_vars(bound_vars, typ.constraints),
-                self.from_typ_extract_free_vars(bound_vars, typ.body),
-            )
-        elif isinstance(typ, Least):
-            bound_vars = bound_vars.add(typ.id)
-            return self.from_typ_extract_free_vars(bound_vars, typ.body)
-        elif isinstance(typ, Bot):
-            return pset()
-        elif isinstance(typ, Top):
-            return pset()
-    '''
-    end from_typ_extract_free_vars
-    '''
-
-
-    def from_constraints_extract_free_vars(self, bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
-        result = pset()
-        for st in constraints:
-            result = PSet.union(result, 
-                PSet.union( self.from_typ_extract_free_vars(bound_vars, st.strong), 
-                    self.from_typ_extract_free_vars(bound_vars, st.weak)))
-
-        return result
-
-    def extract_reachable_constraints(self, model : Model, id : str) -> Sequence[Subtyping]:
-        # TODO
-        return [] 
-
-    def package_typ(self, premises : list[Premise], typ : Typ) -> Typ:
-        '''
-        construct an IdxUnio type, with frozen variables as bound variable.
-        '''
-        xs : list = []
-
-        typ_result = Bot()
-        ids_base = self.from_typ_extract_free_vars(pset(), typ)
-        for premise in premises:
-            constraints = pset()
-            for id_base in ids_base: 
-                constraints_reachable = self.extract_reachable_constraints(premise.model, id_base)
-                constraints = PSet.union(constraints, constraints_reachable)
-
-            ids_constraints = self.from_constraints_extract_free_vars(pset(), constraints)
-            ids_bound = PSet.intersection(premise.freezer, ids_constraints)
-
-            # TODO: determine if only constraints with bound variables should be kept
-            # constraints = [
-            #     st
-            #     for st in constraints
-            #     if any(
-            #         bid in self.from_constraints_extract_free_vars(pset(), [st]) 
-            #         for bid in ids_bound
-            #     )
-            # ]
-            typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
-            typ_result = Unio(typ_idx_unio, typ_result)
-
-        return typ_result 
-
-
 class Rule:
     def __init__(self, solver : Solver, nt : Nonterm):
         self.solver = solver
@@ -1123,8 +1116,8 @@ class BaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), TTag(id, typ_var), self.nt.typ)
-        typ_guide = self.solver.package_typ(solution, typ_var)  
+        solution = self.solver.solve_composition(TTag(id, typ_var), self.nt.typ)
+        typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide)
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
@@ -1152,14 +1145,14 @@ class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', typ_var), TField('tail', Bot())), self.nt.typ)
-        typ_guide = self.solver.package_typ(solution, typ_var)  
+        solution = self.solver.solve_composition(Inter(TField('head', typ_var), TField('tail', Bot())), self.nt.typ)
+        typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', head), TField('tail', typ_var)), self.nt.typ)
-        typ_guide = self.solver.package_typ(solution, typ_var)  
+        solution = self.solver.solve_composition(Inter(TField('head', head), TField('tail', typ_var)), self.nt.typ)
+        typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
@@ -1177,8 +1170,8 @@ class ExprRule(Rule):
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('true', TUnit()), typ_var) 
         premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve(Premise(s(), s()), implication, premise_conclusion)
-        typ_guide = self.solver.package_typ(solution, typ_var)  
+        solution = self.solver.solve_composition(implication, premise_conclusion)
+        typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
@@ -1189,17 +1182,17 @@ class ExprRule(Rule):
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('false', TUnit()), typ_var) 
         premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve(Premise(s(), s()), implication, premise_conclusion)
-        typ_guide = self.solver.package_typ(solution, typ_var)  
+        solution = self.solver.solve_composition(implication, premise_conclusion)
+        typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
     def combine_ite(self, condition : Typ, branch_true : Typ, branch_false : Typ) -> Typ: 
-        solution_true = self.solver.solve(Premise(s(), s()), condition, TTag('true', TUnit()))
-        solution_false = self.solver.solve(Premise(s(), s()), condition, TTag('false', TUnit()))
+        solution_true = self.solver.solve_composition(condition, TTag('true', TUnit()))
+        solution_false = self.solver.solve_composition(condition, TTag('false', TUnit()))
 
         return Unio(
-            self.solver.package_typ(solution_true, branch_true), 
-            self.solver.package_typ(solution_false, branch_false), 
+            package_typ(solution_true, branch_true), 
+            package_typ(solution_false, branch_false), 
         )
 
 
@@ -1214,8 +1207,8 @@ class ExprRule(Rule):
         answr_i = record 
         for key in keys:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), s()), answr_i, TField(key, answr))
-            answr_i = self.solver.package_typ(solution, answr)
+            solution = self.solver.solve_composition(answr_i, TField(key, answr))
+            answr_i = package_typ(solution, answr)
 
         return answr_i
 
@@ -1231,8 +1224,8 @@ class ExprRule(Rule):
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), s()), answr_i, Imp(argument, answr))
-            answr_i = self.solver.package_typ(solution, answr)
+            solution = self.solver.solve_composition(answr_i, Imp(argument, answr))
+            answr_i = package_typ(solution, answr)
 
         return answr_i
 
@@ -1248,8 +1241,8 @@ class ExprRule(Rule):
         answr_i = arg 
         for cator in cators:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve(Premise(s(), s()), Imp(answr_i, answr), cator)
-            answr_i = self.solver.package_typ(solution, answr)
+            solution = self.solver.solve_composition(Imp(answr_i, answr), cator)
+            answr_i = package_typ(solution, answr)
 
         return answr_i
     #########
@@ -1287,8 +1280,8 @@ class RecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), TField(id, typ), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(TField(id, typ), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded) 
 
     def combine_single(self, id : str, body : Typ) -> Typ:
@@ -1299,8 +1292,8 @@ class RecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField(id, body), typ), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(Inter(TField(id, body), typ), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('record', self.nt.enviro, typ_grounded) 
 
     def combine_cons(self, id : str, body : Typ, tail : Typ) -> Typ:
@@ -1310,15 +1303,15 @@ class FunctionRule(Rule):
 
     def distill_single_pattern(self) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ_var, Top()))
+        solution = self.solver.solve_composition(self.nt.typ, Imp(typ_var, Top()))
 
-        typ_guide = self.solver.package_typ(solution, typ_var)
+        typ_guide = package_typ(solution, typ_var)
         return Nonterm('pattern', self.nt.enviro, typ_guide)
 
     def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
         conclusion = self.solver.fresh_type_var() 
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(pattern.typ, conclusion)) 
-        conclusion_grounded = self.solver.package_typ(solution, conclusion)
+        solution = self.solver.solve_composition(self.nt.typ, Imp(pattern.typ, conclusion)) 
+        conclusion_grounded = package_typ(solution, conclusion)
         enviro = self.nt.enviro + pattern.enviro
         return Nonterm('expr', enviro, conclusion_grounded)
 
@@ -1349,7 +1342,7 @@ class FunctionRule(Rule):
         )
 
         solution = self.solver.solve(Premise(model, s()), typ_imp, self.nt.typ)
-        typ_guide = self.solver.package_typ(solution, Imp(case_antec, case_consq))
+        typ_guide = package_typ(solution, Imp(case_antec, case_consq))
         '''
         NOTE: the guide is an implication guiding the next case
         '''
@@ -1370,8 +1363,8 @@ class KeychainRule(Rule):
     '''
     def distill_cons_tail(self, key : str):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, TField(key, typ))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(self.nt.typ, TField(key, typ))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('keychain', self.nt.enviro, typ_grounded)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
@@ -1381,15 +1374,15 @@ class ArgchainRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ, Top()))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(typ, Top()))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
     def distill_cons_tail(self, head : Typ):
@@ -1398,8 +1391,8 @@ class ArgchainRule(Rule):
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        solution = self.solver.solve(Premise(s(), s()), self.nt.typ, Imp(head, typ))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(self.nt.typ, Imp(head, typ))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('argchain', self.nt.enviro, typ_grounded)
 
     def combine_single(self, content : Typ) -> list[Typ]:
@@ -1415,15 +1408,15 @@ class PipelineRule(Rule):
 
     def distill_single_content(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), typ, Imp(self.nt.typ, Top()))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(typ, Imp(self.nt.typ, Top()))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
 
     def distill_cons_head(self):
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), typ, Imp(self.nt.typ, Top()))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(typ, Imp(self.nt.typ, Top()))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('expr', self.nt.enviro, typ_grounded)
 
     def distill_cons_tail(self, head : Typ) -> Nonterm:
@@ -1432,8 +1425,8 @@ class PipelineRule(Rule):
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        solution = self.solver.solve(Premise(s(), s()), head, Imp(self.nt.typ, typ))
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(head, Imp(self.nt.typ, typ))
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pipeline', self.nt.enviro, typ_grounded)
 
     def combine_single(self, content : Typ) -> list[Typ]:
@@ -1451,14 +1444,14 @@ start Pattern Ruleibutes
 class PatternRule(Rule):
     def distill_tuple_head(self) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
     def combine_tuple(self, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
@@ -1473,8 +1466,8 @@ class PatternBaseRule(Rule):
     def combine_var(self, id : str) -> PatternAttr:
         typ = self.solver.fresh_type_var()
         enviro = m().set(id, typ)
-        solution = self.solver.solve(Premise(s(), s()), typ, self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(typ, self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return PatternAttr(enviro, typ_grounded)
 
     def combine_unit(self) -> PatternAttr:
@@ -1482,8 +1475,8 @@ class PatternBaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), TTag(id, typ), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(TTag(id, typ), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded)
 
     def combine_tag(self, label : str, body : PatternAttr) -> PatternAttr:
@@ -1496,8 +1489,8 @@ class PatternRecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), TField(id, typ), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(TField(id, typ), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 
     def combine_single(self, label : str, body : PatternAttr) -> PatternAttr:
@@ -1508,8 +1501,8 @@ class PatternRecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve(Premise(s(), s()), Inter(TField(id, body.typ), typ), self.nt.typ)
-        typ_grounded = self.solver.package_typ(solution, typ)
+        solution = self.solver.solve_composition(Inter(TField(id, body.typ), typ), self.nt.typ)
+        typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 
     def combine_cons(self, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
