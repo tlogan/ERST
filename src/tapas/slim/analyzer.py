@@ -704,16 +704,27 @@ class Solver:
             frozen = weak.id in premise.freezer
             if frozen:
                 '''
-                package weak; an IdxUnio will be constructed, and the right IdxUnio rule will specialize its constraints with strong
-
-                e.g.
-                L <: {X . X, Y <: R, X <: T } X
-                -------------------------------
-                X |-> L 
-                L, Y <: R, L <: T
+                find constraints of weak.d and  sub in the strong type
                 '''
-                weak_packaged = self.package_typ([premise], weak)
-                return self.solve(premise, strong, weak_packaged) 
+                constraints = extract_constraints_with_id(premise.model, weak.id)
+                constraints_subbed = [
+                    Subtyping(
+                        sub_type(pmap({weak.id : strong}), st.strong),
+                        sub_type(pmap({weak.id : strong}), st.weak)
+                    )
+                    for st in constraints
+
+                ] 
+
+                premises = [premise]
+                for constraint in constraints_subbed:
+                    premises = [
+                        p2
+                        for p1 in premises
+                        for p2 in self.solve(p1, constraint.strong, constraint.weak)
+                    ]  
+                return premises
+
             else:
                 premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
                 return [premise]
@@ -721,19 +732,6 @@ class Solver:
         elif isinstance(strong, TVar): 
             frozen = strong.id in premise.freezer
             if frozen:
-                '''
-                package strong 
-                - if the strong has only simple constraints, it will be subbed
-                - if the strong has relational constraints, the collapsing would cause an IdxUnio will be constructed, and the left IdxUnio rule will cause an infinite loop 
-                e.g.
-                {X . X, Y <: R, X <: T } X <: U
-                -------------------------------
-                -------------------------------
-                X, Y <: R, X <: T, X <: U
-
-                -----------------------
-
-                '''
                 strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
                 return self.solve(premise, strongest_weaker, weak) 
             else:
@@ -925,8 +923,6 @@ class Solver:
             return premises
 
         elif isinstance(weak, Least): 
-            # TODO: add energy check; and energy decrementing
-            # if not relational_key(strong) and self.energy > 0:
             if not is_relational_key(strong) and self._battery > 0:
                 self._battery -= 1
                 tvar_fresh = self.fresh_type_var()
@@ -1082,19 +1078,28 @@ class Solver:
         '''
         construct an IdxUnio type, with frozen variables as bound variable.
         '''
+        xs : list = []
 
         typ_result = Bot()
         ids_base = self.from_typ_extract_free_vars(pset(), typ)
         for premise in premises:
             constraints = pset()
             for id_base in ids_base: 
-                constraints = PSet.union(
-                    constraints, 
-                    self.extract_reachable_constraints(premise.model, id_base)
-                )
+                constraints_reachable = self.extract_reachable_constraints(premise.model, id_base)
+                constraints = PSet.union(constraints, constraints_reachable)
 
             ids_constraints = self.from_constraints_extract_free_vars(pset(), constraints)
             ids_bound = PSet.intersection(premise.freezer, ids_constraints)
+
+            # TODO: determine if only constraints with bound variables should be kept
+            # constraints = [
+            #     st
+            #     for st in constraints
+            #     if any(
+            #         bid in self.from_constraints_extract_free_vars(pset(), [st]) 
+            #         for bid in ids_bound
+            #     )
+            # ]
             typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
             typ_result = Unio(typ_idx_unio, typ_result)
 

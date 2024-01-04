@@ -2,6 +2,9 @@
 
 
 ### TODO
+- implement `extract_constraints_with_id`
+- implement `sub_type`
+- implement `extract_reachable_constraints`
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
 - implement caching for streaming parsing
