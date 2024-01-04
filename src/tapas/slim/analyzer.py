@@ -615,9 +615,11 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
 
 class Solver:
     _type_id : int = 0 
+    _battery : int = 0 
+    _max_battery : int = 100
 
-    # def __init__(self, type_id : int):
-    #     self._type_id = type_id
+    def set_max_battery(self, max_battery : int):
+        self._max_battery = max_battery 
 
     def fresh_type_var(self) -> TVar:
         self._type_id += 1
@@ -925,7 +927,8 @@ class Solver:
         elif isinstance(weak, Least): 
             # TODO: add energy check; and energy decrementing
             # if not relational_key(strong) and self.energy > 0:
-            if not is_relational_key(strong):
+            if not is_relational_key(strong) and self._battery > 0:
+                self._battery -= 1
                 tvar_fresh = self.fresh_type_var()
                 unrolling = Subtyping(tvar_fresh, weak)
                 model = premise.model.add(unrolling)
@@ -993,6 +996,15 @@ class Solver:
     '''
     end solve
     '''
+
+    def solve_composition(self, strong : Typ, weak : Typ) -> List[Premise]: 
+        self._battery = self._max_battery
+        premise = Premise(s(), s())
+        return self.solve(premise, strong, weak)
+    '''
+    end solve_composition
+    '''
+
 
     # TODO: move outside of class
     def from_typ_extract_free_vars(self, bound_vars : PSet[str], typ : Typ) -> PSet[str]:

@@ -2,7 +2,6 @@
 
 
 ### TODO
-- implement `energy` decreasing counter
 - finish implementing combine/distill procedures
     - construct inductive type from `fix`
 - implement caching for streaming parsing
