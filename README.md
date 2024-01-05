@@ -2,7 +2,6 @@
 
 
 ### TODO
-- implement `extract_reachable_constraints`
 - finish implementing combine/distill procedures
     - implement `combine_function`
     - implement `combine_fix`

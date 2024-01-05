@@ -725,22 +725,28 @@ def from_constraints_extract_free_vars(bound_vars : PSet[str], constraints : Ite
 
     return result
 
-def extract_reachable_constraints(model : Model, id : str) -> Sequence[Subtyping]:
-    # TODO
-    return [] 
+def extract_reachable_constraints(model : Model, id : str, constraints : PSet[Subtyping]) -> PSet[Subtyping]:
+    constraints_with_id = extract_constraints_with_id(model, id) 
+    diff = constraints_with_id.difference(constraints)
+    ids = from_constraints_extract_free_vars(pset(), diff)
+    for id in ids:
+        constraints = constraints.union(
+            extract_reachable_constraints(model, id, constraints)
+        ) 
+
+    return constraints 
 
 def package_typ(premises : list[Premise], typ : Typ) -> Typ:
     '''
     construct an IdxUnio type, with frozen variables as bound variable.
     '''
-    xs : list = []
 
     typ_result = Bot()
     ids_base = from_typ_extract_free_vars(pset(), typ)
     for premise in premises:
         constraints = pset()
         for id_base in ids_base: 
-            constraints_reachable = extract_reachable_constraints(premise.model, id_base)
+            constraints_reachable = extract_reachable_constraints(premise.model, id_base, constraints)
             constraints = PSet.union(constraints, constraints_reachable)
 
         ids_constraints = from_constraints_extract_free_vars(pset(), constraints)
