@@ -1119,20 +1119,25 @@ class BaseRule(Rule):
         return TTag(label, body)
 
     def combine_function(self, cases : list[Imp]) -> Typ:
-        # - TODO: solve subtyping of case types from function rewriting into implication 
-        # - view of cases as first-come-first-serve
-        # - e.g. A -> B, C -> D becomes [X <: (A | C)] X -> ({Y . X * Y <: (A * B) | (C\A * D)} Y)
-        #####################
-        # NOTE: alternative view of cases as pure intersection
-        # P --> Q & A --> B
-        # (~P | Q) & (~A | B)
-        # (~P | (P, Q)) & (~A | (A, B))
-        # (~P & ~A) | (~P & A, B) | (~A & P, Q) | (P & A, Q & B)
-        # [X <: (P | A)] X -> ({X <: A\P} B) | ({X <: P\A} Q | ({X <: P, X <: A} (Q & B)
-        # [X <: (P | A)] X -> ({X <: P\A} Q | ({X <: A\P} B) | ({X <: P, X <: A} (Q & B)
-        return Imp(Bot(), Top())
+        # TODO: redo after notion of constraint is separated from quantification
+        '''
+            nil -> zero
+            cons X -> succ Y 
+            --------------------
+            {X <: nil} X | -> {Y . (X, Y) <: (nil,zero) | (cons X\\nil, succ Y)} Y
+            ...
+            Freeze Y . {(X, Y) <: (nil,zero) | (cons X\\nil, succ Y)} X -> Y   
+        '''
+        choices = from_cases_to_choices(cases)
+        rel = Bot() 
+        for choice in reversed(choices): 
+            rel = Unio(mk_pair_type(*choice), rel)
 
+        var_antec = self.solver.fresh_type_var()
+        var_concl = self.solver.fresh_type_var()
+        var_pair = mk_pair_type(var_antec, var_concl)
 
+        return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
 
 
 

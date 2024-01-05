@@ -2,8 +2,9 @@
 
 
 ### TODO
+
+- separate notion of constraint type from quantification type
 - finish implementing combine/distill procedures
-    - implement `combine_function`
     - implement `combine_fix`
     - implement `distill_let_contin`
 - implement caching for streaming parsing
