@@ -2,7 +2,6 @@
 
 
 ### TODO
-- implement `is_record_type_with_var`
 - implement `contains`
 - implement `extract_constraints_with_id`
 - implement `extract_reachable_constraints`

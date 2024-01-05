@@ -540,15 +540,6 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-# def constraint_well_formed(premise : Premise, strong : Typ, weak : Typ) -> bool:
-#     # TODO
-#     return False
-
-def is_record_type_with_var(t : Typ, id : str) -> bool:
-    # TODO
-    return False
-
-
 def extract_strongest_weaker(model : Model, id : str) -> Typ:
     '''
     NOTE: related to strongest-post concept
@@ -583,7 +574,7 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
     constraints_relational = [
         st
         for st in model
-        if is_record_type_with_var(st.weak, id)
+        if is_relational_key(st.weak) and (id in from_typ_extract_free_vars(pset(), st.weak))
     ]
 
     typ_factored = Top()
