@@ -2,8 +2,6 @@
 
 
 ### TODO
-- implement `contains`
-- implement `extract_constraints_with_id`
 - implement `extract_reachable_constraints`
 - finish implementing combine/distill procedures
     - implement `combine_function`

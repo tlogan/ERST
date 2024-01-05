@@ -369,13 +369,8 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
     return pset((
         st
         for st in constraints
-        if contains(st.strong, key)
+        if key in from_typ_extract_free_vars(pset(), st.strong)
     )) 
-
-
-def contains(typ : Typ, var : str) -> bool:
-    # TODO: check if the type variable exists in type
-    return False
 
 
 Enviro = PMap[str, Typ]
@@ -603,8 +598,11 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
     return typ_final 
 
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
-    # TODO
-    return pset()
+    return pset(
+        st
+        for st in model
+        if id in from_constraints_extract_free_vars(pset(), [st])
+    )
 
 
 def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
