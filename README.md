@@ -2,8 +2,6 @@
 
 
 ### TODO
-
-- separate notion of constraint type from quantification type
 - finish implementing combine/distill procedures
     - implement `combine_fix`
     - implement `distill_let_contin`

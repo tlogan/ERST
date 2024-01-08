@@ -1119,14 +1119,17 @@ class BaseRule(Rule):
         return TTag(label, body)
 
     def combine_function(self, cases : list[Imp]) -> Typ:
-        # TODO: redo after notion of constraint is separated from quantification
         '''
-            nil -> zero
-            cons X -> succ Y 
-            --------------------
-            {X <: nil} X | -> {Y . (X, Y) <: (nil,zero) | (cons X\\nil, succ Y)} Y
-            ...
-            Freeze Y . {(X, Y) <: (nil,zero) | (cons X\\nil, succ Y)} X -> Y   
+        nil -> zero
+        cons A -> succ B 
+        --------------------
+
+        Construct an existential with the input variable free and the return variable bound 
+        {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
+
+        
+        ----- generalization with universal will happen in let-binding rule
+        [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
         choices = from_cases_to_choices(cases)
         rel = Bot() 
