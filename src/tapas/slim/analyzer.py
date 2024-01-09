@@ -222,8 +222,8 @@ class Subtyping:
     weak : Typ
 
 
-def mk_stack_machine(
-    mk_plate : Callable[[T], tuple[list[T], Callable, list[R]]], 
+def make_stack_machine(
+    make_plate : Callable[[T], tuple[list[T], Callable, list[R]]], 
 ) -> Callable[[T], R] :
     def run(start : T):
         result = None 
@@ -240,7 +240,7 @@ def mk_stack_machine(
             else:
                 result = None 
                 control = controls.pop(0)
-                plate = mk_plate(control)
+                plate = make_plate(control)
                 stack.append((controls, combine, args))
                 stack.append(plate)
 
@@ -260,7 +260,7 @@ def concretize_constraints(subtypings : list[Subtyping]) -> str:
     ])
 
 def concretize_typ(typ : Typ) -> str:
-    def mk_plate (control : Typ):
+    def make_plate (control : Typ):
         if False: 
             pass
         elif isinstance(control, TVar):
@@ -297,7 +297,7 @@ def concretize_typ(typ : Typ) -> str:
 
         return plate
 
-    return mk_stack_machine(mk_plate)(typ)
+    return make_stack_machine(make_plate)(typ)
 
 
 
@@ -396,13 +396,13 @@ def diff_well_formed(diff : Diff) -> bool:
     '''
     return pattern_type(diff.negation)
 
-def mk_diff(context : Typ, negs : list[Typ]) -> Typ:
+def make_diff(context : Typ, negs : list[Typ]) -> Typ:
     result = context 
     for neg in negs:
         result = Diff(result, neg)
     return result
 
-def mk_pair_type(left : Typ, right : Typ) -> Typ:
+def make_pair_type(left : Typ, right : Typ) -> Typ:
     return Inter(TField("left", left), TField("right", right))
 
 def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
@@ -417,7 +417,7 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     negs = []
 
     for case in cases:
-        choices += [(mk_diff(case.antec, negs), case.consq)]
+        choices += [(make_diff(case.antec, negs), case.consq)]
         negs += [case.antec]
     return choices 
 
@@ -725,6 +725,13 @@ def from_constraints_extract_free_vars(bound_vars : PSet[str], constraints : Ite
 
     return result
 
+def is_variable_unassigned(premise : Premise, id : str) -> bool:
+    return (
+        id not in from_constraints_extract_free_vars(pset(), premise.model) and
+        id not in premise.freezer and
+        True
+    )
+
 def extract_reachable_constraints(model : Model, id : str, constraints : PSet[Subtyping]) -> PSet[Subtyping]:
     constraints_with_id = extract_constraints_with_id(model, id) 
     diff = constraints_with_id.difference(constraints)
@@ -770,7 +777,7 @@ class Solver:
         self._type_id += 1
         return TVar(f"_{self._type_id}")
 
-    def mk_renaming(self, old_ids) -> PMap[str, Typ]:
+    def make_renaming(self, old_ids) -> PMap[str, Typ]:
         '''
         Map old_ids to fresh ids
         '''
@@ -836,7 +843,7 @@ class Solver:
         #######################################
 
         elif isinstance(strong, IdxUnio):
-            renaming = self.mk_renaming(strong.ids)
+            renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
             freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
@@ -856,7 +863,7 @@ class Solver:
             ]
 
         elif isinstance(weak, IdxInter):
-            renaming = self.mk_renaming(weak.ids)
+            renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
             freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
@@ -973,7 +980,7 @@ class Solver:
             return [premise] 
 
         elif isinstance(weak, IdxUnio): 
-            renaming = self.mk_renaming(weak.ids)
+            renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
 
@@ -994,7 +1001,7 @@ class Solver:
             return premises
 
         elif isinstance(strong, IdxInter): 
-            renaming = self.mk_renaming(strong.ids)
+            renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
 
@@ -1134,11 +1141,11 @@ class BaseRule(Rule):
         choices = from_cases_to_choices(cases)
         rel = Bot() 
         for choice in reversed(choices): 
-            rel = Unio(mk_pair_type(*choice), rel)
+            rel = Unio(make_pair_type(*choice), rel)
 
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
-        var_pair = mk_pair_type(var_antec, var_concl)
+        var_pair = make_pair_type(var_antec, var_concl)
 
         return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
 
@@ -1255,12 +1262,42 @@ class ExprRule(Rule):
         return Nonterm('expr', self.nt.enviro, Top())
 
     def combine_fix(self, body : Typ) -> Typ:
-        typ = self.solver.fresh_type_var()
-        # TODO: construct implication of least
-        # ==== cases: (P -> Q), ...
-        # ==== ([X . X <: (P | ...)] X -> {Y . X * Y <: least (P * Q) | ...} Y)
-        #####################
-        return Least(typ.id, body)
+        '''
+        ensure that the the body type can be rewritten as an implication, where the antec is an single variable representing the self-reference
+        '''
+
+        '''
+        nil -> zero
+        cons A -> succ B 
+        --------------------
+        frezer: Y, model: (X, Y) <: (nil,zero) | (cons A\\nil, succ B)
+        X -> Y   
+        
+
+        I <: X
+        Y <: C
+        I <: C
+        '''
+
+        tvar_induc = self.solver.fresh_type_var()
+        tvar_target = self.solver.fresh_type_var()
+        solution = [
+            p2
+            for p1 in self.solver.solve_composition(body, Imp(tvar_induc, tvar_target))
+            for p2 in self.solver.solve(p1, tvar_induc, tvar_target)
+        ]
+
+        # TODO: update freezer
+        result = Bot()
+        for premise in reversed(solution):
+            typ_rel = make_relation(premise, tvar_induc, tvar_target)
+            tvar_antec = self.solver.fresh_type_var()
+            tvar_consq = self.solver.fresh_type_var()
+            typ_imp = Imp(tvar_antec, tvar_consq)
+            typ_pair = make_pair_type(tvar_antec, tvar_consq)
+            choice = IdxUnio([tvar_consq.id], [Subtyping(typ_pair, typ_rel)], typ_imp) 
+            result = Unio(choice, result)
+        return result
     
     def distill_let_target(self, id : str) -> Nonterm:
         return Nonterm('target', self.nt.enviro, Top())
@@ -1336,11 +1373,11 @@ class FunctionRule(Rule):
 
         typ_left = self.solver.fresh_type_var()
         typ_right = self.solver.fresh_type_var()
-        typ_pair = mk_pair_type(typ_left, typ_right)
+        typ_pair = make_pair_type(typ_left, typ_right)
         typ_imp = Imp(typ_left, typ_right)
 
         model = pset(
-            Subtyping(typ_pair, mk_pair_type(choice[0], choice[1]))
+            Subtyping(typ_pair, make_pair_type(choice[0], choice[1]))
             for choice in choices
         )
 
