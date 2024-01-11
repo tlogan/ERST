@@ -402,7 +402,7 @@ def make_diff(context : Typ, negs : list[Typ]) -> Typ:
         result = Diff(result, neg)
     return result
 
-def make_pair_type(left : Typ, right : Typ) -> Typ:
+def make_pair_typ(left : Typ, right : Typ) -> Typ:
     return Inter(TField("left", left), TField("right", right))
 
 def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
@@ -1141,11 +1141,11 @@ class BaseRule(Rule):
         choices = from_cases_to_choices(cases)
         rel = Bot() 
         for choice in reversed(choices): 
-            rel = Unio(make_pair_type(*choice), rel)
+            rel = Unio(make_pair_typ(*choice), rel)
 
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
-        var_pair = make_pair_type(var_antec, var_concl)
+        var_pair = make_pair_typ(var_antec, var_concl)
 
         return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
 
@@ -1263,40 +1263,37 @@ class ExprRule(Rule):
 
     def combine_fix(self, body : Typ) -> Typ:
         '''
-        ensure that the the body type can be rewritten as an implication, where the antec is an single variable representing the self-reference
+        - ensure the body is of the form Imp(I, F).
+            - F should be an existential with the consequent as a bound variable, e.g. {Y . ...} X -> Y
+        . Extract the union from the constraints 
+            - F = {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
+        - Add inductive constraint: {(IX, IY) <: I} (A, B)
         '''
+        return Bot()
+        # choices = linearize_unions(body)
 
-        '''
-        nil -> zero
-        cons A -> succ B 
-        --------------------
-        frezer: Y, model: (X, Y) <: (nil,zero) | (cons A\\nil, succ B)
-        X -> Y   
-        
-
-        I <: X
-        Y <: C
-        I <: C
-        '''
-
-        tvar_induc = self.solver.fresh_type_var()
-        tvar_target = self.solver.fresh_type_var()
-        solution = [
-            p2
-            for p1 in self.solver.solve_composition(body, Imp(tvar_induc, tvar_target))
-            for p2 in self.solver.solve(p1, tvar_induc, tvar_target)
-        ]
+        # result = Bot()
+        # for choice in reversed(choices):
+        #     item = Imp(Bot(), Top()) 
+        #     result = Unio(item, result)  
+        #     pass
+        # tvar_induc = self.solver.fresh_type_var()
+        # tvar_target = self.solver.fresh_type_var()
+        # solution = [
+        #     p2
+        #     for p1 in self.solver.solve_composition(body, Imp(tvar_induc, tvar_target))
+        #     for p2 in self.solver.solve(p1, tvar_induc, tvar_target)
+        # ]
 
         # TODO: update freezer
-        result = Bot()
-        for premise in reversed(solution):
-            typ_rel = make_relation(premise, tvar_induc, tvar_target)
-            tvar_antec = self.solver.fresh_type_var()
-            tvar_consq = self.solver.fresh_type_var()
-            typ_imp = Imp(tvar_antec, tvar_consq)
-            typ_pair = make_pair_type(tvar_antec, tvar_consq)
-            choice = IdxUnio([tvar_consq.id], [Subtyping(typ_pair, typ_rel)], typ_imp) 
-            result = Unio(choice, result)
+        # for premise in reversed(solution):
+        #     typ_rel = make_relation(premise, tvar_induc, tvar_target)
+        #     tvar_antec = self.solver.fresh_type_var()
+        #     tvar_consq = self.solver.fresh_type_var()
+        #     typ_imp = Imp(tvar_antec, tvar_consq)
+        #     typ_pair = make_pair_typ(tvar_antec, tvar_consq)
+        #     choice = IdxUnio([tvar_consq.id], [Subtyping(typ_pair, typ_rel)], typ_imp) 
+        #     result = Unio(choice, result)
         return result
     
     def distill_let_target(self, id : str) -> Nonterm:
@@ -1373,11 +1370,11 @@ class FunctionRule(Rule):
 
         typ_left = self.solver.fresh_type_var()
         typ_right = self.solver.fresh_type_var()
-        typ_pair = make_pair_type(typ_left, typ_right)
+        typ_pair = make_pair_typ(typ_left, typ_right)
         typ_imp = Imp(typ_left, typ_right)
 
         model = pset(
-            Subtyping(typ_pair, make_pair_type(choice[0], choice[1]))
+            Subtyping(typ_pair, make_pair_typ(choice[0], choice[1]))
             for choice in choices
         )
 
