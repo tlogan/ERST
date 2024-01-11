@@ -369,7 +369,7 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
     return pset((
         st
         for st in constraints
-        if key in from_typ_extract_free_vars(pset(), st.strong)
+        if key in extract_free_vars_from_typ(pset(), st.strong)
     )) 
 
 
@@ -569,7 +569,7 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
     constraints_relational = [
         st
         for st in model
-        if is_relational_key(st.weak) and (id in from_typ_extract_free_vars(pset(), st.weak))
+        if is_relational_key(st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
     ]
 
     typ_factored = Top()
@@ -601,7 +601,7 @@ def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
     return pset(
         st
         for st in model
-        if id in from_constraints_extract_free_vars(pset(), [st])
+        if id in extract_free_vars_from_constraints(pset(), [st])
     )
 
 
@@ -658,7 +658,7 @@ def sub_constraints(assignment_map : PMap[str, Typ], constraints : list[Subtypin
 end sub_constraints
 '''
 
-def from_typ_extract_free_vars(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
+def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
     if False:
         assert False
     elif isinstance(typ, TVar):
@@ -669,65 +669,65 @@ def from_typ_extract_free_vars(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
     elif isinstance(typ, TUnit):
         return pset()
     elif isinstance(typ, TTag):
-        return from_typ_extract_free_vars(bound_vars, typ.body)
+        return extract_free_vars_from_typ(bound_vars, typ.body)
     elif isinstance(typ, TField):
-        return from_typ_extract_free_vars(bound_vars, typ.body)
+        return extract_free_vars_from_typ(bound_vars, typ.body)
     elif isinstance(typ, Unio):
         return PSet.union(
-            from_typ_extract_free_vars(bound_vars, typ.left),
-            from_typ_extract_free_vars(bound_vars, typ.right),
+            extract_free_vars_from_typ(bound_vars, typ.left),
+            extract_free_vars_from_typ(bound_vars, typ.right),
         ) 
     elif isinstance(typ, Inter):
         return PSet.union(
-            from_typ_extract_free_vars(bound_vars, typ.left),
-            from_typ_extract_free_vars(bound_vars, typ.right),
+            extract_free_vars_from_typ(bound_vars, typ.left),
+            extract_free_vars_from_typ(bound_vars, typ.right),
         ) 
     elif isinstance(typ, Diff):
         return PSet.union(
-            from_typ_extract_free_vars(bound_vars, typ.context),
-            from_typ_extract_free_vars(bound_vars, typ.negation),
+            extract_free_vars_from_typ(bound_vars, typ.context),
+            extract_free_vars_from_typ(bound_vars, typ.negation),
         ) 
     elif isinstance(typ, Imp):
         return PSet.union(
-            from_typ_extract_free_vars(bound_vars, typ.antec),
-            from_typ_extract_free_vars(bound_vars, typ.consq),
+            extract_free_vars_from_typ(bound_vars, typ.antec),
+            extract_free_vars_from_typ(bound_vars, typ.consq),
         ) 
     elif isinstance(typ, IdxUnio):
         bound_vars = PSet.union(bound_vars, typ.ids)
         return PSet.union(
-            from_constraints_extract_free_vars(bound_vars, typ.constraints),
-            from_typ_extract_free_vars(bound_vars, typ.body),
+            extract_free_vars_from_constraints(bound_vars, typ.constraints),
+            extract_free_vars_from_typ(bound_vars, typ.body),
         )
     elif isinstance(typ, IdxInter):
         bound_vars = PSet.union(bound_vars, typ.ids)
         return PSet.union(
-            from_constraints_extract_free_vars(bound_vars, typ.constraints),
-            from_typ_extract_free_vars(bound_vars, typ.body),
+            extract_free_vars_from_constraints(bound_vars, typ.constraints),
+            extract_free_vars_from_typ(bound_vars, typ.body),
         )
     elif isinstance(typ, Least):
         bound_vars = bound_vars.add(typ.id)
-        return from_typ_extract_free_vars(bound_vars, typ.body)
+        return extract_free_vars_from_typ(bound_vars, typ.body)
     elif isinstance(typ, Bot):
         return pset()
     elif isinstance(typ, Top):
         return pset()
 '''
-end from_typ_extract_free_vars
+end extract_free_vars_from_typ
 '''
 
 
-def from_constraints_extract_free_vars(bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
+def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
     result = pset()
     for st in constraints:
         result = PSet.union(result, 
-            PSet.union(from_typ_extract_free_vars(bound_vars, st.strong), 
-                from_typ_extract_free_vars(bound_vars, st.weak)))
+            PSet.union(extract_free_vars_from_typ(bound_vars, st.strong), 
+                extract_free_vars_from_typ(bound_vars, st.weak)))
 
     return result
 
 def is_variable_unassigned(premise : Premise, id : str) -> bool:
     return (
-        id not in from_constraints_extract_free_vars(pset(), premise.model) and
+        id not in extract_free_vars_from_constraints(pset(), premise.model) and
         id not in premise.freezer and
         True
     )
@@ -735,7 +735,7 @@ def is_variable_unassigned(premise : Premise, id : str) -> bool:
 def extract_reachable_constraints(model : Model, id : str, constraints : PSet[Subtyping]) -> PSet[Subtyping]:
     constraints_with_id = extract_constraints_with_id(model, id) 
     diff = constraints_with_id.difference(constraints)
-    ids = from_constraints_extract_free_vars(pset(), diff)
+    ids = extract_free_vars_from_constraints(pset(), diff)
     for id in ids:
         constraints = constraints.union(
             extract_reachable_constraints(model, id, constraints)
@@ -749,14 +749,14 @@ def package_typ(premises : list[Premise], typ : Typ) -> Typ:
     '''
 
     typ_result = Bot()
-    ids_base = from_typ_extract_free_vars(pset(), typ)
+    ids_base = extract_free_vars_from_typ(pset(), typ)
     for premise in premises:
         constraints = pset()
         for id_base in ids_base: 
             constraints_reachable = extract_reachable_constraints(premise.model, id_base, constraints)
             constraints = PSet.union(constraints, constraints_reachable)
 
-        ids_constraints = from_constraints_extract_free_vars(pset(), constraints)
+        ids_constraints = extract_free_vars_from_constraints(pset(), constraints)
         ids_bound = PSet.intersection(premise.freezer, ids_constraints)
 
         typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
@@ -1134,7 +1134,7 @@ class BaseRule(Rule):
         Construct an existential with the input variable free and the return variable bound 
         {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
 
-        
+
         ----- generalization with universal will happen in let-binding rule
         [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
@@ -1262,39 +1262,45 @@ class ExprRule(Rule):
         return Nonterm('expr', self.nt.enviro, Top())
 
     def combine_fix(self, body : Typ) -> Typ:
-        '''
-        - ensure the body is of the form Imp(I, F).
-            - F should be an existential with the consequent as a bound variable, e.g. {Y . ...} X -> Y
-        . Extract the union from the constraints 
-            - F = {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
-        - Add inductive constraint: {(IX, IY) <: I} (A, B)
-        '''
-        return Bot()
-        # choices = linearize_unions(body)
+        typ_self = self.solver.fresh_type_var()
+        typ_content = self.solver.fresh_type_var()
 
-        # result = Bot()
-        # for choice in reversed(choices):
-        #     item = Imp(Bot(), Top()) 
-        #     result = Unio(item, result)  
-        #     pass
-        # tvar_induc = self.solver.fresh_type_var()
-        # tvar_target = self.solver.fresh_type_var()
-        # solution = [
-        #     p2
-        #     for p1 in self.solver.solve_composition(body, Imp(tvar_induc, tvar_target))
-        #     for p2 in self.solver.solve(p1, tvar_induc, tvar_target)
-        # ]
+        typ_self_in = self.solver.fresh_type_var()
+        typ_self_out = self.solver.fresh_type_var()
 
-        # TODO: update freezer
-        # for premise in reversed(solution):
-        #     typ_rel = make_relation(premise, tvar_induc, tvar_target)
-        #     tvar_antec = self.solver.fresh_type_var()
-        #     tvar_consq = self.solver.fresh_type_var()
-        #     typ_imp = Imp(tvar_antec, tvar_consq)
-        #     typ_pair = make_pair_typ(tvar_antec, tvar_consq)
-        #     choice = IdxUnio([tvar_consq.id], [Subtyping(typ_pair, typ_rel)], typ_imp) 
-        #     result = Unio(choice, result)
-        return result
+        typ_content_in = self.solver.fresh_type_var()
+        typ_content_out = self.solver.fresh_type_var()
+
+        solution = [
+            p2
+            for p0 in self.solver.solve_composition(body, Imp(typ_self, typ_content))
+            for p1 in self.solver.solve(p0, typ_self, Imp(typ_self_in, typ_self_out))
+            for p2 in self.solver.solve(p1, typ_content, Imp(typ_content_in, typ_content_out))
+        ]
+
+        tvar_fixy = self.solver.fresh_type_var()
+
+        typ_unio = Bot()
+        for premise in reversed(solution):
+            typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
+            typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
+
+            free_vars_content = extract_free_vars_from_typ(pset(), typ_content_pair)
+            free_vars_self = extract_free_vars_from_typ(pset(), typ_self_pair)
+
+            if (free_vars_content.intersection(free_vars_self)) :
+                model = premise.model.add(Subtyping(typ_self_pair, tvar_fixy))
+                premise = Premise(model, premise.freezer)
+
+            typ_choice = package_typ([premise], typ_content_pair) 
+            typ_unio = Unio(typ_choice, typ_unio) 
+
+
+        rel = Least(tvar_fixy.id, typ_unio)
+        var_antec = self.solver.fresh_type_var()
+        var_concl = self.solver.fresh_type_var()
+        var_pair = make_pair_typ(var_antec, var_concl)
+        return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
     
     def distill_let_target(self, id : str) -> Nonterm:
         return Nonterm('target', self.nt.enviro, Top())
