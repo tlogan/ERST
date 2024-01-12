@@ -3,7 +3,9 @@
 
 ### TODO
 - finish implementing combine/distill procedures
-    - implement `distill_let_contin`
+    - implement `distill_let_contin`, generalizing target
+- modify right/strong var rule to collect constraints where strong variable X anywhere in model where X is on LHS of constraint 
+    - resolve constraints with weak subbed in for X. 
 - implement caching for streaming parsing
 - encode fibonacci as an example to motivate 2-induction and test k-induction.
 - add examples with type annotations 

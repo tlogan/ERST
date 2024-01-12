@@ -835,6 +835,8 @@ class Solver:
                 strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
                 return self.solve(premise, strongest_weaker, weak) 
             else:
+                # TODO: collect constraints where strong.id is on LHS of constraint 
+                # sub in weak for strong and solve the new constraints. 
                 premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
                 return [premise]
 
@@ -1309,8 +1311,16 @@ class ExprRule(Rule):
         '''
         TODO: generalize target
         - avoid overgeneralizing by not abstracting variables introduced before target
+
+        original   : {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
+        ============
+        generalized: [Z . Z <: ({Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y)] Z 
+        ============
+        generalized: [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
+
         '''
-        enviro = self.nt.enviro.set(id, target)
+        target_generalized = target
+        enviro = self.nt.enviro.set(id, target_generalized)
         return Nonterm('expr', enviro, self.nt.typ)
 
 
