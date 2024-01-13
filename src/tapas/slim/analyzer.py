@@ -1133,10 +1133,11 @@ class BaseRule(Rule):
         cons A -> succ B 
         --------------------
 
+        TODO: this is WRONG!!! change this!
         Construct an existential with the input variable free and the return variable bound 
         {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
 
-
+        TODO: this is CORRECT!!! do this!
         ----- generalization with universal will happen in let-binding rule
         [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
@@ -1148,6 +1149,8 @@ class BaseRule(Rule):
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
+
+        # TODO: consider modifying combine_function to add antecedent to bound variables
 
         return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
 
@@ -1311,13 +1314,13 @@ class ExprRule(Rule):
         '''
         TODO: generalize target
         - avoid overgeneralizing by not abstracting variables introduced before target
-
-        original   : {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
-        ============
-        generalized: [Z . Z <: ({Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y)] Z 
-        ============
-        generalized: [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
-
+        TODO: generalizing is not the same as strengthening. Strengthening is not sound in general.
+            - strengthening could result in a False premise which would unsoundly prove anything.
+            - generalizing should universally quantify over variables that do not appear free in the typing environment 
+        TODO: generalize via [X. Target <: X] X. How does this help?
+            - [X. (A -> B) <: X] X <: P -> Q
+            - should be similar but more general than: 
+            - (A -> B) <: P -> Q
         '''
         target_generalized = target
         enviro = self.nt.enviro.set(id, target_generalized)
