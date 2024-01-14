@@ -7,7 +7,7 @@
         - e.g. fun x => g(x) : X -> Y vs [X . X <: T] X -> Y. T may have a free variables   
         - generalization will generalize the free variables in T.
 - finish implementing combine/distill procedures
-    - implement `distill_let_contin`, generalizing target (e.g. for free variables in constraint of universal)
+- add check that target is well typed (not bottom) in `distill_let_contin`
 - modify right/strong var rule to collect constraints for which the strong variable X is on LHS
     - resolve constraints with weak subbed in for X. 
 - implement caching for streaming parsing

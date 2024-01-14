@@ -1312,20 +1312,15 @@ class ExprRule(Rule):
 
     def distill_let_contin(self, id : str, target : Typ) -> Nonterm:
         '''
-        TODO: generalize target
-        - avoid overgeneralizing by not abstracting variables introduced before target
-        TODO: generalizing is not the same as strengthening. Strengthening is not sound in general.
-            - strengthening could result in a False premise which would unsoundly prove anything.
-            - generalizing should universally quantify over variables that do not appear free in the typing environment 
-        TODO: generalize via [X. Target <: X] X. How does this help?
-            - [X. (A -> B) <: X] X <: P -> Q
-            - should be similar but more general than: 
-            - (A -> B) <: P -> Q
+        TODO: add check that target is well typed (not bottom)
+        -- if target is not well typed, then adding to environment is unsound 
+        -- universal with existential body is the same as (Remy's) universal with existential constraint. 
+        -- if existential constraint is not false; i.e if target is well typed. 
         '''
-        target_generalized = target
+        free_ids = extract_free_vars_from_typ(pset(), target)
+        target_generalized = IdxInter(list(free_ids), [], target)
         enviro = self.nt.enviro.set(id, target_generalized)
         return Nonterm('expr', enviro, self.nt.typ)
-
 
 '''
 end ExprRule
