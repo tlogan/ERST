@@ -526,6 +526,12 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
     return None
 
 def extract_strongest_weaker(model : Model, id : str) -> Typ:
+
+    '''
+    assumption: strongest weaker is weaker than the stronger types of id:
+    H <: X, I <: X - the strongest type weaker than X is H | I
+    '''
+
     '''
     NOTE: related to strongest-post concept
 
@@ -543,8 +549,6 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
     ---------------
 
     -------------
-    TODO: must externally ensure that the type is weaker than the weaker-than constraints:
-    H <: X, I <: X - the strongest type weaker than X is H | I
     '''
 
     typs_strengthen = [
@@ -1317,10 +1321,7 @@ class ExprRule(Rule):
 
     def distill_let_contin(self, id : str, target : Typ) -> Nonterm:
         '''
-        TODO: add check that target is well typed (not bottom)
-        -- if target is not well typed, then adding to environment is unsound 
-        -- universal with existential body is the same as (Remy's) universal with existential constraint. 
-        -- if existential constraint is not false; i.e if target is well typed. 
+        assumption: target type is assumed to be well formed / inhabitable
         '''
         free_ids = extract_free_vars_from_typ(pset(), target)
         target_generalized = IdxInter(list(free_ids), [], target)

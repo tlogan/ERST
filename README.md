@@ -2,18 +2,16 @@
 
 
 ### TODO
-- add check that target type is well formed (not bottom) in `distill_let_contin`
-- modify right/strong var rule to collect constraints for which the strong variable X is on LHS
-    - resolve constraints with weak subbed in for X. 
-- write algorithmic inference rules as a combination of combine/distill rules 
-    - distill rules construct a new environment; combine rules construct a new type
-- implement caching for streaming parsing
-- encode fibonacci as an example to motivate 2-induction and test k-induction.
-- add examples with type annotations 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
-- update collect and guide_choice rules to memo(r)ize
-- use renaming/nameless representation lazily (just for equality modulo alpha renaming)
+    - inferring max
+    - encode fibonacci as an example to motivate 2-induction and test k-induction.
+    - type annotations 
+    - subtyping 
+- implement caching for streaming parsing
+    - update collect and guide_choice rules to memo(r)ize
+- for paper, write algorithmic inference rules as a combination of combine/distill rules 
+    - distill rules construct a new environment; combine rules construct a new type
 
 ### Implementation 
 - avoid recursion, which has poor performance in python.
