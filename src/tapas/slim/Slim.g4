@@ -121,6 +121,15 @@ $combo = [$ID.text] ++ $ids.combo
 
 typ_base returns [Typ combo] : 
 
+
+| 'top' {
+$combo = Top() 
+}
+
+| 'bot' {
+$combo = Bot() 
+}
+
 | ID {
 $combo = TVar($ID.text) 
 }

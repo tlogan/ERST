@@ -16,6 +16,7 @@ from pyrsistent import m, s, pmap, pset
 
 from contextlib import contextmanager
 
+from tapas import util_system
 
 T = TypeVar('T')
 R = TypeVar('R')
@@ -216,34 +217,6 @@ class Subtyping:
     weak : Typ
 
 
-def make_stack_machine(
-    make_plate : Callable[[T], tuple[list[T], Callable, list[R]]], 
-) -> Callable[[T], R] :
-    def run(start : T):
-        result = None 
-        stack : list[tuple[list[T], Callable, list[R]]]= [([start], (lambda x : x), [])]
-
-        while len(stack) > 0 :
-            (controls, combine, args) = stack.pop()
-
-            if result:
-                args.append(result)
-
-            if len(controls) == 0:
-                result = combine(*args)
-            else:
-                result = None 
-                control = controls.pop(0)
-                plate = make_plate(control)
-                stack.append((controls, combine, args))
-                stack.append(plate)
-
-            pass
-
-        assert result
-        return result
-    return run
-
 def concretize_ids(ids : list[str]) -> str:
     return ", ".join(ids)
 
@@ -254,44 +227,44 @@ def concretize_constraints(subtypings : list[Subtyping]) -> str:
     ])
 
 def concretize_typ(typ : Typ) -> str:
-    def make_plate (control : Typ):
+    def make_plate_entry (control : Typ):
         if False: 
             pass
         elif isinstance(control, TVar):
-            plate = ([], lambda: control.id, [])  
+            plate_entry = ([], lambda: control.id)  
         elif isinstance(control, TUnit):
-            plate = ([], lambda: "@", [])  
+            plate_entry = ([], lambda: "@")  
         elif isinstance(control, TTag):
-            plate = ([control.body], lambda body : f":{control.label} {body}", [])  
+            plate_entry = ([control.body], lambda body : f":{control.label} {body}")  
         elif isinstance(control, TField):
-            plate = ([control.body], lambda body : f"{control.label} : {body}", [])  
+            plate_entry = ([control.body], lambda body : f"{control.label} : {body}")  
         elif isinstance(control, Imp):
-            plate = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})", [])  
+            plate_entry = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})")  
         elif isinstance(control, Unio):
-            plate = ([control.left,control.right], lambda left, right : f"({left} | {right})", [])  
+            plate_entry = ([control.left,control.right], lambda left, right : f"({left} | {right})")  
         elif isinstance(control, Inter):
-            plate = ([control.left,control.right], lambda left, right : f"({left} & {right})", [])  
+            plate_entry = ([control.left,control.right], lambda left, right : f"({left} & {right})")  
         elif isinstance(control, Diff):
-            plate = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})", [])  
+            plate_entry = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})")  
         elif isinstance(control, IdxUnio):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}", [])  
+            plate_entry = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}")  
         elif isinstance(control, IdxInter):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate = ([control.body], lambda body : f"[{ids} . {constraints}] {body}", [])  
+            plate_entry = ([control.body], lambda body : f"[{ids} . {constraints}] {body}")  
         elif isinstance(control, Least):
             id = control.id
-            plate = ([control.body], lambda body : f"least {id} with {body}", [])  
+            plate_entry = ([control.body], lambda body : f"least {id} with {body}")  
         elif isinstance(control, Top):
-            plate = ([], lambda: "top", [])  
+            plate_entry = ([], lambda: "top")  
         elif isinstance(control, Bot):
-            plate = ([], lambda: "bot", [])  
+            plate_entry = ([], lambda: "bot")  
 
-        return plate
+        return plate_entry
 
-    return make_stack_machine(make_plate)(typ)
+    return util_system.make_stack_machine(make_plate_entry)(typ)
 
 
 
@@ -425,7 +398,7 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:
     elif isinstance(t, Inter):
         left = extract_paths(t.left) 
         right = extract_paths(t.right)
-        return PSet.union(left, right)
+        return left.union(right)
     elif isinstance(t, TField):
         body = t.body
         if isinstance(body, TVar) and (not tvar or tvar.id == body.id):
@@ -649,69 +622,73 @@ end sub_constraints
 '''
 
 def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
-    if False:
-        assert False
-    elif isinstance(typ, TVar):
-        if typ.id not in bound_vars:
-            return pset(typ.id)
-        else:
-            return pset()
-    elif isinstance(typ, TUnit):
-        return pset()
-    elif isinstance(typ, TTag):
-        return extract_free_vars_from_typ(bound_vars, typ.body)
-    elif isinstance(typ, TField):
-        return extract_free_vars_from_typ(bound_vars, typ.body)
-    elif isinstance(typ, Unio):
-        return PSet.union(
-            extract_free_vars_from_typ(bound_vars, typ.left),
-            extract_free_vars_from_typ(bound_vars, typ.right),
-        ) 
-    elif isinstance(typ, Inter):
-        return PSet.union(
-            extract_free_vars_from_typ(bound_vars, typ.left),
-            extract_free_vars_from_typ(bound_vars, typ.right),
-        ) 
-    elif isinstance(typ, Diff):
-        return PSet.union(
-            extract_free_vars_from_typ(bound_vars, typ.context),
-            extract_free_vars_from_typ(bound_vars, typ.negation),
-        ) 
-    elif isinstance(typ, Imp):
-        return PSet.union(
-            extract_free_vars_from_typ(bound_vars, typ.antec),
-            extract_free_vars_from_typ(bound_vars, typ.consq),
-        ) 
-    elif isinstance(typ, IdxUnio):
-        bound_vars = PSet.union(bound_vars, typ.ids)
-        return PSet.union(
-            extract_free_vars_from_constraints(bound_vars, typ.constraints),
-            extract_free_vars_from_typ(bound_vars, typ.body),
-        )
-    elif isinstance(typ, IdxInter):
-        bound_vars = PSet.union(bound_vars, typ.ids)
-        return PSet.union(
-            extract_free_vars_from_constraints(bound_vars, typ.constraints),
-            extract_free_vars_from_typ(bound_vars, typ.body),
-        )
-    elif isinstance(typ, Least):
-        bound_vars = bound_vars.add(typ.id)
-        return extract_free_vars_from_typ(bound_vars, typ.body)
-    elif isinstance(typ, Bot):
-        return pset()
-    elif isinstance(typ, Top):
-        return pset()
+
+    def pair_up(bound_vars, items) -> list:
+        return [
+            (bound_vars, item)
+            for item in items
+        ]
+
+    def make_plate_entry(control_pair : tuple[PSet[str], Typ]):
+
+        bound_vars = control_pair[0]
+        typ : Typ = control_pair[1]
+
+        if False:
+            assert False
+        elif isinstance(typ, TVar) and typ.id not in bound_vars:
+            plate_entry = ([], lambda : pset().add(typ.id))
+        elif isinstance(typ, TVar) :
+            plate_entry = ([], lambda : pset())
+        elif isinstance(typ, TUnit):
+            plate_entry = ([], lambda : pset())
+        elif isinstance(typ, TTag):
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_bodyA: set_bodyA)
+        elif isinstance(typ, TField):
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
+        elif isinstance(typ, Unio):
+            plate_entry = (pair_up(bound_vars, [typ.left, typ.right]), lambda set_left, set_right: set_left.union(set_right))
+        elif isinstance(typ, Inter):
+            plate_entry = (pair_up(bound_vars, [typ.left, typ.right]), lambda set_left, set_right: set_left.union(set_right))
+        elif isinstance(typ, Diff):
+            plate_entry = (pair_up(bound_vars, [typ.context, typ.negation]), lambda set_context, set_negation: set_context.union(set_negation))
+        elif isinstance(typ, Imp):
+            plate_entry = (pair_up(bound_vars, [typ.antec, typ.consq]), lambda set_antec, set_consq: set_antec.union(set_consq))
+        elif isinstance(typ, IdxUnio):
+            bound_vars = bound_vars.union(typ.ids)
+            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
+
+        elif isinstance(typ, IdxInter):
+            bound_vars = bound_vars.union(typ.ids)
+            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
+
+        elif isinstance(typ, Least):
+            bound_vars = bound_vars.add(typ.id)
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
+
+        elif isinstance(typ, Bot):
+            plate_entry = ([], lambda : pset())
+
+        elif isinstance(typ, Top):
+            plate_entry = ([], lambda : pset())
+
+        return plate_entry
+
+    return util_system.make_stack_machine(make_plate_entry)((bound_vars, typ))
 '''
 end extract_free_vars_from_typ
 '''
 
-
 def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
     result = pset()
     for st in constraints:
-        result = PSet.union(result, 
-            PSet.union(extract_free_vars_from_typ(bound_vars, st.strong), 
-                extract_free_vars_from_typ(bound_vars, st.weak)))
+        result = (
+            result
+            .union(extract_free_vars_from_typ(bound_vars, st.strong))
+            .union(extract_free_vars_from_typ(bound_vars, st.weak))
+        )
 
     return result
 
@@ -744,10 +721,10 @@ def package_typ(premises : list[Premise], typ : Typ) -> Typ:
         constraints = pset()
         for id_base in ids_base: 
             constraints_reachable = extract_reachable_constraints(premise.model, id_base, constraints)
-            constraints = PSet.union(constraints, constraints_reachable)
+             #constraints = constraints.union(constraints_reachable)
 
         ids_constraints = extract_free_vars_from_constraints(pset(), constraints)
-        ids_bound = PSet.intersection(premise.freezer, ids_constraints)
+        ids_bound = premise.freezer.intersection(ids_constraints)
 
         typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
         typ_result = Unio(typ_idx_unio, typ_result)

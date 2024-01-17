@@ -16,7 +16,7 @@ from tapas.slim import analyzer, language
 
 from tapas.util_system import box, unbox
 
-from pyrsistent import m, pmap, v
+from pyrsistent import m, s, pmap, pset
 
 import pytest
 
@@ -201,6 +201,7 @@ def test_projection():
 (:uno = @ :dos = @).uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
     assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @)))))) )) (keychain . uno))"
 
 def test_projection_chain():
@@ -319,8 +320,6 @@ least self with :nil @ | :cons self
     assert c == "least self with (:nil @ | :cons self)"
 
 if __name__ == '__main__':
-    test_type_least()
-
     pass
 
 #######################################################################
