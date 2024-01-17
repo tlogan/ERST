@@ -787,56 +787,29 @@ class Solver:
         #######################################
 
         elif isinstance(weak, TVar): 
-            # TODO: ensure this rule is safe
             frozen = weak.id in premise.freezer
-            if frozen:
-                '''
-                find constraints of weak.id and sub in the strong type
-
-                (P, weak) <: U
-                weak <: T 
-                |-
-                strong <: weak
-                ============================
-                (P, strong) <: U
-                strong <: T 
-                '''
-
-                constraints = extract_constraints_with_id(premise.model, weak.id)
-                constraints_subbed = [
-                    Subtyping(
-                        sub_typ(pmap({weak.id : strong}), st.strong),
-                        sub_typ(pmap({weak.id : strong}), st.weak)
-                    )
-                    for st in constraints
-
-                ] 
-
-                premises = [premise]
-                for constraint in constraints_subbed:
-                    premises = [
-                        p2
-                        for p1 in premises
-                        for p2 in self.solve(p1, constraint.strong, constraint.weak)
-                    ]  
-                return premises
-
+            weak_strongest_weaker = extract_strongest_weaker(premise.model, weak.id)
+            solution = self.solve(premise, strong, weak_strongest_weaker)
+            if solution:
+                if frozen:
+                    return solution
+                else:
+                    '''
+                    add constraint and wait for more information
+                    '''
+                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
             else:
-                # TODO: collect constraints where weak.id is on RHS of constraint 
-                # sub in strong for weak and solve the new constraints. 
-                # if empty; then simply add new constraint 
-                premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
-                return [premise]
+                return []
 
         elif isinstance(strong, TVar): 
             frozen = strong.id in premise.freezer
             if frozen:
-                strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+                strong_strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
                 '''
                 NOTE: 
-                assumption: strongest_weaker is already safe wrt existing weaker-than constraints 
+                assumption: strong_strongest_weaker is already safe wrt existing stronger types 
                 '''
-                return self.solve(premise, strongest_weaker, weak) 
+                return self.solve(premise, strong_strongest_weaker, weak) 
             else:
                 '''
                 NOTE: ensure that (U <: Weak) before adding (Strong <: Weak)  
