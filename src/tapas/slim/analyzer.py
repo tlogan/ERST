@@ -1149,7 +1149,7 @@ class BaseRule(Rule):
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
 
-        return IdxUnio([var_antec.id], [Subtyping(var_antec, antec)],
+        return IdxInter([var_antec.id], [Subtyping(var_antec, antec)],
             Imp(
                 var_antec,
                 IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
@@ -1286,7 +1286,8 @@ class ExprRule(Rule):
 
         tvar_fixy = self.solver.fresh_type_var()
 
-        typ_unio = Bot()
+        rel_unio = Bot()
+        antec_unio = Bot()
         for premise in reversed(solution):
             typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
             typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
@@ -1298,15 +1299,25 @@ class ExprRule(Rule):
                 model = premise.model.add(Subtyping(typ_self_pair, tvar_fixy))
                 premise = Premise(model, premise.freezer)
 
-            typ_choice = package_typ([premise], typ_content_pair) 
-            typ_unio = Unio(typ_choice, typ_unio) 
+            rel_choice = package_typ([premise], typ_content_pair) 
+            rel_unio = Unio(rel_choice, rel_unio) 
+
+            antec_choice = package_typ([premise], typ_content_in) 
+            antec_unio = Unio(antec_choice, antec_unio) 
 
 
-        rel = Least(tvar_fixy.id, typ_unio)
+        rel = Least(tvar_fixy.id, rel_unio)
+        antec = Least(tvar_fixy.id, antec_unio)
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
-        return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
+
+        return IdxInter([var_antec.id], [Subtyping(var_antec, antec)],
+            Imp(
+                var_antec,
+                IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
+            )
+        )   
     
     def distill_let_target(self, id : str) -> Nonterm:
         return Nonterm('target', self.nt.enviro, Top())

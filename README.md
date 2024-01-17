@@ -2,7 +2,6 @@
 
 
 ### TODO
-- modify `combine_fix` to construct universally quantified type over cases
 - add check that target type is well formed (not bottom) in `distill_let_contin`
 - modify right/strong var rule to collect constraints for which the strong variable X is on LHS
     - resolve constraints with weak subbed in for X. 
