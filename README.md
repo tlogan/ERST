@@ -2,14 +2,12 @@
 
 
 ### TODO
-- modify `combine_function` and `combine_fix` to construct universally quantified type over cases
-    - we should simply universally quantify each function introduction?
-        - e.g. fun x => g(x) : X -> Y vs [X . X <: T] X -> Y. T may have a free variables   
-        - generalization will generalize the free variables in T.
-- finish implementing combine/distill procedures
-- add check that target is well typed (not bottom) in `distill_let_contin`
+- modify `combine_fix` to construct universally quantified type over cases
+- add check that target type is well formed (not bottom) in `distill_let_contin`
 - modify right/strong var rule to collect constraints for which the strong variable X is on LHS
     - resolve constraints with weak subbed in for X. 
+- write algorithmic inference rules as a combination of combine/distill rules 
+    - distill rules construct a new environment; combine rules construct a new type
 - implement caching for streaming parsing
 - encode fibonacci as an example to motivate 2-induction and test k-induction.
 - add examples with type annotations 

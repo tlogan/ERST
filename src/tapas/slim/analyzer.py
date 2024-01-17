@@ -1129,31 +1129,32 @@ class BaseRule(Rule):
 
     def combine_function(self, cases : list[Imp]) -> Typ:
         '''
+        Example
+        ==============
         nil -> zero
         cons A -> succ B 
         --------------------
-
-        TODO: this is WRONG!!! change this!
-        Construct an existential with the input variable free and the return variable bound 
-        {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} X -> Y   
-
-        TODO: this is CORRECT!!! do this!
-        ----- generalization with universal will happen in let-binding rule
-        [X . X <: nil | cons A] | -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
+        [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
         choices = from_cases_to_choices(cases)
         rel = Bot() 
         for choice in reversed(choices): 
             rel = Unio(make_pair_typ(*choice), rel)
 
+        antec = Bot()  
+        for case in reversed(cases): 
+            antec = Unio(case.antec, antec)
+
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
 
-        # TODO: consider modifying combine_function to add antecedent to bound variables
-
-        return IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], Imp(var_antec, var_concl))
-
+        return IdxUnio([var_antec.id], [Subtyping(var_antec, antec)],
+            Imp(
+                var_antec,
+                IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
+            )
+        )   
 
 
 class ExprRule(Rule):
