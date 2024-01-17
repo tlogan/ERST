@@ -2,6 +2,9 @@
 
 
 ### TODO
+
+- ensure this weak-var rule is safe
+- must ensure the strongest type is weaker than the types in weaker-than constraints 
 - add check that target type is well formed (not bottom) in `distill_let_contin`
 - modify right/strong var rule to collect constraints for which the strong variable X is on LHS
     - resolve constraints with weak subbed in for X. 

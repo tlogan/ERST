@@ -26,12 +26,6 @@ Op = Optional
 """
 Typ data types
 """
-# TODO: type concrete syntax
-# Field ==> - :uno = expr :uno = expr
-# TField ==> uno : typ & dos : typ 
-# Tag  ==> :tag :tag :tag typ 
-# TTag  ==> ^cons x * ^cons y * ^nil unit 
-# TTag  ==> :cons x, :cons y, :nil unit 
 
 @dataclass(frozen=True, eq=True)
 class TVar:
@@ -342,17 +336,13 @@ class Nonterm:
     typ : Typ
 
 
-# TODO: the interpretation could map type patterns to types, rather than merely strings
-# -- in order to handle subtyping of relational types
-# Interp = PMap[str, Typ]
-
-
-
 
 '''
 NOTE: 
 Freezer dictates when the strongest solution for a variable is found.
 The assignment map could be tracked, or computed lazily when variable is used. 
+
+NOTE: frozen variables correspond to hidden type information of existential/indexed union.
 
 NOTE: freezing variables corresponds to refining predicates from duality interpolation in CHC
 '''
@@ -552,7 +542,8 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
     -- e.g. (A, B, C, L) <: (Least I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
     ---------------
 
-    Step 3: RHS variable simple constraints:
+    -------------
+    TODO: must externally ensure that the type is weaker than the weaker-than constraints:
     H <: X, I <: X - the strongest type weaker than X is H | I
     '''
 
@@ -580,22 +571,17 @@ def extract_strongest_weaker(model : Model, id : str) -> Typ:
             typ_labeled = factor_path(path, st.strong)
             typ_factored = Inter(typ_labeled, typ_factored)
 
+    typ_final = Inter(typ_strong, typ_factored)
 
+    return typ_final 
 
-    typs_weaken = [
+def extract_strongers(model : Model, id : str) -> PSet[Typ]:
+    return pset(
         st.strong
         for st in model
         if st.weak == TVar(id)
-    ]
+    )
 
-    typ_weak = Bot() 
-    for t in reversed(typs_weaken):
-        typ_weak = Inter(t, typ_weak) 
-
-
-    typ_final = Inter(typ_strong, Inter(typ_factored, typ_weak))
-
-    return typ_final 
 
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
     return pset(
@@ -801,11 +787,21 @@ class Solver:
         #######################################
 
         elif isinstance(weak, TVar): 
+            # TODO: ensure this rule is safe
             frozen = weak.id in premise.freezer
             if frozen:
                 '''
-                find constraints of weak.d and  sub in the strong type
+                find constraints of weak.id and sub in the strong type
+
+                (P, weak) <: U
+                weak <: T 
+                |-
+                strong <: weak
+                ============================
+                (P, strong) <: U
+                strong <: T 
                 '''
+
                 constraints = extract_constraints_with_id(premise.model, weak.id)
                 constraints_subbed = [
                     Subtyping(
@@ -826,6 +822,9 @@ class Solver:
                 return premises
 
             else:
+                # TODO: collect constraints where weak.id is on RHS of constraint 
+                # sub in strong for weak and solve the new constraints. 
+                # if empty; then simply add new constraint 
                 premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
                 return [premise]
 
@@ -833,12 +832,33 @@ class Solver:
             frozen = strong.id in premise.freezer
             if frozen:
                 strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+                '''
+                NOTE: 
+                assumption: strongest_weaker is already safe wrt existing weaker-than constraints 
+                '''
                 return self.solve(premise, strongest_weaker, weak) 
             else:
-                # TODO: collect constraints where strong.id is on LHS of constraint 
-                # sub in weak for strong and solve the new constraints. 
-                premise = Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)
-                return [premise]
+                '''
+                NOTE: ensure that (U <: Weak) before adding (Strong <: Weak)  
+                
+                U <: Strong 
+                |-
+                Strong <: Weak 
+                '''
+
+                strongers = extract_strongers(premise.model, strong.id)
+                if (
+                    any(
+                        not self.solve(premise, stronger, weak) 
+                        for stronger in strongers 
+                    )
+                ) :
+                    '''
+                    failure
+                    '''
+                    return []
+                else:
+                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
 
         #######################################
         #### Model rules: ####
