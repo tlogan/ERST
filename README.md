@@ -2,6 +2,97 @@
 
 
 ### TODO
+- determine if intersection types can be subsumed by constrained universal types with union 
+    - e.g. [X <: (S | T) | U] X === ([X <: S | T] X) & U ==== ([X <: S] X) & T & U === S & U & T 
+    - e.g. [X <: T | U] X -> {Y. (X, Y) <: (T, A) | (U, B)} === (T -> A) & (U -> B) 
+- understand why union in super F constraints paper is defined differently
+- understand what polarity types are and how they are related to relational typing
+- implement and use extract_weakest_stronger for extracting return type from application
+    - use unions
+    - e.g. in T <: X, U <: X, the weakest type stronger than X is T | U
+- consider two ways to type a function (constrained implication vs indexed intersection)
+    - constrained implication is construction from function introduction (in case a fixedpoint relation is used)
+    - indexed intersection is constructed from constraint solving 
+    - both reduce to the same solution in application 
+    ```
+    ==============================
+    case _ : A => _ : T 
+    case _ : B => _ : U 
+    --------------------
+    -- infer
+    --------------------
+    [X <: A | B] X -> {Y . (Z, Y) <: (A, T) | (B\A, U)} Y
+    ==============================
+
+
+    ==============================
+    [X <: A | B] X -> {Y . (Z, Y) <: (A, T) | (B\A, U)} Y <: P -> Q
+    --------------------
+    -- application of constrained implication
+    --------------------
+    P <: A | B
+    P -> {Y . (P, Y) <: (A, T) | (B\A, U)} Y <: P -> Q
+    --------------------
+    {Y . (P, Y) <: (A, T) | (B\A, U)} Y <: Q
+    --------------------
+    (P, Y) <: (A, T) | (B\A, U)  :: Y frozen 
+    |-
+    Y <: Q
+    --------------------
+    (P, Y) <: (A, T) |- Y <: Q :: Y frozen || 
+    (P, Y) <: (B\A, U) |- Y <: Q :: Y frozen
+    --------------------
+    P <: A, T <: Q  ||  P <: B\A, U <: Q 
+    ==============================
+
+
+    ==============================
+    (A -> T & B\A -> U) <: P -> Q
+    --------------------
+    -- application of intersection implication
+    --------------------
+    A -> T <: P -> Q  ||  B\A -> U <: P -> Q
+    P <: A, T <: Q    ||  P <: B\A, U <: Q 
+    ==============================
+    -- P is in neg position
+    -- Q is in pos position
+    ------------------------------
+
+    ```
+- Check if special antecedent union rule is necessary 
+- Check that special consequent intersection isn't necessary 
+    - basic intersection rule is not expressive enough
+    ```
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    P -> A <: T -> U  ||  P -> B <: T -> U
+    ------------------------------
+    P -> A <: T -> U  ||  P -> B <: T -> U
+    ------------------------------
+    T <: P, A <: U  ||  T <: P, B <: U    
+
+    =========================================
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    (P -> A & B) <: T -> U
+    ------------------------------
+    T <: P, A & B <: U    
+    ------------------------------
+    A <: U || B <: U
+
+    =========================================
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    [X <: P] X -> {Y. (X,Y) <: (P, A) | (P, B)} Y <: T -> U
+    ------------------------------
+    T <: P
+    {Y. (P,Y) <: (P, A) | (P, B)} Y <: U
+    ------------------------------
+    Y <: A # Y frozen |- Y <: U || 
+    Y <: B # Y frozen |- Y <: U 
+    ------------------------------
+    A <: U || B <: U
+    ```
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
@@ -12,6 +103,20 @@
     - update collect and guide_choice rules to memo(r)ize
 - for paper, write algorithmic inference rules as a combination of combine/distill rules 
     - distill rules construct a new environment; combine rules construct a new type
+- for paper, note that much of type reconstruction is handled in solving subtyping
+    - this puts intersection/union rules in subtyping instead of typing
+    - indirectly in typing via subsumption
+- for paper, note why both intro and elim rules are bidirectional
+    - basic bidirectional typing has checking for intro rules and synthesis for elimination rules 
+        - type and program are both provided
+    - roundtrip typing has checking for intro rules and both checking and synthesis for elimination rules
+        - program is not provided
+        - checking is necessary for both as the type guides synthesis
+    - contextual typing has both checking and synthesis for intro and elim rules
+        - parts of type are not provided
+        - parts of program are not provided
+        - synthesis for intro is necessary to construct type
+        - checking for elim is necessary to construct program  
 
 ### Implementation 
 - avoid recursion, which has poor performance in python.

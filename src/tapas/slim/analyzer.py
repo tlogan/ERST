@@ -901,6 +901,7 @@ class Solver:
             ]
 
         elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
+            # TODO: remove; doesn't seem to be necessary
             '''
             consequent intersection: strong <: (TA -> (T1 & T2))
             P -> A & P -> B ~~~ P -> A & B 
