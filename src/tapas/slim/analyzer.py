@@ -656,12 +656,14 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = (pair_up(bound_vars, [typ.antec, typ.consq]), lambda set_antec, set_consq: set_antec.union(set_consq))
         elif isinstance(typ, IdxUnio):
             bound_vars = bound_vars.union(typ.ids)
-            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            # set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            set_constraints = pset()
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, IdxInter):
             bound_vars = bound_vars.union(typ.ids)
-            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            # set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            set_constraints = pset()
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, Least):
@@ -699,13 +701,13 @@ def is_variable_unassigned(premise : Premise, id : str) -> bool:
         True
     )
 
-def extract_reachable_constraints(model : Model, id : str, constraints : PSet[Subtyping]) -> PSet[Subtyping]:
-    constraints_with_id = extract_constraints_with_id(model, id) 
-    diff = constraints_with_id.difference(constraints)
-    ids = extract_free_vars_from_constraints(pset(), diff)
+def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
+    constraints = extract_constraints_with_id(model, id) 
+    ids_seen = ids_seen.add(id)
+    ids = extract_free_vars_from_constraints(pset(), constraints).difference(ids_seen)
     for id in ids:
         constraints = constraints.union(
-            extract_reachable_constraints(model, id, constraints)
+            extract_reachable_constraints(model, id, ids_seen)
         ) 
 
     return constraints 
@@ -720,8 +722,8 @@ def package_typ(premises : list[Premise], typ : Typ) -> Typ:
     for premise in premises:
         constraints = pset()
         for id_base in ids_base: 
-            constraints_reachable = extract_reachable_constraints(premise.model, id_base, constraints)
-             #constraints = constraints.union(constraints_reachable)
+            constraints_reachable = extract_reachable_constraints(premise.model, id_base, pset())
+            constraints = constraints.union(constraints_reachable)
 
         ids_constraints = extract_free_vars_from_constraints(pset(), constraints)
         ids_bound = premise.freezer.intersection(ids_constraints)
