@@ -498,15 +498,19 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def extract_strongest_weaker(model : Model, id : str) -> Typ:
+def extract_weakest_stronger(model : Model, id : str) -> Typ:
+    '''
+    extract the the weakest type that is stronger than id's weaker
+    e.g. given: X <: T, X <: U. the weakest type stronger than T and stronger than U is T & U.
+    '''
 
     '''
-    assumption: strongest weaker is weaker than the stronger types of id:
-    H <: X, I <: X - the strongest type weaker than X is H | I
+    assumption: weakest stronger is weaker than the stronger types of id:
+    H <: X, I <: X - the weakest stronger type is weaker than H | I
     '''
 
     '''
-    NOTE: related to strongest-post concept
+    NOTE: related to weakest precondition concept
 
     Step 1: LHS variable in simple constraints:
     X <: A, X <: B - the strongest type weaker than X is A & B,
@@ -771,7 +775,7 @@ class Solver:
 
         elif isinstance(weak, TVar): 
             frozen = weak.id in premise.freezer
-            weak_strongest_weaker = extract_strongest_weaker(premise.model, weak.id)
+            weak_strongest_weaker = extract_weakest_stronger(premise.model, weak.id)
             solution = self.solve(premise, strong, weak_strongest_weaker)
             if solution:
                 if frozen:
@@ -787,7 +791,7 @@ class Solver:
         elif isinstance(strong, TVar): 
             frozen = strong.id in premise.freezer
             if frozen:
-                strong_strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+                strong_strongest_weaker = extract_weakest_stronger(premise.model, strong.id)
                 '''
                 NOTE: 
                 assumption: strong_strongest_weaker is already safe wrt existing stronger types 

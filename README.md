@@ -2,9 +2,10 @@
 
 
 ### TODO
-- implement and use extract_weakest_stronger for extracting return type from application
+- implement and use extract_strongest_weaker (principal) for extracting return type from application
     - use unions
-    - e.g. in T <: X, U <: X, the weakest type stronger than X is T | U
+    - e.g. in T <: X, U <: X, the strongest type weaker than T and weaker than U is T | U
+    - e.g strongest that is weaker than T and weaker than U 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max

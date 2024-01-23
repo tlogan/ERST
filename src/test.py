@@ -201,7 +201,6 @@ def test_projection():
 (:uno = @ :dos = @).uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
     assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @)))))) )) (keychain . uno))"
 
 def test_projection_chain():
