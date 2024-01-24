@@ -499,35 +499,12 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
     return None
 
 def extract_weakest_stronger(model : Model, id : str) -> Typ:
-    '''
-    extract the the weakest type that is stronger than id's weaker
-    e.g. given: X <: T, X <: U. the weakest type stronger than T and stronger than U is T & U.
-    '''
 
     '''
-    assumption: weakest stronger is weaker than the stronger types of id:
-    H <: X, I <: X - the weakest stronger type is weaker than H | I
-    '''
-
-    '''
+    for constraints X <: T, <: U; find weakest type stronger than T, stronger than U
+    which is T & U.
     NOTE: related to weakest precondition concept
-
-    Step 1: LHS variable in simple constraints:
-    X <: A, X <: B - the strongest type weaker than X is A & B,
-    --------
-
-
-    Step 2: LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
-    case relational: if variable is part of relational constraint, factor out type from rhs
-    case simple: otherwise, extract rhs
-    -- NOTE: relational constraints are restricted to record types of variables
-    -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of Least
-    -- e.g. (A, B, C, L) <: (Least I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
-    ---------------
-
-    -------------
     '''
-
     typs_strengthen = [
         st.weak
         for st in model
@@ -538,6 +515,15 @@ def extract_weakest_stronger(model : Model, id : str) -> Typ:
         typ_strong = Inter(t, typ_strong) 
 
 
+    '''
+    LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
+    case relational: if variable is part of relational constraint, factor out type from rhs
+    case simple: otherwise, extract rhs
+    -- NOTE: relational constraints are restricted to record types of variables
+    -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of Least
+    -- e.g. (A, B, C, L) <: (Least I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
+    ---------------
+    '''
     constraints_relational = [
         st
         for st in model
@@ -555,6 +541,22 @@ def extract_weakest_stronger(model : Model, id : str) -> Typ:
     typ_final = Inter(typ_strong, typ_factored)
 
     return typ_final 
+
+def extract_strongest_weaker(model : Model, id : str) -> Typ:
+    '''
+    for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
+    which is T | U.
+    NOTE: related to strongest postcondition concept
+    '''
+    typs_weaken = [
+        st.strong
+        for st in model
+        if st.weak == TVar(id)
+    ]
+    typ_weak = Bot() 
+    for t in reversed(typs_weaken):
+        typ_weak = Unio(t, typ_weak) 
+    return typ_weak
 
 def extract_strongers(model : Model, id : str) -> PSet[Typ]:
     return pset(
@@ -774,51 +776,46 @@ class Solver:
         #######################################
 
         elif isinstance(weak, TVar): 
+            '''
+            T <: X
+            '''
             frozen = weak.id in premise.freezer
-            weak_strongest_weaker = extract_weakest_stronger(premise.model, weak.id)
-            solution = self.solve(premise, strong, weak_strongest_weaker)
-            if solution:
-                if frozen:
-                    return solution
-                else:
-                    '''
-                    add constraint and wait for more information
-                    '''
-                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+            if frozen:
+                strongest_weaker = extract_strongest_weaker(premise.model, weak.id)
+                return self.solve(premise, strong, strongest_weaker)
             else:
-                return []
+                '''
+                ensure constraint is consistent with weakest_stronger
+                X <: U, T <: X iff T <: U
+                add constraint and wait for more information
+                '''
+                weakest_stronger = extract_weakest_stronger(premise.model, weak.id)
+                consistent = bool(self.solve(premise, strong, weakest_stronger))
+                if consistent:
+                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+                else:
+                    return []
 
         elif isinstance(strong, TVar): 
+            '''
+            X <: T
+            '''
             frozen = strong.id in premise.freezer
             if frozen:
-                strong_strongest_weaker = extract_weakest_stronger(premise.model, strong.id)
-                '''
-                NOTE: 
-                assumption: strong_strongest_weaker is already safe wrt existing stronger types 
-                '''
-                return self.solve(premise, strong_strongest_weaker, weak) 
+                weakest_stronger = extract_weakest_stronger(premise.model, strong.id)
+                return self.solve(premise, weakest_stronger, weak) 
             else:
                 '''
-                NOTE: ensure that (U <: Weak) before adding (Strong <: Weak)  
-                
-                U <: Strong 
-                |-
-                Strong <: Weak 
+                ensure constraint is consistent with strongest_weaker
+                U <: X, X <: T iff U <: T 
+                add constraint and wait for more information
                 '''
-
-                strongers = extract_strongers(premise.model, strong.id)
-                if (
-                    any(
-                        not self.solve(premise, stronger, weak) 
-                        for stronger in strongers 
-                    )
-                ) :
-                    '''
-                    failure
-                    '''
-                    return []
-                else:
+                strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+                consistent = bool(self.solve(premise, strongest_weaker, weak))
+                if consistent:
                     return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+                else:
+                    return []
 
         #######################################
         #### Model rules: ####
@@ -1218,6 +1215,12 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
+
+        '''
+        TODO: extract strongest weaker for return type of application 
+        '''
+
+
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
