@@ -1215,16 +1215,18 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
-
-        '''
-        TODO: extract strongest weaker for return type of application 
-        '''
-
-
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve_composition(answr_i, Imp(argument, answr))
+            '''
+            extract strongest weaker to use as return type
+            '''
+            solution = [
+                Premise(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
+                for p0 in self.solver.solve_composition(answr_i, Imp(argument, answr))
+                for typ_return in [extract_strongest_weaker(p0.model, answr.id)]
+            ]
+
             answr_i = package_typ(solution, answr)
 
         return answr_i

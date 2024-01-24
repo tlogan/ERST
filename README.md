@@ -2,8 +2,6 @@
 
 
 ### TODO
-- in application, turn lower bound from `extract_strongest_weaker` into an upper bound. 
-    - can think of returning as flipping from expected type to actual type
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
