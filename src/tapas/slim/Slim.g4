@@ -185,18 +185,20 @@ $combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo))
 }
 
 // indexed union
-//  {P <: T, ...}     
 | '{' ids '.' qualification '}' typ {
 $combo = IdxUnio($ids.combo, $qualification.combo, $typ.combo) 
 }
 
+// indexed intersection default
+| '[' ID ']' body = typ {
+$combo = IdxInter($ID.text, Top(), $body.combo) 
+}
 
 // indexed intersection
-// [P <: T, ...] T 
-// [T <: X -> Y, ...] :a X -> :b Y 
-| '[' ids '.' qualification ']' typ {
-$combo = IdxInter($ids.combo, $qualification.combo, $typ.combo) 
+| '[' ID '<:' upper = typ ']' body = typ {
+$combo = IdxInter($ID.text, $upper.combo, $body.combo) 
 }
+
 
 
 //induction // least fixed point; smallest set such that typ <: ID is invariant

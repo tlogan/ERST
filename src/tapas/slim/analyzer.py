@@ -74,8 +74,8 @@ class IdxUnio:
 
 @dataclass(frozen=True, eq=True)
 class IdxInter:
-    ids : list[str]
-    constraints : list[Subtyping] 
+    id : str
+    upper : Typ 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
@@ -139,8 +139,7 @@ class IdxUnioNL:
 
 @dataclass(frozen=True, eq=True)
 class IdxInterNL:
-    count : int
-    constraints : list[SubtypingNL] 
+    upper : NL 
     body : NL 
 
 @dataclass(frozen=True, eq=True)
@@ -188,14 +187,8 @@ def to_nameless(bound_ids : list[str], typ : Typ) -> NL:
         return IdxUnioNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, IdxInter):
-        count = len(typ.ids)
-        bound_ids = typ.ids + bound_ids
-
-        constraints_nl = [
-            SubtypingNL(to_nameless(bound_ids, st.strong), to_nameless(bound_ids, st.weak))
-            for st in typ.constraints
-        ]
-        return IdxInterNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
+        bound_ids = [typ.id] + bound_ids
+        return IdxInterNL(to_nameless(bound_ids, typ.upper), to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, Least):
         bound_ids = [typ.id] + bound_ids
@@ -251,9 +244,9 @@ def concretize_typ(typ : Typ) -> str:
             ids = concretize_ids(control.ids)
             plate_entry = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}")  
         elif isinstance(control, IdxInter):
-            constraints = concretize_constraints(control.constraints)
-            ids = concretize_ids(control.ids)
-            plate_entry = ([control.body], lambda body : f"[{ids} . {constraints}] {body}")  
+            upper = concretize_typ(control.upper)
+            id = control.id
+            plate_entry = ([control.upper, control.body], lambda upper, body : f"[{id} <: {upper}] {body}")  
         elif isinstance(control, Least):
             id = control.id
             plate_entry = ([control.body], lambda body : f"least {id} with {body}")  
@@ -604,9 +597,8 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
             assignment_map = assignment_map.discard(bid)
         return IdxUnio(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
     elif isinstance(typ, IdxInter):  
-        for bid in typ.ids:
-            assignment_map = assignment_map.discard(bid)
-        return IdxInter(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
+        assignment_map = assignment_map.discard(typ.id)
+        return IdxInter(typ.id, sub_typ(assignment_map, typ.upper), sub_typ(assignment_map, typ.body)) 
     elif isinstance(typ, Least):  
         assignment_map = assignment_map.discard(typ.id)
         return Least(typ.id, sub_typ(assignment_map, typ.body))
@@ -662,15 +654,12 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = (pair_up(bound_vars, [typ.antec, typ.consq]), lambda set_antec, set_consq: set_antec.union(set_consq))
         elif isinstance(typ, IdxUnio):
             bound_vars = bound_vars.union(typ.ids)
-            # set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
-            set_constraints = pset()
+            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, IdxInter):
-            bound_vars = bound_vars.union(typ.ids)
-            # set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
             set_constraints = pset()
-            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
+            plate_entry = (pair_up(bound_vars, [typ.upper, typ.body]), lambda set_upper, set_body: set_constraints.union(set_upper).union(set_body))
 
         elif isinstance(typ, Least):
             bound_vars = bound_vars.add(typ.id)
@@ -842,18 +831,13 @@ class Solver:
             ]
 
         elif isinstance(weak, IdxInter):
-            renaming = self.make_renaming(weak.ids)
-            weak_constraints = sub_constraints(renaming, weak.constraints)
+            tvar_fresh = self.fresh_type_var()
+            renaming = pmap({weak.id : tvar_fresh})
+            weak_upper = sub_typ(renaming, weak.upper)
             weak_body = sub_typ(renaming, weak.body)
             freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
 
-            premises = [Premise(premise.model, freezer)]
-            for constraint in weak_constraints:
-                premises = [
-                    p2
-                    for p1 in premises
-                    for p2 in self.solve(p1, constraint.strong, constraint.weak)
-                ]  
+            premises = self.solve(Premise(premise.model, freezer), tvar_fresh, weak_upper)
 
             return [
                 p2
@@ -981,8 +965,9 @@ class Solver:
             return premises
 
         elif isinstance(strong, IdxInter): 
-            renaming = self.make_renaming(strong.ids)
-            strong_constraints = sub_constraints(renaming, strong.constraints)
+            tvar_fresh = self.fresh_type_var()
+            renaming = pmap({strong.id : tvar_fresh})
+            strong_upper = sub_typ(renaming, strong.upper)
             strong_body = sub_typ(renaming, strong.body)
 
             solution = self.solve(premise, strong_body, weak) 
@@ -990,16 +975,7 @@ class Solver:
 
             model = premise.model
             freezer = premise.freezer.union(ids_ground)
-            premises = [Premise(model, freezer)]
-
-            for constraint in strong_constraints:
-                premises = [
-                    p2 
-                    for p1 in premises
-                    for p2 in self.solve(p1, constraint.strong, constraint.weak)
-                ] 
-
-            return premises
+            return self.solve(Premise(model, freezer), tvar_fresh, strong_upper)
 
         elif isinstance(weak, Least): 
             if not is_relational_key(strong) and self._battery > 0:
@@ -1127,7 +1103,7 @@ class BaseRule(Rule):
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
 
-        return IdxInter([var_antec.id], [Subtyping(var_antec, antec)],
+        return IdxInter(var_antec.id, antec,
             Imp(
                 var_antec,
                 IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
@@ -1298,7 +1274,7 @@ class ExprRule(Rule):
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)
 
-        return IdxInter([var_antec.id], [Subtyping(var_antec, antec)],
+        return IdxInter(var_antec.id, antec,
             Imp(
                 var_antec,
                 IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
@@ -1313,7 +1289,9 @@ class ExprRule(Rule):
         assumption: target type is assumed to be well formed / inhabitable
         '''
         free_ids = extract_free_vars_from_typ(pset(), target)
-        target_generalized = IdxInter(list(free_ids), [], target)
+        target_generalized = target
+        for id in reversed(list(free_ids)):
+            target_generalized = IdxInter(id, Top(), target_generalized) 
         enviro = self.nt.enviro.set(id, target_generalized)
         return Nonterm('expr', enviro, self.nt.typ)
 
