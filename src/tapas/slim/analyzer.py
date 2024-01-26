@@ -404,8 +404,10 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:
                 for path_tail in paths_tail
             )
 
+        
+
     else:
-        raise Exception("extract_labels error")
+        return pset()
 
 
 def extract_field_recurse(t : Typ, path : list[str]) -> Optional[Typ]:
@@ -732,7 +734,7 @@ def package_typ(premises : list[Premise], typ : Typ) -> Typ:
 class Solver:
     _type_id : int = 0 
     _battery : int = 0 
-    _max_battery : int = 100
+    _max_battery : int = 10
 
     def set_max_battery(self, max_battery : int):
         self._max_battery = max_battery 
@@ -770,12 +772,17 @@ class Solver:
             '''
             frozen = weak.id in premise.freezer
             if frozen:
-                strongest_weaker = extract_strongest_weaker(premise.model, weak.id)
-                return self.solve(premise, strong, strongest_weaker)
+                '''
+                use the most lenient interpretation of the weak type; the weakest_stronger
+                '''
+                weak_lenient = extract_weakest_stronger(premise.model, weak.id)
+                return self.solve(premise, strong, weak_lenient)
             else:
                 '''
                 ensure constraint is consistent with weakest_stronger
-                X <: U, T <: X iff T <: U
+                     T <: S
+                ----------------
+                X <: S |- T <: X
                 add constraint and wait for more information
                 '''
                 weakest_stronger = extract_weakest_stronger(premise.model, weak.id)
@@ -791,12 +798,17 @@ class Solver:
             '''
             frozen = strong.id in premise.freezer
             if frozen:
-                weakest_stronger = extract_weakest_stronger(premise.model, strong.id)
-                return self.solve(premise, weakest_stronger, weak) 
+                '''
+                use the most strict interpretation of the strong type; the weakest_stronger
+                '''
+                strong_strict = extract_weakest_stronger(premise.model, strong.id)
+                return self.solve(premise, strong_strict, weak) 
             else:
                 '''
                 ensure constraint is consistent with strongest_weaker
-                U <: X, X <: T iff U <: T 
+                     S <: T
+                ----------------
+                S <: X |- X <: T
                 add constraint and wait for more information
                 '''
                 strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
@@ -978,6 +990,19 @@ class Solver:
             return self.solve(Premise(model, freezer), tvar_fresh, strong_upper)
 
         elif isinstance(weak, Least): 
+            # TODO: perhaps X <: T is a MAY constraint; 
+            # - use this when the most lenient interpretation is better 
+            # TODO: perhaps T<: X is a MUST constraint; 
+            # - use this when the most strict interpretation is better 
+            '''
+
+                _6 <: least ... |-  :succ _4 <: _6
+            -----------------------------------------------------
+                _6 <: least ... |- :succ :succ _4 <: :succ _6
+            '''
+
+
+
             if not is_relational_key(strong) and self._battery > 0:
                 self._battery -= 1
                 tvar_fresh = self.fresh_type_var()
@@ -987,7 +1012,6 @@ class Solver:
                 renaming : PMap[str, Typ] = pmap({weak.id : tvar_fresh})
                 weak_body = sub_typ(renaming, weak.body)
                 premise = Premise(model, freezer)
-
                 return self.solve(premise, strong, weak_body)
             else:
                 weak_cache = match_strong(premise.model, strong)

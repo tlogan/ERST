@@ -342,6 +342,7 @@ base [Nonterm nt] returns [Typ combo] :
 $combo = self.collect(BaseRule(self._solver, nt).combine_unit)
 } 
 
+//tag
 | ':' {
 self.guide_terminal('ID')
 } ID {
