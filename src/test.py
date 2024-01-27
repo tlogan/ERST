@@ -321,6 +321,7 @@ least self with :nil @ | :cons self
 
 def test_subtyping_nat():
 
+    solver = analyzer.Solver() 
     nat = language.parse_typ('''
 least N with
     :zero @  |
@@ -328,39 +329,51 @@ least N with
     ''')
     assert nat
 
-    #############################
-    zero = language.parse_typ('''
-    :zero @ 
-    ''')
-    assert zero
+    # #############################
+    # zero = language.parse_typ('''
+    # :zero @ 
+    # ''')
+    # assert zero
 
-    solver = analyzer.Solver() 
-    zero_solution = solver.solve_composition(zero, nat)
-    print(f'zero: {len(zero_solution)}')
+    # zero_solution = solver.solve_composition(zero, nat)
+    # print(f'zero: {len(zero_solution)}')
+    # #############################
+    # two = language.parse_typ('''
+    # :succ :succ :zero @ 
+    # ''')
+    # assert two
+    # two_solution = solver.solve_composition(two, nat)
+    # print(f'two: {len(two_solution)}')
+    # #############################
+    # blah = language.parse_typ('''
+    # :blah :succ :zero @ 
+    # ''')
+    # assert blah 
+    # blah_solution = solver.solve_composition(blah, nat)
+    # print(f'blah: {len(blah_solution)}')
     #############################
-    two = language.parse_typ('''
-    :succ :succ :zero @ 
-    ''')
-    assert two
-    two_solution = solver.solve_composition(two, nat)
-    print(f'two: {len(two_solution)}')
+#     twice_unrolled = language.parse_typ('''
+# :succ :succ (least N with
+#     :zero @ |
+#     :succ N)
+#     ''')
+
+#     assert twice_unrolled
+#     twice_unrolled_solution = solver.solve_composition(twice_unrolled, nat)
+#     print(f'twice_unrolled: {len(twice_unrolled_solution)}')
     #############################
-    blah = language.parse_typ('''
-    :blah :succ :zero @ 
-    ''')
-    assert blah 
-    blah_solution = solver.solve_composition(blah, nat)
-    print(f'blah: {len(blah_solution)}')
-    #############################
-    # TODO: debug to ensure pass 
+#     # TODO: debug to ensure pass 
     even = language.parse_typ('''
 least E with
-    :zero @  |
+    :zero @ |
     :succ :succ E
     ''')
     assert even
     even_solution = solver.solve_composition(even, nat)
     print(f'even: {len(even_solution)}')
+
+    even_solution_fail = solver.solve_composition(nat, even)
+    print(f'even_fail: {len(even_solution_fail)}')
     #############################
 
 

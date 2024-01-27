@@ -858,6 +858,10 @@ class Solver:
             ]
 
         elif isinstance(strong, Least):
+            print(f'''
+STRONG LEAST: {concretize_typ(strong)}
+WEAK SIDE   : {concretize_typ(weak)} 
+            ''')
             if alpha_equiv(strong, weak):
                 return [premise]
             else:
@@ -872,17 +876,11 @@ class Solver:
                     use the pattern on LHS to dictate number of unrollings needed on RHS 
                     simply need to sub RHS into LHS's self-referencing variable
                     '''
-                    tvar_fresh = self.fresh_type_var()
-                    renaming : PMap[str, Typ] = pmap({strong.id : tvar_fresh})
+                    '''
+                    sub in induction hypothesis to premise:
+                    '''
+                    renaming : PMap[str, Typ] = pmap({strong.id : weak})
                     strong_body = sub_typ(renaming, strong.body)
-
-                    '''
-                    add induction hypothesis to premise:
-                    '''
-                    IH = Subtyping(tvar_fresh, weak) 
-                    model = premise.model.add(IH)
-                    freezer = premise.freezer.add(tvar_fresh.id)
-                    premise = Premise(model, freezer) 
                     return self.solve(premise, strong_body, weak)
                     
                 else:
@@ -990,28 +988,13 @@ class Solver:
             return self.solve(Premise(model, freezer), tvar_fresh, strong_upper)
 
         elif isinstance(weak, Least): 
-            # TODO: perhaps X <: T is a MAY constraint; 
-            # - use this when the most lenient interpretation is better 
-            # TODO: perhaps T<: X is a MUST constraint; 
-            # - use this when the most strict interpretation is better 
-            '''
-
-                _6 <: least ... |-  :succ _4 <: _6
-            -----------------------------------------------------
-                _6 <: least ... |- :succ :succ _4 <: :succ _6
-            '''
-
-
-
             if not is_relational_key(strong) and self._battery > 0:
                 self._battery -= 1
-                tvar_fresh = self.fresh_type_var()
-                unrolling = Subtyping(tvar_fresh, weak)
-                model = premise.model.add(unrolling)
-                freezer = premise.freezer.add(tvar_fresh.id)
-                renaming : PMap[str, Typ] = pmap({weak.id : tvar_fresh})
+                '''
+                unroll
+                '''
+                renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-                premise = Premise(model, freezer)
                 return self.solve(premise, strong, weak_body)
             else:
                 weak_cache = match_strong(premise.model, strong)
