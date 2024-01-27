@@ -113,7 +113,7 @@ $combo = [$ID.text]
 }
 
 | ID ids {
-$combo = [$ID.text] ++ $ids.combo
+$combo = [$ID.text] + $ids.combo
 }
 
 ;
@@ -236,17 +236,23 @@ $combo = Diff(context, $negation.combo)
 
 ;
 
-qualification returns [list[tuple[Typ, Typ]] combo] :
+qualification returns [list[Subtyping] combo] :
 
-| subtyping
+| subtyping {
+$combo = [$subtyping.combo]
+}
 
-| subtyping ',' qualification
+| subtyping ',' qualification {
+$combo = [$subtyping.combo] + $qualification.combo
+}
 
 ;
 
-subtyping returns [tuple[Typ, Typ] combo] :
+subtyping returns [tuple[Subtyping] combo] :
 
-| typ '<:' typ
+| strong = typ '<:' weak = typ {
+$combo = Subtyping($strong.combo, $weak.combo)
+}
 
 ;
 

@@ -858,10 +858,6 @@ class Solver:
             ]
 
         elif isinstance(strong, Least):
-            print(f'''
-STRONG LEAST: {concretize_typ(strong)}
-WEAK SIDE   : {concretize_typ(weak)} 
-            ''')
             if alpha_equiv(strong, weak):
                 return [premise]
             else:

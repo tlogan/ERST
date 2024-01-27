@@ -378,12 +378,37 @@ least E with
 
 
 
+def test_subtyping_nat_list():
+    solver = analyzer.Solver() 
+    nat_list = language.parse_typ('''
+least NL with
+    (:zero @, :nil @) |
+    { N L . (N, L) <: NL} (:succ N, :cons L)  
+    ''')
+    assert nat_list 
 
+    #############################
+    zero_nil = language.parse_typ('''
+(:zero @, :nil @)
+    ''')
+    assert zero_nil 
 
+    zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
+    print(f'zero_nil: {len(zero_nil_solution)}')
+    #############################
+    # TODO: expected to have a solution 
+    one_pair = language.parse_typ('''
+(:succ :zero @, :cons :nil @)
+    ''')
+    assert one_pair 
+
+    one_pair_solution = solver.solve_composition(one_pair, nat_list)
+    print(f'one_pair: {len(one_pair_solution)}')
+    #############################
 
 
 if __name__ == '__main__':
-    test_subtyping_nat()
+    test_subtyping_nat_list()
     pass
 
 #######################################################################
