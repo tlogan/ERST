@@ -88,7 +88,7 @@ def serializedATN():
         2,0,140,141,6,3,-1,0,141,142,3,6,3,0,142,143,6,3,-1,0,143,145,1,
         0,0,0,144,133,1,0,0,0,144,134,1,0,0,0,144,138,1,0,0,0,145,7,1,0,
         0,0,146,156,1,0,0,0,147,148,3,10,5,0,148,149,6,4,-1,0,149,156,1,
-        0,0,0,150,151,3,10,5,0,151,152,5,10,0,0,152,153,3,8,4,0,153,154,
+        0,0,0,150,151,3,10,5,0,151,152,5,12,0,0,152,153,3,8,4,0,153,154,
         6,4,-1,0,154,156,1,0,0,0,155,146,1,0,0,0,155,147,1,0,0,0,155,150,
         1,0,0,0,156,9,1,0,0,0,157,164,1,0,0,0,158,159,3,4,2,0,159,160,5,
         16,0,0,160,161,3,4,2,0,161,162,6,5,-1,0,162,164,1,0,0,0,163,157,
@@ -940,7 +940,7 @@ class SlimParser ( Parser ):
                 self.state = 150
                 localctx._subtyping = self.subtyping()
                 self.state = 151
-                self.match(SlimParser.T__9)
+                self.match(SlimParser.T__11)
                 self.state = 152
                 localctx._qualification = self.qualification()
 
@@ -996,13 +996,12 @@ class SlimParser ( Parser ):
         try:
             self.state = 163
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,5,self._ctx)
-            if la_ == 1:
+            token = self._input.LA(1)
+            if token in [12, 13]:
                 self.enterOuterAlt(localctx, 1)
 
                 pass
-
-            elif la_ == 2:
+            elif token in [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 14, 16, 17, 19, 21, 32]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 158
                 localctx.strong = self.typ()
@@ -1014,7 +1013,8 @@ class SlimParser ( Parser ):
                 localctx.combo = Subtyping(localctx.strong.combo, localctx.weak.combo)
 
                 pass
-
+            else:
+                raise NoViableAltException(self)
 
         except RecognitionException as re:
             localctx.exception = re

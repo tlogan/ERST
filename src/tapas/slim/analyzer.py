@@ -211,10 +211,10 @@ class Subtyping:
 
 
 def concretize_ids(ids : list[str]) -> str:
-    return ", ".join(ids)
+    return " ".join(ids)
 
 def concretize_constraints(subtypings : list[Subtyping]) -> str:
-    return ", ".join([
+    return ". ".join([
         concretize_typ(st.strong) + " <: " + concretize_typ(st.weak)
         for st in subtypings
     ])
@@ -479,11 +479,14 @@ def factor_least(least : Least) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless([], t1) == to_nameless([], t2)
 
-def is_relational_key(t : Typ) -> bool:
+def is_relational_key(freezer : Freezer, t : Typ) -> bool:
     if isinstance(t, TField):
-        return isinstance(t.body, TVar) or is_relational_key(t.body) 
+        return (
+            isinstance(t.body, TVar) and 
+            (t.body.id not in freezer) 
+        ) or is_relational_key(freezer, t.body) 
     elif isinstance(t, Inter):
-        return is_relational_key(t.left) and is_relational_key(t.right)
+        return is_relational_key(freezer, t.left) and is_relational_key(freezer, t.right)
     else:
         return False
 
@@ -493,7 +496,7 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def extract_weakest_stronger(model : Model, id : str) -> Typ:
+def extract_weakest_stronger(premise : Premise, id : str) -> Typ:
 
     '''
     for constraints X <: T, <: U; find weakest type stronger than T, stronger than U
@@ -502,7 +505,7 @@ def extract_weakest_stronger(model : Model, id : str) -> Typ:
     '''
     typs_strengthen = [
         st.weak
-        for st in model
+        for st in premise.model
         if st.strong == TVar(id)
     ]
     typ_strong = Top() 
@@ -521,8 +524,8 @@ def extract_weakest_stronger(model : Model, id : str) -> Typ:
     '''
     constraints_relational = [
         st
-        for st in model
-        if is_relational_key(st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
+        for st in premise.model
+        if is_relational_key(premise.freezer, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
     ]
 
     typ_factored = Top()
@@ -734,7 +737,7 @@ def package_typ(premises : list[Premise], typ : Typ) -> Typ:
 class Solver:
     _type_id : int = 0 
     _battery : int = 0 
-    _max_battery : int = 10
+    _max_battery : int = 100
 
     def set_max_battery(self, max_battery : int):
         self._max_battery = max_battery 
@@ -758,7 +761,6 @@ class Solver:
 
 
     def solve(self, premise : Premise, strong : Typ, weak : Typ) -> list[Premise]:
-
         if False: 
             return [] 
 
@@ -775,7 +777,7 @@ class Solver:
                 '''
                 use the most lenient interpretation of the weak type; the weakest_stronger
                 '''
-                weak_lenient = extract_weakest_stronger(premise.model, weak.id)
+                weak_lenient = extract_weakest_stronger(premise, weak.id)
                 return self.solve(premise, strong, weak_lenient)
             else:
                 '''
@@ -785,7 +787,7 @@ class Solver:
                 X <: S |- T <: X
                 add constraint and wait for more information
                 '''
-                weakest_stronger = extract_weakest_stronger(premise.model, weak.id)
+                weakest_stronger = extract_weakest_stronger(premise, weak.id)
                 consistent = bool(self.solve(premise, strong, weakest_stronger))
                 if consistent:
                     return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
@@ -799,10 +801,10 @@ class Solver:
             frozen = strong.id in premise.freezer
             if frozen:
                 '''
-                use the most strict interpretation of the strong type; the weakest_stronger
+                use the most lenient interpretation of the strong type; the strongest_weaker 
                 '''
-                strong_strict = extract_weakest_stronger(premise.model, strong.id)
-                return self.solve(premise, strong_strict, weak) 
+                strong_lenient = extract_strongest_weaker(premise.model, strong.id)
+                return self.solve(premise, strong_lenient, weak) 
             else:
                 '''
                 ensure constraint is consistent with strongest_weaker
@@ -958,8 +960,10 @@ class Solver:
             ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             model = premise.model
-            freezer = premise.freezer.union(ids_ground)
-            premises = [Premise(model, freezer)]
+            premises = [
+                Premise(p.model, p.freezer.union(ids_ground))
+                for p in solution
+            ]
 
             for constraint in weak_constraints:
                 premises = [
@@ -984,7 +988,8 @@ class Solver:
             return self.solve(Premise(model, freezer), tvar_fresh, strong_upper)
 
         elif isinstance(weak, Least): 
-            if not is_relational_key(strong) and self._battery > 0:
+
+            if not is_relational_key(premise.freezer, strong) and self._battery > 0:
                 self._battery -= 1
                 '''
                 unroll
@@ -1197,14 +1202,18 @@ class ExprRule(Rule):
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
-            '''
-            extract strongest weaker to use as return type
-            '''
-            solution = [
-                Premise(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
-                for p0 in self.solver.solve_composition(answr_i, Imp(argument, answr))
-                for typ_return in [extract_strongest_weaker(p0.model, answr.id)]
-            ]
+            # TODO: Remove commented code
+            # No need to extract strongest weaker
+            # '''
+            # extract strongest weaker to use as return type
+            # '''
+            # solution = [
+            #     Premise(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
+            #     for p0 in self.solver.solve_composition(answr_i, Imp(argument, answr))
+            #     for typ_return in [extract_strongest_weaker(p0.model, answr.id)]
+            # ]
+
+            solution = self.solver.solve_composition(answr_i, Imp(argument, answr))
 
             answr_i = package_typ(solution, answr)
 

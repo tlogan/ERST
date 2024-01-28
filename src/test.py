@@ -376,6 +376,22 @@ least E with
     print(f'even_fail: {len(even_solution_fail)}')
     #############################
 
+def test_subtyping_idx_unio():
+    solver = analyzer.Solver() 
+    debug = language.parse_typ('''
+    { N . N <: top} (:succ N)  
+    ''')
+    assert debug 
+
+    # TODO: expected to have one solution 
+    one_pair = language.parse_typ('''
+(:succ :zero @)
+    ''')
+    assert  one_pair 
+
+    debug_solution = solver.solve_composition(one_pair, debug)
+    for p in debug_solution:
+        print(f'model: {analyzer.concretize_constraints(list(p.model))}')
 
 
 def test_subtyping_nat_list():
@@ -396,15 +412,22 @@ least NL with
     zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
     print(f'zero_nil: {len(zero_nil_solution)}')
     #############################
-    # TODO: expected to have a solution 
+    # TODO: expected to have one solution 
     one_pair = language.parse_typ('''
 (:succ :zero @, :cons :nil @)
     ''')
     assert one_pair 
-
     one_pair_solution = solver.solve_composition(one_pair, nat_list)
     print(f'one_pair: {len(one_pair_solution)}')
     #############################
+    pair_fail = language.parse_typ('''
+(:succ :succ :zero @, :cons :nil @)
+    ''')
+    assert pair_fail 
+    pair_fail_solution = solver.solve_composition(pair_fail, nat_list)
+    print(f'pair_fail: {len(pair_fail_solution)}')
+    ############################
+
 
 
 if __name__ == '__main__':

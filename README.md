@@ -2,7 +2,6 @@
 
 
 ### TODO
-- implement one-pair <: list-nat relation example
 - implement list-nat relation subtyping examples
 - implement plus relation subtyping examples
 - update basic examples with test of type inference 

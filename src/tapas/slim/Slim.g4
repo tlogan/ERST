@@ -242,7 +242,7 @@ qualification returns [list[Subtyping] combo] :
 $combo = [$subtyping.combo]
 }
 
-| subtyping ',' qualification {
+| subtyping '.' qualification {
 $combo = [$subtyping.combo] + $qualification.combo
 }
 

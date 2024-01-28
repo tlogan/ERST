@@ -740,7 +740,7 @@ public class SlimParser extends Parser {
 				setState(150);
 				((QualificationContext)_localctx).subtyping = subtyping();
 				setState(151);
-				match(T__9);
+				match(T__11);
 				setState(152);
 				((QualificationContext)_localctx).qualification = qualification();
 
@@ -784,13 +784,29 @@ public class SlimParser extends Parser {
 		try {
 			setState(163);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
-			case 1:
+			switch (_input.LA(1)) {
+			case T__11:
+			case T__12:
 				enterOuterAlt(_localctx, 1);
 				{
 				}
 				break;
-			case 2:
+			case T__0:
+			case T__1:
+			case T__2:
+			case T__3:
+			case T__4:
+			case T__6:
+			case T__7:
+			case T__8:
+			case T__9:
+			case T__10:
+			case T__13:
+			case T__15:
+			case T__16:
+			case T__18:
+			case T__20:
+			case ID:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(158);
@@ -804,6 +820,8 @@ public class SlimParser extends Parser {
 
 				}
 				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2141,7 +2159,7 @@ public class SlimParser extends Parser {
 		"\u0000\u0091\u0007\u0001\u0000\u0000\u0000\u0092\u009c\u0001\u0000\u0000"+
 		"\u0000\u0093\u0094\u0003\n\u0005\u0000\u0094\u0095\u0006\u0004\uffff\uffff"+
 		"\u0000\u0095\u009c\u0001\u0000\u0000\u0000\u0096\u0097\u0003\n\u0005\u0000"+
-		"\u0097\u0098\u0005\n\u0000\u0000\u0098\u0099\u0003\b\u0004\u0000\u0099"+
+		"\u0097\u0098\u0005\f\u0000\u0000\u0098\u0099\u0003\b\u0004\u0000\u0099"+
 		"\u009a\u0006\u0004\uffff\uffff\u0000\u009a\u009c\u0001\u0000\u0000\u0000"+
 		"\u009b\u0092\u0001\u0000\u0000\u0000\u009b\u0093\u0001\u0000\u0000\u0000"+
 		"\u009b\u0096\u0001\u0000\u0000\u0000\u009c\t\u0001\u0000\u0000\u0000\u009d"+
