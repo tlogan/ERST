@@ -2,6 +2,7 @@
 
 
 ### TODO
+- implement `condense_weakest` to get condensed view of weakest type from current model
 - reconsider if notion of frozen is actually needed
 - implement list-nat relation subtyping examples
 - implement plus relation subtyping examples

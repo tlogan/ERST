@@ -449,6 +449,9 @@ least NL with
     assert two_pair_query
     two_pair_query_solution = solver.solve_composition(two_pair_query, nat_list)
     print(f'two_pair_query: {[analyzer.concretize_constraints(list(p.model)) for p in two_pair_query_solution]}')
+    for p in two_pair_query_solution:
+        weakest = analyzer.condense_weakest(p, analyzer.TVar("X"))
+        print("X <: " + analyzer.concretize_typ(analyzer.simplify_typ(weakest)))
     ###
     """
     Need to be careful about when to freeze variables
