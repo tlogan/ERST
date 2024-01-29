@@ -572,7 +572,6 @@ def condense_weakest(premise : Premise, typ : Typ) -> Typ:
 
 def simplify_typ(typ : Typ) -> Typ:
 
-    Typ = Union[IdxUnio, IdxInter, Least, Top, Bot]
     if False:
         assert False
     elif isinstance(typ, TTag):
@@ -820,6 +819,13 @@ class Solver:
 
 
     def solve(self, premise : Premise, strong : Typ, weak : Typ) -> list[Premise]:
+
+#         print(f'''
+# | | DEBUG SOLVE
+# | | model : {concretize_constraints(list(premise.model))}
+# | | strong: {concretize_typ(strong)}
+# | | weak  : {concretize_typ(weak)}
+#         ''')
         if False: 
             return [] 
 
@@ -831,21 +837,23 @@ class Solver:
             '''
             T <: X
             '''
-            frozen = weak.id in premise.freezer
             weakest = extract_weakest(premise, weak.id)
             premises = self.solve(premise, strong, weakest)
-            if bool(premises):
-                return [
-                    Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
-                    for p in premises
-                ]
-            elif not frozen:
-                '''
-                strengthen weak.id
-                '''
-                return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
-            else:
-                return []
+            # print(f'''
+            # DEBUG WEAK VAR (weak, TVar), strong <: weakest
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # weakest: {concretize_typ(weakest)}
+            # ''')
+            # for p in premises:
+            #     print(f'''
+            #     @ MODEL: {concretize_constraints(list(p.model))}
+            #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
+            #     ''')
+            return [
+                Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
+                for p in premises
+            ]
             # TODO: remove old code
             # frozen = weak.id in premise.freezer
             # if frozen:
@@ -873,22 +881,24 @@ class Solver:
             '''
             X <: T
             '''
-
-            frozen = strong.id in premise.freezer
             strongest = extract_strongest(premise.model, strong.id)
             premises = self.solve(premise, strongest, weak)
-            if bool(premises):
-                return [
-                    Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
-                    for p in premises
-                ]
-            elif not frozen:
-                '''
-                weaken strong.id
-                '''
-                return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
-            else:
-                return []
+            # print(f'''
+            # DEBUG STRONG VAR (strong, TVar), strongest <: weak
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # strongest: {concretize_typ(strongest)}
+            # ''')
+            # for p in premises:
+            #     print(f'''
+            #     @ MODEL: {concretize_constraints(list(p.model))}
+            #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
+            #     ''')
+
+            return [
+                Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
+                for p in premises
+            ]
 
             # frozen = strong.id in premise.freezer
             # print(f'''
@@ -1058,12 +1068,14 @@ class Solver:
             premises = self.solve(premise, strong, weak_body) 
             unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
 
-            print(f''' 
-            DEBUG (weak, IdxUnio)
-            strong: {concretize_typ(strong)}
-            weak: {concretize_typ(weak)}
-            freezing unio_indices: {unio_indices}
-            ''')
+            # print(f''' 
+            # DEBUG (weak, IdxUnio)
+            # model: {concretize_constraints(list(premise.model))}
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # freezing unio_indices: {unio_indices}
+            # premises: {len(premises)}
+            # ''')
 
             for constraint in weak_constraints:
                 premises = [
@@ -1097,14 +1109,14 @@ class Solver:
 
         elif isinstance(weak, Least): 
 
-            print(f'''
-            DEBUG (weak, Least):
-            model: {(len(premise.model))}
-            frozen: {list(premise.freezer)}
-            strong: {concretize_typ(strong)}
-            weak: {concretize_typ(weak)}
-            Will unroll?: {not is_relational_key(premise, strong)}
-            ''')
+            # print(f'''
+            # DEBUG (weak, Least):
+            # model: {(len(premise.model))}
+            # frozen: {list(premise.freezer)}
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # Will unroll?: {not is_relational_key(premise, strong)}
+            # ''')
 
             # TODO: determine the right condition
             if not is_relational_key(premise, strong) and self._battery > 0:
