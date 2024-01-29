@@ -412,7 +412,6 @@ least NL with
     zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
     print(f'zero_nil: {len(zero_nil_solution)}')
     #############################
-    # TODO: expected to have one solution 
     one_pair = language.parse_typ('''
 (:succ :zero @, :cons :nil @)
     ''')
@@ -427,6 +426,41 @@ least NL with
     pair_fail_solution = solver.solve_composition(pair_fail, nat_list)
     print(f'pair_fail: {len(pair_fail_solution)}')
     ############################
+    one_pair_query = language.parse_typ('''
+(:succ :zero @, :cons X)
+    ''')
+    assert one_pair_query
+    one_pair_query_solution = solver.solve_composition(one_pair_query, nat_list)
+    print(f'one_pair_query: {[analyzer.concretize_constraints(list(p.model)) for p in one_pair_query_solution]}')
+    ############################
+    one_pair_query_1 = language.parse_typ('''
+(:succ :zero @, X)
+    ''')
+    assert one_pair_query_1
+    one_pair_query_1_solution = solver.solve_composition(one_pair_query_1, nat_list)
+    print(f'one_pair_query_1: {[analyzer.concretize_constraints(list(p.model)) for p in one_pair_query_1_solution]}')
+    ############################
+    print('''
+###########################################
+    ''')
+    two_pair_query = language.parse_typ('''
+(:succ :succ :zero @, :cons X)
+    ''')
+    assert two_pair_query
+    two_pair_query_solution = solver.solve_composition(two_pair_query, nat_list)
+    print(f'two_pair_query: {[analyzer.concretize_constraints(list(p.model)) for p in two_pair_query_solution]}')
+    ###
+    """
+    Need to be careful about when to freeze variables
+    a variable should only be frozen when it's treated like an input of a query
+    a variable should NOT be frozen when it's used to construct the output of a query
+    - is the notion of frozen fundamentally flawed?
+    - what happens if we don't freeze at all????
+        - the existential won't fail?? 
+        - T <: {X . X <: U} X ===> T <: X,  X <: U; safety check still runs
+        - don't use freezing as a necessary condition for unrolling
+    """
+    ###
 
 
 

@@ -51,7 +51,7 @@ public class SlimParser extends Parser {
 		return new String[] {
 			null, "'top'", "'bot'", "'@'", "':'", "'('", "')'", "'|'", "'&'", "'->'", 
 			"','", "'{'", "'.'", "'}'", "'['", "']'", "'<:'", "'least'", "'with'", 
-			"'greatest'", "'of'", "'\\'", "'if'", "'then'", "'else'", "'let'", "';'", 
+			"'greatest'", "'of'", "'\\'", "';'", "'if'", "'then'", "'else'", "'let'", 
 			"'fix'", "'case'", "'=>'", "'='", "'|>'"
 		};
 	}
@@ -740,7 +740,7 @@ public class SlimParser extends Parser {
 				setState(150);
 				((QualificationContext)_localctx).subtyping = subtyping();
 				setState(151);
-				match(T__11);
+				match(T__21);
 				setState(152);
 				((QualificationContext)_localctx).qualification = qualification();
 
@@ -785,8 +785,8 @@ public class SlimParser extends Parser {
 			setState(163);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
-			case T__11:
 			case T__12:
+			case T__21:
 				enterOuterAlt(_localctx, 1);
 				{
 				}
@@ -935,7 +935,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(177);
-				match(T__21);
+				match(T__22);
 
 				nt_condition = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_condition)
 
@@ -945,7 +945,7 @@ public class SlimParser extends Parser {
 				self.guide_symbol('then')
 
 				setState(181);
-				match(T__22);
+				match(T__23);
 
 				nt_branch_true = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_true, ((ExprContext)_localctx).condition.combo)
 
@@ -955,7 +955,7 @@ public class SlimParser extends Parser {
 				self.guide_symbol('else')
 
 				setState(185);
-				match(T__23);
+				match(T__24);
 
 				nt_branch_false = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_false, ((ExprContext)_localctx).condition.combo, ((ExprContext)_localctx).branch_true.combo)
 
@@ -1024,7 +1024,7 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 8);
 				{
 				setState(208);
-				match(T__24);
+				match(T__25);
 
 				self.guide_terminal('ID')
 
@@ -1039,7 +1039,7 @@ public class SlimParser extends Parser {
 				self.guide_symbol(';')
 
 				setState(214);
-				match(T__25);
+				match(T__21);
 
 				nt_contin = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_contin, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.combo)
 
@@ -1701,7 +1701,7 @@ public class SlimParser extends Parser {
 			setState(358);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
-			case T__25:
+			case T__21:
 				enterOuterAlt(_localctx, 1);
 				{
 				}
@@ -2159,7 +2159,7 @@ public class SlimParser extends Parser {
 		"\u0000\u0091\u0007\u0001\u0000\u0000\u0000\u0092\u009c\u0001\u0000\u0000"+
 		"\u0000\u0093\u0094\u0003\n\u0005\u0000\u0094\u0095\u0006\u0004\uffff\uffff"+
 		"\u0000\u0095\u009c\u0001\u0000\u0000\u0000\u0096\u0097\u0003\n\u0005\u0000"+
-		"\u0097\u0098\u0005\f\u0000\u0000\u0098\u0099\u0003\b\u0004\u0000\u0099"+
+		"\u0097\u0098\u0005\u0016\u0000\u0000\u0098\u0099\u0003\b\u0004\u0000\u0099"+
 		"\u009a\u0006\u0004\uffff\uffff\u0000\u009a\u009c\u0001\u0000\u0000\u0000"+
 		"\u009b\u0092\u0001\u0000\u0000\u0000\u009b\u0093\u0001\u0000\u0000\u0000"+
 		"\u009b\u0096\u0001\u0000\u0000\u0000\u009c\t\u0001\u0000\u0000\u0000\u009d"+
@@ -2174,11 +2174,11 @@ public class SlimParser extends Parser {
 		"\uffff\uffff\u0000\u00ac\u00ad\u0005\n\u0000\u0000\u00ad\u00ae\u0006\u0006"+
 		"\uffff\uffff\u0000\u00ae\u00af\u0003\u000e\u0007\u0000\u00af\u00b0\u0006"+
 		"\u0006\uffff\uffff\u0000\u00b0\u00e5\u0001\u0000\u0000\u0000\u00b1\u00b2"+
-		"\u0005\u0016\u0000\u0000\u00b2\u00b3\u0006\u0006\uffff\uffff\u0000\u00b3"+
+		"\u0005\u0017\u0000\u0000\u00b2\u00b3\u0006\u0006\uffff\uffff\u0000\u00b3"+
 		"\u00b4\u0003\f\u0006\u0000\u00b4\u00b5\u0006\u0006\uffff\uffff\u0000\u00b5"+
-		"\u00b6\u0005\u0017\u0000\u0000\u00b6\u00b7\u0006\u0006\uffff\uffff\u0000"+
+		"\u00b6\u0005\u0018\u0000\u0000\u00b6\u00b7\u0006\u0006\uffff\uffff\u0000"+
 		"\u00b7\u00b8\u0003\f\u0006\u0000\u00b8\u00b9\u0006\u0006\uffff\uffff\u0000"+
-		"\u00b9\u00ba\u0005\u0018\u0000\u0000\u00ba\u00bb\u0006\u0006\uffff\uffff"+
+		"\u00b9\u00ba\u0005\u0019\u0000\u0000\u00ba\u00bb\u0006\u0006\uffff\uffff"+
 		"\u0000\u00bb\u00bc\u0003\f\u0006\u0000\u00bc\u00bd\u0006\u0006\uffff\uffff"+
 		"\u0000\u00bd\u00e5\u0001\u0000\u0000\u0000\u00be\u00bf\u0006\u0006\uffff"+
 		"\uffff\u0000\u00bf\u00c0\u0003\u000e\u0007\u0000\u00c0\u00c1\u0006\u0006"+
@@ -2190,10 +2190,10 @@ public class SlimParser extends Parser {
 		"\u00cb\u0006\u0006\uffff\uffff\u0000\u00cb\u00cc\u0003\u000e\u0007\u0000"+
 		"\u00cc\u00cd\u0006\u0006\uffff\uffff\u0000\u00cd\u00ce\u0003\u0016\u000b"+
 		"\u0000\u00ce\u00cf\u0006\u0006\uffff\uffff\u0000\u00cf\u00e5\u0001\u0000"+
-		"\u0000\u0000\u00d0\u00d1\u0005\u0019\u0000\u0000\u00d1\u00d2\u0006\u0006"+
+		"\u0000\u0000\u00d0\u00d1\u0005\u001a\u0000\u0000\u00d1\u00d2\u0006\u0006"+
 		"\uffff\uffff\u0000\u00d2\u00d3\u0005 \u0000\u0000\u00d3\u00d4\u0006\u0006"+
 		"\uffff\uffff\u0000\u00d4\u00d5\u0003\u001a\r\u0000\u00d5\u00d6\u0006\u0006"+
-		"\uffff\uffff\u0000\u00d6\u00d7\u0005\u001a\u0000\u0000\u00d7\u00d8\u0006"+
+		"\uffff\uffff\u0000\u00d6\u00d7\u0005\u0016\u0000\u0000\u00d7\u00d8\u0006"+
 		"\u0006\uffff\uffff\u0000\u00d8\u00d9\u0003\f\u0006\u0000\u00d9\u00da\u0006"+
 		"\u0006\uffff\uffff\u0000\u00da\u00e5\u0001\u0000\u0000\u0000\u00db\u00dc"+
 		"\u0005\u001b\u0000\u0000\u00dc\u00dd\u0006\u0006\uffff\uffff\u0000\u00dd"+

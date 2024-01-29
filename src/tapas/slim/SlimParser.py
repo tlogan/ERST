@@ -88,24 +88,24 @@ def serializedATN():
         2,0,140,141,6,3,-1,0,141,142,3,6,3,0,142,143,6,3,-1,0,143,145,1,
         0,0,0,144,133,1,0,0,0,144,134,1,0,0,0,144,138,1,0,0,0,145,7,1,0,
         0,0,146,156,1,0,0,0,147,148,3,10,5,0,148,149,6,4,-1,0,149,156,1,
-        0,0,0,150,151,3,10,5,0,151,152,5,12,0,0,152,153,3,8,4,0,153,154,
+        0,0,0,150,151,3,10,5,0,151,152,5,22,0,0,152,153,3,8,4,0,153,154,
         6,4,-1,0,154,156,1,0,0,0,155,146,1,0,0,0,155,147,1,0,0,0,155,150,
         1,0,0,0,156,9,1,0,0,0,157,164,1,0,0,0,158,159,3,4,2,0,159,160,5,
         16,0,0,160,161,3,4,2,0,161,162,6,5,-1,0,162,164,1,0,0,0,163,157,
         1,0,0,0,163,158,1,0,0,0,164,11,1,0,0,0,165,229,1,0,0,0,166,167,3,
         14,7,0,167,168,6,6,-1,0,168,229,1,0,0,0,169,170,6,6,-1,0,170,171,
         3,14,7,0,171,172,6,6,-1,0,172,173,5,10,0,0,173,174,6,6,-1,0,174,
-        175,3,14,7,0,175,176,6,6,-1,0,176,229,1,0,0,0,177,178,5,22,0,0,178,
-        179,6,6,-1,0,179,180,3,12,6,0,180,181,6,6,-1,0,181,182,5,23,0,0,
-        182,183,6,6,-1,0,183,184,3,12,6,0,184,185,6,6,-1,0,185,186,5,24,
+        175,3,14,7,0,175,176,6,6,-1,0,176,229,1,0,0,0,177,178,5,23,0,0,178,
+        179,6,6,-1,0,179,180,3,12,6,0,180,181,6,6,-1,0,181,182,5,24,0,0,
+        182,183,6,6,-1,0,183,184,3,12,6,0,184,185,6,6,-1,0,185,186,5,25,
         0,0,186,187,6,6,-1,0,187,188,3,12,6,0,188,189,6,6,-1,0,189,229,1,
         0,0,0,190,191,6,6,-1,0,191,192,3,14,7,0,192,193,6,6,-1,0,193,194,
         3,24,12,0,194,195,6,6,-1,0,195,229,1,0,0,0,196,197,6,6,-1,0,197,
         198,3,14,7,0,198,199,6,6,-1,0,199,200,3,20,10,0,200,201,6,6,-1,0,
         201,229,1,0,0,0,202,203,6,6,-1,0,203,204,3,14,7,0,204,205,6,6,-1,
-        0,205,206,3,22,11,0,206,207,6,6,-1,0,207,229,1,0,0,0,208,209,5,25,
+        0,205,206,3,22,11,0,206,207,6,6,-1,0,207,229,1,0,0,0,208,209,5,26,
         0,0,209,210,6,6,-1,0,210,211,5,32,0,0,211,212,6,6,-1,0,212,213,3,
-        26,13,0,213,214,6,6,-1,0,214,215,5,26,0,0,215,216,6,6,-1,0,216,217,
+        26,13,0,213,214,6,6,-1,0,214,215,5,22,0,0,215,216,6,6,-1,0,216,217,
         3,12,6,0,217,218,6,6,-1,0,218,229,1,0,0,0,219,220,5,27,0,0,220,221,
         6,6,-1,0,221,222,5,5,0,0,222,223,6,6,-1,0,223,224,3,12,6,0,224,225,
         6,6,-1,0,225,226,5,6,0,0,226,227,6,6,-1,0,227,229,1,0,0,0,228,165,
@@ -182,8 +182,8 @@ class SlimParser ( Parser ):
     literalNames = [ "<INVALID>", "'top'", "'bot'", "'@'", "':'", "'('", 
                      "')'", "'|'", "'&'", "'->'", "','", "'{'", "'.'", "'}'", 
                      "'['", "']'", "'<:'", "'least'", "'with'", "'greatest'", 
-                     "'of'", "'\\'", "'if'", "'then'", "'else'", "'let'", 
-                     "';'", "'fix'", "'case'", "'=>'", "'='", "'|>'" ]
+                     "'of'", "'\\'", "';'", "'if'", "'then'", "'else'", 
+                     "'let'", "'fix'", "'case'", "'=>'", "'='", "'|>'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
@@ -940,7 +940,7 @@ class SlimParser ( Parser ):
                 self.state = 150
                 localctx._subtyping = self.subtyping()
                 self.state = 151
-                self.match(SlimParser.T__11)
+                self.match(SlimParser.T__21)
                 self.state = 152
                 localctx._qualification = self.qualification()
 
@@ -997,7 +997,7 @@ class SlimParser ( Parser ):
             self.state = 163
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [12, 13]:
+            if token in [13, 22]:
                 self.enterOuterAlt(localctx, 1)
 
                 pass
@@ -1143,7 +1143,7 @@ class SlimParser ( Parser ):
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 177
-                self.match(SlimParser.T__21)
+                self.match(SlimParser.T__22)
 
                 nt_condition = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_condition)
 
@@ -1153,7 +1153,7 @@ class SlimParser ( Parser ):
                 self.guide_symbol('then')
 
                 self.state = 181
-                self.match(SlimParser.T__22)
+                self.match(SlimParser.T__23)
 
                 nt_branch_true = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_true, localctx.condition.combo)
 
@@ -1163,7 +1163,7 @@ class SlimParser ( Parser ):
                 self.guide_symbol('else')
 
                 self.state = 185
-                self.match(SlimParser.T__23)
+                self.match(SlimParser.T__24)
 
                 nt_branch_false = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_false, localctx.condition.combo, localctx.branch_true.combo)
 
@@ -1228,7 +1228,7 @@ class SlimParser ( Parser ):
             elif la_ == 8:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 208
-                self.match(SlimParser.T__24)
+                self.match(SlimParser.T__25)
 
                 self.guide_terminal('ID')
 
@@ -1243,7 +1243,7 @@ class SlimParser ( Parser ):
                 self.guide_symbol(';')
 
                 self.state = 214
-                self.match(SlimParser.T__25)
+                self.match(SlimParser.T__21)
 
                 nt_contin = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_contin, (None if localctx._ID is None else localctx._ID.text), localctx._target.combo)
 
@@ -1978,7 +1978,7 @@ class SlimParser ( Parser ):
             self.state = 358
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [26]:
+            if token in [22]:
                 self.enterOuterAlt(localctx, 1)
 
                 pass

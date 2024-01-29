@@ -214,7 +214,7 @@ def concretize_ids(ids : list[str]) -> str:
     return " ".join(ids)
 
 def concretize_constraints(subtypings : list[Subtyping]) -> str:
-    return ". ".join([
+    return " ; ".join([
         concretize_typ(st.strong) + " <: " + concretize_typ(st.weak)
         for st in subtypings
     ])
@@ -479,14 +479,20 @@ def factor_least(least : Least) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless([], t1) == to_nameless([], t2)
 
-def is_relational_key(freezer : Freezer, t : Typ) -> bool:
+def is_relational_key(premise : Premise, t : Typ) -> bool:
     if isinstance(t, TField):
-        return (
-            isinstance(t.body, TVar) and 
-            (t.body.id not in freezer) 
-        ) or is_relational_key(freezer, t.body) 
+        if isinstance(t.body, TVar):
+            strongest = extract_strongest_weaker(premise.model, t.body.id) 
+            return strongest == Bot() or is_relational_key(premise, strongest)
+        else:
+            return is_relational_key(premise, t.body)
+        # TODO: remove old code
+        # return (
+        #     isinstance(t.body, TVar) and 
+        #     (t.body.id not in freezer) 
+        # ) or is_relational_key(freezer, t.body) 
     elif isinstance(t, Inter):
-        return is_relational_key(freezer, t.left) and is_relational_key(freezer, t.right)
+        return is_relational_key(premise, t.left) and is_relational_key(premise, t.right)
     else:
         return False
 
@@ -525,7 +531,7 @@ def extract_weakest_stronger(premise : Premise, id : str) -> Typ:
     constraints_relational = [
         st
         for st in premise.model
-        if is_relational_key(premise.freezer, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
+        if is_relational_key(premise, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
     ]
 
     typ_factored = Top()
@@ -773,52 +779,92 @@ class Solver:
             T <: X
             '''
             frozen = weak.id in premise.freezer
-            if frozen:
+            weakest = extract_weakest_stronger(premise, weak.id)
+            premises = self.solve(premise, strong, weakest)
+            if bool(premises):
+                return [
+                    Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
+                    for p in premises
+                ]
+            elif not frozen:
                 '''
-                use the most lenient interpretation of the weak type; the weakest_stronger
+                strengthen weak.id
                 '''
-                weak_lenient = extract_weakest_stronger(premise, weak.id)
-                return self.solve(premise, strong, weak_lenient)
+                return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
             else:
-                '''
-                ensure constraint is consistent with weakest_stronger
-                     T <: S
-                ----------------
-                X <: S |- T <: X
-                add constraint and wait for more information
-                '''
-                weakest_stronger = extract_weakest_stronger(premise, weak.id)
-                consistent = bool(self.solve(premise, strong, weakest_stronger))
-                if consistent:
-                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
-                else:
-                    return []
+                return []
+            # TODO: remove old code
+            # frozen = weak.id in premise.freezer
+            # if frozen:
+            #     '''
+            #     use the most lenient interpretation of the weak type; the weakest_stronger
+            #     '''
+            #     weak_lenient = extract_weakest_stronger(premise, weak.id)
+            #     return self.solve(premise, strong, weak_lenient)
+            # else:
+            #     '''
+            #     ensure constraint is consistent with weakest_stronger
+            #          T <: S
+            #     ----------------
+            #     X <: S |- T <: X
+            #     add constraint and wait for more information
+            #     '''
+            #     weakest_stronger = extract_weakest_stronger(premise, weak.id)
+            #     consistent = bool(self.solve(premise, strong, weakest_stronger))
+            #     if consistent:
+            #         return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+            #     else:
+            #         return []
 
         elif isinstance(strong, TVar): 
             '''
             X <: T
             '''
+
             frozen = strong.id in premise.freezer
-            if frozen:
+            strongest = extract_strongest_weaker(premise.model, strong.id)
+            premises = self.solve(premise, strongest, weak)
+            if bool(premises):
+                return [
+                    Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
+                    for p in premises
+                ]
+            elif not frozen:
                 '''
-                use the most lenient interpretation of the strong type; the strongest_weaker 
+                weaken strong.id
                 '''
-                strong_lenient = extract_strongest_weaker(premise.model, strong.id)
-                return self.solve(premise, strong_lenient, weak) 
+                return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
             else:
-                '''
-                ensure constraint is consistent with strongest_weaker
-                     S <: T
-                ----------------
-                S <: X |- X <: T
-                add constraint and wait for more information
-                '''
-                strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
-                consistent = bool(self.solve(premise, strongest_weaker, weak))
-                if consistent:
-                    return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
-                else:
-                    return []
+                return []
+
+            # frozen = strong.id in premise.freezer
+            # print(f'''
+            # DEBUG (strong, TVar)
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # frozen: {frozen}
+            # ''')
+            # if frozen:
+            #     '''
+            #     use the most lenient interpretation of the strong type; the strongest_weaker 
+            #     '''
+            #     strong_lenient = extract_strongest_weaker(premise.model, strong.id)
+            #     print(f"strong_lenient: {concretize_typ(strong_lenient)}")
+            #     return self.solve(premise, strong_lenient, weak) 
+            # else:
+            #     '''
+            #     ensure constraint is consistent with strongest_weaker
+            #          S <: T
+            #     ----------------
+            #     S <: X |- X <: T
+            #     add constraint and wait for more information
+            #     '''
+            #     strongest_weaker = extract_strongest_weaker(premise.model, strong.id)
+            #     consistent = bool(self.solve(premise, strongest_weaker, weak))
+            #     if consistent:
+            #         return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+            #     else:
+            #         return []
 
         #######################################
         #### Model rules: ####
@@ -956,14 +1002,15 @@ class Solver:
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
 
-            solution = self.solve(premise, strong, weak_body) 
-            ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
+            premises = self.solve(premise, strong, weak_body) 
+            unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
 
-            model = premise.model
-            premises = [
-                Premise(p.model, p.freezer.union(ids_ground))
-                for p in solution
-            ]
+            print(f''' 
+            DEBUG (weak, IdxUnio)
+            strong: {concretize_typ(strong)}
+            weak: {concretize_typ(weak)}
+            freezing unio_indices: {unio_indices}
+            ''')
 
             for constraint in weak_constraints:
                 premises = [
@@ -973,6 +1020,14 @@ class Solver:
                 ]
 
             return premises
+            # '''
+            # freeze the freed union indices 
+            # '''
+            # return [
+            #     Premise(p.model, p.freezer.union(unio_indices))
+            #     for p in premises
+            # ]
+
 
         elif isinstance(strong, IdxInter): 
             tvar_fresh = self.fresh_type_var()
@@ -989,7 +1044,18 @@ class Solver:
 
         elif isinstance(weak, Least): 
 
-            if not is_relational_key(premise.freezer, strong) and self._battery > 0:
+            print(f'''
+            DEBUG (weak, Least):
+            model: {(len(premise.model))}
+            frozen: {list(premise.freezer)}
+            strong: {concretize_typ(strong)}
+            weak: {concretize_typ(weak)}
+            Will unroll?: {not is_relational_key(premise, strong)}
+            ''')
+
+            # TODO: determine the right condition
+            if not is_relational_key(premise, strong) and self._battery > 0:
+            # if True:
                 self._battery -= 1
                 '''
                 unroll

@@ -2,6 +2,7 @@
 
 
 ### TODO
+- reconsider if notion of frozen is actually needed
 - implement list-nat relation subtyping examples
 - implement plus relation subtyping examples
 - update basic examples with test of type inference 
