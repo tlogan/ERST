@@ -316,11 +316,6 @@ Freezer = PSet[str]
 Model = PSet[Subtyping]
 
 
-@dataclass(frozen=True, eq=True)
-class Premise:
-    model : Model
-    freezer : Freezer 
-
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
     return pset((
         st
@@ -479,20 +474,20 @@ def factor_least(least : Least) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless([], t1) == to_nameless([], t2)
 
-def is_relational_key(premise : Premise, t : Typ) -> bool:
+def is_relational_key(model : Model, t : Typ) -> bool:
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            strongest = extract_strongest(premise.model, t.body.id) 
-            return strongest == Bot() or is_relational_key(premise, strongest)
+            strongest = extract_strongest(model, t.body.id) 
+            return strongest == Bot() or is_relational_key(model, strongest)
         else:
-            return is_relational_key(premise, t.body)
+            return is_relational_key(model, t.body)
         # TODO: remove old code
         # return (
         #     isinstance(t.body, TVar) and 
         #     (t.body.id not in freezer) 
         # ) or is_relational_key(freezer, t.body) 
     elif isinstance(t, Inter):
-        return is_relational_key(premise, t.left) and is_relational_key(premise, t.right)
+        return is_relational_key(model, t.left) and is_relational_key(model, t.right)
     else:
         return False
 
@@ -502,7 +497,7 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def extract_weakest(premise : Premise, id : str) -> Typ:
+def extract_weakest(model : Model, id : str) -> Typ:
 
     '''
     for constraints X <: T, <: U; find weakest type stronger than T, stronger than U
@@ -511,7 +506,7 @@ def extract_weakest(premise : Premise, id : str) -> Typ:
     '''
     typs_strengthen = [
         st.weak
-        for st in premise.model
+        for st in model
         if st.strong == TVar(id)
     ]
     typ_strong = Top() 
@@ -530,8 +525,8 @@ def extract_weakest(premise : Premise, id : str) -> Typ:
     '''
     constraints_relational = [
         st
-        for st in premise.model
-        if is_relational_key(premise, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
+        for st in model
+        if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
     ]
 
     typ_factored = Top()
@@ -562,10 +557,10 @@ def extract_strongest(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def condense_weakest(premise : Premise, typ : Typ) -> Typ:
+def condense_weakest(model : Model, typ : Typ) -> Typ:
     fvs = extract_free_vars_from_typ(pset(), typ)
     renaming = pmap({
-        id : condense_weakest(premise, extract_weakest(premise, id))
+        id : condense_weakest(model, extract_weakest(model, id))
         for id in fvs
     })
     return sub_typ(renaming, typ)
@@ -618,8 +613,8 @@ def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
     ]
 
 
-def prettify_weak(premise : Premise, typ : Typ) -> str:
-    return concretize_typ(simplify_typ(condense_weakest(premise, typ)))
+def prettify_weak(model : Model, typ : Typ) -> str:
+    return concretize_typ(simplify_typ(condense_weakest(model, typ)))
 
 
 
@@ -754,11 +749,9 @@ def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Ite
 
     return result
 
-def is_variable_unassigned(premise : Premise, id : str) -> bool:
+def is_variable_unassigned(model : Model, id : str) -> bool:
     return (
-        id not in extract_free_vars_from_constraints(pset(), premise.model) and
-        id not in premise.freezer and
-        True
+        id not in extract_free_vars_from_constraints(pset(), model)
     )
 
 def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
@@ -772,21 +765,17 @@ def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str])
 
     return constraints 
 
-def package_typ(premises : list[Premise], typ : Typ) -> Typ:
-    '''
-    construct an IdxUnio type, with frozen variables as bound variable.
-    '''
-
+def package_typ(models : list[Model], typ : Typ) -> Typ:
     typ_result = Bot()
     ids_base = extract_free_vars_from_typ(pset(), typ)
-    for premise in premises:
+    for model in models:
         constraints = pset()
         for id_base in ids_base: 
-            constraints_reachable = extract_reachable_constraints(premise.model, id_base, pset())
+            constraints_reachable = extract_reachable_constraints(model, id_base, pset())
             constraints = constraints.union(constraints_reachable)
 
         ids_constraints = extract_free_vars_from_constraints(pset(), constraints)
-        ids_bound = premise.freezer.intersection(ids_constraints)
+        ids_bound = ids_constraints
 
         typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
         typ_result = Unio(typ_idx_unio, typ_result)
@@ -820,11 +809,11 @@ class Solver:
 
 
 
-    def solve(self, premise : Premise, strong : Typ, weak : Typ) -> list[Premise]:
+    def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
 
 #         print(f'''
 # | | DEBUG SOLVE
-# | | model : {concretize_constraints(list(premise.model))}
+# | | model : {concretize_constraints(list(model.model))}
 # | | strong: {concretize_typ(strong)}
 # | | weak  : {concretize_typ(weak)}
 #         ''')
@@ -839,31 +828,31 @@ class Solver:
             '''
             T <: X
             '''
-            weakest = extract_weakest(premise, weak.id)
-            premises = self.solve(premise, strong, weakest)
+            weakest = extract_weakest(model, weak.id)
+            models = self.solve(model, strong, weakest)
             # print(f'''
             # DEBUG WEAK VAR (weak, TVar), strong <: weakest
             # strong: {concretize_typ(strong)}
             # weak: {concretize_typ(weak)}
             # weakest: {concretize_typ(weakest)}
             # ''')
-            # for p in premises:
+            # for p in models:
             #     print(f'''
             #     @ MODEL: {concretize_constraints(list(p.model))}
             #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
             #     ''')
             return [
-                Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
-                for p in premises
+                model.add(Subtyping(strong, weak))
+                for model in models
             ]
             # TODO: remove old code
-            # frozen = weak.id in premise.freezer
+            # frozen = weak.id in model.freezer
             # if frozen:
             #     '''
             #     use the most lenient interpretation of the weak type; the weakest
             #     '''
-            #     weak_lenient = extract_weakest(premise, weak.id)
-            #     return self.solve(premise, strong, weak_lenient)
+            #     weak_lenient = extract_weakest(model, weak.id)
+            #     return self.solve(model, strong, weak_lenient)
             # else:
             #     '''
             #     ensure constraint is consistent with weakest
@@ -872,10 +861,10 @@ class Solver:
             #     X <: S |- T <: X
             #     add constraint and wait for more information
             #     '''
-            #     weakest = extract_weakest(premise, weak.id)
-            #     consistent = bool(self.solve(premise, strong, weakest))
+            #     weakest = extract_weakest(model, weak.id)
+            #     consistent = bool(self.solve(model, strong, weakest))
             #     if consistent:
-            #         return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+            #         return [Model(model.model.add(Subtyping(strong, weak)), model.freezer)]
             #     else:
             #         return []
 
@@ -883,26 +872,26 @@ class Solver:
             '''
             X <: T
             '''
-            strongest = extract_strongest(premise.model, strong.id)
-            premises = self.solve(premise, strongest, weak)
+            strongest = extract_strongest(model, strong.id)
+            models = self.solve(model, strongest, weak)
             # print(f'''
             # DEBUG STRONG VAR (strong, TVar), strongest <: weak
             # strong: {concretize_typ(strong)}
             # weak: {concretize_typ(weak)}
             # strongest: {concretize_typ(strongest)}
             # ''')
-            # for p in premises:
+            # for p in models:
             #     print(f'''
             #     @ MODEL: {concretize_constraints(list(p.model))}
             #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
             #     ''')
 
             return [
-                Premise(p.model.add(Subtyping(strong, weak)), p.freezer)
-                for p in premises
+                model.add(Subtyping(strong, weak))
+                for model in models
             ]
 
-            # frozen = strong.id in premise.freezer
+            # frozen = strong.id in model.freezer
             # print(f'''
             # DEBUG (strong, TVar)
             # strong: {concretize_typ(strong)}
@@ -913,9 +902,9 @@ class Solver:
             #     '''
             #     use the most lenient interpretation of the strong type; the strongest 
             #     '''
-            #     strong_lenient = extract_strongest(premise.model, strong.id)
+            #     strong_lenient = extract_strongest(model.model, strong.id)
             #     print(f"strong_lenient: {concretize_typ(strong_lenient)}")
-            #     return self.solve(premise, strong_lenient, weak) 
+            #     return self.solve(model, strong_lenient, weak) 
             # else:
             #     '''
             #     ensure constraint is consistent with strongest
@@ -924,10 +913,10 @@ class Solver:
             #     S <: X |- X <: T
             #     add constraint and wait for more information
             #     '''
-            #     strongest = extract_strongest(premise.model, strong.id)
-            #     consistent = bool(self.solve(premise, strongest, weak))
+            #     strongest = extract_strongest(model.model, strong.id)
+            #     consistent = bool(self.solve(model, strongest, weak))
             #     if consistent:
-            #         return [Premise(premise.model.add(Subtyping(strong, weak)), premise.freezer)]
+            #         return [Model(model.model.add(Subtyping(strong, weak)), model.freezer)]
             #     else:
             #         return []
 
@@ -939,20 +928,19 @@ class Solver:
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
-            freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
 
-            premises = [Premise(premise.model, freezer)]
+            models = [model]
             for constraint in strong_constraints:
-                premises = [
-                    p2
-                    for p1 in premises
-                    for p2 in self.solve(p1, constraint.strong, constraint.weak)
+                models = [
+                    m1
+                    for m0 in models
+                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
 
             return [
-                p2
-                for p1 in premises
-                for p2 in self.solve(p1, strong_body, weak)
+                m1
+                for m0 in models
+                for m1 in self.solve(m0, strong_body, weak)
             ]
 
         elif isinstance(weak, IdxInter):
@@ -960,24 +948,23 @@ class Solver:
             renaming = pmap({weak.id : tvar_fresh})
             weak_upper = sub_typ(renaming, weak.upper)
             weak_body = sub_typ(renaming, weak.body)
-            freezer = premise.freezer.union(t.id for t in renaming.values() if isinstance(t, TVar))
 
-            premises = self.solve(Premise(premise.model, freezer), tvar_fresh, weak_upper)
+            models = self.solve(model, tvar_fresh, weak_upper)
 
             return [
-                p2
-                for p1 in premises
-                for p2 in self.solve(p1, strong, weak_body)
+                m1
+                for m0 in models
+                for m1 in self.solve(m0, strong, weak_body)
             ]
 
         elif isinstance(strong, Least):
             if alpha_equiv(strong, weak):
-                return [premise]
+                return [model]
             else:
                 solution = []
 
                 strong_factored = factor_least(strong)
-                solution = self.solve(premise, strong_factored, weak)
+                solution = self.solve(model, strong_factored, weak)
 
                 if solution == []:
                     '''
@@ -986,11 +973,11 @@ class Solver:
                     simply need to sub RHS into LHS's self-referencing variable
                     '''
                     '''
-                    sub in induction hypothesis to premise:
+                    sub in induction hypothesis to model:
                     '''
                     renaming : PMap[str, Typ] = pmap({strong.id : weak})
                     strong_body = sub_typ(renaming, strong.body)
-                    return self.solve(premise, strong_body, weak)
+                    return self.solve(model, strong_body, weak)
                     
                 else:
                     return solution
@@ -1002,7 +989,7 @@ class Solver:
             '''
             return [
                 p2
-                for p1 in self.solve(premise, strong, Imp(weak.antec.left, weak.consq))
+                for p1 in self.solve(model, strong, Imp(weak.antec.left, weak.consq))
                 for p2 in self.solve(p1, strong, Imp(weak.antec.right, weak.consq))
             ]
 
@@ -1014,7 +1001,7 @@ class Solver:
             '''
             return [
                 p2
-                for p1 in self.solve(premise, strong, Imp(weak.antec, weak.consq.left))
+                for p1 in self.solve(model, strong, Imp(weak.antec, weak.consq.left))
                 for p2 in self.solve(p1, strong, Imp(weak.antec, weak.consq.right))
             ]
 
@@ -1023,21 +1010,21 @@ class Solver:
         elif isinstance(weak, TField) and isinstance(weak.body, Inter):
             return [
                 p2
-                for p1 in self.solve(premise, strong, TField(weak.label, weak.body.left))
+                for p1 in self.solve(model, strong, TField(weak.label, weak.body.left))
                 for p2 in self.solve(p1, strong, TField(weak.label, weak.body.right))
             ]
 
         elif isinstance(strong, Unio):
             return [
                 p2
-                for p1 in self.solve(premise, strong.left, weak)
+                for p1 in self.solve(model, strong.left, weak)
                 for p2 in self.solve(p1, strong.right, weak)
             ]
 
         elif isinstance(weak, Inter):
             return [
                 p2
-                for p1 in self.solve(premise, strong, weak.left)
+                for p1 in self.solve(model, strong, weak.left)
                 for p2 in self.solve(p1, strong, weak.right)
             ]
 
@@ -1047,7 +1034,7 @@ class Solver:
             '''
             return [
                 p1
-                for p1 in self.solve(premise, strong, weak.context)
+                for p1 in self.solve(model, strong, weak.context)
                 if self.solve(p1, strong, weak.negation) == []
             ]
         
@@ -1057,42 +1044,42 @@ class Solver:
         #######################################
 
         elif isinstance(weak, Top): 
-            return [premise] 
+            return [model] 
 
         elif isinstance(strong, Bot): 
-            return [premise] 
+            return [model] 
 
         elif isinstance(weak, IdxUnio): 
             renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
 
-            premises = self.solve(premise, strong, weak_body) 
+            models = self.solve(model, strong, weak_body) 
             unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
 
             # print(f''' 
             # DEBUG (weak, IdxUnio)
-            # model: {concretize_constraints(list(premise.model))}
+            # model: {concretize_constraints(list(model.model))}
             # strong: {concretize_typ(strong)}
             # weak: {concretize_typ(weak)}
             # freezing unio_indices: {unio_indices}
-            # premises: {len(premises)}
+            # models: {len(models)}
             # ''')
 
             for constraint in weak_constraints:
-                premises = [
+                models = [
                     p2
-                    for p1 in premises
+                    for p1 in models
                     for p2 in self.solve(p1, constraint.strong, constraint.weak)
                 ]
 
-            return premises
+            return models
             # '''
             # freeze the freed union indices 
             # '''
             # return [
-            #     Premise(p.model, p.freezer.union(unio_indices))
-            #     for p in premises
+            #     Model(p.model, p.freezer.union(unio_indices))
+            #     for p in models
             # ]
 
 
@@ -1102,26 +1089,24 @@ class Solver:
             strong_upper = sub_typ(renaming, strong.upper)
             strong_body = sub_typ(renaming, strong.body)
 
-            solution = self.solve(premise, strong_body, weak) 
+            solution = self.solve(model, strong_body, weak) 
             ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
 
-            model = premise.model
-            freezer = premise.freezer.union(ids_ground)
-            return self.solve(Premise(model, freezer), tvar_fresh, strong_upper)
+            return self.solve(model, tvar_fresh, strong_upper)
 
         elif isinstance(weak, Least): 
 
             # print(f'''
             # DEBUG (weak, Least):
-            # model: {(len(premise.model))}
-            # frozen: {list(premise.freezer)}
+            # model: {(len(model.model))}
+            # frozen: {list(model.freezer)}
             # strong: {concretize_typ(strong)}
             # weak: {concretize_typ(weak)}
-            # Will unroll?: {not is_relational_key(premise, strong)}
+            # Will unroll?: {not is_relational_key(model, strong)}
             # ''')
 
             # TODO: determine the right condition
-            if not is_relational_key(premise, strong) and self._battery > 0:
+            if not is_relational_key(model, strong) and self._battery > 0:
             # if True:
                 self._battery -= 1
                 '''
@@ -1129,15 +1114,15 @@ class Solver:
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-                return self.solve(premise, strong, weak_body)
+                return self.solve(model, strong, weak_body)
             else:
-                weak_cache = match_strong(premise.model, strong)
+                weak_cache = match_strong(model, strong)
                 if weak_cache:
-                    return self.solve(premise, weak_cache, weak)
-                # elif constraint_well_formed(premise, strong, weak):
-                #     # TODO: this is questionable: can't be sound to simply strengthen the premise here
-                #     model = premise.model.add(Subtyping(strong, weak))
-                #     return [Premise(model, premise.grounding)]
+                    return self.solve(model, weak_cache, weak)
+                # elif constraint_well_formed(model, strong, weak):
+                #     # TODO: this is questionable: can't be sound to simply strengthen the model here
+                #     model = model.model.add(Subtyping(strong, weak))
+                #     return [Model(model, model.grounding)]
                 else:
                     return []
 
@@ -1145,14 +1130,14 @@ class Solver:
             '''
             A \ B <: T === A <: T | B  
             '''
-            return self.solve(premise, strong.context, Unio(weak, strong.negation))
+            return self.solve(model, strong.context, Unio(weak, strong.negation))
 
 
         elif isinstance(weak, Unio): 
-            return self.solve(premise, strong, weak.left) + self.solve(premise, strong, weak.right)
+            return self.solve(model, strong, weak.left) + self.solve(model, strong, weak.right)
 
         elif isinstance(strong, Inter): 
-            return self.solve(premise, strong.left, weak) + self.solve(premise, strong.right, weak)
+            return self.solve(model, strong.left, weak) + self.solve(model, strong.right, weak)
 
 
         #######################################
@@ -1160,17 +1145,17 @@ class Solver:
         #######################################
 
         elif isinstance(strong, TUnit) and isinstance(weak, TUnit): 
-            return [premise] 
+            return [model] 
 
         elif isinstance(strong, TTag) and isinstance(weak, TTag): 
             if strong.label == weak.label:
-                return self.solve(premise, strong.body, weak.body) 
+                return self.solve(model, strong.body, weak.body) 
             else:
                 return [] 
 
         elif isinstance(strong, TField) and isinstance(weak, TField): 
             if strong.label == weak.label:
-                return self.solve(premise, strong.body, weak.body) 
+                return self.solve(model, strong.body, weak.body) 
             else:
                 return [] 
 
@@ -1179,7 +1164,7 @@ class Solver:
         elif isinstance(strong, Imp) and isinstance(weak, Imp): 
             return [
                 p2
-                for p1 in self.solve(premise, weak.antec, strong.antec) 
+                for p1 in self.solve(model, weak.antec, strong.antec) 
                 for p2 in self.solve(p1, strong.consq, weak.consq) 
             ]
 
@@ -1189,10 +1174,10 @@ class Solver:
     end solve
     '''
 
-    def solve_composition(self, strong : Typ, weak : Typ) -> List[Premise]: 
+    def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
         self._battery = self._max_battery
-        premise = Premise(s(), s())
-        return self.solve(premise, strong, weak)
+        model = s()
+        return self.solve(model, strong, weak)
     '''
     end solve_composition
     '''
@@ -1280,8 +1265,8 @@ class ExprRule(Rule):
         '''
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('true', TUnit()), typ_var) 
-        premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve_composition(implication, premise_conclusion)
+        model_conclusion = Imp(condition, self.nt.typ)
+        solution = self.solver.solve_composition(implication, model_conclusion)
         typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
@@ -1292,8 +1277,8 @@ class ExprRule(Rule):
         '''
         typ_var = self.solver.fresh_type_var()
         implication = Imp(TTag('false', TUnit()), typ_var) 
-        premise_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve_composition(implication, premise_conclusion)
+        model_conclusion = Imp(condition, self.nt.typ)
+        solution = self.solver.solve_composition(implication, model_conclusion)
         typ_guide = package_typ(solution, typ_var)  
         return Nonterm('expr', self.nt.enviro, typ_guide) 
 
@@ -1341,7 +1326,7 @@ class ExprRule(Rule):
             # extract strongest weaker to use as return type
             # '''
             # solution = [
-            #     Premise(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
+            #     Model(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
             #     for p0 in self.solver.solve_composition(answr_i, Imp(argument, answr))
             #     for typ_return in [extract_strongest(p0.model, answr.id)]
             # ]
@@ -1385,17 +1370,17 @@ class ExprRule(Rule):
         typ_content_out = self.solver.fresh_type_var()
 
         solution = [
-            p2
-            for p0 in self.solver.solve_composition(body, Imp(typ_self, typ_content))
-            for p1 in self.solver.solve(p0, typ_self, Imp(typ_self_in, typ_self_out))
-            for p2 in self.solver.solve(p1, typ_content, Imp(typ_content_in, typ_content_out))
+            m2
+            for m0 in self.solver.solve_composition(body, Imp(typ_self, typ_content))
+            for m1 in self.solver.solve(m0, typ_self, Imp(typ_self_in, typ_self_out))
+            for m2 in self.solver.solve(m1, typ_content, Imp(typ_content_in, typ_content_out))
         ]
 
         tvar_fixy = self.solver.fresh_type_var()
 
         rel_unio = Bot()
         antec_unio = Bot()
-        for premise in reversed(solution):
+        for model in reversed(solution):
             typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
             typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
 
@@ -1403,13 +1388,12 @@ class ExprRule(Rule):
             free_vars_self = extract_free_vars_from_typ(pset(), typ_self_pair)
 
             if (free_vars_content.intersection(free_vars_self)) :
-                model = premise.model.add(Subtyping(typ_self_pair, tvar_fixy))
-                premise = Premise(model, premise.freezer)
+                model = model.add(Subtyping(typ_self_pair, tvar_fixy))
 
-            rel_choice = package_typ([premise], typ_content_pair) 
+            rel_choice = package_typ([model], typ_content_pair) 
             rel_unio = Unio(rel_choice, rel_unio) 
 
-            antec_choice = package_typ([premise], typ_content_in) 
+            antec_choice = package_typ([model], typ_content_in) 
             antec_unio = Unio(antec_choice, antec_unio) 
 
 
@@ -1510,7 +1494,7 @@ class FunctionRule(Rule):
             for choice in choices
         )
 
-        solution = self.solver.solve(Premise(model, s()), typ_imp, self.nt.typ)
+        solution = self.solver.solve(model, typ_imp, self.nt.typ)
         typ_guide = package_typ(solution, Imp(case_antec, case_consq))
         '''
         NOTE: the guide is an implication guiding the next case

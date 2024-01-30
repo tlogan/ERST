@@ -390,8 +390,8 @@ def test_subtyping_idx_unio():
     assert  one_pair 
 
     debug_solution = solver.solve_composition(one_pair, debug)
-    for p in debug_solution:
-        print(f'model: {analyzer.concretize_constraints(list(p.model))}')
+    for model in debug_solution:
+        print(f'model: {analyzer.concretize_constraints(list(model))}')
 
 
 def test_subtyping_nat_list():
