@@ -2,6 +2,7 @@
 
 
 ### TODO
+- move tests into smaller functions
 - implement list-nat relation subtyping examples
 - implement plus relation subtyping examples
 - update basic examples with test of type inference 

@@ -403,70 +403,60 @@ least NL with
     ''')
     assert nat_list 
 
-#     #############################
-#     zero_nil = language.parse_typ('''
-# (:zero @, :nil @)
-#     ''')
-#     assert zero_nil 
+    #############################
+    zero_nil = language.parse_typ('''
+(:zero @, :nil @)
+    ''')
+    assert zero_nil 
 
-#     zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
-#     print(f'zero_nil: {len(zero_nil_solution)}')
-#     #############################
-#     one_pair = language.parse_typ('''
-# (:succ :zero @, :cons :nil @)
-#     ''')
-#     assert one_pair 
-#     one_pair_solution = solver.solve_composition(one_pair, nat_list)
-#     print(f'one_pair: {len(one_pair_solution)}')
-#     #############################
+    zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
+    print(f'zero_nil: {len(zero_nil_solution)}')
+    #############################
+    one_pair = language.parse_typ('''
+(:succ :zero @, :cons :nil @)
+    ''')
+    assert one_pair 
+    one_pair_solution = solver.solve_composition(one_pair, nat_list)
+    print(f'one_pair: {len(one_pair_solution)}')
+    #############################
     pair_fail = language.parse_typ('''
 (:succ :succ :zero @, :cons :nil @)
     ''')
-    ######## NOTE: since the following works; the issue is in handling solving for variable
-#     pair_fail = language.parse_typ('''
-# (:succ :zero @, :nil @)
-# ''')
-#     nat_list = language.parse_typ('''
-# {N L . (left : N & right : L) <: least NL with ((left : :zero @ & right : :nil @) | {N L . (left : N & right : L) <: NL} (left : :succ N & right : :cons L))} (left : :succ N & right : :cons L)
-#     ''')
-    ############
-    assert nat_list
 
     assert pair_fail 
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
     pair_fail_solution = solver.solve_composition(pair_fail, nat_list)
     print(f'pair_fail: {len(pair_fail_solution)}')
-    for p in pair_fail_solution:
-        print("<<<")
-        analyzer.concretize_constraints(list(p.model))
-        print(">>>")
-#     ############################
-#     one_pair_query = language.parse_typ('''
-# (:succ :zero @, :cons X)
-#     ''')
-#     assert one_pair_query
-#     one_pair_query_solution = solver.solve_composition(one_pair_query, nat_list)
-#     print(f'one_pair_query: {[analyzer.concretize_constraints(list(p.model)) for p in one_pair_query_solution]}')
-#     ############################
-#     one_pair_query_1 = language.parse_typ('''
-# (:succ :zero @, X)
-#     ''')
-#     assert one_pair_query_1
-#     one_pair_query_1_solution = solver.solve_composition(one_pair_query_1, nat_list)
-#     print(f'one_pair_query_1: {[analyzer.concretize_constraints(list(p.model)) for p in one_pair_query_1_solution]}')
-#     ############################
-#     print('''
-# ###########################################
-#     ''')
-#     two_pair_query = language.parse_typ('''
-# (:succ :succ :zero @, :cons X)
-#     ''')
-#     assert two_pair_query
-#     two_pair_query_solution = solver.solve_composition(two_pair_query, nat_list)
-#     print(f'two_pair_query: {[analyzer.concretize_constraints(list(p.model)) for p in two_pair_query_solution]}')
-#     for p in two_pair_query_solution:
-#         weakest = analyzer.condense_weakest(p, analyzer.TVar("X"))
-#         print("X <: " + analyzer.concretize_typ(analyzer.simplify_typ(weakest)))
+    ############################
+    one_pair_query = language.parse_typ('''
+(:succ :zero @, :cons X)
+    ''')
+    assert one_pair_query
+    one_pair_query_solution = solver.solve_composition(one_pair_query, nat_list)
+    print(f'one_pair_query:')
+    for p in one_pair_query_solution:
+        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
+    ############################
+    one_pair_query_1 = language.parse_typ('''
+(:succ :zero @, X)
+    ''')
+    assert one_pair_query_1
+    one_pair_query_1_solution = solver.solve_composition(one_pair_query_1, nat_list)
+    print(f'one_pair_query_1:')
+    for p in one_pair_query_1_solution:
+        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
+    ############################
+    print('''
+###########################################
+    ''')
+    two_pair_query = language.parse_typ('''
+(:succ :succ :zero @, :cons X)
+    ''')
+    assert two_pair_query
+    two_pair_query_solution = solver.solve_composition(two_pair_query, nat_list)
+    print(f'two_pair_query:')
+    for p in two_pair_query_solution:
+        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
 
 if __name__ == '__main__':
     test_subtyping_nat_list()

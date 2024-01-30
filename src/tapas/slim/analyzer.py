@@ -618,6 +618,8 @@ def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
     ]
 
 
+def prettify_weak(premise : Premise, typ : Typ) -> str:
+    return concretize_typ(simplify_typ(condense_weakest(premise, typ)))
 
 
 
