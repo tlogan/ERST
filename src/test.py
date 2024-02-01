@@ -319,147 +319,152 @@ least self with :nil @ | :cons self
     assert c == "least self with (:nil @ | :cons self)"
 
 
-def test_subtyping_nat():
+def p(s): 
+    t = language.parse_typ(s)
+    assert t 
+    return t 
 
-    solver = analyzer.Solver() 
-    nat = language.parse_typ('''
-least N with
-    :zero @  |
-    :succ N 
-    ''')
-    assert nat
+def u(t): 
+    s = analyzer.concretize_typ(t)
+    assert s 
+    return s 
 
-    # #############################
-    # zero = language.parse_typ('''
-    # :zero @ 
-    # ''')
-    # assert zero
+solver = analyzer.Solver() 
+nat = p('''
+least N with bot | :zero @  | :succ N 
+''')
 
-    # zero_solution = solver.solve_composition(zero, nat)
-    # print(f'zero: {len(zero_solution)}')
-    # #############################
-    # two = language.parse_typ('''
-    # :succ :succ :zero @ 
-    # ''')
-    # assert two
-    # two_solution = solver.solve_composition(two, nat)
-    # print(f'two: {len(two_solution)}')
-    # #############################
-    # blah = language.parse_typ('''
-    # :blah :succ :zero @ 
-    # ''')
-    # assert blah 
-    # blah_solution = solver.solve_composition(blah, nat)
-    # print(f'blah: {len(blah_solution)}')
-    #############################
-#     twice_unrolled = language.parse_typ('''
-# :succ :succ (least N with
-#     :zero @ |
-#     :succ N)
-#     ''')
+even = p('''
+least E with bot | :zero @ | :succ :succ E
+''')
 
-#     assert twice_unrolled
-#     twice_unrolled_solution = solver.solve_composition(twice_unrolled, nat)
-#     print(f'twice_unrolled: {len(twice_unrolled_solution)}')
-    #############################
-#     # TODO: debug to ensure pass 
-    even = language.parse_typ('''
-least E with
-    :zero @ |
-    :succ :succ E
-    ''')
-    assert even
-    even_solution = solver.solve_composition(even, nat)
-    print(f'even: {len(even_solution)}')
-
-    even_solution_fail = solver.solve_composition(nat, even)
-    print(f'even_fail: {len(even_solution_fail)}')
-    #############################
-
-def test_subtyping_idx_unio():
-    solver = analyzer.Solver() 
-    debug = language.parse_typ('''
-    { N . N <: top} (:succ N)  
-    ''')
-    assert debug 
-
-    # TODO: expected to have one solution 
-    one_pair = language.parse_typ('''
-(:succ :zero @)
-    ''')
-    assert  one_pair 
-
-    debug_solution = solver.solve_composition(one_pair, debug)
-    for model in debug_solution:
-        print(f'model: {analyzer.concretize_constraints(list(model))}')
-
-
-def test_subtyping_nat_list():
-    solver = analyzer.Solver() 
-    nat_list = language.parse_typ('''
+nat_list = p('''
 least NL with
+    bot |
     (:zero @, :nil @) |
     { N L . (N, L) <: NL} (:succ N, :cons L)  
-    ''')
-    assert nat_list 
+''')
 
-    #############################
-    zero_nil = language.parse_typ('''
+def test_zero_subtyping_nat():
+    zero = p('''
+:zero @ 
+    ''')
+    models = solver.solve_composition(zero, nat)
+    # print(f'len(models): {len(models)}')
+    assert(models)
+
+def test_two_subtyping_nat():
+    two = p('''
+:succ :succ :zero @ 
+    ''')
+    models = solver.solve_composition(two, nat)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_bad_tag_subtyping_nat():
+    bad = p('''
+:bad :succ :zero @ 
+    ''')
+    models = solver.solve_composition(bad, nat)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_two_nat_subtyping_nat():
+    two_nat = p(f'''
+:succ :succ {u(nat)}
+    ''')
+    models = solver.solve_composition(two_nat, nat)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+
+def test_even_subtyping_nat():
+    models = solver.solve_composition(even, nat)
+    assert models
+
+def test_nat_subtyping_even():
+    models = solver.solve_composition(nat, even)
+    # print(f'len(models): {len(models)}')
+    assert not models
+
+def test_subtyping_idx_unio():
+    idx_unio = p('''
+{ N . N <: top} (:thing N)  
+    ''')
+    thing = p('''
+(:thing @)
+    ''')
+
+    models = solver.solve_composition(thing, idx_unio)
+    for model in models:
+        print(f'model: {analyzer.concretize_constraints(list(model))}')
+    assert(models)
+
+
+def test_zero_nil_subtyping_nat_list():
+    global p
+    zero_nil = p('''
 (:zero @, :nil @)
     ''')
-    assert zero_nil 
 
-    zero_nil_solution = solver.solve_composition(zero_nil, nat_list)
-    print(f'zero_nil: {len(zero_nil_solution)}')
-    #############################
-    one_pair = language.parse_typ('''
+    models = solver.solve_composition(zero_nil, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_one_single_subtyping_nat_list():
+    global p
+    one_single = p('''
 (:succ :zero @, :cons :nil @)
     ''')
-    assert one_pair 
-    one_pair_solution = solver.solve_composition(one_pair, nat_list)
-    print(f'one_pair: {len(one_pair_solution)}')
-    #############################
-    pair_fail = language.parse_typ('''
+    models = solver.solve_composition(one_single, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_two_single_subtyping_nat_list():
+    global p
+    two_single = p('''
 (:succ :succ :zero @, :cons :nil @)
     ''')
+    models = solver.solve_composition(two_single, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert not models
 
-    assert pair_fail 
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-    pair_fail_solution = solver.solve_composition(pair_fail, nat_list)
-    print(f'pair_fail: {len(pair_fail_solution)}')
-    ############################
-    one_pair_query = language.parse_typ('''
-(:succ :zero @, :cons X)
-    ''')
-    assert one_pair_query
-    one_pair_query_solution = solver.solve_composition(one_pair_query, nat_list)
-    print(f'one_pair_query:')
-    for p in one_pair_query_solution:
-        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
-    ############################
-    one_pair_query_1 = language.parse_typ('''
+def test_one_query_subtyping_nat_list():
+    one_query = p('''
 (:succ :zero @, X)
     ''')
-    assert one_pair_query_1
-    one_pair_query_1_solution = solver.solve_composition(one_pair_query_1, nat_list)
-    print(f'one_pair_query_1:')
-    for p in one_pair_query_1_solution:
-        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
-    ############################
-    print('''
-###########################################
+    models = solver.solve_composition(one_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weak(model, p("X"))
+    # print("answr: " + answer)
+    assert answer == ":cons :nil @"
+
+def test_one_cons_query_subtyping_nat_list():
+    global p
+    one_cons_query = p('''
+(:succ :zero @, :cons X)
     ''')
-    two_pair_query = language.parse_typ('''
+    models = solver.solve_composition(one_cons_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weak(model, p("X"))
+    # print("answr: " + answer)
+    assert answer == ":nil @"
+
+
+def test_two_cons_query_subtyping_nat_list():
+    two_cons_query = p('''
 (:succ :succ :zero @, :cons X)
     ''')
-    assert two_pair_query
-    two_pair_query_solution = solver.solve_composition(two_pair_query, nat_list)
-    print(f'two_pair_query:')
-    for p in two_pair_query_solution:
-        print("  --- X <: " + analyzer.prettify_weak(p, analyzer.TVar("X")))
+    models = solver.solve_composition(two_cons_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weak(model, p("X"))
+    print("answr: " + answer)
+    assert answer == ":cons :nil @"
 
 if __name__ == '__main__':
-    test_subtyping_nat_list()
     pass
 
 #######################################################################

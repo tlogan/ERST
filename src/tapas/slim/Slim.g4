@@ -139,6 +139,7 @@ $combo = TUnit()
 }
 
 // Tag 
+// TODO: change symbo to ~, e.g. ~cons
 | ':' ID typ_base {
 $combo = TTag($ID.text, $typ_base.combo) 
 }
