@@ -138,13 +138,12 @@ $combo = TVar($ID.text)
 $combo = TUnit() 
 }
 
-// Tag 
-// TODO: change symbo to ~, e.g. ~cons
-| ':' ID typ_base {
+// TTag 
+| '~' ID typ_base {
 $combo = TTag($ID.text, $typ_base.combo) 
 }
 
-// Field 
+// TField 
 | ID ':' typ_base {
 $combo = TField($ID.text, $typ_base.combo) 
 }
@@ -350,7 +349,7 @@ $combo = self.collect(BaseRule(self._solver, nt).combine_unit)
 } 
 
 //tag
-| ':' {
+| '~' {
 self.guide_terminal('ID')
 } ID {
 nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, $ID.text)
@@ -414,7 +413,7 @@ $combo = self.collect(FunctionRule(self._solver, nt).combine_cons, $pattern.comb
 
 record [Nonterm nt] returns [Typ combo] :
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -424,7 +423,7 @@ nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_single_body, $
 $combo = self.collect(RecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -543,7 +542,7 @@ $combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
 $combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
 } 
 
-| ':' {
+| '~' {
 self.guide_terminal('ID')
 } ID {
 nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, $ID.text)
@@ -559,7 +558,7 @@ $combo = $pattern_record.combo
 
 pattern_record [Nonterm nt] returns [PatternAttr combo] :
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -569,7 +568,7 @@ nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_
 $combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')

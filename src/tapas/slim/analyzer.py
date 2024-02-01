@@ -228,7 +228,7 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, TUnit):
             plate_entry = ([], lambda: "@")  
         elif isinstance(control, TTag):
-            plate_entry = ([control.body], lambda body : f":{control.label} {body}")  
+            plate_entry = ([control.body], lambda body : f"~{control.label} {body}")  
         elif isinstance(control, TField):
             plate_entry = ([control.body], lambda body : f"{control.label} : {body}")  
         elif isinstance(control, Imp):
