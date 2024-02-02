@@ -559,44 +559,57 @@ def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Typ:
     return typ_weak
 
 
-def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> Typ:
+def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> tuple[bool, Typ]:
     strongest = extract_strongest(model, exclude, id)
     if strongest != Bot():
-        '''
-        influenced
-        '''
-        return strongest
+        """
+        strongly influenced
+        """
+        return (True, strongest)
     else:
-        '''
-        uninfluenced
-        '''
-        return extract_weakest(model, id)
+        """
+        not strongly influenced
+        """
+        return (False, extract_weakest(model, id))
 
-def condense_strongest_influence(model : Model, seen : PSet[str], typ : Typ) -> Typ:
+def condense_strongest_influence(model : Model, weakest_seen : PSet[str], typ : Typ) -> Typ:
     '''
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
-    fvs = extract_free_vars_from_typ(pset(), typ)
-    fvs = fvs.difference(seen)
-    seen = seen.union(fvs) 
-    renaming = pmap({
-        id : condense_strongest_influence(model, seen, extract_strongest_influence(model, seen, id))
-        for id in fvs
-    })
-    return sub_typ(renaming, typ)
+    if isinstance(typ, Imp):
+        antec = condense_weakest(model, weakest_seen, typ.antec)
+        consq = condense_strongest_influence(model, weakest_seen, typ.consq)
+        return Imp(antec, consq)
+    else:
+        fvs = extract_free_vars_from_typ(pset(), typ)
+        # seen = seen.union(fvs) 
+        renaming = pmap({
+            id : condense_strongest_influence(
+                model, 
+                weakest_seen if strongly_influenced else weakest_seen.add(id), 
+                extracted
+            )
+            for id in fvs
+            for strongly_influenced, extracted in [extract_strongest_influence(model, weakest_seen, id)]
+        })
+        return sub_typ(renaming, typ)
 
 def condense_weakest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
     '''
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
-    fvs = extract_free_vars_from_typ(pset(), typ)
-    fvs = fvs.difference(seen)
-    seen = seen.union(fvs) 
-    renaming = pmap({
-        id : condense_weakest(model, seen, extract_weakest(model, id))
-        for id in fvs
-    })
-    return sub_typ(renaming, typ)
+    if isinstance(typ, Imp):
+        antec = condense_strongest_influence(model, seen, typ.antec)
+        consq = condense_weakest(model, seen, typ.consq)
+        return Imp(antec, consq)
+    else:
+        fvs = extract_free_vars_from_typ(pset(), typ)
+        seen = seen.union(fvs) 
+        renaming = pmap({
+            id : condense_weakest(model, seen, extract_weakest(model, id))
+            for id in fvs
+        })
+        return sub_typ(renaming, typ)
 
 
 def simplify_typ(typ : Typ) -> Typ:
@@ -647,6 +660,7 @@ def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
     ]
 
 def prettify_strongest_influence(model : Model, typ : Typ) -> str:
+    # return concretize_typ((condense_strongest_influence(model, pset(), typ)))
     return concretize_typ(simplify_typ(condense_strongest_influence(model, pset(), typ)))
 
 def prettify_weakest(model : Model, typ : Typ) -> str:
@@ -867,12 +881,15 @@ class Solver:
             X <: T
             '''
             strongest = extract_strongest(model, pset(), strong.id)
-            models = self.solve(model, strongest, weak)
+            if isinstance(strongest, Bot):
+                return [model.add(Subtyping(strong, weak))]
+            else:
+                models = self.solve(model, strongest, weak)
 
-            return [
-                model.add(Subtyping(strong, weak))
-                for model in models
-            ]
+                return [
+                    model.add(Subtyping(strong, weak))
+                    for model in models
+                ]
 
         elif isinstance(weak, TVar): 
             '''
@@ -889,13 +906,16 @@ class Solver:
             # ''')
 
             weakest = extract_weakest(model, weak.id)
-            models = self.solve(model, strong, weakest)
-            models = [
-                model.add(Subtyping(strong, weak))
-                for model in models
-            ]
+            if isinstance(weakest, Top):
+                return [model.add(Subtyping(strong, weak))]
+            else:
+                models = self.solve(model, strong, weakest)
+                models = [
+                    model.add(Subtyping(strong, weak))
+                    for model in models
+                ]
 
-            return models
+                return models
 
 
 

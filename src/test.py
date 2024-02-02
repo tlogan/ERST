@@ -468,9 +468,13 @@ def test_one_cons_query_subtyping_nat_list():
     models = solver.solve_composition(one_cons_query, nat_list)
     assert len(models) == 1
     model = models[0]
+    # TODO
     answer = analyzer.prettify_strongest_influence(model, p("X"))
-    # print("answr: " + answer)
     assert answer == "~nil @"
+    print(f"""
+model: {analyzer.concretize_constraints(list(model))}
+answr: {answer}
+    """)
 
 
 def test_two_cons_query_subtyping_nat_list():
@@ -481,9 +485,11 @@ def test_two_cons_query_subtyping_nat_list():
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_strongest_influence(model, p("X"))
-    print(f"model: {analyzer.concretize_constraints(list(model))}")
-    print("answr: " + answer)
     assert answer == "~cons ~nil @"
+    print(f"""
+model: {analyzer.concretize_constraints(list(model))}
+answr: {answer}
+    """)
 
 def test_even_list_subtyping_nat_list():
     models = solver.solve_composition(even_list, nat_list)
@@ -516,25 +522,16 @@ def test_zero_plus_query():
     base_case = p('''
 {Y . Y <: top} (x : ~zero @ & y : Y & z : Y)
     ''')
-
     models = solver.solve_composition(zero_plus_query, base_case)
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    print(f"model: {analyzer.concretize_constraints(list(model))}")
-
-    # strongest upper bound
-    # upper = analyzer.extract_weakest(model, "Z") 
     answer = analyzer.prettify_strongest_influence(model, analyzer.TVar("Z"))
-    # return concretize_typ(simplify_typ(condense_weakest(model, pset(), typ)))
-    # answer = analyzer.prettify_weak(model, p("Z"))
-    # '''
-    # NOTE: there is some non-determinism in the order of the unions; assertion may fail sometimes
-    # '''
+    assert answer == "~succ ~zero @"
     print(f'''
+model: {analyzer.concretize_constraints(list(model))}
 answr: {answer}
     ''')
-    assert answer == "~succ ~zero @"
 
 def test_one_plus_one_query():
     one_plus_one_query = p('''
@@ -544,24 +541,17 @@ def test_one_plus_one_query():
     print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    print(f"model: {analyzer.concretize_constraints(list(model))}")
-    # TODO: create new method to construct the strongest influenced type (bot is uninfluenced)
-    # start with the weakest type and intersect with the strongest type (if influenced (not bottom))
-    # this is a form of iterative weakening
-
-    # upper = analyzer.extract_weakest(model, "Z") 
-    # answer = analyzer.prettify_strong(model, upper)
-    # answer = analyzer.prettify_weak(model, p("Z"))
     answer = analyzer.prettify_strongest_influence(model, analyzer.TVar("Z"))
+    assert answer == "~succ ~succ ~zero @"
     print(f'''
+model: {analyzer.concretize_constraints(list(model))}
 answr: {answer}
     ''')
-    assert answer == "~succ ~succ ~zero @"
 
 
 
 if __name__ == '__main__':
-    test_one_plus_one_query()
+    test_two_cons_query_subtyping_nat_list()
     pass
 
 #######################################################################
