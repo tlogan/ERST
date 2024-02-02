@@ -244,7 +244,6 @@ def concretize_typ(typ : Typ) -> str:
             ids = concretize_ids(control.ids)
             plate_entry = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}")  
         elif isinstance(control, IdxInter):
-            upper = concretize_typ(control.upper)
             id = control.id
             plate_entry = ([control.upper, control.body], lambda upper, body : f"[{id} <: {upper}] {body}")  
         elif isinstance(control, Least):
@@ -477,7 +476,7 @@ def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
 def is_relational_key(model : Model, t : Typ) -> bool:
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            strongest = extract_strongest(model, t.body.id) 
+            strongest = extract_strongest(model, pset(), t.body.id) 
             return strongest == Bot() or is_relational_key(model, strongest)
         else:
             return is_relational_key(model, t.body)
@@ -541,7 +540,7 @@ def extract_weakest(model : Model, id : str) -> Typ:
 
     return typ_final 
 
-def extract_strongest(model : Model, id : str) -> Typ:
+def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Typ:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -550,20 +549,55 @@ def extract_strongest(model : Model, id : str) -> Typ:
     typs_weaken = [
         st.strong
         for st in model
-        if st.weak == TVar(id)
+        if st.weak == TVar(id) and (
+            not isinstance(st.strong, TVar) or st.strong.id not in exclude
+        )
     ]
     typ_weak = Bot() 
     for t in reversed(typs_weaken):
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def condense_weakest(model : Model, typ : Typ) -> Typ:
+
+def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> Typ:
+    strongest = extract_strongest(model, exclude, id)
+    if strongest != Bot():
+        '''
+        influenced
+        '''
+        return strongest
+    else:
+        '''
+        uninfluenced
+        '''
+        return extract_weakest(model, id)
+
+def condense_strongest_influence(model : Model, seen : PSet[str], typ : Typ) -> Typ:
+    '''
+    @param seen : tracks variables that have been seen. used to prevent cycling 
+    '''
     fvs = extract_free_vars_from_typ(pset(), typ)
+    fvs = fvs.difference(seen)
+    seen = seen.union(fvs) 
     renaming = pmap({
-        id : condense_weakest(model, extract_weakest(model, id))
+        id : condense_strongest_influence(model, seen, extract_strongest_influence(model, seen, id))
         for id in fvs
     })
     return sub_typ(renaming, typ)
+
+def condense_weakest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
+    '''
+    @param seen : tracks variables that have been seen. used to prevent cycling 
+    '''
+    fvs = extract_free_vars_from_typ(pset(), typ)
+    fvs = fvs.difference(seen)
+    seen = seen.union(fvs) 
+    renaming = pmap({
+        id : condense_weakest(model, seen, extract_weakest(model, id))
+        for id in fvs
+    })
+    return sub_typ(renaming, typ)
+
 
 def simplify_typ(typ : Typ) -> Typ:
 
@@ -612,11 +646,11 @@ def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
         for st in constraints
     ]
 
+def prettify_strongest_influence(model : Model, typ : Typ) -> str:
+    return concretize_typ(simplify_typ(condense_strongest_influence(model, pset(), typ)))
 
-def prettify_weak(model : Model, typ : Typ) -> str:
-    return concretize_typ(simplify_typ(condense_weakest(model, typ)))
-
-
+def prettify_weakest(model : Model, typ : Typ) -> str:
+    return concretize_typ(simplify_typ(condense_weakest(model, pset(), typ)))
 
 
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
@@ -812,113 +846,58 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
 
 #         print(f'''
-# | | DEBUG SOLVE
-# | | model : {concretize_constraints(list(model.model))}
-# | | strong: {concretize_typ(strong)}
-# | | weak  : {concretize_typ(weak)}
+# || DEBUG SOLVE
+# =================
+# || ------------
+# || model: {concretize_constraints(list(model))}
+# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
 #         ''')
-        if False: 
+
+        # if alpha_equiv(strong, weak): 
+        #     return [model] 
+
+        if False:
             return [] 
 
         #######################################
         #### Variable rules: ####
         #######################################
+        elif isinstance(strong, TVar): 
+            '''
+            X <: T
+            '''
+            strongest = extract_strongest(model, pset(), strong.id)
+            models = self.solve(model, strongest, weak)
+
+            return [
+                model.add(Subtyping(strong, weak))
+                for model in models
+            ]
 
         elif isinstance(weak, TVar): 
             '''
             T <: X
             '''
+
+            # print(f''' 
+            # DEBUG (weak, TVar)
+            # model: {concretize_constraints(list(model))}
+            # ---- |- ----------------------------------------
+            # strong: {concretize_typ(strong)}
+            # ---- <: ----------------------------------------
+            # weak: {concretize_typ(weak)}
+            # ''')
+
             weakest = extract_weakest(model, weak.id)
             models = self.solve(model, strong, weakest)
-            # print(f'''
-            # DEBUG WEAK VAR (weak, TVar), strong <: weakest
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # weakest: {concretize_typ(weakest)}
-            # ''')
-            # for p in models:
-            #     print(f'''
-            #     @ MODEL: {concretize_constraints(list(p.model))}
-            #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
-            #     ''')
-            return [
-                model.add(Subtyping(strong, weak))
-                for model in models
-            ]
-            # TODO: remove old code
-            # frozen = weak.id in model.freezer
-            # if frozen:
-            #     '''
-            #     use the most lenient interpretation of the weak type; the weakest
-            #     '''
-            #     weak_lenient = extract_weakest(model, weak.id)
-            #     return self.solve(model, strong, weak_lenient)
-            # else:
-            #     '''
-            #     ensure constraint is consistent with weakest
-            #          T <: S
-            #     ----------------
-            #     X <: S |- T <: X
-            #     add constraint and wait for more information
-            #     '''
-            #     weakest = extract_weakest(model, weak.id)
-            #     consistent = bool(self.solve(model, strong, weakest))
-            #     if consistent:
-            #         return [Model(model.model.add(Subtyping(strong, weak)), model.freezer)]
-            #     else:
-            #         return []
-
-        elif isinstance(strong, TVar): 
-            '''
-            X <: T
-            '''
-            strongest = extract_strongest(model, strong.id)
-            models = self.solve(model, strongest, weak)
-            # print(f'''
-            # DEBUG STRONG VAR (strong, TVar), strongest <: weak
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # strongest: {concretize_typ(strongest)}
-            # ''')
-            # for p in models:
-            #     print(f'''
-            #     @ MODEL: {concretize_constraints(list(p.model))}
-            #     NEW Constraint: {concretize_constraints([Subtyping(strong, weak)])}
-            #     ''')
-
-            return [
+            models = [
                 model.add(Subtyping(strong, weak))
                 for model in models
             ]
 
-            # frozen = strong.id in model.freezer
-            # print(f'''
-            # DEBUG (strong, TVar)
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # frozen: {frozen}
-            # ''')
-            # if frozen:
-            #     '''
-            #     use the most lenient interpretation of the strong type; the strongest 
-            #     '''
-            #     strong_lenient = extract_strongest(model.model, strong.id)
-            #     print(f"strong_lenient: {concretize_typ(strong_lenient)}")
-            #     return self.solve(model, strong_lenient, weak) 
-            # else:
-            #     '''
-            #     ensure constraint is consistent with strongest
-            #          S <: T
-            #     ----------------
-            #     S <: X |- X <: T
-            #     add constraint and wait for more information
-            #     '''
-            #     strongest = extract_strongest(model.model, strong.id)
-            #     consistent = bool(self.solve(model, strongest, weak))
-            #     if consistent:
-            #         return [Model(model.model.add(Subtyping(strong, weak)), model.freezer)]
-            #     else:
-            #         return []
+            return models
+
+
 
         #######################################
         #### Model rules: ####
@@ -988,9 +967,9 @@ class Solver:
             A -> Q & B -> Q ~~~ A | B -> Q
             '''
             return [
-                p2
-                for p1 in self.solve(model, strong, Imp(weak.antec.left, weak.consq))
-                for p2 in self.solve(p1, strong, Imp(weak.antec.right, weak.consq))
+                m1 
+                for m0 in self.solve(model, strong, Imp(weak.antec.left, weak.consq))
+                for m1 in self.solve(m0, strong, Imp(weak.antec.right, weak.consq))
             ]
 
         elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
@@ -1000,32 +979,32 @@ class Solver:
             P -> A & P -> B ~~~ P -> A & B 
             '''
             return [
-                p2
-                for p1 in self.solve(model, strong, Imp(weak.antec, weak.consq.left))
-                for p2 in self.solve(p1, strong, Imp(weak.antec, weak.consq.right))
+                m1 
+                for m0 in self.solve(model, strong, Imp(weak.antec, weak.consq.left))
+                for m1 in self.solve(m0, strong, Imp(weak.antec, weak.consq.right))
             ]
 
         # NOTE: field body intersection: strong <: (:label = (T1 & T2))
         # l : A & l : B ~~~ l : A & B 
         elif isinstance(weak, TField) and isinstance(weak.body, Inter):
             return [
-                p2
-                for p1 in self.solve(model, strong, TField(weak.label, weak.body.left))
-                for p2 in self.solve(p1, strong, TField(weak.label, weak.body.right))
+                m1
+                for m0 in self.solve(model, strong, TField(weak.label, weak.body.left))
+                for m1 in self.solve(m0, strong, TField(weak.label, weak.body.right))
             ]
 
         elif isinstance(strong, Unio):
             return [
-                p2
-                for p1 in self.solve(model, strong.left, weak)
-                for p2 in self.solve(p1, strong.right, weak)
+                m1
+                for m0 in self.solve(model, strong.left, weak)
+                for m1 in self.solve(m0, strong.right, weak)
             ]
 
         elif isinstance(weak, Inter):
             return [
-                p2
-                for p1 in self.solve(model, strong, weak.left)
-                for p2 in self.solve(p1, strong, weak.right)
+                m1 
+                for m0 in self.solve(model, strong, weak.left)
+                for m1 in self.solve(m0, strong, weak.right)
             ]
 
         elif isinstance(weak, Diff) and diff_well_formed(weak):
@@ -1033,9 +1012,9 @@ class Solver:
             T <: A \ B === (T <: A), ~(T <: B) 
             '''
             return [
-                p1
-                for p1 in self.solve(model, strong, weak.context)
-                if self.solve(p1, strong, weak.negation) == []
+                m
+                for m in self.solve(model, strong, weak.context)
+                if self.solve(m, strong, weak.negation) == []
             ]
         
 
@@ -1054,33 +1033,28 @@ class Solver:
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
 
-            models = self.solve(model, strong, weak_body) 
             unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
+            models = self.solve(model, strong, weak_body) 
+            # '''
+            # - add upper bound constraints to unio_indices after solving
+            # - rationale is that all inputs are also output
+            # '''
+            # models = [
+            #     model.union( 
+            #         Subtyping(TVar(id), extract_strongest(model, id))
+            #         for id in unio_indices
+            #     )
+            #     for model in models
+            # ]
 
-            # print(f''' 
-            # DEBUG (weak, IdxUnio)
-            # model: {concretize_constraints(list(model.model))}
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # freezing unio_indices: {unio_indices}
-            # models: {len(models)}
-            # ''')
 
             for constraint in weak_constraints:
                 models = [
-                    p2
-                    for p1 in models
-                    for p2 in self.solve(p1, constraint.strong, constraint.weak)
+                    m1
+                    for m0 in models
+                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]
-
             return models
-            # '''
-            # freeze the freed union indices 
-            # '''
-            # return [
-            #     Model(p.model, p.freezer.union(unio_indices))
-            #     for p in models
-            # ]
 
 
         elif isinstance(strong, IdxInter): 
@@ -1089,10 +1063,26 @@ class Solver:
             strong_upper = sub_typ(renaming, strong.upper)
             strong_body = sub_typ(renaming, strong.body)
 
-            solution = self.solve(model, strong_body, weak) 
-            ids_ground = (t.id for t in renaming.values() if isinstance(t, TVar))
+            inter_indices = (t.id for t in renaming.values() if isinstance(t, TVar))
+            models = self.solve(model, strong_body, weak) 
 
-            return self.solve(model, tvar_fresh, strong_upper)
+            # '''
+            # - add upper bound constraints to unio_indices after solving
+            # - rationale is that all inputs are also output
+            # '''
+            # models = [
+            #     model.union( 
+            #         Subtyping(TVar(id), extract_strongest(model, id))
+            #         for id in inter_indices
+            #     )
+            #     for model in models
+            # ]
+
+            return [
+                m1
+                for m0 in models
+                for m1 in self.solve(m0, tvar_fresh, strong_upper)
+            ]   
 
         elif isinstance(weak, Least): 
 
@@ -1159,13 +1149,11 @@ class Solver:
             else:
                 return [] 
 
-
-
         elif isinstance(strong, Imp) and isinstance(weak, Imp): 
             return [
-                p2
-                for p1 in self.solve(model, weak.antec, strong.antec) 
-                for p2 in self.solve(p1, strong.consq, weak.consq) 
+                m1
+                for m0 in self.solve(model, weak.antec, strong.antec) 
+                for m1 in self.solve(m0, strong.consq, weak.consq) 
             ]
 
         return []

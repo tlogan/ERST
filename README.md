@@ -2,6 +2,7 @@
 
 
 ### TODO
+- update condense_weakest to pattern match and condense_strongest for negative positions (implication antecedent) 
 - move tests into smaller functions
 - implement list-nat relation subtyping examples
 - implement plus relation subtyping examples
