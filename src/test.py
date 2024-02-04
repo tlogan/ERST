@@ -355,15 +355,26 @@ least NL with
     { N L . (N, L) <: NL} (~succ ~succ N, ~cons ~cons L)  
 ''')
 
-addition_rel = p('''
-least AR with
-    {Y . Y <: top} (x : ~zero @ & y : Y & z : Y) |
-    {X Y Z . (x : X & y : Y & z : Z) <: AR} (x : ~succ X & y : Y & z : ~succ Z) 
+
+
+nat_equal = p('''
+least SELF with
+(~zero @, ~zero @) |
+{ A B . (A, B) <: SELF} (~succ A, ~succ B)  
 ''')
 
 
 
-def test_zero_subtyping_nat():
+
+addition_rel = p(f'''
+least AR with
+    {{Y Z .  (Y, Z) <: ({u(nat_equal)})}} (x : ~zero @ & y : Y & z : Z) |
+    {{X Y Z . (x : X & y : Y & z : Z) <: AR}} (x : ~succ X & y : Y & z : ~succ Z) 
+''')
+
+
+
+def test_zero_subs_nat():
     zero = p('''
 ~zero @ 
     ''')
@@ -371,7 +382,7 @@ def test_zero_subtyping_nat():
     # print(f'len(models): {len(models)}')
     assert(models)
 
-def test_two_subtyping_nat():
+def test_two_subs_nat():
     two = p('''
 ~succ ~succ ~zero @ 
     ''')
@@ -379,7 +390,7 @@ def test_two_subtyping_nat():
     # print(f'len(models): {len(models)}')
     assert models
 
-def test_bad_tag_subtyping_nat():
+def test_bad_tag_subs_nat():
     bad = p('''
 ~bad ~succ ~zero @ 
     ''')
@@ -387,7 +398,7 @@ def test_bad_tag_subtyping_nat():
     # print(f'len(models): {len(models)}')
     assert not models
 
-def test_two_nat_subtyping_nat():
+def test_two_nat_subs_nat():
     two_nat = p(f'''
 ~succ ~succ ({u(nat)})
     ''')
@@ -396,16 +407,16 @@ def test_two_nat_subtyping_nat():
     assert models
 
 
-def test_even_subtyping_nat():
+def test_even_subs_nat():
     models = solver.solve_composition(even, nat)
     assert models
 
-def test_nat_subtyping_even():
+def test_nat_subs_even():
     models = solver.solve_composition(nat, even)
     # print(f'len(models): {len(models)}')
     assert not models
 
-def test_subtyping_idx_unio():
+def test_subs_idx_unio():
     idx_unio = p('''
 { N . N <: top} (~thing N)  
     ''')
@@ -419,7 +430,7 @@ def test_subtyping_idx_unio():
     assert(models)
 
 
-def test_zero_nil_subtyping_nat_list():
+def test_zero_nil_subs_nat_list():
     global p
     zero_nil = p('''
 (~zero @, ~nil @)
@@ -429,7 +440,7 @@ def test_zero_nil_subtyping_nat_list():
     # print(f'len(models): {len(models)}')
     assert models
 
-def test_one_single_subtyping_nat_list():
+def test_one_single_subs_nat_list():
 #     one_single = p('''
 # (~succ ~zero @, ~cons ~nil @)
 #     ''')
@@ -441,7 +452,7 @@ def test_one_single_subtyping_nat_list():
     # print(f'len(models): {len(models)}')
     assert models
 
-def test_two_single_subtyping_nat_list():
+def test_two_single_subs_nat_list():
     two_single = p('''
 (~succ ~succ ~zero @, ~cons ~nil @)
     ''')
@@ -449,18 +460,18 @@ def test_two_single_subtyping_nat_list():
     # print(f'len(models): {len(models)}')
     assert not models
 
-def test_one_query_subtyping_nat_list():
+def test_one_query_subs_nat_list():
     one_query = p('''
 (~succ ~zero @, X)
     ''')
     models = solver.solve_composition(one_query, nat_list)
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_strongest_influence(model, p("X"))
+    answer = analyzer.prettify_weakest(model, p("X"))
     # print("answr: " + answer)
     assert answer == "~cons ~nil @"
 
-def test_one_cons_query_subtyping_nat_list():
+def test_one_cons_query_subs_nat_list():
     global p
     one_cons_query = p('''
 (~succ ~zero @, ~cons X)
@@ -469,7 +480,7 @@ def test_one_cons_query_subtyping_nat_list():
     assert len(models) == 1
     model = models[0]
     # TODO
-    answer = analyzer.prettify_strongest_influence(model, p("X"))
+    answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~nil @"
     print(f"""
 model: {analyzer.concretize_constraints(list(model))}
@@ -477,43 +488,41 @@ answr: {answer}
     """)
 
 
-def test_two_cons_query_subtyping_nat_list():
+def test_two_cons_query_subs_nat_list():
     two_cons_query = p('''
 (~succ ~succ ~zero @, ~cons X)
     ''')
     models = solver.solve_composition(two_cons_query, nat_list)
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_strongest_influence(model, p("X"))
+    answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~cons ~nil @"
     print(f"""
 model: {analyzer.concretize_constraints(list(model))}
 answr: {answer}
     """)
 
-def test_even_list_subtyping_nat_list():
+def test_even_list_subs_nat_list():
     models = solver.solve_composition(even_list, nat_list)
     print(f"len(models): {len(models)}")
     # assert models
 
-def test_nat_list_subtyping_even_list():
+def test_nat_list_subs_even_list():
     models = solver.solve_composition(nat_list, even_list)
     print(f"len(models): {len(models)}")
     # assert not models
 
 
 def test_one_plus_one_equals_two():
-#     one_plus_one_equals_two = p('''
-# (x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
-#     ''')
-    # TODO: DEBUG. should (~succ bot) fail?
-    # NOTE: the base case of addition_rel allows anything to be used
+    print("==================")
+    print(u(addition_rel))
+    print("==================")
     one_plus_one_equals_two = p('''
-(x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ bot)
+(x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
     ''')
     models = solver.solve_composition(one_plus_one_equals_two, addition_rel)
     print(f'len(models): {len(models)}')
-    assert len(models) == 1
+    # assert len(models) == 1
 
 def test_zero_plus_query():
     zero_plus_query = p('''
@@ -526,7 +535,7 @@ def test_zero_plus_query():
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_strongest_influence(model, analyzer.TVar("Z"))
+    answer = analyzer.prettify_weakest(model, analyzer.TVar("Z"))
     assert answer == "~succ ~zero @"
     print(f'''
 model: {analyzer.concretize_constraints(list(model))}
@@ -541,17 +550,62 @@ def test_one_plus_one_query():
     print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_strongest_influence(model, analyzer.TVar("Z"))
+    answer = analyzer.prettify_weakest(model, analyzer.TVar("Z"))
     assert answer == "~succ ~succ ~zero @"
     print(f'''
 model: {analyzer.concretize_constraints(list(model))}
 answr: {answer}
     ''')
 
+def test_one_plus_equals_two_query():
+    one_plus_one_query = p('''
+(x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    print(f'len(models): {len(models)}')
+#     assert len(models) == 1
+#     model = models[0]
+#     answer = analyzer.prettify_weakest(model, analyzer.TVar("Y"))
+#     assert answer == "~succ ~zero @"
+#     print(f'''
+# model: {analyzer.concretize_constraints(list(model))}
+# answr: {answer}
+#     ''')
+
+def test_zero_plus_one_equals_two():
+    one_plus_one_query = p('''
+(x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    assert not models
+
+
+def test_plus_one_equals_two_query():
+    one_plus_one_query = p('''
+(x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    print(f'len(models): {len(models)}')
+    assert not models
+    for model in models:
+        print('------')
+        print(f' a model: {analyzer.concretize_constraints(list(model))}')
+        print('------')
+#     assert len(models) == 1
+#     model = models[0]
+#     answer = analyzer.prettify_weakest(model, analyzer.TVar("X"))
+#     assert answer == "~succ ~zero @"
+#     print(f'''
+# model: {analyzer.concretize_constraints(list(model))}
+# # answr: {answer}
+#     ''')
+
 
 
 if __name__ == '__main__':
-    test_two_cons_query_subtyping_nat_list()
+    # test_one_plus_equals_two_query()
+    # test_one_plus_one_query()
+    test_one_plus_one_equals_two()
     pass
 
 #######################################################################

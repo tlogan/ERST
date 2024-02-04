@@ -2,6 +2,8 @@
 
 
 ### TODO
+- fix the factor_least procedure to put factors into correct path
+    - allow cases to have different paths
 - update condense_weakest to pattern match and condense_strongest for negative positions (implication antecedent) 
 - move tests into smaller functions
 - implement list-nat relation subtyping examples

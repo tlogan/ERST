@@ -460,6 +460,7 @@ def factor_path(path : list[str], least : Least) -> Typ:
     column = extract_column(path, least.id, choices)
     return column 
 
+# TODO: fix this; need to but each factor into correct path
 def factor_least(least : Least) -> Typ:
     choices = linearize_unions(least.body)
     paths = list(extract_paths(choices[0]))
@@ -469,7 +470,6 @@ def factor_least(least : Least) -> Typ:
         typ_inter = Inter(typ_inter, column)
     return typ_inter
 
-
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless([], t1) == to_nameless([], t2)
 
@@ -477,7 +477,7 @@ def is_relational_key(model : Model, t : Typ) -> bool:
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
             strongest = extract_strongest(model, pset(), t.body.id) 
-            return strongest == Bot() or is_relational_key(model, strongest)
+            return not strongest or is_relational_key(model, strongest)
         else:
             return is_relational_key(model, t.body)
         # TODO: remove old code
@@ -540,7 +540,8 @@ def extract_weakest(model : Model, id : str) -> Typ:
 
     return typ_final 
 
-def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Typ:
+# TODO: remove option in return type; remove exclude param
+def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Optional[Typ]:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -553,53 +554,76 @@ def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Typ:
             not isinstance(st.strong, TVar) or st.strong.id not in exclude
         )
     ]
-    typ_weak = Bot() 
-    for t in reversed(typs_weaken):
-        typ_weak = Unio(t, typ_weak) 
-    return typ_weak
-
-
-def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> tuple[bool, Typ]:
-    strongest = extract_strongest(model, exclude, id)
-    if strongest != Bot():
-        """
-        strongly influenced
-        """
-        return (True, strongest)
+    if typs_weaken:
+        typ_weak = typs_weaken[-1] 
+        for t in reversed(typs_weaken[:-1]):
+            typ_weak = Unio(t, typ_weak) 
+        return typ_weak
     else:
-        """
-        not strongly influenced
-        """
-        return (False, extract_weakest(model, id))
+        return None
 
-def condense_strongest_influence(model : Model, weakest_seen : PSet[str], typ : Typ) -> Typ:
+
+# TODO: remove weird kludgy concept
+# def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> tuple[bool, Typ]:
+#     strongest = extract_strongest(model, exclude, id)
+#     if strongest:
+#         """
+#         strongly influenced
+#         """
+#         return (True, strongest)
+#     else:
+#         """
+#         not strongly influenced
+#         """
+#         return (False, extract_weakest(model, id))
+
+# TODO: remove weird kludgy concept
+# def condense_strongest_influence(model : Model, weakest_seen : PSet[str], typ : Typ) -> Typ:
+#     '''
+#     @param seen : tracks variables that have been seen. used to prevent cycling 
+#     '''
+#     if isinstance(typ, Imp):
+#         antec = condense_weakest(model, weakest_seen, typ.antec)
+#         consq = condense_strongest_influence(model, weakest_seen, typ.consq)
+#         return Imp(antec, consq)
+#     else:
+#         fvs = extract_free_vars_from_typ(pset(), typ)
+#         # seen = seen.union(fvs) 
+#         renaming = pmap({
+#             id : condense_strongest_influence(
+#                 model, 
+#                 weakest_seen if strongly_influenced else weakest_seen.add(id), 
+#                 extracted
+#             )
+#             for id in fvs
+#             for strongly_influenced, extracted in [extract_strongest_influence(model, weakest_seen, id)]
+#         })
+#         return sub_typ(renaming, typ)
+
+def condense_strongest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
     '''
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
     if isinstance(typ, Imp):
-        antec = condense_weakest(model, weakest_seen, typ.antec)
-        consq = condense_strongest_influence(model, weakest_seen, typ.consq)
+        antec = condense_weakest(model, seen, typ.antec)
+        consq = condense_strongest(model, seen, typ.consq)
         return Imp(antec, consq)
     else:
         fvs = extract_free_vars_from_typ(pset(), typ)
-        # seen = seen.union(fvs) 
+        seen = seen.union(fvs) 
         renaming = pmap({
-            id : condense_strongest_influence(
-                model, 
-                weakest_seen if strongly_influenced else weakest_seen.add(id), 
-                extracted
-            )
+            id : condense_strongest(model, seen, extract_strongest(model, pset(), id) or Bot())
             for id in fvs
-            for strongly_influenced, extracted in [extract_strongest_influence(model, weakest_seen, id)]
         })
         return sub_typ(renaming, typ)
 
 def condense_weakest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
     '''
+    The weakest type that we can determine a abstract type must be
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
     if isinstance(typ, Imp):
-        antec = condense_strongest_influence(model, seen, typ.antec)
+        antec = condense_strongest(model, seen, typ.antec)
         consq = condense_weakest(model, seen, typ.consq)
         return Imp(antec, consq)
     else:
@@ -659,9 +683,11 @@ def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
         for st in constraints
     ]
 
-def prettify_strongest_influence(model : Model, typ : Typ) -> str:
-    # return concretize_typ((condense_strongest_influence(model, pset(), typ)))
-    return concretize_typ(simplify_typ(condense_strongest_influence(model, pset(), typ)))
+# TODO: remove weird kludgy concept
+# def prettify_strongest_influence(model : Model, typ : Typ) -> str:
+#     # return concretize_typ((condense_strongest_influence(model, pset(), typ)))
+#     return concretize_typ(simplify_typ(condense_strongest_influence(model, pset(), typ)))
+
 
 def prettify_weakest(model : Model, typ : Typ) -> str:
     return concretize_typ(simplify_typ(condense_weakest(model, pset(), typ)))
@@ -859,13 +885,13 @@ class Solver:
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
 
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# || ------------
-# || model: {concretize_constraints(list(model))}
-# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-#         ''')
+        print(f'''
+|| DEBUG SOLVE
+=================
+|| ------------
+|| model: {concretize_constraints(list(model))}
+|| |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+        ''')
 
         # if alpha_equiv(strong, weak): 
         #     return [model] 
@@ -880,16 +906,25 @@ class Solver:
             '''
             X <: T
             '''
+
+            # print(f''' 
+            # DEBUG (strong, TVar)
+            # model: {concretize_constraints(list(model))}
+            # ---- |- ----------------------------------------
+            # strong: {concretize_typ(strong)}
+            # ---- <: ----------------------------------------
+            # weak: {concretize_typ(weak)}
+            # ''')
             strongest = extract_strongest(model, pset(), strong.id)
-            if isinstance(strongest, Bot):
-                return [model.add(Subtyping(strong, weak))]
-            else:
+            if strongest:
                 models = self.solve(model, strongest, weak)
 
                 return [
                     model.add(Subtyping(strong, weak))
                     for model in models
                 ]
+            else:
+                return [model.add(Subtyping(strong, weak))]
 
         elif isinstance(weak, TVar): 
             '''
@@ -1126,15 +1161,28 @@ class Solver:
                 weak_body = sub_typ(renaming, weak.body)
                 return self.solve(model, strong, weak_body)
             else:
+                print("""
+RELATIONAL KEY HERE!!!!!!
+                """)
                 weak_cache = match_strong(model, strong)
+                print(f"""
+WEAK CACHE: {weak_cache}
+                """)
                 if weak_cache:
                     return self.solve(model, weak_cache, weak)
-                # elif constraint_well_formed(model, strong, weak):
-                #     # TODO: this is questionable: can't be sound to simply strengthen the model here
-                #     model = model.model.add(Subtyping(strong, weak))
-                #     return [Model(model, model.grounding)]
                 else:
-                    return []
+                    factored = factor_least(weak)
+                    solution = self.solve(model, weak, factored)  
+                    if solution:
+                        """
+                        relational constraint must be well formed, since a matching factorization exists
+                        update model with well formed constraint that can't yet be solved
+                        relational_key is well formed
+                        and matches the cases of the weak type
+                        """
+                        return [model.add(Subtyping(strong, weak))]
+                    else:
+                        return []
 
         elif isinstance(strong, Diff) and diff_well_formed(strong):
             '''
