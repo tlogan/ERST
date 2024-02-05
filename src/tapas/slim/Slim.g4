@@ -616,7 +616,7 @@ $combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, $ID.text
 //     ;
 
 
-ID : [a-zA-Z]+ ;
+ID : [a-zA-Z][_a-zA-Z]* ;
 INT : [0-9]+ ;
 WS : [ \t\n\r]+ -> skip ;
 

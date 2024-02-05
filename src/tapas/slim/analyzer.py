@@ -238,16 +238,22 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, Unio):
             plate_entry = ([control.left,control.right], lambda left, right : f"({left} | {right})")  
         elif isinstance(control, Inter):
-            plate_entry = ([control.left,control.right], lambda left, right : f"({left} & {right})")  
+            if (
+                isinstance(control.left, TField) and control.left.label == "left" and 
+                isinstance(control.right, TField) and control.right.label == "right" 
+            ):
+                plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({left}, {right})")  
+            else:
+                plate_entry = ([control.left,control.right], lambda left, right : f"({left} & {right})")  
         elif isinstance(control, Diff):
             plate_entry = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})")  
         elif isinstance(control, IdxUnio):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate_entry = ([control.body], lambda body : f"{{{ids} . {constraints}}} {body}")  
+            plate_entry = ([control.body], lambda body : f"({{{ids} . {constraints}}} {body})")  
         elif isinstance(control, IdxInter):
             id = control.id
-            plate_entry = ([control.upper, control.body], lambda upper, body : f"[{id} <: {upper}] {body}")  
+            plate_entry = ([control.upper, control.body], lambda upper, body : f"([{id} <: {upper}] {body})")  
         elif isinstance(control, Least):
             id = control.id
             plate_entry = ([control.body], lambda body : f"least {id} with {body}")  
@@ -299,7 +305,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Nonterm:
     id : str 
-    enviro : Enviro 
+    enviro : PMap[str, Typ] 
     typ : Typ
 
 
@@ -325,7 +331,7 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
     )) 
 
 
-Enviro = PMap[str, Typ]
+
 
 
 Guidance = Union[Symbol, Terminal, Nonterm]
@@ -660,7 +666,7 @@ def simplify_typ(typ : Typ) -> Typ:
         else:
             return typ
     elif isinstance(typ, Imp): 
-        return Diff(simplify_typ(typ.antec), simplify_typ(typ.consq))
+        return Imp(simplify_typ(typ.antec), simplify_typ(typ.consq))
     elif isinstance(typ, IdxUnio):
         return IdxUnio(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
     elif isinstance(typ, IdxInter):
@@ -1255,27 +1261,49 @@ class BaseRule(Rule):
         nil -> zero
         cons A -> succ B 
         --------------------
+        (nil -> zero) & (cons A\\nil -> succ B)
+        --------------- OR -----------------------
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
+
+#         for case in cases:
+#             print(f"""
+# ---------------
+# DEBUG case.antec: {case.antec}
+# ---------------
+#             """)
         choices = from_cases_to_choices(cases)
-        rel = Bot() 
+#         for choice in choices:
+#             print(f"""
+# ---------------
+# DEBUG choice[0]: {choice[0]}
+# ---------------
+#             """)
+
+        result = Top() 
         for choice in reversed(choices): 
-            rel = Unio(make_pair_typ(*choice), rel)
+            result = Inter(Imp(choice[0], choice[1]), result)
+        return result
 
-        antec = Bot()  
-        for case in reversed(cases): 
-            antec = Unio(case.antec, antec)
+        # OLD construction of relation
+        # rel = Bot() 
+        # for choice in reversed(choices): 
+        #     rel = Unio(make_pair_typ(*choice), rel)
 
-        var_antec = self.solver.fresh_type_var()
-        var_concl = self.solver.fresh_type_var()
-        var_pair = make_pair_typ(var_antec, var_concl)
+        # antec = Bot()  
+        # for case in reversed(cases): 
+        #     antec = Unio(case.antec, antec)
 
-        return IdxInter(var_antec.id, antec,
-            Imp(
-                var_antec,
-                IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
-            )
-        )   
+        # var_antec = self.solver.fresh_type_var()
+        # var_concl = self.solver.fresh_type_var()
+        # var_pair = make_pair_typ(var_antec, var_concl)
+
+        # return IdxInter(var_antec.id, antec,
+        #     Imp(
+        #         var_antec,
+        #         IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
+        #     )
+        # )   
 
 
 class ExprRule(Rule):
@@ -1460,9 +1488,10 @@ class ExprRule(Rule):
         '''
         free_ids = extract_free_vars_from_typ(pset(), target)
         target_generalized = target
-        for id in reversed(list(free_ids)):
-            target_generalized = IdxInter(id, Top(), target_generalized) 
+        for fid in reversed(list(free_ids)):
+            target_generalized = IdxInter(fid, Top(), target_generalized) 
         enviro = self.nt.enviro.set(id, target_generalized)
+
         return Nonterm('expr', enviro, self.nt.typ)
 
 '''
@@ -1663,9 +1692,7 @@ class PatternBaseRule(Rule):
     def combine_var(self, id : str) -> PatternAttr:
         typ = self.solver.fresh_type_var()
         enviro = m().set(id, typ)
-        solution = self.solver.solve_composition(typ, self.nt.typ)
-        typ_grounded = package_typ(solution, typ)
-        return PatternAttr(enviro, typ_grounded)
+        return PatternAttr(enviro, typ)
 
     def combine_unit(self) -> PatternAttr:
         return PatternAttr(m(), TUnit())

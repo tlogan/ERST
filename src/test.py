@@ -144,166 +144,23 @@ def analyze(pieces : list[str]):
 
     return asyncio.run(_mk_task())
 
+def p(s): 
+    t = language.parse_typ(s)
+    assert t 
+    return t 
+
+def u(t): 
+    s = analyzer.concretize_typ(t)
+    assert s 
+    return s 
+
+def simp(t):
+    return analyzer.simplify_typ(t)
+
+
 """
 tests
 """
-
-def test_var():
-    pieces = ['''
-x
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-    assert isinstance(guides[0], KeyError)
-    assert guides[0].args[0] == 'x'
-    assert guides[-1] == language.Killed()
-    assert not combo
-    assert not parsetree 
-
-def test_unit():
-    pieces = ['''
-@
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base @))"
-
-def test_tag():
-    pieces = ['''
-~uno @
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ~ uno (expr (base @))))"
-
-def test_tuple():
-    pieces = ['''
-@, @, @
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base @) , (base @))"
-
-def test_record():
-    pieces = ['''
-_.uno = @ 
-_.dos = @
-    ''']
-# uno:= @  dos:= @
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
-
-
-def test_function():
-    pieces = ['''
-case ~nil @ => @ 
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    assert parsetree == "(expr (base (function case (pattern (pattern_base ~ nil (pattern (pattern_base @)))) => (expr (base @)))))"
-
-def test_projection():
-    pieces = ['''
-(_.uno = @ _.dos = @).uno
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @)))))) )) (keychain . uno))"
-
-def test_projection_chain():
-    pieces = ['''
-(_.uno = (~dos @) _.one = @).uno.dos
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
-
-def test_application():
-    pieces = ['''
-(
-case ~nil @ => @ 
-case ~cons x => x 
-)(~nil @)
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_application_chain():
-    pieces = ['''
-(case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_let():
-    pieces = ['''
-let x = @ ;
-x
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
-
-def test_idprojection():
-    pieces = ['''
-let r = (~uno = @ ~dos = @) ;
-r.uno
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_idprojection_chain():
-    pieces = ['''
-let r = (~uno = (~dos @) :one = @) ;
-r.uno.dos
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_idapplication():
-    pieces = ['''
-let f = (
-case ~nil @ => @ 
-case ~cons x => x 
-) ;
-f(~nil @)
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_idapplication_chain():
-    pieces = ['''
-let f = (case ~nil @ => case ~nil @ => @) ;
-f(~nil @)(~nil @)
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_fix():
-    pieces = ['''
-fix(case self => (
-case (~nil @) => ~zero @ 
-case ~cons x => ~succ (self(x)) 
-))
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-
-def test_ite():
-    pieces = ['''
-if :true @ then 
-    :one @
-else
-    :two @
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    # print(parsetree)
-
-def test_funnel():
-    pieces = ['''
-~nil @ |> fix(case self => (
-case ~nil @ => ~zero @ 
-case ~cons x => ~succ (self(x)) 
-))
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-
-def test_funnel_pipeline():
-    pieces = ['''
-~nil @ |> (case ~nil @ => @) |> (case ~nil @ => @)
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-
 
 def test_typ_implication():
 
@@ -323,16 +180,6 @@ least self with ~nil @ | ~cons self
     c = analyzer.concretize_typ(p) 
     assert c == "least self with (~nil @ | ~cons self)"
 
-
-def p(s): 
-    t = language.parse_typ(s)
-    assert t 
-    return t 
-
-def u(t): 
-    s = analyzer.concretize_typ(t)
-    assert s 
-    return s 
 
 solver = analyzer.Solver() 
 nat = p('''
@@ -583,6 +430,178 @@ def test_plus_one_equals_two_query():
 # answr: {answer}
 #     ''')
 
+def test_var():
+    pieces = ['''
+x
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+    assert isinstance(guides[0], KeyError)
+    assert guides[0].args[0] == 'x'
+    assert guides[-1] == language.Killed()
+    assert not combo
+    assert not parsetree 
+
+
+def test_unit():
+    pieces = ['''
+@
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base @))"
+    assert combo
+    print("combo: " + (combo))
+
+def test_tag():
+    pieces = ['''
+~uno @
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base ~ uno (expr (base @))))"
+
+def test_tuple():
+    pieces = ['''
+@, @, @
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base @) , (base @))"
+
+def test_record():
+    pieces = ['''
+_.uno = @ 
+_.dos = @
+    ''']
+# uno:= @  dos:= @
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
+
+
+def test_function():
+    pieces = ['''
+case ~nil @ => @ 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    assert parsetree == "(expr (base (function case (pattern (pattern_base ~ nil (pattern (pattern_base @)))) => (expr (base @)))))"
+    assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
+
+def test_function_cases_disjoint():
+    pieces = ['''
+case ~uno @ => ~one @ 
+case ~dos @ => ~two @ 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    # assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
+
+def test_function_cases_overlap():
+    pieces = ['''
+case ~uno @ => ~one @ 
+case x => ~two @ 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    # assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
+
+def test_projection():
+    pieces = ['''
+(_.uno = @ _.dos = @).uno
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @)))))) )) (keychain . uno))"
+
+def test_projection_chain():
+    pieces = ['''
+(_.uno = (~dos @) _.one = @).uno.dos
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
+
+def test_application():
+    pieces = ['''
+(
+case ~nil @ => @ 
+case ~cons x => x 
+)(~nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_application_chain():
+    pieces = ['''
+(case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_let():
+    pieces = ['''
+let x = @ ;
+x
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
+    print("combo: " + u(combo))
+
+def test_idprojection():
+    pieces = ['''
+let r = (~uno = @ ~dos = @) ;
+r.uno
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idprojection_chain():
+    pieces = ['''
+let r = (~uno = (~dos @) :one = @) ;
+r.uno.dos
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idapplication():
+    pieces = ['''
+let f = (
+case ~nil @ => @ 
+case ~cons x => x 
+) ;
+f(~nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_idapplication_chain():
+    pieces = ['''
+let f = (case ~nil @ => case ~nil @ => @) ;
+f(~nil @)(~nil @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_fix():
+    pieces = ['''
+fix(case self => (
+case ~nil @ => ~zero @ 
+case ~cons x => ~succ (self(x)) 
+))
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
+
+def test_funnel():
+    pieces = ['''
+~nil @ |> fix(case self => (
+case ~nil @ => ~zero @ 
+case ~cons x => ~succ (self(x)) 
+))
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+
+def test_funnel_pipeline():
+    pieces = ['''
+~nil @ |> (case ~nil @ => @) |> (case ~nil @ => @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
 
 
 # fix(case self => (
@@ -598,7 +617,16 @@ fix(case self => (
 ))
 ''')
 
-max = ('''
+def test_less_equal():
+    pieces = [less_equal]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
+
+max = (f'''
+let less_equal = {less_equal} ;
 case (x, y) => (
     if less_equal(x, y) then
         y
@@ -607,19 +635,32 @@ case (x, y) => (
 )
 ''')
 
+if_else = (f'''
+if ~true @ then
+    ~uno @
+else
+    ~dos @
+''')
+
+def test_if_then_else():
+    pieces = [if_else]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    print("combo: " + u(combo))
+    print(parsetree)
+
 def test_max():
-    pieces = [f'''
-{less_equal}
-    ''']
+    pieces = []
     (combo, guides, parsetree) = analyze(pieces)
     raise_guide(guides)
     print(parsetree)
-
-
+    assert combo
+    print("combo: " + u(combo))
 
 
 if __name__ == '__main__':
-    test_max()
+    test_function_cases_overlap()
     pass
 
 #######################################################################
