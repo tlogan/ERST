@@ -913,20 +913,20 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 
-				nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+				nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
 
 				setState(170);
-				((ExprContext)_localctx).head = base(nt);
+				((ExprContext)_localctx).head = base(nt_head);
 
 				self.guide_symbol(',')
 
 				setState(172);
 				match(T__10);
 
-				nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, ((ExprContext)_localctx).head.combo)
+				nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, ((ExprContext)_localctx).head.combo)
 
 				setState(174);
-				((ExprContext)_localctx).tail = base(nt);
+				((ExprContext)_localctx).tail = base(nt_tail);
 
 				_localctx.combo = self.collect(ExprRule(self._solver, nt).combine_tuple, ((ExprContext)_localctx).head.combo, ((ExprContext)_localctx).tail.combo) 
 
@@ -1405,12 +1405,12 @@ public class SlimParser extends Parser {
 				nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
 
 				setState(297);
-				((RecordContext)_localctx).body = expr(nt);
+				((RecordContext)_localctx).body = expr(nt_body);
 
 				nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo)
 
 				setState(299);
-				((RecordContext)_localctx).tail = record(nt);
+				((RecordContext)_localctx).tail = record(nt_tail);
 
 				_localctx.combo = self.collect(RecordRule(self._solver, nt).combine_cons, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.combo, ((RecordContext)_localctx).tail.combo)
 
@@ -1742,16 +1742,13 @@ public class SlimParser extends Parser {
 		public Nonterm nt;
 		public PatternAttr combo;
 		public Pattern_baseContext pattern_base;
-		public BaseContext head;
-		public BaseContext tail;
-		public Pattern_baseContext pattern_base() {
-			return getRuleContext(Pattern_baseContext.class,0);
+		public Pattern_baseContext head;
+		public Pattern_baseContext tail;
+		public List<Pattern_baseContext> pattern_base() {
+			return getRuleContexts(Pattern_baseContext.class);
 		}
-		public List<BaseContext> base() {
-			return getRuleContexts(BaseContext.class);
-		}
-		public BaseContext base(int i) {
-			return getRuleContext(BaseContext.class,i);
+		public Pattern_baseContext pattern_base(int i) {
+			return getRuleContext(Pattern_baseContext.class,i);
 		}
 		public PatternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public PatternContext(ParserRuleContext parent, int invokingState, Nonterm nt) {
@@ -1787,22 +1784,22 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 
-				nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_head)
+				nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
 
 				setState(365);
-				((PatternContext)_localctx).head = base(nt);
+				((PatternContext)_localctx).head = pattern_base(nt_head);
 
 				self.guide_symbol(',')
 
 				setState(367);
 				match(T__10);
 
-				nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_tail, ((PatternContext)_localctx).head.combo)
+				nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, ((PatternContext)_localctx).head.combo)
 
 				setState(369);
-				((PatternContext)_localctx).tail = base(nt);
+				((PatternContext)_localctx).tail = pattern_base(nt_tail);
 
-				_localctx.combo = self.collect(ExprRule(self._solver, nt).combine_tuple, ((PatternContext)_localctx).head.combo, ((PatternContext)_localctx).tail.combo) 
+				_localctx.combo = self.collect(PatternRule(self._solver, nt).combine_tuple, ((PatternContext)_localctx).head.combo, ((PatternContext)_localctx).tail.combo) 
 
 				}
 				break;
@@ -1826,6 +1823,7 @@ public class SlimParser extends Parser {
 		public Token ID;
 		public PatternContext body;
 		public Pattern_recordContext pattern_record;
+		public PatternContext pattern;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
@@ -1845,7 +1843,7 @@ public class SlimParser extends Parser {
 		Pattern_baseContext _localctx = new Pattern_baseContext(_ctx, getState(), nt);
 		enterRule(_localctx, 30, RULE_pattern_base);
 		try {
-			setState(391);
+			setState(396);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
 			case 1:
@@ -1913,6 +1911,20 @@ public class SlimParser extends Parser {
 
 				}
 				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(391);
+				match(T__5);
+				setState(392);
+				((Pattern_baseContext)_localctx).pattern = pattern(nt);
+				setState(393);
+				match(T__6);
+
+				_localctx.combo = ((Pattern_baseContext)_localctx).pattern.combo   
+
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -1952,7 +1964,7 @@ public class SlimParser extends Parser {
 		Pattern_recordContext _localctx = new Pattern_recordContext(_ctx, getState(), nt);
 		enterRule(_localctx, 32, RULE_pattern_record);
 		try {
-			setState(414);
+			setState(419);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
@@ -1963,22 +1975,22 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(394);
+				setState(399);
 				match(T__30);
 
 				self.guide_terminal('ID')
 
-				setState(396);
+				setState(401);
 				((Pattern_recordContext)_localctx).ID = match(ID);
 
 				self.guide_symbol('=')
 
-				setState(398);
+				setState(403);
 				match(T__31);
 
 				nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
 
-				setState(400);
+				setState(405);
 				((Pattern_recordContext)_localctx).body = pattern(nt_body);
 
 				_localctx.combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
@@ -1988,27 +2000,27 @@ public class SlimParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(403);
+				setState(408);
 				match(T__30);
 
 				self.guide_terminal('ID')
 
-				setState(405);
+				setState(410);
 				((Pattern_recordContext)_localctx).ID = match(ID);
 
 				self.guide_symbol('=')
 
-				setState(407);
+				setState(412);
 				match(T__31);
 
 				nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_body, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null))
 
-				setState(409);
+				setState(414);
 				((Pattern_recordContext)_localctx).body = pattern(nt_body);
 
 				nt_tail = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_tail, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo)
 
-				setState(411);
+				setState(416);
 				((Pattern_recordContext)_localctx).tail = pattern_record(nt_tail);
 
 				_localctx.combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, (((Pattern_recordContext)_localctx).ID!=null?((Pattern_recordContext)_localctx).ID.getText():null), ((Pattern_recordContext)_localctx).body.combo, ((Pattern_recordContext)_localctx).tail.combo)
@@ -2029,7 +2041,7 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001$\u01a1\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001$\u01a6\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -2089,64 +2101,65 @@ public class SlimParser extends Parser {
 		"\u0003\u000e\u0175\b\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f"+
 		"\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f"+
 		"\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f"+
-		"\u0001\u000f\u0003\u000f\u0188\b\u000f\u0001\u0010\u0001\u0010\u0001\u0010"+
+		"\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f"+
+		"\u0003\u000f\u018d\b\u000f\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010"+
 		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010"+
 		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010"+
-		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010"+
-		"\u0003\u0010\u019f\b\u0010\u0001\u0010\u0000\u0000\u0011\u0000\u0002\u0004"+
-		"\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \u0000"+
-		"\u0000\u01ca\u0000)\u0001\u0000\u0000\u0000\u0002C\u0001\u0000\u0000\u0000"+
-		"\u0004\u0083\u0001\u0000\u0000\u0000\u0006\u0090\u0001\u0000\u0000\u0000"+
-		"\b\u009b\u0001\u0000\u0000\u0000\n\u00a3\u0001\u0000\u0000\u0000\f\u00e4"+
-		"\u0001\u0000\u0000\u0000\u000e\u0100\u0001\u0000\u0000\u0000\u0010\u0117"+
-		"\u0001\u0000\u0000\u0000\u0012\u012e\u0001\u0000\u0000\u0000\u0014\u0141"+
-		"\u0001\u0000\u0000\u0000\u0016\u0150\u0001\u0000\u0000\u0000\u0018\u015e"+
-		"\u0001\u0000\u0000\u0000\u001a\u0166\u0001\u0000\u0000\u0000\u001c\u0174"+
-		"\u0001\u0000\u0000\u0000\u001e\u0187\u0001\u0000\u0000\u0000 \u019e\u0001"+
-		"\u0000\u0000\u0000\"*\u0001\u0000\u0000\u0000#$\u0005\"\u0000\u0000$*"+
-		"\u0006\u0000\uffff\uffff\u0000%&\u0005\"\u0000\u0000&\'\u0003\u0000\u0000"+
-		"\u0000\'(\u0006\u0000\uffff\uffff\u0000(*\u0001\u0000\u0000\u0000)\"\u0001"+
-		"\u0000\u0000\u0000)#\u0001\u0000\u0000\u0000)%\u0001\u0000\u0000\u0000"+
-		"*\u0001\u0001\u0000\u0000\u0000+D\u0001\u0000\u0000\u0000,-\u0005\u0001"+
-		"\u0000\u0000-D\u0006\u0001\uffff\uffff\u0000./\u0005\u0002\u0000\u0000"+
-		"/D\u0006\u0001\uffff\uffff\u000001\u0005\"\u0000\u00001D\u0006\u0001\uffff"+
-		"\uffff\u000023\u0005\u0003\u0000\u00003D\u0006\u0001\uffff\uffff\u0000"+
-		"45\u0005\u0004\u0000\u000056\u0005\"\u0000\u000067\u0003\u0002\u0001\u0000"+
-		"78\u0006\u0001\uffff\uffff\u00008D\u0001\u0000\u0000\u00009:\u0005\"\u0000"+
-		"\u0000:;\u0005\u0005\u0000\u0000;<\u0003\u0002\u0001\u0000<=\u0006\u0001"+
-		"\uffff\uffff\u0000=D\u0001\u0000\u0000\u0000>?\u0005\u0006\u0000\u0000"+
-		"?@\u0003\u0004\u0002\u0000@A\u0005\u0007\u0000\u0000AB\u0006\u0001\uffff"+
-		"\uffff\u0000BD\u0001\u0000\u0000\u0000C+\u0001\u0000\u0000\u0000C,\u0001"+
-		"\u0000\u0000\u0000C.\u0001\u0000\u0000\u0000C0\u0001\u0000\u0000\u0000"+
-		"C2\u0001\u0000\u0000\u0000C4\u0001\u0000\u0000\u0000C9\u0001\u0000\u0000"+
-		"\u0000C>\u0001\u0000\u0000\u0000D\u0003\u0001\u0000\u0000\u0000E\u0084"+
-		"\u0001\u0000\u0000\u0000FG\u0003\u0002\u0001\u0000GH\u0006\u0002\uffff"+
-		"\uffff\u0000H\u0084\u0001\u0000\u0000\u0000IJ\u0003\u0002\u0001\u0000"+
-		"JK\u0005\b\u0000\u0000KL\u0003\u0004\u0002\u0000LM\u0006\u0002\uffff\uffff"+
-		"\u0000M\u0084\u0001\u0000\u0000\u0000NO\u0003\u0002\u0001\u0000OP\u0005"+
-		"\t\u0000\u0000PQ\u0003\u0004\u0002\u0000QR\u0006\u0002\uffff\uffff\u0000"+
-		"R\u0084\u0001\u0000\u0000\u0000ST\u0003\u0002\u0001\u0000TU\u0003\u0006"+
-		"\u0003\u0000UV\u0006\u0002\uffff\uffff\u0000V\u0084\u0001\u0000\u0000"+
-		"\u0000WX\u0003\u0002\u0001\u0000XY\u0005\n\u0000\u0000YZ\u0003\u0004\u0002"+
-		"\u0000Z[\u0006\u0002\uffff\uffff\u0000[\u0084\u0001\u0000\u0000\u0000"+
-		"\\]\u0003\u0002\u0001\u0000]^\u0005\u000b\u0000\u0000^_\u0003\u0004\u0002"+
-		"\u0000_`\u0006\u0002\uffff\uffff\u0000`\u0084\u0001\u0000\u0000\u0000"+
-		"ab\u0005\f\u0000\u0000bc\u0003\u0000\u0000\u0000cd\u0005\r\u0000\u0000"+
-		"de\u0003\b\u0004\u0000ef\u0005\u000e\u0000\u0000fg\u0003\u0004\u0002\u0000"+
-		"gh\u0006\u0002\uffff\uffff\u0000h\u0084\u0001\u0000\u0000\u0000ij\u0005"+
-		"\u000f\u0000\u0000jk\u0005\"\u0000\u0000kl\u0005\u0010\u0000\u0000lm\u0003"+
-		"\u0004\u0002\u0000mn\u0006\u0002\uffff\uffff\u0000n\u0084\u0001\u0000"+
-		"\u0000\u0000op\u0005\u000f\u0000\u0000pq\u0005\"\u0000\u0000qr\u0005\u0011"+
-		"\u0000\u0000rs\u0003\u0004\u0002\u0000st\u0005\u0010\u0000\u0000tu\u0003"+
-		"\u0004\u0002\u0000uv\u0006\u0002\uffff\uffff\u0000v\u0084\u0001\u0000"+
-		"\u0000\u0000wx\u0005\u0012\u0000\u0000xy\u0005\"\u0000\u0000yz\u0005\u0013"+
-		"\u0000\u0000z{\u0003\u0004\u0002\u0000{|\u0006\u0002\uffff\uffff\u0000"+
-		"|\u0084\u0001\u0000\u0000\u0000}~\u0005\u0014\u0000\u0000~\u007f\u0005"+
-		"\"\u0000\u0000\u007f\u0080\u0005\u0015\u0000\u0000\u0080\u0081\u0003\u0004"+
-		"\u0002\u0000\u0081\u0082\u0006\u0002\uffff\uffff\u0000\u0082\u0084\u0001"+
-		"\u0000\u0000\u0000\u0083E\u0001\u0000\u0000\u0000\u0083F\u0001\u0000\u0000"+
-		"\u0000\u0083I\u0001\u0000\u0000\u0000\u0083N\u0001\u0000\u0000\u0000\u0083"+
-		"S\u0001\u0000\u0000\u0000\u0083W\u0001\u0000\u0000\u0000\u0083\\\u0001"+
+		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0003\u0010"+
+		"\u01a4\b\u0010\u0001\u0010\u0000\u0000\u0011\u0000\u0002\u0004\u0006\b"+
+		"\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \u0000\u0000"+
+		"\u01d0\u0000)\u0001\u0000\u0000\u0000\u0002C\u0001\u0000\u0000\u0000\u0004"+
+		"\u0083\u0001\u0000\u0000\u0000\u0006\u0090\u0001\u0000\u0000\u0000\b\u009b"+
+		"\u0001\u0000\u0000\u0000\n\u00a3\u0001\u0000\u0000\u0000\f\u00e4\u0001"+
+		"\u0000\u0000\u0000\u000e\u0100\u0001\u0000\u0000\u0000\u0010\u0117\u0001"+
+		"\u0000\u0000\u0000\u0012\u012e\u0001\u0000\u0000\u0000\u0014\u0141\u0001"+
+		"\u0000\u0000\u0000\u0016\u0150\u0001\u0000\u0000\u0000\u0018\u015e\u0001"+
+		"\u0000\u0000\u0000\u001a\u0166\u0001\u0000\u0000\u0000\u001c\u0174\u0001"+
+		"\u0000\u0000\u0000\u001e\u018c\u0001\u0000\u0000\u0000 \u01a3\u0001\u0000"+
+		"\u0000\u0000\"*\u0001\u0000\u0000\u0000#$\u0005\"\u0000\u0000$*\u0006"+
+		"\u0000\uffff\uffff\u0000%&\u0005\"\u0000\u0000&\'\u0003\u0000\u0000\u0000"+
+		"\'(\u0006\u0000\uffff\uffff\u0000(*\u0001\u0000\u0000\u0000)\"\u0001\u0000"+
+		"\u0000\u0000)#\u0001\u0000\u0000\u0000)%\u0001\u0000\u0000\u0000*\u0001"+
+		"\u0001\u0000\u0000\u0000+D\u0001\u0000\u0000\u0000,-\u0005\u0001\u0000"+
+		"\u0000-D\u0006\u0001\uffff\uffff\u0000./\u0005\u0002\u0000\u0000/D\u0006"+
+		"\u0001\uffff\uffff\u000001\u0005\"\u0000\u00001D\u0006\u0001\uffff\uffff"+
+		"\u000023\u0005\u0003\u0000\u00003D\u0006\u0001\uffff\uffff\u000045\u0005"+
+		"\u0004\u0000\u000056\u0005\"\u0000\u000067\u0003\u0002\u0001\u000078\u0006"+
+		"\u0001\uffff\uffff\u00008D\u0001\u0000\u0000\u00009:\u0005\"\u0000\u0000"+
+		":;\u0005\u0005\u0000\u0000;<\u0003\u0002\u0001\u0000<=\u0006\u0001\uffff"+
+		"\uffff\u0000=D\u0001\u0000\u0000\u0000>?\u0005\u0006\u0000\u0000?@\u0003"+
+		"\u0004\u0002\u0000@A\u0005\u0007\u0000\u0000AB\u0006\u0001\uffff\uffff"+
+		"\u0000BD\u0001\u0000\u0000\u0000C+\u0001\u0000\u0000\u0000C,\u0001\u0000"+
+		"\u0000\u0000C.\u0001\u0000\u0000\u0000C0\u0001\u0000\u0000\u0000C2\u0001"+
+		"\u0000\u0000\u0000C4\u0001\u0000\u0000\u0000C9\u0001\u0000\u0000\u0000"+
+		"C>\u0001\u0000\u0000\u0000D\u0003\u0001\u0000\u0000\u0000E\u0084\u0001"+
+		"\u0000\u0000\u0000FG\u0003\u0002\u0001\u0000GH\u0006\u0002\uffff\uffff"+
+		"\u0000H\u0084\u0001\u0000\u0000\u0000IJ\u0003\u0002\u0001\u0000JK\u0005"+
+		"\b\u0000\u0000KL\u0003\u0004\u0002\u0000LM\u0006\u0002\uffff\uffff\u0000"+
+		"M\u0084\u0001\u0000\u0000\u0000NO\u0003\u0002\u0001\u0000OP\u0005\t\u0000"+
+		"\u0000PQ\u0003\u0004\u0002\u0000QR\u0006\u0002\uffff\uffff\u0000R\u0084"+
+		"\u0001\u0000\u0000\u0000ST\u0003\u0002\u0001\u0000TU\u0003\u0006\u0003"+
+		"\u0000UV\u0006\u0002\uffff\uffff\u0000V\u0084\u0001\u0000\u0000\u0000"+
+		"WX\u0003\u0002\u0001\u0000XY\u0005\n\u0000\u0000YZ\u0003\u0004\u0002\u0000"+
+		"Z[\u0006\u0002\uffff\uffff\u0000[\u0084\u0001\u0000\u0000\u0000\\]\u0003"+
+		"\u0002\u0001\u0000]^\u0005\u000b\u0000\u0000^_\u0003\u0004\u0002\u0000"+
+		"_`\u0006\u0002\uffff\uffff\u0000`\u0084\u0001\u0000\u0000\u0000ab\u0005"+
+		"\f\u0000\u0000bc\u0003\u0000\u0000\u0000cd\u0005\r\u0000\u0000de\u0003"+
+		"\b\u0004\u0000ef\u0005\u000e\u0000\u0000fg\u0003\u0004\u0002\u0000gh\u0006"+
+		"\u0002\uffff\uffff\u0000h\u0084\u0001\u0000\u0000\u0000ij\u0005\u000f"+
+		"\u0000\u0000jk\u0005\"\u0000\u0000kl\u0005\u0010\u0000\u0000lm\u0003\u0004"+
+		"\u0002\u0000mn\u0006\u0002\uffff\uffff\u0000n\u0084\u0001\u0000\u0000"+
+		"\u0000op\u0005\u000f\u0000\u0000pq\u0005\"\u0000\u0000qr\u0005\u0011\u0000"+
+		"\u0000rs\u0003\u0004\u0002\u0000st\u0005\u0010\u0000\u0000tu\u0003\u0004"+
+		"\u0002\u0000uv\u0006\u0002\uffff\uffff\u0000v\u0084\u0001\u0000\u0000"+
+		"\u0000wx\u0005\u0012\u0000\u0000xy\u0005\"\u0000\u0000yz\u0005\u0013\u0000"+
+		"\u0000z{\u0003\u0004\u0002\u0000{|\u0006\u0002\uffff\uffff\u0000|\u0084"+
+		"\u0001\u0000\u0000\u0000}~\u0005\u0014\u0000\u0000~\u007f\u0005\"\u0000"+
+		"\u0000\u007f\u0080\u0005\u0015\u0000\u0000\u0080\u0081\u0003\u0004\u0002"+
+		"\u0000\u0081\u0082\u0006\u0002\uffff\uffff\u0000\u0082\u0084\u0001\u0000"+
+		"\u0000\u0000\u0083E\u0001\u0000\u0000\u0000\u0083F\u0001\u0000\u0000\u0000"+
+		"\u0083I\u0001\u0000\u0000\u0000\u0083N\u0001\u0000\u0000\u0000\u0083S"+
+		"\u0001\u0000\u0000\u0000\u0083W\u0001\u0000\u0000\u0000\u0083\\\u0001"+
 		"\u0000\u0000\u0000\u0083a\u0001\u0000\u0000\u0000\u0083i\u0001\u0000\u0000"+
 		"\u0000\u0083o\u0001\u0000\u0000\u0000\u0083w\u0001\u0000\u0000\u0000\u0083"+
 		"}\u0001\u0000\u0000\u0000\u0084\u0005\u0001\u0000\u0000\u0000\u0085\u0091"+
@@ -2283,39 +2296,42 @@ public class SlimParser extends Parser {
 		"\u001b\u0001\u0000\u0000\u0000\u0168\u0175\u0001\u0000\u0000\u0000\u0169"+
 		"\u016a\u0003\u001e\u000f\u0000\u016a\u016b\u0006\u000e\uffff\uffff\u0000"+
 		"\u016b\u0175\u0001\u0000\u0000\u0000\u016c\u016d\u0006\u000e\uffff\uffff"+
-		"\u0000\u016d\u016e\u0003\u000e\u0007\u0000\u016e\u016f\u0006\u000e\uffff"+
+		"\u0000\u016d\u016e\u0003\u001e\u000f\u0000\u016e\u016f\u0006\u000e\uffff"+
 		"\uffff\u0000\u016f\u0170\u0005\u000b\u0000\u0000\u0170\u0171\u0006\u000e"+
-		"\uffff\uffff\u0000\u0171\u0172\u0003\u000e\u0007\u0000\u0172\u0173\u0006"+
+		"\uffff\uffff\u0000\u0171\u0172\u0003\u001e\u000f\u0000\u0172\u0173\u0006"+
 		"\u000e\uffff\uffff\u0000\u0173\u0175\u0001\u0000\u0000\u0000\u0174\u0168"+
 		"\u0001\u0000\u0000\u0000\u0174\u0169\u0001\u0000\u0000\u0000\u0174\u016c"+
-		"\u0001\u0000\u0000\u0000\u0175\u001d\u0001\u0000\u0000\u0000\u0176\u0188"+
-		"\u0001\u0000\u0000\u0000\u0177\u0178\u0005\"\u0000\u0000\u0178\u0188\u0006"+
-		"\u000f\uffff\uffff\u0000\u0179\u017a\u0005\"\u0000\u0000\u017a\u0188\u0006"+
-		"\u000f\uffff\uffff\u0000\u017b\u017c\u0005\u0003\u0000\u0000\u017c\u0188"+
+		"\u0001\u0000\u0000\u0000\u0175\u001d\u0001\u0000\u0000\u0000\u0176\u018d"+
+		"\u0001\u0000\u0000\u0000\u0177\u0178\u0005\"\u0000\u0000\u0178\u018d\u0006"+
+		"\u000f\uffff\uffff\u0000\u0179\u017a\u0005\"\u0000\u0000\u017a\u018d\u0006"+
+		"\u000f\uffff\uffff\u0000\u017b\u017c\u0005\u0003\u0000\u0000\u017c\u018d"+
 		"\u0006\u000f\uffff\uffff\u0000\u017d\u017e\u0005\u0004\u0000\u0000\u017e"+
 		"\u017f\u0006\u000f\uffff\uffff\u0000\u017f\u0180\u0005\"\u0000\u0000\u0180"+
 		"\u0181\u0006\u000f\uffff\uffff\u0000\u0181\u0182\u0003\u001c\u000e\u0000"+
-		"\u0182\u0183\u0006\u000f\uffff\uffff\u0000\u0183\u0188\u0001\u0000\u0000"+
+		"\u0182\u0183\u0006\u000f\uffff\uffff\u0000\u0183\u018d\u0001\u0000\u0000"+
 		"\u0000\u0184\u0185\u0003 \u0010\u0000\u0185\u0186\u0006\u000f\uffff\uffff"+
-		"\u0000\u0186\u0188\u0001\u0000\u0000\u0000\u0187\u0176\u0001\u0000\u0000"+
-		"\u0000\u0187\u0177\u0001\u0000\u0000\u0000\u0187\u0179\u0001\u0000\u0000"+
-		"\u0000\u0187\u017b\u0001\u0000\u0000\u0000\u0187\u017d\u0001\u0000\u0000"+
-		"\u0000\u0187\u0184\u0001\u0000\u0000\u0000\u0188\u001f\u0001\u0000\u0000"+
-		"\u0000\u0189\u019f\u0001\u0000\u0000\u0000\u018a\u018b\u0005\u001f\u0000"+
-		"\u0000\u018b\u018c\u0006\u0010\uffff\uffff\u0000\u018c\u018d\u0005\"\u0000"+
-		"\u0000\u018d\u018e\u0006\u0010\uffff\uffff\u0000\u018e\u018f\u0005 \u0000"+
-		"\u0000\u018f\u0190\u0006\u0010\uffff\uffff\u0000\u0190\u0191\u0003\u001c"+
-		"\u000e\u0000\u0191\u0192\u0006\u0010\uffff\uffff\u0000\u0192\u019f\u0001"+
-		"\u0000\u0000\u0000\u0193\u0194\u0005\u001f\u0000\u0000\u0194\u0195\u0006"+
-		"\u0010\uffff\uffff\u0000\u0195\u0196\u0005\"\u0000\u0000\u0196\u0197\u0006"+
-		"\u0010\uffff\uffff\u0000\u0197\u0198\u0005 \u0000\u0000\u0198\u0199\u0006"+
-		"\u0010\uffff\uffff\u0000\u0199\u019a\u0003\u001c\u000e\u0000\u019a\u019b"+
-		"\u0006\u0010\uffff\uffff\u0000\u019b\u019c\u0003 \u0010\u0000\u019c\u019d"+
-		"\u0006\u0010\uffff\uffff\u0000\u019d\u019f\u0001\u0000\u0000\u0000\u019e"+
-		"\u0189\u0001\u0000\u0000\u0000\u019e\u018a\u0001\u0000\u0000\u0000\u019e"+
-		"\u0193\u0001\u0000\u0000\u0000\u019f!\u0001\u0000\u0000\u0000\u0011)C"+
-		"\u0083\u0090\u009b\u00a3\u00e4\u0100\u0117\u012e\u0141\u0150\u015e\u0166"+
-		"\u0174\u0187\u019e";
+		"\u0000\u0186\u018d\u0001\u0000\u0000\u0000\u0187\u0188\u0005\u0006\u0000"+
+		"\u0000\u0188\u0189\u0003\u001c\u000e\u0000\u0189\u018a\u0005\u0007\u0000"+
+		"\u0000\u018a\u018b\u0006\u000f\uffff\uffff\u0000\u018b\u018d\u0001\u0000"+
+		"\u0000\u0000\u018c\u0176\u0001\u0000\u0000\u0000\u018c\u0177\u0001\u0000"+
+		"\u0000\u0000\u018c\u0179\u0001\u0000\u0000\u0000\u018c\u017b\u0001\u0000"+
+		"\u0000\u0000\u018c\u017d\u0001\u0000\u0000\u0000\u018c\u0184\u0001\u0000"+
+		"\u0000\u0000\u018c\u0187\u0001\u0000\u0000\u0000\u018d\u001f\u0001\u0000"+
+		"\u0000\u0000\u018e\u01a4\u0001\u0000\u0000\u0000\u018f\u0190\u0005\u001f"+
+		"\u0000\u0000\u0190\u0191\u0006\u0010\uffff\uffff\u0000\u0191\u0192\u0005"+
+		"\"\u0000\u0000\u0192\u0193\u0006\u0010\uffff\uffff\u0000\u0193\u0194\u0005"+
+		" \u0000\u0000\u0194\u0195\u0006\u0010\uffff\uffff\u0000\u0195\u0196\u0003"+
+		"\u001c\u000e\u0000\u0196\u0197\u0006\u0010\uffff\uffff\u0000\u0197\u01a4"+
+		"\u0001\u0000\u0000\u0000\u0198\u0199\u0005\u001f\u0000\u0000\u0199\u019a"+
+		"\u0006\u0010\uffff\uffff\u0000\u019a\u019b\u0005\"\u0000\u0000\u019b\u019c"+
+		"\u0006\u0010\uffff\uffff\u0000\u019c\u019d\u0005 \u0000\u0000\u019d\u019e"+
+		"\u0006\u0010\uffff\uffff\u0000\u019e\u019f\u0003\u001c\u000e\u0000\u019f"+
+		"\u01a0\u0006\u0010\uffff\uffff\u0000\u01a0\u01a1\u0003 \u0010\u0000\u01a1"+
+		"\u01a2\u0006\u0010\uffff\uffff\u0000\u01a2\u01a4\u0001\u0000\u0000\u0000"+
+		"\u01a3\u018e\u0001\u0000\u0000\u0000\u01a3\u018f\u0001\u0000\u0000\u0000"+
+		"\u01a3\u0198\u0001\u0000\u0000\u0000\u01a4!\u0001\u0000\u0000\u0000\u0011"+
+		")C\u0083\u0090\u009b\u00a3\u00e4\u0100\u0117\u012e\u0141\u0150\u015e\u0166"+
+		"\u0174\u018c\u01a3";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

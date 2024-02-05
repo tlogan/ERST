@@ -267,12 +267,12 @@ $combo = $base.combo
 // Introduction rules
 
 | {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
-} head = base[nt] {
+nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+} head = base[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = base[nt] {
+nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = base[nt_tail] {
 $combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
@@ -429,9 +429,9 @@ self.guide_terminal('ID')
 self.guide_symbol('=')
 } '=' {
 nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, $ID.text)
-} body = expr[nt] {
+} body = expr[nt_body] {
 nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
-} tail = record[nt] {
+} tail = record[nt_tail] {
 $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
 
@@ -517,13 +517,13 @@ $combo = $pattern_base.combo
 }
 
 | {
-nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_head)
-} head = base[nt] {
+nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
+} head = pattern_base[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = base[nt] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
+nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = pattern_base[nt_tail] {
+$combo = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
 ;
@@ -553,6 +553,11 @@ $combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, $ID.text, $
 | pattern_record[nt] {
 $combo = $pattern_record.combo
 }
+
+| '(' pattern[nt] ')' {
+$combo = $pattern.combo   
+}
+
 
 ;
 

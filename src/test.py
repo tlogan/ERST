@@ -271,11 +271,12 @@ f(~nil @)(~nil @)
 def test_fix():
     pieces = ['''
 fix(case self => (
-case ~nil @ => ~zero @ 
+case (~nil @) => ~zero @ 
 case ~cons x => ~succ (self(x)) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
 
 def test_ite():
     pieces = ['''
@@ -584,8 +585,41 @@ def test_plus_one_equals_two_query():
 
 
 
+# fix(case self => (
+# case ~nil @ => ~zero @ 
+# case ~cons x => ~succ (self(x)) 
+# ))
+
+less_equal = ('''
+fix(case self => (
+    case (~zero @, x) => ~true @ 
+    case (~succ a, ~succ b) => self(a,b) 
+    case (~succ x, ~zero @) => ~false @ 
+))
+''')
+
+max = ('''
+case (x, y) => (
+    if less_equal(x, y) then
+        y
+    else
+        x
+)
+''')
+
+def test_max():
+    pieces = [f'''
+{less_equal}
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    print(parsetree)
+
+
+
+
 if __name__ == '__main__':
-    test_one_plus_one_equals_two()
+    test_max()
     pass
 
 #######################################################################

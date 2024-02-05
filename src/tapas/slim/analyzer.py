@@ -1644,7 +1644,10 @@ class PatternRule(Rule):
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
         typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField('head', head.typ), TField('tail', typ)), self.nt.typ)
+        solution = self.solver.solve_composition(Inter(
+            TField('head', head.typ), 
+                TField('tail', typ)), 
+                    self.nt.typ)
         typ_grounded = package_typ(solution, typ)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
