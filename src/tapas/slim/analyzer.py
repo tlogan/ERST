@@ -68,8 +68,8 @@ class Imp:
 
 @dataclass(frozen=True, eq=True)
 class IdxUnio:
-    ids : list[str]
-    constraints : list[Subtyping] 
+    ids : tuple[str, ...]
+    constraints : tuple[Subtyping, ...] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
@@ -134,7 +134,7 @@ class ImpNL:
 @dataclass(frozen=True, eq=True)
 class IdxUnioNL:
     count : int
-    constraints : list[SubtypingNL] 
+    constraints : tuple[SubtypingNL, ...] 
     body : NL 
 
 @dataclass(frozen=True, eq=True)
@@ -153,9 +153,10 @@ class SubtypingNL:
 
 NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, IdxUnioNL, IdxInterNL, LeastNL, Top, Bot]
 
-def to_nameless(bound_ids : list[str], typ : Typ) -> NL:
+def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
+    assert isinstance(bound_ids, tuple)
     if False: 
-        pass
+       pass 
     elif isinstance(typ, TVar):  
         if typ.id in bound_ids:
             id = bound_ids.index(typ.id)
@@ -178,20 +179,21 @@ def to_nameless(bound_ids : list[str], typ : Typ) -> NL:
         return ImpNL(to_nameless(bound_ids, typ.antec), to_nameless(bound_ids, typ.consq))
     elif isinstance(typ, IdxUnio):
         count = len(typ.ids)
-        bound_ids = typ.ids + bound_ids
+        # bound_ids = typ.ids + bound_ids
+        bound_ids = tuple(typ.ids) + bound_ids
 
-        constraints_nl = [
+        constraints_nl = tuple(
             SubtypingNL(to_nameless(bound_ids, st.strong), to_nameless(bound_ids, st.weak))
             for st in typ.constraints
-        ]
+        )
         return IdxUnioNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, IdxInter):
-        bound_ids = [typ.id] + bound_ids
+        bound_ids = tuple([typ.id]) + bound_ids
         return IdxInterNL(to_nameless(bound_ids, typ.upper), to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, Least):
-        bound_ids = [typ.id] + bound_ids
+        bound_ids = tuple([typ.id]) + bound_ids
         return LeastNL(to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, Top):
@@ -210,10 +212,10 @@ class Subtyping:
     weak : Typ
 
 
-def concretize_ids(ids : list[str]) -> str:
+def concretize_ids(ids : tuple[str, ...]) -> str:
     return " ".join(ids)
 
-def concretize_constraints(subtypings : list[Subtyping]) -> str:
+def concretize_constraints(subtypings : tuple[Subtyping, ...]) -> str:
     return " ; ".join([
         concretize_typ(st.strong) + " <: " + concretize_typ(st.weak)
         for st in subtypings
@@ -431,14 +433,14 @@ def extract_field_plain(path : list[str], t : Typ) -> Typ:
 
 def extract_field(path : list[str], id_induc : str, t : Typ) -> Typ:
     if isinstance(t, IdxUnio):  
-        new_constraints = [
+        new_constraints = tuple(
             (
             Subtyping(extract_field_plain(path, st.strong), TVar(id_induc))
             if st.weak == TVar(id_induc) else
             st
             )
             for st in t.constraints
-        ] 
+        )
         new_body = extract_field_plain(path, t.body)
         return IdxUnio(t.ids, new_constraints, new_body)
     else:
@@ -460,24 +462,57 @@ def factor_path(path : list[str], least : Least) -> Typ:
     column = extract_column(path, least.id, choices)
     return column 
 
-# TODO: fix this; need to but each factor into correct path
+def insert_at_path(m : PMap, path : list[str], o):
+    if path:
+        key = path[0]  
+        if key in m:
+            assert path[1:]
+            n = m[key] 
+            return m.add({key : insert_at_path(n, path[1:], o)})
+        else:
+            return m.add({key : insert_at_path(pmap(), path[1:], o)})
+    else:
+        return o
+
+
+def to_record_typ(m) -> Typ:
+    result = Top()
+    for key in m:
+        v = m[key]
+         
+        if isinstance(v, Typ):
+            field = TField(key, v)
+        else:
+            t = to_record_typ(v)
+            field = TField(key, t)
+        result = Inter(field, result)
+    return result
+
+
+
 def factor_least(least : Least) -> Typ:
     choices = linearize_unions(least.body)
-    paths = list(extract_paths(choices[0]))
-    typ_inter = Top() 
+    paths = [
+        path
+        for choice in choices
+        for path in list(extract_paths(choice))
+    ]
+
+    m = pmap() 
     for path in paths:
         column = extract_column(path, least.id, choices)
-        typ_inter = Inter(typ_inter, column)
-    return typ_inter
+        m = insert_at_path(m, path, column)
+
+    return to_record_typ(m) 
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
-    return to_nameless([], t1) == to_nameless([], t2)
+    return to_nameless((), t1) == to_nameless((), t2)
 
 def is_relational_key(model : Model, t : Typ) -> bool:
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            strongest = extract_strongest(model, pset(), t.body.id) 
-            return not strongest or is_relational_key(model, strongest)
+            strongest = extract_strongest(model, t.body.id) 
+            return isinstance(strongest, Bot) or is_relational_key(model, strongest)
         else:
             return is_relational_key(model, t.body)
         # TODO: remove old code
@@ -541,7 +576,7 @@ def extract_weakest(model : Model, id : str) -> Typ:
     return typ_final 
 
 # TODO: remove option in return type; remove exclude param
-def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Optional[Typ]:
+def extract_strongest(model : Model, id : str) -> Typ:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -550,55 +585,13 @@ def extract_strongest(model : Model, exclude : PSet[str], id : str) -> Optional[
     typs_weaken = [
         st.strong
         for st in model
-        if st.weak == TVar(id) and (
-            not isinstance(st.strong, TVar) or st.strong.id not in exclude
-        )
+        if st.weak == TVar(id) 
     ]
-    if typs_weaken:
-        typ_weak = typs_weaken[-1] 
-        for t in reversed(typs_weaken[:-1]):
-            typ_weak = Unio(t, typ_weak) 
-        return typ_weak
-    else:
-        return None
+    typ_weak = Bot() 
+    for t in reversed(typs_weaken):
+        typ_weak = Unio(t, typ_weak) 
+    return typ_weak
 
-
-# TODO: remove weird kludgy concept
-# def extract_strongest_influence(model : Model, exclude : PSet[str], id : str) -> tuple[bool, Typ]:
-#     strongest = extract_strongest(model, exclude, id)
-#     if strongest:
-#         """
-#         strongly influenced
-#         """
-#         return (True, strongest)
-#     else:
-#         """
-#         not strongly influenced
-#         """
-#         return (False, extract_weakest(model, id))
-
-# TODO: remove weird kludgy concept
-# def condense_strongest_influence(model : Model, weakest_seen : PSet[str], typ : Typ) -> Typ:
-#     '''
-#     @param seen : tracks variables that have been seen. used to prevent cycling 
-#     '''
-#     if isinstance(typ, Imp):
-#         antec = condense_weakest(model, weakest_seen, typ.antec)
-#         consq = condense_strongest_influence(model, weakest_seen, typ.consq)
-#         return Imp(antec, consq)
-#     else:
-#         fvs = extract_free_vars_from_typ(pset(), typ)
-#         # seen = seen.union(fvs) 
-#         renaming = pmap({
-#             id : condense_strongest_influence(
-#                 model, 
-#                 weakest_seen if strongly_influenced else weakest_seen.add(id), 
-#                 extracted
-#             )
-#             for id in fvs
-#             for strongly_influenced, extracted in [extract_strongest_influence(model, weakest_seen, id)]
-#         })
-#         return sub_typ(renaming, typ)
 
 def condense_strongest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
     '''
@@ -612,7 +605,7 @@ def condense_strongest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
         fvs = extract_free_vars_from_typ(pset(), typ)
         seen = seen.union(fvs) 
         renaming = pmap({
-            id : condense_strongest(model, seen, extract_strongest(model, pset(), id) or Bot())
+            id : condense_strongest(model, seen, extract_strongest(model, id))
             for id in fvs
         })
         return sub_typ(renaming, typ)
@@ -677,11 +670,11 @@ def simplify_typ(typ : Typ) -> Typ:
     else:
         return typ
     
-def simplify_constraints(constraints : list[Subtyping]) -> list[Subtyping]:
-    return [
+def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
+    return tuple(
         Subtyping(simplify_typ(st.weak), simplify_typ(st.strong))
         for st in constraints
-    ]
+    )
 
 # TODO: remove weird kludgy concept
 # def prettify_strongest_influence(model : Model, typ : Typ) -> str:
@@ -744,11 +737,11 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
 end sub_type
 '''
 
-def sub_constraints(assignment_map : PMap[str, Typ], constraints : list[Subtyping]) -> list[Subtyping]:
-    return [
+def sub_constraints(assignment_map : PMap[str, Typ], constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
+    return tuple(
         Subtyping(sub_typ(assignment_map, st.strong), sub_typ(assignment_map, st.weak))
         for st in constraints
-    ]
+    )
 '''
 end sub_constraints
 '''
@@ -851,7 +844,7 @@ def package_typ(models : list[Model], typ : Typ) -> Typ:
         ids_constraints = extract_free_vars_from_constraints(pset(), constraints)
         ids_bound = ids_constraints
 
-        typ_idx_unio = IdxUnio(list(ids_bound), list(constraints), typ)
+        typ_idx_unio = IdxUnio(tuple(ids_bound), tuple(constraints), typ)
         typ_result = Unio(typ_idx_unio, typ_result)
 
     return typ_result 
@@ -885,13 +878,13 @@ class Solver:
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
 
-        print(f'''
-|| DEBUG SOLVE
-=================
-|| ------------
-|| model: {concretize_constraints(list(model))}
-|| |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-        ''')
+#         print(f'''
+# || DEBUG SOLVE
+# =================
+# || ------------
+# || model: {concretize_constraints(tuple(model))}
+# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+#         ''')
 
         # if alpha_equiv(strong, weak): 
         #     return [model] 
@@ -915,16 +908,16 @@ class Solver:
             # ---- <: ----------------------------------------
             # weak: {concretize_typ(weak)}
             # ''')
-            strongest = extract_strongest(model, pset(), strong.id)
-            if strongest:
+            strongest = extract_strongest(model, strong.id)
+            if isinstance(strongest, Bot):
+                return [model.add(Subtyping(strong, weak))]
+            else:
                 models = self.solve(model, strongest, weak)
 
                 return [
                     model.add(Subtyping(strong, weak))
                     for model in models
                 ]
-            else:
-                return [model.add(Subtyping(strong, weak))]
 
         elif isinstance(weak, TVar): 
             '''
@@ -1064,7 +1057,7 @@ class Solver:
 
         elif isinstance(weak, Diff) and diff_well_formed(weak):
             '''
-            T <: A \ B === (T <: A), ~(T <: B) 
+            T <: A \\ B === (T <: A), ~(T <: B) 
             '''
             return [
                 m
@@ -1150,9 +1143,7 @@ class Solver:
             # Will unroll?: {not is_relational_key(model, strong)}
             # ''')
 
-            # TODO: determine the right condition
             if not is_relational_key(model, strong) and self._battery > 0:
-            # if True:
                 self._battery -= 1
                 '''
                 unroll
@@ -1161,13 +1152,7 @@ class Solver:
                 weak_body = sub_typ(renaming, weak.body)
                 return self.solve(model, strong, weak_body)
             else:
-                print("""
-RELATIONAL KEY HERE!!!!!!
-                """)
                 weak_cache = match_strong(model, strong)
-                print(f"""
-WEAK CACHE: {weak_cache}
-                """)
                 if weak_cache:
                     return self.solve(model, weak_cache, weak)
                 else:
@@ -1186,7 +1171,7 @@ WEAK CACHE: {weak_cache}
 
         elif isinstance(strong, Diff) and diff_well_formed(strong):
             '''
-            A \ B <: T === A <: T | B  
+            A \\ B <: T === A <: T | B  
             '''
             return self.solve(model, strong.context, Unio(weak, strong.negation))
 
@@ -1288,7 +1273,7 @@ class BaseRule(Rule):
         return IdxInter(var_antec.id, antec,
             Imp(
                 var_antec,
-                IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
+                IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
             )
         )   
 
@@ -1462,7 +1447,7 @@ class ExprRule(Rule):
         return IdxInter(var_antec.id, antec,
             Imp(
                 var_antec,
-                IdxUnio([var_concl.id], [Subtyping(var_pair, rel)], var_concl)
+                IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
             )
         )   
     

@@ -208,7 +208,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class IdsContext extends ParserRuleContext {
-		public list[str] combo;
+		public tuple[str, ...] combo;
 		public Token ID;
 		public IdsContext ids;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
@@ -239,7 +239,7 @@ public class SlimParser extends Parser {
 				setState(35);
 				((IdsContext)_localctx).ID = match(ID);
 
-				_localctx.combo = [(((IdsContext)_localctx).ID!=null?((IdsContext)_localctx).ID.getText():null)]
+				_localctx.combo = tuple([(((IdsContext)_localctx).ID!=null?((IdsContext)_localctx).ID.getText():null)])
 
 				}
 				break;
@@ -251,7 +251,7 @@ public class SlimParser extends Parser {
 				setState(38);
 				((IdsContext)_localctx).ids = ids();
 
-				_localctx.combo = [(((IdsContext)_localctx).ID!=null?((IdsContext)_localctx).ID.getText():null)] + ((IdsContext)_localctx).ids.combo
+				_localctx.combo = tuple([(((IdsContext)_localctx).ID!=null?((IdsContext)_localctx).ID.getText():null)]) + ((IdsContext)_localctx).ids.combo
 
 				}
 				break;
@@ -698,7 +698,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class QualificationContext extends ParserRuleContext {
-		public list[Subtyping] combo;
+		public tuple[Subtyping, ...] combo;
 		public SubtypingContext subtyping;
 		public QualificationContext qualification;
 		public SubtypingContext subtyping() {

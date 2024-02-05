@@ -17,6 +17,7 @@ from tapas.slim import analyzer, language
 from tapas.util_system import box, unbox
 
 from pyrsistent import m, s, pmap, pset
+from pyrsistent.typing import PMap, PSet 
 
 import pytest
 
@@ -426,7 +427,7 @@ def test_subs_idx_unio():
 
     models = solver.solve_composition(thing, idx_unio)
     for model in models:
-        print(f'model: {analyzer.concretize_constraints(list(model))}')
+        print(f'model: {analyzer.concretize_constraints(tuple(model))}')
     assert(models)
 
 
@@ -483,7 +484,7 @@ def test_one_cons_query_subs_nat_list():
     answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~nil @"
     print(f"""
-model: {analyzer.concretize_constraints(list(model))}
+model: {analyzer.concretize_constraints(tuple(model))}
 answr: {answer}
     """)
 
@@ -498,7 +499,7 @@ def test_two_cons_query_subs_nat_list():
     answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~cons ~nil @"
     print(f"""
-model: {analyzer.concretize_constraints(list(model))}
+model: {analyzer.concretize_constraints(tuple(model))}
 answr: {answer}
     """)
 
@@ -523,88 +524,67 @@ def test_one_plus_one_equals_two():
     models = solver.solve_composition(one_plus_one_equals_two, addition_rel)
     print(f'len(models): {len(models)}')
     # assert len(models) == 1
-
-def test_zero_plus_query():
-    zero_plus_query = p('''
-(x : (~zero @) & y : (~succ ~zero @) & z : Z)
-    ''')
-    base_case = p('''
-{Y . Y <: top} (x : ~zero @ & y : Y & z : Y)
-    ''')
-    models = solver.solve_composition(zero_plus_query, base_case)
-    # print(f'len(models): {len(models)}')
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, analyzer.TVar("Z"))
-    assert answer == "~succ ~zero @"
-    print(f'''
-model: {analyzer.concretize_constraints(list(model))}
-answr: {answer}
-    ''')
+    for model in models:
+        print(f'''
+    model: {analyzer.concretize_constraints(tuple(model))}
+        ''')
 
 def test_one_plus_one_query():
     one_plus_one_query = p('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
     ''')
     models = solver.solve_composition(one_plus_one_query, addition_rel)
-    print(f'len(models): {len(models)}')
+    # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_weakest(model, analyzer.TVar("Z"))
     assert answer == "~succ ~succ ~zero @"
-    print(f'''
-model: {analyzer.concretize_constraints(list(model))}
-answr: {answer}
-    ''')
+#     print(f'''
+# model: {analyzer.concretize_constraints(tuple(model))}
+# answr: {answer}
+#     ''')
 
 def test_one_plus_equals_two_query():
     one_plus_one_query = p('''
 (x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
     ''')
     models = solver.solve_composition(one_plus_one_query, addition_rel)
-    print(f'len(models): {len(models)}')
-#     assert len(models) == 1
-#     model = models[0]
-#     answer = analyzer.prettify_weakest(model, analyzer.TVar("Y"))
-#     assert answer == "~succ ~zero @"
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, analyzer.TVar("Y"))
+    assert answer == "~succ ~zero @"
 #     print(f'''
-# model: {analyzer.concretize_constraints(list(model))}
+# model: {analyzer.concretize_constraints(tuple(model))}
 # answr: {answer}
 #     ''')
 
 def test_zero_plus_one_equals_two():
-    one_plus_one_query = p('''
+    zero_plus_one_equals_two = p('''
 (x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    models = solver.solve_composition(zero_plus_one_equals_two, addition_rel)
     assert not models
 
 
 def test_plus_one_equals_two_query():
-    one_plus_one_query = p('''
-(x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
+    plus_one_equals_two_query = p('''
+(x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    models = solver.solve_composition(one_plus_one_query, addition_rel)
-    print(f'len(models): {len(models)}')
-    assert not models
-    for model in models:
-        print('------')
-        print(f' a model: {analyzer.concretize_constraints(list(model))}')
-        print('------')
-#     assert len(models) == 1
-#     model = models[0]
-#     answer = analyzer.prettify_weakest(model, analyzer.TVar("X"))
-#     assert answer == "~succ ~zero @"
+    models = solver.solve_composition(plus_one_equals_two_query, addition_rel)
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, analyzer.TVar("X"))
+    assert answer == "~succ ~zero @"
 #     print(f'''
-# model: {analyzer.concretize_constraints(list(model))}
-# # answr: {answer}
+# model: {analyzer.concretize_constraints(tuple(model))}
+# answr: {answer}
 #     ''')
 
 
 
 if __name__ == '__main__':
-    # test_one_plus_equals_two_query()
-    # test_one_plus_one_query()
     test_one_plus_one_equals_two()
     pass
 

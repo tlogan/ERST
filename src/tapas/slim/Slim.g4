@@ -106,14 +106,14 @@ def collect(self, f : Callable, *args):
 
 }
 
-ids returns [list[str] combo] :
+ids returns [tuple[str, ...] combo] :
 
 | ID {
-$combo = [$ID.text]
+$combo = tuple([$ID.text])
 }
 
 | ID ids {
-$combo = [$ID.text] + $ids.combo
+$combo = tuple([$ID.text]) + $ids.combo
 }
 
 ;
@@ -236,7 +236,7 @@ $combo = Diff(context, $negation.combo)
 
 ;
 
-qualification returns [list[Subtyping] combo] :
+qualification returns [tuple[Subtyping, ...] combo] :
 
 | subtyping {
 $combo = [$subtyping.combo]

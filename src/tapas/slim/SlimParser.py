@@ -406,7 +406,7 @@ class SlimParser ( Parser ):
                 self.state = 35
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = [(None if localctx._ID is None else localctx._ID.text)]
+                localctx.combo = tuple([(None if localctx._ID is None else localctx._ID.text)])
 
                 pass
 
@@ -417,7 +417,7 @@ class SlimParser ( Parser ):
                 self.state = 38
                 localctx._ids = self.ids()
 
-                localctx.combo = [(None if localctx._ID is None else localctx._ID.text)] + localctx._ids.combo
+                localctx.combo = tuple([(None if localctx._ID is None else localctx._ID.text)]) + localctx._ids.combo
 
                 pass
 
