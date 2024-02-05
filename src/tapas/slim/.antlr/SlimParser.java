@@ -731,7 +731,7 @@ public class SlimParser extends Parser {
 				setState(147);
 				((QualificationContext)_localctx).subtyping = subtyping();
 
-				_localctx.combo = [((QualificationContext)_localctx).subtyping.combo]
+				_localctx.combo = tuple([((QualificationContext)_localctx).subtyping.combo])
 
 				}
 				break;
@@ -745,7 +745,7 @@ public class SlimParser extends Parser {
 				setState(152);
 				((QualificationContext)_localctx).qualification = qualification();
 
-				_localctx.combo = [((QualificationContext)_localctx).subtyping.combo] + ((QualificationContext)_localctx).qualification.combo
+				_localctx.combo = tuple([((QualificationContext)_localctx).subtyping.combo]) + ((QualificationContext)_localctx).qualification.combo
 
 				}
 				break;
@@ -764,7 +764,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class SubtypingContext extends ParserRuleContext {
-		public tuple[Subtyping] combo;
+		public Subtyping combo;
 		public TypContext strong;
 		public TypContext weak;
 		public List<TypContext> typ() {

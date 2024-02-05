@@ -934,7 +934,7 @@ class SlimParser ( Parser ):
                 self.state = 147
                 localctx._subtyping = self.subtyping()
 
-                localctx.combo = [localctx._subtyping.combo]
+                localctx.combo = tuple([localctx._subtyping.combo])
 
                 pass
 
@@ -947,7 +947,7 @@ class SlimParser ( Parser ):
                 self.state = 152
                 localctx._qualification = self.qualification()
 
-                localctx.combo = [localctx._subtyping.combo] + localctx._qualification.combo
+                localctx.combo = tuple([localctx._subtyping.combo]) + localctx._qualification.combo
 
                 pass
 

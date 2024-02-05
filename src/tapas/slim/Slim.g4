@@ -239,16 +239,16 @@ $combo = Diff(context, $negation.combo)
 qualification returns [tuple[Subtyping, ...] combo] :
 
 | subtyping {
-$combo = [$subtyping.combo]
+$combo = tuple([$subtyping.combo])
 }
 
 | subtyping ';' qualification {
-$combo = [$subtyping.combo] + $qualification.combo
+$combo = tuple([$subtyping.combo]) + $qualification.combo
 }
 
 ;
 
-subtyping returns [tuple[Subtyping] combo] :
+subtyping returns [Subtyping combo] :
 
 | strong = typ '<:' weak = typ {
 $combo = Subtyping($strong.combo, $weak.combo)
