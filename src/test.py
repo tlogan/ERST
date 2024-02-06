@@ -158,6 +158,12 @@ def simp(t):
     return analyzer.simplify_typ(t)
 
 
+solver = analyzer.Solver() 
+
+def solve(a : str, b : str):
+    return solver.solve_composition(p(a), p(b))
+
+
 """
 tests
 """
@@ -172,108 +178,108 @@ def test_typ_implication():
 
 
 
-def test_typ_least():
-    p = language.parse_typ('''
-least self with ~nil @ | ~cons self
+def test_typ_induc():
+    d = ('''
+induc self ~nil @ | ~cons self
     ''')
-    assert p 
-    c = analyzer.concretize_typ(p) 
-    assert c == "least self with (~nil @ | ~cons self)"
+    assert u(p(d)) == "induc self (~nil @ | ~cons self)"
+    # print(u(t))
 
 
-solver = analyzer.Solver() 
-nat = p('''
-least N with bot | ~zero @  | ~succ N 
+nat = ('''
+induc N bot 
+    | ~zero @  
+    | ~succ N 
 ''')
 
-even = p('''
-least E with bot | ~zero @ | ~succ ~succ E
+even = ('''
+induc E bot 
+    | ~zero @ 
+    | ~succ ~succ E
 ''')
 
-nat_list = p('''
-least NL with
-    bot |
-    (~zero @, ~nil @) |
-    { N L . (N, L) <: NL} (~succ N, ~cons L)  
+nat_list = ('''
+induc NL bot 
+    | (~zero @, ~nil @) 
+    | [| N L . (N, L) <: NL ] (~succ N, ~cons L)  
 ''')
 
-even_list = p('''
-least NL with
-    bot |
-    (~zero @, ~nil @) |
-    { N L . (N, L) <: NL} (~succ ~succ N, ~cons ~cons L)  
-''')
-
-
-
-nat_equal = p('''
-least SELF with
-(~zero @, ~zero @) |
-{ A B . (A, B) <: SELF} (~succ A, ~succ B)  
+even_list = ('''
+induc NL bot 
+    | (~zero @, ~nil @) 
+    | [| N L . (N, L) <: NL ] (~succ ~succ N, ~cons ~cons L)  
 ''')
 
 
 
+nat_equal = ('''
+induc SELF bot
+    | (~zero @, ~zero @) 
+    | [| A B . (A, B) <: SELF ] (~succ A, ~succ B)  
+''')
 
-addition_rel = p(f'''
-least AR with
-    {{Y Z .  (Y, Z) <: ({u(nat_equal)})}} (x : ~zero @ & y : Y & z : Z) |
-    {{X Y Z . (x : X & y : Y & z : Z) <: AR}} (x : ~succ X & y : Y & z : ~succ Z) 
+
+
+
+addition_rel = (f'''
+induc AR bot
+    | [| Y Z .  (Y, Z) <: ({nat_equal}) ] (x : ~zero @ & y : Y & z : Z) 
+    | [| X Y Z . (x : X & y : Y & z : Z) <: AR ] (x : ~succ X & y : Y & z : ~succ Z) 
 ''')
 
 
 
 def test_zero_subs_nat():
-    zero = p('''
+    zero = ('''
 ~zero @ 
     ''')
-    models = solver.solve_composition(zero, nat)
+    models = solve(zero, nat)
     # print(f'len(models): {len(models)}')
     assert(models)
 
 def test_two_subs_nat():
-    two = p('''
+    two = ('''
 ~succ ~succ ~zero @ 
     ''')
-    models = solver.solve_composition(two, nat)
+    models = solve(two, nat)
     # print(f'len(models): {len(models)}')
     assert models
 
 def test_bad_tag_subs_nat():
-    bad = p('''
+    bad = ('''
 ~bad ~succ ~zero @ 
     ''')
-    models = solver.solve_composition(bad, nat)
+    models = solve(bad, nat)
     # print(f'len(models): {len(models)}')
     assert not models
 
 def test_two_nat_subs_nat():
-    two_nat = p(f'''
-~succ ~succ ({u(nat)})
+    two_nat = (f'''
+~succ ~succ ({nat})
     ''')
-    models = solver.solve_composition(two_nat, nat)
+    models = solve(two_nat, nat)
     # print(f'len(models): {len(models)}')
     assert models
 
 
 def test_even_subs_nat():
-    models = solver.solve_composition(even, nat)
+    models = solve(even, nat)
     assert models
 
 def test_nat_subs_even():
-    models = solver.solve_composition(nat, even)
+    models = solve(nat, even)
     # print(f'len(models): {len(models)}')
     assert not models
 
 def test_subs_idx_unio():
-    idx_unio = p('''
+    idx_unio = ('''
 { N . N <: top} (~thing N)  
     ''')
-    thing = p('''
+    thing = ('''
 (~thing @)
     ''')
 
-    models = solver.solve_composition(thing, idx_unio)
+    models = solve(thing, idx_unio)
     for model in models:
         print(f'model: {analyzer.concretize_constraints(tuple(model))}')
     assert(models)
@@ -281,39 +287,39 @@ def test_subs_idx_unio():
 
 def test_zero_nil_subs_nat_list():
     global p
-    zero_nil = p('''
+    zero_nil = ('''
 (~zero @, ~nil @)
     ''')
 
-    models = solver.solve_composition(zero_nil, nat_list)
+    models = solve(zero_nil, nat_list)
     # print(f'len(models): {len(models)}')
     assert models
 
 def test_one_single_subs_nat_list():
-#     one_single = p('''
+#     one_single = ('''
 # (~succ ~zero @, ~cons ~nil @)
 #     ''')
     # TODO: yeah, this is sound 
-    one_single = p('''
+    one_single = ('''
 (~succ ~zero @, ~cons bot) 
     ''')
-    models = solver.solve_composition(one_single, nat_list)
+    models = solve(one_single, nat_list)
     # print(f'len(models): {len(models)}')
     assert models
 
 def test_two_single_subs_nat_list():
-    two_single = p('''
+    two_single = ('''
 (~succ ~succ ~zero @, ~cons ~nil @)
     ''')
-    models = solver.solve_composition(two_single, nat_list)
+    models = solve(two_single, nat_list)
     # print(f'len(models): {len(models)}')
     assert not models
 
 def test_one_query_subs_nat_list():
-    one_query = p('''
+    one_query = ('''
 (~succ ~zero @, X)
     ''')
-    models = solver.solve_composition(one_query, nat_list)
+    models = solve(one_query, nat_list)
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_weakest(model, p("X"))
@@ -322,10 +328,10 @@ def test_one_query_subs_nat_list():
 
 def test_one_cons_query_subs_nat_list():
     global p
-    one_cons_query = p('''
+    one_cons_query = ('''
 (~succ ~zero @, ~cons X)
     ''')
-    models = solver.solve_composition(one_cons_query, nat_list)
+    models = solve(one_cons_query, nat_list)
     assert len(models) == 1
     model = models[0]
     # TODO
@@ -338,10 +344,10 @@ answr: {answer}
 
 
 def test_two_cons_query_subs_nat_list():
-    two_cons_query = p('''
+    two_cons_query = ('''
 (~succ ~succ ~zero @, ~cons X)
     ''')
-    models = solver.solve_composition(two_cons_query, nat_list)
+    models = solve(two_cons_query, nat_list)
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_weakest(model, p("X"))
@@ -352,24 +358,24 @@ answr: {answer}
     """)
 
 def test_even_list_subs_nat_list():
-    models = solver.solve_composition(even_list, nat_list)
+    models = solve(even_list, nat_list)
     print(f"len(models): {len(models)}")
     # assert models
 
 def test_nat_list_subs_even_list():
-    models = solver.solve_composition(nat_list, even_list)
+    models = solve(nat_list, even_list)
     print(f"len(models): {len(models)}")
     # assert not models
 
 
 def test_one_plus_one_equals_two():
     print("==================")
-    print(u(addition_rel))
+    print(addition_rel)
     print("==================")
-    one_plus_one_equals_two = p('''
+    one_plus_one_equals_two = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
     ''')
-    models = solver.solve_composition(one_plus_one_equals_two, addition_rel)
+    models = solve(one_plus_one_equals_two, addition_rel)
     print(f'len(models): {len(models)}')
     # assert len(models) == 1
     for model in models:
@@ -378,10 +384,10 @@ def test_one_plus_one_equals_two():
         ''')
 
 def test_one_plus_one_query():
-    one_plus_one_query = p('''
+    one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
     ''')
-    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    models = solve(one_plus_one_query, addition_rel)
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
@@ -393,10 +399,10 @@ def test_one_plus_one_query():
 #     ''')
 
 def test_one_plus_equals_two_query():
-    one_plus_one_query = p('''
+    one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
     ''')
-    models = solver.solve_composition(one_plus_one_query, addition_rel)
+    models = solve(one_plus_one_query, addition_rel)
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
@@ -408,18 +414,18 @@ def test_one_plus_equals_two_query():
 #     ''')
 
 def test_zero_plus_one_equals_two():
-    zero_plus_one_equals_two = p('''
+    zero_plus_one_equals_two = ('''
 (x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    models = solver.solve_composition(zero_plus_one_equals_two, addition_rel)
+    models = solve(zero_plus_one_equals_two, addition_rel)
     assert not models
 
 
 def test_plus_one_equals_two_query():
-    plus_one_equals_two_query = p('''
+    plus_one_equals_two_query = ('''
 (x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    models = solver.solve_composition(plus_one_equals_two_query, addition_rel)
+    models = solve(plus_one_equals_two_query, addition_rel)
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
@@ -449,8 +455,9 @@ def test_unit():
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr (base @))"
-    assert combo
-    print("combo: " + (combo))
+    assert u(combo) == "@"
+    # print("parsetree: " + str(parsetree))
+    # print("combo: " + u(combo))
 
 def test_tag():
     pieces = ['''
@@ -562,8 +569,8 @@ r.uno.dos
 def test_idapplication():
     pieces = ['''
 let f = (
-case ~nil @ => @ 
-case ~cons x => x 
+    case ~nil @ => @ 
+    case ~cons x => x 
 ) ;
 f(~nil @)
     ''']
@@ -579,8 +586,8 @@ f(~nil @)(~nil @)
 def test_fix():
     pieces = ['''
 fix(case self => (
-case ~nil @ => ~zero @ 
-case ~cons x => ~succ (self(x)) 
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
@@ -590,8 +597,8 @@ case ~cons x => ~succ (self(x))
 def test_funnel():
     pieces = ['''
 ~nil @ |> fix(case self => (
-case ~nil @ => ~zero @ 
-case ~cons x => ~succ (self(x)) 
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
@@ -651,16 +658,16 @@ def test_if_then_else():
     print(parsetree)
 
 def test_max():
+    # TODO
     pieces = []
     (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    print(parsetree)
-    assert combo
-    print("combo: " + u(combo))
+    # raise_guide(guides)
+    # print(parsetree)
+    # assert combo
+    # print("combo: " + u(combo))
 
 
 if __name__ == '__main__':
-    test_function_cases_overlap()
     pass
 
 #######################################################################

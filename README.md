@@ -2,6 +2,7 @@
 
 
 ### TODO
+- generate a clean function with inductive type for fix term
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max

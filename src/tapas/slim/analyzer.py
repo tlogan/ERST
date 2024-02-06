@@ -79,7 +79,7 @@ class IdxInter:
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
-class Least:
+class Induc:
     id : str 
     body : Typ 
 
@@ -91,7 +91,7 @@ class Top:
 class Bot:
     pass
 
-Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, IdxUnio, IdxInter, Least, Top, Bot]
+Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, IdxUnio, IdxInter, Induc, Top, Bot]
 
 
 '''
@@ -143,7 +143,7 @@ class IdxInterNL:
     body : NL 
 
 @dataclass(frozen=True, eq=True)
-class LeastNL:
+class InducNL:
     body : NL 
 
 @dataclass(frozen=True, eq=True)
@@ -151,7 +151,7 @@ class SubtypingNL:
     strong : NL 
     weak : NL 
 
-NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, IdxUnioNL, IdxInterNL, LeastNL, Top, Bot]
+NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, IdxUnioNL, IdxInterNL, InducNL, Top, Bot]
 
 def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
     assert isinstance(bound_ids, tuple)
@@ -192,9 +192,9 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
         bound_ids = tuple([typ.id]) + bound_ids
         return IdxInterNL(to_nameless(bound_ids, typ.upper), to_nameless(bound_ids, typ.body))
 
-    elif isinstance(typ, Least):
+    elif isinstance(typ, Induc):
         bound_ids = tuple([typ.id]) + bound_ids
-        return LeastNL(to_nameless(bound_ids, typ.body))
+        return InducNL(to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, Top):
         return typ
@@ -250,13 +250,13 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, IdxUnio):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
-            plate_entry = ([control.body], lambda body : f"({{{ids} . {constraints}}} {body})")  
+            plate_entry = ([control.body], lambda body : f"([| {ids} . {constraints} ] {body})")  
         elif isinstance(control, IdxInter):
             id = control.id
             plate_entry = ([control.upper, control.body], lambda upper, body : f"([{id} <: {upper}] {body})")  
-        elif isinstance(control, Least):
+        elif isinstance(control, Induc):
             id = control.id
-            plate_entry = ([control.body], lambda body : f"least {id} with {body}")  
+            plate_entry = ([control.body], lambda body : f"induc {id} {body}")  
         elif isinstance(control, Top):
             plate_entry = ([], lambda: "top")  
         elif isinstance(control, Bot):
@@ -461,9 +461,9 @@ def extract_column(path : list[str], id_induc : str, choices : list[Typ]) -> Typ
     typ_unio = choices_column[0]
     for choice in choices_column[1:]:
         typ_unio = Unio(typ_unio, choice)
-    return Least(id_induc, typ_unio)
+    return Induc(id_induc, typ_unio)
 
-def factor_path(path : list[str], least : Least) -> Typ:
+def factor_path(path : list[str], least : Induc) -> Typ:
     choices = linearize_unions(least.body)
     column = extract_column(path, least.id, choices)
     return column 
@@ -496,7 +496,7 @@ def to_record_typ(m) -> Typ:
 
 
 
-def factor_least(least : Least) -> Typ:
+def factor_least(least : Induc) -> Typ:
     choices = linearize_unions(least.body)
     paths = [
         path
@@ -559,8 +559,8 @@ def extract_weakest(model : Model, id : str) -> Typ:
     case relational: if variable is part of relational constraint, factor out type from rhs
     case simple: otherwise, extract rhs
     -- NOTE: relational constraints are restricted to record types of variables
-    -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of Least
-    -- e.g. (A, B, C, L) <: (Least I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
+    -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of Induc
+    -- e.g. (A, B, C, L) <: (Induc I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
     ---------------
     '''
     constraints_relational = [
@@ -573,7 +573,7 @@ def extract_weakest(model : Model, id : str) -> Typ:
     for st in constraints_relational:
         paths = extract_paths(st.weak, TVar(id)) 
         for path in paths:
-            assert isinstance(st.strong, Least)
+            assert isinstance(st.strong, Induc)
             typ_labeled = factor_path(path, st.strong)
             typ_factored = Inter(typ_labeled, typ_factored)
 
@@ -671,8 +671,8 @@ def simplify_typ(typ : Typ) -> Typ:
         return IdxUnio(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
     elif isinstance(typ, IdxInter):
         return IdxInter(typ.id, simplify_typ(typ.upper), simplify_typ(typ.body))
-    elif isinstance(typ, Least):
-        return Least(typ.id, simplify_typ(typ.body))
+    elif isinstance(typ, Induc):
+        return Induc(typ.id, simplify_typ(typ.body))
     else:
         return typ
     
@@ -732,9 +732,9 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
     elif isinstance(typ, IdxInter):  
         assignment_map = assignment_map.discard(typ.id)
         return IdxInter(typ.id, sub_typ(assignment_map, typ.upper), sub_typ(assignment_map, typ.body)) 
-    elif isinstance(typ, Least):  
+    elif isinstance(typ, Induc):  
         assignment_map = assignment_map.discard(typ.id)
-        return Least(typ.id, sub_typ(assignment_map, typ.body))
+        return Induc(typ.id, sub_typ(assignment_map, typ.body))
     elif isinstance(typ, Top):  
         return typ
     elif isinstance(typ, Bot):  
@@ -794,7 +794,7 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             set_constraints = pset()
             plate_entry = (pair_up(bound_vars, [typ.upper, typ.body]), lambda set_upper, set_body: set_constraints.union(set_upper).union(set_body))
 
-        elif isinstance(typ, Least):
+        elif isinstance(typ, Induc):
             bound_vars = bound_vars.add(typ.id)
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
 
@@ -990,7 +990,7 @@ class Solver:
                 for m1 in self.solve(m0, strong, weak_body)
             ]
 
-        elif isinstance(strong, Least):
+        elif isinstance(strong, Induc):
             if alpha_equiv(strong, weak):
                 return [model]
             else:
@@ -1138,10 +1138,10 @@ class Solver:
                 for m1 in self.solve(m0, tvar_fresh, strong_upper)
             ]   
 
-        elif isinstance(weak, Least): 
+        elif isinstance(weak, Induc): 
 
             # print(f'''
-            # DEBUG (weak, Least):
+            # DEBUG (weak, Induc):
             # model: {(len(model.model))}
             # frozen: {list(model.freezer)}
             # strong: {concretize_typ(strong)}
@@ -1438,10 +1438,12 @@ class ExprRule(Rule):
         typ_content_in = self.solver.fresh_type_var()
         typ_content_out = self.solver.fresh_type_var()
 
-        solution = [
+        models = [
             m2
             for m0 in self.solver.solve_composition(body, Imp(typ_self, typ_content))
             for m1 in self.solver.solve(m0, typ_self, Imp(typ_self_in, typ_self_out))
+            # TODO: typ_content could be an intersection of implications
+            # TODO: should that be turned into 
             for m2 in self.solver.solve(m1, typ_content, Imp(typ_content_in, typ_content_out))
         ]
 
@@ -1449,7 +1451,7 @@ class ExprRule(Rule):
 
         rel_unio = Bot()
         antec_unio = Bot()
-        for model in reversed(solution):
+        for model in reversed(models):
             typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
             typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
 
@@ -1466,8 +1468,8 @@ class ExprRule(Rule):
             antec_unio = Unio(antec_choice, antec_unio) 
 
 
-        rel = Least(tvar_fixy.id, rel_unio)
-        antec = Least(tvar_fixy.id, antec_unio)
+        rel = Induc(tvar_fixy.id, rel_unio)
+        antec = Induc(tvar_fixy.id, antec_unio)
         var_antec = self.solver.fresh_type_var()
         var_concl = self.solver.fresh_type_var()
         var_pair = make_pair_typ(var_antec, var_concl)

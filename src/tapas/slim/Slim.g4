@@ -185,17 +185,17 @@ $combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo))
 }
 
 // indexed union
-| '{' ids '.' qualification '}' typ {
+| '[|' ids '.' qualification ']' typ {
 $combo = IdxUnio($ids.combo, $qualification.combo, $typ.combo) 
 }
 
 // indexed intersection default
-| '[' ID ']' body = typ {
+| '[&' ID ']' body = typ {
 $combo = IdxInter($ID.text, Top(), $body.combo) 
 }
 
 // indexed intersection
-| '[' ID '<:' upper = typ ']' body = typ {
+| '[&' ID '<:' upper = typ ']' body = typ {
 $combo = IdxInter($ID.text, $upper.combo, $body.combo) 
 }
 
@@ -206,8 +206,8 @@ $combo = IdxInter($ID.text, $upper.combo, $body.combo)
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'least' ID 'with' typ {
-$combo = Least($ID.text, $typ.combo) 
+| 'induc' ID typ {
+$combo = Induc($ID.text, $typ.combo) 
 }
 
 
@@ -216,9 +216,9 @@ $combo = Least($ID.text, $typ.combo)
 // greatest self of 
 // nil -> zero &  
 // [self <: n -> l] cons n -> succ l 
-| 'greatest' ID 'of' typ {
-$combo = Greatest($ID.text, $typ.combo) 
-}
+// | 'greatest' ID 'of' typ {
+// $combo = Greatest($ID.text, $typ.combo) 
+// }
 
 ;
 
