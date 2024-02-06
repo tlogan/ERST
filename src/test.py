@@ -391,7 +391,7 @@ def test_one_plus_one_query():
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_weakest(model, analyzer.TVar("Z"))
+    answer = analyzer.prettify_weakest(model, p("Z"))
     assert answer == "~succ ~succ ~zero @"
 #     print(f'''
 # model: {analyzer.concretize_constraints(tuple(model))}
@@ -406,7 +406,7 @@ def test_one_plus_equals_two_query():
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_weakest(model, analyzer.TVar("Y"))
+    answer = analyzer.prettify_weakest(model, p("Y"))
     assert answer == "~succ ~zero @"
 #     print(f'''
 # model: {analyzer.concretize_constraints(tuple(model))}
@@ -429,11 +429,35 @@ def test_plus_one_equals_two_query():
     # print(f'len(models): {len(models)}')
     assert len(models) == 1
     model = models[0]
-    answer = analyzer.prettify_weakest(model, analyzer.TVar("X"))
+    answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~succ ~zero @"
 #     print(f'''
 # model: {analyzer.concretize_constraints(tuple(model))}
 # answr: {answer}
+#     ''')
+
+def test_plus_equals_two_query():
+    print("==================")
+    print(addition_rel)
+    print("==================")
+    plus_equals_two_query = ('''
+(x : X & y : Y & z : ~succ ~succ ~zero @)
+    ''')
+    models = solve(plus_equals_two_query, addition_rel)
+    assert len(models) == 3
+    answers = [
+        analyzer.prettify_weakest(model, p("(X, Y)"))
+        for model in models
+    ]
+    assert answers == [
+        "(~zero @, ~succ ~succ ~zero @)",
+        "(~succ ~zero @, ~succ ~zero @)",
+        "(~succ ~succ ~zero @, ~zero @)",
+    ]
+
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answers}
 #     ''')
 
 def test_var():
@@ -668,6 +692,7 @@ def test_max():
 
 
 if __name__ == '__main__':
+    test_plus_equals_two_query()
     pass
 
 #######################################################################
