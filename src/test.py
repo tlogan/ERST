@@ -408,10 +408,10 @@ def test_one_plus_equals_two_query():
     model = models[0]
     answer = analyzer.prettify_weakest(model, p("Y"))
     assert answer == "~succ ~zero @"
-#     print(f'''
-# model: {analyzer.concretize_constraints(tuple(model))}
-# answr: {answer}
-#     ''')
+    print(f'''
+model: {analyzer.concretize_constraints(tuple(model))}
+answr: {answer}
+    ''')
 
 def test_zero_plus_one_equals_two():
     zero_plus_one_equals_two = ('''
@@ -608,8 +608,18 @@ f(~nil @)(~nil @)
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_fix():
+# TODO
+# fix
+# actual: ((_2 -> ((~nil @ -> ~zero @) & (((~cons _14 \ ~nil @) -> ~succ (([| _2 _18 _14 . _2 <: (_14 -> _18) ] _18) | bot)) & top))) & top)
+# expected: (_2 -> ((~nil @ -> ~zero @) & (~cons _14 \ ~nil @) -> ~succ ([| _18 . _2 <: (_14 -> _18) ] _18)))
+#     pieces = ['''
+# fix(case self => (
+#     case ~nil @ => ~zero @ 
+#     case ~cons x => ~succ (self(x)) 
+# ))
+#     ''']
     pieces = ['''
-fix(case self => (
+(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 ))
@@ -692,7 +702,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_plus_equals_two_query()
+    test_fix()
     pass
 
 #######################################################################
