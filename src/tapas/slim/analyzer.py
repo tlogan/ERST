@@ -598,38 +598,40 @@ def extract_strongest(model : Model, id : str) -> Typ:
     return typ_weak
 
 
-def condense_strongest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
+def condense_strongest(model : Model, typ : Typ) -> Typ:
     '''
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
     if isinstance(typ, Imp):
-        antec = condense_weakest(model, seen, typ.antec)
-        consq = condense_strongest(model, seen, typ.consq)
+        antec = condense_weakest(model, typ.antec)
+        consq = condense_strongest(model, typ.consq)
         return Imp(antec, consq)
     else:
         fvs = extract_free_vars_from_typ(pset(), typ)
-        seen = seen.union(fvs) 
         renaming = pmap({
-            id : condense_strongest(model, seen, extract_strongest(model, id))
+            id : condense_strongest(model, strongest)
             for id in fvs
+            for strongest in [extract_strongest(model, id)]
+            if simplify_typ(strongest) != Bot()
         })
         return sub_typ(renaming, typ)
 
-def condense_weakest(model : Model, seen : PSet[str], typ : Typ) -> Typ:
+def condense_weakest(model : Model, typ : Typ) -> Typ:
     '''
     The weakest type that we can determine a abstract type must be
     @param seen : tracks variables that have been seen. used to prevent cycling 
     '''
     if isinstance(typ, Imp):
-        antec = condense_strongest(model, seen, typ.antec)
-        consq = condense_weakest(model, seen, typ.consq)
+        antec = condense_strongest(model, typ.antec)
+        consq = condense_weakest(model, typ.consq)
         return Imp(antec, consq)
     else:
         fvs = extract_free_vars_from_typ(pset(), typ)
-        seen = seen.union(fvs) 
         renaming = pmap({
-            id : condense_weakest(model, seen, extract_weakest(model, id))
+            id : condense_weakest(model, weakest)
             for id in fvs
+            for weakest in [extract_weakest(model, id)]
+            if simplify_typ(weakest) != Top()
         })
         return sub_typ(renaming, typ)
 
@@ -677,7 +679,7 @@ def simplify_typ(typ : Typ) -> Typ:
     
 def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
     return tuple(
-        Subtyping(simplify_typ(st.weak), simplify_typ(st.strong))
+        Subtyping(simplify_typ(st.strong), simplify_typ(st.weak))
         for st in constraints
     )
 
@@ -688,7 +690,10 @@ def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping
 
 
 def prettify_weakest(model : Model, typ : Typ) -> str:
-    return concretize_typ(simplify_typ(condense_weakest(model, pset(), typ)))
+    return concretize_typ(simplify_typ(condense_weakest(model, typ)))
+
+def prettify_strongest(model : Model, typ : Typ) -> str:
+    return concretize_typ(simplify_typ(condense_strongest(model, typ)))
 
 
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
@@ -1447,61 +1452,81 @@ class ExprRule(Rule):
         --------------- OR -----------------------
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         """
+
         typ_self = self.solver.fresh_type_var()
-        typ_content = self.solver.fresh_type_var()
-
-        typ_self_in = self.solver.fresh_type_var()
-        typ_self_out = self.solver.fresh_type_var()
-
         typ_content_in = self.solver.fresh_type_var()
         typ_content_out = self.solver.fresh_type_var()
 
         models = [
-            m2
-            for m0 in self.solver.solve_composition(body, Imp(typ_self, typ_content))
-            for m1 in self.solver.solve(m0, typ_self, Imp(typ_self_in, typ_self_out))
-            # TODO: typ_content could be an intersection of implications
-            # TODO: should that be turned into 
-            for m2 in self.solver.solve(m1, typ_content, Imp(typ_content_in, typ_content_out))
+            m0
+            for m0 in self.solver.solve_composition(body, Imp(typ_self, Imp(typ_content_in, typ_content_out)))
+            # for m1 in self.solver.solve(m0, typ_self, Imp(typ_content_in, typ_content_out))
+            # # TODO: typ_content could be an intersection of implications
+            # # TODO: should that be turned into 
+            # for m1 in self.solver.solve(m0, typ_content, Imp(typ_content_in, typ_content_out))
         ]
 
-        tvar_fixy = self.solver.fresh_type_var()
-
-        rel_unio = Bot()
-        antec_unio = Bot()
-        for model in reversed(models):
-            typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
-            typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
-
-            free_vars_content = extract_free_vars_from_typ(pset(), typ_content_pair)
-            free_vars_self = extract_free_vars_from_typ(pset(), typ_self_pair)
-
-            if (free_vars_content.intersection(free_vars_self)) :
-                model = model.add(Subtyping(typ_self_pair, tvar_fixy))
-
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            rel_choice = package_typ([model], bound_ids, typ_content_pair) 
-            rel_unio = Unio(rel_choice, rel_unio) 
-
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            antec_choice = package_typ([model], bound_ids, typ_content_in) 
-            antec_unio = Unio(antec_choice, antec_unio) 
+# content IN extracted {typ_content_in.id} : {concretize_typ(simplify_typ(extract_weakest(model, typ_content_in.id)))}
+# content OUT extracted {typ_content_out.id}: {concretize_typ(simplify_typ(extract_strongest(model, typ_content_out.id)))}
 
 
-        rel = Induc(tvar_fixy.id, rel_unio)
-        antec = Induc(tvar_fixy.id, antec_unio)
-        var_antec = self.solver.fresh_type_var()
-        var_concl = self.solver.fresh_type_var()
-        var_pair = make_pair_typ(var_antec, var_concl)
+        for model in models:
+            # TODO: construct case of with optional inductive constraint
+            # e.g. _19 <: _2 ; _20 <: (~cons _14 \ ~nil @) ; ~succ ([| _18 . _2 <: (_14 -> _18) ] _18) 
+            # |-
+            # [(_14, _18) <: SELF)] (~cons _14, ~succ _18) 
+            print(f"""
+<<<<<<<<<<<<<<
+SELF {typ_self.id} 
 
-        return IdxInter(var_antec.id, antec,
-            Imp(
-                var_antec,
-                IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
-            )
-        )   
+content IN condensed {typ_content_in.id} : {prettify_weakest(model, typ_content_in)}
+content OUT condensed {typ_content_out.id}: {prettify_strongest(model, typ_content_out)}
+
+MODEL: { concretize_constraints(tuple(model)) }
+>>>>>>>>>>>>>>
+            """)
+
+
+        return Bot()
+
+        # TODO: modify old code
+
+        # tvar_fixy = self.solver.fresh_type_var()
+        # rel_unio = Bot()
+        # antec_unio = Bot()
+        # for model in reversed(models):
+        #     typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
+        #     typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
+
+        #     free_vars_content = extract_free_vars_from_typ(pset(), typ_content_pair)
+        #     free_vars_self = extract_free_vars_from_typ(pset(), typ_self_pair)
+
+        #     if (free_vars_content.intersection(free_vars_self)) :
+        #         model = model.add(Subtyping(typ_self_pair, tvar_fixy))
+
+        #     # TODO: determine if/how to package type
+        #     bound_ids = ()
+        #     rel_choice = package_typ([model], bound_ids, typ_content_pair) 
+        #     rel_unio = Unio(rel_choice, rel_unio) 
+
+        #     # TODO: determine if/how to package type
+        #     bound_ids = ()
+        #     antec_choice = package_typ([model], bound_ids, typ_content_in) 
+        #     antec_unio = Unio(antec_choice, antec_unio) 
+
+
+        # rel = Induc(tvar_fixy.id, rel_unio)
+        # antec = Induc(tvar_fixy.id, antec_unio)
+        # var_antec = self.solver.fresh_type_var()
+        # var_concl = self.solver.fresh_type_var()
+        # var_pair = make_pair_typ(var_antec, var_concl)
+
+        # return IdxInter(var_antec.id, antec,
+        #     Imp(
+        #         var_antec,
+        #         IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
+        #     )
+        # )   
     
     def distill_let_target(self, id : str) -> Nonterm:
         return Nonterm('target', self.nt.enviro, Top())

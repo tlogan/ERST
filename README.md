@@ -2,7 +2,7 @@
 
 
 ### TODO
-- generate a clean function with inductive type for fix term
+- update `combine_fix` to generate a clean implicative inductive type for fix term
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
@@ -276,6 +276,7 @@
         - propagating types down corresponds to CDCL or back-jumping
         - propagating types up corresponds to BCP or unit-propagation
     - Solving for types directly without SMT
+        - solving for variables on left vs variables on right of subtyping might correspond to a conflict driven dialectic a la CDCL or CEGAR
         - constructing/unrolling a derivation on the LHS of subtyping corresponds to finding a counterexample derivation in CEGAR/interpolation.  
         - we use backward reasoning on subtyping to construct a subtyping derivation. 
             - If there is a satisfying type variable assignment that could allow the derivation to hold, then we update the assignment. 

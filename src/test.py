@@ -619,7 +619,7 @@ def test_fix():
 # ))
 #     ''']
     pieces = ['''
-(case self => (
+fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 ))
