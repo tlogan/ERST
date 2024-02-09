@@ -1308,6 +1308,10 @@ class BaseRule(Rule):
         #     )
         # )   
 
+def flatten_index_unios(t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
+    # TODO
+    return ((), (), t)
+
 
 class ExprRule(Rule):
 
@@ -1453,34 +1457,33 @@ class ExprRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         """
 
-        typ_self = self.solver.fresh_type_var()
-        typ_content_in = self.solver.fresh_type_var()
-        typ_content_out = self.solver.fresh_type_var()
+        self_typ = self.solver.fresh_type_var()
+        in_typ = self.solver.fresh_type_var()
+        out_typ = self.solver.fresh_type_var()
 
-        models = [
-            m0
-            for m0 in self.solver.solve_composition(body, Imp(typ_self, Imp(typ_content_in, typ_content_out)))
-            # for m1 in self.solver.solve(m0, typ_self, Imp(typ_content_in, typ_content_out))
-            # # TODO: typ_content could be an intersection of implications
-            # # TODO: should that be turned into 
-            # for m1 in self.solver.solve(m0, typ_content, Imp(typ_content_in, typ_content_out))
-        ]
-
-# content IN extracted {typ_content_in.id} : {concretize_typ(simplify_typ(extract_weakest(model, typ_content_in.id)))}
-# content OUT extracted {typ_content_out.id}: {concretize_typ(simplify_typ(extract_strongest(model, typ_content_out.id)))}
-
+        models = self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
 
         for model in models:
-            # TODO: construct case of with optional inductive constraint
-            # e.g. _19 <: _2 ; _20 <: (~cons _14 \ ~nil @) ; ~succ ([| _18 . _2 <: (_14 -> _18) ] _18) 
-            # |-
-            # [(_14, _18) <: SELF)] (~cons _14, ~succ _18) 
+            ### TODO: don't need raw_induc_typ; it will be replaced with self_typ
+            # raw_induc_typ = simplify_typ(condense_weakest(model, self_typ))
+            # raw_induc_typ: {concretize_typ(raw_induc_typ)} 
+            ###############################################
+            left_typ = simplify_typ(condense_weakest(model, in_typ))
+            raw_right_typ = simplify_typ(condense_strongest(model, out_typ))
+            (right_bound_ids, right_constraints, right_typ) = flatten_index_unios(raw_right_typ)
+            # NEXT: find constraint (SELF <: X -> Y) ; remainder in right_constraints;
+            # NEXT: construct inductive relational constraint (X, Y) <: R;
+            # NEXT: construct new_constraints as (X, Y) <: R ; remainder
+            # NEXT: extract free vars from left_typ 
+            # NEXT: bound_ids = left_bound_ids + right_bound_ids
+            # NEXT: construct relation instance as (left_typ, right_typ)
+            # NEXT: construct IdxUnio(bound_ids, new_constraints, relation_instance) 
+
             print(f"""
 <<<<<<<<<<<<<<
-SELF {typ_self.id} 
-
-content IN condensed {typ_content_in.id} : {prettify_weakest(model, typ_content_in)}
-content OUT condensed {typ_content_out.id}: {prettify_strongest(model, typ_content_out)}
+self_typ: {self_typ.id} 
+left_typ {concretize_typ(left_typ)} 
+raw_right_typ {concretize_typ(raw_right_typ)} 
 
 MODEL: { concretize_constraints(tuple(model)) }
 >>>>>>>>>>>>>>

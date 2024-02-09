@@ -621,7 +621,7 @@ def test_fix():
     pieces = ['''
 fix(case self => (
     case ~nil @ => ~zero @ 
-    case ~cons x => ~succ (self(x)) 
+    case ~cons x => (~succ (self(x))) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)

@@ -3,6 +3,9 @@
 
 ### TODO
 - update `combine_fix` to generate a clean implicative inductive type for fix term
+    - implement `flatten_index_unios`
+- update left existential and right universal to freeze variables for safety
+    - in left existential, if the right side can be reduce, then the bound variables need to be frozen 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
