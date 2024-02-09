@@ -862,6 +862,52 @@ class Solver:
     _battery : int = 0 
     _max_battery : int = 100
 
+
+    def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
+        if False:
+            pass
+        elif isinstance(t, TVar):
+            return ((), (), t)
+        elif isinstance(t, TUnit):
+            return ((), (), t)
+        elif isinstance(t, TTag):
+            (body_ids, body_constraints, body_typ) = self.flatten_index_unios(t.body)
+            return (body_ids, body_constraints, TTag(t.label, body_typ))
+        elif isinstance(t, TField):
+            (body_ids, body_constraints, body_typ) = self.flatten_index_unios(t.body)
+            return (body_ids, body_constraints, TField(t.label, body_typ))
+        elif isinstance(t, Unio):
+            (left_ids, left_constraints, left_typ) = self.flatten_index_unios(t.left)
+            (right_ids, right_constraints, right_typ) = self.flatten_index_unios(t.right)
+            return (left_ids + right_ids, left_constraints + right_constraints, Unio(left_typ, right_typ))
+        elif isinstance(t, Inter):
+            (left_ids, left_constraints, left_typ) = self.flatten_index_unios(t.left)
+            (right_ids, right_constraints, right_typ) = self.flatten_index_unios(t.right)
+            return (left_ids + right_ids, left_constraints + right_constraints, Inter(left_typ, right_typ))
+        elif isinstance(t, Diff):
+            (context_ids, context_constraints, context_typ) = self.flatten_index_unios(t.context)
+            return (context_ids, context_constraints, Diff(context_typ, t.negation))
+        elif isinstance(t, Imp):
+            (consq_ids, consq_constraints, consq_typ) = self.flatten_index_unios(t.consq)
+            return (consq_ids, consq_constraints, Inter(t.antec, consq_typ))
+        elif isinstance(t, IdxUnio):
+            renaming = self.make_renaming(t.ids)
+            constraints = sub_constraints(renaming, t.constraints)
+            body = sub_typ(renaming, t.body)
+            bound_ids = tuple(t.id for t in renaming.values() if isinstance(t, TVar))
+
+            (body_ids, body_constraints, body_typ) = self.flatten_index_unios(body)
+            return (bound_ids + body_ids, constraints + body_constraints, body_typ)
+        elif isinstance(t, IdxInter):
+            return ((), (), t)
+        elif isinstance(t, Induc):
+            return ((), (), t)
+        elif isinstance(t, Top):
+            return ((), (), t)
+        elif isinstance(t, Bot):
+            return ((), (), t)
+
+
     def set_max_battery(self, max_battery : int):
         self._max_battery = max_battery 
 
@@ -1308,10 +1354,6 @@ class BaseRule(Rule):
         #     )
         # )   
 
-def flatten_index_unios(t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
-    # TODO
-    return ((), (), t)
-
 
 class ExprRule(Rule):
 
@@ -1461,6 +1503,8 @@ class ExprRule(Rule):
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
 
+        rel_typ = self.solver.fresh_type_var()
+
         models = self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
 
         for model in models:
@@ -1470,24 +1514,58 @@ class ExprRule(Rule):
             ###############################################
             left_typ = simplify_typ(condense_weakest(model, in_typ))
             raw_right_typ = simplify_typ(condense_strongest(model, out_typ))
-            (right_bound_ids, right_constraints, right_typ) = flatten_index_unios(raw_right_typ)
-            # NEXT: find constraint (SELF <: X -> Y) ; remainder in right_constraints;
-            # NEXT: construct inductive relational constraint (X, Y) <: R;
-            # NEXT: construct new_constraints as (X, Y) <: R ; remainder
-            # NEXT: extract free vars from left_typ 
-            # NEXT: bound_ids = left_bound_ids + right_bound_ids
-            # NEXT: construct relation instance as (left_typ, right_typ)
-            # NEXT: construct IdxUnio(bound_ids, new_constraints, relation_instance) 
+            (right_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
+
+            left_bound_ids = tuple(extract_free_vars_from_typ(pset(), left_typ))
+            bound_ids = left_bound_ids + right_bound_ids
+            rel_pattern = make_pair_typ(left_typ, right_typ)
+
+            relational_constraint = next(
+                (
+                    Subtyping(make_pair_typ(st.weak.antec, st.weak.consq), rel_typ)
+                    for st in right_constraints
+                    if st.strong == self_typ 
+                    if isinstance(st.weak, Imp)
+                ),
+                None
+            )  
+
+            if relational_constraint:
+
+                other_constraints = tuple(
+                    st
+                    for st in right_constraints
+                    if st.strong != self_typ 
+                ) 
+
+                constraints = tuple([relational_constraint]) + other_constraints
+                constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
+
+            else:
+                constraints = right_constraints 
+                constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
 
             print(f"""
 <<<<<<<<<<<<<<
 self_typ: {self_typ.id} 
-left_typ {concretize_typ(left_typ)} 
-raw_right_typ {concretize_typ(raw_right_typ)} 
+
+left_typ: {concretize_typ(left_typ)} 
+
+raw_right_typ: {concretize_typ(raw_right_typ)} 
+
+right_bound_ids: {right_bound_ids}
+right_constraints: {concretize_constraints(right_constraints)}
+right_typ: {concretize_typ(right_typ)} 
+
+relational_constraint: {concretize_constraints(tuple([relational_constraint])) if relational_constraint else "NADA"}
+
+constrained_rel: {concretize_typ(constrained_rel)} 
+
 
 MODEL: { concretize_constraints(tuple(model)) }
 >>>>>>>>>>>>>>
             """)
+# constrained_rel: {concretize_typ(constrained_rel)}
 
 
         return Bot()
