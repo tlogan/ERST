@@ -1503,15 +1503,13 @@ class ExprRule(Rule):
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
 
-        rel_typ = self.solver.fresh_type_var()
+        IH_typ = self.solver.fresh_type_var()
 
         models = self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
 
-        for model in models:
-            ### TODO: don't need raw_induc_typ; it will be replaced with self_typ
-            # raw_induc_typ = simplify_typ(condense_weakest(model, self_typ))
-            # raw_induc_typ: {concretize_typ(raw_induc_typ)} 
-            ###############################################
+        induc_body = Bot()
+        param_body = Bot()
+        for model in reversed(models):
             left_typ = simplify_typ(condense_weakest(model, in_typ))
             raw_right_typ = simplify_typ(condense_strongest(model, out_typ))
             (right_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
@@ -1520,9 +1518,9 @@ class ExprRule(Rule):
             bound_ids = left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
-            relational_constraint = next(
+            IH_typ_args = next(
                 (
-                    Subtyping(make_pair_typ(st.weak.antec, st.weak.consq), rel_typ)
+                    (st.weak.antec, st.weak.consq)
                     for st in right_constraints
                     if st.strong == self_typ 
                     if isinstance(st.weak, Imp)
@@ -1530,84 +1528,75 @@ class ExprRule(Rule):
                 None
             )  
 
-            if relational_constraint:
-
+            if IH_typ_args:
                 other_constraints = tuple(
                     st
                     for st in right_constraints
                     if st.strong != self_typ 
                 ) 
+                IH_rel_constraint = Subtyping(make_pair_typ(IH_typ_args[0], IH_typ_args[1]), IH_typ)
 
-                constraints = tuple([relational_constraint]) + other_constraints
-                constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
+                IH_left_constraint = Subtyping(IH_typ_args[0], IH_typ)
 
-            else:
+                rel_constraints = tuple([IH_rel_constraint]) + other_constraints
+                constrained_rel = IdxUnio(bound_ids, rel_constraints, rel_pattern) 
+
+                left_constraints = tuple([IH_left_constraint]) + other_constraints
+                constrained_left = IdxUnio(left_bound_ids, left_constraints, left_typ)
+            elif bound_ids:
                 constraints = right_constraints 
                 constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
+                constrained_left = IdxUnio(left_bound_ids, constraints, left_typ) 
+            else:
+                assert not right_constraints
+                constrained_rel = rel_pattern
+                constrained_left = left_typ 
+            #end if
 
-            print(f"""
+            induc_body = Unio(constrained_rel, induc_body) 
+            param_body = Unio(constrained_left, param_body)
+        #end for
+
+        rel_typ = Induc(IH_typ.id, induc_body)
+        param_upper = Induc(IH_typ.id, param_body)
+
+        param_typ = self.solver.fresh_type_var()
+        return_typ = self.solver.fresh_type_var()
+        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+        consq_typ = IdxUnio(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        result = IdxInter(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
+
+        print(f"""
 <<<<<<<<<<<<<<
-self_typ: {self_typ.id} 
+result: {concretize_typ(result)} 
 
-left_typ: {concretize_typ(left_typ)} 
+param_upper: {concretize_typ(param_upper)} 
+<<<<<<<<<<<<<<
+        """)
 
-raw_right_typ: {concretize_typ(raw_right_typ)} 
+#             print(f"""
+# <<<<<<<<<<<<<<
+# self_typ: {self_typ.id} 
 
-right_bound_ids: {right_bound_ids}
-right_constraints: {concretize_constraints(right_constraints)}
-right_typ: {concretize_typ(right_typ)} 
+# left_typ: {concretize_typ(left_typ)} 
 
-relational_constraint: {concretize_constraints(tuple([relational_constraint])) if relational_constraint else "NADA"}
+# raw_right_typ: {concretize_typ(raw_right_typ)} 
 
-constrained_rel: {concretize_typ(constrained_rel)} 
+# right_bound_ids: {right_bound_ids}
+# right_constraints: {concretize_constraints(right_constraints)}
+# right_typ: {concretize_typ(right_typ)} 
 
+# relational_constraint: {concretize_constraints(tuple([relational_constraint])) if relational_constraint else "NADA"}
 
-MODEL: { concretize_constraints(tuple(model)) }
->>>>>>>>>>>>>>
-            """)
+# constrained_rel: {concretize_typ(constrained_rel)} 
+
+# MODEL: { concretize_constraints(tuple(model)) }
+# >>>>>>>>>>>>>>
+#             """)
 # constrained_rel: {concretize_typ(constrained_rel)}
 
+        return result
 
-        return Bot()
-
-        # TODO: modify old code
-
-        # tvar_fixy = self.solver.fresh_type_var()
-        # rel_unio = Bot()
-        # antec_unio = Bot()
-        # for model in reversed(models):
-        #     typ_content_pair = make_pair_typ(typ_content_in, typ_content_out)
-        #     typ_self_pair = make_pair_typ(typ_self_in, typ_self_out)
-
-        #     free_vars_content = extract_free_vars_from_typ(pset(), typ_content_pair)
-        #     free_vars_self = extract_free_vars_from_typ(pset(), typ_self_pair)
-
-        #     if (free_vars_content.intersection(free_vars_self)) :
-        #         model = model.add(Subtyping(typ_self_pair, tvar_fixy))
-
-        #     # TODO: determine if/how to package type
-        #     bound_ids = ()
-        #     rel_choice = package_typ([model], bound_ids, typ_content_pair) 
-        #     rel_unio = Unio(rel_choice, rel_unio) 
-
-        #     # TODO: determine if/how to package type
-        #     bound_ids = ()
-        #     antec_choice = package_typ([model], bound_ids, typ_content_in) 
-        #     antec_unio = Unio(antec_choice, antec_unio) 
-
-
-        # rel = Induc(tvar_fixy.id, rel_unio)
-        # antec = Induc(tvar_fixy.id, antec_unio)
-        # var_antec = self.solver.fresh_type_var()
-        # var_concl = self.solver.fresh_type_var()
-        # var_pair = make_pair_typ(var_antec, var_concl)
-
-        # return IdxInter(var_antec.id, antec,
-        #     Imp(
-        #         var_antec,
-        #         IdxUnio(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
-        #     )
-        # )   
     
     def distill_let_target(self, id : str) -> Nonterm:
         return Nonterm('target', self.nt.enviro, Top())

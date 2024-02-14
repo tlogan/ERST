@@ -161,7 +161,9 @@ def simp(t):
 solver = analyzer.Solver() 
 
 def solve(a : str, b : str):
-    return solver.solve_composition(p(a), p(b))
+    x = p(a)
+    y = p(b)
+    return solver.solve_composition(x, y)
 
 
 """
@@ -460,6 +462,74 @@ def test_plus_equals_two_query():
 # answer: {answers}
 #     ''')
 
+def test_nil_query_subs_list_nat_diff():
+    list_nat_diff = ('''
+induc SELF ((~nil @, ~zero @) | (([| N L . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N)) | bot))
+    ''')
+
+    nil_query = ('''
+(~nil @, X)
+    ''')
+    models = solve(nil_query, list_nat_diff)
+    assert len(models) == 1
+    answer = analyzer.prettify_weakest(models[0], p("X"))
+    assert answer == "~zero @" 
+    # for model in models:
+
+    #     pretty = analyzer.prettify_weakest(model, p("X"))
+    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+    #     print(f'pretty: {pretty}')
+    # assert len(models) == 3
+    # answers = [
+    #     analyzer.prettify_weakest(model, p("(X, Y)"))
+    #     for model in models
+    # ]
+    # assert answers == [
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ]
+
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answers}
+#     ''')
+
+def test_list_nat_imp_subs_nil_query_imp():
+
+    list_nat_imp = ('''
+([& X <: (induc SELF (~nil @ | (~cons SELF \\ ~nil @))] (X -> 
+    ([| Y . (X, Y) <: (induc SELF (
+        (~nil @, ~zero @) | 
+        ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N)) | 
+    ))] Y)
+)) 
+    ''')
+
+    nil_query_imp = ('''
+(~nil @ -> Y)
+    ''')
+    models = solve(list_nat_imp, nil_query_imp)
+    assert len(models) == 1
+    answer = analyzer.prettify_weakest(models[0], p("Y"))
+    # assert answer == "~zero @" 
+    for model in models:
+
+        pretty = analyzer.prettify_weakest(model, p("Y"))
+        print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+        print(f'pretty: {pretty}')
+
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answers}
+#     ''')
+
+
+
+"""
+Type inference
+"""
+
 def test_var():
     pieces = ['''
 x
@@ -608,16 +678,6 @@ f(~nil @)(~nil @)
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_fix():
-# TODO
-# fix
-# actual: ((_2 -> ((~nil @ -> ~zero @) & (((~cons _14 \ ~nil @) -> ~succ (([| _2 _18 _14 . _2 <: (_14 -> _18) ] _18) | bot)) & top))) & top)
-# expected: (_2 -> ((~nil @ -> ~zero @) & (~cons _14 \ ~nil @) -> ~succ ([| _18 . _2 <: (_14 -> _18) ] _18)))
-#     pieces = ['''
-# fix(case self => (
-#     case ~nil @ => ~zero @ 
-#     case ~cons x => ~succ (self(x)) 
-# ))
-#     ''']
     pieces = ['''
 fix(case self => (
     case ~nil @ => ~zero @ 
@@ -628,7 +688,7 @@ fix(case self => (
     assert combo
     print("combo: " + u(combo))
 
-def test_funnel():
+def test_funnel_nil_fix():
     pieces = ['''
 ~nil @ |> fix(case self => (
     case ~nil @ => ~zero @ 
@@ -636,6 +696,9 @@ def test_funnel():
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
+
 
 def test_funnel_pipeline():
     pieces = ['''
@@ -703,6 +766,8 @@ def test_max():
 
 if __name__ == '__main__':
     test_fix()
+    # test_funnel_nil_fix()
+    # test_list_nat_imp_subs_nil_query_imp()
     pass
 
 #######################################################################
