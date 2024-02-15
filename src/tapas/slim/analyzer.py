@@ -320,7 +320,11 @@ NOTE: frozen variables correspond to hidden type information of existential/inde
 NOTE: freezing variables corresponds to refining predicates from duality interpolation in CHC
 '''
 Freezer = PSet[str]
-Model = PSet[Subtyping]
+
+@dataclass(frozen=True, eq=True)
+class Model:
+    constraints : PSet[Subtyping]
+    freezer : PSet[str]
 
 
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
@@ -532,7 +536,7 @@ def is_relational_key(model : Model, t : Typ) -> bool:
         return False
 
 def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
-    for constraint in model:
+    for constraint in model.constraints:
         if strong == constraint.strong:
             return constraint.weak
     return None
@@ -546,7 +550,7 @@ def extract_weakest(model : Model, id : str) -> Typ:
     '''
     typs_strengthen = [
         st.weak
-        for st in model
+        for st in model.constraints
         if st.strong == TVar(id)
     ]
     typ_strong = Top() 
@@ -565,7 +569,7 @@ def extract_weakest(model : Model, id : str) -> Typ:
     '''
     constraints_relational = [
         st
-        for st in model
+        for st in model.constraints
         if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
     ]
 
@@ -589,7 +593,7 @@ def extract_strongest(model : Model, id : str) -> Typ:
     '''
     typs_weaken = [
         st.strong
-        for st in model
+        for st in model.constraints
         if st.weak == TVar(id) 
     ]
     typ_weak = Bot() 
@@ -699,7 +703,7 @@ def prettify_strongest(model : Model, typ : Typ) -> str:
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
     return pset(
         st
-        for st in model
+        for st in model.constraints
         if id in extract_free_vars_from_constraints(pset(), [st])
     )
 
@@ -828,7 +832,7 @@ def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Ite
 
 def is_variable_unassigned(model : Model, id : str) -> bool:
     return (
-        id not in extract_free_vars_from_constraints(pset(), model)
+        id not in extract_free_vars_from_constraints(pset(), model.constraints)
     )
 
 def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
@@ -963,12 +967,18 @@ class Solver:
             # ''')
             strongest = extract_strongest(model, strong.id)
             if isinstance(strongest, Bot):
-                return [model.add(Subtyping(strong, weak))]
+                return [Model(
+                    model.constraints.add(Subtyping(strong, weak)),
+                    model.freezer
+                )]
             else:
                 models = self.solve(model, strongest, weak)
 
                 return [
-                    model.add(Subtyping(strong, weak))
+                    Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer
+                    )
                     for model in models
                 ]
 
@@ -988,11 +998,17 @@ class Solver:
 
             weakest = extract_weakest(model, weak.id)
             if isinstance(weakest, Top):
-                return [model.add(Subtyping(strong, weak))]
+                return [Model(
+                    model.constraints.add(Subtyping(strong, weak)),
+                    model.freezer
+                )]
             else:
                 models = self.solve(model, strong, weakest)
                 models = [
-                    model.add(Subtyping(strong, weak))
+                    Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer
+                    )
                     for model in models
                 ]
 
@@ -1218,7 +1234,10 @@ class Solver:
                         relational_key is well formed
                         and matches the cases of the weak type
                         """
-                        return [model.add(Subtyping(strong, weak))]
+                        return [Model(
+                            model.constraints.add(Subtyping(strong, weak)),
+                            model.freezer
+                        )]
                     else:
                         return []
 
@@ -1270,7 +1289,7 @@ class Solver:
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
         self._battery = self._max_battery
-        model = s()
+        model = Model(s(), s())
         return self.solve(model, strong, weak)
     '''
     end solve_composition
@@ -1686,9 +1705,12 @@ class FunctionRule(Rule):
         typ_pair = make_pair_typ(typ_left, typ_right)
         typ_imp = Imp(typ_left, typ_right)
 
-        model = pset(
-            Subtyping(typ_pair, make_pair_typ(choice[0], choice[1]))
-            for choice in choices
+        model = Model(
+            pset(
+                Subtyping(typ_pair, make_pair_typ(choice[0], choice[1]))
+                for choice in choices
+            ),
+            pset()
         )
 
         solution = self.solver.solve(model, typ_imp, self.nt.typ)

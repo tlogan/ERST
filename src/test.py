@@ -283,7 +283,7 @@ def test_subs_idx_unio():
 
     models = solve(thing, idx_unio)
     for model in models:
-        print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+        print(f'model: {analyzer.concretize_constraints(tuple(model.constraints))}')
     assert(models)
 
 
@@ -340,7 +340,7 @@ def test_one_cons_query_subs_nat_list():
     answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~nil @"
     print(f"""
-model: {analyzer.concretize_constraints(tuple(model))}
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
 
@@ -355,7 +355,7 @@ def test_two_cons_query_subs_nat_list():
     answer = analyzer.prettify_weakest(model, p("X"))
     assert answer == "~cons ~nil @"
     print(f"""
-model: {analyzer.concretize_constraints(tuple(model))}
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
 
@@ -382,7 +382,7 @@ def test_one_plus_one_equals_two():
     # assert len(models) == 1
     for model in models:
         print(f'''
-    model: {analyzer.concretize_constraints(tuple(model))}
+    model: {analyzer.concretize_constraints(tuple(model.constraints))}
         ''')
 
 def test_one_plus_one_query():
@@ -411,7 +411,7 @@ def test_one_plus_equals_two_query():
     answer = analyzer.prettify_weakest(model, p("Y"))
     assert answer == "~succ ~zero @"
     print(f'''
-model: {analyzer.concretize_constraints(tuple(model))}
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     ''')
 
@@ -516,37 +516,24 @@ def test_list_nat_imp_subs_nil_query_imp():
     models = solve(list_nat_imp, nil_query_imp)
     assert len(models) == 1
     model = models[0]
-    # sts = list(model)
-    # for st in sts:
-    #     # print(f'constraint: {st.strong} <: {st.weak}')
-    #     t = st.strong
-    #     if isinstance(t, analyzer.IdxUnio):
-    #         # print(f'<<<<')
-    #         # print(f'{t}')
-    #         # print(f'type(constraints): {type(t.constraints)}')
-    #         # print(f'len(constraints): {len(t.constraints)}')
-    #         # print(f'constraints[0].weak: {t.constraints[0].weak}')
-    #         w = t.constraints[0].weak
-    #         assert isinstance(w, analyzer.Induc)
-    #         print(f'<<<<')
-    #         print(f'w.body: {w.body}')
-    #         print(f'<<<<')
-
-    #         print(f'conc w.body: {analyzer.concretize_typ(w.body)}')
-    #         print(f'constraints: {analyzer.concretize_constraints(t.constraints)}')
-    #         pass
-    #     # print(f'weak: {analyzer.concretize_typ(st.weak)}')
-
-    answer = analyzer.prettify_weakest(model, p("Y"))
+    # answer = analyzer.prettify_weakest(model, p("Y"))
+    # answer = analyzer.prettify_strongest(model, p("Y"))
     # assert answer == "~zero @" 
+    # TODO: consider freeing bound variables before variable rule
     for model in models:
-        print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+
+        print(f'''
+::::::
+model: 
+::::::
+{analyzer.concretize_constraints(tuple(model.constraints))}
+        ''')
         pass
 
-    print(f'''
-len(models): {len(models)}
-answer: {answer}
-    ''')
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answer}
+#     ''')
 
 
 
