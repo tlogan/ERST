@@ -2,6 +2,7 @@
 
 
 ### TODO
+- update to ensure `test_list_nat_imp_subs_nil_query_imp` works properly; expect `~zero @` 
 - update to ensure `test_funnel_nil_fix` works properly; expect `~zero @` 
 - update left existential and right universal to freeze variables for safety
     - in left existential, if the right side can be reduce, then the bound variables need to be frozen 

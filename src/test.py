@@ -496,14 +496,18 @@ induc SELF ((~nil @, ~zero @) | (([| N L . (L, N) <: SELF ] ((~cons L \ ~nil @),
 #     ''')
 
 def test_list_nat_imp_subs_nil_query_imp():
+    rel = ('''
+(induc SELF (
+    (~nil @, ~zero @) | 
+    ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N))
+))
+    ''')
 
-    list_nat_imp = ('''
-([& X <: (induc SELF (~nil @ | (~cons SELF \\ ~nil @))] (X -> 
-    ([| Y . (X, Y) <: (induc SELF (
-        (~nil @, ~zero @) | 
-        ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N)) | 
-    ))] Y)
-)) 
+
+    list_nat_imp = (f'''
+([& X <: (induc SELF (~nil @ | (~cons SELF \\ ~nil @)))] (X -> 
+    ([| Y . (X, Y) <: ({rel})] Y)
+))) 
     ''')
 
     nil_query_imp = ('''
@@ -511,18 +515,38 @@ def test_list_nat_imp_subs_nil_query_imp():
     ''')
     models = solve(list_nat_imp, nil_query_imp)
     assert len(models) == 1
-    answer = analyzer.prettify_weakest(models[0], p("Y"))
+    model = models[0]
+    # sts = list(model)
+    # for st in sts:
+    #     # print(f'constraint: {st.strong} <: {st.weak}')
+    #     t = st.strong
+    #     if isinstance(t, analyzer.IdxUnio):
+    #         # print(f'<<<<')
+    #         # print(f'{t}')
+    #         # print(f'type(constraints): {type(t.constraints)}')
+    #         # print(f'len(constraints): {len(t.constraints)}')
+    #         # print(f'constraints[0].weak: {t.constraints[0].weak}')
+    #         w = t.constraints[0].weak
+    #         assert isinstance(w, analyzer.Induc)
+    #         print(f'<<<<')
+    #         print(f'w.body: {w.body}')
+    #         print(f'<<<<')
+
+    #         print(f'conc w.body: {analyzer.concretize_typ(w.body)}')
+    #         print(f'constraints: {analyzer.concretize_constraints(t.constraints)}')
+    #         pass
+    #     # print(f'weak: {analyzer.concretize_typ(st.weak)}')
+
+    answer = analyzer.prettify_weakest(model, p("Y"))
     # assert answer == "~zero @" 
     for model in models:
-
-        pretty = analyzer.prettify_weakest(model, p("Y"))
         print(f'model: {analyzer.concretize_constraints(tuple(model))}')
-        print(f'pretty: {pretty}')
+        pass
 
-#     print(f'''
-# len(models): {len(models)}
-# answer: {answers}
-#     ''')
+    print(f'''
+len(models): {len(models)}
+answer: {answer}
+    ''')
 
 
 
@@ -765,9 +789,9 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_fix()
+    # test_fix()
     # test_funnel_nil_fix()
-    # test_list_nat_imp_subs_nil_query_imp()
+    test_list_nat_imp_subs_nil_query_imp()
     pass
 
 #######################################################################
