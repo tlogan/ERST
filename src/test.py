@@ -244,7 +244,7 @@ def test_two_subs_nat():
 ~succ ~succ ~zero @ 
     ''')
     models = solve(two, nat)
-    # print(f'len(models): {len(models)}')
+    print(f'len(models): {len(models)}')
     assert models
 
 def test_bad_tag_subs_nat():
@@ -470,6 +470,8 @@ list_nat_diff = ('''
 ))
 ''')
 
+# list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: induc SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
+
 def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
@@ -494,14 +496,11 @@ def test_nil_query_subs_list_nat_diff():
     #     "(~succ ~succ ~zero @, ~zero @)",
     # ]
 
-#     print(f'''
-# len(models): {len(models)}
-# answer: {answers}
-#     ''')
+
 
 def test_cons_nil_query_subs_list_nat_diff():
     cons_nil_query = ('''
-(~cons ~nil @, X)
+((~cons ~nil @), X)
     ''')
     models = solve(cons_nil_query, list_nat_diff)
     assert len(models) == 1
@@ -534,25 +533,25 @@ induc SELF (~nil @ | (~cons SELF \\ ~nil @))
 
 def test_cons_nil_subs_list_diff():
     cons_nil = ('''
-(~cons ~nil @)
+(~cons ~nil @) 
     ''')
-    models = solve(cons_nil, list_nat_diff)
-    # assert len(models) == 1
-    print(f"len(models): {len(models)}")
+    models = solve(cons_nil, list_diff)
+    print(f'len(models): {len(models)}')
+    assert models
 
 
-list_nat_imp = (f'''
+list_imp_nat = (f'''
 ([& X <: ({list_diff})] (X -> 
     ([| Y . (X, Y) <: ({list_nat_diff})] Y)
 ))) 
 ''')
 
-def test_list_nat_imp_subs_nil_imp_query():
+def test_list_imp_nat_subs_nil_imp_query():
 
     nil_imp_query = ('''
 (~nil @ -> Q)
     ''')
-    models = solve(list_nat_imp, nil_imp_query)
+    models = solve(list_imp_nat, nil_imp_query)
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_strongest(model, p("Q"))
@@ -562,29 +561,16 @@ def test_list_nat_imp_subs_nil_imp_query():
 # answer: {answer}
 #     ''')
 
-def test_list_nat_imp_subs_cons_nil_imp_query():
+def test_list_imp_nat_subs_cons_nil_imp_query():
 
     nil_imp_query = ('''
 ((~cons ~nil @) -> Q)
     ''')
-    models = solve(list_nat_imp, nil_imp_query)
-    for model in models:
-        print(f"""
-model:::
-:::::::: 
-{analyzer.concretize_constraints(tuple(model.constraints))}')
-
-        """)
-
-
-        pass
-#     assert len(models) == 1
-#     model = models[0]
-#     answer = analyzer.prettify_strongest(model, p("Q"))
-#     assert answer == "~succ ~zero @" 
-    print(f'''
-len(models): {len(models)}
-    ''')
+    models = solve(list_imp_nat, nil_imp_query)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_strongest(model, p("Q"))
+    assert answer == "~succ ~zero @"
 #     print(f'''
 # len(models): {len(models)}
 # answer: {answer}
@@ -831,13 +817,6 @@ def test_max():
 
 
 if __name__ == '__main__':
-    # test_fix()
-    # test_funnel_nil_fix()
-    # test_cons_nil_query_subs_list_nat_diff()
-    # test_list_nat_imp_subs_nil_imp_query()
-    # TODO: make solving inductive typing with diff work
-    test_cons_nil_subs_list_diff()
-    # test_list_nat_imp_subs_cons_nil_imp_query()
     pass
 
 #######################################################################

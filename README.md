@@ -2,12 +2,6 @@
 
 
 ### TODO
-- make solving inductive typing with diff work
-- move indexed type rules before variable rules to solve nested constraints
-    - ensure freezer is updated on left-existential right-universal
-- update left existential and right universal to freeze variables for safety
-    - in left existential, if the right side can be reduce, then the bound variables need to be frozen 
-- update to ensure `test_list_nat_imp_subs_nil_query_imp` works properly; expect `~zero @` 
 - update to ensure `test_funnel_nil_fix` works properly; expect `~zero @` 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference

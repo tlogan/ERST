@@ -863,8 +863,7 @@ def package_typ(models : list[Model], bound_ids : tuple[str, ...] , typ : Typ) -
 
 class Solver:
     _type_id : int = 0 
-    _battery : int = 0 
-    _max_battery : int = 100
+    _battery  : int = -1
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -912,8 +911,8 @@ class Solver:
             return ((), (), t)
 
 
-    def set_max_battery(self, max_battery : int):
-        self._max_battery = max_battery 
+    def set_battery(self, battery : int):
+        self._battery = battery 
 
     def fresh_type_var(self) -> TVar:
         self._type_id += 1
@@ -935,18 +934,21 @@ class Solver:
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
 
+
 #         print(f'''
 # || DEBUG SOLVE
 # =================
 # ||
-# || model::: 
+# || premise model::: 
 # || :::::::: {concretize_constraints(tuple(model.constraints))}
 # ||
 # || freezer::: 
 # || :::::::: {model.freezer}
 # ||
 # || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+# ||
 #         ''')
+
 
         # if alpha_equiv(strong, weak): 
         #     return [model] 
@@ -961,6 +963,7 @@ class Solver:
             strong_body = sub_typ(renaming, strong.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
+            next_id = self._type_id
             models = [model]
             for constraint in strong_constraints:
                 models = [
@@ -968,11 +971,12 @@ class Solver:
                     for m0 in models
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
+            new_ids = (f"_{i}" for i in range(next_id, self._type_id))
 
             return [
                 m2
                 for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids))]
+                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids))]
                 for m2 in self.solve(m1, strong_body, weak)
             ]
 
@@ -983,12 +987,15 @@ class Solver:
             weak_body = sub_typ(renaming, weak.body)
             renamed_id = tvar_fresh.id
 
+
+            next_id = self._type_id
             models = self.solve(model, tvar_fresh, weak_upper)
+            new_ids = (f"_{i}" for i in range(next_id, self._type_id))
 
             return [
                 m2
                 for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.add(renamed_id))]
+                for m1 in [Model(m0.constraints, m0.freezer.add(renamed_id).union(new_ids))]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
 
@@ -997,20 +1004,8 @@ class Solver:
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
 
-            unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
+            # unio_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
             models = self.solve(model, strong, weak_body) 
-            # '''
-            # - add upper bound constraints to unio_indices after solving
-            # - rationale is that all inputs are also output
-            # '''
-            # models = [
-            #     model.union( 
-            #         Subtyping(TVar(id), extract_strongest(model, id))
-            #         for id in unio_indices
-            #     )
-            #     for model in models
-            # ]
-
 
             for constraint in weak_constraints:
                 models = [
@@ -1027,42 +1022,8 @@ class Solver:
             strong_upper = sub_typ(renaming, strong.upper)
             strong_body = sub_typ(renaming, strong.body)
 
-            inter_indices = (t.id for t in renaming.values() if isinstance(t, TVar))
+            # inter_indices = (t.id for t in renaming.values() if isinstance(t, TVar))
             models = self.solve(model, strong_body, weak) 
-
-    #         print(f'''
-    # || DEBUG SOLVE
-    # =================
-    # ||
-    # || premise model::: 
-    # || :::::::: {concretize_constraints(tuple(model.constraints))}
-    # ||
-    # || freezer::: 
-    # || :::::::: {model.freezer}
-    # ||
-    # || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-    # ||
-    # || result len(models): {len(models)}
-    #         ''')
-
-    #         for m in models:
-    #             print(f'''
-    #         || m:::
-    #         || ::::
-    #         || {concretize_constraints(tuple(m.constraints))}
-    #             ''')
-
-            # '''
-            # - add upper bound constraints to unio_indices after solving
-            # - rationale is that all inputs are also output
-            # '''
-            # models = [
-            #     model.union( 
-            #         Subtyping(TVar(id), extract_strongest(model, id))
-            #         for id in inter_indices
-            #     )
-            #     for model in models
-            # ]
 
             return [
                 m1
@@ -1089,8 +1050,7 @@ class Solver:
 
 
             if strong.id in model.freezer: 
-                pass
-                weakest_strong = extract_weakest(model, strong.id)
+                weakest_strong = condense_weakest(model, strong)
                 return self.solve(model, weakest_strong, weak)
             else:
                 strongest = extract_strongest(model, strong.id)
@@ -1125,7 +1085,7 @@ class Solver:
             # ''')
 
             if weak.id in model.freezer: 
-                strongest_weak = extract_strongest(model, weak.id)
+                strongest_weak = condense_strongest(model, weak)
                 return self.solve(model, strong, strongest_weak)
             else:
                 weakest = extract_weakest(model, weak.id)
@@ -1248,23 +1208,19 @@ class Solver:
 
         elif isinstance(weak, Induc): 
 
-            # print(f'''
-            # DEBUG (weak, Induc):
-            # model: {(len(model.model))}
-            # frozen: {list(model.freezer)}
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # Will unroll?: {not is_relational_key(model, strong)}
-            # ''')
-
-            if not is_relational_key(model, strong) and self._battery > 0:
+            if not is_relational_key(model, strong) and self._battery > 0 or self._battery < 0:
                 self._battery -= 1
                 '''
                 unroll
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-                return self.solve(model, strong, weak_body)
+                # TODO: why can't solver handle unsimplified typ
+                strongest = simplify_typ(condense_strongest(model, strong))
+                models = self.solve(model, strongest, weak_body)
+
+
+                return models
             else:
                 weak_cache = match_strong(model, strong)
                 if weak_cache:
@@ -1333,7 +1289,6 @@ class Solver:
     '''
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
-        self._battery = self._max_battery
         model = Model(s(), s())
         return self.solve(model, strong, weak)
     '''
