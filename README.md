@@ -2,6 +2,7 @@
 
 
 ### TODO
+- make solving inductive typing with diff work
 - move indexed type rules before variable rules to solve nested constraints
     - ensure freezer is updated on left-existential right-universal
 - update left existential and right universal to freeze variables for safety

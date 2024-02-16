@@ -462,11 +462,15 @@ def test_plus_equals_two_query():
 # answer: {answers}
 #     ''')
 
-def test_nil_query_subs_list_nat_diff():
-    list_nat_diff = ('''
-induc SELF ((~nil @, ~zero @) | (([| N L . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N)) | bot))
-    ''')
 
+list_nat_diff = ('''
+(induc SELF (
+    (~nil @, ~zero @) | 
+    ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N))
+))
+''')
+
+def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
     ''')
@@ -495,41 +499,92 @@ induc SELF ((~nil @, ~zero @) | (([| N L . (L, N) <: SELF ] ((~cons L \ ~nil @),
 # answer: {answers}
 #     ''')
 
-def test_list_nat_imp_subs_nil_query_imp():
-    rel = ('''
-(induc SELF (
-    (~nil @, ~zero @) | 
-    ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N))
-))
+def test_cons_nil_query_subs_list_nat_diff():
+    cons_nil_query = ('''
+(~cons ~nil @, X)
+    ''')
+    models = solve(cons_nil_query, list_nat_diff)
+    assert len(models) == 1
+    answer = analyzer.prettify_weakest(models[0], p("X"))
+    assert answer == "~succ ~zero @" 
+    # for model in models:
+
+    #     pretty = analyzer.prettify_weakest(model, p("X"))
+    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+    #     print(f'pretty: {pretty}')
+    # assert len(models) == 3
+    # answers = [
+    #     analyzer.prettify_weakest(model, p("(X, Y)"))
+    #     for model in models
+    # ]
+    # assert answers == [
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ]
+
+    print(f'''
+len(models): {len(models)}
+answer: {answer}
     ''')
 
+list_diff = ('''
+induc SELF (~nil @ | (~cons SELF \\ ~nil @))
+''')
 
-    list_nat_imp = (f'''
-([& X <: (induc SELF (~nil @ | (~cons SELF \\ ~nil @)))] (X -> 
-    ([| Y . (X, Y) <: ({rel})] Y)
+def test_cons_nil_subs_list_diff():
+    cons_nil = ('''
+(~cons ~nil @)
+    ''')
+    models = solve(cons_nil, list_nat_diff)
+    # assert len(models) == 1
+    print(f"len(models): {len(models)}")
+
+
+list_nat_imp = (f'''
+([& X <: ({list_diff})] (X -> 
+    ([| Y . (X, Y) <: ({list_nat_diff})] Y)
 ))) 
-    ''')
+''')
 
-    nil_query_imp = ('''
-(~nil @ -> Y)
+def test_list_nat_imp_subs_nil_imp_query():
+
+    nil_imp_query = ('''
+(~nil @ -> Q)
     ''')
-    models = solve(list_nat_imp, nil_query_imp)
+    models = solve(list_nat_imp, nil_imp_query)
     assert len(models) == 1
     model = models[0]
-    # answer = analyzer.prettify_weakest(model, p("Y"))
-    # answer = analyzer.prettify_strongest(model, p("Y"))
-    # assert answer == "~zero @" 
-    # TODO: consider freeing bound variables before variable rule
+    answer = analyzer.prettify_strongest(model, p("Q"))
+    assert answer == "~zero @" 
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answer}
+#     ''')
+
+def test_list_nat_imp_subs_cons_nil_imp_query():
+
+    nil_imp_query = ('''
+((~cons ~nil @) -> Q)
+    ''')
+    models = solve(list_nat_imp, nil_imp_query)
     for model in models:
+        print(f"""
+model:::
+:::::::: 
+{analyzer.concretize_constraints(tuple(model.constraints))}')
 
-        print(f'''
-::::::
-model: 
-::::::
-{analyzer.concretize_constraints(tuple(model.constraints))}
-        ''')
+        """)
+
+
         pass
-
+#     assert len(models) == 1
+#     model = models[0]
+#     answer = analyzer.prettify_strongest(model, p("Q"))
+#     assert answer == "~succ ~zero @" 
+    print(f'''
+len(models): {len(models)}
+    ''')
 #     print(f'''
 # len(models): {len(models)}
 # answer: {answer}
@@ -778,7 +833,11 @@ def test_max():
 if __name__ == '__main__':
     # test_fix()
     # test_funnel_nil_fix()
-    test_list_nat_imp_subs_nil_query_imp()
+    # test_cons_nil_query_subs_list_nat_diff()
+    # test_list_nat_imp_subs_nil_imp_query()
+    # TODO: make solving inductive typing with diff work
+    test_cons_nil_subs_list_diff()
+    # test_list_nat_imp_subs_cons_nil_imp_query()
     pass
 
 #######################################################################
