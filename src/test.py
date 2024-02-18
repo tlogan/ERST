@@ -754,12 +754,23 @@ fix(case self => (
     assert combo
     print("combo: " + u(combo))
 
-def test_funnel_nil_fix():
+def test_nil_funnel_fix():
     pieces = ['''
 ~nil @ |> fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 ))
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
+
+def test_app_fix_nil():
+    pieces = ['''
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
+))(~nil @) 
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     assert combo
@@ -831,6 +842,8 @@ def test_max():
 
 
 if __name__ == '__main__':
+    test_app_fix_nil()
+    # test_nil_funnel_fix()
     pass
 
 #######################################################################
