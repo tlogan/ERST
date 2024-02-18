@@ -576,6 +576,20 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
 # answer: {answer}
 #     ''')
 
+def test_bot_subs_cons_nil_diff():
+
+    cons_nil_diff = ('''
+((~cons L) \ ~nil @)
+    ''')
+
+    bot = ('''
+(bot)
+    ''')
+    models = solve(bot, cons_nil_diff)
+    assert len(models) == 1
+    print(f'''
+len(models): {len(models)}
+    ''')
 
 
 """

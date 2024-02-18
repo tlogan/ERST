@@ -2,6 +2,8 @@
 
 
 ### TODO
+- finish implementing inhabitable check
+- test out solving with union on left-hand-side
 - update to ensure `test_funnel_nil_fix` works properly; expect `~zero @` 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference

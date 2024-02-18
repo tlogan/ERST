@@ -860,6 +860,15 @@ def package_typ(models : list[Model], bound_ids : tuple[str, ...] , typ : Typ) -
 
     return simplify_typ(typ_result)
 
+def inhabitable(t : Typ) -> bool:
+    t = simplify_typ(t)
+    if False:
+        pass
+    elif isinstance(t, Bot):
+        return False
+    else:
+        # TODO
+        return True
 
 class Solver:
     _type_id : int = 0 
@@ -1185,13 +1194,22 @@ class Solver:
             ]
 
         elif isinstance(weak, Diff) and diff_well_formed(weak):
+            # TODO: need a sound/safe/conservative inhabitable check
+            # only works if we assume T is not empty
             '''
-            T <: A \\ B === (T <: A), ~(T <: B) 
+            T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+            ----
+            T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+            ----
+            T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
             '''
             return [
                 m
                 for m in self.solve(model, strong, weak.context)
-                if self.solve(m, strong, weak.negation) == []
+                if (
+                    not inhabitable(strong) or 
+                    self.solve(m, strong, weak.negation) == []
+                )
             ]
         
 
@@ -1215,10 +1233,8 @@ class Solver:
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-                # TODO: why can't solver handle unsimplified typ
-                strongest = simplify_typ(condense_strongest(model, strong))
+                strongest = (condense_strongest(model, strong))
                 models = self.solve(model, strongest, weak_body)
-
 
                 return models
             else:
