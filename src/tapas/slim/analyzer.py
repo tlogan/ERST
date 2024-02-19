@@ -519,6 +519,8 @@ def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless((), t1) == to_nameless((), t2)
 
 def is_relational_key(model : Model, t : Typ) -> bool:
+    # TODO: assume the key appears on the strong side of subtyping; 
+    # - make sure this uses the strongest(lenient) or weakest(conservative) substitution based on frozen variables 
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
             strongest = extract_strongest(model, t.body.id) 
@@ -1233,8 +1235,7 @@ class Solver:
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-                strongest = (condense_strongest(model, strong))
-                models = self.solve(model, strongest, weak_body)
+                models = self.solve(model, strong, weak_body)
 
                 return models
             else:

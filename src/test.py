@@ -842,8 +842,9 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_app_fix_nil()
+    # test_app_fix_nil()
     # test_nil_funnel_fix()
+    test_cons_nil_query_subs_list_nat_diff()
     pass
 
 #######################################################################

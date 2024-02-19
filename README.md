@@ -4,6 +4,7 @@
 ### TODO
 - update to ensure `test_nil_funnel_fix` and `test_app_fix_nil` works properly; expect `~zero @` 
 - finish implementing inhabitable check
+- finish implementing relational key check 
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
