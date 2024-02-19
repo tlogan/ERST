@@ -283,7 +283,7 @@ not a necessary condition.
   \\
   \I \code{$\tau$\&$\tau$} &\C{intersection}
   \\
-  \I \code{[| $\widebar{\alpha}$ . Q] $\tau$} &\C{existential / indexed union}
+  \I \code{[| $\widebar{\alpha}$ $Q$] $\tau$} &\C{existential / indexed union}
   \\
   \I \code{[\& $\alpha$<:$\tau$] $\tau$} &\C{universal / indexed intersection}
   \\
@@ -291,9 +291,9 @@ not a necessary condition.
   \\
   Q ::= &\C{qualification}
   \\
-  \I \code{$\tau$<:$\tau$} &\C{subtyping}
+  \I \code{.} &\C{empty}
   \\
-  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend}
+  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
   \\
 %   \\
 %   \Gamma ::= &\C{typing env}
@@ -421,6 +421,41 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 \begin{mathpar}
 
+  \inferrule[StrongExisEmpty] {
+    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim \tau_s \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \cup \right> 
+    \claim 
+    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_s$)}
+    \subtypes 
+    \tau_w
+  }
+
+  \inferrule[StrongExisExtend] {
+    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim 
+    \tau_{qs}
+    \subtypes 
+    \tau_{qw}
+    \\\\
+    \left< \Delta_h, \Omega_h \cup \{\alpha_i\}_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \code{([| $\widebar{\alpha_i}^i$ $Q$] $\tau_s$)}
+    \subtypes 
+    \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_s$)}
+    \subtypes 
+    \tau_w
+  }
+
 
   \inferrule[StrongUnion] {
     \\\\
@@ -430,6 +465,19 @@ Unification generates a solution set $C$, which contains subtyping environments.
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
   }
+
+  \inferrule[WeakUnionLeft] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_1
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+  }
+
+  \inferrule[WeakUnionRight] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_2
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+  }
+
 
 
 
