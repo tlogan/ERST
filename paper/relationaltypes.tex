@@ -421,19 +421,6 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 \begin{mathpar}
 
-  \inferrule[StrongExisEmpty] {
-    \bigand_i \alpha_i \notin FTV(\Delta_i)
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim \tau_s \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \cup \right> 
-    \claim 
-    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_s$)}
-    \subtypes 
-    \tau_w
-  }
-
   \inferrule[StrongExisExtend] {
     \bigand_i \alpha_i \notin FTV(\Delta_i)
     \\
@@ -445,7 +432,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \\\\
     \left< \Delta_h, \Omega_h \cup \{\alpha_i\}_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim 
-    \code{([| $\widebar{\alpha_i}^i$ $Q$] $\tau_s$)}
+    \code{([| $Q$] $\tau_s$)}
     \subtypes 
     \tau_w
   } {
@@ -454,6 +441,52 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_s$)}
     \subtypes 
     \tau_w
+  }
+
+  \inferrule[StrongExisEmpty] {
+    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim \tau_s \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_s$)}
+    \subtypes 
+    \tau_w
+  }
+
+
+  \inferrule[WeakExisExtend] {
+    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim \tau_s \subtypes \tau_w
+    \\\\
+    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \tau_{qs}
+    \subtypes 
+    \code{([| $Q$] $\tau_{qw}$)}
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \tau_s
+    \subtypes 
+    \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_w$)}
+  }
+
+  \inferrule[WeakExisEmpty] {
+    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim 
+    \tau_s
+    \subtypes 
+    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_w$)}
   }
 
 
