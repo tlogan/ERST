@@ -10,18 +10,22 @@ dependencies:
   - conda-content-trust=0.1.1
   - conda-package-handling=1.7.3
   - cryptography=36.0.0
+  - exceptiongroup=1.0.4
   - idna=3.3
+  - iniconfig=1.1.1
   - libcxx=12.0.0
   - libffi=3.3
   - ncurses=6.3
   - openssl=1.1.1w
-  - pip=21.2.4
+  - packaging=23.1
+  - pluggy=1.0.0
   - ply=3.11
   - pycosat=0.6.3
   - pycparser=2.21
   - pyopenssl=21.0.0
   - pyrsistent=0.18.0
   - pysocks=1.7.1
+  - pytest=7.4.0
   - python=3.9.7
   - python.app=3
   - readline=8.1.2
@@ -30,6 +34,7 @@ dependencies:
   - six=1.16.0
   - sqlite=3.37.0
   - tk=8.6.11
+  - tomli=2.0.1
   - tqdm=4.62.3
   - tzdata=2021e
   - urllib3=1.26.7
@@ -45,9 +50,9 @@ dependencies:
     - mypy==0.961
     - mypy-extensions==0.4.3
     - nodeenv==1.7.0
+    - pip==23.3.1
     - pyright==1.1.260
     - setuptools==62.3.2
-    - tomli==2.0.1
     - tree-sitter==0.20.0
     - typing-extensions==4.3.0
     - z3-solver==4.12.1.0

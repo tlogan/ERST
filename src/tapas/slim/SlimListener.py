@@ -47,6 +47,15 @@ class SlimListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SlimParser#negchain.
+    def enterNegchain(self, ctx:SlimParser.NegchainContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#negchain.
+    def exitNegchain(self, ctx:SlimParser.NegchainContext):
+        pass
+
+
     # Enter a parse tree produced by SlimParser#qualification.
     def enterQualification(self, ctx:SlimParser.QualificationContext):
         pass

@@ -16,15 +16,16 @@ from tapas.slim import analyzer, language
 
 from tapas.util_system import box, unbox
 
-from pyrsistent import m, pmap, v
+from pyrsistent import m, s, pmap, pset
+from pyrsistent.typing import PMap, PSet 
 
 import pytest
 
     # pieces = [
 
     #     "fix (self =>", " (", "\n",
-    #     "    fun :nil . => :zero () ", "\n",
-    #     "    fun :cons x ", "=>", ":succ", "(self(", "x))", "\n",
+    #     "    fun ~nil . => ~zero () ", "\n",
+    #     "    fun ~cons x ", "=>", "~succ", "(self(", "x))", "\n",
     #     ")", ")"
     # ]
 
@@ -38,29 +39,29 @@ import pytest
 
     # pieces = [
 # """
-# (:uno = @ :dos = @).uno
+# (~uno = @ ~dos = @).uno
 # """,
 ###############
 # """
-# let rec = :uno = @ :dos = @ ;
+# let rec = ~uno = @ ~dos = @ ;
 # rec.uno
 # """,
 ###############
 # """
-# ((:uno = (:one = @)).uno).one
+# ((~uno = (:one = @)).uno).one
 # """,
 ###############
 # """
-# (:uno = (:one = @)).uno.one
+# (~uno = (:one = @)).uno.one
 # """,
 ###############
 # """
-# let rec = :uno = (:one = @) :dos = @ ;
+# let rec = ~uno = (:one = @) ~dos = @ ;
 # ((rec).uno).one
 # """,
 ###############
 # """
-# let rec = :uno = (:one = @) :dos = @ ;
+# let rec = ~uno = (:one = @) ~dos = @ ;
 # rec.uno.one
 # """,
 ###############
@@ -90,7 +91,7 @@ import pytest
 # """,
 ###############
 # """
-# let foo = (x => y => :ooga :booga (:uno = x :dos = y)) ;
+# let foo = (x => y => :ooga :booga (~uno = x ~dos = y)) ;
 # foo(:one @)(:two @)
 # """,
 ###############
@@ -98,9 +99,9 @@ import pytest
 # '''
 # let y = :foo x ;
 # ''',
-# ":uno = y :dos = @", 
+# "~uno = y ~dos = @", 
 ################
-# ":uno = @ :dos = @",
+# "~uno = @ ~dos = @",
 ################
 # "fix (", "@", ")",
 ################
@@ -111,8 +112,8 @@ import pytest
 
 # pieces = [
 # f'''
-# fun :nil () => :zero () 
-# fun :cons () => :succ (self(x))
+# fun ~nil () => ~zero () 
+# fun ~cons () => ~succ (self(x))
 # '''
 # ]
 
@@ -143,8 +144,456 @@ def analyze(pieces : list[str]):
 
     return asyncio.run(_mk_task())
 
+def p(s): 
+    t = language.parse_typ(s)
+    assert t 
+    return t 
+
+def u(t): 
+    s = analyzer.concretize_typ(t)
+    assert s 
+    return s 
+
+def simp(t):
+    return analyzer.simplify_typ(t)
+
+
+solver = analyzer.Solver() 
+
+def solve(a : str, b : str):
+    x = p(a)
+    y = p(b)
+    return solver.solve_composition(x, y)
+
+
 """
 tests
+"""
+
+def test_typ_implication():
+
+    p = language.parse_typ("X -> Y -> Z")
+    assert p 
+    c = analyzer.concretize_typ(p) 
+    print(c)
+    assert c == "(X -> (Y -> Z))"
+
+
+
+def test_typ_induc():
+    d = ('''
+induc self ~nil @ | ~cons self
+    ''')
+    assert u(p(d)) == "induc self (~nil @ | ~cons self)"
+    # print(u(t))
+
+
+nat = ('''
+induc N bot 
+    | ~zero @  
+    | ~succ N 
+''')
+
+even = ('''
+induc E bot 
+    | ~zero @ 
+    | ~succ ~succ E
+''')
+
+nat_list = ('''
+induc NL bot 
+    | (~zero @, ~nil @) 
+    | [| N L . (N, L) <: NL ] (~succ N, ~cons L)  
+''')
+
+even_list = ('''
+induc NL bot 
+    | (~zero @, ~nil @) 
+    | [| N L . (N, L) <: NL ] (~succ ~succ N, ~cons ~cons L)  
+''')
+
+
+
+nat_equal = ('''
+induc SELF bot
+    | (~zero @, ~zero @) 
+    | [| A B . (A, B) <: SELF ] (~succ A, ~succ B)  
+''')
+
+
+
+
+addition_rel = (f'''
+induc AR bot
+    | [| Y Z .  (Y, Z) <: ({nat_equal}) ] (x : ~zero @ & y : Y & z : Z) 
+    | [| X Y Z . (x : X & y : Y & z : Z) <: AR ] (x : ~succ X & y : Y & z : ~succ Z) 
+''')
+
+
+
+def test_zero_subs_nat():
+    zero = ('''
+~zero @ 
+    ''')
+    models = solve(zero, nat)
+    # print(f'len(models): {len(models)}')
+    assert(models)
+
+def test_two_subs_nat():
+    two = ('''
+~succ ~succ ~zero @ 
+    ''')
+    models = solve(two, nat)
+    print(f'len(models): {len(models)}')
+    assert models
+
+def test_bad_tag_subs_nat():
+    bad = ('''
+~bad ~succ ~zero @ 
+    ''')
+    models = solve(bad, nat)
+    # print(f'len(models): {len(models)}')
+    assert not models
+
+def test_two_nat_subs_nat():
+    two_nat = (f'''
+~succ ~succ ({nat})
+    ''')
+    models = solve(two_nat, nat)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+
+def test_even_subs_nat():
+    models = solve(even, nat)
+    assert models
+
+def test_nat_subs_even():
+    models = solve(nat, even)
+    # print(f'len(models): {len(models)}')
+    assert not models
+
+def test_subs_idx_unio():
+    idx_unio = ('''
+{ N . N <: top} (~thing N)  
+    ''')
+    thing = ('''
+(~thing @)
+    ''')
+
+    models = solve(thing, idx_unio)
+    for model in models:
+        print(f'model: {analyzer.concretize_constraints(tuple(model.constraints))}')
+    assert(models)
+
+
+def test_zero_nil_subs_nat_list():
+    global p
+    zero_nil = ('''
+(~zero @, ~nil @)
+    ''')
+
+    models = solve(zero_nil, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_one_single_subs_nat_list():
+#     one_single = ('''
+# (~succ ~zero @, ~cons ~nil @)
+#     ''')
+    # TODO: yeah, this is sound 
+    one_single = ('''
+(~succ ~zero @, ~cons bot) 
+    ''')
+    models = solve(one_single, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert models
+
+def test_two_single_subs_nat_list():
+    two_single = ('''
+(~succ ~succ ~zero @, ~cons ~nil @)
+    ''')
+    models = solve(two_single, nat_list)
+    # print(f'len(models): {len(models)}')
+    assert not models
+
+def test_one_query_subs_nat_list():
+    one_query = ('''
+(~succ ~zero @, X)
+    ''')
+    models = solve(one_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("X"))
+    # print("answr: " + answer)
+    assert answer == "~cons ~nil @"
+
+def test_one_cons_query_subs_nat_list():
+    global p
+    one_cons_query = ('''
+(~succ ~zero @, ~cons X)
+    ''')
+    models = solve(one_cons_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    # TODO
+    answer = analyzer.prettify_weakest(model, p("X"))
+    assert answer == "~nil @"
+    print(f"""
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
+answr: {answer}
+    """)
+
+
+def test_two_cons_query_subs_nat_list():
+    two_cons_query = ('''
+(~succ ~succ ~zero @, ~cons X)
+    ''')
+    models = solve(two_cons_query, nat_list)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("X"))
+    assert answer == "~cons ~nil @"
+    print(f"""
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
+answr: {answer}
+    """)
+
+def test_even_list_subs_nat_list():
+    models = solve(even_list, nat_list)
+    print(f"len(models): {len(models)}")
+    # assert models
+
+def test_nat_list_subs_even_list():
+    models = solve(nat_list, even_list)
+    print(f"len(models): {len(models)}")
+    # assert not models
+
+
+def test_one_plus_one_equals_two():
+    print("==================")
+    print(addition_rel)
+    print("==================")
+    one_plus_one_equals_two = ('''
+(x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
+    ''')
+    models = solve(one_plus_one_equals_two, addition_rel)
+    print(f'len(models): {len(models)}')
+    # assert len(models) == 1
+    for model in models:
+        print(f'''
+    model: {analyzer.concretize_constraints(tuple(model.constraints))}
+        ''')
+
+def test_one_plus_one_query():
+    one_plus_one_query = ('''
+(x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
+    ''')
+    models = solve(one_plus_one_query, addition_rel)
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("Z"))
+    assert answer == "~succ ~succ ~zero @"
+#     print(f'''
+# model: {analyzer.concretize_constraints(tuple(model))}
+# answr: {answer}
+#     ''')
+
+def test_one_plus_equals_two_query():
+    one_plus_one_query = ('''
+(x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solve(one_plus_one_query, addition_rel)
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("Y"))
+    assert answer == "~succ ~zero @"
+    print(f'''
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
+answr: {answer}
+    ''')
+
+def test_zero_plus_one_equals_two():
+    zero_plus_one_equals_two = ('''
+(x : ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solve(zero_plus_one_equals_two, addition_rel)
+    assert not models
+
+
+def test_plus_one_equals_two_query():
+    plus_one_equals_two_query = ('''
+(x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
+    ''')
+    models = solve(plus_one_equals_two_query, addition_rel)
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("X"))
+    assert answer == "~succ ~zero @"
+#     print(f'''
+# model: {analyzer.concretize_constraints(tuple(model))}
+# answr: {answer}
+#     ''')
+
+def test_plus_equals_two_query():
+    print("==================")
+    print(addition_rel)
+    print("==================")
+    plus_equals_two_query = ('''
+(x : X & y : Y & z : ~succ ~succ ~zero @)
+    ''')
+    models = solve(plus_equals_two_query, addition_rel)
+    assert len(models) == 3
+    answers = [
+        analyzer.prettify_weakest(model, p("(X, Y)"))
+        for model in models
+    ]
+    assert answers == [
+        "(~zero @, ~succ ~succ ~zero @)",
+        "(~succ ~zero @, ~succ ~zero @)",
+        "(~succ ~succ ~zero @, ~zero @)",
+    ]
+
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answers}
+#     ''')
+
+
+list_nat_diff = ('''
+(induc SELF (
+    (~nil @, ~zero @) | 
+    ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N))
+))
+''')
+
+# list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: induc SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
+
+def test_nil_query_subs_list_nat_diff():
+    nil_query = ('''
+(~nil @, X)
+    ''')
+    models = solve(nil_query, list_nat_diff)
+    assert len(models) == 1
+    answer = analyzer.prettify_weakest(models[0], p("X"))
+    assert answer == "~zero @" 
+    # for model in models:
+
+    #     pretty = analyzer.prettify_weakest(model, p("X"))
+    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+    #     print(f'pretty: {pretty}')
+    # assert len(models) == 3
+    # answers = [
+    #     analyzer.prettify_weakest(model, p("(X, Y)"))
+    #     for model in models
+    # ]
+    # assert answers == [
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ]
+
+
+
+def test_cons_nil_query_subs_list_nat_diff():
+    cons_nil_query = ('''
+((~cons ~nil @), X)
+    ''')
+    models = solve(cons_nil_query, list_nat_diff)
+    assert len(models) == 1
+    answer = analyzer.prettify_weakest(models[0], p("X"))
+    assert answer == "~succ ~zero @" 
+    # for model in models:
+
+    #     pretty = analyzer.prettify_weakest(model, p("X"))
+    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
+    #     print(f'pretty: {pretty}')
+    # assert len(models) == 3
+    # answers = [
+    #     analyzer.prettify_weakest(model, p("(X, Y)"))
+    #     for model in models
+    # ]
+    # assert answers == [
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ]
+
+    print(f'''
+len(models): {len(models)}
+answer: {answer}
+    ''')
+
+list_diff = ('''
+induc SELF (~nil @ | (~cons SELF \\ ~nil @))
+''')
+
+def test_cons_nil_subs_list_diff():
+    cons_nil = ('''
+(~cons ~nil @) 
+    ''')
+    models = solve(cons_nil, list_diff)
+    print(f'len(models): {len(models)}')
+    assert models
+
+
+list_imp_nat = (f'''
+([& X <: ({list_diff})] (X -> 
+    ([| Y . (X, Y) <: ({list_nat_diff})] Y)
+))) 
+''')
+
+def test_list_imp_nat_subs_nil_imp_query():
+
+    nil_imp_query = ('''
+(~nil @ -> Q)
+    ''')
+    models = solve(list_imp_nat, nil_imp_query)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_strongest(model, p("Q"))
+    assert answer == "~zero @" 
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answer}
+#     ''')
+
+def test_list_imp_nat_subs_cons_nil_imp_query():
+
+    nil_imp_query = ('''
+((~cons ~nil @) -> Q)
+    ''')
+    models = solve(list_imp_nat, nil_imp_query)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_strongest(model, p("Q"))
+    assert answer == "~succ ~zero @"
+#     print(f'''
+# len(models): {len(models)}
+# answer: {answer}
+#     ''')
+
+def test_bot_subs_cons_nil_diff():
+
+    cons_nil_diff = ('''
+((~cons L) \ ~nil @)
+    ''')
+
+    bot = ('''
+(bot)
+    ''')
+    models = solve(bot, cons_nil_diff)
+    assert len(models) == 1
+    print(f'''
+len(models): {len(models)}
+    ''')
+
+
+"""
+Type inference
 """
 
 def test_var():
@@ -159,19 +608,23 @@ x
     assert not combo
     assert not parsetree 
 
+
 def test_unit():
     pieces = ['''
 @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr (base @))"
+    assert u(combo) == "@"
+    # print("parsetree: " + str(parsetree))
+    # print("combo: " + u(combo))
 
 def test_tag():
     pieces = ['''
-:uno @
+~uno @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base : uno (expr (base @))))"
+    assert parsetree == "(expr (base ~ uno (expr (base @))))"
 
 def test_tuple():
     pieces = ['''
@@ -182,46 +635,71 @@ def test_tuple():
 
 def test_record():
     pieces = ['''
-:uno = @ :dos = @
+_.uno = @ 
+_.dos = @
     ''']
+# uno:= @  dos:= @
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @))))))"
+    assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
 
 
 def test_function():
     pieces = ['''
-case :nil @ => @ 
+case ~nil @ => @ 
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     print(parsetree)
-    # assert parsetree == "(expr (base (function case (pattern (pattern_base : nil (pattern (pattern_base @)))) => (expr (base @)) (function case (pattern (pattern_base : cons (pattern (pattern_base x)))) => (expr (base x))))))"
+    assert parsetree == "(expr (base (function case (pattern (pattern_base ~ nil (pattern (pattern_base @)))) => (expr (base @)))))"
+    assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
+
+def test_function_cases_disjoint():
+    pieces = ['''
+case ~uno @ => ~one @ 
+case ~dos @ => ~two @ 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    # assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
+
+def test_function_cases_overlap():
+    pieces = ['''
+case ~uno @ => ~one @ 
+case x => ~two @ 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    # assert u(simp(combo)) == "(~nil @ -> @)"
+    print("combo: " + u(simp(combo)))
 
 def test_projection():
     pieces = ['''
-(:uno = @ :dos = @).uno
+(_.uno = @ _.dos = @).uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base @)) (record : dos = (expr (base @)))))) )) (keychain . uno))"
+    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @)))))) )) (keychain . uno))"
 
 def test_projection_chain():
     pieces = ['''
-(:uno = (:dos @) :one = @).uno.dos
+(_.uno = (~dos @) _.one = @).uno.dos
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ( (expr (base (record : uno = (expr (base ( (expr (base : dos (expr (base @)))) ))) (record : one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
+    print(parsetree)
+    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
 
 def test_application():
     pieces = ['''
 (
-case :nil @ => @ 
-case :cons x => x 
-)(:nil @)
+case ~nil @ => @ 
+case ~cons x => x 
+)(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_application_chain():
     pieces = ['''
-(case :nil @ => case :nil @ => @)(:nil @)(:nil @)
+(case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
@@ -232,17 +710,18 @@ x
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
+    print("combo: " + u(combo))
 
 def test_idprojection():
     pieces = ['''
-let r = (:uno = @ :dos = @) ;
+let r = (~uno = @ ~dos = @) ;
 r.uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_idprojection_chain():
     pieces = ['''
-let r = (:uno = (:dos @) :one = @) ;
+let r = (~uno = (~dos @) :one = @) ;
 r.uno.dos
     ''']
     (combo, guides, parsetree) = analyze(pieces)
@@ -250,77 +729,121 @@ r.uno.dos
 def test_idapplication():
     pieces = ['''
 let f = (
-case :nil @ => @ 
-case :cons x => x 
+    case ~nil @ => @ 
+    case ~cons x => x 
 ) ;
-f(:nil @)
+f(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_idapplication_chain():
     pieces = ['''
-let f = (case :nil @ => case :nil @ => @) ;
-f(:nil @)(:nil @)
+let f = (case ~nil @ => case ~nil @ => @) ;
+f(~nil @)(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_fix():
     pieces = ['''
 fix(case self => (
-case :nil @ => :zero @ 
-case :cons x => :succ (self(x)) 
+    case ~nil @ => ~zero @ 
+    case ~cons x => (~succ (self(x))) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
 
-def test_ite():
+def test_nil_funnel_fix():
     pieces = ['''
-if :true @ then 
-    :one @
-else
-    :two @
-    ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    # print(parsetree)
-
-def test_funnel():
-    pieces = ['''
-:nil @ |> fix(case self => (
-case :nil @ => :zero @ 
-case :cons x => :succ (self(x)) 
+~nil @ |> fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
 ))
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
+
+def test_app_fix_nil():
+    pieces = ['''
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
+))(~nil @) 
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert combo
+    print("combo: " + u(combo))
+
 
 def test_funnel_pipeline():
     pieces = ['''
-:nil @ |> (case :nil @ => @) |> (case :nil @ => @)
+~nil @ |> (case ~nil @ => @) |> (case ~nil @ => @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     print(parsetree)
 
 
-def test_type_implication():
+# fix(case self => (
+# case ~nil @ => ~zero @ 
+# case ~cons x => ~succ (self(x)) 
+# ))
 
-    p = language.parse_typ("X -> Y -> Z")
-    assert p 
-    c = analyzer.concretize_typ(p) 
-    print(c)
-    assert c == "(X -> (Y -> Z))"
+less_equal = ('''
+fix(case self => (
+    case (~zero @, x) => ~true @ 
+    case (~succ a, ~succ b) => self(a,b) 
+    case (~succ x, ~zero @) => ~false @ 
+))
+''')
 
+def test_less_equal():
+    pieces = [less_equal]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
 
+max = (f'''
+let less_equal = {less_equal} ;
+case (x, y) => (
+    if less_equal(x, y) then
+        y
+    else
+        x
+)
+''')
 
-def test_type_least():
-    p = language.parse_typ('''
-least self with :nil @ | :cons self
-    ''')
-    assert p 
-    c = analyzer.concretize_typ(p) 
-    assert c == "least self with (:nil @ | :cons self)"
+if_else = (f'''
+if ~true @ then
+    ~uno @
+else
+    ~dos @
+''')
+
+def test_if_then_else():
+    pieces = [if_else]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    print("combo: " + u(combo))
+    print(parsetree)
+
+def test_max():
+    # TODO
+    pieces = []
+    (combo, guides, parsetree) = analyze(pieces)
+    # raise_guide(guides)
+    # print(parsetree)
+    # assert combo
+    # print("combo: " + u(combo))
+
 
 if __name__ == '__main__':
-    test_type_least()
-
+    test_app_fix_nil()
+    # test_nil_funnel_fix()
     pass
 
 #######################################################################
@@ -331,8 +854,8 @@ if __name__ == '__main__':
 
 #     test_parse_tree_serialize(f'''
 # fix (self => (
-#     fun :nil () => :zero () 
-#     fun :cons x => :succ (self(x)) 
+#     fun ~nil () => ~zero () 
+#     fun ~cons x => ~succ (self(x)) 
 # ))
 #     ''')
 

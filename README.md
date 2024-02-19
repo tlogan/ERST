@@ -2,16 +2,122 @@
 
 
 ### TODO
-- replace Z3 with RInGen. Z3 is not expressive enough with algebraic datatypes
-    - NOTE: git checkout the tag `chccomp22` for a stable version that executes.
-- add examples with type annotations 
+- update to ensure `test_nil_funnel_fix` and `test_app_fix_nil` works properly; expect `~zero @` 
+- finish implementing inhabitable check
 - update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
-- update collect and guide_choice rules to memo(r)ize
-- modify unify to return multiple interpretations 
-- write subtyping solving with outsourcing to Z3 
-- instead of using custom solver, translate leaf subtyping into horn clauses for external solver
-- use renaming lazily (just for equality modulo alpha renaming)
+    - inferring max
+    - encode fibonacci as an example to motivate 2-induction and test k-induction.
+    - type annotations 
+    - subtyping 
+- implement caching for streaming parsing
+    - update collect and guide_choice rules to memo(r)ize
+- consider generalizing parameter types with universal a la SuperF paper
+    - remove need for let-poly rule for the special case of prenex poly.
+- determine if intersection types can be subsumed by constrained universal types with union 
+    - e.g. [X <: (S | T) | U] X === ([X <: S | T] X) & U ==== ([X <: S] X) & T & U === S & U & T 
+    - e.g. [X <: T | U] X -> {Y. (X, Y) <: (T, A) | (U, B)} === (T -> A) & (U -> B) 
+- understand why union in super F constraints paper is defined differently
+- understand what polarity types are and how they are related to relational typing
+- consider two ways to type a function (constrained implication vs indexed intersection)
+    - constrained implication is construction from function introduction (in case a fixedpoint relation is used)
+    - indexed intersection is constructed from constraint solving 
+    - both reduce to the same solution in application 
+    ```
+    ==============================
+    case _ : A => _ : T 
+    case _ : B => _ : U 
+    --------------------
+    -- infer
+    --------------------
+    [X <: A | B] X -> {Y . (Z, Y) <: (A, T) | (B\A, U)} Y
+    ==============================
+
+
+    ==============================
+    [X <: A | B] X -> {Y . (Z, Y) <: (A, T) | (B\A, U)} Y <: P -> Q
+    --------------------
+    -- application of constrained implication
+    --------------------
+    P <: A | B
+    P -> {Y . (P, Y) <: (A, T) | (B\A, U)} Y <: P -> Q
+    --------------------
+    {Y . (P, Y) <: (A, T) | (B\A, U)} Y <: Q
+    --------------------
+    (P, Y) <: (A, T) | (B\A, U)  :: Y frozen 
+    |-
+    Y <: Q
+    --------------------
+    (P, Y) <: (A, T) |- Y <: Q :: Y frozen || 
+    (P, Y) <: (B\A, U) |- Y <: Q :: Y frozen
+    --------------------
+    P <: A, T <: Q  ||  P <: B\A, U <: Q 
+    ==============================
+
+
+    ==============================
+    (A -> T & B\A -> U) <: P -> Q
+    --------------------
+    -- application of intersection implication
+    --------------------
+    A -> T <: P -> Q  ||  B\A -> U <: P -> Q
+    P <: A, T <: Q    ||  P <: B\A, U <: Q 
+    ==============================
+    -- P is in neg position
+    -- Q is in pos position
+    ------------------------------
+
+    ```
+- Check if special antecedent union rule is necessary 
+- Check that special consequent intersection isn't necessary 
+    - basic intersection rule is not expressive enough
+    ```
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    P -> A <: T -> U  ||  P -> B <: T -> U
+    ------------------------------
+    P -> A <: T -> U  ||  P -> B <: T -> U
+    ------------------------------
+    T <: P, A <: U  ||  T <: P, B <: U    
+
+    =========================================
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    (P -> A & B) <: T -> U
+    ------------------------------
+    T <: P, A & B <: U    
+    ------------------------------
+    A <: U || B <: U
+
+    =========================================
+    (P -> A & P -> B) <: T -> U
+    ------------------------------
+    [X <: P] X -> {Y. (X,Y) <: (P, A) | (P, B)} Y <: T -> U
+    ------------------------------
+    T <: P
+    {Y. (P,Y) <: (P, A) | (P, B)} Y <: U
+    ------------------------------
+    Y <: A # Y frozen |- Y <: U || 
+    Y <: B # Y frozen |- Y <: U 
+    ------------------------------
+    A <: U || B <: U
+    ```
+- for paper, write algorithmic inference rules as a combination of combine/distill rules 
+    - distill rules construct a new environment; combine rules construct a new type
+- for paper, note that much of type reconstruction is handled in solving subtyping
+    - this puts intersection/union rules in subtyping instead of typing
+    - indirectly in typing via subsumption
+- for paper, note why both intro and elim rules are bidirectional
+    - basic bidirectional typing has checking for intro rules and synthesis for elimination rules 
+        - type and program are both provided
+    - roundtrip typing has checking for intro rules and both checking and synthesis for elimination rules
+        - program is not provided
+        - checking is necessary for both as the type guides synthesis
+    - contextual typing has both checking and synthesis for intro and elim rules
+        - parts of type are not provided
+        - parts of program are not provided
+        - synthesis for intro is necessary to construct type
+        - checking for elim is necessary to construct program  
 
 ### Implementation 
 - avoid recursion, which has poor performance in python.
@@ -171,6 +277,7 @@
         - propagating types down corresponds to CDCL or back-jumping
         - propagating types up corresponds to BCP or unit-propagation
     - Solving for types directly without SMT
+        - solving for variables on left vs variables on right of subtyping might correspond to a conflict driven dialectic a la CDCL or CEGAR
         - constructing/unrolling a derivation on the LHS of subtyping corresponds to finding a counterexample derivation in CEGAR/interpolation.  
         - we use backward reasoning on subtyping to construct a subtyping derivation. 
             - If there is a satisfying type variable assignment that could allow the derivation to hold, then we update the assignment. 
@@ -180,6 +287,24 @@
             - union types are constructed from combining solutions from multiple reasoning branches (e.g. solving cases from pattern matching)
         - failure to find assignment satisfying subtyping unification corresponds to CEGAR's counter-example derivation having only consistent assignments  
         - success in finding a satisfying assignment for subtyping unification corresponds to CEGAR's counter-example derivation having in an inconsistent assignment
+        - there is a correspondence between model-based satisfaction and proof-based entailment for typing and subtyping 
+            - `T |= T` type satisfaction represents subset inclusion of interpretations for types inhabited by some term
+            - `x : T |= x : T` typing satisfaction represents subset inclusion of interpretations for types inhabited by then given term
+            - `T <: T |= T <: T`subtyping satisfaction represents subset inclusion of interpretations for subtyping
+            - `M |- T <: T` subtyping entailment represents subset inclusion of terms that inhabit types for some interpretation
+            - `M |- x : T` typing entailment represents inhabitation of a term in a types for some interpretation
+            - ```
+                A |= P
+                P -> Q, A |= B  
+                -- corresponds to --
+                (A <: P) |= (B <: Q) 
+                -- corresponds to --
+                M |- A <: P
+                ----------------
+                M |- Q <: B
+                -- corresponds to --
+                M |- (P -> Q) <: (A -> B) 
+                ```
 
 
 

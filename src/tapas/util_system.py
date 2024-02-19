@@ -13,10 +13,49 @@ from pyrsistent import pmap, m, pset, s, PMap, PSet
 
 import pickle
 
+import inspect
+
 T = TypeVar('T')
 X = TypeVar('X')
 K = TypeVar('K')
 V = TypeVar('V')
+R = TypeVar('R')
+
+@dataclass(frozen=True, eq=True)
+class StackResult(Generic[T]):
+    content : T 
+
+
+def make_stack_machine(
+    make_plate_entry : Callable[[T], tuple[list[T], Callable[..., R]]], 
+) -> Callable[[T], R] :
+    def run(start : T):
+        result : Optional[StackResult[R]] = None 
+        stack : list[tuple[list[T], Callable, list[R]]] = [([start], (lambda x : x), [])]
+
+        while len(stack) > 0 :
+            (controls, combine, args) = stack.pop()
+
+            if isinstance(result, StackResult):
+                args.append(result.content)
+
+            assert isinstance(combine, Callable)
+            if len(controls) == 0:
+                result = StackResult(combine(*args))
+            else:
+                result = None 
+                control = controls.pop(0)
+                stack.append((controls, combine, args))
+                plate_entry = make_plate_entry(control)
+                plate = (plate_entry[0], plate_entry[1], []) 
+                stack.append(plate)
+
+            pass
+
+        assert isinstance(result, StackResult)
+        return result.content
+    return run
+
 
 
 

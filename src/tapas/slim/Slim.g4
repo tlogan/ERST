@@ -106,20 +106,29 @@ def collect(self, f : Callable, *args):
 
 }
 
-ids returns [list[str] combo] :
+ids returns [tuple[str, ...] combo] :
 
 | ID {
-$combo = [$ID.text]
+$combo = tuple([$ID.text])
 }
 
 | ID ids {
-$combo = [$ID.text] ++ $ids.combo
+$combo = tuple([$ID.text]) + $ids.combo
 }
 
 ;
 
 
 typ_base returns [Typ combo] : 
+
+
+| 'top' {
+$combo = Top() 
+}
+
+| 'bot' {
+$combo = Bot() 
+}
 
 | ID {
 $combo = TVar($ID.text) 
@@ -129,12 +138,12 @@ $combo = TVar($ID.text)
 $combo = TUnit() 
 }
 
-// Tag 
-| ':' ID typ_base {
+// TTag 
+| '~' ID typ_base {
 $combo = TTag($ID.text, $typ_base.combo) 
 }
 
-// Field 
+// TField 
 | ID ':' typ_base {
 $combo = TField($ID.text, $typ_base.combo) 
 }
@@ -161,6 +170,10 @@ $combo = Unio($typ_base.combo, $typ.combo)
 $combo = Inter($typ_base.combo, $typ.combo) 
 }
 
+| context = typ_base acc = negchain[$context.combo] {
+$combo = $acc.combo 
+}
+
 | typ_base '->' typ {
 $combo = Imp($typ_base.combo, $typ.combo) 
 }
@@ -172,18 +185,20 @@ $combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo))
 }
 
 // indexed union
-//  {P <: T, ...}     
-| '{' ids '.' qualification '}' typ {
+| '[|' ids '.' qualification ']' typ {
 $combo = IdxUnio($ids.combo, $qualification.combo, $typ.combo) 
 }
 
+// indexed intersection default
+| '[&' ID ']' body = typ {
+$combo = IdxInter($ID.text, Top(), $body.combo) 
+}
 
 // indexed intersection
-// [P <: T, ...] T 
-// [T <: X -> Y, ...] :a X -> :b Y 
-| '[' ids '.' qualification ']' typ {
-$combo = IdxInter($ids.combo, $qualification.combo, $typ.combo) 
+| '[&' ID '<:' upper = typ ']' body = typ {
+$combo = IdxInter($ID.text, $upper.combo, $body.combo) 
 }
+
 
 
 //induction // least fixed point; smallest set such that typ <: ID is invariant
@@ -191,8 +206,8 @@ $combo = IdxInter($ids.combo, $qualification.combo, $typ.combo)
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'least' ID 'with' typ {
-$combo = Least($ID.text, $typ.combo) 
+| 'induc' ID typ {
+$combo = Induc($ID.text, $typ.combo) 
 }
 
 
@@ -201,23 +216,43 @@ $combo = Least($ID.text, $typ.combo)
 // greatest self of 
 // nil -> zero &  
 // [self <: n -> l] cons n -> succ l 
-| 'greatest' ID 'of' typ {
-$combo = Greatest($ID.text, $typ.combo) 
+// | 'greatest' ID 'of' typ {
+// $combo = Greatest($ID.text, $typ.combo) 
+// }
+
+;
+
+negchain [Typ context] returns [Diff combo] :
+
+| '\\' negation = typ {
+$combo = Diff(context, $negation.combo)
+}
+
+| '\\' negation = typ {
+context_tail = Diff(context, $negation.combo)
+} tail = negchain[context_tail] {
+$combo = Diff(context, $negation.combo)
 }
 
 ;
 
-qualification returns [list[tuple[Typ, Typ]] combo] :
+qualification returns [tuple[Subtyping, ...] combo] :
 
-| subtyping
+| subtyping {
+$combo = tuple([$subtyping.combo])
+}
 
-| subtyping ',' qualification
+| subtyping ';' qualification {
+$combo = tuple([$subtyping.combo]) + $qualification.combo
+}
 
 ;
 
-subtyping returns [tuple[Typ, Typ] combo] :
+subtyping returns [Subtyping combo] :
 
-| typ '<:' typ
+| strong = typ '<:' weak = typ {
+$combo = Subtyping($strong.combo, $weak.combo)
+}
 
 ;
 
@@ -232,12 +267,12 @@ $combo = $base.combo
 // Introduction rules
 
 | {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
-} head = base[nt] {
+nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+} head = base[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = base[nt] {
+nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = base[nt_tail] {
 $combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
@@ -313,7 +348,8 @@ base [Nonterm nt] returns [Typ combo] :
 $combo = self.collect(BaseRule(self._solver, nt).combine_unit)
 } 
 
-| ':' {
+//tag
+| '~' {
 self.guide_terminal('ID')
 } ID {
 nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, $ID.text)
@@ -327,7 +363,7 @@ $combo = $record.combo
 
 | {
 } function[nt] {
-$combo = $function.combo
+$combo = self.collect(BaseRule(self._solver, nt).combine_function, $function.combo)
 }
 
 // Elimination rules
@@ -347,7 +383,7 @@ $combo = $expr.combo
 ;
 
 
-function [Nonterm nt] returns [Typ combo] :
+function [Nonterm nt] returns [list[Imp] combo] :
 
 | 'case' {
 nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_pattern)
@@ -367,7 +403,7 @@ self.guide_symbol('=>')
 nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_body, $pattern.combo)
 } body = expr[nt_body] {
 nt_tail = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_tail, $pattern.combo, $body.combo)
-} tail = function[nt] {
+} tail = function[nt_tail] {
 $combo = self.collect(FunctionRule(self._solver, nt).combine_cons, $pattern.combo, $body.combo, $tail.combo)
 }
 
@@ -377,7 +413,7 @@ $combo = self.collect(FunctionRule(self._solver, nt).combine_cons, $pattern.comb
 
 record [Nonterm nt] returns [Typ combo] :
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -387,15 +423,15 @@ nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_single_body, $
 $combo = self.collect(RecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
 nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, $ID.text)
-} body = expr[nt] {
+} body = expr[nt_body] {
 nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
-} tail = record[nt] {
+} tail = record[nt_tail] {
 $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
 }
 
@@ -481,13 +517,13 @@ $combo = $pattern_base.combo
 }
 
 | {
-nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_head)
-} head = base[nt] {
+nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
+} head = pattern_base[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_cator = self.guide_nonterm(PatterRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = base[nt] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
+nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, $head.combo)
+} tail = pattern_base[nt_tail] {
+$combo = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
 ;
@@ -506,7 +542,7 @@ $combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
 $combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
 } 
 
-| ':' {
+| '~' {
 self.guide_terminal('ID')
 } ID {
 nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, $ID.text)
@@ -518,11 +554,16 @@ $combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, $ID.text, $
 $combo = $pattern_record.combo
 }
 
+| '(' pattern[nt] ')' {
+$combo = $pattern.combo   
+}
+
+
 ;
 
 pattern_record [Nonterm nt] returns [PatternAttr combo] :
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -532,7 +573,7 @@ nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_
 $combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
 }
 
-| ':' {
+| '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -575,7 +616,7 @@ $combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, $ID.text
 //     ;
 
 
-ID : [a-zA-Z]+ ;
+ID : [a-zA-Z][_a-zA-Z]* ;
 INT : [0-9]+ ;
 WS : [ \t\n\r]+ -> skip ;
 
