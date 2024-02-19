@@ -230,6 +230,92 @@ and application rules subsume pattern matching. This departure enables a more di
 correspondence between the structures of programs and their types, but it is 
 not a necessary condition.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Syntax %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\[
+% \begin{array}[t]{l r}
+%   e ::= &\C{expression}
+%   \\
+%   \I \code{$x$} &\C{variable}
+%   \\
+%   \I \code{()} &\C{unit}
+%   \\
+%   \I \code{\#$l$ $e$}  &\C{tag}
+%   \\
+%   \I \widebar{\code{@$l$=$e$}} &\C{record}
+%   \\
+%   \I \widebar{\code{path $m$=>$e$}} &\C{function}
+%   \\
+%   \I \code{$e$.$l$} &\C{projection}
+%   \\
+%   \I \code{$e$($e$)} &\C{application}
+%   \\
+%   \I \code{fix($e$)} &\C{fix}
+%   \\
+%   \I \code{let $x$ : $\tau$ = $e$ in $e$}  &\C{let}
+%   \\
+% m ::= &\C{pattern}
+%   \\
+%   \I \code{$x$} &\C{variable}
+%   \\
+%   \I \code{()} &\C{unit}
+%   \\
+%   \I \code{\#$l$ $e$}  &\C{tag}
+%   \\
+%   \I \widebar{\code{@$l$=$e$}} &\C{record}
+% \end{array}
+\begin{array}[t]{l r}
+\tau ::= &\C{type}
+  \\
+  \I \code{$\alpha$}  &\C{variable}
+  \\
+  \I \code{@} &\C{unit}
+  \\
+  \I \code{\textasciitilde{}$l$ $\tau$} &\C{tag}
+  \\
+  \I \code{$l$:$\tau$} &\C{field}
+  \\
+  \I \code{$\tau$->$\tau$} &\C{implication}
+  \\
+  \I \code{$\tau$|$\tau$} &\C{union}
+  \\
+  \I \code{$\tau$\&$\tau$} &\C{intersection}
+  \\
+  \I \code{[| $\widebar{\alpha}$ . Q] $\tau$} &\C{existential / indexed union}
+  \\
+  \I \code{[\& $\alpha$<:$\tau$] $\tau$} &\C{universal / indexed intersection}
+  \\
+  \I \code{induc $\alpha$ $\tau$} &\C{induction}
+  \\
+  Q ::= &\C{qualification}
+  \\
+  \I \code{$\tau$<:$\tau$} &\C{subtyping}
+  \\
+  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend}
+  \\
+%   \\
+%   \Gamma ::= &\C{typing env}
+%   \\
+%   \I \bullet  &\C{empty}
+%   \\
+%   \I \Gamma; \code{$x$:$\tau$} &\C{extend}
+%   \\
+%   \Delta ::= &\C{subtyping env}
+%   \\
+%   \I \bullet &\C{empty}
+%   \\
+%   \I \Delta; \code{$\tau$<:$\tau$} &\C{extend}
+\end{array}
+\]
+
+\caption{Syntax}
+\label{fig:syntax}
+\end{figure*}
+
+
+
 \subsection{Types}
 
 \paragraph{Quantified types}
@@ -285,6 +371,7 @@ it treats a function as a sequence of paths whose type is an intersection of imp
 rather than having a separate pattern matching rule. 
 Likewise, the type of a record is an intersection of field types.
 The let-binding rule allows for prenex polymorphism by generalizing via subtyping. 
+\TODO{Look at Super F paper to see if prenex restriction is necessary or not}
 
 \subsection{Subtyping}
 The subtyping is given in \FIG{fig:subtyping}.
@@ -323,7 +410,208 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 \subsection{Subtype Solving}
 \TODO{type unification}
-\TODO{encoding to/decoding from horn clauses}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Subtyping Solving 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\left< \Delta, \Omega \right> \rightsquigarrow \left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+\end{flalign*}
+
+\begin{mathpar}
+
+
+  \inferrule[StrongUnion] {
+    \\\\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> \claim \tau_1 \subtypes \tau_w
+    \\\\
+    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_2 \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+  }
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% SET COMPREHENSION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  
+%   \inferrule[StrongUnion] {
+%     \\\\
+%     M = \{ \left< \Delta_2, \Omega_2 \right> \ |\ 
+%     \\\\
+%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \claim \tau_1 \subtypes \tau_w
+%     \ \land \ 
+%     \left< \Delta_1, \Omega_1 \right> \in M_1
+%     \\\\
+%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \claim \tau_2 \subtypes \tau_w
+%     \ \land \ 
+%     \left< \Delta_2, \Omega_2 \right> \in M_2
+%     \\\\
+%     \}
+%     \\
+%   } {
+%     \left< \Delta, \Omega \right> \rightsquigarrow M \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+%   }
+
+
+%   \inferrule[anteUnion] {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \\
+%     \Delta \claim \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
+%   }
+
+%   \inferrule[rightUnion1] {
+%     \Delta \claim \tau_l \subtypes \tau_1
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%   }
+
+%   \inferrule[rightUnion2] {
+%     \Delta \claim \tau_l \subtypes \tau_2
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%   }
+
+%   \inferrule[ConsqInter] {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
+%     \\
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
+%   }
+
+%   \inferrule[rightInter] {
+%     \Delta \claim \tau_l \subtypes \tau_1
+%     \\
+%     \Delta \claim \tau_l \subtypes \tau_2
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
+%   }
+
+%   \inferrule[leftInter1] {
+%     \Delta \claim \tau_1 \subtypes \tau_r
+%   } {
+%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%   }
+
+%   \inferrule[leftInter2] {
+%     \Delta \claim \tau_2 \subtypes \tau_r
+%   } {
+%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%   }
+
+%   \inferrule[leftExis] { 
+%     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
+%     \\
+%     \bigand_{\Delta'}
+%     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
+%     \longrightarrow
+%     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
+%   } { 
+%     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[rightExis] { 
+%     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
+%     \\
+%     \Delta;\Delta' \claim \tau_l \subtypes \tau
+%     \\
+%     \Delta;\Delta' \claim \tau_1 \subtypes \tau_2
+%   } { 
+%     \Delta \claim \tau_l
+%     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%   }
+
+%   \inferrule[refl] {
+%   } {
+%     \Delta \claim \tau \subtypes \tau 
+%   }
+
+%   \inferrule[impli] {
+%     \Delta \claim \tau_3 \subtypes \tau_1 
+%     \\
+%     \Delta \claim \tau_2 \subtypes \tau_4
+%   } {
+%     \Delta \claim \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
+%   } 
+
+
+%   \inferrule[rightUniv] { 
+%     \alpha \not\in \F{freeTVs}(\tau_l)
+%     \\
+%     \Delta;\code{$\alpha$<:$\tau'$} \claim \tau_l \subtypes \tau
+%   } { 
+%     \Delta \claim \tau_l
+%     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
+%   }
+
+%   \inferrule[leftUniv] { 
+%     \alpha \not\in \F{freeTVs}(\tau_r)
+%     \\
+%     \Delta;\Delta' \claim \tau \subtypes \tau_r
+%     \\
+%     \Delta;\Delta' \claim \alpha \subtypes \tau'
+%   } { 
+%     \Delta \claim \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[cons] {
+%     \code{$\tau_l$<:$\tau_r$} \in \Delta
+%   } {
+%     \Delta \claim \tau_l \subtypes \tau_r
+%   }
+
+
+%   % left-induc
+%   \inferrule[leftInduc] { 
+%     \alpha \not\in \F{freeTVs}(\tau_r)
+%     \\
+%     \Delta;\code{$\alpha$<:$\tau_r$} \claim \tau 
+%     \subtypes \tau_r
+%   } { 
+%     \Delta \claim \code{induc[$\alpha$]$\tau$}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[field] {
+%     \Delta \claim \tau_1 \subtypes \tau_2
+%   } {
+%     \Delta \claim \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
+%   } 
+
+
+%   % right-induc
+%   \inferrule[rightInduc] {
+%     \alpha \not\in \F{freeTVs}(\tau_l)
+%     \\
+%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \claim 
+%     \tau_l \subtypes \tau
+%   } {
+%     \Delta \claim \tau_l
+%     \subtypes \code{induc[$\alpha$]$\tau$}
+%   }
+
+%   \inferrule[tag] {
+%     \Delta \claim \tau_1 \subtypes \tau_2
+%   } {
+%     \Delta \claim (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
+%   } 
+\end{mathpar}
+\caption{Subtyping}
+\label{fig:subtyping}
+\end{figure*}
+
+
+
 
 
 \section{Experiments}
