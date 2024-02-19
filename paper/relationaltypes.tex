@@ -421,7 +421,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 \begin{mathpar}
 
-  \inferrule[StrongExisExtend] {
+  \inferrule[ExtendStrongExis] {
     \bigand_i \alpha_i \notin FTV(\Delta_i)
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
@@ -443,7 +443,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \tau_w
   }
 
-  \inferrule[StrongExisEmpty] {
+  \inferrule[EmptyStrongExis] {
     \bigand_i \alpha_i \notin FTV(\Delta_i)
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
@@ -457,7 +457,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
   }
 
 
-  \inferrule[WeakExisExtend] {
+  \inferrule[ExtendWeakExis] {
     \bigand_i \alpha_i \notin FTV(\Delta_i)
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
@@ -476,7 +476,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_w$)}
   }
 
-  \inferrule[WeakExisEmpty] {
+  \inferrule[EmptyWeakExis] {
     \bigand_i \alpha_i \notin FTV(\Delta_i)
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
@@ -489,6 +489,36 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \code{([| $\widebar{\alpha_i}^i$ .] $\tau_w$)}
   }
 
+  \inferrule[StrictStrongVar] {
+    \alpha \in \Omega_i 
+    \\
+    condenseWeakest(\Delta, \alpha) = \tau_s
+    \\\\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \alpha \subtypes \tau_w
+  }
+
+  \inferrule[LenientStrongVar] {
+    \alpha \notin \Omega_i 
+    \\
+    extractStrongest(\Delta_i, \alpha) = \tau_s
+    \\\\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim \tau_s \subtypes \tau_w
+    \\\\
+    \Delta_h \subseteq \Delta_o
+    \\
+    \Omega_h \subseteq \Omega_o
+    \\
+    \code{$\alpha$<:$\tau_w$} \in \Omega_o
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \alpha \subtypes \tau_w
+  }
+
 
   \inferrule[StrongUnion] {
     \\\\
@@ -499,13 +529,13 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
   }
 
-  \inferrule[WeakUnionLeft] {
+  \inferrule[LeftWeakUnion] {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_1
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
   }
 
-  \inferrule[WeakUnionRight] {
+  \inferrule[RightWeakUnion] {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_2
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}

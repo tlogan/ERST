@@ -872,6 +872,16 @@ def inhabitable(t : Typ) -> bool:
         # TODO
         return True
 
+def selective(t : Typ) -> bool:
+    t = simplify_typ(t)
+    if False:
+        pass
+    elif isinstance(t, Top):
+        return False
+    else:
+        # TODO
+        return True
+
 class Solver:
     _type_id : int = 0 
     _battery  : int = -1
@@ -1065,7 +1075,7 @@ class Solver:
                 return self.solve(model, weakest_strong, weak)
             else:
                 strongest = extract_strongest(model, strong.id)
-                if isinstance(strongest, Bot):
+                if not inhabitable(strongest):
                     return [Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
@@ -1100,7 +1110,7 @@ class Solver:
                 return self.solve(model, strong, strongest_weak)
             else:
                 weakest = extract_weakest(model, weak.id)
-                if isinstance(weakest, Top):
+                if not selective(weakest):
                     return [Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
