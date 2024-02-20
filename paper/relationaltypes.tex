@@ -424,7 +424,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
 \begin{mathpar}
 
   \inferrule[ExtendStrongExis] {
-    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \land_i (\alpha_i \notin FTV(\Delta_i))
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
     \claim 
@@ -446,7 +446,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
   }
 
   \inferrule[EmptyStrongExis] {
-    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \land_i (\alpha_i \notin FTV(\Delta_i))
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
     \claim \tau_s \subtypes \tau_w
@@ -460,7 +460,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
 
 
   \inferrule[ExtendWeakExis] {
-    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \land_i (\alpha_i \notin FTV(\Delta_i))
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
     \claim \tau_s \subtypes \tau_w
@@ -495,7 +495,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \alpha \in \Omega_i 
     \\
     condenseWeakest(\Delta, \alpha) = \tau_s
-    \\\\
+    \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \tau_s \subtypes \tau_w
   } {
@@ -507,10 +507,10 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \alpha \notin \Omega_i 
     \\
     extractStrongest(\Delta_i, \alpha) = \tau_s
-    \\\\
+    \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
     \claim \tau_s \subtypes \tau_w
-    \\\\
+    \\
     \Delta_h \subseteq \Delta_o
     \\
     \Omega_h \subseteq \Omega_o
