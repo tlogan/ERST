@@ -541,6 +541,35 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
   }
 
+  \inferrule[Equiv] {
+    \claim \tau_s \equiv \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_w
+  }
+
+  \inferrule[FactorStrongInduc] {
+    factorLeast(\code{induc $\alpha$ $\tau_s$}) = \tau_f 
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_f \subtypes \tau_w
+    \\ \Delta_o \not\subseteq \emptyset 
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
+  }
+
+  \inferrule[KStrongInduc] {
+    \alpha \not\in FTV(\Delta_i)
+    \\
+    subTyp(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s' \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
+  }
+
 
 
 
