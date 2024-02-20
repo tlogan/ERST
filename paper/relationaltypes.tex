@@ -283,6 +283,8 @@ not a necessary condition.
   \\
   \I \code{$\tau$\&$\tau$} &\C{intersection}
   \\
+  \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
+  \\
   \I \code{[| $\widebar{\alpha}$ $Q$] $\tau$} &\C{existential / indexed union}
   \\
   \I \code{[\& $\alpha$<:$\tau$] $\tau$} &\C{universal / indexed intersection}
@@ -552,7 +554,6 @@ Unification generates a solution set $C$, which contains subtyping environments.
     factorLeast(\code{induc $\alpha$ $\tau_s$}) = \tau_f 
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_f \subtypes \tau_w
-    \\ \Delta_o \not\subseteq \emptyset 
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
@@ -561,7 +562,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
   \inferrule[KStrongInduc] {
     \alpha \not\in FTV(\Delta_i)
     \\
-    subTyp(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
+    subst(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \tau_s' \subtypes \tau_w
@@ -570,7 +571,63 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
   }
 
+  \inferrule[UninhabWeakDiff] {
+    \neg inhabitable(\tau_s)
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+  }
 
+  \inferrule[InhabWeakDiff] {
+    inhabitable(\tau_s)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_c
+    \\
+    wellformed(\code{$\tau_c$\textbackslash$\tau_n$})
+    \\
+    \neg \left< \Delta_o, \Omega_o \right> \rightsquigarrow \left< \Delta_n, \Omega_n \right> 
+    \claim \tau_s \subtypes \tau_n
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+  }
+
+  \inferrule[StrongDiff] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_c \subtypes \code{$\tau_w$|$\tau_n$}
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{$\tau_c$\textbackslash$\tau_n$} \subtypes \tau_w
+  }
+
+  \inferrule[Unit] {
+    \Delta_i \subseteq \Delta_o
+    \\
+    \Omega_i \subseteq \Omega_o
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{@} \subtypes \code{@}
+  }
+
+  \inferrule[Tag] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{\textasciitilde$l$ $\tau_s$} \subtypes \code{\textasciitilde$l$ $\tau_w$}
+  }
+
+  \inferrule[Imp] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
+    \claim \tau_{wa} \subtypes \tau_{sa}
+    \\
+    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_{sc} \subtypes \tau_{wc}
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \code{$\tau_{sa}$ -> $\tau_{sc}$} \subtypes \code{$\tau_{wa}$ -> $\tau_{wc}$}
+  }
 
 
 

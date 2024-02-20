@@ -1160,6 +1160,7 @@ class Solver:
                     return solution
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
+            # TODO: do we need this rule? 
             '''
             antecedent union: strong <: ((T1 | T2) -> TR)
             A -> Q & B -> Q ~~~ A | B -> Q
