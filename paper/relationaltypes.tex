@@ -479,7 +479,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
   }
 
   \inferrule[EmptyWeakExis] {
-    \bigand_i \alpha_i \notin FTV(\Delta_i)
+    \land_i (\alpha_i \notin FTV(\Delta_i))
     \\
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \tau_s \subtypes \tau_w
@@ -559,7 +559,7 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
   }
 
-  \inferrule[KStrongInduc] {
+  \inferrule[KInducStrongInduc] {
     \alpha \not\in FTV(\Delta_i)
     \\
     subst(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
@@ -592,6 +592,49 @@ Unification generates a solution set $C$, which contains subtyping environments.
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
+
+
+  \inferrule[UnrollWeakInduc] {
+    \neg relationalKey(\Delta_i, \tau_s)
+    \\
+    subst(\{\alpha \mapsto \code{induc $\alpha$ $\tau_b$}\}, \tau_b) = \tau_b'
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b'$}
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+  }
+
+  \inferrule[ReadCacheWeakInduc] {
+    relationalKey(\Delta_i, \tau_s)
+    \\
+    \code{$\tau_s$<:$\tau_c$} \in \Delta_i
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_c \subtypes \code{induc $\alpha$ $\tau_b$}
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+  }
+
+  \inferrule[WriteCacheWeakInduc] {
+    relationalKey(\Delta_i, \tau_s)
+    \\
+    \land_{\tau_c} (\code{$\tau_s$<:$\tau_c$} \not\in \Delta_i)
+    \\
+    safeToCache(\Delta_i, \tau_s, (\code{induc $\alpha$ $\tau_b$})) 
+    \\
+    \Delta_i \subseteq \Delta_o
+    \\
+    \code{$\tau_s$<:(induc $\alpha$ $\tau_b$)} \in \Delta_o
+    \\
+    \Omega_i \subseteq \Omega_o
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+  }
+
 
   \inferrule[StrongDiff] {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 

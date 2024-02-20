@@ -1252,8 +1252,11 @@ class Solver:
             else:
                 weak_cache = match_strong(model, strong)
                 if weak_cache:
+                    # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     return self.solve(model, weak_cache, weak)
                 else:
+                    # NOTE: factoring indicates that it can be cached
+                    # TODO: write a separate function called well-formed for clarity
                     factored = factor_least(weak)
                     solution = self.solve(model, weak, factored)  
                     if solution:
