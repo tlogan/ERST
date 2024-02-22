@@ -302,9 +302,12 @@ $combo = self.collect(ExprRule(self._solver, nt).combine_projection, $cator.comb
 
 | {
 nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+print("~~~~~ APP PARSING RULE")
 } cator = base[nt_cator] {
+print(f"~~~~~ CATOR COMBO: {$cator.combo}")
 nt_argchain = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, $cator.combo)
 } argchain[nt_argchain] {
+print(f"~~~~~ ARGCHAIN COMBO: {$argchain.combo}")
 $combo = self.collect(ExprRule(self._solver, nt).combine_application, $cator.combo, $argchain.combo)
 }
 
@@ -372,12 +375,9 @@ $combo = self.collect(BaseRule(self._solver, nt).combine_function, $function.com
 $combo = self.collect(BaseRule(self._solver, nt).combine_var, $ID.text)
 } 
 
-| '(' {
-nt_expr = self.guide_nonterm(lambda: nt)
-} expr[nt_expr] {
-self.guide_symbol(')')
-} ')' {
-$combo = $expr.combo
+| argchain[nt] {
+print("~~~~~~~~~~~~~~~~~ paren base")
+$combo = $argchain.combo[0]
 } 
 
 ;
@@ -440,19 +440,19 @@ $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body
 // NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
 argchain [Nonterm nt] returns [list[Typ] combo] :
 
-| '(' {
+| '(--' {
 nt_content = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_content) 
 } content = expr[nt_content] {
 self.guide_symbol(')')
-} ')' {
+} '--)' {
 $combo = self.collect(ArgchainRule(self._solver, nt).combine_single, $content.combo)
 }
 
-| '(' {
+| '(--' {
 nt_head = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_head) 
 } head = expr[nt_head] {
 self.guide_symbol(')')
-} ')' {
+} '--)' {
 nt_tail = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_tail, $head.combo) 
 } tail = argchain[nt_tail] {
 $combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, $head.combo, $tail.combo)

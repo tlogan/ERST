@@ -1491,15 +1491,27 @@ class ExprRule(Rule):
     #########
 
     def distill_application_cator(self) -> Nonterm: 
+        print(f"""
+<< distill application cator >>
+        """)
         return Nonterm('expr', self.nt.enviro, Imp(Bot(), Top()))
 
     def distill_application_argchain(self, cator : Typ) -> Nonterm: 
+        # DEBUG
+        print(f"""
+<< distill application argchain
+~~~~~~~~~~~~~~~~~~~
+cator: {cator if cator else "NO CATOR!!!"}
+~~~~~~~~~~~~~~~~~~~
+>>
+        """)
         return Nonterm('argchain', self.nt.enviro, cator)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
+
             # TODO: delete this commented code
             # No need to extract strongest weaker
             # '''
@@ -1513,6 +1525,29 @@ class ExprRule(Rule):
 
             models = self.solver.solve_composition(answr_i, Imp(argument, answr))
             bound_ids = tuple([answr.id])
+
+
+
+            nl = "\n"
+            print(f"""
+##############################
+answr var::
+:::::::::::
+{answr}
+
+model constraints::
+::::::::
+{("%%%%" + nl).join(concretize_constraints(tuple(model.constraints)) for model in models)}
+
+##############################
+            """)
+
+
+
+
+
+
+
             answr_i = package_typ(models, bound_ids, answr)
 
         return answr_i
@@ -1606,24 +1641,24 @@ class ExprRule(Rule):
             induc_body = Unio(constrained_rel, induc_body) 
             param_body = Unio(constrained_left, param_body)
 
-            print(f"""
-<<<<<<<<<<<<<<
+#             print(f"""
+# <<<<<<<<<<<<<<
 
-raw right typ::::
-=====================
-{concretize_typ(raw_right_typ) }
+# raw right typ::::
+# =====================
+# {concretize_typ(raw_right_typ) }
                   
-------------------------
+# ------------------------
 
-rel constraints::::
-=====================
-{concretize_constraints(tuple(rel_constraints)) }
+# rel constraints::::
+# =====================
+# {concretize_constraints(tuple(rel_constraints)) }
 
-model constraints::::
-=====================
-{concretize_constraints(tuple(model.constraints)) }
->>>>>>>>>>>>>>
-            """)
+# model constraints::::
+# =====================
+# {concretize_constraints(tuple(model.constraints)) }
+# >>>>>>>>>>>>>>
+#             """)
         #end for
 
         rel_typ = Induc(IH_typ.id, induc_body)

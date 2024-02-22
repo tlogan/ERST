@@ -2,6 +2,7 @@
 
 
 ### TODO
+- update paren syntax; make sure distillation makes sense for argchain used for single paren
 - update to ensure `test_nil_funnel_fix` and `test_app_fix_nil` works properly; expect `~zero @` 
 - finish implementing inhabitable check
 - finish implementing relational key check 

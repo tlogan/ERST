@@ -122,7 +122,7 @@ def raise_guide(guides : list[analyzer.Guidance]):
         if isinstance(guide, Exception):
             raise guide
 
-def analyze(pieces : list[str]):
+def analyze(pieces : list[str], debug = False):
     async def _mk_task():
 
         connection = language.launch()
@@ -142,7 +142,11 @@ def analyze(pieces : list[str]):
         ctx = await connection.mk_getter()
         return (ctx.combo if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None)
 
-    return asyncio.run(_mk_task())
+    (combo, guides, parsetree) = asyncio.run(_mk_task())
+    if debug:
+        raise_guide(guides)
+
+    return (combo, guides, parsetree)
 
 def p(s): 
     t = language.parse_typ(s)
@@ -688,7 +692,25 @@ def test_projection_chain():
     print(parsetree)
     assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
 
-def test_application():
+def test_app_identity():
+#     '''
+# (expr base (argchain ( (expr (base (function case (pattern (pattern_base x)) => (expr (base x))))) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
+#     '''
+#     pieces = ['''
+# (case x => x)(~nil @)
+#     ''']
+
+# (expr base (argchain ( (expr (base @)) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
+    pieces = ['''
+(-- ~fun @ --)(-- ~nil @ --)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces, debug=True)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    # assert combo
+    # print("combo: " + u(combo))
+
+def test_app_pattern_match():
     pieces = ['''
 (
 case ~nil @ => @ 
@@ -696,6 +718,10 @@ case ~cons x => x
 )(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    # assert combo
+    # print("combo: " + u(combo))
 
 def test_application_chain():
     pieces = ['''
@@ -767,14 +793,20 @@ def test_nil_funnel_fix():
 
 def test_app_fix_nil():
     pieces = ['''
-fix(case self => (
+(fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
-))(~nil @) 
+)))(~nil @) 
+    ''']
+
+    pieces = ['''
+(case x => x)(~nil @) 
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert combo
-    print("combo: " + u(combo))
+    assert parsetree
+    print("parsetree: " + parsetree)
+    # assert combo
+    # print("combo: " + u(combo))
 
 
 def test_funnel_pipeline():
@@ -842,9 +874,9 @@ def test_max():
 
 
 if __name__ == '__main__':
+    test_app_identity()
     # test_app_fix_nil()
     # test_nil_funnel_fix()
-    test_cons_nil_query_subs_list_nat_diff()
     pass
 
 #######################################################################
