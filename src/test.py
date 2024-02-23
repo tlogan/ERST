@@ -702,13 +702,13 @@ def test_app_identity():
 
 # (expr base (argchain ( (expr (base @)) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
     pieces = ['''
-(~fun @)(~nil @)
+(case x => x)(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces, debug=True)
     assert parsetree
     print("parsetree: " + parsetree)
-    # assert combo
-    # print("combo: " + u(combo))
+    assert combo
+    print("combo: " + u(combo))
 
 def test_app_pattern_match():
     pieces = ['''

@@ -1345,7 +1345,7 @@ class BaseRule(Rule):
             return argchain[0]
         else:
             applicator = argchain[0]
-            arguments = argchain[:1]
+            arguments = argchain[1:]
             return ExprRule(self.solver, self.nt).combine_application(applicator, arguments) 
 
     def combine_unit(self) -> Typ:
@@ -1506,6 +1506,12 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
+        print(f"""
+~~~~~~~~~~~~~~~~~
+>> cator: {concretize_typ(cator)}
+>> args : {[concretize_typ(t) for t in arguments]} 
+~~~~~~~~~~~~~~~~~
+        """)
         answr_i = cator 
         for argument in arguments:
             answr = self.solver.fresh_type_var()
