@@ -307,6 +307,7 @@ class Nonterm:
     id : str 
     enviro : PMap[str, Typ] 
     typ : Typ
+    is_applicator : bool = False
 
 
 
@@ -1339,6 +1340,14 @@ class BaseRule(Rule):
     def combine_var(self, id : str) -> Typ:
         return self.nt.enviro[id]
 
+    def combine_assoc(self, argchain : list[Typ]) -> Typ:
+        if len(argchain) == 1:
+            return argchain[0]
+        else:
+            applicator = argchain[0]
+            arguments = argchain[:1]
+            return ExprRule(self.solver, self.nt).combine_application(applicator, arguments) 
+
     def combine_unit(self) -> Typ:
         return TUnit()
 
@@ -1491,21 +1500,10 @@ class ExprRule(Rule):
     #########
 
     def distill_application_cator(self) -> Nonterm: 
-        print(f"""
-<< distill application cator >>
-        """)
         return Nonterm('expr', self.nt.enviro, Imp(Bot(), Top()))
 
     def distill_application_argchain(self, cator : Typ) -> Nonterm: 
-        # DEBUG
-        print(f"""
-<< distill application argchain
-~~~~~~~~~~~~~~~~~~~
-cator: {cator if cator else "NO CATOR!!!"}
-~~~~~~~~~~~~~~~~~~~
->>
-        """)
-        return Nonterm('argchain', self.nt.enviro, cator)
+        return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
         answr_i = cator 
@@ -1525,29 +1523,6 @@ cator: {cator if cator else "NO CATOR!!!"}
 
             models = self.solver.solve_composition(answr_i, Imp(argument, answr))
             bound_ids = tuple([answr.id])
-
-
-
-            nl = "\n"
-            print(f"""
-##############################
-answr var::
-:::::::::::
-{answr}
-
-model constraints::
-::::::::
-{("%%%%" + nl).join(concretize_constraints(tuple(model.constraints)) for model in models)}
-
-##############################
-            """)
-
-
-
-
-
-
-
             answr_i = package_typ(models, bound_ids, answr)
 
         return answr_i
@@ -1827,24 +1802,28 @@ class KeychainRule(Rule):
         return self.combine_single(key) + keys
 
 class ArgchainRule(Rule):
-
     def distill_single_content(self):
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('expr', self.nt.enviro, typ_grounded)
-
+        if self.nt.is_applicator:
+            typ = self.solver.fresh_type_var()
+            solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
+            # TODO: determine if/how to package type
+            bound_ids = ()
+            typ_grounded = package_typ(solution, bound_ids, typ)
+            return Nonterm('expr', self.nt.enviro, typ_grounded, True)
+        else:
+            return self.nt
 
     def distill_cons_head(self):
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
+        if self.nt.is_applicator:
+            typ = self.solver.fresh_type_var()
+            solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
 
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('expr', self.nt.enviro, typ_grounded)
+            # TODO: determine if/how to package type
+            bound_ids = ()
+            typ_grounded = package_typ(solution, bound_ids, typ)
+            return Nonterm('expr', self.nt.enviro, typ_grounded, True)
+        else:
+            return self.nt
 
     def distill_cons_tail(self, head : Typ):
         typ = self.solver.fresh_type_var()
@@ -1857,7 +1836,7 @@ class ArgchainRule(Rule):
         # TODO: determine if/how to package type
         bound_ids = ()
         typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('argchain', self.nt.enviro, typ_grounded)
+        return Nonterm('argchain', self.nt.enviro, typ_grounded, True)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))

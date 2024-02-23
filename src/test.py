@@ -702,7 +702,7 @@ def test_app_identity():
 
 # (expr base (argchain ( (expr (base @)) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
     pieces = ['''
-(-- ~fun @ --)(-- ~nil @ --)
+(~fun @)(~nil @)
     ''']
     (combo, guides, parsetree) = analyze(pieces, debug=True)
     assert parsetree
