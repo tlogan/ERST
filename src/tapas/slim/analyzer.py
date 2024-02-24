@@ -849,19 +849,25 @@ def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str])
 
     return constraints 
 
-def package_typ(models : list[Model], bound_ids : tuple[str, ...] , typ : Typ) -> Typ:
-    typ_result = Bot()
+def package_typ(model : Model, typ : Typ) -> Typ:
     ids_base = extract_free_vars_from_typ(pset(), typ)
-    for model in models:
-        constraints = pset()
-        for id_base in ids_base: 
-            constraints_reachable = extract_reachable_constraints(model, id_base, pset())
-            constraints = constraints.union(constraints_reachable)
+    constraints = pset()
+    for id_base in ids_base: 
+        constraints_reachable = extract_reachable_constraints(model, id_base, pset())
+        constraints = constraints.union(constraints_reachable)
 
-        typ_idx_unio = IdxUnio(bound_ids, tuple(constraints), typ)
-        typ_result = Unio(typ_idx_unio, typ_result)
+    bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(pset(), constraints)))
+    typ_idx_unio = IdxUnio(bound_ids, tuple(constraints), typ)
 
-    return simplify_typ(typ_result)
+    return simplify_typ(typ_idx_unio)
+
+def decode_strongest_typ(models : list[Model], id : str) -> Typ:
+    constraint_typs = [
+        package_typ(model, strongest_answer)
+        for model in models
+        for strongest_answer in [extract_strongest(model, id)]
+    ] 
+    return mk_unio(constraint_typs)
 
 def inhabitable(t : Typ) -> bool:
     t = simplify_typ(t)
@@ -882,6 +888,12 @@ def selective(t : Typ) -> bool:
     else:
         # TODO
         return True
+
+def mk_unio(ts : list[Typ]) -> Typ:
+    u = Bot()
+    for t in reversed(ts):
+        u = Unio(t, u)
+    return u
 
 class Solver:
     _type_id : int = 0 
@@ -1528,10 +1540,9 @@ class ExprRule(Rule):
             # ]
 
             models = self.solver.solve_composition(answr_i, Imp(argument, answr))
-            bound_ids = tuple([answr.id])
-            answr_i = package_typ(models, bound_ids, answr)
+            decode_strongest_typ(models, answr.id)
 
-        return answr_i
+        return simplify_typ(answr_i)
 
 
     #########
@@ -1542,17 +1553,7 @@ class ExprRule(Rule):
         return Nonterm('pipeline', self.nt.enviro, arg)
 
     def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
-        answr_i = arg 
-        for cator in cators:
-            answr = self.solver.fresh_type_var()
-            solution = self.solver.solve_composition(Imp(answr_i, answr), cator)
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            answr_i = package_typ(solution, bound_ids, answr)
-
-        return answr_i
-    #########
-
+        return self.combine_application(arg, cators)
 
     def distill_fix_body(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())
