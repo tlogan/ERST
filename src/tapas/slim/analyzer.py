@@ -861,11 +861,26 @@ def package_typ(model : Model, typ : Typ) -> Typ:
 
     return simplify_typ(typ_idx_unio)
 
+def decode_typ(models : list[Model], t : Typ) -> Typ:
+    constraint_typs = [
+        package_typ(model, t)
+        for model in models
+    ] 
+    return mk_unio(constraint_typs)
+
 def decode_strongest_typ(models : list[Model], id : str) -> Typ:
     constraint_typs = [
         package_typ(model, strongest_answer)
         for model in models
         for strongest_answer in [extract_strongest(model, id)]
+    ] 
+    return mk_unio(constraint_typs)
+
+def decode_weakest_typ(models : list[Model], id : str) -> Typ:
+    constraint_typs = [
+        package_typ(model, weakest_answer)
+        for model in models
+        for weakest_answer in [extract_weakest(model, id)]
     ] 
     return mk_unio(constraint_typs)
 
@@ -1151,12 +1166,12 @@ class Solver:
             if alpha_equiv(strong, weak):
                 return [model]
             else:
-                solution = []
+                models = []
 
                 strong_factored = factor_least(strong)
-                solution = self.solve(model, strong_factored, weak)
+                models = self.solve(model, strong_factored, weak)
 
-                if solution == []:
+                if models == []:
                     '''
                     NOTE: k-induction
                     use the pattern on LHS to dictate number of unrollings needed on RHS 
@@ -1170,7 +1185,7 @@ class Solver:
                     return self.solve(model, strong_body, weak)
                     
                 else:
-                    return solution
+                    return models 
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
             # TODO: do we need this rule? 
@@ -1271,8 +1286,8 @@ class Solver:
                     # NOTE: factoring indicates that it can be cached
                     # TODO: write a separate function called well-formed for clarity
                     factored = factor_least(weak)
-                    solution = self.solve(model, weak, factored)  
-                    if solution:
+                    models = self.solve(model, weak, factored)  
+                    if models:
                         """
                         relational constraint must be well formed, since a matching factorization exists
                         update model with well formed constraint that can't yet be solved
@@ -1364,12 +1379,10 @@ class BaseRule(Rule):
         return TUnit()
 
     def distill_tag_body(self, id : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(TTag(id, typ_var), self.nt.typ)
-        # TODO: determine how/if to package typ
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)  
-        return Nonterm('expr', self.nt.enviro, typ_guide)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(TTag(id, query_typ), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)  
+        return Nonterm('expr', self.nt.enviro, expected_typ)
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
         return TTag(label, body)
@@ -1429,20 +1442,16 @@ class BaseRule(Rule):
 class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField('head', typ_var), TField('tail', Bot())), self.nt.typ)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)  
-        return Nonterm('expr', self.nt.enviro, typ_guide) 
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)  
+        return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField('head', head), TField('tail', typ_var)), self.nt.typ)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)  
-        return Nonterm('expr', self.nt.enviro, typ_guide) 
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(TField('head', head), TField('tail', query_typ)), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)  
+        return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
         return Inter(TField('head', head), TField('tail', tail))
@@ -1456,38 +1465,31 @@ class ExprRule(Rule):
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
         '''
-        typ_var = self.solver.fresh_type_var()
-        implication = Imp(TTag('true', TUnit()), typ_var) 
+        query_typ = self.solver.fresh_type_var()
+        implication = Imp(TTag('true', TUnit()), query_typ) 
         model_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve_composition(implication, model_conclusion)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)  
-        return Nonterm('expr', self.nt.enviro, typ_guide) 
+        models = self.solver.solve_composition(implication, model_conclusion)
+        expected_typ = decode_strongest_typ(models, query_typ.id)  
+        return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
         '''
-        typ_var = self.solver.fresh_type_var()
-        implication = Imp(TTag('false', TUnit()), typ_var) 
+        query_typ = self.solver.fresh_type_var()
+        implication = Imp(TTag('false', TUnit()), query_typ) 
         model_conclusion = Imp(condition, self.nt.typ)
-        solution = self.solver.solve_composition(implication, model_conclusion)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)  
-        return Nonterm('expr', self.nt.enviro, typ_guide) 
+        models = self.solver.solve_composition(implication, model_conclusion)
+        expected_typ = decode_strongest_typ(models, query_typ.id)  
+        return Nonterm('expr', self.nt.enviro, expected_typ) 
 
-    def combine_ite(self, condition : Typ, branch_true : Typ, branch_false : Typ) -> Typ: 
-        solution_true = self.solver.solve_composition(condition, TTag('true', TUnit()))
-        solution_false = self.solver.solve_composition(condition, TTag('false', TUnit()))
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
+    def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
+        true_models = self.solver.solve_composition(condition, TTag('true', TUnit()))
+        false_models = self.solver.solve_composition(condition, TTag('false', TUnit()))
         return Unio(
-            package_typ(solution_true, bound_ids, branch_true), 
-            package_typ(solution_false, bound_ids, branch_false), 
+            decode_typ(true_models, true_branch), 
+            decode_typ(false_models, false_branch), 
         )
 
 
@@ -1502,10 +1504,8 @@ class ExprRule(Rule):
         answr_i = record 
         for key in keys:
             answr = self.solver.fresh_type_var()
-            solution = self.solver.solve_composition(answr_i, TField(key, answr))
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            answr_i = package_typ(solution, bound_ids, answr)
+            models = self.solver.solve_composition(answr_i, TField(key, answr))
+            answr_i = decode_strongest_typ(models, answr.id)
 
         return answr_i
 
@@ -1533,7 +1533,7 @@ class ExprRule(Rule):
             # '''
             # extract strongest weaker to use as return type
             # '''
-            # solution = [
+            # models = [
             #     Model(p0.model.add(Subtyping(answr, typ_return)), p0.freezer.add(answr.id))
             #     for p0 in self.solver.solve_composition(answr_i, Imp(argument, answr))
             #     for typ_return in [extract_strongest(p0.model, answr.id)]
@@ -1701,12 +1701,10 @@ end ExprRule
 class RecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(TField(id, typ), self.nt.typ)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('expr', self.nt.enviro, typ_grounded) 
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(TField(id, query_typ), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_single(self, id : str, body : Typ) -> Typ:
         return TField(id, body) 
@@ -1715,12 +1713,10 @@ class RecordRule(Rule):
         return self.distill_single_body(id)
 
     def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField(id, body), typ), self.nt.typ)
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('record', self.nt.enviro, typ_grounded) 
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(TField(id, body), query_typ), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('record', self.nt.enviro, expected_typ) 
 
     def combine_cons(self, id : str, body : Typ, tail : Typ) -> Typ:
         return Inter(TField(id, body), tail)
@@ -1728,22 +1724,17 @@ class RecordRule(Rule):
 class FunctionRule(Rule):
 
     def distill_single_pattern(self) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(self.nt.typ, Imp(typ_var, Top()))
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, typ_var)
-        return Nonterm('pattern', self.nt.enviro, typ_guide)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('pattern', self.nt.enviro, expected_typ)
 
     def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
-        conclusion = self.solver.fresh_type_var() 
-        solution = self.solver.solve_composition(self.nt.typ, Imp(pattern.typ, conclusion)) 
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        conclusion_grounded = package_typ(solution, bound_ids, conclusion)
+        query_typ = self.solver.fresh_type_var() 
+        models = self.solver.solve_composition(self.nt.typ, Imp(pattern.typ, query_typ)) 
+        expected_typ = decode_strongest_typ(models, query_typ.id)
         enviro = self.nt.enviro + pattern.enviro
-        return Nonterm('expr', enviro, conclusion_grounded)
+        return Nonterm('expr', enviro, expected_typ)
 
     def combine_single(self, pattern : PatternAttr, body : Typ) -> list[Imp]:
         return [Imp(pattern.typ, body)]
@@ -1755,34 +1746,32 @@ class FunctionRule(Rule):
         return self.distill_single_body(pattern)
 
     def distill_cons_tail(self, pattern : PatternAttr, body : Typ) -> Nonterm:
-        case_antec = self.solver.fresh_type_var()
-        case_consq = self.solver.fresh_type_var()
+        antec_query_typ = self.solver.fresh_type_var()
+        consq_query_typ = self.solver.fresh_type_var()
 
-        choices = from_cases_to_choices([Imp(pattern.typ, body), Imp(case_antec, case_consq)])
+        choices = from_cases_to_choices([Imp(pattern.typ, body), Imp(antec_query_typ, consq_query_typ)])
 
 
-        typ_left = self.solver.fresh_type_var()
-        typ_right = self.solver.fresh_type_var()
-        typ_pair = make_pair_typ(typ_left, typ_right)
-        typ_imp = Imp(typ_left, typ_right)
+        left_query_typ = self.solver.fresh_type_var()
+        right_query_typ = self.solver.fresh_type_var()
+        pair_typ = make_pair_typ(left_query_typ, right_query_typ)
+        imp_typ = Imp(left_query_typ, right_query_typ)
 
         model = Model(
             pset(
-                Subtyping(typ_pair, make_pair_typ(choice[0], choice[1]))
+                Subtyping(pair_typ, make_pair_typ(choice[0], choice[1]))
                 for choice in choices
             ),
             pset()
         )
 
-        solution = self.solver.solve(model, typ_imp, self.nt.typ)
+        models = self.solver.solve(model, imp_typ, self.nt.typ)
 
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_guide = package_typ(solution, bound_ids, Imp(case_antec, case_consq))
+        expected_typ = decode_typ(models, Imp(antec_query_typ, consq_query_typ))
         '''
         NOTE: the guide is an implication guiding the next case
         '''
-        return Nonterm('function', self.nt.enviro, typ_guide)
+        return Nonterm('function', self.nt.enviro, expected_typ)
 
     def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
         return [Imp(pattern.typ, body)] + tail
@@ -1798,11 +1787,9 @@ class KeychainRule(Rule):
     return the plate with the tyption as the type that the next element in tail cuts
     '''
     def distill_cons_tail(self, key : str):
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(self.nt.typ, TField(key, typ))
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(self.nt.typ, TField(key, query_typ))
+        typ_grounded = decode_strongest_typ(models, query_typ.id)
         return Nonterm('keychain', self.nt.enviro, typ_grounded)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
@@ -1811,38 +1798,30 @@ class KeychainRule(Rule):
 class ArgchainRule(Rule):
     def distill_single_content(self):
         if self.nt.is_applicator:
-            typ = self.solver.fresh_type_var()
-            solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            typ_grounded = package_typ(solution, bound_ids, typ)
-            return Nonterm('expr', self.nt.enviro, typ_grounded, True)
+            query_typ = self.solver.fresh_type_var()
+            models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
+            expected_typ = decode_weakest_typ(models, query_typ.id)
+            return Nonterm('expr', self.nt.enviro, expected_typ, False)
         else:
             return self.nt
 
     def distill_cons_head(self):
         if self.nt.is_applicator:
-            typ = self.solver.fresh_type_var()
-            solution = self.solver.solve_composition(self.nt.typ, Imp(typ, Top()))
-
-            # TODO: determine if/how to package type
-            bound_ids = ()
-            typ_grounded = package_typ(solution, bound_ids, typ)
-            return Nonterm('expr', self.nt.enviro, typ_grounded, True)
+            query_typ = self.solver.fresh_type_var()
+            models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
+            expected_typ = decode_weakest_typ(models, query_typ.id)
+            return Nonterm('expr', self.nt.enviro, expected_typ, False)
         else:
             return self.nt
 
     def distill_cons_tail(self, head : Typ):
-        typ = self.solver.fresh_type_var()
+        query_typ = self.solver.fresh_type_var()
         '''
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        solution = self.solver.solve_composition(self.nt.typ, Imp(head, typ))
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        models = self.solver.solve_composition(self.nt.typ, Imp(head, query_typ))
+        typ_grounded = decode_strongest_typ(models, query_typ.id)
         return Nonterm('argchain', self.nt.enviro, typ_grounded, True)
 
     def combine_single(self, content : Typ) -> list[Typ]:
@@ -1857,36 +1836,27 @@ class ArgchainRule(Rule):
 class PipelineRule(Rule):
 
     def distill_single_content(self):
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(typ, Imp(self.nt.typ, Top()))
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('expr', self.nt.enviro, typ_grounded)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(query_typ, Imp(self.nt.typ, Top()))
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('expr', self.nt.enviro, expected_typ)
 
 
     def distill_cons_head(self):
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(typ, Imp(self.nt.typ, Top()))
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('expr', self.nt.enviro, typ_grounded)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(query_typ, Imp(self.nt.typ, Top()))
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('expr', self.nt.enviro, expected_typ)
 
     def distill_cons_tail(self, head : Typ) -> Nonterm:
-        typ = self.solver.fresh_type_var()
+        query_typ = self.solver.fresh_type_var()
         '''
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        solution = self.solver.solve_composition(head, Imp(self.nt.typ, typ))
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('pipeline', self.nt.enviro, typ_grounded)
+        models = self.solver.solve_composition(head, Imp(self.nt.typ, query_typ))
+        expected_typ = decode_strongest_typ(models, query_typ.id)
+        return Nonterm('pipeline', self.nt.enviro, expected_typ)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
@@ -1897,29 +1867,24 @@ class PipelineRule(Rule):
 
 
 '''
-start Pattern Ruleibutes
+start Pattern Rule
 '''
 
 class PatternRule(Rule):
     def distill_tuple_head(self) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField('head', typ), TField('tail', Bot())), self.nt.typ)
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ)
+        typ_grounded = decode_weakest_typ(models, query_typ.id)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(
             TField('head', head.typ), 
-                TField('tail', typ)), 
+                TField('tail', query_typ)), 
                     self.nt.typ)
 
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        typ_grounded = decode_weakest_typ(models, query_typ.id)
         return Nonterm('pattern', self.nt.enviro, typ_grounded) 
 
     def combine_tuple(self, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
@@ -1940,13 +1905,10 @@ class PatternBaseRule(Rule):
         return PatternAttr(m(), TUnit())
 
     def distill_tag_body(self, id : str) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(TTag(id, typ), self.nt.typ)
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
-        return Nonterm('pattern', self.nt.enviro, typ_grounded)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(TTag(id, query_typ), self.nt.typ)
+        expected_typ = decode_weakest_typ(models, query_typ.id)
+        return Nonterm('pattern', self.nt.enviro, expected_typ)
 
     def combine_tag(self, label : str, body : PatternAttr) -> PatternAttr:
         return PatternAttr(body.enviro, TTag(label, body.typ))
@@ -1957,12 +1919,9 @@ end PatternBaseRule
 class PatternRecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(TField(id, typ), self.nt.typ)
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(TField(id, query_typ), self.nt.typ)
+        typ_grounded = decode_weakest_typ(models, query_typ.id)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 
     def combine_single(self, label : str, body : PatternAttr) -> PatternAttr:
@@ -1972,12 +1931,9 @@ class PatternRecordRule(Rule):
         return self.distill_cons_body(id)
 
     def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
-        typ = self.solver.fresh_type_var()
-        solution = self.solver.solve_composition(Inter(TField(id, body.typ), typ), self.nt.typ)
-
-        # TODO: determine if/how to package type
-        bound_ids = ()
-        typ_grounded = package_typ(solution, bound_ids, typ)
+        query_typ = self.solver.fresh_type_var()
+        models = self.solver.solve_composition(Inter(TField(id, body.typ), query_typ), self.nt.typ)
+        typ_grounded = decode_weakest_typ(models, query_typ.id)
         return Nonterm('pattern_record', self.nt.enviro, typ_grounded) 
 
     def combine_cons(self, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
