@@ -2,8 +2,6 @@
 
 
 ### TODO
-- use argchain rule to implement typing of application
-    - when first element in chain is actually the applicator
 - update to ensure `test_nil_funnel_fix` and `test_app_fix_nil` works properly; expect `~zero @` 
 - finish implementing inhabitable check
 - finish implementing relational key check 
