@@ -693,14 +693,6 @@ def test_projection_chain():
     assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
 
 def test_app_identity():
-#     '''
-# (expr base (argchain ( (expr (base (function case (pattern (pattern_base x)) => (expr (base x))))) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
-#     '''
-#     pieces = ['''
-# (case x => x)(~nil @)
-#     ''']
-
-# (expr base (argchain ( (expr (base @)) ) (argchain ( (expr (base ~ nil (expr (base @)))) ))))
     pieces = ['''
 (case x => x)(~nil @)
     ''']
@@ -708,6 +700,7 @@ def test_app_identity():
     assert parsetree
     print("parsetree: " + parsetree)
     assert combo
+    assert u(combo) == "~nil @" 
     print("combo: " + u(combo))
 
 def test_app_pattern_match():
@@ -799,14 +792,12 @@ def test_app_fix_nil():
 )))(~nil @) 
     ''']
 
-    pieces = ['''
-(case x => x)(~nil @) 
-    ''']
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree
     print("parsetree: " + parsetree)
-    # assert combo
-    # print("combo: " + u(combo))
+    assert combo
+    assert u(combo) == "~zero @"
+    print("combo: " + u(combo))
 
 
 def test_funnel_pipeline():
@@ -874,9 +865,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_app_identity()
-    # test_app_fix_nil()
-    # test_nil_funnel_fix()
+    test_nil_funnel_fix()
     pass
 
 #######################################################################

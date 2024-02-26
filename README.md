@@ -2,7 +2,7 @@
 
 
 ### TODO
-- update to ensure `test_nil_funnel_fix` and `test_app_fix_nil` works properly; expect `~zero @` 
+- fix `test_nil_funnel_fix`
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 
