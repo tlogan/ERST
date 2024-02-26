@@ -604,36 +604,6 @@ def extract_strongest_from_id(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def extract_strongest(model : Model, typ : Typ) -> Typ:
-    if isinstance(typ, Imp):
-        antec = extract_weakest(model, typ.antec)
-        consq = extract_strongest(model, typ.consq)
-        return Imp(antec, consq)
-    else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
-        renaming = pmap({
-            id : strongest 
-            for id in fvs
-            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if strongest != Bot()
-        })
-        return sub_typ(renaming, typ)
-
-def extract_weakest(model : Model, typ : Typ) -> Typ:
-    if isinstance(typ, Imp):
-        antec = extract_strongest(model, typ.antec)
-        consq = extract_weakest(model, typ.consq)
-        return Imp(antec, consq)
-    else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
-        renaming = pmap({
-            id : weakest
-            for id in fvs
-            for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
-            if weakest != Top()
-        })
-        return sub_typ(renaming, typ)
-
 
 def condense_strongest(model : Model, typ : Typ) -> Typ:
     if isinstance(typ, Imp):
@@ -645,16 +615,12 @@ def condense_strongest(model : Model, typ : Typ) -> Typ:
         renaming = pmap({
             id : condense_strongest(model, strongest)
             for id in fvs
-            for strongest in [extract_strongest_from_id(model, id)]
-            if simplify_typ(strongest) != Bot()
+            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
+            if strongest != Bot()
         })
         return sub_typ(renaming, typ)
 
 def condense_weakest(model : Model, typ : Typ) -> Typ:
-    '''
-    The weakest type that we can determine a abstract type must be
-    @param seen : tracks variables that have been seen. used to prevent cycling 
-    '''
     if isinstance(typ, Imp):
         antec = condense_strongest(model, typ.antec)
         consq = condense_weakest(model, typ.consq)
@@ -664,8 +630,8 @@ def condense_weakest(model : Model, typ : Typ) -> Typ:
         renaming = pmap({
             id : condense_weakest(model, weakest)
             for id in fvs
-            for weakest in [extract_weakest_from_id(model, id)]
-            if simplify_typ(weakest) != Top()
+            for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
+            if weakest != Top()
         })
         return sub_typ(renaming, typ)
 
@@ -675,9 +641,9 @@ def simplify_typ(typ : Typ) -> Typ:
     if False:
         assert False
     elif isinstance(typ, TTag):
-            return TTag(typ.label, simplify_typ(typ.body))
+        return TTag(typ.label, simplify_typ(typ.body))
     elif isinstance(typ, TField):
-            return TField(typ.label, simplify_typ(typ.body))
+        return TField(typ.label, simplify_typ(typ.body))
     elif isinstance(typ, Inter): 
         typ = Inter(simplify_typ(typ.left), simplify_typ(typ.right))
         if typ.left == Top():
@@ -878,7 +844,10 @@ def package_typ(model : Model, typ : Typ) -> Typ:
         constraints = constraints.union(constraints_reachable)
 
     bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(pset(), constraints)))
-    typ_idx_unio = IdxUnio(bound_ids, tuple(constraints), typ)
+    if not bound_ids and not constraints:
+        typ_idx_unio = typ
+    else:
+        typ_idx_unio = IdxUnio(bound_ids, tuple(constraints), typ)
 
     return simplify_typ(typ_idx_unio)
 
@@ -893,7 +862,7 @@ def decode_strongest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
         package_typ(model, strongest_answer)
         for model in models
-        for strongest_answer in [extract_strongest(model, t)]
+        for strongest_answer in [condense_strongest(model, t)]
     ] 
     return make_unio(constraint_typs)
 
@@ -901,7 +870,7 @@ def decode_weakest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
         package_typ(model, weakest_answer)
         for model in models
-        for weakest_answer in [extract_weakest(model, t)]
+        for weakest_answer in [condense_weakest(model, t)]
     ] 
     return make_unio(constraint_typs)
 
@@ -1551,7 +1520,7 @@ class ExprRule(Rule):
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
             models = self.solver.solve_composition(answr_i, Imp(argument, query_typ))
-            decode_strongest_typ(models, query_typ)
+            answr_i = decode_strongest_typ(models, query_typ)
 
         return simplify_typ(answr_i)
 

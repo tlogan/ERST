@@ -58,8 +58,6 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
 
             num_syn_err = parser.getNumberOfSyntaxErrors()
 
-            print(f"$$$$$$$$$$$$$$ Num Syntax Errors: {num_syn_err}")
-
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
             elif ctx.combo: 

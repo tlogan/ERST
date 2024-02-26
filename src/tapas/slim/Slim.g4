@@ -373,7 +373,6 @@ $combo = self.collect(BaseRule(self._solver, nt).combine_var, $ID.text)
 } 
 
 | argchain[nt] {
-print("~~~~ assoc rule!")
 $combo = self.collect(BaseRule(self._solver, nt).combine_assoc, $argchain.combo)
 } 
 

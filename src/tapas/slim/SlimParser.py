@@ -1390,7 +1390,6 @@ class SlimParser ( Parser ):
                 self.state = 242
                 localctx._argchain = self.argchain(nt)
 
-                print("~~~~ assoc rule!")
                 localctx.combo = self.collect(BaseRule(self._solver, nt).combine_assoc, localctx._argchain.combo)
 
                 pass

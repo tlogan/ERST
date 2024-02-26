@@ -1178,7 +1178,6 @@ public class SlimParser extends Parser {
 				setState(242);
 				((BaseContext)_localctx).argchain = argchain(nt);
 
-				print("~~~~ assoc rule!")
 				_localctx.combo = self.collect(BaseRule(self._solver, nt).combine_assoc, ((BaseContext)_localctx).argchain.combo)
 
 				}
