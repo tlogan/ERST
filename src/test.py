@@ -773,15 +773,41 @@ fix(case self => (
     assert combo
     print("combo: " + u(combo))
 
+def test_identity_function():
+    pieces = ['''
+(case x => x)
+    ''']
+
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    assert combo
+    print("combo: " + u(combo))
+
+def test_unit_funnel_identity():
+    pieces = ['''
+@ |> (case x => x)
+    ''']
+
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    assert combo
+    print("combo: " + u(combo))
+
 def test_nil_funnel_fix():
     pieces = ['''
-~nil @ |> fix(case self => (
+(~nil @) |> (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
-))
+)))
     ''']
+
     (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
     assert combo
+    assert u(combo) == "~zero @"
     print("combo: " + u(combo))
 
 def test_app_fix_nil():

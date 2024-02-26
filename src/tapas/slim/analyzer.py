@@ -1533,7 +1533,10 @@ class ExprRule(Rule):
         return Nonterm('pipeline', self.nt.enviro, arg)
 
     def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
-        return self.combine_application(arg, cators)
+        result = arg 
+        for cator in cators:
+            result = self.combine_application(cator, [result])
+        return result
 
     def distill_fix_body(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())

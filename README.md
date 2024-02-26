@@ -2,7 +2,7 @@
 
 
 ### TODO
-- fix `test_nil_funnel_fix`
+- fix precedence between tags/etc and pipeline 
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 
