@@ -1083,16 +1083,6 @@ class Solver:
             X <: T
             '''
 
-            # print(f''' 
-            # DEBUG (strong, TVar)
-            # model: {concretize_constraints(list(model))}
-            # ---- |- ----------------------------------------
-            # strong: {concretize_typ(strong)}
-            # ---- <: ----------------------------------------
-            # weak: {concretize_typ(weak)}
-            # ''')
-
-
             if strong.id in model.freezer: 
                 weakest_strong = condense_weakest(model, strong)
                 return self.solve(model, weakest_strong, weak)
@@ -1118,15 +1108,6 @@ class Solver:
             '''
             T <: X
             '''
-
-            # print(f''' 
-            # DEBUG (weak, TVar)
-            # model: {concretize_constraints(list(model))}
-            # ---- |- ----------------------------------------
-            # strong: {concretize_typ(strong)}
-            # ---- <: ----------------------------------------
-            # weak: {concretize_typ(weak)}
-            # ''')
 
             if weak.id in model.freezer: 
                 strongest_weak = condense_strongest(model, weak)
@@ -1393,21 +1374,7 @@ class BaseRule(Rule):
         --------------- OR -----------------------
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
-
-#         for case in cases:
-#             print(f"""
-# ---------------
-# DEBUG case.antec: {case.antec}
-# ---------------
-#             """)
         choices = from_cases_to_choices(cases)
-#         for choice in choices:
-#             print(f"""
-# ---------------
-# DEBUG choice[0]: {choice[0]}
-# ---------------
-#             """)
-
         result = Top() 
         for choice in reversed(choices): 
             result = Inter(Imp(choice[0], choice[1]), result)
@@ -1515,39 +1482,10 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
-#         print(f"""
-# |<<
-# |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# |cator: {concretize_typ(cator)}
-# |args: {[concretize_typ(arg) for arg in arguments]}
-# |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# |<<
-#         """)
-
         answr_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
             models = self.solver.solve_composition(answr_i, Imp(argument, query_typ))
-            for model in models:
-                pass
-        #         print(f"""
-        # |<<
-        # |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # |query typ: {query_typ.id}
-        # |model constraints: {concretize_constraints(tuple(model.constraints))}
-        # |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # |<<
-        #         """)
-
-            '''
-            _29 <: induc _20 (~nil @ | (([| _12 .  ] (~cons _12 \ ~nil @)) | bot)) ; 
-            ~cons ~nil @ <: _32 ; 
-            ~succ _17 <: _28 ; 
-            _30 <: ~succ _17 ; 
-            _29 <: (~cons _31 \ ~nil @) ; 
-            ~cons ~nil @ <: _31 ; 
-            ~cons ~cons ~nil @ <: _29
-            '''
             answr_i = decode_strongest_typ(models, query_typ)
 
         return simplify_typ(answr_i)
@@ -1577,12 +1515,6 @@ class ExprRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         """
 
-        print(f"""
-<<
-<<~~~ body: {concretize_typ(body)}
-<<
-        """)
-
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
@@ -1596,10 +1528,11 @@ class ExprRule(Rule):
         for model in reversed(models):
             left_typ = simplify_typ(condense_weakest(model, in_typ))
             raw_right_typ = simplify_typ(condense_strongest(model, out_typ))
-            (right_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
+            (flat_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
 
             left_bound_ids = tuple(extract_free_vars_from_typ(pset(), left_typ))
-            bound_ids = left_bound_ids + right_bound_ids
+            right_bound_ids = tuple(extract_free_vars_from_typ(pset(), right_typ))
+            bound_ids = flat_bound_ids + left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
             IH_typ_args = next(
@@ -1611,13 +1544,6 @@ class ExprRule(Rule):
                 ),
                 None
             )  
-
-            print(f"""
-~~~ self_typ: {self_typ.id}
-~~~ model.constraints: {concretize_constraints(tuple(model.constraints))} .
-~~~ right_constraints: {concretize_constraints(right_constraints)} .
-~~~ IH_typ_args: {IH_typ_args}
-            """)
 
             if IH_typ_args:
                 other_constraints = tuple(
@@ -1634,45 +1560,19 @@ class ExprRule(Rule):
 
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
                 constrained_left = IdxUnio(left_bound_ids, left_constraints, left_typ)
-                print("OOGA A")
             elif bound_ids:
                 constraints = right_constraints 
                 constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
                 constrained_left = IdxUnio(left_bound_ids, constraints, left_typ) 
-                print("OOGA B")
             else:
                 assert not right_constraints
                 constrained_rel = rel_pattern
                 constrained_left = left_typ 
-                print("OOGA C")
             #end if
-
-            # TODO: should replace the left with the self reference 
-            print(f"""
-~~~ constrained_left: {concretize_typ(constrained_left)}
-            """)
 
             induc_body = Unio(constrained_rel, induc_body) 
             param_body = Unio(constrained_left, param_body)
 
-#             print(f"""
-# <<<<<<<<<<<<<<
-
-# raw right typ::::
-# =====================
-# {concretize_typ(raw_right_typ) }
-                  
-# ------------------------
-
-# rel constraints::::
-# =====================
-# {concretize_constraints(tuple(rel_constraints)) }
-
-# model constraints::::
-# =====================
-# {concretize_constraints(tuple(model.constraints)) }
-# >>>>>>>>>>>>>>
-#             """)
         #end for
 
         rel_typ = Induc(IH_typ.id, induc_body)
@@ -1683,29 +1583,6 @@ class ExprRule(Rule):
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = IdxUnio(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
         result = IdxInter(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
-
-#         print(f"""
-# <<<<<<<<<<<<<<
-# result: {concretize_typ(result)} 
-
-# param_upper: {concretize_typ(param_upper)} 
-# <<<<<<<<<<<<<<
-#         """)
-
-# constrained_rel: {concretize_typ(constrained_rel)}
-# self_typ: {self_typ.id} 
-
-# left_typ: {concretize_typ(left_typ)} 
-
-# raw_right_typ: {concretize_typ(raw_right_typ)} 
-
-# right_bound_ids: {right_bound_ids}
-# right_constraints: {concretize_constraints(right_constraints)}
-# right_typ: {concretize_typ(right_typ)} 
-
-# relational_constraint: {concretize_constraints(tuple([relational_constraint])) if relational_constraint else "NADA"}
-
-# constrained_rel: {concretize_typ(constrained_rel)} 
 
         return result
 

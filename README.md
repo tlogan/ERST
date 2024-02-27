@@ -2,7 +2,6 @@
 
 
 ### TODO
-- update fix expression type construction so that right variables are bound 
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 

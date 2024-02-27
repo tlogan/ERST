@@ -915,11 +915,10 @@ def test_app_fix_cons_cons():
     ''']
 
     (combo, guides, parsetree) = analyze(pieces, True)
-    # assert parsetree
-    # print("parsetree: " + parsetree)
-    # assert combo
-    # assert u(combo) == "~succ ~succ ~zero @"
-    # print("combo: " + u(combo))
+    assert parsetree
+    assert combo
+    assert u(combo) == "~succ ~succ ~zero @"
+    print("combo: " + u(combo))
 
 
 def test_funnel_pipeline():
@@ -987,9 +986,6 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_fix()
-    # test_list_imp_nat_subs_cons_cons_nil_imp_query()
-    # test_app_fix_cons_cons()
     pass
 
 #######################################################################
