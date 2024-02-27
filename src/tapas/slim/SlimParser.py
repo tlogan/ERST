@@ -111,7 +111,7 @@ def serializedATN():
         1,0,0,0,221,195,1,0,0,0,221,201,1,0,0,0,221,212,1,0,0,0,222,13,1,
         0,0,0,223,246,1,0,0,0,224,225,5,3,0,0,225,246,6,7,-1,0,226,227,5,
         4,0,0,227,228,6,7,-1,0,228,229,5,30,0,0,229,230,6,7,-1,0,230,231,
-        3,12,6,0,231,232,6,7,-1,0,232,246,1,0,0,0,233,234,3,18,9,0,234,235,
+        3,14,7,0,231,232,6,7,-1,0,232,246,1,0,0,0,233,234,3,18,9,0,234,235,
         6,7,-1,0,235,246,1,0,0,0,236,237,6,7,-1,0,237,238,3,16,8,0,238,239,
         6,7,-1,0,239,246,1,0,0,0,240,241,5,30,0,0,241,246,6,7,-1,0,242,243,
         3,20,10,0,243,244,6,7,-1,0,244,246,1,0,0,0,245,223,1,0,0,0,245,224,
@@ -1276,7 +1276,7 @@ class SlimParser ( Parser ):
             self.nt = None
             self.combo = None
             self._ID = None # Token
-            self.body = None # ExprContext
+            self.body = None # BaseContext
             self._record = None # RecordContext
             self._function = None # FunctionContext
             self._argchain = None # ArgchainContext
@@ -1285,8 +1285,8 @@ class SlimParser ( Parser ):
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
 
-        def expr(self):
-            return self.getTypedRuleContext(SlimParser.ExprContext,0)
+        def base(self):
+            return self.getTypedRuleContext(SlimParser.BaseContext,0)
 
 
         def record(self):
@@ -1350,7 +1350,7 @@ class SlimParser ( Parser ):
                 nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 230
-                localctx.body = self.expr(nt_body)
+                localctx.body = self.base(nt_body)
 
                 localctx.combo = self.collect(BaseRule(self._solver, nt).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 

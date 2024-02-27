@@ -797,7 +797,7 @@ def test_unit_funnel_identity():
 
 def test_nil_funnel_fix():
     pieces = ['''
-(~nil @) |> (fix(case self => (
+~nil @ |> (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 )))
