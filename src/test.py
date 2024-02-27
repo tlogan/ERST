@@ -590,9 +590,15 @@ def test_list_imp_nat_subs_cons_cons_nil_imp_query():
     ''')
 
 # TODO: fix the problem to ensure that the self reference is used
+
     list_imp_nat = (f'''
-([& X <: induc self (~nil @ | (([| L .  ] (~cons L \ ~nil @)) | bot))] (X -> 
-    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| L .  ] ((~cons L \ ~nil @), ~succ bot)) | bot)) ] Y)
+([& X <: induc self (~nil @ | (([| XX . XX <: self ] (~cons XX \ ~nil @)) | bot))] (X -> 
+    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| XX . (XX, YY) <: self ] ((~cons XX \ ~nil @), ~succ YY)) | bot)) ] Y)
+))
+    ''')
+    list_imp_nat = (f'''
+([& X <: induc self (~nil @ | (([| XX . XX <: self ] (~cons XX \ ~nil @)) | bot))] (X -> 
+    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| XX YY . (XX, YY) <: self ] ((~cons XX \ ~nil @), ~succ YY)) | bot)) ] Y)
 ))
     ''')
 
@@ -821,6 +827,8 @@ f(~nil @)(~nil @)
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_fix():
+# TODO: ([& _21 <: induc _20 (~nil @ | (([| _12 . _12 <: _20 ] (~cons _12 \ ~nil @)) | bot))] (_21 -> ([| _22 . (_21, _22) <: induc _20 ((~nil @, ~zero @) | (([| _12 . (_12, _16) <: _20 ] ((~cons _12 \ ~nil @), ~succ _16)) | bot)) ] _22)))
+# fix fix type construction to bind _16
     pieces = ['''
 fix(case self => (
     case ~nil @ => ~zero @ 

@@ -2,7 +2,7 @@
 
 
 ### TODO
-- fix fix expression type construction so that the problem to ensure that the self reference is used
+- update fix expression type construction so that right variables are bound 
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 

@@ -604,37 +604,6 @@ def extract_strongest_from_id(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def extract_strongest(model : Model, typ : Typ) -> Typ:
-    if isinstance(typ, Imp):
-        antec = extract_weakest(model, typ.antec)
-        consq = extract_strongest(model, typ.consq)
-        return Imp(antec, consq)
-    else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
-        renaming = pmap({
-            id : strongest
-            for id in fvs
-            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if strongest != Bot()
-        })
-        return sub_typ(renaming, typ)
-
-def extract_weakest(model : Model, typ : Typ) -> Typ:
-    if isinstance(typ, Imp):
-        antec = extract_strongest(model, typ.antec)
-        consq = extract_weakest(model, typ.consq)
-        return Imp(antec, consq)
-    else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
-        renaming = pmap({
-            id : weakest
-            for id in fvs
-            for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
-            if weakest != Top()
-        })
-        return sub_typ(renaming, typ)
-
-
 def condense_strongest(model : Model, typ : Typ) -> Typ:
     if isinstance(typ, Imp):
         antec = condense_weakest(model, typ.antec)
@@ -892,7 +861,7 @@ def decode_strongest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
         package_typ(model, strongest_answer)
         for model in models
-        for strongest_answer in [extract_strongest(model, t)]
+        for strongest_answer in [condense_strongest(model, t)]
     ] 
     return make_unio(constraint_typs)
 
@@ -900,7 +869,7 @@ def decode_weakest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
         package_typ(model, weakest_answer)
         for model in models
-        for weakest_answer in [extract_weakest(model, t)]
+        for weakest_answer in [condense_weakest(model, t)]
     ] 
     return make_unio(constraint_typs)
 
@@ -1546,28 +1515,29 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
-        print(f"""
-|<<
-|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-|cator: {concretize_typ(cator)}
-|args: {[concretize_typ(arg) for arg in arguments]}
-|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-|<<
-        """)
+#         print(f"""
+# |<<
+# |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# |cator: {concretize_typ(cator)}
+# |args: {[concretize_typ(arg) for arg in arguments]}
+# |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# |<<
+#         """)
 
         answr_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
             models = self.solver.solve_composition(answr_i, Imp(argument, query_typ))
             for model in models:
-                print(f"""
-        |<<
-        |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        |query typ: {query_typ.id}
-        |model constraints: {concretize_constraints(tuple(model.constraints))}
-        |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        |<<
-                """)
+                pass
+        #         print(f"""
+        # |<<
+        # |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # |query typ: {query_typ.id}
+        # |model constraints: {concretize_constraints(tuple(model.constraints))}
+        # |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # |<<
+        #         """)
 
             '''
             _29 <: induc _20 (~nil @ | (([| _12 .  ] (~cons _12 \ ~nil @)) | bot)) ; 
@@ -1578,10 +1548,9 @@ class ExprRule(Rule):
             ~cons ~nil @ <: _31 ; 
             ~cons ~cons ~nil @ <: _29
             '''
-            # answr_i = decode_strongest_typ(models, query_typ)
+            answr_i = decode_strongest_typ(models, query_typ)
 
-        # return simplify_typ(answr_i)
-        return Bot() 
+        return simplify_typ(answr_i)
 
 
     #########
@@ -1607,6 +1576,12 @@ class ExprRule(Rule):
         --------------- OR -----------------------
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         """
+
+        print(f"""
+<<
+<<~~~ body: {concretize_typ(body)}
+<<
+        """)
 
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
@@ -1637,6 +1612,13 @@ class ExprRule(Rule):
                 None
             )  
 
+            print(f"""
+~~~ self_typ: {self_typ.id}
+~~~ model.constraints: {concretize_constraints(tuple(model.constraints))} .
+~~~ right_constraints: {concretize_constraints(right_constraints)} .
+~~~ IH_typ_args: {IH_typ_args}
+            """)
+
             if IH_typ_args:
                 other_constraints = tuple(
                     st
@@ -1652,15 +1634,23 @@ class ExprRule(Rule):
 
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
                 constrained_left = IdxUnio(left_bound_ids, left_constraints, left_typ)
+                print("OOGA A")
             elif bound_ids:
                 constraints = right_constraints 
                 constrained_rel = IdxUnio(bound_ids, constraints, rel_pattern) 
                 constrained_left = IdxUnio(left_bound_ids, constraints, left_typ) 
+                print("OOGA B")
             else:
                 assert not right_constraints
                 constrained_rel = rel_pattern
                 constrained_left = left_typ 
+                print("OOGA C")
             #end if
+
+            # TODO: should replace the left with the self reference 
+            print(f"""
+~~~ constrained_left: {concretize_typ(constrained_left)}
+            """)
 
             induc_body = Unio(constrained_rel, induc_body) 
             param_body = Unio(constrained_left, param_body)
