@@ -580,6 +580,35 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
 # answer: {answer}
 #     ''')
 
+
+def test_list_imp_nat_subs_cons_cons_nil_imp_query():
+
+    list_imp_nat = (f'''
+([& X <: ({list_diff})] (X -> 
+    ([| Y . (X, Y) <: ({list_nat_diff})] Y)
+))) 
+    ''')
+
+# TODO: fix the problem to ensure that the self reference is used
+    list_imp_nat = (f'''
+([& X <: induc self (~nil @ | (([| L .  ] (~cons L \ ~nil @)) | bot))] (X -> 
+    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| L .  ] ((~cons L \ ~nil @), ~succ bot)) | bot)) ] Y)
+))
+    ''')
+
+    cons_cons_nil_imp_query = ('''
+((~cons ~cons ~nil @) -> Q)
+    ''')
+    models = solve(list_imp_nat, cons_cons_nil_imp_query)
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_strongest(model, p("Q"))
+    assert answer == "~succ ~succ ~zero @"
+    print(f'''
+len(models): {len(models)}
+answer: {answer}
+    ''')
+
 def test_bot_subs_cons_nil_diff():
 
     cons_nil_diff = ('''
@@ -692,18 +721,18 @@ def test_projection_chain():
     print(parsetree)
     assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
 
-def test_app_identity():
+def test_app_identity_unit():
     pieces = ['''
-(case x => x)(~nil @)
+(case x => x)(@)
     ''']
     (combo, guides, parsetree) = analyze(pieces, debug=True)
     assert parsetree
     print("parsetree: " + parsetree)
     assert combo
-    assert u(combo) == "~nil @" 
+    assert u(combo) == "@" 
     print("combo: " + u(combo))
 
-def test_app_pattern_match():
+def test_app_pattern_match_nil():
     pieces = ['''
 (
 case ~nil @ => @ 
@@ -713,8 +742,37 @@ case ~cons x => x
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree
     print("parsetree: " + parsetree)
-    # assert combo
-    # print("combo: " + u(combo))
+    assert combo
+    assert u(combo) == "@"
+    print("combo: " + u(combo))
+
+def test_app_pattern_match_cons():
+    pieces = ['''
+(
+case ~nil @ => @ 
+case ~cons x => x 
+)(~cons @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    assert combo
+    assert u(combo) == "@"
+    print("combo: " + u(combo))
+
+def test_app_pattern_match_fail():
+    pieces = ['''
+(
+case ~nil @ => @ 
+case ~cons x => x 
+)(~fail @)
+    ''']
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    assert combo
+    assert u(combo) == "bot"
+    print("combo: " + u(combo))
 
 def test_application_chain():
     pieces = ['''
@@ -825,6 +883,36 @@ def test_app_fix_nil():
     assert u(combo) == "~zero @"
     print("combo: " + u(combo))
 
+def test_app_fix_cons():
+    pieces = ['''
+(fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
+)))(~cons ~nil @) 
+    ''']
+
+    (combo, guides, parsetree) = analyze(pieces)
+    assert parsetree
+    print("parsetree: " + parsetree)
+    assert combo
+    assert u(combo) == "~succ ~zero @"
+    print("combo: " + u(combo))
+
+def test_app_fix_cons_cons():
+    pieces = ['''
+(fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => ~succ (self(x)) 
+)))(~cons ~cons ~nil @) 
+    ''']
+
+    (combo, guides, parsetree) = analyze(pieces, True)
+    # assert parsetree
+    # print("parsetree: " + parsetree)
+    # assert combo
+    # assert u(combo) == "~succ ~succ ~zero @"
+    # print("combo: " + u(combo))
+
 
 def test_funnel_pipeline():
     pieces = ['''
@@ -891,7 +979,9 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_nil_funnel_fix()
+    test_fix()
+    # test_list_imp_nat_subs_cons_cons_nil_imp_query()
+    # test_app_fix_cons_cons()
     pass
 
 #######################################################################
