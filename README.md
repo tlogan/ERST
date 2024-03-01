@@ -2,6 +2,7 @@
 
 
 ### TODO
+- in paper, change subset inclusion to strict equality in subtyping rules 
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 
