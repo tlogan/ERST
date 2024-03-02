@@ -152,8 +152,8 @@ def serializedATN():
         349,1,0,0,0,361,350,1,0,0,0,361,353,1,0,0,0,362,29,1,0,0,0,363,386,
         1,0,0,0,364,365,5,30,0,0,365,386,6,15,-1,0,366,367,5,30,0,0,367,
         386,6,15,-1,0,368,369,5,3,0,0,369,386,6,15,-1,0,370,371,5,4,0,0,
-        371,372,6,15,-1,0,372,373,5,30,0,0,373,374,6,15,-1,0,374,375,3,28,
-        14,0,375,376,6,15,-1,0,376,386,1,0,0,0,377,378,3,32,16,0,378,379,
+        371,372,6,15,-1,0,372,373,5,30,0,0,373,374,6,15,-1,0,374,375,3,30,
+        15,0,375,376,6,15,-1,0,376,386,1,0,0,0,377,378,3,32,16,0,378,379,
         6,15,-1,0,379,386,1,0,0,0,380,381,5,6,0,0,381,382,3,28,14,0,382,
         383,5,7,0,0,383,384,6,15,-1,0,384,386,1,0,0,0,385,363,1,0,0,0,385,
         364,1,0,0,0,385,366,1,0,0,0,385,368,1,0,0,0,385,370,1,0,0,0,385,
@@ -2077,7 +2077,7 @@ class SlimParser ( Parser ):
             self.nt = None
             self.combo = None
             self._ID = None # Token
-            self.body = None # PatternContext
+            self.body = None # Pattern_baseContext
             self._pattern_record = None # Pattern_recordContext
             self._pattern = None # PatternContext
             self.nt = nt
@@ -2085,12 +2085,16 @@ class SlimParser ( Parser ):
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
 
-        def pattern(self):
-            return self.getTypedRuleContext(SlimParser.PatternContext,0)
+        def pattern_base(self):
+            return self.getTypedRuleContext(SlimParser.Pattern_baseContext,0)
 
 
         def pattern_record(self):
             return self.getTypedRuleContext(SlimParser.Pattern_recordContext,0)
+
+
+        def pattern(self):
+            return self.getTypedRuleContext(SlimParser.PatternContext,0)
 
 
         def getRuleIndex(self):
@@ -2160,7 +2164,7 @@ class SlimParser ( Parser ):
                 nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 374
-                localctx.body = self.pattern(nt_body)
+                localctx.body = self.pattern_base(nt_body)
 
                 localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
 

@@ -1793,15 +1793,18 @@ public class SlimParser extends Parser {
 		public Nonterm nt;
 		public PatternAttr combo;
 		public Token ID;
-		public PatternContext body;
+		public Pattern_baseContext body;
 		public Pattern_recordContext pattern_record;
 		public PatternContext pattern;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
-		public PatternContext pattern() {
-			return getRuleContext(PatternContext.class,0);
+		public Pattern_baseContext pattern_base() {
+			return getRuleContext(Pattern_baseContext.class,0);
 		}
 		public Pattern_recordContext pattern_record() {
 			return getRuleContext(Pattern_recordContext.class,0);
+		}
+		public PatternContext pattern() {
+			return getRuleContext(PatternContext.class,0);
 		}
 		public Pattern_baseContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public Pattern_baseContext(ParserRuleContext parent, int invokingState, Nonterm nt) {
@@ -1867,7 +1870,7 @@ public class SlimParser extends Parser {
 				nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null))
 
 				setState(374);
-				((Pattern_baseContext)_localctx).body = pattern(nt_body);
+				((Pattern_baseContext)_localctx).body = pattern_base(nt_body);
 
 				_localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, (((Pattern_baseContext)_localctx).ID!=null?((Pattern_baseContext)_localctx).ID.getText():null), ((Pattern_baseContext)_localctx).body.combo)
 
@@ -2271,7 +2274,7 @@ public class SlimParser extends Parser {
 		"\uffff\uffff\u0000\u0170\u0171\u0005\u0003\u0000\u0000\u0171\u0182\u0006"+
 		"\u000f\uffff\uffff\u0000\u0172\u0173\u0005\u0004\u0000\u0000\u0173\u0174"+
 		"\u0006\u000f\uffff\uffff\u0000\u0174\u0175\u0005\u001e\u0000\u0000\u0175"+
-		"\u0176\u0006\u000f\uffff\uffff\u0000\u0176\u0177\u0003\u001c\u000e\u0000"+
+		"\u0176\u0006\u000f\uffff\uffff\u0000\u0176\u0177\u0003\u001e\u000f\u0000"+
 		"\u0177\u0178\u0006\u000f\uffff\uffff\u0000\u0178\u0182\u0001\u0000\u0000"+
 		"\u0000\u0179\u017a\u0003 \u0010\u0000\u017a\u017b\u0006\u000f\uffff\uffff"+
 		"\u0000\u017b\u0182\u0001\u0000\u0000\u0000\u017c\u017d\u0005\u0006\u0000"+

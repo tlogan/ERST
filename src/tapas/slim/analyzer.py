@@ -239,8 +239,8 @@ def concretize_typ(typ : Typ) -> str:
             plate_entry = ([control.left,control.right], lambda left, right : f"({left} | {right})")  
         elif isinstance(control, Inter):
             if (
-                isinstance(control.left, TField) and control.left.label == "left" and 
-                isinstance(control.right, TField) and control.right.label == "right" 
+                isinstance(control.left, TField) and control.left.label == "head" and 
+                isinstance(control.right, TField) and control.right.label == "tail" 
             ):
                 plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({left}, {right})")  
             else:
@@ -1451,10 +1451,10 @@ class ExprRule(Rule):
         true_models = self.solver.solve_composition(Imp(TTag('true', TUnit()), true_branch), Imp(condition, query_typ))
         false_models = self.solver.solve_composition(Imp(TTag('false', TUnit()), false_branch), Imp(condition, query_typ))
 
-        return Unio(
+        return simplify_typ(Unio(
             decode_strongest_typ(true_models, query_typ), 
             decode_strongest_typ(false_models, query_typ), 
-        )
+        ))
 
 
     def distill_projection_cator(self) -> Nonterm:

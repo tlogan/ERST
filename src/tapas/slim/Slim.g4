@@ -542,7 +542,7 @@ $combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
 self.guide_terminal('ID')
 } ID {
 nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, $ID.text)
-} body = pattern[nt_body] {
+} body = pattern_base[nt_body] {
 $combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, $ID.text, $body.combo)
 }
 

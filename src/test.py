@@ -934,6 +934,18 @@ def test_funnel_pipeline():
 # case ~cons x => ~succ (self(x)) 
 # ))
 
+def test_pattern_tuple():
+    tup = ('''
+case (~zero @, @) => @
+    ''')
+    pieces = [tup]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    assert u(combo) == "((~zero @, @) -> @)"
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
+
 less_equal = ('''
 fix(case self => (
     case (~zero @, x) => ~true @ 
@@ -960,24 +972,62 @@ case (x, y) => (
 )
 ''')
 
-if_else = (f'''
+if_true_then_else = (f'''
 if ~true @ then
     ~uno @
 else
     ~dos @
 ''')
 
-def test_if_then_else():
-    pieces = [if_else]
+if_false_then_else = (f'''
+if ~false @ then
+    ~uno @
+else
+    ~dos @
+''')
+
+function_if_then_else = (f'''
+case x => (
+    if x then
+        ~uno @
+    else
+        ~dos @
+)
+''')
+
+def test_if_true_then_else():
+    pieces = [if_true_then_else]
     (combo, guides, parsetree) = analyze(pieces)
     raise_guide(guides)
     assert combo
+    assert u(combo) == "~uno @"
+    print("combo: " + u(combo))
+    print(parsetree)
+
+def test_if_false_then_else():
+    pieces = [if_false_then_else]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    assert u(combo) == "~dos @"
+    print("combo: " + u(combo))
+    print(parsetree)
+
+
+
+def test_function_if_then_else():
+    pieces = [function_if_then_else]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    assert u(combo) == "(_2 -> (~uno @ | ~dos @))"
+
     print("combo: " + u(combo))
     print(parsetree)
 
 def test_max():
     # TODO
-    pieces = []
+    pieces = [max]
     (combo, guides, parsetree) = analyze(pieces)
     # raise_guide(guides)
     # print(parsetree)
@@ -986,6 +1036,8 @@ def test_max():
 
 
 if __name__ == '__main__':
+    test_pattern_tuple()
+    # test_less_equal()
     pass
 
 #######################################################################

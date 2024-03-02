@@ -2,15 +2,15 @@
 
 
 ### TODO
-- in paper, change subset inclusion to strict equality in subtyping rules 
-- finish implementing inhabitable check
-- finish implementing relational key check 
-- update basic examples with test of type inference 
 - develop examples with interesting semantics and test type inference
     - inferring max
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, change subset inclusion to strict equality in subtyping rules 
+- finish implementing inhabitable check
+- finish implementing relational key check 
+- update basic examples with test of type inference 
 - implement caching for streaming parsing
     - update collect and guide_choice rules to memo(r)ize
 - consider generalizing parameter types with universal a la SuperF paper
