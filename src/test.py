@@ -21,102 +21,6 @@ from pyrsistent.typing import PMap, PSet
 
 import pytest
 
-    # pieces = [
-
-    #     "fix (self =>", " (", "\n",
-    #     "    fun ~nil . => ~zero () ", "\n",
-    #     "    fun ~cons x ", "=>", "~succ", "(self(", "x))", "\n",
-    #     ")", ")"
-    # ]
-
-    # pieces = [
-    #     "hello"
-    # ]
-
-    # pieces = [
-    #     ":hello ()"
-    # ]
-
-    # pieces = [
-# """
-# (~uno = @ ~dos = @).uno
-# """,
-###############
-# """
-# let rec = ~uno = @ ~dos = @ ;
-# rec.uno
-# """,
-###############
-# """
-# ((~uno = (:one = @)).uno).one
-# """,
-###############
-# """
-# (~uno = (:one = @)).uno.one
-# """,
-###############
-# """
-# let rec = ~uno = (:one = @) ~dos = @ ;
-# ((rec).uno).one
-# """,
-###############
-# """
-# let rec = ~uno = (:one = @) ~dos = @ ;
-# rec.uno.one
-# """,
-###############
-# """
-# x => :ooga :booga x 
-# """,
-###############
-# """
-# (x => :ooga :booga x)
-# """,
-##################
-# """
-# (x => :ooga :booga x)(@)
-# """,
-###############
-# """
-# let foo = x => :ooga :booga x 
-# foo(@)
-# """,
-###############
-# """
-# x => y => :ooga :booga (.uno = x .dos = y) 
-# """,
-###############
-# """
-# (x => y => :ooga :booga (.uno = x .dos = y)) (:one @) (:two @) 
-# """,
-###############
-# """
-# let foo = (x => y => :ooga :booga (~uno = x ~dos = y)) ;
-# foo(:one @)(:two @)
-# """,
-###############
-# "let x = :boo @ ;",
-# '''
-# let y = :foo x ;
-# ''',
-# "~uno = y ~dos = @", 
-################
-# "~uno = @ ~dos = @",
-################
-# "fix (", "@", ")",
-################
-# "fix", "(",
-################
-# server.Kill()
-    # ] 
-
-# pieces = [
-# f'''
-# fun ~nil () => ~zero () 
-# fun ~cons () => ~succ (self(x))
-# '''
-# ]
-
 def raise_guide(guides : list[analyzer.Guidance]):
     for guide in guides:
         if isinstance(guide, Exception):
@@ -184,53 +88,53 @@ def test_typ_implication():
 
 
 
-def test_typ_induc():
+def test_typ_LFP():
     d = ('''
-induc self ~nil @ | ~cons self
+LFP self ~nil @ | ~cons self
     ''')
-    assert u(p(d)) == "induc self (~nil @ | ~cons self)"
+    assert u(p(d)) == "LFP self (~nil @ | ~cons self)"
     # print(u(t))
 
 
 nat = ('''
-induc N bot 
+LFP N BOT 
     | ~zero @  
     | ~succ N 
 ''')
 
 even = ('''
-induc E bot 
+LFP E BOT 
     | ~zero @ 
     | ~succ ~succ E
 ''')
 
 nat_list = ('''
-induc NL bot 
+LFP NL BOT 
     | (~zero @, ~nil @) 
-    | [| N L . (N, L) <: NL ] (~succ N, ~cons L)  
+    | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
 ''')
 
 even_list = ('''
-induc NL bot 
+LFP NL BOT 
     | (~zero @, ~nil @) 
-    | [| N L . (N, L) <: NL ] (~succ ~succ N, ~cons ~cons L)  
+    | EXI [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
 ''')
 
 
 
 nat_equal = ('''
-induc SELF bot
+LFP SELF BOT 
     | (~zero @, ~zero @) 
-    | [| A B . (A, B) <: SELF ] (~succ A, ~succ B)  
+    | EXI [A B ; (A, B) <: SELF] (~succ A, ~succ B)  
 ''')
 
 
 
 
 addition_rel = (f'''
-induc AR bot
-    | [| Y Z .  (Y, Z) <: ({nat_equal}) ] (x : ~zero @ & y : Y & z : Z) 
-    | [| X Y Z . (x : X & y : Y & z : Z) <: AR ] (x : ~succ X & y : Y & z : ~succ Z) 
+LFP AR BOT 
+    | EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z) 
+    | EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z) 
 ''')
 
 
@@ -279,7 +183,7 @@ def test_nat_subs_even():
 
 def test_subs_idx_unio():
     idx_unio = ('''
-{ N . N <: top} (~thing N)  
+EXI [N ; N <: TOP] (~thing N)  
     ''')
     thing = ('''
 (~thing @)
@@ -302,15 +206,11 @@ def test_zero_nil_subs_nat_list():
     assert models
 
 def test_one_single_subs_nat_list():
-#     one_single = ('''
-# (~succ ~zero @, ~cons ~nil @)
-#     ''')
-    # TODO: yeah, this is sound 
     one_single = ('''
-(~succ ~zero @, ~cons bot) 
+(~succ ~zero @, ~cons ~nil @) 
     ''')
     models = solve(one_single, nat_list)
-    # print(f'len(models): {len(models)}')
+    print(f'len(models): {len(models)}')
     assert models
 
 def test_two_single_subs_nat_list():
@@ -468,13 +368,13 @@ def test_plus_equals_two_query():
 
 
 list_nat_diff = ('''
-(induc SELF (
+(LFP self (
     (~nil @, ~zero @) | 
-    ([| L N . (L, N) <: SELF ] ((~cons L \\ ~nil @), ~succ N))
+    (EXI [l n ; (l, n) <: self] ((~cons l \\ ~nil @), ~succ n))
 ))
 ''')
 
-# list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: induc SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
+# list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: LFP SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
 
 def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
@@ -532,7 +432,7 @@ answer: {answer}
     ''')
 
 list_diff = ('''
-induc SELF (~nil @ | (~cons SELF \\ ~nil @))
+LFP SELF (~nil @ | (~cons SELF \\ ~nil @))
 ''')
 
 def test_cons_nil_subs_list_diff():
@@ -545,8 +445,8 @@ def test_cons_nil_subs_list_diff():
 
 
 list_imp_nat = (f'''
-([& X <: ({list_diff})] (X -> 
-    ([| Y . (X, Y) <: ({list_nat_diff})] Y)
+(ALL [X <: ({list_diff})] (X -> 
+    (EXI [Y ; (X, Y) <: ({list_nat_diff})] Y)
 ))) 
 ''')
 
@@ -582,26 +482,6 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
 
 
 def test_list_imp_nat_subs_cons_cons_nil_imp_query():
-
-    list_imp_nat = (f'''
-([& X <: ({list_diff})] (X -> 
-    ([| Y . (X, Y) <: ({list_nat_diff})] Y)
-))) 
-    ''')
-
-# TODO: fix the problem to ensure that the self reference is used
-
-    list_imp_nat = (f'''
-([& X <: induc self (~nil @ | (([| XX . XX <: self ] (~cons XX \ ~nil @)) | bot))] (X -> 
-    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| XX . (XX, YY) <: self ] ((~cons XX \ ~nil @), ~succ YY)) | bot)) ] Y)
-))
-    ''')
-    list_imp_nat = (f'''
-([& X <: induc self (~nil @ | (([| XX . XX <: self ] (~cons XX \ ~nil @)) | bot))] (X -> 
-    ([| Y . (X, Y) <: induc self ((~nil @, ~zero @) | (([| XX YY . (XX, YY) <: self ] ((~cons XX \ ~nil @), ~succ YY)) | bot)) ] Y)
-))
-    ''')
-
     cons_cons_nil_imp_query = ('''
 ((~cons ~cons ~nil @) -> Q)
     ''')
@@ -622,7 +502,7 @@ def test_bot_subs_cons_nil_diff():
     ''')
 
     bot = ('''
-(bot)
+(BOT)
     ''')
     models = solve(bot, cons_nil_diff)
     assert len(models) == 1
@@ -777,7 +657,7 @@ case ~cons x => x
     assert parsetree
     print("parsetree: " + parsetree)
     assert combo
-    assert u(combo) == "bot"
+    assert u(combo) == "BOT"
     print("combo: " + u(combo))
 
 def test_application_chain():
@@ -827,8 +707,6 @@ f(~nil @)(~nil @)
     (combo, guides, parsetree) = analyze(pieces)
 
 def test_fix():
-# TODO: ([& _21 <: induc _20 (~nil @ | (([| _12 . _12 <: _20 ] (~cons _12 \ ~nil @)) | bot))] (_21 -> ([| _22 . (_21, _22) <: induc _20 ((~nil @, ~zero @) | (([| _12 . (_12, _16) <: _20 ] ((~cons _12 \ ~nil @), ~succ _16)) | bot)) ] _22)))
-# fix fix type construction to bind _16
     pieces = ['''
 fix(case self => (
     case ~nil @ => ~zero @ 
@@ -1036,8 +914,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_pattern_tuple()
-    # test_less_equal()
+    test_even_list_subs_nat_list()
     pass
 
 #######################################################################

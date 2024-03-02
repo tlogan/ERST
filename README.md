@@ -13,8 +13,6 @@
 - update basic examples with test of type inference 
 - implement caching for streaming parsing
     - update collect and guide_choice rules to memo(r)ize
-- consider generalizing parameter types with universal a la SuperF paper
-    - remove need for let-poly rule for the special case of prenex poly.
 - determine if intersection types can be subsumed by constrained universal types with union 
     - e.g. [X <: (S | T) | U] X === ([X <: S | T] X) & U ==== ([X <: S] X) & T & U === S & U & T 
     - e.g. [X <: T | U] X -> {Y. (X, Y) <: (T, A) | (U, B)} === (T -> A) & (U -> B) 

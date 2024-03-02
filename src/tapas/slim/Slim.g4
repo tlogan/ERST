@@ -122,11 +122,11 @@ $combo = tuple([$ID.text]) + $ids.combo
 typ_base returns [Typ combo] : 
 
 
-| 'top' {
+| 'TOP' {
 $combo = Top() 
 }
 
-| 'bot' {
+| 'BOT' {
 $combo = Bot() 
 }
 
@@ -184,19 +184,24 @@ $combo = Imp($typ_base.combo, $typ.combo)
 $combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo)) 
 }
 
-// indexed union
-| '[|' ids '.' qualification ']' typ {
-$combo = IdxUnio($ids.combo, $qualification.combo, $typ.combo) 
+// Existential unconstrained 
+| 'EXI' '[' ids ']' typ {
+$combo = Exi($ids.combo, [], $typ.combo) 
 }
 
-// indexed intersection default
-| '[&' ID ']' body = typ {
-$combo = IdxInter($ID.text, Top(), $body.combo) 
+// Existential 
+| 'EXI' '[' ids qualification ']' typ {
+$combo = Exi($ids.combo, $qualification.combo, $typ.combo) 
 }
 
-// indexed intersection
-| '[&' ID '<:' upper = typ ']' body = typ {
-$combo = IdxInter($ID.text, $upper.combo, $body.combo) 
+// Universal unconstrained 
+| 'ALL' '[' ID ']' body = typ {
+$combo = All($ID.text, Top(), $body.combo) 
+}
+
+// Universal 
+| 'ALL' '[' ID '<:' upper = typ ']' body = typ {
+$combo = All($ID.text, $upper.combo, $body.combo) 
 }
 
 
@@ -206,8 +211,8 @@ $combo = IdxInter($ID.text, $upper.combo, $body.combo)
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'induc' ID typ {
-$combo = Induc($ID.text, $typ.combo) 
+| 'LFP' ID typ {
+$combo = LeastFP($ID.text, $typ.combo) 
 }
 
 
@@ -238,11 +243,11 @@ $combo = Diff(context, $negation.combo)
 
 qualification returns [tuple[Subtyping, ...] combo] :
 
-| subtyping {
+| ';' subtyping {
 $combo = tuple([$subtyping.combo])
 }
 
-| subtyping ';' qualification {
+| ';' subtyping qualification {
 $combo = tuple([$subtyping.combo]) + $qualification.combo
 }
 
