@@ -766,8 +766,8 @@ def test_app_fix_nil():
     assert parsetree
     print("parsetree: " + parsetree)
     assert combo
-    assert u(combo) == "~zero @"
     print("combo: " + u(combo))
+    assert u(combo) == "~zero @"
 
 def test_app_fix_cons():
     pieces = ['''
@@ -915,6 +915,7 @@ def test_max():
 
 if __name__ == '__main__':
     # test_app_fix_nil()
+    # test_even_list_subs_nat_list()
     pass
 
 #######################################################################

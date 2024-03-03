@@ -2,7 +2,6 @@
 
 
 ### TODO
-- possibly add rule for variable on both sides and one side is frozen. 
 - fix regressions according to failing tests
 - develop examples with interesting semantics and test type inference
     - inferring max
