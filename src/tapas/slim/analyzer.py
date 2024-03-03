@@ -907,7 +907,7 @@ def make_inter(ts : list[Typ]) -> Typ:
 
 class Solver:
     _type_id : int = 0 
-    _battery  : int = -1
+    _battery  : int = 30 
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -1084,8 +1084,13 @@ class Solver:
             '''
 
             if strong.id in model.freezer: 
+
+                w = extract_weakest_from_id(model, strong.id)
                 weakest_strong = condense_weakest(model, strong)
-                return self.solve(model, weakest_strong, weak)
+                if weakest_strong == strong:
+                    return []
+                else:
+                    return self.solve(model, weakest_strong, weak)
             else:
                 strongest = extract_strongest_from_id(model, strong.id)
                 if not inhabitable(strongest):
@@ -1111,7 +1116,10 @@ class Solver:
 
             if weak.id in model.freezer: 
                 strongest_weak = condense_strongest(model, weak)
-                return self.solve(model, strong, strongest_weak)
+                if strongest_weak == weak:
+                    return []
+                else:
+                    return self.solve(model, strong, strongest_weak)
             else:
                 weakest = extract_weakest_from_id(model, weak.id)
                 if not selective(weakest):

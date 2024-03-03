@@ -266,12 +266,12 @@ answr: {answer}
 def test_even_list_subs_nat_list():
     models = solve(even_list, nat_list)
     print(f"len(models): {len(models)}")
-    # assert models
+    assert models
 
 def test_nat_list_subs_even_list():
     models = solve(nat_list, even_list)
     print(f"len(models): {len(models)}")
-    # assert not models
+    assert not models
 
 
 def test_one_plus_one_equals_two():

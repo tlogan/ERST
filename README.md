@@ -2,6 +2,7 @@
 
 
 ### TODO
+- fix regressions according to failing tests, e.g. even_list subs nat_list
 - develop examples with interesting semantics and test type inference
     - inferring max
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
