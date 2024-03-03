@@ -604,7 +604,7 @@ def extract_strongest_from_id(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def extract_strongest(model : Model, typ : Typ) -> Typ:
+def condense_strongest(model : Model, typ : Typ, full = False) -> Typ:
     if isinstance(typ, Imp):
         antec = condense_weakest(model, typ.antec)
         consq = condense_strongest(model, typ.consq)
@@ -612,29 +612,14 @@ def extract_strongest(model : Model, typ : Typ) -> Typ:
     else:
         fvs = extract_free_vars_from_typ(pset(), typ)
         renaming = pmap({
-            id : strongest
+            id : condense_strongest(model, strongest, full)
             for id in fvs
             for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if strongest != Bot()
+            if strongest != Bot() or full
         })
         return sub_typ(renaming, typ)
 
-def condense_strongest(model : Model, typ : Typ) -> Typ:
-    if isinstance(typ, Imp):
-        antec = condense_weakest(model, typ.antec)
-        consq = condense_strongest(model, typ.consq)
-        return Imp(antec, consq)
-    else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
-        renaming = pmap({
-            id : condense_strongest(model, strongest)
-            for id in fvs
-            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if strongest != Bot()
-        })
-        return sub_typ(renaming, typ)
-
-def condense_weakest(model : Model, typ : Typ) -> Typ:
+def condense_weakest(model : Model, typ : Typ, full = False) -> Typ:
     if isinstance(typ, Imp):
         antec = condense_strongest(model, typ.antec)
         consq = condense_weakest(model, typ.consq)
@@ -642,10 +627,10 @@ def condense_weakest(model : Model, typ : Typ) -> Typ:
     else:
         fvs = extract_free_vars_from_typ(pset(), typ)
         renaming = pmap({
-            id : condense_weakest(model, weakest)
+            id : condense_weakest(model, weakest, full)
             for id in fvs
             for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
-            if weakest != Top()
+            if weakest != Top() or full
         })
         return sub_typ(renaming, typ)
 
@@ -698,10 +683,10 @@ def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping
     )
 
 def prettify_weakest(model : Model, typ : Typ) -> str:
-    return concretize_typ(simplify_typ(condense_weakest(model, typ)))
+    return concretize_typ(simplify_typ(condense_weakest(model, typ, True)))
 
 def prettify_strongest(model : Model, typ : Typ) -> str:
-    return concretize_typ(simplify_typ(condense_strongest(model, typ)))
+    return concretize_typ(simplify_typ(condense_strongest(model, typ, True)))
 
 
 def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
@@ -1275,11 +1260,10 @@ class Solver:
         elif isinstance(weak, LeastFP): 
             lenient = all(fv not in model.freezer for fv in extract_free_vars_from_typ(pset(), strong))
             if lenient:
-                strong = extract_strongest(model, strong) 
+                strong = condense_strongest(model, strong) 
             else:
                 strong = condense_weakest(model, strong) 
-
-            if not is_relational_key(model, strong) and self._battery > 0 or self._battery < 0:
+            if not is_relational_key(model, strong) and self._battery != 0:
                 self._battery -= 1
                 '''
                 unroll

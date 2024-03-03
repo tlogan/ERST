@@ -242,11 +242,11 @@ def test_one_cons_query_subs_nat_list():
     model = models[0]
     # TODO
     answer = analyzer.prettify_weakest(model, p("X"))
-    assert answer == "~nil @"
     print(f"""
 model: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
+    assert answer == "~nil @"
 
 
 def test_two_cons_query_subs_nat_list():
@@ -914,8 +914,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    # test_app_fix_nil()
-    # test_even_list_subs_nat_list()
+    test_one_cons_query_subs_nat_list()
     pass
 
 #######################################################################
