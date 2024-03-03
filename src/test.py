@@ -914,7 +914,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_even_list_subs_nat_list()
+    # test_app_fix_nil()
     pass
 
 #######################################################################

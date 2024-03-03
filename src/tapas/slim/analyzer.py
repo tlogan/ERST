@@ -604,6 +604,21 @@ def extract_strongest_from_id(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
+def extract_strongest(model : Model, typ : Typ) -> Typ:
+    if isinstance(typ, Imp):
+        antec = condense_weakest(model, typ.antec)
+        consq = condense_strongest(model, typ.consq)
+        return Imp(antec, consq)
+    else:
+        fvs = extract_free_vars_from_typ(pset(), typ)
+        renaming = pmap({
+            id : strongest
+            for id in fvs
+            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
+            if strongest != Bot()
+        })
+        return sub_typ(renaming, typ)
+
 def condense_strongest(model : Model, typ : Typ) -> Typ:
     if isinstance(typ, Imp):
         antec = condense_weakest(model, typ.antec)
@@ -907,7 +922,7 @@ def make_inter(ts : list[Typ]) -> Typ:
 
 class Solver:
     _type_id : int = 0 
-    _battery  : int = 30 
+    _battery : int = 100 
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -994,8 +1009,8 @@ class Solver:
 #         ''')
 
 
-        # if alpha_equiv(strong, weak): 
-        #     return [model] 
+        if alpha_equiv(strong, weak): 
+            return [model] 
 
         if False:
             return [] 
@@ -1078,6 +1093,38 @@ class Solver:
         #######################################
         #### Variable rules: ####
         #######################################
+
+        # TODO: possibly add check if one side is a frozen variable and the other is an unfrozen variable
+        elif isinstance(weak, TVar): 
+            '''
+            T <: X
+            '''
+
+            if weak.id in model.freezer: 
+                strongest_weak = condense_strongest(model, weak)
+                if strongest_weak == weak:
+                    return []
+                else:
+                    return self.solve(model, strong, strongest_weak)
+            else:
+                weakest = extract_weakest_from_id(model, weak.id)
+                if not selective(weakest):
+                    return [Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer
+                    )]
+                else:
+                    models = self.solve(model, strong, weakest)
+                    models = [
+                        Model(
+                            model.constraints.add(Subtyping(strong, weak)),
+                            model.freezer
+                        )
+                        for model in models
+                    ]
+
+                    return models
+
         elif isinstance(strong, TVar): 
             '''
             X <: T
@@ -1109,35 +1156,6 @@ class Solver:
                         for model in models
                     ]
 
-        elif isinstance(weak, TVar): 
-            '''
-            T <: X
-            '''
-
-            if weak.id in model.freezer: 
-                strongest_weak = condense_strongest(model, weak)
-                if strongest_weak == weak:
-                    return []
-                else:
-                    return self.solve(model, strong, strongest_weak)
-            else:
-                weakest = extract_weakest_from_id(model, weak.id)
-                if not selective(weakest):
-                    return [Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer
-                    )]
-                else:
-                    models = self.solve(model, strong, weakest)
-                    models = [
-                        Model(
-                            model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer
-                        )
-                        for model in models
-                    ]
-
-                    return models
 
 
 
@@ -1250,6 +1268,11 @@ class Solver:
 
 
         elif isinstance(weak, LeastFP): 
+            lenient = all(fv not in model.freezer for fv in extract_free_vars_from_typ(pset(), strong))
+            if lenient:
+                strong = extract_strongest(model, strong) 
+            else:
+                strong = condense_weakest(model, strong) 
 
             if not is_relational_key(model, strong) and self._battery > 0 or self._battery < 0:
                 self._battery -= 1
@@ -1280,7 +1303,7 @@ class Solver:
                         """
                         return [Model(
                             model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer
+                            model.freezer.union(extract_free_vars_from_typ(pset(), strong))
                         )]
                     else:
                         return []
@@ -1332,6 +1355,7 @@ class Solver:
     '''
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
+        self._battery = 100
         model = Model(s(), s())
         return self.solve(model, strong, weak)
     '''
