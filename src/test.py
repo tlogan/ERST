@@ -909,22 +909,50 @@ less_equal
     print("combo: " + u(combo))
     # print("parsetree: " + str(parsetree))
 
+less_equal_rel = ('''
+LFP self BOT 
+    | ((~zero @, x), ~true @)
+    | EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c) 
+    | ((~succ x, ~zero @), ~false @)
+''')
 
-def test_app_less_equal():
-    app_less = (f'''
-let less_equal = {less_equal} ;
-less_equal(~zero @, ~succ ~zero @)
+def test_two_less_equal_one_query():
+    two_less_equal_one_query = ('''
+((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
-#     app_less = (f'''
-# let less_equal = {less_equal} ;
-# less_equal
-#     ''')
+    models = solve(two_less_equal_one_query, less_equal_rel)
+    # print(f'len(models): {len(models)}')
+    assert len(models) == 1
+    model = models[0]
+    answer = analyzer.prettify_weakest(model, p("Z"))
+    print(f'''
+model: {analyzer.concretize_constraints(tuple(model.constraints))}
+answr: {answer}
+    ''')
+    assert answer == "~false @"
+
+
+def test_app_less_equal_zero_one():
+    app_less = (f'''
+({less_equal})(~zero @, ~succ ~zero @)
+    ''')
     pieces = [app_less]
     (combo, guides, parsetree) = analyze(pieces)
     # print(parsetree)
     assert combo
     print("combo: " + u(combo))
-    # print("parsetree: " + str(parsetree))
+    assert u(combo) == "~true @"
+
+def test_app_less_equal_two_one():
+    app_less = (f'''
+({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
+    ''')
+    pieces = [app_less]
+    (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
+    assert combo
+    print("combo: " + u(combo))
+    assert u(combo) == "~false @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -957,8 +985,10 @@ less_equal(~zero @, ~succ ~zero @)
 
 
 if __name__ == '__main__':
-    test_let_less_equal()
+    # test_let_less_equal()
     # test_less_equal()
+    # test_app_less_equal_two_one()
+    test_two_less_equal_one_query()
     pass
 
 #######################################################################

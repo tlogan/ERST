@@ -390,7 +390,7 @@ def linearize_unions(t : Typ) -> list[Typ]:
     else:
         return [t]
 
-def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:  
+def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]]:  
     if False:
         assert False
     elif isinstance(t, Exi):
@@ -402,12 +402,12 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:
     elif isinstance(t, TField):
         body = t.body
         if isinstance(body, TVar) and (not tvar or tvar.id == body.id):
-            path = [t.label]
+            path = tuple([t.label])
             return pset().add(path)
         else:
             paths_tail = extract_paths(t.body)
-            return pset( 
-                [t.label] + path_tail
+            return pset(
+                tuple([t.label]) + path_tail
                 for path_tail in paths_tail
             )
 
@@ -417,32 +417,35 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[list[str]]:
         return pset()
 
 
-def extract_field_recurse(t : Typ, path : list[str]) -> Optional[Typ]:
-    assert path
-
-    if isinstance(t, Inter):
+def extract_field_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
+    if not path:
+        return None
+    elif isinstance(t, Inter):
         left = extract_field_recurse(t.left, path)
-        right = extract_field_recurse(t.left, path)
+        right = extract_field_recurse(t.right, path)
         if left and right:
             return Inter(left, right)
         else:
             return left or right
     elif isinstance(t, TField):
         label = path[0]
-        if len(path) == 1 and t.label == label:
-            return t.body
+        if t.label == label:
+            if len(path) == 1:
+                return t.body
+            else:
+                return extract_field_recurse(t.body, path[1:])
         else:
-            return extract_field_recurse(t.body, path[1:])
+            return None
 
 
-def extract_field_plain(path : list[str], t : Typ) -> Typ:
+def extract_field_plain(path : tuple[str, ...], t : Typ) -> Typ:
     result = extract_field_recurse(t, path)
     if result:
         return result
     else:
-        raise Exception("extract_field_plain error")
+        raise Exception(f"extract_field_plain error: {path} in {concretize_typ(t)}")
 
-def extract_field(path : list[str], id_induc : str, t : Typ) -> Typ:
+def extract_field(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
     if isinstance(t, Exi):  
         new_constraints = tuple(
             (
@@ -458,22 +461,29 @@ def extract_field(path : list[str], id_induc : str, t : Typ) -> Typ:
         return extract_field_plain(path, t)
 
 
-def extract_column(path : list[str], id_induc : str, choices : list[Typ]) -> Typ:
+def extract_column(path : tuple[str, ...], id_induc : str, choices : list[Typ]) -> Typ:
+    for i, choice in enumerate(choices):
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+choice {i}: {concretize_typ(choice)}
+~~~~~~~~~~~~~~~~~~~~~
+        """)
     choices_column = [
         extract_field(path, id_induc, choice)
         for choice in choices
+        if choice != Bot()
     ] 
     typ_unio = choices_column[0]
     for choice in choices_column[1:]:
         typ_unio = Unio(typ_unio, choice)
     return LeastFP(id_induc, typ_unio)
 
-def factor_path(path : list[str], least : LeastFP) -> Typ:
+def factor_path(path : tuple[str, ...], least : LeastFP) -> Typ:
     choices = linearize_unions(least.body)
     column = extract_column(path, least.id, choices)
     return column 
 
-def insert_at_path(m : PMap, path : list[str], o):
+def insert_at_path(m : PMap, path : tuple[str, ...], o):
     if path:
         key = path[0]  
         if key in m:
@@ -1274,16 +1284,12 @@ class Solver:
 
                 return models
             else:
-                weak_cache = match_strong(model, strong)
-                if weak_cache:
+                strong_cache = match_strong(model, strong)
+                if strong_cache:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    return self.solve(model, weak_cache, weak)
+                    return self.solve(model, strong_cache, weak)
                 else:
-                    # NOTE: factoring indicates that it can be cached
-                    # TODO: write a separate function called well-formed for clarity
-                    factored = factor_least(weak)
-                    models = self.solve(model, weak, factored)  
-                    if models:
+                    if self.is_relation_constraint_wellformed(model, strong, weak):
                         """
                         relational constraint must be well formed, since a matching factorization exists
                         update model with well formed constraint that can't yet be solved
@@ -1342,6 +1348,11 @@ class Solver:
     '''
     end solve
     '''
+
+    def is_relation_constraint_wellformed(self, model : Model, strong : Typ, weak : LeastFP) -> bool:
+        factored = factor_least(weak)
+        models = self.solve(model, strong, factored)  
+        return bool(models)
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
         self._battery = 100
