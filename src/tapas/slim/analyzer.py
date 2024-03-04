@@ -462,12 +462,6 @@ def extract_field(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
 
 
 def extract_column(path : tuple[str, ...], id_induc : str, choices : list[Typ]) -> Typ:
-    for i, choice in enumerate(choices):
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-choice {i}: {concretize_typ(choice)}
-~~~~~~~~~~~~~~~~~~~~~
-        """)
     choices_column = [
         extract_field(path, id_induc, choice)
         for choice in choices
@@ -1268,11 +1262,32 @@ class Solver:
 
 
         elif isinstance(weak, LeastFP): 
+            print(f'''
+    || DEBUG SOLVE weak, LeastFP
+    =================
+    ||
+    || freezer::: 
+    || :::::::: {model.freezer}
+    ||
+    || premise model::: 
+    || :::::::: {concretize_constraints(tuple(model.constraints))}
+    ||
+    || strong: {concretize_typ(strong)} 
+    ||
+    || <: 
+    ||
+    || weak: {concretize_typ(weak)}
+    ||
+            ''')
+
+
             lenient = all(fv not in model.freezer for fv in extract_free_vars_from_typ(pset(), strong))
+            print(f"~~~~~~~ lenient: {lenient}")
             if lenient:
                 strong = condense_strongest(model, strong) 
             else:
-                strong = condense_weakest(model, strong) 
+                strong = condense_weakest(model, strong)
+
             if not is_relational_key(model, strong) and self._battery != 0:
                 self._battery -= 1
                 '''

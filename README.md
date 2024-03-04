@@ -3,6 +3,7 @@
 
 ### TODO
 - correct issues so `test_app_less_equal_two_one` passes
+    - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - correct generalization of free variables in let rule 
 - develop examples with interesting semantics and test type inference
     - inferring max
