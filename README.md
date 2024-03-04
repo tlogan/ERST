@@ -2,7 +2,7 @@
 
 
 ### TODO
-- fix regressions according to failing tests
+- fix generalization of free variables in let rule 
 - develop examples with interesting semantics and test type inference
     - inferring max
     - encode fibonacci as an example to motivate 2-induction and test k-induction.

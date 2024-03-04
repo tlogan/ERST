@@ -678,6 +678,7 @@ x
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
     print("combo: " + u(combo))
+    assert u(combo) == "@"
 
 def test_idprojection():
     pieces = ['''
@@ -828,32 +829,6 @@ case (~zero @, @) => @
     print("combo: " + u(combo))
     # print("parsetree: " + str(parsetree))
 
-less_equal = ('''
-fix(case self => (
-    case (~zero @, x) => ~true @ 
-    case (~succ a, ~succ b) => self(a,b) 
-    case (~succ x, ~zero @) => ~false @ 
-))
-''')
-
-def test_less_equal():
-    pieces = [less_equal]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    print("combo: " + u(combo))
-    # print("parsetree: " + str(parsetree))
-
-max = (f'''
-let less_equal = {less_equal} ;
-case (x, y) => (
-    if less_equal(x, y) then
-        y
-    else
-        x
-)
-''')
-
 if_true_then_else = (f'''
 if ~true @ then
     ~uno @
@@ -895,8 +870,6 @@ def test_if_false_then_else():
     print("combo: " + u(combo))
     print(parsetree)
 
-
-
 def test_function_if_then_else():
     pieces = [function_if_then_else]
     (combo, guides, parsetree) = analyze(pieces)
@@ -907,18 +880,85 @@ def test_function_if_then_else():
     print("combo: " + u(combo))
     print(parsetree)
 
+
+less_equal = ('''
+fix(case self => (
+    case (~zero @, x) => ~true @ 
+    case (~succ a, ~succ b) => self(a,b) 
+    case (~succ x, ~zero @) => ~false @ 
+))
+''')
+
+def test_less_equal():
+    pieces = [less_equal]
+    (combo, guides, parsetree) = analyze(pieces)
+    raise_guide(guides)
+    assert combo
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
+
+def test_let_less_equal():
+    let_less = (f'''
+let less_equal = {less_equal} ;
+less_equal
+    ''')
+    pieces = [let_less]
+    (combo, guides, parsetree) = analyze(pieces)
+    # print(parsetree)
+    assert combo
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
+
+
+def test_app_less_equal():
+    app_less = (f'''
+let less_equal = {less_equal} ;
+less_equal(~zero @, ~succ ~zero @)
+    ''')
+#     app_less = (f'''
+# let less_equal = {less_equal} ;
+# less_equal
+#     ''')
+    pieces = [app_less]
+    (combo, guides, parsetree) = analyze(pieces)
+    # print(parsetree)
+    assert combo
+    print("combo: " + u(combo))
+    # print("parsetree: " + str(parsetree))
+
+max = (f'''
+let less_equal = {less_equal} ;
+case (x, y) => (
+    if less_equal(x, y) then
+        y
+    else
+        x
+)
+''')
+
 def test_max():
     # TODO
+
+#     max = (f'''
+# let less_equal = {less_equal} ;
+# case (x, y) => less_equal(x, y)
+#     ''')
+
+    max = (f'''
+let less_equal = {less_equal} ;
+less_equal(~zero @, ~succ ~zero @)
+    ''')
     pieces = [max]
     (combo, guides, parsetree) = analyze(pieces)
+    print(parsetree)
     # raise_guide(guides)
-    # print(parsetree)
     # assert combo
     # print("combo: " + u(combo))
 
 
 if __name__ == '__main__':
-    test_tuple()
+    test_let_less_equal()
+    # test_less_equal()
     pass
 
 #######################################################################

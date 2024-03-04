@@ -151,7 +151,7 @@ def serializedATN():
         6,0,355,356,6,13,-1,0,356,358,1,0,0,0,357,351,1,0,0,0,357,352,1,
         0,0,0,358,27,1,0,0,0,359,372,1,0,0,0,360,361,3,30,15,0,361,362,6,
         14,-1,0,362,372,1,0,0,0,363,364,6,14,-1,0,364,365,3,30,15,0,365,
-        366,6,14,-1,0,366,367,5,11,0,0,367,368,6,14,-1,0,368,369,3,30,15,
+        366,6,14,-1,0,366,367,5,11,0,0,367,368,6,14,-1,0,368,369,3,28,14,
         0,369,370,6,14,-1,0,370,372,1,0,0,0,371,359,1,0,0,0,371,360,1,0,
         0,0,371,363,1,0,0,0,372,29,1,0,0,0,373,396,1,0,0,0,374,375,5,31,
         0,0,375,396,6,15,-1,0,376,377,5,31,0,0,377,396,6,15,-1,0,378,379,
@@ -2016,14 +2016,15 @@ class SlimParser ( Parser ):
             self.combo = None
             self._pattern_base = None # Pattern_baseContext
             self.head = None # Pattern_baseContext
-            self.tail = None # Pattern_baseContext
+            self.tail = None # PatternContext
             self.nt = nt
 
-        def pattern_base(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(SlimParser.Pattern_baseContext)
-            else:
-                return self.getTypedRuleContext(SlimParser.Pattern_baseContext,i)
+        def pattern_base(self):
+            return self.getTypedRuleContext(SlimParser.Pattern_baseContext,0)
+
+
+        def pattern(self):
+            return self.getTypedRuleContext(SlimParser.PatternContext,0)
 
 
         def getRuleIndex(self):
@@ -2078,7 +2079,7 @@ class SlimParser ( Parser ):
                 nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, localctx.head.combo)
 
                 self.state = 368
-                localctx.tail = self.pattern_base(nt_tail)
+                localctx.tail = self.pattern(nt_tail)
 
                 localctx.combo = self.collect(PatternRule(self._solver, nt).combine_tuple, localctx.head.combo, localctx.tail.combo) 
 

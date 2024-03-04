@@ -1737,12 +1737,12 @@ public class SlimParser extends Parser {
 		public PatternAttr combo;
 		public Pattern_baseContext pattern_base;
 		public Pattern_baseContext head;
-		public Pattern_baseContext tail;
-		public List<Pattern_baseContext> pattern_base() {
-			return getRuleContexts(Pattern_baseContext.class);
+		public PatternContext tail;
+		public Pattern_baseContext pattern_base() {
+			return getRuleContext(Pattern_baseContext.class,0);
 		}
-		public Pattern_baseContext pattern_base(int i) {
-			return getRuleContext(Pattern_baseContext.class,i);
+		public PatternContext pattern() {
+			return getRuleContext(PatternContext.class,0);
 		}
 		public PatternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public PatternContext(ParserRuleContext parent, int invokingState, Nonterm nt) {
@@ -1791,7 +1791,7 @@ public class SlimParser extends Parser {
 				nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, ((PatternContext)_localctx).head.combo)
 
 				setState(368);
-				((PatternContext)_localctx).tail = pattern_base(nt_tail);
+				((PatternContext)_localctx).tail = pattern(nt_tail);
 
 				_localctx.combo = self.collect(PatternRule(self._solver, nt).combine_tuple, ((PatternContext)_localctx).head.combo, ((PatternContext)_localctx).tail.combo) 
 
@@ -2295,7 +2295,7 @@ public class SlimParser extends Parser {
 		"\uffff\u0000\u016a\u0174\u0001\u0000\u0000\u0000\u016b\u016c\u0006\u000e"+
 		"\uffff\uffff\u0000\u016c\u016d\u0003\u001e\u000f\u0000\u016d\u016e\u0006"+
 		"\u000e\uffff\uffff\u0000\u016e\u016f\u0005\u000b\u0000\u0000\u016f\u0170"+
-		"\u0006\u000e\uffff\uffff\u0000\u0170\u0171\u0003\u001e\u000f\u0000\u0171"+
+		"\u0006\u000e\uffff\uffff\u0000\u0170\u0171\u0003\u001c\u000e\u0000\u0171"+
 		"\u0172\u0006\u000e\uffff\uffff\u0000\u0172\u0174\u0001\u0000\u0000\u0000"+
 		"\u0173\u0167\u0001\u0000\u0000\u0000\u0173\u0168\u0001\u0000\u0000\u0000"+
 		"\u0173\u016b\u0001\u0000\u0000\u0000\u0174\u001d\u0001\u0000\u0000\u0000"+

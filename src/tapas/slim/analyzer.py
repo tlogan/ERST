@@ -366,7 +366,7 @@ def make_diff(context : Typ, negs : list[Typ]) -> Typ:
     return result
 
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
-    return Inter(TField("left", left), TField("right", right))
+    return Inter(TField("head", left), TField("tail", right))
 
 def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     '''
@@ -1615,11 +1615,18 @@ class ExprRule(Rule):
         '''
         assumption: target type is assumed to be well formed / inhabitable
         '''
+        # TODO: only generalize the free variables; there's an error causing rebinding of all-bound variable
+        # free_ids = extract_free_vars_from_typ(pset(), target)
+        # target_generalized = target
+        # for fid in reversed(list(free_ids)):
+        #     target_generalized = All(fid, Top(), target_generalized) 
+        # enviro = self.nt.enviro.set(id, target_generalized)
+        #################################
         free_ids = extract_free_vars_from_typ(pset(), target)
         target_generalized = target
         for fid in reversed(list(free_ids)):
             target_generalized = All(fid, Top(), target_generalized) 
-        enviro = self.nt.enviro.set(id, target_generalized)
+        enviro = self.nt.enviro.set(id, target)
 
         return Nonterm('expr', enviro, self.nt.typ)
 

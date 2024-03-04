@@ -523,7 +523,7 @@ nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
 self.guide_symbol(',')
 } ',' {
 nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = pattern_base[nt_tail] {
+} tail = pattern[nt_tail] {
 $combo = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
