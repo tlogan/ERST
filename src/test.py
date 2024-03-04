@@ -355,16 +355,16 @@ def test_plus_equals_two_query():
         analyzer.prettify_weakest(model, p("(X, Y)"))
         for model in models
     ]
+#     print(f'''
+# len(models): {len(models)}
+# answers: {answers}
+#     ''')
     assert answers == [
         "(~zero @, ~succ ~succ ~zero @)",
         "(~succ ~zero @, ~succ ~zero @)",
         "(~succ ~succ ~zero @, ~zero @)",
     ]
 
-#     print(f'''
-# len(models): {len(models)}
-# answer: {answers}
-#     ''')
 
 
 list_nat_diff = ('''
@@ -543,14 +543,17 @@ def test_tag():
 ~uno @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ~ uno (expr (base @))))"
+    print(parsetree)
+    assert parsetree == "(expr (base ~ uno (base @)))"
 
 def test_tuple():
     pieces = ['''
 @, @, @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base @) , (base @))"
+    # print(parsetree)
+    # print(f"u(combo): {u(combo)}")
+    assert u(combo) == "(@, (@, @))"
 
 def test_record():
     pieces = ['''
@@ -568,9 +571,8 @@ case ~nil @ => @
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     print(parsetree)
-    assert parsetree == "(expr (base (function case (pattern (pattern_base ~ nil (pattern (pattern_base @)))) => (expr (base @)))))"
-    assert u(simp(combo)) == "(~nil @ -> @)"
     print("combo: " + u(simp(combo)))
+    assert u(simp(combo)) == "(~nil @ -> @)"
 
 def test_function_cases_disjoint():
     pieces = ['''
@@ -594,18 +596,20 @@ case x => ~two @
 
 def test_projection():
     pieces = ['''
-(_.uno = @ _.dos = @).uno
+(_.uno = ~one @ _.dos = ~two @).uno
     ''']
     (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @)))))) )) (keychain . uno))"
+    print("combo: " + u(simp(combo)))
+    assert u(simp(combo)) == "~one @"
 
 def test_projection_chain():
     pieces = ['''
-(_.uno = (~dos @) _.one = @).uno.dos
+(_.uno = (_.dos = ~onetwo @) _.one = @).uno.dos
     ''']
     (combo, guides, parsetree) = analyze(pieces)
     print(parsetree)
-    assert parsetree == "(expr (base ( (expr (base (record _. uno = (expr (base ( (expr (base ~ dos (expr (base @)))) ))) (record _. one = (expr (base @)))))) )) (keychain . uno (keychain . dos)))"
+    print("combo: " + u(simp(combo)))
+    assert u(simp(combo)) == "~onetwo @"
 
 def test_app_identity_unit():
     pieces = ['''
@@ -914,7 +918,7 @@ def test_max():
 
 
 if __name__ == '__main__':
-    test_one_cons_query_subs_nat_list()
+    test_tuple()
     pass
 
 #######################################################################

@@ -181,7 +181,7 @@ $combo = Imp($typ_base.combo, $typ.combo)
 
 // Tuple 
 | typ_base ',' typ {
-$combo = Inter(TField('left', $typ_base.combo), TField('right', $typ.combo)) 
+$combo = Inter(TField('head', $typ_base.combo), TField('tail', $typ.combo)) 
 }
 
 // Existential unconstrained 
@@ -277,7 +277,7 @@ nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
 self.guide_symbol(',')
 } ',' {
 nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = base[nt_tail] {
+} tail = expr[nt_tail] {
 $combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
 }
 
@@ -588,33 +588,6 @@ $combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, $ID.text
 
 ;
 
-
-
-// thing returns [str result]: 
-//     | 'fun' param = expr '=>' body = expr {
-//         $result = f'(fun {$param.result} {$body.result})'
-//     }
-//     ;
-
-// things : 
-//     | thing
-//     | things thing
-//     ;
-
-// typ :
-//     | 'unit'
-//     | 'top'
-//     | 'bot'
-//     | ID '//' typ 
-//     | ID 'in' typ 
-//     | typ '&' typ 
-//     | typ '*' typ 
-//     | typ '|' typ 
-//     | typ '->' typ 
-//     | '{' ID ('<:' typ)? ('with' typ '<:' typ)* ('#' (ID)+)? '}'
-//     | '[' ID ('<:' typ)? ']' typ 
-//     | ID '@' typ 
-//     ;
 
 
 ID : [a-zA-Z][_a-zA-Z]* ;

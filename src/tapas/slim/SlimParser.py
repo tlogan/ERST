@@ -96,7 +96,7 @@ def serializedATN():
         1,0,0,0,166,160,1,0,0,0,166,161,1,0,0,0,167,11,1,0,0,0,168,232,1,
         0,0,0,169,170,3,14,7,0,170,171,6,6,-1,0,171,232,1,0,0,0,172,173,
         6,6,-1,0,173,174,3,14,7,0,174,175,6,6,-1,0,175,176,5,11,0,0,176,
-        177,6,6,-1,0,177,178,3,14,7,0,178,179,6,6,-1,0,179,232,1,0,0,0,180,
+        177,6,6,-1,0,177,178,3,12,6,0,178,179,6,6,-1,0,179,232,1,0,0,0,180,
         181,5,20,0,0,181,182,6,6,-1,0,182,183,3,12,6,0,183,184,6,6,-1,0,
         184,185,5,21,0,0,185,186,6,6,-1,0,186,187,3,12,6,0,187,188,6,6,-1,
         0,188,189,5,22,0,0,189,190,6,6,-1,0,190,191,3,12,6,0,191,192,6,6,
@@ -702,7 +702,7 @@ class SlimParser ( Parser ):
                 self.state = 94
                 localctx._typ = self.typ()
 
-                localctx.combo = Inter(TField('left', localctx._typ_base.combo), TField('right', localctx._typ.combo)) 
+                localctx.combo = Inter(TField('head', localctx._typ_base.combo), TField('tail', localctx._typ.combo)) 
 
                 pass
 
@@ -1043,7 +1043,7 @@ class SlimParser ( Parser ):
             self.combo = None
             self._base = None # BaseContext
             self.head = None # BaseContext
-            self.tail = None # BaseContext
+            self.tail = None # ExprContext
             self.condition = None # ExprContext
             self.branch_true = None # ExprContext
             self.branch_false = None # ExprContext
@@ -1057,11 +1057,8 @@ class SlimParser ( Parser ):
             self.body = None # ExprContext
             self.nt = nt
 
-        def base(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(SlimParser.BaseContext)
-            else:
-                return self.getTypedRuleContext(SlimParser.BaseContext,i)
+        def base(self):
+            return self.getTypedRuleContext(SlimParser.BaseContext,0)
 
 
         def expr(self, i:int=None):
@@ -1142,7 +1139,7 @@ class SlimParser ( Parser ):
                 nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, localctx.head.combo)
 
                 self.state = 177
-                localctx.tail = self.base(nt_tail)
+                localctx.tail = self.expr(nt_tail)
 
                 localctx.combo = self.collect(ExprRule(self._solver, nt).combine_tuple, localctx.head.combo, localctx.tail.combo) 
 
