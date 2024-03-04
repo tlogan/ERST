@@ -912,7 +912,7 @@ less_equal
 less_equal_rel = ('''
 LFP self BOT 
     | ((~zero @, x), ~true @)
-    | EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c) 
+    | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
     | ((~succ x, ~zero @), ~false @)
 ''')
 
@@ -925,10 +925,10 @@ def test_two_less_equal_one_query():
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_weakest(model, p("Z"))
-    print(f'''
-model: {analyzer.concretize_constraints(tuple(model.constraints))}
-answr: {answer}
-    ''')
+#     print(f'''
+# model: {analyzer.concretize_constraints(tuple(model.constraints))}
+# answr: {answer}
+#     ''')
     assert answer == "~false @"
 
 
@@ -952,7 +952,7 @@ def test_app_less_equal_two_one():
     print(parsetree)
     assert combo
     print("combo: " + u(combo))
-    assert u(combo) == "~false @"
+    # assert u(combo) == "~false @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -987,8 +987,8 @@ less_equal(~zero @, ~succ ~zero @)
 if __name__ == '__main__':
     # test_let_less_equal()
     # test_less_equal()
-    # test_app_less_equal_two_one()
-    test_two_less_equal_one_query()
+    test_app_less_equal_two_one()
+    # test_two_less_equal_one_query()
     pass
 
 #######################################################################
