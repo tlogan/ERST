@@ -619,7 +619,8 @@ def condense_strongest(model : Model, typ : Typ, strict : bool) -> Typ:
             id : condense_strongest(model, strongest, strict)
             for id in fvs
             for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if strongest != Bot() or strict 
+            # if strongest != Bot() or strict or id not in model.freezer
+            if strict or (strongest != Bot() and id not in model.freezer)
         })
         return sub_typ(renaming, typ)
 
@@ -634,7 +635,8 @@ def condense_weakest(model : Model, typ : Typ, strict : bool) -> Typ:
             id : condense_weakest(model, weakest, strict)
             for id in fvs
             for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
-            if weakest != Top() or strict 
+            # if weakest != Top() or strict or id not in model.freezer
+            if strict or (weakest != Top() and id not in model.freezer)
         })
         return sub_typ(renaming, typ)
 

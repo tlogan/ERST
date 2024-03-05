@@ -257,11 +257,12 @@ def test_two_cons_query_subs_nat_list():
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_weakest(model, p("X"))
-    assert answer == "~cons ~nil @"
     print(f"""
-model: {analyzer.concretize_constraints(tuple(model.constraints))}
+freezer: {model.freezer}
+constraints: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
+    assert answer == "~cons ~nil @"
 
 def test_even_list_subs_nat_list():
     models = solve(even_list, nat_list)
@@ -982,7 +983,7 @@ def test_app_less_equal_two_one():
     print(parsetree)
     assert combo
     print("combo: " + u(combo))
-    # assert u(combo) == "~false @"
+    assert u(combo) == "~false @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -1016,7 +1017,9 @@ less_equal(~zero @, ~succ ~zero @)
 
 if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
-    test_even_list_subs_nat_list()
+    # test_even_list_subs_nat_list()
+    # test_two_cons_query_subs_nat_list()
+    test_app_less_equal_two_one()
     pass
 
 #######################################################################
