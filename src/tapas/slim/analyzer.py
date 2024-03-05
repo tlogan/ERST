@@ -1084,23 +1084,11 @@ class Solver:
 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
             weakest_strong = condense_weakest(model, strong, strict = True)
-            if weakest_strong == Top() and isinstance(weak, TVar):
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
-                )]
-            else:
-                return self.solve(model, weakest_strong, weak)
+            return self.solve(model, weakest_strong, weak)
 
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
             strongest_weak = condense_strongest(model, weak, strict = False)
-            if strongest_weak == Bot() and isinstance(strong, TVar):
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
-                )]
-            else:
-                return self.solve(model, strong, strongest_weak)
+            return self.solve(model, strong, strongest_weak)
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
             strongest = extract_strongest_from_id(model, strong.id)

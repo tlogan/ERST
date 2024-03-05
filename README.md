@@ -2,7 +2,6 @@
 
 
 ### TODO
-- consider refining precision of TVar rules in case where both are variables 
 - in `condense` procedures, consider using freezer as indication for substituting or not instead of parameter
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
