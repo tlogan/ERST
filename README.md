@@ -2,7 +2,7 @@
 
 
 ### TODO
-- in `condense` procedures, consider using freezer as indication for substituting or not instead of parameter
+- avoid interpreting frozen variables in lenient (strict=False) interpretation.
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - correct generalization of free variables in let rule 
