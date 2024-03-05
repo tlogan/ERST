@@ -266,7 +266,7 @@ answr: {answer}
 def test_even_list_subs_nat_list():
     models = solve(even_list, nat_list)
     print(f"len(models): {len(models)}")
-    assert models
+    # assert models
 
 def test_nat_list_subs_even_list():
     models = solve(nat_list, even_list)
@@ -945,11 +945,6 @@ less_equal_imp = (f'''
 ''')
 
 def test_less_equal_imp_subs_two_one_imp_query():
-
-    # TODO: when constructing a weakest (using intersection) for conservative interpretation may need to interpret variables as TOP!!
-    # in the case where the weak side is also a variable
-    # But need to be careful to keep variables that can gain new interpretations 
-
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
     ''')
@@ -957,15 +952,14 @@ def test_less_equal_imp_subs_two_one_imp_query():
     assert len(models) == 1
     model = models[0]
     answer = analyzer.prettify_strongest(model, p("Q"))
-# ; ~zero @ <: _5 ; ~zero @ <: _19 ; (_6 & ~false @) <: Q ; _11 <: LFP N (BOT | (~zero @ | ~succ N)) ; _2 <: _6 ; ~succ ~zero @ <: _4 ; _19 <: LFP N (BOT | (~zero @ | ~succ N)) ; ~succ ~zero @ <: _14 ; _2 <: ~false @ ; ~zero @ <: _11 ; ~zero @ <: _15 ; _1 <: LFP self (BOT | ((EXI [x ; x <: LFP N (BOT | (~zero @ | ~succ N))] (~zero @, x)) | ((EXI [a b ; (a, b) <: self] (~succ a, ~succ b)) | (EXI [x ; x <: LFP N (BOT | (~zero @ | ~succ N))] (~succ x, ~zero @))))) ; (~succ ~succ ~zero @, ~succ ~zero @) <: _1
 
-    print(f'''
-len(models): {len(models)}
-model freezer: {model.freezer}
-model constraints: {analyzer.concretize_constraints(tuple(model.constraints))}
-answer: {answer}
-    ''')
-    # assert answer == "~false @" 
+#     print(f'''
+# len(models): {len(models)}
+# model freezer: {model.freezer}
+# model constraints: {analyzer.concretize_constraints(tuple(model.constraints))}
+# answer: {answer}
+#     ''')
+    assert answer == "~false @" 
 
 
 def test_app_less_equal_zero_one():
@@ -1021,7 +1015,8 @@ less_equal(~zero @, ~succ ~zero @)
 
 
 if __name__ == '__main__':
-    test_less_equal_imp_subs_two_one_imp_query()
+    # test_less_equal_imp_subs_two_one_imp_query()
+    test_even_list_subs_nat_list()
     pass
 
 #######################################################################

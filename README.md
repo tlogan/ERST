@@ -2,9 +2,12 @@
 
 
 ### TODO
+- consider refining precision of TVar rules in case where both are variables 
+- in `condense` procedures, consider using freezer as indication for substituting or not instead of parameter
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - correct generalization of free variables in let rule 
+- check that combine_app rule isn't redundant with checks in distill app rules.
 - develop examples with interesting semantics and test type inference
     - inferring max
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
