@@ -118,7 +118,7 @@ foo (fun x => some x)
 
 
 \begin{frame}[fragile]
-  \frametitle{Intersection as Constrained Parametric Polymorphism}
+  \frametitle{Constrained Variable as Intersection}
   \begin{itemize}
   \item intersection in parameter type 
   \begin{lstlisting}
@@ -128,7 +128,7 @@ ALL a b .
   \item is the weakest interpretation of the parameter type in 
   \begin{lstlisting}
 ALL a b c 
-  {c <: Int -> a, c <: Bool -> b}. 
+  {c <: Int -> a, c <: Bool -> b} . 
   c -> (a,b)
   \end{lstlisting}
   \end{itemize}
@@ -155,7 +155,7 @@ bar : ALL a b .
 
 
 \begin{frame}[fragile]
-  \frametitle{Union as Constrained Parametric Polymorphism}
+  \frametitle{Constrained Variable as Union}
 
   \begin{itemize}
   \item union in return type 
@@ -209,15 +209,11 @@ fn x => foo (fn y => x (y, y))
   \item the inner function's type is generalized 
   \begin{lstlisting}
 (fn y => x (y, y)) : 
-ALL B ... {...} . B -> T
+ALL b . b -> c 
   \end{lstlisting}
-  \item if bound variable leaks into outer constraint 
+  \item unsound if bound variable leaks into outer constraint 
   \begin{lstlisting}
-x : A, A <: (B,B) -> T
-  \end{lstlisting}
-  \item then unsound 
-  \begin{lstlisting}
-x : A, A <: Int -> T
+x : a, a <: (b,b) -> c 
   \end{lstlisting}
   \end{itemize}
 \end{frame}
@@ -229,19 +225,19 @@ x : A, A <: Int -> T
   \item extrude types that are too polymorphic
   \begin{lstlisting}
 (fn y => x (y, y)) : 
-ALL B ... {B <: B', ...} . B -> T
+ALL b {b <: b'} . b -> c 
   \end{lstlisting}
   \item constrain outer param with extruded type  
   \begin{lstlisting}
-A <: (B',B') -> T
+a <: (b',b') -> c
   \end{lstlisting}
   \item generate instantiated constraints 
   \begin{lstlisting}
-A <: (B',B') -> T, Int <: B', Bool <: B' 
+a <: (b',b') -> c, Int <: b', Bool <: b' 
   \end{lstlisting}
   \item or as union 
   \begin{lstlisting}
-A <: (Int|Bool, Int|Bool) -> T
+a <: (Int|Bool, Int|Bool) -> c
   \end{lstlisting}
   \end{itemize}
 \end{frame}
@@ -271,7 +267,7 @@ L <: U
   \begin{itemize}
   \item solve constraint with parametric type on the left 
   \begin{lstlisting}
-ALL a {L <: U} T <: V
+ALL a {L <: U} . T <: V
   \end{lstlisting}
   \item free the variables and solve apparent constraints 
   \begin{lstlisting}
@@ -297,6 +293,16 @@ c_sk <: a, b <: c_sk
   \begin{lstlisting}
 TOP <: a, b <: BOT  
   \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Main Ideas}
+
+  \begin{itemize}
+  \item use intersection and union to infer satisfactory types 
+  \item limit intersection/union to negative/positive positions 
+  \item solve for variable bounds in subtyping constraints  
   \end{itemize}
 \end{frame}
 

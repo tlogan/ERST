@@ -1378,6 +1378,11 @@ INPUT ./super_F_talk.vrb
 INPUT super_F_talk.vrb
 INPUT ./super_F_talk.vrb
 INPUT super_F_talk.vrb
+OUTPUT super_F_talk.vrb
+INPUT ./super_F_talk.vrb
+INPUT super_F_talk.vrb
+INPUT ./super_F_talk.vrb
+INPUT super_F_talk.vrb
 OUTPUT super_F_talk.nav
 OUTPUT super_F_talk.toc
 OUTPUT super_F_talk.snm
