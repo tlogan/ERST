@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.17)  6 MAR 2024 22:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.17)  6 MAR 2024 23:23
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -752,9 +752,7 @@ Dictionary: translator-numbers-dictionary, Language: English
 Dictionary: translator-theorem-dictionary, Language: English 
 )
 \c@lstlisting=\count353
- (./super_F_talk.nav) [1
-
-{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+ (./super_F_talk.nav)
 LaTeX Font Info:    Trying to load font information for U+msa on input line 40.
  (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
@@ -766,7 +764,12 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 LaTeX Font Info:    Trying to load font information for OT1+mathkerncmss on input line 40.
  (/usr/local/texlive/2023/texmf-dist/tex/latex/sansmathaccent/ot1mathkerncmss.fd
 File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/mathkerncmss.
-) [2
+) [1
+
+{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+\openout4 = `super_F_talk.vrb'.
+
+ (./super_F_talk.vrb) [2
 
 ]
 \openout4 = `super_F_talk.vrb'.
@@ -796,17 +799,17 @@ File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/mat
 ]
 \openout4 = `super_F_talk.vrb'.
 
- (./super_F_talk.vrb) [8
-
-]
-\openout4 = `super_F_talk.vrb'.
-
  (./super_F_talk.vrb
 Overfull \hbox (4.34712pt too wide) in paragraph at lines 6--7
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-) [9
+) [8
+
+]
+\openout4 = `super_F_talk.vrb'.
+
+ (./super_F_talk.vrb) [9
 
 ]
 \openout4 = `super_F_talk.vrb'.
@@ -831,143 +834,12 @@ Overfull \hbox (4.34712pt too wide) in paragraph at lines 6--7
 ]
 \openout4 = `super_F_talk.vrb'.
 
- (./super_F_talk.vrb (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-)) [14
+ (./super_F_talk.vrb) [14
 
 ]
 \openout4 = `super_F_talk.vrb'.
 
- (./super_F_talk.vrb (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-) (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/lstlang2.sty
-File: lstlang2.sty 2023/02/27 1.9 listings language file
-)) [15
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [16
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb
-Overfull \hbox (8.3013pt too wide) in paragraph at lines 5--6
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-) [17
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb
-Overfull \hbox (8.3013pt too wide) in paragraph at lines 5--6
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-) [18
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [19
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [20
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [21
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [22
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [23
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [24
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [25
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [26
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [27
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [28
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [29
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [30
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [31
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [32
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [33
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [34
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [35
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb
-Overfull \hbox (11.65482pt too wide) in paragraph at lines 15--16
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-) [36
-
-]
-\openout4 = `super_F_talk.vrb'.
-
- (./super_F_talk.vrb) [37
+ (./super_F_talk.vrb) [15
 
 ]
 \tf@nav=\write6
@@ -984,18 +856,18 @@ Package rerunfilecheck Info: File `super_F_talk.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 24572 strings out of 476025
- 465997 string characters out of 5790016
- 1886388 words of memory out of 5000000
- 44394 multiletter control sequences out of 15000+600000
- 522999 words of font info for 71 fonts, out of 8000000 for 9000
+ 24079 strings out of 476025
+ 458984 string characters out of 5790016
+ 1872388 words of memory out of 5000000
+ 43998 multiletter control sequences out of 15000+600000
+ 519205 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 128i,14n,122p,499b,1331s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmss12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on super_F_talk.pdf (37 pages, 134211 bytes).
+ 128i,14n,122p,450b,1181s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmss12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
+Output written on super_F_talk.pdf (15 pages, 75842 bytes).
 PDF statistics:
- 1007 PDF objects out of 1200 (max. 8388607)
- 940 compressed objects within 10 object streams
- 75 named destinations out of 1000 (max. 500000)
+ 425 PDF objects out of 1000 (max. 8388607)
+ 390 compressed objects within 4 object streams
+ 31 named destinations out of 1000 (max. 500000)
  43 words of extra memory for PDF output out of 10000 (max. 10000000)
 

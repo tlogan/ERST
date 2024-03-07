@@ -1,16 +1,16 @@
-\frametitle{Expressivity: comparison to Prolog}
+\frametitle{Freezing Right Parametric Type}
 
-  \begin{lstlisting}[]
-  plus(0, A, A).
-  plus(s(A), B, s(C)) :- plus(A, B, C).
-
-
-  $\mu$ plus .
-    $\exists$ $\alpha$ $\Rightarrow$
-      (x $\mapsto$ zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; z $\mapsto$ $\alpha$) |
-    $\exists$ $\alpha$ $\beta$ $\gamma$ ::
-      (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ $\gamma$) $\leq$ plus $\Rightarrow$
-      x $\mapsto$ succ.$\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.$\gamma$
-
+  \begin{itemize}
+  \item solve constraint with parametric type on the right
+  \begin{lstlisting}
+a -> b <: ALL c . c -> c
   \end{lstlisting}
-
+  \item treat the variable as "skolem"
+  \begin{lstlisting}
+c_sk <: a, b <: c_sk
+  \end{lstlisting}
+  \item interpret skolem conservatively
+  \begin{lstlisting}
+TOP <: a, b <: BOT
+  \end{lstlisting}
+  \end{itemize}
