@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1709778858 "/Users/thomas/tlogan@github.com/lightweight-tapas/super_F_talk/super_F_talk.tex" "super_F_talk.pdf" "super_F_talk" 1709778860 0
-  "/Users/thomas/tlogan@github.com/lightweight-tapas/super_F_talk/super_F_talk.tex" 1709778858 13124 4cb0499dd4093b74acd691794be675a0 ""
+["pdflatex"] 1709786151 "/Users/thomas/tlogan@github.com/lightweight-tapas/super_F_talk/super_F_talk.tex" "super_F_talk.pdf" "super_F_talk" 1709786152 0
+  "/Users/thomas/tlogan@github.com/lightweight-tapas/super_F_talk/super_F_talk.tex" 1709786150 15720 c3f36c39f987c1e33f4833543a6e492d ""
   "/usr/local/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1246382020 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -204,11 +204,11 @@
   "/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1700237641 4623355 b8cad38412faebe1ce5b780a45db67bd ""
   "/usr/local/texlive/2023/texmf-var/web2c/pdftex/pdflatex.fmt" 1700237588 7883461 4a75b230a61073ee7515c9a020beb60d ""
   "/usr/local/texlive/2023/texmf.cnf" 1678822455 577 1b2b1af17af2508fb20dd85783af4050 ""
-  "super_F_talk.aux" 1709778860 4952 1f55d6ba0957b0f92e10e0916b5ef3f3 "pdflatex"
-  "super_F_talk.nav" 1709778860 3155 b379335c0c1e73cb5bf3ba258b1317d0 "pdflatex"
-  "super_F_talk.out" 1709778859 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
-  "super_F_talk.tex" 1709778858 13124 4cb0499dd4093b74acd691794be675a0 ""
-  "super_F_talk.vrb" 1709778860 517 a10d93635dbaddb3332aa812da919e75 "pdflatex"
+  "super_F_talk.aux" 1709786152 5597 0523ab7504b40f019be1fee8df65d2d6 "pdflatex"
+  "super_F_talk.nav" 1709786152 3620 0d24747d224889f3dce48efcb712964f "pdflatex"
+  "super_F_talk.out" 1709786151 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "super_F_talk.tex" 1709786150 15720 c3f36c39f987c1e33f4833543a6e492d ""
+  "super_F_talk.vrb" 1709786152 517 a10d93635dbaddb3332aa812da919e75 "pdflatex"
   (generated)
   "super_F_talk.aux"
   "super_F_talk.log"

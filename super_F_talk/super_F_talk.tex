@@ -8,14 +8,14 @@
 
 
 \lstset{
-    identifierstyle=\color{black},
+    % identifierstyle=\color{purple},
     % textcolor=blue,
     % keywordstyle=\color{blue},
     keywordstyle=\text,
     basicstyle=\ttfamily,
     mathescape=true,
     showspaces=false,
-    morekeywords={let, fix}
+    % morekeywords={if, then, else, fn}
 }
 
 \title{Subtyping Constraints and Type Inference}
@@ -85,14 +85,17 @@ foo (fun x => some x)
 \begin{frame}[fragile]
   \frametitle{Intersection as Savior}
 
+  \begin{itemize}
+  \item multiple application
   \begin{lstlisting}
 foo f = (f 123, f True)
   \end{lstlisting}
-
+  \item suggests intersection in parameter type  
   \begin{lstlisting}
 foo : ALL a b . 
       ((Int -> a) & (Bool -> b)) -> (a,b)
   \end{lstlisting}
+  \end{itemize}
 \end{frame}
 
 
@@ -127,6 +130,118 @@ ALL a b .
 ALL a b c 
   {c <: Int -> a, c <: Bool -> b}. 
   c -> (a,b)
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Union as Savior}
+
+  \begin{itemize}
+  \item branching  
+  \begin{lstlisting}
+bar f x = if (f x) then f else (fn x => x)
+  \end{lstlisting}
+
+  \item suggests union in return type 
+  \begin{lstlisting}
+bar : ALL a b . 
+      (a & (b -> Bool)) -> 
+      b -> (a | (ALL d . d -> d))
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Union as Constrained Parametric Polymorphism}
+
+  \begin{itemize}
+  \item union in return type 
+  \begin{lstlisting}
+bar : ALL a b . 
+      (a & (b -> Bool)) -> 
+      b -> (a | (ALL d . d -> d))
+  \end{lstlisting}
+  \item is the strongest interpretation of the return type in 
+  \begin{lstlisting}
+bar : ALL a b c {
+        a <: b -> Bool, 
+        a <: c, 
+        (ALL d . d -> d) <: c
+      } . a -> b -> c
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Restricted User Annotations}
+
+  \begin{itemize}
+  \item bounds/intersections are *not* allowed in annotations 
+  \begin{lstlisting}
+foo (
+  add : (Int -> Int) & (Str -> Str)
+) : T = ...
+  \end{lstlisting}
+  \item to avoid backtracking search in constraint solving 
+  \begin{lstlisting}
+(Int -> Int) & (Str -> Str) <: U
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Leaky Bound Variable}
+
+
+  \begin{itemize}
+  \item recall 
+  \begin{lstlisting}
+foo f = (f 123, f True)
+  \end{lstlisting}
+  \item consider the expression 
+  \begin{lstlisting}
+fn x => foo (fn y => x (y, y))
+  \end{lstlisting}
+  \item the inner function's type is generalized 
+  \begin{lstlisting}
+(fn y => x (y, y)) : 
+ALL B ... {...} . B -> T
+  \end{lstlisting}
+  \item if bound variable leaks into outer constraint 
+  \begin{lstlisting}
+x : A, A <: (B,B) -> T
+  \end{lstlisting}
+  \item then unsound 
+  \begin{lstlisting}
+x : A, A <: Int -> T
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Subtype Extrusion}
+
+  \begin{itemize}
+  \item extrude types that are too polymorphic
+  \begin{lstlisting}
+(fn y => x (y, y)) : 
+ALL B ... {B <: B', ...} . B -> T
+  \end{lstlisting}
+  \item constrain outer param with extruded type  
+  \begin{lstlisting}
+A <: (B',B') -> T
+  \end{lstlisting}
+  \item generate instantiated constraints 
+  \begin{lstlisting}
+A <: (B',B') -> T, Int <: B', Bool <: B' 
+  \end{lstlisting}
+  \item or as union 
+  \begin{lstlisting}
+A <: (Int|Bool, Int|Bool) -> T
   \end{lstlisting}
   \end{itemize}
 \end{frame}
