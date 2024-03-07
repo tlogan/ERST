@@ -1,0 +1,524 @@
+\documentclass{beamer}
+
+\usepackage{mathpartir}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+
+
+\lstset{
+    identifierstyle=\color{black},
+    % textcolor=blue,
+    % keywordstyle=\color{blue},
+    keywordstyle=\text,
+    basicstyle=\ttfamily,
+    mathescape=true,
+    showspaces=false,
+    morekeywords={let, fix}
+}
+
+\title{Subtyping Constraints and Type Inference}
+\author{Thomas Logan}
+% \date{18 November 2022}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{When Subtyping Constraints Liberate}
+
+  \begin{itemize}
+  \item LIONEL PARREAUX, HKUST, Hong Kong, China
+  \item ALEKSANDER BORUCH-GRUSZECKI, EPFL, Switzerland
+  \item ANDONG FAN, HKUST, Hong Kong, China
+  \item CHUN YIN CHAU, HKUST, Hong Kong, China
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Impoverished Type Inference}
+
+  \begin{lstlisting}
+foo f = (f 123, f True)
+  \end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Satifcatory Typing 1}
+
+  \begin{itemize}
+  \item should allow
+  \begin{lstlisting}
+foo (fun x => x)
+  \end{lstlisting}
+  \item where
+  \begin{lstlisting}
+(fun x => x) : ALL a . a -> a
+  \end{lstlisting}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Satifcatory Typing 2}
+
+  \begin{itemize}
+  \item should allow
+  \begin{lstlisting}
+foo (fun x => some x)
+  \end{lstlisting}
+  \item where
+  \begin{lstlisting}
+(fun x => some x) : ALL a . a -> Option a
+  \end{lstlisting}
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Intersection as Savior}
+
+  \begin{lstlisting}
+foo f = (f 123, f True)
+  \end{lstlisting}
+
+  \begin{lstlisting}
+foo : ALL a b . 
+      ((Int -> a) & (Bool -> b)) -> (a,b)
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Instantiation as Subtyping}
+
+  \begin{itemize}
+  \item application 
+  \begin{lstlisting}
+foo (fun x => some x)
+  \end{lstlisting}
+  \item generates subtyping constraint to be checked or solved 
+  \begin{lstlisting}
+(ALL a . a -> Option a) 
+         <: 
+((Int -> c) & (Bool -> d))
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Intersection as Constrained Parametric Polymorphism}
+  \begin{itemize}
+  \item intersection in parameter type 
+  \begin{lstlisting}
+ALL a b . 
+  ((Int -> a) & (Bool -> b)) -> (a,b)
+  \end{lstlisting}
+  \item is the weakest interpretation of the parameter type in 
+  \begin{lstlisting}
+ALL a b c 
+  {c <: Int -> a, c <: Bool -> b}. 
+  c -> (a,b)
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{}
+
+  \begin{lstlisting}[language=Python]
+  def foo(x):
+      if isinstance(x, int):
+          return x + 1 
+      else:
+        return x + "abc"
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Prescribed static bounds with datatypes}
+
+  \begin{lstlisting}[language=ML]
+  datatype int_or_str = 
+      Int of int | 
+      Str of string
+
+  fun foo(Int x) = x + 1
+    | foo(Str x) = x . "abc"
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Specification}
+  \begin{itemize}
+  \item Types as specification 
+    \begin{itemize}
+    \item Universal spec: examples, abstract values, resource usage, 
+      pure, temporal, quantitative, probabilistic 
+    \end{itemize}
+  \item Propagation of types   
+    \begin{itemize}
+    \item Expected types decomposed to locally guide at holes and leaf terms   
+    \item Actual types synthesized in case annotations missing 
+    \end{itemize}
+
+  \item Expressivity of types    
+    \begin{itemize}
+    \item Subtyping since static bounds are unprescribed 
+    \item Unification; solving for unknown types in composition 
+    \item Unions and intersections to widen and narrow static bounds 
+    \item Precise relations to guide effectively   
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Propagation: down}
+
+  \begin{lstlisting}
+  $\lambda$ n : nat $\Rightarrow$
+    let first = ($\lambda$ (x,y) : (str $\times$ str) $\Rightarrow$ x) .
+    first (n, _) 
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Propagation: down}
+
+  \begin{lstlisting}
+  $\lambda$ n : nat $\Rightarrow$
+    let first = ($\lambda$ (x,y) : (str $\times$ str) $\Rightarrow$ x) .
+    first (n, _) 
+
+    
+  (n, _) : str $\times$ str
+  n : str   
+  nat $\leq$ str 
+  _ : str  
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Propagation: up}
+
+  \begin{lstlisting}
+  $\lambda$ upper : str $\rightarrow$ str $\Rightarrow$
+  $\hdots$
+  $\lambda$ x $\Rightarrow$ $\lambda$ y $\Rightarrow$
+    cons*(upper x, cons*(upper y,nil*()))
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Propagation: up}
+
+  \begin{lstlisting}
+
+  $\lambda$ upper : str $\rightarrow$ str $\Rightarrow$
+  $\hdots$
+  $\lambda$ x $\Rightarrow$ $\lambda$ y $\Rightarrow$
+    cons*(upper x,cons*(upper y,nil*()))
+
+
+  str $\rightarrow$ str $\rightarrow$
+    cons.(str $\times$ cons.(str $\times$ nil.$\diamondsuit$))
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: widening}
+
+  \begin{lstlisting}
+  ($\lambda$ pair : $\forall$ $\alpha$ $\Rightarrow$ $\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ ($\alpha$ $\times$ $\alpha$) $\Rightarrow$ 
+  ($\lambda$ n : int $\Rightarrow$ ($\lambda$ s : str $\Rightarrow$ 
+    let p = pair n s
+    $\hdots$
+  )))
+
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: widening}
+
+  \begin{lstlisting}
+  ($\lambda$ pair : $\forall$ $\alpha$ $\Rightarrow$ $\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ ($\alpha$ $\times$ $\alpha$) $\Rightarrow$ 
+  ($\lambda$ n : int $\Rightarrow$ ($\lambda$ s : str $\Rightarrow$ 
+    let p = pair n s
+    $\hdots$
+  )))
+
+  $\alpha$ $\mapsto$ (int | ?) 
+  $\alpha$ $\mapsto$ (int | str | ?)
+  pair : $\top$ $\rightarrow$ $\top$ $\rightarrow$ (int | str) $\times$ (int | str)
+
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: narrowing}
+
+  \begin{lstlisting}
+  ($\lambda$ i2n : int $\rightarrow$ nat $\Rightarrow$ 
+  ($\lambda$ s2n : str $\rightarrow$ nat $\Rightarrow$ 
+    let f = $\lambda$ x $\Rightarrow$ (i2n x, s2n x)
+    $\hdots$
+  ))
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: narrowing}
+
+  \begin{lstlisting}
+  ($\lambda$ i2n : int $\rightarrow$ nat $\Rightarrow$ 
+  ($\lambda$ s2n : str $\rightarrow$ nat $\Rightarrow$ 
+    let f = $\lambda$ x $\Rightarrow$ (i2n x, s2n x)
+    $\hdots$
+  ))
+  
+  x : $\alpha$
+  $\alpha$ $\mapsto$ (int ; ?)
+  $\alpha$ $\mapsto$ (int ; str ; ?)
+  x : $\bot$
+  $\lambda$ x $\Rightarrow$ (i2n x, s2n x) : 
+    (int ; str) $\rightarrow$ (nat $\times$ nat) 
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: relational record}
+
+  \begin{lstlisting}[]
+  let measurement : $\mu$ (nat $\times$ list) $\Rightarrow$ 
+    zero.$\diamondsuit$ $\times$ nil.$\diamondsuit$ | 
+    succ.nat $\times$ cons.(? $\times$ list)
+  \end{lstlisting} 
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: relational record expanded}
+
+  \begin{lstlisting}[]
+  let measurement : 
+  $\exists$ $\alpha$ $\Rightarrow$ $\mu$ nat_and_list $\Rightarrow$ 
+    zero.$\diamondsuit$ $\times$ nil.$\diamondsuit$ | 
+    $\exists$ nat list :: 
+      (nat $\times$ list) $\leq$ nat_and_list $\Rightarrow$ 
+      succ.nat.$\times$ cons.($\alpha$ $\times$ list)
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: relational record comparison (Synquid)}
+
+  \begin{lstlisting}[keywords={termination, measure, data, where}]
+  termination measure len :: List $\beta$ $\rightarrow$ Nat 
+  data List $\beta$ where
+    Nil :: {v: List $\beta$ | len v = 0}
+    Cons :: $\beta$ $\rightarrow$ xs: List $\beta$ $\rightarrow$ 
+      {v: List $\beta$ | len v = len xs + 1}
+
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: relational function}
+
+  \begin{lstlisting}[]
+  let replicate : 
+  $\forall$ $\alpha$ $\Rightarrow$ $\alpha$ $\rightarrow$ $\nu$ (nat $\rightarrow$ list) $\Rightarrow$ 
+    zero.$\diamondsuit$ $\rightarrow$ nil.$\diamondsuit$ ; 
+    succ.nat $\rightarrow$ cons.($\alpha$ $\times$ list)
+  \end{lstlisting}
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+  \frametitle{Expressivity: relational function expanded}
+
+  \begin{lstlisting}[]
+  let replicate : 
+  $\forall$ $\alpha$ $\Rightarrow$ $\alpha$ $\rightarrow$ $\nu$ nat_to_list $\Rightarrow$ 
+    zero.$\diamondsuit$ $\rightarrow$ nil.$\diamondsuit$ ; 
+    $\forall$ nat list :: 
+      nat_to_list $\leq$ (nat $\rightarrow$ list) $\Rightarrow$ 
+      succ.nat $\rightarrow$ cons.($\alpha$ $\times$ list)
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+  \frametitle{Expressivity: relational function comparison (Synquid)}
+
+  \begin{lstlisting}[keywords={termination, measure, data, where}]
+  replicate :: n:Nat $\rightarrow$ x:$\alpha$ $\rightarrow$ 
+    {v: List $\alpha$ | len v = n}
+
+  \end{lstlisting}
+
+  \hfill
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: recursive pattern matching}
+  \begin{lstlisting}[]
+  let replicate = 
+  $\lambda$ x $\Rightarrow$ fix ($\lambda$ self $\Rightarrow$ $\lambda$ [
+      zero*() $\Rightarrow$ nil*(),
+      succ*n $\Rightarrow$ cons*(x, self n)
+  ])
+
+  let replicate : 
+  $\forall$ $\alpha$ $\Rightarrow$ $\alpha$ $\rightarrow$ $\nu$ (nat $\rightarrow$ list) $\Rightarrow$ 
+    zero.$\diamondsuit$ $\rightarrow$ nil.$\diamondsuit$ ; 
+    succ.nat $\rightarrow$ cons.($\alpha$ $\times$ list)
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: unification with nat}
+
+  \begin{lstlisting}[]
+  nat $\equiv$ $\mu$ nat $\Rightarrow$ 
+    zero.$\diamondsuit$ | 
+    succ.nat
+
+
+  > zero.$\diamondsuit$ $\leq$ nat 
+  < $\cdot$
+
+  > succ.succ.zero.$\diamondsuit$ $\leq$ nat 
+  < $\cdot$
+
+  > succ.$\alpha$ $\leq$ nat 
+  < $\cdot$, $\alpha$ $\mapsto$ $\mu$ $\beta$ $\Rightarrow$ zero.$\diamondsuit$ | succ.$\beta$
+  \end{lstlisting} 
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: unification with nat and even}
+
+  \begin{lstlisting}[]
+  nat $\equiv$ $\mu$ nat $\Rightarrow$ 
+    zero.$\diamondsuit$ | 
+    succ.nat
+
+  even $\equiv$ $\mu$ even $\Rightarrow$ 
+    zero.$\diamondsuit$ | 
+    succ.succ.even 
+
+
+  > even $\leq$ nat 
+  < $\cdot$
+
+  > nat $\leq$ even 
+  < $\emptyset$
+  \end{lstlisting} 
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: unification with nat list relation}
+
+  \begin{lstlisting}[]
+  nat_list $\equiv$ $\mu$ (nat $\times$ list) $\Rightarrow$ 
+    zero.$\diamondsuit$ $\times$ nil.$\diamondsuit$ | 
+    succ.nat $\times$ cons.(? $\times$ list)
+
+
+  > succ.zero.$\diamondsuit$ $\times$ cons.(? $\times$ cons.(? $\times$ $\alpha$))
+    $\leq$ nat_list
+  < $\emptyset$
+
+  > succ.succ.zero.$\diamondsuit$ $\times$ cons.(? $\times$ $\alpha$) 
+    $\leq$ nat_list
+  < $\cdot$, $\alpha$ $\mapsto$ cons.(? $\times$ nil.$\diamondsuit$)
+  \end{lstlisting} 
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: plus relation}
+
+  \begin{lstlisting}[]
+  $\mu$ plus $\Rightarrow$ 
+    $\exists$ $\alpha$ $\Rightarrow$ 
+      (x $\mapsto$ zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; z $\mapsto$ $\alpha$) |
+    $\exists$ $\alpha$ $\beta$ $\gamma$ :: 
+      (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ $\gamma$) $\leq$ plus $\Rightarrow$ 
+      x $\mapsto$ succ.$\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.$\gamma$
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Expressivity: unification with plus relation}
+
+  \begin{lstlisting}[]
+  plus $\equiv$ $\mu$ plus .
+    $\exists$ $\alpha$ $\Rightarrow$ 
+      (x $\mapsto$ zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; z $\mapsto$ $\alpha$) |
+    $\exists$ $\alpha$ $\beta$ $\gamma$ :: 
+      (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ $\gamma$) $\leq$ plus $\Rightarrow$ 
+      x $\mapsto$ succ.$\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.$\gamma$
+
+  > (x $\mapsto$ succ.zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; 
+     z $\mapsto$ succ.succ.zero.$\diamondsuit$) $\leq$ plus
+  < $\cdot$, $\alpha$ $\mapsto$ succ.zero.$\diamondsuit$)
+
+  > (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.zero.$\diamondsuit$) $\leq$ plus
+  < $\cdot$, $\alpha$ $\mapsto$ zero.$\diamondsuit$, $\beta$ $\mapsto$ succ.zero.$\diamondsuit$
+  < $\cdot$, $\alpha$ $\mapsto$ succ.zero $\diamondsuit$, $\beta$ $\mapsto$ zero.$\diamondsuit$
+  \end{lstlisting}
+
+
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Expressivity: comparison to Prolog}
+
+  \begin{lstlisting}[]
+  plus(0, A, A).
+  plus(s(A), B, s(C)) :- plus(A, B, C).
+
+
+  $\mu$ plus .
+    $\exists$ $\alpha$ $\Rightarrow$ 
+      (x $\mapsto$ zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; z $\mapsto$ $\alpha$) |
+    $\exists$ $\alpha$ $\beta$ $\gamma$ :: 
+      (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ $\gamma$) $\leq$ plus $\Rightarrow$ 
+      x $\mapsto$ succ.$\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.$\gamma$
+
+  \end{lstlisting}
+
+\end{frame}
+
+\end{document}

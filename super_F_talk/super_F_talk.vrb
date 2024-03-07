@@ -1,0 +1,16 @@
+\frametitle{Expressivity: comparison to Prolog}
+
+  \begin{lstlisting}[]
+  plus(0, A, A).
+  plus(s(A), B, s(C)) :- plus(A, B, C).
+
+
+  $\mu$ plus .
+    $\exists$ $\alpha$ $\Rightarrow$
+      (x $\mapsto$ zero.$\diamondsuit$ ; y $\mapsto$ $\alpha$ ; z $\mapsto$ $\alpha$) |
+    $\exists$ $\alpha$ $\beta$ $\gamma$ ::
+      (x $\mapsto$ $\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ $\gamma$) $\leq$ plus $\Rightarrow$
+      x $\mapsto$ succ.$\alpha$ ; y $\mapsto$ $\beta$ ; z $\mapsto$ succ.$\gamma$
+
+  \end{lstlisting}
+
