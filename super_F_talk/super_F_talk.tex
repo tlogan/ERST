@@ -50,16 +50,16 @@ foo f = (f 123, f True)
 
 
 \begin{frame}[fragile]
-  \frametitle{Satifcatory Typing 1}
+  \frametitle{Satisfcatory Typing 1}
 
   \begin{itemize}
   \item should allow
   \begin{lstlisting}
-foo (fun x => x)
+foo (fn x => x)
   \end{lstlisting}
   \item where
   \begin{lstlisting}
-(fun x => x) : ALL a . a -> a
+(fn x => x) : ALL a . a -> a
   \end{lstlisting}
   \end{itemize}
 
@@ -67,26 +67,26 @@ foo (fun x => x)
 
 
 \begin{frame}[fragile]
-  \frametitle{Satifcatory Typing 2}
+  \frametitle{Satisfcatory Typing 2}
 
   \begin{itemize}
   \item should allow
   \begin{lstlisting}
-foo (fun x => some x)
+foo (fn x => some x)
   \end{lstlisting}
   \item where
   \begin{lstlisting}
-(fun x => some x) : ALL a . a -> Option a
+(fn x => some x) : ALL a . a -> Option a
   \end{lstlisting}
   \end{itemize}
 
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Intersection as Savior}
+  \frametitle{Liberation by Intersection}
 
   \begin{itemize}
-  \item multiple application
+  \item repeated application
   \begin{lstlisting}
 foo f = (f 123, f True)
   \end{lstlisting}
@@ -105,7 +105,7 @@ foo : ALL a b .
   \begin{itemize}
   \item application 
   \begin{lstlisting}
-foo (fun x => some x)
+foo (fn x => some x)
   \end{lstlisting}
   \item generates subtyping constraint to be checked or solved 
   \begin{lstlisting}
@@ -136,7 +136,7 @@ ALL a b c
 
 
 \begin{frame}[fragile]
-  \frametitle{Union as Savior}
+  \frametitle{Liberation by Union}
 
   \begin{itemize}
   \item branching  
