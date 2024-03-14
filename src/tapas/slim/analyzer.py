@@ -827,13 +827,13 @@ def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Ite
 
 def is_variable_unassigned(model : Model, id : str) -> bool:
     return (
-        id not in extract_free_vars_from_constraints(pset(), model.constraints)
+        id not in extract_free_vars_from_constraints(s(), model.constraints)
     )
 
 def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
     constraints = extract_constraints_with_id(model, id) 
     ids_seen = ids_seen.add(id)
-    ids = extract_free_vars_from_constraints(pset(), constraints).difference(ids_seen)
+    ids = extract_free_vars_from_constraints(s(), constraints).difference(ids_seen)
     for id in ids:
         constraints = constraints.union(
             extract_reachable_constraints(model, id, ids_seen)
@@ -842,13 +842,13 @@ def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str])
     return constraints 
 
 def package_typ(model : Model, typ : Typ) -> Typ:
-    ids_base = extract_free_vars_from_typ(pset(), typ)
+    ids_base = extract_free_vars_from_typ(s(), typ)
     constraints = s()
     for id_base in ids_base: 
-        constraints_reachable = extract_reachable_constraints(model, id_base, pset())
+        constraints_reachable = extract_reachable_constraints(model, id_base, s())
         constraints = constraints.union(constraints_reachable)
 
-    bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(pset(), constraints)))
+    bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(s(), constraints)))
     if not bound_ids and not constraints:
         typ_idx_unio = typ
     else:
@@ -1246,7 +1246,7 @@ class Solver:
 
 
         elif isinstance(weak, LeastFP): 
-            lenient = all(fv not in model.freezer for fv in extract_free_vars_from_typ(pset(), strong))
+            lenient = all(fv not in model.freezer for fv in extract_free_vars_from_typ(s(), strong))
             if lenient:
                 strong = condense_strongest(model, strong, strict = False) 
             else:
@@ -1278,7 +1278,7 @@ class Solver:
                         """
                         return [Model(
                             model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer.union(extract_free_vars_from_typ(pset(), strong))
+                            model.freezer.union(extract_free_vars_from_typ(s(), strong))
                         )]
                     else:
                         return []
@@ -1494,6 +1494,13 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
+        print(f"""
+DEBUG combine_application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cator: {concretize_typ(cator)}
+arguments: {[concretize_typ(arg) for arg in arguments]}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         answr_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
@@ -1542,8 +1549,8 @@ class ExprRule(Rule):
             raw_right_typ = simplify_typ(condense_strongest(model, out_typ, strict = False))
             (flat_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
 
-            left_bound_ids = tuple(extract_free_vars_from_typ(pset(), left_typ))
-            right_bound_ids = tuple(extract_free_vars_from_typ(pset(), right_typ))
+            left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
+            right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
             bound_ids = flat_bound_ids + left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
@@ -1607,13 +1614,13 @@ class ExprRule(Rule):
         assumption: target type is assumed to be well formed / inhabitable
         '''
         # TODO: only generalize the free variables; there's an error causing rebinding of all-bound variable
-        # free_ids = extract_free_vars_from_typ(pset(), target)
+        # free_ids = extract_free_vars_from_typ(s(), target)
         # target_generalized = target
         # for fid in reversed(list(free_ids)):
         #     target_generalized = All(fid, Top(), target_generalized) 
         # enviro = self.nt.enviro.set(id, target_generalized)
         #################################
-        free_ids = extract_free_vars_from_typ(pset(), target)
+        free_ids = extract_free_vars_from_typ(s(), target)
         target_generalized = target
         for fid in reversed(list(free_ids)):
             target_generalized = All(fid, Top(), target_generalized) 

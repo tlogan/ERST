@@ -945,6 +945,8 @@ less_equal_imp = (f'''
 ))) 
 ''')
 
+
+
 def test_less_equal_imp_subs_two_one_imp_query():
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
@@ -961,6 +963,7 @@ def test_less_equal_imp_subs_two_one_imp_query():
 # answer: {answer}
 #     ''')
     assert answer == "~false @" 
+    print(answer)
 
 
 def test_app_less_equal_zero_one():
@@ -974,13 +977,14 @@ def test_app_less_equal_zero_one():
     print("combo: " + u(combo))
     assert u(combo) == "~true @"
 
+
 def test_app_less_equal_two_one():
     app_less = (f'''
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
     pieces = [app_less]
     (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
+    # print(parsetree)
     assert combo
     print("combo: " + u(combo))
     # assert u(combo) == "~false @"
@@ -1015,10 +1019,12 @@ less_equal(~zero @, ~succ ~zero @)
     # print("combo: " + u(combo))
 
 
+
+    # (succ x / (Exis y)) 
+
+
 if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
-    # test_even_list_subs_nat_list()
-    # test_two_cons_query_subs_nat_list()
     test_app_less_equal_two_one()
     pass
 
