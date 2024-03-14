@@ -403,7 +403,7 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
         body = t.body
         if isinstance(body, TVar) and (not tvar or tvar.id == body.id):
             path = tuple([t.label])
-            return pset().add(path)
+            return s(path)
         else:
             paths_tail = extract_paths(t.body)
             return pset(
@@ -577,7 +577,7 @@ def extract_weakest_from_id(model : Model, id : str) -> Typ:
     constraints_relational = [
         st
         for st in model.constraints
-        if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(pset(), st.weak))
+        if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
     ]
 
     typ_factored = Top()
@@ -614,7 +614,7 @@ def condense_strongest(model : Model, typ : Typ, strict : bool) -> Typ:
         consq = condense_strongest(model, typ.consq, strict)
         return Imp(antec, consq)
     else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
+        fvs = extract_free_vars_from_typ(s(), typ)
         renaming = pmap({
             id : condense_strongest(model, strongest, strict)
             for id in fvs
@@ -630,7 +630,7 @@ def condense_weakest(model : Model, typ : Typ, strict : bool) -> Typ:
         consq = condense_weakest(model, typ.consq, strict)
         return Imp(antec, consq)
     else:
-        fvs = extract_free_vars_from_typ(pset(), typ)
+        fvs = extract_free_vars_from_typ(s(), typ)
         renaming = pmap({
             id : condense_weakest(model, weakest, strict)
             for id in fvs
@@ -771,11 +771,11 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
         if False:
             assert False
         elif isinstance(typ, TVar) and typ.id not in bound_vars:
-            plate_entry = ([], lambda : pset().add(typ.id))
+            plate_entry = ([], lambda : s(typ.id))
         elif isinstance(typ, TVar) :
-            plate_entry = ([], lambda : pset())
+            plate_entry = ([], lambda : s())
         elif isinstance(typ, TUnit):
-            plate_entry = ([], lambda : pset())
+            plate_entry = ([], lambda : s())
         elif isinstance(typ, TTag):
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_bodyA: set_bodyA)
         elif isinstance(typ, TField):
@@ -794,7 +794,7 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, All):
-            set_constraints = pset()
+            set_constraints = s()
             plate_entry = (pair_up(bound_vars, [typ.upper, typ.body]), lambda set_upper, set_body: set_constraints.union(set_upper).union(set_body))
 
         elif isinstance(typ, LeastFP):
@@ -802,10 +802,10 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
 
         elif isinstance(typ, Bot):
-            plate_entry = ([], lambda : pset())
+            plate_entry = ([], lambda : s())
 
         elif isinstance(typ, Top):
-            plate_entry = ([], lambda : pset())
+            plate_entry = ([], lambda : s())
 
         return plate_entry
 
@@ -815,7 +815,7 @@ end extract_free_vars_from_typ
 '''
 
 def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
-    result = pset()
+    result = s()
     for st in constraints:
         result = (
             result
@@ -843,7 +843,7 @@ def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str])
 
 def package_typ(model : Model, typ : Typ) -> Typ:
     ids_base = extract_free_vars_from_typ(pset(), typ)
-    constraints = pset()
+    constraints = s()
     for id_base in ids_base: 
         constraints_reachable = extract_reachable_constraints(model, id_base, pset())
         constraints = constraints.union(constraints_reachable)
