@@ -719,7 +719,7 @@ fix(case self => (
     case ~cons x => (~succ (self(x))) 
 ))
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces, debug=True)
     assert combo
     print("combo: " + u(combo))
 
@@ -1019,13 +1019,12 @@ less_equal(~zero @, ~succ ~zero @)
     # print("combo: " + u(combo))
 
 
-
-    # (succ x / (Exis y)) 
-
-
 if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
-    test_app_less_equal_two_one()
+    # test_app_less_equal_two_one()
+    #########################3
+    # test_less_equal()
+    test_fix()
     pass
 
 #######################################################################

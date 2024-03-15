@@ -357,7 +357,14 @@ def diff_well_formed(diff : Diff) -> bool:
     '''
     restriction to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
     '''
-    return pattern_type(diff.negation)
+    neg = diff.negation
+    if isinstance(neg, Exi):
+        return (
+            neg.constraints == () and 
+            pattern_type(neg.body)
+        )
+    else:
+        return pattern_type(diff.negation)
 
 def make_diff(context : Typ, negs : list[Typ]) -> Typ:
     result = context 
@@ -380,8 +387,17 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     negs = []
 
     for case in cases:
+#         print(f"""
+# DEBUG case: {concretize_typ(case)}
+#         """)
         choices += [(make_diff(case.antec, negs), case.consq)]
-        negs += [case.antec]
+        neg_fvs = extract_free_vars_from_typ(s(), case.antec)  
+        neg = (
+            Exi(tuple(sorted(neg_fvs)), (), case.antec)
+            if neg_fvs else
+            case.antec
+        )
+        negs += [neg]
     return choices 
 
 def linearize_unions(t : Typ) -> list[Typ]:
@@ -1373,7 +1389,13 @@ class BaseRule(Rule):
         return Nonterm('expr', self.nt.enviro, expected_typ)
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
-        return TTag(label, body)
+        '''
+        move existential outside
+        '''
+        if isinstance(body, Exi):
+            return Exi(body.ids, body.constraints, TTag(label, body.body))
+        else:
+            return TTag(label, body)
 
     def combine_function(self, cases : list[Imp]) -> Typ:
         '''
@@ -1390,6 +1412,14 @@ class BaseRule(Rule):
         result = Top() 
         for choice in reversed(choices): 
             result = Inter(Imp(choice[0], choice[1]), result)
+
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG choice[1]: {concretize_typ(choice[1])}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
         return simplify_typ(result)
 
         # OLD construction of relation
@@ -1494,17 +1524,14 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
-        print(f"""
-DEBUG combine_application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cator: {concretize_typ(cator)}
-arguments: {[concretize_typ(arg) for arg in arguments]}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         answr_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
-            models = self.solver.solve_composition(answr_i, Imp(argument, query_typ))
+            models = [
+                Model(m.constraints, m.freezer.add(query_typ.id))
+                for m in self.solver.solve_composition(answr_i, Imp(argument, query_typ))
+            ]
+
             answr_i = decode_strongest_typ(models, query_typ)
 
         return simplify_typ(answr_i)
@@ -1546,47 +1573,83 @@ arguments: {[concretize_typ(arg) for arg in arguments]}
         param_body = Bot()
         for model in reversed(models):
             left_typ = simplify_typ(condense_weakest(model, in_typ, strict = False))
-            raw_right_typ = simplify_typ(condense_strongest(model, out_typ, strict = False))
-            (flat_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
+            right_typ = simplify_typ(condense_strongest(model, out_typ, strict = False))
+            # raw_right_typ = simplify_typ(condense_strongest(model, out_typ, strict = False))
+            # (flat_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
+            ######################################
+            # right_typ = raw_right_typ
+            # right_constraints = model.constraints
+            ######################################
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
-            bound_ids = flat_bound_ids + left_bound_ids + right_bound_ids
+            # bound_ids = flat_bound_ids + left_bound_ids + right_bound_ids
+            bound_ids = left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
+
+
 
             IH_typ_args = next(
                 (
                     (st.weak.antec, st.weak.consq)
-                    for st in right_constraints
+                    for st in model.constraints 
+                    # for st in right_constraints 
                     if st.strong == self_typ 
                     if isinstance(st.weak, Imp)
                 ),
                 None
             )  
 
+            other_constraints = tuple(
+                st
+                for st in model.constraints 
+                if st.strong != self_typ 
+                if (
+                    (not isinstance(st.weak, Imp)) or 
+                    (not IH_typ_args) or 
+                    (st.weak.antec != IH_typ_args[0]) or 
+                    (st.weak.consq != IH_typ_args[1]) or
+                    False
+                )
+            ) 
+
+            print(f"""
+    DEBUG fix 
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    self_typ: {self_typ.id}
+    IH_typ: {IH_typ.id}
+    model constraints: {concretize_constraints(tuple(model.constraints))}
+    other constraints: {concretize_constraints(other_constraints)}
+    left_typ: {concretize_typ(left_typ)}
+    right_typ: {concretize_typ(right_typ)}
+    bound_ids: {bound_ids}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
             if IH_typ_args:
-                other_constraints = tuple(
-                    st
-                    for st in right_constraints
-                    if st.strong != self_typ 
-                ) 
+
                 IH_rel_constraint = Subtyping(make_pair_typ(IH_typ_args[0], IH_typ_args[1]), IH_typ)
 
                 IH_left_constraint = Subtyping(IH_typ_args[0], IH_typ)
 
                 rel_constraints = tuple([IH_rel_constraint]) + other_constraints
-                constrained_rel = Exi(bound_ids, rel_constraints, rel_pattern) 
+                # constrained_rel = Exi(bound_ids, rel_constraints, rel_pattern) 
+                constrained_rel = package_typ(Model(pset(rel_constraints), pset(bound_ids)), rel_pattern)
 
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
-                constrained_left = Exi(left_bound_ids, left_constraints, left_typ)
-            elif bound_ids:
-                constraints = right_constraints 
-                constrained_rel = Exi(bound_ids, constraints, rel_pattern) 
-                constrained_left = Exi(left_bound_ids, constraints, left_typ) 
+                # constrained_left = Exi(left_bound_ids, left_constraints, left_typ)
+                constrained_left = package_typ(Model(pset(left_constraints), pset(left_bound_ids)), left_typ)
             else:
-                assert not right_constraints
-                constrained_rel = rel_pattern
-                constrained_left = left_typ 
+                constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
+                constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
+            # elif bound_ids:
+            #     constraints = other_constraints 
+            #     # TODO: use package_typ
+            #     constrained_rel = Exi(bound_ids, constraints, rel_pattern) 
+            #     constrained_left = Exi(left_bound_ids, constraints, left_typ) 
+            # else:
+            #     constrained_rel = rel_pattern
+            #     constrained_left = left_typ 
             #end if
 
             induc_body = Unio(constrained_rel, induc_body) 
@@ -1596,6 +1659,15 @@ arguments: {[concretize_typ(arg) for arg in arguments]}
 
         rel_typ = LeastFP(IH_typ.id, induc_body)
         param_upper = LeastFP(IH_typ.id, param_body)
+
+#         print(f"""
+# DEBUG rel_typ 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# :: rel_typ: {concretize_typ(rel_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# LFP _38 ((EXI [_8 ; ~true @ <: _37 ; _36 <: (~zero @, _8) ; _35 <: _2] ((~zero @, _8), ~true @)) | ((EXI [_16 _19 _24 ; ((_16, _19), _24) <: _38 ; _2 <: ((_16, _19) -> _24) ; _36 <: ((~succ _16, ~succ _19) \ (EXI [_8] (~zero @, _8))) ; _24 <: _37] (((~succ _16, ~succ _19) \ (EXI [_8] (~zero @, _8))), _24)) | ((EXI [_30 ; ~false @ <: _37 ; _36 <: (((~succ _30, ~zero @) \ (EXI [_8] (~zero @, _8))) \ (EXI [_16 _19] (~succ _16, ~succ _19))) ; _35 <: _2] ((((~succ _30, ~zero @) \ (EXI [_8] (~zero @, _8))) \ (EXI [_16 _19] (~succ _16, ~succ _19))), ~false @)) | BOT)))
+
+#         """)
 
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()
