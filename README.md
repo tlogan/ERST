@@ -12,6 +12,7 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, note criteria of when variables are frozen (i.e. turned into skolems) 
 - in paper, change subset inclusion to strict equality in subtyping rules 
 - finish implementing inhabitable check
 - finish implementing relational key check 

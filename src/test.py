@@ -73,6 +73,23 @@ def solve(a : str, b : str):
     y = p(b)
     return solver.solve_composition(x, y)
 
+def query_weakest(a : str, b : str, k : str):
+    x = p(a)
+    y = p(b)
+    q = p(k)
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_weakest(x, y, q)))
+
+def query_strongest(a : str, b : str, k : str):
+    x = p(a)
+    y = p(b)
+    q = p(k)
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_strongest(x, y, q)))
+
+def roundtrip(ss : list[str]) -> str:
+    return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
+        p(s) for s in ss
+    ])))
+
 
 """
 tests
@@ -218,18 +235,15 @@ def test_two_single_subs_nat_list():
 (~succ ~succ ~zero @, ~cons ~nil @)
     ''')
     models = solve(two_single, nat_list)
-    # print(f'len(models): {len(models)}')
+    print(f'len(models): {len(models)}')
     assert not models
 
 def test_one_query_subs_nat_list():
     one_query = ('''
 (~succ ~zero @, X)
     ''')
-    models = solve(one_query, nat_list)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("X"))
-    # print("answr: " + answer)
+    answer = query_weakest(one_query, nat_list, "X") 
+    print("answer: " + answer)
     assert answer == "~cons ~nil @"
 
 def test_one_cons_query_subs_nat_list():
@@ -237,13 +251,8 @@ def test_one_cons_query_subs_nat_list():
     one_cons_query = ('''
 (~succ ~zero @, ~cons X)
     ''')
-    models = solve(one_cons_query, nat_list)
-    assert len(models) == 1
-    model = models[0]
-    # TODO
-    answer = analyzer.prettify_weakest(model, p("X"))
+    answer = query_weakest(one_cons_query, nat_list, "X")
     print(f"""
-model: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
     assert answer == "~nil @"
@@ -253,13 +262,8 @@ def test_two_cons_query_subs_nat_list():
     two_cons_query = ('''
 (~succ ~succ ~zero @, ~cons X)
     ''')
-    models = solve(two_cons_query, nat_list)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("X"))
+    answer = query_weakest(two_cons_query, nat_list, "X")
     print(f"""
-freezer: {model.freezer}
-constraints: {analyzer.concretize_constraints(tuple(model.constraints))}
 answr: {answer}
     """)
     assert answer == "~cons ~nil @"
@@ -294,30 +298,20 @@ def test_one_plus_one_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
     ''')
-    models = solve(one_plus_one_query, addition_rel)
-    # print(f'len(models): {len(models)}')
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("Z"))
+    answer = query_weakest(one_plus_one_query, addition_rel, "Z")
     assert answer == "~succ ~succ ~zero @"
 #     print(f'''
-# model: {analyzer.concretize_constraints(tuple(model))}
-# answr: {answer}
+# answer: {answer}
 #     ''')
 
 def test_one_plus_equals_two_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
     ''')
-    models = solve(one_plus_one_query, addition_rel)
-    # print(f'len(models): {len(models)}')
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("Y"))
+    answer = query_weakest(one_plus_one_query, addition_rel, "Y")
     assert answer == "~succ ~zero @"
     print(f'''
-model: {analyzer.concretize_constraints(tuple(model.constraints))}
-answr: {answer}
+answer: {answer}
     ''')
 
 def test_zero_plus_one_equals_two():
@@ -332,15 +326,10 @@ def test_plus_one_equals_two_query():
     plus_one_equals_two_query = ('''
 (x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    models = solve(plus_one_equals_two_query, addition_rel)
-    # print(f'len(models): {len(models)}')
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("X"))
+    answer = query_weakest(plus_one_equals_two_query, addition_rel, "X")
     assert answer == "~succ ~zero @"
 #     print(f'''
-# model: {analyzer.concretize_constraints(tuple(model))}
-# answr: {answer}
+# answer: {answer}
 #     ''')
 
 def test_plus_equals_two_query():
@@ -350,21 +339,15 @@ def test_plus_equals_two_query():
     plus_equals_two_query = ('''
 (x : X & y : Y & z : ~succ ~succ ~zero @)
     ''')
-    models = solve(plus_equals_two_query, addition_rel)
-    assert len(models) == 3
-    answers = [
-        analyzer.prettify_weakest(model, p("(X, Y)"))
-        for model in models
-    ]
+    answer = query_weakest(plus_equals_two_query, addition_rel, "(X, Y)")
 #     print(f'''
-# len(models): {len(models)}
-# answers: {answers}
+# answer: {answer}
 #     ''')
-    assert answers == [
+    assert answer == roundtrip([
         "(~zero @, ~succ ~succ ~zero @)",
         "(~succ ~zero @, ~succ ~zero @)",
         "(~succ ~succ ~zero @, ~zero @)",
-    ]
+    ])
 
 
 
@@ -381,56 +364,18 @@ def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
     ''')
-    models = solve(nil_query, list_nat_diff)
-    assert len(models) == 1
-    answer = analyzer.prettify_weakest(models[0], p("X"))
+    answer = query_weakest(nil_query, list_nat_diff, "X")
     assert answer == "~zero @" 
-    # for model in models:
-
-    #     pretty = analyzer.prettify_weakest(model, p("X"))
-    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
-    #     print(f'pretty: {pretty}')
-    # assert len(models) == 3
-    # answers = [
-    #     analyzer.prettify_weakest(model, p("(X, Y)"))
-    #     for model in models
-    # ]
-    # assert answers == [
-    #     "(~zero @, ~succ ~succ ~zero @)",
-    #     "(~succ ~zero @, ~succ ~zero @)",
-    #     "(~succ ~succ ~zero @, ~zero @)",
-    # ]
-
-
 
 def test_cons_nil_query_subs_list_nat_diff():
     cons_nil_query = ('''
 ((~cons ~nil @), X)
     ''')
-    models = solve(cons_nil_query, list_nat_diff)
-    assert len(models) == 1
-    answer = analyzer.prettify_weakest(models[0], p("X"))
-    assert answer == "~succ ~zero @" 
-    # for model in models:
-
-    #     pretty = analyzer.prettify_weakest(model, p("X"))
-    #     print(f'model: {analyzer.concretize_constraints(tuple(model))}')
-    #     print(f'pretty: {pretty}')
-    # assert len(models) == 3
-    # answers = [
-    #     analyzer.prettify_weakest(model, p("(X, Y)"))
-    #     for model in models
-    # ]
-    # assert answers == [
-    #     "(~zero @, ~succ ~succ ~zero @)",
-    #     "(~succ ~zero @, ~succ ~zero @)",
-    #     "(~succ ~succ ~zero @, ~zero @)",
-    # ]
-
+    answer = query_weakest(cons_nil_query, list_nat_diff, "X")
     print(f'''
-len(models): {len(models)}
 answer: {answer}
     ''')
+    assert answer == "~succ ~zero @" 
 
 list_diff = ('''
 LFP SELF (~nil @ | (~cons SELF \\ ~nil @))
@@ -456,28 +401,19 @@ def test_list_imp_nat_subs_nil_imp_query():
     nil_imp_query = ('''
 (~nil @ -> Q)
     ''')
-    models = solve(list_imp_nat, nil_imp_query)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_strongest(model, p("Q"))
+    answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
     assert answer == "~zero @" 
 #     print(f'''
-# len(models): {len(models)}
 # answer: {answer}
 #     ''')
 
 def test_list_imp_nat_subs_cons_nil_imp_query():
-
     nil_imp_query = ('''
 ((~cons ~nil @) -> Q)
     ''')
-    models = solve(list_imp_nat, nil_imp_query)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_strongest(model, p("Q"))
+    answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
     assert answer == "~succ ~zero @"
 #     print(f'''
-# len(models): {len(models)}
 # answer: {answer}
 #     ''')
 
@@ -486,13 +422,9 @@ def test_list_imp_nat_subs_cons_cons_nil_imp_query():
     cons_cons_nil_imp_query = ('''
 ((~cons ~cons ~nil @) -> Q)
     ''')
-    models = solve(list_imp_nat, cons_cons_nil_imp_query)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_strongest(model, p("Q"))
+    answer = query_strongest(list_imp_nat, cons_cons_nil_imp_query, "Q")
     assert answer == "~succ ~succ ~zero @"
     print(f'''
-len(models): {len(models)}
 answer: {answer}
     ''')
 
@@ -928,16 +860,11 @@ def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
-    models = solve(two_less_equal_one_query, less_equal_rel)
-    # print(f'len(models): {len(models)}')
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_weakest(model, p("Z"))
-#     print(f'''
-# model: {analyzer.concretize_constraints(tuple(model.constraints))}
-# answr: {answer}
-#     ''')
+    answer = query_weakest(two_less_equal_one_query, less_equal_rel, "Z")
     assert answer == "~false @"
+#     print(f'''
+# answer: {answer}
+#     ''')
 
 less_equal_imp = (f'''
 (ALL [XY <: ({nat_pair_rel})] (XY -> 
@@ -951,19 +878,9 @@ def test_less_equal_imp_subs_two_one_imp_query():
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
     ''')
-    models = solve(less_equal_imp, two_one_imp_query)
-    assert len(models) == 1
-    model = models[0]
-    answer = analyzer.prettify_strongest(model, p("Q"))
-
-#     print(f'''
-# len(models): {len(models)}
-# model freezer: {model.freezer}
-# model constraints: {analyzer.concretize_constraints(tuple(model.constraints))}
-# answer: {answer}
-#     ''')
+    answer = query_strongest(less_equal_imp, two_one_imp_query, "Q")
+    print(f"answer: {answer}")
     assert answer == "~false @" 
-    print(answer)
 
 
 def test_app_less_equal_zero_one():
@@ -1026,7 +943,15 @@ if __name__ == '__main__':
     # test_less_equal()
     # test_fix()
     # test_app_fix_nil()
-    test_app_fix_cons()
+    # test_app_fix_cons()
+
+    #####################
+    # test_zero_nil_subs_nat_list()
+    # test_one_single_subs_nat_list()
+    # test_two_single_subs_nat_list()
+    #####################
+    test_one_query_subs_nat_list()
+    # test_one_cons_query_subs_nat_list()
     pass
 
 #######################################################################
