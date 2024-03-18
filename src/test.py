@@ -950,7 +950,7 @@ if __name__ == '__main__':
     # test_one_single_subs_nat_list()
     # test_two_single_subs_nat_list()
     #####################
-    test_even_list_subs_nat_list()
+    # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
     # test_one_query_subs_nat_list()
     pass
