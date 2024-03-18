@@ -1661,48 +1661,43 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
-        models = self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
+        models = [
+            Model(m.constraints, m.freezer.union([IH_typ.id, in_typ.id, out_typ.id]))
+            for m in self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
+        ]
 
         induc_body = Bot()
         param_body = Bot()
         for model in reversed(models):
-            left_typ = simplify_typ(decode_weakest_typ([model], in_typ))
-            right_typ = simplify_typ(decode_strongest_typ([model], out_typ))
+            left_typ = simplify_typ(condense_weakest(model, in_typ))
+            right_typ = simplify_typ(condense_strongest(model, out_typ))
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix 
-# ~~~~~~~~~~~~~~~~~~~~~
-# out_typ: {out_typ.id}
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ======================
-# left_typ: {concretize_typ(left_typ)}
-# right_typ: {concretize_typ(right_typ)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix 
+~~~~~~~~~~~~~~~~~~~~~
+IH_typ: {IH_typ.id}
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+======================
+in_typ: {concretize_typ(in_typ)}
+left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
 
-
-            # raw_right_typ = simplify_typ(condense_strongest(model, out_typ, strict = False))
-            # (flat_bound_ids, right_constraints, right_typ) = self.solver.flatten_index_unios(raw_right_typ)
-            ######################################
-            # right_typ = raw_right_typ
-            # right_constraints = model.constraints
-            ######################################
+out_typ: {concretize_typ(out_typ)}
+right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
-            # bound_ids = flat_bound_ids + left_bound_ids + right_bound_ids
             bound_ids = left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
-
-
+            #########################################
 
             IH_typ_args = next(
                 (
                     (st.weak.antec, st.weak.consq)
                     for st in model.constraints 
-                    # for st in right_constraints 
                     if st.strong == self_typ 
                     if isinstance(st.weak, Imp)
                 ),
@@ -1722,32 +1717,30 @@ class ExprRule(Rule):
                 )
             ) 
 
-    #         print(f"""
-    # DEBUG fix 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # self_typ: {self_typ.id}
-    # IH_typ: {IH_typ.id}
-    # model constraints: {concretize_constraints(tuple(model.constraints))}
-    # other constraints: {concretize_constraints(other_constraints)}
-    # left_typ: {concretize_typ(left_typ)}
-    # right_typ: {concretize_typ(right_typ)}
-    # bound_ids: {bound_ids}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
-
             if IH_typ_args:
 
                 IH_rel_constraint = Subtyping(make_pair_typ(IH_typ_args[0], IH_typ_args[1]), IH_typ)
+                rel_constraints = tuple([IH_rel_constraint]) + other_constraints
+                rel_model = Model(pset(rel_constraints), pset(bound_ids))
+                constrained_rel = package_typ(rel_model, rel_pattern)
+
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix rel
+    ~~~~~~~~~~~~~~~~~~~~~
+    IH_typ: {IH_typ.id}
+    rel_model.freezer: {rel_model.freezer}
+    rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
+    ======================
+    rel_pattern: {concretize_typ(rel_pattern)}
+    packaged rel: {concretize_typ(constrained_rel)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 IH_left_constraint = Subtyping(IH_typ_args[0], IH_typ)
-
-                rel_constraints = tuple([IH_rel_constraint]) + other_constraints
-                # constrained_rel = Exi(bound_ids, rel_constraints, rel_pattern) 
-                constrained_rel = package_typ(Model(pset(rel_constraints), pset(bound_ids)), rel_pattern)
-
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
-                # constrained_left = Exi(left_bound_ids, left_constraints, left_typ)
-                constrained_left = package_typ(Model(pset(left_constraints), pset(left_bound_ids)), left_typ)
+                left_model = Model(pset(left_constraints), pset(left_bound_ids))
+                constrained_left = package_typ(left_model, left_typ)
             else:
                 constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
                 constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 

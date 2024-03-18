@@ -941,7 +941,7 @@ if __name__ == '__main__':
     # test_app_less_equal_two_one()
     #########################3
     # test_less_equal()
-    # test_fix()
+    test_fix()
     # test_app_fix_nil()
     # test_app_fix_cons()
 
