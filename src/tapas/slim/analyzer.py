@@ -544,7 +544,7 @@ def is_relational_key(model : Model, t : Typ) -> bool:
     # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            strongest = extract_strongest_from_id(model, t.body.id) 
+            strongest = interpret_strongest_for_id(model, t.body.id) 
             return isinstance(strongest, Bot) or is_relational_key(model, strongest)
         else:
             return is_relational_key(model, t.body)
@@ -564,7 +564,7 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def extract_weakest_from_id(model : Model, id : str) -> Typ:
+def interpret_weakest_for_id(model : Model, id : str) -> Typ:
 
     '''
     for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
@@ -579,36 +579,38 @@ def extract_weakest_from_id(model : Model, id : str) -> Typ:
     typ_strong = Top() 
     for t in reversed(typs_strengthen):
         typ_strong = Inter(t, typ_strong) 
+    
+    return typ_strong
 
 
-    '''
-    LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
-    case relational: if variable is part of relational constraint, factor out type from rhs
-    case simple: otherwise, extract rhs
-    -- NOTE: relational constraints are restricted to record types of variables
-    -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of LeastFP
-    -- e.g. (A, B, C, L) <: (LeastFP I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
-    ---------------
-    '''
-    constraints_relational = [
-        st
-        for st in model.constraints
-        if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
-    ]
+    # '''
+    # LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
+    # case relational: if variable is part of relational constraint, factor out type from rhs
+    # case simple: otherwise, extract rhs
+    # -- NOTE: relational constraints are restricted to record types of variables
+    # -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of LeastFP
+    # -- e.g. (A, B, C, L) <: (LeastFP I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
+    # ---------------
+    # '''
+    # constraints_relational = [
+    #     st
+    #     for st in model.constraints
+    #     if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
+    # ]
 
-    typ_factored = Top()
-    for st in constraints_relational:
-        paths = extract_paths(st.weak, TVar(id)) 
-        for path in paths:
-            assert isinstance(st.strong, LeastFP)
-            typ_labeled = factor_path(path, st.strong)
-            typ_factored = Inter(typ_labeled, typ_factored)
+    # typ_factored = Top()
+    # for st in constraints_relational:
+    #     paths = extract_paths(st.weak, TVar(id)) 
+    #     for path in paths:
+    #         assert isinstance(st.strong, LeastFP)
+    #         typ_labeled = factor_path(path, st.strong)
+    #         typ_factored = Inter(typ_labeled, typ_factored)
 
-    typ_final = Inter(typ_strong, typ_factored)
+    # typ_final = Inter(typ_strong, typ_factored)
 
-    return typ_final 
+    # return typ_final 
 
-def extract_strongest_from_id(model : Model, id : str) -> Typ:
+def interpret_strongest_for_id(model : Model, id : str) -> Typ:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -624,24 +626,24 @@ def extract_strongest_from_id(model : Model, id : str) -> Typ:
         typ_weak = Unio(t, typ_weak) 
     return typ_weak
 
-def extract_strongest_from_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
+def interpret_strongest_for_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
     return pmap({
         id : strongest
         for id in ids
-        for strongest in [extract_strongest_from_id(model, id)]
+        for strongest in [interpret_strongest_for_id(model, id)]
 
     })
 
-def extract_weakest_from_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
+def interpret_weakest_for_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
     return pmap({
         id : weakest 
         for id in ids
-        for weakest in [extract_weakest_from_id(model, id)]
+        for weakest in [interpret_weakest_for_id(model, id)]
 
     })
 
 
-def has_strong_extraction(model : Model, id : str) -> bool:
+def has_strongest_interpretation(model : Model, id : str) -> bool:
     return all(
         (
             id not in extract_free_vars_from_typ(s(), st.weak) or
@@ -651,7 +653,7 @@ def has_strong_extraction(model : Model, id : str) -> bool:
 
     )
 
-def has_weak_extraction(model : Model, id : str) -> bool:
+def has_weakest_interpretation(model : Model, id : str) -> bool:
     result = all(
         (
             id not in extract_free_vars_from_typ(s(), st.strong) or
@@ -660,7 +662,7 @@ def has_weak_extraction(model : Model, id : str) -> bool:
         for st in model.constraints
     )
     print(f"""
-has_weak_extraction:
+has_weakest_interpretation:
 ~~~~~~~~~~~~~~~
 id: {id}
 result: {result}
@@ -678,19 +680,12 @@ def condense_strongest(model : Model, typ : Typ) -> Typ:
         renaming = pmap({
             id : condense_strongest(model, strongest)
             for id in fvs
-            for strongest in [simplify_typ(extract_strongest_from_id(model, id))]
-            if (id in model.freezer) and has_strong_extraction(model, id)
+            for strongest in [simplify_typ(interpret_strongest_for_id(model, id))]
+            if (id in model.freezer) and has_strongest_interpretation(model, id)
         })
         return sub_typ(renaming, typ)
 
 def condense_weakest(model : Model, typ : Typ) -> Typ:
-    print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG condense_weakest
-~~~~~~~~~~~~~~~~~~~~~
-input typ: {concretize_typ(typ)}
-~~~~~~~~~~~~~~~~~~~~~
-    """)
     if isinstance(typ, Imp):
         antec = condense_strongest(model, typ.antec)
         consq = condense_weakest(model, typ.consq)
@@ -700,8 +695,8 @@ input typ: {concretize_typ(typ)}
         renaming = pmap({
             id : condense_weakest(model, weakest)
             for id in fvs
-            for weakest in [simplify_typ(extract_weakest_from_id(model, id))]
-            if (id in model.freezer) and has_weak_extraction(model, id)
+            for weakest in [simplify_typ(interpret_weakest_for_id(model, id))]
+            if (id in model.freezer) and has_weakest_interpretation(model, id)
         })
         return sub_typ(renaming, typ)
 
@@ -1043,19 +1038,19 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
         if self._battery == 0:
             return []
-        print(f'''
-|| DEBUG SOLVE
-=================
-||
-|| model.freezer::: 
-|| :::::::: {model.freezer}
-||
-|| model.constraints::: 
-|| :::::::: {concretize_constraints(tuple(model.constraints))}
-||
-|| |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-||
-        ''')
+#         print(f'''
+# || DEBUG SOLVE
+# =================
+# ||
+# || model.freezer::: 
+# || :::::::: {model.freezer}
+# ||
+# || model.constraints::: 
+# || :::::::: {concretize_constraints(tuple(model.constraints))}
+# ||
+# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+# ||
+#         ''')
 
         if alpha_equiv(strong, weak): 
             return [model] 
@@ -1147,18 +1142,8 @@ class Solver:
         #### Variable rules: ####
         #######################################
 
-        elif isinstance(strong, TVar) and strong.id in model.freezer: 
-            # weakest_strong = condense_weakest(model, strong, strict = True)
-            weakest_strong = extract_weakest_from_id(model, strong.id)
-            return self.solve(model, weakest_strong, weak)
-
-        elif isinstance(weak, TVar) and weak.id in model.freezer: 
-            # strongest_weak = condense_strongest(model, weak)
-            strongest_weak = extract_strongest_from_id(model, weak.id)
-            return self.solve(model, strong, strongest_weak)
-
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            strongest = extract_strongest_from_id(model, strong.id)
+            strongest = interpret_strongest_for_id(model, strong.id)
             if not inhabitable(strongest):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1177,7 +1162,7 @@ class Solver:
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            weakest = extract_weakest_from_id(model, weak.id)
+            weakest = interpret_weakest_for_id(model, weak.id)
             if not selective(weakest):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1194,6 +1179,16 @@ class Solver:
                 ]
 
                 return models
+
+        elif isinstance(strong, TVar) and strong.id in model.freezer: 
+            # weakest_strong = condense_weakest(model, strong, strict = True)
+            weakest_strong = interpret_weakest_for_id(model, strong.id)
+            return self.solve(model, weakest_strong, weak)
+
+        elif isinstance(weak, TVar) and weak.id in model.freezer: 
+            # strongest_weak = condense_strongest(model, weak)
+            strongest_weak = interpret_strongest_for_id(model, weak.id)
+            return self.solve(model, strong, strongest_weak)
 
 
 
@@ -1324,25 +1319,30 @@ class Solver:
                 id : interp 
                 for id in ids
                 for interp in [
-                    simplify_typ(extract_weakest_from_id(model, id))
+                    simplify_typ(interpret_weakest_for_id(model, id))
                     if id in model.freezer else
-                    simplify_typ(extract_strongest_from_id(model, id))
+                    simplify_typ(interpret_strongest_for_id(model, id))
                 ]
-                if interp != Bot()
+                if (
+                    (has_weakest_interpretation(model, id))
+                    if id in model.freezer else
+                    (has_strongest_interpretation(model, id) and inhabitable(interp))
+                )
             })
+            
             reduced_strong = sub_typ(sub_map, strong)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# strong: {concretize_typ(strong)}
-# reduced_strong: {concretize_typ(reduced_strong)}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG weak, LeastFP
+~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+strong: {concretize_typ(strong)}
+reduced_strong: {concretize_typ(reduced_strong)}
+weak: {concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
             if strong != reduced_strong:
                 return self.solve(model, reduced_strong, weak)
             elif not is_relational_key(model, strong) and self._battery != 0:

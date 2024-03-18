@@ -253,7 +253,7 @@ def test_one_cons_query_subs_nat_list():
     ''')
     answer = query_weakest(one_cons_query, nat_list, "X")
     print(f"""
-answr: {answer}
+answer: {answer}
     """)
     assert answer == "~nil @"
 
@@ -271,7 +271,7 @@ answr: {answer}
 def test_even_list_subs_nat_list():
     models = solve(even_list, nat_list)
     print(f"len(models): {len(models)}")
-    # assert models
+    assert models
 
 def test_nat_list_subs_even_list():
     models = solve(nat_list, even_list)
@@ -950,8 +950,9 @@ if __name__ == '__main__':
     # test_one_single_subs_nat_list()
     # test_two_single_subs_nat_list()
     #####################
-    test_one_query_subs_nat_list()
-    # test_one_cons_query_subs_nat_list()
+    test_even_list_subs_nat_list()
+    # test_nat_list_subs_even_list()
+    # test_one_query_subs_nat_list()
     pass
 
 #######################################################################

@@ -2,6 +2,7 @@
 
 
 ### TODO
+- consider moving `has_interpretation` checks into `interpret` procedures 
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - introduce generalization at function abstraction; use subtyping extrusion for soundness 
@@ -12,6 +13,8 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.
+    - allows for greater automation: that is, automatic reusing of proofs across propositions across the transitive closure of subtyping. 
 - in paper, note criteria of when variables are frozen (i.e. turned into skolems) 
 - in paper, change subset inclusion to strict equality in subtyping rules 
 - finish implementing inhabitable check
