@@ -1218,56 +1218,44 @@ class Solver:
         #######################################
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            op = interpret_strongest_for_id(model, strong.id)
-            if op == None:
+            interp = interpret_strongest_for_id(model, strong.id)
+            if interp == None or not inhabitable(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
                     model.freezer
                 )]
             else:
-                (strongest, _) = op
-                if not inhabitable(strongest):
-                    return [Model(
+                strongest = interp[0]
+                models = self.solve(model, strongest, weak)
+
+                return [
+                    Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
-                    )]
-                else:
-                    models = self.solve(model, strongest, weak)
-
-                    return [
-                        Model(
-                            model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer
-                        )
-                        for model in models
-                    ]
+                    )
+                    for model in models
+                ]
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            op = interpret_weakest_for_id(model, weak.id)
-            if op == None:
+            interp = interpret_weakest_for_id(model, weak.id)
+            if interp == None or not selective(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
                     model.freezer
                 )]
             else:
-                (weakest, _) = op
-                if not selective(weakest):
-                    return [Model(
+                weakest = interp[0]
+                models = self.solve(model, strong, weakest)
+                models = [
+                    Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
-                    )]
-                else:
-                    models = self.solve(model, strong, weakest)
-                    models = [
-                        Model(
-                            model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer
-                        )
-                        for model in models
-                    ]
+                    )
+                    for model in models
+                ]
 
-                    return models
+                return models
 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
             # weakest_strong = condense_weakest(model, strong, strict = True)
