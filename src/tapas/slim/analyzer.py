@@ -544,8 +544,12 @@ def is_relational_key(model : Model, t : Typ) -> bool:
     # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            strongest = interpret_strongest_for_id(model, t.body.id) 
-            return strongest != None and (isinstance(strongest, Bot) or is_relational_key(model, strongest))
+            op = interpret_strongest_for_id(model, t.body.id) 
+            if op != None:
+                (strongest, _) = op
+                return strongest != None and (isinstance(strongest, Bot) or is_relational_key(model, strongest))
+            else:
+                return False
         else:
             return is_relational_key(model, t.body)
         # TODO: remove old code
@@ -564,7 +568,7 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def interpret_weakest_for_id(model : Model, id : str) -> Optional[Typ]:
+def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
     which is T & U.
@@ -579,16 +583,16 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[Typ]:
         for st in model.constraints
     )
     if has_weakest_interpretation:
-        typs_strengthen = [
-            st.weak
+        constraints = [
+            st
             for st in model.constraints
             if st.strong == TVar(id)
         ]
         typ_strong = Top() 
-        for t in reversed(typs_strengthen):
-            typ_strong = Inter(t, typ_strong) 
+        for c in reversed(constraints):
+            typ_strong = Inter(c.weak, typ_strong) 
         
-        return typ_strong
+        return (simplify_typ(typ_strong), pset(constraints))
     else:
         return None
 
@@ -620,7 +624,7 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[Typ]:
 
     # return typ_final 
 
-def interpret_strongest_for_id(model : Model, id : str) -> Optional[Typ]:
+def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -637,33 +641,62 @@ def interpret_strongest_for_id(model : Model, id : str) -> Optional[Typ]:
     )
 
     if has_strongest_interpretation:
-        typs_weaken = [
-            st.strong
+        constraints = [
+            st
             for st in model.constraints
             if st.weak == TVar(id) 
         ]
         typ_weak = Bot() 
-        for t in reversed(typs_weaken):
-            typ_weak = Unio(t, typ_weak) 
-        return typ_weak
+        for c in reversed(constraints):
+            typ_weak = Unio(c.strong, typ_weak) 
+        return (simplify_typ(typ_weak), pset(constraints))
     else:
         return None
 
-def interpret_strongest_for_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
-    return pmap({
-        id : strongest
+def interpret_strongest_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+
+    trips = [ 
+        (id, strongest, cs)
         for id in ids
-        for strongest in [interpret_strongest_for_id(model, id)]
-        if strongest
+        for op in [interpret_strongest_for_id(model, id)]
+        if op 
+        for (strongest, cs) in [op]
+    ]
+
+
+    m = pmap({
+        id : strongest
+        for (id, strongest, cs) in trips
     })
 
-def interpret_weakest_for_ids(model : Model, ids : list[str]) -> PMap[str, Typ]:
-    return pmap({
-        id : weakest 
+    cs = pset([
+        c 
+        for (id, strongest, cs) in trips
+        for c in cs
+    ]) 
+    return (m, cs)
+
+def interpret_weakest_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+    trips = [ 
+        (id, weakest, cs)
         for id in ids
-        for weakest in [interpret_weakest_for_id(model, id)]
-        if weakest
+        for op in [interpret_weakest_for_id(model, id)]
+        if op 
+        for (weakest, cs) in [op]
+    ]
+
+
+    m = pmap({
+        id : weakest
+        for (id, weakest, cs) in trips
     })
+
+    cs = pset([
+        c 
+        for (id, weakest, cs) in trips
+        for c in cs
+    ]) 
+    return (m, cs)
 
 def mapOp(f):
     def call(o):
@@ -674,35 +707,67 @@ def mapOp(f):
     return call
 
 
-def condense_strongest(model : Model, typ : Typ) -> Typ:
+def condense_strongest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec = condense_weakest(model, typ.antec)
-        consq = condense_strongest(model, typ.consq)
-        return Imp(antec, consq)
+        antec, antec_constraints = condense_weakest(model, typ.antec)
+        consq, consq_constraints = condense_strongest(model, typ.consq)
+        return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
-        renaming = pmap({
-            id : condense_strongest(model, strongest)
-            for id in fvs
-            for strongest in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
-            if strongest != None and (id in model.freezer)
-        })
-        return sub_typ(renaming, typ)
 
-def condense_weakest(model : Model, typ : Typ) -> Typ:
+
+        trips = [ 
+            (id, strongest, cs_once.union(cs_cont)) 
+            for id in fvs
+            for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+            if op != None
+            if (id in model.freezer)
+            for (strongest_once, cs_once) in [op]
+            for (strongest, cs_cont) in [condense_strongest(model, strongest_once)]
+        ]
+
+        renaming = pmap({
+            id : strongest 
+            for (id, strongest, cs) in trips
+        })
+
+        cs = pset(
+            c
+            for (id, strongest, cs) in trips
+            for c in cs
+        )
+        return (sub_typ(renaming, typ), cs)
+
+def condense_weakest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec = condense_strongest(model, typ.antec)
-        consq = condense_weakest(model, typ.consq)
-        return Imp(antec, consq)
+        antec, antec_constraints = condense_strongest(model, typ.antec)
+        consq, consq_constraints = condense_weakest(model, typ.consq)
+        return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
-        renaming = pmap({
-            id : condense_weakest(model, weakest)
+
+
+        trips = [ 
+            (id, weakest, cs_once.union(cs_cont)) 
             for id in fvs
-            for weakest in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
-            if weakest != None and (id in model.freezer)
+            for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
+            if op != None
+            if (id in model.freezer)
+            for (weakest_once, cs_once) in [op]
+            for (weakest, cs_cont) in [condense_weakest(model, weakest_once)]
+        ]
+
+        renaming = pmap({
+            id : weakest 
+            for (id, weakest, cs) in trips
         })
-        return sub_typ(renaming, typ)
+
+        cs = pset(
+            c
+            for (id, weakest, cs) in trips
+            for c in cs
+        )
+        return (sub_typ(renaming, typ), cs)
 
 
 def simplify_typ(typ : Typ) -> Typ:
@@ -922,17 +987,23 @@ def decode_typ(models : list[Model], t : Typ) -> Typ:
 
 def decode_strongest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
-        package_typ(model, strongest_answer)
+        package_typ(m, strongest)
         for model in models
-        for strongest_answer in [condense_strongest(model, t)]
+        for op in [condense_strongest(model, t)]
+        if op != None
+        for (strongest, cs) in [op]
+        for m in [Model(model.constraints.difference(cs), model.freezer)]
     ] 
     return make_unio(constraint_typs)
 
 def decode_weakest_typ(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
-        package_typ(model, weakest_answer)
+        package_typ(m, weakest)
         for model in models
-        for weakest_answer in [condense_weakest(model, t)]
+        for op in [condense_weakest(model, t)]
+        if op != None
+        for (weakest, cs) in [op]
+        for m in [Model(model.constraints.difference(cs), model.freezer)]
     ] 
     return make_unio(constraint_typs)
 
@@ -960,13 +1031,13 @@ def make_unio(ts : list[Typ]) -> Typ:
     u = Bot()
     for t in reversed(ts):
         u = Unio(t, u)
-    return u
+    return simplify_typ(u)
 
 def make_inter(ts : list[Typ]) -> Typ:
     u = Top()
     for t in reversed(ts):
         u = Inter(t, u)
-    return u
+    return simplify_typ(u)
 
 class Solver:
     _type_id : int = 0 
@@ -1147,55 +1218,71 @@ class Solver:
         #######################################
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            strongest = interpret_strongest_for_id(model, strong.id)
-            if strongest == None or not inhabitable(strongest):
+            op = interpret_strongest_for_id(model, strong.id)
+            if op == None:
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
                     model.freezer
                 )]
             else:
-                models = self.solve(model, strongest, weak)
-
-                return [
-                    Model(
+                (strongest, _) = op
+                if not inhabitable(strongest):
+                    return [Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
-                    )
-                    for model in models
-                ]
+                    )]
+                else:
+                    models = self.solve(model, strongest, weak)
+
+                    return [
+                        Model(
+                            model.constraints.add(Subtyping(strong, weak)),
+                            model.freezer
+                        )
+                        for model in models
+                    ]
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            weakest = interpret_weakest_for_id(model, weak.id)
-            if weakest == None or not selective(weakest):
+            op = interpret_weakest_for_id(model, weak.id)
+            if op == None:
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
                     model.freezer
                 )]
             else:
-                models = self.solve(model, strong, weakest)
-                models = [
-                    Model(
+                (weakest, _) = op
+                if not selective(weakest):
+                    return [Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
-                    )
-                    for model in models
-                ]
+                    )]
+                else:
+                    models = self.solve(model, strong, weakest)
+                    models = [
+                        Model(
+                            model.constraints.add(Subtyping(strong, weak)),
+                            model.freezer
+                        )
+                        for model in models
+                    ]
 
-                return models
+                    return models
 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
             # weakest_strong = condense_weakest(model, strong, strict = True)
-            weakest_strong = interpret_weakest_for_id(model, strong.id)
-            if weakest_strong:
+            op = interpret_weakest_for_id(model, strong.id)
+            if op != None:
+                (weakest_strong, _) = op
                 return self.solve(model, weakest_strong, weak)
             else:
                 return []
 
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
             # strongest_weak = condense_strongest(model, weak)
-            strongest_weak = interpret_strongest_for_id(model, weak.id)
-            if strongest_weak:
+            op = interpret_strongest_for_id(model, weak.id)
+            if op != None:
+                (strongest_weak, _) = op
                 return self.solve(model, strong, strongest_weak)
             else:
                 return []
@@ -1662,15 +1749,16 @@ class ExprRule(Rule):
         IH_typ = self.solver.fresh_type_var()
 
         models = [
-            Model(m.constraints, m.freezer.union([IH_typ.id, in_typ.id, out_typ.id]))
+            Model(m.constraints, m.freezer.union([in_typ.id, out_typ.id]))
+            # Model(m.constraints, m.freezer.union([IH_typ.id, in_typ.id, out_typ.id]))
             for m in self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
         ]
 
         induc_body = Bot()
         param_body = Bot()
         for model in reversed(models):
-            left_typ = simplify_typ(condense_weakest(model, in_typ))
-            right_typ = simplify_typ(condense_strongest(model, out_typ))
+            (left_typ, left_used_constraints) = condense_weakest(model, in_typ)
+            (right_typ, right_used_constraints) = condense_strongest(model, out_typ)
 
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1682,11 +1770,14 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
 ======================
 in_typ: {concretize_typ(in_typ)}
 left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
 out_typ: {concretize_typ(out_typ)}
 right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
 ~~~~~~~~~~~~~~~~~~~~~
             """)
+
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
@@ -1717,12 +1808,19 @@ right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
                 )
             ) 
 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix IH_typ_args: {IH_typ_args} 
+~~~~~~~~~~~~~~~~~~~~~
+            """)
+
             if IH_typ_args:
 
                 IH_rel_constraint = Subtyping(make_pair_typ(IH_typ_args[0], IH_typ_args[1]), IH_typ)
                 rel_constraints = tuple([IH_rel_constraint]) + other_constraints
-                rel_model = Model(pset(rel_constraints), pset(bound_ids))
-                constrained_rel = package_typ(rel_model, rel_pattern)
+                rel_model = Model(pset(rel_constraints).difference(left_used_constraints).difference(right_used_constraints), pset(bound_ids))
+                # constrained_rel = package_typ(rel_model, rel_pattern)
+                constrained_rel = decode_weakest_typ([rel_model], rel_pattern)
 
                 print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
@@ -1733,14 +1831,28 @@ right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
     rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
     ======================
     rel_pattern: {concretize_typ(rel_pattern)}
-    packaged rel: {concretize_typ(constrained_rel)}
+    constrained rel: {concretize_typ(constrained_rel)}
     ~~~~~~~~~~~~~~~~~~~~~
                 """)
 
                 IH_left_constraint = Subtyping(IH_typ_args[0], IH_typ)
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
-                left_model = Model(pset(left_constraints), pset(left_bound_ids))
-                constrained_left = package_typ(left_model, left_typ)
+                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
+                # constrained_left = package_typ(left_model, left_typ)
+                constrained_left = decode_weakest_typ([left_model], left_typ)
+
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix left
+    ~~~~~~~~~~~~~~~~~~~~~
+    IH_typ: {IH_typ.id}
+    left_model.freezer: {left_model.freezer}
+    left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+    ======================
+    left_pattern: {concretize_typ(left_typ)}
+    constrained left: {concretize_typ(constrained_left)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
             else:
                 constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
                 constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
