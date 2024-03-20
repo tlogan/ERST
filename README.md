@@ -2,7 +2,9 @@
 
 
 ### TODO
-- consider returning subtyping constraints that are used to condense, so they can be removed from before packaging constraints. 
+- double check that, in even_list subs nat_list, the learning of un-interpretable skolems is sound. 
+- in `condense`, consider need to flip back and forth between interpreting as strongest vs weakest
+    - as variables on the other side are followed?
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - introduce generalization at function abstraction; use subtyping extrusion for soundness 

@@ -360,6 +360,8 @@ list_nat_diff = ('''
 
 # list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: LFP SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
 
+# (~nil @, _2) <: ((~nil @, ~zero @) | (EXI [l n ; (l, n) <: LFP self ((~nil @, ~zero @) | (EXI [l n ; (l, n) <: self] ((~cons l \ ~nil @), ~succ n)))] ((~cons l \ ~nil @), ~succ n)))
+
 def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
@@ -402,10 +404,10 @@ def test_list_imp_nat_subs_nil_imp_query():
 (~nil @ -> Q)
     ''')
     answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
+    print(f'''
+answer: {answer}
+    ''')
     assert answer == "~zero @" 
-#     print(f'''
-# answer: {answer}
-#     ''')
 
 def test_list_imp_nat_subs_cons_nil_imp_query():
     nil_imp_query = ('''
@@ -700,12 +702,12 @@ def test_app_fix_nil():
 )))(~nil @) 
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces, debug=True)
     assert parsetree
     # print("parsetree: " + parsetree)
     assert combo
     print("combo: " + u(combo))
-    # assert u(combo) == "~zero @"
+    assert u(combo) == "~zero @"
 
 def test_app_fix_cons():
     pieces = ['''
@@ -717,7 +719,7 @@ def test_app_fix_cons():
 
     (combo, guides, parsetree) = analyze(pieces)
     assert parsetree
-    print("parsetree: " + parsetree)
+    # print("parsetree: " + parsetree)
     assert combo
     print("combo: " + u(combo))
     # assert u(combo) == "~succ ~zero @"
@@ -941,9 +943,14 @@ if __name__ == '__main__':
     # test_app_less_equal_two_one()
     #########################3
     # test_less_equal()
-    test_fix()
+    # test_fix()
+    # test_nil_query_subs_list_nat_diff()
+    # test_list_imp_nat_subs_nil_imp_query()
     # test_app_fix_nil()
-    # test_app_fix_cons()
+    
+    # TODO: need to flip back and forth between interpreting as strongest vs weakest
+    # - as variables on the other side are followed?
+    test_app_fix_cons()
 
     #####################
     # test_zero_nil_subs_nat_list()
