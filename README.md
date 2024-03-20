@@ -2,9 +2,10 @@
 
 
 ### TODO
-- double check that, in even_list subs nat_list, the learning of un-interpretable skolems is sound. 
 - in `condense`, consider need to flip back and forth between interpreting as strongest vs weakest
     - as variables on the other side are followed?
+- in weak, LeastFP: make sure reducing strong flips back and forth between strongest and weakest interpretations 
+    - consider if condense can be used for this.
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - introduce generalization at function abstraction; use subtyping extrusion for soundness 
@@ -15,6 +16,8 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, note the importance of flipping between weakest and strongest interpretations
+    - for a return type that depends on a parameter type; the P <: T ,  P < Q; Q; strongest of Q uses weakest of P e.g. T. 
 - in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.
     - allows for greater automation: that is, automatic reusing of proofs across propositions across the transitive closure of subtyping. 
 - in paper, note criteria of when variables are frozen (i.e. turned into skolems) 

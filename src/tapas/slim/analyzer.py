@@ -575,6 +575,7 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
     NOTE: related to weakest precondition concept
     '''
 
+
     has_weakest_interpretation = all(
         (
             id not in extract_free_vars_from_typ(s(), st.strong) or
@@ -582,6 +583,19 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
         )
         for st in model.constraints
     )
+
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG interpret_weakest_for_id 
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# id: {id}
+# has_weakest_interpretation: {has_weakest_interpretation}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+
+
     if has_weakest_interpretation:
         constraints = [
             st
@@ -715,15 +729,27 @@ def condense_strongest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG condense_strongest
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# typ: {concretize_typ(typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+
 
         trips = [ 
-            (id, strongest, cs_once.union(cs_cont)) 
+            (id, t, cs_once.union(cs_cont)) 
             for id in fvs
             for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
             if op != None
             if (id in model.freezer)
             for (strongest_once, cs_once) in [op]
-            for (strongest, cs_cont) in [condense_strongest(model, strongest_once)]
+            for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+            # for m in [model]
+            for (t, cs_cont) in [condense_weakest(m, strongest_once)]
         ]
 
         renaming = pmap({
@@ -748,19 +774,33 @@ def condense_weakest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
 
 
         trips = [ 
-            (id, weakest, cs_once.union(cs_cont)) 
+            (id, t, cs_once.union(cs_cont)) 
             for id in fvs
             for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
             if op != None
             if (id in model.freezer)
             for (weakest_once, cs_once) in [op]
-            for (weakest, cs_cont) in [condense_weakest(model, weakest_once)]
+            for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+            # for m in [model]
+            for (t, cs_cont) in [condense_strongest(m, weakest_once)]
         ]
 
         renaming = pmap({
             id : weakest 
             for (id, weakest, cs) in trips
         })
+
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG condense_weakest 
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# typ: {concretize_typ(typ)}
+# renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
+# fvs: {fvs}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         cs = pset(
             c
@@ -987,16 +1027,16 @@ def decode_typ(models : list[Model], t : Typ) -> Typ:
 
 def decode_strongest_typ(models : list[Model], t : Typ) -> Typ:
 
-    for m in models:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG decode_strongest 
-~~~~~~~~~~~~~~~~~~~~~~~~
-m.freezer: {m.freezer}
-m.constraints: {concretize_constraints(tuple(m.constraints))}
-t: {concretize_typ(t)}
-~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#     for m in models:
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG decode_strongest 
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# m.freezer: {m.freezer}
+# m.constraints: {concretize_constraints(tuple(m.constraints))}
+# t: {concretize_typ(t)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
     constraint_typs = [
         package_typ(m, strongest)
@@ -1294,14 +1334,14 @@ class Solver:
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, TVar unfrozen 
-~~~~~~~~~~~~~~~~~~~~~
-strong: {concretize_typ(strong)}
-weak: {concretize_typ(weak)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, TVar unfrozen 
+# ~~~~~~~~~~~~~~~~~~~~~
+# strong: {concretize_typ(strong)}
+# weak: {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             interp = interpret_weakest_for_id(model, weak.id)
             if interp == None or not selective(interp[0]):
                 return [Model(
@@ -1453,20 +1493,19 @@ weak: {concretize_typ(weak)}
             })
             
             reduced_strong = sub_typ(sub_map, strong)
-
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, LeastFP
-~~~~~~~~~~~~~~~~~~~~~
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
-strong: {concretize_typ(strong)}
-reduced_strong: {concretize_typ(reduced_strong)}
-weak: {concretize_typ(weak)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# strong: {concretize_typ(strong)}
+# reduced_strong: {concretize_typ(reduced_strong)}
+# weak: {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             if strong != reduced_strong:
                 return self.solve(model, reduced_strong, weak)
             elif not is_relational_key(model, strong) and self._battery != 0:
@@ -1489,6 +1528,14 @@ weak: {concretize_typ(weak)}
                 return models
             else:
                 strong_cache = match_strong(model, strong)
+
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP --- Cache hit 
+# ~~~~~~~~~~~~~~~~~~~~~
+# strong_cache: {mapOp(concretize_typ)(strong_cache)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 if strong_cache:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     return self.solve(model, strong_cache, weak)
@@ -1640,13 +1687,18 @@ class BaseRule(Rule):
         for choice in reversed(choices): 
             result = Inter(Imp(choice[0], choice[1]), result)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG choice[1]: {concretize_typ(choice[1])}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            # TODO: need to generalize/extrude here 
+            # from: ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16))))
+            # into:  ALL [X <: _12] ALL [R <: (EXI [_16 ; _2 <: (X -> _16)] ~succ _16))))] 
+            #           (~cons X\ ~nil @) -> R 
+            # TODO: need to unfreeze the body variables; or treat body as upper bound
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function:
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG body (i.e. choice[1]): {concretize_typ(choice[1])}
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
         return simplify_typ(result)
 
         # OLD construction of relation
@@ -1792,25 +1844,43 @@ class ExprRule(Rule):
         param_body = Bot()
         for model in reversed(models):
             (left_typ, left_used_constraints) = condense_weakest(model, in_typ)
+            # TODO; _21 in ~succ _21 should not be frozen; still needs to be learned 
+
+            # (_2 -> ((~nil @ -> ~zero @) & ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: P -> Q
+            # (_2 -> ((~nil @ -> ~zero @) & ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: P -> Q
+            # should the existential on the left should not be unfrozen?
+            # variables in return type of function should not be frozen;
+            # they can be learned/refined from application
+            # (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: Q
+            # criteria for when to freeze/unfreeze
+            # - application freezes result (for use as argument); 
+            # - abstraction unfreezes body (for use as applicator);
+            # alternative criteria for when to freeze/unfreeze
+            # - application freezes arguments; 
+            # - abstraction body should be unfrozen already 
             (right_typ, right_used_constraints) = condense_strongest(model, out_typ)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix 
-# ~~~~~~~~~~~~~~~~~~~~~
-# IH_typ: {IH_typ.id}
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ======================
-# in_typ: {concretize_typ(in_typ)}
-# left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-# left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix 
+~~~~~~~~~~~~~~~~~~~~~
 
-# out_typ: {concretize_typ(out_typ)}
-# right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-# right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+self_typ: {self_typ.id}
+body: {concretize_typ(body)}
+
+IH_typ: {IH_typ.id}
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+======================
+in_typ: {concretize_typ(in_typ)}
+left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
+
+out_typ: {concretize_typ(out_typ)}
+right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
