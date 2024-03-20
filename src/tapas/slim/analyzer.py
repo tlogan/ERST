@@ -745,11 +745,20 @@ def condense_strongest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
             for id in fvs
             for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
             if op != None
-            if (id in model.freezer)
+            # if (id in model.freezer)
+            # for (strongest_once, cs_once) in [op]
+            # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+            # # for m in [model]
+            # for (t, cs_cont) in [condense_weakest(m, strongest_once)]
+
             for (strongest_once, cs_once) in [op]
+            if (id in model.freezer) or inhabitable(strongest_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            # for m in [model]
-            for (t, cs_cont) in [condense_weakest(m, strongest_once)]
+            for (t, cs_cont) in [
+                condense_weakest(m, strongest_once)
+                if (id in model.freezer) else
+                condense_strongest(m, strongest_once)
+            ]
         ]
 
         renaming = pmap({
@@ -778,11 +787,18 @@ def condense_weakest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
             for id in fvs
             for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
             if op != None
-            if (id in model.freezer)
+            # if (id in model.freezer)
+            # for (weakest_once, cs_once) in [op]
+            # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+            # for (t, cs_cont) in [condense_strongest(m, weakest_once)]
             for (weakest_once, cs_once) in [op]
+            if (id in model.freezer) or selective(weakest_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            # for m in [model]
-            for (t, cs_cont) in [condense_strongest(m, weakest_once)]
+            for (t, cs_cont) in [
+                condense_strongest(m, weakest_once)
+                if (id in model.freezer) else
+                condense_weakest(m, weakest_once)
+            ]
         ]
 
         renaming = pmap({
@@ -1144,22 +1160,32 @@ class Solver:
     def set_battery(self, battery : int):
         self._battery = battery 
 
-    def fresh_type_var(self) -> TVar:
+    def fresh_type_id(self) -> str:
         self._type_id += 1
-        return TVar(f"_{self._type_id}")
+        return (f"_{self._type_id}")
 
-    def make_renaming(self, old_ids) -> PMap[str, Typ]:
+    def fresh_type_var(self) -> TVar:
+        return TVar(self.fresh_type_id())
+
+    def make_renaming_ids(self, old_ids) -> PMap[str, str]:
         '''
         Map old_ids to fresh ids
         '''
         d = {}
         for old_id in old_ids:
-            fresh = self.fresh_type_var()
+            fresh = self.fresh_type_id()
             d[old_id] = fresh
 
         return pmap(d)
 
+    def make_submap_from_renaming(self, renaming : PMap[str, str]) -> PMap[str, Typ]:
+        return pmap({
+            id : TVar(target)
+            for id, target in renaming.items()
+        })
 
+    def make_renaming(self, old_ids) -> PMap[str, Typ]:
+        return self.make_submap_from_renaming(self.make_renaming_ids(old_ids))
 
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
@@ -1243,8 +1269,8 @@ class Solver:
 
             for constraint in weak_constraints:
                 models = [
-                    # m1
-                    Model(m1.constraints, m1.freezer.union(frozen_indices))
+                    m1
+                    # Model(m1.constraints, m1.freezer.union(frozen_indices))
                     for m0 in models
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]
@@ -1260,7 +1286,8 @@ class Solver:
             models = self.solve(model, strong_body, weak)
 
             return [
-                Model(m1.constraints, m1.freezer.add(tvar_fresh.id))
+                m1
+                # Model(m1.constraints, m1.freezer.add(tvar_fresh.id))
                 for m0 in models
                 for m1 in self.solve(m0, tvar_fresh, strong_upper)
             ]   
@@ -1601,22 +1628,22 @@ class Solver:
     '''
 
     def query_weakest(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
-        fvs = extract_free_vars_from_typ(s(), query_typ)
-        models = [
-            Model(m.constraints, m.freezer.union(fvs))
-            for m in self.solve_composition(strong, weak)
-        ]
+        # fvs = extract_free_vars_from_typ(s(), query_typ)
+        # models = [
+        #     Model(m.constraints, m.freezer.union(fvs))
+        #     for m in self.solve_composition(strong, weak)
+        # ]
+        models = self.solve_composition(strong, weak)
         return decode_weakest_typ(models, query_typ)  
 
     def query_strongest(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
-        fvs = extract_free_vars_from_typ(s(), query_typ)
-        models = [
-            Model(m.constraints, m.freezer.union(fvs))
-            for m in self.solve_composition(strong, weak)
-        ]
-
+        # fvs = extract_free_vars_from_typ(s(), query_typ) 
+        # models = [
+        #     Model(m.constraints, m.freezer.union(fvs))
+        #     for m in self.solve_composition(strong, weak)
+        # ]
+        models = self.solve_composition(strong, weak)
         return decode_strongest_typ(models, query_typ)  
-
 
 
     def is_relation_constraint_wellformed(self, model : Model, strong : Typ, weak : LeastFP) -> bool:
@@ -1685,20 +1712,20 @@ class BaseRule(Rule):
         choices = from_cases_to_choices(cases)
         result = Top() 
         for choice in reversed(choices): 
-            result = Inter(Imp(choice[0], choice[1]), result)
+            '''
+            generalization and extrusion
+            '''
+            fvs = extract_free_vars_from_typ(s(), choice[0])
+            param_renaming = self.solver.make_renaming_ids(fvs)
+            param_typ = sub_typ(self.solver.make_submap_from_renaming(param_renaming), choice[0]) 
+            return_typ = choice[1]
 
-            # TODO: need to generalize/extrude here 
-            # from: ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16))))
-            # into:  ALL [X <: _12] ALL [R <: (EXI [_16 ; _2 <: (X -> _16)] ~succ _16))))] 
-            #           (~cons X\ ~nil @) -> R 
-            # TODO: need to unfreeze the body variables; or treat body as upper bound
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function:
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG body (i.e. choice[1]): {concretize_typ(choice[1])}
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+            imp = Imp(param_typ, return_typ)
+            generalized_case = imp
+            for old_var, new_var in param_renaming.items():
+                generalized_case = All(new_var, TVar(old_var), generalized_case)
+            result = Inter(generalized_case, result)
+
         return simplify_typ(result)
 
         # OLD construction of relation
@@ -1802,6 +1829,19 @@ class ExprRule(Rule):
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
             answer_i = self.solver.query_strongest(answer_i, Imp(argument, query_typ), query_typ)
+
+            # # TODO: figure out how to implement without freezeing
+            # # simply don't add query_typ to frozen variables
+            # # fvs = extract_free_vars_from_typ(s(), query_typ)
+            # models = self.solver.solve_composition(answer_i, Imp(argument, query_typ))
+            # # TODO: but if variables isn't frozen, then how do we decode an interpretaiton?
+            # # TODO: maybe decode should 
+            # # - use lenient interpretation for unfrozen variables and 
+            # #   - e.g. find strongest on strong side
+            # # - use strict interpretation for frozen variables
+            # #   - e.g. find weakest on strong side (flip back and forth)
+            # answer_i = decode_strongest_typ(models, query_typ)  
+            # # answer_i = decode_typ(models, query_typ)  
         return simplify_typ(answer_i)
 
 
@@ -1860,28 +1900,26 @@ class ExprRule(Rule):
             # - abstraction body should be unfrozen already 
             (right_typ, right_used_constraints) = condense_strongest(model, out_typ)
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix 
-~~~~~~~~~~~~~~~~~~~~~
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix 
+# ~~~~~~~~~~~~~~~~~~~~~
+# self_typ: {self_typ.id}
+# body: {concretize_typ(body)}
 
-self_typ: {self_typ.id}
-body: {concretize_typ(body)}
+# IH_typ: {IH_typ.id}
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# ======================
+# in_typ: {concretize_typ(in_typ)}
+# left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+# left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
-IH_typ: {IH_typ.id}
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
-======================
-in_typ: {concretize_typ(in_typ)}
-left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
-
-out_typ: {concretize_typ(out_typ)}
-right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
-
+# out_typ: {concretize_typ(out_typ)}
+# right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+# right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
@@ -1993,13 +2031,6 @@ right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
         '''
         assumption: target type is assumed to be well formed / inhabitable
         '''
-        # TODO: only generalize the free variables; there's an error causing rebinding of all-bound variable
-        # free_ids = extract_free_vars_from_typ(s(), target)
-        # target_generalized = target
-        # for fid in reversed(list(free_ids)):
-        #     target_generalized = All(fid, Top(), target_generalized) 
-        # enviro = self.nt.enviro.set(id, target_generalized)
-        #################################
         free_ids = extract_free_vars_from_typ(s(), target)
         target_generalized = target
         for fid in reversed(list(free_ids)):

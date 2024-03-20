@@ -414,10 +414,10 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
 ((~cons ~nil @) -> Q)
     ''')
     answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
+    print(f'''
+answer: {answer}
+    ''')
     assert answer == "~succ ~zero @"
-#     print(f'''
-# answer: {answer}
-#     ''')
 
 
 def test_list_imp_nat_subs_cons_cons_nil_imp_query():
@@ -717,9 +717,9 @@ def test_app_fix_cons():
 )))(~cons ~nil @) 
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces, True)
     assert parsetree
-    # print("parsetree: " + parsetree)
+    print("parsetree: " + parsetree)
     assert combo
     print("combo: " + u(combo))
     # assert u(combo) == "~succ ~zero @"
@@ -945,12 +945,14 @@ if __name__ == '__main__':
     # test_less_equal()
     # test_fix()
     # test_nil_query_subs_list_nat_diff()
+    # test_cons_nil_query_subs_list_nat_diff()
     # test_list_imp_nat_subs_nil_imp_query()
     # test_app_fix_nil()
     
     # TODO: need to flip back and forth between interpreting as strongest vs weakest
     # - as variables on the other side are followed?
-    test_app_fix_cons()
+    test_list_imp_nat_subs_cons_nil_imp_query()
+    # test_app_fix_cons()
 
     #####################
     # test_zero_nil_subs_nat_list()

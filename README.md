@@ -2,10 +2,6 @@
 
 
 ### TODO
-- in `condense`, consider need to flip back and forth between interpreting as strongest vs weakest
-    - as variables on the other side are followed?
-- in weak, LeastFP: make sure reducing strong flips back and forth between strongest and weakest interpretations 
-    - consider if condense can be used for this.
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - introduce generalization at function abstraction; use subtyping extrusion for soundness 
