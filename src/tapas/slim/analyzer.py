@@ -721,44 +721,67 @@ def mapOp(f):
     return call
 
 
-def condense_strongest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+    # NOTE: the unfrozen variables use strongest interpretation
+    # NOTE: the frozen variables use weakest interpretation 
     if isinstance(typ, Imp):
-        antec, antec_constraints = condense_weakest(model, typ.antec)
-        consq, consq_constraints = condense_strongest(model, typ.consq)
+        antec, antec_constraints = interpret_weak_side(model, typ.antec)
+        consq, consq_constraints = interpret_strong_side(model, typ.consq)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG condense_strongest
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# typ: {concretize_typ(typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG interpret_strong_side
+~~~~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+typ: {concretize_typ(typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
+        # trips = [ 
+        #     (id, t, cs_once.union(cs_cont)) 
+        #     for id in fvs
+        #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+        #     if op != None
+        #     if (id in model.freezer)
+        #     for (strongest_once, cs_once) in [op]
+        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+        #     # for m in [model]
+        #     for (t, cs_cont) in [interpret_weak_side(m, strongest_once)]
+        # ]
+
+
+        # trips = [ 
+        #     (id, t, cs_once.union(cs_cont)) 
+        #     for id in fvs
+        #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+        #     if op != None
+        #     for (strongest_once, cs_once) in [op]
+        #     if (id in model.freezer) or inhabitable(strongest_once) 
+        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+        #     for (t, cs_cont) in [
+        #         interpret_weak_side(m, strongest_once)
+        #         if (id in model.freezer) else
+        #         interpret_strong_side(m, strongest_once)
+        #     ]
+        # ]
 
         trips = [ 
             (id, t, cs_once.union(cs_cont)) 
             for id in fvs
-            for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+            for op in [
+                mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+                if id in model.freezer else
+                mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+            ]
             if op != None
-            # if (id in model.freezer)
-            # for (strongest_once, cs_once) in [op]
-            # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            # # for m in [model]
-            # for (t, cs_cont) in [condense_weakest(m, strongest_once)]
-
             for (strongest_once, cs_once) in [op]
             if (id in model.freezer) or inhabitable(strongest_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [
-                condense_weakest(m, strongest_once)
-                if (id in model.freezer) else
-                condense_strongest(m, strongest_once)
-            ]
+            for (t, cs_cont) in [interpret_strong_side(m, strongest_once)]
         ]
 
         renaming = pmap({
@@ -773,32 +796,46 @@ def condense_strongest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
         )
         return (sub_typ(renaming, typ), cs)
 
-def condense_weakest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+def interpret_weak_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec, antec_constraints = condense_strongest(model, typ.antec)
-        consq, consq_constraints = condense_weakest(model, typ.consq)
+        antec, antec_constraints = interpret_strong_side(model, typ.antec)
+        consq, consq_constraints = interpret_weak_side(model, typ.consq)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
+        # trips = [ 
+        #     (id, t, cs_once.union(cs_cont)) 
+        #     for id in fvs
+        #     for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
+        #     if op != None
+        #     # if (id in model.freezer)
+        #     # for (weakest_once, cs_once) in [op]
+        #     # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+        #     # for (t, cs_cont) in [interpret_strong_side(m, weakest_once)]
+        #     for (weakest_once, cs_once) in [op]
+        #     if (id in model.freezer) or selective(weakest_once) 
+        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+        #     for (t, cs_cont) in [
+        #         interpret_strong_side(m, weakest_once)
+        #         if (id in model.freezer) else
+        #         interpret_weak_side(m, weakest_once)
+        #     ]
+        # ]
 
         trips = [ 
             (id, t, cs_once.union(cs_cont)) 
             for id in fvs
-            for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
+            for op in [
+                mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+                if (id in model.freezer) else
+                mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+            ]
             if op != None
-            # if (id in model.freezer)
-            # for (weakest_once, cs_once) in [op]
-            # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            # for (t, cs_cont) in [condense_strongest(m, weakest_once)]
             for (weakest_once, cs_once) in [op]
             if (id in model.freezer) or selective(weakest_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [
-                condense_strongest(m, weakest_once)
-                if (id in model.freezer) else
-                condense_weakest(m, weakest_once)
-            ]
+            for (t, cs_cont) in [interpret_weak_side(m, weakest_once)]
         ]
 
         renaming = pmap({
@@ -806,17 +843,17 @@ def condense_weakest(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
             for (id, weakest, cs) in trips
         })
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG condense_weakest 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# typ: {concretize_typ(typ)}
-# renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
-# fvs: {fvs}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG interpret_weak_side 
+~~~~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+typ: {concretize_typ(typ)}
+renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
+fvs: {fvs}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         cs = pset(
             c
@@ -1041,34 +1078,34 @@ def decode_typ(models : list[Model], t : Typ) -> Typ:
     ] 
     return make_unio(constraint_typs)
 
-def decode_strongest_typ(models : list[Model], t : Typ) -> Typ:
+def decode_strong_side(models : list[Model], t : Typ) -> Typ:
 
-#     for m in models:
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG decode_strongest 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# m.freezer: {m.freezer}
-# m.constraints: {concretize_constraints(tuple(m.constraints))}
-# t: {concretize_typ(t)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+    for m in models:
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG decode_strongest 
+~~~~~~~~~~~~~~~~~~~~~~~~
+m.freezer: {m.freezer}
+m.constraints: {concretize_constraints(tuple(m.constraints))}
+t: {concretize_typ(t)}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
     constraint_typs = [
         package_typ(m, strongest)
         for model in models
-        for op in [condense_strongest(model, t)]
+        for op in [interpret_strong_side(model, t)]
         if op != None
         for (strongest, cs) in [op]
         for m in [Model(model.constraints.difference(cs), model.freezer)]
     ] 
     return make_unio(constraint_typs)
 
-def decode_weakest_typ(models : list[Model], t : Typ) -> Typ:
+def decode_weak_side(models : list[Model], t : Typ) -> Typ:
     constraint_typs = [
         package_typ(m, weakest)
         for model in models
-        for op in [condense_weakest(model, t)]
+        for op in [interpret_weak_side(model, t)]
         if op != None
         for (weakest, cs) in [op]
         for m in [Model(model.constraints.difference(cs), model.freezer)]
@@ -1191,19 +1228,19 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
         if self._battery == 0:
             return []
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# ||
-# || model.freezer::: 
-# || :::::::: {model.freezer}
-# ||
-# || model.constraints::: 
-# || :::::::: {concretize_constraints(tuple(model.constraints))}
-# ||
-# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-# ||
-#         ''')
+        print(f'''
+|| DEBUG SOLVE
+=================
+||
+|| model.freezer::: 
+|| :::::::: {model.freezer}
+||
+|| model.constraints::: 
+|| :::::::: {concretize_constraints(tuple(model.constraints))}
+||
+|| |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+||
+        ''')
 
         if alpha_equiv(strong, weak): 
             return [model] 
@@ -1627,23 +1664,23 @@ class Solver:
     end solve
     '''
 
-    def query_weakest(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
+    def query_weak_side(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
         # fvs = extract_free_vars_from_typ(s(), query_typ)
         # models = [
         #     Model(m.constraints, m.freezer.union(fvs))
         #     for m in self.solve_composition(strong, weak)
         # ]
         models = self.solve_composition(strong, weak)
-        return decode_weakest_typ(models, query_typ)  
+        return decode_weak_side(models, query_typ)  
 
-    def query_strongest(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
+    def query_strong_side(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
         # fvs = extract_free_vars_from_typ(s(), query_typ) 
         # models = [
         #     Model(m.constraints, m.freezer.union(fvs))
         #     for m in self.solve_composition(strong, weak)
         # ]
         models = self.solve_composition(strong, weak)
-        return decode_strongest_typ(models, query_typ)  
+        return decode_strong_side(models, query_typ)  
 
 
     def is_relation_constraint_wellformed(self, model : Model, strong : Typ, weak : LeastFP) -> bool:
@@ -1685,7 +1722,7 @@ class BaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(TTag(id, query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(TTag(id, query_typ), self.nt.typ, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ)
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
@@ -1753,12 +1790,12 @@ class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(Inter(TField('head', head), TField('tail', query_typ)), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(Inter(TField('head', head), TField('tail', query_typ)), self.nt.typ, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
@@ -1776,7 +1813,7 @@ class ExprRule(Rule):
         query_typ = self.solver.fresh_type_var()
         implication = Imp(TTag('true', TUnit()), query_typ) 
         model_conclusion = Imp(condition, self.nt.typ)
-        expected_typ = self.solver.query_weakest(implication, model_conclusion, query_typ)
+        expected_typ = self.solver.query_weak_side(implication, model_conclusion, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
@@ -1787,13 +1824,13 @@ class ExprRule(Rule):
         query_typ = self.solver.fresh_type_var()
         implication = Imp(TTag('false', TUnit()), query_typ) 
         model_conclusion = Imp(condition, self.nt.typ)
-        expected_typ = self.solver.query_weakest(implication, model_conclusion, query_typ)
+        expected_typ = self.solver.query_weak_side(implication, model_conclusion, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
         query_typ = self.solver.fresh_type_var()
-        true_typ = self.solver.query_strongest(Imp(TTag('true', TUnit()), true_branch), Imp(condition, query_typ), query_typ)
-        false_typ = self.solver.query_strongest(Imp(TTag('false', TUnit()), false_branch), Imp(condition, query_typ), query_typ) 
+        true_typ = self.solver.query_strong_side(Imp(TTag('true', TUnit()), true_branch), Imp(condition, query_typ), query_typ)
+        false_typ = self.solver.query_strong_side(Imp(TTag('false', TUnit()), false_branch), Imp(condition, query_typ), query_typ) 
         return simplify_typ(Unio(true_typ, false_typ)) 
 
     def distill_projection_cator(self) -> Nonterm:
@@ -1807,7 +1844,7 @@ class ExprRule(Rule):
         answer_i = record 
         for key in keys:
             query_typ = self.solver.fresh_type_var()
-            answer_i = self.solver.query_strongest(answer_i, TField(key, query_typ), query_typ)
+            answer_i = self.solver.query_strong_side(answer_i, TField(key, query_typ), query_typ)
 
         return answer_i
 
@@ -1828,7 +1865,7 @@ class ExprRule(Rule):
         answer_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
-            answer_i = self.solver.query_strongest(answer_i, Imp(argument, query_typ), query_typ)
+            answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
 
             # # TODO: figure out how to implement without freezeing
             # # simply don't add query_typ to frozen variables
@@ -1840,7 +1877,7 @@ class ExprRule(Rule):
             # #   - e.g. find strongest on strong side
             # # - use strict interpretation for frozen variables
             # #   - e.g. find weakest on strong side (flip back and forth)
-            # answer_i = decode_strongest_typ(models, query_typ)  
+            # answer_i = decode_strong_side(models, query_typ)  
             # # answer_i = decode_typ(models, query_typ)  
         return simplify_typ(answer_i)
 
@@ -1875,51 +1912,39 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
+        # TODO: need to figure out when to freeze variables and how to interpret them
         models = [
             Model(m.constraints, m.freezer.union([in_typ.id, out_typ.id]))
+            # m
             for m in self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
         ]
 
         induc_body = Bot()
         param_body = Bot()
         for model in reversed(models):
-            (left_typ, left_used_constraints) = condense_weakest(model, in_typ)
-            # TODO; _21 in ~succ _21 should not be frozen; still needs to be learned 
+            (left_typ, left_used_constraints) = interpret_weak_side(model, in_typ)
+            (right_typ, right_used_constraints) = interpret_strong_side(model, out_typ)
 
-            # (_2 -> ((~nil @ -> ~zero @) & ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: P -> Q
-            # (_2 -> ((~nil @ -> ~zero @) & ((~cons _12 \ ~nil @) -> (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: P -> Q
-            # should the existential on the left should not be unfrozen?
-            # variables in return type of function should not be frozen;
-            # they can be learned/refined from application
-            # (EXI [_16 ; _2 <: (_12 -> _16)] ~succ _16)))) <: Q
-            # criteria for when to freeze/unfreeze
-            # - application freezes result (for use as argument); 
-            # - abstraction unfreezes body (for use as applicator);
-            # alternative criteria for when to freeze/unfreeze
-            # - application freezes arguments; 
-            # - abstraction body should be unfrozen already 
-            (right_typ, right_used_constraints) = condense_strongest(model, out_typ)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix 
+~~~~~~~~~~~~~~~~~~~~~
+self_typ: {self_typ.id}
+body: {concretize_typ(body)}
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix 
-# ~~~~~~~~~~~~~~~~~~~~~
-# self_typ: {self_typ.id}
-# body: {concretize_typ(body)}
+IH_typ: {IH_typ.id}
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+======================
+in_typ: {concretize_typ(in_typ)}
+left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
-# IH_typ: {IH_typ.id}
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ======================
-# in_typ: {concretize_typ(in_typ)}
-# left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-# left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
-
-# out_typ: {concretize_typ(out_typ)}
-# right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-# right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+out_typ: {concretize_typ(out_typ)}
+right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
@@ -1961,7 +1986,7 @@ class ExprRule(Rule):
                 IH_rel_constraint = Subtyping(make_pair_typ(IH_typ_args[0], IH_typ_args[1]), IH_typ)
                 rel_constraints = tuple([IH_rel_constraint]) + other_constraints
                 rel_model = Model(pset(rel_constraints).difference(left_used_constraints).difference(right_used_constraints), pset(bound_ids))
-                constrained_rel = decode_weakest_typ([rel_model], rel_pattern)
+                constrained_rel = decode_weak_side([rel_model], rel_pattern)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
@@ -1979,7 +2004,7 @@ class ExprRule(Rule):
                 IH_left_constraint = Subtyping(IH_typ_args[0], IH_typ)
                 left_constraints = tuple([IH_left_constraint]) + other_constraints
                 left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
-                constrained_left = decode_weakest_typ([left_model], left_typ)
+                constrained_left = decode_weak_side([left_model], left_typ)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
@@ -2048,7 +2073,7 @@ class RecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(TField(id, query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(TField(id, query_typ), self.nt.typ, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_single(self, id : str, body : Typ) -> Typ:
@@ -2059,7 +2084,7 @@ class RecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(Inter(TField(id, body), query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(Inter(TField(id, body), query_typ), self.nt.typ, query_typ)
         return Nonterm('record', self.nt.enviro, expected_typ) 
 
     def combine_cons(self, id : str, body : Typ, tail : Typ) -> Typ:
@@ -2069,12 +2094,12 @@ class FunctionRule(Rule):
 
     def distill_single_pattern(self) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(self.nt.typ, Imp(query_typ, Top()), query_typ)
+        expected_typ = self.solver.query_weak_side(self.nt.typ, Imp(query_typ, Top()), query_typ)
         return Nonterm('pattern', self.nt.enviro, expected_typ)
 
     def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
         query_typ = self.solver.fresh_type_var() 
-        next_typ = self.solver.query_strongest(self.nt.typ, Imp(pattern.typ, query_typ), query_typ)
+        next_typ = self.solver.query_strong_side(self.nt.typ, Imp(pattern.typ, query_typ), query_typ)
         enviro = self.nt.enviro + pattern.enviro
         return Nonterm('expr', enviro, next_typ)
 
@@ -2096,7 +2121,7 @@ class FunctionRule(Rule):
             for choice in from_cases_to_choices([Imp(pattern.typ, body), Imp(antec_query_typ, consq_query_typ)])
         ])
 
-        cator_typ = self.solver.query_weakest(actual_typ, self.nt.typ, Imp(antec_query_typ, consq_query_typ))
+        cator_typ = self.solver.query_weak_side(actual_typ, self.nt.typ, Imp(antec_query_typ, consq_query_typ))
         '''
         NOTE: the guide is an implication guiding the next case
         '''
@@ -2117,7 +2142,7 @@ class KeychainRule(Rule):
     '''
     def distill_cons_tail(self, key : str):
         query_typ = self.solver.fresh_type_var()
-        next_typ = self.solver.query_strongest(self.nt.typ, TField(key, query_typ), query_typ)
+        next_typ = self.solver.query_strong_side(self.nt.typ, TField(key, query_typ), query_typ)
         return Nonterm('keychain', self.nt.enviro, next_typ)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
@@ -2127,7 +2152,7 @@ class ArgchainRule(Rule):
     def distill_single_content(self):
         if self.nt.is_applicator:
             query_typ = self.solver.fresh_type_var()
-            expected_typ = self.solver.query_weakest(self.nt.typ, Imp(query_typ, Top()), query_typ)
+            expected_typ = self.solver.query_weak_side(self.nt.typ, Imp(query_typ, Top()), query_typ)
             return Nonterm('expr', self.nt.enviro, expected_typ, False)
         else:
             return self.nt
@@ -2135,7 +2160,7 @@ class ArgchainRule(Rule):
     def distill_cons_head(self):
         if self.nt.is_applicator:
             query_typ = self.solver.fresh_type_var()
-            expected_typ = self.solver.query_weakest(self.nt.typ, Imp(query_typ, Top()), query_typ)
+            expected_typ = self.solver.query_weak_side(self.nt.typ, Imp(query_typ, Top()), query_typ)
             return Nonterm('expr', self.nt.enviro, expected_typ, False)
         else:
             return self.nt
@@ -2146,7 +2171,7 @@ class ArgchainRule(Rule):
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        next_typ = self.solver.query_strongest(self.nt.typ, Imp(head, query_typ), query_typ)
+        next_typ = self.solver.query_strong_side(self.nt.typ, Imp(head, query_typ), query_typ)
         return Nonterm('argchain', self.nt.enviro, next_typ, True)
 
     def combine_single(self, content : Typ) -> list[Typ]:
@@ -2162,13 +2187,13 @@ class PipelineRule(Rule):
 
     def distill_single_content(self):
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(query_typ, Imp(self.nt.typ, Top()), query_typ)
+        expected_typ = self.solver.query_weak_side(query_typ, Imp(self.nt.typ, Top()), query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ)
 
 
     def distill_cons_head(self):
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(query_typ, Imp(self.nt.typ, Top()), query_typ)
+        expected_typ = self.solver.query_weak_side(query_typ, Imp(self.nt.typ, Top()), query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ)
 
     def distill_cons_tail(self, head : Typ) -> Nonterm:
@@ -2177,7 +2202,7 @@ class PipelineRule(Rule):
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        next_typ = self.solver.query_strongest(head, Imp(self.nt.typ, query_typ), query_typ)
+        next_typ = self.solver.query_strong_side(head, Imp(self.nt.typ, query_typ), query_typ)
         return Nonterm('pipeline', self.nt.enviro, next_typ)
 
     def combine_single(self, content : Typ) -> list[Typ]:
@@ -2195,12 +2220,12 @@ start Pattern Rule
 class PatternRule(Rule):
     def distill_tuple_head(self) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ, query_typ)
         return Nonterm('pattern', self.nt.enviro, expected_typ) 
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(
+        expected_typ = self.solver.query_weak_side(
             Inter(TField('head', head.typ), TField('tail', query_typ)), 
             self.nt.typ, 
             query_typ
@@ -2226,7 +2251,7 @@ class PatternBaseRule(Rule):
 
     def distill_tag_body(self, id : str) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(TTag(id, query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(TTag(id, query_typ), self.nt.typ, query_typ)
         return Nonterm('pattern', self.nt.enviro, expected_typ)
 
     def combine_tag(self, label : str, body : PatternAttr) -> PatternAttr:
@@ -2239,7 +2264,7 @@ class PatternRecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(TField(id, query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(TField(id, query_typ), self.nt.typ, query_typ)
         return Nonterm('pattern_record', self.nt.enviro, expected_typ) 
 
     def combine_single(self, label : str, body : PatternAttr) -> PatternAttr:
@@ -2250,7 +2275,7 @@ class PatternRecordRule(Rule):
 
     def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
         query_typ = self.solver.fresh_type_var()
-        expected_typ = self.solver.query_weakest(Inter(TField(id, body.typ), query_typ), self.nt.typ, query_typ)
+        expected_typ = self.solver.query_weak_side(Inter(TField(id, body.typ), query_typ), self.nt.typ, query_typ)
         return Nonterm('pattern_record', self.nt.enviro, expected_typ) 
 
     def combine_cons(self, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:

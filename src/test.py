@@ -73,17 +73,17 @@ def solve(a : str, b : str):
     y = p(b)
     return solver.solve_composition(x, y)
 
-def query_weakest(a : str, b : str, k : str):
+def query_weak_side(a : str, b : str, k : str):
     x = p(a)
     y = p(b)
     q = p(k)
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_weakest(x, y, q)))
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_weak_side(x, y, q)))
 
-def query_strongest(a : str, b : str, k : str):
+def query_strong_side(a : str, b : str, k : str):
     x = p(a)
     y = p(b)
     q = p(k)
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_strongest(x, y, q)))
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_strong_side(x, y, q)))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
@@ -242,7 +242,7 @@ def test_one_query_subs_nat_list():
     one_query = ('''
 (~succ ~zero @, X)
     ''')
-    answer = query_weakest(one_query, nat_list, "X") 
+    answer = query_weak_side(one_query, nat_list, "X") 
     print("answer: " + answer)
     assert answer == "~cons ~nil @"
 
@@ -251,7 +251,7 @@ def test_one_cons_query_subs_nat_list():
     one_cons_query = ('''
 (~succ ~zero @, ~cons X)
     ''')
-    answer = query_weakest(one_cons_query, nat_list, "X")
+    answer = query_weak_side(one_cons_query, nat_list, "X")
     print(f"""
 answer: {answer}
     """)
@@ -262,7 +262,7 @@ def test_two_cons_query_subs_nat_list():
     two_cons_query = ('''
 (~succ ~succ ~zero @, ~cons X)
     ''')
-    answer = query_weakest(two_cons_query, nat_list, "X")
+    answer = query_weak_side(two_cons_query, nat_list, "X")
     print(f"""
 answr: {answer}
     """)
@@ -298,7 +298,7 @@ def test_one_plus_one_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
     ''')
-    answer = query_weakest(one_plus_one_query, addition_rel, "Z")
+    answer = query_weak_side(one_plus_one_query, addition_rel, "Z")
     assert answer == "~succ ~succ ~zero @"
 #     print(f'''
 # answer: {answer}
@@ -308,7 +308,7 @@ def test_one_plus_equals_two_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
     ''')
-    answer = query_weakest(one_plus_one_query, addition_rel, "Y")
+    answer = query_weak_side(one_plus_one_query, addition_rel, "Y")
     assert answer == "~succ ~zero @"
     print(f'''
 answer: {answer}
@@ -326,7 +326,7 @@ def test_plus_one_equals_two_query():
     plus_one_equals_two_query = ('''
 (x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    answer = query_weakest(plus_one_equals_two_query, addition_rel, "X")
+    answer = query_weak_side(plus_one_equals_two_query, addition_rel, "X")
     assert answer == "~succ ~zero @"
 #     print(f'''
 # answer: {answer}
@@ -339,7 +339,7 @@ def test_plus_equals_two_query():
     plus_equals_two_query = ('''
 (x : X & y : Y & z : ~succ ~succ ~zero @)
     ''')
-    answer = query_weakest(plus_equals_two_query, addition_rel, "(X, Y)")
+    answer = query_weak_side(plus_equals_two_query, addition_rel, "(X, Y)")
 #     print(f'''
 # answer: {answer}
 #     ''')
@@ -366,14 +366,14 @@ def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
     ''')
-    answer = query_weakest(nil_query, list_nat_diff, "X")
+    answer = query_weak_side(nil_query, list_nat_diff, "X")
     assert answer == "~zero @" 
 
 def test_cons_nil_query_subs_list_nat_diff():
     cons_nil_query = ('''
 ((~cons ~nil @), X)
     ''')
-    answer = query_weakest(cons_nil_query, list_nat_diff, "X")
+    answer = query_weak_side(cons_nil_query, list_nat_diff, "X")
     print(f'''
 answer: {answer}
     ''')
@@ -403,7 +403,7 @@ def test_list_imp_nat_subs_nil_imp_query():
     nil_imp_query = ('''
 (~nil @ -> Q)
     ''')
-    answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
+    answer = query_strong_side(list_imp_nat, nil_imp_query, "Q")
     print(f'''
 answer: {answer}
     ''')
@@ -413,7 +413,7 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
     nil_imp_query = ('''
 ((~cons ~nil @) -> Q)
     ''')
-    answer = query_strongest(list_imp_nat, nil_imp_query, "Q")
+    answer = query_strong_side(list_imp_nat, nil_imp_query, "Q")
     print(f'''
 answer: {answer}
     ''')
@@ -424,7 +424,7 @@ def test_list_imp_nat_subs_cons_cons_nil_imp_query():
     cons_cons_nil_imp_query = ('''
 ((~cons ~cons ~nil @) -> Q)
     ''')
-    answer = query_strongest(list_imp_nat, cons_cons_nil_imp_query, "Q")
+    answer = query_strong_side(list_imp_nat, cons_cons_nil_imp_query, "Q")
     assert answer == "~succ ~succ ~zero @"
     print(f'''
 answer: {answer}
@@ -862,7 +862,7 @@ def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
-    answer = query_weakest(two_less_equal_one_query, less_equal_rel, "Z")
+    answer = query_weak_side(two_less_equal_one_query, less_equal_rel, "Z")
     assert answer == "~false @"
 #     print(f'''
 # answer: {answer}
@@ -880,7 +880,7 @@ def test_less_equal_imp_subs_two_one_imp_query():
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
     ''')
-    answer = query_strongest(less_equal_imp, two_one_imp_query, "Q")
+    answer = query_strong_side(less_equal_imp, two_one_imp_query, "Q")
     print(f"answer: {answer}")
     assert answer == "~false @" 
 
@@ -949,9 +949,9 @@ if __name__ == '__main__':
     # test_list_imp_nat_subs_nil_imp_query()
     # test_app_fix_nil()
     
-    # TODO: need to flip back and forth between interpreting as strongest vs weakest
-    # - as variables on the other side are followed?
-    test_list_imp_nat_subs_cons_nil_imp_query()
+    ###############
+    # test_list_imp_nat_subs_cons_nil_imp_query()
+    # TODO
     # test_app_fix_cons()
 
     #####################
