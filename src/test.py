@@ -718,11 +718,11 @@ def test_app_fix_cons():
     ''']
 
     (combo, guides, parsetree) = analyze(pieces, True)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
+    # assert parsetree
+    # print("parsetree: " + parsetree)
+    # assert combo
     print("combo: " + u(combo))
-    # assert u(combo) == "~succ ~zero @"
+    assert u(combo) == "~succ ~zero @"
 
 def test_app_fix_cons_cons():
     pieces = ['''
@@ -947,11 +947,10 @@ if __name__ == '__main__':
     # test_nil_query_subs_list_nat_diff()
     # test_cons_nil_query_subs_list_nat_diff()
     # test_list_imp_nat_subs_nil_imp_query()
-    # test_app_fix_nil()
+    # test_list_imp_nat_subs_cons_nil_imp_query()
     
     ###############
-    # test_list_imp_nat_subs_cons_nil_imp_query()
-    # TODO
+    # test_app_fix_nil()
     # test_app_fix_cons()
 
     #####################

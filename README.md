@@ -2,7 +2,6 @@
 
 
 ### TODO
-- update how variables are interpreted in `combine_fix`
 - correct issues so `test_app_less_equal_two_one` passes
     - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
 - introduce generalization at function abstraction; use subtyping extrusion for soundness 
