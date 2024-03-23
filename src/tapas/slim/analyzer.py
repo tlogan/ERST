@@ -352,19 +352,41 @@ def pattern_type(t : Typ) -> bool:
         False
     )
 
+def negation_well_formed(neg : Typ) -> bool:
+    '''
+    restriction to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
+    '''
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~
+# DEBUG negation_well_formed
+# ~~~~~~~~~~~~~~~~~~~
+# neg: {concretize_typ(neg)}
+# ~~~~~~~~~~~~~~~~~~~
+#     """)
+    if isinstance(neg, Exi):
+        return len(neg.constraints) == 0 and negation_well_formed(neg.body)
+    elif isinstance(neg, TVar):
+        return True
+    elif isinstance(neg, TUnit):
+        return True
+    elif isinstance(neg, TTag):
+        return negation_well_formed(neg.body)
+    elif isinstance(neg, TField):
+        return negation_well_formed(neg.body)
+    elif isinstance(neg, Inter):
+        return (
+            negation_well_formed(neg.left) and 
+            negation_well_formed(neg.right)
+        )
+    else:
+        return False
+
 
 def diff_well_formed(diff : Diff) -> bool:
     '''
     restriction to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
     '''
-    neg = diff.negation
-    if isinstance(neg, Exi):
-        return (
-            neg.constraints == () and 
-            pattern_type(neg.body)
-        )
-    else:
-        return pattern_type(diff.negation)
+    return negation_well_formed(diff.negation)
 
 def make_diff(context : Typ, negs : list[Typ]) -> Typ:
     result = context 
@@ -397,7 +419,8 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
             if neg_fvs else
             case.antec
         )
-        negs += [neg]
+        # negs += [neg]
+        negs = []
     return choices 
 
 def linearize_unions(t : Typ) -> list[Typ]:
@@ -1146,7 +1169,7 @@ def make_inter(ts : list[Typ]) -> Typ:
 
 class Solver:
     _type_id : int = 0 
-    _battery : int = 100 
+    _battery : int = 10 
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -1226,6 +1249,7 @@ class Solver:
 
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
+        self._battery -= 1 
         if self._battery == 0:
             return []
 #         print(f'''
@@ -1340,13 +1364,25 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG strong, TVar frozen 
 # ~~~~~~~~~~~~~~~~~~~~~
+
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+
 # strong: {strong.id}
 # weak: {concretize_typ(weak)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
             op = interpret_weakest_for_id(model, strong.id)
             if op != None:
-                (weakest_strong, _) = op
+                (weakest_strong, used_constraints) = op
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG strong, TVar frozen 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # weakest_strong: {concretize_typ(weakest_strong)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
                 return [Model(
@@ -1374,6 +1410,10 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG strong, TVar unfrozen 
 # ~~~~~~~~~~~~~~~~~~~~~
+
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+
 # strong: {strong.id}
 # weak: {concretize_typ(weak)}
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -1385,7 +1425,15 @@ class Solver:
                     model.freezer
                 )]
             else:
-                strongest = interp[0]
+                strongest, used_constraints = interp
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG strong, TVar unfrozen 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # strongest: {strongest}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
                 models = self.solve(model, strongest, weak)
 
                 return [
@@ -1510,24 +1558,48 @@ class Solver:
                 for m1 in self.solve(m0, strong, weak.right)
             ]
 
-        elif isinstance(weak, Diff) and diff_well_formed(weak):
-            # TODO: need a sound/safe/conservative inhabitable check
-            # only works if we assume T is not empty
-            '''
-            T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-            ----
-            T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-            ----
-            T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
-            '''
-            return [
-                m
-                for m in self.solve(model, strong, weak.context)
-                if (
-                    not inhabitable(strong) or 
-                    self.solve(m, strong, weak.negation) == []
-                )
-            ]
+        elif isinstance(weak, Diff): 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, Diff 
+# ~~~~~~~~~~~~~~~~~~~~
+# strong: {concretize_typ(strong)}
+# weak: {concretize_typ(weak)}
+# well_formed: {diff_well_formed(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
+            if diff_well_formed(weak):
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_models = self.solve(model, strong, weak.context)
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG weak, Diff 
+    # ~~~~~~~~~~~~~~~~~~~~
+    # len(context_models): {len(context_models)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+                return [
+                    m
+                    for m in context_models 
+                    if (
+                        not inhabitable(strong) or 
+                        self.solve(m, strong, weak.negation) == []
+                    )
+                ]   
+            else:
+                return []
         
 
         #######################################
@@ -1593,13 +1665,6 @@ class Solver:
             else:
                 strong_cache = match_strong(model, strong)
 
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- Cache hit 
-# ~~~~~~~~~~~~~~~~~~~~~
-# strong_cache: {mapOp(concretize_typ)(strong_cache)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
                 if strong_cache:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     return self.solve(model, strong_cache, weak)
@@ -1618,11 +1683,14 @@ class Solver:
                     else:
                         return []
 
-        elif isinstance(strong, Diff) and diff_well_formed(strong):
-            '''
-            A \\ B <: T === A <: T | B  
-            '''
-            return self.solve(model, strong.context, Unio(weak, strong.negation))
+        elif isinstance(strong, Diff):
+            if diff_well_formed(strong):
+                '''
+                A \\ B <: T === A <: T | B  
+                '''
+                return self.solve(model, strong.context, Unio(weak, strong.negation))
+            else:
+                return []
 
 
         elif isinstance(weak, Unio): 
@@ -1955,14 +2023,16 @@ right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
             bound_ids = left_bound_ids + right_bound_ids
             rel_pattern = make_pair_typ(left_typ, right_typ)
             #########################################
+            model = Model(other_constraints, model.freezer)
             self_interp = (interpret_weak_side(model, self_typ))
 
-#             nl = "\n"
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            nl = "\n"
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG self_typ: {self_typ.id}
+DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             if self_interp and isinstance(self_interp[0], Imp):
                 left = self_interp[0].antec
@@ -2031,12 +2101,14 @@ DEBUG rel_typ
         result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
 
         print(f"""
-DEBUG combine_fix resul 
+DEBUG combine_fix result 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :: result: {concretize_typ(result)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)
 
+        # DEBUG
+        # return Bot() 
         return result
 
     

@@ -2,10 +2,11 @@
 
 
 ### TODO
-- correct issues so `test_app_less_equal_two_one` passes
-    - try using criteria that frozen variables should be given non-variable interpretation and unfrozen variables may keep variables around
-- introduce generalization at function abstraction; use subtyping extrusion for soundness 
-- remove generalization from the let rule; let rule 
+- make sure constraints used to construct interpretations are removed in subsequent interpretations
+- update generation of bound variable in case of relation type of fix
+- fix solver to handle least relation with bot in either beginning or end 
+- drop free variable that have no interpretation
+
 - check that combine_app rule isn't redundant with checks in distill app rules.
 - develop examples with interesting semantics and test type inference
     - inferring max

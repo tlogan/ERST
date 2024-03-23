@@ -851,22 +851,24 @@ LFP self BOT
     | (EXI [x ; x <: ({nat})] (~succ x, ~zero @))
 ''')
 
-less_equal_rel = (f'''
-LFP self BOT 
+
+less_equal_rel = (f"""
+LFP self  BOT 
     | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
     | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
     | (EXI [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
-''')
+    | BOT
+""")
 
 def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
     answer = query_weak_side(two_less_equal_one_query, less_equal_rel, "Z")
+    print(f'''
+answer: {answer}
+    ''')
     assert answer == "~false @"
-#     print(f'''
-# answer: {answer}
-#     ''')
 
 less_equal_imp = (f'''
 (ALL [XY <: ({nat_pair_rel})] (XY -> 
@@ -874,6 +876,29 @@ less_equal_imp = (f'''
 ))) 
 ''')
 
+def test_weak_diff():
+    left = ('''
+(~succ ~zero @)
+    ''')
+    right = ('''
+(~succ W) \\ (EXI [x] (~zero @, x))
+    ''')
+    answer = query_strong_side(left, right, "W")
+    print(f"answer: {answer}")
+    # assert answer == "(~succ ~succ ~zero @, ~succ ~zero @)" 
+    assert answer == "~zero @" 
+
+def test_weak_diff_in_pair():
+    left = ('''
+((~succ ~zero @), @)
+    ''')
+    right = ('''
+(((~succ W) \\ (EXI [x] (~zero @, x))), @)
+    ''')
+    answer = query_strong_side(left, right, "W")
+    print(f"answer: {answer}")
+    # assert answer == "(~succ ~succ ~zero @, ~succ ~zero @)" 
+    assert answer == "~zero @" 
 
 
 def test_less_equal_imp_subs_two_one_imp_query():
@@ -902,11 +927,11 @@ def test_app_less_equal_two_one():
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
     pieces = [app_less]
-    (combo, guides, parsetree) = analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces, True)
     # print(parsetree)
-    assert combo
+    # assert combo
     print("combo: " + u(combo))
-    # assert u(combo) == "~false @"
+    assert u(combo) == "~false @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -939,9 +964,15 @@ less_equal(~zero @, ~succ ~zero @)
 
 
 if __name__ == '__main__':
+    # p(less_equal_rel)
     # test_less_equal_imp_subs_two_one_imp_query()
+    # test_weak_diff()
+    # test_weak_diff_in_pair()
+    #########################
+    # TODO: this is broken because of BOT at the beginning of the union
+    test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
-    #########################3
+    ########################
     # test_less_equal()
     # test_fix()
     # test_nil_query_subs_list_nat_diff()
