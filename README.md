@@ -2,11 +2,6 @@
 
 
 ### TODO
-- make sure constraints used to construct interpretations are removed in subsequent interpretations
-- update generation of bound variable in case of relation type of fix
-- fix solver to handle least relation with bot in either beginning or end 
-- drop free variable that have no interpretation
-
 - check that combine_app rule isn't redundant with checks in distill app rules.
 - develop examples with interesting semantics and test type inference
     - inferring max

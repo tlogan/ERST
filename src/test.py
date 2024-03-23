@@ -857,7 +857,6 @@ LFP self  BOT
     | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
     | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
     | (EXI [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
-    | BOT
 """)
 
 def test_two_less_equal_one_query():
@@ -969,8 +968,7 @@ if __name__ == '__main__':
     # test_weak_diff()
     # test_weak_diff_in_pair()
     #########################
-    # TODO: this is broken because of BOT at the beginning of the union
-    test_two_less_equal_one_query()
+    # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
     ########################
     # test_less_equal()
@@ -990,7 +988,7 @@ if __name__ == '__main__':
     # test_two_single_subs_nat_list()
     #####################
     # test_even_list_subs_nat_list()
-    # test_nat_list_subs_even_list()
+    test_nat_list_subs_even_list()
     # test_one_query_subs_nat_list()
     pass
 

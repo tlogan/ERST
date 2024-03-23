@@ -1125,6 +1125,17 @@ def decode_strong_side(models : list[Model], t : Typ) -> Typ:
     return make_unio(constraint_typs)
 
 def decode_weak_side(models : list[Model], t : Typ) -> Typ:
+
+    for m in models:
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG decode_weak_side 
+~~~~~~~~~~~~~~~~~~~~~~~~
+m.freezer: {m.freezer}
+m.constraints: {concretize_constraints(tuple(m.constraints))}
+t: {concretize_typ(t)}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
     constraint_typs = [
         package_typ(m, weakest)
         for model in models
@@ -1249,7 +1260,6 @@ class Solver:
 
 
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
-        self._battery -= 1 
         if self._battery == 0:
             return []
 #         print(f'''
@@ -1360,29 +1370,18 @@ class Solver:
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG strong, TVar frozen 
-# ~~~~~~~~~~~~~~~~~~~~~
-
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-
-# strong: {strong.id}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
             op = interpret_weakest_for_id(model, strong.id)
             if op != None:
                 (weakest_strong, used_constraints) = op
 
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG strong, TVar frozen 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # weakest_strong: {concretize_typ(weakest_strong)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG strong, TVar frozen 
+    ~~~~~~~~~~~~~~~~~~~~~
+    weakest_strong: {concretize_typ(weakest_strong)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
+                model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
                 return [Model(
@@ -1395,7 +1394,8 @@ class Solver:
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
             op = interpret_strongest_for_id(model, weak.id)
             if op != None:
-                (strongest_weak, _) = op
+                (strongest_weak, used_constraints) = op
+                model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return self.solve(model, strong, strongest_weak)
             elif isinstance(strong, TVar) and strong.id not in model.freezer:
                 return [Model(
@@ -1406,18 +1406,18 @@ class Solver:
                 return []
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG strong, TVar unfrozen 
-# ~~~~~~~~~~~~~~~~~~~~~
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG strong, TVar unfrozen 
+~~~~~~~~~~~~~~~~~~~~~
 
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
 
-# strong: {strong.id}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+strong: {strong.id}
+weak: {concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
             interp = interpret_strongest_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
@@ -1434,6 +1434,8 @@ class Solver:
     # strongest: {strongest}
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
+
+                model = Model(model.constraints.difference(used_constraints), model.freezer)
                 models = self.solve(model, strongest, weak)
 
                 return [
@@ -1461,7 +1463,8 @@ class Solver:
                     model.freezer
                 )]
             else:
-                weakest = interp[0]
+                weakest, used_constraints = interp
+                model = Model(model.constraints.difference(used_constraints), model.freezer)
                 models = self.solve(model, strong, weakest)
                 models = [
                     Model(
@@ -1614,21 +1617,24 @@ class Solver:
 
 
         elif isinstance(weak, LeastFP): 
-            ids = extract_free_vars_from_typ(s(), strong)
-            sub_map = pmap({
-                id : interp 
-                for id in ids
-                for pair in [
-                    mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
-                    if id in model.freezer else
-                    mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
-                ]
-                if pair 
-                for interp in [pair[0]]
-                if inhabitable(interp) 
-            })
+            # ids = extract_free_vars_from_typ(s(), strong)
+            # sub_map = pmap({
+            #     id : interp 
+            #     for id in ids
+            #     for pair in [
+            #         mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+            #         if id in model.freezer else
+            #         mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+            #     ]
+            #     if pair 
+            #     for interp in [pair[0]]
+            #     if inhabitable(interp) 
+            # })
             
-            reduced_strong = sub_typ(sub_map, strong)
+            # reduced_strong = sub_typ(sub_map, strong)
+
+            reduced_strong, used_constraints = interpret_strong_side(model, strong)
+            model = Model(model.constraints.difference(used_constraints), model.freezer)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~
