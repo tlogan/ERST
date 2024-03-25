@@ -24,6 +24,16 @@ R = TypeVar('R')
 
 Op = Optional
 
+@dataclass(frozen=True, eq=True)
+class RNode:
+    content : PMap[str, RTree] 
+
+@dataclass(frozen=True, eq=True)
+class RLeaf:
+    content : Typ 
+
+RTree = Union[RNode, RLeaf]
+
 """
 Typ data types
 """
@@ -516,27 +526,53 @@ def factor_path(path : tuple[str, ...], least : LeastFP) -> Typ:
     column = extract_column(path, least.id, choices)
     return column 
 
-def insert_at_path(m : PMap, path : tuple[str, ...], o):
-    if path:
-        key = path[0]  
-        if key in m:
-            assert path[1:]
-            n = m[key] 
-            return m.add({key : insert_at_path(n, path[1:], o)})
+
+def insert_at_path(rnode : RNode, path : tuple[str, ...], t : Typ) -> RNode:
+    assert path
+    key = path[0]  
+    remainder = path[1:]
+
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG insert_at_path 
+# ~~ path: {path}
+# ~~ key in rnode.content: {key in rnode.content}
+# ~~ remainder: {remainder}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+
+    if remainder:
+        if key in rnode.content:
+            assert remainder
+            n = rnode.content[key] 
+            assert isinstance(n, RNode)
         else:
-            return m.add({key : insert_at_path(pmap(), path[1:], o)})
+            n = RNode(m())
+
+        o = insert_at_path(n, remainder, t)
+        content = rnode.content.set(key, o) 
+        return RNode(content)
     else:
-        return o
+        o = RLeaf(t) 
+        content = rnode.content.set(key, o) 
+        return RNode(content)
 
-
-def to_record_typ(m) -> Typ:
+def to_record_typ(rnode : RNode) -> Typ:
     result = Top()
-    for key in m:
-        v = m[key]
-         
-        if isinstance(v, Typ):
-            field = TField(key, v)
+    for key in rnode.content:
+        v = rnode.content[key]
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG to_record_typ
+DEBUG v: {v}
+DEBUG type(v): {v} 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+        if isinstance(v, RLeaf):
+            field = TField(key, v.content)
         else:
+            assert (v, RNode)
             t = to_record_typ(v)
             field = TField(key, t)
         result = Inter(field, result)
@@ -552,12 +588,13 @@ def factor_least(least : LeastFP) -> Typ:
         for path in list(extract_paths(choice))
     ]
 
-    m = pmap() 
+    rnode = RNode(m()) 
     for path in paths:
         column = extract_column(path, least.id, choices)
-        m = insert_at_path(m, path, column)
+        assert isinstance(rnode, RNode)
+        rnode = insert_at_path(rnode, path, column)
 
-    return to_record_typ(m) 
+    return to_record_typ(rnode) 
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless((), t1) == to_nameless((), t2)

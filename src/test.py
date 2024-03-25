@@ -955,7 +955,7 @@ let less_equal = {less_equal} ;
 less_equal(~zero @, ~succ ~zero @)
     ''')
     pieces = [max]
-    (combo, guides, parsetree) = analyze(pieces)
+    (combo, guides, parsetree) = analyze(pieces, True)
     print(parsetree)
     # raise_guide(guides)
     # assert combo
@@ -963,14 +963,15 @@ less_equal(~zero @, ~succ ~zero @)
 
 
 if __name__ == '__main__':
+    # test_two_less_equal_one_query()
+    # test_app_less_equal_two_one()
+    test_max()
+    ########################
     # p(less_equal_rel)
     # test_less_equal_imp_subs_two_one_imp_query()
     # test_weak_diff()
     # test_weak_diff_in_pair()
     #########################
-    # test_two_less_equal_one_query()
-    # test_app_less_equal_two_one()
-    ########################
     # test_less_equal()
     # test_fix()
     # test_nil_query_subs_list_nat_diff()
@@ -988,7 +989,7 @@ if __name__ == '__main__':
     # test_two_single_subs_nat_list()
     #####################
     # test_even_list_subs_nat_list()
-    test_nat_list_subs_even_list()
+    # test_nat_list_subs_even_list()
     # test_one_query_subs_nat_list()
     pass
 

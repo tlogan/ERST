@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.17)  18 MAR 2024 09:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.17)  25 MAR 2024 10:27
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1079,15 +1079,15 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24343 strings out of 476025
- 393755 string characters out of 5790016
+ 24340 strings out of 476025
+ 393680 string characters out of 5790016
  1893388 words of memory out of 5000000
  43685 multiletter control sequences out of 15000+600000
- 701831 words of font info for 414 fonts, out of 8000000 for 9000
+ 701558 words of font info for 412 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  85i,30n,131p,1073b,1303s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/txfonts/txsya.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (13 pages, 473437 bytes).
+Output written on paper.pdf (13 pages, 472863 bytes).
 PDF statistics:
  292 PDF objects out of 1000 (max. 8388607)
  237 compressed objects within 3 object streams

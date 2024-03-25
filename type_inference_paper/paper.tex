@@ -2191,15 +2191,6 @@ The terminology "semantic subtyping" vs "syntactic subtyping" are confusing term
 "semantics subtyping" means the semantics of types is determined indirectly by the semantics of another structure.
 "syntactic subtyping" means the semantics of types is determined directly by the type structure
 
-In my opinion, better terms would be "model-based" vs "proof-based".
-A model-based system can be more complete but requires proving absence of inhabitation of the types.
-That is, the semantics of subtyping would depend on the semantics of inhabitation of types.
-This is related to SAT solving, proof synthesis, model checking, and SMT.
-If a type is model-based, not proof-based, then a proof must be found.
-Since the "proof" is not part of the model-based subtyping statement, 
-there is an infinite space to search to prove that the subtyping statement holds.
-This leads to a more complete system, but a more difficult system to decide.
-
 \paragraph{Extrinsic typing.}
 Exemplified by Typescript, which is unsound. Maybe not as lenient?  
 The static behavior of a program is not necessarily specified/prescribed; 
