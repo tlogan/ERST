@@ -952,32 +952,43 @@ case (x, y) => (
 )
 ''')
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
-case (x, y) => (
-    if cmp(x, y) then
-        (~OOGA @) 
-    else
-        (~BOOGA @) 
-)
-''')
 
-# combo: (ALL [_41 <: _19] (ALL [_40 <: _21] ((_41, _40) -> (EXI [ ; _21 <: ~uno @ ; _19 <: ~uno @ ; _19 <: ~dos @ ; _21 <: ~dos @] (~BOOGA @ | ~OOGA @)))))
-# arg_specialization = (f'''
-# let cmp = (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) ;
-# case (x, y) => (
-#     (
-#     case ~true @ => (~OOGA @) 
-#     case ~false @ => (~BOOGA @) 
-#     )(cmp(x, y))
-# )
-# ''')
+def test_imp_inter_subs_union_imp():
+    # TODO: figure out how to apply each case individually
+    imp_inter = ('''
+((~true @ -> X) & (~false @ -> Y)) 
+    ''')
+
+    union_imp = ('''
+(
+(EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) | 
+(EXI [ ; Y <: ~dos @ ; X <: ~uno @] ~false @)
+) -> Q
+    ''')
+    answer = query_strong_side(imp_inter, union_imp, "Q")
+    print(f'''
+answer: {answer}
+    ''')
+    # assert answer == "~zero @" 
+
+def test_all_imp_exi_subs_union_imp():
+    # TODO: make sure this works as expected 
+
+    all_imp_exi = ('''
+(ALL [A <: (~true @ | ~false @) -> EXI [B ; (A,B) <:(~true @, X) | (~false @, Y) ] B) 
+    ''')
+
+    union_imp = ('''
+(
+(EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) | 
+(EXI [ ; Y <: ~dos @ ; X <: ~uno @] ~false @)
+) -> Q
+    ''')
+    answer = query_strong_side(all_imp_exi, union_imp, "Q")
+    print(f'''
+answer: {answer}
+    ''')
+    # assert answer == "~zero @" 
 
 def test_arg_specialization():
     # TODO
@@ -1083,7 +1094,9 @@ if __name__ == '__main__':
     # test_app_less_equal_two_one()
     #
     # TODO
-    test_arg_specialization()
+    test_imp_inter_subs_union_imp()
+    # test_all_imp_exi_subs_union_imp()
+    # test_arg_specialization()
     # test_if_true_then_else()
     # test_function_if_then_else()
     # (ALL [_9 <: _2] (_9 -> ((EXI [ ; _2 <: ~true @] ~uno @) | (EXI [ ; _2 <: ~false @] ~dos @))))

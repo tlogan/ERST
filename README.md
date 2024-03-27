@@ -2,7 +2,10 @@
 
 
 ### TODO
-- make sure constraints on arguments are preserved 
+- make sure constraints on arguments are preserved in `combine_application` 
+- update implication unification rule to keep new antecedent constraints local
+- in `combine_function`, consider extruding over whole implication; not just parameter
+- add negs back in `from_cases_to_choices`
 - get `max` example to work
 - check that combine_app rule isn't redundant with checks in distill app rules.
 - develop examples with interesting semantics and test type inference
@@ -10,6 +13,8 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, note importance of generating constraints on argument variables
+- in paper, note importance of keeping argument constraints local to each case in implication rule 
 - in paper, note the importance of flipping between weakest and strongest interpretations
     - for a return type that depends on a parameter type; the P <: T ,  P < Q; Q; strongest of Q uses weakest of P e.g. T. 
 - in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.
