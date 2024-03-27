@@ -419,9 +419,13 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     negs = []
 
     for case in cases:
-#         print(f"""
-# DEBUG case: {concretize_typ(case)}
-#         """)
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG from_cases_to_choices
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG case: {concretize_typ(case)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         choices += [(make_diff(case.antec, negs), case.consq)]
         neg_fvs = extract_free_vars_from_typ(s(), case.antec)  
         neg = (
@@ -429,6 +433,7 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
             if neg_fvs else
             case.antec
         )
+        # TODO
         # negs += [neg]
         negs = []
     return choices 
@@ -561,14 +566,13 @@ def to_record_typ(rnode : RNode) -> Typ:
     result = Top()
     for key in rnode.content:
         v = rnode.content[key]
-
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG to_record_typ
-DEBUG v: {v}
-DEBUG type(v): {v} 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG to_record_typ
+# DEBUG v: {v}
+# DEBUG type(v): {v} 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
         if isinstance(v, RLeaf):
             field = TField(key, v.content)
         else:
@@ -1163,16 +1167,18 @@ def decode_strong_side(models : list[Model], t : Typ) -> Typ:
 
 def decode_weak_side(models : list[Model], t : Typ) -> Typ:
 
-    for m in models:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG decode_weak_side 
-~~~~~~~~~~~~~~~~~~~~~~~~
-m.freezer: {m.freezer}
-m.constraints: {concretize_constraints(tuple(m.constraints))}
-t: {concretize_typ(t)}
-~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#     for m in models:
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG decode_weak_side 
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# m.freezer: {m.freezer}
+
+# m.constraints: {concretize_constraints(tuple(m.constraints))}
+
+# t: {concretize_typ(t)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
     constraint_typs = [
         package_typ(m, weakest)
         for model in models
@@ -1411,13 +1417,13 @@ class Solver:
             if op != None:
                 (weakest_strong, used_constraints) = op
 
-                print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG strong, TVar frozen 
-    ~~~~~~~~~~~~~~~~~~~~~
-    weakest_strong: {concretize_typ(weakest_strong)}
-    ~~~~~~~~~~~~~~~~~~~~~
-                """)
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG strong, TVar frozen 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # weakest_strong: {concretize_typ(weakest_strong)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
                 model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
@@ -1443,18 +1449,18 @@ class Solver:
                 return []
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG strong, TVar unfrozen 
-~~~~~~~~~~~~~~~~~~~~~
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG strong, TVar unfrozen 
+# ~~~~~~~~~~~~~~~~~~~~~
 
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
 
-strong: {strong.id}
-weak: {concretize_typ(weak)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+# strong: {strong.id}
+# weak: {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             interp = interpret_strongest_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
@@ -1863,39 +1869,17 @@ class BaseRule(Rule):
             '''
             generalization and extrusion
             '''
-            fvs = extract_free_vars_from_typ(s(), choice[0])
-            param_renaming = self.solver.make_renaming_ids(fvs)
-            param_typ = sub_typ(self.solver.make_submap_from_renaming(param_renaming), choice[0]) 
-            return_typ = choice[1]
 
-            imp = Imp(param_typ, return_typ)
-            generalized_case = imp
-            for old_var, new_var in param_renaming.items():
+            imp = Imp(choice[0], choice[1])
+            fvs = extract_free_vars_from_typ(s(), imp)
+            renaming = self.solver.make_renaming_ids(fvs)
+
+            generalized_case = sub_typ(self.solver.make_submap_from_renaming(renaming), imp)
+            for old_var, new_var in renaming.items():
                 generalized_case = All(new_var, TVar(old_var), generalized_case)
             result = Inter(generalized_case, result)
 
         return simplify_typ(result)
-
-        # OLD construction of relation
-        # rel = Bot() 
-        # for choice in reversed(choices): 
-        #     rel = Unio(make_pair_typ(*choice), rel)
-
-        # antec = Bot()  
-        # for case in reversed(cases): 
-        #     antec = Unio(case.antec, antec)
-
-        # var_antec = self.solver.fresh_type_var()
-        # var_concl = self.solver.fresh_type_var()
-        # var_pair = make_pair_typ(var_antec, var_concl)
-
-        # return All(var_antec.id, antec,
-        #     Imp(
-        #         var_antec,
-        #         Exi(tuple([var_concl.id]), tuple([Subtyping(var_pair, rel)]), var_concl)
-        #     )
-        # )   
-
 
 class ExprRule(Rule):
 
@@ -1968,28 +1952,39 @@ class ExprRule(Rule):
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG arguments: {arguments} 
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
+
         answer_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
-            answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
+            solved_typ = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
 
-            # # TODO: figure out how to implement without freezeing
-            # # simply don't add query_typ to frozen variables
-            # # fvs = extract_free_vars_from_typ(s(), query_typ)
-            # models = self.solver.solve_composition(answer_i, Imp(argument, query_typ))
-            # # TODO: but if variables isn't frozen, then how do we decode an interpretaiton?
-            # # TODO: maybe decode should 
-            # # - use lenient interpretation for unfrozen variables and 
-            # #   - e.g. find strongest on strong side
-            # # - use strict interpretation for frozen variables
-            # #   - e.g. find weakest on strong side (flip back and forth)
-            # answer_i = decode_strong_side(models, query_typ)  
-            # # answer_i = decode_typ(models, query_typ)  
+            # TODO: remove non intruded version
+            # answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
+
+            '''
+            extrusion 
+            '''
+            fvs = extract_free_vars_from_typ(s(), solved_typ)
+            renaming = self.solver.make_renaming_ids(fvs)
+            renamed_typ = sub_typ(self.solver.make_submap_from_renaming(renaming), solved_typ)
+            bound_ids = tuple(renaming.values())
+            extrusions = tuple(
+                Subtyping(TVar(old_var), TVar(new_var)) for old_var, new_var in renaming.items()
+            )
+
+            if isinstance(renamed_typ, Exi):
+                answer_i = Exi(bound_ids + renamed_typ.ids, extrusions + renamed_typ.constraints, renamed_typ.body) 
+            else:
+                answer_i = Exi(bound_ids, extrusions, renamed_typ) 
+
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_application
+    ~~~~~~~~~~~~~~~~~~~~~
+    ~~~ cator: {concretize_typ(cator)} 
+    ~~~ answer_i: {concretize_typ(answer_i)} 
+    ~~~~~~~~~~~~~~~~~~~~~
+            """)
         return simplify_typ(answer_i)
 
 
@@ -2146,6 +2141,8 @@ DEBUG rel_typ
         print(f"""
 DEBUG combine_fix result 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:: consq_typ: {concretize_typ(consq_typ)}
+
 :: result: {concretize_typ(result)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)

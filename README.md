@@ -2,6 +2,7 @@
 
 
 ### TODO
+- add extrusion to existential in `combine_application` and `fix` rules
 - get `max` example to work
 - check that combine_app rule isn't redundant with checks in distill app rules.
 - develop examples with interesting semantics and test type inference

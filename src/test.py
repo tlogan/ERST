@@ -942,29 +942,53 @@ case (x, y) => (
 )
 ''')
 
+max = (f'''
+let less_equal = {less_equal} ;
+case (x, y) => (
+    (
+    case (~true @) => y 
+    case (~false @) => x 
+    )(less_equal(x, y))
+)
+''')
+
+max = (f'''
+case (x, y) => (
+    (
+    case (~true @) => y 
+    case (~false @) => x 
+    )(({less_equal})(x, y))
+)
+''')
+'''
+~~~ cator: ((~true @ -> _5) & (~false @ -> _3)) 
+LOOK!! (_3 and _5) should not be bound. they are the same variables as the return of max 
+TODO: consider existential extrusion
+ -- Q: what's the benefit of extrusion over simply using free variable in relation constraint
+    -- A: existential extrusion allows specialization on the outside, but using the weaker type on the inside. 
+    -- A: opposite of universal extrusion: allows specialized view on the inside with generalized view on the outside
+ -- should existential extrusion be used in return type of application too?
+e.g. EXI [_73 _4 _6 ; _3 <: _4; _4 <: 6; ((_4, _6), _73) <: LFP _59
+~~~ arguments: (EXI [_73 _3 _5 ; ((_3, _5), _73) <: LFP _59 ((EXI [_61 ; _61 <: _24] ((~zero @, _61), ~true @)) | ((EXI [_62 _40 _63 ; ((_63, _62), _40) <: _59] ((~succ _63, ~succ _62), _40)) | (EXI [_64 ; _64 <: _46] ((~succ _64, ~zero @), ~false @)))) ; _72 <: LFP _59 ((EXI [_61 ; _61 <: _24] (~zero @, _61)) | ((EXI [_62 _63 ; (_63, _62) <: _59] (~succ _63, ~succ _62)) | (EXI [_64 ; _64 <: _46] (~succ _64, ~zero @))))] _73)
+'''
+
+
 def test_max():
     # TODO
 
-#     max = (f'''
-# let less_equal = {less_equal} ;
-# case (x, y) => less_equal(x, y)
-#     ''')
-
-    max = (f'''
-let less_equal = {less_equal} ;
-less_equal(~zero @, ~succ ~zero @)
-    ''')
     pieces = [max]
     (combo, guides, parsetree) = analyze(pieces, True)
-    print(parsetree)
+    # print(parsetree)
     # raise_guide(guides)
-    # assert combo
-    # print("combo: " + u(combo))
+    assert combo
+    print("combo: " + u(combo))
 
 
 if __name__ == '__main__':
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
+    #
+    # TODO
     test_max()
     ########################
     # p(less_equal_rel)
@@ -973,6 +997,8 @@ if __name__ == '__main__':
     # test_weak_diff_in_pair()
     #########################
     # test_less_equal()
+    #
+    # TODO
     # test_fix()
     # test_nil_query_subs_list_nat_diff()
     # test_cons_nil_query_subs_list_nat_diff()
