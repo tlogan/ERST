@@ -1121,13 +1121,18 @@ def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str])
     return constraints 
 
 def package_typ(model : Model, typ : Typ) -> Typ:
-    ids_base = extract_free_vars_from_typ(s(), typ)
-    constraints = s()
-    for id_base in ids_base: 
-        constraints_reachable = extract_reachable_constraints(model, id_base, s())
-        constraints = constraints.union(constraints_reachable)
+    ####### TODO: package all of the constraints
+    constraints = model.constraints
+    bound_ids  = tuple(model.freezer)
+    ####### TODO: remove old code 
+    # ids_base = extract_free_vars_from_typ(s(), typ)
+    # constraints = s()
+    # for id_base in ids_base: 
+    #     constraints_reachable = extract_reachable_constraints(model, id_base, s())
+    #     constraints = constraints.union(constraints_reachable)
 
-    bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(s(), constraints)))
+    # bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(s(), constraints)))
+    #############
     if not bound_ids and not constraints:
         typ_idx_unio = typ
     else:
@@ -1863,6 +1868,8 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
+        
+
         choices = from_cases_to_choices(cases)
         result = Top() 
         for choice in reversed(choices): 
@@ -1870,11 +1877,11 @@ class BaseRule(Rule):
             generalization and extrusion
             '''
 
-            imp = Imp(choice[0], choice[1])
-            fvs = extract_free_vars_from_typ(s(), imp)
+            fvs = extract_free_vars_from_typ(s(), choice[0])
             renaming = self.solver.make_renaming_ids(fvs)
 
-            generalized_case = sub_typ(self.solver.make_submap_from_renaming(renaming), imp)
+            generalized_case = Imp(sub_typ(self.solver.make_submap_from_renaming(renaming), choice[0]), choice[1])
+             
             for old_var, new_var in renaming.items():
                 generalized_case = All(new_var, TVar(old_var), generalized_case)
             result = Inter(generalized_case, result)
@@ -1923,10 +1930,14 @@ class ExprRule(Rule):
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
     def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
-        query_typ = self.solver.fresh_type_var()
-        true_typ = self.solver.query_strong_side(Imp(TTag('true', TUnit()), true_branch), Imp(condition, query_typ), query_typ)
-        false_typ = self.solver.query_strong_side(Imp(TTag('false', TUnit()), false_branch), Imp(condition, query_typ), query_typ) 
-        return simplify_typ(Unio(true_typ, false_typ)) 
+        cases = [
+            Imp(TTag('true', TUnit()), true_branch), 
+            Imp(TTag('false', TUnit()), false_branch)
+        ]
+        nt = Nonterm('base', self.nt.enviro, Imp(self.nt.typ, Top()))
+        cator = BaseRule(self.solver, nt).combine_function(cases)
+        arguments = [condition]
+        return self.combine_application(cator, arguments) 
 
     def distill_projection_cator(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())
@@ -1956,31 +1967,37 @@ class ExprRule(Rule):
         answer_i = cator 
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
-            solved_typ = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
 
-            # TODO: remove non intruded version
-            # answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
+            # TODO: keep all of the constraints around; package all constraints into existential!! 
+            answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
 
-            '''
-            extrusion 
-            '''
-            fvs = extract_free_vars_from_typ(s(), solved_typ)
-            renaming = self.solver.make_renaming_ids(fvs)
-            renamed_typ = sub_typ(self.solver.make_submap_from_renaming(renaming), solved_typ)
-            bound_ids = tuple(renaming.values())
-            extrusions = tuple(
-                Subtyping(TVar(old_var), TVar(new_var)) for old_var, new_var in renaming.items()
-            )
+            # TODO: remove this extrusion idea; not the issue
+            # ##############
+            # solved_typ = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
+            # '''
+            # extrusion 
+            # '''
+            # fvs = extract_free_vars_from_typ(s(), solved_typ)
+            # renaming = self.solver.make_renaming_ids(fvs)
+            # renamed_typ = sub_typ(self.solver.make_submap_from_renaming(renaming), solved_typ)
+            # bound_ids = tuple(renaming.values())
+            # extrusions = tuple(
+            #     Subtyping(TVar(old_var), TVar(new_var)) for old_var, new_var in renaming.items()
+            # )
 
-            if isinstance(renamed_typ, Exi):
-                answer_i = Exi(bound_ids + renamed_typ.ids, extrusions + renamed_typ.constraints, renamed_typ.body) 
-            else:
-                answer_i = Exi(bound_ids, extrusions, renamed_typ) 
+            # if isinstance(renamed_typ, Exi):
+            #     answer_i = Exi(bound_ids + renamed_typ.ids, extrusions + renamed_typ.constraints, renamed_typ.body) 
+            # else:
+            #     answer_i = Exi(bound_ids, extrusions, renamed_typ) 
+            # ##############
 
             print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
     DEBUG combine_application
     ~~~~~~~~~~~~~~~~~~~~~
+
+    ~~~ argument: {concretize_typ(argument)} 
+
     ~~~ cator: {concretize_typ(cator)} 
     ~~~ answer_i: {concretize_typ(answer_i)} 
     ~~~~~~~~~~~~~~~~~~~~~
