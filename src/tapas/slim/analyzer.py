@@ -1563,25 +1563,31 @@ class Solver:
                     return models 
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
+            '''
+            '''
             # TODO: fix the semantics of this rule
             '''
             antecedent union: strong <: ((T1 | T2) -> TR)
+            NOTE: (T1 -> TR) & (T2 -> TR) the same as (T1 -> TR) | (T2 -> TR) if and only if TR is learnable
+            '''
+
+            '''
             e.g. (A -> X & B -> Y) <: ([...]A | [...]B -> Q)
             ==== (A -> X & B -> Y) <: ([...]A -> Q) & ([...]B -> Q)
             ==== (A -> X & B -> Y) <: ([...]A -> Q) <<AND>> (A -> X & B -> Y) <: ([...]B -> Q)
             ==== (A -> X) <: ([...]A -> Q) <<AND>> (B -> Y) <: ([...]B -> Q)
             # TODO: IDEA: implication rule needs to package constraints from antecedent????
             ==== [...]X <: Q <<AND>> [...]Y <: Q
-            ==== Q == X | Y 
+            ==== Q ~~ X | Y 
             '''
-#             fvs = extract_free_vars_from_typ(s(), strong)
-#             model = Model(model.constraints, model.freezer.union(fvs))
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, Imp / weak.antec, Unio 
-# ~~~~~~~~~~~~~~~~~~~~ fvs: {fvs}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+
+            '''
+            ==== (A -> X & B -> Y) <: (A -> Q) | (B -> Q)
+            ==== (A -> X & B -> Y) <: (A -> Q) <<OR>> (A -> X & B -> Y) <: (B -> Q)
+            ==== (A -> X) <: (A -> Q) <<OR>> (B -> Y) <: (B -> Q)
+            ==== X <: Q <<OR>> Y <: Q
+            ==== Q ~ X | Y
+            '''
 
             return self.solve(model, strong, Inter(
                 Imp(weak.antec.left, weak.consq), 

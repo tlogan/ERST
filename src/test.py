@@ -954,7 +954,7 @@ case (x, y) => (
 
 
 def test_imp_inter_subs_union_imp():
-    # TODO: figure out how to apply each case individually
+    # TODO
     imp_inter = ('''
 ((~true @ -> X) & (~false @ -> Y)) 
     ''')
