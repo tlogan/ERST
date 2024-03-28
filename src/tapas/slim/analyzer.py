@@ -1140,60 +1140,6 @@ def package_typ(model : Model, typ : Typ) -> Typ:
 
     return simplify_typ(typ_idx_unio)
 
-def decode_typ(models : list[Model], t : Typ) -> Typ:
-    constraint_typs = [
-        package_typ(model, t)
-        for model in models
-    ] 
-    return make_unio(constraint_typs)
-
-def decode_strong_side(models : list[Model], t : Typ) -> Typ:
-
-#     for m in models:
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG decode_strong_side 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# m.freezer: {m.freezer}
-# m.constraints: {concretize_constraints(tuple(m.constraints))}
-# t: {concretize_typ(t)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-
-    constraint_typs = [
-        package_typ(m, strongest)
-        for model in models
-        for op in [interpret_strong_side(model, t)]
-        if op != None
-        for (strongest, cs) in [op]
-        for m in [Model(model.constraints.difference(cs), model.freezer)]
-    ] 
-    return make_unio(constraint_typs)
-
-def decode_weak_side(models : list[Model], t : Typ) -> Typ:
-
-#     for m in models:
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG decode_weak_side 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# m.freezer: {m.freezer}
-
-# m.constraints: {concretize_constraints(tuple(m.constraints))}
-
-# t: {concretize_typ(t)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-    constraint_typs = [
-        package_typ(m, weakest)
-        for model in models
-        for op in [interpret_weak_side(model, t)]
-        if op != None
-        for (weakest, cs) in [op]
-        for m in [Model(model.constraints.difference(cs), model.freezer)]
-    ] 
-    return make_unio(constraint_typs)
-
 def inhabitable(t : Typ) -> bool:
     t = simplify_typ(t)
     if False:
@@ -1229,6 +1175,96 @@ def make_inter(ts : list[Typ]) -> Typ:
 class Solver:
     _type_id : int = 0 
     _battery : int = 10 
+
+
+    def extrude_existential(self, t : Typ) -> Typ:
+        fvs = extract_free_vars_from_typ(s(), t)
+        renaming = self.make_renaming_ids(fvs)
+        renamed_typ = sub_typ(self.make_submap_from_renaming(renaming), t)
+        bound_ids = tuple(renaming.values())
+        extrusions = tuple(
+            Subtyping(TVar(new_var), TVar(old_var)) for old_var, new_var in renaming.items()
+        )
+
+        return Exi(bound_ids, extrusions, renamed_typ) 
+
+    def decode_typ(self, models : list[Model], t : Typ) -> Typ:
+        constraint_typs = [
+            package_typ(model, t)
+            for model in models
+        ] 
+        return make_unio(constraint_typs)
+
+    def decode_strong_side_extrusion(self, models : list[Model], t : Typ) -> Typ:
+
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG decode_strong_side 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    t: {concretize_typ(t)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
+        constraint_typs = [
+            self.extrude_existential(package_typ(m, strongest))
+            for model in models
+            for op in [interpret_strong_side(model, t)]
+            if op != None
+            for (strongest, cs) in [op]
+            for m in [Model(model.constraints.difference(cs), model.freezer)]
+        ] 
+        return make_unio(constraint_typs)
+
+    def decode_strong_side(self, models : list[Model], t : Typ) -> Typ:
+
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG decode_strong_side 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    t: {concretize_typ(t)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
+        constraint_typs = [
+            package_typ(m, strongest)
+            for model in models
+            for op in [interpret_strong_side(model, t)]
+            if op != None
+            for (strongest, cs) in [op]
+            for m in [Model(model.constraints.difference(cs), model.freezer)]
+        ] 
+        return make_unio(constraint_typs)
+
+    def decode_weak_side(self, models : list[Model], t : Typ) -> Typ:
+
+    #     for m in models:
+    #         print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG decode_weak_side 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # m.freezer: {m.freezer}
+
+    # m.constraints: {concretize_constraints(tuple(m.constraints))}
+
+    # t: {concretize_typ(t)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
+        constraint_typs = [
+            package_typ(m, weakest)
+            for model in models
+            for op in [interpret_weak_side(model, t)]
+            if op != None
+            for (weakest, cs) in [op]
+            for m in [Model(model.constraints.difference(cs), model.freezer)]
+        ] 
+        return make_unio(constraint_typs)
+
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -1564,44 +1600,16 @@ class Solver:
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
             '''
-            '''
-            # TODO: fix the semantics of this rule
-            '''
             antecedent union: strong <: ((T1 | T2) -> TR)
             NOTE: (T1 -> TR) & (T2 -> TR) the same as (T1 -> TR) | (T2 -> TR) if and only if TR is learnable
-            '''
-
-            '''
             e.g. (A -> X & B -> Y) <: ([...]A | [...]B -> Q)
             ==== (A -> X & B -> Y) <: ([...]A -> Q) & ([...]B -> Q)
-            ==== (A -> X & B -> Y) <: ([...]A -> Q) <<AND>> (A -> X & B -> Y) <: ([...]B -> Q)
-            ==== (A -> X) <: ([...]A -> Q) <<AND>> (B -> Y) <: ([...]B -> Q)
-            # TODO: IDEA: implication rule needs to package constraints from antecedent????
-            ==== [...]X <: Q <<AND>> [...]Y <: Q
-            ==== Q ~~ X | Y 
-            '''
-
-            '''
-            ==== (A -> X & B -> Y) <: (A -> Q) | (B -> Q)
-            ==== (A -> X & B -> Y) <: (A -> Q) <<OR>> (A -> X & B -> Y) <: (B -> Q)
-            ==== (A -> X) <: (A -> Q) <<OR>> (B -> Y) <: (B -> Q)
-            ==== X <: Q <<OR>> Y <: Q
-            ==== Q ~ X | Y
             '''
 
             return self.solve(model, strong, Inter(
                 Imp(weak.antec.left, weak.consq), 
                 Imp(weak.antec.right, weak.consq)
             ))
-            # return [
-            #     m1 
-            #     for m0 in self.solve(model, strong, Imp(weak.antec.left, weak.consq))
-            #     for m1 in self.solve(m0, strong, Imp(weak.antec.right, weak.consq))
-            # ]
-            # return (
-            #     self.solve(model, strong, Imp(weak.antec.left, weak.consq)) +
-            #     self.solve(model, strong, Imp(weak.antec.right, weak.consq))
-            # )
 
         # elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
         #     # TODO: remove; doesn't seem to be necessary
@@ -1827,7 +1835,7 @@ class Solver:
         #     for m in self.solve_composition(strong, weak)
         # ]
         models = self.solve_composition(strong, weak)
-        return decode_weak_side(models, query_typ)  
+        return self.decode_weak_side(models, query_typ)  
 
     def query_strong_side(self, strong : Typ, weak : Typ, query_typ : Typ) -> Typ:
         # fvs = extract_free_vars_from_typ(s(), query_typ) 
@@ -1836,8 +1844,7 @@ class Solver:
         #     for m in self.solve_composition(strong, weak)
         # ]
         models = self.solve_composition(strong, weak)
-        return decode_strong_side(models, query_typ)  
-
+        return self.decode_strong_side(models, query_typ)  
 
     def is_relation_constraint_wellformed(self, model : Model, strong : Typ, weak : LeastFP) -> bool:
         factored = factor_least(weak)
@@ -2002,31 +2009,9 @@ class ExprRule(Rule):
         for argument in arguments:
             query_typ = self.solver.fresh_type_var()
 
-            answer_i = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
+            models = self.solver.solve_composition(answer_i, Imp(argument, query_typ))
+            answer_i = self.solver.decode_strong_side_extrusion(models, query_typ)  
 
-            # TODO: remove this extrusion idea; not the issue
-            # NOTE: instead, just keep all of the constraints around; package all constraints into existential!! 
-            # ##############
-            # solved_typ = self.solver.query_strong_side(answer_i, Imp(argument, query_typ), query_typ)
-            # '''
-            # extrusion 
-            # '''
-            # fvs = extract_free_vars_from_typ(s(), solved_typ)
-            # renaming = self.solver.make_renaming_ids(fvs)
-            # renamed_typ = sub_typ(self.solver.make_submap_from_renaming(renaming), solved_typ)
-            # bound_ids = tuple(renaming.values())
-            # extrusions = tuple(
-            #     Subtyping(TVar(old_var), TVar(new_var)) for old_var, new_var in renaming.items()
-            # )
-
-            # if isinstance(renamed_typ, Exi):
-            #     answer_i = Exi(bound_ids + renamed_typ.ids, extrusions + renamed_typ.constraints, renamed_typ.body) 
-            # else:
-            #     answer_i = Exi(bound_ids, extrusions, renamed_typ) 
-            # ##############
-
-            # TODO: fix subtyping rules to choose case 
-            # (A -> X) & (B -> Y) <:  (EXI[...]A | EXI[...]B) -> Z
             print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
     DEBUG combine_application

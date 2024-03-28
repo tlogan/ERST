@@ -939,32 +939,58 @@ def test_app_less_equal_two_one():
     print("combo: " + u(combo))
     assert u(combo) == "~false @"
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
-case (x, y) => (
-    if cmp(x, y) then
-        y
-    else
-        x
-)
-''')
+def test_imp_inter_subs_imp_inter():
+    # TODO
+    # NOTE: difference could be due to variables being treated as frozen after constraints are learned 
+
+    imp_inter = ('''
+((~true @ -> X) & (~false @ -> Y)) 
+    ''')
+
+#     union_imp = ('''
+# (EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
+# (EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
+#     ''')
+
+    
+    union_imp = ('''
+(EXI [A B ; A <: X ; B <: Y] EXI [ ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
+(EXI [A B ; A <: X ; B <: Y] EXI [ ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
+    ''')
+
+
+    answer = query_strong_side(imp_inter, union_imp, "Q")
+    print(f'''
+answer: {answer}
+    ''')
+    # assert answer == "~zero @" 
+
+
+
+
 
 
 def test_imp_inter_subs_union_imp():
     # TODO
+
     imp_inter = ('''
 ((~true @ -> X) & (~false @ -> Y)) 
     ''')
 
     union_imp = ('''
 (
-(EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) | 
-(EXI [ ; Y <: ~dos @ ; X <: ~uno @] ~false @)
+(EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) | 
+(EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) 
 ) -> Q
     ''')
+
+#     union_imp = ('''
+# (
+# (EXI [A B ; A <: X ; B <: Y] (EXI [ ; B <: ~uno @ ; A <: ~dos @] ~true @)) | 
+# (EXI [A B ; A <: X ; B <: Y] (EXI [ ; A <: ~uno @ ; B <: ~dos @] ~false @)) 
+# ) -> Q
+#     ''')
+
     answer = query_strong_side(imp_inter, union_imp, "Q")
     print(f'''
 answer: {answer}
@@ -989,6 +1015,27 @@ def test_all_imp_exi_subs_union_imp():
 answer: {answer}
     ''')
     # assert answer == "~zero @" 
+
+arg_specialization = (f'''
+let cmp = (
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+) ;
+case (x, y) => (
+    if cmp(x, y) then
+        y
+    else
+        x
+)
+''')
+
+# arg_specialization = (f'''
+# let cmp = (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) ;
+# case (x, y) => cmp(x, y)
+# ''')
 
 def test_arg_specialization():
     # TODO
@@ -1088,13 +1135,13 @@ LFP _22 (
 '''
 
 
-
 if __name__ == '__main__':
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
     #
     # TODO
-    test_imp_inter_subs_union_imp()
+    test_imp_inter_subs_imp_inter()
+    # test_imp_inter_subs_union_imp()
     # test_all_imp_exi_subs_union_imp()
     # test_arg_specialization()
     # test_if_true_then_else()

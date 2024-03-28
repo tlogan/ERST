@@ -2,7 +2,12 @@
 
 
 ### TODO
+- update how solving implication query with union of existentials in 
+    - see `test_imp_inter_subs_union_imp`
+- remove query procedures; use two steps; `solve`; `decode`
 - make sure constraints on arguments are preserved in `combine_application` 
+- should universal extrusion be abstracted into decode_weak_side?
+    - why is there an asymmetry where existential extrusion is in the decode_strong_side
 - update implication unification rule to keep new antecedent constraints local
 - in `combine_function`, consider extruding over whole implication; not just parameter
 - add negs back in `from_cases_to_choices`
