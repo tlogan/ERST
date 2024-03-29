@@ -419,13 +419,13 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     negs = []
 
     for case in cases:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG from_cases_to_choices
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG case: {concretize_typ(case)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG from_cases_to_choices
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG case: {concretize_typ(case)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
         choices += [(make_diff(case.antec, negs), case.consq)]
         neg_fvs = extract_free_vars_from_typ(s(), case.antec)  
         neg = (
@@ -1197,16 +1197,16 @@ class Solver:
 
     def decode_strong_side_extrusion(self, models : list[Model], t : Typ) -> Typ:
 
-        for m in models:
-            print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-    DEBUG decode_strong_side 
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-    m.freezer: {m.freezer}
-    m.constraints: {concretize_constraints(tuple(m.constraints))}
-    t: {concretize_typ(t)}
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+    #     for m in models:
+    #         print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG decode_strong_side 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # m.freezer: {m.freezer}
+    # m.constraints: {concretize_constraints(tuple(m.constraints))}
+    # t: {concretize_typ(t)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
 
         constraint_typs = [
             self.extrude_existential(package_typ(m, strongest))
@@ -1237,7 +1237,8 @@ class Solver:
             for op in [interpret_strong_side(model, t)]
             if op != None
             for (strongest, cs) in [op]
-            for m in [Model(model.constraints.difference(cs), model.freezer)]
+            for m in [model]
+            # for m in [Model(model.constraints.difference(cs), model.freezer)]
         ] 
         return make_unio(constraint_typs)
 
@@ -1346,19 +1347,19 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
         if self._battery == 0:
             return []
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# ||
-# || model.freezer::: 
-# || :::::::: {model.freezer}
-# ||
-# || model.constraints::: 
-# || :::::::: {concretize_constraints(tuple(model.constraints))}
-# ||
-# || |- {concretize_typ(strong)} <: {concretize_typ(weak)}
-# ||
-#         ''')
+        print(f'''
+|| DEBUG SOLVE
+=================
+||
+|| model.freezer::: 
+|| :::::::: {model.freezer}
+||
+|| model.constraints::: 
+|| :::::::: {concretize_constraints(tuple(model.constraints))}
+||
+|| |- {concretize_typ(strong)} <: {concretize_typ(weak)}
+||
+        ''')
 
         if alpha_equiv(strong, weak): 
             return [model] 
@@ -1451,6 +1452,9 @@ class Solver:
         #### Variable rules: ####
         #######################################
 
+
+        
+
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
@@ -1465,7 +1469,7 @@ class Solver:
     # weakest_strong: {concretize_typ(weakest_strong)}
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
-                model = Model(model.constraints.difference(used_constraints), model.freezer)
+                # model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
                 return [Model(
@@ -1479,7 +1483,7 @@ class Solver:
             op = interpret_strongest_for_id(model, weak.id)
             if op != None:
                 (strongest_weak, used_constraints) = op
-                model = Model(model.constraints.difference(used_constraints), model.freezer)
+                # model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return self.solve(model, strong, strongest_weak)
             elif isinstance(strong, TVar) and strong.id not in model.freezer:
                 return [Model(
@@ -1489,19 +1493,23 @@ class Solver:
             else:
                 return []
 
+        # TODO: add rule where both are sides are learnable variables
+        # reduce both together to avoid redundant edges in subtyping lattice  
+        # - if left is bottom or right is top; simply add constraint;
+
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG strong, TVar unfrozen 
-# ~~~~~~~~~~~~~~~~~~~~~
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~
+            DEBUG strong, TVar unfrozen 
+            ~~~~~~~~~~~~~~~~~~~~~
 
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
+            model.freezer: {model.freezer}
+            model.constraints: {concretize_constraints(tuple(model.constraints))}
 
-# strong: {strong.id}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            strong: {strong.id}
+            weak: {concretize_typ(weak)}
+            ~~~~~~~~~~~~~~~~~~~~~
+            """)
             interp = interpret_strongest_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
@@ -1519,15 +1527,14 @@ class Solver:
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
-                model = Model(model.constraints.difference(used_constraints), model.freezer)
-                models = self.solve(model, strongest, weak)
-
+                # TODO: remove commented code: constraints must be kept around on learnable variables
+                # model = Model(model.constraints.difference(used_constraints), model.freezer)
                 return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
                     )
-                    for model in models
+                    for model in self.solve(model, strongest, weak)
                 ]
 
 
@@ -1548,24 +1555,15 @@ class Solver:
                 )]
             else:
                 weakest, used_constraints = interp
-                model = Model(model.constraints.difference(used_constraints), model.freezer)
-                models = self.solve(model, strong, weakest)
-                models = [
+                # TODO: remove commented code; constraints on learnable variables must be kept around for learning new constraints 
+                # model = Model(model.constraints.difference(used_constraints), model.freezer)
+                return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
                         model.freezer
                     )
-                    for model in models
+                    for model in self.solve(model, strong, weakest)
                 ]
-
-                return models
-
-
-
-
-
-
-
 
 
         #######################################
@@ -2012,16 +2010,16 @@ class ExprRule(Rule):
             models = self.solver.solve_composition(answer_i, Imp(argument, query_typ))
             answer_i = self.solver.decode_strong_side_extrusion(models, query_typ)  
 
-            print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG combine_application
-    ~~~~~~~~~~~~~~~~~~~~~
-    ~~~ cator: {concretize_typ(cator)} 
-    ~~~ argument: {concretize_typ(argument)} 
+    #         print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_application
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # ~~~ cator: {concretize_typ(cator)} 
+    # ~~~ argument: {concretize_typ(argument)} 
 
-    ~~~ answer_i: {concretize_typ(answer_i)} 
-    ~~~~~~~~~~~~~~~~~~~~~
-            """)
+    # ~~~ answer_i: {concretize_typ(answer_i)} 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #         """)
         return simplify_typ(answer_i)
 
 
@@ -2072,26 +2070,26 @@ class ExprRule(Rule):
             (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
             other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix 
-~~~~~~~~~~~~~~~~~~~~~
-self_typ: {self_typ.id}
-body: {concretize_typ(body)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix 
+# ~~~~~~~~~~~~~~~~~~~~~
+# self_typ: {self_typ.id}
+# body: {concretize_typ(body)}
 
-IH_typ: {IH_typ.id}
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
-======================
-in_typ: {concretize_typ(in_typ)}
-left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
+# IH_typ: {IH_typ.id}
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# ======================
+# in_typ: {concretize_typ(in_typ)}
+# left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+# left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
-out_typ: {concretize_typ(out_typ)}
-right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+# out_typ: {concretize_typ(out_typ)}
+# right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+# right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
@@ -2101,13 +2099,13 @@ right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
             model = Model(other_constraints, model.freezer)
             self_interp = (interpret_weak_side(model, self_typ))
 
-            nl = "\n"
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG self_typ: {self_typ.id}
-DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+#             nl = "\n"
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG self_typ: {self_typ.id}
+# DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             if self_interp and isinstance(self_interp[0], Imp):
                 left = self_interp[0].antec
@@ -2162,12 +2160,12 @@ DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_cons
         rel_typ = LeastFP(IH_typ.id, induc_body)
         param_upper = LeastFP(IH_typ.id, param_body)
 
-        print(f"""
-DEBUG rel_typ 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:: rel_typ: {concretize_typ(rel_typ)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# DEBUG rel_typ 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# :: rel_typ: {concretize_typ(rel_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()
@@ -2175,14 +2173,14 @@ DEBUG rel_typ
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
         result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
 
-        print(f"""
-DEBUG combine_fix result 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:: consq_typ: {concretize_typ(consq_typ)}
+#         print(f"""
+# DEBUG combine_fix result 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# :: consq_typ: {concretize_typ(consq_typ)}
 
-:: result: {concretize_typ(result)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# :: result: {concretize_typ(result)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         # DEBUG
         # return Bot() 

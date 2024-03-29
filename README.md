@@ -2,6 +2,9 @@
 
 
 ### TODO
+- add variable rule where both sides are learnable variables
+    - reduce both together to avoid redundant edges in subtyping lattice  
+    - if left is bottom or right is top; simply add constraint;
 - update how solving implication query with union of existentials in 
     - see `test_imp_inter_subs_union_imp`
 - remove query procedures; use two steps; `solve`; `decode`

@@ -947,17 +947,24 @@ def test_imp_inter_subs_imp_inter():
 ((~true @ -> X) & (~false @ -> Y)) 
     ''')
 
+
 #     union_imp = ('''
 # (EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
 # (EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
 #     ''')
 
     
-    union_imp = ('''
-(EXI [A B ; A <: X ; B <: Y] EXI [ ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
-(EXI [A B ; A <: X ; B <: Y] EXI [ ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
-    ''')
+#     union_imp = ('''
+# EXI [A B ; A <: X ; B <: Y] EXI [ ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q
+#     ''')
 
+    # TODO: check if important constraint on A <: X is removed
+    imp_inter = ('''
+(~true @ -> X)
+    ''')
+    union_imp = ('''
+(EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q
+    ''')
 
     answer = query_strong_side(imp_inter, union_imp, "Q")
     print(f'''
