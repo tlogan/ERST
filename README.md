@@ -2,11 +2,12 @@
 
 
 ### TODO
-- add variable rule where both sides are learnable variables
-    - reduce both together to avoid redundant edges in subtyping lattice  
-    - if left is bottom or right is top; simply add constraint;
 - update how solving implication query with union of existentials in 
+    - make sure bound variables capture constraint
     - see `test_imp_inter_subs_union_imp`
+- modify solver to prevent non-deterministic redundancy
+    - e.g. (~uno @ | ~dos @) vs ((~uno @ | ~dos @) | (~dos @ | ~uno @))
+    - see `test_imp_inter_subs_imp_inter`
 - remove query procedures; use two steps; `solve`; `decode`
 - make sure constraints on arguments are preserved in `combine_application` 
 - should universal extrusion be abstracted into decode_weak_side?

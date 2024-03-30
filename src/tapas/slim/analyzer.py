@@ -1458,18 +1458,9 @@ class Solver:
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
-            op = interpret_weakest_for_id(model, strong.id)
-            if op != None:
-                (weakest_strong, used_constraints) = op
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG strong, TVar frozen 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # weakest_strong: {concretize_typ(weakest_strong)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-                # model = Model(model.constraints.difference(used_constraints), model.freezer)
+            interp = interpret_weakest_for_id(model, strong.id)
+            if interp != None:
+                weakest_strong = interp[0]
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
                 return [Model(
@@ -1480,10 +1471,9 @@ class Solver:
                 return []
 
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
-            op = interpret_strongest_for_id(model, weak.id)
-            if op != None:
-                (strongest_weak, used_constraints) = op
-                # model = Model(model.constraints.difference(used_constraints), model.freezer)
+            interp = interpret_strongest_for_id(model, weak.id)
+            if interp != None:
+                strongest_weak = interp[0]
                 return self.solve(model, strong, strongest_weak)
             elif isinstance(strong, TVar) and strong.id not in model.freezer:
                 return [Model(
@@ -1493,42 +1483,45 @@ class Solver:
             else:
                 return []
 
-        # TODO: add rule where both are sides are learnable variables
-        # reduce both together to avoid redundant edges in subtyping lattice  
-        # - if left is bottom or right is top; simply add constraint;
+
+        elif (
+            isinstance(strong, TVar) and strong.id not in model.freezer and
+            isinstance(weak, TVar) and weak.id not in model.freezer
+        ):
+            """
+            interpret both sides together to avoid transitive edges in subtyping lattice  
+            """
+            strong_interp = interpret_strongest_for_id(model, strong.id)
+            weak_interp = interpret_weakest_for_id(model, weak.id)
+            if (
+                strong_interp == None or not inhabitable(strong_interp[0]) or
+                weak_interp == None or not selective(weak_interp[0])
+            ):
+                return [Model(
+                    model.constraints.add(Subtyping(strong, weak)),
+                    model.freezer
+                )]
+            else:
+                strongest = strong_interp[0]
+                weakest = weak_interp[0]
+                return [
+                    Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer
+                    )
+                    for model in self.solve(model, strongest, weakest)
+                ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~
-            DEBUG strong, TVar unfrozen 
-            ~~~~~~~~~~~~~~~~~~~~~
-
-            model.freezer: {model.freezer}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-
-            strong: {strong.id}
-            weak: {concretize_typ(weak)}
-            ~~~~~~~~~~~~~~~~~~~~~
-            """)
             interp = interpret_strongest_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
                     model.freezer
                 )]
+
             else:
-                strongest, used_constraints = interp
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG strong, TVar unfrozen 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # strongest: {strongest}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-
-                # TODO: remove commented code: constraints must be kept around on learnable variables
-                # model = Model(model.constraints.difference(used_constraints), model.freezer)
+                strongest = interp[0]
                 return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
@@ -1539,14 +1532,6 @@ class Solver:
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, TVar unfrozen 
-# ~~~~~~~~~~~~~~~~~~~~~
-# strong: {concretize_typ(strong)}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
             interp = interpret_weakest_for_id(model, weak.id)
             if interp == None or not selective(interp[0]):
                 return [Model(
@@ -1554,9 +1539,7 @@ class Solver:
                     model.freezer
                 )]
             else:
-                weakest, used_constraints = interp
-                # TODO: remove commented code; constraints on learnable variables must be kept around for learning new constraints 
-                # model = Model(model.constraints.difference(used_constraints), model.freezer)
+                weakest = interp[0]
                 return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
