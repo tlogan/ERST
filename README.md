@@ -2,12 +2,6 @@
 
 
 ### TODO
-- update how solving implication query with union of existentials in 
-    - make sure bound variables capture constraint
-    - see `test_imp_inter_subs_union_imp`
-- modify solver to prevent non-deterministic redundancy
-    - e.g. (~uno @ | ~dos @) vs ((~uno @ | ~dos @) | (~dos @ | ~uno @))
-    - see `test_imp_inter_subs_imp_inter`
 - remove query procedures; use two steps; `solve`; `decode`
 - make sure constraints on arguments are preserved in `combine_application` 
 - should universal extrusion be abstracted into decode_weak_side?
@@ -23,7 +17,9 @@
     - type annotations 
     - subtyping 
 - in paper, note importance of generating constraints on argument variables
-- in paper, note importance of keeping argument constraints local to each case in implication rule 
+- in paper, note importance of renaming and extrusion in imp-imp rule 
+    - renaming to solve for conclusion under local assumption
+    - extrusion to connect conclusion with other conclusions 
 - in paper, note the importance of flipping between weakest and strongest interpretations
     - for a return type that depends on a parameter type; the P <: T ,  P < Q; Q; strongest of Q uses weakest of P e.g. T. 
 - in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.

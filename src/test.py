@@ -943,14 +943,33 @@ def test_imp_inter_subs_imp_inter():
     # TODO: modify solver to prevent non-deterministic redundancy
     # e.g. (~uno @ | ~dos @) vs ((~uno @ | ~dos @) | (~dos @ | ~uno @))
 
+######## OLD ############
+#     imp_inter = ('''
+# ((~true @ -> X) & (~false @ -> Y)) 
+#     ''')
+
+#     union_imp = ('''
+# ((EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
+# ((EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
+#     ''')
+#########################
+
     imp_inter = ('''
 ((~true @ -> X) & (~false @ -> Y)) 
     ''')
 
     union_imp = ('''
-((EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
-((EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
+((EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) -> Q) & 
+((EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~false @) -> Q)
     ''')
+
+    # TODO: transform into
+    '''
+(EXI [X Y ; Y <: ~uno @ ; X <: ~dos @] X) <: Q
+(EXI [X Y ; X <: ~uno @ ; Y <: ~dos @] Y) <: Q
+    '''
+
+# expect ~ dos @ <: Q
     
 #     imp_inter = ('''
 # (~true @ -> X)
@@ -963,7 +982,7 @@ def test_imp_inter_subs_imp_inter():
     print(f'''
 answer: {answer}
     ''')
-    # assert answer == "~zero @" 
+    # assert answer == "~dos @" 
 
 
 
