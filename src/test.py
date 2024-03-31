@@ -77,13 +77,15 @@ def query_weak_side(a : str, b : str, k : str):
     x = p(a)
     y = p(b)
     q = p(k)
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_weak_side(x, y, q)))
+    models = solver.solve_composition(x, y) 
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_weak_side(models, q)))
 
 def query_strong_side(a : str, b : str, k : str):
     x = p(a)
     y = p(b)
     q = p(k)
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.query_strong_side(x, y, q)))
+    models = solver.solve_composition(x, y) 
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_strong_side(models, q)))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
@@ -940,57 +942,27 @@ def test_app_less_equal_two_one():
     assert u(combo) == "~false @"
 
 def test_imp_inter_subs_imp_inter():
-    # TODO: modify solver to prevent non-deterministic redundancy
-    # e.g. (~uno @ | ~dos @) vs ((~uno @ | ~dos @) | (~dos @ | ~uno @))
-
-######## OLD ############
-#     imp_inter = ('''
-# ((~true @ -> X) & (~false @ -> Y)) 
-#     ''')
-
-#     union_imp = ('''
-# ((EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q) & 
-# ((EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) -> Q)
-#     ''')
-#########################
-
     imp_inter = ('''
 ((~true @ -> X) & (~false @ -> Y)) 
     ''')
 
     union_imp = ('''
-((EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) -> Q) & 
-((EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~false @) -> Q)
+((EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~true @) -> Q) & 
+((EXI [ ; X <: ~dos @ ; Y <: ~uno @] ~false @) -> Q)
     ''')
 
-    # TODO: transform into
-    '''
-(EXI [X Y ; Y <: ~uno @ ; X <: ~dos @] X) <: Q
-(EXI [X Y ; X <: ~uno @ ; Y <: ~dos @] Y) <: Q
-    '''
-
-# expect ~ dos @ <: Q
-    
-#     imp_inter = ('''
-# (~true @ -> X)
-#     ''')
-#     union_imp = ('''
-# (EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) -> Q
-#     ''')
-
+    # '''
+    # NOTE: transform into:
+    # (EXI [X Y ; (...extrusion...) ; X <: ~uno @ ; Y <: ~dos @] X) <: Q
+    # (EXI [X Y ; (...extrusion...) ; X <: ~dos @ ; Y <: ~uno @] Y) <: Q
+    # '''
     answer = query_strong_side(imp_inter, union_imp, "Q")
     print(f'''
 answer: {answer}
     ''')
-    # assert answer == "~dos @" 
-
-
-
-
-
+    assert answer == "~uno @" 
 
 def test_imp_inter_subs_union_imp():
-    # TODO
 
     imp_inter = ('''
 ((~true @ -> X) & (~false @ -> Y)) 
@@ -998,23 +970,17 @@ def test_imp_inter_subs_union_imp():
 
     union_imp = ('''
 (
-(EXI [A B ; A <: X ; B <: Y ; B <: ~uno @ ; A <: ~dos @] ~true @) | 
-(EXI [A B ; A <: X ; B <: Y ; A <: ~uno @ ; B <: ~dos @] ~false @) 
+(EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~true @) | 
+(EXI [ ; X <: ~dos @ ; Y <: ~uno @] ~false @) 
 ) -> Q
     ''')
-
-#     union_imp = ('''
-# (
-# (EXI [A B ; A <: X ; B <: Y] (EXI [ ; B <: ~uno @ ; A <: ~dos @] ~true @)) | 
-# (EXI [A B ; A <: X ; B <: Y] (EXI [ ; A <: ~uno @ ; B <: ~dos @] ~false @)) 
-# ) -> Q
-#     ''')
 
     answer = query_strong_side(imp_inter, union_imp, "Q")
     print(f'''
 answer: {answer}
     ''')
-    # assert answer == "~zero @" 
+    assert answer == "~uno @" 
+
 
 def test_all_imp_exi_subs_union_imp():
     # TODO: make sure this works as expected 
@@ -1033,7 +999,7 @@ def test_all_imp_exi_subs_union_imp():
     print(f'''
 answer: {answer}
     ''')
-    # assert answer == "~zero @" 
+    assert answer == "~dos @" 
 
 arg_specialization = (f'''
 let cmp = (
@@ -1159,10 +1125,10 @@ if __name__ == '__main__':
     # test_app_less_equal_two_one()
     #
     # TODO
-    test_imp_inter_subs_imp_inter()
+    # test_imp_inter_subs_imp_inter()
     # test_imp_inter_subs_union_imp()
+    test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
-    # test_arg_specialization()
     # test_if_true_then_else()
     # test_function_if_then_else()
     # (ALL [_9 <: _2] (_9 -> ((EXI [ ; _2 <: ~true @] ~uno @) | (EXI [ ; _2 <: ~false @] ~dos @))))
