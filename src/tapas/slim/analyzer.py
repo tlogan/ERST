@@ -297,6 +297,7 @@ def concretize_typ(typ : Typ) -> str:
 @dataclass(frozen=True, eq=True)
 class PatternAttr:
     enviro : PMap[str, Typ]
+    models : list[Model]
     typ : Typ    
 
 
@@ -2348,10 +2349,6 @@ class FunctionRule(Rule):
 
 class KeychainRule(Rule):
 
-    def combine_single(self, nt : Nonterm, key : str) -> list[str]:
-        # self.solver.solve(plate.enviro, plate.typ, TField(key, Top())) 
-        return [key]
-
     '''
     return the plate with the typ as the type that the next element in tail cuts
     '''
@@ -2366,8 +2363,12 @@ class KeychainRule(Rule):
         ]
         return Nonterm('keychain', nt.enviro, models, typ_var)
 
-    def combine_cons(self, nt : Nonterm, key : str, keys : list[str]) -> list[str]:
-        return self.combine_single(nt, key) + keys
+    def combine_single(self, key : str) -> list[str]:
+        return [key]
+
+    def combine_cons(self, key : str, keys : list[str]) -> list[str]:
+        return [key] + keys
+
 
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
@@ -2403,11 +2404,11 @@ class ArgchainRule(Rule):
 
         return Nonterm('argchain', nt.enviro, models, typ_var, True)
 
-    def combine_single(self, nt : Nonterm, content : Typ) -> tuple[list[Model], list[Typ]]:
-        return (nt.models, [content])
+    def combine_single(self, content : Typ) -> list[Typ]:
+        return [content]
 
-    def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> tuple[list[Model], list[Typ]]:
-        return (nt.models, [head] + tail)
+    def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
+        return [head] + tail
 
 ######
 
@@ -2444,12 +2445,11 @@ class PipelineRule(Rule):
 
         return Nonterm('pipeline', nt.enviro, models, typ_var)
 
-    def combine_single(self, nt : Nonterm, content : Typ) -> list[Typ]:
-        # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
+    def combine_single(self, content : Typ) -> list[Typ]:
         return [content]
 
-    def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return self.combine_single(nt, head) + tail
+    def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
+        return [head] + tail
 
 
 '''
@@ -2483,7 +2483,9 @@ class PatternRule(Rule):
         return Nonterm('pattern', nt.enviro, models, typ_var) 
 
     def combine_tuple(self, nt : Nonterm, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
-        return PatternAttr(head.enviro + tail.enviro, Inter(TField('head', head.typ), TField('tail', tail.typ)))
+        pattern = Inter(TField('head', head.typ), TField('tail', tail.typ))
+        models = self.evolve_models(nt, pattern)
+        return PatternAttr(head.enviro + tail.enviro, models, pattern)
 
 '''
 end PatternRule
@@ -2492,12 +2494,15 @@ end PatternRule
 class PatternBaseRule(Rule):
 
     def combine_var(self, nt : Nonterm, id : str) -> PatternAttr:
-        typ = self.solver.fresh_type_var()
-        enviro = m().set(id, typ)
-        return PatternAttr(enviro, typ)
+        pattern = self.solver.fresh_type_var()
+        models = self.evolve_models(nt, pattern)
+        enviro = m().set(id, pattern)
+        return PatternAttr(enviro, models, pattern)
 
     def combine_unit(self, nt : Nonterm) -> PatternAttr:
-        return PatternAttr(m(), TUnit())
+        pattern = TUnit()
+        models = self.evolve_models(nt, pattern)
+        return PatternAttr(m(), models, pattern)
 
     def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
@@ -2511,7 +2516,9 @@ class PatternBaseRule(Rule):
         return Nonterm('pattern', nt.enviro, models, typ_var)
 
     def combine_tag(self, nt : Nonterm, label : str, body : PatternAttr) -> PatternAttr:
-        return PatternAttr(body.enviro, TTag(label, body.typ))
+        pattern = TTag(label, body.typ)
+        models = self.evolve_models(nt, pattern)
+        return PatternAttr(body.enviro, models, pattern)
 '''
 end PatternBaseRule
 '''
@@ -2530,7 +2537,9 @@ class PatternRecordRule(Rule):
         return Nonterm('pattern_record', nt.enviro, models, typ_var) 
 
     def combine_single(self, nt : Nonterm, label : str, body : PatternAttr) -> PatternAttr:
-        return PatternAttr(body.enviro, TField(label, body.typ))
+        pattern = TField(label, body.typ)
+        models = self.evolve_models(nt, pattern)
+        return PatternAttr(body.enviro, models, pattern)
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
         return self.distill_cons_body(nt, id)
@@ -2548,4 +2557,6 @@ class PatternRecordRule(Rule):
         return Nonterm('pattern_record', nt.enviro, models, typ_var) 
 
     def combine_cons(self, nt : Nonterm, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
-        return PatternAttr(body.enviro + tail.enviro, Inter(TField(label, body.typ), tail.typ))
+        pattern = Inter(TField(label, body.typ), tail.typ)
+        models = self.evolve_models(nt, pattern) 
+        return PatternAttr(body.enviro + tail.enviro, models, pattern)

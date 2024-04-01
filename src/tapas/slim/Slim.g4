@@ -394,8 +394,8 @@ $combo = self.collect(BaseRule(self._solver, nt).combine_assoc, $argchain.combo)
 function [Nonterm nt] returns [list[Imp] cases] :
 
 | 'case' {
-nt_pattern = self.guide_nonterm(FunctionRule(self._solver).distill_single_pattern, nt)
-} pattern[nt_pattern] {
+pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_pattern, nt)
+} pattern[pattern_nt] {
 self.guide_symbol('=>')
 } '=>' {
 nt_body = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.combo)
@@ -454,7 +454,7 @@ content_nt = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_co
 self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = content_models)
-$models_typs = self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var)
+$models_typs = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
 }
 
 | '(' {
@@ -467,7 +467,7 @@ tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, h
 } tail_result = argchain[tail_nt] {
 (tail_models, tail_typs) = tail_result
 nt = replace(nt, models = head_models)
-$models_typs = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_var, tail_typs)
+$models_typs = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, tail_typs))
 }
 
 ;
