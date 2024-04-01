@@ -266,7 +266,7 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [Nonterm nt] returns [Typ combo] : 
+expr [Nonterm nt] returns [list[Model] models] : 
 
 // Base rules
 
@@ -305,9 +305,11 @@ $combo = self.collect(ExprRule(self._solver, nt).combine_ite, $condition.combo, 
 | {
 nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_cator)
 } cator = base[nt_cator] {
-nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, $cator.combo)
+nt = replace(nt, models = $cator.models)
+nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, nt_cator.tid)
 } keychain[nt_keychain] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_projection, $cator.combo, $keychain.combo) 
+nt = replace(nt, models = $keychain.models)
+$models = self.collect(ExprRule(self._solver, nt).combine_projection, nt_cator.tid, nt_keychain.id) 
 }
 
 | {

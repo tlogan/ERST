@@ -995,10 +995,16 @@ public class SlimParser extends Parser {
 				setState(201);
 				((ExprContext)_localctx).cator = base(nt_cator);
 
+
+				// models should monotonically grow 
+
 				nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, ((ExprContext)_localctx).cator.combo)
 
 				setState(203);
 				((ExprContext)_localctx).keychain = keychain(nt_keychain);
+
+
+				// nt_collect = update_models(nt, )  
 
 				_localctx.combo = self.collect(ExprRule(self._solver, nt).combine_projection, ((ExprContext)_localctx).cator.combo, ((ExprContext)_localctx).keychain.combo) 
 
