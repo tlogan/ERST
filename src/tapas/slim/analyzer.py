@@ -337,7 +337,6 @@ class Model:
     constraints : PSet[Subtyping]
     freezer : PSet[str]
 
-
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
     return pset((
         st
@@ -1786,20 +1785,18 @@ class Rule:
         self.solver = solver
         self.nt = nt 
 
-
-
 class BaseRule(Rule):
 
-    def combine_var(self, id : str) -> Typ:
-        return self.nt.enviro[id]
+    def combine_var(self, model, id : str) -> list[tuple[Model,Typ]]:
+        return [(model, self.nt.enviro[id])]
 
-    def combine_assoc(self, argchain : list[Typ]) -> Typ:
+    def combine_assoc(self, model, argchain : list[Typ]) -> list[tuple[Model, Typ]]:
         if len(argchain) == 1:
-            return argchain[0]
+            return [(model, argchain[0])]
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            return ExprRule(self.solver, self.nt).combine_application(applicator, arguments) 
+            return ExprRule(self.solver, self.nt).combine_application(model, applicator, arguments) 
 
     def combine_unit(self) -> Typ:
         return TUnit()
@@ -1819,7 +1816,7 @@ class BaseRule(Rule):
         else:
             return TTag(label, body)
 
-    def combine_function(self, cases : list[Imp]) -> Typ:
+    def combine_function(self, model, cases : list[Imp]) -> list[tuple[Model,Typ]]:
         '''
         Example
         ==============
@@ -1864,7 +1861,7 @@ class BaseRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        return simplify_typ(result)
+        return [(model, simplify_typ(result))]
 
 
 class ExprRule(Rule):
@@ -1912,15 +1909,18 @@ class ExprRule(Rule):
         expected_typ = self.solver.decode_weak_side(models, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
-    def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
+    def combine_ite(self, model, condition : Typ, true_branch : Typ, false_branch : Typ) -> list[tuple[Model, Typ]]: 
         cases = [
             Imp(TTag('true', TUnit()), true_branch), 
             Imp(TTag('false', TUnit()), false_branch)
         ]
         nt = Nonterm('base', self.nt.enviro, Imp(self.nt.typ, Top()))
-        cator = BaseRule(self.solver, nt).combine_function(cases)
         arguments = [condition]
-        return self.combine_application(cator, arguments) 
+        return [
+            result
+            for model, cator in BaseRule(self.solver, nt).combine_function(model, cases)
+            for result in self.combine_application(model, cator, arguments) 
+        ]
 
     def distill_projection_cator(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())
@@ -1946,7 +1946,7 @@ class ExprRule(Rule):
     def distill_application_argchain(self, cator : Typ) -> Nonterm: 
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
-    def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
+    def combine_application(self, model, cator : Typ, arguments : list[Typ]) -> list[tuple[Model, Typ]]: 
 
         answer_i = cator 
         for argument in arguments:
@@ -1980,11 +1980,7 @@ class ExprRule(Rule):
 #     ~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
-
-
-
-
-        return simplify_typ(answer_i)
+        return [(model, simplify_typ(answer_i))]
 
 
     #########
@@ -1994,11 +1990,15 @@ class ExprRule(Rule):
     def distill_funnel_pipeline(self, arg : Typ) -> Nonterm: 
         return Nonterm('pipeline', self.nt.enviro, arg)
 
-    def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
-        result = arg 
+    def combine_funnel(self, model : Model, arg : Typ, cators : list[Typ]) -> list[tuple[Model, Typ]]: 
+        results = [(model, arg)] 
         for cator in cators:
-            result = self.combine_application(cator, [result])
-        return result
+            results = [
+                result_i
+                for model, arg in results
+                for result_i in self.combine_application(model, cator, [arg])
+            ]
+        return results
 
     def distill_fix_body(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())

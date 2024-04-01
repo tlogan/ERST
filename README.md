@@ -2,6 +2,7 @@
 
 
 ### TODO
+- IMPORTANT!! do a major refactor of rules to return a list of models with a type; instead of just a type 
 - debug `test_arg_specialization`
 - add negs back in `from_cases_to_choices`
 - get `max` example to work
