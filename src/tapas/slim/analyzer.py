@@ -1810,7 +1810,7 @@ class BaseRule(Rule):
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            return self.combine_application(nt, applicator, arguments) 
+            return ExprRule(self.solver).combine_application(nt, applicator, arguments) 
 
     def combine_unit(self, nt : Nonterm) -> Typ:
         return TUnit()
@@ -1950,15 +1950,22 @@ class ExprRule(Rule):
         ]
         return Nonterm('expr', nt.enviro, models, typ_var) 
 
-    def combine_ite(self, nt : Nonterm, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
+    def combine_ite(self, nt : Nonterm, condition : TVar, true_branch : TVar, false_branch : TVar) -> list[Model]: 
         cases = [
             Imp(TTag('true', TUnit()), true_branch), 
             Imp(TTag('false', TUnit()), false_branch)
         ]
-        nt = Nonterm('base', nt.enviro, Imp(nt.typ, Top()))
-        cator = BaseRule(self.solver, nt).combine_function(cases)
+        cator_var = self.solver.fresh_type_var()
+        cator_models = [
+            m1
+            for m0 in nt.models
+            for m1 in self.solver.solve(m0, cator_var, Imp(nt.typ_var, Top()))
+        ]
+        function_nt = replace(nt, models = cator_models, typ_var = cator_var)
+        function_models = BaseRule(self.solver).combine_function(function_nt, cases)
+        nt = replace(nt, models = function_models)
         arguments = [condition]
-        return self.combine_application(cator, arguments) 
+        return self.combine_application(nt, cator_var, arguments) 
 
     def distill_projection_cator(self, nt : Nonterm) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
