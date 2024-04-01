@@ -316,10 +316,14 @@ class Terminal:
 class Nonterm:
     id : str 
     enviro : PMap[str, Typ] 
-    typ : Typ
+    models : list[Model]
+    symbol : str 
     is_applicator : bool = False
 
-
+@dataclass(frozen=True, eq=True)
+class Combo:
+    models : list[Model]
+    symbol : str 
 
 '''
 NOTE: 
@@ -350,7 +354,11 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
 
 Guidance = Union[Symbol, Terminal, Nonterm]
 
-nt_default = Nonterm('expr', m(), Top())
+default_solver = Solver()
+
+def make_default_nonterm(solver : Solver):
+    id = solver.fresh_type_id()
+    return Nonterm('expr', m(), [Model(s(), s())], id)
 
 def pattern_type(t : Typ) -> bool:
     return (
@@ -1785,38 +1793,43 @@ class Rule:
         self.solver = solver
         self.nt = nt 
 
+
+
 class BaseRule(Rule):
 
-    def combine_var(self, model, id : str) -> list[tuple[Model,Typ]]:
-        return [(model, self.nt.enviro[id])]
+    def combine_var(self, id : str) -> Typ:
+        return self.nt.enviro[id]
 
-    def combine_assoc(self, model, argchain : list[Typ]) -> list[tuple[Model, Typ]]:
+    def combine_assoc(self, argchain : list[Typ]) -> Typ:
         if len(argchain) == 1:
-            return [(model, argchain[0])]
+            return argchain[0]
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            return ExprRule(self.solver, self.nt).combine_application(model, applicator, arguments) 
+            return ExprRule(self.solver, self.nt).combine_application(applicator, arguments) 
 
     def combine_unit(self) -> Typ:
         return TUnit()
 
     def distill_tag_body(self, id : str) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(TTag(id, query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ)
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, TTag(id, TVar(symbol)), TVar(self.nt.symbol))
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol)
 
-    def combine_tag(self, model : Model, label : str, body : Typ) -> list[tuple[Model,Typ]]:
+    def combine_tag(self, label : str, body : Typ) -> Typ:
         '''
         move existential outside
         '''
         if isinstance(body, Exi):
-            return [(model, Exi(body.ids, body.constraints, TTag(label, body.body)))]
+            return Exi(body.ids, body.constraints, TTag(label, body.body))
         else:
-            return [(model, TTag(label, body))]
+            return TTag(label, body)
 
-    def combine_function(self, model, cases : list[Imp]) -> list[tuple[Model,Typ]]:
+    def combine_function(self, cases : list[Imp]) -> Typ:
         '''
         Example
         ==============
@@ -1861,87 +1874,113 @@ class BaseRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        return [(model, simplify_typ(result))]
+        return simplify_typ(result)
 
 
 class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ) 
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ) 
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Inter(TField('head', TVar(symbol)), TField('tail', Bot())), TVar(self.nt.symbol)) 
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(Inter(TField('head', head), TField('tail', query_typ)), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ) 
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Inter(TField('head', head), TField('tail', TVar(symbol))), TVar(self.nt.symbol))
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol) 
 
-    def combine_tuple(self, model : Model, head : Typ, tail : Typ) -> list[tuple[Model, Typ]]:
-        return [(model, Inter(TField('head', head), TField('tail', tail)))]
+    def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
+        return Inter(TField('head', head), TField('tail', tail))
 
     def distill_ite_condition(self) -> Nonterm:
-        typ = Unio(TTag('false', TUnit()), TTag('true', TUnit()))
-        return Nonterm('expr', self.nt.enviro, typ)
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(self.nt.symbol),
+                Unio(TTag('false', TUnit()), TTag('true', TUnit()))
+            )
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol)
 
     def distill_ite_branch_true(self, condition : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
         '''
-        query_typ = self.solver.fresh_type_var()
-        implication = Imp(TTag('true', TUnit()), query_typ) 
-        model_conclusion = Imp(condition, self.nt.typ)
-        models = self.solver.solve_composition(implication, model_conclusion)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ) 
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Imp(TTag('true', TUnit()), TVar(symbol)),
+                Imp(condition, TVar(self.nt.symbol))
+            )
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol) 
 
     def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
         '''
-        query_typ = self.solver.fresh_type_var()
-        implication = Imp(TTag('false', TUnit()), query_typ) 
-        model_conclusion = Imp(condition, self.nt.typ)
-        models = self.solver.solve_composition(implication, model_conclusion)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ) 
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Imp(TTag('false', TUnit()), TVar(symbol)),
+                Imp(condition, TVar(self.nt.symbol))
+            )
+        ]
+        return Nonterm('expr', self.nt.enviro, models, symbol) 
 
-    def combine_ite(self, model : Model, condition : Typ, true_branch : Typ, false_branch : Typ) -> list[tuple[Model, Typ]]: 
+    def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
         cases = [
             Imp(TTag('true', TUnit()), true_branch), 
             Imp(TTag('false', TUnit()), false_branch)
         ]
         nt = Nonterm('base', self.nt.enviro, Imp(self.nt.typ, Top()))
+        cator = BaseRule(self.solver, nt).combine_function(cases)
         arguments = [condition]
-        return [
-            result
-            for model, cator in BaseRule(self.solver, nt).combine_function(model, cases)
-            for result in self.combine_application(model, cator, arguments) 
-        ]
+        return self.combine_application(cator, arguments) 
 
     def distill_projection_cator(self) -> Nonterm:
-        return Nonterm('expr', self.nt.enviro, Top())
+        symbol = self.solver.fresh_type_id()
+        return Nonterm('expr', self.nt.enviro, self.nt.models, symbol)
 
     def distill_projection_keychain(self, record : Typ) -> Nonterm: 
-        return Nonterm('keychain', self.nt.enviro, record)
+        symbol = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(symbol),
+                record 
+            )
+        ]
+        return Nonterm('keychain', self.nt.enviro, models, symbol)
 
 
-    def combine_projection(self, model : Model, record : Typ, keys : list[str]) -> list[tuple[Model,Typ]]: 
-        results = [(model,record)]
+    def combine_projection(self, record : Typ, keys : list[str]) -> Typ: 
+        answer_i = record 
         for key in keys:
             query_typ = self.solver.fresh_type_var()
-            results = [
-                (m1, interp[0])
-                for m0, t in results 
-                for m1 in self.solver.solve(m0, t, TField(key, query_typ))
-                for interp in [interpret_strong_side(m1, t)]
-                if interp != None
-            ]
+            models = self.solver.solve_composition(answer_i, TField(key, query_typ))
+            answer_i = self.solver.decode_strong_side(models, query_typ)
 
-        return results
+        return answer_i
 
     #########
 
@@ -1951,7 +1990,7 @@ class ExprRule(Rule):
     def distill_application_argchain(self, cator : Typ) -> Nonterm: 
         return Nonterm('argchain', self.nt.enviro, cator, True)
 
-    def combine_application(self, model, cator : Typ, arguments : list[Typ]) -> list[tuple[Model, Typ]]: 
+    def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
 
         answer_i = cator 
         for argument in arguments:
@@ -1985,7 +2024,11 @@ class ExprRule(Rule):
 #     ~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
-        return [(model, simplify_typ(answer_i))]
+
+
+
+
+        return simplify_typ(answer_i)
 
 
     #########
@@ -1995,15 +2038,11 @@ class ExprRule(Rule):
     def distill_funnel_pipeline(self, arg : Typ) -> Nonterm: 
         return Nonterm('pipeline', self.nt.enviro, arg)
 
-    def combine_funnel(self, model : Model, arg : Typ, cators : list[Typ]) -> list[tuple[Model, Typ]]: 
-        results = [(model, arg)] 
+    def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
+        result = arg 
         for cator in cators:
-            results = [
-                result_i
-                for model, arg in results
-                for result_i in self.combine_application(model, cator, [arg])
-            ]
-        return results
+            result = self.combine_application(cator, [result])
+        return result
 
     def distill_fix_body(self) -> Nonterm:
         return Nonterm('expr', self.nt.enviro, Top())

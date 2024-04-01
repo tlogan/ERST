@@ -25,11 +25,11 @@ _overflow = False
 def init(self): 
     self._solver = Solver() 
     self._cache = {}
-    self._guidance = nt_default 
+    self._guidance = make_default_nonterm(self._solver) 
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = nt_default
+    self._guidance = make_default_nonterm(self._solver)
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -443,7 +443,7 @@ $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body
 
 ;
 
-// NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
+// NOTE: nt.typ represents the type of the rator applied to the next immediate argument  
 argchain [Nonterm nt] returns [list[Typ] combo] :
 
 | '(' {

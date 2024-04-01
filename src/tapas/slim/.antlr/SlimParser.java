@@ -120,11 +120,11 @@ public class SlimParser extends Parser {
 	def init(self): 
 	    self._solver = Solver() 
 	    self._cache = {}
-	    self._guidance = nt_default 
+	    self._guidance = make_default_nonterm(self._solver) 
 	    self._overflow = False  
 
 	def reset(self): 
-	    self._guidance = nt_default
+	    self._guidance = make_default_nonterm(self._solver)
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()

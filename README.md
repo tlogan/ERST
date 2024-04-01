@@ -3,6 +3,7 @@
 
 ### TODO
 - IMPORTANT!! do a major refactor of rules to return a list of models with a type; instead of just a type 
+    - replace types symbols and list of models that give interpretation for the symbols.
 - debug `test_arg_specialization`
 - add negs back in `from_cases_to_choices`
 - get `max` example to work
