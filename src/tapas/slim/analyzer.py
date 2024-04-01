@@ -1807,14 +1807,14 @@ class BaseRule(Rule):
         expected_typ = self.solver.decode_weak_side(models, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ)
 
-    def combine_tag(self, label : str, body : Typ) -> Typ:
+    def combine_tag(self, model : Model, label : str, body : Typ) -> list[tuple[Model,Typ]]:
         '''
         move existential outside
         '''
         if isinstance(body, Exi):
-            return Exi(body.ids, body.constraints, TTag(label, body.body))
+            return [(model, Exi(body.ids, body.constraints, TTag(label, body.body)))]
         else:
-            return TTag(label, body)
+            return [(model, TTag(label, body))]
 
     def combine_function(self, model, cases : list[Imp]) -> list[tuple[Model,Typ]]:
         '''
@@ -1878,8 +1878,8 @@ class ExprRule(Rule):
         expected_typ = self.solver.decode_weak_side(models, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
-    def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
-        return Inter(TField('head', head), TField('tail', tail))
+    def combine_tuple(self, model : Model, head : Typ, tail : Typ) -> list[tuple[Model, Typ]]:
+        return [(model, Inter(TField('head', head), TField('tail', tail)))]
 
     def distill_ite_condition(self) -> Nonterm:
         typ = Unio(TTag('false', TUnit()), TTag('true', TUnit()))
@@ -1909,7 +1909,7 @@ class ExprRule(Rule):
         expected_typ = self.solver.decode_weak_side(models, query_typ)
         return Nonterm('expr', self.nt.enviro, expected_typ) 
 
-    def combine_ite(self, model, condition : Typ, true_branch : Typ, false_branch : Typ) -> list[tuple[Model, Typ]]: 
+    def combine_ite(self, model : Model, condition : Typ, true_branch : Typ, false_branch : Typ) -> list[tuple[Model, Typ]]: 
         cases = [
             Imp(TTag('true', TUnit()), true_branch), 
             Imp(TTag('false', TUnit()), false_branch)
@@ -1929,14 +1929,19 @@ class ExprRule(Rule):
         return Nonterm('keychain', self.nt.enviro, record)
 
 
-    def combine_projection(self, record : Typ, keys : list[str]) -> Typ: 
-        answer_i = record 
+    def combine_projection(self, model : Model, record : Typ, keys : list[str]) -> list[tuple[Model,Typ]]: 
+        results = [(model,record)]
         for key in keys:
             query_typ = self.solver.fresh_type_var()
-            models = self.solver.solve_composition(answer_i, TField(key, query_typ))
-            answer_i = self.solver.decode_strong_side(models, query_typ)
+            results = [
+                (m1, interp[0])
+                for m0, t in results 
+                for m1 in self.solver.solve(m0, t, TField(key, query_typ))
+                for interp in [interpret_strong_side(m1, t)]
+                if interp != None
+            ]
 
-        return answer_i
+        return results
 
     #########
 
