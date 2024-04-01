@@ -2307,7 +2307,7 @@ class FunctionRule(Rule):
 
         return Nonterm('expr', enviro, models, typ_var)
 
-    def combine_single(self, nt : Nonterm, pattern : PatternAttr, body : Typ) -> list[Imp]:
+    def combine_single(self, pattern : PatternAttr, body : Typ) -> list[Imp]:
         return [Imp(pattern.typ, body)]
 
     def distill_cons_pattern(self, nt : Nonterm) -> Nonterm:
@@ -2342,7 +2342,7 @@ class FunctionRule(Rule):
         '''
         return Nonterm('function', nt.enviro, models, typ_var, True)
 
-    def combine_cons(self, nt : Nonterm, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
+    def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
         return [Imp(pattern.typ, body)] + tail
 
 
@@ -2387,7 +2387,7 @@ class ArgchainRule(Rule):
     def distill_cons_head(self, nt : Nonterm) -> Nonterm:
         return self.distill_single_content(nt)
 
-    def distill_cons_tail(self, nt : Nonterm, head : Typ):
+    def distill_cons_tail(self, nt : Nonterm, head : Typ) -> Nonterm:
         '''
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
@@ -2403,12 +2403,11 @@ class ArgchainRule(Rule):
 
         return Nonterm('argchain', nt.enviro, models, typ_var, True)
 
-    def combine_single(self, nt : Nonterm, content : Typ) -> list[Typ]:
-        # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
-        return [content]
+    def combine_single(self, nt : Nonterm, content : Typ) -> tuple[list[Model], list[Typ]]:
+        return (nt.models, [content])
 
-    def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return self.combine_single(nt, head) + tail
+    def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> tuple[list[Model], list[Typ]]:
+        return (nt.models, [head] + tail)
 
 ######
 
