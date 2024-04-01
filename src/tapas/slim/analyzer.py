@@ -314,16 +314,16 @@ class Terminal:
 
 @dataclass(frozen=True, eq=True)
 class Nonterm:
-    id : str 
+    name : str 
     enviro : PMap[str, Typ] 
     models : list[Model]
-    symbol : str 
+    typ_id : str 
     is_applicator : bool = False
 
 @dataclass(frozen=True, eq=True)
 class Combo:
     models : list[Model]
-    symbol : str 
+    typ_id : str 
 
 '''
 NOTE: 
@@ -356,9 +356,7 @@ Guidance = Union[Symbol, Terminal, Nonterm]
 
 default_solver = Solver()
 
-def make_default_nonterm(solver : Solver):
-    id = solver.fresh_type_id()
-    return Nonterm('expr', m(), [Model(s(), s())], id)
+default_nonterm = Nonterm('expr', m(), [Model(s(), s())], default_solver.fresh_type_id())
 
 def pattern_type(t : Typ) -> bool:
     return (
@@ -1812,13 +1810,13 @@ class BaseRule(Rule):
         return TUnit()
 
     def distill_tag_body(self, id : str) -> Nonterm:
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
-            for m1 in self.solver.solve(m0, TTag(id, TVar(symbol)), TVar(self.nt.symbol))
+            for m1 in self.solver.solve(m0, TTag(id, TVar(typ_id)), TVar(self.nt.typ_id))
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol)
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
     def combine_tag(self, label : str, body : Typ) -> Typ:
         '''
@@ -1880,71 +1878,71 @@ class BaseRule(Rule):
 class ExprRule(Rule):
 
     def distill_tuple_head(self) -> Nonterm:
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                Inter(TField('head', TVar(symbol)), TField('tail', Bot())), TVar(self.nt.symbol)) 
+                Inter(TField('head', TVar(typ_id)), TField('tail', Bot())), TVar(self.nt.typ_id)) 
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol) 
+        return Nonterm('expr', self.nt.enviro, models, typ_id) 
 
     def distill_tuple_tail(self, head : Typ) -> Nonterm:
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                Inter(TField('head', head), TField('tail', TVar(symbol))), TVar(self.nt.symbol))
+                Inter(TField('head', head), TField('tail', TVar(typ_id))), TVar(self.nt.typ_id))
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol) 
+        return Nonterm('expr', self.nt.enviro, models, typ_id) 
 
     def combine_tuple(self, head : Typ, tail : Typ) -> Typ:
         return Inter(TField('head', head), TField('tail', tail))
 
     def distill_ite_condition(self) -> Nonterm:
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                TVar(self.nt.symbol),
+                TVar(self.nt.typ_id),
                 Unio(TTag('false', TUnit()), TTag('true', TUnit()))
             )
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol)
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
     def distill_ite_branch_true(self, condition : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
         '''
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                Imp(TTag('true', TUnit()), TVar(symbol)),
-                Imp(condition, TVar(self.nt.symbol))
+                Imp(TTag('true', TUnit()), TVar(typ_id)),
+                Imp(condition, TVar(self.nt.typ_id))
             )
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol) 
+        return Nonterm('expr', self.nt.enviro, models, typ_id) 
 
     def distill_ite_branch_false(self, condition : Typ, branch_true : Typ) -> Nonterm:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
         '''
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                Imp(TTag('false', TUnit()), TVar(symbol)),
-                Imp(condition, TVar(self.nt.symbol))
+                Imp(TTag('false', TUnit()), TVar(typ_id)),
+                Imp(condition, TVar(self.nt.typ_id))
             )
         ]
-        return Nonterm('expr', self.nt.enviro, models, symbol) 
+        return Nonterm('expr', self.nt.enviro, models, typ_id) 
 
     def combine_ite(self, condition : Typ, true_branch : Typ, false_branch : Typ) -> Typ: 
         cases = [
@@ -1957,20 +1955,20 @@ class ExprRule(Rule):
         return self.combine_application(cator, arguments) 
 
     def distill_projection_cator(self) -> Nonterm:
-        symbol = self.solver.fresh_type_id()
-        return Nonterm('expr', self.nt.enviro, self.nt.models, symbol)
+        typ_id = self.solver.fresh_type_id()
+        return Nonterm('expr', self.nt.enviro, self.nt.models, typ_id)
 
     def distill_projection_keychain(self, record : Typ) -> Nonterm: 
-        symbol = self.solver.fresh_type_id()
+        typ_id = self.solver.fresh_type_id()
         models = [
             m1
             for m0 in self.nt.models
             for m1 in self.solver.solve(m0, 
-                TVar(symbol),
+                TVar(typ_id),
                 record 
             )
         ]
-        return Nonterm('keychain', self.nt.enviro, models, symbol)
+        return Nonterm('keychain', self.nt.enviro, models, typ_id)
 
 
     def combine_projection(self, record : Typ, keys : list[str]) -> Typ: 
@@ -1985,10 +1983,28 @@ class ExprRule(Rule):
     #########
 
     def distill_application_cator(self) -> Nonterm: 
-        return Nonterm('expr', self.nt.enviro, Imp(Bot(), Top()))
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(typ_id),
+                Imp(Bot(), Top()) 
+            )
+        ]
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
     def distill_application_argchain(self, cator : Typ) -> Nonterm: 
-        return Nonterm('argchain', self.nt.enviro, cator, True)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(typ_id),
+                cator
+            )
+        ]
+        return Nonterm('argchain', self.nt.enviro, models, typ_id, True)
 
     def combine_application(self, cator : Typ, arguments : list[Typ]) -> Typ: 
 
@@ -2033,10 +2049,22 @@ class ExprRule(Rule):
 
     #########
     def distill_funnel_arg(self) -> Nonterm: 
-        return Nonterm('expr', self.nt.enviro, Top())
+        typ_id = self.solver.fresh_type_id()
+        models = self.nt.models
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
     def distill_funnel_pipeline(self, arg : Typ) -> Nonterm: 
-        return Nonterm('pipeline', self.nt.enviro, arg)
+
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(typ_id),
+                arg
+            )
+        ]
+        return Nonterm('pipeline', self.nt.enviro, models, typ_id)
 
     def combine_funnel(self, arg : Typ, cators : list[Typ]) -> Typ: 
         result = arg 
@@ -2045,7 +2073,9 @@ class ExprRule(Rule):
         return result
 
     def distill_fix_body(self) -> Nonterm:
-        return Nonterm('expr', self.nt.enviro, Top())
+        typ_id = self.solver.fresh_type_id()
+        models = self.nt.models
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
     def combine_fix(self, body : Typ) -> Typ:
         """
@@ -2196,7 +2226,9 @@ class ExprRule(Rule):
 
     
     def distill_let_target(self, id : str) -> Nonterm:
-        return Nonterm('target', self.nt.enviro, Top())
+        typ_id = self.solver.fresh_type_id()
+        models = self.nt.models
+        return Nonterm('target', self.nt.enviro, models, typ_id)
 
     def distill_let_contin(self, id : str, target : Typ) -> Nonterm:
         '''
@@ -2208,7 +2240,7 @@ class ExprRule(Rule):
             target_generalized = All(fid, Top(), target_generalized) 
         enviro = self.nt.enviro.set(id, target)
 
-        return Nonterm('expr', enviro, self.nt.typ)
+        return Nonterm('expr', enviro, self.nt.models, self.nt.typ_id)
 
 '''
 end ExprRule
@@ -2218,10 +2250,13 @@ end ExprRule
 class RecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(TField(id, query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, TField(id, TVar(typ_id)), TVar(self.nt.typ_id))
+        ]
+        return Nonterm('expr', self.nt.enviro, models, typ_id) 
 
     def combine_single(self, id : str, body : Typ) -> Typ:
         return TField(id, body) 
@@ -2230,10 +2265,13 @@ class RecordRule(Rule):
         return self.distill_single_body(id)
 
     def distill_cons_tail(self, id : str, body : Typ) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(Inter(TField(id, body), query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('record', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, Inter(TField(id, body), TVar(typ_id)), TVar(self.nt.typ_id))
+        ]
+        return Nonterm('record', self.nt.enviro, models, typ_id) 
 
     def combine_cons(self, id : str, body : Typ, tail : Typ) -> Typ:
         return Inter(TField(id, body), tail)
@@ -2241,17 +2279,28 @@ class RecordRule(Rule):
 class FunctionRule(Rule):
 
     def distill_single_pattern(self) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('pattern', self.nt.enviro, expected_typ)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(self.nt.typ_id), Imp(TVar(typ_id), Top())
+            )
+        ]
+        return Nonterm('pattern', self.nt.enviro, models, typ_id)
 
     def distill_single_body(self, pattern : PatternAttr) -> Nonterm:
-        query_typ = self.solver.fresh_type_var() 
-        models = self.solver.solve_composition(self.nt.typ, Imp(pattern.typ, query_typ))
-        next_typ = self.solver.decode_strong_side(models, query_typ)
         enviro = self.nt.enviro + pattern.enviro
-        return Nonterm('expr', enviro, next_typ)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(self.nt.typ_id), Imp(pattern.typ, TVar(typ_id))
+            )
+        ]
+
+        return Nonterm('expr', enviro, models, typ_id)
 
     def combine_single(self, pattern : PatternAttr, body : Typ) -> list[Imp]:
         return [Imp(pattern.typ, body)]
@@ -2271,12 +2320,22 @@ class FunctionRule(Rule):
             for choice in from_cases_to_choices([Imp(pattern.typ, body), Imp(antec_query_typ, consq_query_typ)])
         ])
 
-        models = self.solver.solve_composition(actual_typ, self.nt.typ)
-        cator_typ = self.solver.decode_weak_side(models, Imp(antec_query_typ, consq_query_typ))
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m2
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                actual_typ, TVar(self.nt.typ_id)
+            )
+            for m2 in self.solver.solve(m1, 
+                TVar(typ_id), actual_typ
+            )
+        ]
+
         '''
         NOTE: the guide is an implication guiding the next case
         '''
-        return Nonterm('function', self.nt.enviro, cator_typ, True)
+        return Nonterm('function', self.nt.enviro, models, typ_id, True)
 
     def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
         return [Imp(pattern.typ, body)] + tail
@@ -2291,43 +2350,53 @@ class KeychainRule(Rule):
     '''
     return the plate with the typ as the type that the next element in tail cuts
     '''
-    def distill_cons_tail(self, key : str):
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(self.nt.typ, TField(key, query_typ))
-        next_typ = self.solver.decode_strong_side(models, query_typ)
-        return Nonterm('keychain', self.nt.enviro, next_typ)
+    def distill_cons_tail(self, key : str) -> Nonterm:
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(self.nt.typ_id), TField(key, TVar(typ_id))
+            )
+        ]
+        return Nonterm('keychain', self.nt.enviro, models, typ_id)
 
     def combine_cons(self, key : str, keys : list[str]) -> list[str]:
         return self.combine_single(key) + keys
 
 class ArgchainRule(Rule):
-    def distill_single_content(self):
+    def distill_single_content(self) -> Nonterm:
         if self.nt.is_applicator:
-            query_typ = self.solver.fresh_type_var()
-            models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
-            expected_typ = self.solver.decode_weak_side(models, query_typ)
-            return Nonterm('expr', self.nt.enviro, expected_typ, False)
+            typ_id = self.solver.fresh_type_id()
+            models = [
+                m1
+                for m0 in self.nt.models
+                for m1 in self.solver.solve(m0, 
+                    TVar(self.nt.typ_id), Imp(TVar(typ_id), Top())
+                )
+            ]
+            return Nonterm('expr', self.nt.enviro, models, typ_id, False)
         else:
             return self.nt
 
-    def distill_cons_head(self):
-        if self.nt.is_applicator:
-            query_typ = self.solver.fresh_type_var()
-            models = self.solver.solve_composition(self.nt.typ, Imp(query_typ, Top()))
-            expected_typ = self.solver.decode_weak_side(models, query_typ)
-            return Nonterm('expr', self.nt.enviro, expected_typ, False)
-        else:
-            return self.nt
+    def distill_cons_head(self) -> Nonterm:
+        return self.distill_single_content()
 
     def distill_cons_tail(self, head : Typ):
-        query_typ = self.solver.fresh_type_var()
         '''
         cut the previous tyption with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        models = self.solver.solve_composition(self.nt.typ, Imp(head, query_typ))
-        next_typ = self.solver.decode_strong_side(models, query_typ)
-        return Nonterm('argchain', self.nt.enviro, next_typ, True)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(self.nt.typ_id), Imp(head, TVar(typ_id))
+            )
+        ]
+
+        return Nonterm('argchain', self.nt.enviro, models, typ_id, True)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
@@ -2341,27 +2410,35 @@ class ArgchainRule(Rule):
 class PipelineRule(Rule):
 
     def distill_single_content(self):
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(query_typ, Imp(self.nt.typ, Top()))
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TVar(typ_id), Imp(TVar(self.nt.typ_id), Top())
+            )
+        ]
+        return Nonterm('expr', self.nt.enviro, models, typ_id)
 
 
     def distill_cons_head(self):
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(query_typ, Imp(self.nt.typ, Top()))
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('expr', self.nt.enviro, expected_typ)
+        return self.distill_single_content()
 
     def distill_cons_tail(self, head : Typ) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
         '''
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        models = self.solver.solve_composition(head, Imp(self.nt.typ, query_typ))
-        next_typ = self.solver.decode_strong_side(models, query_typ)
-        return Nonterm('pipeline', self.nt.enviro, next_typ)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                head, Imp(TVar(self.nt.typ_id), TVar(typ_id))
+            )
+        ]
+
+        return Nonterm('pipeline', self.nt.enviro, models, typ_id)
 
     def combine_single(self, content : Typ) -> list[Typ]:
         # self.solver.solve(plate.enviro, plate.typ, Imp(content, Top()))
@@ -2377,19 +2454,29 @@ start Pattern Rule
 
 class PatternRule(Rule):
     def distill_tuple_head(self) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(Inter(TField('head', query_typ), TField('tail', Bot())), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('pattern', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Inter(TField('head', TVar(typ_id)), TField('tail', Bot())), 
+                TVar(self.nt.typ_id)
+            )
+        ]
+
+        return Nonterm('pattern', self.nt.enviro, models, typ_id) 
 
     def distill_tuple_tail(self, head : PatternAttr) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(
-            Inter(TField('head', head.typ), TField('tail', query_typ)), 
-            self.nt.typ,
-        )
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('pattern', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Inter(TField('head', head.typ), TField('tail', TVar(typ_id))), 
+                TVar(self.nt.typ_id),
+            )
+        ]
+        return Nonterm('pattern', self.nt.enviro, models, typ_id) 
 
     def combine_tuple(self, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
         return PatternAttr(head.enviro + tail.enviro, Inter(TField('head', head.typ), TField('tail', tail.typ)))
@@ -2409,10 +2496,15 @@ class PatternBaseRule(Rule):
         return PatternAttr(m(), TUnit())
 
     def distill_tag_body(self, id : str) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(TTag(id, query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('pattern', self.nt.enviro, expected_typ)
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TTag(id, TVar(typ_id)), TVar(self.nt.typ_id)
+            )
+        ]
+        return Nonterm('pattern', self.nt.enviro, models, typ_id)
 
     def combine_tag(self, label : str, body : PatternAttr) -> PatternAttr:
         return PatternAttr(body.enviro, TTag(label, body.typ))
@@ -2423,10 +2515,15 @@ end PatternBaseRule
 class PatternRecordRule(Rule):
 
     def distill_single_body(self, id : str) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(TField(id, query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_strong_side(models, query_typ)
-        return Nonterm('pattern_record', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                TField(id, TVar(typ_id)), TVar(self.nt.typ_id)
+            )
+        ]
+        return Nonterm('pattern_record', self.nt.enviro, models, typ_id) 
 
     def combine_single(self, label : str, body : PatternAttr) -> PatternAttr:
         return PatternAttr(body.enviro, TField(label, body.typ))
@@ -2435,10 +2532,16 @@ class PatternRecordRule(Rule):
         return self.distill_cons_body(id)
 
     def distill_cons_tail(self, id : str, body : PatternAttr) -> Nonterm:
-        query_typ = self.solver.fresh_type_var()
-        models = self.solver.solve_composition(Inter(TField(id, body.typ), query_typ), self.nt.typ)
-        expected_typ = self.solver.decode_weak_side(models, query_typ)
-        return Nonterm('pattern_record', self.nt.enviro, expected_typ) 
+        typ_id = self.solver.fresh_type_id()
+        models = [
+            m1
+            for m0 in self.nt.models
+            for m1 in self.solver.solve(m0, 
+                Inter(TField(id, body.typ), TVar(typ_id)), 
+                TVar(self.nt.typ_id)
+            )
+        ]
+        return Nonterm('pattern_record', self.nt.enviro, models, typ_id) 
 
     def combine_cons(self, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
         return PatternAttr(body.enviro + tail.enviro, Inter(TField(label, body.typ), tail.typ))

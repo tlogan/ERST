@@ -4,6 +4,8 @@
 ### TODO
 - IMPORTANT!! do a major refactor of rules to return a list of models with a type; instead of just a type 
     - replace types symbols and list of models that give interpretation for the symbols.
+    - replace combine return type with list of Models
+    - if expected type is merely a symbol, then there no need for a return type; only need models that specialize the symbol
 - debug `test_arg_specialization`
 - add negs back in `from_cases_to_choices`
 - get `max` example to work
