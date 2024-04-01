@@ -2318,30 +2318,11 @@ class FunctionRule(Rule):
         return self.distill_single_body(nt, pattern)
 
     def distill_cons_tail(self, nt : Nonterm, pattern : PatternAttr, body : Typ) -> Nonterm:
-        antec_query_typ = self.solver.fresh_type_var()
-        consq_query_typ = self.solver.fresh_type_var()
-
-        actual_typ = make_inter([
-            Imp(choice[0], choice[1])
-            for choice in from_cases_to_choices([Imp(pattern.typ, body), Imp(antec_query_typ, consq_query_typ)])
-        ])
-
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m2
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                actual_typ, nt.typ_var
-            )
-            for m2 in self.solver.solve(m1, 
-                typ_var, actual_typ
-            )
-        ]
-
         '''
-        NOTE: the guide is an implication guiding the next case
+        - the previous pattern should not influence what pattern occurs next
+        - patterns may overlap
         '''
-        return Nonterm('function', nt.enviro, models, typ_var, True)
+        return nt
 
     def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
         return [Imp(pattern.typ, body)] + tail
