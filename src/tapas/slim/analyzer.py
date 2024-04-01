@@ -344,15 +344,7 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
         if key in extract_free_vars_from_typ(pset(), st.strong)
     )) 
 
-
-
-
-
 Guidance = Union[Symbol, Terminal, Nonterm]
-
-default_solver = Solver()
-
-default_nonterm = Nonterm('expr', m(), [Model(s(), s())], default_solver.fresh_type_var())
 
 def pattern_type(t : Typ) -> bool:
     return (
@@ -1799,6 +1791,13 @@ class Solver:
     end solve_composition
     '''
 
+'''
+end Solver
+'''
+
+default_solver = Solver()
+default_nonterm = Nonterm('expr', m(), [Model(s(), s())], default_solver.fresh_type_var())
+
 
 class Rule:
     def __init__(self, solver : Solver):
@@ -2090,7 +2089,7 @@ class ExprRule(Rule):
         models = nt.models
         return Nonterm('expr', nt.enviro, models, typ_var)
 
-    def combine_fix(self, nt : Nonterm, body : Typ) -> Typ:
+    def combine_fix(self, nt : Nonterm, body : Typ) -> list[Model]:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -2107,8 +2106,9 @@ class ExprRule(Rule):
         # TODO: need to figure out when to freeze variables and how to interpret them
         models = [
             # Model(m.constraints, m.freezer.union([in_typ.id, out_typ.id]))
-            m
-            for m in self.solver.solve_composition(body, Imp(self_typ, Imp(in_typ, out_typ)))
+            m1
+            for m0 in nt.models
+            for m1 in self.solver.solve(m0, body, Imp(self_typ, Imp(in_typ, out_typ)))
         ]
 
         induc_body = Bot()
@@ -2235,7 +2235,7 @@ class ExprRule(Rule):
 
         # DEBUG
         # return Bot() 
-        return result
+        return self.evolve_models(nt, result)
 
     
     def distill_let_target(self, nt : Nonterm, id : str) -> Nonterm:
@@ -2264,30 +2264,22 @@ class RecordRule(Rule):
 
     def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, TField(id, typ_var), nt.typ_var)
-        ]
+        models = self.evolve_models(nt, TField(id, typ_var))
         return Nonterm('expr', nt.enviro, models, typ_var) 
 
-    def combine_single(self, nt : Nonterm, id : str, body : Typ) -> Typ:
-        return TField(id, body) 
+    def combine_single(self, nt : Nonterm, id : str, body : Typ) -> list[Model]:
+        return self.evolve_models(nt, TField(id, body))
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
-        return self.distill_single_body(id)
+        return self.distill_single_body(nt, id)
 
     def distill_cons_tail(self, nt : Nonterm, id : str, body : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, Inter(TField(id, body), typ_var), nt.typ_var)
-        ]
+        models = self.evolve_models(nt, Inter(TField(id, body), typ_var))
         return Nonterm('record', nt.enviro, models, typ_var) 
 
-    def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail : Typ) -> Typ:
-        return Inter(TField(id, body), tail)
+    def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail : Typ) -> list[Model]:
+        return self.evolve_models(nt, Inter(TField(id, body), tail))
 
 class FunctionRule(Rule):
 
@@ -2319,10 +2311,10 @@ class FunctionRule(Rule):
         return [Imp(pattern.typ, body)]
 
     def distill_cons_pattern(self, nt : Nonterm) -> Nonterm:
-        return self.distill_single_pattern()
+        return self.distill_single_pattern(nt)
 
     def distill_cons_body(self, nt : Nonterm, pattern : PatternAttr) -> Nonterm:
-        return self.distill_single_body(pattern)
+        return self.distill_single_body(nt, pattern)
 
     def distill_cons_tail(self, nt : Nonterm, pattern : PatternAttr, body : Typ) -> Nonterm:
         antec_query_typ = self.solver.fresh_type_var()
@@ -2375,7 +2367,7 @@ class KeychainRule(Rule):
         return Nonterm('keychain', nt.enviro, models, typ_var)
 
     def combine_cons(self, nt : Nonterm, key : str, keys : list[str]) -> list[str]:
-        return self.combine_single(key) + keys
+        return self.combine_single(nt, key) + keys
 
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
@@ -2393,7 +2385,7 @@ class ArgchainRule(Rule):
             return nt
 
     def distill_cons_head(self, nt : Nonterm) -> Nonterm:
-        return self.distill_single_content()
+        return self.distill_single_content(nt)
 
     def distill_cons_tail(self, nt : Nonterm, head : Typ):
         '''
@@ -2416,13 +2408,13 @@ class ArgchainRule(Rule):
         return [content]
 
     def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return self.combine_single(head) + tail
+        return self.combine_single(nt, head) + tail
 
 ######
 
 class PipelineRule(Rule):
 
-    def distill_single_content(self, nt : Nonterm):
+    def distill_single_content(self, nt : Nonterm) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
         models = [
             m1
@@ -2434,8 +2426,8 @@ class PipelineRule(Rule):
         return Nonterm('expr', nt.enviro, models, typ_var)
 
 
-    def distill_cons_head(self, nt : Nonterm):
-        return self.distill_single_content()
+    def distill_cons_head(self, nt : Nonterm) -> Nonterm:
+        return self.distill_single_content(nt)
 
     def distill_cons_tail(self, nt : Nonterm, head : Typ) -> Nonterm:
         '''
@@ -2458,7 +2450,7 @@ class PipelineRule(Rule):
         return [content]
 
     def combine_cons(self, nt : Nonterm, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return self.combine_single(head) + tail
+        return self.combine_single(nt, head) + tail
 
 
 '''
@@ -2542,7 +2534,7 @@ class PatternRecordRule(Rule):
         return PatternAttr(body.enviro, TField(label, body.typ))
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
-        return self.distill_cons_body(id)
+        return self.distill_cons_body(nt, id)
 
     def distill_cons_tail(self, nt : Nonterm, id : str, body : PatternAttr) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
