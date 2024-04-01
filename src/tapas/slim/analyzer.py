@@ -1171,6 +1171,13 @@ def make_inter(ts : list[Typ]) -> Typ:
         u = Inter(t, u)
     return simplify_typ(u)
 
+def cast_up(renaming : PMap[str, TVar]) -> PMap[str, Typ]:
+    return pmap({
+        id : target
+        for id, target in renaming.items()
+    })
+
+
 class Solver:
     _type_id : int = 0 
     _battery : int = 10 
@@ -1285,6 +1292,17 @@ class Solver:
 
     def fresh_type_var(self) -> TVar:
         return TVar(self.fresh_type_id())
+
+    def make_renaming_tvars(self, old_ids) -> PMap[str, TVar]:
+        '''
+        Map old_ids to fresh ids
+        '''
+        d = {}
+        for old_id in old_ids:
+            fresh = self.fresh_type_var()
+            d[old_id] = fresh
+
+        return pmap(d)
 
     def make_renaming_ids(self, old_ids) -> PMap[str, str]:
         '''
@@ -1786,34 +1804,33 @@ class Rule:
     def __init__(self, solver : Solver):
         self.solver = solver
 
+    def evolve_models(self, nt : Nonterm, t : Typ) -> list[Model]:
+        return [
+            m1
+            for m0 in nt.models
+            for m1 in self.solver.solve(m0, 
+                t, 
+                nt.typ_var
+            )
+        ]
+
 
 
 class BaseRule(Rule):
 
     def combine_var(self, nt : Nonterm, id : str) -> list[Model]:
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, nt.typ_var, nt.enviro[id])
-        ]
-        return models 
+        return self.evolve_models(nt, nt.enviro[id])
 
     def combine_assoc(self, nt : Nonterm, argchain : list[TVar]) -> list[Model]:
         if len(argchain) == 1:
-            return [
-                m1
-                for m0 in nt.models
-                for m1 in self.solver.solve(m0, 
-                    nt.typ_var, argchain[0]
-                )
-            ]
+            return self.evolve_models(nt, argchain[0])
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
             return ExprRule(self.solver).combine_application(nt, applicator, arguments) 
 
-    def combine_unit(self, nt : Nonterm) -> Typ:
-        return TUnit()
+    def combine_unit(self, nt : Nonterm) -> list[Model]:
+        return self.evolve_models(nt, TUnit())
 
     def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
@@ -1824,16 +1841,16 @@ class BaseRule(Rule):
         ]
         return Nonterm('expr', nt.enviro, models, typ_var)
 
-    def combine_tag(self, nt : Nonterm, label : str, body : Typ) -> Typ:
+    def combine_tag(self, nt : Nonterm, label : str, body : TVar) -> list[Model]:
         '''
         move existential outside
         '''
         if isinstance(body, Exi):
-            return Exi(body.ids, body.constraints, TTag(label, body.body))
+            return self.evolve_models(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
         else:
-            return TTag(label, body)
+            return self.evolve_models(nt, TTag(label, body))
 
-    def combine_function(self, nt : Nonterm, cases : list[Imp]) -> Typ:
+    def combine_function(self, nt : Nonterm, cases : list[Imp]) -> list[Model]:
         '''
         Example
         ==============
@@ -1863,11 +1880,11 @@ class BaseRule(Rule):
 
             # TODO: consider extruding over whole implication; not just parameter
             fvs = extract_free_vars_from_typ(s(), choice[0])
-            renaming = self.solver.make_renaming_ids(fvs)
-            generalized_case = sub_typ(self.solver.make_submap_from_renaming(renaming), Imp(choice[0], choice[1]))
+            renaming = self.solver.make_renaming_tvars(fvs)
+            generalized_case = sub_typ(cast_up(renaming), Imp(choice[0], choice[1]))
              
-            for old_var, new_var in renaming.items():
-                generalized_case = All(new_var, TVar(old_var), generalized_case)
+            for old_id, new_var in renaming.items():
+                generalized_case = All(new_var.id, TVar(old_id), generalized_case)
             result = Inter(generalized_case, result)
 
 #         print(f"""
@@ -1878,7 +1895,7 @@ class BaseRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        return simplify_typ(result)
+        return self.evolve_models(nt, simplify_typ(result))
 
 
 class ExprRule(Rule):
@@ -1903,8 +1920,8 @@ class ExprRule(Rule):
         ]
         return Nonterm('expr', nt.enviro, models, typ_var) 
 
-    def combine_tuple(self, nt : Nonterm, head : Typ, tail : Typ) -> Typ:
-        return Inter(TField('head', head), TField('tail', tail))
+    def combine_tuple(self, nt : Nonterm, head : Typ, tail : Typ) -> list[Model]:
+        return self.evolve_models(nt, Inter(TField('head', head), TField('tail', tail)))
 
     def distill_ite_condition(self, nt : Nonterm) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
@@ -1984,14 +2001,18 @@ class ExprRule(Rule):
         return Nonterm('keychain', nt.enviro, models, typ_var)
 
 
-    def combine_projection(self, nt : Nonterm, record : Typ, keys : list[str]) -> Typ: 
-        answer_i = record 
+    def combine_projection(self, nt : Nonterm, record : TVar, keys : list[str]) -> list[Model]: 
+        models = nt.models
         for key in keys:
-            query_typ = self.solver.fresh_type_var()
-            models = self.solver.solve_composition(answer_i, TField(key, query_typ))
-            answer_i = self.solver.decode_strong_side(models, query_typ)
-
-        return answer_i
+            result_var = self.solver.fresh_type_var()
+            models = [
+                m1
+                for m0 in models
+                for m1 in self.solver.solve(m0, record, TField(key, result_var))
+            ]
+            record = result_var
+        # TODO: update models with solution for result_var <: nt.typ_var
+        return models 
 
     #########
 
@@ -2023,14 +2044,16 @@ class ExprRule(Rule):
 
         models = nt.models
         for argument in arguments:
-            typ_var = self.solver.fresh_type_var()
+            result_var = self.solver.fresh_type_var()
 
             models = [
                 m1
                 for m0 in models
-                for m1 in self.solver.solve(m0, cator, Imp(argument, typ_var))
+                for m1 in self.solver.solve(m0, cator, Imp(argument, result_var))
             ]
-            cator = typ_var
+            cator = result_var
+
+        # TODO: update models with solution for result_var <: nt.typ_var
         return models
 
     #########
@@ -2055,10 +2078,10 @@ class ExprRule(Rule):
     def combine_funnel(self, nt : Nonterm, arg : TVar, cators : list[TVar]) -> list[Model]: 
         models = nt.models
         for cator in cators:
-            result_typ = self.solver.fresh_type_var() 
-            app_nt = replace(nt, models = models, typ_var = result_typ) 
+            result_var = self.solver.fresh_type_var() 
+            app_nt = replace(nt, models = models, typ_var = result_var) 
             models = self.combine_application(app_nt, cator, [arg])
-            arg = result_typ 
+            arg = result_var 
         # TODO: add final check that the result_typ <: nt.typ_var
         return models 
 
