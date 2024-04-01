@@ -2052,11 +2052,15 @@ class ExprRule(Rule):
         ]
         return Nonterm('pipeline', nt.enviro, models, typ_var)
 
-    def combine_funnel(self, nt : Nonterm, arg : Typ, cators : list[Typ]) -> Typ: 
-        result = arg 
+    def combine_funnel(self, nt : Nonterm, arg : TVar, cators : list[TVar]) -> list[Model]: 
+        models = nt.models
         for cator in cators:
-            result = self.combine_application(cator, [result])
-        return result
+            result_typ = self.solver.fresh_type_var() 
+            app_nt = replace(nt, models = models, typ_var = result_typ) 
+            models = self.combine_application(app_nt, cator, [arg])
+            arg = result_typ 
+        # TODO: add final check that the result_typ <: nt.typ_var
+        return models 
 
     def distill_fix_body(self, nt : Nonterm) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
