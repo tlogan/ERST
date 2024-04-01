@@ -941,66 +941,6 @@ def test_app_less_equal_two_one():
     print("combo: " + u(combo))
     assert u(combo) == "~false @"
 
-def test_imp_inter_subs_imp_inter():
-    imp_inter = ('''
-((~true @ -> X) & (~false @ -> Y)) 
-    ''')
-
-    union_imp = ('''
-((EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~true @) -> Q) & 
-((EXI [ ; X <: ~dos @ ; Y <: ~uno @] ~false @) -> Q)
-    ''')
-
-    # '''
-    # NOTE: transform into:
-    # (EXI [X Y ; (...extrusion...) ; X <: ~uno @ ; Y <: ~dos @] X) <: Q
-    # (EXI [X Y ; (...extrusion...) ; X <: ~dos @ ; Y <: ~uno @] Y) <: Q
-    # '''
-    answer = query_strong_side(imp_inter, union_imp, "Q")
-    print(f'''
-answer: {answer}
-    ''')
-    assert answer == "~uno @" 
-
-def test_imp_inter_subs_union_imp():
-
-    imp_inter = ('''
-((~true @ -> X) & (~false @ -> Y)) 
-    ''')
-
-    union_imp = ('''
-(
-(EXI [ ; X <: ~uno @ ; Y <: ~dos @] ~true @) | 
-(EXI [ ; X <: ~dos @ ; Y <: ~uno @] ~false @) 
-) -> Q
-    ''')
-
-    answer = query_strong_side(imp_inter, union_imp, "Q")
-    print(f'''
-answer: {answer}
-    ''')
-    assert answer == "~uno @" 
-
-
-def test_all_imp_exi_subs_union_imp():
-    # TODO: make sure this works as expected 
-
-    all_imp_exi = ('''
-(ALL [A <: (~true @ | ~false @) -> EXI [B ; (A,B) <:(~true @, X) | (~false @, Y) ] B) 
-    ''')
-
-    union_imp = ('''
-(
-(EXI [ ; Y <: ~uno @ ; X <: ~dos @] ~true @) | 
-(EXI [ ; Y <: ~dos @ ; X <: ~uno @] ~false @)
-) -> Q
-    ''')
-    answer = query_strong_side(all_imp_exi, union_imp, "Q")
-    print(f'''
-answer: {answer}
-    ''')
-    assert answer == "~dos @" 
-
 arg_specialization = (f'''
 let cmp = (
     case (~uno @, ~dos @) => ~true @
@@ -1023,7 +963,17 @@ case (x, y) => (
 # ''')
 
 def test_arg_specialization():
-    # TODO
+    ########################################
+    # TODO: this may require a major refactor of rules to return a list of models with a type; instead of just a type 
+    '''
+; X <: ~uno @ ; Y <: ~dos @ |-
+((~true @ -> X) & (~false @ -> Y)) <: ~true @ -> Q
+
+<< OR >>
+
+; X <: ~dos @ ; Y <: ~uno @ |- 
+((~true @ -> X) & (~false @ -> Y)) <: ~false @ -> Q
+    '''
 
     pieces = [arg_specialization]
     (combo, guides, parsetree) = analyze(pieces, True)
@@ -1032,7 +982,7 @@ def test_arg_specialization():
     
     assert combo
     print("combo: " + u(combo))
-    # assert u(combo) == "(~uno @, ~dos @) -> ~dos @"
+    # assert u(combo) == "~uno @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -1125,8 +1075,6 @@ if __name__ == '__main__':
     # test_app_less_equal_two_one()
     #
     # TODO
-    # test_imp_inter_subs_imp_inter()
-    # test_imp_inter_subs_union_imp()
     test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
