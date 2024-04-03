@@ -401,7 +401,7 @@ def make_diff(context : Typ, negs : list[Typ]) -> Typ:
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
     return Inter(TField("head", left), TField("tail", right))
 
-def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
+def from_branches_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     '''
     nil -> zero
     cons X -> succ Y 
@@ -415,7 +415,7 @@ def from_cases_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     for case in cases:
 #         print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG from_cases_to_choices
+# DEBUG from_branches_to_choices
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG case: {concretize_typ(case)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1851,7 +1851,7 @@ class BaseRule(Rule):
         # - consider removing redundancy
         return self.evolve_models(nt, TTag(label, body))
 
-    def combine_function(self, nt : Nonterm, cases : list[Imp]) -> list[Model]:
+    def combine_function(self, nt : Nonterm, branches : list[Imp]) -> list[Model]:
         '''
         Example
         ==============
@@ -1863,9 +1863,7 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-        
-
-        choices = from_cases_to_choices(cases)
+        choices = from_branches_to_choices(branches)
         result = Top() 
         for choice in reversed(choices): 
 #             print(f"""
@@ -1902,30 +1900,20 @@ class BaseRule(Rule):
 class ExprRule(Rule):
 
     def distill_tuple_head(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Inter(TField('head', typ_var), TField('tail', Bot())), nt.typ_var) 
-        ]
-        return Nonterm('expr', nt.enviro, models, typ_var) 
+        head_var = self.solver.fresh_type_var()
+        models = self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', Bot())))
+        return Nonterm('expr', nt.enviro, models, head_var) 
 
-    def distill_tuple_tail(self, nt : Nonterm, head : Typ) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Inter(TField('head', head), TField('tail', typ_var)), nt.typ_var)
-        ]
-        return Nonterm('expr', nt.enviro, models, typ_var) 
+    def distill_tuple_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
+        tail_var = self.solver.fresh_type_var()
+        models = self.evolve_models(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
+        return Nonterm('expr', nt.enviro, models, tail_var) 
 
-    def combine_tuple(self, nt : Nonterm, head : Typ, tail : Typ) -> list[Model]:
-        return self.evolve_models(nt, Inter(TField('head', head), TField('tail', tail)))
+    def combine_tuple(self, nt : Nonterm, head_var : TVar, tail_var : TVar) -> list[Model]:
+        return self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', tail_var)))
 
     def distill_ite_condition(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
+        condition_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
@@ -1934,44 +1922,44 @@ class ExprRule(Rule):
                 Unio(TTag('false', TUnit()), TTag('true', TUnit()))
             )
         ]
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, condition_var)
 
-    def distill_ite_branch_true(self, nt : Nonterm, condition : Typ) -> Nonterm:
+    def distill_ite_true_branch(self, nt : Nonterm, condition_var : TVar) -> Nonterm:
         '''
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
         '''
-        typ_var = self.solver.fresh_type_var()
+        true_body_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                Imp(TTag('true', TUnit()), typ_var),
-                Imp(condition, nt.typ_var)
+                Imp(TTag('true', TUnit()), true_body_var),
+                Imp(true_body_var, nt.typ_var)
             )
         ]
-        return Nonterm('expr', nt.enviro, models, typ_var) 
+        return Nonterm('expr', nt.enviro, models, true_body_var) 
 
-    def distill_ite_branch_false(self, nt : Nonterm, condition : Typ, branch_true : Typ) -> Nonterm:
+    def distill_ite_false_branch(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar) -> Nonterm:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
         '''
-        typ_var = self.solver.fresh_type_var()
+        false_body_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                Imp(TTag('false', TUnit()), typ_var),
-                Imp(condition, nt.typ_var)
+                Imp(TTag('false', TUnit()), false_body_var),
+                Imp(condition_var, nt.typ_var)
             )
         ]
-        return Nonterm('expr', nt.enviro, models, typ_var) 
+        return Nonterm('expr', nt.enviro, models, false_body_var) 
 
-    def combine_ite(self, nt : Nonterm, condition : TVar, true_branch : TVar, false_branch : TVar) -> list[Model]: 
+    def combine_ite(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar, false_body_var : TVar) -> list[Model]: 
         cases = [
-            Imp(TTag('true', TUnit()), true_branch), 
-            Imp(TTag('false', TUnit()), false_branch)
+            Imp(TTag('true', TUnit()), true_body_var), 
+            Imp(TTag('false', TUnit()), false_body_var)
         ]
         cator_var = self.solver.fresh_type_var()
         cator_models = [
@@ -1982,88 +1970,89 @@ class ExprRule(Rule):
         function_nt = replace(nt, models = cator_models, typ_var = cator_var)
         function_models = BaseRule(self.solver).combine_function(function_nt, cases)
         nt = replace(nt, models = function_models)
-        arguments = [condition]
+        arguments = [condition_var]
         return self.combine_application(nt, cator_var, arguments) 
 
     def distill_projection_cator(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        return Nonterm('expr', nt.enviro, nt.models, typ_var)
+        # the type of the record being projected from
+        rator_var = self.solver.fresh_type_var()
+        return Nonterm('expr', nt.enviro, nt.models, rator_var)
 
-    def distill_projection_keychain(self, nt : Nonterm, record : Typ) -> Nonterm: 
-        typ_var = self.solver.fresh_type_var()
+    def distill_projection_keychain(self, nt : Nonterm, rator_var : TVar) -> Nonterm: 
+        keychain_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                typ_var,
-                record 
+                keychain_var,
+                rator_var 
             )
         ]
-        return Nonterm('keychain', nt.enviro, models, typ_var)
+        return Nonterm('keychain', nt.enviro, models, keychain_var)
 
 
-    def combine_projection(self, nt : Nonterm, record : TVar, keys : list[str]) -> list[Model]: 
+    def combine_projection(self, nt : Nonterm, record_var : TVar, keys : list[str]) -> list[Model]: 
         models = nt.models
         for key in keys:
             result_var = self.solver.fresh_type_var()
             models = [
                 m1
                 for m0 in models
-                for m1 in self.solver.solve(m0, record, TField(key, result_var))
+                for m1 in self.solver.solve(m0, record_var, TField(key, result_var))
             ]
-            record = result_var
+            record_var = result_var
         # TODO: update models with solution for result_var <: nt.typ_var
         return models 
 
     #########
 
     def distill_application_cator(self, nt : Nonterm) -> Nonterm: 
-        typ_var = self.solver.fresh_type_var()
+        cator_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                typ_var,
+                cator_var,
                 Imp(Bot(), Top()) 
             )
         ]
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, cator_var)
 
-    def distill_application_argchain(self, nt : Nonterm, cator : Typ) -> Nonterm: 
-        typ_var = self.solver.fresh_type_var()
+    def distill_application_argchain(self, nt : Nonterm, cator_var : TVar) -> Nonterm: 
+        next_cator_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                typ_var,
-                cator
+                next_cator_var,
+                cator_var
             )
         ]
-        return Nonterm('argchain', nt.enviro, models, typ_var, True)
+        return Nonterm('argchain', nt.enviro, models, next_cator_var, True)
 
-    def combine_application(self, nt : Nonterm, cator : TVar, arguments : list[TVar]) -> list[Model]: 
+    def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
         models = nt.models
-        for argument in arguments:
+        for arg_var in arg_vars:
             result_var = self.solver.fresh_type_var()
 
             models = [
                 m1
                 for m0 in models
-                for m1 in self.solver.solve(m0, cator, Imp(argument, result_var))
+                for m1 in self.solver.solve(m0, cator_var, Imp(arg_var, result_var))
             ]
-            cator = result_var
+            cator_var = result_var
 
         # TODO: update models with solution for result_var <: nt.typ_var
         return models
 
     #########
     def distill_funnel_arg(self, nt : Nonterm) -> Nonterm: 
-        typ_var = self.solver.fresh_type_var()
+        arg_var = self.solver.fresh_type_var()
         models = nt.models
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, arg_var)
 
-    def distill_funnel_pipeline(self, nt : Nonterm, arg : Typ) -> Nonterm: 
+    def distill_funnel_pipeline(self, nt : Nonterm, arg_var : TVar) -> Nonterm: 
 
         typ_var = self.solver.fresh_type_var()
         models = [
@@ -2071,27 +2060,27 @@ class ExprRule(Rule):
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
                 typ_var,
-                arg
+                arg_var
             )
         ]
         return Nonterm('pipeline', nt.enviro, models, typ_var)
 
-    def combine_funnel(self, nt : Nonterm, arg : TVar, cators : list[TVar]) -> list[Model]: 
+    def combine_funnel(self, nt : Nonterm, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
         models = nt.models
-        for cator in cators:
+        for cator_var in cator_vars:
             result_var = self.solver.fresh_type_var() 
             app_nt = replace(nt, models = models, typ_var = result_var) 
-            models = self.combine_application(app_nt, cator, [arg])
-            arg = result_var 
+            models = self.combine_application(app_nt, cator_var, [arg_var])
+            arg_var = result_var 
         # TODO: add final check that the result_typ <: nt.typ_var
         return models 
 
     def distill_fix_body(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
+        body_var = self.solver.fresh_type_var()
         models = nt.models
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, body_var)
 
-    def combine_fix(self, nt : Nonterm, body : Typ) -> list[Model]:
+    def combine_fix(self, nt : Nonterm, body_var : TVar) -> list[Model]:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -2110,7 +2099,7 @@ class ExprRule(Rule):
             # Model(m.constraints, m.freezer.union([in_typ.id, out_typ.id]))
             m1
             for m0 in nt.models
-            for m1 in self.solver.solve(m0, body, Imp(self_typ, Imp(in_typ, out_typ)))
+            for m1 in self.solver.solve(m0, body_var, Imp(self_typ, Imp(in_typ, out_typ)))
         ]
 
         induc_body = Bot()
@@ -2269,19 +2258,19 @@ class RecordRule(Rule):
         models = self.evolve_models(nt, TField(id, typ_var))
         return Nonterm('expr', nt.enviro, models, typ_var) 
 
-    def combine_single(self, nt : Nonterm, id : str, body : Typ) -> list[Model]:
-        return self.evolve_models(nt, TField(id, body))
+    def combine_single(self, nt : Nonterm, label : str, body_var : Typ) -> list[Model]:
+        return self.evolve_models(nt, TField(label, body_var))
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
         return self.distill_single_body(nt, id)
 
-    def distill_cons_tail(self, nt : Nonterm, id : str, body : Typ) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt, Inter(TField(id, body), typ_var))
-        return Nonterm('record', nt.enviro, models, typ_var) 
+    def distill_cons_tail(self, nt : Nonterm, id : str, body_var : TVar) -> Nonterm:
+        tail_var = self.solver.fresh_type_var()
+        models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
+        return Nonterm('record', nt.enviro, models, tail_var) 
 
-    def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail : Typ) -> list[Model]:
-        return self.evolve_models(nt, Inter(TField(id, body), tail))
+    def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail_var : TVar) -> list[Model]:
+        return self.evolve_models(nt, Inter(TField(id, body), tail_var))
 
 class FunctionRule(Rule):
 
@@ -2369,27 +2358,27 @@ class ArgchainRule(Rule):
     def distill_cons_head(self, nt : Nonterm) -> Nonterm:
         return self.distill_single_content(nt)
 
-    def distill_cons_tail(self, nt : Nonterm, head : Typ) -> Nonterm:
+    def distill_cons_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
         '''
-        cut the previous tyption with the head 
+        cut the previous typ with the head 
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
-        typ_var = self.solver.fresh_type_var()
+        tail_cator_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                nt.typ_var, Imp(head, typ_var)
+                nt.typ_var, Imp(head_var, tail_cator_var)
             )
         ]
 
-        return Nonterm('argchain', nt.enviro, models, typ_var, True)
+        return Nonterm('argchain', nt.enviro, models, tail_cator_var, True)
 
-    def combine_single(self, content : Typ) -> list[Typ]:
-        return [content]
+    def combine_single(self, content_var : TVar) -> list[TVar]:
+        return [content_var]
 
-    def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return [head] + tail
+    def combine_cons(self, head_var : TVar, tail_vars : list[TVar]) -> list[TVar]:
+        return [head_var] + tail_vars
 
 ######
 

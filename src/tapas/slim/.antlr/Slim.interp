@@ -86,8 +86,8 @@ pipeline
 keychain
 target
 pattern
-pattern_base
-pattern_record
+base_pattern
+record_pattern
 
 
 atn:

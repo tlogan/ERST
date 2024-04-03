@@ -5,6 +5,7 @@
 - update attributes of parser specification `Slim.g4`
     - models should monotonically grow
     - move nonterm object into argument position instead of object field
+- make sure models are passed through even if combine doesn't return them  
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.
 - debug `test_arg_specialization`

@@ -277,78 +277,90 @@ $models = $base.models
 // Introduction rules
 
 | {
-nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
 } head = base[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = expr[nt_tail] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
+nt = replace(nt, models = $head.models)
+tail_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_tail, nt, head_nt.typ_var)
+} tail = expr[tail_nt] {
+nt = replace(nt, models = $tail.models)
+$models = self.collect(ExprRule(self._solver).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
 }
 
 // Elimination rules
 
 | 'if' {
-nt_condition = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_condition)
-} condition = expr[nt_condition] {
+condition_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_condition, nt)
+} condition = expr[condition_nt] {
 self.guide_symbol('then')
 } 'then' {
-nt_branch_true = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_true, $condition.combo)
-} branch_true = expr[nt_branch_true] {
+nt = replace(nt, models = condition.models)
+true_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_true_branch, nt, condition_nt.typ_var)
+} true_branch = expr[true_branch_nt] {
 self.guide_symbol('else')
 } 'else' {
-nt_branch_false = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_false, $condition.combo, $branch_true.combo)
-} branch_false = expr[nt_branch_false] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_ite, $condition.combo, $branch_true.combo, $branch_false.combo) 
+nt = replace(nt, models = true_branch.models)
+false_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
+} false_branch = expr[false_branch_nt] {
+$models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, true_branch_nt.typ_var, false_branch_nt.typ_var) 
 } 
 
+// the rator below refers to the record being projected from
 | {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_cator)
-} cator = base[nt_cator] {
+rator_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_rator, nt)
+} rator = base[rator_nt] {
+nt = replace(nt, models = $rator.models)
+keychain_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_keychain, nt, rator_nt.typ_var)
+} keychain[keychain_nt] {
+nt = replace(nt, models = keychain_nt.models)
+$models = self.collect(ExprRule(self._solver).combine_projection, nt, nt_cator.tid, $keychain.keys) 
+}
+
+| {
+cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+} cator = base[cator_nt] {
 nt = replace(nt, models = $cator.models)
-nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, nt_cator.tid)
-} keychain[nt_keychain] {
-nt = replace(nt, models = $keychain.models)
-$models = self.collect(ExprRule(self._solver, nt).combine_projection, nt_cator.tid, nt_keychain.id) 
+argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
+} argchain[argchain_nt] {
+(models, args) = $argchain.models_args
+nt = replace(nt, models = models)
+$models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, args)
 }
 
 | {
-nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
-} cator = base[nt_cator] {
-nt_argchain = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, $cator.combo)
-} argchain[nt_argchain] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_application, $cator.combo, $argchain.combo)
-}
-
-| {
-nt_arg = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_arg)
-} cator = base[nt_arg] {
-nt_pipeline = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_pipeline, $cator.combo)
-} pipeline[nt_pipeline] {
-$combo = self.collect(ExprRule(self._solver, nt).combine_funnel, $cator.combo, $pipeline.combo)
+arg_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_arg, nt)
+} cator = base[arg_nt] {
+nt = replace(nt, models = $cator.models)
+pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, cator_nt.typ_var)
+} pipeline[pipeline_nt] {
+nt = replace(nt, models = pipeline_nt.models)
+$models = self.collect(ExprRule(self._solver).combine_funnel, nt, cator.typ_var, $pipeline.cator_vars)
 }
 
 | 'let' {
 self.guide_terminal('ID')
 } ID {
-nt_target = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_target, $ID.text)
-} target[nt_target] {
+target_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_target, nt, $ID.text)
+} target[target_nt] {
 self.guide_symbol(';')
 } ';' {
-nt_contin = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_contin, $ID.text, $target.combo)
-} contin = expr[nt_contin] {
-$combo = $contin.combo
+nt = replace(nt, models = $target.models)
+contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, $ID.text, target_nt.typ_var)
+} contin = expr[contin_nt] {
+$models = $contin.models
 }
 
 
 | 'fix' {
 self.guide_symbol('(')
 } '(' {
-nt_body = self.guide_nonterm(ExprRule(self._solver, nt).distill_fix_body)
-} body = expr[nt_body] {
+body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
+} body = expr[body_nt] {
 self.guide_symbol(')')
 } ')' {
-$combo = self.collect(ExprRule(self._solver, nt).combine_fix, $body.combo)
+nt = replace(nt, models = $body.models)
+$models = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
 }
 
 ;
@@ -386,7 +398,9 @@ $models = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
 } 
 
 | argchain[nt] {
-$models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.args)
+(models, args) = $argchain.models_args
+nt = replace(nt, models = models)
+$models = self.collect(BaseRule(self._solver).combine_assoc, nt, args)
 } 
 
 ;
@@ -414,7 +428,7 @@ self.guide_symbol('=>')
 nt = replace(nt, env = $pattern.attr.env, models = $pattern.attr.models)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
-nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.combo, body_nt.typ_var)
+nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
 } tail = function[nt_tail] {
 $branches = self.collect(FunctionRule(self._solver).combine_cons, $pattern.attr.typ, body_nt.typ_var, $tail.branches)
 }
@@ -423,16 +437,17 @@ $branches = self.collect(FunctionRule(self._solver).combine_cons, $pattern.attr.
 
 
 
-record [Nonterm nt] returns [Typ combo] :
+record [Nonterm nt] returns [list[Model] models] :
 
 | '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_single_body, $ID.text)
-} body = expr[nt_body] {
-$combo = self.collect(RecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
+body_nt = self.guide_nonterm(RecordRule(self._solver).distill_single_body, nt, $ID.text)
+} body = expr[body_nt] {
+nt = replace(nt, models = $body.models)
+$models = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, body_nt.typ_var)
 }
 
 | '_.' {
@@ -440,11 +455,13 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, $ID.text)
+body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, $ID.text)
 } body = expr[nt_body] {
-nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
+nt = replace(nt, models = $body.models)
+tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, $ID.text, body_nt.typ_var)
 } tail = record[nt_tail] {
-$combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
+nt = replace(nt, models = $tail.models)
+$models = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, body_nt.typ_var, tail_nt.typ_var)
 }
 
 ;
@@ -453,25 +470,25 @@ $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body
 argchain [Nonterm nt] returns [tuple[list[Model], list[Typ]] models_args] :
 
 | '(' {
-content_nt = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_content) 
-} content_models = expr[content_nt] {
+content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_content, nt) 
+} content = expr[content_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, models = content_models)
+nt = replace(nt, models = $content.models)
 $models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
 }
 
 | '(' {
 head_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_head, nt) 
-} head_models = expr[head_nt] {
+} head = expr[head_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, models = head_models)
+nt = replace(nt, models = $head.models)
 tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
-} tail_result = argchain[tail_nt] {
-(tail_models, tail_typs) = tail_result
-nt = replace(nt, models = head_models)
-$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, tail_typs))
+} tail = argchain[tail_nt] {
+(models, args) = $tail.models_args
+nt = replace(nt, models = models)
+$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, args))
 }
 
 ;
