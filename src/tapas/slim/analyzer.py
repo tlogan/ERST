@@ -1832,23 +1832,24 @@ class BaseRule(Rule):
     def combine_unit(self, nt : Nonterm) -> list[Model]:
         return self.evolve_models(nt, TUnit())
 
-    def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, TTag(id, typ_var), nt.typ_var)
-        ]
-        return Nonterm('expr', nt.enviro, models, typ_var)
+    def distill_tag_body(self, nt : Nonterm, label : str) -> Nonterm:
+        body_var = self.solver.fresh_type_var()
+        # NOTE: this constraint is redundant with constraint in combine rule
+        # TODO: should it be so for consistency with rules where it's not redundant? 
+        models = self.evolve_models(nt, TTag(label, body_var))
+        return Nonterm('expr', nt.enviro, models, body_var)
 
     def combine_tag(self, nt : Nonterm, label : str, body : TVar) -> list[Model]:
-        '''
-        move existential outside
-        '''
-        if isinstance(body, Exi):
-            return self.evolve_models(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
-        else:
-            return self.evolve_models(nt, TTag(label, body))
+        # TODO: remove existential check now that the types are simply variables
+        # '''
+        # move existential outside
+        # '''
+        # if isinstance(body, Exi):
+        #     return self.evolve_models(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
+        # else:
+        # TODO: note that this constraint is redundant with constraint in distill rule
+        # - consider removing redundancy
+        return self.evolve_models(nt, TTag(label, body))
 
     def combine_function(self, nt : Nonterm, cases : list[Imp]) -> list[Model]:
         '''
@@ -2295,37 +2296,36 @@ class FunctionRule(Rule):
         ]
         return Nonterm('pattern', nt.enviro, models, typ_var)
 
-    def distill_single_body(self, nt : Nonterm, pattern : PatternAttr) -> Nonterm:
-        enviro = nt.enviro + pattern.enviro
+    def distill_single_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                nt.typ_var, Imp(pattern.typ, typ_var)
+                nt.typ_var, Imp(pattern_typ, typ_var)
             )
         ]
 
-        return Nonterm('expr', enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, typ_var)
 
-    def combine_single(self, pattern : PatternAttr, body : Typ) -> list[Imp]:
-        return [Imp(pattern.typ, body)]
+    def combine_single(self, pattern_typ : Typ, body_var : TVar) -> list[Imp]:
+        return [Imp(pattern_typ, body_var)]
 
     def distill_cons_pattern(self, nt : Nonterm) -> Nonterm:
         return self.distill_single_pattern(nt)
 
-    def distill_cons_body(self, nt : Nonterm, pattern : PatternAttr) -> Nonterm:
-        return self.distill_single_body(nt, pattern)
+    def distill_cons_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
+        return self.distill_single_body(nt, pattern_typ)
 
-    def distill_cons_tail(self, nt : Nonterm, pattern : PatternAttr, body : Typ) -> Nonterm:
+    def distill_cons_tail(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar) -> Nonterm:
         '''
         - the previous pattern should not influence what pattern occurs next
         - patterns may overlap
         '''
         return nt
 
-    def combine_cons(self, pattern : PatternAttr, body : Typ, tail : list[Imp]) -> list[Imp]:
-        return [Imp(pattern.typ, body)] + tail
+    def combine_cons(self, pattern_typ : Typ, body_var : TVar, tail : list[Imp]) -> list[Imp]:
+        return [Imp(pattern_typ, body_var)] + tail
 
 
 class KeychainRule(Rule):
@@ -2396,41 +2396,41 @@ class ArgchainRule(Rule):
 class PipelineRule(Rule):
 
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
+        content_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                typ_var, Imp(nt.typ_var, Top())
+                content_var, Imp(nt.typ_var, Top())
             )
         ]
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, content_var)
 
 
     def distill_cons_head(self, nt : Nonterm) -> Nonterm:
         return self.distill_single_content(nt)
 
-    def distill_cons_tail(self, nt : Nonterm, head : Typ) -> Nonterm:
+    def distill_cons_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
         '''
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
         '''
-        typ_var = self.solver.fresh_type_var()
+        tail_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                head, Imp(nt.typ_var, typ_var)
+                head_var, Imp(nt.typ_var, tail_var)
             )
         ]
 
-        return Nonterm('pipeline', nt.enviro, models, typ_var)
+        return Nonterm('pipeline', nt.enviro, models, tail_var)
 
-    def combine_single(self, content : Typ) -> list[Typ]:
-        return [content]
+    def combine_single(self, content_var : TVar) -> list[TVar]:
+        return [content_var]
 
-    def combine_cons(self, head : Typ, tail : list[Typ]) -> list[Typ]:
-        return [head] + tail
+    def combine_cons(self, head_var : TVar, tail_var : list[TVar]) -> list[TVar]:
+        return [head_var] + tail_var
 
 
 '''
@@ -2451,39 +2451,39 @@ class PatternRule(Rule):
 
         return Nonterm('pattern', nt.enviro, models, typ_var) 
 
-    def distill_tuple_tail(self, nt : Nonterm, head : PatternAttr) -> Nonterm:
+    def distill_tuple_tail(self, nt : Nonterm, head_typ : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
         models = [
             m1
             for m0 in nt.models
             for m1 in self.solver.solve(m0, 
-                Inter(TField('head', head.typ), TField('tail', typ_var)), 
+                Inter(TField('head', head_typ), TField('tail', typ_var)), 
                 nt.typ_var,
             )
         ]
         return Nonterm('pattern', nt.enviro, models, typ_var) 
 
-    def combine_tuple(self, nt : Nonterm, head : PatternAttr, tail : PatternAttr) -> PatternAttr:
-        pattern = Inter(TField('head', head.typ), TField('tail', tail.typ))
+    def combine_tuple(self, nt : Nonterm, head_typ : Typ, tail_typ : Typ) -> PatternAttr:
+        pattern = Inter(TField('head', head_typ), TField('tail', tail_typ))
         models = self.evolve_models(nt, pattern)
-        return PatternAttr(head.enviro + tail.enviro, models, pattern)
+        return PatternAttr(nt.enviro, models, pattern)
 
 '''
 end PatternRule
 '''
 
-class PatternBaseRule(Rule):
+class BasePatternRule(Rule):
 
     def combine_var(self, nt : Nonterm, id : str) -> PatternAttr:
         pattern = self.solver.fresh_type_var()
         models = self.evolve_models(nt, pattern)
-        enviro = m().set(id, pattern)
+        enviro = nt.enviro.set(id, pattern)
         return PatternAttr(enviro, models, pattern)
 
     def combine_unit(self, nt : Nonterm) -> PatternAttr:
         pattern = TUnit()
         models = self.evolve_models(nt, pattern)
-        return PatternAttr(m(), models, pattern)
+        return PatternAttr(nt.enviro, models, pattern)
 
     def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
@@ -2496,15 +2496,15 @@ class PatternBaseRule(Rule):
         ]
         return Nonterm('pattern', nt.enviro, models, typ_var)
 
-    def combine_tag(self, nt : Nonterm, label : str, body : PatternAttr) -> PatternAttr:
-        pattern = TTag(label, body.typ)
+    def combine_tag(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
+        pattern = TTag(label, body_typ)
         models = self.evolve_models(nt, pattern)
-        return PatternAttr(body.enviro, models, pattern)
+        return PatternAttr(nt.enviro, models, pattern)
 '''
-end PatternBaseRule
+end BasePatternRule
 '''
 
-class PatternRecordRule(Rule):
+class RecordPatternRule(Rule):
 
     def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
@@ -2517,27 +2517,20 @@ class PatternRecordRule(Rule):
         ]
         return Nonterm('pattern_record', nt.enviro, models, typ_var) 
 
-    def combine_single(self, nt : Nonterm, label : str, body : PatternAttr) -> PatternAttr:
-        pattern = TField(label, body.typ)
+    def combine_single(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
+        pattern = TField(label, body_typ)
         models = self.evolve_models(nt, pattern)
-        return PatternAttr(body.enviro, models, pattern)
+        return PatternAttr(nt.enviro, models, pattern)
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
         return self.distill_cons_body(nt, id)
 
-    def distill_cons_tail(self, nt : Nonterm, id : str, body : PatternAttr) -> Nonterm:
+    def distill_cons_tail(self, nt : Nonterm, id : str, body_typ : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Inter(TField(id, body.typ), typ_var), 
-                nt.typ_var
-            )
-        ]
+        models = self.evolve_models(nt, Inter(TField(id, body_typ), typ_var))
         return Nonterm('pattern_record', nt.enviro, models, typ_var) 
 
-    def combine_cons(self, nt : Nonterm, label : str, body : PatternAttr, tail : PatternAttr) -> PatternAttr:
-        pattern = Inter(TField(label, body.typ), tail.typ)
+    def combine_cons(self, nt : Nonterm, label : str, body_typ : Typ, tail_typ : Typ) -> PatternAttr:
+        pattern = Inter(TField(label, body_typ), tail_typ)
         models = self.evolve_models(nt, pattern) 
-        return PatternAttr(body.enviro + tail.enviro, models, pattern)
+        return PatternAttr(nt.enviro, models, pattern)

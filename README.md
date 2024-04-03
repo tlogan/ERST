@@ -2,12 +2,11 @@
 
 
 ### TODO
-- IMPORTANT!! do a major refactor of rules to return a list of models with a type; instead of just a type 
-    - replace types symbols and list of models that give interpretation for the symbols.
-    - replace combine return type with list of Models
-    - if expected type is merely a symbol, then there no need for a return type; only need models that specialize the symbol
+- update attributes of parser specification `Slim.g4`
     - models should monotonically grow
-    - move nonterm object into function param instead of object field
+    - move nonterm object into argument position instead of object field
+- consider removing redundant constraints in distill; (only necessary for program synthesis)
+- consider if necessary to move existentials out side of tag when interpreting.
 - debug `test_arg_specialization`
 - add negs back in `from_cases_to_choices`
 - get `max` example to work

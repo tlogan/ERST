@@ -271,7 +271,7 @@ expr [Nonterm nt] returns [list[Model] models] :
 // Base rules
 
 | base[nt] {
-$combo = $base.combo
+$models = $base.models
 }
 
 // Introduction rules
@@ -353,66 +353,70 @@ $combo = self.collect(ExprRule(self._solver, nt).combine_fix, $body.combo)
 
 ;
 
-base [Nonterm nt] returns [Typ combo] : 
+base [Nonterm nt] returns [list[Model] models] : 
 // Introduction rules
 
 | '@' {
-$combo = self.collect(BaseRule(self._solver, nt).combine_unit)
+$models = self.collect(BaseRule(self._solver).combine_unit, nt)
 } 
 
 //tag
 | '~' {
 self.guide_terminal('ID')
 } ID {
-nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, $ID.text)
-} body = base[nt_body] {
-$combo = self.collect(BaseRule(self._solver, nt).combine_tag, $ID.text, $body.combo)
+body_nt = self.guide_nonterm(BaseRule(self._solver).distill_tag_body, nt, $ID.text)
+} body = base[body_nt] {
+nt = replace(models = $body.models)
+$models = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt.typ_var)
 }
 
 | record[nt] {
-$combo = $record.combo
+$models = $record.models
 }
 
 | {
 } function[nt] {
-$combo = self.collect(BaseRule(self._solver, nt).combine_function, $function.combo)
+$models = self.collect(BaseRule(self._solver).combine_function, nt, $function.branches)
 }
 
 // Elimination rules
 
 | ID {
-$combo = self.collect(BaseRule(self._solver, nt).combine_var, $ID.text)
+$models = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
 } 
 
 | argchain[nt] {
-$combo = self.collect(BaseRule(self._solver, nt).combine_assoc, $argchain.combo)
+$models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.args)
 } 
 
 ;
 
 
-function [Nonterm nt] returns [list[Imp] cases] :
+function [Nonterm nt] returns [list[Imp] branches] :
 
 | 'case' {
 pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_pattern, nt)
 } pattern[pattern_nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt_body = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.combo)
-} body = expr[nt_body] {
-$cases = self.collect(FunctionRule(self._solver).combine_single, $pattern.combo, $body.combo)
+nt = replace(nt, env = $pattern.attr.env, models = $pattern.attr.models)
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr.typ)
+} body = expr[body_nt] {
+nt = replace(nt, models = $body.models)
+$branches = self.collect(FunctionRule(self._solver).combine_single, $pattern.attr.typ, body_nt.typ_var)
 }
 
 | 'case' {
-nt_pattern = self.guide_nonterm(FunctionRule(self._solver).distill_cons_pattern, nt)
-} pattern[nt_pattern] {
+pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_pattern, nt)
+} pattern[pattern_nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt_body = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.combo)
-} body = expr[nt_body] {
-nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.combo, $body.combo)
+nt = replace(nt, env = $pattern.attr.env, models = $pattern.attr.models)
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
+} body = expr[body_nt] {
+nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.combo, body_nt.typ_var)
 } tail = function[nt_tail] {
-$cases = self.collect(FunctionRule(self._solver).combine_cons, $pattern.combo, $body.combo, $tail.combo)
+$branches = self.collect(FunctionRule(self._solver).combine_cons, $pattern.attr.typ, body_nt.typ_var, $tail.branches)
 }
 
 ;
@@ -446,7 +450,7 @@ $combo = self.collect(RecordRule(self._solver, nt).combine_cons, $ID.text, $body
 ;
 
 // NOTE: nt.typ_var represents the type of the rator that will be applied to the next immediate argument  
-argchain [Nonterm nt] returns [tuple[list[Model], list[Typ]] models_typs] :
+argchain [Nonterm nt] returns [tuple[list[Model], list[Typ]] models_args] :
 
 | '(' {
 content_nt = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_content) 
@@ -454,7 +458,7 @@ content_nt = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_co
 self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = content_models)
-$models_typs = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
+$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
 }
 
 | '(' {
@@ -467,122 +471,128 @@ tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, h
 } tail_result = argchain[tail_nt] {
 (tail_models, tail_typs) = tail_result
 nt = replace(nt, models = head_models)
-$models_typs = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, tail_typs))
+$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, tail_typs))
 }
 
 ;
 
-pipeline [Nonterm nt] returns [list[Typ] combo] :
+pipeline [Nonterm nt] returns [list[TVar] cator_vars] :
 
 | '|>' {
-nt_content = self.guide_nonterm(PipelineRule(self._solver, nt).distill_single_content) 
+content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 } content = expr[nt_content] {
-$combo = self.collect(PipelineRule(self._solver, nt).combine_single, $content.combo)
+nt = replace(nt, models = content.models)
+$cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 }
 
 | '|>' {
-nt_head = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_head) 
+nt_head = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 } head = expr[nt_head] {
-nt_tail = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_tail, $head.combo) 
+nt = replace(nt, models = $head.models)
+nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 } tail = pipeline[nt_tail] {
-$combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, $head.combo, $tail.combo)
+$cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, head_nt.typ_var, $tail.cator_vars)
 }
 
 ;
 
 
 // NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
-keychain [Nonterm nt] returns [list[str] combo] :
+keychain [Nonterm nt] returns [list[str] keys] :
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-$combo = self.collect(KeychainRule(self._solver, nt).combine_single, $ID.text)
+$keys = self.collect(KeychainRule(self._solver).combine_single, nt, $ID.text)
 }
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-nt_tail = self.guide_nonterm(KeychainRule(self._solver, nt).distill_cons_tail, $ID.text) 
-} tail = keychain[nt_tail] {
-$combo = self.collect(KeychainRule(self._solver, nt).combine_cons, $ID.text, $tail.combo)
+tail_nt = self.guide_nonterm(KeychainRule(self._solver).distill_cons_tail, nt, $ID.text) 
+} tail = keychain[tail_nt] {
+$keys = self.collect(KeychainRule(self._solver).combine_cons, nt, $ID.text, $tail.keys)
 }
 
 ;
 
-target [Nonterm nt] returns [Typ combo]:
+target [Nonterm nt] returns [list[Models] models]:
 
 | '=' {
-nt_expr = self.guide_nonterm(lambda: nt)
-} expr[nt_expr] {
-$combo = $expr.combo
+expr_nt = self.guide_nonterm(lambda: nt)
+} expr[expr_nt] {
+$models = $expr.models
 }
 
 ;
 
 
 
-pattern [Nonterm nt] returns [PatternAttr combo]:  
+pattern [Nonterm nt] returns [PatternAttr attr]:  
 
-| pattern_base[nt] {
-$combo = $pattern_base.combo
+| base_pattern[nt] {
+$attr = $base_pattern.attr
 }
 
 | {
-nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
-} head = pattern_base[nt_head] {
+head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
+} head = base_pattern[nt_head] {
 self.guide_symbol(',')
 } ',' {
-nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, $head.combo)
-} tail = pattern[nt_tail] {
-$combo = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.combo, $tail.combo) 
+nt = replace(nt, env = $head.attr.env, models = $head.attr.models)
+tail_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_tail, nt, $head.attr.typ)
+} tail = pattern[tail_nt] {
+$attr = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.attr.typ, $tail.attr.typ) 
 }
 
 ;
 
-pattern_base [Nonterm nt] returns [PatternAttr combo]:  
+base_pattern [Nonterm nt] returns [PatternAttr attr]:  
 
 | ID {
-$combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
+$attr = self.collect(BasePatternRule(self._solver).combine_var, nt, $ID.text)
 } 
 
 | ID {
-$combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, $ID.text)
+$attr = self.collect(BasePatternRule(self._solver).combine_var, nt, $ID.text)
 } 
 
 | '@' {
-$combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
+$attr = self.collect(BasePatternRule(self._solver).combine_unit, nt)
 } 
 
 | '~' {
 self.guide_terminal('ID')
 } ID {
-nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, $ID.text)
-} body = pattern_base[nt_body] {
-$combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, $ID.text, $body.combo)
+body_nt = self.guide_nonterm(BasePatternRule(self._solver).distill_tag_body, nt, $ID.text)
+} body = base_pattern[nt_body] {
+
+nt = replace(nt, env = $body.attr.env, models = $body.attr.models)
+$attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, $ID.text, $body.attr.typ)
 }
 
-| pattern_record[nt] {
-$combo = $pattern_record.combo
+| record_pattern[nt] {
+$attr = $record_pattern.attr
 }
 
 | '(' pattern[nt] ')' {
-$combo = $pattern.combo   
+$attr = $pattern.attr
 }
 
 
 ;
 
-pattern_record [Nonterm nt] returns [PatternAttr combo] :
+record_pattern [Nonterm nt] returns [PatternAttr attr] :
 
 | '_.' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_body, $ID.text)
-} body = pattern[nt_body] {
-$combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, $ID.text, $body.combo)
+body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_single_body, nt, $ID.text)
+} body = pattern[body_nt] {
+nt = replace(nt, env = $body.attr.env, models = $body.attr.models)
+$attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, $ID.text, $body.attr.typ)
 }
 
 | '_.' {
@@ -590,11 +600,16 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_body, $ID.text)
-} body = pattern[nt_body] {
-nt_tail = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_tail, $ID.text, $body.combo)
-} tail = pattern_record[nt_tail] {
-$combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, $ID.text, $body.combo, $tail.combo)
+
+body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_body, nt, $ID.text)
+} body = pattern[body_nt] {
+
+nt = replace(nt, env = $body.attr.env, models = $body.attr.models)
+tail_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_tail, nt, $ID.text, $body.attr.typ)
+} tail = record_pattern[tail_nt] {
+
+nt = replace(nt, env = $tail.attr.env, models = $tail.attr.models)
+$attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, $ID.text, $body.attr.typ, $tail.attr.typ)
 }
 
 ;
