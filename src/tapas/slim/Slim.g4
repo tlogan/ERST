@@ -47,16 +47,16 @@ def guide_nonterm(self, f : Callable, *args) -> Optional[Nonterm]:
         if arg == None:
             self._overflow = True
 
-    nt_result = None
+    result_nt = None
     if not self._overflow:
-        nt_result = f(*args)
-        self._guidance = nt_result
+        result_nt = f(*args)
+        self._guidance = result_nt
 
         tok = self.getCurrentToken()
         if tok.type == self.EOF :
             self._overflow = True 
 
-    return nt_result 
+    return result_nt 
 
 
 
@@ -323,9 +323,8 @@ cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cat
 nt = replace(nt, models = $cator.models)
 argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
 } argchain[argchain_nt] {
-(models, args) = $argchain.models_args
-nt = replace(nt, models = models)
-$models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, args)
+nt = replace(nt, models = $argchain.attr.models)
+$models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
 }
 
 | {
@@ -400,9 +399,8 @@ $models = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
 } 
 
 | argchain[nt] {
-(models, args) = $argchain.models_args
-nt = replace(nt, models = models)
-$models = self.collect(BaseRule(self._solver).combine_assoc, nt, args)
+nt = replace(nt, models = $argchain.attr.models)
+$models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.args)
 } 
 
 ;
@@ -419,7 +417,7 @@ nt = replace(nt, enviro =  $pattern.attr.enviro, models = $pattern.attr.models)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
 nt = replace(nt, models = $body.models)
-$models_branches = ($body.models, self.collect(FunctionRule(self._solver).combine_single, $pattern.attr.typ, body_nt.typ_var))
+$models_branches = ($body.models, self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, body_nt.typ_var))
 }
 
 | 'case' {
@@ -430,10 +428,11 @@ self.guide_symbol('=>')
 nt = replace(nt, enviro =  $pattern.attr.enviro, models = $pattern.attr.models)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
-nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
-} tail = function[nt_tail] {
+nt = replace(nt, models = $body.models)
+tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
+} tail = function[tail_nt] {
 (models, branches) = $tail.models_branches
-$models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, $pattern.attr.typ, body_nt.typ_var, branches))
+$models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, body_nt.typ_var, branches))
 }
 
 ;
@@ -459,18 +458,17 @@ self.guide_terminal('ID')
 self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, $ID.text)
-} body = expr[nt_body] {
+} body = expr[body_nt] {
 nt = replace(nt, models = $body.models)
 tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, $ID.text, body_nt.typ_var)
-} tail = record[nt_tail] {
+} tail = record[tail_nt] {
 nt = replace(nt, models = $tail.models)
 $models = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, body_nt.typ_var, tail_nt.typ_var)
 }
 
 ;
 
-// NOTE: nt.typ_var represents the type of the rator that will be applied to the next immediate argument  
-argchain [Nonterm nt] returns [tuple[list[Model], list[Typ]] models_args] :
+argchain [Nonterm nt] returns [ArgchainAttr attr] :
 
 | '(' {
 content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_content, nt) 
@@ -478,8 +476,9 @@ content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_conten
 self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = $content.models)
-$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
+$attr = self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var)
 }
+
 
 | '(' {
 head_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_head, nt) 
@@ -487,11 +486,9 @@ head_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_head, nt)
 self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = $head.models)
-tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
-} tail = argchain[tail_nt] {
-(models, args) = $tail.models_args
-nt = replace(nt, models = models)
-$models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, args))
+} tail = argchain[nt] {
+nt = replace(nt, models = $tail.attr.models)
+$attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_var, $tail.attr.args)
 }
 
 ;
@@ -500,7 +497,7 @@ pipeline [Nonterm nt] returns [list[TVar] cator_vars] :
 
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
-} content = expr[nt_content] {
+} content = expr[content_nt] {
 nt = replace(nt, models = content.models)
 $cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 }
@@ -509,9 +506,9 @@ $cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, conten
 head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 } head = expr[head_nt] {
 nt = replace(nt, models = $head.models)
-nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
-} tail = pipeline[nt_tail] {
-$cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, head_nt.typ_var, $tail.cator_vars)
+tail_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
+} tail = pipeline[tail_nt] {
+$cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, $tail.cator_vars)
 }
 
 ;
@@ -529,8 +526,7 @@ $keys = self.collect(KeychainRule(self._solver).combine_single, nt, $ID.text)
 | '.' {
 self.guide_terminal('ID')
 } ID {
-tail_nt = self.guide_nonterm(KeychainRule(self._solver).distill_cons_tail, nt, $ID.text) 
-} tail = keychain[tail_nt] {
+} tail = keychain[nt] {
 $keys = self.collect(KeychainRule(self._solver).combine_cons, nt, $ID.text, $tail.keys)
 }
 
@@ -629,7 +625,7 @@ tail_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_tail, 
 } tail = record_pattern[tail_nt] {
 
 nt = replace(nt, enviro = $tail.attr.enviro, models = $tail.attr.models)
-$attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, $ID.text, $body.attr.typ, $tail.attr.typ)
+$attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, $ID.text, $body.attr.typ, $tail.attr.typ)
 }
 
 ;

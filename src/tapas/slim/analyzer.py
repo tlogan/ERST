@@ -301,6 +301,11 @@ class PatternAttr:
     typ : Typ    
 
 
+@dataclass(frozen=True, eq=True)
+class ArgchainAttr:
+    models : list[Model]
+    args : list[TVar]
+
 """
 Guidance
 """
@@ -1845,7 +1850,24 @@ class BaseRule(Rule):
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            return ExprRule(self.solver).combine_application(nt, applicator, arguments) 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_assoc
+~~~~~~~~~~~~~~~~~~~~~
+applicator: {applicator}
+arguments: {arguments}
+nt.models: {nt.models}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
+            result =  ExprRule(self.solver).combine_application(nt, applicator, arguments) 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_assoc
+~~~~~~~~~~~~~~~~~~~~~
+result: {result}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
+            return result
 
     def combine_unit(self, nt : Nonterm) -> list[Model]:
         return self.evolve_models(nt, TUnit())
@@ -2001,7 +2023,7 @@ class ExprRule(Rule):
         arguments = [condition_var]
         return self.combine_application(nt, cator_var, arguments) 
 
-    def distill_projection_cator(self, nt : Nonterm) -> Nonterm:
+    def distill_projection_rator(self, nt : Nonterm) -> Nonterm:
         # the type of the record being projected from
         rator_var = self.solver.fresh_type_var()
         return Nonterm('expr', nt.enviro, nt.models, rator_var)
@@ -2031,7 +2053,12 @@ class ExprRule(Rule):
                 for m1 in self.solver.solve(m0, record_var, TField(key, result_var))
             ]
             record_var = result_var
-        # TODO: update models with solution for result_var <: nt.typ_var
+
+        models = [
+            m1
+            for m0 in models
+            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
+        ]
         return models 
 
     #########
@@ -2077,7 +2104,20 @@ class ExprRule(Rule):
             ]
             cator_var = result_var
 
-        # TODO: update models with solution for result_var <: nt.typ_var
+        models = [
+            m1
+            for m0 in models
+            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
+        ]
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: combine_application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+result_var: {result_var}
+nt.typ_var: {nt.typ_var}
+models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         return models
 
     #########
@@ -2340,7 +2380,7 @@ class FunctionRule(Rule):
 
         return Nonterm('expr', nt.enviro, models, body_var)
 
-    def combine_single(self, pattern_typ : Typ, body_var : TVar) -> list[Imp]:
+    def combine_single(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar) -> list[Imp]:
         return [Imp(pattern_typ, body_var)]
 
     def distill_cons_pattern(self, nt : Nonterm) -> Nonterm:
@@ -2356,78 +2396,50 @@ class FunctionRule(Rule):
         '''
         return nt
 
-    def combine_cons(self, pattern_typ : Typ, body_var : TVar, tail : list[Imp]) -> list[Imp]:
+    def combine_cons(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar, tail : list[Imp]) -> list[Imp]:
         return [Imp(pattern_typ, body_var)] + tail
 
 
 class KeychainRule(Rule):
 
-    '''
-    return the plate with the typ as the type that the next element in tail cuts
-    '''
-    def distill_cons_tail(self, nt : Nonterm, key : str) -> Nonterm:
-        tail_var = self.solver.fresh_type_var()
-        models = nt.models
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
-        #     m1
-        #     for m0 in nt.models
-        #     for m1 in self.solver.solve(m0, 
-        #         nt.typ_var, TField(key, tail_var)
-        #     )
-        # ]
-        return Nonterm('keychain', nt.enviro, models, tail_var)
-
-    def combine_single(self, key : str) -> list[str]:
+    def combine_single(self, nt : Nonterm, key : str) -> list[str]:
         return [key]
 
-    def combine_cons(self, key : str, keys : list[str]) -> list[str]:
+    def combine_cons(self, nt : Nonterm, key : str, keys : list[str]) -> list[str]:
         return [key] + keys
 
 
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
-        if nt.is_applicator:
-            content_var = self.solver.fresh_type_var()
-            models = nt.models
-            # TODO: add constraints in distill for type-guided program synthesis 
-            # models = [
-            #     m1
-            #     for m0 in nt.models
-            #     for m1 in self.solver.solve(m0, 
-            #         nt.typ_var, Imp(typ_var, Top())
-            #     )
-            # ]
-            return Nonterm('expr', nt.enviro, models, content_var, False)
-        else:
-            return nt
-
-    def distill_cons_head(self, nt : Nonterm) -> Nonterm:
-        return self.distill_single_content(nt)
-
-    def distill_cons_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
-        '''
-        cut the previous typ with the head 
-        resulting in a new tyption of what can be cut by the next element in the tail
-        '''
-        tail_cator_var = self.solver.fresh_type_var()
+        content_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = [
         #     m1
         #     for m0 in nt.models
         #     for m1 in self.solver.solve(m0, 
-        #         nt.typ_var, Imp(head_var, tail_cator_var)
+        #         nt.typ_var, Imp(typ_var, Top())
         #     )
         # ]
+        return Nonterm('expr', nt.enviro, models, content_var, False)
 
-        return Nonterm('argchain', nt.enviro, models, tail_cator_var, True)
+    def distill_cons_head(self, nt : Nonterm) -> Nonterm:
+        return self.distill_single_content(nt)
 
-    def combine_single(self, content_var : TVar) -> list[TVar]:
-        return [content_var]
+    def combine_single(self, nt : Nonterm, content_var : TVar) -> ArgchainAttr:
+        return ArgchainAttr(nt.models, [content_var])
 
-    def combine_cons(self, head_var : TVar, tail_vars : list[TVar]) -> list[TVar]:
-        return [head_var] + tail_vars
+    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
+        print(f""""
+~~~~~~~~~~~~~~~~~~~~~~~
+Argchain combine_cons
+~~~~~~~~~~~~~~~~~~~~~~~
+>> head_var {head_var}
+>> tail_vars {tail_vars}
+>> combined vars {[head_var] + tail_vars}
+~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+        return ArgchainAttr(nt.models, [head_var] + tail_vars)
 
 ######
 
@@ -2467,10 +2479,10 @@ class PipelineRule(Rule):
         # ]
         return Nonterm('pipeline', nt.enviro, models, tail_var)
 
-    def combine_single(self, content_var : TVar) -> list[TVar]:
+    def combine_single(self, nt : Nonterm, content_var : TVar) -> list[TVar]:
         return [content_var]
 
-    def combine_cons(self, head_var : TVar, tail_var : list[TVar]) -> list[TVar]:
+    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_var : list[TVar]) -> list[TVar]:
         return [head_var] + tail_var
 
 

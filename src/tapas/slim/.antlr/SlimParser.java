@@ -142,16 +142,16 @@ public class SlimParser extends Parser {
 	        if arg == None:
 	            self._overflow = True
 
-	    nt_result = None
+	    result_nt = None
 	    if not self._overflow:
-	        nt_result = f(*args)
-	        self._guidance = nt_result
+	        result_nt = f(*args)
+	        self._guidance = result_nt
 
 	        tok = self.getCurrentToken()
 	        if tok.type == self.EOF :
 	            self._overflow = True 
 
-	    return nt_result 
+	    return result_nt 
 
 
 
@@ -1026,9 +1026,8 @@ public class SlimParser extends Parser {
 				setState(209);
 				((ExprContext)_localctx).argchain = argchain(argchain_nt);
 
-				(models, args) = ((ExprContext)_localctx).argchain.models_args
-				nt = replace(nt, models = models)
-				_localctx.models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, args)
+				nt = replace(nt, models = ((ExprContext)_localctx).argchain.attr.models)
+				_localctx.models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, ((ExprContext)_localctx).argchain.attr.args)
 
 				}
 				break;
@@ -1235,9 +1234,8 @@ public class SlimParser extends Parser {
 				setState(259);
 				((BaseContext)_localctx).argchain = argchain(nt);
 
-				(models, args) = ((BaseContext)_localctx).argchain.models_args
-				nt = replace(nt, models = models)
-				_localctx.models = self.collect(BaseRule(self._solver).combine_assoc, nt, args)
+				nt = replace(nt, models = ((BaseContext)_localctx).argchain.attr.models)
+				_localctx.models = self.collect(BaseRule(self._solver).combine_assoc, nt, ((BaseContext)_localctx).argchain.attr.args)
 
 				}
 				break;
@@ -1313,7 +1311,7 @@ public class SlimParser extends Parser {
 				((FunctionContext)_localctx).body = expr(body_nt);
 
 				nt = replace(nt, models = ((FunctionContext)_localctx).body.models)
-				_localctx.models_branches = (((FunctionContext)_localctx).body.models, self.collect(FunctionRule(self._solver).combine_single, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var))
+				_localctx.models_branches = (((FunctionContext)_localctx).body.models, self.collect(FunctionRule(self._solver).combine_single, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var))
 
 				}
 				break;
@@ -1339,13 +1337,14 @@ public class SlimParser extends Parser {
 				setState(280);
 				((FunctionContext)_localctx).body = expr(body_nt);
 
-				nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var)
+				nt = replace(nt, models = ((FunctionContext)_localctx).body.models)
+				tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var)
 
 				setState(282);
-				((FunctionContext)_localctx).tail = function(nt_tail);
+				((FunctionContext)_localctx).tail = function(tail_nt);
 
 				(models, branches) = ((FunctionContext)_localctx).tail.models_branches
-				_localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var, branches))
+				_localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var, branches))
 
 				}
 				break;
@@ -1441,13 +1440,13 @@ public class SlimParser extends Parser {
 				body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
 
 				setState(303);
-				((RecordContext)_localctx).body = expr(nt_body);
+				((RecordContext)_localctx).body = expr(body_nt);
 
 				nt = replace(nt, models = ((RecordContext)_localctx).body.models)
 				tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_nt.typ_var)
 
 				setState(305);
-				((RecordContext)_localctx).tail = record(nt_tail);
+				((RecordContext)_localctx).tail = record(tail_nt);
 
 				nt = replace(nt, models = ((RecordContext)_localctx).tail.models)
 				_localctx.models = self.collect(RecordRule(self._solver).combine_cons, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_nt.typ_var, tail_nt.typ_var)
@@ -1470,7 +1469,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ArgchainContext extends ParserRuleContext {
 		public Nonterm nt;
-		public tuple[list[Model], list[Typ]] models_args;
+		public ArgchainAttr attr;
 		public ExprContext content;
 		public ExprContext head;
 		public ArgchainContext tail;
@@ -1517,7 +1516,7 @@ public class SlimParser extends Parser {
 				match(T__6);
 
 				nt = replace(nt, models = ((ArgchainContext)_localctx).content.models)
-				_localctx.models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
+				_localctx.attr = self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var)
 
 				}
 				break;
@@ -1538,14 +1537,12 @@ public class SlimParser extends Parser {
 				match(T__6);
 
 				nt = replace(nt, models = ((ArgchainContext)_localctx).head.models)
-				tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 
 				setState(324);
-				((ArgchainContext)_localctx).tail = argchain(tail_nt);
+				((ArgchainContext)_localctx).tail = argchain(nt);
 
-				(models, args) = ((ArgchainContext)_localctx).tail.models_args
-				nt = replace(nt, models = models)
-				_localctx.models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, args))
+				nt = replace(nt, models = ((ArgchainContext)_localctx).tail.attr.models)
+				_localctx.attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_var, ((ArgchainContext)_localctx).tail.attr.args)
 
 				}
 				break;
@@ -1604,7 +1601,7 @@ public class SlimParser extends Parser {
 				content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 
 				setState(332);
-				((PipelineContext)_localctx).content = expr(nt_content);
+				((PipelineContext)_localctx).content = expr(content_nt);
 
 				nt = replace(nt, models = content.models)
 				_localctx.cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
@@ -1623,12 +1620,12 @@ public class SlimParser extends Parser {
 				((PipelineContext)_localctx).head = expr(head_nt);
 
 				nt = replace(nt, models = ((PipelineContext)_localctx).head.models)
-				nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
+				tail_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 
 				setState(339);
-				((PipelineContext)_localctx).tail = pipeline(nt_tail);
+				((PipelineContext)_localctx).tail = pipeline(tail_nt);
 
-				_localctx.cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, head_nt.typ_var, ((PipelineContext)_localctx).tail.cator_vars)
+				_localctx.cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, ((PipelineContext)_localctx).tail.cator_vars)
 
 				}
 				break;
@@ -1701,10 +1698,9 @@ public class SlimParser extends Parser {
 				setState(351);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				tail_nt = self.guide_nonterm(KeychainRule(self._solver).distill_cons_tail, nt, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)) 
 
 				setState(353);
-				((KeychainContext)_localctx).tail = keychain(tail_nt);
+				((KeychainContext)_localctx).tail = keychain(nt);
 
 				_localctx.keys = self.collect(KeychainRule(self._solver).combine_cons, nt, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.keys)
 
@@ -2079,7 +2075,7 @@ public class SlimParser extends Parser {
 
 
 				nt = replace(nt, enviro = ((Record_patternContext)_localctx).tail.attr.enviro, models = ((Record_patternContext)_localctx).tail.attr.models)
-				_localctx.attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr.typ, ((Record_patternContext)_localctx).tail.attr.typ)
+				_localctx.attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr.typ, ((Record_patternContext)_localctx).tail.attr.typ)
 
 				}
 				break;
