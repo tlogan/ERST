@@ -712,6 +712,17 @@ def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, P
 
     )
 
+    print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG interpret_strongest_for_id ~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~ model.freezer: {model.freezer}
+~~ model.constraints: {concretize_constraints(tuple(model.constraints))}
+~~ id: {id}
+~~ has_strongest_interpretation: {has_strongest_interpretation}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
+
     if has_strongest_interpretation:
         constraints = [
             st
@@ -789,15 +800,6 @@ def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_strong_side
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# typ: {concretize_typ(typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
 
         # trips = [ 
         #     (id, t, cs_once.union(cs_cont)) 
@@ -846,6 +848,18 @@ def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping
             id : strongest 
             for (id, strongest, cs) in trips
         })
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG interpret_strong_side
+~~~~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+typ: {concretize_typ(typ)}
+interp _4: {mapOp(simplify_typ)(interpret_strongest_for_id(model, '_4'))}
+renaming: {renaming}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         cs = pset(
             c
