@@ -90,7 +90,7 @@ def query_strong_side(a : str, b : str, k : str):
     return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_strong_side(models, q)))
 
 
-def decode_strong_side(models, typ_var):
+def decode(models, typ_var):
     return (analyzer.simplify_typ(solver.decode_strong_side(models, typ_var)))
 
 def roundtrip(ss : list[str]) -> str:
@@ -514,8 +514,8 @@ case ~nil @ => @
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # print(parsetree)
-    print(f"answer: {u(decode_strong_side(models, typ_var))}")
-    # assert u(simp(combo)) == "(~nil @ -> @)"
+    print(f"answer: {u(decode(models, typ_var))}")
+    assert u(decode(models, typ_var)) == "(~nil @ -> @)"
 
 def test_function_cases_disjoint():
     pieces = ['''
