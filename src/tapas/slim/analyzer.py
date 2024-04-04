@@ -1184,16 +1184,16 @@ class Solver:
 
     def decode_strong_side(self, models : list[Model], t : Typ, arg : Typ = TUnit()) -> Typ:
 
-    #     for m in models:
-    #         print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_strong_side 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # m.freezer: {m.freezer}
-    # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # t: {concretize_typ(t)}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG decode_strong_side 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    t: {concretize_typ(t)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         constraint_typs = [
             package_typ(m, strongest)
@@ -1866,13 +1866,13 @@ class BaseRule(Rule):
         choices = from_branches_to_choices(branches)
         result = Top() 
         for choice in reversed(choices): 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function iteration
-# ~~~~~~~~~~~~~~~~~~~~~
-# choice[1]: {concretize_typ(choice[1])}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function iteration
+~~~~~~~~~~~~~~~~~~~~~
+choice[1]: {concretize_typ(choice[1])}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
             '''
             generalization and extrusion
             '''

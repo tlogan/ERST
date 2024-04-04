@@ -514,8 +514,6 @@ case ~nil @ => @
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # print(parsetree)
-    print(f"models: {models}")
-    print(f"typ_var: {typ_var}")
     print(f"answer: {u(decode_strong_side(models, typ_var))}")
     # assert u(simp(combo)) == "(~nil @ -> @)"
 

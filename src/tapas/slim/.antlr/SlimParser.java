@@ -1213,7 +1213,9 @@ public class SlimParser extends Parser {
 				setState(254);
 				((BaseContext)_localctx).function = function(nt);
 
-				_localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, ((BaseContext)_localctx).function.branches)
+				(models, branches) = ((BaseContext)_localctx).function.models_branches
+				nt = replace(nt, models = models)
+				_localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 
 				}
 				break;
@@ -1255,7 +1257,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
 		public Nonterm nt;
-		public list[Imp] branches;
+		public tuple[lsit[Model], list[Imp]] models_branches;
 		public PatternContext pattern;
 		public ExprContext body;
 		public FunctionContext tail;
@@ -1311,7 +1313,7 @@ public class SlimParser extends Parser {
 				((FunctionContext)_localctx).body = expr(body_nt);
 
 				nt = replace(nt, models = ((FunctionContext)_localctx).body.models)
-				_localctx.branches = self.collect(FunctionRule(self._solver).combine_single, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var)
+				_localctx.models_branches = (((FunctionContext)_localctx).body.models, self.collect(FunctionRule(self._solver).combine_single, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var))
 
 				}
 				break;
@@ -1342,7 +1344,8 @@ public class SlimParser extends Parser {
 				setState(282);
 				((FunctionContext)_localctx).tail = function(nt_tail);
 
-				_localctx.branches = self.collect(FunctionRule(self._solver).combine_cons, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var, ((FunctionContext)_localctx).tail.branches)
+				(models, branches) = ((FunctionContext)_localctx).tail.models_branches
+				_localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var, branches))
 
 				}
 				break;

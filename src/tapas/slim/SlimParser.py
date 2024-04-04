@@ -1432,7 +1432,9 @@ class SlimParser ( Parser ):
                 self.state = 254
                 localctx._function = self.function(nt)
 
-                localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, localctx._function.branches)
+                (models, branches) = localctx._function.models_branches
+                nt = replace(nt, models = models)
+                localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 
                 pass
 
@@ -1473,7 +1475,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.branches = None
+            self.models_branches = None
             self._pattern = None # PatternContext
             self.body = None # ExprContext
             self.tail = None # FunctionContext
@@ -1540,7 +1542,7 @@ class SlimParser ( Parser ):
                 localctx.body = self.expr(body_nt)
 
                 nt = replace(nt, models = localctx.body.models)
-                localctx.branches = self.collect(FunctionRule(self._solver).combine_single, localctx._pattern.attr.typ, body_nt.typ_var)
+                localctx.models_branches = (localctx.body.models, self.collect(FunctionRule(self._solver).combine_single, localctx._pattern.attr.typ, body_nt.typ_var))
 
                 pass
 
@@ -1570,7 +1572,8 @@ class SlimParser ( Parser ):
                 self.state = 282
                 localctx.tail = self.function(nt_tail)
 
-                localctx.branches = self.collect(FunctionRule(self._solver).combine_cons, localctx._pattern.attr.typ, body_nt.typ_var, localctx.tail.branches)
+                (models, branches) = localctx.tail.models_branches
+                localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, localctx._pattern.attr.typ, body_nt.typ_var, branches))
 
                 pass
 
