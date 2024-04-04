@@ -1149,7 +1149,7 @@ class SlimParser ( Parser ):
                 head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
 
                 self.state = 180
-                localctx.head = self.base(nt_head)
+                localctx.head = self.base(head_nt)
 
                 self.guide_symbol(',')
 
@@ -1218,7 +1218,7 @@ class SlimParser ( Parser ):
                 localctx._keychain = self.keychain(keychain_nt)
 
                 nt = replace(nt, models = keychain_nt.models)
-                localctx.models = self.collect(ExprRule(self._solver).combine_projection, nt, nt_cator.tid, localctx._keychain.keys) 
+                localctx.models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, localctx._keychain.keys) 
 
                 pass
 
@@ -1411,7 +1411,7 @@ class SlimParser ( Parser ):
                 self.state = 247
                 localctx.body = self.base(body_nt)
 
-                nt = replace(models = localctx.body.models)
+                nt = replace(nt, models = localctx.body.models)
                 localctx.models = self.collect(BaseRule(self._solver).combine_tag, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
 
                 pass
@@ -1877,10 +1877,10 @@ class SlimParser ( Parser ):
                 self.state = 335
                 self.match(SlimParser.T__28)
 
-                nt_head = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
+                head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 
                 self.state = 337
-                localctx.head = self.expr(nt_head)
+                localctx.head = self.expr(head_nt)
 
                 nt = replace(nt, models = localctx.head.models)
                 nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
@@ -2120,7 +2120,7 @@ class SlimParser ( Parser ):
                 head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
 
                 self.state = 371
-                localctx.head = self.base_pattern(nt_head)
+                localctx.head = self.base_pattern(head_nt)
 
                 self.guide_symbol(',')
 

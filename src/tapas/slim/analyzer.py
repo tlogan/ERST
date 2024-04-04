@@ -1202,16 +1202,16 @@ class Solver:
 
     def decode_strong_side(self, models : list[Model], t : Typ, arg : Typ = TUnit()) -> Typ:
 
-    #     for m in models:
-    #         print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_strong_side 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # m.freezer: {m.freezer}
-    # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # t: {concretize_typ(t)}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG decode_strong_side 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    t: {concretize_typ(t)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         constraint_typs = [
             package_typ(m, strongest)
@@ -1852,9 +1852,9 @@ class BaseRule(Rule):
 
     def distill_tag_body(self, nt : Nonterm, label : str) -> Nonterm:
         body_var = self.solver.fresh_type_var()
-        # NOTE: this constraint is redundant with constraint in combine rule
-        # TODO: should it be so for consistency with rules where it's not redundant? 
-        models = self.evolve_models(nt, TTag(label, body_var))
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt, TTag(label, body_var))
         return Nonterm('expr', nt.enviro, models, body_var)
 
     def combine_tag(self, nt : Nonterm, label : str, body : TVar) -> list[Model]:
@@ -1919,12 +1919,16 @@ class ExprRule(Rule):
 
     def distill_tuple_head(self, nt : Nonterm) -> Nonterm:
         head_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', Bot())))
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', Bot())))
         return Nonterm('expr', nt.enviro, models, head_var) 
 
     def distill_tuple_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
         tail_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
         return Nonterm('expr', nt.enviro, models, tail_var) 
 
     def combine_tuple(self, nt : Nonterm, head_var : TVar, tail_var : TVar) -> list[Model]:
@@ -1932,14 +1936,16 @@ class ExprRule(Rule):
 
     def distill_ite_condition(self, nt : Nonterm) -> Nonterm:
         condition_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var,
-                Unio(TTag('false', TUnit()), TTag('true', TUnit()))
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         nt.typ_var,
+        #         Unio(TTag('false', TUnit()), TTag('true', TUnit()))
+        #     )
+        # ]
         return Nonterm('expr', nt.enviro, models, condition_var)
 
     def distill_ite_true_branch(self, nt : Nonterm, condition_var : TVar) -> Nonterm:
@@ -1948,14 +1954,16 @@ class ExprRule(Rule):
         (:true? @ -> Q) <: (A -> B) 
         '''
         true_body_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Imp(TTag('true', TUnit()), true_body_var),
-                Imp(true_body_var, nt.typ_var)
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         Imp(TTag('true', TUnit()), true_body_var),
+        #         Imp(true_body_var, nt.typ_var)
+        #     )
+        # ]
         return Nonterm('expr', nt.enviro, models, true_body_var) 
 
     def distill_ite_false_branch(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar) -> Nonterm:
@@ -1964,14 +1972,16 @@ class ExprRule(Rule):
         (:false? @ -> Q) <: (A -> B) 
         '''
         false_body_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Imp(TTag('false', TUnit()), false_body_var),
-                Imp(condition_var, nt.typ_var)
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         Imp(TTag('false', TUnit()), false_body_var),
+        #         Imp(condition_var, nt.typ_var)
+        #     )
+        # ]
         return Nonterm('expr', nt.enviro, models, false_body_var) 
 
     def combine_ite(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar, false_body_var : TVar) -> list[Model]: 
@@ -1998,14 +2008,16 @@ class ExprRule(Rule):
 
     def distill_projection_keychain(self, nt : Nonterm, rator_var : TVar) -> Nonterm: 
         keychain_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                keychain_var,
-                rator_var 
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         keychain_var,
+        #         rator_var 
+        #     )
+        # ]
         return Nonterm('keychain', nt.enviro, models, keychain_var)
 
 
@@ -2026,26 +2038,30 @@ class ExprRule(Rule):
 
     def distill_application_cator(self, nt : Nonterm) -> Nonterm: 
         cator_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                cator_var,
-                Imp(Bot(), Top()) 
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         cator_var,
+        #         Imp(Bot(), Top()) 
+        #     )
+        # ]
         return Nonterm('expr', nt.enviro, models, cator_var)
 
     def distill_application_argchain(self, nt : Nonterm, cator_var : TVar) -> Nonterm: 
         next_cator_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                next_cator_var,
-                cator_var
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         next_cator_var,
+        #         cator_var
+        #     )
+        # ]
         return Nonterm('argchain', nt.enviro, models, next_cator_var, True)
 
     def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
@@ -2071,16 +2087,17 @@ class ExprRule(Rule):
         return Nonterm('expr', nt.enviro, models, arg_var)
 
     def distill_funnel_pipeline(self, nt : Nonterm, arg_var : TVar) -> Nonterm: 
-
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                typ_var,
-                arg_var
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         typ_var,
+        #         arg_var
+        #     )
+        # ]
         return Nonterm('pipeline', nt.enviro, models, typ_var)
 
     def combine_funnel(self, nt : Nonterm, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
@@ -2272,9 +2289,11 @@ end ExprRule
 class RecordRule(Rule):
 
     def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt, TField(id, typ_var))
-        return Nonterm('expr', nt.enviro, models, typ_var) 
+        body_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt, TField(id, body_var))
+        return Nonterm('expr', nt.enviro, models, body_var) 
 
     def combine_single(self, nt : Nonterm, label : str, body_var : Typ) -> list[Model]:
         return self.evolve_models(nt, TField(label, body_var))
@@ -2284,7 +2303,9 @@ class RecordRule(Rule):
 
     def distill_cons_tail(self, nt : Nonterm, id : str, body_var : TVar) -> Nonterm:
         tail_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
         return Nonterm('record', nt.enviro, models, tail_var) 
 
     def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail_var : TVar) -> list[Model]:
@@ -2293,27 +2314,31 @@ class RecordRule(Rule):
 class FunctionRule(Rule):
 
     def distill_single_pattern(self, nt : Nonterm) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var, Imp(typ_var, Top())
-            )
-        ]
-        return Nonterm('pattern', nt.enviro, models, typ_var)
+        pattern_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         nt.typ_var, Imp(pattern_var, Top())
+        #     )
+        # ]
+        return Nonterm('pattern', nt.enviro, models, pattern_var)
 
     def distill_single_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var, Imp(pattern_typ, typ_var)
-            )
-        ]
+        body_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         nt.typ_var, Imp(pattern_typ, body_var)
+        #     )
+        # ]
 
-        return Nonterm('expr', nt.enviro, models, typ_var)
+        return Nonterm('expr', nt.enviro, models, body_var)
 
     def combine_single(self, pattern_typ : Typ, body_var : TVar) -> list[Imp]:
         return [Imp(pattern_typ, body_var)]
@@ -2341,15 +2366,17 @@ class KeychainRule(Rule):
     return the plate with the typ as the type that the next element in tail cuts
     '''
     def distill_cons_tail(self, nt : Nonterm, key : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var, TField(key, typ_var)
-            )
-        ]
-        return Nonterm('keychain', nt.enviro, models, typ_var)
+        tail_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         nt.typ_var, TField(key, tail_var)
+        #     )
+        # ]
+        return Nonterm('keychain', nt.enviro, models, tail_var)
 
     def combine_single(self, key : str) -> list[str]:
         return [key]
@@ -2361,15 +2388,17 @@ class KeychainRule(Rule):
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
         if nt.is_applicator:
-            typ_var = self.solver.fresh_type_var()
-            models = [
-                m1
-                for m0 in nt.models
-                for m1 in self.solver.solve(m0, 
-                    nt.typ_var, Imp(typ_var, Top())
-                )
-            ]
-            return Nonterm('expr', nt.enviro, models, typ_var, False)
+            content_var = self.solver.fresh_type_var()
+            models = nt.models
+            # TODO: add constraints in distill for type-guided program synthesis 
+            # models = [
+            #     m1
+            #     for m0 in nt.models
+            #     for m1 in self.solver.solve(m0, 
+            #         nt.typ_var, Imp(typ_var, Top())
+            #     )
+            # ]
+            return Nonterm('expr', nt.enviro, models, content_var, False)
         else:
             return nt
 
@@ -2382,13 +2411,15 @@ class ArgchainRule(Rule):
         resulting in a new tyption of what can be cut by the next element in the tail
         '''
         tail_cator_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var, Imp(head_var, tail_cator_var)
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         nt.typ_var, Imp(head_var, tail_cator_var)
+        #     )
+        # ]
 
         return Nonterm('argchain', nt.enviro, models, tail_cator_var, True)
 
@@ -2404,13 +2435,15 @@ class PipelineRule(Rule):
 
     def distill_single_content(self, nt : Nonterm) -> Nonterm:
         content_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                content_var, Imp(nt.typ_var, Top())
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         content_var, Imp(nt.typ_var, Top())
+        #     )
+        # ]
         return Nonterm('expr', nt.enviro, models, content_var)
 
 
@@ -2423,14 +2456,15 @@ class PipelineRule(Rule):
         resulting in a new tyption of what can cut the next element in the tail
         '''
         tail_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                head_var, Imp(nt.typ_var, tail_var)
-            )
-        ]
-
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         head_var, Imp(nt.typ_var, tail_var)
+        #     )
+        # ]
         return Nonterm('pipeline', nt.enviro, models, tail_var)
 
     def combine_single(self, content_var : TVar) -> list[TVar]:
@@ -2447,27 +2481,31 @@ start Pattern Rule
 class PatternRule(Rule):
     def distill_tuple_head(self, nt : Nonterm) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Inter(TField('head', typ_var), TField('tail', Bot())), 
-                nt.typ_var
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         Inter(TField('head', typ_var), TField('tail', Bot())), 
+        #         nt.typ_var
+        #     )
+        # ]
 
         return Nonterm('pattern', nt.enviro, models, typ_var) 
 
     def distill_tuple_tail(self, nt : Nonterm, head_typ : Typ) -> Nonterm:
         typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                Inter(TField('head', head_typ), TField('tail', typ_var)), 
-                nt.typ_var,
-            )
-        ]
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         Inter(TField('head', head_typ), TField('tail', typ_var)), 
+        #         nt.typ_var,
+        #     )
+        # ]
         return Nonterm('pattern', nt.enviro, models, typ_var) 
 
     def combine_tuple(self, nt : Nonterm, head_typ : Typ, tail_typ : Typ) -> PatternAttr:
@@ -2493,15 +2531,17 @@ class BasePatternRule(Rule):
         return PatternAttr(nt.enviro, models, pattern)
 
     def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                TTag(id, typ_var), nt.typ_var
-            )
-        ]
-        return Nonterm('pattern', nt.enviro, models, typ_var)
+        body_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         TTag(id, body_var), nt.typ_var
+        #     )
+        # ]
+        return Nonterm('pattern', nt.enviro, models, body_var)
 
     def combine_tag(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
         pattern = TTag(label, body_typ)
@@ -2514,15 +2554,17 @@ end BasePatternRule
 class RecordPatternRule(Rule):
 
     def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                TField(id, typ_var), nt.typ_var
-            )
-        ]
-        return Nonterm('pattern_record', nt.enviro, models, typ_var) 
+        body_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = [
+        #     m1
+        #     for m0 in nt.models
+        #     for m1 in self.solver.solve(m0, 
+        #         TField(id, typ_var), nt.typ_var
+        #     )
+        # ]
+        return Nonterm('pattern_record', nt.enviro, models, body_var) 
 
     def combine_single(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
         pattern = TField(label, body_typ)
@@ -2533,9 +2575,11 @@ class RecordPatternRule(Rule):
         return self.distill_cons_body(nt, id)
 
     def distill_cons_tail(self, nt : Nonterm, id : str, body_typ : Typ) -> Nonterm:
-        typ_var = self.solver.fresh_type_var()
-        models = self.evolve_models(nt, Inter(TField(id, body_typ), typ_var))
-        return Nonterm('pattern_record', nt.enviro, models, typ_var) 
+        tail_var = self.solver.fresh_type_var()
+        models = nt.models
+        # TODO: add constraints in distill for type-guided program synthesis 
+        # models = self.evolve_models(nt, Inter(TField(id, body_typ), tail_var))
+        return Nonterm('pattern_record', nt.enviro, models, tail_var) 
 
     def combine_cons(self, nt : Nonterm, label : str, body_typ : Typ, tail_typ : Typ) -> PatternAttr:
         pattern = Inter(TField(label, body_typ), tail_typ)

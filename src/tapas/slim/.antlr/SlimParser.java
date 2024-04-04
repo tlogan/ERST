@@ -936,7 +936,7 @@ public class SlimParser extends Parser {
 				head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
 
 				setState(180);
-				((ExprContext)_localctx).head = base(nt_head);
+				((ExprContext)_localctx).head = base(head_nt);
 
 				self.guide_symbol(',')
 
@@ -1007,7 +1007,7 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).keychain = keychain(keychain_nt);
 
 				nt = replace(nt, models = keychain_nt.models)
-				_localctx.models = self.collect(ExprRule(self._solver).combine_projection, nt, nt_cator.tid, ((ExprContext)_localctx).keychain.keys) 
+				_localctx.models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, ((ExprContext)_localctx).keychain.keys) 
 
 				}
 				break;
@@ -1190,7 +1190,7 @@ public class SlimParser extends Parser {
 				setState(247);
 				((BaseContext)_localctx).body = base(body_nt);
 
-				nt = replace(models = ((BaseContext)_localctx).body.models)
+				nt = replace(nt, models = ((BaseContext)_localctx).body.models)
 				_localctx.models = self.collect(BaseRule(self._solver).combine_tag, nt, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null), body_nt.typ_var)
 
 				}
@@ -1617,10 +1617,10 @@ public class SlimParser extends Parser {
 				setState(335);
 				match(T__28);
 
-				nt_head = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
+				head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 
 				setState(337);
-				((PipelineContext)_localctx).head = expr(nt_head);
+				((PipelineContext)_localctx).head = expr(head_nt);
 
 				nt = replace(nt, models = ((PipelineContext)_localctx).head.models)
 				nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
@@ -1831,7 +1831,7 @@ public class SlimParser extends Parser {
 				head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
 
 				setState(371);
-				((PatternContext)_localctx).head = base_pattern(nt_head);
+				((PatternContext)_localctx).head = base_pattern(head_nt);
 
 				self.guide_symbol(',')
 

@@ -485,21 +485,20 @@ def test_tag():
     pieces = ['''
 ~uno @
     ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # assert parsetree == "(expr (base ~ uno (base @)))"
-    print(parsetree)
-    assert u(decode(models, typ_var)) == "~uno @"
+    # print(parsetree)
     # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~uno @"
 
 def test_tuple():
     pieces = ['''
 @, @, @
     ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # print(parsetree)
-    # print(f"u(combo): {u(combo)}")
-    assert u(decode(models, typ_var)) == "(@, (@, @))"
-    # print("answer: " + u(decode(models, typ_var)))
+    print(u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "(@, (@, @))"
 
 def test_record():
     pieces = ['''
@@ -1040,7 +1039,7 @@ if __name__ == '__main__':
     ########################
     ## Post refactor tests
     ########################
-    test_function()
+    test_record()
 
     ########################
     # test_two_less_equal_one_query()

@@ -278,7 +278,7 @@ $models = $base.models
 
 | {
 head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
-} head = base[nt_head] {
+} head = base[head_nt] {
 self.guide_symbol(',')
 } ',' {
 nt = replace(nt, models = $head.models)
@@ -314,7 +314,7 @@ nt = replace(nt, models = $rator.models)
 keychain_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_keychain, nt, rator_nt.typ_var)
 } keychain[keychain_nt] {
 nt = replace(nt, models = keychain_nt.models)
-$models = self.collect(ExprRule(self._solver).combine_projection, nt, nt_cator.tid, $keychain.keys) 
+$models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, $keychain.keys) 
 }
 
 | {
@@ -378,7 +378,7 @@ self.guide_terminal('ID')
 } ID {
 body_nt = self.guide_nonterm(BaseRule(self._solver).distill_tag_body, nt, $ID.text)
 } body = base[body_nt] {
-nt = replace(models = $body.models)
+nt = replace(nt, models = $body.models)
 $models = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt.typ_var)
 }
 
@@ -506,8 +506,8 @@ $cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, conten
 }
 
 | '|>' {
-nt_head = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
-} head = expr[nt_head] {
+head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
+} head = expr[head_nt] {
 nt = replace(nt, models = $head.models)
 nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 } tail = pipeline[nt_tail] {
@@ -556,7 +556,7 @@ $attr = $base_pattern.attr
 
 | {
 head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
-} head = base_pattern[nt_head] {
+} head = base_pattern[head_nt] {
 self.guide_symbol(',')
 } ',' {
 nt = replace(nt, enviro =  $head.attr.enviro, models = $head.attr.models)
