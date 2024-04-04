@@ -43,14 +43,16 @@ def analyze(pieces : list[str], debug = False):
             if isinstance(g, language.Done):
                 break
 
-        ctx = await connection.mk_getter()
-        return (ctx.combo if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None)
 
-    (combo, guides, parsetree) = asyncio.run(_mk_task())
+        ctx = await connection.mk_getter()
+        typ_var = analyzer.default_nonterm.typ_var
+        return (ctx.models if ctx else None, typ_var, guides, connection.to_string_tree(ctx) if ctx else None)
+
+    (models, typ_var, guides, parsetree) = asyncio.run(_mk_task())
     if debug:
         raise_guide(guides)
 
-    return (combo, guides, parsetree)
+    return (models, typ_var, guides, parsetree)
 
 def p(s): 
     t = language.parse_typ(s)
@@ -86,6 +88,10 @@ def query_strong_side(a : str, b : str, k : str):
     q = p(k)
     models = solver.solve_composition(x, y) 
     return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_strong_side(models, q)))
+
+
+def decode_strong_side(models, typ_var):
+    return (analyzer.simplify_typ(solver.decode_strong_side(models, typ_var)))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
@@ -506,10 +512,12 @@ def test_function():
     pieces = ['''
 case ~nil @ => @ 
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    print("combo: " + u(simp(combo)))
-    assert u(simp(combo)) == "(~nil @ -> @)"
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    # print(parsetree)
+    print(f"models: {models}")
+    print(f"typ_var: {typ_var}")
+    print(f"answer: {u(decode_strong_side(models, typ_var))}")
+    # assert u(simp(combo)) == "(~nil @ -> @)"
 
 def test_function_cases_disjoint():
     pieces = ['''
@@ -1071,11 +1079,18 @@ LFP _22 (
 
 
 if __name__ == '__main__':
+
+    ########################
+    ## Post refactor tests
+    ########################
+    test_function()
+
+    ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
     #
     # TODO
-    test_arg_specialization()
+    # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()

@@ -2,9 +2,6 @@
 
 
 ### TODO
-- update attributes of parser specification `Slim.g4`
-    - models should monotonically grow
-    - move nonterm object into argument position instead of object field
 - make sure models are passed through even if combine doesn't return them  
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.
@@ -17,6 +14,7 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
+- in paper, write rules in a declarative style that does not imply downward propagation 
 - in paper, note importance of generating constraints on argument variables
 - in paper, note importance of renaming and extrusion in imp-imp rule 
     - renaming to solve for conclusion under local assumption

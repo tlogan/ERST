@@ -54,13 +54,13 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
         parser.reset()
 
         try:
-            ctx = parser.expr(analyzer.nt_default)
+            ctx = parser.expr(analyzer.default_nonterm)
 
             num_syn_err = parser.getNumberOfSyntaxErrors()
 
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
-            elif ctx.combo: 
+            elif ctx.models: 
                 await output.put(Done())
                 break
             else:

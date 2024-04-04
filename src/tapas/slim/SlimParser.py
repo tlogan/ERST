@@ -215,13 +215,13 @@ class SlimParser ( Parser ):
     RULE_keychain = 12
     RULE_target = 13
     RULE_pattern = 14
-    RULE_pattern_base = 15
-    RULE_pattern_record = 16
+    RULE_base_pattern = 15
+    RULE_record_pattern = 16
 
     ruleNames =  [ "ids", "typ_base", "typ", "negchain", "qualification", 
                    "subtyping", "expr", "base", "function", "record", "argchain", 
-                   "pipeline", "keychain", "target", "pattern", "pattern_base", 
-                   "pattern_record" ]
+                   "pipeline", "keychain", "target", "pattern", "base_pattern", 
+                   "record_pattern" ]
 
     EOF = Token.EOF
     T__0=1
@@ -274,13 +274,13 @@ class SlimParser ( Parser ):
     _overflow = False  
 
     def init(self): 
-        self._solver = Solver() 
+        self._solver = default_solver 
         self._cache = {}
-        self._guidance = nt_default 
+        self._guidance = default_nonterm 
         self._overflow = False  
 
     def reset(self): 
-        self._guidance = nt_default
+        self._guidance = default_nonterm
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -1059,15 +1059,16 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.models = None
             self._base = None # BaseContext
             self.head = None # BaseContext
             self.tail = None # ExprContext
             self.condition = None # ExprContext
-            self.branch_true = None # ExprContext
-            self.branch_false = None # ExprContext
-            self.cator = None # BaseContext
+            self.true_branch = None # ExprContext
+            self.false_branch = None # ExprContext
+            self.rator = None # BaseContext
             self._keychain = None # KeychainContext
+            self.cator = None # BaseContext
             self._argchain = None # ArgchainContext
             self._pipeline = None # PipelineContext
             self._ID = None # Token
@@ -1138,14 +1139,14 @@ class SlimParser ( Parser ):
                 self.state = 176
                 localctx._base = self.base(nt)
 
-                localctx.combo = localctx._base.combo
+                localctx.models = localctx._base.models
 
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
 
-                nt_head = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_head)
+                head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
 
                 self.state = 180
                 localctx.head = self.base(nt_head)
@@ -1155,12 +1156,14 @@ class SlimParser ( Parser ):
                 self.state = 182
                 self.match(SlimParser.T__10)
 
-                nt_tail = self.guide_nonterm(ExprRule(self._solver, nt).distill_tuple_tail, localctx.head.combo)
+                nt = replace(nt, models = localctx.head.models)
+                tail_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_tail, nt, head_nt.typ_var)
 
                 self.state = 184
-                localctx.tail = self.expr(nt_tail)
+                localctx.tail = self.expr(tail_nt)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_tuple, localctx.head.combo, localctx.tail.combo) 
+                nt = replace(nt, models = localctx.tail.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
 
                 pass
 
@@ -1169,83 +1172,92 @@ class SlimParser ( Parser ):
                 self.state = 187
                 self.match(SlimParser.T__19)
 
-                nt_condition = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_condition)
+                condition_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_condition, nt)
 
                 self.state = 189
-                localctx.condition = self.expr(nt_condition)
+                localctx.condition = self.expr(condition_nt)
 
                 self.guide_symbol('then')
 
                 self.state = 191
                 self.match(SlimParser.T__20)
 
-                nt_branch_true = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_true, localctx.condition.combo)
+                nt = replace(nt, models = condition.models)
+                true_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_true_branch, nt, condition_nt.typ_var)
 
                 self.state = 193
-                localctx.branch_true = self.expr(nt_branch_true)
+                localctx.true_branch = self.expr(true_branch_nt)
 
                 self.guide_symbol('else')
 
                 self.state = 195
                 self.match(SlimParser.T__21)
 
-                nt_branch_false = self.guide_nonterm(ExprRule(self._solver, nt).distill_ite_branch_false, localctx.condition.combo, localctx.branch_true.combo)
+                nt = replace(nt, models = true_branch.models)
+                false_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
 
                 self.state = 197
-                localctx.branch_false = self.expr(nt_branch_false)
+                localctx.false_branch = self.expr(false_branch_nt)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_ite, localctx.condition.combo, localctx.branch_true.combo, localctx.branch_false.combo) 
+                localctx.models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, true_branch_nt.typ_var, false_branch_nt.typ_var) 
 
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
 
-                nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_cator)
+                rator_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_rator, nt)
 
                 self.state = 201
-                localctx.cator = self.base(nt_cator)
+                localctx.rator = self.base(rator_nt)
 
-                nt_keychain = self.guide_nonterm(ExprRule(self._solver, nt).distill_projection_keychain, localctx.cator.combo)
+                nt = replace(nt, models = localctx.rator.models)
+                keychain_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_keychain, nt, rator_nt.typ_var)
 
                 self.state = 203
-                localctx._keychain = self.keychain(nt_keychain)
+                localctx._keychain = self.keychain(keychain_nt)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_projection, localctx.cator.combo, localctx._keychain.combo) 
+                nt = replace(nt, models = keychain_nt.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_projection, nt, nt_cator.tid, localctx._keychain.keys) 
 
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
 
-                nt_cator = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+                cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
 
                 self.state = 207
-                localctx.cator = self.base(nt_cator)
+                localctx.cator = self.base(cator_nt)
 
-                nt_argchain = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, localctx.cator.combo)
+                nt = replace(nt, models = localctx.cator.models)
+                argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
 
                 self.state = 209
-                localctx._argchain = self.argchain(nt_argchain)
+                localctx._argchain = self.argchain(argchain_nt)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_application, localctx.cator.combo, localctx._argchain.combo)
+                (models, args) = localctx._argchain.models_args
+                nt = replace(nt, models = models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, args)
 
                 pass
 
             elif la_ == 7:
                 self.enterOuterAlt(localctx, 7)
 
-                nt_arg = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_arg)
+                arg_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_arg, nt)
 
                 self.state = 213
-                localctx.cator = self.base(nt_arg)
+                localctx.cator = self.base(arg_nt)
 
-                nt_pipeline = self.guide_nonterm(ExprRule(self._solver, nt).distill_funnel_pipeline, localctx.cator.combo)
+                nt = replace(nt, models = localctx.cator.models)
+                pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, cator_nt.typ_var)
 
                 self.state = 215
-                localctx._pipeline = self.pipeline(nt_pipeline)
+                localctx._pipeline = self.pipeline(pipeline_nt)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_funnel, localctx.cator.combo, localctx._pipeline.combo)
+                nt = replace(nt, models = pipeline_nt.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_funnel, nt, cator.typ_var, localctx._pipeline.cator_vars)
 
                 pass
 
@@ -1259,22 +1271,23 @@ class SlimParser ( Parser ):
                 self.state = 220
                 localctx._ID = self.match(SlimParser.ID)
 
-                nt_target = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_target, (None if localctx._ID is None else localctx._ID.text))
+                target_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_target, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 222
-                localctx._target = self.target(nt_target)
+                localctx._target = self.target(target_nt)
 
                 self.guide_symbol(';')
 
                 self.state = 224
                 self.match(SlimParser.T__18)
 
-                nt_contin = self.guide_nonterm(ExprRule(self._solver, nt).distill_let_contin, (None if localctx._ID is None else localctx._ID.text), localctx._target.combo)
+                nt = replace(nt, models = localctx._target.models)
+                contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, (None if localctx._ID is None else localctx._ID.text), target_nt.typ_var)
 
                 self.state = 226
-                localctx.contin = self.expr(nt_contin)
+                localctx.contin = self.expr(contin_nt)
 
-                localctx.combo = localctx.contin.combo
+                localctx.models = localctx.contin.models
 
                 pass
 
@@ -1288,17 +1301,18 @@ class SlimParser ( Parser ):
                 self.state = 231
                 self.match(SlimParser.T__5)
 
-                nt_body = self.guide_nonterm(ExprRule(self._solver, nt).distill_fix_body)
+                body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
 
                 self.state = 233
-                localctx.body = self.expr(nt_body)
+                localctx.body = self.expr(body_nt)
 
                 self.guide_symbol(')')
 
                 self.state = 235
                 self.match(SlimParser.T__6)
 
-                localctx.combo = self.collect(ExprRule(self._solver, nt).combine_fix, localctx.body.combo)
+                nt = replace(nt, models = localctx.body.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
 
                 pass
 
@@ -1319,7 +1333,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.models = None
             self._ID = None # Token
             self.body = None # BaseContext
             self._record = None # RecordContext
@@ -1378,7 +1392,7 @@ class SlimParser ( Parser ):
                 self.state = 241
                 self.match(SlimParser.T__2)
 
-                localctx.combo = self.collect(BaseRule(self._solver, nt).combine_unit)
+                localctx.models = self.collect(BaseRule(self._solver).combine_unit, nt)
 
                 pass
 
@@ -1392,12 +1406,13 @@ class SlimParser ( Parser ):
                 self.state = 245
                 localctx._ID = self.match(SlimParser.ID)
 
-                nt_body = self.guide_nonterm(BaseRule(self._solver, nt).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
+                body_nt = self.guide_nonterm(BaseRule(self._solver).distill_tag_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 247
-                localctx.body = self.base(nt_body)
+                localctx.body = self.base(body_nt)
 
-                localctx.combo = self.collect(BaseRule(self._solver, nt).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                nt = replace(models = localctx.body.models)
+                localctx.models = self.collect(BaseRule(self._solver).combine_tag, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
 
                 pass
 
@@ -1406,7 +1421,7 @@ class SlimParser ( Parser ):
                 self.state = 250
                 localctx._record = self.record(nt)
 
-                localctx.combo = localctx._record.combo
+                localctx.models = localctx._record.models
 
                 pass
 
@@ -1417,7 +1432,7 @@ class SlimParser ( Parser ):
                 self.state = 254
                 localctx._function = self.function(nt)
 
-                localctx.combo = self.collect(BaseRule(self._solver, nt).combine_function, localctx._function.combo)
+                localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, localctx._function.branches)
 
                 pass
 
@@ -1426,7 +1441,7 @@ class SlimParser ( Parser ):
                 self.state = 257
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(BaseRule(self._solver, nt).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.models = self.collect(BaseRule(self._solver).combine_var, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1435,7 +1450,9 @@ class SlimParser ( Parser ):
                 self.state = 259
                 localctx._argchain = self.argchain(nt)
 
-                localctx.combo = self.collect(BaseRule(self._solver, nt).combine_assoc, localctx._argchain.combo)
+                (models, args) = localctx._argchain.models_args
+                nt = replace(nt, models = models)
+                localctx.models = self.collect(BaseRule(self._solver).combine_assoc, nt, args)
 
                 pass
 
@@ -1456,7 +1473,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.branches = None
             self._pattern = None # PatternContext
             self.body = None # ExprContext
             self.tail = None # FunctionContext
@@ -1506,22 +1523,24 @@ class SlimParser ( Parser ):
                 self.state = 265
                 self.match(SlimParser.T__24)
 
-                nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_pattern)
+                pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_pattern, nt)
 
                 self.state = 267
-                localctx._pattern = self.pattern(nt_pattern)
+                localctx._pattern = self.pattern(pattern_nt)
 
                 self.guide_symbol('=>')
 
                 self.state = 269
                 self.match(SlimParser.T__25)
 
-                nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_single_body, localctx._pattern.combo)
+                nt = replace(nt, enviro =  localctx._pattern.attr.enviro, models = localctx._pattern.attr.models)
+                body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, localctx._pattern.attr.typ)
 
                 self.state = 271
-                localctx.body = self.expr(nt_body)
+                localctx.body = self.expr(body_nt)
 
-                localctx.combo = self.collect(FunctionRule(self._solver, nt).combine_single, localctx._pattern.combo, localctx.body.combo)
+                nt = replace(nt, models = localctx.body.models)
+                localctx.branches = self.collect(FunctionRule(self._solver).combine_single, localctx._pattern.attr.typ, body_nt.typ_var)
 
                 pass
 
@@ -1530,27 +1549,28 @@ class SlimParser ( Parser ):
                 self.state = 274
                 self.match(SlimParser.T__24)
 
-                nt_pattern = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_pattern)
+                pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_pattern, nt)
 
                 self.state = 276
-                localctx._pattern = self.pattern(nt_pattern)
+                localctx._pattern = self.pattern(pattern_nt)
 
                 self.guide_symbol('=>')
 
                 self.state = 278
                 self.match(SlimParser.T__25)
 
-                nt_body = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_body, localctx._pattern.combo)
+                nt = replace(nt, enviro =  localctx._pattern.attr.enviro, models = localctx._pattern.attr.models)
+                body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, localctx._pattern.attr.typ)
 
                 self.state = 280
-                localctx.body = self.expr(nt_body)
+                localctx.body = self.expr(body_nt)
 
-                nt_tail = self.guide_nonterm(FunctionRule(self._solver, nt).distill_cons_tail, localctx._pattern.combo, localctx.body.combo)
+                nt_tail = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, localctx._pattern.attr.typ, body_nt.typ_var)
 
                 self.state = 282
                 localctx.tail = self.function(nt_tail)
 
-                localctx.combo = self.collect(FunctionRule(self._solver, nt).combine_cons, localctx._pattern.combo, localctx.body.combo, localctx.tail.combo)
+                localctx.branches = self.collect(FunctionRule(self._solver).combine_cons, localctx._pattern.attr.typ, body_nt.typ_var, localctx.tail.branches)
 
                 pass
 
@@ -1571,7 +1591,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.models = None
             self._ID = None # Token
             self.body = None # ExprContext
             self.tail = None # RecordContext
@@ -1630,12 +1650,13 @@ class SlimParser ( Parser ):
                 self.state = 292
                 self.match(SlimParser.T__27)
 
-                nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
+                body_nt = self.guide_nonterm(RecordRule(self._solver).distill_single_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 294
-                localctx.body = self.expr(nt_body)
+                localctx.body = self.expr(body_nt)
 
-                localctx.combo = self.collect(RecordRule(self._solver, nt).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                nt = replace(nt, models = localctx.body.models)
+                localctx.models = self.collect(RecordRule(self._solver).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
 
                 pass
 
@@ -1654,17 +1675,19 @@ class SlimParser ( Parser ):
                 self.state = 301
                 self.match(SlimParser.T__27)
 
-                nt_body = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
+                body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 303
                 localctx.body = self.expr(nt_body)
 
-                nt_tail = self.guide_nonterm(RecordRule(self._solver, nt).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                nt = replace(nt, models = localctx.body.models)
+                tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
 
                 self.state = 305
                 localctx.tail = self.record(nt_tail)
 
-                localctx.combo = self.collect(RecordRule(self._solver, nt).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
+                nt = replace(nt, models = localctx.tail.models)
+                localctx.models = self.collect(RecordRule(self._solver).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var, tail_nt.typ_var)
 
                 pass
 
@@ -1685,7 +1708,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.models_args = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # ArgchainContext
@@ -1731,17 +1754,18 @@ class SlimParser ( Parser ):
                 self.state = 311
                 self.match(SlimParser.T__5)
 
-                nt_content = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_single_content) 
+                content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_content, nt) 
 
                 self.state = 313
-                localctx.content = self.expr(nt_content)
+                localctx.content = self.expr(content_nt)
 
                 self.guide_symbol(')')
 
                 self.state = 315
                 self.match(SlimParser.T__6)
 
-                localctx.combo = self.collect(ArgchainRule(self._solver, nt).combine_single, localctx.content.combo)
+                nt = replace(nt, models = localctx.content.models)
+                localctx.models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var))
 
                 pass
 
@@ -1750,22 +1774,25 @@ class SlimParser ( Parser ):
                 self.state = 318
                 self.match(SlimParser.T__5)
 
-                nt_head = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_head) 
+                head_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_head, nt) 
 
                 self.state = 320
-                localctx.head = self.expr(nt_head)
+                localctx.head = self.expr(head_nt)
 
                 self.guide_symbol(')')
 
                 self.state = 322
                 self.match(SlimParser.T__6)
 
-                nt_tail = self.guide_nonterm(ArgchainRule(self._solver, nt).distill_cons_tail, localctx.head.combo) 
+                nt = replace(nt, models = localctx.head.models)
+                tail_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 
                 self.state = 324
-                localctx.tail = self.argchain(nt_tail)
+                localctx.tail = self.argchain(tail_nt)
 
-                localctx.combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, localctx.head.combo, localctx.tail.combo)
+                (models, args) = localctx.tail.models_args
+                nt = replace(nt, models = models)
+                localctx.models_args = (nt.models, self.collect(ArgchainRule(self._solver).combine_cons, head_nt.typ_var, args))
 
                 pass
 
@@ -1786,7 +1813,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.cator_vars = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # PipelineContext
@@ -1832,12 +1859,13 @@ class SlimParser ( Parser ):
                 self.state = 330
                 self.match(SlimParser.T__28)
 
-                nt_content = self.guide_nonterm(PipelineRule(self._solver, nt).distill_single_content) 
+                content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 
                 self.state = 332
                 localctx.content = self.expr(nt_content)
 
-                localctx.combo = self.collect(PipelineRule(self._solver, nt).combine_single, localctx.content.combo)
+                nt = replace(nt, models = content.models)
+                localctx.cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 
                 pass
 
@@ -1846,17 +1874,18 @@ class SlimParser ( Parser ):
                 self.state = 335
                 self.match(SlimParser.T__28)
 
-                nt_head = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_head) 
+                nt_head = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 
                 self.state = 337
                 localctx.head = self.expr(nt_head)
 
-                nt_tail = self.guide_nonterm(PipelineRule(self._solver, nt).distill_cons_tail, localctx.head.combo) 
+                nt = replace(nt, models = localctx.head.models)
+                nt_tail = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 
                 self.state = 339
                 localctx.tail = self.pipeline(nt_tail)
 
-                localctx.combo = self.collect(ArgchainRule(self._solver, nt).combine_cons, localctx.head.combo, localctx.tail.combo)
+                localctx.cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, head_nt.typ_var, localctx.tail.cator_vars)
 
                 pass
 
@@ -1877,7 +1906,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.keys = None
             self._ID = None # Token
             self.tail = None # KeychainContext
             self.nt = nt
@@ -1926,7 +1955,7 @@ class SlimParser ( Parser ):
                 self.state = 347
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(KeychainRule(self._solver, nt).combine_single, (None if localctx._ID is None else localctx._ID.text))
+                localctx.keys = self.collect(KeychainRule(self._solver).combine_single, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -1940,12 +1969,12 @@ class SlimParser ( Parser ):
                 self.state = 351
                 localctx._ID = self.match(SlimParser.ID)
 
-                nt_tail = self.guide_nonterm(KeychainRule(self._solver, nt).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text)) 
+                tail_nt = self.guide_nonterm(KeychainRule(self._solver).distill_cons_tail, nt, (None if localctx._ID is None else localctx._ID.text)) 
 
                 self.state = 353
-                localctx.tail = self.keychain(nt_tail)
+                localctx.tail = self.keychain(tail_nt)
 
-                localctx.combo = self.collect(KeychainRule(self._solver, nt).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.tail.combo)
+                localctx.keys = self.collect(KeychainRule(self._solver).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), localctx.tail.keys)
 
                 pass
 
@@ -1966,7 +1995,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.models = None
             self._expr = None # ExprContext
             self.nt = nt
 
@@ -2005,12 +2034,12 @@ class SlimParser ( Parser ):
                 self.state = 359
                 self.match(SlimParser.T__27)
 
-                nt_expr = self.guide_nonterm(lambda: nt)
+                expr_nt = self.guide_nonterm(lambda: nt)
 
                 self.state = 361
-                localctx._expr = self.expr(nt_expr)
+                localctx._expr = self.expr(expr_nt)
 
-                localctx.combo = localctx._expr.combo
+                localctx.models = localctx._expr.models
 
                 pass
             else:
@@ -2032,14 +2061,14 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
-            self._pattern_base = None # Pattern_baseContext
-            self.head = None # Pattern_baseContext
+            self.attr = None
+            self._base_pattern = None # Base_patternContext
+            self.head = None # Base_patternContext
             self.tail = None # PatternContext
             self.nt = nt
 
-        def pattern_base(self):
-            return self.getTypedRuleContext(SlimParser.Pattern_baseContext,0)
+        def base_pattern(self):
+            return self.getTypedRuleContext(SlimParser.Base_patternContext,0)
 
 
         def pattern(self):
@@ -2076,31 +2105,32 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 367
-                localctx._pattern_base = self.pattern_base(nt)
+                localctx._base_pattern = self.base_pattern(nt)
 
-                localctx.combo = localctx._pattern_base.combo
+                localctx.attr = localctx._base_pattern.attr
 
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
 
-                nt_head = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_head)
+                head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
 
                 self.state = 371
-                localctx.head = self.pattern_base(nt_head)
+                localctx.head = self.base_pattern(nt_head)
 
                 self.guide_symbol(',')
 
                 self.state = 373
                 self.match(SlimParser.T__10)
 
-                nt_tail = self.guide_nonterm(PatternRule(self._solver, nt).distill_tuple_tail, localctx.head.combo)
+                nt = replace(nt, enviro =  localctx.head.attr.enviro, models = localctx.head.attr.models)
+                tail_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_tail, nt, localctx.head.attr.typ)
 
                 self.state = 375
-                localctx.tail = self.pattern(nt_tail)
+                localctx.tail = self.pattern(tail_nt)
 
-                localctx.combo = self.collect(PatternRule(self._solver, nt).combine_tuple, localctx.head.combo, localctx.tail.combo) 
+                localctx.attr = self.collect(PatternRule(self._solver, nt).combine_tuple, localctx.head.attr.typ, localctx.tail.attr.typ) 
 
                 pass
 
@@ -2114,29 +2144,29 @@ class SlimParser ( Parser ):
         return localctx
 
 
-    class Pattern_baseContext(ParserRuleContext):
+    class Base_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.attr = None
             self._ID = None # Token
-            self.body = None # Pattern_baseContext
-            self._pattern_record = None # Pattern_recordContext
+            self.body = None # Base_patternContext
+            self._record_pattern = None # Record_patternContext
             self._pattern = None # PatternContext
             self.nt = nt
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
 
-        def pattern_base(self):
-            return self.getTypedRuleContext(SlimParser.Pattern_baseContext,0)
+        def base_pattern(self):
+            return self.getTypedRuleContext(SlimParser.Base_patternContext,0)
 
 
-        def pattern_record(self):
-            return self.getTypedRuleContext(SlimParser.Pattern_recordContext,0)
+        def record_pattern(self):
+            return self.getTypedRuleContext(SlimParser.Record_patternContext,0)
 
 
         def pattern(self):
@@ -2144,23 +2174,23 @@ class SlimParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return SlimParser.RULE_pattern_base
+            return SlimParser.RULE_base_pattern
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterPattern_base" ):
-                listener.enterPattern_base(self)
+            if hasattr( listener, "enterBase_pattern" ):
+                listener.enterBase_pattern(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitPattern_base" ):
-                listener.exitPattern_base(self)
+            if hasattr( listener, "exitBase_pattern" ):
+                listener.exitBase_pattern(self)
 
 
 
 
-    def pattern_base(self, nt:Nonterm):
+    def base_pattern(self, nt:Nonterm):
 
-        localctx = SlimParser.Pattern_baseContext(self, self._ctx, self.state, nt)
-        self.enterRule(localctx, 30, self.RULE_pattern_base)
+        localctx = SlimParser.Base_patternContext(self, self._ctx, self.state, nt)
+        self.enterRule(localctx, 30, self.RULE_base_pattern)
         try:
             self.state = 402
             self._errHandler.sync(self)
@@ -2175,7 +2205,7 @@ class SlimParser ( Parser ):
                 self.state = 381
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.attr = self.collect(BasePatternRule(self._solver).combine_var, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -2184,7 +2214,7 @@ class SlimParser ( Parser ):
                 self.state = 383
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_var, (None if localctx._ID is None else localctx._ID.text))
+                localctx.attr = self.collect(BasePatternRule(self._solver).combine_var, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 pass
 
@@ -2193,7 +2223,7 @@ class SlimParser ( Parser ):
                 self.state = 385
                 self.match(SlimParser.T__2)
 
-                localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_unit)
+                localctx.attr = self.collect(BasePatternRule(self._solver).combine_unit, nt)
 
                 pass
 
@@ -2207,21 +2237,23 @@ class SlimParser ( Parser ):
                 self.state = 389
                 localctx._ID = self.match(SlimParser.ID)
 
-                nt_body = self.guide_nonterm(PatternBaseRule(self._solver, nt).distill_tag_body, (None if localctx._ID is None else localctx._ID.text))
+                body_nt = self.guide_nonterm(BasePatternRule(self._solver).distill_tag_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 391
-                localctx.body = self.pattern_base(nt_body)
+                localctx.body = self.base_pattern(body_nt)
 
-                localctx.combo = self.collect(PatternBaseRule(self._solver, nt).combine_tag, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+
+                nt = replace(nt, enviro =  localctx.body.attr.enviro, models = localctx.body.attr.models)
+                localctx.attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr.typ)
 
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 394
-                localctx._pattern_record = self.pattern_record(nt)
+                localctx._record_pattern = self.record_pattern(nt)
 
-                localctx.combo = localctx._pattern_record.combo
+                localctx.attr = localctx._record_pattern.attr
 
                 pass
 
@@ -2234,7 +2266,7 @@ class SlimParser ( Parser ):
                 self.state = 399
                 self.match(SlimParser.T__6)
 
-                localctx.combo = localctx._pattern.combo   
+                localctx.attr = localctx._pattern.attr
 
                 pass
 
@@ -2248,17 +2280,17 @@ class SlimParser ( Parser ):
         return localctx
 
 
-    class Pattern_recordContext(ParserRuleContext):
+    class Record_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.combo = None
+            self.attr = None
             self._ID = None # Token
             self.body = None # PatternContext
-            self.tail = None # Pattern_recordContext
+            self.tail = None # Record_patternContext
             self.nt = nt
 
         def ID(self):
@@ -2268,28 +2300,28 @@ class SlimParser ( Parser ):
             return self.getTypedRuleContext(SlimParser.PatternContext,0)
 
 
-        def pattern_record(self):
-            return self.getTypedRuleContext(SlimParser.Pattern_recordContext,0)
+        def record_pattern(self):
+            return self.getTypedRuleContext(SlimParser.Record_patternContext,0)
 
 
         def getRuleIndex(self):
-            return SlimParser.RULE_pattern_record
+            return SlimParser.RULE_record_pattern
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterPattern_record" ):
-                listener.enterPattern_record(self)
+            if hasattr( listener, "enterRecord_pattern" ):
+                listener.enterRecord_pattern(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitPattern_record" ):
-                listener.exitPattern_record(self)
+            if hasattr( listener, "exitRecord_pattern" ):
+                listener.exitRecord_pattern(self)
 
 
 
 
-    def pattern_record(self, nt:Nonterm):
+    def record_pattern(self, nt:Nonterm):
 
-        localctx = SlimParser.Pattern_recordContext(self, self._ctx, self.state, nt)
-        self.enterRule(localctx, 32, self.RULE_pattern_record)
+        localctx = SlimParser.Record_patternContext(self, self._ctx, self.state, nt)
+        self.enterRule(localctx, 32, self.RULE_record_pattern)
         try:
             self.state = 425
             self._errHandler.sync(self)
@@ -2314,12 +2346,13 @@ class SlimParser ( Parser ):
                 self.state = 409
                 self.match(SlimParser.T__27)
 
-                nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_single_body, (None if localctx._ID is None else localctx._ID.text))
+                body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_single_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 411
-                localctx.body = self.pattern(nt_body)
+                localctx.body = self.pattern(body_nt)
 
-                localctx.combo = self.collect(PatternRecordRule(self._solver, nt).combine_single, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+                nt = replace(nt, enviro = localctx.body.attr.enviro, models = localctx.body.attr.models)
+                localctx.attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr.typ)
 
                 pass
 
@@ -2338,17 +2371,22 @@ class SlimParser ( Parser ):
                 self.state = 418
                 self.match(SlimParser.T__27)
 
-                nt_body = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_body, (None if localctx._ID is None else localctx._ID.text))
+
+                body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_body, nt, (None if localctx._ID is None else localctx._ID.text))
 
                 self.state = 420
-                localctx.body = self.pattern(nt_body)
+                localctx.body = self.pattern(body_nt)
 
-                nt_tail = self.guide_nonterm(PatternRecordRule(self._solver, nt).distill_cons_tail, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo)
+
+                nt = replace(nt, enviro = localctx.body.attr.enviro, models = localctx.body.attr.models)
+                tail_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_tail, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr.typ)
 
                 self.state = 422
-                localctx.tail = self.pattern_record(nt_tail)
+                localctx.tail = self.record_pattern(tail_nt)
 
-                localctx.combo = self.collect(PatternRecordRule(self._solver, nt).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.combo, localctx.tail.combo)
+
+                nt = replace(nt, enviro = localctx.tail.attr.enviro, models = localctx.tail.attr.models)
+                localctx.attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr.typ, localctx.tail.attr.typ)
 
                 pass
 

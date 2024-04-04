@@ -1304,7 +1304,7 @@ public class SlimParser extends Parser {
 				setState(269);
 				match(T__25);
 
-				nt = replace(nt, env = ((FunctionContext)_localctx).pattern.attr.env, models = ((FunctionContext)_localctx).pattern.attr.models)
+				nt = replace(nt, enviro =  ((FunctionContext)_localctx).pattern.attr.enviro, models = ((FunctionContext)_localctx).pattern.attr.models)
 				body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, ((FunctionContext)_localctx).pattern.attr.typ)
 
 				setState(271);
@@ -1331,7 +1331,7 @@ public class SlimParser extends Parser {
 				setState(278);
 				match(T__25);
 
-				nt = replace(nt, env = ((FunctionContext)_localctx).pattern.attr.env, models = ((FunctionContext)_localctx).pattern.attr.models)
+				nt = replace(nt, enviro =  ((FunctionContext)_localctx).pattern.attr.enviro, models = ((FunctionContext)_localctx).pattern.attr.models)
 				body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, ((FunctionContext)_localctx).pattern.attr.typ)
 
 				setState(280);
@@ -1835,7 +1835,7 @@ public class SlimParser extends Parser {
 				setState(373);
 				match(T__10);
 
-				nt = replace(nt, env = ((PatternContext)_localctx).head.attr.env, models = ((PatternContext)_localctx).head.attr.models)
+				nt = replace(nt, enviro =  ((PatternContext)_localctx).head.attr.enviro, models = ((PatternContext)_localctx).head.attr.models)
 				tail_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_tail, nt, ((PatternContext)_localctx).head.attr.typ)
 
 				setState(375);
@@ -1940,10 +1940,10 @@ public class SlimParser extends Parser {
 				body_nt = self.guide_nonterm(BasePatternRule(self._solver).distill_tag_body, nt, (((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null))
 
 				setState(391);
-				((Base_patternContext)_localctx).body = base_pattern(nt_body);
+				((Base_patternContext)_localctx).body = base_pattern(body_nt);
 
 
-				nt = replace(nt, env = ((Base_patternContext)_localctx).body.attr.env, models = ((Base_patternContext)_localctx).body.attr.models)
+				nt = replace(nt, enviro =  ((Base_patternContext)_localctx).body.attr.enviro, models = ((Base_patternContext)_localctx).body.attr.models)
 				_localctx.attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, (((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null), ((Base_patternContext)_localctx).body.attr.typ)
 
 				}
@@ -2040,7 +2040,7 @@ public class SlimParser extends Parser {
 				setState(411);
 				((Record_patternContext)_localctx).body = pattern(body_nt);
 
-				nt = replace(nt, env = ((Record_patternContext)_localctx).body.attr.env, models = ((Record_patternContext)_localctx).body.attr.models)
+				nt = replace(nt, enviro = ((Record_patternContext)_localctx).body.attr.enviro, models = ((Record_patternContext)_localctx).body.attr.models)
 				_localctx.attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr.typ)
 
 				}
@@ -2068,14 +2068,14 @@ public class SlimParser extends Parser {
 				((Record_patternContext)_localctx).body = pattern(body_nt);
 
 
-				nt = replace(nt, env = ((Record_patternContext)_localctx).body.attr.env, models = ((Record_patternContext)_localctx).body.attr.models)
+				nt = replace(nt, enviro = ((Record_patternContext)_localctx).body.attr.enviro, models = ((Record_patternContext)_localctx).body.attr.models)
 				tail_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_tail, nt, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr.typ)
 
 				setState(422);
 				((Record_patternContext)_localctx).tail = record_pattern(tail_nt);
 
 
-				nt = replace(nt, env = ((Record_patternContext)_localctx).tail.attr.env, models = ((Record_patternContext)_localctx).tail.attr.models)
+				nt = replace(nt, enviro = ((Record_patternContext)_localctx).tail.attr.enviro, models = ((Record_patternContext)_localctx).tail.attr.models)
 				_localctx.attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr.typ, ((Record_patternContext)_localctx).tail.attr.typ)
 
 				}

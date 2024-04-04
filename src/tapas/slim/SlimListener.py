@@ -155,21 +155,21 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#pattern_base.
-    def enterPattern_base(self, ctx:SlimParser.Pattern_baseContext):
+    # Enter a parse tree produced by SlimParser#base_pattern.
+    def enterBase_pattern(self, ctx:SlimParser.Base_patternContext):
         pass
 
-    # Exit a parse tree produced by SlimParser#pattern_base.
-    def exitPattern_base(self, ctx:SlimParser.Pattern_baseContext):
+    # Exit a parse tree produced by SlimParser#base_pattern.
+    def exitBase_pattern(self, ctx:SlimParser.Base_patternContext):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#pattern_record.
-    def enterPattern_record(self, ctx:SlimParser.Pattern_recordContext):
+    # Enter a parse tree produced by SlimParser#record_pattern.
+    def enterRecord_pattern(self, ctx:SlimParser.Record_patternContext):
         pass
 
-    # Exit a parse tree produced by SlimParser#pattern_record.
-    def exitPattern_record(self, ctx:SlimParser.Pattern_recordContext):
+    # Exit a parse tree produced by SlimParser#record_pattern.
+    def exitRecord_pattern(self, ctx:SlimParser.Record_patternContext):
         pass
 
 
