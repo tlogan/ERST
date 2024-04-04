@@ -462,12 +462,12 @@ def test_var():
     pieces = ['''
 x
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
 
     assert isinstance(guides[0], KeyError)
     assert guides[0].args[0] == 'x'
     assert guides[-1] == language.Killed()
-    assert not combo
+    assert not models 
     assert not parsetree 
 
 
@@ -475,28 +475,31 @@ def test_unit():
     pieces = ['''
 @
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
     assert parsetree == "(expr (base @))"
-    assert u(combo) == "@"
     # print("parsetree: " + str(parsetree))
-    # print("combo: " + u(combo))
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_tag():
     pieces = ['''
 ~uno @
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # assert parsetree == "(expr (base ~ uno (base @)))"
     print(parsetree)
-    assert parsetree == "(expr (base ~ uno (base @)))"
+    assert u(decode(models, typ_var)) == "~uno @"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_tuple():
     pieces = ['''
 @, @, @
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
     # print(parsetree)
     # print(f"u(combo): {u(combo)}")
-    assert u(combo) == "(@, (@, @))"
+    assert u(decode(models, typ_var)) == "(@, (@, @))"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_record():
     pieces = ['''
@@ -504,8 +507,10 @@ _.uno = @
 _.dos = @
     ''']
 # uno:= @  dos:= @
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
+    assert u(decode(models, typ_var)) == "(uno : @) & (dos : @)"
+    # print("answer: " + u(decode(models, typ_var)))
 
 
 def test_function():
@@ -522,48 +527,44 @@ def test_function_cases_disjoint():
 case ~uno @ => ~one @ 
 case ~dos @ => ~two @ 
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    # assert u(simp(combo)) == "(~nil @ -> @)"
-    print("combo: " + u(simp(combo)))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print(parsetree)
+    # print("answer: " + u(simp(combo)))
+    assert u(decode(models, typ_var)) == "(~uno @ -> ~one @) & (~dos @ \ ~uno @ -> ~two @)"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_function_cases_overlap():
     pieces = ['''
 case ~uno @ => ~one @ 
 case x => ~two @ 
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    # assert u(simp(combo)) == "(~nil @ -> @)"
-    print("combo: " + u(simp(combo)))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "(~uno @ -> ~one @) & ALL [_2 <: _1] (_2 \ ~uno @ -> ~two @)"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_projection():
     pieces = ['''
 (_.uno = ~one @ _.dos = ~two @).uno
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print("combo: " + u(simp(combo)))
-    assert u(simp(combo)) == "~one @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "~one @"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_projection_chain():
     pieces = ['''
 (_.uno = (_.dos = ~onetwo @) _.one = @).uno.dos
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
-    print("combo: " + u(simp(combo)))
-    assert u(simp(combo)) == "~onetwo @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "~onetwo @"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_identity_unit():
     pieces = ['''
 (case x => x)(@)
     ''']
-    (combo, guides, parsetree) = analyze(pieces, debug=True)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    assert u(combo) == "@" 
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_pattern_match_nil():
     pieces = ['''
@@ -572,12 +573,9 @@ case ~nil @ => @
 case ~cons x => x 
 )(~nil @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    assert u(combo) == "@"
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_pattern_match_cons():
     pieces = ['''
@@ -586,12 +584,9 @@ case ~nil @ => @
 case ~cons x => x 
 )(~cons @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    assert u(combo) == "@"
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_pattern_match_fail():
     pieces = ['''
@@ -600,42 +595,45 @@ case ~nil @ => @
 case ~cons x => x 
 )(~fail @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    assert u(combo) == "BOT"
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "BOT"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_application_chain():
     pieces = ['''
 (case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_let():
     pieces = ['''
 let x = @ ;
 x
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
-    print("combo: " + u(combo))
-    assert u(combo) == "@"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_idprojection():
     pieces = ['''
-let r = (~uno = @ ~dos = @) ;
+let r = (:uno = @ :dos = @) ;
 r.uno
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_idprojection_chain():
     pieces = ['''
-let r = (~uno = (~dos @) :one = @) ;
+let r = (:uno = (:dos = @) :one = @) ;
 r.uno.dos
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_idapplication():
     pieces = ['''
@@ -645,14 +643,18 @@ let f = (
 ) ;
 f(~nil @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_idapplication_chain():
     pieces = ['''
 let f = (case ~nil @ => case ~nil @ => @) ;
 f(~nil @)(~nil @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    assert u(decode(models, typ_var)) == "@"
+    # print("answer: " + u(decode(models, typ_var)))
 
 def test_fix():
     pieces = ['''
@@ -661,31 +663,27 @@ fix(case self => (
     case ~cons x => (~succ (self(x))) 
 ))
     ''']
-    (combo, guides, parsetree) = analyze(pieces, debug=True)
-    assert combo
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_identity_function():
     pieces = ['''
 (case x => x)
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "ALL [_2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
     pieces = ['''
 @ |> (case x => x)
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_nil_funnel_fix():
     pieces = ['''
@@ -694,13 +692,9 @@ def test_nil_funnel_fix():
     case ~cons x => ~succ (self(x)) 
 )))
     ''']
-
-    (combo, guides, parsetree) = analyze(pieces)
-    assert parsetree
-    print("parsetree: " + parsetree)
-    assert combo
-    assert u(combo) == "~zero @"
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~zero @"
 
 def test_app_fix_nil():
     pieces = ['''
@@ -710,12 +704,9 @@ def test_app_fix_nil():
 )))(~nil @) 
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces, debug=True)
-    assert parsetree
-    # print("parsetree: " + parsetree)
-    assert combo
-    print("combo: " + u(combo))
-    assert u(combo) == "~zero @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~zero @"
 
 def test_app_fix_cons():
     pieces = ['''
@@ -725,12 +716,9 @@ def test_app_fix_cons():
 )))(~cons ~nil @) 
     ''']
 
-    (combo, guides, parsetree) = analyze(pieces, True)
-    # assert parsetree
-    # print("parsetree: " + parsetree)
-    # assert combo
-    print("combo: " + u(combo))
-    assert u(combo) == "~succ ~zero @"
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~succ ~zero @"
 
 def test_app_fix_cons_cons():
     pieces = ['''
@@ -739,20 +727,18 @@ def test_app_fix_cons_cons():
     case ~cons x => ~succ (self(x)) 
 )))(~cons ~cons ~nil @) 
     ''']
-
-    (combo, guides, parsetree) = analyze(pieces, True)
-    assert parsetree
-    assert combo
-    assert u(combo) == "~succ ~succ ~zero @"
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~succ ~succ ~zero @"
 
 
 def test_funnel_pipeline():
     pieces = ['''
-~nil @ |> (case ~nil @ => @) |> (case ~nil @ => @)
+~nil @ |> (case ~nil @ => @) |> (case @ => ~uno @)
     ''']
-    (combo, guides, parsetree) = analyze(pieces)
-    print(parsetree)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~uno @"
 
 
 # fix(case self => (
@@ -761,16 +747,12 @@ def test_funnel_pipeline():
 # ))
 
 def test_pattern_tuple():
-    tup = ('''
+    pieces = ['''
 case (~zero @, @) => @
-    ''')
-    pieces = [tup]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    assert u(combo) == "((~zero @, @) -> @)"
-    print("combo: " + u(combo))
-    # print("parsetree: " + str(parsetree))
+    ''']
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "((~zero @, @) -> @)"
 
 if_true_then_else = (f'''
 if ~true @ then
@@ -806,29 +788,21 @@ case x => (
 
 def test_if_true_then_else():
     pieces = [if_true_then_else]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    assert u(combo) == "~uno @"
-    print("combo: " + u(combo))
-    print(parsetree)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~uno @"
 
 def test_if_false_then_else():
     pieces = [if_false_then_else]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    assert u(combo) == "~dos @"
-    print("combo: " + u(combo))
-    print(parsetree)
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~dos @"
 
 def test_function_if_then_else():
     pieces = [function_if_then_else]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    print("combo: " + u(combo))
-    # assert u(combo) == "(_2 -> (~uno @ | ~dos @))"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "(_2 -> (~uno @ | ~dos @))"
 
 
 less_equal = ('''
@@ -841,11 +815,9 @@ fix(case self => (
 
 def test_less_equal():
     pieces = [less_equal]
-    (combo, guides, parsetree) = analyze(pieces)
-    raise_guide(guides)
-    assert combo
-    print("combo: " + u(combo))
-    # print("parsetree: " + str(parsetree))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_let_less_equal():
     let_less = (f'''
@@ -853,11 +825,9 @@ let less_equal = {less_equal} ;
 less_equal
     ''')
     pieces = [let_less]
-    (combo, guides, parsetree) = analyze(pieces)
-    # print(parsetree)
-    assert combo
-    print("combo: " + u(combo))
-    # print("parsetree: " + str(parsetree))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 nat_pair_rel = (f'''
 LFP self BOT 
@@ -929,11 +899,9 @@ def test_app_less_equal_zero_one():
 ({less_equal})(~zero @, ~succ ~zero @)
     ''')
     pieces = [app_less]
-    (combo, guides, parsetree) = analyze(pieces)
-    # print(parsetree)
-    assert combo
-    print("combo: " + u(combo))
-    assert u(combo) == "~true @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~true @"
 
 
 def test_app_less_equal_two_one():
@@ -941,11 +909,9 @@ def test_app_less_equal_two_one():
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
     pieces = [app_less]
-    (combo, guides, parsetree) = analyze(pieces, True)
-    # print(parsetree)
-    # assert combo
-    print("combo: " + u(combo))
-    assert u(combo) == "~false @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~false @"
 
 arg_specialization = (f'''
 let cmp = (
@@ -980,15 +946,10 @@ def test_arg_specialization():
 ; X <: ~dos @ ; Y <: ~uno @ |- 
 ((~true @ -> X) & (~false @ -> Y)) <: ~false @ -> Q
     '''
-
     pieces = [arg_specialization]
-    (combo, guides, parsetree) = analyze(pieces, True)
-    # print(parsetree)
-    # raise_guide(guides)
-    
-    assert combo
-    print("combo: " + u(combo))
-    # assert u(combo) == "~uno @"
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "~uno @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -1024,11 +985,9 @@ def test_max():
     # TODO
 
     pieces = [max]
-    (combo, guides, parsetree) = analyze(pieces, True)
-    # print(parsetree)
-    # raise_guide(guides)
-    assert combo
-    print("combo: " + u(combo))
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 '''
 ~~~ cator: ((~true @ -> _5) & (~false @ -> _3)) 
