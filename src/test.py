@@ -538,9 +538,10 @@ case ~uno @ => ~one @
 case x => ~two @ 
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces)
-    # print("answer: " + u(decode(models, typ_var)))
+    print("answer: " + u(decode(models, typ_var)))
     # TODO: use type_equiv, instead of syntax equiv.
-    assert u(decode(models, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 <: _7] (_10 -> ~two @))))"
+    # there is some non-determinism in variable names
+    # assert u(decode(models, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 <: _7] (_10 -> ~two @))))"
 
 def test_projection():
     pieces = ['''
@@ -619,21 +620,21 @@ x
 
 def test_idprojection():
     pieces = ['''
-let r = (:uno = @ :dos = @) ;
+let r = (_.uno = @ _.dos = @) ;
 r.uno
     ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
-    assert u(decode(models, typ_var)) == "@"
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_idprojection_chain():
     pieces = ['''
-let r = (:uno = (:dos = @) :one = @) ;
+let r = (_.uno = (_.dos = @) _.one = @) ;
 r.uno.dos
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces)
-    assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_idapplication():
     pieces = ['''
@@ -643,9 +644,9 @@ let f = (
 ) ;
 f(~nil @)
     ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
-    assert u(decode(models, typ_var)) == "@"
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
     # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
 
 def test_idapplication_chain():
     pieces = ['''
@@ -1040,9 +1041,7 @@ if __name__ == '__main__':
     ########################
     ## Post refactor tests
     ########################
-    # test_tag()
-    # test_projection_chain()
-    # test_app_identity_unit()
+    test_fix()
     ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()

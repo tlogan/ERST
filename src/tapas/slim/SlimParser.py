@@ -1225,13 +1225,13 @@ class SlimParser ( Parser ):
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
 
-                cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+                cator_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_cator, nt)
 
                 self.state = 207
                 localctx.cator = self.base(cator_nt)
 
                 nt = replace(nt, models = localctx.cator.models)
-                argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
+                argchain_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_argchain, nt, cator_nt.typ_var)
 
                 self.state = 209
                 localctx._argchain = self.argchain(argchain_nt)

@@ -1015,13 +1015,13 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 6);
 				{
 
-				cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+				cator_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_cator, nt)
 
 				setState(207);
 				((ExprContext)_localctx).cator = base(cator_nt);
 
 				nt = replace(nt, models = ((ExprContext)_localctx).cator.models)
-				argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
+				argchain_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_argchain, nt, cator_nt.typ_var)
 
 				setState(209);
 				((ExprContext)_localctx).argchain = argchain(argchain_nt);

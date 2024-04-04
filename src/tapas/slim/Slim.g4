@@ -318,10 +318,10 @@ $models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.t
 }
 
 | {
-cator_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_cator)
+cator_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_cator, nt)
 } cator = base[cator_nt] {
 nt = replace(nt, models = $cator.models)
-argchain_nt = self.guide_nonterm(ExprRule(self._solver, nt).distill_application_argchain, cator_nt.typ_var)
+argchain_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_argchain, nt, cator_nt.typ_var)
 } argchain[argchain_nt] {
 nt = replace(nt, models = $argchain.attr.models)
 $models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
