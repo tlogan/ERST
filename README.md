@@ -2,7 +2,9 @@
 
 
 ### TODO
-- debug `test_fix`
+- update interpret functions to properly handle the weak and strong sides of constraints in existential and universal
+- determine if there is a way to generalize and extrude without packaging constraints
+- debug `test_functional` and `test_fix`
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.

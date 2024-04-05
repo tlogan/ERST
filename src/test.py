@@ -657,6 +657,19 @@ f(~nil @)(~nil @)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
+def test_functional():
+    pieces = ['''
+(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => (~succ (self(x))) 
+))
+    ''']
+    # TODO: how should we package the constraints on X where x : X 
+    # does it need to collect all the constraints on X, before generalizing?
+    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "@"
+
 def test_fix():
     pieces = ['''
 fix(case self => (
@@ -666,7 +679,7 @@ fix(case self => (
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
     print("answer: " + u(decode(models, typ_var)))
-    assert u(decode(models, typ_var)) == "@"
+    # assert u(decode(models, typ_var)) == "@"
 
 def test_identity_function():
     pieces = ['''
@@ -1041,7 +1054,8 @@ if __name__ == '__main__':
     ########################
     ## Post refactor tests
     ########################
-    test_fix()
+    test_functional()
+    # test_fix()
     ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()

@@ -1482,36 +1482,62 @@ class Solver:
                 return []
 
 
-        elif (
-            isinstance(strong, TVar) and strong.id not in model.freezer and
-            isinstance(weak, TVar) and weak.id not in model.freezer
-        ):
-            """
-            interpret both sides together to avoid transitive edges in subtyping lattice  
-            """
-            strong_interp = interpret_strongest_for_id(model, strong.id)
-            weak_interp = interpret_weakest_for_id(model, weak.id)
-            if (
-                strong_interp == None or not inhabitable(strong_interp[0]) or
-                weak_interp == None or not selective(weak_interp[0])
-            ):
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
-                )]
-            else:
-                strongest = strong_interp[0]
-                weakest = weak_interp[0]
-                return [
-                    Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer
-                    )
-                    for model in self.solve(model, strongest, weakest)
-                ]
+# NOTE: this commented stuff doesn't actually work
+# TODO: remove it
+#         elif (
+#             isinstance(strong, TVar) and strong.id not in model.freezer and
+#             isinstance(weak, TVar) and weak.id not in model.freezer
+#         ):
+#             """
+#             interpret both sides together to avoid transitive edges in subtyping lattice  
+#             """
+# #             print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG double TVar 
+# # ~~~~~~~~~~~~~~~~~~~~
+# # strong: {concretize_typ(strong)}
+# # weak: {concretize_typ(weak)}
+# # ~~~~~~~~~~~~~~~~~~~~~
+# #             """)
+#             strong_interp = interpret_strongest_for_id(model, strong.id)
+#             weak_interp = interpret_weakest_for_id(model, weak.id)
+#             if (
+#                 strong_interp == None or not inhabitable(strong_interp[0]) or
+#                 weak_interp == None or not selective(weak_interp[0])
+#             ):
+#                 return [Model(
+#                     model.constraints.add(Subtyping(strong, weak)),
+#                     model.freezer
+#                 )]
+#             else:
+#                 strongest = strong_interp[0]
+#                 weakest = weak_interp[0]
+#                 return [
+#                     Model(
+#                         model.constraints.add(Subtyping(strong, weak)),
+#                         model.freezer
+#                     )
+#                     for model in self.solve(model, strongest, weakest)
+#                 ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
             interp = interpret_strongest_for_id(model, strong.id)
+
+            # NOTE: this commented stuff doesn't actually work
+            # TODO: remove it
+            # '''
+            # skip over the learnable variables to avoid redundant learning already covered by transitivity  
+            # '''
+            # while interp != None and isinstance(interp[0], TVar) and interp[0].id not in model.freezer:
+            #         model = Model(model.constraints.difference(interp[1]), model.freezer)
+            #         next_interp = interpret_strongest_for_id(model, interp[0].id)
+            #         if next_interp:
+                        
+            #             interp = (next_interp[0], interp[1].union(next_interp[1]))
+            #         else:
+            #             interp = None
+
+
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1531,6 +1557,22 @@ class Solver:
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
             interp = interpret_weakest_for_id(model, weak.id)
+
+            # NOTE: this commented stuff doesn't actually work
+            # TODO: remove it
+            # '''
+            # skip over the learnable variables to avoid redundant learning already covered by transitivity  
+            # '''
+            # while interp != None and isinstance(interp[0], TVar) and interp[0].id not in model.freezer:
+            #         model = Model(model.constraints.difference(interp[1]), model.freezer)
+            #         next_interp = interpret_weakest_for_id(model, interp[0].id)
+            #         if next_interp:
+                        
+            #             interp = (next_interp[0], interp[1].union(next_interp[1]))
+            #         else:
+            #             interp = None
+
+
             if interp == None or not selective(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1903,39 +1945,89 @@ result: {result}
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-        choices = from_branches_to_choices(branches)
-        result = Top() 
-        for choice in reversed(choices): 
+#         for model in nt.models:
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function iteration
+# DEBUG combine_function model
 # ~~~~~~~~~~~~~~~~~~~~~
-# choice[1]: {concretize_typ(choice[1])}
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
-            '''
-            generalization and extrusion
-            '''
 
-            # TODO: consider extruding over whole implication; not just parameter
-            fvs = extract_free_vars_from_typ(s(), choice[0])
-            renaming = self.solver.make_renaming_tvars(fvs)
-            generalized_case = sub_typ(cast_up(renaming), Imp(choice[0], choice[1]))
-             
-            for old_id, new_var in renaming.items():
-                generalized_case = All(new_var.id, TVar(old_id), generalized_case)
-            result = Inter(generalized_case, result)
+        new_models = []
+        for model in nt.models:
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function
-# ~~~~~~~~~~~~~~~~~~~~~
-# result: {concretize_typ(simplify_typ(result))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function model 
+~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
+# model.constraints:  ; @ <: _8 ; ~succ _16 <: _15 ; _6 <: _5 ; _4 <: _18 ; ~cons _13 <: _11 ; _4 <: (_20 -> _21) ; _21 <: _17 ; _13 <: _12 ; _4 <: _3 ; _17 <: _16 ; _13 <: _20 ; ~nil @ <: _7 ; _18 <: (_20 -> _21) ; _15 <: _14 ; ((~nil @ -> ~zero @) & (ALL [_23 <: _20] (ALL [_22 <: _12] (~cons (_22 & _23) -> (EXI [ ; _4 <: _3 ; _18 <: (_23 -> _21) ; _4 <: _18 ; _4 <: (_23 -> _21)] ~succ _21))))) <: _6
+            choices = from_branches_to_choices(branches)
+            result = Top() 
+            for choice in reversed(choices): 
+                '''
+                generalization and extrusion
+                '''
 
-        return self.evolve_models(nt, simplify_typ(result))
+                param_interp = interpret_weak_side(model, choice[0])
+                (param_typ, param_used_constraints) = (param_interp if param_interp else (choice[0], s())) 
 
+                return_interp = interpret_strong_side(model, choice[1])
+                (return_typ, return_used_constraints) = (return_interp if return_interp else (choice[1], s())) 
+
+                new_model = Model(model.constraints
+                    .difference(param_used_constraints)
+                    .difference(return_used_constraints), 
+                    model.freezer
+                ) 
+                packaged_return_typ = package_typ(new_model, return_typ)
+
+                fvs = extract_free_vars_from_typ(s(), param_typ)
+                renaming = self.solver.make_renaming_tvars(fvs)
+
+                generalized_case = sub_typ(cast_up(renaming), Imp(param_typ, packaged_return_typ))
+                for old_id, new_var in renaming.items():
+                    generalized_case = All(new_var.id, TVar(old_id), generalized_case)
+
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_function iteration
+    ~~~~~~~~~~~~~~~~~~~~~
+    choice[0]: {concretize_typ(choice[0])}
+    choice[1]: {concretize_typ(choice[1])}
+
+    param_typ: {concretize_typ(param_typ)}
+    return_typ: {concretize_typ(return_typ)}
+    packaged_return_typ: {concretize_typ(packaged_return_typ)}
+
+    generalized_case: {concretize_typ(generalized_case)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
+
+                result = Inter(generalized_case, result)
+
+
+
+                new_models.extend(
+                    self.solver.solve(new_model, 
+                        simplify_typ(result), 
+                        nt.typ_var
+                    )
+                )
+
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_function
+    ~~~~~~~~~~~~~~~~~~~~~
+    result: {concretize_typ(simplify_typ(result))}
+    ~~~~~~~~~~~~~~~~~~~~~
+            """)
+        return new_models
 
 class ExprRule(Rule):
 
@@ -2181,101 +2273,106 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
         param_body = Bot()
         for model in reversed(models):
 
-            left_interp = interpret_weakest_for_id(model, in_typ.id)
+            left_interp = interpret_weak_side(model, in_typ)
             (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
-            right_interp = interpret_strongest_for_id(model, out_typ.id)
+
+            right_interp = interpret_strong_side(model, out_typ)
             (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
             other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix 
-# ~~~~~~~~~~~~~~~~~~~~~
-# self_typ: {self_typ.id}
-# body: {concretize_typ(body)}
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix 
+~~~~~~~~~~~~~~~~~~~~~
+self_typ: {self_typ.id}
+body_var: {concretize_typ(body_var)}
 
-# IH_typ: {IH_typ.id}
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ======================
-# in_typ: {concretize_typ(in_typ)}
-# left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-# left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
+IH_typ: {IH_typ.id}
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+======================
+in_typ: {concretize_typ(in_typ)}
+left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
-# out_typ: {concretize_typ(out_typ)}
-# right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-# right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+out_typ: {concretize_typ(out_typ)}
+right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+======================
 
-            left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
-            right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
-            bound_ids = left_bound_ids + right_bound_ids
-            rel_pattern = make_pair_typ(left_typ, right_typ)
-            #########################################
-            model = Model(other_constraints, model.freezer)
-            self_interp = (interpret_weak_side(model, self_typ))
+other_constraints: 
+{concretize_constraints(tuple(other_constraints))}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
-#             nl = "\n"
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG self_typ: {self_typ.id}
-# DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+#             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
+#             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
+#             bound_ids = left_bound_ids + right_bound_ids
+#             rel_pattern = make_pair_typ(left_typ, right_typ)
+#             #########################################
+#             model = Model(other_constraints, model.freezer)
+#             self_interp = (interpret_weak_side(model, self_typ))
 
-            if self_interp and isinstance(self_interp[0], Imp):
-                left = self_interp[0].antec
-                right = self_interp[0].consq
-                other_constraints = other_constraints.difference(self_interp[1])
+# #             nl = "\n"
+# #             print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG self_typ: {self_typ.id}
+# # DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+# # ~~~~~~~~~~~~~~~~~~~~~
+# #             """)
 
-                IH_rel_constraint = Subtyping(make_pair_typ(left, right), IH_typ)
-                rel_constraints = tuple([IH_rel_constraint]) + tuple(other_constraints)
-                rel_model = Model(pset(rel_constraints).difference(left_used_constraints).difference(right_used_constraints), pset(bound_ids))
-                constrained_rel = package_typ(rel_model, rel_pattern)
+#             if self_interp and isinstance(self_interp[0], Imp):
+#                 left = self_interp[0].antec
+#                 right = self_interp[0].consq
+#                 other_constraints = other_constraints.difference(self_interp[1])
 
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix rel
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # IH_typ: {IH_typ.id}
-    # rel_model.freezer: {rel_model.freezer}
-    # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
-    # ======================
-    # rel_pattern: {concretize_typ(rel_pattern)}
-    # constrained rel: {concretize_typ(constrained_rel)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
+#                 IH_rel_constraint = Subtyping(make_pair_typ(left, right), IH_typ)
+#                 rel_constraints = tuple([IH_rel_constraint]) + tuple(other_constraints)
+#                 rel_model = Model(pset(rel_constraints).difference(left_used_constraints).difference(right_used_constraints), pset(bound_ids))
+#                 constrained_rel = package_typ(rel_model, rel_pattern)
 
-                IH_left_constraint = Subtyping(left, IH_typ)
-                left_constraints = tuple([IH_left_constraint]) + tuple(other_constraints)
-                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
-                constrained_left = package_typ(left_model, left_typ)
+#     #             print(f"""
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     # DEBUG combine_fix rel
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     # IH_typ: {IH_typ.id}
+#     # rel_model.freezer: {rel_model.freezer}
+#     # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
+#     # ======================
+#     # rel_pattern: {concretize_typ(rel_pattern)}
+#     # constrained rel: {concretize_typ(constrained_rel)}
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     #             """)
 
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix left
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # IH_typ: {IH_typ.id}
-    # left_model.freezer: {left_model.freezer}
-    # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
-    # ======================
-    # left_pattern: {concretize_typ(left_typ)}
-    # constrained left: {concretize_typ(constrained_left)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-            else:
-                constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
-                constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
-            #end if
+#                 IH_left_constraint = Subtyping(left, IH_typ)
+#                 left_constraints = tuple([IH_left_constraint]) + tuple(other_constraints)
+#                 left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
+#                 constrained_left = package_typ(left_model, left_typ)
 
-            induc_body = Unio(constrained_rel, induc_body) 
-            param_body = Unio(constrained_left, param_body)
+#     #             print(f"""
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     # DEBUG combine_fix left
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     # IH_typ: {IH_typ.id}
+#     # left_model.freezer: {left_model.freezer}
+#     # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+#     # ======================
+#     # left_pattern: {concretize_typ(left_typ)}
+#     # constrained left: {concretize_typ(constrained_left)}
+#     # ~~~~~~~~~~~~~~~~~~~~~
+#     #             """)
+#             else:
+#                 constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
+#                 constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
+#             #end if
+
+#             induc_body = Unio(constrained_rel, induc_body) 
+#             param_body = Unio(constrained_left, param_body)
 
         #end for
 
-        rel_typ = LeastFP(IH_typ.id, induc_body)
-        param_upper = LeastFP(IH_typ.id, param_body)
+        # rel_typ = LeastFP(IH_typ.id, induc_body)
+        # param_upper = LeastFP(IH_typ.id, param_body)
 
 #         print(f"""
 # DEBUG rel_typ 
@@ -2284,11 +2381,11 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        param_typ = self.solver.fresh_type_var()
-        return_typ = self.solver.fresh_type_var()
-        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
+        # param_typ = self.solver.fresh_type_var()
+        # return_typ = self.solver.fresh_type_var()
+        # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+        # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        # result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
 
 #         print(f"""
 # DEBUG combine_fix result 
@@ -2299,9 +2396,9 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        # DEBUG
-        # return Bot() 
-        return self.evolve_models(nt, result)
+        # return self.evolve_models(nt, result)
+        ##################################
+        return nt.models
 
     
     def distill_let_target(self, nt : Nonterm, id : str) -> Nonterm:
