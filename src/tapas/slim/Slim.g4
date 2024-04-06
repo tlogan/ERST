@@ -189,24 +189,36 @@ $combo = Inter(TField('head', $typ_base.combo), TField('tail', $typ.combo))
 $combo = Exi($ids.combo, (), $typ.combo) 
 }
 
-// Existential 
-| 'EXI' '[' qualification ']' typ {
-$combo = Exi((), $qualification.combo, $typ.combo) 
-}
+// // Existential 
+// | 'EXI' '[' qualification ']' typ {
+// $combo = Exi((), $qualification.combo, $typ.combo) 
+// }
 
 // Existential 
 | 'EXI' '[' ids qualification ']' typ {
 $combo = Exi($ids.combo, $qualification.combo, $typ.combo) 
 }
 
+// // Universal unconstrained 
+// | 'ALL' '[' ID ']' body = typ {
+// $combo = All($ID.text, Top(), $body.combo) 
+// }
+
+// // Universal 
+// | 'ALL' '[' ID '<:' upper = typ ']' body = typ {
+// $combo = All($ID.text, $upper.combo, $body.combo) 
+// }
+
+///////////////
+
 // Universal unconstrained 
-| 'ALL' '[' ID ']' body = typ {
-$combo = All($ID.text, Top(), $body.combo) 
+| 'ALL' '[' ids ']' typ {
+$combo = All($ids.combo, (), $typ.combo) 
 }
 
 // Universal 
-| 'ALL' '[' ID '<:' upper = typ ']' body = typ {
-$combo = All($ID.text, $upper.combo, $body.combo) 
+| 'ALL' '[' ids qualification ']' typ {
+$combo = All($ids.combo, $qualification.combo, $typ.combo) 
 }
 
 

@@ -401,7 +401,7 @@ def test_cons_nil_subs_list_diff():
 
 
 list_imp_nat = (f'''
-(ALL [X <: ({list_diff})] (X -> 
+(ALL [X ; X <: ({list_diff})] (X -> 
     (EXI [Y ; (X, Y) <: ({list_nat_diff})] Y)
 ))) 
 ''')
@@ -541,7 +541,7 @@ case x => ~two @
     print("answer: " + u(decode(models, typ_var)))
     # TODO: use type_equiv, instead of syntax equiv.
     # there is some non-determinism in variable names
-    # assert u(decode(models, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 <: _7] (_10 -> ~two @))))"
+    # assert u(decode(models, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
 
 def test_projection():
     pieces = ['''
@@ -688,7 +688,7 @@ def test_identity_function():
 
     (models, typ_var, guides, parsetree) = analyze(pieces)
     # print("answer: " + u(decode(models, typ_var)))
-    assert u(decode(models, typ_var)) == "ALL [_2 <: _1] _1 -> _1"
+    assert u(decode(models, typ_var)) == "ALL [_2 ; _2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
     pieces = ['''
@@ -869,7 +869,7 @@ answer: {answer}
     assert answer == "~false @"
 
 less_equal_imp = (f'''
-(ALL [XY <: ({nat_pair_rel})] (XY -> 
+(ALL [XY ; XY <: ({nat_pair_rel})] (XY -> 
     (EXI [Z ; (XY, Z) <: ({less_equal_rel})] Z)
 ))) 
 ''')
@@ -1065,8 +1065,6 @@ if __name__ == '__main__':
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()
-    # (ALL [_9 <: _2] (_9 -> ((EXI [ ; _2 <: ~true @] ~uno @) | (EXI [ ; _2 <: ~false @] ~dos @))))
-    # (ALL [_17 <: _2] (_17 -> ((EXI [ ; _2 <: ~true @] ~uno @) | (EXI [ ; _2 <: ~false @] ~dos @))))
     # test_max()
 
     ########################

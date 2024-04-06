@@ -84,8 +84,8 @@ class Exi:
 
 @dataclass(frozen=True, eq=True)
 class All:
-    id : str
-    upper : Typ 
+    ids : tuple[str, ...]
+    constraints : tuple[Subtyping, ...] 
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
@@ -149,7 +149,8 @@ class ExiNL:
 
 @dataclass(frozen=True, eq=True)
 class AllNL:
-    upper : NL 
+    count : int
+    constraints : tuple[SubtypingNL, ...] 
     body : NL 
 
 @dataclass(frozen=True, eq=True)
@@ -189,7 +190,6 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
         return ImpNL(to_nameless(bound_ids, typ.antec), to_nameless(bound_ids, typ.consq))
     elif isinstance(typ, Exi):
         count = len(typ.ids)
-        # bound_ids = typ.ids + bound_ids
         bound_ids = tuple(typ.ids) + bound_ids
 
         constraints_nl = tuple(
@@ -199,8 +199,14 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
         return ExiNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, All):
-        bound_ids = tuple([typ.id]) + bound_ids
-        return AllNL(to_nameless(bound_ids, typ.upper), to_nameless(bound_ids, typ.body))
+        count = len(typ.ids)
+        bound_ids = tuple(typ.ids) + bound_ids
+
+        constraints_nl = tuple(
+            SubtypingNL(to_nameless(bound_ids, st.strong), to_nameless(bound_ids, st.weak))
+            for st in typ.constraints
+        )
+        return AllNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
 
     elif isinstance(typ, LeastFP):
         bound_ids = tuple([typ.id]) + bound_ids
@@ -262,8 +268,9 @@ def concretize_typ(typ : Typ) -> str:
             ids = concretize_ids(control.ids)
             plate_entry = ([control.body], lambda body : f"(EXI [{ids}{constraints}] {body})")  
         elif isinstance(control, All):
-            id = control.id
-            plate_entry = ([control.upper, control.body], lambda upper, body : f"(ALL [{id} <: {upper}] {body})")  
+            constraints = concretize_constraints(control.constraints)
+            ids = concretize_ids(control.ids)
+            plate_entry = ([control.body], lambda body : f"(ALL [{ids}{constraints}] {body})")  
         elif isinstance(control, LeastFP):
             id = control.id
             plate_entry = ([control.body], lambda body : f"LFP {id} {body}")  
@@ -979,7 +986,7 @@ def simplify_typ(typ : Typ) -> Typ:
     elif isinstance(typ, Exi):
         return Exi(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
     elif isinstance(typ, All):
-        return All(typ.id, simplify_typ(typ.upper), simplify_typ(typ.body))
+        return All(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
     elif isinstance(typ, LeastFP):
         return LeastFP(typ.id, simplify_typ(typ.body))
     else:
@@ -1029,8 +1036,9 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
             assignment_map = assignment_map.discard(bid)
         return Exi(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
     elif isinstance(typ, All):  
-        assignment_map = assignment_map.discard(typ.id)
-        return All(typ.id, sub_typ(assignment_map, typ.upper), sub_typ(assignment_map, typ.body)) 
+        for bid in typ.ids:
+            assignment_map = assignment_map.discard(bid)
+        return All(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
     elif isinstance(typ, LeastFP):  
         assignment_map = assignment_map.discard(typ.id)
         return LeastFP(typ.id, sub_typ(assignment_map, typ.body))
@@ -1084,14 +1092,16 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = (pair_up(bound_vars, [typ.context, typ.negation]), lambda set_context, set_negation: set_context.union(set_negation))
         elif isinstance(typ, Imp):
             plate_entry = (pair_up(bound_vars, [typ.antec, typ.consq]), lambda set_antec, set_consq: set_antec.union(set_consq))
+
         elif isinstance(typ, Exi):
             bound_vars = bound_vars.union(typ.ids)
             set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, All):
-            set_constraints = s()
-            plate_entry = (pair_up(bound_vars, [typ.upper, typ.body]), lambda set_upper, set_body: set_constraints.union(set_upper).union(set_body))
+            bound_vars = bound_vars.union(typ.ids)
+            set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
+            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
         elif isinstance(typ, LeastFP):
             bound_vars = bound_vars.add(typ.id)
@@ -1390,41 +1400,44 @@ class Solver:
             ]
 
         elif isinstance(weak, All):
-            tvar_fresh = self.fresh_type_var()
-            renaming = pmap({weak.id : tvar_fresh})
-            weak_upper = sub_typ(renaming, weak.upper)
+            renaming = self.make_renaming(weak.ids)
+            weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
-            renamed_id = tvar_fresh.id
-
+            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             next_id = self._type_id
-            models = self.solve(model, tvar_fresh, weak_upper)
+            models = [model]
+            for constraint in weak_constraints:
+                models = [
+                    m1
+                    for m0 in models
+                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
+                ]  
             new_ids = (f"_{i}" for i in range(next_id, self._type_id))
 
             return [
                 m2
                 for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.add(renamed_id).union(new_ids))]
+                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids))]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
+
+
+
+
+
+
+
+
 
         elif isinstance(weak, Exi): 
             renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
-
-            frozen_indices = pset(t.id for t in renaming.values() if isinstance(t, TVar))
-
             models = self.solve(model, strong, weak_body) 
-            # models = [
-            #     Model(m.constraints, m.freezer.union(frozen_indices))
-            #     for m in self.solve(model, strong, weak_body) 
-            # ]
-
             for constraint in weak_constraints:
                 models = [
                     m1
-                    # Model(m1.constraints, m1.freezer.union(frozen_indices))
                     for m0 in models
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]
@@ -1432,19 +1445,17 @@ class Solver:
 
 
         elif isinstance(strong, All): 
-            tvar_fresh = self.fresh_type_var()
-            renaming = pmap({strong.id : tvar_fresh})
-            strong_upper = sub_typ(renaming, strong.upper)
+            renaming = self.make_renaming(strong.ids)
+            strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
-
-            models = self.solve(model, strong_body, weak)
-
-            return [
-                m1
-                # Model(m1.constraints, m1.freezer.add(tvar_fresh.id))
-                for m0 in models
-                for m1 in self.solve(m0, tvar_fresh, strong_upper)
-            ]   
+            models = self.solve(model, strong_body, weak) 
+            for constraint in strong_constraints:
+                models = [
+                    m1
+                    for m0 in models
+                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
+                ]
+            return models
 
         #######################################
         #### Variable rules: ####
@@ -1990,9 +2001,9 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
                 fvs = extract_free_vars_from_typ(s(), param_typ)
                 renaming = self.solver.make_renaming_tvars(fvs)
 
-                generalized_case = sub_typ(cast_up(renaming), Imp(param_typ, packaged_return_typ))
-                for old_id, new_var in renaming.items():
-                    generalized_case = All(new_var.id, TVar(old_id), generalized_case)
+                bound_ids = tuple(var.id for var in renaming.values())
+                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items())
+                generalized_case = All(bound_ids, constraints, sub_typ(cast_up(renaming), Imp(param_typ, packaged_return_typ)))
 
                 print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
@@ -2408,12 +2419,8 @@ other_constraints:
 
     def distill_let_contin(self, nt : Nonterm, id : str, target : Typ) -> Nonterm:
         '''
-        assumption: target type is assumed to be well formed / inhabitable
+        no need to generalize; generalizstion occurs in combine_function
         '''
-        free_ids = extract_free_vars_from_typ(s(), target)
-        target_generalized = target
-        for fid in reversed(list(free_ids)):
-            target_generalized = All(fid, Top(), target_generalized) 
         enviro = nt.enviro.set(id, target)
 
         return Nonterm('expr', enviro, nt.models, nt.typ_var)
