@@ -2,7 +2,6 @@
 
 
 ### TODO
-- rewrite universal syntax to allow arbitrary constraints (like existential)
 - in `combine_function`, package constraints in the universal. (strong side generalization)
     - (if variables only occur in parameter, then can use (weak side generalization using existential)) 
 - update interpret functions to properly handle the weak and strong sides of constraints in existential and universal

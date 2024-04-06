@@ -1996,14 +1996,18 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
                     .difference(return_used_constraints), 
                     model.freezer
                 ) 
-                packaged_return_typ = package_typ(new_model, return_typ)
 
                 fvs = extract_free_vars_from_typ(s(), param_typ)
                 renaming = self.solver.make_renaming_tvars(fvs)
+                sub_map = cast_up(renaming)
 
                 bound_ids = tuple(var.id for var in renaming.values())
-                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items())
-                generalized_case = All(bound_ids, constraints, sub_typ(cast_up(renaming), Imp(param_typ, packaged_return_typ)))
+                imp = Imp(param_typ, return_typ)
+                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                    sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_model, imp)))
+                )
+                renamed_imp = sub_typ(sub_map, imp)
+                generalized_case = All(bound_ids, constraints, renamed_imp)
 
                 print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
@@ -2014,7 +2018,6 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
 
     param_typ: {concretize_typ(param_typ)}
     return_typ: {concretize_typ(return_typ)}
-    packaged_return_typ: {concretize_typ(packaged_return_typ)}
 
     generalized_case: {concretize_typ(generalized_case)}
     ~~~~~~~~~~~~~~~~~~~~~
