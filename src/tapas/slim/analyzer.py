@@ -956,49 +956,90 @@ def meaningful(polarity : bool, t : Typ) -> bool:
     else:
         return selective(t)
 
+
 def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, fvs : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
-    if isinstance(typ, Imp):
+    def interpret_for_id(polarity : bool, id : str): 
+        if polarity:
+            return interpret_strongest_for_id(model, id)
+        else:
+            return interpret_weakest_for_id(model, id)
+
+    if False:
+        assert False
+    elif isinstance(typ, TVar):
+
+        id = typ.id
+        op = ( 
+            mapOp(simplify_typ)(interpret_for_id(not polarity, id))
+            if (id in model.freezer) else
+            mapOp(simplify_typ)(interpret_for_id(polarity, id))
+        )
+
+        if op != None:
+            (interp_typ_once, cs_once) = op
+            if (id in model.freezer) or meaningful(polarity, interp_typ_once): 
+                m = Model(model.constraints.difference(cs_once), model.freezer)
+                next_fvs = extract_free_vars_from_typ(s(), interp_typ_once)
+                (t, cs_cont) = interpret_with_polarity(polarity, m, interp_typ_once, next_fvs)
+                return (simplify_typ(t), cs_cont)
+            else:
+                return (typ, s())
+        else:
+            return (typ, s())
+
+    elif isinstance(typ, TUnit):
+        return (typ, s())
+    elif isinstance(typ, TTag):
+        body = typ.body
+        body_fvs = extract_free_vars_from_typ(s(), typ.body)
+        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, body_fvs)
+        return (TTag(typ.label, body), body_constraints)
+    elif isinstance(typ, TField):
+        body = typ.body
+        body_fvs = extract_free_vars_from_typ(s(), typ.body)
+        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, body_fvs)
+        return (TField(typ.label, body), body_constraints)
+    elif isinstance(typ, Unio):
+        left_fvs = extract_free_vars_from_typ(s(), typ.left)
+        left, left_constraints = interpret_with_polarity(polarity, model, typ.left, left_fvs)
+
+        right_fvs = extract_free_vars_from_typ(s(), typ.right)
+        right, right_constraints = interpret_with_polarity(polarity, model, typ.right, right_fvs)
+        return (Unio(left, right), left_constraints.union(right_constraints))
+    elif isinstance(typ, Inter):
+        left_fvs = extract_free_vars_from_typ(s(), typ.left)
+        left, left_constraints = interpret_with_polarity(polarity, model, typ.left, left_fvs)
+
+        right_fvs = extract_free_vars_from_typ(s(), typ.right)
+        right, right_constraints = interpret_with_polarity(polarity, model, typ.right, right_fvs)
+        return (Unio(left, right), left_constraints.union(right_constraints))
+
+    elif isinstance(typ, Diff):
+        context_fvs = extract_free_vars_from_typ(s(), typ.context)
+        context, context_constraints = interpret_with_polarity(polarity, model, typ.context, context_fvs)
+        return (Diff(context, typ.negation), context_constraints)
+
+    elif isinstance(typ, Imp):
         antec_fvs = extract_free_vars_from_typ(s(), typ.antec)
         antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, antec_fvs)
 
         consq_fvs = extract_free_vars_from_typ(s(), typ.consq)
         consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, consq_fvs)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+
+    elif isinstance(typ, Exi):
+        # TODO
+    elif isinstance(typ, All):
+        # TODO
+    elif isinstance(typ, LeastFP):
+        # TODO
+    elif isinstance(typ, Top):
+        # TODO
+    elif isinstance(typ, Bot):
+        # TODO
     else:
-        def interpret_for_id(polarity : bool, id : str): 
-            if polarity:
-                return interpret_strongest_for_id(model, id)
-            else:
-                return interpret_weakest_for_id(model, id)
+        assert False
 
-        trips = [ 
-            (id, t, cs_once.union(cs_cont)) 
-            for id in fvs
-            for op in [
-                mapOp(simplify_typ)(interpret_for_id(not polarity, id))
-                if (id in model.freezer) else
-                mapOp(simplify_typ)(interpret_for_id(polarity, id))
-            ]
-            if op != None
-            for (interp_typ_once, cs_once) in [op]
-            if (id in model.freezer) or meaningful(polarity, interp_typ_once) 
-            for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-
-            for next_fvs in [extract_free_vars_from_typ(s(), interp_typ_once)]
-            for (t, cs_cont) in [interpret_with_polarity(polarity, m, interp_typ_once, next_fvs)]
-        ]
-
-        renaming = pmap({
-            id : t 
-            for (id, t, cs) in trips
-        })
-
-        cs = pset(
-            c
-            for (id, t, cs) in trips
-            for c in cs
-        )
-        return (simplify_typ(sub_typ(renaming, typ)), cs)
 
 
 def simplify_typ(typ : Typ) -> Typ:
