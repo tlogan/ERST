@@ -2,9 +2,10 @@
 
 
 ### TODO
-- in `combine_function`, package constraints in the universal. (strong side generalization)
-    - (if variables only occur in parameter, then can use (weak side generalization using existential)) 
-- update interpret functions to properly handle the weak and strong sides of constraints in existential and universal
+- update interpret functions to take polarity param weak(neg)/strong(pos)
+- update interpret_weak function to take initial set of variables to interpret.
+- update interpret functions to properly handle the weak and strong sides to properly flip direction of interpretation by pattern matching on all cases.
+
 - determine if there is a way to generalize and extrude without packaging constraints
 - debug `test_functional` and `test_fix`
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
