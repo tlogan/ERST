@@ -950,21 +950,21 @@ def mapOp(f):
 #         )
 #         return (simplify_typ(sub_typ(renaming, typ)), cs)
 
-def meaningful(t : Typ, polarity) -> bool:
+def meaningful(polarity : bool, t : Typ) -> bool:
     if polarity:
         return inhabitable(t)
     else:
         return selective(t)
 
-def interpret_with_polarity(model : Model, typ : Typ, polarity : bool) -> tuple[Typ, PSet[Subtyping]]:
+def interpret_with_polarity(polarity : bool, model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec, antec_constraints = interpret_with_polarity(model, typ.antec, not polarity)
-        consq, consq_constraints = interpret_with_polarity(model, typ.consq, polarity)
+        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec)
+        consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
-        def interpret_for_id(id, polarity : bool): 
+        def interpret_for_id(polarity : bool, id : str): 
             if polarity:
                 return interpret_strongest_for_id(model, id)
             else:
@@ -974,15 +974,15 @@ def interpret_with_polarity(model : Model, typ : Typ, polarity : bool) -> tuple[
             (id, t, cs_once.union(cs_cont)) 
             for id in fvs
             for op in [
-                mapOp(simplify_typ)(interpret_for_id(model, not polarity))
+                mapOp(simplify_typ)(interpret_for_id(not polarity, id))
                 if (id in model.freezer) else
-                mapOp(simplify_typ)(interpret_for_id(id, polarity))
+                mapOp(simplify_typ)(interpret_for_id(polarity, id))
             ]
             if op != None
             for (interp_typ_once, cs_once) in [op]
-            if (id in model.freezer) or meaningful(interp_typ_once, polarity) 
+            if (id in model.freezer) or meaningful(polarity, interp_typ_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [interpret_with_polarity(m, interp_typ_once, polarity)]
+            for (t, cs_cont) in [interpret_with_polarity(polarity, m, interp_typ_once)]
         ]
 
         renaming = pmap({
@@ -1262,7 +1262,54 @@ class Solver:
         ] 
         return make_unio(constraint_typs)
 
-    def decode_strong_side(self, models : list[Model], t : Typ, arg : Typ = TUnit()) -> Typ:
+    # def decode_strong_side(self, models : list[Model], t : Typ, arg : Typ = TUnit()) -> Typ:
+
+    #     for m in models:
+    #         print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG decode_strong_side 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # m.freezer: {m.freezer}
+    # m.constraints: {concretize_constraints(tuple(m.constraints))}
+    # t: {concretize_typ(t)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
+
+    #     constraint_typs = [
+    #         package_typ(m, strongest)
+    #         for model in models
+    #         for op in [interpret_with_polarity(True, model, t)]
+    #         if op != None
+    #         for (strongest, cs) in [op]
+    #         # for m in [model]
+    #         for m in [Model(model.constraints.difference(cs), model.freezer)]
+    #     ] 
+    #     return make_unio(constraint_typs)
+
+    # def decode_weak_side(self, models : list[Model], t : Typ) -> Typ:
+
+    # #     for m in models:
+    # #         print(f"""
+    # # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # # DEBUG decode_weak_side 
+    # # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # # m.freezer: {m.freezer}
+    # # m.constraints: {concretize_constraints(tuple(m.constraints))}
+    # # t: {concretize_typ(t)}
+    # # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # #         """)
+    #     constraint_typs = [
+    #         package_typ(m, weakest)
+    #         for model in models
+    #         for op in [interpret_with_polarity(model, t, False)]
+    #         if op != None
+    #         for (weakest, cs) in [op]
+    #         # for m in [model]
+    #         for m in [Model(model.constraints.difference(cs), model.freezer)]
+    #     ] 
+    #     return make_unio(constraint_typs)
+
+    def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
 
         for m in models:
             print(f"""
@@ -1278,7 +1325,7 @@ class Solver:
         constraint_typs = [
             package_typ(m, strongest)
             for model in models
-            for op in [interpret_with_polarity(model, t, True)]
+            for op in [interpret_with_polarity(polarity, model, t)]
             if op != None
             for (strongest, cs) in [op]
             # for m in [model]
@@ -1286,28 +1333,6 @@ class Solver:
         ] 
         return make_unio(constraint_typs)
 
-    def decode_weak_side(self, models : list[Model], t : Typ) -> Typ:
-
-    #     for m in models:
-    #         print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_weak_side 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # m.freezer: {m.freezer}
-    # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # t: {concretize_typ(t)}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
-        constraint_typs = [
-            package_typ(m, weakest)
-            for model in models
-            for op in [interpret_with_polarity(model, t, False)]
-            if op != None
-            for (weakest, cs) in [op]
-            # for m in [model]
-            for m in [Model(model.constraints.difference(cs), model.freezer)]
-        ] 
-        return make_unio(constraint_typs)
 
 
 
@@ -1797,7 +1822,7 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            reduced_strong, used_constraints = interpret_with_polarity(model, strong, True)
+            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong)
             model = Model(model.constraints.difference(used_constraints), model.freezer)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -2032,10 +2057,10 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
                 generalization and extrusion
                 '''
 
-                param_interp = interpret_with_polarity(model, choice[0], False)
+                param_interp = interpret_with_polarity(False, model, choice[0])
                 (param_typ, param_used_constraints) = (param_interp if param_interp else (choice[0], s())) 
 
-                return_interp = interpret_with_polarity(model, choice[1], True)
+                return_interp = interpret_with_polarity(True, model, choice[1])
                 (return_typ, return_used_constraints) = (return_interp if return_interp else (choice[1], s())) 
 
                 new_model = Model(model.constraints
@@ -2334,10 +2359,10 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
         param_body = Bot()
         for model in reversed(models):
 
-            left_interp = interpret_with_polarity(model, in_typ, False)
+            left_interp = interpret_with_polarity(False, model, in_typ)
             (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-            right_interp = interpret_with_polarity(model, out_typ, True)
+            right_interp = interpret_with_polarity(True, model, out_typ)
             (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
             other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)

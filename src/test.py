@@ -80,18 +80,18 @@ def query_weak_side(a : str, b : str, k : str):
     y = p(b)
     q = p(k)
     models = solver.solve_composition(x, y) 
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_weak_side(models, q)))
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_with_polarity(False, models, q)))
 
 def query_strong_side(a : str, b : str, k : str):
     x = p(a)
     y = p(b)
     q = p(k)
     models = solver.solve_composition(x, y) 
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_strong_side(models, q)))
+    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_with_polarity(True, models, q)))
 
 
 def decode(models, typ_var):
-    return (analyzer.simplify_typ(solver.decode_strong_side(models, typ_var)))
+    return (analyzer.simplify_typ(solver.decode_with_polarity(True, models, typ_var)))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([

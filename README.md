@@ -2,8 +2,7 @@
 
 
 ### TODO
-- update interpret functions to take polarity param weak(neg)/strong(pos)
-- update interpret_weak function to take initial set of variables to interpret.
+- update interpret_with_polarity function to take initial set of variables to interpret.
 - update interpret functions to properly handle the weak and strong sides to properly flip direction of interpretation by pattern matching on all cases.
 
 - determine if there is a way to generalize and extrude without packaging constraints
