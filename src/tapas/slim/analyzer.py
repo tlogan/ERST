@@ -956,14 +956,15 @@ def meaningful(polarity : bool, t : Typ) -> bool:
     else:
         return selective(t)
 
-def interpret_with_polarity(polarity : bool, model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, fvs : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec)
-        consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq)
+        antec_fvs = extract_free_vars_from_typ(s(), typ.antec)
+        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, antec_fvs)
+
+        consq_fvs = extract_free_vars_from_typ(s(), typ.consq)
+        consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, consq_fvs)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
-        fvs = extract_free_vars_from_typ(s(), typ)
-
         def interpret_for_id(polarity : bool, id : str): 
             if polarity:
                 return interpret_strongest_for_id(model, id)
@@ -982,7 +983,9 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ) -> tuple[
             for (interp_typ_once, cs_once) in [op]
             if (id in model.freezer) or meaningful(polarity, interp_typ_once) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [interpret_with_polarity(polarity, m, interp_typ_once)]
+
+            for next_fvs in [extract_free_vars_from_typ(s(), interp_typ_once)]
+            for (t, cs_cont) in [interpret_with_polarity(polarity, m, interp_typ_once, next_fvs)]
         ]
 
         renaming = pmap({
@@ -1322,12 +1325,14 @@ class Solver:
     ~~~~~~~~~~~~~~~~~~~~~~~~
             """)
 
+        fvs = extract_free_vars_from_typ(s(), t)
+
         constraint_typs = [
-            package_typ(m, strongest)
+            package_typ(m, tt)
             for model in models
-            for op in [interpret_with_polarity(polarity, model, t)]
+            for op in [interpret_with_polarity(polarity, model, t, fvs)]
             if op != None
-            for (strongest, cs) in [op]
+            for (tt, cs) in [op]
             # for m in [model]
             for m in [Model(model.constraints.difference(cs), model.freezer)]
         ] 
@@ -1822,7 +1827,8 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong)
+            fvs = extract_free_vars_from_typ(s(), strong)
+            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, fvs)
             model = Model(model.constraints.difference(used_constraints), model.freezer)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -2057,10 +2063,12 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
                 generalization and extrusion
                 '''
 
-                param_interp = interpret_with_polarity(False, model, choice[0])
+                param_fvs = extract_free_vars_from_typ(s(), choice[0])
+                param_interp = interpret_with_polarity(False, model, choice[0], param_fvs)
                 (param_typ, param_used_constraints) = (param_interp if param_interp else (choice[0], s())) 
 
-                return_interp = interpret_with_polarity(True, model, choice[1])
+                return_fvs = extract_free_vars_from_typ(s(), choice[1])
+                return_interp = interpret_with_polarity(True, model, choice[1], return_fvs)
                 (return_typ, return_used_constraints) = (return_interp if return_interp else (choice[1], s())) 
 
                 new_model = Model(model.constraints
@@ -2359,10 +2367,12 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
         param_body = Bot()
         for model in reversed(models):
 
-            left_interp = interpret_with_polarity(False, model, in_typ)
+            in_fvs = extract_free_vars_from_typ(s(), in_typ)
+            left_interp = interpret_with_polarity(False, model, in_typ, in_fvs)
             (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-            right_interp = interpret_with_polarity(True, model, out_typ)
+            out_fvs = extract_free_vars_from_typ(s(), in_typ)
+            right_interp = interpret_with_polarity(True, model, out_typ, out_fvs)
             (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
             other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)
