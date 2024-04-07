@@ -806,146 +806,193 @@ def mapOp(f):
     return call
 
 
-def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
-    # NOTE: the unfrozen variables use strongest interpretation
-    # NOTE: the frozen variables use weakest interpretation 
+# def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+#     # NOTE: the unfrozen variables use strongest interpretation
+#     # NOTE: the frozen variables use weakest interpretation 
+#     if isinstance(typ, Imp):
+#         antec, antec_constraints = interpret_weak_side(model, typ.antec)
+#         consq, consq_constraints = interpret_strong_side(model, typ.consq)
+#         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+#     else:
+#         fvs = extract_free_vars_from_typ(s(), typ)
+
+
+#         # trips = [ 
+#         #     (id, t, cs_once.union(cs_cont)) 
+#         #     for id in fvs
+#         #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+#         #     if op != None
+#         #     if (id in model.freezer)
+#         #     for (strongest_once, cs_once) in [op]
+#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     # for m in [model]
+#         #     for (t, cs_cont) in [interpret_weak_side(m, strongest_once)]
+#         # ]
+
+
+#         # trips = [ 
+#         #     (id, t, cs_once.union(cs_cont)) 
+#         #     for id in fvs
+#         #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+#         #     if op != None
+#         #     for (strongest_once, cs_once) in [op]
+#         #     if (id in model.freezer) or inhabitable(strongest_once) 
+#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     for (t, cs_cont) in [
+#         #         interpret_weak_side(m, strongest_once)
+#         #         if (id in model.freezer) else
+#         #         interpret_strong_side(m, strongest_once)
+#         #     ]
+#         # ]
+
+#         trips = [ 
+#             (id, t, cs_once.union(cs_cont)) 
+#             for id in fvs
+#             for op in [
+#                 mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+#                 if id in model.freezer else
+#                 mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+#             ]
+#             if op != None
+#             for (strongest_once, cs_once) in [op]
+#             if (id in model.freezer) or inhabitable(strongest_once) 
+#             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#             for (t, cs_cont) in [interpret_strong_side(m, strongest_once)]
+#         ]
+
+#         renaming = pmap({
+#             id : strongest 
+#             for (id, strongest, cs) in trips
+#         })
+
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG interpret_strong_side
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# # model.freezer: {model.freezer}
+# # model.constraints: {concretize_constraints(tuple(model.constraints))}
+# # typ: {concretize_typ(typ)}
+# # interp _4: {mapOp(simplify_typ)(interpret_strongest_for_id(model, '_4'))}
+# # renaming: {renaming}
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+
+#         cs = pset(
+#             c
+#             for (id, strongest, cs) in trips
+#             for c in cs
+#         )
+#         return (simplify_typ(sub_typ(renaming, typ)), cs)
+
+# def interpret_weak_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+#     if isinstance(typ, Imp):
+#         antec, antec_constraints = interpret_strong_side(model, typ.antec)
+#         consq, consq_constraints = interpret_weak_side(model, typ.consq)
+#         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+#     else:
+#         fvs = extract_free_vars_from_typ(s(), typ)
+
+#         # trips = [ 
+#         #     (id, t, cs_once.union(cs_cont)) 
+#         #     for id in fvs
+#         #     for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
+#         #     if op != None
+#         #     # if (id in model.freezer)
+#         #     # for (weakest_once, cs_once) in [op]
+#         #     # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     # for (t, cs_cont) in [interpret_strong_side(m, weakest_once)]
+#         #     for (weakest_once, cs_once) in [op]
+#         #     if (id in model.freezer) or selective(weakest_once) 
+#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     for (t, cs_cont) in [
+#         #         interpret_strong_side(m, weakest_once)
+#         #         if (id in model.freezer) else
+#         #         interpret_weak_side(m, weakest_once)
+#         #     ]
+#         # ]
+
+#         trips = [ 
+#             (id, t, cs_once.union(cs_cont)) 
+#             for id in fvs
+#             for op in [
+#                 mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+#                 if (id in model.freezer) else
+#                 mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+#             ]
+#             if op != None
+#             for (weakest_once, cs_once) in [op]
+#             if (id in model.freezer) or selective(weakest_once) 
+#             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#             for (t, cs_cont) in [interpret_weak_side(m, weakest_once)]
+#         ]
+
+#         renaming = pmap({
+#             id : weakest 
+#             for (id, weakest, cs) in trips
+#         })
+
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG interpret_weak_side 
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# # model.freezer: {model.freezer}
+# # model.constraints: {concretize_constraints(tuple(model.constraints))}
+# # typ: {concretize_typ(typ)}
+# # renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
+# # fvs: {fvs}
+# # ~~~~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+
+#         cs = pset(
+#             c
+#             for (id, weakest, cs) in trips
+#             for c in cs
+#         )
+#         return (simplify_typ(sub_typ(renaming, typ)), cs)
+
+def meaningful(t : Typ, polarity) -> bool:
+    if polarity:
+        return inhabitable(t)
+    else:
+        return selective(t)
+
+def interpret_with_polarity(model : Model, typ : Typ, polarity : bool) -> tuple[Typ, PSet[Subtyping]]:
     if isinstance(typ, Imp):
-        antec, antec_constraints = interpret_weak_side(model, typ.antec)
-        consq, consq_constraints = interpret_strong_side(model, typ.consq)
+        antec, antec_constraints = interpret_with_polarity(model, typ.antec, not polarity)
+        consq, consq_constraints = interpret_with_polarity(model, typ.consq, polarity)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
     else:
         fvs = extract_free_vars_from_typ(s(), typ)
 
-
-        # trips = [ 
-        #     (id, t, cs_once.union(cs_cont)) 
-        #     for id in fvs
-        #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
-        #     if op != None
-        #     if (id in model.freezer)
-        #     for (strongest_once, cs_once) in [op]
-        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-        #     # for m in [model]
-        #     for (t, cs_cont) in [interpret_weak_side(m, strongest_once)]
-        # ]
-
-
-        # trips = [ 
-        #     (id, t, cs_once.union(cs_cont)) 
-        #     for id in fvs
-        #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
-        #     if op != None
-        #     for (strongest_once, cs_once) in [op]
-        #     if (id in model.freezer) or inhabitable(strongest_once) 
-        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-        #     for (t, cs_cont) in [
-        #         interpret_weak_side(m, strongest_once)
-        #         if (id in model.freezer) else
-        #         interpret_strong_side(m, strongest_once)
-        #     ]
-        # ]
+        def interpret_for_id(id, polarity : bool): 
+            if polarity:
+                return interpret_strongest_for_id(model, id)
+            else:
+                return interpret_weakest_for_id(model, id)
 
         trips = [ 
             (id, t, cs_once.union(cs_cont)) 
             for id in fvs
             for op in [
-                mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
-                if id in model.freezer else
-                mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
-            ]
-            if op != None
-            for (strongest_once, cs_once) in [op]
-            if (id in model.freezer) or inhabitable(strongest_once) 
-            for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [interpret_strong_side(m, strongest_once)]
-        ]
-
-        renaming = pmap({
-            id : strongest 
-            for (id, strongest, cs) in trips
-        })
-
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_strong_side
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# typ: {concretize_typ(typ)}
-# interp _4: {mapOp(simplify_typ)(interpret_strongest_for_id(model, '_4'))}
-# renaming: {renaming}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-
-        cs = pset(
-            c
-            for (id, strongest, cs) in trips
-            for c in cs
-        )
-        return (simplify_typ(sub_typ(renaming, typ)), cs)
-
-def interpret_weak_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
-    if isinstance(typ, Imp):
-        antec, antec_constraints = interpret_strong_side(model, typ.antec)
-        consq, consq_constraints = interpret_weak_side(model, typ.consq)
-        return (Imp(antec, consq), antec_constraints.union(consq_constraints))
-    else:
-        fvs = extract_free_vars_from_typ(s(), typ)
-
-        # trips = [ 
-        #     (id, t, cs_once.union(cs_cont)) 
-        #     for id in fvs
-        #     for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
-        #     if op != None
-        #     # if (id in model.freezer)
-        #     # for (weakest_once, cs_once) in [op]
-        #     # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-        #     # for (t, cs_cont) in [interpret_strong_side(m, weakest_once)]
-        #     for (weakest_once, cs_once) in [op]
-        #     if (id in model.freezer) or selective(weakest_once) 
-        #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-        #     for (t, cs_cont) in [
-        #         interpret_strong_side(m, weakest_once)
-        #         if (id in model.freezer) else
-        #         interpret_weak_side(m, weakest_once)
-        #     ]
-        # ]
-
-        trips = [ 
-            (id, t, cs_once.union(cs_cont)) 
-            for id in fvs
-            for op in [
-                mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+                mapOp(simplify_typ)(interpret_for_id(model, not polarity))
                 if (id in model.freezer) else
-                mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+                mapOp(simplify_typ)(interpret_for_id(id, polarity))
             ]
             if op != None
-            for (weakest_once, cs_once) in [op]
-            if (id in model.freezer) or selective(weakest_once) 
+            for (interp_typ_once, cs_once) in [op]
+            if (id in model.freezer) or meaningful(interp_typ_once, polarity) 
             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-            for (t, cs_cont) in [interpret_weak_side(m, weakest_once)]
+            for (t, cs_cont) in [interpret_with_polarity(m, interp_typ_once, polarity)]
         ]
 
         renaming = pmap({
-            id : weakest 
-            for (id, weakest, cs) in trips
+            id : t 
+            for (id, t, cs) in trips
         })
-
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_weak_side 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# typ: {concretize_typ(typ)}
-# renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
-# fvs: {fvs}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
 
         cs = pset(
             c
-            for (id, weakest, cs) in trips
+            for (id, t, cs) in trips
             for c in cs
         )
         return (simplify_typ(sub_typ(renaming, typ)), cs)
@@ -1231,7 +1278,7 @@ class Solver:
         constraint_typs = [
             package_typ(m, strongest)
             for model in models
-            for op in [interpret_strong_side(model, t)]
+            for op in [interpret_with_polarity(model, t, True)]
             if op != None
             for (strongest, cs) in [op]
             # for m in [model]
@@ -1254,7 +1301,7 @@ class Solver:
         constraint_typs = [
             package_typ(m, weakest)
             for model in models
-            for op in [interpret_weak_side(model, t)]
+            for op in [interpret_with_polarity(model, t, False)]
             if op != None
             for (weakest, cs) in [op]
             # for m in [model]
@@ -1750,7 +1797,7 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            reduced_strong, used_constraints = interpret_strong_side(model, strong)
+            reduced_strong, used_constraints = interpret_with_polarity(model, strong, True)
             model = Model(model.constraints.difference(used_constraints), model.freezer)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -1985,10 +2032,10 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
                 generalization and extrusion
                 '''
 
-                param_interp = interpret_weak_side(model, choice[0])
+                param_interp = interpret_with_polarity(model, choice[0], False)
                 (param_typ, param_used_constraints) = (param_interp if param_interp else (choice[0], s())) 
 
-                return_interp = interpret_strong_side(model, choice[1])
+                return_interp = interpret_with_polarity(model, choice[1], True)
                 (return_typ, return_used_constraints) = (return_interp if return_interp else (choice[1], s())) 
 
                 new_model = Model(model.constraints
@@ -2287,10 +2334,10 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
         param_body = Bot()
         for model in reversed(models):
 
-            left_interp = interpret_weak_side(model, in_typ)
+            left_interp = interpret_with_polarity(model, in_typ, False)
             (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-            right_interp = interpret_strong_side(model, out_typ)
+            right_interp = interpret_with_polarity(model, out_typ, True)
             (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
             other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)
