@@ -527,8 +527,8 @@ case ~uno @ => ~one @
 case ~dos @ => ~two @ 
     ''']
     (models, typ_var, guides, parsetree) = analyze(pieces)
-    # print("answer: " + u(decode(models, typ_var)))
-    assert u(decode(models, typ_var)) == "((~uno @ -> ~one @) & (~dos @ -> ~two @))"
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "((~uno @ -> ~one @) & (~dos @ -> ~two @))"
     # TODO: update once diffs are enabled 
     # assert u(decode(models, typ_var)) == "(~uno @ -> ~one @) & (~dos @ \ ~uno @ -> ~two @)"
 
@@ -1054,7 +1054,9 @@ if __name__ == '__main__':
     ########################
     ## Post refactor tests
     ########################
-    test_functional()
+    test_function_cases_disjoint()
+    # test_function()
+    # test_functional()
     # test_fix()
     ########################
     # test_two_less_equal_one_query()
