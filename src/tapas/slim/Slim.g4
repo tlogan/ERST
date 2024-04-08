@@ -421,11 +421,10 @@ $models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.
 function [Nonterm nt] returns [tuple[lsit[Model], list[Imp]] models_branches] :
 
 | 'case' {
-pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_pattern, nt)
-} pattern[pattern_nt] {
+} pattern[nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt = replace(nt, enviro =  $pattern.attr.enviro, models = $pattern.attr.models)
+nt = replace(nt, enviro = $pattern.attr.enviro)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
 nt = replace(nt, models = $body.models)
@@ -433,11 +432,10 @@ $models_branches = ($body.models, self.collect(FunctionRule(self._solver).combin
 }
 
 | 'case' {
-pattern_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_pattern, nt)
-} pattern[pattern_nt] {
+} pattern[nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt = replace(nt, enviro =  $pattern.attr.enviro, models = $pattern.attr.models)
+nt = replace(nt, enviro = $pattern.attr.enviro)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
 nt = replace(nt, models = $body.models)
@@ -563,14 +561,13 @@ $attr = $base_pattern.attr
 }
 
 | {
-head_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_head, nt)
-} head = base_pattern[head_nt] {
+} head = base_pattern[nt] {
 self.guide_symbol(',')
 } ',' {
-nt = replace(nt, enviro =  $head.attr.enviro, models = $head.attr.models)
-tail_nt = self.guide_nonterm(PatternRule(self._solver).distill_tuple_tail, nt, $head.attr.typ)
-} tail = pattern[tail_nt] {
-$attr = self.collect(PatternRule(self._solver, nt).combine_tuple, $head.attr.typ, $tail.attr.typ) 
+nt = replace(nt, enviro = $head.attr.enviro)
+} tail = pattern[nt] {
+nt = replace(nt, enviro = $tail.attr.enviro)
+$attr = self.collect(PatternRule(self._solver).combine_tuple, nt, $head.attr.typ, $tail.attr.typ) 
 }
 
 ;
@@ -592,10 +589,8 @@ $attr = self.collect(BasePatternRule(self._solver).combine_unit, nt)
 | '~' {
 self.guide_terminal('ID')
 } ID {
-body_nt = self.guide_nonterm(BasePatternRule(self._solver).distill_tag_body, nt, $ID.text)
-} body = base_pattern[body_nt] {
-
-nt = replace(nt, enviro =  $body.attr.enviro, models = $body.attr.models)
+} body = base_pattern[nt] {
+nt = replace(nt, enviro = $body.attr.enviro)
 $attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, $ID.text, $body.attr.typ)
 }
 
@@ -617,9 +612,8 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_single_body, nt, $ID.text)
-} body = pattern[body_nt] {
-nt = replace(nt, enviro = $body.attr.enviro, models = $body.attr.models)
+} body = pattern[nt] {
+nt = replace(nt, enviro = $body.attr.enviro)
 $attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, $ID.text, $body.attr.typ)
 }
 
@@ -628,15 +622,10 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-
-body_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_body, nt, $ID.text)
-} body = pattern[body_nt] {
-
-nt = replace(nt, enviro = $body.attr.enviro, models = $body.attr.models)
-tail_nt = self.guide_nonterm(RecordPatternRule(self._solver).distill_cons_tail, nt, $ID.text, $body.attr.typ)
-} tail = record_pattern[tail_nt] {
-
-nt = replace(nt, enviro = $tail.attr.enviro, models = $tail.attr.models)
+} body = pattern[nt] {
+nt = replace(nt, enviro = $body.attr.enviro)
+} tail = record_pattern[nt] {
+nt = replace(nt, enviro = $tail.attr.enviro)
 $attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, $ID.text, $body.attr.typ, $tail.attr.typ)
 }
 

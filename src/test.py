@@ -657,6 +657,17 @@ f(~nil @)(~nil @)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
+def test_function_with_var():
+    pieces = ['''
+case ~nil @ => ~zero @ 
+case ~cons x => (~succ x) 
+    ''']
+    # TODO: how should we package the constraints on X where x : X 
+    # does it need to collect all the constraints on X, before generalizing?
+    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "@"
+
 def test_functional():
     pieces = ['''
 (case self => (
@@ -677,6 +688,14 @@ fix(case self => (
     case ~cons x => (~succ (self(x))) 
 ))
     ''']
+# (_8 -> _11) -> ((~nil @ -> ~zero @) & (~cons _15 -> ~succ _16)))
+# expect: _15 <: _8 // _11 <: _16
+# actual: _8 <: 15 // _16 <: _11
+
+
+# given: _8 <: 15 // _16 <: _11
+# expect: (15 -> 16) -> (~cons _8 -> ~succ _11) 
+
     (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "@"
@@ -1054,9 +1073,10 @@ if __name__ == '__main__':
     ########################
     ## Post refactor tests
     ########################
-    test_function_cases_disjoint()
+    # test_function_cases_disjoint()
     # test_function()
-    # test_functional()
+    # test_function_with_var()
+    test_functional()
     # test_fix()
     ########################
     # test_two_less_equal_one_query()

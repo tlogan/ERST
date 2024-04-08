@@ -2,7 +2,12 @@
 
 
 ### TODO
+- clean up `combine_function` and `test_functional` 
+    - call interpret on imp instead of param and return separately 
 - update interpret functions to properly handle the weak and strong sides to properly flip direction of interpretation by pattern matching on all cases.
+
+- update package to only use existential for frozen variables then and use universal  for remaining variables plus remaining constraints.
+    - existential should come after universal since it can depend on a particular instance of learnable variables
 
 - determine if there is a way to generalize and extrude without packaging constraints
 - debug `test_functional` and `test_fix`
