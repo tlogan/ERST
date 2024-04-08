@@ -1011,38 +1011,40 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
 
     elif isinstance(typ, Imp):
         antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, ignored_ids)
-        # TODO: consider update model with constraints removed
+        model = Model(model.constraints.difference(antec_constraints), model.freezer)
         consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, ignored_ids)
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
     elif isinstance(typ, Exi):
-        return (typ, s())
+
+        # return (typ, s())
+        # TODO: uncomment below: gathering used constraints of negated side first (strong side of <: )
+
+        neg_constraints = s() 
+        strong_constraint_pairs = []
+        for st in typ.constraints:
+            strong, strong_constraints = interpret_with_polarity(not polarity, model, st.strong, ignored_ids)
+            neg_constraints = neg_constraints.union(strong_constraints)
+            strong_constraint_pairs.append((strong, st))
+
+        model = Model(model.constraints.difference(neg_constraints), model.freezer)
+
+        pos_constraints = s() 
+        new_constraints = [] 
+        for (strong, st) in strong_constraint_pairs:
+            weak, weak_constraints = interpret_with_polarity(polarity, model, st.weak, ignored_ids)
+            pos_constraints = pos_constraints.union(weak_constraints)
+            new_constraints.append(Subtyping(strong, weak))
+
+
         body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
         ignored_ids = ignored_ids.union(typ.ids)
-        new_constraints = []
-        used_constraints = body_constraints
-        for st in typ.constraints:
-            # strong, strong_constraints = interpret_with_polarity(not polarity, model, st.strong, ignored_ids)
-            # TODO: consider update model with constraints removed
-            weak, weak_constraints = interpret_with_polarity(polarity, model, st.weak, ignored_ids)
-            used_constraints = used_constraints.union(strong_constraints).union(weak_constraints)
-            new_constraints.append(Subtyping(strong,weak))
+        used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
         return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
 
     elif isinstance(typ, All):
         return (typ, s())
-        ignored_ids = ignored_ids.union(typ.ids)
-        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
-        new_constraints = []
-        used_constraints = body_constraints
-        for st in typ.constraints:
-            # strong, strong_constraints = interpret_with_polarity(not polarity, model, st.strong, ignored_ids)
-            # TODO: consider update model with constraints removed
-            strong, strong_constraints (st.strong, s())
-            weak, weak_constraints = interpret_with_polarity(polarity, model, st.weak, ignored_ids)
-            used_constraints = used_constraints.union(strong_constraints).union(weak_constraints)
-            new_constraints.append(Subtyping(strong,weak))
-        return (All(typ.ids, tuple(new_constraints), body), used_constraints)
+        # TODO: copy Exi rule
     elif isinstance(typ, LeastFP):
         ignored_ids = ignored_ids.add(typ.id)
         body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
@@ -2130,8 +2132,6 @@ DEBUG combine_function len(nt.models): {len(nt.models)}
         new_models = []
         for model in nt.models:
 
-            new_model = Model(model.constraints .difference(used_constraints), model.freezer)
-
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG combine_function model 
@@ -2144,79 +2144,26 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
             result = Top() 
             for choice in reversed(choices): 
                 '''
-                generalization and extrusion
+                interpret, extrude, and generalize
                 '''
-                print(f"""
-                >>>> len(choices): {len(choices)}
-                """)
-
+                new_model = model
 
                 (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, choice[0], s())
                 used_constraints = used_constraints.union(param_used_constraints)
-                new_model = Model(new_model.constraints .difference(used_constraints), model.freezer)
-
-                print(f"""
-                >>>> param_used_constraints: {concretize_constraints(tuple(param_used_constraints))} 
-                """)
-
-                print(f"""
-                >>>> new_model.constraints post_param: {concretize_constraints(tuple(new_model.constraints))} 
-                """)
+                new_model = Model(new_model.constraints .difference(used_constraints), new_model.freezer)
 
                 (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, choice[1], s())
                 used_constraints = used_constraints.union(return_used_constraints)
-                new_model = Model(new_model.constraints .difference(used_constraints), model.freezer)
+                new_model = Model(new_model.constraints .difference(used_constraints), new_model.freezer)
 
-                print(f"""
-                >>>> return_used_constraints: {concretize_constraints(tuple(return_used_constraints))} 
-                """)
+                fvs = extract_free_vars_from_typ(s(), param_typ)
 
-                print(f"""
-                >>>> new_model.constraints post_return: {concretize_constraints(tuple(new_model.constraints))} 
-                """)
-
-
-                # assert isinstance(choice[1], TVar)
-                # return_interp = interpret_strongest_for_id(new_model, choice[1].id)
-                # (return_typ, return_used_constraints) = (return_interp if return_interp else (choice[1], s())) 
-
-                # new_model = Model(model.constraints
-                #     .difference(return_used_constraints), 
-                #     model.freezer
-                # )
-
-
-                print(f"""
-                >>>> len(choices) A
-                """)
-
-
-                print(f"""
-                >>>> len(choices) B 
-                """)
 
                 fvs = extract_free_vars_from_typ(s(), param_typ)
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
-
-                print(f"""
-                >>>> len(choices) C 
-                """)
-
-
                 bound_ids = tuple(var.id for var in renaming.values())
                 imp = Imp(param_typ, return_typ)
-
-
-                ###################
-                # debug = extract_reachable_constraints_from_typ(new_model, imp)
-                print(f"""
-                >>>> len(choices) D 
-                >>>> new_model.freezer: {new_model.freezer}
-                >>>> new_model.constraints: {concretize_constraints(tuple(new_model.constraints))}
-
-                >>>> imp: {concretize_typ(imp)}
-                """)
                 generalized_case = imp
                 # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
                 #     # TODO: adding the following causes non-termination
@@ -2253,6 +2200,8 @@ model.constraints: {concretize_constraints(tuple(model.constraints))}
             end for 
             '''
 
+            used_constraints = used_constraints.union(param_used_constraints).union(return_used_constraints)
+            new_model = Model(model.constraints.difference(used_constraints), model.freezer)
             new_models.extend(
                 self.solver.solve(new_model, 
                     simplify_typ(result), 
