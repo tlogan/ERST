@@ -1076,8 +1076,8 @@ if __name__ == '__main__':
     # test_function_cases_disjoint()
     # test_function()
     # test_function_with_var()
-    # test_functional()
-    test_fix()
+    test_functional()
+    # test_fix()
     ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()

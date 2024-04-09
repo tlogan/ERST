@@ -2199,11 +2199,11 @@ result: {result}
     #             """)
 
                 result = Inter(generalized_case, result)
+                used_constraints = used_constraints.union(param_used_constraints).union(return_used_constraints)
             '''
             end for 
             '''
 
-            used_constraints = used_constraints.union(param_used_constraints).union(return_used_constraints)
             new_model = Model(model.constraints.difference(used_constraints), model.freezer)
             new_models.extend(
                 self.solver.solve(new_model, 
