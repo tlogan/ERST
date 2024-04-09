@@ -2466,143 +2466,164 @@ models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
 
         IH_typ = self.solver.fresh_type_var()
 
-        # TODO: need to figure out when to freeze variables and how to interpret them
-        models = [
-            # Model(m.constraints, m.freezer.union([in_typ.id, out_typ.id]))
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, body_var, Imp(self_typ, Imp(in_typ, out_typ)))
-        ]
 
-        induc_body = Bot()
-        param_body = Bot()
-        for model in reversed(models):
+        for outer_model in nt.models:
 
-            left_interp = interpret_with_polarity(False, model, in_typ, s())
-            (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
+            '''
+            Constructive a least fixed point type over union from the inner models
+            '''
+            inner_models = self.solver.solve(outer_model, body_var, Imp(self_typ, Imp(in_typ, out_typ)))
 
-            right_interp = interpret_with_polarity(True, model, out_typ, s())
-            (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
+            induc_body = Bot()
+            param_body = Bot()
+            for inner_model in reversed(inner_models):
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix (initial inner_model)
+    ~~~~~~~~~~~~~~~~~~~~~
+    inner_model.freezer: {inner_model.freezer}
+    inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
+    ======================
+    self_typ: {self_typ.id}
+    body_var: {concretize_typ(body_var)}
 
-            other_constraints = model.constraints.difference(left_used_constraints).difference(right_used_constraints)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix 
-~~~~~~~~~~~~~~~~~~~~~
-self_typ: {self_typ.id}
-body_var: {concretize_typ(body_var)}
+    IH_typ: {IH_typ.id}
+    ======================
+                """)
 
-IH_typ: {IH_typ.id}
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
-======================
-in_typ: {concretize_typ(in_typ)}
-left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
-left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
+                left_interp = interpret_with_polarity(False, inner_model, in_typ, s())
+                (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-out_typ: {concretize_typ(out_typ)}
-right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
-right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
-======================
+                inner_model = Model(inner_model.constraints.difference(left_used_constraints), inner_model.freezer)
+                right_interp = interpret_with_polarity(True, inner_model, out_typ, s())
+                (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
-other_constraints: 
-{concretize_constraints(tuple(other_constraints))}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+                inner_model = Model(inner_model.constraints.difference(right_used_constraints), inner_model.freezer)
 
-#             left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
-#             right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
-#             bound_ids = left_bound_ids + right_bound_ids
-#             rel_pattern = make_pair_typ(left_typ, right_typ)
-#             #########################################
-#             model = Model(other_constraints, model.freezer)
-#             self_interp = (interpret_weak_side(model, self_typ))
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix (after interpretation of left and right)
+    ~~~~~~~~~~~~~~~~~~~~~
+    self_typ: {self_typ.id}
+    body_var: {concretize_typ(body_var)}
 
-# #             nl = "\n"
-# #             print(f"""
-# # ~~~~~~~~~~~~~~~~~~~~~
-# # DEBUG self_typ: {self_typ.id}
-# # DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-# # ~~~~~~~~~~~~~~~~~~~~~
-# #             """)
+    IH_typ: {IH_typ.id}
+    ======================
+    in_typ: {concretize_typ(in_typ)}
+    left_typ (weakly condensed in_typ): {concretize_typ(left_typ)}
+    left_used_constraints: {concretize_constraints(tuple(left_used_constraints))}
 
-#             if self_interp and isinstance(self_interp[0], Imp):
-#                 left = self_interp[0].antec
-#                 right = self_interp[0].consq
-#                 other_constraints = other_constraints.difference(self_interp[1])
+    out_typ: {concretize_typ(out_typ)}
+    right_typ (strongly condensed out_typ): {concretize_typ(right_typ)}
+    right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
+    ======================
+    (:after removing used constraints:)
+    inner_model.freezer: {inner_model.freezer}
+    inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
-#                 IH_rel_constraint = Subtyping(make_pair_typ(left, right), IH_typ)
-#                 rel_constraints = tuple([IH_rel_constraint]) + tuple(other_constraints)
-#                 rel_model = Model(pset(rel_constraints).difference(left_used_constraints).difference(right_used_constraints), pset(bound_ids))
-#                 constrained_rel = package_typ(rel_model, rel_pattern)
+                left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
+                right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
+                bound_ids = left_bound_ids + right_bound_ids
+                rel_pattern = make_pair_typ(left_typ, right_typ)
+                #########################################
+                self_interp = interpret_with_polarity(False, inner_model, self_typ, s())
 
-#     #             print(f"""
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     # DEBUG combine_fix rel
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     # IH_typ: {IH_typ.id}
-#     # rel_model.freezer: {rel_model.freezer}
-#     # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
-#     # ======================
-#     # rel_pattern: {concretize_typ(rel_pattern)}
-#     # constrained rel: {concretize_typ(constrained_rel)}
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     #             """)
+                nl = "\n"
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG self_typ: {self_typ.id}
+    DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
-#                 IH_left_constraint = Subtyping(left, IH_typ)
-#                 left_constraints = tuple([IH_left_constraint]) + tuple(other_constraints)
-#                 left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
-#                 constrained_left = package_typ(left_model, left_typ)
+                if self_interp and isinstance(self_interp[0], Imp):
+                    self_left = self_interp[0].antec
+                    self_right = self_interp[0].consq
+                    self_used_constraints = self_interp[1]
+                    inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer)
+                    reachable_constraints = tuple(
+                        st
+                        for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
+                        if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
+                    )
 
-#     #             print(f"""
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     # DEBUG combine_fix left
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     # IH_typ: {IH_typ.id}
-#     # left_model.freezer: {left_model.freezer}
-#     # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
-#     # ======================
-#     # left_pattern: {concretize_typ(left_typ)}
-#     # constrained left: {concretize_typ(constrained_left)}
-#     # ~~~~~~~~~~~~~~~~~~~~~
-#     #             """)
-#             else:
-#                 constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
-#                 constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
-#             #end if
+                    IH_rel_constraint = Subtyping(make_pair_typ(self_left, self_right), IH_typ)
+                    rel_constraints = tuple([IH_rel_constraint]) + reachable_constraints
+                    # TODO: what if there are existing frozen variables in inner_model?
+                    rel_model = Model(pset(rel_constraints), pset(bound_ids))
+                    constrained_rel = package_typ(rel_model, rel_pattern)
 
-#             induc_body = Unio(constrained_rel, induc_body) 
-#             param_body = Unio(constrained_left, param_body)
+                    print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~
+        DEBUG combine_fix rel
+        ~~~~~~~~~~~~~~~~~~~~~
+        body_var: {body_var}
+        IH_typ: {IH_typ.id}
+        rel_model.freezer: {rel_model.freezer}
+        rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
+        ======================
+        rel_pattern: {concretize_typ(rel_pattern)}
+        constrained rel: {concretize_typ(constrained_rel)}
+        ~~~~~~~~~~~~~~~~~~~~~
+                    """)
 
-        #end for
+        #             IH_left_constraint = Subtyping(self_left, IH_typ)
+        #             left_constraints = tuple([IH_left_constraint]) + reachable_constraints
+        #             # TODO: what if there are existing frozen variables in inner_model?
+        #             left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
+        #             constrained_left = package_typ(left_model, left_typ)
 
-        # rel_typ = LeastFP(IH_typ.id, induc_body)
-        # param_upper = LeastFP(IH_typ.id, param_body)
+        #             print(f"""
+        # ~~~~~~~~~~~~~~~~~~~~~
+        # DEBUG combine_fix left
+        # ~~~~~~~~~~~~~~~~~~~~~
+        # IH_typ: {IH_typ.id}
+        # left_model.freezer: {left_model.freezer}
+        # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+        # ======================
+        # left_pattern: {concretize_typ(left_typ)}
+        # constrained left: {concretize_typ(constrained_left)}
+        # ~~~~~~~~~~~~~~~~~~~~~
+        #             """)
+    #             else:
+    #                 constrained_rel = package_typ(Model(pset(other_constraints), pset(bound_ids)), rel_pattern)
+    #                 constrained_left = package_typ(Model(pset(other_constraints), pset(left_bound_ids)), left_typ) 
+    #             #end if
 
-#         print(f"""
-# DEBUG rel_typ 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# :: rel_typ: {concretize_typ(rel_typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+    #             induc_body = Unio(constrained_rel, induc_body) 
+    #             param_body = Unio(constrained_left, param_body)
 
-        # param_typ = self.solver.fresh_type_var()
-        # return_typ = self.solver.fresh_type_var()
-        # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        # result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
+            #end for
 
-#         print(f"""
-# DEBUG combine_fix result 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# :: consq_typ: {concretize_typ(consq_typ)}
+            # rel_typ = LeastFP(IH_typ.id, induc_body)
+            # param_upper = LeastFP(IH_typ.id, param_body)
 
-# :: result: {concretize_typ(result)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+    #         print(f"""
+    # DEBUG rel_typ 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # :: rel_typ: {concretize_typ(rel_typ)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
 
-        # return self.evolve_models(nt, result)
-        ##################################
+            # param_typ = self.solver.fresh_type_var()
+            # return_typ = self.solver.fresh_type_var()
+            # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+            # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+            # result = All(param_typ.id, param_upper, Imp(param_typ, consq_typ))  
+
+    #         print(f"""
+    # DEBUG combine_fix result 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # :: consq_typ: {concretize_typ(consq_typ)}
+
+    # :: result: {concretize_typ(result)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
+
+            # return self.evolve_models(nt, result)
+            ##################################
         return nt.models
 
     
