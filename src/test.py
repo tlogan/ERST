@@ -918,6 +918,14 @@ def test_weak_diff_in_pair():
     assert answer == "~zero @" 
 
 
+def test_less_equal_imp_subs_one_two_imp_query():
+    two_one_imp_query = ('''
+((~succ ~zero @, ~succ ~succ ~zero @) -> Q)
+    ''')
+    answer = query_strong_side(less_equal_imp, two_one_imp_query, "Q")
+    print(f"answer: {answer}")
+    assert answer == "~true @" 
+
 def test_less_equal_imp_subs_two_one_imp_query():
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
@@ -943,7 +951,7 @@ def test_app_less_equal_two_one():
     ''')
     pieces = [app_less]
     (models, typ_var, guides, parsetree) = analyze(pieces)
-    # print("answer: " + u(decode(models, typ_var)))
+    print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~false @"
 
 arg_specialization = (f'''
@@ -959,13 +967,28 @@ case (x, y) => (
 )
 ''')
 
-# arg_specialization = (f'''
-# let cmp = (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) ;
-# case (x, y) => cmp(x, y)
-# ''')
+arg_specialization = (f'''
+let cmp = (
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+) ;
+
+case (x, y) => (
+    (
+    case ~true @ => y 
+    case ~false @ => x 
+    )(cmp(x, y))
+)
+''')
+
+arg_specialization = (f'''
+let cmp = (
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+) ;
+
+case (x, y) => cmp(x, y)
+''')
 
 def test_arg_specialization():
     ########################################
@@ -980,9 +1003,12 @@ def test_arg_specialization():
 ((~true @ -> X) & (~false @ -> Y)) <: ~false @ -> Q
     '''
     pieces = [arg_specialization]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    ##### DEBUG #####
+    decode(models, typ_var)
+    ##### DEBUG #####
     # print("answer: " + u(decode(models, typ_var)))
-    assert u(decode(models, typ_var)) == "~uno @"
+    # assert u(decode(models, typ_var)) == "(X, Y) -> ~uno @"
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -1022,52 +1048,6 @@ def test_max():
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
-'''
-~~~ cator: ((~true @ -> _5) & (~false @ -> _3)) 
-LOOK!! (_3 and _5) should not be bound. they are the same variables as the return of max 
-TODO: consider existential extrusion
- -- Q: what's the benefit of extrusion over simply using free variable in relation constraint
-    -- A: existential extrusion allows specialization on the outside, but using the weaker type on the inside. 
-    -- A: opposite of universal extrusion: allows specialized view on the inside with generalized view on the outside
- -- should existential extrusion be used in return type of application too?
-e.g. EXI [_73 _4 _6 ; _3 <: _4; _4 <: 6; ((_4, _6), _73) <: LFP _59
-~~~ arguments: (EXI [_73 _3 _5 ; ((_3, _5), _73) <: LFP _59 ((EXI [_61 ; _61 <: _24] ((~zero @, _61), ~true @)) | ((EXI [_62 _40 _63 ; ((_63, _62), _40) <: _59] ((~succ _63, ~succ _62), _40)) | (EXI [_64 ; _64 <: _46] ((~succ _64, ~zero @), ~false @)))) ; _72 <: LFP _59 ((EXI [_61 ; _61 <: _24] (~zero @, _61)) | ((EXI [_62 _63 ; (_63, _62) <: _59] (~succ _63, ~succ _62)) | (EXI [_64 ; _64 <: _46] (~succ _64, ~zero @))))] _73)
-'''
-
-'''
-LFP _32 (
-    (~nil @, ~zero @) | 
-    (EXI [N L 
-        ; _42 <: (_44 -> N) 
-        ; _41 <: (_44 -> N) 
-        ; L <: _44 ; _40 <: _16 ; _34 <: _16 
-        ; L <: _12 ; _33 <: _12 ; _40 <: N 
-        ; (_29 | _41) <: _2 ; _38 <: _2
-    ] (~cons L, ~succ N))
-)
-'''
-
-'''
-LFP _29 (
-    (~nil @, ~zero @) | 
-    (EXI [ L N 
-        ; _33 <: _12 
-        ; _36 <: (L -> N) 
-        ; N <: _16 ; (_26 | _36) <: _2 
-        ; _31 <: _2 ; _32 <: _16 
-        ; L <: _12
-    ] (~cons L, ~succ N))
-)
-'''
-
-'''
-LFP _22 (
-    (~nil @, ~zero @) | 
-    (EXI [N L ; (L, N) <: _22] (~cons L, ~succ N))
-)
-'''
-
-
 if __name__ == '__main__':
 
     ########################
@@ -1076,14 +1056,16 @@ if __name__ == '__main__':
     # test_function_cases_disjoint()
     # test_function()
     # test_function_with_var()
-    test_functional()
+    # test_functional()
     # test_fix()
     ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()
+    # test_less_equal_imp_subs_one_two_imp_query()
+    # test_less_equal_imp_subs_two_one_imp_query()
     #
     # TODO
-    # test_arg_specialization()
+    test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()

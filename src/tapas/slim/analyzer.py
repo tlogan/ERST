@@ -1376,9 +1376,10 @@ class Solver:
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     # DEBUG decode_with_polarity 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # t: {concretize_typ(t)}
+    # ***
     # m.freezer: {m.freezer}
     # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # t: {concretize_typ(t)}
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     #         """)
 
@@ -2014,13 +2015,13 @@ class Rule:
         self.solver = solver
 
     def evolve_models(self, nt : Nonterm, t : Typ) -> list[Model]:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG evolve_models
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nt.enviro: {nt.enviro}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG evolve_models
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# nt.enviro: {nt.enviro}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
         return [
             m1
             for m0 in nt.models
@@ -2029,25 +2030,6 @@ nt.enviro: {nt.enviro}
                 nt.typ_var
             )
         ]
-
-    def evolve_models_with_pattern(self, nt : Nonterm, pat : Typ) -> list[Model]:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG evolve_models_with_pattern
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nt.enviro: {nt.enviro}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
-        return [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var,
-                pat 
-            )
-        ]
-
-
 
 class BaseRule(Rule):
 
@@ -2060,23 +2042,7 @@ class BaseRule(Rule):
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_assoc
-~~~~~~~~~~~~~~~~~~~~~
-applicator: {applicator}
-arguments: {arguments}
-nt.models: {nt.models}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
-            result =  ExprRule(self.solver).combine_application(nt, applicator, arguments) 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_assoc
-~~~~~~~~~~~~~~~~~~~~~
-result: {result}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+            result = ExprRule(self.solver).combine_application(nt, applicator, arguments) 
             return result
 
     def combine_unit(self, nt : Nonterm) -> list[Model]:
@@ -2113,16 +2079,19 @@ result: {result}
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function len(nt.models): {len(nt.models)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
+        # TODO: the models from the bodies of the branches should intersected with each other
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function 
+~~~~~~~~~~~~~~~~~~~~~
+len(nt.models): {len(nt.models)}
+~~~~~~~~~~~~~~~~~~~~~
+        """)
 
 #         for model in nt.models:
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function model
+# DEBUG combine_function (for model in nt.model)
 # ~~~~~~~~~~~~~~~~~~~~~
 # model.freezer: {model.freezer}
 # model.constraints: {concretize_constraints(tuple(model.constraints))}
@@ -2387,11 +2356,22 @@ class ExprRule(Rule):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DEBUG: combine_application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nt.enviro: {nt.enviro}
 cator_var: {cator_var}
 arg_vars: {arg_vars}
-nt.models: {[concretize_constraints(tuple(m.constraints)) for m in nt.models]}
+len(nt.models): {len(nt.models)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)
+
+        for m in nt.models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_application (nt.models) 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         models = nt.models
         for arg_var in arg_vars:
@@ -2411,11 +2391,11 @@ nt.models: {[concretize_constraints(tuple(m.constraints)) for m in nt.models]}
         ]
         print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: combine_application
+DEBUG: combine_application result models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 result_var: {result_var}
 nt.typ_var: {nt.typ_var}
-models: {[concretize_constraints(tuple(m.constraints)) for m in models]}
+len(models): {len(models)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)
         return models

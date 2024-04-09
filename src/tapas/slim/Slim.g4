@@ -307,12 +307,12 @@ condition_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_condition, 
 } condition = expr[condition_nt] {
 self.guide_symbol('then')
 } 'then' {
-nt = replace(nt, models = condition.models)
+nt = replace(nt, models = $condition.models)
 true_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_true_branch, nt, condition_nt.typ_var)
 } true_branch = expr[true_branch_nt] {
 self.guide_symbol('else')
 } 'else' {
-nt = replace(nt, models = true_branch.models)
+nt = replace(nt, models = $true_branch.models)
 false_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
 } false_branch = expr[false_branch_nt] {
 $models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, true_branch_nt.typ_var, false_branch_nt.typ_var) 

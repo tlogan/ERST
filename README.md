@@ -2,7 +2,7 @@
 
 
 ### TODO
-- update `combine_fix` to work and use constraint pruning of negative interpretations   
+- update how models from function case bodies are turned into intersections of implications 
 - clean up `combine_function` and `test_functional` 
     - call interpret on imp instead of param and return separately 
 - update interpret functions to properly handle the weak and strong sides to properly flip direction of interpretation by pattern matching on all cases.
