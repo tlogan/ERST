@@ -2,16 +2,11 @@
 
 
 ### TODO
-- fix application of intersection argument generating union in `arg_specialization`
 - test `combine_fix` with `test_fix`
-- use interpretation to keep types and constraints compact 
+- test the real `arg_specialization`
 - uncomment generalization and extrusion in `combine_function`
-- update simplify to remove constraints containing unused variables.
-- consider freezing the result variable of application
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
-- clean up `combine_function` and `test_functional` 
-    - call interpret on imp instead of param and return separately 
-- debug `test_functional` and `test_fix`
+
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.
