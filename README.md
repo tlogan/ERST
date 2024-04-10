@@ -2,15 +2,14 @@
 
 
 ### TODO
-- update how models from function case bodies are turned into intersections of implications 
+- update combine rules so that models generated from bodies of function cases and record fields are included in result and used in higher rules 
+    - do not rewrite the parameter variables; they remain in order to relate to variables under difference branches. 
+- uncomment generalization and extrusion in `combine_function`
+- update simplify to remove constraints containing unused variables.
+- consider freezing the result variable of application
+- (maybe) rewrite package to ensure that all constraints have a frozen variable
 - clean up `combine_function` and `test_functional` 
     - call interpret on imp instead of param and return separately 
-- update interpret functions to properly handle the weak and strong sides to properly flip direction of interpretation by pattern matching on all cases.
-
-- update package to only use existential for frozen variables then and use universal  for remaining variables plus remaining constraints.
-    - existential should come after universal since it can depend on a particular instance of learnable variables
-
-- determine if there is a way to generalize and extrude without packaging constraints
 - debug `test_functional` and `test_fix`
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - consider removing redundant constraints in distill; (only necessary for program synthesis)

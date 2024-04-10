@@ -104,6 +104,13 @@ class Bot:
 Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
 
 
+@dataclass(frozen=True, eq=True)
+class Branch:
+    models : list[Model]
+    pattern : Typ 
+    body : TVar
+
+
 '''
 Nameless Type
 '''
@@ -413,7 +420,7 @@ def make_diff(context : Typ, negs : list[Typ]) -> Typ:
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
     return Inter(TField("head", left), TField("tail", right))
 
-def from_branches_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
+def augment_branches_with_diff(branches : list[Branch]) -> list[Branch]:
     '''
     nil -> zero
     cons X -> succ Y 
@@ -421,10 +428,10 @@ def from_branches_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
     (nil,zero) | (cons X\\nil, succ Y)
     '''
 
-    choices = []
+    augmented_branches = []
     negs = []
 
-    for case in cases:
+    for branch in branches:
 #         print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG from_branches_to_choices
@@ -432,17 +439,17 @@ def from_branches_to_choices(cases : list[Imp]) -> list[tuple[Typ, Typ]]:
 # DEBUG case: {concretize_typ(case)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
-        choices += [(make_diff(case.antec, negs), case.consq)]
-        neg_fvs = extract_free_vars_from_typ(s(), case.antec)  
+        augmented_branches += [Branch(branch.models, make_diff(branch.pattern, negs), branch.body)]
+        neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
         neg = (
-            Exi(tuple(sorted(neg_fvs)), (), case.antec)
+            Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
             if neg_fvs else
-            case.antec
+            branch.pattern 
         )
         # TODO
         # negs += [neg]
         negs = []
-    return choices 
+    return augmented_branches 
 
 def linearize_unions(t : Typ) -> list[Typ]:
     if isinstance(t, Unio):
@@ -1371,17 +1378,17 @@ class Solver:
 
     def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
 
-    #     for m in models:
-    #         print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_with_polarity 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # t: {concretize_typ(t)}
-    # ***
-    # m.freezer: {m.freezer}
-    # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG decode_with_polarity 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    t: {concretize_typ(t)}
+    ***
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         constraint_typs = [
             package_typ(m, tt)
@@ -2067,7 +2074,7 @@ class BaseRule(Rule):
         # - consider removing redundancy
         return self.evolve_models(nt, TTag(label, body))
 
-    def combine_function(self, nt : Nonterm, branches : list[Imp]) -> list[Model]:
+    def combine_function(self, nt : Nonterm, branches : list[Branch]) -> list[Model]:
         '''
         Example
         ==============
@@ -2084,6 +2091,7 @@ class BaseRule(Rule):
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG combine_function 
 ~~~~~~~~~~~~~~~~~~~~~
+nt.enviro: {nt.enviro}
 len(nt.models): {len(nt.models)}
 ~~~~~~~~~~~~~~~~~~~~~
         """)
@@ -2098,10 +2106,7 @@ len(nt.models): {len(nt.models)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
 
-        used_constraints = s()
-        new_models = []
-        for model in nt.models:
-
+        # used_constraints = s()
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG combine_function model 
@@ -2110,21 +2115,40 @@ len(nt.models): {len(nt.models)}
 # model.constraints: {concretize_constraints(tuple(model.constraints))}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
-            choices = from_branches_to_choices(branches)
-            result = Top() 
-            for choice in reversed(choices): 
+        augmented_branches = augment_branches_with_diff(branches)
+        result = Top() 
+        for branch in reversed(augmented_branches): 
+            for branch_model in branch.models:
                 '''
                 interpret, extrude, and generalize
                 '''
-                new_model = model
+                new_model = branch_model
 
-                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, choice[0], s())
-                used_constraints = used_constraints.union(param_used_constraints)
-                new_model = Model(new_model.constraints .difference(used_constraints), new_model.freezer)
+                # TODO: (maybe, not sure) consider not weakening the param; should just manipulate body to match the variables used in param
+                # param_typ = branch.pattern
+                # param_used_constraints = s()
+                #############
+                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, s())
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                DEBUG combine_function (after interpret param)
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                param_typ: {concretize_typ(param_typ)}
+                param_used_constraints: {concretize_constraints(tuple(param_used_constraints))}
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
 
-                (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, choice[1], s())
-                used_constraints = used_constraints.union(return_used_constraints)
-                new_model = Model(new_model.constraints .difference(used_constraints), new_model.freezer)
+                (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                DEBUG combine_function (after interpret return)
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                return_typ: {concretize_typ(return_typ)}
+                return_used_constraints: {concretize_constraints(tuple(return_used_constraints))}
+                ~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+                new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
 
                 fvs = extract_free_vars_from_typ(s(), param_typ)
 
@@ -2134,11 +2158,12 @@ len(nt.models): {len(nt.models)}
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(var.id for var in renaming.values())
                 imp = Imp(param_typ, return_typ)
-                generalized_case = imp
+                # generalized_case = imp
+                ######## DEBUG: without generalization #############
+                constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
+                generalized_case = All((), constraints, imp)
                 ######## TODO: generalization #############
                 # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
-                #     # TODO: adding the following causes non-termination
-                #     # but it's necessary to related return type to generalized parameter type
                 #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_model, imp)))
                 # )
 
@@ -2168,33 +2193,20 @@ len(nt.models): {len(nt.models)}
     #             """)
 
                 result = Inter(generalized_case, result)
-                used_constraints = used_constraints.union(param_used_constraints).union(return_used_constraints)
             '''
             end for 
             '''
+        '''
+        end for 
+        '''
 
-            new_model = Model(model.constraints.difference(used_constraints), model.freezer)
-            new_models.extend(
-                self.solver.solve(new_model, 
-                    simplify_typ(result), 
-                    nt.typ_var
-                )
-            )
+        models = [
+            m
+            # Model(m.constraints.difference(used_constraints), m.freezer)
+            for m in self.evolve_models(nt, simplify_typ(result))
+        ]
 
-#             print(f"""
-#     ~~~~~~~~~~~~~~~~~~~~~
-#     DEBUG combine_function
-#     ~~~~~~~~~~~~~~~~~~~~~
-#     result: {concretize_typ(simplify_typ(result))}
-#     ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function len(new_models): {len(new_models)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
-        return new_models
+        return models
 
 class ExprRule(Rule):
 
@@ -2267,8 +2279,8 @@ class ExprRule(Rule):
 
     def combine_ite(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar, false_body_var : TVar) -> list[Model]: 
         cases = [
-            Imp(TTag('true', TUnit()), true_body_var), 
-            Imp(TTag('false', TUnit()), false_body_var)
+            Branch([], TTag('true', TUnit()), true_body_var), 
+            Branch([], TTag('false', TUnit()), false_body_var)
         ]
         cator_var = self.solver.fresh_type_var()
         cator_models = [
@@ -2678,8 +2690,13 @@ class FunctionRule(Rule):
 
         return Nonterm('expr', nt.enviro, models, body_var)
 
-    def combine_single(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar) -> list[Imp]:
-        return [Imp(pattern_typ, body_var)]
+    def combine_single(self, nt : Nonterm, pattern_typ : Typ, body_models : list[Model], body_var : TVar) -> list[Branch]:
+        """
+        NOTE: this could learn constraints on the param variables,
+        which could separate params into case patterns.
+        should package the 
+        """
+        return [Branch(body_models, pattern_typ, body_var)]
 
     def distill_cons_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
         return self.distill_single_body(nt, pattern_typ)
@@ -2691,8 +2708,8 @@ class FunctionRule(Rule):
         '''
         return nt
 
-    def combine_cons(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar, tail : list[Imp]) -> list[Imp]:
-        return [Imp(pattern_typ, body_var)] + tail
+    def combine_cons(self, nt : Nonterm, pattern_typ : Typ, body_models : list[Model], body_var : TVar, tail : list[Branch]) -> list[Branch]:
+        return self.combine_single(nt, pattern_typ, body_models, body_var) + tail
 
 
 class KeychainRule(Rule):

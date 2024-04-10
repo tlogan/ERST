@@ -1005,9 +1005,9 @@ def test_arg_specialization():
     pieces = [arg_specialization]
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
     ##### DEBUG #####
-    decode(models, typ_var)
+    # decode(models, typ_var)
     ##### DEBUG #####
-    # print("answer: " + u(decode(models, typ_var)))
+    print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "(X, Y) -> ~uno @"
 
 max = (f'''
@@ -1056,7 +1056,7 @@ if __name__ == '__main__':
     # test_function_cases_disjoint()
     # test_function()
     # test_function_with_var()
-    # test_functional()
+    test_functional()
     # test_fix()
     ########################
     # test_two_less_equal_one_query()
@@ -1065,7 +1065,7 @@ if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
     #
     # TODO
-    test_arg_specialization()
+    # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()

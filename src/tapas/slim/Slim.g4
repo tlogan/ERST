@@ -399,8 +399,7 @@ $models = $record.models
 
 | {
 } function[nt] {
-(models, branches) = $function.models_branches
-nt = replace(nt, models = models)
+branches = $function.branches
 $models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 }
 
@@ -418,7 +417,7 @@ $models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.
 ;
 
 
-function [Nonterm nt] returns [tuple[lsit[Model], list[Imp]] models_branches] :
+function [Nonterm nt] returns [list[Branch] branches] :
 
 | 'case' {
 } pattern[nt] {
@@ -427,8 +426,7 @@ self.guide_symbol('=>')
 nt = replace(nt, enviro = $pattern.attr.enviro)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
-nt = replace(nt, models = $body.models)
-$models_branches = ($body.models, self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, body_nt.typ_var))
+$branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
 }
 
 | 'case' {
@@ -438,11 +436,10 @@ self.guide_symbol('=>')
 nt = replace(nt, enviro = $pattern.attr.enviro)
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
 } body = expr[body_nt] {
-nt = replace(nt, models = $body.models)
 tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
 } tail = function[tail_nt] {
-(models, branches) = $tail.models_branches
-$models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, body_nt.typ_var, branches))
+tail_branches = $tail.branches
+$branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.models, body_nt.typ_var, tail_branches)
 }
 
 ;

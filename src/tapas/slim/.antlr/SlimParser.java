@@ -1187,8 +1187,7 @@ public class SlimParser extends Parser {
 				setState(246);
 				((BaseContext)_localctx).function = function(nt);
 
-				(models, branches) = ((BaseContext)_localctx).function.models_branches
-				nt = replace(nt, models = models)
+				branches = ((BaseContext)_localctx).function.branches
 				_localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 
 				}
@@ -1230,7 +1229,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
 		public Nonterm nt;
-		public tuple[lsit[Model], list[Imp]] models_branches;
+		public list[Branch] branches;
 		public PatternContext pattern;
 		public ExprContext body;
 		public FunctionContext tail;
@@ -1284,8 +1283,7 @@ public class SlimParser extends Parser {
 				setState(263);
 				((FunctionContext)_localctx).body = expr(body_nt);
 
-				nt = replace(nt, models = ((FunctionContext)_localctx).body.models)
-				_localctx.models_branches = (((FunctionContext)_localctx).body.models, self.collect(FunctionRule(self._solver).combine_single, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var))
+				_localctx.branches = self.collect(FunctionRule(self._solver).combine_single, nt, ((FunctionContext)_localctx).pattern.attr.typ, ((FunctionContext)_localctx).body.models, body_nt.typ_var)
 
 				}
 				break;
@@ -1310,14 +1308,13 @@ public class SlimParser extends Parser {
 				setState(272);
 				((FunctionContext)_localctx).body = expr(body_nt);
 
-				nt = replace(nt, models = ((FunctionContext)_localctx).body.models)
 				tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var)
 
 				setState(274);
 				((FunctionContext)_localctx).tail = function(tail_nt);
 
-				(models, branches) = ((FunctionContext)_localctx).tail.models_branches
-				_localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, nt, ((FunctionContext)_localctx).pattern.attr.typ, body_nt.typ_var, branches))
+				tail_branches = ((FunctionContext)_localctx).tail.branches
+				_localctx.branches = self.collect(FunctionRule(self._solver).combine_cons, nt, ((FunctionContext)_localctx).pattern.attr.typ, ((FunctionContext)_localctx).body.models, body_nt.typ_var, tail_branches)
 
 				}
 				break;

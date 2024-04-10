@@ -1404,8 +1404,7 @@ class SlimParser ( Parser ):
                 self.state = 246
                 localctx._function = self.function(nt)
 
-                (models, branches) = localctx._function.models_branches
-                nt = replace(nt, models = models)
+                branches = localctx._function.branches
                 localctx.models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 
                 pass
@@ -1446,7 +1445,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.models_branches = None
+            self.branches = None
             self._pattern = None # PatternContext
             self.body = None # ExprContext
             self.tail = None # FunctionContext
@@ -1511,8 +1510,7 @@ class SlimParser ( Parser ):
                 self.state = 263
                 localctx.body = self.expr(body_nt)
 
-                nt = replace(nt, models = localctx.body.models)
-                localctx.models_branches = (localctx.body.models, self.collect(FunctionRule(self._solver).combine_single, nt, localctx._pattern.attr.typ, body_nt.typ_var))
+                localctx.branches = self.collect(FunctionRule(self._solver).combine_single, nt, localctx._pattern.attr.typ, localctx.body.models, body_nt.typ_var)
 
                 pass
 
@@ -1536,14 +1534,13 @@ class SlimParser ( Parser ):
                 self.state = 272
                 localctx.body = self.expr(body_nt)
 
-                nt = replace(nt, models = localctx.body.models)
                 tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, localctx._pattern.attr.typ, body_nt.typ_var)
 
                 self.state = 274
                 localctx.tail = self.function(tail_nt)
 
-                (models, branches) = localctx.tail.models_branches
-                localctx.models_branches = (models, self.collect(FunctionRule(self._solver).combine_cons, nt, localctx._pattern.attr.typ, body_nt.typ_var, branches))
+                tail_branches = localctx.tail.branches
+                localctx.branches = self.collect(FunctionRule(self._solver).combine_cons, nt, localctx._pattern.attr.typ, localctx.body.models, body_nt.typ_var, tail_branches)
 
                 pass
 
