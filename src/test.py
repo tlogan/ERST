@@ -968,48 +968,41 @@ def test_nested_fun():
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
-case (x, y) => (
-    if cmp(x, y) then
-        y
-    else
-        x
-)
-''')
+# arg_specialization = (f'''
+# let cmp = (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) ;
+# case (x, y) => (
+#     if cmp(x, y) then
+#         y
+#     else
+#         x
+# )
+# ''')
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
+# arg_specialization = (f'''
+# let cmp = (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) ;
 
-case (x, y) => (
-    (
-    case ~true @ => y 
-    case ~false @ => x 
-    )(cmp(x, y))
-)
-''')
+# case (x, y) => (
+#     (
+#     case ~true @ => y 
+#     case ~false @ => x 
+#     )(cmp(x, y))
+# )
+# ''')
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
+# arg_specialization = (f'''
+# let cmp = (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) ;
 
-case (x, y) => cmp(x, y)
-''')
-
-# TODO: There are too many redundant constraints when using the let syntax
-# DEBUG combine_application (nt.models) 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# m.freezer: pset()
-# m.constraints:  ; (_3 | ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @)))) <: _11 ; _3 <: _2 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _3 ; (_14, _15) <: _13 ; _2 <: _11 ; _9 <: _15 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _2 ; _8 <: _14
-# ~~~~~~~~~~~~~~~~~~~~~~~~
+# case (x, y) => cmp(x, y)
+# ''')
 
 # arg_specialization = (f'''
 # case (x, y) => ((
@@ -1018,14 +1011,14 @@ case (x, y) => cmp(x, y)
 # )(x, y))
 # ''')
 
-# arg_specialization = (f'''
-# (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) |> (case cmp => 
-# case (x, y) => cmp(x, y)
-# )
-# ''')
+arg_specialization = (f'''
+(
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+) |> (case cmp => 
+case (x, y) => cmp(x, y)
+)
+''')
 
 # arg_specialization = (f'''
 # (case cmp => (case (x, y) => cmp(x, y))) (

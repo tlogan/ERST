@@ -1022,8 +1022,8 @@ public class SlimParser extends Parser {
 				setState(207);
 				((ExprContext)_localctx).pipeline = pipeline(pipeline_nt);
 
-				nt = replace(nt, models = pipeline_nt.models)
-				_localctx.models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, ((ExprContext)_localctx).pipeline.cator_vars)
+				nt = replace(nt, models = ((ExprContext)_localctx).pipeline.attr.models)
+				_localctx.models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, ((ExprContext)_localctx).pipeline.attr.cators)
 
 				}
 				break;
@@ -1535,7 +1535,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class PipelineContext extends ParserRuleContext {
 		public Nonterm nt;
-		public list[TVar] cator_vars;
+		public PipelineAttr attr;
 		public ExprContext content;
 		public ExprContext head;
 		public PipelineContext tail;
@@ -1577,7 +1577,7 @@ public class SlimParser extends Parser {
 				((PipelineContext)_localctx).content = expr(content_nt);
 
 				nt = replace(nt, models = ((PipelineContext)_localctx).content.models)
-				_localctx.cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
+				_localctx.attr = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 
 				}
 				break;
@@ -1598,7 +1598,8 @@ public class SlimParser extends Parser {
 				setState(331);
 				((PipelineContext)_localctx).tail = pipeline(tail_nt);
 
-				_localctx.cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, ((PipelineContext)_localctx).tail.cator_vars)
+				nt = replace(nt, models = ((PipelineContext)_localctx).tail.attr.models)
+				_localctx.attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, ((PipelineContext)_localctx).tail.attr.cators)
 
 				}
 				break;

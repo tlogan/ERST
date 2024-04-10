@@ -326,6 +326,11 @@ class ArgchainAttr:
     models : list[Model]
     args : list[TVar]
 
+@dataclass(frozen=True, eq=True)
+class PipelineAttr:
+    models : list[Model]
+    cators : list[TVar]
+
 """
 Guidance
 """
@@ -1005,6 +1010,11 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
 
         if op != None:
             (interp_typ_once, cs_once) = op
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG: used_constraints: {concretize_constraints(cs_once)}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             if (id in model.freezer) or meaningful(polarity, interp_typ_once): 
                 m = Model(model.constraints.difference(cs_once), model.freezer)
                 (t, cs_cont) = interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
@@ -2094,6 +2104,7 @@ class BaseRule(Rule):
                 field = TField(branch.label, body_typ)
                 constraints = tuple(extract_reachable_constraints_from_typ(new_model, field))
                 if constraints:
+                    # TODO: update outer model instead of nesting constraints; since there's no generalization
                     generalized_case = All((), constraints, field)
                 else:
                     generalized_case = field 
@@ -2421,10 +2432,16 @@ class ExprRule(Rule):
             new_models = []
             for model in models:
                 # NOTE: interpret cator to keep types compact 
+                print(f"""
+                ~~~~~~~~~~~~~~
+                DEBUG application
+                constraints: {concretize_constraints(tuple(model.constraints))}
+                ~~~~~~~~~~~~~~
+                """)
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
-                # arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
-                model = Model(model.constraints.difference(cator_used_constraints), model.freezer)
-                new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_var, result_var)))
+                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
+                model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer)
+                new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
             models = new_models
 
             # TODO: remove version without interpretation
@@ -2466,11 +2483,23 @@ class ExprRule(Rule):
     def combine_funnel(self, nt : Nonterm, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
         models = nt.models
         for cator_var in cator_vars:
+            print(f"""
+            ~~~~~~~~
+            DEBUG funnel
+            cator_var: {cator_var}
+            ~~~~~~~~
+            """)
             result_var = self.solver.fresh_type_var() 
             app_nt = replace(nt, models = models, typ_var = result_var) 
             models = self.combine_application(app_nt, cator_var, [arg_var])
             arg_var = result_var 
-        # TODO: add final check that the result_typ <: nt.typ_var
+
+        # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
+        models = [
+            m1
+            for m0 in models
+            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
+        ]
         return models 
 
     def distill_fix_body(self, nt : Nonterm) -> Nonterm:
@@ -2821,11 +2850,11 @@ class PipelineRule(Rule):
         # ]
         return Nonterm('pipeline', nt.enviro, models, tail_var)
 
-    def combine_single(self, nt : Nonterm, content_var : TVar) -> list[TVar]:
-        return [content_var]
+    def combine_single(self, nt : Nonterm, content_var : TVar) -> PipelineAttr:
+        return PipelineAttr(nt.models, [content_var])
 
-    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_var : list[TVar]) -> list[TVar]:
-        return [head_var] + tail_var
+    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
+        return PipelineAttr(nt.models, [head_var] + tail_var)
 
 
 '''

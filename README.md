@@ -2,6 +2,8 @@
 
 
 ### TODO
+- test `combine_fix` with `test_fix`
+- use interpretation to keep types and constraints compact 
 - uncomment generalization and extrusion in `combine_function`
 - update simplify to remove constraints containing unused variables.
 - consider freezing the result variable of application

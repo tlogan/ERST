@@ -1229,8 +1229,8 @@ class SlimParser ( Parser ):
                 self.state = 207
                 localctx._pipeline = self.pipeline(pipeline_nt)
 
-                nt = replace(nt, models = pipeline_nt.models)
-                localctx.models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, localctx._pipeline.cator_vars)
+                nt = replace(nt, models = localctx._pipeline.attr.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, localctx._pipeline.attr.cators)
 
                 pass
 
@@ -1784,7 +1784,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.cator_vars = None
+            self.attr = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # PipelineContext
@@ -1836,7 +1836,7 @@ class SlimParser ( Parser ):
                 localctx.content = self.expr(content_nt)
 
                 nt = replace(nt, models = localctx.content.models)
-                localctx.cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
+                localctx.attr = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 
                 pass
 
@@ -1856,7 +1856,8 @@ class SlimParser ( Parser ):
                 self.state = 331
                 localctx.tail = self.pipeline(tail_nt)
 
-                localctx.cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, localctx.tail.cator_vars)
+                nt = replace(nt, models = localctx.tail.attr.models)
+                localctx.attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, localctx.tail.attr.cators)
 
                 pass
 

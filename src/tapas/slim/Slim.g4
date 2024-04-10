@@ -345,11 +345,10 @@ arg_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_arg, nt)
 nt = replace(nt, models = $arg.models)
 pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, arg_nt.typ_var)
 } pipeline[pipeline_nt] {
-nt = replace(nt, models = pipeline_nt.models)
-$models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.cator_vars)
+nt = replace(nt, models = $pipeline.attr.models)
+$models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.attr.cators)
 }
 
-//TODO
 | 'let' {
 self.guide_terminal('ID')
 } ID {
@@ -505,13 +504,13 @@ $attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_va
 
 ;
 
-pipeline [Nonterm nt] returns [list[TVar] cator_vars] :
+pipeline [Nonterm nt] returns [PipelineAttr attr] :
 
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 } content = expr[content_nt] {
 nt = replace(nt, models = $content.models)
-$cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
+$attr = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 }
 
 | '|>' {
@@ -520,7 +519,8 @@ head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt)
 nt = replace(nt, models = $head.models)
 tail_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 } tail = pipeline[tail_nt] {
-$cator_vars = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, $tail.cator_vars)
+nt = replace(nt, models = $tail.attr.models)
+$attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, $tail.attr.cators)
 }
 
 ;
