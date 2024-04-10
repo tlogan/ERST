@@ -1011,12 +1011,12 @@ case (x, y) => cmp(x, y)
 # m.constraints:  ; (_3 | ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @)))) <: _11 ; _3 <: _2 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _3 ; (_14, _15) <: _13 ; _2 <: _11 ; _9 <: _15 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _2 ; _8 <: _14
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 
-arg_specialization = (f'''
-case (x, y) => ((
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-)(x, y))
-''')
+# arg_specialization = (f'''
+# case (x, y) => ((
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# )(x, y))
+# ''')
 
 # arg_specialization = (f'''
 # (
@@ -1120,8 +1120,8 @@ if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
     #
     # TODO
-    test_nested_fun()
-    # test_arg_specialization()
+    # test_nested_fun()
+    test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()
