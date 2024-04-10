@@ -2,6 +2,7 @@
 
 
 ### TODO
+- fix application of intersection argument generating union in `arg_specialization`
 - test `combine_fix` with `test_fix`
 - use interpretation to keep types and constraints compact 
 - uncomment generalization and extrusion in `combine_function`

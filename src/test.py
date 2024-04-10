@@ -1011,21 +1011,22 @@ def test_nested_fun():
 # )(x, y))
 # ''')
 
-arg_specialization = (f'''
-(
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) |> (case cmp => 
-case (x, y) => cmp(x, y)
-)
-''')
-
 # arg_specialization = (f'''
-# (case cmp => (case (x, y) => cmp(x, y))) (
+# (
 #     case (~uno @, ~dos @) => ~true @
 #     case (~dos @, ~uno @) => ~false @ 
+# ) |> (case cmp => 
+# case (x, y) => cmp(x, y)
 # )
 # ''')
+
+# TODO: why does the application produce two models at the top?
+arg_specialization = (f'''
+(case cmp => (case (x, y) => cmp(x, y))) (
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+)
+''')
 
 def test_arg_specialization():
     ########################################
