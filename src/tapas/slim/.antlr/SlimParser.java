@@ -1181,7 +1181,8 @@ public class SlimParser extends Parser {
 				setState(242);
 				((BaseContext)_localctx).record = record(nt);
 
-				_localctx.models = ((BaseContext)_localctx).record.models
+				branches = ((BaseContext)_localctx).record.branches
+				_localctx.models = self.collect(BaseRule(self._solver).combine_record, nt, branches)
 
 				}
 				break;
@@ -1338,7 +1339,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class RecordContext extends ParserRuleContext {
 		public Nonterm nt;
-		public list[Model] models;
+		public list[RecordBranch] branches;
 		public Token ID;
 		public ExprContext body;
 		public RecordContext tail;
@@ -1390,8 +1391,7 @@ public class SlimParser extends Parser {
 				setState(286);
 				((RecordContext)_localctx).body = expr(body_nt);
 
-				nt = replace(nt, models = ((RecordContext)_localctx).body.models)
-				_localctx.models = self.collect(RecordRule(self._solver).combine_single, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_nt.typ_var)
+				_localctx.branches = self.collect(RecordRule(self._solver).combine_single, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.models, body_nt.typ_var)
 
 				}
 				break;
@@ -1416,14 +1416,13 @@ public class SlimParser extends Parser {
 				setState(295);
 				((RecordContext)_localctx).body = expr(body_nt);
 
-				nt = replace(nt, models = ((RecordContext)_localctx).body.models)
 				tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_nt.typ_var)
 
 				setState(297);
 				((RecordContext)_localctx).tail = record(tail_nt);
 
-				nt = replace(nt, models = ((RecordContext)_localctx).tail.models)
-				_localctx.models = self.collect(RecordRule(self._solver).combine_cons, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_nt.typ_var, tail_nt.typ_var)
+				tail_branches = ((RecordContext)_localctx).tail.branches
+				_localctx.branches = self.collect(RecordRule(self._solver).combine_cons, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.models, body_nt.typ_var, tail_branches)
 
 				}
 				break;

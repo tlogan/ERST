@@ -1399,7 +1399,8 @@ class SlimParser ( Parser ):
                 self.state = 242
                 localctx._record = self.record(nt)
 
-                localctx.models = localctx._record.models
+                branches = localctx._record.branches
+                localctx.models = self.collect(BaseRule(self._solver).combine_record, nt, branches)
 
                 pass
 
@@ -1565,7 +1566,7 @@ class SlimParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
-            self.models = None
+            self.branches = None
             self._ID = None # Token
             self.body = None # ExprContext
             self.tail = None # RecordContext
@@ -1629,8 +1630,7 @@ class SlimParser ( Parser ):
                 self.state = 286
                 localctx.body = self.expr(body_nt)
 
-                nt = replace(nt, models = localctx.body.models)
-                localctx.models = self.collect(RecordRule(self._solver).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
+                localctx.branches = self.collect(RecordRule(self._solver).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.models, body_nt.typ_var)
 
                 pass
 
@@ -1654,14 +1654,13 @@ class SlimParser ( Parser ):
                 self.state = 295
                 localctx.body = self.expr(body_nt)
 
-                nt = replace(nt, models = localctx.body.models)
                 tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var)
 
                 self.state = 297
                 localctx.tail = self.record(tail_nt)
 
-                nt = replace(nt, models = localctx.tail.models)
-                localctx.models = self.collect(RecordRule(self._solver).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), body_nt.typ_var, tail_nt.typ_var)
+                tail_branches = localctx.tail.branches
+                localctx.branches = self.collect(RecordRule(self._solver).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.models, body_nt.typ_var, tail_branches)
 
                 pass
 

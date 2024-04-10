@@ -2,8 +2,6 @@
 
 
 ### TODO
-- update combine rules so that models generated from bodies of function cases and record fields are included in result and used in higher rules 
-    - do not rewrite the parameter variables; they remain in order to relate to variables under difference branches. 
 - uncomment generalization and extrusion in `combine_function`
 - update simplify to remove constraints containing unused variables.
 - consider freezing the result variable of application

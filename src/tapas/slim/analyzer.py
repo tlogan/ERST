@@ -110,6 +110,12 @@ class Branch:
     pattern : Typ 
     body : TVar
 
+@dataclass(frozen=True, eq=True)
+class RecordBranch:
+    models : list[Model]
+    label : str 
+    body : TVar
+
 
 '''
 Nameless Type
@@ -2076,6 +2082,33 @@ class BaseRule(Rule):
         # - consider removing redundancy
         return self.evolve_models(nt, TTag(label, body))
 
+    def combine_record(self, nt : Nonterm, branches : list[RecordBranch]) -> list[Model]:
+        result = Top() 
+        for branch in reversed(branches): 
+            for branch_model in reversed(branch.models):
+                new_model = branch_model
+
+                (body_typ, body_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
+                new_model = Model(new_model.constraints.difference(body_used_constraints), new_model.freezer)
+
+                field = TField(branch.label, body_typ)
+                constraints = tuple(extract_reachable_constraints_from_typ(new_model, field))
+                if constraints:
+                    generalized_case = All((), constraints, field)
+                else:
+                    generalized_case = field 
+
+
+                result = Inter(generalized_case, result)
+            '''
+            end for 
+            '''
+        '''
+        end for 
+        '''
+
+        return self.evolve_models(nt, simplify_typ(result))
+
     def combine_function(self, nt : Nonterm, branches : list[Branch]) -> list[Model]:
         '''
         Example
@@ -2692,8 +2725,8 @@ class RecordRule(Rule):
         # models = self.evolve_models(nt, TField(id, body_var))
         return Nonterm('expr', nt.enviro, models, body_var) 
 
-    def combine_single(self, nt : Nonterm, label : str, body_var : Typ) -> list[Model]:
-        return self.evolve_models(nt, TField(label, body_var))
+    def combine_single(self, nt : Nonterm, label : str, body_models : list[Model], body_var : TVar) -> list[RecordBranch]:
+        return [RecordBranch(body_models, label, body_var)]
 
     def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
         return self.distill_single_body(nt, id)
@@ -2705,8 +2738,8 @@ class RecordRule(Rule):
         # models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
         return Nonterm('record', nt.enviro, models, tail_var) 
 
-    def combine_cons(self, nt : Nonterm, id : str, body : Typ, tail_var : TVar) -> list[Model]:
-        return self.evolve_models(nt, Inter(TField(id, body), tail_var))
+    def combine_cons(self, nt : Nonterm, label : str, body_models : list[Model], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
+        return self.combine_single(nt, label, body_models, body_var) + tail
 
 class FunctionRule(Rule):
 

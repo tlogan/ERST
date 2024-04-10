@@ -402,7 +402,8 @@ $models = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt
 }
 
 | record[nt] {
-$models = $record.models
+branches = $record.branches
+$models = self.collect(BaseRule(self._solver).combine_record, nt, branches)
 }
 
 | {
@@ -452,7 +453,7 @@ $branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.a
 
 
 
-record [Nonterm nt] returns [list[Model] models] :
+record [Nonterm nt] returns [list[RecordBranch] branches] :
 
 | '_.' {
 self.guide_terminal('ID')
@@ -461,8 +462,7 @@ self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver).distill_single_body, nt, $ID.text)
 } body = expr[body_nt] {
-nt = replace(nt, models = $body.models)
-$models = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, body_nt.typ_var)
+$branches = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, $body.models, body_nt.typ_var)
 }
 
 | '_.' {
@@ -472,11 +472,10 @@ self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, $ID.text)
 } body = expr[body_nt] {
-nt = replace(nt, models = $body.models)
 tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, $ID.text, body_nt.typ_var)
 } tail = record[tail_nt] {
-nt = replace(nt, models = $tail.models)
-$models = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, body_nt.typ_var, tail_nt.typ_var)
+tail_branches = $tail.branches
+$branches = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, $body.models, body_nt.typ_var, tail_branches)
 }
 
 ;
