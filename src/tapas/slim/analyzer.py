@@ -2143,27 +2143,129 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function 
+# ~~~~~~~~~~~~~~~~~~~~~
+# nt.enviro: {nt.enviro}
+# len(nt.models): {len(nt.models)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
+#         for model in nt.models:
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function (for model in nt.model)
+# ~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
+
+        # used_constraints = s()
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function model 
+# ~~~~~~~~~~~~~~~~~~~~~
+# model.freezer: {model.freezer}
+# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
         augmented_branches = augment_branches_with_diff(branches)
         result = Top() 
-        inner_model = Model(s(), s())
         for branch in reversed(augmented_branches): 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function branch models::: {len(branch.models)} 
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             for branch_model in reversed(branch.models):
 
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_function branch_model 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # branch_model.freezer: {branch_model.freezer}
+    # branch_model.constraints: {concretize_constraints(tuple(branch_model.constraints))}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
                 '''
                 interpret, extrude, and generalize
                 '''
                 new_model = branch_model
 
+                # TODO: (maybe, not sure) consider not weakening the param; should just manipulate body to match the variables used in param
+                # param_typ = branch.pattern
+                # param_used_constraints = s()
+                #############
                 (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, s())
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG combine_function (after interpret param)
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # param_typ: {concretize_typ(param_typ)}
+                # param_used_constraints: {concretize_constraints(tuple(param_used_constraints))}
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
                 new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
 
                 (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG combine_function (after interpret return)
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # return_typ: {concretize_typ(return_typ)}
+                # return_used_constraints: {concretize_constraints(tuple(return_used_constraints))}
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
                 new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
 
+                fvs = extract_free_vars_from_typ(s(), param_typ)
+
+
+                fvs = extract_free_vars_from_typ(s(), param_typ)
+                renaming = self.solver.make_renaming_tvars(fvs)
+                sub_map = cast_up(renaming)
+                bound_ids = tuple(var.id for var in renaming.values())
                 imp = Imp(param_typ, return_typ)
-                inner_model = Model(inner_model.constraints.union(new_model.constraints), inner_model.freezer.union(new_model.freezer))
-                result = Inter(imp, result)
+                # generalized_case = imp
+                ######## DEBUG: without generalization #############
+                constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
+                if constraints:
+                    generalized_case = All((), constraints, imp)
+                else:
+                    generalized_case = imp
+                ######## TODO: generalization #############
+                # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_model, imp)))
+                # )
+
+                # renamed_imp = sub_typ(sub_map, imp)
+                # if bound_ids or constraints:
+                #     generalized_case = All(bound_ids, constraints, renamed_imp)
+                # else:
+                #     generalized_case = renamed_imp
+                #############################################
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_function iteration
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # choice[0]: {concretize_typ(choice[0])}
+    # choice[1]: {concretize_typ(choice[1])}
+
+    # param_typ: {concretize_typ(param_typ)}
+    # return_typ: {concretize_typ(return_typ)}
+
+    # nt.env: {nt.enviro}
+    # model.freezer: {model.freezer}
+    # model.constraints: {concretize_constraints(tuple(model.constraints))}
+
+    # generalized_case: {concretize_typ(generalized_case)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+
+                result = Inter(generalized_case, result)
             '''
             end for 
             '''
@@ -2171,51 +2273,94 @@ class BaseRule(Rule):
         end for 
         '''
 
-        # TODO: generalize out side of intersections; keep track of param vars inside of branch loop 
-                # generalized_case = imp
-                ######## DEBUG: without generalization #############
+        models = self.evolve_models(nt, simplify_typ(result))
+        return models
 
-                # fvs = extract_free_vars_from_typ(s(), param_typ)
-                # renaming = self.solver.make_renaming_tvars(fvs)
-                # sub_map = cast_up(renaming)
-                # bound_ids = tuple(var.id for var in renaming.values())
-                # constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
+    # def combine_function(self, nt : Nonterm, branches : list[Branch]) -> list[Model]:
+    #     '''
+    #     Example
+    #     ==============
+    #     nil -> zero
+    #     cons A -> succ B 
+    #     --------------------
+    #     (nil -> zero) & (cons A\\nil -> succ B)
+    #     --------------- OR -----------------------
+    #     [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
+    #     '''
 
-        # NOTE: update outer models with inner model
-        # models =  [
-        #     m2
-        #     for m0 in nt.models
-        #     for m1 in [Model(m0.constraints.union(inner_model.constraints), m0.freezer.union(inner_model.freezer))] 
-        #     for m2 in self.solver.solve(m1, 
-        #         simplify_typ(result), 
-        #         nt.typ_var
-        #     )
-        # ]
 
-        ## DEBUG
-        models = [
-            m2
-            for m1 in [inner_model] 
-            for m2 in self.solver.solve(m1, 
-                simplify_typ(result), 
-                nt.typ_var
-            )
-        ]
+    #     augmented_branches = augment_branches_with_diff(branches)
+    #     result = Top() 
+    #     inner_model = Model(s(), s())
+    #     for branch in reversed(augmented_branches): 
+    #         for branch_model in reversed(branch.models):
+
+    #             '''
+    #             interpret, extrude, and generalize
+    #             '''
+    #             new_model = branch_model
+
+    #             (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, s())
+    #             new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
+
+    #             (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
+    #             new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
+
+    #             imp = Imp(param_typ, return_typ)
+    #             inner_model = Model(inner_model.constraints.union(new_model.constraints), inner_model.freezer.union(new_model.freezer))
+    #             result = Inter(imp, result)
+    #         '''
+    #         end for 
+    #         '''
+    #     '''
+    #     end for 
+    #     '''
+
+    #     # TODO: generalize out side of intersections; keep track of param vars inside of branch loop 
+    #             # generalized_case = imp
+    #             ######## DEBUG: without generalization #############
+
+    #             # fvs = extract_free_vars_from_typ(s(), param_typ)
+    #             # renaming = self.solver.make_renaming_tvars(fvs)
+    #             # sub_map = cast_up(renaming)
+    #             # bound_ids = tuple(var.id for var in renaming.values())
+    #             # constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
+
+    #     # NOTE: update outer models with inner model
+    #     # models =  [
+    #     #     m2
+    #     #     for m0 in nt.models
+    #     #     for m1 in [Model(m0.constraints.union(inner_model.constraints), m0.freezer.union(inner_model.freezer))] 
+    #     #     for m2 in self.solver.solve(m1, 
+    #     #         simplify_typ(result), 
+    #     #         nt.typ_var
+    #     #     )
+    #     # ]
+
+    #     ## DEBUG
+    #     models = [
+    #         m2
+    #         for m1 in [inner_model] 
+    #         for m2 in self.solver.solve(m1, 
+    #             simplify_typ(result), 
+    #             nt.typ_var
+    #         )
+    #     ]
 
         
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG combine_function inner_model 
-        inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
-        result: {concretize_typ(result)}
-        simplify_typ(result): {concretize_typ(simplify_typ(result))}
-        nt.typ_var: {nt.typ_var}
-        decoded nt.typ_var: {concretize_typ(self.solver.decode_with_polarity(True, models, nt.typ_var))}
-        ~~~~~~~~~~~~~~
-        """)
+    #     print(f"""
+    #     ~~~~~~~~~~~~~~
+    #     DEBUG combine_function inner_model 
+    #     inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
+    #     result: {concretize_typ(result)}
+    #     simplify_typ(result): {concretize_typ(simplify_typ(result))}
+    #     nt.typ_var: {nt.typ_var}
+    #     decoded nt.typ_var: {concretize_typ(self.solver.decode_with_polarity(True, models, nt.typ_var))}
+    #     ~~~~~~~~~~~~~~
+    #     """)
 
-        return models
+    #     return models
 
 class ExprRule(Rule):
 
