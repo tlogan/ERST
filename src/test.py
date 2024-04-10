@@ -954,6 +954,20 @@ def test_app_less_equal_two_one():
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~false @"
 
+def test_nested_fun():
+    nested_fun = (f'''
+    case x => (
+        (
+        case (~true @) => ~uno @ 
+        case (~false @) => ~dos @ 
+        )(x)
+    )
+    ''')
+    pieces = [nested_fun]
+    (models, typ_var, guides, parsetree) = analyze(pieces)
+    print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
+
 arg_specialization = (f'''
 let cmp = (
     case (~uno @, ~dos @) => ~true @
@@ -990,6 +1004,36 @@ let cmp = (
 case (x, y) => cmp(x, y)
 ''')
 
+# TODO: There are too many redundant constraints when using the let syntax
+# DEBUG combine_application (nt.models) 
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# m.freezer: pset()
+# m.constraints:  ; (_3 | ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @)))) <: _11 ; _3 <: _2 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _3 ; (_14, _15) <: _13 ; _2 <: _11 ; _9 <: _15 ; ((ALL [] ((~uno @, ~dos @) -> ~true @)) & (ALL [] ((~dos @, ~uno @) -> ~false @))) <: _2 ; _8 <: _14
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+
+arg_specialization = (f'''
+case (x, y) => ((
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+)(x, y))
+''')
+
+# arg_specialization = (f'''
+# (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) |> (case cmp => 
+# case (x, y) => cmp(x, y)
+# )
+# ''')
+
+# arg_specialization = (f'''
+# (case cmp => (case (x, y) => cmp(x, y))) (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# )
+# ''')
+
 def test_arg_specialization():
     ########################################
     # TODO: this may require a major refactor of rules to return a list of models with a type; instead of just a type 
@@ -1005,6 +1049,17 @@ def test_arg_specialization():
     pieces = [arg_specialization]
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
     ##### DEBUG #####
+    assert models != None
+    # for m in models:
+    #     print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG decode_with_polarity 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # typ_var: {typ_var.id}
+    # m.freezer: {m.freezer}
+    # m.constraints: {analyzer.concretize_constraints(tuple(m.constraints))}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # """)
     # decode(models, typ_var)
     ##### DEBUG #####
     print("answer: " + u(decode(models, typ_var)))
@@ -1056,7 +1111,7 @@ if __name__ == '__main__':
     # test_function_cases_disjoint()
     # test_function()
     # test_function_with_var()
-    test_functional()
+    # test_functional()
     # test_fix()
     ########################
     # test_two_less_equal_one_query()
@@ -1065,6 +1120,7 @@ if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
     #
     # TODO
+    test_nested_fun()
     # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()

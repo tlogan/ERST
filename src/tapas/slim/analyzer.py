@@ -965,6 +965,20 @@ def meaningful(polarity : bool, t : Typ) -> bool:
 
 
 def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
+
+
+    # print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG interpret_with_polarity:
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # typ: {concretize_typ(typ)}
+
+    # model.freezer: {model.freezer}
+    # model.constraints: {concretize_constraints(tuple(model.constraints))}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # """)
+
+
     def interpret_for_id(polarity : bool, id : str): 
         if polarity:
             return interpret_strongest_for_id(model, id)
@@ -1377,18 +1391,6 @@ class Solver:
     #     return make_unio(constraint_typs)
 
     def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
-
-        for m in models:
-            print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-    DEBUG decode_with_polarity 
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-    t: {concretize_typ(t)}
-    ***
-    m.freezer: {m.freezer}
-    m.constraints: {concretize_constraints(tuple(m.constraints))}
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
 
         constraint_typs = [
             package_typ(m, tt)
@@ -2086,15 +2088,14 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-        # TODO: the models from the bodies of the branches should intersected with each other
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function 
-~~~~~~~~~~~~~~~~~~~~~
-nt.enviro: {nt.enviro}
-len(nt.models): {len(nt.models)}
-~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function 
+# ~~~~~~~~~~~~~~~~~~~~~
+# nt.enviro: {nt.enviro}
+# len(nt.models): {len(nt.models)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
 #         for model in nt.models:
 #             print(f"""
@@ -2118,7 +2119,21 @@ len(nt.models): {len(nt.models)}
         augmented_branches = augment_branches_with_diff(branches)
         result = Top() 
         for branch in reversed(augmented_branches): 
-            for branch_model in branch.models:
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function branch models::: {len(branch.models)} 
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
+            for branch_model in reversed(branch.models):
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_function branch_model 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # branch_model.freezer: {branch_model.freezer}
+    # branch_model.constraints: {concretize_constraints(tuple(branch_model.constraints))}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
                 '''
                 interpret, extrude, and generalize
                 '''
@@ -2129,25 +2144,25 @@ len(nt.models): {len(nt.models)}
                 # param_used_constraints = s()
                 #############
                 (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, s())
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                DEBUG combine_function (after interpret param)
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                param_typ: {concretize_typ(param_typ)}
-                param_used_constraints: {concretize_constraints(tuple(param_used_constraints))}
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG combine_function (after interpret param)
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # param_typ: {concretize_typ(param_typ)}
+                # param_used_constraints: {concretize_constraints(tuple(param_used_constraints))}
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
                 new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
 
                 (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                DEBUG combine_function (after interpret return)
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                return_typ: {concretize_typ(return_typ)}
-                return_used_constraints: {concretize_constraints(tuple(return_used_constraints))}
-                ~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG combine_function (after interpret return)
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # return_typ: {concretize_typ(return_typ)}
+                # return_used_constraints: {concretize_constraints(tuple(return_used_constraints))}
+                # ~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
                 new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
 
                 fvs = extract_free_vars_from_typ(s(), param_typ)
@@ -2161,7 +2176,10 @@ len(nt.models): {len(nt.models)}
                 # generalized_case = imp
                 ######## DEBUG: without generalization #############
                 constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
-                generalized_case = All((), constraints, imp)
+                if constraints:
+                    generalized_case = All((), constraints, imp)
+                else:
+                    generalized_case = imp
                 ######## TODO: generalization #############
                 # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
                 #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_model, imp)))
@@ -2364,16 +2382,16 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: combine_application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nt.enviro: {nt.enviro}
-cator_var: {cator_var}
-arg_vars: {arg_vars}
-len(nt.models): {len(nt.models)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: combine_application
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# nt.enviro: {nt.enviro}
+# cator_var: {cator_var}
+# arg_vars: {arg_vars}
+# len(nt.models): {len(nt.models)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         for m in nt.models:
             print(f"""
@@ -2389,12 +2407,32 @@ len(nt.models): {len(nt.models)}
         for arg_var in arg_vars:
             result_var = self.solver.fresh_type_var()
 
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG: combine_application
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+            cator_var: {cator_var.id}
+            arg_var: {arg_var.id}
+            result_var: {result_var.id}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
             models = [
                 m1
                 for m0 in models
                 for m1 in self.solver.solve(m0, cator_var, Imp(arg_var, result_var))
             ]
             cator_var = result_var
+
+        for m in models:
+            print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_application (post loop) 
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    m.freezer: {m.freezer}
+    m.constraints: {concretize_constraints(tuple(m.constraints))}
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         models = [
             m1
@@ -2637,11 +2675,7 @@ len(models): {len(models)}
         return Nonterm('target', nt.enviro, models, typ_var)
 
     def distill_let_contin(self, nt : Nonterm, id : str, target : Typ) -> Nonterm:
-        '''
-        no need to generalize; generalizstion occurs in combine_function
-        '''
         enviro = nt.enviro.set(id, target)
-
         return Nonterm('expr', enviro, nt.models, nt.typ_var)
 
 '''
@@ -2676,7 +2710,10 @@ class RecordRule(Rule):
 
 class FunctionRule(Rule):
 
-    def distill_single_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
+    def distill_single_body(self, nt : Nonterm, pattern_attr : PatternAttr) -> Nonterm:
+
+        enviro = pattern_attr.enviro
+
         body_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2688,7 +2725,7 @@ class FunctionRule(Rule):
         #     )
         # ]
 
-        return Nonterm('expr', nt.enviro, models, body_var)
+        return Nonterm('expr', nt.enviro.update(enviro), models, body_var)
 
     def combine_single(self, nt : Nonterm, pattern_typ : Typ, body_models : list[Model], body_var : TVar) -> list[Branch]:
         """
@@ -2698,8 +2735,8 @@ class FunctionRule(Rule):
         """
         return [Branch(body_models, pattern_typ, body_var)]
 
-    def distill_cons_body(self, nt : Nonterm, pattern_typ : Typ) -> Nonterm:
-        return self.distill_single_body(nt, pattern_typ)
+    def distill_cons_body(self, nt : Nonterm, pattern_attr : PatternAttr) -> Nonterm:
+        return self.distill_single_body(nt, pattern_attr)
 
     def distill_cons_tail(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar) -> Nonterm:
         '''
@@ -2832,9 +2869,10 @@ class PatternRule(Rule):
     #     # ]
     #     return Nonterm('pattern', nt.enviro, models, typ_var) 
 
-    def combine_tuple(self, nt : Nonterm, head_typ : Typ, tail_typ : Typ) -> PatternAttr:
-        pattern = Inter(TField('head', head_typ), TField('tail', tail_typ))
-        return PatternAttr(nt.enviro, pattern)
+    def combine_tuple(self, nt : Nonterm, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+        pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
+        enviro = head_attr.enviro.update(tail_attr.enviro) 
+        return PatternAttr(enviro, pattern)
 
 '''
 end PatternRule
@@ -2844,12 +2882,13 @@ class BasePatternRule(Rule):
 
     def combine_var(self, nt : Nonterm, id : str) -> PatternAttr:
         pattern = self.solver.fresh_type_var()
-        enviro = nt.enviro.set(id, pattern)
+        # TODO
+        enviro : PMap[str, Typ] = pmap({id : pattern})
         return PatternAttr(enviro, pattern)
 
     def combine_unit(self, nt : Nonterm) -> PatternAttr:
         pattern = TUnit()
-        return PatternAttr(nt.enviro, pattern)
+        return PatternAttr(m(), pattern)
 
     # def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
     #     body_var = self.solver.fresh_type_var()
@@ -2864,9 +2903,9 @@ class BasePatternRule(Rule):
     #     # ]
     #     return Nonterm('pattern', nt.enviro, models, body_var)
 
-    def combine_tag(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
-        pattern = TTag(label, body_typ)
-        return PatternAttr(nt.enviro, pattern)
+    def combine_tag(self, nt : Nonterm, label : str, body_attr : PatternAttr) -> PatternAttr:
+        pattern = TTag(label, body_attr.typ)
+        return PatternAttr(body_attr.enviro, pattern)
 '''
 end BasePatternRule
 '''
@@ -2886,9 +2925,9 @@ class RecordPatternRule(Rule):
     #     # ]
     #     return Nonterm('pattern_record', nt.enviro, models, body_var) 
 
-    def combine_single(self, nt : Nonterm, label : str, body_typ : Typ) -> PatternAttr:
-        pattern = TField(label, body_typ)
-        return PatternAttr(nt.enviro, pattern)
+    def combine_single(self, nt : Nonterm, label : str, body_attr : PatternAttr) -> PatternAttr:
+        pattern = TField(label, body_attr.typ)
+        return PatternAttr(body_attr.enviro, pattern)
 
     # def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
     #     return self.distill_cons_body(nt, id)
@@ -2900,6 +2939,7 @@ class RecordPatternRule(Rule):
     #     # models = self.evolve_models(nt, Inter(TField(id, body_typ), tail_var))
     #     return Nonterm('pattern_record', nt.enviro, models, tail_var) 
 
-    def combine_cons(self, nt : Nonterm, label : str, body_typ : Typ, tail_typ : Typ) -> PatternAttr:
-        pattern = Inter(TField(label, body_typ), tail_typ)
-        return PatternAttr(nt.enviro, pattern)
+    def combine_cons(self, nt : Nonterm, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+        pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
+        enviro = body_attr.enviro.update(tail_attr.enviro)
+        return PatternAttr(enviro, pattern)

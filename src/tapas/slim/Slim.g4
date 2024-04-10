@@ -341,26 +341,34 @@ $models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.
 
 | {
 arg_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_arg, nt)
-} cator = base[arg_nt] {
-nt = replace(nt, models = $cator.models)
-pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, cator_nt.typ_var)
+} arg = base[arg_nt] {
+nt = replace(nt, models = $arg.models)
+pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, arg_nt.typ_var)
 } pipeline[pipeline_nt] {
 nt = replace(nt, models = pipeline_nt.models)
-$models = self.collect(ExprRule(self._solver).combine_funnel, nt, cator.typ_var, $pipeline.cator_vars)
+$models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.cator_vars)
 }
 
+//TODO
 | 'let' {
 self.guide_terminal('ID')
 } ID {
+
 target_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_target, nt, $ID.text)
+
 } target[target_nt] {
 self.guide_symbol(';')
 } ';' {
 nt = replace(nt, models = $target.models)
+
 contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, $ID.text, target_nt.typ_var)
+
 } contin = expr[contin_nt] {
+
 $models = $contin.models
 }
+// nt = replace(nt, models = contin.models)
+// $models = self.guide_nonterm(ExprRule(self._solver).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
 
 
 | 'fix' {
@@ -423,8 +431,7 @@ function [Nonterm nt] returns [list[Branch] branches] :
 } pattern[nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt = replace(nt, enviro = $pattern.attr.enviro)
-body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr.typ)
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr)
 } body = expr[body_nt] {
 $branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
 }
@@ -433,8 +440,7 @@ $branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern
 } pattern[nt] {
 self.guide_symbol('=>')
 } '=>' {
-nt = replace(nt, enviro = $pattern.attr.enviro)
-body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr.typ)
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr)
 } body = expr[body_nt] {
 tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
 } tail = function[tail_nt] {
@@ -505,7 +511,7 @@ pipeline [Nonterm nt] returns [list[TVar] cator_vars] :
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 } content = expr[content_nt] {
-nt = replace(nt, models = content.models)
+nt = replace(nt, models = $content.models)
 $cator_vars = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 }
 
@@ -561,10 +567,8 @@ $attr = $base_pattern.attr
 } head = base_pattern[nt] {
 self.guide_symbol(',')
 } ',' {
-nt = replace(nt, enviro = $head.attr.enviro)
 } tail = pattern[nt] {
-nt = replace(nt, enviro = $tail.attr.enviro)
-$attr = self.collect(PatternRule(self._solver).combine_tuple, nt, $head.attr.typ, $tail.attr.typ) 
+$attr = self.collect(PatternRule(self._solver).combine_tuple, nt, $head.attr, $tail.attr) 
 }
 
 ;
@@ -587,8 +591,7 @@ $attr = self.collect(BasePatternRule(self._solver).combine_unit, nt)
 self.guide_terminal('ID')
 } ID {
 } body = base_pattern[nt] {
-nt = replace(nt, enviro = $body.attr.enviro)
-$attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, $ID.text, $body.attr.typ)
+$attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, $ID.text, $body.attr)
 }
 
 | record_pattern[nt] {
@@ -610,8 +613,7 @@ self.guide_terminal('ID')
 self.guide_symbol('=')
 } '=' {
 } body = pattern[nt] {
-nt = replace(nt, enviro = $body.attr.enviro)
-$attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, $ID.text, $body.attr.typ)
+$attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, $ID.text, $body.attr)
 }
 
 | '_.' {
@@ -620,10 +622,8 @@ self.guide_terminal('ID')
 self.guide_symbol('=')
 } '=' {
 } body = pattern[nt] {
-nt = replace(nt, enviro = $body.attr.enviro)
 } tail = record_pattern[nt] {
-nt = replace(nt, enviro = $tail.attr.enviro)
-$attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, $ID.text, $body.attr.typ, $tail.attr.typ)
+$attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, $ID.text, $body.attr, $tail.attr)
 }
 
 ;
