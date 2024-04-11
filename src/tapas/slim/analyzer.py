@@ -1046,37 +1046,36 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
         return (Diff(context, typ.negation), context_constraints)
 
     elif isinstance(typ, Imp):
-        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, ignored_ids)
-        model = Model(model.constraints.difference(antec_constraints), model.freezer)
         consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, ignored_ids)
+        model = Model(model.constraints.difference(consq_constraints), model.freezer)
+        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
     elif isinstance(typ, Exi):
-
-        # return (typ, s())
+        return (typ, s())
         # TODO: uncomment below: gathering used constraints of negated side first (strong side of <: )
+        # pos_constraints = s() 
+        # weak_constraint_pairs = []
+        # for st in typ.constraints:
+        #     weak, weak_constraints = interpret_with_polarity(not polarity, model, st.weak, ignored_ids)
+        #     pos_constraints = pos_constraints.union(weak_constraints)
+        #     weak_constraint_pairs.append((weak, st))
+        #     ignored_ids = ignored_ids.union(extract_free_vars_from_typ(ignored_ids, weak))
 
-        neg_constraints = s() 
-        strong_constraint_pairs = []
-        for st in typ.constraints:
-            strong, strong_constraints = interpret_with_polarity(not polarity, model, st.strong, ignored_ids)
-            neg_constraints = neg_constraints.union(strong_constraints)
-            strong_constraint_pairs.append((strong, st))
+        # model = Model(model.constraints.difference(pos_constraints), model.freezer)
 
-        model = Model(model.constraints.difference(neg_constraints), model.freezer)
-
-        pos_constraints = s() 
-        new_constraints = [] 
-        for (strong, st) in strong_constraint_pairs:
-            weak, weak_constraints = interpret_with_polarity(polarity, model, st.weak, ignored_ids)
-            pos_constraints = pos_constraints.union(weak_constraints)
-            new_constraints.append(Subtyping(strong, weak))
+        # neg_constraints = s() 
+        # new_constraints = [] 
+        # for (weak, st) in weak_constraint_pairs:
+        #     strong, strong_constraints = interpret_with_polarity(polarity, model, st.strong, ignored_ids)
+        #     pos_constraints = pos_constraints.union(strong_constraints)
+        #     new_constraints.append(Subtyping(strong, weak))
 
 
-        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
-        ignored_ids = ignored_ids.union(typ.ids)
-        used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
-        return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
+        # body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
+        # ignored_ids = ignored_ids.union(typ.ids)
+        # used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
+        # return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
 
     elif isinstance(typ, All):
         return (typ, s())
@@ -1407,17 +1406,17 @@ class Solver:
 
     def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
 
-        for model in models:
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            DEBUG decode_with_polarity:
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            typ: {concretize_typ(t)}
+        # for model in models:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     DEBUG decode_with_polarity:
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     typ: {concretize_typ(t)}
 
-            model.freezer: {model.freezer}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+        #     model.freezer: {model.freezer}
+        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     """)
 
         constraint_typs = [
             package_typ(m, tt)
@@ -2143,82 +2142,19 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function 
-# ~~~~~~~~~~~~~~~~~~~~~
-# nt.enviro: {nt.enviro}
-# len(nt.models): {len(nt.models)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
-
-#         for model in nt.models:
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function (for model in nt.model)
-# ~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-        # used_constraints = s()
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function model 
-# ~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
         augmented_branches = augment_branches_with_diff(branches)
         constrained_branches = []
         for branch in reversed(augmented_branches): 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function branch models::: {len(branch.models)} 
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
             for branch_model in reversed(branch.models):
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_function branch_model 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # branch_model.freezer: {branch_model.freezer}
-    # branch_model.constraints: {concretize_constraints(tuple(branch_model.constraints))}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
                 '''
                 interpret, extrude, and generalize
                 '''
                 new_model = branch_model
 
-                # TODO: (maybe, not sure) consider not weakening the param; should just manipulate body to match the variables used in param
-                # param_typ = branch.pattern
-                # param_used_constraints = s()
-                #############
-                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, s())
-                # print(f"""
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # DEBUG combine_function (after interpret param)
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # param_typ: {concretize_typ(param_typ)}
-                # param_used_constraints: {concretize_constraints(tuple(param_used_constraints))}
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # """)
-                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
-
                 (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                # print(f"""
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # DEBUG combine_function (after interpret return)
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # return_typ: {concretize_typ(return_typ)}
-                # return_used_constraints: {concretize_constraints(tuple(return_used_constraints))}
-                # ~~~~~~~~~~~~~~~~~~~~~~~
-                # """)
                 new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
+                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
+                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
                 imp = Imp(param_typ, return_typ)
                 constrained_branches.append((new_model, imp))
             '''
@@ -2441,12 +2377,12 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application init
-        len(nt.models): {len(nt.models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application init
+        # len(nt.models): {len(nt.models)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
         models = nt.models 
         for arg_var in arg_vars:
@@ -2454,14 +2390,23 @@ class ExprRule(Rule):
             new_models = []
             for model in models:
                 # NOTE: interpretation to keep types and constraints compact 
+                cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
+                # cator_typ, cator_used_constraints = (cator_var, s())
+                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
+                # arg_typ, arg_used_constraints = (arg_var, s())
                 # print(f"""
                 # ~~~~~~~~~~~~~~
                 # DEBUG application
-                # constraints: {concretize_constraints(tuple(model.constraints))}
+                # ~~~~~~~~~~~~~~
+                # model.freezer: {tuple(model.freezer)}
+                # model.constraints: {concretize_constraints(tuple(model.constraints))}
+                # cator_var: {cator_var}
+                # arg_var: {arg_var}
+
+                # cator_typ: {concretize_typ(cator_typ)}
+                # arg_typ: {concretize_typ(arg_typ)}
                 # ~~~~~~~~~~~~~~
                 # """)
-                cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
-                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
                 model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer)
                 new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
             models = new_models
@@ -2481,12 +2426,27 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application end 
-        len(models): {len(models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application results 
+        # len(models): {len(models)}
+        # ~~~~~~~~~~~~~~
+        # """)
+
+        # for model in models:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~
+        #     DEBUG application results
+        #     ~~~~~~~~~~~~~~
+        #     model.freezer: {tuple(model.freezer)}
+        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
+        #     cator_var: {cator_var}
+        #     arg_var: {arg_var}
+
+        #     cator_typ: {concretize_typ(cator_typ)}
+        #     arg_typ: {concretize_typ(arg_typ)}
+        #     ~~~~~~~~~~~~~~
+        #     """)
         return models
 
     #########

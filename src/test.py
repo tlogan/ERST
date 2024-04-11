@@ -950,7 +950,7 @@ def test_app_less_equal_two_one():
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
     pieces = [app_less]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~false @"
 
@@ -968,95 +968,71 @@ def test_nested_fun():
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
-# arg_specialization = (f'''
-# let cmp = (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) ;
-# case (x, y) => (
-#     if cmp(x, y) then
-#         y
-#     else
-#         x
-# )
-# ''')
-
-# arg_specialization = (f'''
-# let cmp = (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) ;
-
-# case (x, y) => (
-#     (
-#     case ~true @ => y 
-#     case ~false @ => x 
-#     )(cmp(x, y))
-# )
-# ''')
+arg_specialization = (f'''
+let cmp = (
+    case (~uno @, ~dos @) => ~true @
+    case (~dos @, ~uno @) => ~false @ 
+) ;
+case (x, y) => (
+    if cmp(x, y) then
+        y
+    else
+        x
+)
+''')
 
 arg_specialization = (f'''
 let cmp = (
     case (~uno @, ~dos @) => ~true @
     case (~dos @, ~uno @) => ~false @ 
 ) ;
-
-case (x, y) => cmp(x, y)
-''')
-
-# arg_specialization = (f'''
-# case (x, y) => ((
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# )(x, y))
-# ''')
-
-# arg_specialization = (f'''
-# (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) |> (case cmp => 
-# case (x, y) => cmp(x, y)
-# )
-# ''')
-
-arg_specialization = (f'''
-(case cmp => (case (x, y) => cmp(x, y))) (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
+case (x, y) => (
+    (
+    case ~true @ => y
+    case ~false @ => x
+    ) (cmp(x, y)) 
 )
 ''')
 
 def test_arg_specialization():
-    ########################################
-    # TODO: this may require a major refactor of rules to return a list of models with a type; instead of just a type 
-    '''
-; X <: ~uno @ ; Y <: ~dos @ |-
-((~true @ -> X) & (~false @ -> Y)) <: ~true @ -> Q
-
-<< OR >>
-
-; X <: ~dos @ ; Y <: ~uno @ |- 
-((~true @ -> X) & (~false @ -> Y)) <: ~false @ -> Q
-    '''
     pieces = [arg_specialization]
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
-    ##### DEBUG #####
-    assert models != None
-    # for m in models:
-    #     print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_with_polarity 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # typ_var: {typ_var.id}
-    # m.freezer: {m.freezer}
-    # m.constraints: {analyzer.concretize_constraints(tuple(m.constraints))}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # """)
-    # decode(models, typ_var)
-    ##### DEBUG #####
     print("answer: " + u(decode(models, typ_var)))
-    # assert u(decode(models, typ_var)) == "(X, Y) -> ~uno @"
+    # expected typ: ((ALL [ ; _9 <: ~dos @] ((~uno @, _9) -> _9)) & (ALL [ ; _8 <: ~dos @] ((_8, ~uno @) -> _8)))
+    # assert u(decode(models, typ_var)) == "(X, Y) -> ~dos @"
+
+def test_passing_pattern_matching():
+    # program = (f'''
+    # let cmp = (
+    #     case (~uno @, ~dos @) => ~true @
+    #     case (~dos @, ~uno @) => ~false @ 
+    # ) ;
+
+    # case (x, y) => cmp(x, y)
+    # ''')
+
+
+    # program = (f'''
+    # (
+    #     case (~uno @, ~dos @) => ~true @
+    #     case (~dos @, ~uno @) => ~false @ 
+    # ) |> (case cmp => 
+    # case (x, y) => cmp(x, y)
+    # )
+    # ''')
+
+    program = (f'''
+    (case cmp => (case (x, y) => cmp(x, y))) (
+        case (~uno @, ~dos @) => ~true @
+        case (~dos @, ~uno @) => ~false @ 
+    )
+    ''')
+
+    pieces = [program]
+    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "..."
+
 
 max = (f'''
 let less_equal = {less_equal} ;
@@ -1106,6 +1082,8 @@ if __name__ == '__main__':
     # test_function_with_var()
     # test_functional()
     # test_fix()
+    # test_app_identity_unit()
+    # test_app_pattern_match_nil()
     ########################
     # test_two_less_equal_one_query()
     # test_app_less_equal_two_one()

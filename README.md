@@ -2,8 +2,6 @@
 
 
 ### TODO
-- test `combine_fix` with `test_fix`
-- test the real `arg_specialization`
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
 
