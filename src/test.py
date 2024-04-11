@@ -968,33 +968,33 @@ def test_nested_fun():
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
-case (x, y) => (
-    if cmp(x, y) then
-        y
-    else
-        x
-)
-''')
-
-# arg_specialization = (f'''
-# let cmp = (
-#     case (~uno @, ~dos @) => ~true @
-#     case (~dos @, ~uno @) => ~false @ 
-# ) ;
-# case (x, y) => (
-#     (
-#     case ~true @ => y
-#     case ~false @ => x
-#     ) (cmp(x, y)) 
-# )
-# ''')
-
 def test_arg_specialization():
+    arg_specialization = (f'''
+    let cmp = (
+        case (~uno @, ~dos @) => ~true @
+        case (~dos @, ~uno @) => ~false @ 
+    ) ;
+    case (x, y) => (
+        if cmp(x, y) then
+            y
+        else
+            x
+    )
+    ''')
+
+    # arg_specialization = (f'''
+    # let cmp = (
+    #     case (~uno @, ~dos @) => ~true @
+    #     case (~dos @, ~uno @) => ~false @ 
+    # ) ;
+    # case (x, y) => (
+    #     (
+    #     case ~true @ => y
+    #     case ~false @ => x
+    #     ) (cmp(x, y)) 
+    # )
+    # ''')
+
     pieces = [arg_specialization]
     (models, typ_var, guides, parsetree) = analyze(pieces, True)
     print("answer: " + u(decode(models, typ_var)))
