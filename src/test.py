@@ -1072,7 +1072,39 @@ def test_max():
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
+
+
+def test_antecedent_union():
+    strong = ('''
+(~uno @ -> ~one @) & (~dos @ -> ~two @) 
+    ''')
+
+    weak = ('''
+((~uno @ | ~dos @) -> Q) 
+    ''')
+    answer = query_strong_side(strong, weak, "Q")
+    print(f'''
+answer: {answer}
+    ''')
+    assert answer == "(~two @ | ~one @)" 
+
+def test_consequent_intersection():
+    strong = ('''
+(@ -> (uno : ~one @)) & (@ -> (dos : ~two @)) 
+    ''')
+
+    weak = ('''
+(Q -> (uno : ~one @) & (dos : ~two @)) 
+    ''')
+    answer = query_weak_side(strong, weak, "Q")
+    print(f'''
+answer: {answer}
+    ''')
+    # assert answer == "@" 
+
 if __name__ == '__main__':
+    # test_antecedent_union()
+    test_consequent_intersection()
 
     ########################
     ## Post refactor tests
@@ -1092,7 +1124,7 @@ if __name__ == '__main__':
     #
     # TODO
     # test_nested_fun()
-    test_arg_specialization()
+    # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()

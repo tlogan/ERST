@@ -1,12 +1,14 @@
 # Lightweight Tapas
 
-
-### TODO
+### TODO (Neural Implementation)
+- set up script to test out GPT API
+- test it with full EBNF grammar
+- update parser attributes (combine rules) to generate refined EBNF grammar
+### TODO (Symbolic Implementation)
+- create simplified entry point for non-interactive parser/analyzer
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
-
 - in parser attributes; move nt model updates to combine step
-
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.
@@ -19,29 +21,35 @@
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
     - subtyping 
-- in paper, write rules in a declarative style that does not imply downward propagation 
-- in paper, note importance of generating constraints on argument variables
-- in paper, note importance of renaming and extrusion in imp-imp rule 
-    - renaming to solve for conclusion under local assumption
-    - extrusion to connect conclusion with other conclusions 
-    - develop examples where renamed variables are everywhere to demonstrate importance of extrusion
-- in paper, note the importance of flipping between weakest and strongest interpretations
-    - for a return type that depends on a parameter type; the P <: T ,  P < Q; Q; strongest of Q uses weakest of P e.g. T. 
-- in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.
-    - allows for greater automation: that is, automatic reusing of proofs across propositions across the transitive closure of subtyping. 
-- in paper, note criteria of when variables are frozen (i.e. turned into skolems) 
-- in paper, change subset inclusion to strict equality in subtyping rules 
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 
 - implement caching for streaming parsing
     - update collect and guide_choice rules to memo(r)ize
-- determine if intersection types can be subsumed by constrained universal types with union 
-    - e.g. [X <: (S | T) | U] X === ([X <: S | T] X) & U ==== ([X <: S] X) & T & U === S & U & T 
-    - e.g. [X <: T | U] X -> {Y. (X, Y) <: (T, A) | (U, B)} === (T -> A) & (U -> B) 
 - understand why union in super F constraints paper is defined differently
 - understand what polarity types are and how they are related to relational typing
-- consider two ways to type a function (constrained implication vs indexed intersection)
+
+### TODO (Symbolic Paper)
+- for paper, write algorithmic inference rules as a combination of combine/distill rules 
+    - distill rules construct a new environment; combine rules construct a new type
+- for paper, note that much of type reconstruction is handled in solving subtyping
+    - this puts intersection/union rules in subtyping instead of typing
+    - indirectly in typing via subsumption
+- for paper, note why both intro and elim rules are bidirectional
+    - basic bidirectional typing has checking for intro rules and synthesis for elimination rules 
+        - type and program are both provided
+    - roundtrip typing has checking for intro rules and both checking and synthesis for elimination rules
+        - program is not provided
+        - checking is necessary for both as the type guides synthesis
+    - contextual typing has both checking and synthesis for intro and elim rules
+        - parts of type are not provided
+        - parts of program are not provided
+        - synthesis for intro is necessary to construct type
+        - checking for elim is necessary to construct program  
+- note two ways to type a function (constrained implication vs indexed intersection)
+    - intersection types can be subsumed by constrained universal types with union 
+        - e.g. [X <: (S | T) | U] X === ([X <: S | T] X) & U ==== ([X <: S] X) & T & U === S & U & T 
+        - e.g. [X <: T | U] X -> {Y. (X, Y) <: (T, A) | (U, B)} === (T -> A) & (U -> B) 
     - constrained implication is construction from function introduction (in case a fixedpoint relation is used)
     - indexed intersection is constructed from constraint solving 
     - both reduce to the same solution in application 
@@ -90,56 +98,18 @@
     ------------------------------
 
     ```
-- Check if special antecedent union rule is necessary 
-- Check that special consequent intersection isn't necessary 
-    - basic intersection rule is not expressive enough
-    ```
-    (P -> A & P -> B) <: T -> U
-    ------------------------------
-    P -> A <: T -> U  ||  P -> B <: T -> U
-    ------------------------------
-    P -> A <: T -> U  ||  P -> B <: T -> U
-    ------------------------------
-    T <: P, A <: U  ||  T <: P, B <: U    
-
-    =========================================
-    (P -> A & P -> B) <: T -> U
-    ------------------------------
-    (P -> A & B) <: T -> U
-    ------------------------------
-    T <: P, A & B <: U    
-    ------------------------------
-    A <: U || B <: U
-
-    =========================================
-    (P -> A & P -> B) <: T -> U
-    ------------------------------
-    [X <: P] X -> {Y. (X,Y) <: (P, A) | (P, B)} Y <: T -> U
-    ------------------------------
-    T <: P
-    {Y. (P,Y) <: (P, A) | (P, B)} Y <: U
-    ------------------------------
-    Y <: A # Y frozen |- Y <: U || 
-    Y <: B # Y frozen |- Y <: U 
-    ------------------------------
-    A <: U || B <: U
-    ```
-- for paper, write algorithmic inference rules as a combination of combine/distill rules 
-    - distill rules construct a new environment; combine rules construct a new type
-- for paper, note that much of type reconstruction is handled in solving subtyping
-    - this puts intersection/union rules in subtyping instead of typing
-    - indirectly in typing via subsumption
-- for paper, note why both intro and elim rules are bidirectional
-    - basic bidirectional typing has checking for intro rules and synthesis for elimination rules 
-        - type and program are both provided
-    - roundtrip typing has checking for intro rules and both checking and synthesis for elimination rules
-        - program is not provided
-        - checking is necessary for both as the type guides synthesis
-    - contextual typing has both checking and synthesis for intro and elim rules
-        - parts of type are not provided
-        - parts of program are not provided
-        - synthesis for intro is necessary to construct type
-        - checking for elim is necessary to construct program  
+- in paper, write rules in a declarative style that does not imply downward propagation 
+- in paper, note importance of generating constraints on argument variables
+- in paper, note importance of renaming and extrusion in imp-imp rule 
+    - renaming to solve for conclusion under local assumption
+    - extrusion to connect conclusion with other conclusions 
+    - develop examples where renamed variables are everywhere to demonstrate importance of extrusion
+- in paper, note the importance of flipping between weakest and strongest interpretations
+    - for a return type that depends on a parameter type; the P <: T ,  P < Q; Q; strongest of Q uses weakest of P e.g. T. 
+- in paper, note farfetched conjecture that relational types is a more elegant foundation for math than dependent types.
+    - allows for greater automation: that is, automatic reusing of proofs across propositions across the transitive closure of subtyping. 
+- in paper, note criteria of when variables are frozen (i.e. turned into skolems) 
+- in paper, change subset inclusion to strict equality in subtyping rules 
 
 ### Implementation 
 - avoid recursion, which has poor performance in python.

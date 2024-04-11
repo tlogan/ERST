@@ -1671,22 +1671,6 @@ class Solver:
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
             interp = interpret_strongest_for_id(model, strong.id)
-
-            # NOTE: this commented stuff doesn't actually work
-            # TODO: remove it
-            # '''
-            # skip over the learnable variables to avoid redundant learning already covered by transitivity  
-            # '''
-            # while interp != None and isinstance(interp[0], TVar) and interp[0].id not in model.freezer:
-            #         model = Model(model.constraints.difference(interp[1]), model.freezer)
-            #         next_interp = interpret_strongest_for_id(model, interp[0].id)
-            #         if next_interp:
-                        
-            #             interp = (next_interp[0], interp[1].union(next_interp[1]))
-            #         else:
-            #             interp = None
-
-
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1706,22 +1690,6 @@ class Solver:
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
             interp = interpret_weakest_for_id(model, weak.id)
-
-            # NOTE: this commented stuff doesn't actually work
-            # TODO: remove it
-            # '''
-            # skip over the learnable variables to avoid redundant learning already covered by transitivity  
-            # '''
-            # while interp != None and isinstance(interp[0], TVar) and interp[0].id not in model.freezer:
-            #         model = Model(model.constraints.difference(interp[1]), model.freezer)
-            #         next_interp = interpret_weakest_for_id(model, interp[0].id)
-            #         if next_interp:
-                        
-            #             interp = (next_interp[0], interp[1].union(next_interp[1]))
-            #         else:
-            #             interp = None
-
-
             if interp == None or not selective(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
@@ -1800,32 +1768,17 @@ class Solver:
                     return models 
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
-            '''
-            antecedent union: strong <: ((T1 | T2) -> TR)
-            NOTE: (T1 -> TR) & (T2 -> TR) the same as (T1 -> TR) | (T2 -> TR) if and only if TR is learnable
-            e.g. (A -> X & B -> Y) <: ([...]A | [...]B -> Q)
-            ==== (A -> X & B -> Y) <: ([...]A -> Q) & ([...]B -> Q)
-            '''
-
             return self.solve(model, strong, Inter(
                 Imp(weak.antec.left, weak.consq), 
                 Imp(weak.antec.right, weak.consq)
             ))
 
-        # elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
-        #     # TODO: remove; doesn't seem to be necessary
-        #     '''
-        #     consequent intersection: strong <: (TA -> (T1 & T2))
-        #     P -> A & P -> B ~~~ P -> A & B 
-        #     '''
-        #     return [
-        #         m1 
-        #         for m0 in self.solve(model, strong, Imp(weak.antec, weak.consq.left))
-        #         for m1 in self.solve(m0, strong, Imp(weak.antec, weak.consq.right))
-        #     ]
+        elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
+            return self.solve(model, strong, Inter(
+                Imp(weak.antec, weak.consq.left), 
+                Imp(weak.antec, weak.consq.right)
+            ))
 
-        # NOTE: field body intersection: strong <: (:label = (T1 & T2))
-        # l : A & l : B ~~~ l : A & B 
         elif isinstance(weak, TField) and isinstance(weak.body, Inter):
             return [
                 m1
