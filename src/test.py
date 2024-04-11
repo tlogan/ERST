@@ -981,18 +981,18 @@ case (x, y) => (
 )
 ''')
 
-arg_specialization = (f'''
-let cmp = (
-    case (~uno @, ~dos @) => ~true @
-    case (~dos @, ~uno @) => ~false @ 
-) ;
-case (x, y) => (
-    (
-    case ~true @ => y
-    case ~false @ => x
-    ) (cmp(x, y)) 
-)
-''')
+# arg_specialization = (f'''
+# let cmp = (
+#     case (~uno @, ~dos @) => ~true @
+#     case (~dos @, ~uno @) => ~false @ 
+# ) ;
+# case (x, y) => (
+#     (
+#     case ~true @ => y
+#     case ~false @ => x
+#     ) (cmp(x, y)) 
+# )
+# ''')
 
 def test_arg_specialization():
     pieces = [arg_specialization]

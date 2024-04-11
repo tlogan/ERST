@@ -2290,20 +2290,23 @@ class ExprRule(Rule):
         # ]
         return Nonterm('expr', nt.enviro, models, false_body_var) 
 
-    def combine_ite(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar, false_body_var : TVar) -> list[Model]: 
-        cases = [
-            Branch([], TTag('true', TUnit()), true_body_var), 
-            Branch([], TTag('false', TUnit()), false_body_var)
+    def combine_ite(self, nt : Nonterm, condition_var : TVar, 
+                true_body_models: list[Model], true_body_var : TVar, 
+                false_body_models: list[Model], false_body_var : TVar
+    ) -> list[Model]: 
+        branches = [
+            Branch(true_body_models, TTag('true', TUnit()), true_body_var), 
+            Branch(false_body_models, TTag('false', TUnit()), false_body_var)
         ]
         cator_var = self.solver.fresh_type_var()
-        cator_models = [
-            m1
-            for m0 in nt.models
-            for m1 in self.solver.solve(m0, cator_var, Imp(nt.typ_var, Top()))
-        ]
-        function_nt = replace(nt, models = cator_models, typ_var = cator_var)
-        function_models = BaseRule(self.solver).combine_function(function_nt, cases)
+        function_nt = replace(nt, typ_var = cator_var)
+        function_models = BaseRule(self.solver).combine_function(function_nt, branches)
         nt = replace(nt, models = function_models)
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG ite len(function_models): {len(function_models)}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         arguments = [condition_var]
         return self.combine_application(nt, cator_var, arguments) 
 
@@ -2377,12 +2380,12 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application init
-        # len(nt.models): {len(nt.models)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application init
+        len(nt.models): {len(nt.models)}
+        ~~~~~~~~~~~~~~
+        """)
 
         models = nt.models 
         for arg_var in arg_vars:
@@ -2391,22 +2394,21 @@ class ExprRule(Rule):
             for model in models:
                 # NOTE: interpretation to keep types and constraints compact 
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
-                # cator_typ, cator_used_constraints = (cator_var, s())
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
-                # arg_typ, arg_used_constraints = (arg_var, s())
-                # print(f"""
-                # ~~~~~~~~~~~~~~
-                # DEBUG application
-                # ~~~~~~~~~~~~~~
-                # model.freezer: {tuple(model.freezer)}
-                # model.constraints: {concretize_constraints(tuple(model.constraints))}
-                # cator_var: {cator_var}
-                # arg_var: {arg_var}
 
-                # cator_typ: {concretize_typ(cator_typ)}
-                # arg_typ: {concretize_typ(arg_typ)}
-                # ~~~~~~~~~~~~~~
-                # """)
+                print(f"""
+                ~~~~~~~~~~~~~~
+                DEBUG application
+                ~~~~~~~~~~~~~~
+                model.freezer: {tuple(model.freezer)}
+                model.constraints: {concretize_constraints(tuple(model.constraints))}
+                cator_var: {cator_var}
+                arg_var: {arg_var}
+
+                cator_typ: {concretize_typ(cator_typ)}
+                arg_typ: {concretize_typ(arg_typ)}
+                ~~~~~~~~~~~~~~
+                """)
                 model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer)
                 new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
             models = new_models
@@ -2426,27 +2428,27 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application results 
-        # len(models): {len(models)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application results 
+        len(models): {len(models)}
+        ~~~~~~~~~~~~~~
+        """)
 
-        # for model in models:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~
-        #     DEBUG application results
-        #     ~~~~~~~~~~~~~~
-        #     model.freezer: {tuple(model.freezer)}
-        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
-        #     cator_var: {cator_var}
-        #     arg_var: {arg_var}
+        for model in models:
+            print(f"""
+            ~~~~~~~~~~~~~~
+            DEBUG application results
+            ~~~~~~~~~~~~~~
+            model.freezer: {tuple(model.freezer)}
+            model.constraints: {concretize_constraints(tuple(model.constraints))}
+            cator_var: {cator_var}
+            arg_var: {arg_var}
 
-        #     cator_typ: {concretize_typ(cator_typ)}
-        #     arg_typ: {concretize_typ(arg_typ)}
-        #     ~~~~~~~~~~~~~~
-        #     """)
+            cator_typ: {concretize_typ(cator_typ)}
+            arg_typ: {concretize_typ(arg_typ)}
+            ~~~~~~~~~~~~~~
+            """)
         return models
 
     #########

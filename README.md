@@ -5,6 +5,8 @@
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
 
+- in parser attributes; move nt model updates to combine step
+
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - consider removing redundant constraints in distill; (only necessary for program synthesis)
 - consider if necessary to move existentials out side of tag when interpreting.

@@ -1156,7 +1156,6 @@ class SlimParser ( Parser ):
                 self.state = 183
                 self.match(SlimParser.T__20)
 
-                nt = replace(nt, models = localctx.condition.models)
                 true_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_true_branch, nt, condition_nt.typ_var)
 
                 self.state = 185
@@ -1167,13 +1166,16 @@ class SlimParser ( Parser ):
                 self.state = 187
                 self.match(SlimParser.T__21)
 
-                nt = replace(nt, models = localctx.true_branch.models)
                 false_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
 
                 self.state = 189
                 localctx.false_branch = self.expr(false_branch_nt)
 
-                localctx.models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, true_branch_nt.typ_var, false_branch_nt.typ_var) 
+                nt = replace(nt, models = localctx.condition.models)
+                localctx.models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, 
+                    localctx.true_branch.models, true_branch_nt.typ_var, 
+                    localctx.false_branch.models, false_branch_nt.typ_var
+                ) 
 
                 pass
 
