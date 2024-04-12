@@ -1,8 +1,7 @@
 # Lightweight Tapas
 
 ### TODO (Neural Implementation)
-- set up script to test out GPT API
-- test it with full EBNF grammar
+- try using full EBNF grammar in `system` role.
 - update parser attributes (combine rules) to generate refined EBNF grammar
 ### TODO (Symbolic Implementation)
 - create simplified entry point for non-interactive parser/analyzer

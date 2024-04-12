@@ -20,19 +20,20 @@ from pyrsistent import m, s, pmap, pset
 from pyrsistent.typing import PMap, PSet 
 
 import pytest
+from tapas.slim.language import analyze 
 
 def raise_guide(guides : list[analyzer.Guidance]):
     for guide in guides:
         if isinstance(guide, Exception):
             raise guide
 
-def analyze(pieces : list[str], debug = False):
+def analyze_stream(code : list[str], debug = False):
     async def _mk_task():
 
         connection = language.launch()
 
         guides = []
-        for piece in pieces + [language.Kill()]:
+        for piece in code + [language.Kill()]:
             g = await connection.mk_caller(piece)
             guides.append(g)
             print()
@@ -459,235 +460,227 @@ Type inference
 """
 
 def test_var():
-    pieces = ['''
+    code = '''
 x
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
-
-    assert isinstance(guides[0], KeyError)
-    assert guides[0].args[0] == 'x'
-    assert guides[-1] == language.Killed()
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert not models 
     assert not parsetree 
 
 
 def test_unit():
-    pieces = ['''
+    code = '''
 @
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert parsetree == "(expr (base @))"
     # print("parsetree: " + str(parsetree))
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_tag():
-    pieces = ['''
+    code = '''
 ~uno @
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr (base ~ uno (base @)))"
     # print(parsetree)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~uno @"
 
 def test_tuple():
-    pieces = ['''
+    code = '''
 @, @, @
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print(parsetree)
     print(u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "(@, (@, @))"
 
 def test_record():
-    pieces = ['''
+    code = '''
 _.uno = @ 
 _.dos = @
-    ''']
+    '''
 # uno:= @  dos:= @
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    (models, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "(uno : @ & dos : @)"
 
 
 def test_function():
-    pieces = ['''
+    code = '''
 case ~nil @ => @ 
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print(parsetree)
     print(f"answer: {u(decode(models, typ_var))}")
     assert u(decode(models, typ_var)) == "(~nil @ -> @)"
 
 def test_function_cases_disjoint():
-    pieces = ['''
+    code = '''
 case ~uno @ => ~one @ 
 case ~dos @ => ~two @ 
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "((~uno @ -> ~one @) & (~dos @ -> ~two @))"
     # TODO: update once diffs are enabled 
     # assert u(decode(models, typ_var)) == "(~uno @ -> ~one @) & (~dos @ \ ~uno @ -> ~two @)"
 
 def test_function_cases_overlap():
-    pieces = ['''
+    code = '''
 case ~uno @ => ~one @ 
 case x => ~two @ 
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     print("answer: " + u(decode(models, typ_var)))
     # TODO: use type_equiv, instead of syntax equiv.
     # there is some non-determinism in variable names
     # assert u(decode(models, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
 
 def test_projection():
-    pieces = ['''
+    code = '''
 (_.uno = ~one @ _.dos = ~two @).uno
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~one @"
 
 def test_projection_chain():
-    pieces = ['''
+    code = '''
 (_.uno = (_.dos = ~onetwo @) _.one = @).uno.dos
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~onetwo @"
 
 def test_app_identity_unit():
-    pieces = ['''
+    code = '''
 (case x => x)(@)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
 def test_app_pattern_match_nil():
-    pieces = ['''
+    code = '''
 (
 case ~nil @ => @ 
 case ~cons x => x 
 )(~nil @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_pattern_match_cons():
-    pieces = ['''
+    code = '''
 (
 case ~nil @ => @ 
 case ~cons x => x 
 )(~cons @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_app_pattern_match_fail():
-    pieces = ['''
+    code = '''
 (
 case ~nil @ => @ 
 case ~cons x => x 
 )(~fail @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert u(decode(models, typ_var)) == "BOT"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_application_chain():
-    pieces = ['''
+    code = '''
 (case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_let():
-    pieces = ['''
+    code = '''
 let x = @ ;
 x
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_idprojection():
-    pieces = ['''
+    code = '''
 let r = (_.uno = @ _.dos = @) ;
 r.uno
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
 def test_idprojection_chain():
-    pieces = ['''
+    code = '''
 let r = (_.uno = (_.dos = @) _.one = @) ;
 r.uno.dos
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
 def test_idapplication():
-    pieces = ['''
+    code = '''
 let f = (
     case ~nil @ => @ 
     case ~cons x => x 
 ) ;
 f(~nil @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
 def test_idapplication_chain():
-    pieces = ['''
+    code = '''
 let f = (case ~nil @ => case ~nil @ => @) ;
 f(~nil @)(~nil @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     assert u(decode(models, typ_var)) == "@"
     # print("answer: " + u(decode(models, typ_var)))
 
 def test_function_with_var():
-    pieces = ['''
+    code = '''
 case ~nil @ => ~zero @ 
 case ~cons x => (~succ x) 
-    ''']
-    # TODO: how should we package the constraints on X where x : X 
-    # does it need to collect all the constraints on X, before generalizing?
-    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "@"
 
 def test_functional():
-    pieces = ['''
+    code = '''
 (case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => (~succ (self(x))) 
 ))
-    ''']
-    # TODO: how should we package the constraints on X where x : X 
-    # does it need to collect all the constraints on X, before generalizing?
-    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "@"
 
 def test_fix():
-    pieces = ['''
+    code = '''
 fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => (~succ (self(x))) 
 ))
-    ''']
+    '''
 # (_8 -> _11) -> ((~nil @ -> ~zero @) & (~cons _15 -> ~succ _16)))
 # expect: _15 <: _8 // _11 <: _16
 # actual: _8 <: 15 // _16 <: _11
@@ -696,80 +689,77 @@ fix(case self => (
 # given: _8 <: 15 // _16 <: _11
 # expect: (15 -> 16) -> (~cons _8 -> ~succ _11) 
 
-    (models, typ_var, guides, parsetree) = analyze(pieces, debug=True)
+    (models, typ_var, parsetree) = analyze(code)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "@"
 
 def test_identity_function():
-    pieces = ['''
+    code = '''
 (case x => x)
-    ''']
-
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "ALL [_2 ; _2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
-    pieces = ['''
+    code = '''
 @ |> (case x => x)
-    ''']
-
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
 def test_nil_funnel_fix():
-    pieces = ['''
+    code = '''
 ~nil @ |> (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 )))
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~zero @"
 
 def test_app_fix_nil():
-    pieces = ['''
+    code = '''
 (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 )))(~nil @) 
-    ''']
-
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~zero @"
 
 def test_app_fix_cons():
-    pieces = ['''
+    code = '''
 (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 )))(~cons ~nil @) 
-    ''']
+    '''
 
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~succ ~zero @"
 
 def test_app_fix_cons_cons():
-    pieces = ['''
+    code = '''
 (fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons x => ~succ (self(x)) 
 )))(~cons ~cons ~nil @) 
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~succ ~succ ~zero @"
 
 
 def test_funnel_pipeline():
-    pieces = ['''
+    code = '''
 ~nil @ |> (case ~nil @ => @) |> (case @ => ~uno @)
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~uno @"
 
@@ -780,35 +770,12 @@ def test_funnel_pipeline():
 # ))
 
 def test_pattern_tuple():
-    pieces = ['''
+    code = '''
 case (~zero @, @) => @
-    ''']
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    '''
+    (models, typ_var, parsetree) = analyze(code)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~zero @, @) -> @)"
-
-if_true_then_else = (f'''
-if ~true @ then
-    ~uno @
-else
-    ~dos @
-''')
-
-if_false_then_else = (f'''
-if ~false @ then
-    ~uno @
-else
-    ~dos @
-''')
-
-function_if_then_else = (f'''
-case x => (
-    if x then
-        ~uno @
-    else
-        ~dos @
-)
-''')
 
 # function_if_then_else = (f'''
 # case x => (
@@ -820,20 +787,39 @@ case x => (
 # ''')
 
 def test_if_true_then_else():
-    pieces = [if_true_then_else]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    if_true_then_else = (f'''
+    if ~true @ then
+        ~uno @
+    else
+        ~dos @
+    ''')
+
+    (models, typ_var, parsetree) = analyze(if_true_then_else)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~uno @"
 
 def test_if_false_then_else():
-    pieces = [if_false_then_else]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    if_false_then_else = (f'''
+    if ~false @ then
+        ~uno @
+    else
+        ~dos @
+    ''')
+
+    (models, typ_var, parsetree) = analyze(if_false_then_else)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~dos @"
 
 def test_function_if_then_else():
-    pieces = [function_if_then_else]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    function_if_then_else = (f'''
+    case x => (
+        if x then
+            ~uno @
+        else
+            ~dos @
+    )
+    ''')
+    (models, typ_var, parsetree) = analyze(function_if_then_else)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "(_2 -> (~uno @ | ~dos @))"
 
@@ -847,8 +833,7 @@ fix(case self => (
 ''')
 
 def test_less_equal():
-    pieces = [less_equal]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, parsetree) = analyze(less_equal)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
@@ -857,8 +842,7 @@ def test_let_less_equal():
 let less_equal = {less_equal} ;
 less_equal
     ''')
-    pieces = [let_less]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, parsetree) = analyze(let_less)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
@@ -939,8 +923,7 @@ def test_app_less_equal_zero_one():
     app_less = (f'''
 ({less_equal})(~zero @, ~succ ~zero @)
     ''')
-    pieces = [app_less]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, parsetree) = analyze(app_less)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~true @"
 
@@ -949,8 +932,8 @@ def test_app_less_equal_two_one():
     app_less = (f'''
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
-    pieces = [app_less]
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    code = []
+    (models, typ_var, parsetree) = analyze(app_less)
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~false @"
 
@@ -963,8 +946,7 @@ def test_nested_fun():
         )(x)
     )
     ''')
-    pieces = [nested_fun]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    (models, typ_var, parsetree) = analyze(nested_fun)
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
@@ -995,8 +977,7 @@ def test_arg_specialization():
     # )
     # ''')
 
-    pieces = [arg_specialization]
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    (models, typ_var, parsetree) = analyze(arg_specialization)
     print("answer: " + u(decode(models, typ_var)))
     # expected typ: ((ALL [ ; _9 <: ~dos @] ((~uno @, _9) -> _9)) & (ALL [ ; _8 <: ~dos @] ((_8, ~uno @) -> _8)))
     # assert u(decode(models, typ_var)) == "(X, Y) -> ~dos @"
@@ -1028,8 +1009,7 @@ def test_passing_pattern_matching():
     )
     ''')
 
-    pieces = [program]
-    (models, typ_var, guides, parsetree) = analyze(pieces, True)
+    (models, typ_var, parsetree) = analyze(program)
     print("answer: " + u(decode(models, typ_var)))
     # assert u(decode(models, typ_var)) == "..."
 
@@ -1044,31 +1024,29 @@ case (x, y) => (
 )
 ''')
 
-max = (f'''
-let less_equal = {less_equal} ;
-case (x, y) => (
-    (
-    case (~true @) => y 
-    case (~false @) => x 
-    )(less_equal(x, y))
-)
-''')
-
-max = (f'''
-case (x, y) => (
-    (
-    case (~true @) => y 
-    case (~false @) => x 
-    )(({less_equal})(x, y))
-)
-''')
 
 
 def test_max():
-    # TODO
+    max = (f'''
+    let less_equal = {less_equal} ;
+    case (x, y) => (
+        (
+        case (~true @) => y 
+        case (~false @) => x 
+        )(less_equal(x, y))
+    )
+    ''')
 
-    pieces = [max]
-    (models, typ_var, guides, parsetree) = analyze(pieces)
+    max = (f'''
+    case (x, y) => (
+        (
+        case (~true @) => y 
+        case (~false @) => x 
+        )(({less_equal})(x, y))
+    )
+    ''')
+
+    (models, typ_var, parsetree) = analyze(max)
     # print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "@"
 
@@ -1103,8 +1081,8 @@ answer: {answer}
     # assert answer == "@" 
 
 if __name__ == '__main__':
-    # test_antecedent_union()
-    test_consequent_intersection()
+    test_antecedent_union()
+    # test_consequent_intersection()
 
     ########################
     ## Post refactor tests

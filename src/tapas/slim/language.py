@@ -139,6 +139,14 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     tc = parser.typ()
     return tc.combo
 
+def analyze(code : str) -> tuple[Optional[list[analyzer.Model]], analyzer.TVar, str]:
+    input_stream = InputStream(code)
+    lexer = SlimLexer(input_stream)
+    token_stream : Any = CommonTokenStream(lexer)
+    parser = SlimParser(token_stream)
+    tc = parser.expr(analyzer.default_nonterm)
+    return (tc.models, analyzer.default_nonterm.typ_var, tc.toStringTree(recog=parser))
+
 
 
 
