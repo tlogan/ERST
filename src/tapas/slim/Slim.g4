@@ -42,7 +42,7 @@ def getGuidance(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def guide_nonterm(self, f : Callable, *args) -> Optional[Nonterm]:
+def guide_nonterm(self, f : Callable, *args) -> Optional[Context]:
     for arg in args:
         if arg == None:
             self._overflow = True
@@ -278,7 +278,7 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [Nonterm nt] returns [list[Model] models] : 
+expr [Context nt] returns [list[Model] models] : 
 
 // Base rules
 
@@ -385,7 +385,7 @@ $models = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
 
 ;
 
-base [Nonterm nt] returns [list[Model] models] : 
+base [Context nt] returns [list[Model] models] : 
 // Introduction rules
 
 | '@' {
@@ -427,34 +427,8 @@ $models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.
 ;
 
 
-function [Nonterm nt] returns [list[Branch] branches] :
 
-| 'case' {
-} pattern[nt] {
-self.guide_symbol('=>')
-} '=>' {
-body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr)
-} body = expr[body_nt] {
-$branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
-}
-
-| 'case' {
-} pattern[nt] {
-self.guide_symbol('=>')
-} '=>' {
-body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr)
-} body = expr[body_nt] {
-tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
-} tail = function[tail_nt] {
-tail_branches = $tail.branches
-$branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.models, body_nt.typ_var, tail_branches)
-}
-
-;
-
-
-
-record [Nonterm nt] returns [list[RecordBranch] branches] :
+record [Context nt] returns [list[RecordBranch] branches] :
 
 | '_.' {
 self.guide_terminal('ID')
@@ -481,7 +455,51 @@ $branches = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, $b
 
 ;
 
-argchain [Nonterm nt] returns [ArgchainAttr attr] :
+
+function [Context nt] returns [list[Branch] branches] :
+
+| 'case' {
+} pattern[nt] {
+self.guide_symbol('=>')
+} '=>' {
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr)
+} body = expr[body_nt] {
+$branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
+}
+
+| 'case' {
+} pattern[nt] {
+self.guide_symbol('=>')
+} '=>' {
+body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $pattern.attr)
+} body = expr[body_nt] {
+tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
+} tail = function[tail_nt] {
+tail_branches = $tail.branches
+$branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.models, body_nt.typ_var, tail_branches)
+}
+
+;
+
+// NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
+keychain [Context nt] returns [list[str] keys] :
+
+| '.' {
+self.guide_terminal('ID')
+} ID {
+$keys = self.collect(KeychainRule(self._solver).combine_single, nt, $ID.text)
+}
+
+| '.' {
+self.guide_terminal('ID')
+} ID {
+} tail = keychain[nt] {
+$keys = self.collect(KeychainRule(self._solver).combine_cons, nt, $ID.text, $tail.keys)
+}
+
+;
+
+argchain [Context nt] returns [ArgchainAttr attr] :
 
 | '(' {
 content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_content, nt) 
@@ -506,7 +524,7 @@ $attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_va
 
 ;
 
-pipeline [Nonterm nt] returns [PipelineAttr attr] :
+pipeline [Context nt] returns [PipelineAttr attr] :
 
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
@@ -528,25 +546,7 @@ $attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.ty
 ;
 
 
-// NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
-keychain [Nonterm nt] returns [list[str] keys] :
-
-| '.' {
-self.guide_terminal('ID')
-} ID {
-$keys = self.collect(KeychainRule(self._solver).combine_single, nt, $ID.text)
-}
-
-| '.' {
-self.guide_terminal('ID')
-} ID {
-} tail = keychain[nt] {
-$keys = self.collect(KeychainRule(self._solver).combine_cons, nt, $ID.text, $tail.keys)
-}
-
-;
-
-target [Nonterm nt] returns [list[Models] models]:
+target [Context nt] returns [list[Models] models]:
 
 | '=' {
 expr_nt = self.guide_nonterm(lambda: nt)
@@ -558,7 +558,7 @@ $models = $expr.models
 
 
 
-pattern [Nonterm nt] returns [PatternAttr attr]:  
+pattern [Context nt] returns [PatternAttr attr]:  
 
 | base_pattern[nt] {
 $attr = $base_pattern.attr
@@ -574,11 +574,7 @@ $attr = self.collect(PatternRule(self._solver).combine_tuple, nt, $head.attr, $t
 
 ;
 
-base_pattern [Nonterm nt] returns [PatternAttr attr]:  
-
-| ID {
-$attr = self.collect(BasePatternRule(self._solver).combine_var, nt, $ID.text)
-} 
+base_pattern [Context nt] returns [PatternAttr attr]:  
 
 | ID {
 $attr = self.collect(BasePatternRule(self._solver).combine_var, nt, $ID.text)
@@ -606,7 +602,7 @@ $attr = $pattern.attr
 
 ;
 
-record_pattern [Nonterm nt] returns [PatternAttr attr] :
+record_pattern [Context nt] returns [PatternAttr attr] :
 
 | '_.' {
 self.guide_terminal('ID')

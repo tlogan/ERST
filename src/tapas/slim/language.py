@@ -16,6 +16,107 @@ T = TypeVar("T")
 from pyrsistent.typing import PMap 
 from pyrsistent import m, pmap, v
 
+
+
+
+@dataclass(frozen=True, eq=True)
+class Nonterm: 
+    id : str 
+
+@dataclass(frozen=True, eq=True)
+class Termin: 
+    pattern : str 
+
+GItem = Union[Nonterm, Termin]
+
+RuleBody = list[Union[Nonterm, Termin]] 
+
+Grammar = dict[str, list[RuleBody]]
+
+n = Nonterm
+t = Termin
+
+
+def make_grammar_prompt() -> Grammar: 
+    ID = t("[a-zA-Z][_a-zA-Z]*")
+    return {
+        'expr' : [
+            [n('base')],
+            [n('base'), t(','), n('expr')],
+            [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')],
+            [n('base'), n('keychain')],
+            [n('base'), n('argchain')],
+            [n('base'), n('pipeline')],
+            [t('let'), ID, n('target'), t(';'), n('expr')],
+            [t('fix'), t('('), n('expr'), t(')')],
+        ],
+        
+        'base' : [
+            [t('@')],
+            [t('~'), ID, n('base')],
+            [n('record')],
+            [n('function')],
+            [ID],
+            [n('argchain')]
+        ], 
+
+        'record' : [
+            [t('_.'), ID, t('='), n('expr')],
+            [t('_.'), ID, t('='), n('expr'), n('record')],
+        ],
+
+        'function' : [
+            [t('case'), n('pattern'), t('=>'), n('expr')],
+            [t('case'), n('pattern'), t('=>'), n('expr'), n('function')],
+        ],
+
+        'keychain' : [
+            [t('.'), ID],
+            [t('.'), ID, n('keychain')],
+        ],
+
+        'argchain' : [
+            [t('('), n('expr'), t(')')],
+            [t('('), n('expr'), t(')'), n('argchain')],
+        ],
+
+        'pipeline' : [
+            [t('|>'), n('expr')],
+            [t('|>'), n('expr'), n('pipeline')],
+        ],
+        
+        'target' : [
+            [t('='), n('expr')],
+            [t(':'), ID, t('='), n('expr')],
+        ],
+        
+        'pattern' : [
+            [n('basepat')],
+            [n('basepat'), t(','), n('pattern')],
+        ],
+
+        'basepat' : [
+            [ID],
+            [t('@')],
+            [t('~'), ID, n('basepat')],
+            [n('recpat')],
+            [t('('), n('pattern'), t(')')],
+        ],
+        
+        'recpat' : [
+            [t('_.'), ID, t('='), n('pattern')],
+            [t('_.'), ID, t('='), n('pattern'), n('recpat')],
+        ]
+
+        
+    } 
+
+def concretize_grammar(g : Grammar) -> str:
+    # TODO
+    return ""
+
+
+
 @dataclass(frozen=True, eq=True)
 class Kill: 
     pass 

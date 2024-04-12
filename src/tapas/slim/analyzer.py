@@ -344,7 +344,7 @@ class Terminal:
     content : str
 
 @dataclass(frozen=True, eq=True)
-class Nonterm:
+class Context:
     name : str 
     enviro : PMap[str, Typ] 
     models : list[Model]
@@ -375,7 +375,7 @@ def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]:
         if key in extract_free_vars_from_typ(pset(), st.strong)
     )) 
 
-Guidance = Union[Symbol, Terminal, Nonterm]
+Guidance = Union[Symbol, Terminal, Context]
 
 def pattern_type(t : Typ) -> bool:
     return (
@@ -1995,14 +1995,14 @@ end Solver
 '''
 
 default_solver = Solver()
-default_nonterm = Nonterm('expr', m(), [Model(s(), s())], default_solver.fresh_type_var())
+default_nonterm = Context('expr', m(), [Model(s(), s())], default_solver.fresh_type_var())
 
 
 class Rule:
     def __init__(self, solver : Solver):
         self.solver = solver
 
-    def evolve_models(self, nt : Nonterm, t : Typ) -> list[Model]:
+    def evolve_models(self, nt : Context, t : Typ) -> list[Model]:
 #         print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG evolve_models
@@ -2021,10 +2021,10 @@ class Rule:
 
 class BaseRule(Rule):
 
-    def combine_var(self, nt : Nonterm, id : str) -> list[Model]:
+    def combine_var(self, nt : Context, id : str) -> list[Model]:
         return self.evolve_models(nt, nt.enviro[id])
 
-    def combine_assoc(self, nt : Nonterm, argchain : list[TVar]) -> list[Model]:
+    def combine_assoc(self, nt : Context, argchain : list[TVar]) -> list[Model]:
         if len(argchain) == 1:
             return self.evolve_models(nt, argchain[0])
         else:
@@ -2033,17 +2033,17 @@ class BaseRule(Rule):
             result = ExprRule(self.solver).combine_application(nt, applicator, arguments) 
             return result
 
-    def combine_unit(self, nt : Nonterm) -> list[Model]:
+    def combine_unit(self, nt : Context) -> list[Model]:
         return self.evolve_models(nt, TUnit())
 
-    def distill_tag_body(self, nt : Nonterm, label : str) -> Nonterm:
+    def distill_tag_body(self, nt : Context, label : str) -> Context:
         body_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = self.evolve_models(nt, TTag(label, body_var))
-        return Nonterm('expr', nt.enviro, models, body_var)
+        return Context('expr', nt.enviro, models, body_var)
 
-    def combine_tag(self, nt : Nonterm, label : str, body : TVar) -> list[Model]:
+    def combine_tag(self, nt : Context, label : str, body : TVar) -> list[Model]:
         # TODO: remove existential check now that the types are simply variables
         # '''
         # move existential outside
@@ -2055,7 +2055,7 @@ class BaseRule(Rule):
         # - consider removing redundancy
         return self.evolve_models(nt, TTag(label, body))
 
-    def combine_record(self, nt : Nonterm, branches : list[RecordBranch]) -> list[Model]:
+    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[Model]:
         result = Top() 
         for branch in reversed(branches): 
             for branch_model in reversed(branch.models):
@@ -2083,7 +2083,7 @@ class BaseRule(Rule):
 
         return self.evolve_models(nt, simplify_typ(result))
 
-    def combine_function(self, nt : Nonterm, branches : list[Branch]) -> list[Model]:
+    def combine_function(self, nt : Context, branches : list[Branch]) -> list[Model]:
         '''
         Example
         ==============
@@ -2176,24 +2176,24 @@ class BaseRule(Rule):
 
 class ExprRule(Rule):
 
-    def distill_tuple_head(self, nt : Nonterm) -> Nonterm:
+    def distill_tuple_head(self, nt : Context) -> Context:
         head_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', Bot())))
-        return Nonterm('expr', nt.enviro, models, head_var) 
+        return Context('expr', nt.enviro, models, head_var) 
 
-    def distill_tuple_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
+    def distill_tuple_tail(self, nt : Context, head_var : TVar) -> Context:
         tail_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = self.evolve_models(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
-        return Nonterm('expr', nt.enviro, models, tail_var) 
+        return Context('expr', nt.enviro, models, tail_var) 
 
-    def combine_tuple(self, nt : Nonterm, head_var : TVar, tail_var : TVar) -> list[Model]:
+    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> list[Model]:
         return self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', tail_var)))
 
-    def distill_ite_condition(self, nt : Nonterm) -> Nonterm:
+    def distill_ite_condition(self, nt : Context) -> Context:
         condition_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2205,9 +2205,9 @@ class ExprRule(Rule):
         #         Unio(TTag('false', TUnit()), TTag('true', TUnit()))
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, condition_var)
+        return Context('expr', nt.enviro, models, condition_var)
 
-    def distill_ite_true_branch(self, nt : Nonterm, condition_var : TVar) -> Nonterm:
+    def distill_ite_true_branch(self, nt : Context, condition_var : TVar) -> Context:
         '''
         Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
         (:true? @ -> Q) <: (A -> B) 
@@ -2223,9 +2223,9 @@ class ExprRule(Rule):
         #         Imp(true_body_var, nt.typ_var)
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, true_body_var) 
+        return Context('expr', nt.enviro, models, true_body_var) 
 
-    def distill_ite_false_branch(self, nt : Nonterm, condition_var : TVar, true_body_var : TVar) -> Nonterm:
+    def distill_ite_false_branch(self, nt : Context, condition_var : TVar, true_body_var : TVar) -> Context:
         '''
         Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
         (:false? @ -> Q) <: (A -> B) 
@@ -2241,9 +2241,9 @@ class ExprRule(Rule):
         #         Imp(condition_var, nt.typ_var)
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, false_body_var) 
+        return Context('expr', nt.enviro, models, false_body_var) 
 
-    def combine_ite(self, nt : Nonterm, condition_var : TVar, 
+    def combine_ite(self, nt : Context, condition_var : TVar, 
                 true_body_models: list[Model], true_body_var : TVar, 
                 false_body_models: list[Model], false_body_var : TVar
     ) -> list[Model]: 
@@ -2263,12 +2263,12 @@ class ExprRule(Rule):
         arguments = [condition_var]
         return self.combine_application(nt, cator_var, arguments) 
 
-    def distill_projection_rator(self, nt : Nonterm) -> Nonterm:
+    def distill_projection_rator(self, nt : Context) -> Context:
         # the type of the record being projected from
         rator_var = self.solver.fresh_type_var()
-        return Nonterm('expr', nt.enviro, nt.models, rator_var)
+        return Context('expr', nt.enviro, nt.models, rator_var)
 
-    def distill_projection_keychain(self, nt : Nonterm, rator_var : TVar) -> Nonterm: 
+    def distill_projection_keychain(self, nt : Context, rator_var : TVar) -> Context: 
         keychain_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2280,10 +2280,10 @@ class ExprRule(Rule):
         #         rator_var 
         #     )
         # ]
-        return Nonterm('keychain', nt.enviro, models, keychain_var)
+        return Context('keychain', nt.enviro, models, keychain_var)
 
 
-    def combine_projection(self, nt : Nonterm, record_var : TVar, keys : list[str]) -> list[Model]: 
+    def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[Model]: 
         models = nt.models
         for key in keys:
             result_var = self.solver.fresh_type_var()
@@ -2303,7 +2303,7 @@ class ExprRule(Rule):
 
     #########
 
-    def distill_application_cator(self, nt : Nonterm) -> Nonterm: 
+    def distill_application_cator(self, nt : Context) -> Context: 
         cator_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2315,9 +2315,9 @@ class ExprRule(Rule):
         #         Imp(Bot(), Top()) 
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, cator_var)
+        return Context('expr', nt.enviro, models, cator_var)
 
-    def distill_application_argchain(self, nt : Nonterm, cator_var : TVar) -> Nonterm: 
+    def distill_application_argchain(self, nt : Context, cator_var : TVar) -> Context: 
         next_cator_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2329,9 +2329,9 @@ class ExprRule(Rule):
         #         cator_var
         #     )
         # ]
-        return Nonterm('argchain', nt.enviro, models, next_cator_var, True)
+        return Context('argchain', nt.enviro, models, next_cator_var, True)
 
-    def combine_application(self, nt : Nonterm, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
+    def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
         print(f"""
         ~~~~~~~~~~~~~~
@@ -2405,12 +2405,12 @@ class ExprRule(Rule):
         return models
 
     #########
-    def distill_funnel_arg(self, nt : Nonterm) -> Nonterm: 
+    def distill_funnel_arg(self, nt : Context) -> Context: 
         arg_var = self.solver.fresh_type_var()
         models = nt.models
-        return Nonterm('expr', nt.enviro, models, arg_var)
+        return Context('expr', nt.enviro, models, arg_var)
 
-    def distill_funnel_pipeline(self, nt : Nonterm, arg_var : TVar) -> Nonterm: 
+    def distill_funnel_pipeline(self, nt : Context, arg_var : TVar) -> Context: 
         typ_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2422,9 +2422,9 @@ class ExprRule(Rule):
         #         arg_var
         #     )
         # ]
-        return Nonterm('pipeline', nt.enviro, models, typ_var)
+        return Context('pipeline', nt.enviro, models, typ_var)
 
-    def combine_funnel(self, nt : Nonterm, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
+    def combine_funnel(self, nt : Context, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
         models = nt.models
         for cator_var in cator_vars:
             print(f"""
@@ -2446,12 +2446,12 @@ class ExprRule(Rule):
         ]
         return models 
 
-    def distill_fix_body(self, nt : Nonterm) -> Nonterm:
+    def distill_fix_body(self, nt : Context) -> Context:
         body_var = self.solver.fresh_type_var()
         models = nt.models
-        return Nonterm('expr', nt.enviro, models, body_var)
+        return Context('expr', nt.enviro, models, body_var)
 
-    def combine_fix(self, nt : Nonterm, body_var : TVar) -> list[Model]:
+    def combine_fix(self, nt : Context, body_var : TVar) -> list[Model]:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -2635,14 +2635,14 @@ class ExprRule(Rule):
         return new_model
 
     
-    def distill_let_target(self, nt : Nonterm, id : str) -> Nonterm:
+    def distill_let_target(self, nt : Context, id : str) -> Context:
         typ_var = self.solver.fresh_type_var()
         models = nt.models
-        return Nonterm('target', nt.enviro, models, typ_var)
+        return Context('target', nt.enviro, models, typ_var)
 
-    def distill_let_contin(self, nt : Nonterm, id : str, target : Typ) -> Nonterm:
+    def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
         enviro = nt.enviro.set(id, target)
-        return Nonterm('expr', enviro, nt.models, nt.typ_var)
+        return Context('expr', enviro, nt.models, nt.typ_var)
 
 '''
 end ExprRule
@@ -2651,32 +2651,32 @@ end ExprRule
 
 class RecordRule(Rule):
 
-    def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
+    def distill_single_body(self, nt : Context, id : str) -> Context:
         body_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = self.evolve_models(nt, TField(id, body_var))
-        return Nonterm('expr', nt.enviro, models, body_var) 
+        return Context('expr', nt.enviro, models, body_var) 
 
-    def combine_single(self, nt : Nonterm, label : str, body_models : list[Model], body_var : TVar) -> list[RecordBranch]:
+    def combine_single(self, nt : Context, label : str, body_models : list[Model], body_var : TVar) -> list[RecordBranch]:
         return [RecordBranch(body_models, label, body_var)]
 
-    def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
+    def distill_cons_body(self, nt : Context, id : str) -> Context:
         return self.distill_single_body(nt, id)
 
-    def distill_cons_tail(self, nt : Nonterm, id : str, body_var : TVar) -> Nonterm:
+    def distill_cons_tail(self, nt : Context, id : str, body_var : TVar) -> Context:
         tail_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
         # models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
-        return Nonterm('record', nt.enviro, models, tail_var) 
+        return Context('record', nt.enviro, models, tail_var) 
 
-    def combine_cons(self, nt : Nonterm, label : str, body_models : list[Model], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
+    def combine_cons(self, nt : Context, label : str, body_models : list[Model], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
         return self.combine_single(nt, label, body_models, body_var) + tail
 
 class FunctionRule(Rule):
 
-    def distill_single_body(self, nt : Nonterm, pattern_attr : PatternAttr) -> Nonterm:
+    def distill_single_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
 
         enviro = pattern_attr.enviro
 
@@ -2691,9 +2691,9 @@ class FunctionRule(Rule):
         #     )
         # ]
 
-        return Nonterm('expr', nt.enviro.update(enviro), models, body_var)
+        return Context('expr', nt.enviro.update(enviro), models, body_var)
 
-    def combine_single(self, nt : Nonterm, pattern_typ : Typ, body_models : list[Model], body_var : TVar) -> list[Branch]:
+    def combine_single(self, nt : Context, pattern_typ : Typ, body_models : list[Model], body_var : TVar) -> list[Branch]:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
@@ -2701,31 +2701,31 @@ class FunctionRule(Rule):
         """
         return [Branch(body_models, pattern_typ, body_var)]
 
-    def distill_cons_body(self, nt : Nonterm, pattern_attr : PatternAttr) -> Nonterm:
+    def distill_cons_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(nt, pattern_attr)
 
-    def distill_cons_tail(self, nt : Nonterm, pattern_typ : Typ, body_var : TVar) -> Nonterm:
+    def distill_cons_tail(self, nt : Context, pattern_typ : Typ, body_var : TVar) -> Context:
         '''
         - the previous pattern should not influence what pattern occurs next
         - patterns may overlap
         '''
         return nt
 
-    def combine_cons(self, nt : Nonterm, pattern_typ : Typ, body_models : list[Model], body_var : TVar, tail : list[Branch]) -> list[Branch]:
+    def combine_cons(self, nt : Context, pattern_typ : Typ, body_models : list[Model], body_var : TVar, tail : list[Branch]) -> list[Branch]:
         return self.combine_single(nt, pattern_typ, body_models, body_var) + tail
 
 
 class KeychainRule(Rule):
 
-    def combine_single(self, nt : Nonterm, key : str) -> list[str]:
+    def combine_single(self, nt : Context, key : str) -> list[str]:
         return [key]
 
-    def combine_cons(self, nt : Nonterm, key : str, keys : list[str]) -> list[str]:
+    def combine_cons(self, nt : Context, key : str, keys : list[str]) -> list[str]:
         return [key] + keys
 
 
 class ArgchainRule(Rule):
-    def distill_single_content(self, nt : Nonterm) -> Nonterm:
+    def distill_single_content(self, nt : Context) -> Context:
         content_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2736,22 +2736,22 @@ class ArgchainRule(Rule):
         #         nt.typ_var, Imp(typ_var, Top())
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, content_var, False)
+        return Context('expr', nt.enviro, models, content_var, False)
 
-    def distill_cons_head(self, nt : Nonterm) -> Nonterm:
+    def distill_cons_head(self, nt : Context) -> Context:
         return self.distill_single_content(nt)
 
-    def combine_single(self, nt : Nonterm, content_var : TVar) -> ArgchainAttr:
+    def combine_single(self, nt : Context, content_var : TVar) -> ArgchainAttr:
         return ArgchainAttr(nt.models, [content_var])
 
-    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
+    def combine_cons(self, nt : Context, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
         return ArgchainAttr(nt.models, [head_var] + tail_vars)
 
 ######
 
 class PipelineRule(Rule):
 
-    def distill_single_content(self, nt : Nonterm) -> Nonterm:
+    def distill_single_content(self, nt : Context) -> Context:
         content_var = self.solver.fresh_type_var()
         models = nt.models
         # TODO: add constraints in distill for type-guided program synthesis 
@@ -2762,13 +2762,13 @@ class PipelineRule(Rule):
         #         content_var, Imp(nt.typ_var, Top())
         #     )
         # ]
-        return Nonterm('expr', nt.enviro, models, content_var)
+        return Context('expr', nt.enviro, models, content_var)
 
 
-    def distill_cons_head(self, nt : Nonterm) -> Nonterm:
+    def distill_cons_head(self, nt : Context) -> Context:
         return self.distill_single_content(nt)
 
-    def distill_cons_tail(self, nt : Nonterm, head_var : TVar) -> Nonterm:
+    def distill_cons_tail(self, nt : Context, head_var : TVar) -> Context:
         '''
         cut the head with the previous tyption
         resulting in a new tyption of what can cut the next element in the tail
@@ -2783,12 +2783,12 @@ class PipelineRule(Rule):
         #         head_var, Imp(nt.typ_var, tail_var)
         #     )
         # ]
-        return Nonterm('pipeline', nt.enviro, models, tail_var)
+        return Context('pipeline', nt.enviro, models, tail_var)
 
-    def combine_single(self, nt : Nonterm, content_var : TVar) -> PipelineAttr:
+    def combine_single(self, nt : Context, content_var : TVar) -> PipelineAttr:
         return PipelineAttr(nt.models, [content_var])
 
-    def combine_cons(self, nt : Nonterm, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
+    def combine_cons(self, nt : Context, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
         return PipelineAttr(nt.models, [head_var] + tail_var)
 
 
@@ -2797,7 +2797,7 @@ start Pattern Rule
 '''
 
 class PatternRule(Rule):
-    # def distill_tuple_head(self, nt : Nonterm) -> Nonterm:
+    # def distill_tuple_head(self, nt : Context) -> Context:
     #     typ_var = self.solver.fresh_type_var()
     #     models = nt.models
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -2810,9 +2810,9 @@ class PatternRule(Rule):
     #     #     )
     #     # ]
 
-    #     return Nonterm('pattern', nt.enviro, models, typ_var) 
+    #     return Context('pattern', nt.enviro, models, typ_var) 
 
-    # def distill_tuple_tail(self, nt : Nonterm, head_typ : Typ) -> Nonterm:
+    # def distill_tuple_tail(self, nt : Context, head_typ : Typ) -> Context:
     #     typ_var = self.solver.fresh_type_var()
     #     models = nt.models
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -2824,9 +2824,9 @@ class PatternRule(Rule):
     #     #         nt.typ_var,
     #     #     )
     #     # ]
-    #     return Nonterm('pattern', nt.enviro, models, typ_var) 
+    #     return Context('pattern', nt.enviro, models, typ_var) 
 
-    def combine_tuple(self, nt : Nonterm, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_tuple(self, nt : Context, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
         enviro = head_attr.enviro.update(tail_attr.enviro) 
         return PatternAttr(enviro, pattern)
@@ -2837,17 +2837,17 @@ end PatternRule
 
 class BasePatternRule(Rule):
 
-    def combine_var(self, nt : Nonterm, id : str) -> PatternAttr:
+    def combine_var(self, nt : Context, id : str) -> PatternAttr:
         pattern = self.solver.fresh_type_var()
         # TODO
         enviro : PMap[str, Typ] = pmap({id : pattern})
         return PatternAttr(enviro, pattern)
 
-    def combine_unit(self, nt : Nonterm) -> PatternAttr:
+    def combine_unit(self, nt : Context) -> PatternAttr:
         pattern = TUnit()
         return PatternAttr(m(), pattern)
 
-    # def distill_tag_body(self, nt : Nonterm, id : str) -> Nonterm:
+    # def distill_tag_body(self, nt : Context, id : str) -> Context:
     #     body_var = self.solver.fresh_type_var()
     #     models = nt.models
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -2858,9 +2858,9 @@ class BasePatternRule(Rule):
     #     #         TTag(id, body_var), nt.typ_var
     #     #     )
     #     # ]
-    #     return Nonterm('pattern', nt.enviro, models, body_var)
+    #     return Context('pattern', nt.enviro, models, body_var)
 
-    def combine_tag(self, nt : Nonterm, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_tag(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TTag(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 '''
@@ -2869,7 +2869,7 @@ end BasePatternRule
 
 class RecordPatternRule(Rule):
 
-    # def distill_single_body(self, nt : Nonterm, id : str) -> Nonterm:
+    # def distill_single_body(self, nt : Context, id : str) -> Context:
     #     body_var = self.solver.fresh_type_var()
     #     models = nt.models
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -2880,23 +2880,23 @@ class RecordPatternRule(Rule):
     #     #         TField(id, typ_var), nt.typ_var
     #     #     )
     #     # ]
-    #     return Nonterm('pattern_record', nt.enviro, models, body_var) 
+    #     return Context('pattern_record', nt.enviro, models, body_var) 
 
-    def combine_single(self, nt : Nonterm, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_single(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TField(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 
-    # def distill_cons_body(self, nt : Nonterm, id : str) -> Nonterm:
+    # def distill_cons_body(self, nt : Context, id : str) -> Context:
     #     return self.distill_cons_body(nt, id)
 
-    # def distill_cons_tail(self, nt : Nonterm, id : str, body_typ : Typ) -> Nonterm:
+    # def distill_cons_tail(self, nt : Context, id : str, body_typ : Typ) -> Context:
     #     tail_var = self.solver.fresh_type_var()
     #     models = nt.models
     #     # TODO: add constraints in distill for type-guided program synthesis 
     #     # models = self.evolve_models(nt, Inter(TField(id, body_typ), tail_var))
-    #     return Nonterm('pattern_record', nt.enviro, models, tail_var) 
+    #     return Context('pattern_record', nt.enviro, models, tail_var) 
 
-    def combine_cons(self, nt : Nonterm, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_cons(self, nt : Context, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
         enviro = body_attr.enviro.update(tail_attr.enviro)
         return PatternAttr(enviro, pattern)

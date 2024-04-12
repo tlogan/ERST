@@ -290,7 +290,7 @@ class SlimParser ( Parser ):
     def tokenIndex(self):
         return self.getCurrentToken().tokenIndex
 
-    def guide_nonterm(self, f : Callable, *args) -> Optional[Nonterm]:
+    def guide_nonterm(self, f : Callable, *args) -> Optional[Context]:
         for arg in args:
             if arg == None:
                 self._overflow = True
@@ -1028,7 +1028,7 @@ class SlimParser ( Parser ):
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1095,7 +1095,7 @@ class SlimParser ( Parser ):
 
 
 
-    def expr(self, nt:Nonterm):
+    def expr(self, nt:Context):
 
         localctx = SlimParser.ExprContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 12, self.RULE_expr)
@@ -1309,7 +1309,7 @@ class SlimParser ( Parser ):
     class BaseContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1354,7 +1354,7 @@ class SlimParser ( Parser ):
 
 
 
-    def base(self, nt:Nonterm):
+    def base(self, nt:Context):
 
         localctx = SlimParser.BaseContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 14, self.RULE_base)
@@ -1450,7 +1450,7 @@ class SlimParser ( Parser ):
     class FunctionContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1486,7 +1486,7 @@ class SlimParser ( Parser ):
 
 
 
-    def function(self, nt:Nonterm):
+    def function(self, nt:Context):
 
         localctx = SlimParser.FunctionContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 16, self.RULE_function)
@@ -1564,7 +1564,7 @@ class SlimParser ( Parser ):
     class RecordContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1599,7 +1599,7 @@ class SlimParser ( Parser ):
 
 
 
-    def record(self, nt:Nonterm):
+    def record(self, nt:Context):
 
         localctx = SlimParser.RecordContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 18, self.RULE_record)
@@ -1679,7 +1679,7 @@ class SlimParser ( Parser ):
     class ArgchainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1711,7 +1711,7 @@ class SlimParser ( Parser ):
 
 
 
-    def argchain(self, nt:Nonterm):
+    def argchain(self, nt:Context):
 
         localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 20, self.RULE_argchain)
@@ -1782,7 +1782,7 @@ class SlimParser ( Parser ):
     class PipelineContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1814,7 +1814,7 @@ class SlimParser ( Parser ):
 
 
 
-    def pipeline(self, nt:Nonterm):
+    def pipeline(self, nt:Context):
 
         localctx = SlimParser.PipelineContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 22, self.RULE_pipeline)
@@ -1876,7 +1876,7 @@ class SlimParser ( Parser ):
     class KeychainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1906,7 +1906,7 @@ class SlimParser ( Parser ):
 
 
 
-    def keychain(self, nt:Nonterm):
+    def keychain(self, nt:Context):
 
         localctx = SlimParser.KeychainContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 24, self.RULE_keychain)
@@ -1964,7 +1964,7 @@ class SlimParser ( Parser ):
     class TargetContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -1990,7 +1990,7 @@ class SlimParser ( Parser ):
 
 
 
-    def target(self, nt:Nonterm):
+    def target(self, nt:Context):
 
         localctx = SlimParser.TargetContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 26, self.RULE_target)
@@ -2030,7 +2030,7 @@ class SlimParser ( Parser ):
     class PatternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -2062,7 +2062,7 @@ class SlimParser ( Parser ):
 
 
 
-    def pattern(self, nt:Nonterm):
+    def pattern(self, nt:Context):
 
         localctx = SlimParser.PatternContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 28, self.RULE_pattern)
@@ -2117,7 +2117,7 @@ class SlimParser ( Parser ):
     class Base_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -2157,7 +2157,7 @@ class SlimParser ( Parser ):
 
 
 
-    def base_pattern(self, nt:Nonterm):
+    def base_pattern(self, nt:Context):
 
         localctx = SlimParser.Base_patternContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 30, self.RULE_base_pattern)
@@ -2250,7 +2250,7 @@ class SlimParser ( Parser ):
     class Record_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Nonterm=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
             super().__init__(parent, invokingState)
             self.parser = parser
             self.nt = None
@@ -2285,7 +2285,7 @@ class SlimParser ( Parser ):
 
 
 
-    def record_pattern(self, nt:Nonterm):
+    def record_pattern(self, nt:Context):
 
         localctx = SlimParser.Record_patternContext(self, self._ctx, self.state, nt)
         self.enterRule(localctx, 32, self.RULE_record_pattern)
