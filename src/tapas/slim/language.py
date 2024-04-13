@@ -31,14 +31,18 @@ GItem = Union[Nonterm, Termin]
 
 RuleBody = list[Union[Nonterm, Termin]] 
 
+@dataclass(frozen=True, eq=True)
+class Rule:
+    head : str
+    body : RuleBody
+
 Grammar = dict[str, list[RuleBody]]
 
 n = Nonterm
 t = Termin
 
-
-def make_grammar_prompt() -> Grammar: 
-    ID = t("[a-zA-Z][_a-zA-Z]*")
+def make_prompt_grammar() -> Grammar: 
+    ID = t(r"[a-zA-Z][_a-zA-Z]*")
     return {
         'expr' : [
             [n('base')],
@@ -86,7 +90,7 @@ def make_grammar_prompt() -> Grammar:
         ],
         
         'target' : [
-            [t('='), n('expr')],
+            # [t('='), n('expr')],
             [t(':'), ID, t('='), n('expr')],
         ],
         
@@ -111,9 +115,43 @@ def make_grammar_prompt() -> Grammar:
         
     } 
 
+def from_rules_to_grammar (rules : list[Rule]) -> Grammar:
+    g = {}
+    for rule in rules:
+        if rule.head in g:
+            bodies = g[rule.head]
+            g[rule.head] = bodies + [rule.body]
+        else:
+            g[rule.head] = [rule.body]
+    return g
+
+def concretize_rule_body(items : RuleBody) -> str:
+    return " ".join([
+        (
+            item.id
+            if isinstance(item, Nonterm) else
+            f"'{item.pattern}'"
+            if isinstance(item, Termin) else
+            "<ERROR>"
+        )
+
+        for item in items
+    ])
+
 def concretize_grammar(g : Grammar) -> str:
-    # TODO
-    return ""
+    result = ""
+    for head in g:
+        bodies = g[head]
+        init_body = bodies[0]
+        result += f"{head} ::= {concretize_rule_body(init_body)}" + "\n"
+        result += "".join([
+            (" " * len(head)) + "   | " + f"{concretize_rule_body(body)}" + "\n"
+            for body in bodies[1:]
+        ])
+        result += "\n"
+    return result
+
+     
 
 
 
