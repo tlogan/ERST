@@ -792,6 +792,13 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
+def get_relational_keys(model : Model) -> PSet[str]:
+    return pset(
+        fv
+        for st in model.constraints
+        for fv in extract_free_vars_from_typ(s(), st.strong)
+    ).intersection(model.freezer)
+
 def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
@@ -1660,20 +1667,20 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
         if self._battery == 0:
             return []
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# ||
-# || model.freezer::: 
-# || :::::::: {model.freezer}
-# ||
-# || model.constraints::: 
-# || :::::::: {concretize_constraints(tuple(model.constraints))}
-# ||
-# || |- {concretize_typ(strong)} 
-# || <: {concretize_typ(weak)}
-# ||
-#         ''')
+        print(f'''
+|| DEBUG SOLVE
+=================
+||
+|| model.freezer::: 
+|| :::::::: {model.freezer}
+||
+|| model.constraints::: 
+|| :::::::: {concretize_constraints(tuple(model.constraints))}
+||
+|| |- {concretize_typ(strong)} 
+|| <: {concretize_typ(weak)}
+||
+        ''')
 
         if alpha_equiv(strong, weak): 
             return [model] 
@@ -1743,8 +1750,24 @@ class Solver:
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
+
             interp = interpret_weakest_for_id(model, strong.id)
-            if interp != None:
+            if (
+                interp != None and 
+                strong.id in get_relational_keys(model) and
+                isinstance(weak, TVar) and 
+                weak.id not in model.freezer
+            ) :
+                weakest_strong = interp[0]
+                safe = bool(self.solve(model, weakest_strong, weak))
+                if safe:
+                    return [Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer
+                    )]
+                else:
+                    return []
+            elif interp != None:
                 weakest_strong = interp[0]
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
@@ -2010,21 +2033,25 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, s())
+            ignored_ids = get_relational_keys(model)
+            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, ignored_ids)
             model = Model(model.constraints.difference(used_constraints), model.freezer)
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
-# strong: {concretize_typ(strong)}
-# reduced_strong: {concretize_typ(reduced_strong)}
-# weak: {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG weak, LeastFP
+~~~~~~~~~~~~~~~~~~~~~
+model.freezer: {model.freezer}
+model.constraints: {concretize_constraints(tuple(model.constraints))}
+
+ignored_ids: {ignored_ids}
+
+strong: {concretize_typ(strong)}
+reduced_strong: {concretize_typ(reduced_strong)}
+weak: {concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
             if strong != reduced_strong:
                 return self.solve(model, reduced_strong, weak)
             elif not is_relational_key(model, strong) and self._battery != 0:
@@ -2035,13 +2062,13 @@ class Solver:
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
 
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- Unrolling
-# ~~~~~~~~~~~~~~~~~~~~~
-# weak_body: {concretize_typ(weak_body)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG weak, LeastFP --- Unrolling
+~~~~~~~~~~~~~~~~~~~~~
+weak_body: {concretize_typ(weak_body)}
+~~~~~~~~~~~~~~~~~~~~~
+                """)
                 models = self.solve(model, strong, weak_body)
 
                 return models

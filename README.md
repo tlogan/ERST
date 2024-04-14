@@ -2,7 +2,7 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- debug `test_max`
+- debug `test_max` ; recursion depth exceeded
 - improve speed by interpreting variables and removing constraints in `combine` rules
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
