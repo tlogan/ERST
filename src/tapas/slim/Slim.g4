@@ -8,8 +8,8 @@ from contextlib import contextmanager
 
 from tapas.slim.analyzer import * 
 
-from pyrsistent import m, pmap, v
-from pyrsistent.typing import PMap 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 }
 
@@ -21,6 +21,8 @@ _cache : dict[int, str] = {}
 
 _guidance : Guidance 
 _overflow = False  
+
+_syntax_rules : PSet[SyntaxRule] = s() 
 
 def init(self): 
     self._solver = default_solver 
@@ -35,6 +37,12 @@ def reset(self):
     # self.getTokenStream()
 
 
+def get_syntax_rules(self):
+    return self._syntax_rules
+
+def update_sr(self, head : str, body : list[Union[Nonterm, Termin]]):
+    rule = SyntaxRule(head, tuple(body))
+    self._syntax_rules = self._syntax_rules.add(rule)
 
 def getGuidance(self):
     return self._guidance
@@ -284,6 +292,7 @@ expr [Context nt] returns [list[Model] models] :
 
 | base[nt] {
 $models = $base.models
+self.update_sr('expr', [n('base')])
 }
 
 // Introduction rules
@@ -298,6 +307,7 @@ tail_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_tail, nt, head
 } tail = expr[tail_nt] {
 nt = replace(nt, models = $tail.models)
 $models = self.collect(ExprRule(self._solver).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
+self.update_sr('expr', [n('base'), t(','), n('expr')])
 }
 
 // Elimination rules
@@ -318,6 +328,7 @@ $models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_
     $true_branch.models, true_branch_nt.typ_var, 
     $false_branch.models, false_branch_nt.typ_var
 ) 
+self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 } 
 
 // the rator below refers to the record being projected from
@@ -329,6 +340,7 @@ keychain_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_keych
 } keychain[keychain_nt] {
 nt = replace(nt, models = keychain_nt.models)
 $models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, $keychain.keys) 
+self.update_sr('expr', [n('base'), n('keychain')])
 }
 
 | {
@@ -339,6 +351,7 @@ argchain_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_argc
 } argchain[argchain_nt] {
 nt = replace(nt, models = $argchain.attr.models)
 $models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
+self.update_sr('expr', [n('base'), n('argchain')])
 }
 
 | {
@@ -349,24 +362,21 @@ pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline,
 } pipeline[pipeline_nt] {
 nt = replace(nt, models = $pipeline.attr.models)
 $models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.attr.cators)
+self.update_sr('expr', [n('base'), n('pipeline')])
 }
 
 | 'let' {
 self.guide_terminal('ID')
 } ID {
-
 target_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_target, nt, $ID.text)
-
 } target[target_nt] {
 self.guide_symbol(';')
 } ';' {
 nt = replace(nt, models = $target.models)
-
 contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, $ID.text, target_nt.typ_var)
-
 } contin = expr[contin_nt] {
-
 $models = $contin.models
+self.update_sr('expr', [t('let'), ID, n('target'), t(';'), n('expr')])
 }
 // nt = replace(nt, models = contin.models)
 // $models = self.guide_nonterm(ExprRule(self._solver).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
@@ -381,6 +391,7 @@ self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = $body.models)
 $models = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
+self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 }
 
 ;
@@ -390,6 +401,7 @@ base [Context nt] returns [list[Model] models] :
 
 | '@' {
 $models = self.collect(BaseRule(self._solver).combine_unit, nt)
+self.update_sr('base', [t('@')])
 } 
 
 //tag
@@ -400,28 +412,33 @@ body_nt = self.guide_nonterm(BaseRule(self._solver).distill_tag_body, nt, $ID.te
 } body = base[body_nt] {
 nt = replace(nt, models = $body.models)
 $models = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt.typ_var)
+self.update_sr('base', [t('~'), ID, n('base')])
 }
 
 | record[nt] {
 branches = $record.branches
 $models = self.collect(BaseRule(self._solver).combine_record, nt, branches)
+self.update_sr('base', [n('record')])
 }
 
 | {
 } function[nt] {
 branches = $function.branches
 $models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
+self.update_sr('base', [n('function')])
 }
 
 // Elimination rules
 
 | ID {
 $models = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
+self.update_sr('base', [ID])
 } 
 
 | argchain[nt] {
 nt = replace(nt, models = $argchain.attr.models)
 $models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.args)
+self.update_sr('base', [n('argchain')])
 } 
 
 ;
@@ -438,6 +455,7 @@ self.guide_symbol('=')
 body_nt = self.guide_nonterm(RecordRule(self._solver).distill_single_body, nt, $ID.text)
 } body = expr[body_nt] {
 $branches = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, $body.models, body_nt.typ_var)
+self.update_sr('record', [t('_.'), ID, t('='), n('expr')])
 }
 
 | '_.' {
@@ -451,6 +469,7 @@ tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, $ID
 } tail = record[tail_nt] {
 tail_branches = $tail.branches
 $branches = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, $body.models, body_nt.typ_var, tail_branches)
+self.update_sr('record', [t('_.'), ID, t('='), n('expr'), n('record')])
 }
 
 ;
@@ -465,6 +484,7 @@ self.guide_symbol('=>')
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr)
 } body = expr[body_nt] {
 $branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
+self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
 | 'case' {
@@ -477,6 +497,7 @@ tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $
 } tail = function[tail_nt] {
 tail_branches = $tail.branches
 $branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.models, body_nt.typ_var, tail_branches)
+self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 
 ;
@@ -488,6 +509,7 @@ keychain [Context nt] returns [list[str] keys] :
 self.guide_terminal('ID')
 } ID {
 $keys = self.collect(KeychainRule(self._solver).combine_single, nt, $ID.text)
+self.update_sr('keychain', [t('.'), ID])
 }
 
 | '.' {
@@ -495,6 +517,7 @@ self.guide_terminal('ID')
 } ID {
 } tail = keychain[nt] {
 $keys = self.collect(KeychainRule(self._solver).combine_cons, nt, $ID.text, $tail.keys)
+self.update_sr('keychain', [t('.'), ID, n('keychain')])
 }
 
 ;
@@ -508,6 +531,7 @@ self.guide_symbol(')')
 } ')' {
 nt = replace(nt, models = $content.models)
 $attr = self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var)
+self.update_sr('argchain', [t('('), n('expr'), t(')')])
 }
 
 
@@ -520,6 +544,7 @@ nt = replace(nt, models = $head.models)
 } tail = argchain[nt] {
 nt = replace(nt, models = $tail.attr.models)
 $attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_var, $tail.attr.args)
+self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 }
 
 ;
@@ -531,6 +556,7 @@ content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_conten
 } content = expr[content_nt] {
 nt = replace(nt, models = $content.models)
 $attr = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
+self.update_sr('pipeline', [t('|>'), n('expr')])
 }
 
 | '|>' {
@@ -541,6 +567,7 @@ tail_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, h
 } tail = pipeline[tail_nt] {
 nt = replace(nt, models = $tail.attr.models)
 $attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, $tail.attr.cators)
+self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 }
 
 ;
@@ -552,6 +579,7 @@ target [Context nt] returns [list[Models] models]:
 expr_nt = self.guide_nonterm(lambda: nt)
 } expr[expr_nt] {
 $models = $expr.models
+self.update_sr('target', [t('='), n('expr')])
 }
 
 ;
@@ -562,6 +590,7 @@ pattern [Context nt] returns [PatternAttr attr]:
 
 | base_pattern[nt] {
 $attr = $base_pattern.attr
+self.update_sr('pattern', [n('basepat')])
 }
 
 | {
@@ -570,6 +599,7 @@ self.guide_symbol(',')
 } ',' {
 } tail = pattern[nt] {
 $attr = self.collect(PatternRule(self._solver).combine_tuple, nt, $head.attr, $tail.attr) 
+self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
 }
 
 ;
@@ -578,10 +608,12 @@ base_pattern [Context nt] returns [PatternAttr attr]:
 
 | ID {
 $attr = self.collect(BasePatternRule(self._solver).combine_var, nt, $ID.text)
+self.update_sr('basepat', [ID])
 } 
 
 | '@' {
 $attr = self.collect(BasePatternRule(self._solver).combine_unit, nt)
+self.update_sr('basepat', [t('@')])
 } 
 
 | '~' {
@@ -589,14 +621,17 @@ self.guide_terminal('ID')
 } ID {
 } body = base_pattern[nt] {
 $attr = self.collect(BasePatternRule(self._solver).combine_tag, nt, $ID.text, $body.attr)
+self.update_sr('basepat', [t('~'), ID, n('basepat')])
 }
 
 | record_pattern[nt] {
 $attr = $record_pattern.attr
+self.update_sr('basepat', [n('recpat')])
 }
 
 | '(' pattern[nt] ')' {
 $attr = $pattern.attr
+self.update_sr('basepat', [t('('), n('pattern'), t(')')])
 }
 
 
@@ -611,6 +646,7 @@ self.guide_symbol('=')
 } '=' {
 } body = pattern[nt] {
 $attr = self.collect(RecordPatternRule(self._solver).combine_single, nt, $ID.text, $body.attr)
+self.update_sr('recpat', [t('_.'), ID, t('='), n('pattern')])
 }
 
 | '_.' {
@@ -621,6 +657,7 @@ self.guide_symbol('=')
 } body = pattern[nt] {
 } tail = record_pattern[nt] {
 $attr = self.collect(RecordPatternRule(self._solver, nt).combine_cons, nt, $ID.text, $body.attr, $tail.attr)
+self.update_sr('recpat', [t('_.'), ID, t('='), n('pattern'), n('recpat')])
 }
 
 ;

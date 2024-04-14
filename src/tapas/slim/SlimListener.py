@@ -12,8 +12,8 @@ from contextlib import contextmanager
 
 from tapas.slim.analyzer import * 
 
-from pyrsistent import m, pmap, v
-from pyrsistent.typing import PMap 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 
 
@@ -92,6 +92,15 @@ class SlimListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SlimParser#record.
+    def enterRecord(self, ctx:SlimParser.RecordContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#record.
+    def exitRecord(self, ctx:SlimParser.RecordContext):
+        pass
+
+
     # Enter a parse tree produced by SlimParser#function.
     def enterFunction(self, ctx:SlimParser.FunctionContext):
         pass
@@ -101,12 +110,12 @@ class SlimListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SlimParser#record.
-    def enterRecord(self, ctx:SlimParser.RecordContext):
+    # Enter a parse tree produced by SlimParser#keychain.
+    def enterKeychain(self, ctx:SlimParser.KeychainContext):
         pass
 
-    # Exit a parse tree produced by SlimParser#record.
-    def exitRecord(self, ctx:SlimParser.RecordContext):
+    # Exit a parse tree produced by SlimParser#keychain.
+    def exitKeychain(self, ctx:SlimParser.KeychainContext):
         pass
 
 
@@ -125,15 +134,6 @@ class SlimListener(ParseTreeListener):
 
     # Exit a parse tree produced by SlimParser#pipeline.
     def exitPipeline(self, ctx:SlimParser.PipelineContext):
-        pass
-
-
-    # Enter a parse tree produced by SlimParser#keychain.
-    def enterKeychain(self, ctx:SlimParser.KeychainContext):
-        pass
-
-    # Exit a parse tree produced by SlimParser#keychain.
-    def exitKeychain(self, ctx:SlimParser.KeychainContext):
         pass
 
 

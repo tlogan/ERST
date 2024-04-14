@@ -25,6 +25,142 @@ R = TypeVar('R')
 Op = Optional
 
 @dataclass(frozen=True, eq=True)
+class Nonterm: 
+    id : str 
+
+@dataclass(frozen=True, eq=True)
+class Termin: 
+    pattern : str 
+
+GItem = Union[Nonterm, Termin]
+
+SyntaxSeq = tuple[Union[Nonterm, Termin], ...] 
+
+@dataclass(frozen=True, eq=True)
+class SyntaxRule:
+    head : str
+    body : SyntaxSeq
+
+Grammar = dict[str, list[SyntaxSeq]]
+
+n = Nonterm
+t = Termin
+def from_rules_to_grammar (rules : PSet[SyntaxRule]) -> Grammar:
+    g = {}
+    for rule in rules:
+        if rule.head in g:
+            bodies = g[rule.head]
+            g[rule.head] = bodies + [rule.body]
+        else:
+            g[rule.head] = [rule.body]
+    return g
+
+def concretize_rule_body(items : SyntaxSeq) -> str:
+    return " ".join([
+        (
+            item.id
+            if isinstance(item, Nonterm) else
+            f"'{item.pattern}'"
+            if isinstance(item, Termin) else
+            "<ERROR>"
+        )
+
+        for item in items
+    ])
+
+def concretize_grammar(g : Grammar) -> str:
+    result = ""
+    for head in g:
+        bodies = g[head]
+        init_body = bodies[0]
+        result += f"{head} ::= {concretize_rule_body(init_body)}" + "\n"
+        result += "".join([
+            (" " * len(head)) + "   | " + f"{concretize_rule_body(body)}" + "\n"
+            for body in bodies[1:]
+        ])
+        result += "\n"
+    return result
+
+ID = t(r"[a-zA-Z][_a-zA-Z]*")
+
+# def make_prompt_grammar() -> Grammar: 
+#     return {
+#         'expr' : [
+#             [n('base')],
+#             [n('base'), t(','), n('expr')],
+#             [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')],
+#             [n('base'), n('keychain')],
+#             [n('base'), n('argchain')],
+#             [n('base'), n('pipeline')],
+#             [t('let'), ID, n('target'), t(';'), n('expr')],
+#             [t('fix'), t('('), n('expr'), t(')')],
+#         ],
+        
+#         'base' : [
+#             [t('@')],
+#             [t('~'), ID, n('base')],
+#             [n('record')],
+#             [n('function')],
+#             [ID],
+#             [n('argchain')]
+#         ], 
+
+#         'record' : [
+#             [t('_.'), ID, t('='), n('expr')],
+#             [t('_.'), ID, t('='), n('expr'), n('record')],
+#         ],
+
+#         'function' : [
+#             [t('case'), n('pattern'), t('=>'), n('expr')],
+#             [t('case'), n('pattern'), t('=>'), n('expr'), n('function')],
+#         ],
+
+#         'keychain' : [
+#             [t('.'), ID],
+#             [t('.'), ID, n('keychain')],
+#         ],
+
+#         'argchain' : [
+#             [t('('), n('expr'), t(')')],
+#             [t('('), n('expr'), t(')'), n('argchain')],
+#         ],
+
+#         'pipeline' : [
+#             [t('|>'), n('expr')],
+#             [t('|>'), n('expr'), n('pipeline')],
+#         ],
+        
+#         'target' : [
+#             # [t('='), n('expr')],
+#             [t(':'), ID, t('='), n('expr')],
+#         ],
+        
+#         'pattern' : [
+#             [n('basepat')],
+#             [n('basepat'), t(','), n('pattern')],
+#         ],
+
+#         'basepat' : [
+#             [ID],
+#             [t('@')],
+#             [t('~'), ID, n('basepat')],
+#             [n('recpat')],
+#             [t('('), n('pattern'), t(')')],
+#         ],
+        
+#         'recpat' : [
+#             [t('_.'), ID, t('='), n('pattern')],
+#             [t('_.'), ID, t('='), n('pattern'), n('recpat')],
+#         ]
+
+        
+#     } 
+
+
+
+
+
+@dataclass(frozen=True, eq=True)
 class RNode:
     content : PMap[str, RTree] 
 

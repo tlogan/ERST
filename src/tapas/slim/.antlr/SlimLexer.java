@@ -7,8 +7,8 @@ from contextlib import contextmanager
 
 from tapas.slim.analyzer import * 
 
-from pyrsistent import m, pmap, v
-from pyrsistent.typing import PMap 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 
 import org.antlr.v4.runtime.Lexer;

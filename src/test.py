@@ -1051,6 +1051,20 @@ def test_max():
     assert u(decode(models, typ_var)) == "@"
 
 
+def test_foldr():
+    # TODO
+    foldr = (f'''
+fix (case self => ( 
+    case (f, ~nil @, b) => b
+    case (f, ~cons (x, xs), b) => f(self(f, xs, b), x)
+))
+    ''')
+
+    (models, typ_var, parsetree) = analyze(foldr)
+    # print("answer: " + u(decode(models, typ_var)))
+    assert u(decode(models, typ_var)) == "@"
+
+
 
 def test_antecedent_union():
     strong = ('''
