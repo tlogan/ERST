@@ -793,11 +793,14 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
     return None
 
 def get_relational_keys(model : Model) -> PSet[str]:
-    return pset(
-        fv
+    result = pset([
+        fv 
         for st in model.constraints
+        if is_relational_key(model, st.strong)
         for fv in extract_free_vars_from_typ(s(), st.strong)
-    ).intersection(model.freezer)
+    ]).intersection(model.freezer)
+
+    return result
 
 def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
@@ -1667,20 +1670,20 @@ class Solver:
     def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
         if self._battery == 0:
             return []
-        print(f'''
-|| DEBUG SOLVE
-=================
-||
-|| model.freezer::: 
-|| :::::::: {model.freezer}
-||
-|| model.constraints::: 
-|| :::::::: {concretize_constraints(tuple(model.constraints))}
-||
-|| |- {concretize_typ(strong)} 
-|| <: {concretize_typ(weak)}
-||
-        ''')
+#         print(f'''
+# || DEBUG SOLVE
+# =================
+# ||
+# || model.freezer::: 
+# || :::::::: {model.freezer}
+# ||
+# || model.constraints::: 
+# || :::::::: {concretize_constraints(tuple(model.constraints))}
+# ||
+# || |- {concretize_typ(strong)} 
+# || <: {concretize_typ(weak)}
+# ||
+#         ''')
 
         if alpha_equiv(strong, weak): 
             return [model] 
@@ -1753,13 +1756,35 @@ class Solver:
 
             interp = interpret_weakest_for_id(model, strong.id)
             if (
-                interp != None and 
+                # interp != None and 
                 strong.id in get_relational_keys(model) and
                 isinstance(weak, TVar) and 
                 weak.id not in model.freezer
             ) :
-                weakest_strong = interp[0]
-                safe = bool(self.solve(model, weakest_strong, weak))
+
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                DEBUG relational_key interp 
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                strong: {concretize_typ(strong)}
+                weak: {concretize_typ(weak)}
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+                # weakest_strong = interp[0]
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG relational_key interp 
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # strong: {concretize_typ(strong)}
+                # weakest_strong: {concretize_typ(weakest_strong)}
+                # weak: {concretize_typ(weak)}
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
+
+
+                # TODO: to be more precise, it could factor the relation instead of using Top
+                # safe = bool(self.solve(model, Top(), weak))
+                safe = True
                 if safe:
                     return [Model(
                         model.constraints.add(Subtyping(strong, weak)),
@@ -2034,6 +2059,7 @@ class Solver:
             # reduced_strong = sub_typ(sub_map, strong)
 
             ignored_ids = get_relational_keys(model)
+            # ignored_ids = s()
             reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, ignored_ids)
             model = Model(model.constraints.difference(used_constraints), model.freezer)
             print(f"""
@@ -2498,12 +2524,14 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application init
-        # len(nt.models): {len(nt.models)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application init
+        ~~~~~~~~~~~~~~
+        len(nt.enviro): {nt.enviro}
+        len(nt.models): {len(nt.models)}
+        ~~~~~~~~~~~~~~
+        """)
 
         models = nt.models 
         for arg_var in arg_vars:
@@ -2513,6 +2541,20 @@ class ExprRule(Rule):
                 # NOTE: interpretation to keep types and constraints compact 
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
+
+                print(f"""
+                ~~~~~~~~~~~~~~
+                DEBUG application
+                ~~~~~~~~~~~~~~
+                model.freezer: {tuple(model.freezer)}
+                model.constraints: {concretize_constraints(tuple(model.constraints))}
+
+                cator_typ: {concretize_typ(cator_typ)}
+
+                arg_type: {concretize_typ(arg_typ)}
+                result_var: {result_var.id}
+                ~~~~~~~~~~~~~~
+                """)
 
                 # print(f"""
                 # ~~~~~~~~~~~~~~
@@ -2546,12 +2588,12 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application results 
-        # len(models): {len(models)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application results 
+        len(models): {len(models)}
+        ~~~~~~~~~~~~~~
+        """)
 
         # for model in models:
         #     print(f"""

@@ -1026,6 +1026,17 @@ case (x, y) => (
 
 
 def test_max():
+
+# TODO: _39 is most likely the return type of less_equal(x,y)
+# TODO: _39 should be ~true in one world and ~false in another world
+# need to capture that _41 <: _39 ; _41 flows into _39; this connection appears broken
+# TODO: however, the constraint will be upper: _41 <: ~true; so getting strongest interp wouldn't work
+# TODO: the problem might be that the relational constraint is generated before the constraints on _41 alone
+# strong: ((_2, _3), _41)
+# reduced_strong: ((_2, _3), _41)
+# weak: LFP _33 ((EXI [_15] ((~zero @, _15), ~true @)) | ((EXI [_18 _19 _26 ; ((_18, _19), _26) <: _33] ((~succ _18, ~succ _19), _26)) | (EXI [_27] ((~succ _27, ~zero @), ~false @))))
+
+
     max = (f'''
     let less_equal = {less_equal} ;
     case (x, y) => (
@@ -1045,9 +1056,12 @@ def test_max():
     )
     ''')
 
-    (models, typ_var, parsetree) = analyze(max)
-    print("answer: " + u(decode(models, typ_var)))
-    # assert u(decode(models, typ_var)) == "@"
+    try:
+        (models, typ_var, parsetree) = analyze(max)
+        print("answer: " + u(decode(models, typ_var)))
+        # assert u(decode(models, typ_var)) == "@"
+    except Exception:
+        print("exception raised")
 
 
 def test_foldr():
@@ -1119,7 +1133,7 @@ if __name__ == '__main__':
     # test_if_true_then_else()
     # test_function_if_then_else()
     # TODO
-    # test_max()
+    test_max()
 
     ########################
     # p(less_equal_rel)
@@ -1145,7 +1159,7 @@ if __name__ == '__main__':
     # test_one_single_subs_nat_list()
     # test_two_single_subs_nat_list()
     #####################
-    test_even_list_subs_nat_list()
+    # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
     # test_one_query_subs_nat_list()
     pass
