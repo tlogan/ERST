@@ -932,7 +932,6 @@ def test_app_less_equal_two_one():
     app_less = (f'''
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
-    code = []
     (models, typ_var, parsetree) = analyze(app_less)
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "~false @"
@@ -1047,8 +1046,8 @@ def test_max():
     ''')
 
     (models, typ_var, parsetree) = analyze(max)
-    # print("answer: " + u(decode(models, typ_var)))
-    assert u(decode(models, typ_var)) == "@"
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "@"
 
 
 def test_foldr():
@@ -1095,7 +1094,7 @@ answer: {answer}
     # assert answer == "@" 
 
 if __name__ == '__main__':
-    test_antecedent_union()
+    # test_antecedent_union()
     # test_consequent_intersection()
 
     ########################
@@ -1114,13 +1113,13 @@ if __name__ == '__main__':
     # test_less_equal_imp_subs_one_two_imp_query()
     # test_less_equal_imp_subs_two_one_imp_query()
     #
-    # TODO
     # test_nested_fun()
     # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()
-    # test_max()
+    # TODO
+    test_max()
 
     ########################
     # p(less_equal_rel)

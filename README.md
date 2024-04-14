@@ -1,10 +1,9 @@
 # Lightweight Tapas
 
 ### TODO (Neural Implementation)
-- try using full EBNF grammar in `system` role.
-- update parser attributes (combine rules) to generate refined EBNF grammar
 ### TODO (Symbolic Implementation)
-- create simplified entry point for non-interactive parser/analyzer
+- debug `test_max`
+- improve speed by interpreting variables and removing constraints in `combine` rules
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
 - in parser attributes; move nt model updates to combine step

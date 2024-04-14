@@ -1435,7 +1435,9 @@ def extract_reachable_constraints_from_typ(model : Model, typ : Typ) -> PSet[Sub
 
 def package_typ(model : Model, typ : Typ) -> Typ:
     constraints = extract_reachable_constraints_from_typ(model, typ)
-    bound_ids = tuple(model.freezer.intersection(extract_free_vars_from_constraints(s(), constraints)))
+
+    reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
+    bound_ids = tuple(model.freezer.intersection(reachable_ids))
     if not bound_ids and not constraints:
         typ_idx_unio = typ
     else:
@@ -1542,17 +1544,17 @@ class Solver:
 
     def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
 
-        # for model in models:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     DEBUG decode_with_polarity:
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     typ: {concretize_typ(t)}
+        for model in models:
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG decode_with_polarity:
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            typ: {concretize_typ(t)}
 
-        #     model.freezer: {model.freezer}
-        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     """)
+            model.freezer: {model.freezer}
+            model.constraints: {concretize_constraints(tuple(model.constraints))}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         constraint_typs = [
             package_typ(m, tt)
@@ -2391,11 +2393,11 @@ class ExprRule(Rule):
         function_nt = replace(nt, typ_var = cator_var)
         function_models = BaseRule(self.solver).combine_function(function_nt, branches)
         nt = replace(nt, models = function_models)
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG ite len(function_models): {len(function_models)}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # DEBUG ite len(function_models): {len(function_models)}
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # """)
         arguments = [condition_var]
         return self.combine_application(nt, cator_var, arguments) 
 
@@ -2469,12 +2471,12 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application init
-        len(nt.models): {len(nt.models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application init
+        # len(nt.models): {len(nt.models)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
         models = nt.models 
         for arg_var in arg_vars:
@@ -2485,19 +2487,19 @@ class ExprRule(Rule):
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
 
-                print(f"""
-                ~~~~~~~~~~~~~~
-                DEBUG application
-                ~~~~~~~~~~~~~~
-                model.freezer: {tuple(model.freezer)}
-                model.constraints: {concretize_constraints(tuple(model.constraints))}
-                cator_var: {cator_var}
-                arg_var: {arg_var}
+                # print(f"""
+                # ~~~~~~~~~~~~~~
+                # DEBUG application
+                # ~~~~~~~~~~~~~~
+                # model.freezer: {tuple(model.freezer)}
+                # model.constraints: {concretize_constraints(tuple(model.constraints))}
+                # cator_var: {cator_var}
+                # arg_var: {arg_var}
 
-                cator_typ: {concretize_typ(cator_typ)}
-                arg_typ: {concretize_typ(arg_typ)}
-                ~~~~~~~~~~~~~~
-                """)
+                # cator_typ: {concretize_typ(cator_typ)}
+                # arg_typ: {concretize_typ(arg_typ)}
+                # ~~~~~~~~~~~~~~
+                # """)
                 model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer)
                 new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
             models = new_models
@@ -2517,27 +2519,27 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application results 
-        len(models): {len(models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application results 
+        # len(models): {len(models)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
-        for model in models:
-            print(f"""
-            ~~~~~~~~~~~~~~
-            DEBUG application results
-            ~~~~~~~~~~~~~~
-            model.freezer: {tuple(model.freezer)}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-            cator_var: {cator_var}
-            arg_var: {arg_var}
+        # for model in models:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~
+        #     DEBUG application results
+        #     ~~~~~~~~~~~~~~
+        #     model.freezer: {tuple(model.freezer)}
+        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
+        #     cator_var: {cator_var}
+        #     arg_var: {arg_var}
 
-            cator_typ: {concretize_typ(cator_typ)}
-            arg_typ: {concretize_typ(arg_typ)}
-            ~~~~~~~~~~~~~~
-            """)
+        #     cator_typ: {concretize_typ(cator_typ)}
+        #     arg_typ: {concretize_typ(arg_typ)}
+        #     ~~~~~~~~~~~~~~
+        #     """)
         return models
 
     #########
@@ -2673,71 +2675,71 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
+                self_used_constraints = s()
                 if self_interp and isinstance(self_interp[0], Imp):
                     self_left = self_interp[0].antec
                     self_right = self_interp[0].consq
+
                     self_used_constraints = self_interp[1]
-                    inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer)
-                    reachable_constraints = tuple(
-                        st
-                        for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
-                        if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-                    )
-
-                    IH_rel_constraint = Subtyping(make_pair_typ(self_left, self_right), IH_typ)
-                    rel_constraints = tuple([IH_rel_constraint]) + reachable_constraints
-                    # TODO: what if there are existing frozen variables in inner_model?
-                    rel_model = Model(pset(rel_constraints), pset(bound_ids))
-                    constrained_rel = package_typ(rel_model, rel_pattern)
-
-        #             print(f"""
-        # ~~~~~~~~~~~~~~~~~~~~~
-        # DEBUG combine_fix rel
-        # ~~~~~~~~~~~~~~~~~~~~~
-        # body_var: {body_var}
-        # IH_typ: {IH_typ.id}
-        # rel_model.freezer: {rel_model.freezer}
-        # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
-        # ======================
-        # rel_pattern: {concretize_typ(rel_pattern)}
-        # constrained rel: {concretize_typ(constrained_rel)}
-        # ~~~~~~~~~~~~~~~~~~~~~
-        #             """)
-
-                    IH_left_constraint = Subtyping(self_left, IH_typ)
-                    left_constraints = tuple([IH_left_constraint]) + reachable_constraints
-                    # TODO: what if there are existing frozen variables in inner_model?
-                    left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
-                    constrained_left = package_typ(left_model, left_typ)
-
-        #             print(f"""
-        # ~~~~~~~~~~~~~~~~~~~~~
-        # DEBUG combine_fix left
-        # ~~~~~~~~~~~~~~~~~~~~~
-        # IH_typ: {IH_typ.id}
-        # left_model.freezer: {left_model.freezer}
-        # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
-        # ======================
-        # left_pattern: {concretize_typ(left_typ)}
-        # constrained left: {concretize_typ(constrained_left)}
-        # ~~~~~~~~~~~~~~~~~~~~~
-        #             """)
+                    IH_rel_constraints = s(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
+                    IH_left_constraints = s(Subtyping(self_left, IH_typ))
                 else:
+                    self_used_constraints = s()
 
-                    inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer)
-                    reduced_constraints = pset(
-                        st
-                        for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
-                        if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-                    )
-
-
-                    constrained_rel = package_typ(Model(reduced_constraints, pset(bound_ids)), rel_pattern)
-                    constrained_left = package_typ(Model(reduced_constraints, pset(left_bound_ids)), left_typ) 
+                    IH_rel_constraints = s()
+                    IH_left_constraints = s()
                 #end if
+
+                inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer)
+                reachable_constraints = tuple(
+                    st
+                    for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
+                    if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
+                )
+
+                rel_constraints = IH_rel_constraints.union(reachable_constraints)
+                left_constraints = IH_left_constraints.union(reachable_constraints)
+
+                # TODO: see why frozen variables aren't in existential from package type
+
+                # TODO: what if there are existing frozen variables in inner_model?
+                rel_model = Model(pset(rel_constraints), pset(bound_ids))
+                constrained_rel = package_typ(rel_model, rel_pattern)
+
+                # TODO: what if there are existing frozen variables in inner_model?
+                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
+                constrained_left = package_typ(left_model, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
                 param_body = Unio(constrained_left, param_body)
+
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_fix rel
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # body_var: {body_var}
+    # IH_typ: {IH_typ.id}
+    # rel_model.freezer: {rel_model.freezer}
+    # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
+    # ======================
+    # rel_pattern: {concretize_typ(rel_pattern)}
+    # constrained rel: {concretize_typ(constrained_rel)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix left
+    ~~~~~~~~~~~~~~~~~~~~~
+    IH_typ: {IH_typ.id}
+    left_model.freezer: {left_model.freezer}
+    left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+    ======================
+    left_pattern: {concretize_typ(left_typ)}
+    constrained left: {concretize_typ(constrained_left)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
             #end for
 
@@ -2761,6 +2763,13 @@ class ExprRule(Rule):
     DEBUG combine_fix result 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     :: param_upper: {concretize_typ(param_upper)}
+
+    ::::
+
+    :: rel_typ: {concretize_typ(rel_typ)}
+
+    ::::
+    
     :: result: {concretize_typ(result)}
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             """)
