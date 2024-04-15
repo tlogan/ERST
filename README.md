@@ -29,13 +29,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- note how semantically equivalent forms change what can be solved:
-    - using existential prevents solving from return type to argument type
-```
-ALL[X . X <: nil | cons A] X -> EXI[Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] Y
---------------- OR -----------------------
-ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> Y
-```
+- discuss the notion of freezer/skolem adjacent learnable variables (frozen <: learnable); 
 - for paper, write algorithmic inference rules as a combination of combine/distill rules 
     - distill rules construct a new environment; combine rules construct a new type
 - for paper, note that much of type reconstruction is handled in solving subtyping
