@@ -787,6 +787,71 @@ def is_relational_key(model : Model, t : Typ) -> bool:
     else:
         return False
 
+def is_unrollable(model : Model, key : Typ, rel : LeastFP) -> bool:
+    # TODO:
+
+    # choices = linearize_unions(rel.body)
+    # paths = [
+    #     path
+    #     for choice in choices
+    #     for path in list(extract_paths(choice))
+    # ]
+    # result = True 
+    # for path in paths:
+    #     column_key = extract_field_plain(path, key)
+    #     is_key_tag = isinstance(column_key, TTag)
+    #     column_choices = [
+    #         extract_field(path, rel.id, choice)
+    #         for choice in choices
+    #         if choice != Bot()
+    #     ] 
+    #     are_all_choices_tags = all(isinstance(cc, TTag) for cc in column_choices)
+    #     if (is_key_tag or are_all_choices_tags):
+    #         pass 
+    #     else:
+    #         return False
+
+    # return result
+    return not is_relational_key(model, key)
+
+
+    # choices = linearize_unions(least.body)
+    # paths = [
+    #     path
+    #     for choice in choices
+    #     for path in list(extract_paths(choice))
+    # ]
+
+    # rnode = RNode(m()) 
+    # for path in paths:
+    #     column = extract_column(path, least.id, choices)
+    #     assert isinstance(rnode, RNode)
+    #     rnode = insert_at_path(rnode, path, column)
+
+
+    # # TODO: assume the key appears on the strong side of subtyping; 
+    # # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
+    # if isinstance(t, TField):
+    #     if isinstance(t.body, TVar):
+    #         op = interpret_strong_for_id(model, t.body.id) 
+    #         if op != None:
+    #             (strongest, _) = op
+    #             return strongest == None or (not isinstance(strongest, Bot) and is_unrollable(model, strongest))
+    #         else:
+    #             return True 
+    #     else:
+    #         return is_unrollable(model, t.body)
+    #     # TODO: remove old code
+    #     # return (
+    #     #     isinstance(t.body, TVar) and 
+    #     #     (t.body.id not in freezer) 
+    #     # ) or is_relational_key(freezer, t.body) 
+    # elif isinstance(t, Inter):
+    #     return is_unrollable(model, t.left) or is_unrollable(model, t.right)
+    # else:
+    #     return True 
+
+
 def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
     for constraint in model.constraints:
         if strong == constraint.strong:
@@ -1852,6 +1917,7 @@ class Solver:
 #                 ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
+            interp = interpret_strong_for_id(model, strong.id)
             print(f"""
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             DEBUG strong, TVar learnable  
@@ -1859,14 +1925,50 @@ class Solver:
             strong: {concretize_typ(strong)}
             weak: {concretize_typ(weak)}
             model.relids: {model.relids}
+            interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             """)
-            interp = interpret_strong_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer, model.relids
-                )]
+
+                if False: # TODO: strong.id in model.relids:
+                    rel_constraints = [
+                        st
+                        for st in model.constraints
+                        if strong.id in extract_free_vars_from_typ(s(), st.strong)
+                        if isinstance(st.weak, LeastFP)
+                    ]
+
+                    print(f"""
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    DEBUG RELATIONAL INSTANTIATING for strong: {concretize_typ(strong)}
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    model.constraints: {concretize_constraints(tuple(model.constraints))}
+                    rel_constraints: {concretize_constraints(tuple(rel_constraints))}
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    """)
+                    models = [Model(
+                        model.constraints.add(Subtyping(strong, weak)).difference(rel_constraints),
+                        model.freezer, model.relids
+                    )]
+                    sub_map : PMap[str, Typ] = pmap({strong.id : weak})
+
+                    for rel_con in rel_constraints:
+                        key = sub_typ(sub_map, rel_con.strong)
+                        models = [
+                            m1
+                            for m0 in models 
+                            for m1 in self.solve(m0, key, rel_con.weak)
+                        ]
+
+                    return [
+                        Model(m0.constraints.union(rel_constraints), m0.freezer, m0.relids)
+                        for m0 in models 
+                    ]
+                else:
+                    return [Model(
+                        model.constraints.add(Subtyping(strong, weak)),
+                        model.freezer, model.relids
+                    )]
 
             else:
                 strongest = interp[0]
@@ -2082,7 +2184,7 @@ weak: {concretize_typ(weak)}
             model = Model(model.constraints.difference(used_constraints), model.freezer, model.relids)
             if strong != reduced_strong:
                 return self.solve(model, reduced_strong, weak)
-            elif not is_relational_key(model, strong) and self._battery != 0:
+            elif is_unrollable(model, strong, weak) and self._battery != 0:
                 self._battery -= 1
                 '''
                 unroll
@@ -2094,10 +2196,21 @@ weak: {concretize_typ(weak)}
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG weak, LeastFP --- Unrolling
 ~~~~~~~~~~~~~~~~~~~~~
+strong: {concretize_typ(strong)}
 weak_body: {concretize_typ(weak_body)}
 ~~~~~~~~~~~~~~~~~~~~~
                 """)
                 models = self.solve(model, strong, weak_body)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG weak, LeastFP --- Unrolling Result
+~~~~~~~~~~~~~~~~~~~~~
+strong: {concretize_typ(strong)}
+weak_body: {concretize_typ(weak_body)}
+len(models): {len(models)}
+~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 return models
             else:

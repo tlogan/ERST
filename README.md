@@ -2,6 +2,9 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
+- debug construction of unrollable and updating constraints with learned type values; see `test_max`
+- consider how the flow changes when return type is in relational constraint;
+    - consider when to freeze variable to get correct interpretation; see `test_app_less_equal_two_one` 
 - debug `test_max` ; recursion depth exceeded
 - improve speed by interpreting variables and removing constraints in `combine` rules
 - uncomment generalization and extrusion in `combine_function`
@@ -28,6 +31,13 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how semantically equivalent forms change what can be solved:
+    - using existential prevents solving from return type to argument type
+```
+ALL[X . X <: nil | cons A] X -> EXI[Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] Y
+--------------- OR -----------------------
+ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> Y
+```
 - for paper, write algorithmic inference rules as a combination of combine/distill rules 
     - distill rules construct a new environment; combine rules construct a new type
 - for paper, note that much of type reconstruction is handled in solving subtyping

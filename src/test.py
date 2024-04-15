@@ -934,6 +934,7 @@ def test_app_less_equal_two_one():
     ''')
     (models, typ_var, parsetree) = analyze(app_less)
     print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "(EXI [ ; _38 <: ~false @] _38)"
     assert u(decode(models, typ_var)) == "~false @"
 
 def test_nested_fun():
@@ -1140,6 +1141,17 @@ answer: {answer}
     ''')
     # assert answer == "@" 
 
+def test_extra_exi():
+    strong = ('''
+~true @
+    ''')
+    weak = ('''
+(((EXI [X] ~true @) | (EXI [X Y Z ; Z <: LFP self (((EXI [X] ~true @) | (EXI [X Y Z ; Z <: self] Z)) | (EXI [X] ~false @))] Z)) | (EXI [X] ~false @))
+    ''')
+    models = solve(strong, weak)
+    print(f"len(models): {len(models)}")
+
+
 if __name__ == '__main__':
     # test_antecedent_union()
     # test_consequent_intersection()
@@ -1156,7 +1168,7 @@ if __name__ == '__main__':
     # test_app_pattern_match_nil()
     ########################
     # test_two_less_equal_one_query()
-    # test_app_less_equal_two_one()
+    test_app_less_equal_two_one()
     # test_less_equal_imp_subs_one_two_imp_query()
     # test_less_equal_imp_subs_two_one_imp_query()
     #
@@ -1165,10 +1177,11 @@ if __name__ == '__main__':
     # test_if_true_then_else()
     # test_function_if_then_else()
     # TODO
+    # test_extra_exi()
     # test_pattern_match_wrap()
     # test_arg_specialization()
     # test_recursion_wrapper()
-    test_max()
+    # test_max()
 
     ########################
     # p(less_equal_rel)
