@@ -1561,6 +1561,14 @@ def cast_up(renaming : PMap[str, TVar]) -> PMap[str, Typ]:
     })
 
 
+def get_freezer_adjacent_learnable_ids(model : Model) -> PSet[str]:
+    return pset(
+        st.weak.id
+        for st in model.constraints
+        if isinstance(st.strong, TVar) and st.strong.id in model.freezer  
+        if isinstance(st.weak, TVar) and st.weak.id not in model.freezer  
+    ) 
+
 class Solver:
     _type_id : int = 0 
     _battery : int = 10 
@@ -1815,7 +1823,15 @@ class Solver:
         #######################################
 
 
-        
+        elif (
+            isinstance(strong, TVar) and strong.id in model.freezer and
+            isinstance(weak, TVar) and weak.id not in model.freezer
+        ):
+            # NOTE: no interpretation; simply add constraint
+            return [Model(
+                model.constraints.add(Subtyping(strong, weak)),
+                model.freezer, model.relids
+            )]
 
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
@@ -1823,16 +1839,16 @@ class Solver:
 
 
             interp = interpret_weak_for_id(model, strong.id)
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            DEBUG strong, TVar frozen  
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            strong: {concretize_typ(strong)}
-            weak: {concretize_typ(weak)}
-            has interp: {interp != None}
-            model.relids: {model.relids}
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+            # print(f"""
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # DEBUG strong, TVar frozen  
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # has interp: {interp != None}
+            # model.relids: {model.relids}
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # """)
             if interp != None:
                 weakest_strong = interp[0]
                 return self.solve(model, weakest_strong, weak)
@@ -1917,6 +1933,7 @@ class Solver:
 #                 ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
+            # TODO: don't it as a frozen variable
             interp = interpret_strong_for_id(model, strong.id)
             print(f"""
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1925,6 +1942,8 @@ class Solver:
             strong: {concretize_typ(strong)}
             weak: {concretize_typ(weak)}
             model.relids: {model.relids}
+            model.freezer: {model.freezer}
+            model.constraints: {concretize_constraints(tuple(model.constraints))}
             interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             """)
@@ -1970,7 +1989,14 @@ class Solver:
                         model.freezer, model.relids
                     )]
 
+            elif isinstance(interp[0], TVar) and (interp[0].id in model.freezer):
+                # TODO: safety check
+                return [Model(
+                    model.constraints.add(Subtyping(strong, weak)),
+                    model.freezer, model.relids
+                )]
             else:
+                # NOTE: if there is a frozen <: learnable constraint then they could simply jump back and forth forever
                 strongest = interp[0]
                 return [
                     Model(
@@ -1979,7 +2005,6 @@ class Solver:
                     )
                     for model in self.solve(model, strongest, weak)
                 ]
-
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
             interp = interpret_weak_for_id(model, weak.id)
@@ -2165,7 +2190,11 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, s())
+            # NOTE: don't interpret learnable variables as frozen variables
+            # ignored_ids = get_freezer_adjacent_learnable_ids(model)
+
+            ignored_ids = s()
+            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, ignored_ids)
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~
@@ -2661,7 +2690,8 @@ class ExprRule(Rule):
             for model in models:
                 # NOTE: interpretation to keep types and constraints compact 
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
-                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
+                ignored_ids = get_freezer_adjacent_learnable_ids(model)
+                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
                 print(f"""
@@ -2789,7 +2819,7 @@ class ExprRule(Rule):
         --------------- OR -----------------------
         ALL[X . X <: nil | cons A] X -> EXI[Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] Y
         --------------- OR -----------------------
-        ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> Y
+        ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> EXI[Z ; Z <: Y] Z
         """
 
         self_typ = self.solver.fresh_type_var()
@@ -2877,12 +2907,12 @@ class ExprRule(Rule):
 
                     self_used_constraints = self_interp[1]
                     IH_rel_constraints = s(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
-                    # IH_left_constraints = s(Subtyping(self_left, IH_typ))
+                    IH_left_constraints = s(Subtyping(self_left, IH_typ))
                 else:
                     self_used_constraints = s()
 
                     IH_rel_constraints = s()
-                    # IH_left_constraints = s()
+                    IH_left_constraints = s()
                 #end if
 
                 inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer, inner_model.relids)
@@ -2893,7 +2923,7 @@ class ExprRule(Rule):
                 )
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
-                # left_constraints = IH_left_constraints.union(reachable_constraints)
+                left_constraints = IH_left_constraints.union(reachable_constraints)
 
                 # TODO: see why frozen variables aren't in existential from package type
 
@@ -2902,11 +2932,11 @@ class ExprRule(Rule):
                 constrained_rel = package_typ(rel_model, rel_pattern)
 
                 # TODO: what if there are existing frozen variables in inner_model?
-                # left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
-                # constrained_left = package_typ(left_model, left_typ)
+                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
+                constrained_left = package_typ(left_model, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
-                # param_body = Unio(constrained_left, param_body)
+                param_body = Unio(constrained_left, param_body)
 
 
                 print(f"""
@@ -2950,13 +2980,16 @@ class ExprRule(Rule):
     #         """)
 
             param_typ = self.solver.fresh_type_var()
-            return_typ = self.solver.fresh_type_var()
-            # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-            # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-            # result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
+            body_typ = self.solver.fresh_type_var()
+            consq_constraint = Subtyping(make_pair_typ(param_typ, body_typ), rel_typ)
+            consq_typ = Exi(tuple([body_typ.id]), tuple([consq_constraint]), body_typ)  
+            result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
 
-            full_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-            result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, return_typ))  
+            # full_constraint = Subtyping(make_pair_typ(param_typ, body_typ), rel_typ)
+            # return_typ = self.solver.fresh_type_var()
+            # # consq_typ = Exi(tuple([return_typ.id]), tuple([Subtyping(return_typ, body_typ)]), return_typ)  
+            # # result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, consq_typ))  
+            # result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, body_typ))  
 
     # :: param_upper: {concretize_typ(param_upper)}
 

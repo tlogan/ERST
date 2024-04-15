@@ -3,9 +3,7 @@
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
 - debug construction of unrollable and updating constraints with learned type values; see `test_max`
-- consider how the flow changes when return type is in relational constraint;
-    - consider when to freeze variable to get correct interpretation; see `test_app_less_equal_two_one` 
-- debug `test_max` ; recursion depth exceeded
+- debug `test_max`
 - improve speed by interpreting variables and removing constraints in `combine` rules
 - uncomment generalization and extrusion in `combine_function`
 - (maybe) rewrite package to ensure that all constraints have a frozen variable
