@@ -503,6 +503,7 @@ Freezer = PSet[str]
 class Model:
     constraints : PSet[Subtyping]
     freezer : PSet[str]
+    relids : PSet[str]
 
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
     return pset((
@@ -768,7 +769,7 @@ def is_relational_key(model : Model, t : Typ) -> bool:
     # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            op = interpret_strongest_for_id(model, t.body.id) 
+            op = interpret_strong_for_id(model, t.body.id) 
             if op != None:
                 (strongest, _) = op
                 return strongest != None and (isinstance(strongest, Bot) or is_relational_key(model, strongest))
@@ -792,17 +793,7 @@ def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def get_relational_keys(model : Model) -> PSet[str]:
-    result = pset([
-        fv 
-        for st in model.constraints
-        if is_relational_key(model, st.strong)
-        for fv in extract_free_vars_from_typ(s(), st.strong)
-    ]).intersection(model.freezer)
-
-    return result
-
-def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
     which is T & U.
@@ -810,7 +801,18 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
     '''
 
 
-    has_weakest_interpretation = True
+    has_weak_interpretation = id not in model.relids
+    # TODO: determine if the following is needed or too restrictive
+    # all(
+    #     id != fv 
+    #     for st in model.constraints
+    #     if is_relational_key(model, st.strong)
+    #     for fv in extract_free_vars_from_typ(s(), st.strong)
+    # )
+
+#     return result
+
+
     # TODO: determine if some restriction is actually necessary
     # all(
     #     (
@@ -822,7 +824,7 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
 
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_weakest_for_id 
+# DEBUG interpret_weak_for_id 
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 # model.freezer: {model.freezer}
 # model.constraints: {concretize_constraints(tuple(model.constraints))}
@@ -832,7 +834,7 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
 #     """)
 
 
-    if has_weakest_interpretation:
+    if has_weak_interpretation:
         constraints = [
             st
             for st in model.constraints
@@ -874,14 +876,14 @@ def interpret_weakest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSe
 
     # return typ_final 
 
-def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
     NOTE: related to strongest postcondition concept
     '''
 
-    has_strongest_interpretation = True
+    has_strong_interpretation = True
     # TODO: determine if some restriction is actually necessary
     # all(
     #     (
@@ -894,7 +896,7 @@ def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, P
 
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_strongest_for_id ~~~~~~~~~
+# DEBUG interpret_strong_for_id ~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~ model.freezer: {model.freezer}
 # ~~ model.constraints: {concretize_constraints(tuple(model.constraints))}
@@ -903,7 +905,7 @@ def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, P
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     """)
 
-    if has_strongest_interpretation:
+    if has_strong_interpretation:
         constraints = [
             st
             for st in model.constraints
@@ -916,12 +918,12 @@ def interpret_strongest_for_id(model : Model, id : str) -> Optional[tuple[Typ, P
     else:
         return None
 
-def interpret_strongest_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+def interpret_strong_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
 
     trips = [ 
         (id, strongest, cs)
         for id in ids
-        for op in [interpret_strongest_for_id(model, id)]
+        for op in [interpret_strong_for_id(model, id)]
         if op 
         for (strongest, cs) in [op]
     ]
@@ -939,11 +941,11 @@ def interpret_strongest_for_ids(model : Model, ids : list[str]) -> tuple[PMap[st
     ]) 
     return (m, cs)
 
-def interpret_weakest_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+def interpret_weak_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
     trips = [ 
         (id, weakest, cs)
         for id in ids
-        for op in [interpret_weakest_for_id(model, id)]
+        for op in [interpret_weak_for_id(model, id)]
         if op 
         for (weakest, cs) in [op]
     ]
@@ -984,7 +986,7 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(model, id))]
 #         #     if op != None
 #         #     if (id in model.freezer)
 #         #     for (strongest_once, cs_once) in [op]
@@ -997,7 +999,7 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_strongest_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(model, id))]
 #         #     if op != None
 #         #     for (strongest_once, cs_once) in [op]
 #         #     if (id in model.freezer) or inhabitable(strongest_once) 
@@ -1013,9 +1015,9 @@ def mapOp(f):
 #             (id, t, cs_once.union(cs_cont)) 
 #             for id in fvs
 #             for op in [
-#                 mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_weak_for_id(model, id))
 #                 if id in model.freezer else
-#                 mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_strong_for_id(model, id))
 #             ]
 #             if op != None
 #             for (strongest_once, cs_once) in [op]
@@ -1036,7 +1038,7 @@ def mapOp(f):
 # # model.freezer: {model.freezer}
 # # model.constraints: {concretize_constraints(tuple(model.constraints))}
 # # typ: {concretize_typ(typ)}
-# # interp _4: {mapOp(simplify_typ)(interpret_strongest_for_id(model, '_4'))}
+# # interp _4: {mapOp(simplify_typ)(interpret_strong_for_id(model, '_4'))}
 # # renaming: {renaming}
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
 # #         """)
@@ -1059,7 +1061,7 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_weakest_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_weak_for_id(model, id))]
 #         #     if op != None
 #         #     # if (id in model.freezer)
 #         #     # for (weakest_once, cs_once) in [op]
@@ -1079,9 +1081,9 @@ def mapOp(f):
 #             (id, t, cs_once.union(cs_cont)) 
 #             for id in fvs
 #             for op in [
-#                 mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_strong_for_id(model, id))
 #                 if (id in model.freezer) else
-#                 mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_weak_for_id(model, id))
 #             ]
 #             if op != None
 #             for (weakest_once, cs_once) in [op]
@@ -1137,9 +1139,9 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
 
     def interpret_for_id(polarity : bool, id : str): 
         if polarity:
-            return interpret_strongest_for_id(model, id)
+            return interpret_strong_for_id(model, id)
         else:
-            return interpret_weakest_for_id(model, id)
+            return interpret_weak_for_id(model, id)
 
     if False:
         assert False
@@ -1161,7 +1163,7 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # """)
             if (id in model.freezer) or meaningful(polarity, interp_typ_once): 
-                m = Model(model.constraints.difference(cs_once), model.freezer)
+                m = Model(model.constraints.difference(cs_once), model.freezer, model.relids)
                 (t, cs_cont) = interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
                 return (simplify_typ(t), cs_once.union(cs_cont))
             else:
@@ -1193,7 +1195,7 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
 
     elif isinstance(typ, Imp):
         consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, ignored_ids)
-        model = Model(model.constraints.difference(consq_constraints), model.freezer)
+        model = Model(model.constraints.difference(consq_constraints), model.freezer, model.relids)
         antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
@@ -1573,7 +1575,7 @@ class Solver:
             if op != None
             for (tt, cs) in [op]
             # for m in [model]
-            for m in [Model(model.constraints.difference(cs), model.freezer)]
+            for m in [Model(model.constraints.difference(cs), model.freezer, model.relids)]
         ] 
         return make_unio(constraint_typs)
 
@@ -1711,7 +1713,7 @@ class Solver:
             return [
                 m2
                 for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids))]
+                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
                 for m2 in self.solve(m1, strong_body, weak)
             ]
 
@@ -1734,7 +1736,7 @@ class Solver:
             return [
                 m2
                 for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids))]
+                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
 
@@ -1754,64 +1756,48 @@ class Solver:
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in model.freezer: 
 
-            interp = interpret_weakest_for_id(model, strong.id)
-            if (
-                # interp != None and 
-                strong.id in get_relational_keys(model) and
-                isinstance(weak, TVar) and 
-                weak.id not in model.freezer
-            ) :
 
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                DEBUG relational_key interp 
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                strong: {concretize_typ(strong)}
-                weak: {concretize_typ(weak)}
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
-                # weakest_strong = interp[0]
-                # print(f"""
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # DEBUG relational_key interp 
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # strong: {concretize_typ(strong)}
-                # weakest_strong: {concretize_typ(weakest_strong)}
-                # weak: {concretize_typ(weak)}
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # """)
-
-
-                # TODO: to be more precise, it could factor the relation instead of using Top
-                # safe = bool(self.solve(model, Top(), weak))
-                safe = True
-                if safe:
-                    return [Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer
-                    )]
-                else:
-                    return []
-            elif interp != None:
+            interp = interpret_weak_for_id(model, strong.id)
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG strong, TVar frozen  
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            strong: {concretize_typ(strong)}
+            weak: {concretize_typ(weak)}
+            has interp: {interp != None}
+            model.relids: {model.relids}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            if interp != None:
                 weakest_strong = interp[0]
                 return self.solve(model, weakest_strong, weak)
             elif isinstance(weak, TVar) and weak.id not in model.freezer:
+                # TODO: consider safety check
+                #     # safe = bool(self.solve(model, Top(), weak))
+                #     safe = True
+                #     if safe:
+                #         return [Model(
+                #             model.constraints.add(Subtyping(strong, weak)),
+                #             model.freezer, model.relids
+                #         )]
+                #     else:
+                #         return []
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
+                    model.freezer, model.relids
                 )]
             else:
                 return []
 
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
-            interp = interpret_strongest_for_id(model, weak.id)
+            interp = interpret_strong_for_id(model, weak.id)
             if interp != None:
                 strongest_weak = interp[0]
                 return self.solve(model, strong, strongest_weak)
             elif isinstance(strong, TVar) and strong.id not in model.freezer:
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
+                    model.freezer, model.relids
                 )]
             else:
                 return []
@@ -1834,8 +1820,8 @@ class Solver:
 # # weak: {concretize_typ(weak)}
 # # ~~~~~~~~~~~~~~~~~~~~~
 # #             """)
-#             strong_interp = interpret_strongest_for_id(model, strong.id)
-#             weak_interp = interpret_weakest_for_id(model, weak.id)
+#             strong_interp = interpret_strong_for_id(model, strong.id)
+#             weak_interp = interpret_weak_for_id(model, weak.id)
 #             if (
 #                 strong_interp == None or not inhabitable(strong_interp[0]) or
 #                 weak_interp == None or not selective(weak_interp[0])
@@ -1856,11 +1842,11 @@ class Solver:
 #                 ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            interp = interpret_strongest_for_id(model, strong.id)
+            interp = interpret_strong_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
+                    model.freezer, model.relids
                 )]
 
             else:
@@ -1868,25 +1854,25 @@ class Solver:
                 return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer
+                        model.freezer, model.relids
                     )
                     for model in self.solve(model, strongest, weak)
                 ]
 
 
         elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            interp = interpret_weakest_for_id(model, weak.id)
+            interp = interpret_weak_for_id(model, weak.id)
             if interp == None or not selective(interp[0]):
                 return [Model(
                     model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer
+                    model.freezer, model.relids
                 )]
             else:
                 weakest = interp[0]
                 return [
                     Model(
                         model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer
+                        model.freezer, model.relids
                     )
                     for model in self.solve(model, strong, weakest)
                 ]
@@ -2047,9 +2033,9 @@ class Solver:
             #     id : interp 
             #     for id in ids
             #     for pair in [
-            #         mapOp(simplify_typ)(interpret_weakest_for_id(model, id))
+            #         mapOp(simplify_typ)(interpret_weak_for_id(model, id))
             #         if id in model.freezer else
-            #         mapOp(simplify_typ)(interpret_strongest_for_id(model, id))
+            #         mapOp(simplify_typ)(interpret_strong_for_id(model, id))
             #     ]
             #     if pair 
             #     for interp in [pair[0]]
@@ -2058,26 +2044,23 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            ignored_ids = get_relational_keys(model)
-            # ignored_ids = s()
-            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, ignored_ids)
-            model = Model(model.constraints.difference(used_constraints), model.freezer)
+            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, s())
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG weak, LeastFP
 ~~~~~~~~~~~~~~~~~~~~~
+model.relids: {model.relids}
 model.freezer: {model.freezer}
 model.constraints: {concretize_constraints(tuple(model.constraints))}
-
-ignored_ids: {ignored_ids}
 
 strong: {concretize_typ(strong)}
 reduced_strong: {concretize_typ(reduced_strong)}
 weak: {concretize_typ(weak)}
 ~~~~~~~~~~~~~~~~~~~~~
             """)
+            model = Model(model.constraints.difference(used_constraints), model.freezer, model.relids)
             if strong != reduced_strong:
                 return self.solve(model, reduced_strong, weak)
             elif not is_relational_key(model, strong) and self._battery != 0:
@@ -2105,16 +2088,22 @@ weak_body: {concretize_typ(weak_body)}
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     return self.solve(model, strong_cache, weak)
                 else:
-                    if self.is_relation_constraint_wellformed(model, strong, weak):
-                        """
-                        relational constraint must be well formed, since a matching factorization exists
-                        update model with well formed constraint that can't yet be solved
-                        relational_key is well formed
-                        and matches the cases of the weak type
-                        """
+                    fvs = extract_free_vars_from_typ(s(), strong)  
+                    print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG weak, LeastFP --- Adding relids 
+~~~~~~~~~~~~~~~~~~~~~
+fvs: {fvs}
+~~~~~~~~~~~~~~~~~~~~~
+
+                    """)
+                    if (
+                        (all((fv not in model.freezer) for fv in fvs)) and 
+                        self.is_relation_constraint_wellformed(model, strong, weak)
+                    ):
                         return [Model(
                             model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer.union(extract_free_vars_from_typ(s(), strong))
+                            model.freezer, model.relids.union(fvs)
                         )]
                     else:
                         return []
@@ -2175,7 +2164,7 @@ weak_body: {concretize_typ(weak_body)}
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
         self._battery = 100
-        model = Model(s(), s())
+        model = Model(s(), s(), s())
         return self.solve(model, strong, weak)
     '''
     end solve_composition
@@ -2186,7 +2175,7 @@ end Solver
 '''
 
 default_solver = Solver()
-default_nonterm = Context('expr', m(), [Model(s(), s())], default_solver.fresh_type_var())
+default_nonterm = Context('expr', m(), [Model(s(), s(), s())], default_solver.fresh_type_var())
 
 
 class Rule:
@@ -2253,7 +2242,7 @@ class BaseRule(Rule):
                 new_model = branch_model
 
                 (body_typ, body_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                new_model = Model(new_model.constraints.difference(body_used_constraints), new_model.freezer)
+                new_model = Model(new_model.constraints.difference(body_used_constraints), new_model.freezer, new_model.relids)
 
                 field = TField(branch.label, body_typ)
                 constraints = tuple(extract_reachable_constraints_from_typ(new_model, field))
@@ -2296,9 +2285,9 @@ class BaseRule(Rule):
                 new_model = branch_model
 
                 (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer)
+                new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer, new_model.relids)
                 (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
-                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer)
+                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer, new_model.relids)
                 imp = Imp(param_typ, return_typ)
                 constrained_branches.append((new_model, imp))
             '''
@@ -2549,9 +2538,11 @@ class ExprRule(Rule):
                 model.freezer: {tuple(model.freezer)}
                 model.constraints: {concretize_constraints(tuple(model.constraints))}
 
+                cator_var: {concretize_typ(cator_var)}
                 cator_typ: {concretize_typ(cator_typ)}
 
-                arg_type: {concretize_typ(arg_typ)}
+                arg_var: {arg_var.id}
+                arg_typ: {concretize_typ(arg_typ)}
                 result_var: {result_var.id}
                 ~~~~~~~~~~~~~~
                 """)
@@ -2569,7 +2560,7 @@ class ExprRule(Rule):
                 # arg_typ: {concretize_typ(arg_typ)}
                 # ~~~~~~~~~~~~~~
                 # """)
-                model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer)
+                model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer, model.relids)
                 new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
             models = new_models
 
@@ -2700,11 +2691,11 @@ class ExprRule(Rule):
                 left_interp = interpret_with_polarity(False, inner_model, in_typ, s())
                 (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-                inner_model = Model(inner_model.constraints.difference(left_used_constraints), inner_model.freezer)
+                inner_model = Model(inner_model.constraints.difference(left_used_constraints), inner_model.freezer, inner_model.relids)
                 right_interp = interpret_with_polarity(True, inner_model, out_typ, s())
                 (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
-                inner_model = Model(inner_model.constraints.difference(right_used_constraints), inner_model.freezer)
+                inner_model = Model(inner_model.constraints.difference(right_used_constraints), inner_model.freezer, inner_model.relids)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
@@ -2759,7 +2750,7 @@ class ExprRule(Rule):
                     IH_left_constraints = s()
                 #end if
 
-                inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer)
+                inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer, inner_model.relids)
                 reachable_constraints = tuple(
                     st
                     for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
@@ -2772,11 +2763,11 @@ class ExprRule(Rule):
                 # TODO: see why frozen variables aren't in existential from package type
 
                 # TODO: what if there are existing frozen variables in inner_model?
-                rel_model = Model(pset(rel_constraints), pset(bound_ids))
+                rel_model = Model(pset(rel_constraints), pset(bound_ids), inner_model.relids)
                 constrained_rel = package_typ(rel_model, rel_pattern)
 
                 # TODO: what if there are existing frozen variables in inner_model?
-                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids))
+                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
                 constrained_left = package_typ(left_model, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 

@@ -1027,6 +1027,7 @@ case (x, y) => (
 
 def test_max():
 
+#**********************
 # TODO: _39 is most likely the return type of less_equal(x,y)
 # TODO: _39 should be ~true in one world and ~false in another world
 # need to capture that _41 <: _39 ; _41 flows into _39; this connection appears broken
@@ -1056,12 +1057,12 @@ def test_max():
     )
     ''')
 
-    try:
-        (models, typ_var, parsetree) = analyze(max)
-        print("answer: " + u(decode(models, typ_var)))
-        # assert u(decode(models, typ_var)) == "@"
-    except Exception:
-        print("exception raised")
+    # try:
+    (models, typ_var, parsetree) = analyze(max)
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "@"
+    # except Exception:
+    #     print("exception raised")
 
 
 def test_foldr():
