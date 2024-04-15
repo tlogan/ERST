@@ -1787,6 +1787,16 @@ class Solver:
                     model.freezer, model.relids
                 )]
             else:
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                !!!!!!!!!!!!!!! DEBUG strong, TVar frozen FAILURE  !!!!!!!!!!!
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                strong: {concretize_typ(strong)}
+                weak: {concretize_typ(weak)}
+                has interp: {interp != None}
+                model.relids: {model.relids}
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
                 return []
 
         elif isinstance(weak, TVar) and weak.id in model.freezer: 
@@ -1842,6 +1852,15 @@ class Solver:
 #                 ]
 
         elif isinstance(strong, TVar) and strong.id not in model.freezer: 
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG strong, TVar learnable  
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            strong: {concretize_typ(strong)}
+            weak: {concretize_typ(weak)}
+            model.relids: {model.relids}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             interp = interpret_strong_for_id(model, strong.id)
             if interp == None or not inhabitable(interp[0]):
                 return [Model(
@@ -2530,6 +2549,7 @@ class ExprRule(Rule):
                 # NOTE: interpretation to keep types and constraints compact 
                 cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, s())
+                # arg_typ, arg_used_constraints = (arg_var, s())
 
                 print(f"""
                 ~~~~~~~~~~~~~~
@@ -2586,20 +2606,20 @@ class ExprRule(Rule):
         ~~~~~~~~~~~~~~
         """)
 
-        # for model in models:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~
-        #     DEBUG application results
-        #     ~~~~~~~~~~~~~~
-        #     model.freezer: {tuple(model.freezer)}
-        #     model.constraints: {concretize_constraints(tuple(model.constraints))}
-        #     cator_var: {cator_var}
-        #     arg_var: {arg_var}
+        for model in models:
+            print(f"""
+            ~~~~~~~~~~~~~~
+            DEBUG application results
+            ~~~~~~~~~~~~~~
+            model.freezer: {tuple(model.freezer)}
+            model.constraints: {concretize_constraints(tuple(model.constraints))}
+            cator_var: {cator_var}
+            arg_var: {arg_var}
 
-        #     cator_typ: {concretize_typ(cator_typ)}
-        #     arg_typ: {concretize_typ(arg_typ)}
-        #     ~~~~~~~~~~~~~~
-        #     """)
+            cator_typ: {concretize_typ(cator_typ)}
+            arg_typ: {concretize_typ(arg_typ)}
+            ~~~~~~~~~~~~~~
+            """)
         return models
 
     #########
@@ -2654,7 +2674,9 @@ class ExprRule(Rule):
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
         --------------- OR -----------------------
-        [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
+        ALL[X . X <: nil | cons A] X -> EXI[Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] Y
+        --------------- OR -----------------------
+        ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> Y
         """
 
         self_typ = self.solver.fresh_type_var()
@@ -2742,12 +2764,12 @@ class ExprRule(Rule):
 
                     self_used_constraints = self_interp[1]
                     IH_rel_constraints = s(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
-                    IH_left_constraints = s(Subtyping(self_left, IH_typ))
+                    # IH_left_constraints = s(Subtyping(self_left, IH_typ))
                 else:
                     self_used_constraints = s()
 
                     IH_rel_constraints = s()
-                    IH_left_constraints = s()
+                    # IH_left_constraints = s()
                 #end if
 
                 inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer, inner_model.relids)
@@ -2758,7 +2780,7 @@ class ExprRule(Rule):
                 )
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
-                left_constraints = IH_left_constraints.union(reachable_constraints)
+                # left_constraints = IH_left_constraints.union(reachable_constraints)
 
                 # TODO: see why frozen variables aren't in existential from package type
 
@@ -2767,39 +2789,40 @@ class ExprRule(Rule):
                 constrained_rel = package_typ(rel_model, rel_pattern)
 
                 # TODO: what if there are existing frozen variables in inner_model?
-                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
-                constrained_left = package_typ(left_model, left_typ)
+                # left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
+                # constrained_left = package_typ(left_model, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
-                param_body = Unio(constrained_left, param_body)
+                # param_body = Unio(constrained_left, param_body)
 
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix rel
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # body_var: {body_var}
-    # IH_typ: {IH_typ.id}
-    # rel_model.freezer: {rel_model.freezer}
-    # rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
-    # ======================
-    # rel_pattern: {concretize_typ(rel_pattern)}
-    # constrained rel: {concretize_typ(constrained_rel)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
 
                 print(f"""
     ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG combine_fix left
+    DEBUG combine_fix rel
     ~~~~~~~~~~~~~~~~~~~~~
+    body_var: {body_var}
     IH_typ: {IH_typ.id}
-    left_model.freezer: {left_model.freezer}
-    left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+    rel_model.freezer: {rel_model.freezer}
+    rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
     ======================
-    left_pattern: {concretize_typ(left_typ)}
-    constrained left: {concretize_typ(constrained_left)}
+    rel_pattern: {concretize_typ(rel_pattern)}
+    constrained rel: {concretize_typ(constrained_rel)}
     ~~~~~~~~~~~~~~~~~~~~~
                 """)
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_fix left
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # IH_typ: {IH_typ.id}
+    # left_model.freezer: {left_model.freezer}
+    # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+    # ======================
+    # left_pattern: {concretize_typ(left_typ)}
+    # constrained left: {concretize_typ(constrained_left)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+
 
             #end for
 
@@ -2815,17 +2838,20 @@ class ExprRule(Rule):
 
             param_typ = self.solver.fresh_type_var()
             return_typ = self.solver.fresh_type_var()
-            consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-            consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-            result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
+            # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+            # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+            # result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
+
+            full_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+            result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, return_typ))  
+
+    # :: param_upper: {concretize_typ(param_upper)}
+
+    # ::::
 
             print(f"""
     DEBUG combine_fix result 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    :: param_upper: {concretize_typ(param_upper)}
-
-    ::::
-
     :: rel_typ: {concretize_typ(rel_typ)}
 
     ::::

@@ -949,6 +949,20 @@ def test_nested_fun():
     print("answer: " + u(decode(models, typ_var)))
     assert u(decode(models, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
+def test_pattern_match_wrap():
+    pattern_match_wrap = (f'''
+    let cmp = (
+        case (~uno @, ~dos @) => ~true @
+        case (~dos @, ~uno @) => ~false @ 
+    ) ;
+    case (x, y) => (cmp(x, y))
+    ''')
+
+    (models, typ_var, parsetree) = analyze(pattern_match_wrap)
+    print("answer: " + u(decode(models, typ_var)))
+    # expected typ: ((ALL [ ; _9 <: ~dos @] ((~uno @, _9) -> _9)) & (ALL [ ; _8 <: ~dos @] ((_8, ~uno @) -> _8)))
+    # assert u(decode(models, typ_var)) == "(X, Y) -> ~dos @"
+
 def test_arg_specialization():
     arg_specialization = (f'''
     let cmp = (
@@ -961,6 +975,14 @@ def test_arg_specialization():
         else
             x
     )
+    ''')
+
+    arg_specialization = (f'''
+    let cmp = (
+        case (~uno @, ~dos @) => ~true @
+        case (~dos @, ~uno @) => ~false @ 
+    ) ;
+    case (x, y) => (cmp(x, y))
     ''')
 
     # arg_specialization = (f'''
@@ -1023,20 +1045,26 @@ case (x, y) => (
 )
 ''')
 
+def test_recursion_wrapper():
+
+    program = (f'''
+    case (x, y) => (
+        ({less_equal})(x, y)
+    )
+    ''')
+
+    # try:
+    (models, typ_var, parsetree) = analyze(program)
+    print("answer: " + u(decode(models, typ_var)))
+    # assert u(decode(models, typ_var)) == "@"
+    # except Exception:
+    #     print("exception raised")
+
 
 
 def test_max():
 
-#**********************
-# TODO: _39 is most likely the return type of less_equal(x,y)
-# TODO: _39 should be ~true in one world and ~false in another world
-# need to capture that _41 <: _39 ; _41 flows into _39; this connection appears broken
-# TODO: however, the constraint will be upper: _41 <: ~true; so getting strongest interp wouldn't work
-# TODO: the problem might be that the relational constraint is generated before the constraints on _41 alone
-# strong: ((_2, _3), _41)
-# reduced_strong: ((_2, _3), _41)
-# weak: LFP _33 ((EXI [_15] ((~zero @, _15), ~true @)) | ((EXI [_18 _19 _26 ; ((_18, _19), _26) <: _33] ((~succ _18, ~succ _19), _26)) | (EXI [_27] ((~succ _27, ~zero @), ~false @))))
-
+# TODO: when relid variable is learned, use it to solve rel constraint 
 
     max = (f'''
     let less_equal = {less_equal} ;
@@ -1049,13 +1077,17 @@ def test_max():
     ''')
 
     max = (f'''
+    let less_equal = {less_equal} ;
     case (x, y) => (
-        (
-        case (~true @) => y 
-        case (~false @) => x 
-        )(({less_equal})(x, y))
+        if less_equal(x, y) then
+            y
+        else
+            x
     )
     ''')
+
+
+    # max = less_equal
 
     # try:
     (models, typ_var, parsetree) = analyze(max)
@@ -1129,11 +1161,13 @@ if __name__ == '__main__':
     # test_less_equal_imp_subs_two_one_imp_query()
     #
     # test_nested_fun()
-    # test_arg_specialization()
     # test_all_imp_exi_subs_union_imp()
     # test_if_true_then_else()
     # test_function_if_then_else()
     # TODO
+    # test_pattern_match_wrap()
+    # test_arg_specialization()
+    # test_recursion_wrapper()
     test_max()
 
     ########################
