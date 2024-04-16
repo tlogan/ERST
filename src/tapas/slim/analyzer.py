@@ -81,7 +81,11 @@ def concretize_grammar(g : Grammar) -> str:
         result += "\n"
     return result
 
+'''
+Prompt identifier lexemes
+'''
 ID = t(r"[a-zA-Z][_a-zA-Z]*")
+TID = t(r"T[0-9]+")
 
 # def make_prompt_grammar() -> Grammar: 
 #     return {
@@ -242,13 +246,13 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP
 
 @dataclass(frozen=True, eq=True)
 class Branch:
-    models : list[Model]
+    worlds : list[World]
     pattern : Typ 
     body : TVar
 
 @dataclass(frozen=True, eq=True)
 class RecordBranch:
-    models : list[Model]
+    worlds : list[World]
     label : str 
     body : TVar
 
@@ -453,18 +457,18 @@ def concretize_typ(typ : Typ) -> str:
 @dataclass(frozen=True, eq=True)
 class PatternAttr:
     enviro : PMap[str, Typ]
-    # models : list[Model]
+    # worlds : list[World]
     typ : Typ    
 
 
 @dataclass(frozen=True, eq=True)
 class ArgchainAttr:
-    models : list[Model]
+    worlds : list[World]
     args : list[TVar]
 
 @dataclass(frozen=True, eq=True)
 class PipelineAttr:
-    models : list[Model]
+    worlds : list[World]
     cators : list[TVar]
 
 """
@@ -483,7 +487,7 @@ class Terminal:
 class Context:
     name : str 
     enviro : PMap[str, Typ] 
-    models : list[Model]
+    worlds : list[World]
     typ_var : TVar 
     is_applicator : bool = False
 
@@ -500,7 +504,7 @@ NOTE: freezing variables corresponds to refining predicates from duality interpo
 Freezer = PSet[str]
 
 @dataclass(frozen=True, eq=True)
-class Model:
+class World:
     constraints : PSet[Subtyping]
     freezer : PSet[str]
     relids : PSet[str]
@@ -587,7 +591,7 @@ def augment_branches_with_diff(branches : list[Branch]) -> list[Branch]:
 # DEBUG case: {concretize_typ(case)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
-        augmented_branches += [Branch(branch.models, make_diff(branch.pattern, negs), branch.body)]
+        augmented_branches += [Branch(branch.worlds, make_diff(branch.pattern, negs), branch.body)]
         neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
         neg = (
             Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
@@ -621,10 +625,15 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
             return s(path)
         else:
             paths_tail = extract_paths(t.body)
-            return pset(
-                tuple([t.label]) + path_tail
-                for path_tail in paths_tail
+            result = (
+                pset(
+                    tuple([t.label]) + path_tail
+                    for path_tail in paths_tail
+                )
+                if bool(paths_tail) else
+                s(tuple([t.label]))
             )
+            return result
 
         
 
@@ -764,55 +773,70 @@ def factor_least(least : LeastFP) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless((), t1) == to_nameless((), t2)
 
-def is_relational_key(model : Model, t : Typ) -> bool:
-    # TODO: assume the key appears on the strong side of subtyping; 
-    # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
+def is_relational_key(t : Typ) -> bool:
     if isinstance(t, TField):
         if isinstance(t.body, TVar):
-            op = interpret_strong_for_id(model, t.body.id) 
-            if op != None:
-                (strongest, _) = op
-                return strongest != None and (isinstance(strongest, Bot) or is_relational_key(model, strongest))
-            else:
-                return False
+            return True
         else:
-            return is_relational_key(model, t.body)
-        # TODO: remove old code
-        # return (
-        #     isinstance(t.body, TVar) and 
-        #     (t.body.id not in freezer) 
-        # ) or is_relational_key(freezer, t.body) 
+            return is_relational_key(t.body)
     elif isinstance(t, Inter):
-        return is_relational_key(model, t.left) and is_relational_key(model, t.right)
+        return is_relational_key(t.left) and is_relational_key(t.right)
     else:
         return False
 
-def is_unrollable(model : Model, key : Typ, rel : LeastFP) -> bool:
-    # TODO:
+def is_unrollable(key : Typ, rel : LeastFP) -> bool:
+    # TODO: unrollable iff there is a tag in key and correspond column has at least one tag? 
+    choices = [
+        choice
+        for choice in linearize_unions(rel.body)
+        if choice != Bot()
+    ]
+    paths = [
+        path
+        for choice in choices
+        for path in list(extract_paths(choice))
+    ]
 
-    # choices = linearize_unions(rel.body)
-    # paths = [
-    #     path
-    #     for choice in choices
-    #     for path in list(extract_paths(choice))
-    # ]
-    # result = True 
-    # for path in paths:
-    #     column_key = extract_field_plain(path, key)
-    #     is_key_tag = isinstance(column_key, TTag)
-    #     column_choices = [
-    #         extract_field(path, rel.id, choice)
-    #         for choice in choices
-    #         if choice != Bot()
-    #     ] 
-    #     are_all_choices_tags = all(isinstance(cc, TTag) for cc in column_choices)
-    #     if (is_key_tag or are_all_choices_tags):
-    #         pass 
-    #     else:
-    #         return False
+    nl = "\n"
+    print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG is_unrollable 
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    choices: {nl.join([(concretize_typ(choice)) for choice in choices])}
+    paths: {pset(paths)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
+    result = False 
+    for path in pset(paths):
+        column_key = extract_field_plain(path, key)
+        is_key_tag = isinstance(column_key, TTag)
+        column_choices = [
+            extract_field(path, rel.id, choice)
+            for choice in choices
+            if choice != Bot()
+        ] 
+        are_there_tags_in_choices = any(
+            isinstance(cc, TTag) or
+            (isinstance(cc, Exi) and isinstance(cc.body, TTag))
+            for cc in column_choices
+        )
+        # print(f"""
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # DEBUG is_unrollable 
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # path: {path}
+        # is_key_tag: {is_key_tag}
 
-    # return result
-    return not is_relational_key(model, key)
+        # column_choices: {[concretize_typ(choice) for choice in column_choices]}
+        # are_there_tags_in_choices: {are_there_tags_in_choices}
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # """)
+        if (is_key_tag and are_there_tags_in_choices):
+            return True 
+        # endif
+
+    return result
+    # return not is_relational_key(key)
 
 
     # choices = linearize_unions(least.body)
@@ -833,32 +857,32 @@ def is_unrollable(model : Model, key : Typ, rel : LeastFP) -> bool:
     # # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
     # if isinstance(t, TField):
     #     if isinstance(t.body, TVar):
-    #         op = interpret_strong_for_id(model, t.body.id) 
+    #         op = interpret_strong_for_id(world, t.body.id) 
     #         if op != None:
     #             (strongest, _) = op
-    #             return strongest == None or (not isinstance(strongest, Bot) and is_unrollable(model, strongest))
+    #             return strongest == None or (not isinstance(strongest, Bot) and is_unrollable(world, strongest))
     #         else:
     #             return True 
     #     else:
-    #         return is_unrollable(model, t.body)
+    #         return is_unrollable(world, t.body)
     #     # TODO: remove old code
     #     # return (
     #     #     isinstance(t.body, TVar) and 
     #     #     (t.body.id not in freezer) 
     #     # ) or is_relational_key(freezer, t.body) 
     # elif isinstance(t, Inter):
-    #     return is_unrollable(model, t.left) or is_unrollable(model, t.right)
+    #     return is_unrollable(world, t.left) or is_unrollable(world, t.right)
     # else:
     #     return True 
 
 
-def match_strong(model : Model, strong : Typ) -> Optional[Typ]:
-    for constraint in model.constraints:
+def match_strong(world : World, strong : Typ) -> Optional[Typ]:
+    for constraint in world.constraints:
         if strong == constraint.strong:
             return constraint.weak
     return None
 
-def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
     which is T & U.
@@ -866,12 +890,12 @@ def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[S
     '''
 
 
-    has_weak_interpretation = id not in model.relids
+    has_weak_interpretation = id not in world.relids
     # TODO: determine if the following is needed or too restrictive
     # all(
     #     id != fv 
-    #     for st in model.constraints
-    #     if is_relational_key(model, st.strong)
+    #     for st in world.constraints
+    #     if is_relational_key(world, st.strong)
     #     for fv in extract_free_vars_from_typ(s(), st.strong)
     # )
 
@@ -884,15 +908,15 @@ def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[S
     #         id not in extract_free_vars_from_typ(s(), st.strong) or
     #         st.strong == TVar(id) 
     #     )
-    #     for st in model.constraints
+    #     for st in world.constraints
     # )
 
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG interpret_weak_for_id 
 # ~~~~~~~~~~~~~~~~~~~~~~~~
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# world.freezer: {world.freezer}
+# world.constraints: {concretize_constraints(tuple(world.constraints))}
 # id: {id}
 # has_weakest_interpretation: {has_weakest_interpretation}
 # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -902,7 +926,7 @@ def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[S
     if has_weak_interpretation:
         constraints = [
             st
-            for st in model.constraints
+            for st in world.constraints
             if st.strong == TVar(id)
         ]
         typ_strong = Top() 
@@ -925,8 +949,8 @@ def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[S
     # '''
     # constraints_relational = [
     #     st
-    #     for st in model.constraints
-    #     if is_relational_key(model, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
+    #     for st in world.constraints
+    #     if is_relational_key(world, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
     # ]
 
     # typ_factored = Top()
@@ -941,7 +965,7 @@ def interpret_weak_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[S
 
     # return typ_final 
 
-def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+def interpret_strong_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
@@ -955,7 +979,7 @@ def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet
     #         id not in extract_free_vars_from_typ(s(), st.weak) or
     #         st.weak == TVar(id) 
     #     )
-    #     for st in model.constraints
+    #     for st in world.constraints
 
     # )
 
@@ -963,8 +987,8 @@ def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG interpret_strong_for_id ~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~ model.freezer: {model.freezer}
-# ~~ model.constraints: {concretize_constraints(tuple(model.constraints))}
+# ~~ world.freezer: {world.freezer}
+# ~~ world.constraints: {concretize_constraints(tuple(world.constraints))}
 # ~~ id: {id}
 # ~~ has_strongest_interpretation: {has_strongest_interpretation}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -973,7 +997,7 @@ def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet
     if has_strong_interpretation:
         constraints = [
             st
-            for st in model.constraints
+            for st in world.constraints
             if st.weak == TVar(id) 
         ]
         typ_weak = Bot() 
@@ -983,12 +1007,12 @@ def interpret_strong_for_id(model : Model, id : str) -> Optional[tuple[Typ, PSet
     else:
         return None
 
-def interpret_strong_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+def interpret_strong_for_ids(world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
 
     trips = [ 
         (id, strongest, cs)
         for id in ids
-        for op in [interpret_strong_for_id(model, id)]
+        for op in [interpret_strong_for_id(world, id)]
         if op 
         for (strongest, cs) in [op]
     ]
@@ -1006,11 +1030,11 @@ def interpret_strong_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, 
     ]) 
     return (m, cs)
 
-def interpret_weak_for_ids(model : Model, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+def interpret_weak_for_ids(world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
     trips = [ 
         (id, weakest, cs)
         for id in ids
-        for op in [interpret_weak_for_id(model, id)]
+        for op in [interpret_weak_for_id(world, id)]
         if op 
         for (weakest, cs) in [op]
     ]
@@ -1037,12 +1061,12 @@ def mapOp(f):
     return call
 
 
-# def interpret_strong_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+# def interpret_strong_side(world : World, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
 #     # NOTE: the unfrozen variables use strongest interpretation
 #     # NOTE: the frozen variables use weakest interpretation 
 #     if isinstance(typ, Imp):
-#         antec, antec_constraints = interpret_weak_side(model, typ.antec)
-#         consq, consq_constraints = interpret_strong_side(model, typ.consq)
+#         antec, antec_constraints = interpret_weak_side(world, typ.antec)
+#         consq, consq_constraints = interpret_strong_side(world, typ.consq)
 #         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 #     else:
 #         fvs = extract_free_vars_from_typ(s(), typ)
@@ -1051,12 +1075,12 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(world, id))]
 #         #     if op != None
-#         #     if (id in model.freezer)
+#         #     if (id in world.freezer)
 #         #     for (strongest_once, cs_once) in [op]
-#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
-#         #     # for m in [model]
+#         #     for m in [World(world.constraints.difference(cs_once), world.freezer)]
+#         #     # for m in [world]
 #         #     for (t, cs_cont) in [interpret_weak_side(m, strongest_once)]
 #         # ]
 
@@ -1064,14 +1088,14 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_strong_for_id(world, id))]
 #         #     if op != None
 #         #     for (strongest_once, cs_once) in [op]
-#         #     if (id in model.freezer) or inhabitable(strongest_once) 
-#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     if (id in world.freezer) or inhabitable(strongest_once) 
+#         #     for m in [World(world.constraints.difference(cs_once), world.freezer)]
 #         #     for (t, cs_cont) in [
 #         #         interpret_weak_side(m, strongest_once)
-#         #         if (id in model.freezer) else
+#         #         if (id in world.freezer) else
 #         #         interpret_strong_side(m, strongest_once)
 #         #     ]
 #         # ]
@@ -1080,14 +1104,14 @@ def mapOp(f):
 #             (id, t, cs_once.union(cs_cont)) 
 #             for id in fvs
 #             for op in [
-#                 mapOp(simplify_typ)(interpret_weak_for_id(model, id))
-#                 if id in model.freezer else
-#                 mapOp(simplify_typ)(interpret_strong_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_weak_for_id(world, id))
+#                 if id in world.freezer else
+#                 mapOp(simplify_typ)(interpret_strong_for_id(world, id))
 #             ]
 #             if op != None
 #             for (strongest_once, cs_once) in [op]
-#             if (id in model.freezer) or inhabitable(strongest_once) 
-#             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#             if (id in world.freezer) or inhabitable(strongest_once) 
+#             for m in [World(world.constraints.difference(cs_once), world.freezer)]
 #             for (t, cs_cont) in [interpret_strong_side(m, strongest_once)]
 #         ]
 
@@ -1100,10 +1124,10 @@ def mapOp(f):
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
 # # DEBUG interpret_strong_side
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
-# # model.freezer: {model.freezer}
-# # model.constraints: {concretize_constraints(tuple(model.constraints))}
+# # world.freezer: {world.freezer}
+# # world.constraints: {concretize_constraints(tuple(world.constraints))}
 # # typ: {concretize_typ(typ)}
-# # interp _4: {mapOp(simplify_typ)(interpret_strong_for_id(model, '_4'))}
+# # interp _4: {mapOp(simplify_typ)(interpret_strong_for_id(world, '_4'))}
 # # renaming: {renaming}
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
 # #         """)
@@ -1115,10 +1139,10 @@ def mapOp(f):
 #         )
 #         return (simplify_typ(sub_typ(renaming, typ)), cs)
 
-# def interpret_weak_side(model : Model, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
+# def interpret_weak_side(world : World, typ : Typ) -> tuple[Typ, PSet[Subtyping]]:
 #     if isinstance(typ, Imp):
-#         antec, antec_constraints = interpret_strong_side(model, typ.antec)
-#         consq, consq_constraints = interpret_weak_side(model, typ.consq)
+#         antec, antec_constraints = interpret_strong_side(world, typ.antec)
+#         consq, consq_constraints = interpret_weak_side(world, typ.consq)
 #         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 #     else:
 #         fvs = extract_free_vars_from_typ(s(), typ)
@@ -1126,18 +1150,18 @@ def mapOp(f):
 #         # trips = [ 
 #         #     (id, t, cs_once.union(cs_cont)) 
 #         #     for id in fvs
-#         #     for op in [mapOp(simplify_typ)(interpret_weak_for_id(model, id))]
+#         #     for op in [mapOp(simplify_typ)(interpret_weak_for_id(world, id))]
 #         #     if op != None
-#         #     # if (id in model.freezer)
+#         #     # if (id in world.freezer)
 #         #     # for (weakest_once, cs_once) in [op]
-#         #     # for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     # for m in [World(world.constraints.difference(cs_once), world.freezer)]
 #         #     # for (t, cs_cont) in [interpret_strong_side(m, weakest_once)]
 #         #     for (weakest_once, cs_once) in [op]
-#         #     if (id in model.freezer) or selective(weakest_once) 
-#         #     for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#         #     if (id in world.freezer) or selective(weakest_once) 
+#         #     for m in [World(world.constraints.difference(cs_once), world.freezer)]
 #         #     for (t, cs_cont) in [
 #         #         interpret_strong_side(m, weakest_once)
-#         #         if (id in model.freezer) else
+#         #         if (id in world.freezer) else
 #         #         interpret_weak_side(m, weakest_once)
 #         #     ]
 #         # ]
@@ -1146,14 +1170,14 @@ def mapOp(f):
 #             (id, t, cs_once.union(cs_cont)) 
 #             for id in fvs
 #             for op in [
-#                 mapOp(simplify_typ)(interpret_strong_for_id(model, id))
-#                 if (id in model.freezer) else
-#                 mapOp(simplify_typ)(interpret_weak_for_id(model, id))
+#                 mapOp(simplify_typ)(interpret_strong_for_id(world, id))
+#                 if (id in world.freezer) else
+#                 mapOp(simplify_typ)(interpret_weak_for_id(world, id))
 #             ]
 #             if op != None
 #             for (weakest_once, cs_once) in [op]
-#             if (id in model.freezer) or selective(weakest_once) 
-#             for m in [Model(model.constraints.difference(cs_once), model.freezer)]
+#             if (id in world.freezer) or selective(weakest_once) 
+#             for m in [World(world.constraints.difference(cs_once), world.freezer)]
 #             for (t, cs_cont) in [interpret_weak_side(m, weakest_once)]
 #         ]
 
@@ -1166,8 +1190,8 @@ def mapOp(f):
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
 # # DEBUG interpret_weak_side 
 # # ~~~~~~~~~~~~~~~~~~~~~~~~
-# # model.freezer: {model.freezer}
-# # model.constraints: {concretize_constraints(tuple(model.constraints))}
+# # world.freezer: {world.freezer}
+# # world.constraints: {concretize_constraints(tuple(world.constraints))}
 # # typ: {concretize_typ(typ)}
 # # renaming: {[id + " --*> " + concretize_typ(t) for id, t in renaming.items()]}
 # # fvs: {fvs}
@@ -1188,7 +1212,7 @@ def meaningful(polarity : bool, t : Typ) -> bool:
         return selective(t)
 
 
-def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
+def interpret_with_polarity(polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
 
 
     # print(f"""
@@ -1197,16 +1221,16 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # typ: {concretize_typ(typ)}
 
-    # model.freezer: {model.freezer}
-    # model.constraints: {concretize_constraints(tuple(model.constraints))}
+    # world.freezer: {world.freezer}
+    # world.constraints: {concretize_constraints(tuple(world.constraints))}
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # """)
 
     def interpret_for_id(polarity : bool, id : str): 
         if polarity:
-            return interpret_strong_for_id(model, id)
+            return interpret_strong_for_id(world, id)
         else:
-            return interpret_weak_for_id(model, id)
+            return interpret_weak_for_id(world, id)
 
     if False:
         assert False
@@ -1216,7 +1240,7 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
         id = typ.id
         op = ( 
             mapOp(simplify_typ)(interpret_for_id(not polarity, id))
-            if (id in model.freezer) else
+            if (id in world.freezer) else
             mapOp(simplify_typ)(interpret_for_id(polarity, id))
         )
 
@@ -1227,8 +1251,8 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
             # DEBUG: used_constraints: {concretize_constraints(cs_once)}
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # """)
-            if (id in model.freezer) or meaningful(polarity, interp_typ_once): 
-                m = Model(model.constraints.difference(cs_once), model.freezer, model.relids)
+            if (id in world.freezer) or meaningful(polarity, interp_typ_once): 
+                m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
                 (t, cs_cont) = interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
                 return (simplify_typ(t), cs_once.union(cs_cont))
             else:
@@ -1240,28 +1264,28 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
         return (typ, s())
     elif isinstance(typ, TTag):
         body = typ.body
-        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
+        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
         return (TTag(typ.label, body), body_constraints)
     elif isinstance(typ, TField):
         body = typ.body
-        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
+        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
         return (TField(typ.label, body), body_constraints)
     elif isinstance(typ, Unio):
-        left, left_constraints = interpret_with_polarity(polarity, model, typ.left, ignored_ids)
-        right, right_constraints = interpret_with_polarity(polarity, model, typ.right, ignored_ids)
+        left, left_constraints = interpret_with_polarity(polarity, world, typ.left, ignored_ids)
+        right, right_constraints = interpret_with_polarity(polarity, world, typ.right, ignored_ids)
         return (Unio(left, right), left_constraints.union(right_constraints))
     elif isinstance(typ, Inter):
-        left, left_constraints = interpret_with_polarity(polarity, model, typ.left, ignored_ids)
-        right, right_constraints = interpret_with_polarity(polarity, model, typ.right, ignored_ids)
+        left, left_constraints = interpret_with_polarity(polarity, world, typ.left, ignored_ids)
+        right, right_constraints = interpret_with_polarity(polarity, world, typ.right, ignored_ids)
         return (Inter(left, right), left_constraints.union(right_constraints))
     elif isinstance(typ, Diff):
-        context, context_constraints = interpret_with_polarity(polarity, model, typ.context, ignored_ids)
+        context, context_constraints = interpret_with_polarity(polarity, world, typ.context, ignored_ids)
         return (Diff(context, typ.negation), context_constraints)
 
     elif isinstance(typ, Imp):
-        consq, consq_constraints = interpret_with_polarity(polarity, model, typ.consq, ignored_ids)
-        model = Model(model.constraints.difference(consq_constraints), model.freezer, model.relids)
-        antec, antec_constraints = interpret_with_polarity(not polarity, model, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
+        consq, consq_constraints = interpret_with_polarity(polarity, world, typ.consq, ignored_ids)
+        world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+        antec, antec_constraints = interpret_with_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
         return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
     elif isinstance(typ, Exi):
@@ -1270,22 +1294,22 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
         # pos_constraints = s() 
         # weak_constraint_pairs = []
         # for st in typ.constraints:
-        #     weak, weak_constraints = interpret_with_polarity(not polarity, model, st.weak, ignored_ids)
+        #     weak, weak_constraints = interpret_with_polarity(not polarity, world, st.weak, ignored_ids)
         #     pos_constraints = pos_constraints.union(weak_constraints)
         #     weak_constraint_pairs.append((weak, st))
         #     ignored_ids = ignored_ids.union(extract_free_vars_from_typ(ignored_ids, weak))
 
-        # model = Model(model.constraints.difference(pos_constraints), model.freezer)
+        # world = World(world.constraints.difference(pos_constraints), world.freezer)
 
         # neg_constraints = s() 
         # new_constraints = [] 
         # for (weak, st) in weak_constraint_pairs:
-        #     strong, strong_constraints = interpret_with_polarity(polarity, model, st.strong, ignored_ids)
+        #     strong, strong_constraints = interpret_with_polarity(polarity, world, st.strong, ignored_ids)
         #     pos_constraints = pos_constraints.union(strong_constraints)
         #     new_constraints.append(Subtyping(strong, weak))
 
 
-        # body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
+        # body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
         # ignored_ids = ignored_ids.union(typ.ids)
         # used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
         # return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
@@ -1295,7 +1319,7 @@ def interpret_with_polarity(polarity : bool, model : Model, typ : Typ, ignored_i
         # TODO: copy Exi rule
     elif isinstance(typ, LeastFP):
         ignored_ids = ignored_ids.add(typ.id)
-        body, body_constraints = interpret_with_polarity(polarity, model, typ.body, ignored_ids)
+        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
         return (LeastFP(typ.id, body), body_constraints)
     elif isinstance(typ, Top):
         return (typ, s())
@@ -1353,10 +1377,10 @@ def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping
         for st in constraints
     )
 
-def extract_constraints_with_id(model : Model, id : str) -> PSet[Subtyping]:
+def extract_constraints_with_id(world : World, id : str) -> PSet[Subtyping]:
     return pset(
         st
-        for st in model.constraints
+        for st in world.constraints
         if id in extract_free_vars_from_constraints(pset(), [st])
     )
 
@@ -1486,35 +1510,35 @@ def extract_free_vars_from_constraints(bound_vars : PSet[str], constraints : Ite
 
     return result
 
-def is_variable_unassigned(model : Model, id : str) -> bool:
+def is_variable_unassigned(world : World, id : str) -> bool:
     return (
-        id not in extract_free_vars_from_constraints(s(), model.constraints)
+        id not in extract_free_vars_from_constraints(s(), world.constraints)
     )
 
-def extract_reachable_constraints(model : Model, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
-    constraints = extract_constraints_with_id(model, id) 
+def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
+    constraints = extract_constraints_with_id(world, id) 
     ids_seen = ids_seen.add(id)
     ids = extract_free_vars_from_constraints(s(), constraints).difference(ids_seen)
     for id in ids:
         constraints = constraints.union(
-            extract_reachable_constraints(model, id, ids_seen)
+            extract_reachable_constraints(world, id, ids_seen)
         ) 
 
     return constraints 
 
-def extract_reachable_constraints_from_typ(model : Model, typ : Typ) -> PSet[Subtyping]:
+def extract_reachable_constraints_from_typ(world : World, typ : Typ) -> PSet[Subtyping]:
     ids_base = extract_free_vars_from_typ(s(), typ)
     constraints = s()
     for id_base in ids_base: 
-        constraints_reachable = extract_reachable_constraints(model, id_base, s())
+        constraints_reachable = extract_reachable_constraints(world, id_base, s())
         constraints = constraints.union(constraints_reachable)
     return constraints
 
-def package_typ(model : Model, typ : Typ) -> Typ:
-    constraints = extract_reachable_constraints_from_typ(model, typ)
+def package_typ(world : World, typ : Typ) -> Typ:
+    constraints = extract_reachable_constraints_from_typ(world, typ)
 
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
-    bound_ids = tuple(model.freezer.intersection(reachable_ids))
+    bound_ids = tuple(world.freezer.intersection(reachable_ids))
     if not bound_ids and not constraints:
         typ_idx_unio = typ
     else:
@@ -1561,28 +1585,28 @@ def cast_up(renaming : PMap[str, TVar]) -> PMap[str, Typ]:
     })
 
 
-def get_freezer_adjacent_learnable_ids(model : Model) -> PSet[str]:
+def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
     return pset(
         st.weak.id
-        for st in model.constraints
-        if isinstance(st.strong, TVar) and st.strong.id in model.freezer  
-        if isinstance(st.weak, TVar) and st.weak.id not in model.freezer  
+        for st in world.constraints
+        if isinstance(st.strong, TVar) and st.strong.id in world.freezer  
+        if isinstance(st.weak, TVar) and st.weak.id not in world.freezer  
     ) 
 
 class Solver:
     _type_id : int = 0 
     _battery : int = 10 
 
-    def decode_typ(self, models : list[Model], t : Typ) -> Typ:
+    def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
-            package_typ(model, t)
-            for model in models
+            package_typ(world, t)
+            for world in worlds
         ] 
         return make_unio(constraint_typs)
 
-    # def decode_strong_side(self, models : list[Model], t : Typ, arg : Typ = TUnit()) -> Typ:
+    # def decode_strong_side(self, worlds : list[World], t : Typ, arg : Typ = TUnit()) -> Typ:
 
-    #     for m in models:
+    #     for m in worlds:
     #         print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     # DEBUG decode_strong_side 
@@ -1595,18 +1619,18 @@ class Solver:
 
     #     constraint_typs = [
     #         package_typ(m, strongest)
-    #         for model in models
-    #         for op in [interpret_with_polarity(True, model, t)]
+    #         for world in worlds
+    #         for op in [interpret_with_polarity(True, world, t)]
     #         if op != None
     #         for (strongest, cs) in [op]
-    #         # for m in [model]
-    #         for m in [Model(model.constraints.difference(cs), model.freezer)]
+    #         # for m in [world]
+    #         for m in [World(world.constraints.difference(cs), world.freezer)]
     #     ] 
     #     return make_unio(constraint_typs)
 
-    # def decode_weak_side(self, models : list[Model], t : Typ) -> Typ:
+    # def decode_weak_side(self, worlds : list[World], t : Typ) -> Typ:
 
-    # #     for m in models:
+    # #     for m in worlds:
     # #         print(f"""
     # # ~~~~~~~~~~~~~~~~~~~~~~~~
     # # DEBUG decode_weak_side 
@@ -1618,37 +1642,37 @@ class Solver:
     # #         """)
     #     constraint_typs = [
     #         package_typ(m, weakest)
-    #         for model in models
-    #         for op in [interpret_with_polarity(model, t, False)]
+    #         for world in worlds
+    #         for op in [interpret_with_polarity(world, t, False)]
     #         if op != None
     #         for (weakest, cs) in [op]
-    #         # for m in [model]
-    #         for m in [Model(model.constraints.difference(cs), model.freezer)]
+    #         # for m in [world]
+    #         for m in [World(world.constraints.difference(cs), world.freezer)]
     #     ] 
     #     return make_unio(constraint_typs)
 
-    def decode_with_polarity(self, polarity : bool, models : list[Model], t : Typ) -> Typ:
+    def decode_with_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
 
-        for model in models:
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            DEBUG decode_with_polarity:
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            typ: {concretize_typ(t)}
+        # for world in worlds:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     DEBUG decode_with_polarity:
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     typ: {concretize_typ(t)}
 
-            model.freezer: {model.freezer}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+        #     world.freezer: {world.freezer}
+        #     world.constraints: {concretize_constraints(tuple(world.constraints))}
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     """)
 
         constraint_typs = [
             package_typ(m, tt)
-            for model in models
-            for op in [interpret_with_polarity(polarity, model, t, s())]
+            for world in worlds
+            for op in [interpret_with_polarity(polarity, world, t, s())]
             if op != None
             for (tt, cs) in [op]
-            # for m in [model]
-            for m in [Model(model.constraints.difference(cs), model.freezer, model.relids)]
+            # for m in [world]
+            for m in [World(world.constraints.difference(cs), world.freezer, world.relids)]
         ] 
         return make_unio(constraint_typs)
 
@@ -1742,18 +1766,18 @@ class Solver:
         return self.make_submap_from_renaming(self.make_renaming_ids(old_ids))
 
 
-    def solve(self, model : Model, strong : Typ, weak : Typ) -> list[Model]:
+    def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
         if self._battery == 0:
             return []
 #         print(f'''
 # || DEBUG SOLVE
 # =================
 # ||
-# || model.freezer::: 
-# || :::::::: {model.freezer}
+# || world.freezer::: 
+# || :::::::: {world.freezer}
 # ||
-# || model.constraints::: 
-# || :::::::: {concretize_constraints(tuple(model.constraints))}
+# || world.constraints::: 
+# || :::::::: {concretize_constraints(tuple(world.constraints))}
 # ||
 # || |- {concretize_typ(strong)} 
 # || <: {concretize_typ(weak)}
@@ -1761,7 +1785,7 @@ class Solver:
 #         ''')
 
         if alpha_equiv(strong, weak): 
-            return [model] 
+            return [world] 
 
         if False:
             return [] 
@@ -1774,19 +1798,19 @@ class Solver:
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             next_id = self._type_id
-            models = [model]
+            worlds = [world]
             for constraint in strong_constraints:
-                models = [
+                worlds = [
                     m1
-                    for m0 in models
+                    for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
             new_ids = (f"_{i}" for i in range(next_id, self._type_id))
 
             return [
                 m2
-                for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
+                for m0 in worlds
+                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
                 for m2 in self.solve(m1, strong_body, weak)
             ]
 
@@ -1797,19 +1821,19 @@ class Solver:
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             next_id = self._type_id
-            models = [model]
+            worlds = [world]
             for constraint in weak_constraints:
-                models = [
+                worlds = [
                     m1
-                    for m0 in models
+                    for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
             new_ids = (f"_{i}" for i in range(next_id, self._type_id))
 
             return [
                 m2
-                for m0 in models
-                for m1 in [Model(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
+                for m0 in worlds
+                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
 
@@ -1824,21 +1848,21 @@ class Solver:
 
 
         elif (
-            isinstance(strong, TVar) and strong.id in model.freezer and
-            isinstance(weak, TVar) and weak.id not in model.freezer
+            isinstance(strong, TVar) and strong.id in world.freezer and
+            isinstance(weak, TVar) and weak.id not in world.freezer
         ):
             # NOTE: no interpretation; simply add constraint
-            return [Model(
-                model.constraints.add(Subtyping(strong, weak)),
-                model.freezer, model.relids
+            return [World(
+                world.constraints.add(Subtyping(strong, weak)),
+                world.freezer, world.relids
             )]
 
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
-        elif isinstance(strong, TVar) and strong.id in model.freezer: 
+        elif isinstance(strong, TVar) and strong.id in world.freezer: 
 
 
-            interp = interpret_weak_for_id(model, strong.id)
+            interp = interpret_weak_for_id(world, strong.id)
             # print(f"""
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # DEBUG strong, TVar frozen  
@@ -1846,26 +1870,26 @@ class Solver:
             # strong: {concretize_typ(strong)}
             # weak: {concretize_typ(weak)}
             # has interp: {interp != None}
-            # model.relids: {model.relids}
+            # world.relids: {world.relids}
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # """)
             if interp != None:
                 weakest_strong = interp[0]
-                return self.solve(model, weakest_strong, weak)
-            elif isinstance(weak, TVar) and weak.id not in model.freezer:
+                return self.solve(world, weakest_strong, weak)
+            elif isinstance(weak, TVar) and weak.id not in world.freezer:
                 # TODO: consider safety check
-                #     # safe = bool(self.solve(model, Top(), weak))
+                #     # safe = bool(self.solve(world, Top(), weak))
                 #     safe = True
                 #     if safe:
-                #         return [Model(
-                #             model.constraints.add(Subtyping(strong, weak)),
-                #             model.freezer, model.relids
+                #         return [World(
+                #             world.constraints.add(Subtyping(strong, weak)),
+                #             world.freezer, world.relids
                 #         )]
                 #     else:
                 #         return []
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer, model.relids
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
                 )]
             else:
                 print(f"""
@@ -1875,20 +1899,20 @@ class Solver:
                 strong: {concretize_typ(strong)}
                 weak: {concretize_typ(weak)}
                 has interp: {interp != None}
-                model.relids: {model.relids}
+                world.relids: {world.relids}
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 """)
                 return []
 
-        elif isinstance(weak, TVar) and weak.id in model.freezer: 
-            interp = interpret_strong_for_id(model, weak.id)
+        elif isinstance(weak, TVar) and weak.id in world.freezer: 
+            interp = interpret_strong_for_id(world, weak.id)
             if interp != None:
                 strongest_weak = interp[0]
-                return self.solve(model, strong, strongest_weak)
-            elif isinstance(strong, TVar) and strong.id not in model.freezer:
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer, model.relids
+                return self.solve(world, strong, strongest_weak)
+            elif isinstance(strong, TVar) and strong.id not in world.freezer:
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
                 )]
             else:
                 return []
@@ -1897,8 +1921,8 @@ class Solver:
 # NOTE: this commented stuff doesn't actually work
 # TODO: remove it
 #         elif (
-#             isinstance(strong, TVar) and strong.id not in model.freezer and
-#             isinstance(weak, TVar) and weak.id not in model.freezer
+#             isinstance(strong, TVar) and strong.id not in world.freezer and
+#             isinstance(weak, TVar) and weak.id not in world.freezer
 #         ):
 #             """
 #             interpret both sides together to avoid transitive edges in subtyping lattice  
@@ -1911,48 +1935,47 @@ class Solver:
 # # weak: {concretize_typ(weak)}
 # # ~~~~~~~~~~~~~~~~~~~~~
 # #             """)
-#             strong_interp = interpret_strong_for_id(model, strong.id)
-#             weak_interp = interpret_weak_for_id(model, weak.id)
+#             strong_interp = interpret_strong_for_id(world, strong.id)
+#             weak_interp = interpret_weak_for_id(world, weak.id)
 #             if (
 #                 strong_interp == None or not inhabitable(strong_interp[0]) or
 #                 weak_interp == None or not selective(weak_interp[0])
 #             ):
-#                 return [Model(
-#                     model.constraints.add(Subtyping(strong, weak)),
-#                     model.freezer
+#                 return [World(
+#                     world.constraints.add(Subtyping(strong, weak)),
+#                     world.freezer
 #                 )]
 #             else:
 #                 strongest = strong_interp[0]
 #                 weakest = weak_interp[0]
 #                 return [
-#                     Model(
-#                         model.constraints.add(Subtyping(strong, weak)),
-#                         model.freezer
+#                     World(
+#                         world.constraints.add(Subtyping(strong, weak)),
+#                         world.freezer
 #                     )
-#                     for model in self.solve(model, strongest, weakest)
+#                     for world in self.solve(world, strongest, weakest)
 #                 ]
 
-        elif isinstance(strong, TVar) and strong.id not in model.freezer: 
-            # TODO: don't it as a frozen variable
-            interp = interpret_strong_for_id(model, strong.id)
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            DEBUG strong, TVar learnable  
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            strong: {concretize_typ(strong)}
-            weak: {concretize_typ(weak)}
-            model.relids: {model.relids}
-            model.freezer: {model.freezer}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-            interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
-            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+        elif isinstance(strong, TVar) and strong.id not in world.freezer: 
+            interp = interpret_strong_for_id(world, strong.id)
+            # print(f"""
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # DEBUG strong, TVar learnable  
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # world.relids: {world.relids}
+            # world.freezer: {world.freezer}
+            # world.constraints: {concretize_constraints(tuple(world.constraints))}
+            # interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # """)
             if interp == None or not inhabitable(interp[0]):
 
-                if False: # TODO: strong.id in model.relids:
+                if False: # TODO: strong.id in world.relids:
                     rel_constraints = [
                         st
-                        for st in model.constraints
+                        for st in world.constraints
                         if strong.id in extract_free_vars_from_typ(s(), st.strong)
                         if isinstance(st.weak, LeastFP)
                     ]
@@ -1961,66 +1984,66 @@ class Solver:
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     DEBUG RELATIONAL INSTANTIATING for strong: {concretize_typ(strong)}
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    model.constraints: {concretize_constraints(tuple(model.constraints))}
+                    world.constraints: {concretize_constraints(tuple(world.constraints))}
                     rel_constraints: {concretize_constraints(tuple(rel_constraints))}
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     """)
-                    models = [Model(
-                        model.constraints.add(Subtyping(strong, weak)).difference(rel_constraints),
-                        model.freezer, model.relids
+                    worlds = [World(
+                        world.constraints.add(Subtyping(strong, weak)).difference(rel_constraints),
+                        world.freezer, world.relids
                     )]
                     sub_map : PMap[str, Typ] = pmap({strong.id : weak})
 
                     for rel_con in rel_constraints:
                         key = sub_typ(sub_map, rel_con.strong)
-                        models = [
+                        worlds = [
                             m1
-                            for m0 in models 
+                            for m0 in worlds 
                             for m1 in self.solve(m0, key, rel_con.weak)
                         ]
 
                     return [
-                        Model(m0.constraints.union(rel_constraints), m0.freezer, m0.relids)
-                        for m0 in models 
+                        World(m0.constraints.union(rel_constraints), m0.freezer, m0.relids)
+                        for m0 in worlds 
                     ]
                 else:
-                    return [Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer, model.relids
+                    return [World(
+                        world.constraints.add(Subtyping(strong, weak)),
+                        world.freezer, world.relids
                     )]
 
-            elif isinstance(interp[0], TVar) and (interp[0].id in model.freezer):
+            elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
                 # TODO: safety check
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer, model.relids
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
                 )]
             else:
                 # NOTE: if there is a frozen <: learnable constraint then they could simply jump back and forth forever
                 strongest = interp[0]
                 return [
-                    Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer, model.relids
+                    World(
+                        world.constraints.add(Subtyping(strong, weak)),
+                        world.freezer, world.relids
                     )
-                    for model in self.solve(model, strongest, weak)
+                    for world in self.solve(world, strongest, weak)
                 ]
 
-        elif isinstance(weak, TVar) and weak.id not in model.freezer: 
-            interp = interpret_weak_for_id(model, weak.id)
+        elif isinstance(weak, TVar) and weak.id not in world.freezer: 
+            interp = interpret_weak_for_id(world, weak.id)
             if interp == None or not selective(interp[0]):
-                return [Model(
-                    model.constraints.add(Subtyping(strong, weak)),
-                    model.freezer, model.relids
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
                 )]
             else:
                 weakest = interp[0]
                 return [
-                    Model(
-                        model.constraints.add(Subtyping(strong, weak)),
-                        model.freezer, model.relids
+                    World(
+                        world.constraints.add(Subtyping(strong, weak)),
+                        world.freezer, world.relids
                     )
-                    for model in self.solve(model, strong, weakest)
+                    for world in self.solve(world, strong, weakest)
                 ]
 
         #######################################
@@ -2031,68 +2054,68 @@ class Solver:
             renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
-            models = self.solve(model, strong, weak_body) 
+            worlds = self.solve(world, strong, weak_body) 
             for constraint in weak_constraints:
-                models = [
+                worlds = [
                     m1
-                    for m0 in models
+                    for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]
-            return models
+            return worlds
 
 
         elif isinstance(strong, All): 
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
-            models = self.solve(model, strong_body, weak) 
+            worlds = self.solve(world, strong_body, weak) 
             for constraint in strong_constraints:
-                models = [
+                worlds = [
                     m1
-                    for m0 in models
+                    for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]
-            return models
+            return worlds
 
 
         #######################################
-        #### Model rules: ####
+        #### World rules: ####
         #######################################
 
 
         elif isinstance(strong, LeastFP):
             if alpha_equiv(strong, weak):
-                return [model]
+                return [world]
             else:
-                models = []
+                worlds = []
 
                 strong_factored = factor_least(strong)
-                models = self.solve(model, strong_factored, weak)
+                worlds = self.solve(world, strong_factored, weak)
 
-                if models == []:
+                if worlds == []:
                     '''
                     NOTE: k-induction
                     use the pattern on LHS to dictate number of unrollings needed on RHS 
                     simply need to sub RHS into LHS's self-referencing variable
                     '''
                     '''
-                    sub in induction hypothesis to model:
+                    sub in induction hypothesis to world:
                     '''
                     renaming : PMap[str, Typ] = pmap({strong.id : weak})
                     strong_body = sub_typ(renaming, strong.body)
-                    return self.solve(model, strong_body, weak)
+                    return self.solve(world, strong_body, weak)
                     
                 else:
-                    return models 
+                    return worlds 
 
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
-            return self.solve(model, strong, Inter(
+            return self.solve(world, strong, Inter(
                 Imp(weak.antec.left, weak.consq), 
                 Imp(weak.antec.right, weak.consq)
             ))
 
         elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
-            return self.solve(model, strong, Inter(
+            return self.solve(world, strong, Inter(
                 Imp(weak.antec, weak.consq.left), 
                 Imp(weak.antec, weak.consq.right)
             ))
@@ -2100,21 +2123,21 @@ class Solver:
         elif isinstance(weak, TField) and isinstance(weak.body, Inter):
             return [
                 m1
-                for m0 in self.solve(model, strong, TField(weak.label, weak.body.left))
+                for m0 in self.solve(world, strong, TField(weak.label, weak.body.left))
                 for m1 in self.solve(m0, strong, TField(weak.label, weak.body.right))
             ]
 
         elif isinstance(strong, Unio):
             return [
                 m1
-                for m0 in self.solve(model, strong.left, weak)
+                for m0 in self.solve(world, strong.left, weak)
                 for m1 in self.solve(m0, strong.right, weak)
             ]
 
         elif isinstance(weak, Inter):
             return [
                 m1 
-                for m0 in self.solve(model, strong, weak.left)
+                for m0 in self.solve(world, strong, weak.left)
                 for m1 in self.solve(m0, strong, weak.right)
             ]
 
@@ -2140,19 +2163,19 @@ class Solver:
                 ----
                 T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
                 '''
-                context_models = self.solve(model, strong, weak.context)
+                context_worlds = self.solve(world, strong, weak.context)
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
     # ~~~~~~~~~~~~~~~~~~~~~
     # ~~~~~~~~~~~~~~~~~~~~~
     # DEBUG weak, Diff 
     # ~~~~~~~~~~~~~~~~~~~~
-    # len(context_models): {len(context_models)}
+    # len(context_worlds): {len(context_worlds)}
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
                 return [
                     m
-                    for m in context_models 
+                    for m in context_worlds 
                     if (
                         not inhabitable(strong) or 
                         self.solve(m, strong, weak.negation) == []
@@ -2167,10 +2190,10 @@ class Solver:
         #######################################
 
         elif isinstance(weak, Top): 
-            return [model] 
+            return [world] 
 
         elif isinstance(strong, Bot): 
-            return [model] 
+            return [world] 
 
 
         elif isinstance(weak, LeastFP): 
@@ -2179,9 +2202,9 @@ class Solver:
             #     id : interp 
             #     for id in ids
             #     for pair in [
-            #         mapOp(simplify_typ)(interpret_weak_for_id(model, id))
-            #         if id in model.freezer else
-            #         mapOp(simplify_typ)(interpret_strong_for_id(model, id))
+            #         mapOp(simplify_typ)(interpret_weak_for_id(world, id))
+            #         if id in world.freezer else
+            #         mapOp(simplify_typ)(interpret_strong_for_id(world, id))
             #     ]
             #     if pair 
             #     for interp in [pair[0]]
@@ -2191,29 +2214,29 @@ class Solver:
             # reduced_strong = sub_typ(sub_map, strong)
 
             # NOTE: don't interpret learnable variables as frozen variables
-            # ignored_ids = get_freezer_adjacent_learnable_ids(model)
+            # ignored_ids = get_freezer_adjacent_learnable_ids(world)
 
             ignored_ids = s()
-            reduced_strong, used_constraints = interpret_with_polarity(True, model, strong, ignored_ids)
+            reduced_strong, used_constraints = interpret_with_polarity(True, world, strong, ignored_ids)
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG weak, LeastFP
 ~~~~~~~~~~~~~~~~~~~~~
-model.relids: {model.relids}
-model.freezer: {model.freezer}
-model.constraints: {concretize_constraints(tuple(model.constraints))}
+world.relids: {world.relids}
+world.freezer: {world.freezer}
+world.constraints: {concretize_constraints(tuple(world.constraints))}
 
 strong: {concretize_typ(strong)}
 reduced_strong: {concretize_typ(reduced_strong)}
 weak: {concretize_typ(weak)}
 ~~~~~~~~~~~~~~~~~~~~~
             """)
-            model = Model(model.constraints.difference(used_constraints), model.freezer, model.relids)
+            world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
             if strong != reduced_strong:
-                return self.solve(model, reduced_strong, weak)
-            elif is_unrollable(model, strong, weak) and self._battery != 0:
+                return self.solve(world, reduced_strong, weak)
+            elif is_unrollable(strong, weak) and self._battery != 0:
                 self._battery -= 1
                 '''
                 unroll
@@ -2229,7 +2252,7 @@ strong: {concretize_typ(strong)}
 weak_body: {concretize_typ(weak_body)}
 ~~~~~~~~~~~~~~~~~~~~~
                 """)
-                models = self.solve(model, strong, weak_body)
+                worlds = self.solve(world, strong, weak_body)
 
                 print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
@@ -2237,17 +2260,17 @@ DEBUG weak, LeastFP --- Unrolling Result
 ~~~~~~~~~~~~~~~~~~~~~
 strong: {concretize_typ(strong)}
 weak_body: {concretize_typ(weak_body)}
-len(models): {len(models)}
+len(worlds): {len(worlds)}
 ~~~~~~~~~~~~~~~~~~~~~
                 """)
 
-                return models
+                return worlds
             else:
-                strong_cache = match_strong(model, strong)
+                strong_cache = match_strong(world, strong)
 
                 if strong_cache:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    return self.solve(model, strong_cache, weak)
+                    return self.solve(world, strong_cache, weak)
                 else:
                     fvs = extract_free_vars_from_typ(s(), strong)  
                     print(f"""
@@ -2259,12 +2282,12 @@ fvs: {fvs}
 
                     """)
                     if (
-                        (all((fv not in model.freezer) for fv in fvs)) and 
-                        self.is_relation_constraint_wellformed(model, strong, weak)
+                        (all((fv not in world.freezer) for fv in fvs)) and 
+                        self.is_relation_constraint_wellformed(world, strong, weak)
                     ):
-                        return [Model(
-                            model.constraints.add(Subtyping(strong, weak)),
-                            model.freezer, model.relids.union(fvs)
+                        return [World(
+                            world.constraints.add(Subtyping(strong, weak)),
+                            world.freezer, world.relids.union(fvs)
                         )]
                     else:
                         return []
@@ -2274,16 +2297,16 @@ fvs: {fvs}
                 '''
                 A \\ B <: T === A <: T | B  
                 '''
-                return self.solve(model, strong.context, Unio(weak, strong.negation))
+                return self.solve(world, strong.context, Unio(weak, strong.negation))
             else:
                 return []
 
 
         elif isinstance(weak, Unio): 
-            return self.solve(model, strong, weak.left) + self.solve(model, strong, weak.right)
+            return self.solve(world, strong, weak.left) + self.solve(world, strong, weak.right)
 
         elif isinstance(strong, Inter): 
-            return self.solve(model, strong.left, weak) + self.solve(model, strong.right, weak)
+            return self.solve(world, strong.left, weak) + self.solve(world, strong.right, weak)
 
 
         #######################################
@@ -2291,24 +2314,24 @@ fvs: {fvs}
         #######################################
 
         elif isinstance(strong, TUnit) and isinstance(weak, TUnit): 
-            return [model] 
+            return [world] 
 
         elif isinstance(strong, TTag) and isinstance(weak, TTag): 
             if strong.label == weak.label:
-                return self.solve(model, strong.body, weak.body) 
+                return self.solve(world, strong.body, weak.body) 
             else:
                 return [] 
 
         elif isinstance(strong, TField) and isinstance(weak, TField): 
             if strong.label == weak.label:
-                return self.solve(model, strong.body, weak.body) 
+                return self.solve(world, strong.body, weak.body) 
             else:
                 return [] 
 
         elif isinstance(strong, Imp) and isinstance(weak, Imp): 
             return [
                 m1
-                for m0 in self.solve(model, weak.antec, strong.antec) 
+                for m0 in self.solve(world, weak.antec, strong.antec) 
                 for m1 in self.solve(m0, strong.consq, weak.consq) 
             ]
 
@@ -2318,15 +2341,15 @@ fvs: {fvs}
     end solve
     '''
 
-    def is_relation_constraint_wellformed(self, model : Model, strong : Typ, weak : LeastFP) -> bool:
+    def is_relation_constraint_wellformed(self, world : World, strong : Typ, weak : LeastFP) -> bool:
         factored = factor_least(weak)
-        models = self.solve(model, strong, factored)  
-        return bool(models)
+        worlds = self.solve(world, strong, factored)  
+        return bool(worlds)
 
-    def solve_composition(self, strong : Typ, weak : Typ) -> List[Model]: 
+    def solve_composition(self, strong : Typ, weak : Typ) -> List[World]: 
         self._battery = 100
-        model = Model(s(), s(), s())
-        return self.solve(model, strong, weak)
+        world = World(s(), s(), s())
+        return self.solve(world, strong, weak)
     '''
     end solve_composition
     '''
@@ -2336,24 +2359,24 @@ end Solver
 '''
 
 default_solver = Solver()
-default_nonterm = Context('expr', m(), [Model(s(), s(), s())], default_solver.fresh_type_var())
+default_nonterm = Context('expr', m(), [World(s(), s(), s())], default_solver.fresh_type_var())
 
 
 class Rule:
     def __init__(self, solver : Solver):
         self.solver = solver
 
-    def evolve_models(self, nt : Context, t : Typ) -> list[Model]:
+    def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
 #         print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG evolve_models
+# DEBUG evolve_worlds
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # nt.enviro: {nt.enviro}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
         return [
             m1
-            for m0 in nt.models
+            for m0 in nt.worlds
             for m1 in self.solver.solve(m0, 
                 t, 
                 nt.typ_var
@@ -2362,53 +2385,53 @@ class Rule:
 
 class BaseRule(Rule):
 
-    def combine_var(self, nt : Context, id : str) -> list[Model]:
-        return self.evolve_models(nt, nt.enviro[id])
+    def combine_var(self, nt : Context, id : str) -> list[World]:
+        return self.evolve_worlds(nt, nt.enviro[id])
 
-    def combine_assoc(self, nt : Context, argchain : list[TVar]) -> list[Model]:
+    def combine_assoc(self, nt : Context, argchain : list[TVar]) -> list[World]:
         if len(argchain) == 1:
-            return self.evolve_models(nt, argchain[0])
+            return self.evolve_worlds(nt, argchain[0])
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
             result = ExprRule(self.solver).combine_application(nt, applicator, arguments) 
             return result
 
-    def combine_unit(self, nt : Context) -> list[Model]:
-        return self.evolve_models(nt, TUnit())
+    def combine_unit(self, nt : Context) -> list[World]:
+        return self.evolve_worlds(nt, TUnit())
 
     def distill_tag_body(self, nt : Context, label : str) -> Context:
         body_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = self.evolve_models(nt, TTag(label, body_var))
-        return Context('expr', nt.enviro, models, body_var)
+        # worlds = self.evolve_worlds(nt, TTag(label, body_var))
+        return Context('expr', nt.enviro, worlds, body_var)
 
-    def combine_tag(self, nt : Context, label : str, body : TVar) -> list[Model]:
+    def combine_tag(self, nt : Context, label : str, body : TVar) -> list[World]:
         # TODO: remove existential check now that the types are simply variables
         # '''
         # move existential outside
         # '''
         # if isinstance(body, Exi):
-        #     return self.evolve_models(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
+        #     return self.evolve_worlds(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
         # else:
         # TODO: note that this constraint is redundant with constraint in distill rule
         # - consider removing redundancy
-        return self.evolve_models(nt, TTag(label, body))
+        return self.evolve_worlds(nt, TTag(label, body))
 
-    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[Model]:
+    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[World]:
         result = Top() 
         for branch in reversed(branches): 
-            for branch_model in reversed(branch.models):
-                new_model = branch_model
+            for branch_world in reversed(branch.worlds):
+                new_world = branch_world
 
-                (body_typ, body_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                new_model = Model(new_model.constraints.difference(body_used_constraints), new_model.freezer, new_model.relids)
+                (body_typ, body_used_constraints) = interpret_with_polarity(True, new_world, branch.body, s())
+                new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
 
                 field = TField(branch.label, body_typ)
-                constraints = tuple(extract_reachable_constraints_from_typ(new_model, field))
+                constraints = tuple(extract_reachable_constraints_from_typ(new_world, field))
                 if constraints:
-                    # TODO: update outer model instead of nesting constraints; since there's no generalization
+                    # TODO: update outer world instead of nesting constraints; since there's no generalization
                     generalized_case = All((), constraints, field)
                 else:
                     generalized_case = field 
@@ -2422,9 +2445,9 @@ class BaseRule(Rule):
         end for 
         '''
 
-        return self.evolve_models(nt, simplify_typ(result))
+        return self.evolve_worlds(nt, simplify_typ(result))
 
-    def combine_function(self, nt : Context, branches : list[Branch]) -> list[Model]:
+    def combine_function(self, nt : Context, branches : list[Branch]) -> list[World]:
         '''
         Example
         ==============
@@ -2439,18 +2462,18 @@ class BaseRule(Rule):
         augmented_branches = augment_branches_with_diff(branches)
         constrained_branches = []
         for branch in reversed(augmented_branches): 
-            for branch_model in reversed(branch.models):
+            for branch_world in reversed(branch.worlds):
                 '''
                 interpret, extrude, and generalize
                 '''
-                new_model = branch_model
+                new_world = branch_world
 
-                (return_typ, return_used_constraints) = interpret_with_polarity(True, new_model, branch.body, s())
-                new_model = Model(new_model.constraints.difference(return_used_constraints), new_model.freezer, new_model.relids)
-                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_model, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
-                new_model = Model(new_model.constraints.difference(param_used_constraints), new_model.freezer, new_model.relids)
+                (return_typ, return_used_constraints) = interpret_with_polarity(True, new_world, branch.body, s())
+                new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
+                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
+                new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
                 imp = Imp(param_typ, return_typ)
-                constrained_branches.append((new_model, imp))
+                constrained_branches.append((new_world, imp))
             '''
             end for 
             '''
@@ -2458,14 +2481,14 @@ class BaseRule(Rule):
         end for 
         '''
         if len(constrained_branches) == 1:
-            new_model, imp = constrained_branches[0]
-            return self.solver.solve(new_model, simplify_typ(imp), nt.typ_var)
+            new_world, imp = constrained_branches[0]
+            return self.solver.solve(new_world, simplify_typ(imp), nt.typ_var)
         else:
             result = Top()
-            for new_model, imp in constrained_branches:
+            for new_world, imp in constrained_branches:
                 generalized_case = imp
                 ######## DEBUG: without generalization #############
-                constraints = tuple(extract_reachable_constraints_from_typ(new_model, imp))
+                constraints = tuple(extract_reachable_constraints_from_typ(new_world, imp))
                 if constraints:
                     generalized_case = All((), constraints, imp)
                 else:
@@ -2476,7 +2499,7 @@ class BaseRule(Rule):
                 # sub_map = cast_up(renaming)
                 # bound_ids = tuple(var.id for var in renaming.values())
                 # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
-                #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_model, imp)))
+                #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
                 # )
 
                 # renamed_imp = sub_typ(sub_map, imp)
@@ -2489,7 +2512,7 @@ class BaseRule(Rule):
             '''
             end for
             '''
-            models = self.evolve_models(nt, simplify_typ(result))
+            worlds = self.evolve_worlds(nt, simplify_typ(result))
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG combine_function iteration
@@ -2501,13 +2524,13 @@ class BaseRule(Rule):
 # return_typ: {concretize_typ(return_typ)}
 
 # nt.env: {nt.enviro}
-# model.freezer: {model.freezer}
-# model.constraints: {concretize_constraints(tuple(model.constraints))}
+# world.freezer: {world.freezer}
+# world.constraints: {concretize_constraints(tuple(world.constraints))}
 
 # generalized_case: {concretize_typ(generalized_case)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
-            return models
+            return worlds
         '''
         end if/else
         '''
@@ -2519,34 +2542,34 @@ class ExprRule(Rule):
 
     def distill_tuple_head(self, nt : Context) -> Context:
         head_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', Bot())))
-        return Context('expr', nt.enviro, models, head_var) 
+        # worlds = self.evolve_worlds(nt, Inter(TField('head', head_var), TField('tail', Bot())))
+        return Context('expr', nt.enviro, worlds, head_var) 
 
     def distill_tuple_tail(self, nt : Context, head_var : TVar) -> Context:
         tail_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = self.evolve_models(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
-        return Context('expr', nt.enviro, models, tail_var) 
+        # worlds = self.evolve_worlds(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
+        return Context('expr', nt.enviro, worlds, tail_var) 
 
-    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> list[Model]:
-        return self.evolve_models(nt, Inter(TField('head', head_var), TField('tail', tail_var)))
+    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> list[World]:
+        return self.evolve_worlds(nt, Inter(TField('head', head_var), TField('tail', tail_var)))
 
     def distill_ite_condition(self, nt : Context) -> Context:
         condition_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         nt.typ_var,
         #         Unio(TTag('false', TUnit()), TTag('true', TUnit()))
         #     )
         # ]
-        return Context('expr', nt.enviro, models, condition_var)
+        return Context('expr', nt.enviro, worlds, condition_var)
 
     def distill_ite_true_branch(self, nt : Context, condition_var : TVar) -> Context:
         '''
@@ -2554,17 +2577,17 @@ class ExprRule(Rule):
         (:true? @ -> Q) <: (A -> B) 
         '''
         true_body_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         Imp(TTag('true', TUnit()), true_body_var),
         #         Imp(true_body_var, nt.typ_var)
         #     )
         # ]
-        return Context('expr', nt.enviro, models, true_body_var) 
+        return Context('expr', nt.enviro, worlds, true_body_var) 
 
     def distill_ite_false_branch(self, nt : Context, condition_var : TVar, true_body_var : TVar) -> Context:
         '''
@@ -2572,33 +2595,33 @@ class ExprRule(Rule):
         (:false? @ -> Q) <: (A -> B) 
         '''
         false_body_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         Imp(TTag('false', TUnit()), false_body_var),
         #         Imp(condition_var, nt.typ_var)
         #     )
         # ]
-        return Context('expr', nt.enviro, models, false_body_var) 
+        return Context('expr', nt.enviro, worlds, false_body_var) 
 
     def combine_ite(self, nt : Context, condition_var : TVar, 
-                true_body_models: list[Model], true_body_var : TVar, 
-                false_body_models: list[Model], false_body_var : TVar
-    ) -> list[Model]: 
+                true_body_worlds: list[World], true_body_var : TVar, 
+                false_body_worlds: list[World], false_body_var : TVar
+    ) -> list[World]: 
         branches = [
-            Branch(true_body_models, TTag('true', TUnit()), true_body_var), 
-            Branch(false_body_models, TTag('false', TUnit()), false_body_var)
+            Branch(true_body_worlds, TTag('true', TUnit()), true_body_var), 
+            Branch(false_body_worlds, TTag('false', TUnit()), false_body_var)
         ]
         cator_var = self.solver.fresh_type_var()
         function_nt = replace(nt, typ_var = cator_var)
-        function_models = BaseRule(self.solver).combine_function(function_nt, branches)
-        nt = replace(nt, models = function_models)
+        function_worlds = BaseRule(self.solver).combine_function(function_nt, branches)
+        nt = replace(nt, worlds = function_worlds)
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # DEBUG ite len(function_models): {len(function_models)}
+        # DEBUG ite len(function_worlds): {len(function_worlds)}
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
         arguments = [condition_var]
@@ -2607,115 +2630,115 @@ class ExprRule(Rule):
     def distill_projection_rator(self, nt : Context) -> Context:
         # the type of the record being projected from
         rator_var = self.solver.fresh_type_var()
-        return Context('expr', nt.enviro, nt.models, rator_var)
+        return Context('expr', nt.enviro, nt.worlds, rator_var)
 
     def distill_projection_keychain(self, nt : Context, rator_var : TVar) -> Context: 
         keychain_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         keychain_var,
         #         rator_var 
         #     )
         # ]
-        return Context('keychain', nt.enviro, models, keychain_var)
+        return Context('keychain', nt.enviro, worlds, keychain_var)
 
 
-    def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[Model]: 
-        models = nt.models
+    def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[World]: 
+        worlds = nt.worlds
         for key in keys:
             result_var = self.solver.fresh_type_var()
-            models = [
+            worlds = [
                 m1
-                for m0 in models
+                for m0 in worlds
                 for m1 in self.solver.solve(m0, record_var, TField(key, result_var))
             ]
             record_var = result_var
 
-        models = [
+        worlds = [
             m1
-            for m0 in models
+            for m0 in worlds
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
-        return models 
+        return worlds 
 
     #########
 
     def distill_application_cator(self, nt : Context) -> Context: 
         cator_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         cator_var,
         #         Imp(Bot(), Top()) 
         #     )
         # ]
-        return Context('expr', nt.enviro, models, cator_var)
+        return Context('expr', nt.enviro, worlds, cator_var)
 
     def distill_application_argchain(self, nt : Context, cator_var : TVar) -> Context: 
         next_cator_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         next_cator_var,
         #         cator_var
         #     )
         # ]
-        return Context('argchain', nt.enviro, models, next_cator_var, True)
+        return Context('argchain', nt.enviro, worlds, next_cator_var, True)
 
-    def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[Model]: 
+    def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application init
-        ~~~~~~~~~~~~~~
-        len(nt.enviro): {nt.enviro}
-        len(nt.models): {len(nt.models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application init
+        # ~~~~~~~~~~~~~~
+        # len(nt.enviro): {nt.enviro}
+        # len(nt.worlds): {len(nt.worlds)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
-        models = nt.models 
+        worlds = nt.worlds 
         for arg_var in arg_vars:
             result_var = self.solver.fresh_type_var()
-            new_models = []
-            for model in models:
+            new_worlds = []
+            for world in worlds:
                 # NOTE: interpretation to keep types and constraints compact 
-                cator_typ, cator_used_constraints = interpret_with_polarity(True, model, cator_var, s())
-                ignored_ids = get_freezer_adjacent_learnable_ids(model)
-                arg_typ, arg_used_constraints = interpret_with_polarity(True, model, arg_var, ignored_ids)
+                cator_typ, cator_used_constraints = interpret_with_polarity(True, world, cator_var, s())
+                ignored_ids = get_freezer_adjacent_learnable_ids(world)
+                arg_typ, arg_used_constraints = interpret_with_polarity(True, world, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
-
-                print(f"""
-                ~~~~~~~~~~~~~~
-                DEBUG application
-                ~~~~~~~~~~~~~~
-                model.freezer: {tuple(model.freezer)}
-                model.constraints: {concretize_constraints(tuple(model.constraints))}
-
-                cator_var: {concretize_typ(cator_var)}
-                cator_typ: {concretize_typ(cator_typ)}
-
-                arg_var: {arg_var.id}
-                arg_typ: {concretize_typ(arg_typ)}
-                result_var: {result_var.id}
-                ~~~~~~~~~~~~~~
-                """)
 
                 # print(f"""
                 # ~~~~~~~~~~~~~~
                 # DEBUG application
                 # ~~~~~~~~~~~~~~
-                # model.freezer: {tuple(model.freezer)}
-                # model.constraints: {concretize_constraints(tuple(model.constraints))}
+                # world.freezer: {tuple(world.freezer)}
+                # world.constraints: {concretize_constraints(tuple(world.constraints))}
+
+                # cator_var: {concretize_typ(cator_var)}
+                # cator_typ: {concretize_typ(cator_typ)}
+
+                # arg_var: {arg_var.id}
+                # arg_typ: {concretize_typ(arg_typ)}
+                # result_var: {result_var.id}
+                # ~~~~~~~~~~~~~~
+                # """)
+
+                # print(f"""
+                # ~~~~~~~~~~~~~~
+                # DEBUG application
+                # ~~~~~~~~~~~~~~
+                # world.freezer: {tuple(world.freezer)}
+                # world.constraints: {concretize_constraints(tuple(world.constraints))}
                 # cator_var: {cator_var}
                 # arg_var: {arg_var}
 
@@ -2723,70 +2746,71 @@ class ExprRule(Rule):
                 # arg_typ: {concretize_typ(arg_typ)}
                 # ~~~~~~~~~~~~~~
                 # """)
-                model = Model(model.constraints.difference(cator_used_constraints).difference(arg_used_constraints), model.freezer, model.relids)
-                new_models.extend(self.solver.solve(model, cator_typ, Imp(arg_typ, result_var)))
-            models = new_models
+                world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
+                new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
+            worlds = new_worlds
 
             # TODO: remove version without interpretation
-            # models = [
+            # worlds = [
             #     m1
-            #     for m0 in models
+            #     for m0 in worlds
             #     for m1 in self.solver.solve(m0, cator_var, Imp(arg_var, result_var))
             # ] 
             ###########################
             cator_var = result_var
 
-        models = [
+        worlds = [
             m1
-            for m0 in models
+            for m0 in worlds
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application results 
-        len(models): {len(models)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application results 
+        # len(worlds): {len(worlds)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
-        for model in models:
-            print(f"""
-            ~~~~~~~~~~~~~~
-            DEBUG application results
-            ~~~~~~~~~~~~~~
-            model.freezer: {tuple(model.freezer)}
-            model.constraints: {concretize_constraints(tuple(model.constraints))}
-            cator_var: {cator_var}
-            arg_var: {arg_var}
+        # for world in worlds:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~
+        #     DEBUG application results
+        #     ~~~~~~~~~~~~~~
+        #     world.freezer: {tuple(world.freezer)}
+        #     world.constraints: {concretize_constraints(tuple(world.constraints))}
+        #     cator_var: {cator_var}
+        #     arg_var: {arg_var}
 
-            cator_typ: {concretize_typ(cator_typ)}
-            arg_typ: {concretize_typ(arg_typ)}
-            ~~~~~~~~~~~~~~
-            """)
-        return models
+        #     cator_typ: {concretize_typ(cator_typ)}
+        #     arg_typ: {concretize_typ(arg_typ)}
+        #     ~~~~~~~~~~~~~~
+        #     """)
+
+        return worlds
 
     #########
     def distill_funnel_arg(self, nt : Context) -> Context: 
         arg_var = self.solver.fresh_type_var()
-        models = nt.models
-        return Context('expr', nt.enviro, models, arg_var)
+        worlds = nt.worlds
+        return Context('expr', nt.enviro, worlds, arg_var)
 
     def distill_funnel_pipeline(self, nt : Context, arg_var : TVar) -> Context: 
         typ_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         typ_var,
         #         arg_var
         #     )
         # ]
-        return Context('pipeline', nt.enviro, models, typ_var)
+        return Context('pipeline', nt.enviro, worlds, typ_var)
 
-    def combine_funnel(self, nt : Context, arg_var : TVar, cator_vars : list[TVar]) -> list[Model]: 
-        models = nt.models
+    def combine_funnel(self, nt : Context, arg_var : TVar, cator_vars : list[TVar]) -> list[World]: 
+        worlds = nt.worlds
         for cator_var in cator_vars:
             print(f"""
             ~~~~~~~~
@@ -2795,24 +2819,24 @@ class ExprRule(Rule):
             ~~~~~~~~
             """)
             result_var = self.solver.fresh_type_var() 
-            app_nt = replace(nt, models = models, typ_var = result_var) 
-            models = self.combine_application(app_nt, cator_var, [arg_var])
+            app_nt = replace(nt, worlds = worlds, typ_var = result_var) 
+            worlds = self.combine_application(app_nt, cator_var, [arg_var])
             arg_var = result_var 
 
         # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
-        models = [
+        worlds = [
             m1
-            for m0 in models
+            for m0 in worlds
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
-        return models 
+        return worlds 
 
     def distill_fix_body(self, nt : Context) -> Context:
         body_var = self.solver.fresh_type_var()
-        models = nt.models
-        return Context('expr', nt.enviro, models, body_var)
+        worlds = nt.worlds
+        return Context('expr', nt.enviro, worlds, body_var)
 
-    def combine_fix(self, nt : Context, body_var : TVar) -> list[Model]:
+    def combine_fix(self, nt : Context, body_var : TVar) -> list[World]:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -2829,22 +2853,22 @@ class ExprRule(Rule):
         IH_typ = self.solver.fresh_type_var()
 
 
-        for outer_model in nt.models:
+        for outer_world in nt.worlds:
 
             '''
-            Constructive a least fixed point type over union from the inner models
+            Constructive a least fixed point type over union from the inner worlds
             '''
-            inner_models = self.solver.solve(outer_model, body_var, Imp(self_typ, Imp(in_typ, out_typ)))
+            inner_worlds = self.solver.solve(outer_world, body_var, Imp(self_typ, Imp(in_typ, out_typ)))
 
             induc_body = Bot()
             param_body = Bot()
-            for inner_model in reversed(inner_models):
+            for inner_world in reversed(inner_worlds):
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix (initial inner_model)
+    # DEBUG combine_fix (initial inner_world)
     # ~~~~~~~~~~~~~~~~~~~~~
-    # inner_model.freezer: {inner_model.freezer}
-    # inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
+    # inner_world.freezer: {inner_world.freezer}
+    # inner_world.constraints: {concretize_constraints(tuple(inner_world.constraints))}
     # ======================
     # self_typ: {self_typ.id}
     # body_var: {concretize_typ(body_var)}
@@ -2853,14 +2877,14 @@ class ExprRule(Rule):
     # ======================
     #             """)
 
-                left_interp = interpret_with_polarity(False, inner_model, in_typ, s())
+                left_interp = interpret_with_polarity(False, inner_world, in_typ, s())
                 (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
-                inner_model = Model(inner_model.constraints.difference(left_used_constraints), inner_model.freezer, inner_model.relids)
-                right_interp = interpret_with_polarity(True, inner_model, out_typ, s())
+                inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
+                right_interp = interpret_with_polarity(True, inner_world, out_typ, s())
                 (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
-                inner_model = Model(inner_model.constraints.difference(right_used_constraints), inner_model.freezer, inner_model.relids)
+                inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
@@ -2880,8 +2904,8 @@ class ExprRule(Rule):
     # right_used_constraints: {concretize_constraints(tuple(right_used_constraints))}
     # ======================
     # (:after removing used constraints:)
-    # inner_model.freezer: {inner_model.freezer}
-    # inner_model.constraints: {concretize_constraints(tuple(inner_model.constraints))}
+    # inner_world.freezer: {inner_world.freezer}
+    # inner_world.constraints: {concretize_constraints(tuple(inner_world.constraints))}
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
@@ -2890,7 +2914,7 @@ class ExprRule(Rule):
                 bound_ids = left_bound_ids + right_bound_ids
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
-                self_interp = interpret_with_polarity(False, inner_model, self_typ, s())
+                self_interp = interpret_with_polarity(False, inner_world, self_typ, s())
 
     #             nl = "\n"
     #             print(f"""
@@ -2915,10 +2939,10 @@ class ExprRule(Rule):
                     IH_left_constraints = s()
                 #end if
 
-                inner_model = Model(inner_model.constraints.difference(self_used_constraints), inner_model.freezer, inner_model.relids)
+                inner_world = World(inner_world.constraints.difference(self_used_constraints), inner_world.freezer, inner_world.relids)
                 reachable_constraints = tuple(
                     st
-                    for st in extract_reachable_constraints_from_typ(inner_model, rel_pattern)
+                    for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 )
 
@@ -2927,39 +2951,39 @@ class ExprRule(Rule):
 
                 # TODO: see why frozen variables aren't in existential from package type
 
-                # TODO: what if there are existing frozen variables in inner_model?
-                rel_model = Model(pset(rel_constraints), pset(bound_ids), inner_model.relids)
-                constrained_rel = package_typ(rel_model, rel_pattern)
+                # TODO: what if there are existing frozen variables in inner_world?
+                rel_world = World(pset(rel_constraints), pset(bound_ids), inner_world.relids)
+                constrained_rel = package_typ(rel_world, rel_pattern)
 
-                # TODO: what if there are existing frozen variables in inner_model?
-                left_model = Model(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_model.relids)
-                constrained_left = package_typ(left_model, left_typ)
+                # TODO: what if there are existing frozen variables in inner_world?
+                left_world = World(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_world.relids)
+                constrained_left = package_typ(left_world, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
                 param_body = Unio(constrained_left, param_body)
 
 
-                print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG combine_fix rel
-    ~~~~~~~~~~~~~~~~~~~~~
-    body_var: {body_var}
-    IH_typ: {IH_typ.id}
-    rel_model.freezer: {rel_model.freezer}
-    rel_model.constraints: {concretize_constraints(tuple(rel_model.constraints))}
-    ======================
-    rel_pattern: {concretize_typ(rel_pattern)}
-    constrained rel: {concretize_typ(constrained_rel)}
-    ~~~~~~~~~~~~~~~~~~~~~
-                """)
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_fix rel
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # body_var: {body_var}
+    # IH_typ: {IH_typ.id}
+    # rel_world.freezer: {rel_world.freezer}
+    # rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
+    # ======================
+    # rel_pattern: {concretize_typ(rel_pattern)}
+    # constrained rel: {concretize_typ(constrained_rel)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
     # DEBUG combine_fix left
     # ~~~~~~~~~~~~~~~~~~~~~
     # IH_typ: {IH_typ.id}
-    # left_model.freezer: {left_model.freezer}
-    # left_model.constraints: {concretize_constraints(tuple(left_model.constraints))}
+    # left_world.freezer: {left_world.freezer}
+    # left_world.constraints: {concretize_constraints(tuple(left_world.constraints))}
     # ======================
     # left_pattern: {concretize_typ(left_typ)}
     # constrained left: {concretize_typ(constrained_left)}
@@ -3007,19 +3031,19 @@ class ExprRule(Rule):
             """)
 
 
-            new_model = self.evolve_models(nt, result)
+            new_world = self.evolve_worlds(nt, result)
             ##################################
-        return new_model
+        return new_world
 
     
     def distill_let_target(self, nt : Context, id : str) -> Context:
         typ_var = self.solver.fresh_type_var()
-        models = nt.models
-        return Context('target', nt.enviro, models, typ_var)
+        worlds = nt.worlds
+        return Context('target', nt.enviro, worlds, typ_var)
 
     def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
         enviro = nt.enviro.set(id, target)
-        return Context('expr', enviro, nt.models, nt.typ_var)
+        return Context('expr', enviro, nt.worlds, nt.typ_var)
 
 '''
 end ExprRule
@@ -3030,26 +3054,26 @@ class RecordRule(Rule):
 
     def distill_single_body(self, nt : Context, id : str) -> Context:
         body_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = self.evolve_models(nt, TField(id, body_var))
-        return Context('expr', nt.enviro, models, body_var) 
+        # worlds = self.evolve_worlds(nt, TField(id, body_var))
+        return Context('expr', nt.enviro, worlds, body_var) 
 
-    def combine_single(self, nt : Context, label : str, body_models : list[Model], body_var : TVar) -> list[RecordBranch]:
-        return [RecordBranch(body_models, label, body_var)]
+    def combine_single(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar) -> list[RecordBranch]:
+        return [RecordBranch(body_worlds, label, body_var)]
 
     def distill_cons_body(self, nt : Context, id : str) -> Context:
         return self.distill_single_body(nt, id)
 
     def distill_cons_tail(self, nt : Context, id : str, body_var : TVar) -> Context:
         tail_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = self.evolve_models(nt, Inter(TField(id, body_var), tail_var))
-        return Context('record', nt.enviro, models, tail_var) 
+        # worlds = self.evolve_worlds(nt, Inter(TField(id, body_var), tail_var))
+        return Context('record', nt.enviro, worlds, tail_var) 
 
-    def combine_cons(self, nt : Context, label : str, body_models : list[Model], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
-        return self.combine_single(nt, label, body_models, body_var) + tail
+    def combine_cons(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
+        return self.combine_single(nt, label, body_worlds, body_var) + tail
 
 class FunctionRule(Rule):
 
@@ -3058,25 +3082,25 @@ class FunctionRule(Rule):
         enviro = pattern_attr.enviro
 
         body_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         nt.typ_var, Imp(pattern_typ, body_var)
         #     )
         # ]
 
-        return Context('expr', nt.enviro.update(enviro), models, body_var)
+        return Context('expr', nt.enviro.update(enviro), worlds, body_var)
 
-    def combine_single(self, nt : Context, pattern_typ : Typ, body_models : list[Model], body_var : TVar) -> list[Branch]:
+    def combine_single(self, nt : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar) -> list[Branch]:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return [Branch(body_models, pattern_typ, body_var)]
+        return [Branch(body_worlds, pattern_typ, body_var)]
 
     def distill_cons_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(nt, pattern_attr)
@@ -3088,8 +3112,8 @@ class FunctionRule(Rule):
         '''
         return nt
 
-    def combine_cons(self, nt : Context, pattern_typ : Typ, body_models : list[Model], body_var : TVar, tail : list[Branch]) -> list[Branch]:
-        return self.combine_single(nt, pattern_typ, body_models, body_var) + tail
+    def combine_cons(self, nt : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar, tail : list[Branch]) -> list[Branch]:
+        return self.combine_single(nt, pattern_typ, body_worlds, body_var) + tail
 
 
 class KeychainRule(Rule):
@@ -3104,25 +3128,25 @@ class KeychainRule(Rule):
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Context) -> Context:
         content_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         nt.typ_var, Imp(typ_var, Top())
         #     )
         # ]
-        return Context('expr', nt.enviro, models, content_var, False)
+        return Context('expr', nt.enviro, worlds, content_var, False)
 
     def distill_cons_head(self, nt : Context) -> Context:
         return self.distill_single_content(nt)
 
     def combine_single(self, nt : Context, content_var : TVar) -> ArgchainAttr:
-        return ArgchainAttr(nt.models, [content_var])
+        return ArgchainAttr(nt.worlds, [content_var])
 
     def combine_cons(self, nt : Context, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
-        return ArgchainAttr(nt.models, [head_var] + tail_vars)
+        return ArgchainAttr(nt.worlds, [head_var] + tail_vars)
 
 ######
 
@@ -3130,16 +3154,16 @@ class PipelineRule(Rule):
 
     def distill_single_content(self, nt : Context) -> Context:
         content_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         content_var, Imp(nt.typ_var, Top())
         #     )
         # ]
-        return Context('expr', nt.enviro, models, content_var)
+        return Context('expr', nt.enviro, worlds, content_var)
 
 
     def distill_cons_head(self, nt : Context) -> Context:
@@ -3151,22 +3175,22 @@ class PipelineRule(Rule):
         resulting in a new tyption of what can cut the next element in the tail
         '''
         tail_var = self.solver.fresh_type_var()
-        models = nt.models
+        worlds = nt.worlds
         # TODO: add constraints in distill for type-guided program synthesis 
-        # models = [
+        # worlds = [
         #     m1
-        #     for m0 in nt.models
+        #     for m0 in nt.worlds
         #     for m1 in self.solver.solve(m0, 
         #         head_var, Imp(nt.typ_var, tail_var)
         #     )
         # ]
-        return Context('pipeline', nt.enviro, models, tail_var)
+        return Context('pipeline', nt.enviro, worlds, tail_var)
 
     def combine_single(self, nt : Context, content_var : TVar) -> PipelineAttr:
-        return PipelineAttr(nt.models, [content_var])
+        return PipelineAttr(nt.worlds, [content_var])
 
     def combine_cons(self, nt : Context, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
-        return PipelineAttr(nt.models, [head_var] + tail_var)
+        return PipelineAttr(nt.worlds, [head_var] + tail_var)
 
 
 '''
@@ -3176,32 +3200,32 @@ start Pattern Rule
 class PatternRule(Rule):
     # def distill_tuple_head(self, nt : Context) -> Context:
     #     typ_var = self.solver.fresh_type_var()
-    #     models = nt.models
+    #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # models = [
+    #     # worlds = [
     #     #     m1
-    #     #     for m0 in nt.models
+    #     #     for m0 in nt.worlds
     #     #     for m1 in self.solver.solve(m0, 
     #     #         Inter(TField('head', typ_var), TField('tail', Bot())), 
     #     #         nt.typ_var
     #     #     )
     #     # ]
 
-    #     return Context('pattern', nt.enviro, models, typ_var) 
+    #     return Context('pattern', nt.enviro, worlds, typ_var) 
 
     # def distill_tuple_tail(self, nt : Context, head_typ : Typ) -> Context:
     #     typ_var = self.solver.fresh_type_var()
-    #     models = nt.models
+    #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # models = [
+    #     # worlds = [
     #     #     m1
-    #     #     for m0 in nt.models
+    #     #     for m0 in nt.worlds
     #     #     for m1 in self.solver.solve(m0, 
     #     #         Inter(TField('head', head_typ), TField('tail', typ_var)), 
     #     #         nt.typ_var,
     #     #     )
     #     # ]
-    #     return Context('pattern', nt.enviro, models, typ_var) 
+    #     return Context('pattern', nt.enviro, worlds, typ_var) 
 
     def combine_tuple(self, nt : Context, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
@@ -3226,16 +3250,16 @@ class BasePatternRule(Rule):
 
     # def distill_tag_body(self, nt : Context, id : str) -> Context:
     #     body_var = self.solver.fresh_type_var()
-    #     models = nt.models
+    #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # models = [
+    #     # worlds = [
     #     #     m1
-    #     #     for m0 in nt.models
+    #     #     for m0 in nt.worlds
     #     #     for m1 in self.solver.solve(m0, 
     #     #         TTag(id, body_var), nt.typ_var
     #     #     )
     #     # ]
-    #     return Context('pattern', nt.enviro, models, body_var)
+    #     return Context('pattern', nt.enviro, worlds, body_var)
 
     def combine_tag(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TTag(label, body_attr.typ)
@@ -3248,16 +3272,16 @@ class RecordPatternRule(Rule):
 
     # def distill_single_body(self, nt : Context, id : str) -> Context:
     #     body_var = self.solver.fresh_type_var()
-    #     models = nt.models
+    #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # models = [
+    #     # worlds = [
     #     #     m1
-    #     #     for m0 in nt.models
+    #     #     for m0 in nt.worlds
     #     #     for m1 in self.solver.solve(m0, 
     #     #         TField(id, typ_var), nt.typ_var
     #     #     )
     #     # ]
-    #     return Context('pattern_record', nt.enviro, models, body_var) 
+    #     return Context('pattern_record', nt.enviro, worlds, body_var) 
 
     def combine_single(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TField(label, body_attr.typ)
@@ -3268,12 +3292,24 @@ class RecordPatternRule(Rule):
 
     # def distill_cons_tail(self, nt : Context, id : str, body_typ : Typ) -> Context:
     #     tail_var = self.solver.fresh_type_var()
-    #     models = nt.models
+    #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # models = self.evolve_models(nt, Inter(TField(id, body_typ), tail_var))
-    #     return Context('pattern_record', nt.enviro, models, tail_var) 
+    #     # worlds = self.evolve_worlds(nt, Inter(TField(id, body_typ), tail_var))
+    #     return Context('pattern_record', nt.enviro, worlds, tail_var) 
 
     def combine_cons(self, nt : Context, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
         enviro = body_attr.enviro.update(tail_attr.enviro)
         return PatternAttr(enviro, pattern)
+
+class TargetRule(Rule):
+    def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
+        return [
+            m1
+            for m0 in nt.worlds
+            for m1 in self.solver.solve(m0, 
+                nt.typ_var,
+                anno_typ
+            )
+        ]
+

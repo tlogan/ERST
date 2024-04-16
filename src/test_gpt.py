@@ -55,8 +55,11 @@ from tapas.slim.language import *
 # print(foldr(lambda acc, x : acc / x, mine([1,2]), 6))
 
 print(make_prompt("""
+let foo : T1 =
 fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons (x, xs) => ~succ (self(xs)) 
 )) 
+;
+foo
 """))

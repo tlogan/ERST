@@ -286,12 +286,12 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [Context nt] returns [list[Model] models] : 
+expr [Context nt] returns [list[World] worlds] : 
 
 // Base rules
 
 | base[nt] {
-$models = $base.models
+$worlds = $base.worlds
 self.update_sr('expr', [n('base')])
 }
 
@@ -302,11 +302,11 @@ head_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_head, nt)
 } head = base[head_nt] {
 self.guide_symbol(',')
 } ',' {
-nt = replace(nt, models = $head.models)
+nt = replace(nt, worlds = $head.worlds)
 tail_nt = self.guide_nonterm(ExprRule(self._solver).distill_tuple_tail, nt, head_nt.typ_var)
 } tail = expr[tail_nt] {
-nt = replace(nt, models = $tail.models)
-$models = self.collect(ExprRule(self._solver).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
+nt = replace(nt, worlds = $tail.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
 self.update_sr('expr', [n('base'), t(','), n('expr')])
 }
 
@@ -323,10 +323,10 @@ self.guide_symbol('else')
 } 'else' {
 false_branch_nt = self.guide_nonterm(ExprRule(self._solver).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
 } false_branch = expr[false_branch_nt] {
-nt = replace(nt, models = $condition.models)
-$models = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, 
-    $true_branch.models, true_branch_nt.typ_var, 
-    $false_branch.models, false_branch_nt.typ_var
+nt = replace(nt, worlds = $condition.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_ite, nt, condition_nt.typ_var, 
+    $true_branch.worlds, true_branch_nt.typ_var, 
+    $false_branch.worlds, false_branch_nt.typ_var
 ) 
 self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 } 
@@ -335,33 +335,33 @@ self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('
 | {
 rator_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_rator, nt)
 } rator = base[rator_nt] {
-nt = replace(nt, models = $rator.models)
+nt = replace(nt, worlds = $rator.worlds)
 keychain_nt = self.guide_nonterm(ExprRule(self._solver).distill_projection_keychain, nt, rator_nt.typ_var)
 } keychain[keychain_nt] {
-nt = replace(nt, models = keychain_nt.models)
-$models = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, $keychain.keys) 
+nt = replace(nt, worlds = keychain_nt.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_projection, nt, rator_nt.typ_var, $keychain.keys) 
 self.update_sr('expr', [n('base'), n('keychain')])
 }
 
 | {
 cator_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_cator, nt)
 } cator = base[cator_nt] {
-nt = replace(nt, models = $cator.models)
+nt = replace(nt, worlds = $cator.worlds)
 argchain_nt = self.guide_nonterm(ExprRule(self._solver).distill_application_argchain, nt, cator_nt.typ_var)
 } argchain[argchain_nt] {
-nt = replace(nt, models = $argchain.attr.models)
-$models = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
+nt = replace(nt, worlds = $argchain.attr.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
 self.update_sr('expr', [n('base'), n('argchain')])
 }
 
 | {
 arg_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_arg, nt)
 } arg = base[arg_nt] {
-nt = replace(nt, models = $arg.models)
+nt = replace(nt, worlds = $arg.worlds)
 pipeline_nt = self.guide_nonterm(ExprRule(self._solver).distill_funnel_pipeline, nt, arg_nt.typ_var)
 } pipeline[pipeline_nt] {
-nt = replace(nt, models = $pipeline.attr.models)
-$models = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.attr.cators)
+nt = replace(nt, worlds = $pipeline.attr.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_funnel, nt, arg_nt.typ_var, $pipeline.attr.cators)
 self.update_sr('expr', [n('base'), n('pipeline')])
 }
 
@@ -372,14 +372,14 @@ target_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_target, nt, $I
 } target[target_nt] {
 self.guide_symbol(';')
 } ';' {
-nt = replace(nt, models = $target.models)
+nt = replace(nt, worlds = $target.worlds)
 contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, $ID.text, target_nt.typ_var)
 } contin = expr[contin_nt] {
-$models = $contin.models
+$worlds = $contin.worlds
 self.update_sr('expr', [t('let'), ID, n('target'), t(';'), n('expr')])
 }
-// nt = replace(nt, models = contin.models)
-// $models = self.guide_nonterm(ExprRule(self._solver).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
+// nt = replace(nt, worlds = contin.worlds)
+// $worlds = self.guide_nonterm(ExprRule(self._solver).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
 
 
 | 'fix' {
@@ -389,18 +389,18 @@ body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
 } body = expr[body_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, models = $body.models)
-$models = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
+nt = replace(nt, worlds = $body.worlds)
+$worlds = self.collect(ExprRule(self._solver).combine_fix, nt, body_nt.typ_var)
 self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 }
 
 ;
 
-base [Context nt] returns [list[Model] models] : 
+base [Context nt] returns [list[World] worlds] : 
 // Introduction rules
 
 | '@' {
-$models = self.collect(BaseRule(self._solver).combine_unit, nt)
+$worlds = self.collect(BaseRule(self._solver).combine_unit, nt)
 self.update_sr('base', [t('@')])
 } 
 
@@ -410,34 +410,34 @@ self.guide_terminal('ID')
 } ID {
 body_nt = self.guide_nonterm(BaseRule(self._solver).distill_tag_body, nt, $ID.text)
 } body = base[body_nt] {
-nt = replace(nt, models = $body.models)
-$models = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt.typ_var)
+nt = replace(nt, worlds = $body.worlds)
+$worlds = self.collect(BaseRule(self._solver).combine_tag, nt, $ID.text, body_nt.typ_var)
 self.update_sr('base', [t('~'), ID, n('base')])
 }
 
 | record[nt] {
 branches = $record.branches
-$models = self.collect(BaseRule(self._solver).combine_record, nt, branches)
+$worlds = self.collect(BaseRule(self._solver).combine_record, nt, branches)
 self.update_sr('base', [n('record')])
 }
 
 | {
 } function[nt] {
 branches = $function.branches
-$models = self.collect(BaseRule(self._solver).combine_function, nt, branches)
+$worlds = self.collect(BaseRule(self._solver).combine_function, nt, branches)
 self.update_sr('base', [n('function')])
 }
 
 // Elimination rules
 
 | ID {
-$models = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
+$worlds = self.collect(BaseRule(self._solver).combine_var, nt, $ID.text)
 self.update_sr('base', [ID])
 } 
 
 | argchain[nt] {
-nt = replace(nt, models = $argchain.attr.models)
-$models = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.args)
+nt = replace(nt, worlds = $argchain.attr.worlds)
+$worlds = self.collect(BaseRule(self._solver).combine_assoc, nt, $argchain.attr.args)
 self.update_sr('base', [n('argchain')])
 } 
 
@@ -454,7 +454,7 @@ self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver).distill_single_body, nt, $ID.text)
 } body = expr[body_nt] {
-$branches = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, $body.models, body_nt.typ_var)
+$branches = self.collect(RecordRule(self._solver).combine_single, nt, $ID.text, $body.worlds, body_nt.typ_var)
 self.update_sr('record', [t('_.'), ID, t('='), n('expr')])
 }
 
@@ -468,7 +468,7 @@ body_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_body, nt, $ID
 tail_nt = self.guide_nonterm(RecordRule(self._solver).distill_cons_tail, nt, $ID.text, body_nt.typ_var)
 } tail = record[tail_nt] {
 tail_branches = $tail.branches
-$branches = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, $body.models, body_nt.typ_var, tail_branches)
+$branches = self.collect(RecordRule(self._solver).combine_cons, nt, $ID.text, $body.worlds, body_nt.typ_var, tail_branches)
 self.update_sr('record', [t('_.'), ID, t('='), n('expr'), n('record')])
 }
 
@@ -483,7 +483,7 @@ self.guide_symbol('=>')
 } '=>' {
 body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_single_body, nt, $pattern.attr)
 } body = expr[body_nt] {
-$branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.models, body_nt.typ_var)
+$branches = self.collect(FunctionRule(self._solver).combine_single, nt, $pattern.attr.typ, $body.worlds, body_nt.typ_var)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
@@ -496,7 +496,7 @@ body_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_body, nt, $
 tail_nt = self.guide_nonterm(FunctionRule(self._solver).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
 } tail = function[tail_nt] {
 tail_branches = $tail.branches
-$branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.models, body_nt.typ_var, tail_branches)
+$branches = self.collect(FunctionRule(self._solver).combine_cons, nt, $pattern.attr.typ, $body.worlds, body_nt.typ_var, tail_branches)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 
@@ -529,7 +529,7 @@ content_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_single_conten
 } content = expr[content_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, models = $content.models)
+nt = replace(nt, worlds = $content.worlds)
 $attr = self.collect(ArgchainRule(self._solver).combine_single, nt, content_nt.typ_var)
 self.update_sr('argchain', [t('('), n('expr'), t(')')])
 }
@@ -540,9 +540,9 @@ head_nt = self.guide_nonterm(ArgchainRule(self._solver).distill_cons_head, nt)
 } head = expr[head_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, models = $head.models)
+nt = replace(nt, worlds = $head.worlds)
 } tail = argchain[nt] {
-nt = replace(nt, models = $tail.attr.models)
+nt = replace(nt, worlds = $tail.attr.worlds)
 $attr = self.collect(ArgchainRule(self._solver).combine_cons, nt, head_nt.typ_var, $tail.attr.args)
 self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 }
@@ -554,7 +554,7 @@ pipeline [Context nt] returns [PipelineAttr attr] :
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver).distill_single_content, nt) 
 } content = expr[content_nt] {
-nt = replace(nt, models = $content.models)
+nt = replace(nt, worlds = $content.worlds)
 $attr = self.collect(PipelineRule(self._solver).combine_single, nt, content_nt.typ_var)
 self.update_sr('pipeline', [t('|>'), n('expr')])
 }
@@ -562,10 +562,10 @@ self.update_sr('pipeline', [t('|>'), n('expr')])
 | '|>' {
 head_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_head, nt) 
 } head = expr[head_nt] {
-nt = replace(nt, models = $head.models)
+nt = replace(nt, worlds = $head.worlds)
 tail_nt = self.guide_nonterm(PipelineRule(self._solver).distill_cons_tail, nt, head_nt.typ_var) 
 } tail = pipeline[tail_nt] {
-nt = replace(nt, models = $tail.attr.models)
+nt = replace(nt, worlds = $tail.attr.worlds)
 $attr = self.collect(ArgchainRule(self._solver, nt).combine_cons, nt, head_nt.typ_var, $tail.attr.cators)
 self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 }
@@ -573,15 +573,22 @@ self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 ;
 
 
-target [Context nt] returns [list[Models] models]:
+target [Context nt] returns [list[Worlds] worlds]:
 
 | '=' {
 expr_nt = self.guide_nonterm(lambda: nt)
 } expr[expr_nt] {
-$models = $expr.models
+$worlds = $expr.worlds
 self.update_sr('target', [t('='), n('expr')])
 }
 
+| ':' typ '=' {
+expr_nt = self.guide_nonterm(lambda: nt)
+} expr[expr_nt] {
+nt = replace(nt, worlds = $expr.worlds)
+$worlds = self.collect(TargetRule(self._solver).combine_anno, nt, $typ.combo) 
+self.update_sr('target', [t(':'), TID, t('='), n('expr')])
+}
 ;
 
 

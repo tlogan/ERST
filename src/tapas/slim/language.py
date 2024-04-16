@@ -66,7 +66,7 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
 
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
-            elif ctx.models: 
+            elif ctx.worlds: 
                 await output.put(Done())
                 break
             else:
@@ -145,14 +145,14 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     tc = parser.typ()
     return tc.combo
 
-def analyze(code : str) -> tuple[Optional[list[analyzer.Model]], analyzer.TVar, str]:
+def analyze(code : str) -> tuple[Optional[list[analyzer.World]], analyzer.TVar, str]:
     input_stream = InputStream(code)
     lexer = SlimLexer(input_stream)
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init()
     tc = parser.expr(analyzer.default_nonterm)
-    return (tc.models, analyzer.default_nonterm.typ_var, tc.toStringTree(recog=parser))
+    return (tc.worlds, analyzer.default_nonterm.typ_var, tc.toStringTree(recog=parser))
 
 def make_prompt(code : str) -> str:
     input_stream = InputStream(code)
