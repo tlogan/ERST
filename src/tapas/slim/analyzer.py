@@ -773,108 +773,70 @@ def factor_least(least : LeastFP) -> Typ:
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless((), t1) == to_nameless((), t2)
 
-def is_relational_key(t : Typ) -> bool:
+def is_record_typ(t : Typ) -> bool:
     if isinstance(t, TField):
-        if isinstance(t.body, TVar):
-            return True
-        else:
-            return is_relational_key(t.body)
+        return True
     elif isinstance(t, Inter):
-        return is_relational_key(t.left) and is_relational_key(t.right)
+        return is_record_typ(t.left) and is_record_typ(t.right)
     else:
         return False
 
 def is_unrollable(key : Typ, rel : LeastFP) -> bool:
-    # TODO: unrollable iff there is a tag in key and correspond column has at least one tag? 
-    choices = [
-        choice
-        for choice in linearize_unions(rel.body)
-        if choice != Bot()
-    ]
-    paths = [
-        path
-        for choice in choices
-        for path in list(extract_paths(choice))
-    ]
-
-    nl = "\n"
-    print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    DEBUG is_unrollable 
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    choices: {nl.join([(concretize_typ(choice)) for choice in choices])}
-    paths: {pset(paths)}
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """)
-    result = False 
-    for path in pset(paths):
-        column_key = extract_field_plain(path, key)
-        is_key_tag = isinstance(column_key, TTag)
-        column_choices = [
-            extract_field(path, rel.id, choice)
-            for choice in choices
+    if not is_record_typ(key):
+        return True
+    else:
+        # TODO: unrollable iff there is a tag in key and correspond column has at least one tag? 
+        choices = [
+            choice
+            for choice in linearize_unions(rel.body)
             if choice != Bot()
-        ] 
-        are_there_tags_in_choices = any(
-            isinstance(cc, TTag) or
-            (isinstance(cc, Exi) and isinstance(cc.body, TTag))
-            for cc in column_choices
-        )
+        ]
+        paths = [
+            path
+            for choice in choices
+            for path in list(extract_paths(choice))
+        ]
+
+        # nl = "\n"
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # DEBUG is_unrollable 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # path: {path}
-        # is_key_tag: {is_key_tag}
-
-        # column_choices: {[concretize_typ(choice) for choice in column_choices]}
-        # are_there_tags_in_choices: {are_there_tags_in_choices}
+        # choices: {nl.join([(concretize_typ(choice)) for choice in choices])}
+        # paths: {pset(paths)}
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
-        if (is_key_tag and are_there_tags_in_choices):
-            return True 
-        # endif
+        result = False 
+        for path in pset(paths):
+            column_key = extract_field_plain(path, key)
+            is_key_tag = isinstance(column_key, TTag)
+            column_choices = [
+                extract_field(path, rel.id, choice)
+                for choice in choices
+                if choice != Bot()
+            ] 
+            are_there_tags_in_choices = any(
+                isinstance(cc, TTag) or
+                (isinstance(cc, Exi) and isinstance(cc.body, TTag))
+                for cc in column_choices
+            )
+            # print(f"""
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # DEBUG is_unrollable 
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # path: {path}
+            # is_key_tag: {is_key_tag}
 
-    return result
-    # return not is_relational_key(key)
+            # column_choices: {[concretize_typ(choice) for choice in column_choices]}
+            # are_there_tags_in_choices: {are_there_tags_in_choices}
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # """)
+            if (is_key_tag and are_there_tags_in_choices):
+                return True 
+            # endif
 
-
-    # choices = linearize_unions(least.body)
-    # paths = [
-    #     path
-    #     for choice in choices
-    #     for path in list(extract_paths(choice))
-    # ]
-
-    # rnode = RNode(m()) 
-    # for path in paths:
-    #     column = extract_column(path, least.id, choices)
-    #     assert isinstance(rnode, RNode)
-    #     rnode = insert_at_path(rnode, path, column)
-
-
-    # # TODO: assume the key appears on the strong side of subtyping; 
-    # # - make sure this uses the strongest(lenient) or weakest(strict) substitution based on frozen variables 
-    # if isinstance(t, TField):
-    #     if isinstance(t.body, TVar):
-    #         op = interpret_strong_for_id(world, t.body.id) 
-    #         if op != None:
-    #             (strongest, _) = op
-    #             return strongest == None or (not isinstance(strongest, Bot) and is_unrollable(world, strongest))
-    #         else:
-    #             return True 
-    #     else:
-    #         return is_unrollable(world, t.body)
-    #     # TODO: remove old code
-    #     # return (
-    #     #     isinstance(t.body, TVar) and 
-    #     #     (t.body.id not in freezer) 
-    #     # ) or is_relational_key(freezer, t.body) 
-    # elif isinstance(t, Inter):
-    #     return is_unrollable(world, t.left) or is_unrollable(world, t.right)
-    # else:
-    #     return True 
-
+        return result
+    # endif
 
 def match_strong(world : World, strong : Typ) -> Optional[Typ]:
     for constraint in world.constraints:
@@ -890,7 +852,7 @@ def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[S
     '''
 
 
-    has_weak_interpretation = id not in world.relids
+    should_interpret = id not in world.relids
     # TODO: determine if the following is needed or too restrictive
     # all(
     #     id != fv 
@@ -923,7 +885,7 @@ def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[S
 #     """)
 
 
-    if has_weak_interpretation:
+    if should_interpret:
         constraints = [
             st
             for st in world.constraints
@@ -965,47 +927,21 @@ def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[S
 
     # return typ_final 
 
-def interpret_strong_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+def interpret_strong_for_id(world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
     '''
     for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
     which is T | U.
     NOTE: related to strongest postcondition concept
     '''
-
-    has_strong_interpretation = True
-    # TODO: determine if some restriction is actually necessary
-    # all(
-    #     (
-    #         id not in extract_free_vars_from_typ(s(), st.weak) or
-    #         st.weak == TVar(id) 
-    #     )
-    #     for st in world.constraints
-
-    # )
-
-#     print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_strong_for_id ~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~ world.freezer: {world.freezer}
-# ~~ world.constraints: {concretize_constraints(tuple(world.constraints))}
-# ~~ id: {id}
-# ~~ has_strongest_interpretation: {has_strongest_interpretation}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     """)
-
-    if has_strong_interpretation:
-        constraints = [
-            st
-            for st in world.constraints
-            if st.weak == TVar(id) 
-        ]
-        typ_weak = Bot() 
-        for c in reversed(constraints):
-            typ_weak = Unio(c.strong, typ_weak) 
-        return (simplify_typ(typ_weak), pset(constraints))
-    else:
-        return None
+    constraints = [
+        st
+        for st in world.constraints
+        if st.weak == TVar(id) 
+    ]
+    typ_weak = Bot() 
+    for c in reversed(constraints):
+        typ_weak = Unio(c.strong, typ_weak) 
+    return (simplify_typ(typ_weak), pset(constraints))
 
 def interpret_strong_for_ids(world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
 
@@ -1892,69 +1828,22 @@ class Solver:
                     world.freezer, world.relids
                 )]
             else:
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                !!!!!!!!!!!!!!! DEBUG strong, TVar frozen FAILURE  !!!!!!!!!!!
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                strong: {concretize_typ(strong)}
-                weak: {concretize_typ(weak)}
-                has interp: {interp != None}
-                world.relids: {world.relids}
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # !!!!!!!!!!!!!!! DEBUG strong, TVar frozen FAILURE  !!!!!!!!!!!
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # strong: {concretize_typ(strong)}
+                # weak: {concretize_typ(weak)}
+                # has interp: {interp != None}
+                # world.relids: {world.relids}
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
                 return []
 
         elif isinstance(weak, TVar) and weak.id in world.freezer: 
             interp = interpret_strong_for_id(world, weak.id)
-            if interp != None:
-                strongest_weak = interp[0]
-                return self.solve(world, strong, strongest_weak)
-            elif isinstance(strong, TVar) and strong.id not in world.freezer:
-                return [World(
-                    world.constraints.add(Subtyping(strong, weak)),
-                    world.freezer, world.relids
-                )]
-            else:
-                return []
-
-
-# NOTE: this commented stuff doesn't actually work
-# TODO: remove it
-#         elif (
-#             isinstance(strong, TVar) and strong.id not in world.freezer and
-#             isinstance(weak, TVar) and weak.id not in world.freezer
-#         ):
-#             """
-#             interpret both sides together to avoid transitive edges in subtyping lattice  
-#             """
-# #             print(f"""
-# # ~~~~~~~~~~~~~~~~~~~~~
-# # DEBUG double TVar 
-# # ~~~~~~~~~~~~~~~~~~~~
-# # strong: {concretize_typ(strong)}
-# # weak: {concretize_typ(weak)}
-# # ~~~~~~~~~~~~~~~~~~~~~
-# #             """)
-#             strong_interp = interpret_strong_for_id(world, strong.id)
-#             weak_interp = interpret_weak_for_id(world, weak.id)
-#             if (
-#                 strong_interp == None or not inhabitable(strong_interp[0]) or
-#                 weak_interp == None or not selective(weak_interp[0])
-#             ):
-#                 return [World(
-#                     world.constraints.add(Subtyping(strong, weak)),
-#                     world.freezer
-#                 )]
-#             else:
-#                 strongest = strong_interp[0]
-#                 weakest = weak_interp[0]
-#                 return [
-#                     World(
-#                         world.constraints.add(Subtyping(strong, weak)),
-#                         world.freezer
-#                     )
-#                     for world in self.solve(world, strongest, weakest)
-#                 ]
+            strongest_weak = interp[0]
+            return self.solve(world, strong, strongest_weak)
 
         elif isinstance(strong, TVar) and strong.id not in world.freezer: 
             interp = interpret_strong_for_id(world, strong.id)
@@ -1970,50 +1859,14 @@ class Solver:
             # interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # """)
-            if interp == None or not inhabitable(interp[0]):
-
-                if False: # TODO: strong.id in world.relids:
-                    rel_constraints = [
-                        st
-                        for st in world.constraints
-                        if strong.id in extract_free_vars_from_typ(s(), st.strong)
-                        if isinstance(st.weak, LeastFP)
-                    ]
-
-                    print(f"""
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    DEBUG RELATIONAL INSTANTIATING for strong: {concretize_typ(strong)}
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    world.constraints: {concretize_constraints(tuple(world.constraints))}
-                    rel_constraints: {concretize_constraints(tuple(rel_constraints))}
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    """)
-                    worlds = [World(
-                        world.constraints.add(Subtyping(strong, weak)).difference(rel_constraints),
-                        world.freezer, world.relids
-                    )]
-                    sub_map : PMap[str, Typ] = pmap({strong.id : weak})
-
-                    for rel_con in rel_constraints:
-                        key = sub_typ(sub_map, rel_con.strong)
-                        worlds = [
-                            m1
-                            for m0 in worlds 
-                            for m1 in self.solve(m0, key, rel_con.weak)
-                        ]
-
-                    return [
-                        World(m0.constraints.union(rel_constraints), m0.freezer, m0.relids)
-                        for m0 in worlds 
-                    ]
-                else:
-                    return [World(
-                        world.constraints.add(Subtyping(strong, weak)),
-                        world.freezer, world.relids
-                    )]
+            if not inhabitable(interp[0]):
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
+                )]
 
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
-                # TODO: safety check
+                # NOTE: prevent over interprenting into frozen to allow learning new type values 
                 return [World(
                     world.constraints.add(Subtyping(strong, weak)),
                     world.freezer, world.relids
@@ -2031,7 +1884,13 @@ class Solver:
 
         elif isinstance(weak, TVar) and weak.id not in world.freezer: 
             interp = interpret_weak_for_id(world, weak.id)
-            if interp == None or not selective(interp[0]):
+            if interp == None:
+                # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
+                )]
+            elif not selective(interp[0]):
                 return [World(
                     world.constraints.add(Subtyping(strong, weak)),
                     world.freezer, world.relids
