@@ -30,6 +30,13 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- write soundness theorems and proofs.
+    - define typing_ssin using subsumption rule as denotation into sets with subset inclusion
+    - define (syntactic) subtyping
+    - prove that syntactic subtyping is sound wrt to subset inclusion
+    - define typing_st subsumption in terms of syntactic subtyping
+    - prove that typing_st is sound wrt typing 
+    - prove or state existence of proof that typing_ssin is sound wrt operational semantics 
 - discuss the notion of freezer/skolem adjacent learnable variables (frozen <: learnable); 
 - for paper, write algorithmic inference rules as a combination of combine/distill rules 
     - distill rules construct a new environment; combine rules construct a new type
