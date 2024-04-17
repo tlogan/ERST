@@ -2711,6 +2711,13 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG combine_fix
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        nt: {nt}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         for outer_world in nt.worlds:
 

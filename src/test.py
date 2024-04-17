@@ -1119,6 +1119,57 @@ def test_max():
     #     print("exception raised")
 
 
+add = (f'''
+fix (case self => ( 
+    case (~zero @, b) => b 
+    case (~succ a, b) => ~succ (self(a, b))
+))
+''')
+
+def test_add():
+    (worlds, typ_var, parsetree) = analyze(add)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
+
+fib = (f'''
+let add = {add} ;
+fix (case self => ( 
+    case (~zero @) => ~zero @
+    case (~succ ~zero @) => ~succ ~zero @
+    case (~succ ~succ n) => add((self)(~succ n), (self)(n))
+))
+''')
+
+def test_fib():
+    (worlds, typ_var, parsetree) = analyze(fib)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
+
+
+def test_application_in_tuple():
+
+    code = (f'''
+    let f = (case x => x) ;
+    let g = (case x => x) ;
+    (f)(@), (g)(@)
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "(@, @)"
+
+def test_generalized_application_in_tuple():
+    # TODO: this requires add generalization in the combine_function rule
+    code = (f'''
+    let f = (case x => x) ;
+    (f)(@), (f)(@)
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "(@, @)"
+
+
 def test_foldr():
     # TODO
     foldr = (f'''
@@ -1131,6 +1182,7 @@ fix (case self => (
     (worlds, typ_var, parsetree) = analyze(foldr)
     # print("answer: " + u(decode(worlds, typ_var)))
     assert u(decode(worlds, typ_var)) == "@"
+
 
 
 
@@ -1174,6 +1226,12 @@ def test_extra_exi():
 
 
 if __name__ == '__main__':
+    # test_application_in_tuple()
+    # test_generalized_application_in_tuple()
+    # test_add()
+    test_fib()
+
+    #############################
     # test_plus_equals_two_query()
     # test_plus_one_equals_query()
     # test_antecedent_union()
@@ -1204,7 +1262,7 @@ if __name__ == '__main__':
     # test_pattern_match_wrap()
     # test_arg_specialization()
     # test_recursion_wrapper()
-    test_max()
+    # test_max()
 
     ########################
     # p(less_equal_rel)
