@@ -2863,20 +2863,11 @@ class ExprRule(Rule):
     #         """)
 
             param_typ = self.solver.fresh_type_var()
-            body_typ = self.solver.fresh_type_var()
-            consq_constraint = Subtyping(make_pair_typ(param_typ, body_typ), rel_typ)
-            consq_typ = Exi(tuple([body_typ.id]), tuple([consq_constraint]), body_typ)  
+            return_typ = self.solver.fresh_type_var()
+            consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+            consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
             result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
 
-            # full_constraint = Subtyping(make_pair_typ(param_typ, body_typ), rel_typ)
-            # return_typ = self.solver.fresh_type_var()
-            # # consq_typ = Exi(tuple([return_typ.id]), tuple([Subtyping(return_typ, body_typ)]), return_typ)  
-            # # result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, consq_typ))  
-            # result = All(tuple([param_typ.id, return_typ.id]), tuple([full_constraint]), Imp(param_typ, body_typ))  
-
-    # :: param_upper: {concretize_typ(param_upper)}
-
-    # ::::
 
             print(f"""
     DEBUG combine_fix result 

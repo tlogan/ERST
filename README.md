@@ -2,17 +2,14 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- debug refining relational constraints
-    - see `test_max`
-    - debug construction of unrollable 
+- create `fibonacci` test 
+    - prove that the output type of `fibonacci` on any input is subtyping of a number that is greater than its input (e.g. using `leq` relational constraint).
+- create `merge sort` test
+- create RedBlack `tree insert` test
+- write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
 - improve speed by interpreting variables and removing constraints in `combine` rules
 - uncomment generalization and extrusion in `combine_function`
-- (maybe) rewrite package to ensure that all constraints have a frozen variable
 - in parser attributes; move nt model updates to combine step
-- write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
-- consider removing redundant constraints in distill; (only necessary for program synthesis)
-- consider if necessary to move existentials out side of tag when interpreting.
-- debug `test_arg_specialization`
 - add negs back in `from_cases_to_choices`
 - get `max` example to work
 - check that combine_app rule isn't redundant with checks in distill app rules.
