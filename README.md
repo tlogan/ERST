@@ -34,6 +34,13 @@
     - define typing_st subsumption in terms of syntactic subtyping
     - prove that typing_st is sound wrt typing 
     - prove or state existence of proof that typing_ssin is sound wrt operational semantics 
+- note how solving subtyping corresponds to CDCL
+    - solving subtyping splits worlds when there is an intersection of implications on left or a union of patterns on the right
+        - this corresponds to CDCL's splitting a variable into true or false worlds
+    - after splitting worlds, solving searches for the strongest interpretation of type variable (e.g. I <: T)
+        - this corresponds to CDCL's learning a clause due to a conflict
+        - that is, a conflicting clause in CDCL corresponds to a lower bound in subtyping
+        - CDCL uses negation for duality, while subtyping uses lower vs upper bound (therefore, union vs intersection) for duality.
 - discuss the notion of freezer/skolem adjacent learnable variables (frozen <: learnable); 
 - for paper, write algorithmic inference rules as a combination of combine/distill rules 
     - distill rules construct a new environment; combine rules construct a new type
