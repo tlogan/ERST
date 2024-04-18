@@ -672,7 +672,7 @@ self.update_sr('recpat', [t('_.'), ID, t('='), n('pattern'), n('recpat')])
 
 
 
-ID : [a-zA-Z][_a-zA-Z]* ;
+ID : [a-zA-Z][0-9_a-zA-Z]* ;
 INT : [0-9]+ ;
 WS : [ \t\n\r]+ -> skip ;
 

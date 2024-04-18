@@ -2,8 +2,7 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- create `fibonacci` test 
-    - prove that the output type of `fibonacci` on any input is subtyping of a number that is greater than its input (e.g. using `leq` relational constraint).
+- prove that the output type of `fibonacci` on any input is subtyping of a number that is greater than its input (e.g. using `leq` relational constraint).
 - create `merge sort` test
 - create RedBlack `tree insert` test
 - write a function that operates on even numbers (e.g. div by 2) and one that operates on nats, to demonstrate power of subtyping of unions. 
@@ -17,7 +16,7 @@
     - inferring max
     - encode fibonacci as an example to motivate 2-induction and test k-induction.
     - type annotations 
-    - subtyping 
+    - subtyping
 - finish implementing inhabitable check
 - finish implementing relational key check 
 - update basic examples with test of type inference 
