@@ -1169,19 +1169,55 @@ def test_generalized_application_in_tuple():
     print("answer: " + u(decode(worlds, typ_var)))
     # assert u(decode(worlds, typ_var)) == "(@, @)"
 
+def test_sumr():
+    sumr = (f'''
+let add = ({add}) ; 
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => add((self)(xs, b), x)
+))
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(sumr)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
+
+def test_suml():
+    suml = (f'''
+let add = {add} ; 
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => self(xs, (add)(b, x))
+))
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(suml)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
 
 def test_foldr():
-    # TODO
     foldr = (f'''
 fix (case self => ( 
     case (f, ~nil @, b) => b
-    case (f, ~cons (x, xs), b) => f(self(f, xs, b), x)
+    case (f, ~cons (x, xs), b) => f((self)(f, xs, b), x)
 ))
     ''')
 
     (worlds, typ_var, parsetree) = analyze(foldr)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
+
+def test_foldl():
+    foldl = (f'''
+fix (case self => ( 
+    case (f, ~nil @, b) => b
+    case (f, ~cons (x, xs), b) => self(f, xs, (f)(b, x))
+))
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(foldl)
+    print("answer: " + u(decode(worlds, typ_var)))
+    # assert u(decode(worlds, typ_var)) == "@"
 
 
 
@@ -1229,7 +1265,12 @@ if __name__ == '__main__':
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
     # test_add()
-    test_fib()
+    # test_fib()
+    # TODO
+    test_sumr()
+    # test_suml()
+    # test_foldr()
+    # test_foldl()
 
     #############################
     # test_plus_equals_two_query()

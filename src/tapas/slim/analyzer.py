@@ -1531,7 +1531,10 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
 
 class Solver:
     _type_id : int = 0 
-    _battery : int = 10 
+    _limit : int = 100 
+
+    def __init__(self):
+        self.count = 0
 
     def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
@@ -1660,9 +1663,6 @@ class Solver:
             return ((), (), t)
 
 
-    def set_battery(self, battery : int):
-        self._battery = battery 
-
     def fresh_type_id(self) -> str:
         self._type_id += 1
         return (f"_{self._type_id}")
@@ -1703,22 +1703,24 @@ class Solver:
 
 
     def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
-        if self._battery == 0:
+        self.count += 1
+        if self.count > self._limit:
             return []
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# ||
-# || world.freezer::: 
-# || :::::::: {world.freezer}
-# ||
-# || world.constraints::: 
-# || :::::::: {concretize_constraints(tuple(world.constraints))}
-# ||
-# || |- {concretize_typ(strong)} 
-# || <: {concretize_typ(weak)}
-# ||
-#         ''')
+        print(f'''
+|| DEBUG SOLVE
+=================
+||
+|| world.freezer::: 
+|| :::::::: {world.freezer}
+||
+|| world.constraints::: 
+|| :::::::: {concretize_constraints(tuple(world.constraints))}
+||
+|| |- {concretize_typ(strong)} 
+|| <: {concretize_typ(weak)}
+||
+|| count: {self.count}
+        ''')
 
         if alpha_equiv(strong, weak): 
             return [world] 
@@ -2077,40 +2079,39 @@ class Solver:
 
             ignored_ids = s()
             reduced_strong, used_constraints = interpret_with_polarity(True, world, strong, ignored_ids)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, LeastFP
-~~~~~~~~~~~~~~~~~~~~~
-world.relids: {world.relids}
-world.freezer: {world.freezer}
-world.constraints: {concretize_constraints(tuple(world.constraints))}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# world.relids: {world.relids}
+# world.freezer: {world.freezer}
+# world.constraints: {concretize_constraints(tuple(world.constraints))}
 
-strong: {concretize_typ(strong)}
-reduced_strong: {concretize_typ(reduced_strong)}
-weak: {concretize_typ(weak)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+# strong: {concretize_typ(strong)}
+# reduced_strong: {concretize_typ(reduced_strong)}
+# weak: {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
             if strong != reduced_strong:
                 return self.solve(world, reduced_strong, weak)
-            elif is_unrollable(strong, weak) and self._battery != 0:
-                self._battery -= 1
+            elif is_unrollable(strong, weak):
                 '''
                 unroll
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
 
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, LeastFP --- Unrolling
-~~~~~~~~~~~~~~~~~~~~~
-strong: {concretize_typ(strong)}
-weak_body: {concretize_typ(weak_body)}
-~~~~~~~~~~~~~~~~~~~~~
-                """)
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP --- Unrolling
+# ~~~~~~~~~~~~~~~~~~~~~
+# strong: {concretize_typ(strong)}
+# weak_body: {concretize_typ(weak_body)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 worlds = self.solve(world, strong, weak_body)
 
                 print(f"""
@@ -2132,14 +2133,14 @@ len(worlds): {len(worlds)}
                     return self.solve(world, strong_cache, weak)
                 else:
                     fvs = extract_free_vars_from_typ(s(), strong)  
-                    print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, LeastFP --- Adding relids 
-~~~~~~~~~~~~~~~~~~~~~
-fvs: {fvs}
-~~~~~~~~~~~~~~~~~~~~~
+#                     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP --- Adding relids 
+# ~~~~~~~~~~~~~~~~~~~~~
+# fvs: {fvs}
+# ~~~~~~~~~~~~~~~~~~~~~
 
-                    """)
+#                     """)
                     if (
                         (all((fv not in world.freezer) for fv in fvs)) and 
                         self.is_relation_constraint_wellformed(world, strong, weak)
@@ -2206,7 +2207,7 @@ fvs: {fvs}
         return bool(worlds)
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[World]: 
-        self._battery = 100
+        self.count = 0
         world = World(s(), s(), s())
         return self.solve(world, strong, weak)
     '''
@@ -2671,12 +2672,12 @@ class ExprRule(Rule):
     def combine_funnel(self, nt : Context, arg_var : TVar, cator_vars : list[TVar]) -> list[World]: 
         worlds = nt.worlds
         for cator_var in cator_vars:
-            print(f"""
-            ~~~~~~~~
-            DEBUG funnel
-            cator_var: {cator_var}
-            ~~~~~~~~
-            """)
+            # print(f"""
+            # ~~~~~~~~
+            # DEBUG funnel
+            # cator_var: {cator_var}
+            # ~~~~~~~~
+            # """)
             result_var = self.solver.fresh_type_var() 
             app_nt = replace(nt, worlds = worlds, typ_var = result_var) 
             worlds = self.combine_application(app_nt, cator_var, [arg_var])
@@ -2711,13 +2712,13 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG combine_fix
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        nt: {nt}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # DEBUG combine_fix
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # nt: {nt}
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # """)
 
         for outer_world in nt.worlds:
 

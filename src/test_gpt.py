@@ -19,8 +19,6 @@ from tapas.slim.language import *
 # print(completion.choices[0].message)
 
 
-
-
 # @dataclass(frozen=True, eq=True)
 # class Cons: 
 #     head : int
