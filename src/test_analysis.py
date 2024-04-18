@@ -60,6 +60,27 @@ def p(s):
     assert t 
     return t 
 
+def print_worlds(worlds : list[analyzer.World]):
+    for i, world in enumerate(worlds):
+        constraints_str = "".join([ 
+            f"---{analyzer.concretize_constraints(tuple([st]))}" + "\n"
+            for st in world.constraints
+        ])
+        
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG WORLD {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.freezer: {world.freezer}
+
+world.constraints: 
+{constraints_str}
+
+world.relids: {world.relids}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+
+
 def u(t): 
     s = analyzer.concretize_typ(t)
     assert s 
@@ -1178,8 +1199,28 @@ fix (case self => (
 ))
     ''')
 
+########## DEBUG #############
+    sumr = (f'''
+let add = ({add}) ; 
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => ((self)(xs, b), x)
+))
+    ''')
+
+    sumr = (f'''
+let add = ({add}) ; 
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => add(b, x)
+))
+    ''')
+##############################
+
     (worlds, typ_var, parsetree) = analyze(sumr)
-    print("answer: " + u(decode(worlds, typ_var)))
+    assert worlds
+    print_worlds(worlds)
+    # print("answer: " + u(decode(worlds, typ_var)))
     # assert u(decode(worlds, typ_var)) == "@"
 
 def test_suml():
@@ -1266,8 +1307,15 @@ if __name__ == '__main__':
     # test_generalized_application_in_tuple()
     # test_add()
     # test_fib()
-    # TODO
+
+    # TODO: the type is missing the constraint relating its result to addition
+    # - it is missing the cons case containing the inductive hypothesis
+    # - that is, it is missing the inner model that generates the cons case containing the inductive hypothesis
+    # - IDEA: modify until the case appears; then debug the part of syntax that is different
+    # - it appears that combine_application of `add` is broken
     test_sumr()
+
+    # TODO: the type is missing the constraint relating its result to addition
     # test_suml()
     # test_foldr()
     # test_foldl()

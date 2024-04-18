@@ -1294,7 +1294,6 @@ class SlimParser ( Parser ):
                 self.match(SlimParser.T__5)
 
                 body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
-                print(f"!!! DEBUG body_nt.worlds: {body_nt.worlds}")
 
                 self.state = 225
                 localctx.body = self.expr(body_nt)

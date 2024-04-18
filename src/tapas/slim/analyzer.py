@@ -384,10 +384,16 @@ class Subtyping:
 def concretize_ids(ids : tuple[str, ...]) -> str:
     return " ".join(ids)
 
-def concretize_constraints(subtypings : tuple[Subtyping, ...]) -> str:
+def concretize_constraints(subtypings : Iterable[Subtyping]) -> str:
     return "".join([
         " ; " + concretize_typ(st.strong) + " <: " + concretize_typ(st.weak)
         for st in subtypings
+    ])
+
+def list_out_constraints(subtypings : Iterable[Subtyping], indent = 0) -> str:
+    return ((indent * 4) * " ").join([ 
+        "--- " + concretize_typ(st.strong) + " <: " + concretize_typ(st.weak) + "\n"
+        for st in subtypings 
     ])
 
 def concretize_typ(typ : Typ) -> str:
@@ -508,6 +514,26 @@ class World:
     constraints : PSet[Subtyping]
     freezer : PSet[str]
     relids : PSet[str]
+
+def print_worlds(worlds : list[World], msg = ""):
+    for i, world in enumerate(worlds):
+        constraints_str = "".join([ 
+            f"  ---{concretize_constraints(tuple([st]))}" + "\n"
+            for st in world.constraints
+        ])
+        
+        print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    DEBUG {msg} WORLD {i}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    world.freezer: {world.freezer}
+
+    world.constraints: 
+    {constraints_str}
+
+    world.relids: {world.relids}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
 def by_variable(constraints : PSet[Subtyping], key : str) -> PSet[Subtyping]: 
     return pset((
@@ -1592,18 +1618,6 @@ class Solver:
 
     def decode_with_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
 
-        # for world in worlds:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     DEBUG decode_with_polarity:
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     typ: {concretize_typ(t)}
-
-        #     world.freezer: {world.freezer}
-        #     world.constraints: {concretize_constraints(tuple(world.constraints))}
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     """)
-
         constraint_typs = [
             package_typ(m, tt)
             for world in worlds
@@ -1706,21 +1720,21 @@ class Solver:
         self.count += 1
         if self.count > self._limit:
             return []
-        print(f'''
-|| DEBUG SOLVE
-=================
-||
-|| world.freezer::: 
-|| :::::::: {world.freezer}
-||
-|| world.constraints::: 
-|| :::::::: {concretize_constraints(tuple(world.constraints))}
-||
-|| |- {concretize_typ(strong)} 
-|| <: {concretize_typ(weak)}
-||
-|| count: {self.count}
-        ''')
+#         print(f'''
+# || DEBUG SOLVE
+# =================
+# ||
+# || world.freezer::: 
+# || :::::::: {world.freezer}
+# ||
+# || world.constraints::: 
+# || :::::::: {concretize_constraints(tuple(world.constraints))}
+# ||
+# || |- {concretize_typ(strong)} 
+# || <: {concretize_typ(weak)}
+# ||
+# || count: {self.count}
+#         ''')
 
         if alpha_equiv(strong, weak): 
             return [world] 
@@ -2114,15 +2128,15 @@ class Solver:
 #                 """)
                 worlds = self.solve(world, strong, weak_body)
 
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG weak, LeastFP --- Unrolling Result
-~~~~~~~~~~~~~~~~~~~~~
-strong: {concretize_typ(strong)}
-weak_body: {concretize_typ(weak_body)}
-len(worlds): {len(worlds)}
-~~~~~~~~~~~~~~~~~~~~~
-                """)
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP --- Unrolling Result
+# ~~~~~~~~~~~~~~~~~~~~~
+# strong: {concretize_typ(strong)}
+# weak_body: {concretize_typ(weak_body)}
+# len(worlds): {len(worlds)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
 
                 return worlds
             else:
@@ -2557,14 +2571,14 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application init
-        # ~~~~~~~~~~~~~~
-        # len(nt.enviro): {nt.enviro}
-        # len(nt.worlds): {len(nt.worlds)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application init
+        ~~~~~~~~~~~~~~
+        len(nt.enviro): {nt.enviro}
+        len(nt.worlds): {len(nt.worlds)}
+        ~~~~~~~~~~~~~~
+        """)
 
         worlds = nt.worlds 
         for arg_var in arg_vars:
@@ -2577,21 +2591,22 @@ class ExprRule(Rule):
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, world, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
-                # print(f"""
-                # ~~~~~~~~~~~~~~
-                # DEBUG application
-                # ~~~~~~~~~~~~~~
-                # world.freezer: {tuple(world.freezer)}
-                # world.constraints: {concretize_constraints(tuple(world.constraints))}
+                print(f"""
+                ~~~~~~~~~~~~~~
+                DEBUG application
+                ~~~~~~~~~~~~~~
+                world.freezer: {tuple(world.freezer)}
+                world.constraints: 
+                {list_out_constraints(world.constraints)}
 
-                # cator_var: {concretize_typ(cator_var)}
-                # cator_typ: {concretize_typ(cator_typ)}
+                cator_var: {concretize_typ(cator_var)}
+                cator_typ: {concretize_typ(cator_typ)}
 
-                # arg_var: {arg_var.id}
-                # arg_typ: {concretize_typ(arg_typ)}
-                # result_var: {result_var.id}
-                # ~~~~~~~~~~~~~~
-                # """)
+                arg_var: {arg_var.id}
+                arg_typ: {concretize_typ(arg_typ)}
+                result_var: {result_var.id}
+                ~~~~~~~~~~~~~~
+                """)
 
                 # print(f"""
                 # ~~~~~~~~~~~~~~
@@ -2625,12 +2640,12 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application results 
-        # len(worlds): {len(worlds)}
-        # ~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~
+        DEBUG application results 
+        len(worlds): {len(worlds)}
+        ~~~~~~~~~~~~~~
+        """)
 
         # for world in worlds:
         #     print(f"""
@@ -2729,7 +2744,12 @@ class ExprRule(Rule):
 
             induc_body = Bot()
             param_body = Bot()
-            for inner_world in reversed(inner_worlds):
+
+            ########## DEBUG ##########
+            # print_worlds(inner_worlds, ":: combine_fix :: inner ::")
+            ###########################
+            for i, inner_world in enumerate(reversed(inner_worlds)):
+
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
     # DEBUG combine_fix (initial inner_world)
@@ -2783,13 +2803,13 @@ class ExprRule(Rule):
                 #########################################
                 self_interp = interpret_with_polarity(False, inner_world, self_typ, s())
 
-    #             nl = "\n"
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG self_typ: {self_typ.id}
-    # DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
+                nl = "\n"
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG self_typ: {self_typ.id}
+    DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 self_used_constraints = s()
                 if self_interp and isinstance(self_interp[0], Imp):
@@ -2806,12 +2826,38 @@ class ExprRule(Rule):
                     IH_left_constraints = s()
                 #end if
 
+
                 inner_world = World(inner_world.constraints.difference(self_used_constraints), inner_world.freezer, inner_world.relids)
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # $$$$$$$ OOGA START 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # inner_world.relids: {inner_world.relids}
+
+    # inner_world.freezer: {inner_world.freezer}
+
+    # inner_world.constraints: {concretize_constraints(tuple(inner_world.constraints))}
+
+    # rel_pattern: {concretize_typ(rel_pattern)}
+
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+
                 reachable_constraints = tuple(
                     st
-                    for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                    for st in inner_world.constraints
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 )
+
+                # TODO: this is REALLY REALLY SLOW!!!!
+                # - ALSO this doesn't even seem needed based on the examples 
+                # reachable_constraints = tuple(
+                #     st
+                #     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                #     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
+                # )
+
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
@@ -2830,19 +2876,25 @@ class ExprRule(Rule):
                 param_body = Unio(constrained_left, param_body)
 
 
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix rel
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # body_var: {body_var}
-    # IH_typ: {IH_typ.id}
-    # rel_world.freezer: {rel_world.freezer}
-    # rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
-    # ======================
-    # rel_pattern: {concretize_typ(rel_pattern)}
-    # constrained rel: {concretize_typ(constrained_rel)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
+                print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~
+    DEBUG combine_fix rel {i} / len={len(inner_worlds)}
+    ~~~~~~~~~~~~~~~~~~~~~
+    rel_pattern: {concretize_typ(rel_pattern)}
+    constrained rel: {concretize_typ(constrained_rel)}
+
+    ======================
+
+    body_var: {body_var}
+    IH_typ: {IH_typ.id}
+
+    rel_world.relids: {rel_world.relids}
+
+    rel_world.freezer: {rel_world.freezer}
+
+    rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
+    ~~~~~~~~~~~~~~~~~~~~~
+                """)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~
@@ -2877,16 +2929,16 @@ class ExprRule(Rule):
             result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
 
 
-            print(f"""
-    DEBUG combine_fix result 
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    :: rel_typ: {concretize_typ(rel_typ)}
+    #         print(f"""
+    # DEBUG combine_fix result 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # :: rel_typ: {concretize_typ(rel_typ)}
 
-    ::::
+    # ::::
     
-    :: result: {concretize_typ(result)}
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+    # :: result: {concretize_typ(result)}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #         """)
 
 
             new_world = self.evolve_worlds(nt, result)

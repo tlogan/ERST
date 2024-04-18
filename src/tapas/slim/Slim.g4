@@ -386,7 +386,6 @@ self.update_sr('expr', [t('let'), ID, n('target'), t(';'), n('expr')])
 self.guide_symbol('(')
 } '(' {
 body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
-print(f"!!! DEBUG body_nt.worlds: {body_nt.worlds}")
 } body = expr[body_nt] {
 self.guide_symbol(')')
 } ')' {

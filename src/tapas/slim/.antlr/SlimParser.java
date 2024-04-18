@@ -1087,7 +1087,6 @@ public class SlimParser extends Parser {
 				match(T__5);
 
 				body_nt = self.guide_nonterm(ExprRule(self._solver).distill_fix_body, nt)
-				print(f"!!! DEBUG body_nt.worlds: {body_nt.worlds}")
 
 				setState(225);
 				((ExprContext)_localctx).body = expr(body_nt);
