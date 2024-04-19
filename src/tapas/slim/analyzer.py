@@ -432,7 +432,7 @@ def concretize_typ(typ : Typ) -> str:
             plate_entry = ([control.body], lambda body : f"(ALL [{ids}{constraints}] {body})")  
         elif isinstance(control, LeastFP):
             id = control.id
-            plate_entry = ([control.body], lambda body : f"LFP {id} {body}")  
+            plate_entry = ([control.body], lambda body : f"(LFP {id} {body})")  
         elif isinstance(control, Top):
             plate_entry = ([], lambda: "TOP")  
         elif isinstance(control, Bot):
@@ -1557,10 +1557,11 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
 
 class Solver:
     _type_id : int = 0 
-    _limit : int = 100 
+    _limit : int = 10000
 
     def __init__(self):
         self.count = 0
+        self.debug = False
 
     def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
@@ -1720,21 +1721,23 @@ class Solver:
         self.count += 1
         if self.count > self._limit:
             return []
-#         print(f'''
-# || DEBUG SOLVE
-# =================
-# ||
-# || world.freezer::: 
-# || :::::::: {world.freezer}
-# ||
-# || world.constraints::: 
-# || :::::::: {concretize_constraints(tuple(world.constraints))}
-# ||
-# || |- {concretize_typ(strong)} 
-# || <: {concretize_typ(weak)}
-# ||
-# || count: {self.count}
-#         ''')
+
+        if self.debug:
+            print(f'''
+|| DEBUG SOLVE
+=================
+||
+|| world.freezer::: 
+|| :::::::: {world.freezer}
+||
+|| world.constraints::: 
+|| :::::::: {concretize_constraints(tuple(world.constraints))}
+||
+|| |- {concretize_typ(strong)} 
+|| <: {concretize_typ(weak)}
+||
+|| count: {self.count}
+            ''')
 
         if alpha_equiv(strong, weak): 
             return [world] 
@@ -1749,7 +1752,8 @@ class Solver:
             strong_body = sub_typ(renaming, strong.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
-            next_id = self._type_id
+            # TODO: remove old commented code that freezes of all new variables
+            # next_id = self._type_id
             worlds = [world]
             for constraint in strong_constraints:
                 worlds = [
@@ -1757,12 +1761,23 @@ class Solver:
                     for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
-            new_ids = (f"_{i}" for i in range(next_id, self._type_id))
+            # new_ids = (f"_{i}" for i in range(next_id, self._type_id))
+            # ... .union(new_ids)
+
+            # print(f"""
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # DEBUG strong, EXI
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # renamed_ids: {renamed_ids}
+            # new_ids: {[n for n in new_ids]}
+            # new_ids: {[n for n in new_ids]}
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # """)
 
             return [
                 m2
                 for m0 in worlds
-                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
+                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids), m0.relids)]
                 for m2 in self.solve(m1, strong_body, weak)
             ]
 
@@ -1772,7 +1787,8 @@ class Solver:
             weak_body = sub_typ(renaming, weak.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
-            next_id = self._type_id
+            # TODO: remove old commented code that freezes of all new variables
+            # next_id = self._type_id
             worlds = [world]
             for constraint in weak_constraints:
                 worlds = [
@@ -1780,12 +1796,13 @@ class Solver:
                     for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
-            new_ids = (f"_{i}" for i in range(next_id, self._type_id))
+            # new_ids = (f"_{i}" for i in range(next_id, self._type_id))
+            # ... .union(new_ids)
 
             return [
                 m2
                 for m0 in worlds
-                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids).union(new_ids), m0.relids)]
+                for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids), m0.relids)]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
 
@@ -2132,14 +2149,26 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG weak, LeastFP --- Unrolling Result
 # ~~~~~~~~~~~~~~~~~~~~~
+# status: {'FAILURE!!!!!!!!' if len(worlds) == 0 else len(worlds)}
+
 # strong: {concretize_typ(strong)}
 # weak_body: {concretize_typ(weak_body)}
-# len(worlds): {len(worlds)}
+
+# world.freezer: {world.freezer} 
+# world.constraints: 
+# {list_out_constraints(world.constraints)}
+
+# world.freezer: {world.relids} 
 # ~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
                 return worlds
             else:
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP --- CAN'T UNROLL 
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 strong_cache = match_strong(world, strong)
 
                 if strong_cache:
@@ -2153,7 +2182,6 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~
 # fvs: {fvs}
 # ~~~~~~~~~~~~~~~~~~~~~
-
 #                     """)
                     if (
                         (all((fv not in world.freezer) for fv in fvs)) and 
@@ -2203,11 +2231,12 @@ class Solver:
                 return [] 
 
         elif isinstance(strong, Imp) and isinstance(weak, Imp): 
-            return [
+            worlds = [
                 m1
                 for m0 in self.solve(world, weak.antec, strong.antec) 
                 for m1 in self.solve(m0, strong.consq, weak.consq) 
             ]
+            return worlds
 
         return []
 
@@ -2571,14 +2600,14 @@ class ExprRule(Rule):
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application init
-        ~~~~~~~~~~~~~~
-        len(nt.enviro): {nt.enviro}
-        len(nt.worlds): {len(nt.worlds)}
-        ~~~~~~~~~~~~~~
-        """)
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application init
+        # ~~~~~~~~~~~~~~
+        # len(nt.enviro): {nt.enviro}
+        # len(nt.worlds): {len(nt.worlds)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
         worlds = nt.worlds 
         for arg_var in arg_vars:
@@ -2591,36 +2620,25 @@ class ExprRule(Rule):
                 arg_typ, arg_used_constraints = interpret_with_polarity(True, world, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
-                print(f"""
-                ~~~~~~~~~~~~~~
-                DEBUG application
-                ~~~~~~~~~~~~~~
-                world.freezer: {tuple(world.freezer)}
-                world.constraints: 
-                {list_out_constraints(world.constraints)}
-
-                cator_var: {concretize_typ(cator_var)}
-                cator_typ: {concretize_typ(cator_typ)}
-
-                arg_var: {arg_var.id}
-                arg_typ: {concretize_typ(arg_typ)}
-                result_var: {result_var.id}
-                ~~~~~~~~~~~~~~
-                """)
-
                 # print(f"""
                 # ~~~~~~~~~~~~~~
                 # DEBUG application
                 # ~~~~~~~~~~~~~~
                 # world.freezer: {tuple(world.freezer)}
-                # world.constraints: {concretize_constraints(tuple(world.constraints))}
-                # cator_var: {cator_var}
-                # arg_var: {arg_var}
 
+                # world.constraints: 
+                # {list_out_constraints(world.constraints, 4)}
+
+                # cator_var: {concretize_typ(cator_var)}
                 # cator_typ: {concretize_typ(cator_typ)}
+
+                # arg_var: {arg_var.id}
                 # arg_typ: {concretize_typ(arg_typ)}
+
+                # result_var: {result_var.id}
                 # ~~~~~~~~~~~~~~
                 # """)
+
                 world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
                 new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
             worlds = new_worlds
@@ -2640,12 +2658,13 @@ class ExprRule(Rule):
             for m1 in self.solver.solve(m0, result_var, nt.typ_var)
         ]
 
-        print(f"""
-        ~~~~~~~~~~~~~~
-        DEBUG application results 
-        len(worlds): {len(worlds)}
-        ~~~~~~~~~~~~~~
-        """)
+        ########################
+        # print(f"""
+        # ~~~~~~~~~~~~~~
+        # DEBUG application results 
+        # len(worlds): {len(worlds)}
+        # ~~~~~~~~~~~~~~
+        # """)
 
         # for world in worlds:
         #     print(f"""
@@ -2653,7 +2672,10 @@ class ExprRule(Rule):
         #     DEBUG application results
         #     ~~~~~~~~~~~~~~
         #     world.freezer: {tuple(world.freezer)}
-        #     world.constraints: {concretize_constraints(tuple(world.constraints))}
+
+        #     world.constraints: 
+        #     {list_out_constraints(world.constraints, 3)}
+
         #     cator_var: {cator_var}
         #     arg_var: {arg_var}
 
@@ -2661,6 +2683,7 @@ class ExprRule(Rule):
         #     arg_typ: {concretize_typ(arg_typ)}
         #     ~~~~~~~~~~~~~~
         #     """)
+        ########################
 
         return worlds
 
@@ -2803,13 +2826,13 @@ class ExprRule(Rule):
                 #########################################
                 self_interp = interpret_with_polarity(False, inner_world, self_typ, s())
 
-                nl = "\n"
-                print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG self_typ: {self_typ.id}
-    DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
-    ~~~~~~~~~~~~~~~~~~~~~
-                """)
+    #             nl = "\n"
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG self_typ: {self_typ.id}
+    # DEBUG self_interp: {mapOp(lambda p : concretize_typ(p[0]) + nl + concretize_constraints(tuple(p[1])))(self_interp)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
 
                 self_used_constraints = s()
                 if self_interp and isinstance(self_interp[0], Imp):
@@ -2875,26 +2898,25 @@ class ExprRule(Rule):
                 induc_body = Unio(constrained_rel, induc_body) 
                 param_body = Unio(constrained_left, param_body)
 
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_fix rel {i} / len={len(inner_worlds)}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # rel_pattern: {concretize_typ(rel_pattern)}
+    # constrained rel: {concretize_typ(constrained_rel)}
 
-                print(f"""
-    ~~~~~~~~~~~~~~~~~~~~~
-    DEBUG combine_fix rel {i} / len={len(inner_worlds)}
-    ~~~~~~~~~~~~~~~~~~~~~
-    rel_pattern: {concretize_typ(rel_pattern)}
-    constrained rel: {concretize_typ(constrained_rel)}
+    # ======================
 
-    ======================
+    # body_var: {body_var}
+    # IH_typ: {IH_typ.id}
 
-    body_var: {body_var}
-    IH_typ: {IH_typ.id}
+    # rel_world.relids: {rel_world.relids}
 
-    rel_world.relids: {rel_world.relids}
+    # rel_world.freezer: {rel_world.freezer}
 
-    rel_world.freezer: {rel_world.freezer}
-
-    rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
-    ~~~~~~~~~~~~~~~~~~~~~
-                """)
+    # rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
 
     #             print(f"""
     # ~~~~~~~~~~~~~~~~~~~~~

@@ -60,7 +60,7 @@ def p(s):
     assert t 
     return t 
 
-def print_worlds(worlds : list[analyzer.World]):
+def print_worlds(worlds : Iterable[analyzer.World]):
     for i, world in enumerate(worlds):
         constraints_str = "".join([ 
             f"---{analyzer.concretize_constraints(tuple([st]))}" + "\n"
@@ -97,23 +97,11 @@ def solve(a : str, b : str):
     y = p(b)
     return solver.solve_composition(x, y)
 
-def query_weak_side(a : str, b : str, k : str):
-    x = p(a)
-    y = p(b)
-    q = p(k)
-    worlds = solver.solve_composition(x, y) 
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, q)))
+def decode_negative(worlds, t):
+    return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, t))))
 
-def query_strong_side(a : str, b : str, k : str):
-    x = p(a)
-    y = p(b)
-    q = p(k)
-    worlds = solver.solve_composition(x, y) 
-    return analyzer.concretize_typ(analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, q)))
-
-
-def decode(worlds, typ_var):
-    return (analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, typ_var)))
+def decode_positive(worlds, t):
+    return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
@@ -272,7 +260,8 @@ def test_one_query_subs_nat_list():
     one_query = ('''
 (~succ ~zero @, X)
     ''')
-    answer = query_weak_side(one_query, nat_list, "X") 
+    worlds = solve(one_query, nat_list)
+    answer = decode_negative(worlds, p("X")) 
     print("answer: " + answer)
     assert answer == "~cons ~nil @"
 
@@ -281,7 +270,8 @@ def test_one_cons_query_subs_nat_list():
     one_cons_query = ('''
 (~succ ~zero @, ~cons X)
     ''')
-    answer = query_weak_side(one_cons_query, nat_list, "X")
+    worlds = solve(one_cons_query, nat_list)
+    answer = decode_negative(worlds, p("X"))
     print(f"""
 answer: {answer}
     """)
@@ -292,7 +282,8 @@ def test_two_cons_query_subs_nat_list():
     two_cons_query = ('''
 (~succ ~succ ~zero @, ~cons X)
     ''')
-    answer = query_weak_side(two_cons_query, nat_list, "X")
+    worlds = solve(two_cons_query, nat_list)
+    answer = decode_negative(worlds, p("X"))
     print(f"""
 answr: {answer}
     """)
@@ -347,17 +338,19 @@ def test_one_plus_one_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : Z)
     ''')
-    answer = query_weak_side(one_plus_one_query, addition_rel, "Z")
+    worlds = solve(one_plus_one_query, addition_rel)
+    answer = decode_negative(worlds, p("Z"))
+    print(f'''
+answer: {answer}
+    ''')
     assert answer == "~succ ~succ ~zero @"
-#     print(f'''
-# answer: {answer}
-#     ''')
 
 def test_one_plus_equals_two_query():
     one_plus_one_query = ('''
 (x : ~succ ~zero @ & y : Y & z : ~succ ~succ ~zero @ )
     ''')
-    answer = query_weak_side(one_plus_one_query, addition_rel, "Y")
+    worlds = solve(one_plus_one_query, addition_rel)
+    answer = decode_negative(worlds, p("Y"))
     assert answer == "~succ ~zero @"
     print(f'''
 answer: {answer}
@@ -375,7 +368,8 @@ def test_plus_one_equals_two_query():
     plus_one_equals_two_query = ('''
 (x : X & y : ~succ ~zero @ & z : ~succ ~succ ~zero @ )
     ''')
-    answer = query_weak_side(plus_one_equals_two_query, addition_rel, "X")
+    worlds = solve(plus_one_equals_two_query, addition_rel)
+    answer = decode_negative(worlds, p("X"))
     assert answer == "~succ ~zero @"
 #     print(f'''
 # answer: {answer}
@@ -388,7 +382,8 @@ def test_plus_equals_two_query():
     plus_equals_two_query = ('''
 (x : X & y : Y & z : ~succ ~succ ~zero @)
     ''')
-    answer = query_weak_side(plus_equals_two_query, addition_rel, "(X, Y)")
+    worlds = solve(plus_equals_two_query, addition_rel)
+    answer = decode_negative(worlds, p("(X, Y)"))
     print(f'''
 answer: {answer}
     ''')
@@ -415,14 +410,16 @@ def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
 (~nil @, X)
     ''')
-    answer = query_weak_side(nil_query, list_nat_diff, "X")
+    worlds = solve(nil_query, list_nat_diff)
+    answer = decode_negative(worlds, p("X"))
     assert answer == "~zero @" 
 
 def test_cons_nil_query_subs_list_nat_diff():
     cons_nil_query = ('''
 ((~cons ~nil @), X)
     ''')
-    answer = query_weak_side(cons_nil_query, list_nat_diff, "X")
+    worlds = solve(cons_nil_query, list_nat_diff)
+    answer = decode_negative(worlds, p("X"))
     print(f'''
 answer: {answer}
     ''')
@@ -452,7 +449,8 @@ def test_list_imp_nat_subs_nil_imp_query():
     nil_imp_query = ('''
 (~nil @ -> Q)
     ''')
-    answer = query_strong_side(list_imp_nat, nil_imp_query, "Q")
+    worlds = solve(list_imp_nat, nil_imp_query)
+    answer = decode_positive(worlds, p("Q"))
     print(f'''
 answer: {answer}
     ''')
@@ -462,7 +460,8 @@ def test_list_imp_nat_subs_cons_nil_imp_query():
     nil_imp_query = ('''
 ((~cons ~nil @) -> Q)
     ''')
-    answer = query_strong_side(list_imp_nat, nil_imp_query, "Q")
+    worlds = solve(list_imp_nat, nil_imp_query)
+    answer = decode_positive(worlds, p("Q"))
     print(f'''
 answer: {answer}
     ''')
@@ -473,7 +472,8 @@ def test_list_imp_nat_subs_cons_cons_nil_imp_query():
     cons_cons_nil_imp_query = ('''
 ((~cons ~cons ~nil @) -> Q)
     ''')
-    answer = query_strong_side(list_imp_nat, cons_cons_nil_imp_query, "Q")
+    worlds = solve(list_imp_nat, cons_cons_nil_imp_query)
+    answer = decode_positive(worlds, p("Q"))
     assert answer == "~succ ~succ ~zero @"
     print(f'''
 answer: {answer}
@@ -515,8 +515,8 @@ def test_unit():
     (worlds, typ_var, parsetree) = analyze(code)
     assert parsetree == "(expr (base @))"
     # print("parsetree: " + str(parsetree))
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_tag():
     code = '''
@@ -525,8 +525,8 @@ def test_tag():
     (worlds, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr (base ~ uno (base @)))"
     # print(parsetree)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~uno @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~uno @"
 
 def test_tuple():
     code = '''
@@ -534,8 +534,8 @@ def test_tuple():
     '''
     (worlds, typ_var, parsetree) = analyze(code)
     # print(parsetree)
-    print(u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "(@, (@, @))"
+    print(decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "(@, (@, @))"
 
 def test_record():
     code = '''
@@ -545,8 +545,8 @@ _.dos = @
 # uno:= @  dos:= @
     (worlds, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "(uno : @ & dos : @)"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "(uno : @ & dos : @)"
 
 
 def test_function():
@@ -555,8 +555,8 @@ case ~nil @ => @
     '''
     (worlds, typ_var, parsetree) = analyze(code)
     # print(parsetree)
-    print(f"answer: {u(decode(worlds, typ_var))}")
-    assert u(decode(worlds, typ_var)) == "(~nil @ -> @)"
+    print(f"answer: {decode_positive(worlds, typ_var)}")
+    assert decode_positive(worlds, typ_var) == "(~nil @ -> @)"
 
 def test_function_cases_disjoint():
     code = '''
@@ -564,10 +564,10 @@ case ~uno @ => ~one @
 case ~dos @ => ~two @ 
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "((~uno @ -> ~one @) & (~dos @ -> ~two @))"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "((~uno @ -> ~one @) & (~dos @ -> ~two @))"
     # TODO: update once diffs are enabled 
-    # assert u(decode(worlds, typ_var)) == "(~uno @ -> ~one @) & (~dos @ \ ~uno @ -> ~two @)"
+    # assert decode_positive(worlds, typ_var) == "(~uno @ -> ~one @) & (~dos @ \ ~uno @ -> ~two @)"
 
 def test_function_cases_overlap():
     code = '''
@@ -575,34 +575,34 @@ case ~uno @ => ~one @
 case x => ~two @ 
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
+    print("answer: " + decode_positive(worlds, typ_var))
     # TODO: use type_equiv, instead of syntax equiv.
     # there is some non-determinism in variable names
-    # assert u(decode(worlds, typ_var)) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
+    # assert decode_positive(worlds, typ_var) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
 
 def test_projection():
     code = '''
 (_.uno = ~one @ _.dos = ~two @).uno
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~one @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~one @"
 
 def test_projection_chain():
     code = '''
 (_.uno = (_.dos = ~onetwo @) _.one = @).uno.dos
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~onetwo @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~onetwo @"
 
 def test_app_identity_unit():
     code = '''
 (case x => x)(@)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_app_pattern_match_nil():
     code = '''
@@ -612,8 +612,8 @@ case ~cons x => x
 )(~nil @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_app_pattern_match_cons():
     code = '''
@@ -623,8 +623,8 @@ case ~cons x => x
 )(~cons @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_app_pattern_match_fail():
     code = '''
@@ -634,16 +634,16 @@ case ~cons x => x
 )(~fail @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    assert u(decode(worlds, typ_var)) == "BOT"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "BOT"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_application_chain():
     code = '''
 (case ~nil @ => case ~nil @ => @)(~nil @)(~nil @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_let():
     code = '''
@@ -652,8 +652,8 @@ x
     '''
     (worlds, typ_var, parsetree) = analyze(code)
     # assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_idprojection():
     code = '''
@@ -661,8 +661,8 @@ let r = (_.uno = @ _.dos = @) ;
 r.uno
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_idprojection_chain():
     code = '''
@@ -670,8 +670,8 @@ let r = (_.uno = (_.dos = @) _.one = @) ;
 r.uno.dos
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_idapplication():
     code = '''
@@ -682,8 +682,8 @@ let f = (
 f(~nil @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_idapplication_chain():
     code = '''
@@ -691,8 +691,8 @@ let f = (case ~nil @ => case ~nil @ => @) ;
 f(~nil @)(~nil @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    assert u(decode(worlds, typ_var)) == "@"
-    # print("answer: " + u(decode(worlds, typ_var)))
+    assert decode_positive(worlds, typ_var) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
 
 def test_function_with_var():
     code = '''
@@ -700,8 +700,8 @@ case ~nil @ => ~zero @
 case ~cons x => (~succ x) 
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_functional():
     code = '''
@@ -711,8 +711,8 @@ def test_functional():
 ))
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_fix():
     code = '''
@@ -730,24 +730,24 @@ fix(case self => (
 # expect: (15 -> 16) -> (~cons _8 -> ~succ _11) 
 
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_identity_function():
     code = '''
 (case x => x)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "ALL [_2 ; _2 <: _1] _1 -> _1"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "ALL [_2 ; _2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
     code = '''
 @ |> (case x => x)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_nil_funnel_fix():
     code = '''
@@ -757,8 +757,8 @@ def test_nil_funnel_fix():
 )))
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~zero @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~zero @"
 
 def test_app_fix_nil():
     code = '''
@@ -768,8 +768,8 @@ def test_app_fix_nil():
 )))(~nil @) 
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~zero @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~zero @"
 
 def test_app_fix_cons():
     code = '''
@@ -780,8 +780,8 @@ def test_app_fix_cons():
     '''
 
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~succ ~zero @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~succ ~zero @"
 
 def test_app_fix_cons_cons():
     code = '''
@@ -791,8 +791,8 @@ def test_app_fix_cons_cons():
 )))(~cons ~cons ~nil @) 
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~succ ~succ ~zero @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~succ ~succ ~zero @"
 
 
 def test_funnel_pipeline():
@@ -800,8 +800,8 @@ def test_funnel_pipeline():
 ~nil @ |> (case ~nil @ => @) |> (case @ => ~uno @)
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~uno @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~uno @"
 
 
 # fix(case self => (
@@ -814,8 +814,8 @@ def test_pattern_tuple():
 case (~zero @, @) => @
     '''
     (worlds, typ_var, parsetree) = analyze(code)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "((~zero @, @) -> @)"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "((~zero @, @) -> @)"
 
 # function_if_then_else = (f'''
 # case x => (
@@ -835,8 +835,8 @@ def test_if_true_then_else():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(if_true_then_else)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~uno @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~uno @"
 
 def test_if_false_then_else():
     if_false_then_else = (f'''
@@ -847,8 +847,8 @@ def test_if_false_then_else():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(if_false_then_else)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~dos @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~dos @"
 
 def test_function_if_then_else():
     function_if_then_else = (f'''
@@ -860,8 +860,8 @@ def test_function_if_then_else():
     )
     ''')
     (worlds, typ_var, parsetree) = analyze(function_if_then_else)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "(_2 -> (~uno @ | ~dos @))"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "(_2 -> (~uno @ | ~dos @))"
 
 
 less_equal = ('''
@@ -874,8 +874,8 @@ fix(case self => (
 
 def test_less_equal():
     (worlds, typ_var, parsetree) = analyze(less_equal)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 def test_let_less_equal():
     let_less = (f'''
@@ -883,8 +883,8 @@ let less_equal = {less_equal} ;
 less_equal
     ''')
     (worlds, typ_var, parsetree) = analyze(let_less)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "@"
 
 nat_pair_rel = (f'''
 LFP self BOT 
@@ -905,7 +905,8 @@ def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
-    answer = query_weak_side(two_less_equal_one_query, less_equal_rel, "Z")
+    worlds = solve(two_less_equal_one_query, less_equal_rel)
+    answer = decode_negative(worlds, p("Z"))
     print(f'''
 answer: {answer}
     ''')
@@ -924,7 +925,8 @@ def test_weak_diff():
     right = ('''
 (~succ W) \\ (EXI [x] (~zero @, x))
     ''')
-    answer = query_strong_side(left, right, "W")
+    worlds = solve(left, right)
+    answer = decode_positive(worlds, p("W"))
     print(f"answer: {answer}")
     # assert answer == "(~succ ~succ ~zero @, ~succ ~zero @)" 
     assert answer == "~zero @" 
@@ -936,7 +938,8 @@ def test_weak_diff_in_pair():
     right = ('''
 (((~succ W) \\ (EXI [x] (~zero @, x))), @)
     ''')
-    answer = query_strong_side(left, right, "W")
+    worlds = solve(left, right)
+    answer = decode_positive(worlds, p("W"))
     print(f"answer: {answer}")
     # assert answer == "(~succ ~succ ~zero @, ~succ ~zero @)" 
     assert answer == "~zero @" 
@@ -946,7 +949,8 @@ def test_less_equal_imp_subs_one_two_imp_query():
     two_one_imp_query = ('''
 ((~succ ~zero @, ~succ ~succ ~zero @) -> Q)
     ''')
-    answer = query_strong_side(less_equal_imp, two_one_imp_query, "Q")
+    worlds = solve(less_equal_imp, two_one_imp_query)
+    answer = decode_positive(worlds, p("Q"))
     print(f"answer: {answer}")
     assert answer == "~true @" 
 
@@ -954,7 +958,8 @@ def test_less_equal_imp_subs_two_one_imp_query():
     two_one_imp_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
     ''')
-    answer = query_strong_side(less_equal_imp, two_one_imp_query, "Q")
+    worlds = solve(less_equal_imp, two_one_imp_query)
+    answer = decode_positive(worlds, p("Q"))
     print(f"answer: {answer}")
     assert answer == "~false @" 
 
@@ -964,21 +969,17 @@ def test_app_less_equal_zero_one():
 ({less_equal})(~zero @, ~succ ~zero @)
     ''')
     (worlds, typ_var, parsetree) = analyze(app_less)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "~true @"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~true @"
 
 
 def test_app_less_equal_two_one():
     app_less = (f'''
 ({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
-    try:
-        (worlds, typ_var, parsetree) = analyze(app_less)
-        print("answer: " + u(decode(worlds, typ_var)))
-        # assert u(decode(worlds, typ_var)) == "(EXI [ ; _38 <: ~false @] _38)"
-        # assert u(decode(worlds, typ_var)) == "~false @"
-    except RecursionError:
-        print("RecursionError")
+    (worlds, typ_var, parsetree) = analyze(app_less)
+    print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~false @"
 
 
 def test_nested_fun():
@@ -991,8 +992,8 @@ def test_nested_fun():
     )
     ''')
     (worlds, typ_var, parsetree) = analyze(nested_fun)
-    print("answer: " + u(decode(worlds, typ_var)))
-    assert u(decode(worlds, typ_var)) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
+    print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "((~true @ -> ~uno @) & (~false @ -> ~dos @))"
 
 def test_pattern_match_wrap():
     pattern_match_wrap = (f'''
@@ -1004,9 +1005,9 @@ def test_pattern_match_wrap():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(pattern_match_wrap)
-    print("answer: " + u(decode(worlds, typ_var)))
+    print("answer: " + decode_positive(worlds, typ_var))
     # expected typ: ((ALL [ ; _9 <: ~dos @] ((~uno @, _9) -> _9)) & (ALL [ ; _8 <: ~dos @] ((_8, ~uno @) -> _8)))
-    # assert u(decode(worlds, typ_var)) == "(X, Y) -> ~dos @"
+    # assert decode_positive(worlds, typ_var) == "(X, Y) -> ~dos @"
 
 def test_arg_specialization():
     arg_specialization = (f'''
@@ -1044,9 +1045,9 @@ def test_arg_specialization():
     # ''')
 
     (worlds, typ_var, parsetree) = analyze(arg_specialization)
-    print("answer: " + u(decode(worlds, typ_var)))
+    print("answer: " + decode_positive(worlds, typ_var))
     # expected typ: ((ALL [ ; _9 <: ~dos @] ((~uno @, _9) -> _9)) & (ALL [ ; _8 <: ~dos @] ((_8, ~uno @) -> _8)))
-    # assert u(decode(worlds, typ_var)) == "(X, Y) -> ~dos @"
+    # assert decode_positive(worlds, typ_var) == "(X, Y) -> ~dos @"
 
 def test_passing_pattern_matching():
     # program = (f'''
@@ -1076,8 +1077,8 @@ def test_passing_pattern_matching():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(program)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "..."
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "..."
 
 
 max = (f'''
@@ -1100,8 +1101,8 @@ def test_recursion_wrapper():
 
     # try:
     (worlds, typ_var, parsetree) = analyze(program)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
     # except Exception:
     #     print("exception raised")
 
@@ -1134,8 +1135,8 @@ def test_max():
 
     # try:
     (worlds, typ_var, parsetree) = analyze(max)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
     # except Exception:
     #     print("exception raised")
 
@@ -1143,14 +1144,73 @@ def test_max():
 add = (f'''
 fix (case self => ( 
     case (~zero @, b) => b 
-    case (~succ a, b) => ~succ (self(a, b))
+    case (~succ a, c) => ~succ (self(a, c))
 ))
 ''')
 
+######## DEBUG #######
+add = (f'''
+fix (case self => ( 
+    case (~zero @, b) => b 
+    case (~succ a, c) => c 
+))
+''')
+#######################
+
 def test_add():
     (worlds, typ_var, parsetree) = analyze(add)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
+
+def test_exi_add_rel_subs_query():
+    exi_add = '''
+(EXI [Y ; (~zero @, ~zero @) <: X ; (X, Y) <: (LFP self ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y)
+    '''
+    query = ('''
+Q
+    ''')
+    worlds = solve(exi_add, query)
+    answer = decode_positive(worlds, p("Q"))
+    print(f"answer: {answer}")
+    # assert answer == "~zero @" 
+
+
+def test_add_imp_subs_zero_zero_imp_query():
+
+    add_imp = '''
+(ALL [X ; X <: (LFP self ((EXI [B] (~zero @, B)) | (EXI [B A] (~succ A, B))))] (X -> (
+    EXI [Y ; (X, Y) <: (LFP self ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y
+))) 
+    '''
+    zero_zero_imp_query = ('''
+((~zero @, ~zero @) -> Q)
+    ''')
+
+    worlds = solve(add_imp, zero_zero_imp_query)
+    answer = decode_positive(worlds, p("Q"))
+    print(f"answer: {answer}")
+    # assert answer == "~zero @" 
+
+
+def test_add_zero_and_zero_equals_zero():
+    # TODO: need to generate an equality constraint when the same variable is used
+    # NOTE: would extrusion work for this?
+    # Either 34 should not be frozen; or the subtyping should be in the opposite direction _34 <: ~zero
+    code = f"""
+({add})(~zero @, ~zero @)
+    """
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
+
+def test_add_one_and_two_equals_three():
+    code = f"""
+({add})(~succ ~zero @, ~succ ~succ ~zero @)
+    """
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
+
 
 fib = (f'''
 let add = {add} ;
@@ -1163,8 +1223,8 @@ fix (case self => (
 
 def test_fib():
     (worlds, typ_var, parsetree) = analyze(fib)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 
 def test_application_in_tuple():
@@ -1176,8 +1236,8 @@ def test_application_in_tuple():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "(@, @)"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "(@, @)"
 
 def test_generalized_application_in_tuple():
     # TODO: this requires add generalization in the combine_function rule
@@ -1187,8 +1247,8 @@ def test_generalized_application_in_tuple():
     ''')
 
     (worlds, typ_var, parsetree) = analyze(code)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "(@, @)"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "(@, @)"
 
 def test_sumr():
     sumr = (f'''
@@ -1215,13 +1275,20 @@ fix (case self => (
     case (~cons (x, xs), b) => add(b, x)
 ))
     ''')
+
+    sumr = (f'''
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => ({add})(b, b)
+))
+    ''')
 ##############################
 
     (worlds, typ_var, parsetree) = analyze(sumr)
     assert worlds
     print_worlds(worlds)
-    # print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    # print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_suml():
     suml = (f'''
@@ -1233,8 +1300,8 @@ fix (case self => (
     ''')
 
     (worlds, typ_var, parsetree) = analyze(suml)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_foldr():
     foldr = (f'''
@@ -1245,8 +1312,8 @@ fix (case self => (
     ''')
 
     (worlds, typ_var, parsetree) = analyze(foldr)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 def test_foldl():
     foldl = (f'''
@@ -1257,8 +1324,8 @@ fix (case self => (
     ''')
 
     (worlds, typ_var, parsetree) = analyze(foldl)
-    print("answer: " + u(decode(worlds, typ_var)))
-    # assert u(decode(worlds, typ_var)) == "@"
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == @"
 
 
 
@@ -1271,7 +1338,8 @@ def test_antecedent_union():
     weak = ('''
 ((~uno @ | ~dos @) -> Q) 
     ''')
-    answer = query_strong_side(strong, weak, "Q")
+    worlds = solve(strong, weak)
+    answer = decode_positive(worlds, p("Q"))
     print(f'''
 answer: {answer}
     ''')
@@ -1285,7 +1353,8 @@ def test_consequent_intersection():
     weak = ('''
 (Q -> (uno : ~one @) & (dos : ~two @)) 
     ''')
-    answer = query_weak_side(strong, weak, "Q")
+    worlds = solve(strong, weak)
+    answer = decode_negative(worlds, p("Q"))
     print(f'''
 answer: {answer}
     ''')
@@ -1306,14 +1375,17 @@ if __name__ == '__main__':
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
     # test_add()
+    # test_one_plus_one_equals_two()
+    # test_one_plus_one_query()
+
+    # test_exi_add_rel_subs_query()
+    # test_add_imp_subs_zero_zero_imp_query()
+    # test_add_zero_and_zero_equals_zero()
+    test_add_one_and_two_equals_three()
     # test_fib()
 
     # TODO: the type is missing the constraint relating its result to addition
-    # - it is missing the cons case containing the inductive hypothesis
-    # - that is, it is missing the inner model that generates the cons case containing the inductive hypothesis
-    # - IDEA: modify until the case appears; then debug the part of syntax that is different
-    # - it appears that combine_application of `add` is broken
-    test_sumr()
+    # test_sumr()
 
     # TODO: the type is missing the constraint relating its result to addition
     # test_suml()
@@ -1338,9 +1410,11 @@ if __name__ == '__main__':
     # test_app_pattern_match_nil()
     ########################
     # test_two_less_equal_one_query()
+    # test_app_less_equal_zero_one()
     # test_app_less_equal_two_one()
     # test_less_equal_imp_subs_one_two_imp_query()
     # test_less_equal_imp_subs_two_one_imp_query()
+    ########################
     #
     # test_nested_fun()
     # test_all_imp_exi_subs_union_imp()
