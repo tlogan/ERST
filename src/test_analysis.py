@@ -1259,35 +1259,11 @@ fix (case self => (
 ))
     ''')
 
-########## DEBUG #############
-    sumr = (f'''
-let add = ({add}) ; 
-fix (case self => ( 
-    case (~nil @, b) => b
-    case (~cons (x, xs), b) => ((self)(xs, b), x)
-))
-    ''')
-
-    sumr = (f'''
-let add = ({add}) ; 
-fix (case self => ( 
-    case (~nil @, b) => b
-    case (~cons (x, xs), b) => add(b, x)
-))
-    ''')
-
-    sumr = (f'''
-fix (case self => ( 
-    case (~nil @, b) => b
-    case (~cons (x, xs), b) => ({add})(b, b)
-))
-    ''')
-##############################
-
     (worlds, typ_var, parsetree) = analyze(sumr)
     assert worlds
     print_worlds(worlds)
-    # print("answer: " + decode_positive(worlds, typ_var))
+    # TODO: decode is very slow; make it faster somehow
+    print("answer: " + decode_positive(worlds, typ_var))
     # assert decode_positive(worlds, typ_var) == "@"
 
 def test_suml():
@@ -1300,6 +1276,8 @@ fix (case self => (
     ''')
 
     (worlds, typ_var, parsetree) = analyze(suml)
+    assert worlds
+    print_worlds(worlds)
     print("answer: " + decode_positive(worlds, typ_var))
     # assert decode_positive(worlds, typ_var) == "@"
 
@@ -1381,13 +1359,9 @@ if __name__ == '__main__':
     # test_exi_add_rel_subs_query()
     # test_add_imp_subs_zero_zero_imp_query()
     # test_add_zero_and_zero_equals_zero()
-    test_add_one_and_two_equals_three()
+    # test_add_one_and_two_equals_three()
     # test_fib()
-
-    # TODO: the type is missing the constraint relating its result to addition
-    # test_sumr()
-
-    # TODO: the type is missing the constraint relating its result to addition
+    test_sumr()
     # test_suml()
     # test_foldr()
     # test_foldl()

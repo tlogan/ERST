@@ -2,6 +2,12 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
+- decode is slow; 
+    - need to redo package_typ to use 
+        - existential for frozen/skolem variables and 
+        - universal for learnable variables
+    - universal first, then existential 
+
 - prove that the output type of `fibonacci` on any input is subtyping of a number that is greater than its input (e.g. using `leq` relational constraint).
 - create `merge sort` test
 - create RedBlack `tree insert` test

@@ -1477,27 +1477,33 @@ def is_variable_unassigned(world : World, id : str) -> bool:
         id not in extract_free_vars_from_constraints(s(), world.constraints)
     )
 
-def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str]) -> PSet[Subtyping]:
+def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str], debug = False) -> PSet[Subtyping]:
+    if debug:
+        print(f"DEBUG extract_reachable_constraints -- id: {id} -- seen: {len(ids_seen)}")
     constraints = extract_constraints_with_id(world, id) 
     ids_seen = ids_seen.add(id)
     ids = extract_free_vars_from_constraints(s(), constraints).difference(ids_seen)
     for id in ids:
-        constraints = constraints.union(
-            extract_reachable_constraints(world, id, ids_seen)
-        ) 
+        if id not in ids_seen:
+            constraints = constraints.union(
+                extract_reachable_constraints(world, id, ids_seen, debug)
+            ) 
+            ids_seen = ids_seen.add(id)
 
     return constraints 
 
-def extract_reachable_constraints_from_typ(world : World, typ : Typ) -> PSet[Subtyping]:
+def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = False) -> PSet[Subtyping]:
     ids_base = extract_free_vars_from_typ(s(), typ)
     constraints = s()
     for id_base in ids_base: 
-        constraints_reachable = extract_reachable_constraints(world, id_base, s())
+        constraints_reachable = extract_reachable_constraints(world, id_base, s(), debug)
         constraints = constraints.union(constraints_reachable)
     return constraints
 
 def package_typ(world : World, typ : Typ) -> Typ:
+    print(f"DEBUG PACK TYP extract START")
     constraints = extract_reachable_constraints_from_typ(world, typ)
+    print(f"DEBUG PACK TYP extract END")
 
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
     bound_ids = tuple(world.freezer.intersection(reachable_ids))
