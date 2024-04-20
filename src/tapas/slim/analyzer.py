@@ -1484,11 +1484,10 @@ def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str],
     ids_seen = ids_seen.add(id)
     ids = extract_free_vars_from_constraints(s(), constraints).difference(ids_seen)
     for id in ids:
-        if id not in ids_seen:
-            constraints = constraints.union(
-                extract_reachable_constraints(world, id, ids_seen, debug)
-            ) 
-            ids_seen = ids_seen.add(id)
+        constraints = constraints.union(
+            extract_reachable_constraints(world, id, ids_seen, debug)
+        ) 
+        ids_seen = ids_seen.add(id)
 
     return constraints 
 
@@ -1501,9 +1500,7 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
     return constraints
 
 def package_typ(world : World, typ : Typ) -> Typ:
-    print(f"DEBUG PACK TYP extract START")
     constraints = extract_reachable_constraints_from_typ(world, typ)
-    print(f"DEBUG PACK TYP extract END")
 
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
     bound_ids = tuple(world.freezer.intersection(reachable_ids))
