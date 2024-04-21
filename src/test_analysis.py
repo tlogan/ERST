@@ -46,7 +46,7 @@ def analyze_stream(code : list[str], debug = False):
 
 
         ctx = await connection.mk_getter()
-        typ_var = analyzer.default_nonterm.typ_var
+        typ_var = analyzer.default_context.typ_var
         return (ctx.worlds if ctx else None, typ_var, guides, connection.to_string_tree(ctx) if ctx else None)
 
     (worlds, typ_var, guides, parsetree) = asyncio.run(_mk_task())
@@ -1226,6 +1226,22 @@ def test_fib():
     print("answer: " + decode_positive(worlds, typ_var))
     # assert decode_positive(worlds, typ_var) == "@"
 
+def test_fib_annotated():
+    le = (f'''
+(LFP SELF 
+    (EXI [N ; N <: {nat}] (~zero @, N)) |
+    (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B)) |
+    BOT
+)
+    ''')
+    anno_fib = (f'''
+let fib : X -> (EXI [Y ; (X, Y) <: {le}] Y) = {fib};
+@
+    ''')
+    (worlds, typ_var, parsetree) = analyze(anno_fib)
+    assert worlds
+    print(f"len(worlds): {len(worlds)}")
+
 
 def test_application_in_tuple():
 
@@ -1360,7 +1376,10 @@ if __name__ == '__main__':
     # test_add_imp_subs_zero_zero_imp_query()
     # test_add_zero_and_zero_equals_zero()
     # test_add_one_and_two_equals_three()
-    # test_fib()
+
+    # TODO
+    test_fib()
+    # test_fib_annotated()
 
     # test_sumr()
     # test_suml()

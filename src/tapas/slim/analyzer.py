@@ -1477,26 +1477,27 @@ def is_variable_unassigned(world : World, id : str) -> bool:
         id not in extract_free_vars_from_constraints(s(), world.constraints)
     )
 
-def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str], debug = False) -> PSet[Subtyping]:
+def extract_reachable_constraints(world : World, id : str, ids_seen : PSet[str], debug = False) -> tuple[PSet[Subtyping], PSet[str]]:
     if debug:
         print(f"DEBUG extract_reachable_constraints -- id: {id} -- seen: {len(ids_seen)}")
     constraints = extract_constraints_with_id(world, id) 
     ids_seen = ids_seen.add(id)
     ids = extract_free_vars_from_constraints(s(), constraints).difference(ids_seen)
     for id in ids:
-        constraints = constraints.union(
-            extract_reachable_constraints(world, id, ids_seen, debug)
-        ) 
-        ids_seen = ids_seen.add(id)
+        if id not in ids_seen:
+            new_constraints, ids_seen = extract_reachable_constraints(world, id, ids_seen, debug)
+            constraints = constraints.union(new_constraints) 
 
-    return constraints 
+    return (constraints, ids_seen)
 
 def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = False) -> PSet[Subtyping]:
     ids_base = extract_free_vars_from_typ(s(), typ)
     constraints = s()
+    ids_seen = s()
     for id_base in ids_base: 
-        constraints_reachable = extract_reachable_constraints(world, id_base, s(), debug)
-        constraints = constraints.union(constraints_reachable)
+        if id not in ids_seen:
+            new_constraints, ids_seen = extract_reachable_constraints(world, id_base, ids_seen, debug)
+            constraints = constraints.union(new_constraints)
     return constraints
 
 def package_typ(world : World, typ : Typ) -> Typ:
@@ -1577,7 +1578,7 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
 
 class Solver:
     _type_id : int = 0 
-    _limit : int = 10000
+    _limit : int = 1000
 
     def __init__(self):
         self.count = 0
@@ -2282,7 +2283,7 @@ end Solver
 '''
 
 default_solver = Solver()
-default_nonterm = Context('expr', m(), [World(s(), s(), s())], default_solver.fresh_type_var())
+default_context = Context('expr', m(), [World(s(), s(), s())], default_solver.fresh_type_var())
 
 
 class Rule:
@@ -2876,15 +2877,6 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     # $$$$$$$ OOGA START 
     # ~~~~~~~~~~~~~~~~~~~~~
-    # inner_world.relids: {inner_world.relids}
-
-    # inner_world.freezer: {inner_world.freezer}
-
-    # inner_world.constraints: {concretize_constraints(tuple(inner_world.constraints))}
-
-    # rel_pattern: {concretize_typ(rel_pattern)}
-
-    # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
                 reachable_constraints = tuple(
@@ -2892,6 +2884,13 @@ class ExprRule(Rule):
                     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 )
+
+    #             print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~
+    # $$$$$$$ OOGA END 
+    # ~~~~~~~~~~~~~~~~~~~~~
+    #             """)
+
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
@@ -2927,33 +2926,11 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     # rel_pattern: {concretize_typ(rel_pattern)}
     # constrained rel: {concretize_typ(constrained_rel)}
-
     # ======================
-
     # body_var: {body_var}
     # IH_typ: {IH_typ.id}
-
-    # rel_world.relids: {rel_world.relids}
-
-    # rel_world.freezer: {rel_world.freezer}
-
-    # rel_world.constraints: {concretize_constraints(tuple(rel_world.constraints))}
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix left
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # IH_typ: {IH_typ.id}
-    # left_world.freezer: {left_world.freezer}
-    # left_world.constraints: {concretize_constraints(tuple(left_world.constraints))}
-    # ======================
-    # left_pattern: {concretize_typ(left_typ)}
-    # constrained left: {concretize_typ(constrained_left)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-
 
             #end for
 

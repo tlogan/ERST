@@ -277,11 +277,11 @@ class SlimParser ( Parser ):
     def init(self): 
         self._solver = default_solver 
         self._cache = {}
-        self._guidance = default_nonterm 
+        self._guidance = default_context 
         self._overflow = False  
 
     def reset(self): 
-        self._guidance = default_nonterm
+        self._guidance = default_context
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
