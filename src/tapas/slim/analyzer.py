@@ -1501,15 +1501,32 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
 
 def package_typ(world : World, typ : Typ) -> Typ:
     constraints = extract_reachable_constraints_from_typ(world, typ)
+    existential_constraints = pset( 
+        st
+        for st in constraints
+        for strong_fvs in [extract_free_vars_from_typ(s(), st.strong)]
+        for weak_fvs in [extract_free_vars_from_typ(s(), st.weak)]
+        if bool(world.freezer.intersection(strong_fvs.union(weak_fvs))) 
+    )
 
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
-    bound_ids = tuple(world.freezer.intersection(reachable_ids))
-    if not bound_ids and not constraints:
-        typ_idx_unio = typ
-    else:
-        typ_idx_unio = Exi(bound_ids, tuple(constraints), typ)
+    existential_bound_ids = tuple(world.freezer.intersection(reachable_ids))
 
-    return simplify_typ(typ_idx_unio)
+    if not existential_bound_ids:
+        assert not existential_constraints
+        exi_typ = typ
+    else:
+        exi_typ = Exi(existential_bound_ids, tuple(existential_constraints), typ)
+
+    universal_constraints = constraints.difference(existential_constraints)
+    universal_bound_ids = tuple(reachable_ids.difference(world.freezer))
+
+    if not universal_bound_ids:
+        assert not universal_constraints
+        univ_typ = exi_typ
+    else:
+        univ_typ = All(universal_bound_ids, tuple(universal_constraints), exi_typ)
+    return simplify_typ(univ_typ)
 
 def inhabitable(t : Typ) -> bool:
     t = simplify_typ(t)
@@ -2872,31 +2889,34 @@ class ExprRule(Rule):
 
                 reachable_constraints = tuple(
                     st
-                    for st in inner_world.constraints
+                    for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 )
-
-                # TODO: this is REALLY REALLY SLOW!!!!
-                # - ALSO this doesn't even seem needed based on the examples 
-                # reachable_constraints = tuple(
-                #     st
-                #     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                #     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-                # )
-
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
 
-                # TODO: see why frozen variables aren't in existential from package type
-
                 # TODO: what if there are existing frozen variables in inner_world?
-                rel_world = World(pset(rel_constraints), pset(bound_ids), inner_world.relids)
-                constrained_rel = package_typ(rel_world, rel_pattern)
+                # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
+                if bool(bound_ids):
+                    constrained_rel = Exi(bound_ids, tuple(rel_constraints), rel_pattern)
+                else:
+                    assert not bool(rel_constraints)
+                    constrained_rel = rel_pattern
 
-                # TODO: what if there are existing frozen variables in inner_world?
-                left_world = World(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_world.relids)
-                constrained_left = package_typ(left_world, left_typ)
+                # TODO: remove old commented code
+                # rel_world = World(pset(rel_constraints), pset(bound_ids), inner_world.relids)
+                # package_typ(rel_world, rel_pattern)
+
+                if bool(left_bound_ids):
+                    constrained_left = Exi(left_bound_ids, tuple(left_constraints), left_typ)
+                else:
+                    assert not bool(left_constraints)
+                    constrained_left = left_typ
+
+                # TODO: remove old commented code
+                # left_world = World(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_world.relids)
+                # constrained_left = package_typ(left_world, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
                 param_body = Unio(constrained_left, param_body)

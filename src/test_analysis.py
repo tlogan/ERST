@@ -1361,7 +1361,8 @@ if __name__ == '__main__':
     # test_add_zero_and_zero_equals_zero()
     # test_add_one_and_two_equals_three()
     # test_fib()
-    test_sumr()
+
+    # test_sumr()
     # test_suml()
     # test_foldr()
     # test_foldl()

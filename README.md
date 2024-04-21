@@ -2,11 +2,9 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- decode is slow; 
-    - need to redo package_typ to use 
-        - existential for frozen/skolem variables and 
-        - universal for learnable variables
-    - universal first, then existential 
+- double check `test_max`
+    - see if subbing into relational constraint is necessary for learnable variables
+    - maybe not, since strongest interpretation is still available: T <: X, (X, Y) <: R 
 
 - prove that the output type of `fibonacci` on any input is subtyping of a number that is greater than its input (e.g. using `leq` relational constraint).
 - create `merge sort` test
