@@ -2,6 +2,11 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
+- modify parser to include a preamble for type aliasing
+    - modify contexts solver to include alias environment 
+    - modify solver to check if variable is an alias
+- create a `to_aliasing_typ` that generates preamble and subs in alias. 
+- create a `concretize_aliases`
 - test `fib`, `sumr`, and `suml` on concrete examples for sanity check
     - figure out how to clean up result for arguments of inductive case
 - add relational constraint weakening (via factoring columns) to enable relational annotations
