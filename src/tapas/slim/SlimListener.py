@@ -29,6 +29,24 @@ class SlimListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SlimParser#preamble.
+    def enterPreamble(self, ctx:SlimParser.PreambleContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#preamble.
+    def exitPreamble(self, ctx:SlimParser.PreambleContext):
+        pass
+
+
+    # Enter a parse tree produced by SlimParser#program.
+    def enterProgram(self, ctx:SlimParser.ProgramContext):
+        pass
+
+    # Exit a parse tree produced by SlimParser#program.
+    def exitProgram(self, ctx:SlimParser.ProgramContext):
+        pass
+
+
     # Enter a parse tree produced by SlimParser#typ_base.
     def enterTyp_base(self, ctx:SlimParser.Typ_baseContext):
         pass

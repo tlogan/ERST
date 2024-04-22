@@ -151,7 +151,7 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str]:
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init()
-    tc = parser.expr(analyzer.default_context)
+    tc = parser.program(analyzer.default_context)
     if tc.worlds == None:
         raise Exception("Parsing Error")
     else:

@@ -870,61 +870,6 @@ def match_strong(world : World, strong : Typ) -> Optional[Typ]:
             return constraint.weak
     return None
 
-def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
-    '''
-    for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
-    which is T & U.
-    NOTE: related to weakest precondition concept
-    '''
-
-
-    should_interpret = id not in world.relids
-    # TODO: determine if the following is needed or too restrictive
-    # all(
-    #     id != fv 
-    #     for st in world.constraints
-    #     if is_relational_key(world, st.strong)
-    #     for fv in extract_free_vars_from_typ(s(), st.strong)
-    # )
-
-#     return result
-
-
-    # TODO: determine if some restriction is actually necessary
-    # all(
-    #     (
-    #         id not in extract_free_vars_from_typ(s(), st.strong) or
-    #         st.strong == TVar(id) 
-    #     )
-    #     for st in world.constraints
-    # )
-
-#     print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG interpret_weak_for_id 
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# world.freezer: {world.freezer}
-# world.constraints: {concretize_constraints(tuple(world.constraints))}
-# id: {id}
-# has_weakest_interpretation: {has_weakest_interpretation}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#     """)
-
-
-    if should_interpret:
-        constraints = [
-            st
-            for st in world.constraints
-            if st.strong == TVar(id)
-        ]
-        typ_strong = Top() 
-        for c in reversed(constraints):
-            typ_strong = Inter(c.weak, typ_strong) 
-        
-        return (simplify_typ(typ_strong), pset(constraints))
-    else:
-        return None
-
 
     # '''
     # LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
@@ -953,66 +898,6 @@ def interpret_weak_for_id(world : World, id : str) -> Optional[tuple[Typ, PSet[S
 
     # return typ_final 
 
-def interpret_strong_for_id(world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
-    '''
-    for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
-    which is T | U.
-    NOTE: related to strongest postcondition concept
-    '''
-    constraints = [
-        st
-        for st in world.constraints
-        if st.weak == TVar(id) 
-    ]
-    typ_weak = Bot() 
-    for c in reversed(constraints):
-        typ_weak = Unio(c.strong, typ_weak) 
-    return (simplify_typ(typ_weak), pset(constraints))
-
-def interpret_strong_for_ids(world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
-
-    trips = [ 
-        (id, strongest, cs)
-        for id in ids
-        for op in [interpret_strong_for_id(world, id)]
-        if op 
-        for (strongest, cs) in [op]
-    ]
-
-
-    m = pmap({
-        id : strongest
-        for (id, strongest, cs) in trips
-    })
-
-    cs = pset([
-        c 
-        for (id, strongest, cs) in trips
-        for c in cs
-    ]) 
-    return (m, cs)
-
-def interpret_weak_for_ids(world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
-    trips = [ 
-        (id, weakest, cs)
-        for id in ids
-        for op in [interpret_weak_for_id(world, id)]
-        if op 
-        for (weakest, cs) in [op]
-    ]
-
-
-    m = pmap({
-        id : weakest
-        for (id, weakest, cs) in trips
-    })
-
-    cs = pset([
-        c 
-        for (id, weakest, cs) in trips
-        for c in cs
-    ]) 
-    return (m, cs)
 
 def mapOp(f):
     def call(o):
@@ -1172,123 +1057,6 @@ def meaningful(polarity : bool, t : Typ) -> bool:
         return inhabitable(t)
     else:
         return selective(t)
-
-
-def interpret_with_polarity(polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
-
-
-    # print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG interpret_with_polarity:
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # typ: {concretize_typ(typ)}
-
-    # world.freezer: {world.freezer}
-    # world.constraints: {concretize_constraints(tuple(world.constraints))}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # """)
-
-    def interpret_for_id(polarity : bool, id : str): 
-        if polarity:
-            return interpret_strong_for_id(world, id)
-        else:
-            return interpret_weak_for_id(world, id)
-
-    if False:
-        assert False
-    elif isinstance(typ, TVar) and typ.id in ignored_ids:
-        return (typ, s())
-    elif isinstance(typ, TVar) and typ.id not in ignored_ids:
-        id = typ.id
-        op = ( 
-            mapOp(simplify_typ)(interpret_for_id(not polarity, id))
-            if (id in world.freezer) else
-            mapOp(simplify_typ)(interpret_for_id(polarity, id))
-        )
-
-        if op != None:
-            (interp_typ_once, cs_once) = op
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG: used_constraints: {concretize_constraints(cs_once)}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
-            if (id in world.freezer) or meaningful(polarity, interp_typ_once): 
-                m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
-                (t, cs_cont) = interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
-                return (simplify_typ(t), cs_once.union(cs_cont))
-            else:
-                return (typ, s())
-        else:
-            return (typ, s())
-
-    elif isinstance(typ, TUnit):
-        return (typ, s())
-    elif isinstance(typ, TTag):
-        body = typ.body
-        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
-        return (TTag(typ.label, body), body_constraints)
-    elif isinstance(typ, TField):
-        body = typ.body
-        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
-        return (TField(typ.label, body), body_constraints)
-    elif isinstance(typ, Unio):
-        left, left_constraints = interpret_with_polarity(polarity, world, typ.left, ignored_ids)
-        right, right_constraints = interpret_with_polarity(polarity, world, typ.right, ignored_ids)
-        return (Unio(left, right), left_constraints.union(right_constraints))
-    elif isinstance(typ, Inter):
-        left, left_constraints = interpret_with_polarity(polarity, world, typ.left, ignored_ids)
-        right, right_constraints = interpret_with_polarity(polarity, world, typ.right, ignored_ids)
-        return (Inter(left, right), left_constraints.union(right_constraints))
-    elif isinstance(typ, Diff):
-        context, context_constraints = interpret_with_polarity(polarity, world, typ.context, ignored_ids)
-        return (Diff(context, typ.negation), context_constraints)
-
-    elif isinstance(typ, Imp):
-        consq, consq_constraints = interpret_with_polarity(polarity, world, typ.consq, ignored_ids)
-        world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
-        antec, antec_constraints = interpret_with_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
-        return (Imp(antec, consq), antec_constraints.union(consq_constraints))
-
-    elif isinstance(typ, Exi):
-        return (typ, s())
-        # TODO: uncomment below: gathering used constraints of negated side first (strong side of <: )
-        # pos_constraints = s() 
-        # weak_constraint_pairs = []
-        # for st in typ.constraints:
-        #     weak, weak_constraints = interpret_with_polarity(not polarity, world, st.weak, ignored_ids)
-        #     pos_constraints = pos_constraints.union(weak_constraints)
-        #     weak_constraint_pairs.append((weak, st))
-        #     ignored_ids = ignored_ids.union(extract_free_vars_from_typ(ignored_ids, weak))
-
-        # world = World(world.constraints.difference(pos_constraints), world.freezer)
-
-        # neg_constraints = s() 
-        # new_constraints = [] 
-        # for (weak, st) in weak_constraint_pairs:
-        #     strong, strong_constraints = interpret_with_polarity(polarity, world, st.strong, ignored_ids)
-        #     pos_constraints = pos_constraints.union(strong_constraints)
-        #     new_constraints.append(Subtyping(strong, weak))
-
-
-        # body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
-        # ignored_ids = ignored_ids.union(typ.ids)
-        # used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
-        # return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
-
-    elif isinstance(typ, All):
-        return (typ, s())
-        # TODO: copy Exi rule
-    elif isinstance(typ, LeastFP):
-        ignored_ids = ignored_ids.add(typ.id)
-        body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
-        return (LeastFP(typ.id, body), body_constraints)
-    elif isinstance(typ, Top):
-        return (typ, s())
-    elif isinstance(typ, Bot):
-        return (typ, s())
-    else:
-        assert False
 
 
 
@@ -1577,11 +1345,139 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
     ) 
 
 class Solver:
-    _type_id : int = 0 
-    _limit : int = 1000
+    _type_id : int
+    _limit : int
 
-    def __init__(self):
+    aliasing : PMap[str, Typ]
+
+    def __init__(self, aliasing : PMap[str, Typ]):
+        self._type_id : int = 0 
+        self._limit : int = 1000
         self.count = 0
+        self.aliasing = aliasing
+
+    def interpret_weak_for_id(self, world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+        '''
+        for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
+        which is T & U.
+        NOTE: related to weakest precondition concept
+        '''
+
+        # if id in self.aliasing:
+        #     return (self.aliasing[id], s())
+
+        should_interpret = id not in world.relids
+        # TODO: determine if the following is needed or too restrictive
+        # all(
+        #     id != fv 
+        #     for st in world.constraints
+        #     if is_relational_key(world, st.strong)
+        #     for fv in extract_free_vars_from_typ(s(), st.strong)
+        # )
+
+    #     return result
+
+
+        # TODO: determine if some restriction is actually necessary
+        # all(
+        #     (
+        #         id not in extract_free_vars_from_typ(s(), st.strong) or
+        #         st.strong == TVar(id) 
+        #     )
+        #     for st in world.constraints
+        # )
+
+    #     print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG interpret_weak_for_id 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    # world.freezer: {world.freezer}
+    # world.constraints: {concretize_constraints(tuple(world.constraints))}
+    # id: {id}
+    # has_weakest_interpretation: {has_weakest_interpretation}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    #     """)
+
+
+        if should_interpret:
+            constraints = [
+                st
+                for st in world.constraints
+                if st.strong == TVar(id)
+            ]
+            typ_strong = Top() 
+            for c in reversed(constraints):
+                typ_strong = Inter(c.weak, typ_strong) 
+            
+            return (simplify_typ(typ_strong), pset(constraints))
+        else:
+            return None
+
+    def interpret_strong_for_id(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+        # if id in self.aliasing:
+        #     return (self.aliasing[id], s())
+
+        '''
+        for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
+        which is T | U.
+        NOTE: related to strongest postcondition concept
+        '''
+        constraints = [
+            st
+            for st in world.constraints
+            if st.weak == TVar(id) 
+        ]
+        typ_weak = Bot() 
+        for c in reversed(constraints):
+            typ_weak = Unio(c.strong, typ_weak) 
+        return (simplify_typ(typ_weak), pset(constraints))
+
+    def interpret_strong_for_ids(self, world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+
+        trips = [ 
+            (id, strongest, cs)
+            for id in ids
+            for op in [self.interpret_strong_for_id(world, id)]
+            if op 
+            for (strongest, cs) in [op]
+        ]
+
+
+        m = pmap({
+            id : strongest
+            for (id, strongest, cs) in trips
+        })
+
+        cs = pset([
+            c 
+            for (id, strongest, cs) in trips
+            for c in cs
+        ]) 
+        return (m, cs)
+
+    def interpret_weak_for_ids(self, world : World, ids : list[str]) -> tuple[PMap[str, Typ], PSet[Subtyping]]:
+        trips = [ 
+            (id, weakest, cs)
+            for id in ids
+            for op in [self.interpret_weak_for_id(world, id)]
+            if op 
+            for (weakest, cs) in [op]
+        ]
+
+
+        m = pmap({
+            id : weakest
+            for (id, weakest, cs) in trips
+        })
+
+        cs = pset([
+            c 
+            for (id, weakest, cs) in trips
+            for c in cs
+        ]) 
+        return (m, cs)
+
+
 
     def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
@@ -1637,12 +1533,130 @@ class Solver:
     #     ] 
     #     return make_unio(constraint_typs)
 
+    def interpret_with_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
+
+
+        # print(f"""
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # DEBUG interpret_with_polarity:
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # typ: {concretize_typ(typ)}
+
+        # world.freezer: {world.freezer}
+        # world.constraints: {concretize_constraints(tuple(world.constraints))}
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # """)
+
+        def interpret_for_id(polarity : bool, id : str): 
+            if polarity:
+                return self.interpret_strong_for_id(world, id)
+            else:
+                return self.interpret_weak_for_id(world, id)
+
+        if False:
+            assert False
+        elif isinstance(typ, TVar) and typ.id in ignored_ids:
+            return (typ, s())
+        elif isinstance(typ, TVar) and typ.id not in ignored_ids:
+            id = typ.id
+            op = ( 
+                mapOp(simplify_typ)(interpret_for_id(not polarity, id))
+                if (id in world.freezer) else
+                mapOp(simplify_typ)(interpret_for_id(polarity, id))
+            )
+
+            if op != None:
+                (interp_typ_once, cs_once) = op
+                # print(f"""
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # DEBUG: used_constraints: {concretize_constraints(cs_once)}
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # """)
+                if (id in world.freezer) or meaningful(polarity, interp_typ_once): 
+                    m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
+                    (t, cs_cont) = self.interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
+                    return (simplify_typ(t), cs_once.union(cs_cont))
+                else:
+                    return (typ, s())
+            else:
+                return (typ, s())
+
+        elif isinstance(typ, TUnit):
+            return (typ, s())
+        elif isinstance(typ, TTag):
+            body = typ.body
+            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            return (TTag(typ.label, body), body_constraints)
+        elif isinstance(typ, TField):
+            body = typ.body
+            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            return (TField(typ.label, body), body_constraints)
+        elif isinstance(typ, Unio):
+            left, left_constraints = self.interpret_with_polarity(polarity, world, typ.left, ignored_ids)
+            right, right_constraints = self.interpret_with_polarity(polarity, world, typ.right, ignored_ids)
+            return (Unio(left, right), left_constraints.union(right_constraints))
+        elif isinstance(typ, Inter):
+            left, left_constraints = self.interpret_with_polarity(polarity, world, typ.left, ignored_ids)
+            right, right_constraints = self.interpret_with_polarity(polarity, world, typ.right, ignored_ids)
+            return (Inter(left, right), left_constraints.union(right_constraints))
+        elif isinstance(typ, Diff):
+            context, context_constraints = self.interpret_with_polarity(polarity, world, typ.context, ignored_ids)
+            return (Diff(context, typ.negation), context_constraints)
+
+        elif isinstance(typ, Imp):
+            consq, consq_constraints = self.interpret_with_polarity(polarity, world, typ.consq, ignored_ids)
+            world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+            antec, antec_constraints = self.interpret_with_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
+            return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+
+        elif isinstance(typ, Exi):
+            return (typ, s())
+            # TODO: uncomment below: gathering used constraints of negated side first (strong side of <: )
+            # pos_constraints = s() 
+            # weak_constraint_pairs = []
+            # for st in typ.constraints:
+            #     weak, weak_constraints = interpret_with_polarity(not polarity, world, st.weak, ignored_ids)
+            #     pos_constraints = pos_constraints.union(weak_constraints)
+            #     weak_constraint_pairs.append((weak, st))
+            #     ignored_ids = ignored_ids.union(extract_free_vars_from_typ(ignored_ids, weak))
+
+            # world = World(world.constraints.difference(pos_constraints), world.freezer)
+
+            # neg_constraints = s() 
+            # new_constraints = [] 
+            # for (weak, st) in weak_constraint_pairs:
+            #     strong, strong_constraints = interpret_with_polarity(polarity, world, st.strong, ignored_ids)
+            #     pos_constraints = pos_constraints.union(strong_constraints)
+            #     new_constraints.append(Subtyping(strong, weak))
+
+
+            # body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            # ignored_ids = ignored_ids.union(typ.ids)
+            # used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
+            # return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
+
+        elif isinstance(typ, All):
+            return (typ, s())
+            # TODO: copy Exi rule
+        elif isinstance(typ, LeastFP):
+            ignored_ids = ignored_ids.add(typ.id)
+            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            return (LeastFP(typ.id, body), body_constraints)
+        elif isinstance(typ, Top):
+            return (typ, s())
+        elif isinstance(typ, Bot):
+            return (typ, s())
+        else:
+            assert False
+
+
+
     def decode_with_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
 
         constraint_typs = [
             package_typ(m, tt)
             for world in worlds
-            for op in [interpret_with_polarity(polarity, world, t, s())]
+            for op in [self.interpret_with_polarity(polarity, world, t, s())]
             if op != None
             for (tt, cs) in [op]
             # for m in [world]
@@ -1745,6 +1759,8 @@ class Solver:
         print(f'''
 || DEBUG SOLVE
 =================
+|| self.aliasing :::
+|| :::::::: {self.aliasing}
 ||
 || world.freezer::: 
 || :::::::: {world.freezer}
@@ -1763,6 +1779,16 @@ class Solver:
 
         if False:
             return [] 
+        #######################################
+
+        #######################################
+        #### Dealiasing ####
+        #######################################
+        elif isinstance(weak, TVar) and weak.id in self.aliasing: 
+            return self.solve(world, strong, self.aliasing[weak.id])
+
+        elif isinstance(strong, TVar) and strong.id in self.aliasing: 
+            return self.solve(world, self.aliasing[strong.id], weak)
         #######################################
 
         elif isinstance(strong, Exi):
@@ -1836,12 +1862,12 @@ class Solver:
         #######################################
 
         elif isinstance(weak, TVar) and weak.id in world.freezer: 
-            interp = interpret_strong_for_id(world, weak.id)
+            interp = self.interpret_strong_for_id(world, weak.id)
             strongest_weak = interp[0]
             return self.solve(world, strong, strongest_weak)
 
         elif isinstance(strong, TVar) and strong.id not in world.freezer: 
-            interp = interpret_strong_for_id(world, strong.id)
+            interp = self.interpret_strong_for_id(world, strong.id)
             # print(f"""
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # DEBUG strong, TVar learnable  
@@ -1879,7 +1905,7 @@ class Solver:
 
 
         elif isinstance(weak, TVar) and weak.id not in world.freezer: 
-            interp = interpret_weak_for_id(world, weak.id)
+            interp = self.interpret_weak_for_id(world, weak.id)
             if interp == None:
                 # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
                 return [World(
@@ -2077,7 +2103,7 @@ class Solver:
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
 
             ignored_ids = s()
-            reduced_strong, used_constraints = interpret_with_polarity(True, world, strong, ignored_ids)
+            reduced_strong, used_constraints = self.interpret_with_polarity(True, world, strong, ignored_ids)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -2225,7 +2251,7 @@ class Solver:
         elif isinstance(strong, TVar) and strong.id in world.freezer: 
 
 
-            interp = interpret_weak_for_id(world, strong.id)
+            interp = self.interpret_weak_for_id(world, strong.id)
             # print(f"""
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # DEBUG strong, TVar frozen  
@@ -2293,7 +2319,7 @@ class Solver:
 end Solver
 '''
 
-default_solver = Solver()
+default_solver = Solver(m())
 default_context = Context('expr', m(), [World(s(), s(), s())], default_solver.fresh_type_var())
 
 
@@ -2360,7 +2386,7 @@ class BaseRule(Rule):
             for branch_world in reversed(branch.worlds):
                 new_world = branch_world
 
-                (body_typ, body_used_constraints) = interpret_with_polarity(True, new_world, branch.body, s())
+                (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
                 new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
 
                 field = TField(branch.label, body_typ)
@@ -2403,9 +2429,9 @@ class BaseRule(Rule):
                 '''
                 new_world = branch_world
 
-                (return_typ, return_used_constraints) = interpret_with_polarity(True, new_world, branch.body, s())
+                (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
                 new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
-                (param_typ, param_used_constraints) = interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
+                (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
                 new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
                 imp = Imp(param_typ, return_typ)
                 constrained_branches.append((new_world, imp))
@@ -2647,9 +2673,9 @@ class ExprRule(Rule):
             new_worlds = []
             for world in worlds:
                 # NOTE: interpretation to keep types and constraints compact 
-                cator_typ, cator_used_constraints = interpret_with_polarity(True, world, cator_var, s())
+                cator_typ, cator_used_constraints = self.solver.interpret_with_polarity(True, world, cator_var, s())
                 ignored_ids = get_freezer_adjacent_learnable_ids(world)
-                arg_typ, arg_used_constraints = interpret_with_polarity(True, world, arg_var, ignored_ids)
+                arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
                 # print(f"""
@@ -2819,11 +2845,11 @@ class ExprRule(Rule):
     # ======================
     #             """)
 
-                left_interp = interpret_with_polarity(False, inner_world, in_typ, s())
+                left_interp = self.solver.interpret_with_polarity(False, inner_world, in_typ, s())
                 (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
 
                 inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
-                right_interp = interpret_with_polarity(True, inner_world, out_typ, s())
+                right_interp = self.solver.interpret_with_polarity(True, inner_world, out_typ, s())
                 (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
 
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
@@ -2856,7 +2882,7 @@ class ExprRule(Rule):
                 bound_ids = left_bound_ids + right_bound_ids
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
-                self_interp = interpret_with_polarity(False, inner_world, self_typ, s())
+                self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
 
     #             nl = "\n"
     #             print(f"""
@@ -3247,7 +3273,15 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
     def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
-        return [
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG anno: 
+        {concretize_typ(nt.typ_var)}
+        <:
+        {concretize_typ(anno_typ)}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+        worlds = [
             m1
             for m0 in nt.worlds
             for m1 in self.solver.solve(m0, 
@@ -3255,4 +3289,12 @@ class TargetRule(Rule):
                 anno_typ
             )
         ]
+        for world in worlds:
+            print(f"""
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+            DEBUG anno result constraints: 
+            {list_out_constraints(world.constraints)}
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+        return worlds
 

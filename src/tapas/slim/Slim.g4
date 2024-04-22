@@ -27,11 +27,11 @@ _syntax_rules : PSet[SyntaxRule] = s()
 def init(self): 
     self._solver = default_solver 
     self._cache = {}
-    self._guidance = default_nonterm 
+    self._guidance = default_context
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = default_nonterm
+    self._guidance = default_context
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -114,6 +114,7 @@ def collect(self, f : Callable, *args):
 
 }
 
+
 ids returns [tuple[str, ...] combo] :
 
 | ID {
@@ -122,6 +123,32 @@ $combo = tuple([$ID.text])
 
 | ID ids {
 $combo = tuple([$ID.text]) + $ids.combo
+}
+
+;
+
+preamble returns [PMap[str, Typ] aliasing] :
+
+| 'alias' ID '=' typ {
+$aliasing = m().set($ID.text, $typ.combo)
+}
+
+| 'alias' ID '=' typ preamble{
+$aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
+}
+
+;
+
+program [context : Context] returns [list[World] worlds] :
+
+| preamble {
+self._solver = Solver($preamble.aliasing)
+} expr[context] {
+$worlds = $expr.worlds
+}
+
+| expr[context] {
+$worlds = $expr.worlds
 }
 
 ;

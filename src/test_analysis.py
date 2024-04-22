@@ -90,7 +90,7 @@ def simp(t):
     return analyzer.simplify_typ(t)
 
 
-solver = analyzer.Solver() 
+solver = analyzer.Solver(m()) 
 
 def solve(a : str, b : str):
     x = p(a)
@@ -1384,7 +1384,39 @@ def test_extra_exi():
     print(f"len(worlds): {len(worlds)}")
 
 
+
+# def test_():
+#     strong = ('''
+
+def test_preamble_pass():
+    code = (f'''
+alias T = ~uno @
+alias U = ~dos @
+let x : T = ~uno @ ;
+x
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    assert decode_positive(worlds, typ_var) == "~uno @"
+
+def test_preamble_fail():
+    code = (f'''
+alias T = ~uno @
+alias U = ~dos @
+let x : U = ~uno @ ;
+x
+    ''')
+
+    (worlds, typ_var, parsetree) = analyze(code)
+    print(len(worlds))
+    print("answer: " + decode_positive(worlds, typ_var))
+    assert not worlds
+    assert decode_positive(worlds, typ_var) == "BOT"
+
+
 if __name__ == '__main__':
+    test_preamble_fail()
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
     # TODO
