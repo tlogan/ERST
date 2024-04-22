@@ -132,9 +132,10 @@ LFP self ~nil @ | ~cons self
 
 
 nat = ('''
-LFP N BOT 
+(LFP N BOT 
     | ~zero @  
     | ~succ N 
+)
 ''')
 
 even = ('''
@@ -1148,15 +1149,6 @@ fix (case self => (
 ))
 ''')
 
-######## DEBUG #######
-add = (f'''
-fix (case self => ( 
-    case (~zero @, b) => b 
-    case (~succ a, c) => c 
-))
-''')
-#######################
-
 def test_add():
     (worlds, typ_var, parsetree) = analyze(add)
     print("answer: " + decode_positive(worlds, typ_var))
@@ -1193,9 +1185,6 @@ def test_add_imp_subs_zero_zero_imp_query():
 
 
 def test_add_zero_and_zero_equals_zero():
-    # TODO: need to generate an equality constraint when the same variable is used
-    # NOTE: would extrusion work for this?
-    # Either 34 should not be frozen; or the subtyping should be in the opposite direction _34 <: ~zero
     code = f"""
 ({add})(~zero @, ~zero @)
     """
@@ -1210,6 +1199,25 @@ def test_add_one_and_two_equals_three():
     (worlds, typ_var, parsetree) = analyze(code)
     print("answer: " + decode_positive(worlds, typ_var))
     # assert decode_positive(worlds, typ_var) == "@"
+
+lte = (f'''
+(LFP SELF 
+    (EXI [N ; N <: {nat}] (~zero @, N)) |
+    (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B)) |
+    BOT
+)
+''')
+
+def test_add_annotated():
+    # TODO: requires weakening the relational constraint to just the two variables of interest
+    # e.g. (A, _27) <: (LFP SELF ((EXI [N ; N ...
+    code = (f'''
+let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add};
+@
+    ''')
+    (worlds, typ_var, parsetree) = analyze(code)
+    print(f"len(worlds): {len(worlds)}")
+    assert worlds
 
 
 fib = (f'''
@@ -1227,20 +1235,31 @@ def test_fib():
     # assert decode_positive(worlds, typ_var) == "@"
 
 def test_fib_annotated():
-    le = (f'''
-(LFP SELF 
-    (EXI [N ; N <: {nat}] (~zero @, N)) |
-    (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B)) |
-    BOT
-)
-    ''')
+    # TODO: come up with a feasible annotation
     anno_fib = (f'''
-let fib : X -> (EXI [Y ; (X, Y) <: {le}] Y) = {fib};
+let fib : X -> Y = {fib};
 @
     ''')
+
     (worlds, typ_var, parsetree) = analyze(anno_fib)
     assert worlds
     print(f"len(worlds): {len(worlds)}")
+
+def test_fib_zero_equals_zero():
+    code = f"""
+({fib})(~zero @)
+    """
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
+
+def test_fib_two_equals_one():
+    code = f"""
+({fib})(~succ ~succ ~zero @)
+    """
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
 
 def test_application_in_tuple():
@@ -1368,9 +1387,11 @@ def test_extra_exi():
 if __name__ == '__main__':
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
+    # TODO
     # test_add()
     # test_one_plus_one_equals_two()
     # test_one_plus_one_query()
+    # test_add_annotated()
 
     # test_exi_add_rel_subs_query()
     # test_add_imp_subs_zero_zero_imp_query()
@@ -1378,7 +1399,9 @@ if __name__ == '__main__':
     # test_add_one_and_two_equals_three()
 
     # TODO
-    test_fib()
+    # test_fib()
+    # test_fib_zero_equals_zero()
+    # test_fib_two_equals_one()
     # test_fib_annotated()
 
     # test_sumr()

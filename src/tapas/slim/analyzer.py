@@ -391,8 +391,8 @@ def concretize_constraints(subtypings : Iterable[Subtyping]) -> str:
     ])
 
 def list_out_constraints(subtypings : Iterable[Subtyping], indent = 0) -> str:
-    return ((indent * 4) * " ").join([ 
-        "--- " + concretize_typ(st.strong) + " <: " + concretize_typ(st.weak) + "\n"
+    return "\n" + "".join([ 
+        ((indent * 4) * " ") + "# " + concretize_typ(st.strong) + " <: " + concretize_typ(st.weak) + "\n\n"
         for st in subtypings 
     ])
 
@@ -1582,7 +1582,6 @@ class Solver:
 
     def __init__(self):
         self.count = 0
-        self.debug = False
 
     def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
@@ -1743,8 +1742,7 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        if self.debug:
-            print(f'''
+        print(f'''
 || DEBUG SOLVE
 =================
 ||
@@ -1752,13 +1750,13 @@ class Solver:
 || :::::::: {world.freezer}
 ||
 || world.constraints::: 
-|| :::::::: {concretize_constraints(tuple(world.constraints))}
+    {list_out_constraints(world.constraints, 1)}
 ||
 || |- {concretize_typ(strong)} 
 || <: {concretize_typ(weak)}
 ||
 || count: {self.count}
-            ''')
+        ''')
 
         if alpha_equiv(strong, weak): 
             return [world] 
@@ -1832,67 +1830,10 @@ class Solver:
 
 
 
+
         #######################################
-        #### Variable rules: ####
+        #### Learnable variable rules: ####
         #######################################
-
-
-        elif (
-            isinstance(strong, TVar) and strong.id in world.freezer and
-            isinstance(weak, TVar) and weak.id not in world.freezer
-        ):
-            # NOTE: no interpretation; simply add constraint
-            return [World(
-                world.constraints.add(Subtyping(strong, weak)),
-                world.freezer, world.relids
-            )]
-
-        # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
-        # but if uninterpretable and other type is learnable, then simply add it: 
-        elif isinstance(strong, TVar) and strong.id in world.freezer: 
-
-
-            interp = interpret_weak_for_id(world, strong.id)
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG strong, TVar frozen  
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # has interp: {interp != None}
-            # world.relids: {world.relids}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
-            if interp != None:
-                weakest_strong = interp[0]
-                return self.solve(world, weakest_strong, weak)
-            elif isinstance(weak, TVar) and weak.id not in world.freezer:
-                # TODO: consider safety check
-                #     # safe = bool(self.solve(world, Top(), weak))
-                #     safe = True
-                #     if safe:
-                #         return [World(
-                #             world.constraints.add(Subtyping(strong, weak)),
-                #             world.freezer, world.relids
-                #         )]
-                #     else:
-                #         return []
-                return [World(
-                    world.constraints.add(Subtyping(strong, weak)),
-                    world.freezer, world.relids
-                )]
-            else:
-                # print(f"""
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # !!!!!!!!!!!!!!! DEBUG strong, TVar frozen FAILURE  !!!!!!!!!!!
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # strong: {concretize_typ(strong)}
-                # weak: {concretize_typ(weak)}
-                # has interp: {interp != None}
-                # world.relids: {world.relids}
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # """)
-                return []
 
         elif isinstance(weak, TVar) and weak.id in world.freezer: 
             interp = interpret_strong_for_id(world, weak.id)
@@ -1936,6 +1877,7 @@ class Solver:
                     for world in self.solve(world, strongest, weak)
                 ]
 
+
         elif isinstance(weak, TVar) and weak.id not in world.freezer: 
             interp = interpret_weak_for_id(world, weak.id)
             if interp == None:
@@ -1959,10 +1901,10 @@ class Solver:
                     for world in self.solve(world, strong, weakest)
                 ]
 
-        #######################################
-        #### learnable bound variables ####
-        #######################################
-        # NOTE: Variable instantiation happens afte variable updates in order to maintain generalization
+
+        #########################################
+        #### learnable bound variables (EXI) ####
+        #########################################
         elif isinstance(weak, Exi): 
             renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
@@ -1977,6 +1919,11 @@ class Solver:
             return worlds
 
 
+        #########################################
+        #### learnable bound variables (ALL) ####
+        #########################################
+        # NOTE: Variable instantiation happens after variable updates in order to maintain generalization
+        # TODO: why is this necessary? for which example?
         elif isinstance(strong, All): 
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
@@ -2259,7 +2206,71 @@ class Solver:
             ]
             return worlds
 
+        #######################################
+        #### Frozen variable rules: ####
+        #######################################
+
+        elif (
+            isinstance(strong, TVar) and strong.id in world.freezer and
+            isinstance(weak, TVar) and weak.id not in world.freezer
+        ):
+            # NOTE: no interpretation; simply add constraint
+            return [World(
+                world.constraints.add(Subtyping(strong, weak)),
+                world.freezer, world.relids
+            )]
+
+        # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
+        # but if uninterpretable and other type is learnable, then simply add it: 
+        elif isinstance(strong, TVar) and strong.id in world.freezer: 
+
+
+            interp = interpret_weak_for_id(world, strong.id)
+            # print(f"""
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # DEBUG strong, TVar frozen  
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # strong: {concretize_typ(strong)}
+            # weak: {concretize_typ(weak)}
+            # has interp: {interp != None}
+            # world.relids: {world.relids}
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # """)
+            if interp != None:
+                weakest_strong = interp[0]
+                return self.solve(world, weakest_strong, weak)
+            elif isinstance(weak, TVar) and weak.id not in world.freezer:
+                # TODO: consider safety check
+                #     # safe = bool(self.solve(world, Top(), weak))
+                #     safe = True
+                #     if safe:
+                #         return [World(
+                #             world.constraints.add(Subtyping(strong, weak)),
+                #             world.freezer, world.relids
+                #         )]
+                #     else:
+                #         return []
+                return [World(
+                    world.constraints.add(Subtyping(strong, weak)),
+                    world.freezer, world.relids
+                )]
+            else:
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                !!!!!!!!!!!!!!! DEBUG strong, TVar frozen FAILURE  !!!!!!!!!!!
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                strong: {concretize_typ(strong)}
+                weak: {concretize_typ(weak)}
+                has interp: {interp != None}
+                world.relids: {world.relids}
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+                return []
+            #end if-else
+        #end if-else
         return []
+
+
 
     '''
     end solve

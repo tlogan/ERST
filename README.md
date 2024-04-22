@@ -2,6 +2,12 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
+- test `fib`, `sumr`, and `suml` on concrete examples for sanity check
+    - figure out how to clean up result for arguments of inductive case
+- add relational constraint weakening (via factoring columns) to enable relational annotations
+- develop example of function that calls different function expecting different records on same argument 
+    - e.g. `_.uno = @` and `_.dos = @` and infers `(uno : @ & dos : @)`
+
 - double check `test_max`
     - see if subbing into relational constraint is necessary for learnable variables
     - maybe not, since strongest interpretation is still available: T <: X, (X, Y) <: R 
