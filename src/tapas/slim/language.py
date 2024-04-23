@@ -98,7 +98,7 @@ end mk_task
 class Connection(Generic[T]):
     _input : Queue
     _output : Queue
-    _parser : Parser 
+    _parser : SlimParser 
     _task : Task[T]
 
     def __init__(self, input, output, parser, task):
@@ -126,6 +126,9 @@ class Connection(Generic[T]):
     async def mk_getter(self):
         return await self._task
 
+    def get_solver(self):
+        return self._parser._solver
+
 def launch() -> Connection[Optional[SlimParser.ExprContext]]:
     input : Queue = Queue()
     output : Queue = Queue()
@@ -144,7 +147,7 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     tc = parser.typ()
     return tc.combo
 
-def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str]:
+def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analyzer.Solver]:
     input_stream = InputStream(code)
     lexer = SlimLexer(input_stream)
     token_stream : Any = CommonTokenStream(lexer)
@@ -154,9 +157,9 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str]:
     if tc.worlds == None:
         raise Exception("Parsing Error")
     else:
-        return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser))
+        return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)
 
-def make_prompt(code : str) -> str:
+def refine_grammar(code : str) -> analyzer.Grammar:
     input_stream = InputStream(code)
     lexer = SlimLexer(input_stream)
     token_stream : Any = CommonTokenStream(lexer)
@@ -165,19 +168,7 @@ def make_prompt(code : str) -> str:
     tc = parser.expr(analyzer.default_context)
     rs = parser.get_syntax_rules()
     g = analyzer.from_rules_to_grammar(rs)
-
-    return f"""
-program:
-{code}
-
-***
-
-grammar:
-
-{analyzer.concretize_grammar(g)}
-
-    """
-
+    return g
 
 
 

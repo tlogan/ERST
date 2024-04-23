@@ -1376,7 +1376,7 @@ class Solver:
             (rev_aliasing, weak) = self.to_aliasing_typ(st.weak, rev_aliasing)
             new_constraints.append(Subtyping(strong, weak))
 
-        return tuple(new_constraints)
+        return (rev_aliasing, tuple(new_constraints))
 
 
     def to_aliasing_typ(self, t : Typ, rev_aliasing : PMap[Typ, str]) -> tuple[PMap[Typ, str], Typ]:
