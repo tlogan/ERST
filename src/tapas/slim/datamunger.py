@@ -24,7 +24,7 @@ from tapas.slim.language import analyze
 import re
 
 
-def make_prompt(description : str, code : str) -> str:
+def make_gpt_example(description : str, code : str) -> str:
     g = language.refine_grammar(code)
 
     return f"""

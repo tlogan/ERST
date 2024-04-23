@@ -127,7 +127,7 @@ class Connection(Generic[T]):
         return await self._task
 
     def get_solver(self):
-        return self._parser._solver
+        return self._parser.getSolver()
 
 def launch() -> Connection[Optional[SlimParser.ExprContext]]:
     input : Queue = Queue()
@@ -165,7 +165,7 @@ def refine_grammar(code : str) -> analyzer.Grammar:
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init()
-    tc = parser.expr(analyzer.default_context)
+    tc = parser.program(analyzer.default_context)
     rs = parser.get_syntax_rules()
     g = analyzer.from_rules_to_grammar(rs)
     return g

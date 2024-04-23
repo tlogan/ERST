@@ -142,6 +142,9 @@ public class SlimParser extends Parser {
 	def getGuidance(self):
 	    return self._guidance
 
+	def getSolver(self):
+	    return self._solver
+
 	def tokenIndex(self):
 	    return self.getCurrentToken().tokenIndex
 

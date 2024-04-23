@@ -46,6 +46,9 @@ def update_sr(self, head : str, body : list[Union[Nonterm, Termin]]):
 def getGuidance(self):
     return self._guidance
 
+def getSolver(self):
+    return self._solver
+
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 

@@ -290,11 +290,11 @@ class SlimParser ( Parser ):
 
     def init(self): 
         self._cache = {}
-        self._guidance = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
+        self._guidance = default_context
         self._overflow = False  
 
     def reset(self): 
-        self._guidance = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
+        self._guidance = default_context 
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -309,6 +309,9 @@ class SlimParser ( Parser ):
 
     def getGuidance(self):
         return self._guidance
+
+    def getSolver(self):
+        return self._solver
 
     def tokenIndex(self):
         return self.getCurrentToken().tokenIndex

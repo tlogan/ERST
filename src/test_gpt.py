@@ -4,19 +4,39 @@ from dataclasses import dataclass
 from typing import *
 from tapas.slim.analyzer import * 
 from tapas.slim.language import * 
+from tapas.slim.datamunger import * 
 
 
-# client = OpenAI()
+# print(make_gpt_example('''
+# A function that takes a list and returns its length
+# ''', """
+# let foo : T1 =
+# fix(case self => (
+#     case ~nil @ => ~zero @ 
+#     case ~cons (x, xs) => ~succ (self(xs)) 
+# )) 
+# ;
+# foo
+# """))
 
-# completion = client.chat.completions.create(
-#   model="gpt-3.5-turbo",
-#   messages=[
-#     {"role": "system", "content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},
-#     {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
-#   ]
-# )
+client = OpenAI()
 
-# print(completion.choices[0].message)
+completion = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+    {"role": "system", "content": '''
+You are a functional programming assistant, skilled in conjuring up simple, complex, quintessential, archetypal, and classic functional programming concepts.
+    '''},
+    {"role": "user", "content": '''
+A json object with three fields: description, program, and grammar. 
+The program adheres to the behavior described by the description.
+The program is constructed according to the rules of the grammar. 
+     '''}
+    ],
+    response_format={ "type": "json_object" }
+)
+
+print(completion.choices[0].message)
 
 
 # @dataclass(frozen=True, eq=True)
@@ -51,13 +71,3 @@ from tapas.slim.language import *
 
 # print(foldr(lambda acc, x : acc + x, mine([1,2, 3]), 0))
 # print(foldr(lambda acc, x : acc / x, mine([1,2]), 6))
-
-print(make_prompt("""
-let foo : T1 =
-fix(case self => (
-    case ~nil @ => ~zero @ 
-    case ~cons (x, xs) => ~succ (self(xs)) 
-)) 
-;
-foo
-"""))
