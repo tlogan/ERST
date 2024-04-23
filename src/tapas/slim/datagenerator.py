@@ -23,7 +23,7 @@ import pytest
 from tapas.slim.language import analyze 
 import re
 
-solver = analyzer.Solver() 
+solver = analyzer.Solver(m()) 
 
 def p(s): 
     t = language.parse_typ(s)
@@ -35,11 +35,11 @@ def u(t):
     assert s 
     return s 
 
-def decode_annotations(worlds, placeholders : list[str]) -> dict[str, str]:
-    return {
-        ph : u(analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, analyzer.TVar(ph)))) 
+def decode_annotations(worlds, placeholders : list[str]) -> PMap[str, analyzer.Typ]:
+    return pmap({
+        ph : analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, analyzer.TVar(ph))) 
         for ph in placeholders
-    }
+    })
 
 def extract_annotation_ids(prog : str) -> list[str]:
     regex = re.compile(r'let \S+ : T([0-9]+) =')
@@ -53,20 +53,50 @@ def make_input_seq(code : str, ids : list[str]) -> str:
         result = result.replace(f"T{i}", f"<extra_id_{i}>")
     return result
 
-def make_output_seq(anno_map : dict[str, str]) -> str:
-    return "".join([
-        "<" + k.replace("T", "extra_id_") + ">" + v 
-        for (k,v) in anno_map.items()
+def make_output_seq(
+    rev_aliasing : PMap[analyzer.Typ, str], 
+    anno_map : PMap[str, analyzer.Typ]
+) -> str:
+    aliasing_seq = analyzer.concretize_reversed_aliasing(rev_aliasing)
+    anno_seq = "".join([
+        "<" + k.replace("T", "extra_id_") + ">" + u(t)
+        for (k,t) in anno_map.items()
     ])
+    return aliasing_seq + anno_seq
 
+
+def to_anno_map_with_rev_aliasing(
+        anno_map : PMap[str, analyzer.Typ], 
+        rev_aliasing : PMap[analyzer.Typ, str]
+) -> tuple[PMap[analyzer.Typ, str], PMap[str, analyzer.Typ]]:  
+    # returns (rev_aliasing, new_anno_map)
+    new_anno_map = m()
+    for id, t in anno_map.items():
+        (rev_aliasing, new_typ) = solver.to_aliasing_typ(t, rev_aliasing)
+        new_anno_map = new_anno_map.set(id, new_typ)
+    return (rev_aliasing, new_anno_map)
+    
 
 def generate_example(prog : str) -> dict[str, str]: 
     ids = extract_annotation_ids(prog)
     input_seq = make_input_seq(prog, ids)
 
-    worlds = analyze(prog)[0]
-    anno_map = decode_annotations(worlds, [f"T{i}" for i in ids])
-    output_seq = make_output_seq(anno_map)
+    (worlds, t, _) = analyze(prog)
+
+
+    raw_anno_map = decode_annotations(worlds, [f"T{i}" for i in ids])
+    # (rev_aliasing, anno_map) = to_anno_map_with_rev_aliasing(raw_anno_map, solver.reversed_aliasing) 
+    # output_seq = make_output_seq(rev_aliasing, anno_map)
+    rev_aliasing : PMap[analyzer.Typ, str] = pmap()
+    print(f"""
+    ~~~~~~~~~~~~~~~~~
+    DEBUG raw_anno_map: {raw_anno_map}
+    result type: {analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))}
+    ~~~~~~~~~~~~~~~~~
+    """)
+    output_seq = make_output_seq(rev_aliasing, raw_anno_map)
+
+
     return {'input' : input_seq, 'output' : output_seq}
 
 def generate_examples(programs : list[str]) -> list[dict[str, str]]: 

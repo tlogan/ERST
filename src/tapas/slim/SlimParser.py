@@ -289,13 +289,12 @@ class SlimParser ( Parser ):
     _syntax_rules : PSet[SyntaxRule] = s() 
 
     def init(self): 
-        self._solver = default_solver 
         self._cache = {}
-        self._guidance = default_context
+        self._guidance = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
         self._overflow = False  
 
     def reset(self): 
-        self._guidance = default_context
+        self._guidance = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -596,7 +595,7 @@ class SlimParser ( Parser ):
                 self.state = 64
                 localctx._preamble = self.preamble()
 
-                self._solver = Solver(localctx._preamble.aliasing)
+                self._solver = Solver(localctx._preamble.aliasing if localctx._preamble.aliasing else m())
 
                 self.state = 66
                 localctx._expr = self.expr(context)
@@ -610,6 +609,7 @@ class SlimParser ( Parser ):
                 self.state = 69
                 localctx._expr = self.expr(context)
 
+                self._solver = Solver(m())
                 localctx.worlds = localctx._expr.worlds
 
                 pass

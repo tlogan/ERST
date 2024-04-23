@@ -22,18 +22,19 @@ let add : T1 = fix (case self => (
     example = generate_example(code)
     input = example['input']
     output = example['output']
-    reconstitute_annotations(input, output)
+    # reconstitute_annotations(input, output)
 
     # json: {json.dumps(example)}
-    # print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # generate example 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # input: {input}
+    print(f"""
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    generate example 
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    input: {input}
 
-    # output: {output}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # """)
+    output: {output}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
+    return example
 
 
 if __name__ == '__main__':

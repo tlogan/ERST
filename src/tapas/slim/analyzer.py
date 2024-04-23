@@ -442,6 +442,12 @@ def concretize_typ(typ : Typ) -> str:
 
     return util_system.make_stack_machine(make_plate_entry)(typ)
 
+def concretize_reversed_aliasing(rev_aliasing : PMap[Typ, str]):
+    return "".join([
+        "alias " + id + " = " + (concretize_typ(t)) + "\n" 
+        for t, id in rev_aliasing.items() 
+    ]) 
+
 
 
 
@@ -1344,17 +1350,81 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
         if isinstance(st.weak, TVar) and st.weak.id not in world.freezer  
     ) 
 
+default_context = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
+
 class Solver:
     _type_id : int
     _limit : int
 
     aliasing : PMap[str, Typ]
+    reversed_aliasing : PMap[Typ, str]
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id : int = 0 
         self._limit : int = 1000
         self.count = 0
         self.aliasing = aliasing
+        self.reversed_aliasing : PMap[Typ, str] = pmap({
+            t : id
+            for id, t in self.aliasing.items()
+        })
+
+    def to_aliasing_constraints(self, constraints : Iterable[Subtyping], rev_aliasing : PMap[Typ, str]) -> tuple[PMap[Typ, str], tuple[Subtyping, ...]]:
+        new_constraints = []
+        for st in constraints:
+            (rev_aliasing, strong) = self.to_aliasing_typ(st.strong, rev_aliasing)
+            (rev_aliasing, weak) = self.to_aliasing_typ(st.weak, rev_aliasing)
+            new_constraints.append(Subtyping(strong, weak))
+
+        return tuple(new_constraints)
+
+
+    def to_aliasing_typ(self, t : Typ, rev_aliasing : PMap[Typ, str]) -> tuple[PMap[Typ, str], Typ]:
+
+        if False: 
+            pass
+        elif isinstance(t, TTag):
+            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            return (rev_aliasing, TTag(t.label, body_typ)) 
+        elif isinstance(t, TField):
+            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            return (rev_aliasing, TField(t.label, body_typ)) 
+        elif isinstance(t, Imp):
+            (rev_aliasing, antec_typ) = self.to_aliasing_typ(t.antec, rev_aliasing)
+            (rev_aliasing, consq_typ) = self.to_aliasing_typ(t.consq, rev_aliasing)
+            return (rev_aliasing, Imp(antec_typ, consq_typ)) 
+        elif isinstance(t, Unio):
+            (rev_aliasing, left_typ) = self.to_aliasing_typ(t.left, rev_aliasing)
+            (rev_aliasing, right_typ) = self.to_aliasing_typ(t.right, rev_aliasing)
+            return (rev_aliasing, Unio(left_typ, right_typ)) 
+        elif isinstance(t, Inter):
+            (rev_aliasing, left_typ) = self.to_aliasing_typ(t.left, rev_aliasing)
+            (rev_aliasing, right_typ) = self.to_aliasing_typ(t.right, rev_aliasing)
+            return (rev_aliasing, Inter(left_typ, right_typ)) 
+        elif isinstance(t, Diff):
+            (rev_aliasing, context_typ) = self.to_aliasing_typ(t.context, rev_aliasing)
+            (rev_aliasing, neg_typ) = self.to_aliasing_typ(t.negation, rev_aliasing)
+            return (rev_aliasing, Diff(context_typ, neg_typ)) 
+        elif isinstance(t, Exi):
+            (rev_aliasing, constraints) = self.to_aliasing_constraints(t.constraints, rev_aliasing)
+            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            return (rev_aliasing, Exi(t.ids, constraints, body_typ))
+        elif isinstance(t, All):
+            (rev_aliasing, constraints) = self.to_aliasing_constraints(t.constraints, rev_aliasing)
+            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            return (rev_aliasing, All(t.ids, constraints, body_typ))
+        elif isinstance(t, LeastFP):
+            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            new_typ = LeastFP(t.id, body_typ)
+            if new_typ in rev_aliasing:
+                return (rev_aliasing, TVar(rev_aliasing[new_typ]))
+            else:
+                new_id = self.fresh_type_id()
+                rev_aliasing = rev_aliasing.set(new_typ, new_id)
+                return (rev_aliasing, TVar(new_id))
+        else:
+            return (rev_aliasing, t)
+
 
     def interpret_weak_for_id(self, world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
         '''
@@ -1713,11 +1783,15 @@ class Solver:
 
 
     def fresh_type_id(self) -> str:
-        self._type_id += 1
-        return (f"_{self._type_id}")
+        print(f"self id: {id(self)}")
+        print(f"debug fresh before: {self._type_id}")
+        self._type_id = self._type_id + 1
+        print(f"debug fresh after: {self._type_id}")
+        return (f"G{self._type_id}")
 
     def fresh_type_var(self) -> TVar:
-        return TVar(self.fresh_type_id())
+        id = self.fresh_type_id()
+        return TVar(f"G{self._type_id}")
 
     def make_renaming_tvars(self, old_ids) -> PMap[str, TVar]:
         '''
@@ -1756,23 +1830,23 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        print(f'''
-|| DEBUG SOLVE
-=================
-|| self.aliasing :::
-|| :::::::: {self.aliasing}
-||
-|| world.freezer::: 
-|| :::::::: {world.freezer}
-||
-|| world.constraints::: 
-    {list_out_constraints(world.constraints, 1)}
-||
-|| |- {concretize_typ(strong)} 
-|| <: {concretize_typ(weak)}
-||
-|| count: {self.count}
-        ''')
+#         print(f'''
+# || DEBUG SOLVE
+# =================
+# || self.aliasing :::
+# || :::::::: {self.aliasing}
+# ||
+# || world.freezer::: 
+# || :::::::: {world.freezer}
+# ||
+# || world.constraints::: 
+#     {list_out_constraints(world.constraints, 1)}
+# ||
+# || |- {concretize_typ(strong)} 
+# || <: {concretize_typ(weak)}
+# ||
+# || count: {self.count}
+#         ''')
 
         if alpha_equiv(strong, weak): 
             return [world] 
@@ -1797,8 +1871,6 @@ class Solver:
             strong_body = sub_typ(renaming, strong.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
-            # TODO: remove old commented code that freezes of all new variables
-            # next_id = self._type_id
             worlds = [world]
             for constraint in strong_constraints:
                 worlds = [
@@ -1806,8 +1878,6 @@ class Solver:
                     for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
-            # new_ids = (f"_{i}" for i in range(next_id, self._type_id))
-            # ... .union(new_ids)
 
             # print(f"""
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1832,8 +1902,6 @@ class Solver:
             weak_body = sub_typ(renaming, weak.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
-            # TODO: remove old commented code that freezes of all new variables
-            # next_id = self._type_id
             worlds = [world]
             for constraint in weak_constraints:
                 worlds = [
@@ -1841,8 +1909,6 @@ class Solver:
                     for m0 in worlds
                     for m1 in self.solve(m0, constraint.strong, constraint.weak)
                 ]  
-            # new_ids = (f"_{i}" for i in range(next_id, self._type_id))
-            # ... .union(new_ids)
 
             return [
                 m2
@@ -2319,8 +2385,6 @@ class Solver:
 end Solver
 '''
 
-default_solver = Solver(m())
-default_context = Context('expr', m(), [World(s(), s(), s())], default_solver.fresh_type_var())
 
 
 class Rule:
@@ -3006,11 +3070,34 @@ class ExprRule(Rule):
 
     
     def distill_let_target(self, nt : Context, id : str) -> Context:
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG let_target init
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        nt: {nt.typ_var.id}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         typ_var = self.solver.fresh_type_var()
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG let_target
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        new: {concretize_typ(typ_var)}
+        nt: {nt.typ_var.id}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         worlds = nt.worlds
         return Context('target', nt.enviro, worlds, typ_var)
 
     def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG let_contin
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        target: {concretize_typ(target)}
+        contin: {nt.typ_var.id}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         enviro = nt.enviro.set(id, target)
         return Context('expr', enviro, nt.worlds, nt.typ_var)
 
@@ -3289,12 +3376,12 @@ class TargetRule(Rule):
                 anno_typ
             )
         ]
-        for world in worlds:
-            print(f"""
-            ~~~~~~~~~~~~~~~~~~~~~~~~~
-            DEBUG anno result constraints: 
-            {list_out_constraints(world.constraints)}
-            ~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+        # for world in worlds:
+        #     print(f"""
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     DEBUG anno result constraints: 
+        #     {list_out_constraints(world.constraints)}
+        #     ~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     """)
         return worlds
 

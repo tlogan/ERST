@@ -10,7 +10,6 @@ from tapas.slim.SlimLexer import SlimLexer
 from tapas.slim.SlimParser import SlimParser, Guidance
 from tapas.slim import analyzer 
 
-
 T = TypeVar("T")
 
 from pyrsistent.typing import PMap 

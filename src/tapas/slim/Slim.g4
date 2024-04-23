@@ -25,13 +25,12 @@ _overflow = False
 _syntax_rules : PSet[SyntaxRule] = s() 
 
 def init(self): 
-    self._solver = default_solver 
     self._cache = {}
     self._guidance = default_context
     self._overflow = False  
 
 def reset(self): 
-    self._guidance = default_context
+    self._guidance = default_context 
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -142,12 +141,13 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 program [context : Context] returns [list[World] worlds] :
 
 | preamble {
-self._solver = Solver($preamble.aliasing)
+self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
 } expr[context] {
 $worlds = $expr.worlds
 }
 
 | expr[context] {
+self._solver = Solver(m())
 $worlds = $expr.worlds
 }
 

@@ -722,14 +722,17 @@ fix(case self => (
     case ~cons x => (~succ (self(x))) 
 ))
     '''
-# (_8 -> _11) -> ((~nil @ -> ~zero @) & (~cons _15 -> ~succ _16)))
-# expect: _15 <: _8 // _11 <: _16
-# actual: _8 <: 15 // _16 <: _11
+    (worlds, typ_var, parsetree) = analyze(code)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
 
-
-# given: _8 <: 15 // _16 <: _11
-# expect: (15 -> 16) -> (~cons _8 -> ~succ _11) 
-
+def test_fix_aliased():
+    code = '''
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => (~succ (self(x))) 
+))
+    '''
     (worlds, typ_var, parsetree) = analyze(code)
     print("answer: " + decode_positive(worlds, typ_var))
     # assert decode_positive(worlds, typ_var) == "@"
@@ -1414,9 +1417,34 @@ x
     assert not worlds
     assert decode_positive(worlds, typ_var) == "BOT"
 
+def test_annotated_let():
+    code = (f'''
+alias Z = @
+let x : ~uno B = ~uno @ ;
+let ident : T0 = (case x => x) ;
+let add : T1 = fix (case self => ( 
+    case (~zero @, b) => b 
+    case (~succ a, b) => ~succ (self(a, b))
+)) ;
+@
+    ''')
+
+    code = (f'''
+let y : T = (~dos @) ;
+@
+    ''')
+    (worlds, typ_var, parsetree) = analyze(code)
+    # print(p
+    print(f"len(worlds): {len(worlds)}")
+    print_worlds(worlds)
+    print("answer: " + decode_positive(worlds, typ_var))
+    # assert decode_positive(worlds, typ_var) == "@"
+
+
 
 if __name__ == '__main__':
-    test_preamble_fail()
+    test_annotated_let()
+    # test_preamble_fail()
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
     # TODO

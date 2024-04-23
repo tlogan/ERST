@@ -121,13 +121,12 @@ public class SlimParser extends Parser {
 	_syntax_rules : PSet[SyntaxRule] = s() 
 
 	def init(self): 
-	    self._solver = default_solver 
 	    self._cache = {}
 	    self._guidance = default_context
 	    self._overflow = False  
 
 	def reset(self): 
-	    self._guidance = default_context
+	    self._guidance = default_context 
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -392,7 +391,7 @@ public class SlimParser extends Parser {
 				setState(64);
 				((ProgramContext)_localctx).preamble = preamble();
 
-				self._solver = Solver(((ProgramContext)_localctx).preamble.aliasing)
+				self._solver = Solver(((ProgramContext)_localctx).preamble.aliasing if ((ProgramContext)_localctx).preamble.aliasing else m())
 
 				setState(66);
 				((ProgramContext)_localctx).expr = expr(context);
@@ -407,6 +406,7 @@ public class SlimParser extends Parser {
 				setState(69);
 				((ProgramContext)_localctx).expr = expr(context);
 
+				self._solver = Solver(m())
 				_localctx.worlds = ((ProgramContext)_localctx).expr.worlds
 
 				}
