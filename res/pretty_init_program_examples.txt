@@ -1,0 +1,68 @@
+
+<<<<<<<<
+*** description ***
+A program that defines some basic values.
+
+*** grammar ***
+target ::= ":" "T[0-9]+" "=" expr
+
+expr ::= "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | base
+
+base ::= "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+
+
+*** program ***
+let unit : T0 = @ ;
+let true : T1 = ~true @ ;
+let false : T2 = ~false @ ;
+let zero : T3 = ~zero @ ;
+let one : T4 = ~succ ~zero @ ;
+let two : T5 = ~succ ~succ ~zero @ ;
+@
+>>>>>>>>
+    
+
+<<<<<<<<
+*** description ***
+A program that defines a function that takes a list and returns its length.
+
+*** grammar ***
+expr ::= "fix" "(" expr ")"
+       | base argchain
+       | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | base
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "@"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+
+basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
+          | "@"
+          | "(" pattern ")"
+          | "[a-zA-Z][_a-zA-Z]*"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
+
+pattern ::= basepat
+          | basepat "," pattern
+
+target ::= ":" "T[0-9]+" "=" expr
+
+argchain ::= "(" expr ")"
+
+
+
+*** program ***
+let length : T0 = fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) ;
+@
+>>>>>>>>
+    

@@ -60,7 +60,7 @@ def concretize_rule_body(items : SyntaxSeq) -> str:
         (
             item.id
             if isinstance(item, Nonterm) else
-            f"'{item.pattern}'"
+            f'"{item.pattern}"'
             if isinstance(item, Termin) else
             "<ERROR>"
         )
@@ -86,6 +86,7 @@ Prompt identifier lexemes
 '''
 ID = t(r"[a-zA-Z][_a-zA-Z]*")
 TID = t(r"T[0-9]+")
+SEMI = t(';')
 
 # def make_prompt_grammar() -> Grammar: 
 #     return {

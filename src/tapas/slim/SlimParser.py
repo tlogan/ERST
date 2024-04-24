@@ -1466,8 +1466,8 @@ class SlimParser ( Parser ):
                 self.state = 249
                 localctx.contin = self.expr(contin_nt)
 
-                localctx.worlds =  localctx.contin.worlds
-                self.update_sr('expr', [t('let'), ID, n('target'), t(''), n('expr')])
+                localctx.worlds = localctx.contin.worlds
+                self.update_sr('expr', [t('let'), ID, n('target'), SEMI, n('expr')])
 
                 pass
 

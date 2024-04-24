@@ -1,0 +1,49 @@
+
+<<<<<<<<
+*** program ***
+let unit : <extra_id_0> = @ ;
+let true : <extra_id_1> = ~true @ ;
+let false : <extra_id_2> = ~false @ ;
+let zero : <extra_id_3> = ~zero @ ;
+let one : <extra_id_4> = ~succ ~zero @ ;
+let two : <extra_id_5> = ~succ ~succ ~zero @ ;
+@
+
+*** context ***
+<<TODO>>
+
+*** aliasing ***
+
+
+*** annotations ***
+<extra_id_5> ~succ ~succ ~zero @
+<extra_id_4> ~succ ~zero @
+<extra_id_3> ~zero @
+<extra_id_0> @
+<extra_id_1> ~true @
+<extra_id_2> ~false @
+
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let length : <extra_id_0> = fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) ;
+@
+
+*** context ***
+<<TODO>>
+
+*** aliasing ***
+alias G23 = (LFP G20 (~nil @ | (EXI [G9 G8 ; G9 <: G20] ~cons (G8, G9))))
+alias G24 = (LFP G20 ((~nil @, ~zero @) | (EXI [G9 G8 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))
+
+
+*** annotations ***
+<extra_id_0> (ALL [G21 ; G21 <: G23] (G21 -> (EXI [G22 ; (G21, G22) <: G24] G22)))
+
+>>>>>>>>
+    

@@ -1222,8 +1222,8 @@ public class SlimParser extends Parser {
 				setState(249);
 				((ExprContext)_localctx).contin = expr(contin_nt);
 
-				((ExprContext)_localctx).worlds =  ((ExprContext)_localctx).contin.worlds
-				self.update_sr('expr', [t('let'), ID, n('target'), t(';'), n('expr')])
+				_localctx.worlds = ((ExprContext)_localctx).contin.worlds
+				self.update_sr('expr', [t('let'), ID, n('target'), SEMI, n('expr')])
 
 				}
 				break;

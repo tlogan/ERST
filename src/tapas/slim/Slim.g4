@@ -406,7 +406,7 @@ nt = replace(nt, worlds = $target.worlds)
 contin_nt = self.guide_nonterm(ExprRule(self._solver).distill_let_contin, nt, $ID.text, target_nt.typ_var)
 } contin = expr[contin_nt] {
 $worlds = $contin.worlds
-self.update_sr('expr', [t('let'), ID, n('target'), t(';'), n('expr')])
+self.update_sr('expr', [t('let'), ID, n('target'), SEMI, n('expr')])
 }
 // nt = replace(nt, worlds = contin.worlds)
 // $worlds = self.guide_nonterm(ExprRule(self._solver).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)

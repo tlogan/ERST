@@ -35,7 +35,7 @@ from tapas.util_system import *
 
 
 
-def make_gpt_example(description : str, code : str) -> str:
+def make_program_example(description : str, code : str) -> str:
     g = language.refine_grammar(code)
     return json.dumps({
         'description' : description.strip(),
@@ -44,11 +44,27 @@ def make_gpt_example(description : str, code : str) -> str:
     })
 
 
+def prettify_program_example(example) -> str:
+    sample = json.loads(example) 
+    return (f"""
+<<<<<<<<
+*** description ***
+{sample['description']}
+
+*** grammar ***
+{sample['grammar']}
+
+*** program ***
+{sample['program']}
+>>>>>>>>
+    """)
+
+
 
 
 client = OpenAI()
 
-def generate_gpt_example(prev_examples, temperature=.5):
+def generate_gpt_example(examples, temperature=.5):
     messages : Iterable =[
         {"role": "system", "content": '''
 You are a functional programming assistant, skilled in conjuring up 
@@ -61,9 +77,9 @@ Do not assume a helper function exists unless you define it.
         '''}
     ]
 
-    if len(prev_examples) > 0:
-        if len(prev_examples) > 10:
-            prev_examples = random.sample(prev_examples, 10)
+    if len(examples) > 0:
+        if len(examples) > 10:
+            prev_examples = random.sample(examples, 10)
         for example in prev_examples:
             messages.append({
                 "role": "assistant",
@@ -136,14 +152,13 @@ case (b, l)  => (
 )
     """).strip())
 
-    # TODO: add example showing strengthening abilities
-
 # end FunLib
     
 lib = Lib()
 
-init_gpt_examples = [
-    make_gpt_example(f"""
+init_program_examples = [
+
+    make_program_example(f"""
 A program that defines some basic values.
     """, f"""
 let unit : T0 = @ ;
@@ -154,61 +169,62 @@ let one : T4 = ~succ ~zero @ ;
 let two : T5 = ~succ ~succ ~zero @ ;
 @
     """),
-    make_gpt_example(f"""
+
+    make_program_example(f"""
 A program that defines a function that takes a list and returns its length.
     """, f"""
 let length : T0 = {lib.length} ;
 @
     """),
 
-    make_gpt_example(f"""
-A program that defines addition and multiplication.
-    """, f"""
-let add : T0 = {lib.add} ;
-let plus : T1 = add ;
-let mult : T2 = {lib.mult('add')} ;
-let times : T3 = {lib.mult('plus')} ;
-@
-    """),
+#     make_program_example(f"""
+# A program that defines addition and multiplication.
+#     """, f"""
+# let add : T0 = {lib.add} ;
+# let plus : T1 = add ;
+# let mult : T2 = {lib.mult('add')} ;
+# let times : T3 = {lib.mult('plus')} ;
+# @
+#     """),
 
-    make_gpt_example(f"""
-A program that defines less-than-or-equal of two numbers and maximum of two numbers.
-    """, f"""
-let lte : T0 = {lib.lte} ;
-let max : T1 = {lib.max('lte')} ;
-@
-    """),
+#     make_program_example(f"""
+# A program that defines less-than-or-equal of two numbers and maximum of two numbers.
+#     """, f"""
+# let lte : T0 = {lib.lte} ;
+# let max : T1 = {lib.max('lte')} ;
+# @
+#     """),
 
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
-    make_gpt_example(f"""
-A program that defines construction of a pair by calling two different functions on the same input.
-    """, f"""
-let f : T0 = (case (_.uno = x) => x)
-let g : T1 = (case (_.dos = x) => x)
-let make_pair : T2 = {lib.refiner('f', 'g')} ;
-let max : T1 = {lib.max('lte')} ;
-@
-    """),
+#     # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
+#     make_program_example(f"""
+# A program that defines construction of a pair by calling two different functions on the same input.
+#     """, f"""
+# let f : T0 = (case (_.uno = x) => x)
+# let g : T1 = (case (_.dos = x) => x)
+# let make_pair : T2 = {lib.refiner('f', 'g')} ;
+# let max : T1 = {lib.max('lte')} ;
+# @
+#     """),
 
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
-    make_gpt_example(f"""
-A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
-    """, f"""
-let length : T0 = {lib.length} ;
-let maybe_with_length : T1 = {lib.expander('length')} ;
-@
-    """),
+#     # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
+#     make_program_example(f"""
+# A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
+#     """, f"""
+# let length : T0 = {lib.length} ;
+# let maybe_with_length : T1 = {lib.expander('length')} ;
+# @
+#     """),
 
 ]
 
-def generate_gpt_examples(num_examples = 10, temperature=.5):
-    prev_examples = init_gpt_examples.copy()
+def generate_program_examples(num_examples = 10, temperature=.5):
+    new_examples = []
     for i in range(num_examples):
         print(f'Generating GPT example {i}')
-        example = generate_gpt_example(prev_examples, temperature)
+        example = generate_gpt_example(new_examples + init_program_examples.copy(), temperature)
         if example:
-            prev_examples.append(example)
-    return prev_examples
+            new_examples.append(example)
+    return new_examples
 
 
 
@@ -235,22 +251,6 @@ def extract_annotation_ids(prog : str) -> list[str]:
     return matches
 
 
-def make_input_seq(code : str, ids : list[str]) -> str:
-    result = code 
-    for i in ids:
-        result = result.replace(f"T{i}", f"<extra_id_{i}>")
-    return result
-
-def make_output_seq(
-    rev_aliasing : PMap[analyzer.Typ, str], 
-    anno_map : PMap[str, analyzer.Typ]
-) -> str:
-    aliasing_seq = analyzer.concretize_reversed_aliasing(rev_aliasing)
-    anno_seq = "".join([
-        "<" + k.replace("T", "extra_id_") + ">" + u(t)
-        for (k,t) in anno_map.items()
-    ])
-    return aliasing_seq + anno_seq
 
 
 def to_anno_map_with_rev_aliasing(
@@ -266,21 +266,59 @@ def to_anno_map_with_rev_aliasing(
     return (rev_aliasing, new_anno_map)
     
 
-def make_example(prog : str) -> dict[str, str]: 
+def make_masked_program(code : str, ids : list[str]) -> str:
+    result = code 
+    for i in ids:
+        result = result.replace(f"T{i}", f"<extra_id_{i}>")
+    return result
+
+def make_masked_annotations(
+    anno_map : PMap[str, analyzer.Typ]
+) -> str:
+    return "".join([
+        "<" + k.replace("T", "extra_id_") + "> " + u(t) + "\n"
+        for (k,t) in anno_map.items()
+    ])
+
+def make_annotation_example(prog : str) -> str: 
     # TODO: modify to include serialized worlds as context in input
     (worlds, t, _, solver) = analyze(prog)
+    context = "<<TODO>>"
     ids = extract_annotation_ids(prog)
-    input_seq = make_input_seq(prog, ids)
+    masked_prog = make_masked_program(prog, ids)
     raw_anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
     (rev_aliasing, anno_map) = to_anno_map_with_rev_aliasing(solver, raw_anno_map, solver.reversed_aliasing) 
-    output_seq = make_output_seq(rev_aliasing, anno_map)
+    aliasing = analyzer.concretize_reversed_aliasing(rev_aliasing)
+    annotations = make_masked_annotations(anno_map)
 
+    return json.dumps({
+        'program' : masked_prog, 
+        'context' : context, 
+        'aliasing' : aliasing, 
+        'annotations' : annotations
+    })
 
-    return {'input' : input_seq, 'output' : output_seq}
+def prettify_annotation_example(example) -> str:
+    sample = json.loads(example) 
+    return (f"""
+<<<<<<<<
+*** program ***
+{sample['program']}
 
-def make_examples(programs : list[str]) -> list[dict[str, str]]: 
+*** context ***
+{sample['context']}
+
+*** aliasing ***
+{sample['aliasing']}
+
+*** annotations ***
+{sample['annotations']}
+>>>>>>>>
+    """)
+
+def make_annotation_examples(programs : list[str]) -> list[str]: 
     return [
-        make_example(prog)
+        make_annotation_example(prog)
         for prog in programs
     ]
 
