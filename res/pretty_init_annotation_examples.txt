@@ -12,16 +12,13 @@ let two : <extra_id_5> = ~succ ~succ ~zero @ ;
 *** context ***
 <<TODO>>
 
-*** aliasing ***
-
-
 *** annotations ***
 <extra_id_0> @
-<extra_id_1> ~true @
-<extra_id_5> ~succ ~succ ~zero @
-<extra_id_3> ~zero @
 <extra_id_2> ~false @
+<extra_id_1> ~true @
+<extra_id_3> ~zero @
 <extra_id_4> ~succ ~zero @
+<extra_id_5> ~succ ~succ ~zero @
 
 >>>>>>>>
     
@@ -37,13 +34,8 @@ let length : <extra_id_0> = fix(case self => (
 *** context ***
 <<TODO>>
 
-*** aliasing ***
-alias G24 = (LFP G20 ((~nil @, ~zero @) | (EXI [G8 G9 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))
-alias G23 = (LFP G20 (~nil @ | (EXI [G8 G9 ; G9 <: G20] ~cons (G8, G9))))
-
-
 *** annotations ***
-<extra_id_0> (ALL [G21 ; G21 <: G23] (G21 -> (EXI [G22 ; (G21, G22) <: G24] G22)))
+<extra_id_0> (ALL [G21 ; G21 <: (LFP G20 (~nil @ | (EXI [G9 G8 ; G9 <: G20] ~cons (G8, G9))))] (G21 -> (EXI [G22 ; (G21, G22) <: (LFP G20 ((~nil @, ~zero @) | (EXI [G9 G8 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))] G22)))
 
 >>>>>>>>
     
@@ -59,13 +51,33 @@ let add : <extra_id_0> = fix (case self => (
 *** context ***
 <<TODO>>
 
-*** aliasing ***
-alias G26 = (LFP G22 ((EXI [G21 G21 ; G19 <: G3] ((~zero @, G21), G21)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G22] ((~succ G8, G9), ~succ G18))))
-alias G25 = (LFP G22 ((EXI [G21 ; G19 <: G3] (~zero @, G21)) | (EXI [G8 G9 ; (G8, G9) <: G22] (~succ G8, G9))))
+*** annotations ***
+<extra_id_0> (ALL [G27 ; G27 <: (LFP G24 ((EXI [G23 G6] (~zero @, (G23 & G6))) | (EXI [G9 G8 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G23 G6] ((~zero @, (G23 & G6)), G23)) | (EXI [G9 G8 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28)))
 
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let lte : <extra_id_0> = fix(case self => (
+    case (~zero @, n) => ~true @ 
+    case (~succ m, ~succ n) => self(m,n) 
+    case (~succ m, ~zero @) => ~false @ 
+)) ;
+let max : <extra_id_1> = case (x, y) => (
+    if (lte)(x, y) then
+        y
+    else
+        x
+) ;
+@
+
+*** context ***
+<<TODO>>
 
 *** annotations ***
-<extra_id_0> (ALL [G8 G3 G18 G2 G6 G9 G19 ; (G3 -> (((~zero @, G6) -> G6) & (ALL [ ; G3 <: ((G8, G9) -> G18)] ((~succ G8, G9) -> ~succ G18)))) <: G2] (ALL [G23 ; G23 <: G25] (G23 -> (EXI [G24 ; (G23, G24) <: G26] G24))))
+<extra_id_0> (ALL [G31 ; G31 <: (LFP G27 ((EXI [G6] (~zero @, G6)) | ((EXI [G9 G10 ; (G9, G10) <: G27] (~succ G9, ~succ G10)) | (EXI [G18] (~succ G18, ~zero @)))))] (G31 -> (EXI [G32 ; (G31, G32) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @)))))] G32)))
+<extra_id_1> (ALL [G34 G35 G45 G43] ((ALL [G52 G53 ; G52 <: G34 ; G53 <: G35 ; G45 <: G43 ; ((G52, G53), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G43 <: ~true @] ((G52, G53) -> G53)) & (ALL [G50 G51 ; G50 <: G34 ; G51 <: G35 ; G45 <: G43 ; ((G50, G51), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G43 <: ~false @] ((G50, G51) -> G50))))
 
 >>>>>>>>
     

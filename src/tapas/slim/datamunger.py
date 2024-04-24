@@ -184,13 +184,13 @@ let add : T0 = {lib.add} ;
 @
     """),
 
-#     make_program_example(f"""
-# A program that defines less-than-or-equal of two numbers and maximum of two numbers.
-#     """, f"""
-# let lte : T0 = {lib.lte} ;
-# let max : T1 = {lib.max('lte')} ;
-# @
-#     """),
+    make_program_example(f"""
+A program that defines less-than-or-equal of two numbers and maximum of two numbers.
+    """, f"""
+let lte : T0 = {lib.lte} ;
+let max : T1 = {lib.max('lte')} ;
+@
+    """),
 
 #     make_program_example(f"""
 # A program that defines addition and multiplication.
@@ -289,7 +289,7 @@ def make_masked_annotations(
     ])
 
 def make_annotation_example(prog : str) -> str: 
-    # TODO: modify to include serialized worlds as context in input
+    # TODO: modify to include serialized unsolved constraints as context in input
     (worlds, t, _, solver) = analyze(prog)
     context = "<<TODO>>"
     ids = extract_annotation_ids(prog)
@@ -319,9 +319,6 @@ def prettify_annotation_example(example) -> str:
 
 *** context ***
 {sample['context']}
-
-*** aliasing ***
-{sample['aliasing']}
 
 *** annotations ***
 {sample['annotations']}

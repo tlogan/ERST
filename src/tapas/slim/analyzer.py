@@ -2524,25 +2524,25 @@ class BaseRule(Rule):
             for new_world, imp in constrained_branches:
                 generalized_case = imp
                 ######## DEBUG: without generalization #############
-                constraints = tuple(extract_reachable_constraints_from_typ(new_world, imp))
-                if constraints:
-                    generalized_case = All((), constraints, imp)
-                else:
-                    generalized_case = imp
-                ######## TODO: generalize in a separate loop over constrained_branches #############
-                # fvs = extract_free_vars_from_typ(s(), param_typ)
-                # renaming = self.solver.make_renaming_tvars(fvs)
-                # sub_map = cast_up(renaming)
-                # bound_ids = tuple(var.id for var in renaming.values())
-                # constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
-                #     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
-                # )
-
-                # renamed_imp = sub_typ(sub_map, imp)
-                # if bound_ids or constraints:
-                #     generalized_case = All(bound_ids, constraints, renamed_imp)
+                # constraints = tuple(extract_reachable_constraints_from_typ(new_world, imp))
+                # if constraints:
+                #     generalized_case = All((), constraints, imp)
                 # else:
-                #     generalized_case = renamed_imp
+                #     generalized_case = imp
+                ######## NOTE: generalization and extrusion #############
+                fvs = extract_free_vars_from_typ(s(), param_typ)
+                renaming = self.solver.make_renaming_tvars(fvs)
+                sub_map = cast_up(renaming)
+                bound_ids = tuple(var.id for var in renaming.values())
+                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                    sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
+                )
+
+                renamed_imp = sub_typ(sub_map, imp)
+                if bound_ids or constraints:
+                    generalized_case = All(bound_ids, constraints, renamed_imp)
+                else:
+                    generalized_case = renamed_imp
                 #############################################
                 result = Inter(generalized_case, result)
             '''
