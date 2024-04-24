@@ -3,6 +3,7 @@
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
 - generate gpt example for `max`, `add`, `suml`, `sumr`, and others
+- write function that generates annotation examples from gpt examples
 - test `test_add` ; make sure there's not extra info
 - add in generalization and diffing 
 - add worlds as context in annotation_example processing 

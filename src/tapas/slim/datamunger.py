@@ -52,7 +52,7 @@ def generate_gpt_example(prev_examples, temperature=.5):
     messages : Iterable =[
         {"role": "system", "content": '''
 You are a functional programming assistant, skilled in conjuring up 
-simple, complex, quintessential, archetypal, and classic functional programming concepts.
+archetypal and classic functional programming concepts.
 You are generating data about functional programs where each datum is 
 a json object with three fields: 'description', 'grammar', and 'program'. 
 The program adheres to the behavior described by the description (English).
@@ -94,7 +94,7 @@ fix(case self => (
     add = (f"""
 fix (case self => ( 
     case (~zero @, n) => n 
-    case (~succ n, m) => ~succ (self(n, m))
+    case (~succ m, n) => ~succ (self(m, n))
 ))
     """.strip())
     mult : Callable[[str], str] = (lambda add : (f"""
@@ -103,6 +103,41 @@ fix (case self => (
     case (~succ m, n) => ({add})(n, (self)(m, n))
 ))
     """).strip())
+    lte = (f"""
+fix(case self => (
+    case (~zero @, n) => ~true @ 
+    case (~succ m, ~succ n) => self(m,n) 
+    case (~succ m, ~zero @) => ~false @ 
+))
+    """.strip())
+    max : Callable[[str], str] = (lambda lte : (f"""
+case (x, y) => (
+    if ({lte})(x, y) then
+        y
+    else
+        x
+)
+    """).strip())
+
+    # NOTE: an example demonstrating refinement abilities
+    refiner : Callable[[str, str], str] = (lambda f, g : (f"""
+case x => (
+    (({f})(x), ({g})(x))
+)
+    """).strip())
+
+    # NOTE: an example demonstrating expansion abilities
+    expander : Callable[[str], str] = (lambda length : (f"""
+case (b, l)  => (
+    if b then
+        (l, ({length})(l)
+    else
+        l
+)
+    """).strip())
+
+    # TODO: add example showing strengthening abilities
+
 # end FunLib
     
 lib = Lib()
@@ -132,9 +167,38 @@ A program that defines addition and multiplication.
 let add : T0 = {lib.add} ;
 let plus : T1 = add ;
 let mult : T2 = {lib.mult('add')} ;
-let times : T3 = mult ;
+let times : T3 = {lib.mult('plus')} ;
 @
     """),
+
+    make_gpt_example(f"""
+A program that defines less-than-or-equal of two numbers and maximum of two numbers.
+    """, f"""
+let lte : T0 = {lib.lte} ;
+let max : T1 = {lib.max('lte')} ;
+@
+    """),
+
+    # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
+    make_gpt_example(f"""
+A program that defines construction of a pair by calling two different functions on the same input.
+    """, f"""
+let f : T0 = (case (_.uno = x) => x)
+let g : T1 = (case (_.dos = x) => x)
+let make_pair : T2 = {lib.refiner('f', 'g')} ;
+let max : T1 = {lib.max('lte')} ;
+@
+    """),
+
+    # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
+    make_gpt_example(f"""
+A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
+    """, f"""
+let length : T0 = {lib.length} ;
+let maybe_with_length : T1 = {lib.expander('length')} ;
+@
+    """),
+
 ]
 
 def generate_gpt_examples(num_examples = 10, temperature=.5):
