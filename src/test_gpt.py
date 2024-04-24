@@ -5,39 +5,29 @@ from typing import *
 from tapas.slim.analyzer import * 
 from tapas.slim.language import * 
 from tapas.slim.datamunger import * 
+import random
+from tapas.util_system import *
 
 
-# print(make_gpt_example('''
-# A function that takes a list and returns its length
-# ''', """
-# let foo : T1 =
-# fix(case self => (
-#     case ~nil @ => ~zero @ 
-#     case ~cons (x, xs) => ~succ (self(xs)) 
-# )) 
-# ;
-# foo
-# """))
 
-client = OpenAI()
+gpt_examples = [
+    make_gpt_example('''
+A function that takes a list and returns its length
+        ''', """
+let foo : T1 =
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) 
+;
+foo
+    """)
+]
 
-completion = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[
-    {"role": "system", "content": '''
-You are a functional programming assistant, skilled in conjuring up simple, complex, quintessential, archetypal, and classic functional programming concepts.
-    '''},
-    {"role": "user", "content": '''
-A json object with three fields: description, program, and grammar. 
-The program adheres to the behavior described by the description.
-The program is constructed according to the rules of the grammar. 
-     '''}
-    ],
-    response_format={ "type": "json_object" }
-)
 
-print(completion.choices[0].message)
-
+print(gpt_examples)
+gpt_data = generate_gpt_examples()
+write(project_path("res"), "gpt_examples.jsonl", "\n".join(gpt_data))
 
 # @dataclass(frozen=True, eq=True)
 # class Cons: 

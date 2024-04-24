@@ -2,10 +2,11 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- create loop to query GPT
+- generate gpt example for `max`, `add`, `suml`, `sumr`, and others
 - test `test_add` ; make sure there's not extra info
 - add in generalization and diffing 
-- add worlds as context in example generation 
+- add worlds as context in annotation_example processing 
+- write annotation examples to file 
 
 
 

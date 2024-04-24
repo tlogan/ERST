@@ -22,32 +22,90 @@ from pyrsistent.typing import PMap, PSet
 import pytest
 from tapas.slim.language import analyze 
 import re
+import json
+
+from openai import OpenAI
+from dataclasses import dataclass
+from typing import *
+from tapas.slim.analyzer import * 
+from tapas.slim.language import * 
+import random
+from tapas.util_system import *
+
+
 
 
 def make_gpt_example(description : str, code : str) -> str:
     g = language.refine_grammar(code)
-
-    return f"""
-description:
-
-{description.strip()}
-
-***
-
-program:
-
-{code.strip()}
-
-***
-
-grammar:
-
-{analyzer.concretize_grammar(g)}
-
-    """
+    return json.dumps({
+        'description' : description.strip(),
+        'program' : code.strip(),
+        'grammar' : analyzer.concretize_grammar(g)
+    })
 
 
-## TODO: GPT data generation 
+
+
+client = OpenAI()
+
+def generate_gpt_example(prev_examples, temperature=.5):
+    messages : Iterable =[
+        {"role": "system", "content": '''
+You are a functional programming assistant, skilled in conjuring up 
+simple, complex, quintessential, archetypal, and classic functional programming concepts.
+You are generating data about functional programs where each datum is 
+a json object with three fields: description, program, and grammar. 
+The program adheres to the behavior described by the description.
+The program is constructed according to the rules of the grammar. 
+Do not assume a helper function exists unless you define it.
+        '''}
+    ]
+
+    if len(prev_examples) > 0:
+        if len(prev_examples) > 10:
+            prev_examples = random.sample(prev_examples, 10)
+        for example in prev_examples:
+            messages.append({
+                "role": "assistant",
+                "content": example
+            })
+
+    # response = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        # model="gpt-4",
+        messages=messages,
+        temperature=temperature,
+        response_format={ "type": "json_object" },
+        max_tokens=1354,
+    )
+
+    # return response.choices[0].message['content']
+    print(completion.choices[0].message.content)
+    return completion.choices[0].message.content
+
+init_gpt_examples = [
+    make_gpt_example('''
+A function that takes a list and returns its length
+        ''', """
+let foo : T1 =
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) 
+;
+foo
+    """)
+]
+
+def generate_gpt_examples(num_examples = 10, temperature=.5):
+    prev_examples = init_gpt_examples 
+    for i in range(num_examples):
+        print(f'Generating GPT example {i}')
+        example = generate_gpt_example(prev_examples, temperature)
+        if example:
+            prev_examples.append(example)
+    return prev_examples
 
 
 

@@ -1783,15 +1783,11 @@ class Solver:
 
 
     def fresh_type_id(self) -> str:
-        print(f"self id: {id(self)}")
-        print(f"debug fresh before: {self._type_id}")
         self._type_id = self._type_id + 1
-        print(f"debug fresh after: {self._type_id}")
         return (f"G{self._type_id}")
 
     def fresh_type_var(self) -> TVar:
-        id = self.fresh_type_id()
-        return TVar(f"G{self._type_id}")
+        return TVar(self.fresh_type_id())
 
     def make_renaming_tvars(self, old_ids) -> PMap[str, TVar]:
         '''
@@ -3070,34 +3066,11 @@ class ExprRule(Rule):
 
     
     def distill_let_target(self, nt : Context, id : str) -> Context:
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG let_target init
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        nt: {nt.typ_var.id}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         typ_var = self.solver.fresh_type_var()
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG let_target
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        new: {concretize_typ(typ_var)}
-        nt: {nt.typ_var.id}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         worlds = nt.worlds
         return Context('target', nt.enviro, worlds, typ_var)
 
     def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG let_contin
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        target: {concretize_typ(target)}
-        contin: {nt.typ_var.id}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         enviro = nt.enviro.set(id, target)
         return Context('expr', enviro, nt.worlds, nt.typ_var)
 
@@ -3360,14 +3333,6 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
     def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG anno: 
-        {concretize_typ(nt.typ_var)}
-        <:
-        {concretize_typ(anno_typ)}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         worlds = [
             m1
             for m0 in nt.worlds
@@ -3376,12 +3341,5 @@ class TargetRule(Rule):
                 anno_typ
             )
         ]
-        # for world in worlds:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     DEBUG anno result constraints: 
-        #     {list_out_constraints(world.constraints)}
-        #     ~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     """)
         return worlds
 
