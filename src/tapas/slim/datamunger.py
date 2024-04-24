@@ -39,8 +39,8 @@ def make_gpt_example(description : str, code : str) -> str:
     g = language.refine_grammar(code)
     return json.dumps({
         'description' : description.strip(),
+        'grammar' : analyzer.concretize_grammar(g),
         'program' : code.strip(),
-        'grammar' : analyzer.concretize_grammar(g)
     })
 
 
@@ -54,9 +54,9 @@ def generate_gpt_example(prev_examples, temperature=.5):
 You are a functional programming assistant, skilled in conjuring up 
 simple, complex, quintessential, archetypal, and classic functional programming concepts.
 You are generating data about functional programs where each datum is 
-a json object with three fields: description, program, and grammar. 
-The program adheres to the behavior described by the description.
-The program is constructed according to the rules of the grammar. 
+a json object with three fields: 'description', 'grammar', and 'program'. 
+The program adheres to the behavior described by the description (English).
+The program is constructed according to the rules of the grammar (EBNF). 
 Do not assume a helper function exists unless you define it.
         '''}
     ]
@@ -81,25 +81,64 @@ Do not assume a helper function exists unless you define it.
     )
 
     # return response.choices[0].message['content']
-    print(completion.choices[0].message.content)
     return completion.choices[0].message.content
 
-init_gpt_examples = [
-    make_gpt_example('''
-A function that takes a list and returns its length
-        ''', """
-let foo : T1 =
+@dataclass(frozen=True, eq=True)
+class Lib: 
+    length = (f"""
 fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons (x, xs) => ~succ (self(xs)) 
 )) 
-;
-foo
-    """)
+    """.strip())
+    add = (f"""
+fix (case self => ( 
+    case (~zero @, n) => n 
+    case (~succ n, m) => ~succ (self(n, m))
+))
+    """.strip())
+    mult : Callable[[str], str] = (lambda add : (f"""
+fix (case self => ( 
+    case (~zero @, n) => ~zero 
+    case (~succ m, n) => ({add})(n, (self)(m, n))
+))
+    """).strip())
+# end FunLib
+    
+lib = Lib()
+
+init_gpt_examples = [
+    make_gpt_example(f"""
+A program that defines some basic values.
+    """, f"""
+let unit : T0 = @ ;
+let true : T1 = ~true @ ;
+let false : T2 = ~false @ ;
+let zero : T3 = ~zero @ ;
+let one : T4 = ~succ ~zero @ ;
+let two : T5 = ~succ ~succ ~zero @ ;
+@
+    """),
+    make_gpt_example(f"""
+A program that defines a function that takes a list and returns its length.
+    """, f"""
+let length : T0 = {lib.length} ;
+@
+    """),
+
+    make_gpt_example(f"""
+A program that defines addition and multiplication.
+    """, f"""
+let add : T0 = {lib.add} ;
+let plus : T1 = add ;
+let mult : T2 = {lib.mult('add')} ;
+let times : T3 = mult ;
+@
+    """),
 ]
 
 def generate_gpt_examples(num_examples = 10, temperature=.5):
-    prev_examples = init_gpt_examples 
+    prev_examples = init_gpt_examples.copy()
     for i in range(num_examples):
         print(f'Generating GPT example {i}')
         example = generate_gpt_example(prev_examples, temperature)

@@ -7,27 +7,41 @@ from tapas.slim.language import *
 from tapas.slim.datamunger import * 
 import random
 from tapas.util_system import *
+import json
 
 
 
-gpt_examples = [
-    make_gpt_example('''
-A function that takes a list and returns its length
-        ''', """
-let foo : T1 =
-fix(case self => (
-    case ~nil @ => ~zero @ 
-    case ~cons (x, xs) => ~succ (self(xs)) 
-)) 
-;
-foo
+# gpt_data = generate_gpt_examples(3)
+# examples = random.sample(gpt_data, 1)
+examples = init_gpt_examples
+for example in examples:
+    sample = json.loads(example) 
+    print(f"""
+<<<<<<<<
+description:
+
+{sample['description']}
+
+***
+
+grammar:
+
+{sample['grammar']}
+
+***
+
+program:
+
+{sample['program']}
+>>>>>>>>
     """)
-]
 
 
-print(gpt_examples)
-gpt_data = generate_gpt_examples()
-write(project_path("res"), "gpt_examples.jsonl", "\n".join(gpt_data))
+
+
+# print(len(init_gpt_examples))
+# print(len(gpt_data))
+# write(project_path("res"), "gpt_examples.jsonl", "\n".join(gpt_data))
 
 # @dataclass(frozen=True, eq=True)
 # class Cons: 
