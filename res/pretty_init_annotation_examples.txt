@@ -13,12 +13,12 @@ let two : <extra_id_5> = ~succ ~succ ~zero @ ;
 <<TODO>>
 
 *** annotations ***
-<extra_id_0> @
-<extra_id_2> ~false @
-<extra_id_1> ~true @
-<extra_id_3> ~zero @
-<extra_id_4> ~succ ~zero @
 <extra_id_5> ~succ ~succ ~zero @
+<extra_id_2> ~false @
+<extra_id_4> ~succ ~zero @
+<extra_id_0> @
+<extra_id_3> ~zero @
+<extra_id_1> ~true @
 
 >>>>>>>>
     
@@ -35,7 +35,52 @@ let length : <extra_id_0> = fix(case self => (
 <<TODO>>
 
 *** annotations ***
-<extra_id_0> (ALL [G21 ; G21 <: (LFP G20 (~nil @ | (EXI [G9 G8 ; G9 <: G20] ~cons (G8, G9))))] (G21 -> (EXI [G22 ; (G21, G22) <: (LFP G20 ((~nil @, ~zero @) | (EXI [G9 G8 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))] G22)))
+<extra_id_0> (ALL [G21 ; G21 <: (LFP G20 (~nil @ | (EXI [G8 G9 ; G9 <: G20] ~cons (G8, G9))))] (G21 -> (EXI [G22 ; (G21, G22) <: (LFP G20 ((~nil @, ~zero @) | (EXI [G8 G9 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))] G22)))
+
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let length : <extra_id_0> = fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) ;
+let maybe_with_length : <extra_id_1> = (case (b, l) => (
+    (if b then
+        ((length)(l), l)
+    else
+        l
+    )
+)) ;
+@
+
+*** context ***
+<<TODO>>
+
+*** annotations ***
+<extra_id_0> (ALL [G21 ; G21 <: (LFP G20 (~nil @ | (EXI [G8 G9 ; G9 <: G20] ~cons (G8, G9))))] (G21 -> (EXI [G22 ; (G21, G22) <: (LFP G20 ((~nil @, ~zero @) | (EXI [G8 G9 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))] G22)))
+<extra_id_1> (ALL [G38 G26] ((ALL [G44 ; G44 <: G26 ; (G44, G38) <: (LFP G20 ((~nil @, ~zero @) | (EXI [G8 G9 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))] ((~true @, G44) -> (G38, G44))) & (ALL [G43 ; G43 <: G26] ((~false @, G43) -> G43))))
+
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let f : <extra_id_0> = (case (_.uno = x) => x) ;
+let g : <extra_id_1> = (case (_.dos = x) => x) ;
+let make_pair : <extra_id_2> = case x => (
+    ((f)(x), (g)(x))
+) ;
+@
+
+*** context ***
+<<TODO>>
+
+*** annotations ***
+<extra_id_0> (ALL [G6 T1 G9 G7 G1 G2 G5 T2 G3 ; G5 <: T1 ; G9 <: T2 ; ((uno : G3 & dos : G7) -> (G3, G7)) <: T2 ; ((uno : G3 & dos : G7) -> (G3, G7)) <: G9 ; ((dos : G7 -> G7) | G6) <: T1] (G1 | (G2 | (uno : G3 -> G3))))
+<extra_id_1> (ALL [G6 G9 G1 G7 G2 T0 T2 G5 G3 ; G1 <: T0 ; G9 <: T2 ; ((uno : G3 & dos : G7) -> (G3, G7)) <: T2 ; ((uno : G3 & dos : G7) -> (G3, G7)) <: G9 ; (G2 | (uno : G3 -> G3)) <: T0] (G5 | ((dos : G7 -> G7) | G6)))
+<extra_id_2> (ALL [G6 T1 G1 G2 G7 T0 G5 G3 ; G5 <: T1 ; G1 <: T0 ; (G2 | (uno : G3 -> G3)) <: T0 ; ((dos : G7 -> G7) | G6) <: T1] ((uno : G3 & dos : G7) -> (G3, G7)))
 
 >>>>>>>>
     
@@ -52,7 +97,7 @@ let add : <extra_id_0> = fix (case self => (
 <<TODO>>
 
 *** annotations ***
-<extra_id_0> (ALL [G27 ; G27 <: (LFP G24 ((EXI [G23 G6] (~zero @, (G23 & G6))) | (EXI [G9 G8 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G23 G6] ((~zero @, (G23 & G6)), G23)) | (EXI [G9 G8 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28)))
+<extra_id_0> (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28)))
 
 >>>>>>>>
     
@@ -76,8 +121,37 @@ let max : <extra_id_1> = case (x, y) => (
 <<TODO>>
 
 *** annotations ***
-<extra_id_0> (ALL [G31 ; G31 <: (LFP G27 ((EXI [G6] (~zero @, G6)) | ((EXI [G9 G10 ; (G9, G10) <: G27] (~succ G9, ~succ G10)) | (EXI [G18] (~succ G18, ~zero @)))))] (G31 -> (EXI [G32 ; (G31, G32) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @)))))] G32)))
-<extra_id_1> (ALL [G34 G35 G45 G43] ((ALL [G52 G53 ; G52 <: G34 ; G53 <: G35 ; G45 <: G43 ; ((G52, G53), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G43 <: ~true @] ((G52, G53) -> G53)) & (ALL [G50 G51 ; G50 <: G34 ; G51 <: G35 ; G45 <: G43 ; ((G50, G51), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G9 G17 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G43 <: ~false @] ((G50, G51) -> G50))))
+<extra_id_0> (ALL [G31 ; G31 <: (LFP G27 ((EXI [G6] (~zero @, G6)) | ((EXI [G9 G10 ; (G9, G10) <: G27] (~succ G9, ~succ G10)) | (EXI [G18] (~succ G18, ~zero @)))))] (G31 -> (EXI [G32 ; (G31, G32) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G17 G9 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @)))))] G32)))
+<extra_id_1> (ALL [G35 G34 G43 G45] ((ALL [G52 G53 ; G52 <: G35 ; G53 <: G34 ; ((G53, G52), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G17 G9 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G43 <: ~true @ ; G45 <: G43] ((G53, G52) -> G52)) & (ALL [G50 G51 ; G50 <: G35 ; G51 <: G34 ; G43 <: ~false @ ; ((G51, G50), G45) <: (LFP G27 ((EXI [G6] ((~zero @, G6), ~true @)) | ((EXI [G17 G9 G10 ; ((G9, G10), G17) <: G27] ((~succ G9, ~succ G10), G17)) | (EXI [G18] ((~succ G18, ~zero @), ~false @))))) ; G45 <: G43] ((G51, G50) -> G51))))
+
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let add : <extra_id_0> = fix (case self => ( 
+    case (~zero @, n) => n 
+    case (~succ m, n) => ~succ (self(m, n))
+)) ;
+let plus : <extra_id_1> = add ;
+let mult : <extra_id_2> = fix (case self => ( 
+    case (~zero @, n) => ~zero 
+    case (~succ m, n) => (add)(n, (self)(m, n))
+)) ;
+let times : <extra_id_3> = fix (case self => ( 
+    case (~zero @, n) => ~zero 
+    case (~succ m, n) => (plus)(n, (self)(m, n))
+)) ;
+@
+
+*** context ***
+<<TODO>>
+
+*** annotations ***
+<extra_id_3> (ALL [G64 T1 G1 G29 T0 G79 G60 G68 G78 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G29 <: T1 ; G1 <: T0 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0] (EXI [G81 ; (((G67, G68) -> G78) -> ((~zero @, G64) -> ~zero ((~succ G67, G68) -> G81))) <: G60 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (ALL [G86 ; G86 <: (LFP G85 (EXI [G64 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; (G67, G68) <: G85 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (~zero @, G64)))] (G86 -> (EXI [G87 ; (G86, G87) <: (LFP G85 (EXI [G64 G68 G81 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; ((G67, G68), G78) <: G85 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G64), ~zero ((~succ G67, G68) -> G81))))] G87)))))
+<extra_id_1> (ALL [T3 G59 G64 T1 G1 T0 G79 G29 G60 G68 G78 G67 ; G1 <: T0 ; G1 <: ((G68, G78) -> G79) ; G59 <: T3 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0] (EXI [G81 ; (ALL [G86 ; G86 <: (LFP G85 (EXI [G64 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; (G67, G68) <: G85 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (~zero @, G64)))] (G86 -> (EXI [G87 ; (G86, G87) <: (LFP G85 (EXI [G64 G68 G81 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; ((G67, G68), G78) <: G85 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G64), ~zero ((~succ G67, G68) -> G81))))] G87))) <: T3 ; (((G67, G68) -> G78) -> ((~zero @, G64) -> ~zero ((~succ G67, G68) -> G81))) <: G60 ; (ALL [G86 ; G86 <: (LFP G85 (EXI [G64 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; (G67, G68) <: G85 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (~zero @, G64)))] (G86 -> (EXI [G87 ; (G86, G87) <: (LFP G85 (EXI [G64 G68 G81 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; ((G67, G68), G78) <: G85 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G64), ~zero ((~succ G67, G68) -> G81))))] G87))) <: G59 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) | G29)))
+<extra_id_0> (ALL [T3 G59 G64 T1 G1 G29 G79 T0 G60 G68 G78 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; G59 <: T3] (EXI [G81 ; (ALL [G86 ; G86 <: (LFP G85 (EXI [G64 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; (G67, G68) <: G85 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (~zero @, G64)))] (G86 -> (EXI [G87 ; (G86, G87) <: (LFP G85 (EXI [G64 G68 G81 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; ((G67, G68), G78) <: G85 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G64), ~zero ((~succ G67, G68) -> G81))))] G87))) <: T3 ; (((G67, G68) -> G78) -> ((~zero @, G64) -> ~zero ((~succ G67, G68) -> G81))) <: G60 ; (ALL [G86 ; G86 <: (LFP G85 (EXI [G64 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; (G67, G68) <: G85 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (~zero @, G64)))] (G86 -> (EXI [G87 ; (G86, G87) <: (LFP G85 (EXI [G64 G68 G81 G67 ; ((ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) | G1) <: T1 ; G1 <: T0 ; G29 <: T1 ; G1 <: ((G68, G78) -> G79) ; ((G67, G68), G78) <: G85 ; (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))) <: T0 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G64), ~zero ((~succ G67, G68) -> G81))))] G87))) <: G59 ; ((G68, G78), G81) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (G1 | (ALL [G27 ; G27 <: (LFP G24 ((EXI [G6 G23] (~zero @, (G6 & G23))) | (EXI [G8 G9 ; (G8, G9) <: G24] (~succ G8, G9))))] (G27 -> (EXI [G28 ; (G27, G28) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] G28))))))
+<extra_id_2> (ALL [G38 G39 G35 G49 G31] (EXI [G52 ; (((G38, G39) -> G49) -> ((~zero @, G35) -> ~zero ((~succ G38, G39) -> G52))) <: G31 ; ((G39, G49), G52) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] (ALL [G57 ; G57 <: (LFP G56 (EXI [G35 ; ((G39, G49), G52) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18)))) ; (G38, G39) <: G56] (~zero @, G35)))] (G57 -> (EXI [G58 ; (G57, G58) <: (LFP G56 (EXI [G35 G38 G39 G52 ; ((G38, G39), G49) <: G56 ; ((G39, G49), G52) <: (LFP G24 ((EXI [G6 G23] ((~zero @, (G6 & G23)), G23)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G24] ((~succ G8, G9), ~succ G18))))] ((~zero @, G35), ~zero ((~succ G38, G39) -> G52))))] G58)))))
 
 >>>>>>>>
     

@@ -144,12 +144,13 @@ case x => (
 
     # NOTE: an example demonstrating expansion abilities
     expander : Callable[[str], str] = (lambda length : (f"""
-case (b, l)  => (
-    if b then
-        (l, ({length})(l)
+(case (b, l) => (
+    (if b then
+        (({length})(l), l)
     else
         l
-)
+    )
+))
     """).strip())
 
 # end FunLib
@@ -177,6 +178,26 @@ let length : T0 = {lib.length} ;
 @
     """),
 
+    # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
+    make_program_example(f"""
+A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
+    """, f"""
+let length : T0 = {lib.length} ;
+let maybe_with_length : T1 = {lib.expander('length')} ;
+@
+    """),
+
+    # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
+    make_program_example(f"""
+A program that defines construction of a pair by calling two different functions on the same input.
+    """, f"""
+let f : T0 = (case (_.uno = x) => x) ;
+let g : T1 = (case (_.dos = x) => x) ;
+let make_pair : T2 = {lib.refiner('f', 'g')} ;
+@
+    """),
+
+
     make_program_example(f"""
 A program that defines addition.
     """, f"""
@@ -192,36 +213,17 @@ let max : T1 = {lib.max('lte')} ;
 @
     """),
 
-#     make_program_example(f"""
-# A program that defines addition and multiplication.
-#     """, f"""
-# let add : T0 = {lib.add} ;
-# let plus : T1 = add ;
-# let mult : T2 = {lib.mult('add')} ;
-# let times : T3 = {lib.mult('plus')} ;
-# @
-#     """),
+    make_program_example(f"""
+A program that defines addition and multiplication.
+    """, f"""
+let add : T0 = {lib.add} ;
+let plus : T1 = add ;
+let mult : T2 = {lib.mult('add')} ;
+let times : T3 = {lib.mult('plus')} ;
+@
+    """),
 
 
-#     # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
-#     make_program_example(f"""
-# A program that defines construction of a pair by calling two different functions on the same input.
-#     """, f"""
-# let f : T0 = (case (_.uno = x) => x)
-# let g : T1 = (case (_.dos = x) => x)
-# let make_pair : T2 = {lib.refiner('f', 'g')} ;
-# let max : T1 = {lib.max('lte')} ;
-# @
-#     """),
-
-#     # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
-#     make_program_example(f"""
-# A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
-#     """, f"""
-# let length : T0 = {lib.length} ;
-# let maybe_with_length : T1 = {lib.expander('length')} ;
-# @
-#     """),
 
 ]
 

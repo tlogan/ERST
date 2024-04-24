@@ -7,10 +7,10 @@ A program that defines some basic values.
 expr ::= base
        | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
 
-base ::= "@"
-       | "~" "[a-zA-Z][_a-zA-Z]*" base
-
 target ::= ":" "T[0-9]+" "=" expr
+
+base ::= "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
 
 
 
@@ -32,29 +32,29 @@ A program that defines a function that takes a list and returns its length.
 *** grammar ***
 expr ::= base
        | base argchain
-       | "fix" "(" expr ")"
        | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
-
-basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
-          | "@"
-          | "(" pattern ")"
-          | "[a-zA-Z][_a-zA-Z]*"
-
-function ::= "case" pattern "=>" expr function
-           | "case" pattern "=>" expr
-
-pattern ::= basepat "," pattern
-          | basepat
-
-base ::= function
-       | "@"
-       | "~" "[a-zA-Z][_a-zA-Z]*" base
-       | "[a-zA-Z][_a-zA-Z]*"
-       | argchain
-
-argchain ::= "(" expr ")"
+       | "fix" "(" expr ")"
 
 target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+          | "[a-zA-Z][_a-zA-Z]*"
+
+base ::= function
+       | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+pattern ::= basepat
+          | basepat "," pattern
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
+
+argchain ::= "(" expr ")"
 
 
 
@@ -69,35 +69,128 @@ let length : T0 = fix(case self => (
 
 <<<<<<<<
 *** description ***
+A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
+
+*** grammar ***
+expr ::= base
+       | base argchain
+       | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | "if" expr "then" expr "else" expr
+       | base "," expr
+       | "fix" "(" expr ")"
+
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+          | "[a-zA-Z][_a-zA-Z]*"
+
+base ::= function
+       | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")" argchain
+           | "(" expr ")"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
+
+
+
+*** program ***
+let length : T0 = fix(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons (x, xs) => ~succ (self(xs)) 
+)) ;
+let maybe_with_length : T1 = (case (b, l) => (
+    (if b then
+        ((length)(l), l)
+    else
+        l
+    )
+)) ;
+@
+>>>>>>>>
+    
+
+<<<<<<<<
+*** description ***
+A program that defines construction of a pair by calling two different functions on the same input.
+
+*** grammar ***
+expr ::= base
+       | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | base "," expr
+
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
+          | recpat
+          | "[a-zA-Z][_a-zA-Z]*"
+
+base ::= function
+       | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "@"
+
+pattern ::= basepat
+
+argchain ::= "(" expr ")" argchain
+           | "(" expr ")"
+
+recpat ::= "_." "[a-zA-Z][_a-zA-Z]*" "=" pattern
+
+function ::= "case" pattern "=>" expr
+
+
+
+*** program ***
+let f : T0 = (case (_.uno = x) => x) ;
+let g : T1 = (case (_.dos = x) => x) ;
+let make_pair : T2 = case x => (
+    ((f)(x), (g)(x))
+) ;
+@
+>>>>>>>>
+    
+
+<<<<<<<<
+*** description ***
 A program that defines addition.
 
 *** grammar ***
 expr ::= base
        | base argchain
-       | "fix" "(" expr ")"
        | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | "fix" "(" expr ")"
        | base "," expr
 
-basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
           | "@"
-          | "(" pattern ")"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
           | "[a-zA-Z][_a-zA-Z]*"
 
-function ::= "case" pattern "=>" expr function
-           | "case" pattern "=>" expr
-
-pattern ::= basepat "," pattern
-          | basepat
-
 base ::= function
-       | "@"
        | "~" "[a-zA-Z][_a-zA-Z]*" base
-       | "[a-zA-Z][_a-zA-Z]*"
        | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "@"
+
+pattern ::= basepat
+          | basepat "," pattern
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
 
 argchain ::= "(" expr ")"
-
-target ::= ":" "T[0-9]+" "=" expr
 
 
 
@@ -117,32 +210,32 @@ A program that defines less-than-or-equal of two numbers and maximum of two numb
 *** grammar ***
 expr ::= base
        | base argchain
-       | "fix" "(" expr ")"
        | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
        | "if" expr "then" expr "else" expr
+       | "fix" "(" expr ")"
        | base "," expr
 
-basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
           | "@"
-          | "(" pattern ")"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
           | "[a-zA-Z][_a-zA-Z]*"
 
-function ::= "case" pattern "=>" expr function
-           | "case" pattern "=>" expr
-
-pattern ::= basepat "," pattern
-          | basepat
-
 base ::= function
-       | "@"
-       | "~" "[a-zA-Z][_a-zA-Z]*" base
-       | "[a-zA-Z][_a-zA-Z]*"
        | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
 
-argchain ::= "(" expr ")"
-           | "(" expr ")" argchain
+pattern ::= basepat
+          | basepat "," pattern
 
-target ::= ":" "T[0-9]+" "=" expr
+argchain ::= "(" expr ")" argchain
+           | "(" expr ")"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
 
 
 
@@ -158,6 +251,59 @@ let max : T1 = case (x, y) => (
     else
         x
 ) ;
+@
+>>>>>>>>
+    
+
+<<<<<<<<
+*** description ***
+A program that defines addition and multiplication.
+
+*** grammar ***
+expr ::= base
+       | base argchain
+       | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | "fix" "(" expr ")"
+       | base "," expr
+
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+          | "[a-zA-Z][_a-zA-Z]*"
+
+base ::= function
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "@"
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")" argchain
+           | "(" expr ")"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
+
+
+
+*** program ***
+let add : T0 = fix (case self => ( 
+    case (~zero @, n) => n 
+    case (~succ m, n) => ~succ (self(m, n))
+)) ;
+let plus : T1 = add ;
+let mult : T2 = fix (case self => ( 
+    case (~zero @, n) => ~zero 
+    case (~succ m, n) => (add)(n, (self)(m, n))
+)) ;
+let times : T3 = fix (case self => ( 
+    case (~zero @, n) => ~zero 
+    case (~succ m, n) => (plus)(n, (self)(m, n))
+)) ;
 @
 >>>>>>>>
     
