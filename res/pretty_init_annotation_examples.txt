@@ -16,12 +16,12 @@ let two : <extra_id_5> = ~succ ~succ ~zero @ ;
 
 
 *** annotations ***
-<extra_id_5> ~succ ~succ ~zero @
-<extra_id_4> ~succ ~zero @
-<extra_id_3> ~zero @
 <extra_id_0> @
 <extra_id_1> ~true @
+<extra_id_5> ~succ ~succ ~zero @
+<extra_id_3> ~zero @
 <extra_id_2> ~false @
+<extra_id_4> ~succ ~zero @
 
 >>>>>>>>
     
@@ -38,12 +38,34 @@ let length : <extra_id_0> = fix(case self => (
 <<TODO>>
 
 *** aliasing ***
-alias G23 = (LFP G20 (~nil @ | (EXI [G9 G8 ; G9 <: G20] ~cons (G8, G9))))
-alias G24 = (LFP G20 ((~nil @, ~zero @) | (EXI [G9 G8 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))
+alias G24 = (LFP G20 ((~nil @, ~zero @) | (EXI [G8 G9 G16 ; (G9, G16) <: G20] (~cons (G8, G9), ~succ G16))))
+alias G23 = (LFP G20 (~nil @ | (EXI [G8 G9 ; G9 <: G20] ~cons (G8, G9))))
 
 
 *** annotations ***
 <extra_id_0> (ALL [G21 ; G21 <: G23] (G21 -> (EXI [G22 ; (G21, G22) <: G24] G22)))
+
+>>>>>>>>
+    
+
+<<<<<<<<
+*** program ***
+let add : <extra_id_0> = fix (case self => ( 
+    case (~zero @, n) => n 
+    case (~succ m, n) => ~succ (self(m, n))
+)) ;
+@
+
+*** context ***
+<<TODO>>
+
+*** aliasing ***
+alias G26 = (LFP G22 ((EXI [G21 G21 ; G19 <: G3] ((~zero @, G21), G21)) | (EXI [G8 G9 G18 ; ((G8, G9), G18) <: G22] ((~succ G8, G9), ~succ G18))))
+alias G25 = (LFP G22 ((EXI [G21 ; G19 <: G3] (~zero @, G21)) | (EXI [G8 G9 ; (G8, G9) <: G22] (~succ G8, G9))))
+
+
+*** annotations ***
+<extra_id_0> (ALL [G8 G3 G18 G2 G6 G9 G19 ; (G3 -> (((~zero @, G6) -> G6) & (ALL [ ; G3 <: ((G8, G9) -> G18)] ((~succ G8, G9) -> ~succ G18)))) <: G2] (ALL [G23 ; G23 <: G25] (G23 -> (EXI [G24 ; (G23, G24) <: G26] G24))))
 
 >>>>>>>>
     

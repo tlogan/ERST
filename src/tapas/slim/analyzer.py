@@ -1115,11 +1115,12 @@ def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping
     )
 
 def extract_constraints_with_id(world : World, id : str) -> PSet[Subtyping]:
-    return pset(
+    result = pset(
         st
         for st in world.constraints
         if id in extract_free_vars_from_constraints(pset(), [st])
     )
+    return result
 
 
 def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
@@ -1269,6 +1270,14 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
     ids_base = extract_free_vars_from_typ(s(), typ)
     constraints = s()
     ids_seen = s()
+    if debug:
+        print(f"""
+    ~~~~~~~~~~~~~~~~~~~~
+    DEBUG extract_reachable_constraints_from_typ 
+    ~~~~~~~~~~~~~~~~~~~~
+    ids_base: {ids_base}
+    ~~~~~~~~~~~~~~~~~~~~
+        """)
     for id_base in ids_base: 
         if id not in ids_seen:
             new_constraints, ids_seen = extract_reachable_constraints(world, id_base, ids_seen, debug)
@@ -1294,8 +1303,13 @@ def package_typ(world : World, typ : Typ) -> Typ:
     else:
         exi_typ = Exi(existential_bound_ids, tuple(existential_constraints), typ)
 
+    # return simplify_typ(exi_typ)
+
     universal_constraints = constraints.difference(existential_constraints)
     universal_bound_ids = tuple(reachable_ids.difference(world.freezer))
+    # NOTE: alternative
+    # universal_constraints = extract_reachable_constraints_from_typ(world, exi_typ)
+    # universal_bound_ids = tuple(extract_free_vars_from_constraints(s(), universal_constraints).union(extract_free_vars_from_typ(s(), exi_typ)))
 
     if not universal_bound_ids:
         assert not universal_constraints
@@ -2938,9 +2952,9 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
-                left_bound_ids = tuple(extract_free_vars_from_typ(s(), left_typ))
-                right_bound_ids = tuple(extract_free_vars_from_typ(s(), right_typ))
-                bound_ids = left_bound_ids + right_bound_ids
+                left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
+                right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
+                bound_ids = left_bound_ids.union(right_bound_ids)
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
                 self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
@@ -2977,18 +2991,12 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
-                reachable_constraints = tuple(
+                inner_world = World(pset(
                     st
-                    for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                    for st in inner_world.constraints
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-                )
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # $$$$$$$ OOGA END 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-
+                ) , inner_world.freezer, inner_world.relids)
+                reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
@@ -2996,7 +3004,7 @@ class ExprRule(Rule):
                 # TODO: what if there are existing frozen variables in inner_world?
                 # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
                 if bool(bound_ids):
-                    constrained_rel = Exi(bound_ids, tuple(rel_constraints), rel_pattern)
+                    constrained_rel = Exi(tuple(bound_ids), tuple(rel_constraints), rel_pattern)
                 else:
                     assert not bool(rel_constraints)
                     constrained_rel = rel_pattern
@@ -3006,7 +3014,7 @@ class ExprRule(Rule):
                 # package_typ(rel_world, rel_pattern)
 
                 if bool(left_bound_ids):
-                    constrained_left = Exi(left_bound_ids, tuple(left_constraints), left_typ)
+                    constrained_left = Exi(tuple(left_bound_ids), tuple(left_constraints), left_typ)
                 else:
                     assert not bool(left_constraints)
                     constrained_left = left_typ

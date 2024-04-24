@@ -4,13 +4,13 @@
 A program that defines some basic values.
 
 *** grammar ***
-target ::= ":" "T[0-9]+" "=" expr
-
 expr ::= "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
        | base
 
-base ::= "~" "[a-zA-Z][_a-zA-Z]*" base
-       | "@"
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= "@"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
 
 
 
@@ -30,31 +30,31 @@ let two : T5 = ~succ ~succ ~zero @ ;
 A program that defines a function that takes a list and returns its length.
 
 *** grammar ***
-expr ::= "fix" "(" expr ")"
-       | base argchain
-       | "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+expr ::= "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
        | base
+       | base argchain
+       | "fix" "(" expr ")"
 
-base ::= function
-       | "[a-zA-Z][_a-zA-Z]*"
-       | "@"
-       | argchain
-       | "~" "[a-zA-Z][_a-zA-Z]*" base
+target ::= ":" "T[0-9]+" "=" expr
 
 basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
           | "@"
           | "(" pattern ")"
           | "[a-zA-Z][_a-zA-Z]*"
 
-function ::= "case" pattern "=>" expr
-           | "case" pattern "=>" expr function
+base ::= function
+       | argchain
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "@"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
 
-pattern ::= basepat
-          | basepat "," pattern
-
-target ::= ":" "T[0-9]+" "=" expr
+pattern ::= basepat "," pattern
+          | basepat
 
 argchain ::= "(" expr ")"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
 
 
 
@@ -62,6 +62,49 @@ argchain ::= "(" expr ")"
 let length : T0 = fix(case self => (
     case ~nil @ => ~zero @ 
     case ~cons (x, xs) => ~succ (self(xs)) 
+)) ;
+@
+>>>>>>>>
+    
+
+<<<<<<<<
+*** description ***
+A program that defines addition.
+
+*** grammar ***
+expr ::= "let" "[a-zA-Z][_a-zA-Z]*" target ";" expr
+       | base "," expr
+       | base
+       | base argchain
+       | "fix" "(" expr ")"
+
+target ::= ":" "T[0-9]+" "=" expr
+
+basepat ::= "~" "[a-zA-Z][_a-zA-Z]*" basepat
+          | "@"
+          | "(" pattern ")"
+          | "[a-zA-Z][_a-zA-Z]*"
+
+base ::= function
+       | argchain
+       | "@"
+       | "[a-zA-Z][_a-zA-Z]*"
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+
+pattern ::= basepat "," pattern
+          | basepat
+
+argchain ::= "(" expr ")"
+
+function ::= "case" pattern "=>" expr
+           | "case" pattern "=>" expr function
+
+
+
+*** program ***
+let add : T0 = fix (case self => ( 
+    case (~zero @, n) => n 
+    case (~succ m, n) => ~succ (self(m, n))
 )) ;
 @
 >>>>>>>>

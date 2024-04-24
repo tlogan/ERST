@@ -177,6 +177,21 @@ let length : T0 = {lib.length} ;
 @
     """),
 
+    make_program_example(f"""
+A program that defines addition.
+    """, f"""
+let add : T0 = {lib.add} ;
+@
+    """),
+
+#     make_program_example(f"""
+# A program that defines less-than-or-equal of two numbers and maximum of two numbers.
+#     """, f"""
+# let lte : T0 = {lib.lte} ;
+# let max : T1 = {lib.max('lte')} ;
+# @
+#     """),
+
 #     make_program_example(f"""
 # A program that defines addition and multiplication.
 #     """, f"""
@@ -187,13 +202,6 @@ let length : T0 = {lib.length} ;
 # @
 #     """),
 
-#     make_program_example(f"""
-# A program that defines less-than-or-equal of two numbers and maximum of two numbers.
-#     """, f"""
-# let lte : T0 = {lib.lte} ;
-# let max : T1 = {lib.max('lte')} ;
-# @
-#     """),
 
 #     # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
 #     make_program_example(f"""
@@ -253,17 +261,17 @@ def extract_annotation_ids(prog : str) -> list[str]:
 
 
 
-def to_anno_map_with_rev_aliasing(
-    solver : analyzer.Solver,
-    anno_map : PMap[str, analyzer.Typ], 
-    rev_aliasing : PMap[analyzer.Typ, str]
-) -> tuple[PMap[analyzer.Typ, str], PMap[str, analyzer.Typ]]:  
-    # returns (rev_aliasing, new_anno_map)
-    new_anno_map = m()
-    for id, t in anno_map.items():
-        (rev_aliasing, new_typ) = solver.to_aliasing_typ(t, rev_aliasing)
-        new_anno_map = new_anno_map.set(id, new_typ)
-    return (rev_aliasing, new_anno_map)
+# def to_anno_map_with_rev_aliasing(
+#     solver : analyzer.Solver,
+#     anno_map : PMap[str, analyzer.Typ], 
+#     rev_aliasing : PMap[analyzer.Typ, str]
+# ) -> tuple[PMap[analyzer.Typ, str], PMap[str, analyzer.Typ]]:  
+#     # returns (rev_aliasing, new_anno_map)
+#     new_anno_map = m()
+#     for id, t in anno_map.items():
+#         (rev_aliasing, new_typ) = solver.to_aliasing_typ(t, rev_aliasing)
+#         new_anno_map = new_anno_map.set(id, new_typ)
+#     return (rev_aliasing, new_anno_map)
     
 
 def make_masked_program(code : str, ids : list[str]) -> str:
@@ -286,15 +294,19 @@ def make_annotation_example(prog : str) -> str:
     context = "<<TODO>>"
     ids = extract_annotation_ids(prog)
     masked_prog = make_masked_program(prog, ids)
-    raw_anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
-    (rev_aliasing, anno_map) = to_anno_map_with_rev_aliasing(solver, raw_anno_map, solver.reversed_aliasing) 
-    aliasing = analyzer.concretize_reversed_aliasing(rev_aliasing)
+
+    anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
     annotations = make_masked_annotations(anno_map)
+
+    # TODO: remove old aliasing code
+    # raw_anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
+    # (rev_aliasing, anno_map) = to_anno_map_with_rev_aliasing(solver, raw_anno_map, solver.reversed_aliasing) 
+    # aliasing = analyzer.concretize_reversed_aliasing(rev_aliasing)
+    # annotations = make_masked_annotations(anno_map)
 
     return json.dumps({
         'program' : masked_prog, 
         'context' : context, 
-        'aliasing' : aliasing, 
         'annotations' : annotations
     })
 
