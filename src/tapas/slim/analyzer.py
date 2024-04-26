@@ -522,6 +522,13 @@ class World:
     freezer : PSet[str]
     relids : PSet[str]
 
+def union_worlds(w1 : World, w2 : World) -> World:
+    return World(
+        w1.constraints.union(w2.constraints),
+        w1.freezer.union(w2.freezer),
+        w1.relids.union(w2.relids)
+    )
+
 def print_worlds(worlds : list[World], msg = ""):
     for i, world in enumerate(worlds):
         constraints_str = "".join([ 
@@ -2399,7 +2406,7 @@ end Solver
 
 
 class Rule:
-    def __init__(self, solver : Solver, light_mode = False):
+    def __init__(self, solver : Solver, light_mode : bool):
         self.solver = solver
         self.light_mode = light_mode
 
@@ -2431,7 +2438,7 @@ class BaseRule(Rule):
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            result = ExprRule(self.solver).combine_application(nt, applicator, arguments) 
+            result = ExprRule(self.solver, self.light_mode).combine_application(nt, applicator, arguments) 
             return result
 
     def combine_unit(self, nt : Context) -> list[World]:
@@ -2457,6 +2464,25 @@ class BaseRule(Rule):
         return self.evolve_worlds(nt, TTag(label, body))
 
     def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[World]:
+
+        if self.light_mode:
+            result = Top()
+
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            for branch in branches:
+                assert len(branch.worlds) == 1
+                branch_world = branch.worlds[0]
+                world = union_worlds(world, branch_world)
+                result = Inter(TField(branch.label, branch.body), result)
+            return [
+                World(world.constraints.add(
+                    Subtyping(simplify_typ(result), nt.typ_var)
+                ), world.freezer, world.relids)
+            ] 
+        #end if
+
+
         result = Top() 
         for branch in reversed(branches): 
             for branch_world in reversed(branch.worlds):
@@ -2485,6 +2511,23 @@ class BaseRule(Rule):
         return self.evolve_worlds(nt, simplify_typ(result))
 
     def combine_function(self, nt : Context, branches : list[Branch]) -> list[World]:
+        augmented_branches = augment_branches_with_diff(branches)
+        if self.light_mode:
+            result = Top()
+
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            for branch in augmented_branches:
+                assert len(branch.worlds) == 1
+                branch_world = branch.worlds[0]
+                world = union_worlds(world, branch_world)
+                result = Inter(Imp(branch.pattern, branch.body), result)
+            return [
+                World(world.constraints.add(
+                    Subtyping(simplify_typ(result), nt.typ_var)
+                ), world.freezer, world.relids)
+            ] 
+        #end if
         '''
         Example
         ==============
@@ -2496,7 +2539,6 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-        augmented_branches = augment_branches_with_diff(branches)
         constrained_branches = []
         for branch in reversed(augmented_branches): 
             for branch_world in reversed(branch.worlds):
@@ -2654,7 +2696,7 @@ class ExprRule(Rule):
         ]
         cator_var = self.solver.fresh_type_var()
         function_nt = replace(nt, typ_var = cator_var)
-        function_worlds = BaseRule(self.solver).combine_function(function_nt, branches)
+        function_worlds = BaseRule(self.solver, self.light_mode).combine_function(function_nt, branches)
         nt = replace(nt, worlds = function_worlds)
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2685,6 +2727,21 @@ class ExprRule(Rule):
 
 
     def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[World]: 
+
+        if self.light_mode:
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            constraints = world.constraints
+            pass
+            for key in keys:
+                result_var = self.solver.fresh_type_var()
+                constraints = constraints.add(Subtyping(record_var, TField(key, result_var)))
+                record_var = result_var
+
+            constraints = constraints.add(Subtyping(result_var, nt.typ_var))
+            return [World(constraints, world.freezer, world.relids)]
+        #end if
+    
         worlds = nt.worlds
         for key in keys:
             result_var = self.solver.fresh_type_var()
@@ -2733,6 +2790,20 @@ class ExprRule(Rule):
         return Context('argchain', nt.enviro, worlds, next_cator_var, True)
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
+
+        if self.light_mode:
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            constraints = world.constraints
+            pass
+            for arg_var in arg_vars:
+                result_var = self.solver.fresh_type_var()
+                constraints = constraints.add(Subtyping(cator_var, Imp(arg_var, result_var)))
+                cator_var = result_var
+
+            constraints = constraints.add(Subtyping(result_var, nt.typ_var))
+            return [World(constraints, world.freezer, world.relids)]
+        #end if
 
         # print(f"""
         # ~~~~~~~~~~~~~~
@@ -2855,6 +2926,13 @@ class ExprRule(Rule):
             worlds = self.combine_application(app_nt, cator_var, [arg_var])
             arg_var = result_var 
 
+
+        if self.light_mode:
+            assert len(worlds) == 1
+            world = worlds[0]
+            return [World(world.constraints.add(Subtyping(result_var, nt.typ_var)), world.freezer, world.relids)]
+        #end if
+
         # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
         worlds = [
             m1
@@ -2869,6 +2947,21 @@ class ExprRule(Rule):
         return Context('expr', nt.enviro, worlds, body_var)
 
     def combine_fix(self, nt : Context, body_var : TVar) -> list[World]:
+        if self.light_mode: 
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            self_typ = self.solver.fresh_type_var()
+            in_typ = self.solver.fresh_type_var()
+            out_typ = self.solver.fresh_type_var()
+            constraints = [
+                Subtyping(body_var, Imp(self_typ, Imp(in_typ, out_typ))),
+                Subtyping(Imp(in_typ, out_typ), nt.typ_var)
+            ]
+            return [World(
+                world.constraints.update(constraints),
+                world.freezer, world.relids
+            )]
+        #end if
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -3343,6 +3436,17 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
     def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
+        if self.light_mode:
+            assert len(nt.worlds) == 1
+            world = nt.worlds[0]
+            constraints = [
+                Subtyping(anno_typ, nt.typ_var)
+            ]
+            return [World(
+                world.constraints.update(constraints),
+                world.freezer, world.relids
+            )]
+        # endif
         worlds = [
             m1
             for m0 in nt.worlds
