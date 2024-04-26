@@ -33,31 +33,44 @@ import random
 from tapas.util_system import *
 
 
+def from_program_exform_to_json(exform : str) -> str:
+    remainder = exform
+    description = ""
+    grammar = ""
+    program = ""
+    splits = remainder.split("<<<description>>>")
+    remainder = splits[1] 
+    splits = remainder.split("<<<grammar>>>")
+    description = splits[0].strip()
+    remainder = splits[1]
+    splits = remainder.split("<<<program>>>")
+    grammar = splits[0].strip()
+    program = splits[1].strip()
+    return json.dumps({
+        'description' : description,
+        'grammar' : grammar,
+        'program' : program
+    })
 
+    
+
+example_delim = "**********************************************"
 
 def make_program_example(description : str, code : str) -> str:
     g = language.refine_grammar(code)
-    return json.dumps({
-        'description' : description.strip(),
-        'grammar' : analyzer.concretize_grammar(g),
-        'program' : code.strip(),
-    })
+    return (f""" 
+{example_delim}
+<<<description>>> 
+{description.strip()}
+
+<<<grammar>>>
+{analyzer.concretize_grammar(g)}
+
+<<<program>>>
+{code.strip()}
+    """).strip()
 
 
-def prettify_program_example(example) -> str:
-    sample = json.loads(example) 
-    return (f"""
-<<<<<<<<
-*** description ***
-{sample['description']}
-
-*** grammar ***
-{sample['grammar']}
-
-*** program ***
-{sample['program']}
->>>>>>>>
-    """)
 
 
 
@@ -70,7 +83,21 @@ def generate_program_example(examples):
 You are a functional programming assistant, skilled in conjuring up 
 archetypal and classic functional programming concepts.
 You are generating data about functional programs where each datum is 
-a json object with three fields: 'description', 'grammar', and 'program'. 
+consists of three fields: 'description', 'grammar', and 'program'. 
+The format looks like:
+```
+
+<<<description>>>
+$description_goes_here     
+
+<<<grammar>>>
+$description_goes_here
+
+<<<program>>>
+$program_goes_here
+
+```
+         
 The program adheres to the behavior described by the description (English).
 The program is constructed according to the rules of the grammar (EBNF). 
 Make sure that you define all helper functions that you use.
@@ -94,7 +121,7 @@ Make sure that you define all helper functions that you use.
         temperature=0.7,
         frequency_penalty=1.5,
         presence_penalty=1.5,
-        response_format={ "type": "json_object" },
+        # response_format={ "type": "json_object" },
         max_tokens=1354,
     )
 

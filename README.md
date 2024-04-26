@@ -2,11 +2,10 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- implement lightweight constraint generation 
-- improve surface syntax of least fixed point - from `LFP self ~nil @ | ...` to `LFP self | ~nil @ | ...`; and records - from `_.uno = @` to `uno = @, dos = @, #` where `# : TOP` 
-- modify `concretize` to structure with new lines and indentation  
 - modify gpt generation to use a custom non-json convention
     - convert to json after generation
+- improve surface syntax of least fixed point - from `LFP self ~nil @ | ...` to `LFP self | ~nil @ | ...`; and records - from `_.uno = @` to `uno = @, dos = @, #` where `# : TOP` 
+- modify `concretize` to structure with new lines and indentation  
 - generate data with gpt 
 - generate annotations symbolically
 - split into train and test sets
