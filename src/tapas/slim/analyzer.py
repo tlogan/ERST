@@ -2399,8 +2399,9 @@ end Solver
 
 
 class Rule:
-    def __init__(self, solver : Solver):
+    def __init__(self, solver : Solver, light_mode = False):
         self.solver = solver
+        self.light_mode = light_mode
 
     def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
 #         print(f"""
