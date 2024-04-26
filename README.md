@@ -2,8 +2,12 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- generate gpt example for `suml`, `sumr`, and others
-- write function that generates annotation examples from gpt examples
+- modify gpt generation to use a custom non-json convention
+    - convert to json after generation
+- generate data with gpt 
+- generate annotations symbolically
+- split into train and test sets
+- train CodeT5
 - add in  diffing 
 - implement lightweight constraint generation 
 

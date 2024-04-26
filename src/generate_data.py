@@ -34,8 +34,16 @@ def write_init_data():
         for ex in init_annotation_examples 
     ]))
 
+def write_generated_data():
+    generated_examples = generate_program_examples(70)
+    write(project_path("res"), "generated_program_examples.jsonl", "\n".join(generated_examples))
+    write(project_path("res"), "pretty_generated_program_examples.txt", "\n".join([
+        prettify_program_example(ex)
+        for ex in generated_examples
+    ]))
 
 #############
-write_init_data()
+# write_init_data()
+write_generated_data()
 #############
 

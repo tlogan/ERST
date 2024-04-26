@@ -64,7 +64,7 @@ def prettify_program_example(example) -> str:
 
 client = OpenAI()
 
-def generate_gpt_example(examples, temperature=.5):
+def generate_program_example(examples):
     messages : Iterable =[
         {"role": "system", "content": '''
 You are a functional programming assistant, skilled in conjuring up 
@@ -73,14 +73,14 @@ You are generating data about functional programs where each datum is
 a json object with three fields: 'description', 'grammar', and 'program'. 
 The program adheres to the behavior described by the description (English).
 The program is constructed according to the rules of the grammar (EBNF). 
-Do not assume a helper function exists unless you define it.
+Make sure that you define all helper functions that you use.
         '''}
     ]
 
     if len(examples) > 0:
-        if len(examples) > 10:
-            prev_examples = random.sample(examples, 10)
-        for example in prev_examples:
+        if len(examples) > 30:
+            examples = random.sample(examples, 30)
+        for example in examples:
             messages.append({
                 "role": "assistant",
                 "content": example
@@ -89,9 +89,11 @@ Do not assume a helper function exists unless you define it.
     # response = openai.ChatCompletion.create(
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
-        # model="gpt-4",
+        # model="gpt-4-turbo",
         messages=messages,
-        temperature=temperature,
+        temperature=0.7,
+        frequency_penalty=1.5,
+        presence_penalty=1.5,
         response_format={ "type": "json_object" },
         max_tokens=1354,
     )
@@ -119,6 +121,37 @@ fix (case self => (
     case (~succ m, n) => ({add})(n, (self)(m, n))
 ))
     """).strip())
+
+
+    suml : Callable[[str], str] = (lambda add : (f"""
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => self(xs, ({add})(b, x))
+))
+    """).strip())
+
+    sumr : Callable[[str], str] = (lambda add : (f"""
+fix (case self => ( 
+    case (~nil @, b) => b
+    case (~cons (x, xs), b) => ({add})((self)(xs, b), x)
+))
+    """).strip())
+
+    fib : Callable[[str], str] = (lambda add : (f"""
+fix (case self => ( 
+    case (~zero @) => ~zero @
+    case (~succ ~zero @) => ~succ ~zero @
+    case (~succ ~succ n) => ({add})((self)(~succ n), (self)(n))
+))
+    """).strip())
+
+    fact : Callable[[str], str] = (lambda mul : (f"""
+fix (case self => ( 
+    case (~zero @) => ~succ ~zero @
+    case (~succ n) => ({mul})((self)(n), ~succ n)
+))
+    """).strip())
+
     lte = (f"""
 fix(case self => (
     case (~zero @, n) => ~true @ 
@@ -148,7 +181,7 @@ case x => (
     (if b then
         (({length})(l), l)
     else
-        l
+        ({length})(l)
     )
 ))
     """).strip())
@@ -223,15 +256,41 @@ let times : T3 = {lib.mult('plus')} ;
 @
     """),
 
+    make_program_example(f"""
+A program that defines addition, summation from left, and summation from right.
+    """, f"""
+let add : T0 = {lib.add} ;
+let suml : T1 = {lib.suml('add')} ;
+let sumr : T2 = {lib.sumr('add')} ;
+@
+    """),
+
+    make_program_example(f"""
+a program that defines the fibonacci sequence.
+    """, f"""
+let add : T0 = {lib.add} ;
+let fib : T1 = {lib.fib('add')} ;
+@
+    """),
+
+    make_program_example(f"""
+a program that defines the factorial.
+    """, f"""
+let add : T0 = {lib.add} ;
+let mult : T1 = {lib.mult('add')} ;
+let fact : T2 = {lib.fact('mult')} ;
+@
+    """),
+
 
 
 ]
 
-def generate_program_examples(num_examples = 10, temperature=.5):
+def generate_program_examples(num_examples):
     new_examples = []
     for i in range(num_examples):
         print(f'Generating GPT example {i}')
-        example = generate_gpt_example(new_examples + init_program_examples.copy(), temperature)
+        example = generate_program_example(new_examples + init_program_examples.copy())
         if example:
             new_examples.append(example)
     return new_examples

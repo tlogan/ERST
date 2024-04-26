@@ -1,0 +1,641 @@
+{"description": "A program that defines a function to compute the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\nexpr ::= base \",\" expr\n       | \"let\" pattern target \";\" expr  # let binding with pattern matching and recursion.\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\""             ,        "\"~"            :         "~","+":"+"}                                                                                                                     
+     
+    
+   
+
+
+    
+    
+
+      
+
+ 
+                                                                                                                                                              
+
+  
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+             
+
+       
+   
+  
+      
+         
+     
+
+         
+        
+        
+        
+        
+
+ 
+
+ 
+                
+      
+
+                                                                                                                              
+  
+  
+  
+  
+
+   
+
+            
+            
+
+  
+  
+
+    
+
+
+                                          
+            
+          
+                                                                            
+
+
+
+
+
+                                   
+
+
+
+
+
+
+                                 
+
+
+
+              
+                                                                         
+
+
+
+
+
+
+
+
+
+
+
+
+                                                             
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                               
+
+
+
+
+
+
+
+
+                   
+
+
+
+
+
+
+
+
+
+                                        
+
+
+                                         
+                                            
+
+                                                                                   
+
+
+
+
+
+
+
+
+
+
+                                             
+
+
+
+
+
+
+
+
+
+
+                                                  
+
+
+
+     
+              
+        
+        
+      
+      
+        
+      
+                                                                                           
+ 
+                                
+                            
+                          
+                               
+
+                                                      
+
+    
+  
+
+
+                                                           
+   
+                                                         
+      
+                                                            
+
+
+
+
+
+                                                       
+    
+    
+                                                     
+                        
+                    
+                                                        
+                                                            
+                                                          
+      
+                
+
+  
+  
+                                                           
+    
+
+                                                        
+
+    
+  
+
+
+                           
+            
+                                           
+                                                                      
+
+
+                                                                    
+
+
+
+
+                                                                          
+
+
+
+
+
+
+                             
+     
+                                            
+                                               
+ 
+                                                                        
+
+
+
+                                                                             
+    
+  
+    
+                                                                     
+
+    
+                                                                           
+    
+    
+    
+    
+        
+    
+ 
+  
+    
+    
+           
+                                                                       
+    
+    
+                       
+                           
+                               
+                                    
+                                        
+                                              
+                
+                                                                       
+                
+                                                
+                                                   
+                    
+                              
+                     
+                             
+                         
+                                                                                           
+  
+                                                                                       
+  
+                                                                               
+        
+  
+    
+                                                                              
+        
+        
+                   
+                  
+               
+             
+                                                                                 
+        
+    
+                            
+                    
+                 
+                                                                                 
+    
+   
+                                                                                               
+   
+    
+    
+    
+    
+   
+    
+ 
+    
+                                                                             
+ 
+            
+            
+            
+            
+                
+                
+                
+                
+                                                                 
+
+
+
+
+
+
+
+
+
+
+
+                  
+
+
+
+
+
+
+                       
+
+
+
+
+
+
+
+
+                        
+
+
+
+
+
+
+
+                          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                  
+
+
+
+
+
+
+
+                         
+
+
+
+
+
+
+                                                 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                       
+
+
+
+
+
+
+
+
+
+                                                              
+
+
+
+
+                    
+
+
+
+
+
+
+
+
+                                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      
+
+
+                     
+    
+    
+    
+    
+        
+    
+ 
+
+
+
+
+       
+
+               
+    
+    
+ 
+            
+    
+
+ 
+
+
+        			               	 			
+{"description": "A program that defines a function to calculate the power of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\nexpr ::= base \",\" expr\n       | base argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr"}
+{"description": "A program that defines a function to calculate the nth prime number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let is_prime : T1 = fix (case self => (\ncase ~one @ => ~false @\ncase ~succ one @ => ~true @\ncase n  => ~(less_than_or_eq)(~two, n) ? ~(is_not_divisible_by_any_in_range)(~two,n):(~notprime)"                                                                                                                                      }
+{"description": "A program that defines a function to calculate the square of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let square : T1 = (case n => ((mult)(n,n)))"}
+{"description": "A program that defines a function to compute the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let sum : T1 = fix (case self => (\ncase ~nil @ => ~zero @\ncase ~cons (x, xs) => ~(add)(x, self(xs))\n)) ;"}
+{"description": "A program that defines a function to compute the nth odd number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let odd : T1 = fix (case self => (\ncase ~zero @ => ~one @\ncase n  => ~(add)(~two, self(~pred(n)))"                                                                                                                                      }
+{"description": "A program that defines a function to calculate the nth even number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let even : T1 = fix (case self => (\ncase ~zero @ => ~zero @\ncase n  => ~(add)(~two, self(~pred(n)))"                                                                                                                                      }
+{"description": "A program that defines the map function.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" \"T[0-9]+\" \"=\" expr","program":"let rec map : T1 = (case f => (\ncase ~nil @ => ~nil @\ncase cons(x, xs)  => (~cons)((f)(x), ~(map)(f,xs))"                                                                                                                                      }
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let fibonacci := fix (case self => (\ncase ~zero @ => ~zero @\ncase ~succ zero @ =>  ~succ zero@\ncase n  => ~(add)(self(~pred(n)),self((~pred(n)))))) ;"}
+{"description": "A program that defines a function to calculate the square root of a number using Newton's method.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let sqrt := fix (case self => (\ncase x  => ~(ifthenelse)(~less_than_or_eq((abs)((sub)((mult)(self(~succ(x)),self(~succ(x))),x)), ~epsilon, self(~zero)) ? self (~add) ((divided_by) (x,self(2))) :   self (~pred)x)) ;"}
+{"description": "A program that defines the map function and its usage on a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let map := fix (case self => (\ncase f, ~nil @  => ~nil @\ncase f, ~cons(x,xs)  => ~(cons)((f)(x),self(f,xs))));\nlet double : T1 = case x=> ((mult)(x,(succ zero))) ; let myList:= (~cons(~one,@(~ cons((~two),(~ nil))))); in (~(map )(double ,myList))"
+}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let sum := fix (case self => (\ncase ~nil @ => ~zero @\ncase ~cons(x, xs)  => ~(add)(x, self(xs))\n));"}
+{"description": "a program that computes the power of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" targetexpr  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let pow : T1 = fix (case self => (\ncase b, ~zero @ => ~succ zero@\ncase b, n=> ~(mult)(b,self(~pred(n))) ));"}
+{"description": "A program that defines the insertion sort algorithm.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" targetexpr  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let insert : T1 = fix (case self => (\ncase x, ~nil @ => (~cons)(x, ~nil)@\ncase x, cons(y,xs)   => ~(ifthenelse)((less_than_eq)(x,y),(~cons(x,(self))(y)),(cons(y,self(xs)))))) ; let isort:T2=(fix(case self=>(\ncase ~nil @=>~ nil@\ncase cons(x , xs)=> (~insert )(x,(self)(xs)))))"}
+{"description": "a program that defines the factorial function using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let factorial := fix (case self => (\ncase ~zero @ =>  ~succ zero@\ncase n  => ~(mult)(self(~pred(n)),~succ n) )) ;"}
+{"description": "A program that defines the map function and applies it to a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let rec map : T1 = (case f => (\ncase ~nil @ => ~nil @\ncase cons(x, xs)  => (~cons)((f)(x), ~(map)(f,xs)))); let double:T2 = case x=> ((mult)(x,(succ zero))) ; let myList:= (~cons(~one,@(~ cons((~two),(~ nil))))); in (~(map )(double ,myList))"
+}
+{"description": "a program that defines the power function.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" targetexpr  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let pow : T1 = fix (case self => (\ncase base, ~zero @ => ~succ zero@\ncase base, n=> ~(mult)(base,self(~pred(n))) ));"}
+{"description": "a program that defines the sum function.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":\" targetexpr  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => (~add)(x,self(xs))) ;"}
+{"description": "a program that defines the power of a number using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let pow := fix (case self => (\ncase b, ~zero @ => ~succ zero@\ncase b, n=> ~(mult)(b,self(~pred(n))) )) ;"}
+{"description": "a program that defines the power function.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let pow := fix (case self => (\ncase b, ~zero @ => ~succ zero@\ncase b, n=> ~(mult)(b,self(~pred(n))) )) ;"}
+{"description": "A program that defines the quicksort algorithm.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let rec partition : T1 = case p, ~nil @ => (~pair)(~nil,@(~ nil))@\ncase p , cons(x,xs)  => (~(ifthenelse )((less_than_eq )(x,p),(case (l,r)=(partition(p,xs))=> ((cons(x,l),r)),(case(l,r)= (partition(p,xs))=>(l,(cons(x,r)))))); let qsnil:= (~pair)((~nil),(@(~ nil))); in let qs := fix (case self => (\ncase ~fst(qspair)=>(~snd(qspair) == (@(:=(pivot,self(fst,snd)))) ? ~(qs)(self(snd)):default return value )) ;"}
+{"description": "A program that defines a function to compute the average of two numbers.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let avg : T1 = case (x, y) => ((divided_by)((add)(x,y),(~succ ~one))) ;"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain",
+"program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the sum of all even numbers up to a given number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain\n\ntarget ::= \":=\" base                  # variable assignment.","program":"let sum_even : T1 = fix (case self => (\ncase ~zero @ => ~zero @\ncase n  => ~(ifthenelse)(~even(n), (~add)(n, self(~pred(n))),self(~pred(n)))"                                                                                                                                      }
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain","program":"let sum : T1 = fix (case self => (\ncase ~nil @ => ~zero @\ncase ~cons(x, xs)  => ~(add)(x, self(xs))));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain",
+"program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x, self(xs)));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain","program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines the map function and applies it to a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | argument_list\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let rec map : T1 = (case ~nil @ => ~nil @\ncase cons(x, xs)  => (~cons)((f)(x), ~(map)(f,xs)));\nlet double:T2 = case x=> ((mult)(x,(succ zero))) ;\nlet myList:= (~cons(~one,@(~ cons((~two),(~ nil))))); in (~(map )(double ,myList));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain",
+"program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines the map function and applies it to a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function\n       | argument_list\n\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",\"",
+"program":"let rec map : T1 = (case f => (\ncase ~nil @ => ~nil @\ncase cons(x, xs)  => (~cons)((f)(x), ~(map)(f,xs)))); let double:T2 = case x=> ((mult)(x,(succ zero))) ; let myList:= (~cons(~one,@(~ cons((~two),(~ nil))))); in (~(map )(double ,myList));"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | argument_list","program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ n,self(~pred(n))))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | \"@\"\n       | argchain","program":"let sum : T1 = fix (case self => (\ncase ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x, self(xs))));"}
+{"description": "A program that defines a function to calculate the sum of numbers up to n using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function\n       | argument_list\ntarget ::= \":=\" base                  # variable assignment.\npattern::= '\"~' [a-z]+'$'\",",
+"program":"let rec sum : T1 = (case ~zero @ => ~zero@\ncase n  => (~add)(n, (sum)((sub)(n, (~succ zero)))));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function\n       | argument_list",
+"program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the nth triangular number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec triangle : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(n, (self)((sub) (n,(~succ(zero))))));"}
+{"description": "A program that defines a function to calculate the factorial of a number using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function\n       | argument_list",
+"program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function\n       | argument_list","program":"let rec sum : T1 = (case ~nil @ => ~zero @\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function",
+"program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase ~succ zero @  => (~succ zero)@ ;\ncase n  => ~(add)(fibonacci(~pred(n)),fibonacci((~pred(n)))));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase ~succ zero @  => (~succ zero)@ ;\ncase n  => ~(add)(fibonacci(~pred(n)),fibonacci((~pred(n)))));"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero))));"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "a program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the nth prime number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec is_prime : T1 = (case ~one @ => ~false@\ncase n  => ~(less_than)((~two), n) ? ~(is_not_divisible_by_any_in_range)(~two,n):(~notprime);" }
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" basepat \")\"\n\nbasepat ::= \"[a-zA-Z][_a-zA-Z]*\"\n       |  ~\"[a-zA-Z][_a-zA-Z]*\"",
+"program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)));"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the nth Fibonacci number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec fibonacci : T1 = (case ~zero @ => ~zero@\ncase n  => ~(add)(fibonacci(~pred(n)), fibonacci((~sub) (~succ zero,~succ zero)))"}
+{"description": "A program that defines a function to calculate the factorial of a number using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function",
+"program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the power of a number using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat",
+"program":"let pow := fix (case self => (\ncase b, ~zero @ => ~succ zero@\ncase b, n=> ~(mult)(b,self(~pred(n))) )) ;"}
+{"description": "A program that defines a function to calculate the factorial of a number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function",
+"program":"let rec fact : T1 = (case ~zero @ => ~succ zero@\ncase n  => ~(mult)(~succ(n),(self(~pred(n)))));" }
+{"description": "A program that defines a function to calculate the sum of all elements in a list.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec sum : T1 = (case ~nil @ => ~zero@\ncase cons(x, xs)  => ~(add)(x,self(xs)))"}
+{"description": "A program that defines a function to calculate the nth odd number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat\n       | function","program":"let rec odd : T1 = (case ~zero @ => ~one@\ncase n  => ~(add)(~two,odd(~pred(n))))"}
+{"description": "A program that defines a function to calculate the nth prime number.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= basepat","program":"let is_prime : T1 = (case ~one @ => ~false@ case n  => ~(less_than)((~two), n) ? ~(is_not_divisible_by_any_in_range)(~two,n):(~notprime);"}
+{"description": "a program that defines the factorial function using recursion.", "grammar": "argchain ::= \"(\" expr \")\" argchain\n           | \"(\" expr \")\"\n\nbase ::= \"[a-zA-Z][_a-zA-Z]*\"\n       | function","program":"let factorial := fix (case self => (\ncase ~zero @ =>  ~succ zero@\ncase n  => ~(mult)(self(~pred(n)),~succ n) )) ;"}
