@@ -2,8 +2,6 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- modify gpt generation to use a custom non-json convention
-    - convert to json after generation
 - improve surface syntax of least fixed point - from `LFP self ~nil @ | ...` to `LFP self | ~nil @ | ...`; and records - from `_.uno = @` to `uno = @, dos = @, #` where `# : TOP` 
 - modify `concretize` to structure with new lines and indentation  
 - generate data with gpt 

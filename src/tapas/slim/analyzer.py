@@ -2466,20 +2466,47 @@ class BaseRule(Rule):
     def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[World]:
 
         if self.light_mode:
-            result = Top()
-
             assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            for branch in branches:
+            if len(branches) == 1:
+                branch = branches[0]
                 assert len(branch.worlds) == 1
-                branch_world = branch.worlds[0]
-                world = union_worlds(world, branch_world)
-                result = Inter(TField(branch.label, branch.body), result)
-            return [
-                World(world.constraints.add(
-                    Subtyping(simplify_typ(result), nt.typ_var)
-                ), world.freezer, world.relids)
-            ] 
+                world = branch.worlds[0]
+                result = TField(branch.label, branch.body)
+                return [
+                    World(world.constraints.add(
+                        Subtyping(simplify_typ(result), nt.typ_var)
+                    ), world.freezer, world.relids)
+                ] 
+            else:
+                world = nt.worlds[0]
+                result = Top()
+                for branch in branches:
+                    assert len(branch.worlds) == 1
+                    branch_world = branch.worlds[0]
+                    rectyp = TField(branch.label, branch.body)
+
+                    ######## NOTE: generalization and extrusion #############
+                    fvs = extract_free_vars_from_typ(s(), rectyp)
+                    renaming = self.solver.make_renaming_tvars(fvs)
+                    sub_map = cast_up(renaming)
+                    bound_ids = tuple(var.id for var in renaming.values())
+                    constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                        sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(branch_world, rectyp)))
+                    )
+
+                    renamed_rectyp = sub_typ(sub_map, rectyp)
+                    if bound_ids or constraints:
+                        generalized_case = All(bound_ids, constraints, renamed_rectyp)
+                    else:
+                        generalized_case = renamed_rectyp
+                    #############################################
+                    result = Inter(generalized_case, result)
+
+                return [
+                    World(world.constraints.add(
+                        Subtyping(simplify_typ(result), nt.typ_var)
+                    ), world.freezer, world.relids)
+                ] 
         #end if
 
 
@@ -2491,15 +2518,22 @@ class BaseRule(Rule):
                 (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
                 new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
 
-                field = TField(branch.label, body_typ)
-                constraints = tuple(extract_reachable_constraints_from_typ(new_world, field))
-                if constraints:
-                    # TODO: update outer world instead of nesting constraints; since there's no generalization
-                    generalized_case = All((), constraints, field)
+                rectyp = TField(branch.label, body_typ)
+                ######## NOTE: generalization and extrusion #############
+                fvs = extract_free_vars_from_typ(s(), rectyp)
+                renaming = self.solver.make_renaming_tvars(fvs)
+                sub_map = cast_up(renaming)
+                bound_ids = tuple(var.id for var in renaming.values())
+                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                    sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(branch_world, rectyp)))
+                )
+
+                renamed_rectyp = sub_typ(sub_map, rectyp)
+                if bound_ids or constraints:
+                    generalized_case = All(bound_ids, constraints, renamed_rectyp)
                 else:
-                    generalized_case = field 
-
-
+                    generalized_case = renamed_rectyp
+                #############################################
                 result = Inter(generalized_case, result)
             '''
             end for 
@@ -2513,20 +2547,47 @@ class BaseRule(Rule):
     def combine_function(self, nt : Context, branches : list[Branch]) -> list[World]:
         augmented_branches = augment_branches_with_diff(branches)
         if self.light_mode:
-            result = Top()
-
             assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            for branch in augmented_branches:
+            if len(augmented_branches) == 1:
+                branch = augmented_branches[0]
                 assert len(branch.worlds) == 1
-                branch_world = branch.worlds[0]
-                world = union_worlds(world, branch_world)
-                result = Inter(Imp(branch.pattern, branch.body), result)
-            return [
-                World(world.constraints.add(
-                    Subtyping(simplify_typ(result), nt.typ_var)
-                ), world.freezer, world.relids)
-            ] 
+                world = branch.worlds[0]
+                result = Imp(branch.pattern, branch.body)
+                return [
+                    World(world.constraints.add(
+                        Subtyping(simplify_typ(result), nt.typ_var)
+                    ), world.freezer, world.relids)
+                ] 
+            else:
+                world = nt.worlds[0]
+                result = Top()
+                for branch in augmented_branches:
+                    assert len(branch.worlds) == 1
+                    branch_world = branch.worlds[0]
+                    imp = Imp(branch.pattern, branch.body)
+
+                    ######## NOTE: generalization and extrusion #############
+                    fvs = extract_free_vars_from_typ(s(), imp)
+                    renaming = self.solver.make_renaming_tvars(fvs)
+                    sub_map = cast_up(renaming)
+                    bound_ids = tuple(var.id for var in renaming.values())
+                    constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                        sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(branch_world, imp)))
+                    )
+
+                    renamed_imp = sub_typ(sub_map, imp)
+                    if bound_ids or constraints:
+                        generalized_case = All(bound_ids, constraints, renamed_imp)
+                    else:
+                        generalized_case = renamed_imp
+                    #############################################
+                    result = Inter(generalized_case, result)
+
+                return [
+                    World(world.constraints.add(
+                        Subtyping(simplify_typ(result), nt.typ_var)
+                    ), world.freezer, world.relids)
+                ] 
         #end if
         '''
         Example
@@ -2543,7 +2604,7 @@ class BaseRule(Rule):
         for branch in reversed(augmented_branches): 
             for branch_world in reversed(branch.worlds):
                 '''
-                interpret, extrude, and generalize
+                interpret
                 '''
                 new_world = branch_world
 
@@ -2573,7 +2634,7 @@ class BaseRule(Rule):
                 # else:
                 #     generalized_case = imp
                 ######## NOTE: generalization and extrusion #############
-                fvs = extract_free_vars_from_typ(s(), param_typ)
+                fvs = extract_free_vars_from_typ(s(), imp)
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(var.id for var in renaming.values())
