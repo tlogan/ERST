@@ -2,8 +2,14 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
+-  add indentation and new lines to `concretize`
+    - modify `concretize` to structure with new lines and indentation  
+- rewrite non-unrollable relational constraint to match constraint in assumption 
+    - consider normalizing relational constraints into rightward tuples before saving
+        - according to variable order
+- when checking a single frozen id that is relational; factor out the column from relational assumption   
+- when checking a relational key; normalize and factor out the columns from the relational assumption   
 - improve surface syntax of least fixed point - from `LFP self ~nil @ | ...` to `LFP self | ~nil @ | ...`; and records - from `_.uno = @` to `uno = @, dos = @, #` where `# : TOP` 
-- modify `concretize` to structure with new lines and indentation  
 - generate data with gpt 
 - generate annotations symbolically
 - split into train and test sets
