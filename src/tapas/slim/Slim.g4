@@ -402,13 +402,13 @@ self.guide_terminal('ID')
 } ID {
 target_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_target, nt, $ID.text)
 } target[target_nt] {
-self.guide_symbol(';')
-} ';' {
+self.guide_symbol('in')
+} 'in' {
 nt = replace(nt, worlds = $target.worlds)
 contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, $ID.text, target_nt.typ_var)
 } contin = expr[contin_nt] {
 $worlds = $contin.worlds
-self.update_sr('expr', [t('let'), ID, n('target'), SEMI, n('expr')])
+self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
 }
 // nt = replace(nt, worlds = contin.worlds)
 // $worlds = self.guide_nonterm(ExprRule(self._solver, self._light_mode).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
@@ -479,7 +479,7 @@ self.update_sr('base', [n('argchain')])
 
 record [Context nt] returns [list[RecordBranch] branches] :
 
-| '_.' {
+| ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -487,10 +487,10 @@ self.guide_symbol('=')
 body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_single_body, nt, $ID.text)
 } body = expr[body_nt] {
 $branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.worlds, body_nt.typ_var)
-self.update_sr('record', [t('_.'), ID, t('='), n('expr')])
+self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 }
 
-| '_.' {
+| ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -501,7 +501,7 @@ tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_
 } tail = record[tail_nt] {
 tail_branches = $tail.branches
 $branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, $ID.text, $body.worlds, body_nt.typ_var, tail_branches)
-self.update_sr('record', [t('_.'), ID, t('='), n('expr'), n('record')])
+self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 }
 
 ;

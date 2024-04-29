@@ -2,7 +2,6 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- improve surface syntax of least fixed point - from `LFP self ~nil @ | ...` to `LFP self | ~nil @ | ...`; and records - from `_.uno = @` to `;uno = @ ;dos = @`
 - need to remove extra constraints that have been rewritten to construct LFP type; see `test_add`
 - rewrite non-unrollable relational constraint to match constraint in assumption 
     - consider normalizing relational constraints into rightward tuples before saving

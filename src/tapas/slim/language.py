@@ -155,6 +155,7 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analy
     parser.init()
     tc = parser.program(analyzer.default_context)
     if tc.worlds == None:
+        print(tc.toStringTree(recog=parser))
         raise Exception("Parsing Error")
     else:
         return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)

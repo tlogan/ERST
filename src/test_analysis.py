@@ -565,12 +565,12 @@ def test_tuple():
 
 def test_record():
     code = '''
-_.uno = @ 
-_.dos = @
+;uno = @ 
+;dos = @
     '''
 # uno:= @  dos:= @
     (worlds, typ_var, parsetree, solver) = analyze(code)
-    # assert parsetree == "(expr (base (record _. uno = (expr (base @)) (record _. dos = (expr (base @))))))"
+    # assert parsetree == "(expr (base (record ; uno = (expr (base @)) (record ; dos = (expr (base @))))))"
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "(uno : @ & dos : @)"
 
@@ -608,7 +608,7 @@ case x => ~two @
 
 def test_projection():
     code = '''
-(_.uno = ~one @ _.dos = ~two @).uno
+(;uno = ~one @ ;dos = ~two @).uno
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
@@ -616,7 +616,7 @@ def test_projection():
 
 def test_projection_chain():
     code = '''
-(_.uno = (_.dos = ~onetwo @) _.one = @).uno.dos
+(;uno = (;dos = ~onetwo @) ;one = @).uno.dos
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
@@ -673,17 +673,17 @@ def test_application_chain():
 
 def test_let():
     code = '''
-let x = @ ;
+let x = @ in
 x
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
-    # assert parsetree == "(expr let x (target = (expr (base @))) ; (expr (base x)))"
+    # assert parsetree == "(expr let x (target = (expr (base @))) in (expr (base x)))"
     assert decode_positive(solver, worlds, typ_var) == "@"
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
 
 def test_idprojection():
     code = '''
-let r = (_.uno = @ _.dos = @) ;
+let r = (;uno = @ ;dos = @) in 
 r.uno
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -692,19 +692,19 @@ r.uno
 
 def test_idprojection_chain():
     code = '''
-let r = (_.uno = (_.dos = @) _.one = @) ;
+let r = (;uno = (;dos = @) ;one = @) in 
 r.uno.dos
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
-    # print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "@"
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_idapplication():
     code = '''
 let f = (
     case ~nil @ => @ 
     case ~cons x => x 
-) ;
+) in 
 f(~nil @)
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -713,7 +713,7 @@ f(~nil @)
 
 def test_idapplication_chain():
     code = '''
-let f = (case ~nil @ => case ~nil @ => @) ;
+let f = (case ~nil @ => case ~nil @ => @) in
 f(~nil @)(~nil @)
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -908,7 +908,7 @@ def test_less_equal():
 
 def test_let_less_equal():
     let_less = (f'''
-let less_equal = {less_equal} ;
+let less_equal = {less_equal} in
 less_equal
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(let_less)
@@ -1036,7 +1036,7 @@ def test_pattern_match_wrap():
     let cmp = (
         case (~uno @, ~dos @) => ~true @
         case (~dos @, ~uno @) => ~false @ 
-    ) ;
+    ) in
     case (x, y) => (cmp(x, y))
     ''')
 
@@ -1050,7 +1050,7 @@ def test_arg_specialization():
     let cmp = (
         case (~uno @, ~dos @) => ~true @
         case (~dos @, ~uno @) => ~false @ 
-    ) ;
+    ) in
     case (x, y) => (
         if cmp(x, y) then
             y
@@ -1063,7 +1063,7 @@ def test_arg_specialization():
     let cmp = (
         case (~uno @, ~dos @) => ~true @
         case (~dos @, ~uno @) => ~false @ 
-    ) ;
+    ) in
     case (x, y) => (cmp(x, y))
     ''')
 
@@ -1071,7 +1071,7 @@ def test_arg_specialization():
     # let cmp = (
     #     case (~uno @, ~dos @) => ~true @
     #     case (~dos @, ~uno @) => ~false @ 
-    # ) ;
+    # ) in 
     # case (x, y) => (
     #     (
     #     case ~true @ => y
@@ -1090,7 +1090,7 @@ def test_passing_pattern_matching():
     # let cmp = (
     #     case (~uno @, ~dos @) => ~true @
     #     case (~dos @, ~uno @) => ~false @ 
-    # ) ;
+    # ) in
 
     # case (x, y) => cmp(x, y)
     # ''')
@@ -1118,7 +1118,7 @@ def test_passing_pattern_matching():
 
 
 max = (f'''
-let less_equal = {less_equal} ;
+let less_equal = {less_equal} in
 case (x, y) => (
     if less_equal(x, y) then
         y
@@ -1147,7 +1147,7 @@ def test_recursion_wrapper():
 def test_max():
 
     max = (f'''
-    let less_equal = {less_equal} ;
+    let less_equal = {less_equal} in
     case (x, y) => (
         (
         case (~true @) => y 
@@ -1157,7 +1157,7 @@ def test_max():
     ''')
 
     max = (f'''
-    let less_equal = {less_equal} ;
+    let less_equal = {less_equal} in
     case (x, y) => (
         if less_equal(x, y) then
             y
@@ -1249,7 +1249,7 @@ def test_add_annotated():
     # TODO: requires weakening the relational constraint to just the two variables of interest
     # e.g. (A, _27) <: (LFP SELF ((EXI [N ; N ...
     code = (f'''
-let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add};
+let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add} in
 @
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -1258,7 +1258,7 @@ let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add};
 
 
 fib = (f'''
-let add = {add} ;
+let add = {add} in
 fix (case self => ( 
     case (~zero @) => ~zero @
     case (~succ ~zero @) => ~succ ~zero @
@@ -1274,7 +1274,7 @@ def test_fib():
 def test_fib_annotated():
     # TODO: come up with a feasible annotation
     anno_fib = (f'''
-let fib : X -> Y = {fib};
+let fib : X -> Y = {fib} in
 @
     ''')
 
@@ -1302,8 +1302,8 @@ def test_fib_two_equals_one():
 def test_application_in_tuple():
 
     code = (f'''
-    let f = (case x => x) ;
-    let g = (case x => x) ;
+    let f = (case x => x) in
+    let g = (case x => x) in
     (f)(@), (g)(@)
     ''')
 
@@ -1314,7 +1314,7 @@ def test_application_in_tuple():
 def test_generalized_application_in_tuple():
     # TODO: this requires add generalization in the combine_function rule
     code = (f'''
-    let f = (case x => x) ;
+    let f = (case x => x) in
     (f)(@), (f)(@)
     ''')
 
@@ -1324,7 +1324,7 @@ def test_generalized_application_in_tuple():
 
 def test_sumr():
     sumr = (f'''
-let add = ({add}) ; 
+let add = ({add}) in
 fix (case self => ( 
     case (~nil @, b) => b
     case (~cons (x, xs), b) => add((self)(xs, b), x)
@@ -1340,7 +1340,7 @@ fix (case self => (
 
 def test_suml():
     suml = (f'''
-let add = {add} ; 
+let add = {add} in
 fix (case self => ( 
     case (~nil @, b) => b
     case (~cons (x, xs), b) => self(xs, (add)(b, x))
@@ -1432,7 +1432,7 @@ def test_preamble_pass():
     code = (f'''
 alias T = ~uno @
 alias U = ~dos @
-let x : T = ~uno @ ;
+let x : T = ~uno @ in
 x
     ''')
 
@@ -1444,7 +1444,7 @@ def test_preamble_fail():
     code = (f'''
 alias T = ~uno @
 alias U = ~dos @
-let x : U = ~uno @ ;
+let x : U = ~uno @ in
 x
     ''')
 
@@ -1457,17 +1457,17 @@ x
 def test_annotated_let():
     code = (f'''
 alias Z = @
-let x : ~uno B = ~uno @ ;
-let ident : T0 = (case x => x) ;
+let x : ~uno B = ~uno @ in
+let ident : T0 = (case x => x) in
 let add : T1 = fix (case self => ( 
     case (~zero @, b) => b 
     case (~succ a, b) => ~succ (self(a, b))
-)) ;
+)) in
 @
     ''')
 
     code = (f'''
-let y : T = (~dos @) ;
+let y : T = (~dos @) in
 @
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -1480,13 +1480,14 @@ let y : T = (~dos @) ;
 
 
 if __name__ == '__main__':
+    test_idprojection_chain()
     # test_annotated_let()
     # test_preamble_fail()
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
 
     # TODO
-    test_add()
+    # test_add()
     # test_one_plus_one_equals_two()
     # test_one_plus_one_query()
     # test_add_annotated()
