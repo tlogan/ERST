@@ -1480,14 +1480,14 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_idprojection_chain()
+    # test_idprojection_chain()
     # test_annotated_let()
     # test_preamble_fail()
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
 
     # TODO
-    # test_add()
+    test_add()
     # test_one_plus_one_equals_two()
     # test_one_plus_one_query()
     # test_add_annotated()

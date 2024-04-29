@@ -2,7 +2,6 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- need to remove extra constraints that have been rewritten to construct LFP type; see `test_add`
 - rewrite non-unrollable relational constraint to match constraint in assumption 
     - consider normalizing relational constraints into rightward tuples before saving
         - according to variable order
@@ -17,6 +16,7 @@
 
 
 -------------------
+- add `sort (merge)`, and some tree (Red Black) procedures  
 - test `fib`, `sumr`, and `suml` on concrete examples for sanity check
     - figure out how to clean up result for arguments of inductive case
 - add relational constraint weakening (via factoring columns) to enable relational annotations

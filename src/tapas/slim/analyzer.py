@@ -391,12 +391,6 @@ def concretize_constraints(subtypings : Iterable[Subtyping]) -> str:
         for st in subtypings
     ])
 
-def list_out_constraints(subtypings : Iterable[Subtyping], indent = 0) -> str:
-    return "\n" + "".join([ 
-        ((indent * 4) * " ") + "# " + concretize_typ(st.strong) + " <: " + concretize_typ(st.weak) + "\n\n"
-        for st in subtypings 
-    ])
-
 dent = 4 * " "
 def indent(block: str) -> str:
     lines = block.split("\n")
@@ -3160,12 +3154,38 @@ class ExprRule(Rule):
     # ~~~~~~~~~~~~~~~~~~~~~
     #             """)
 
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix rel {i} / len={len(inner_worlds)}
+~~~~~~~~~~~~~~~~~~~~~
+
+BEFORE inner_world.constraints:
+{concretize_constraints(inner_world.constraints)} 
+~~~~~~~~~~~~~~~~~~~~~
+                """)
+
                 inner_world = World(pset(
                     st
                     for st in inner_world.constraints
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 ) , inner_world.freezer, inner_world.relids)
                 reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix rel {i} / len={len(inner_worlds)}
+# ~~~~~~~~~~~~~~~~~~~~~
+
+# inner_world.constraints:
+# {concretize_constraints(inner_world.constraints)} 
+
+# reachable_constraints:
+# {concretize_constraints(reachable_constraints)} 
+
+# outer_world.constraints:
+# {concretize_constraints(outer_world.constraints)} 
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
@@ -3238,9 +3258,18 @@ class ExprRule(Rule):
     #         """)
 
 
-            new_world = self.evolve_worlds(nt, result)
-            ##################################
-        return new_world
+        nt = replace(nt, worlds = [
+            World(pset(
+                st
+                for st in world.constraints
+                if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
+            ) , world.freezer, world.relids)
+            for world in nt.worlds
+        ])
+
+        new_worlds = self.evolve_worlds(nt, result)
+        ##################################
+        return new_worlds
 
     
     def distill_let_target(self, nt : Context, id : str) -> Context:
