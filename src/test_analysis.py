@@ -124,33 +124,33 @@ def test_typ_implication():
 
 def test_typ_LFP():
     d = ('''
-LFP self ~nil @ | ~cons self
+LFP self | ~nil @ | ~cons self
     ''')
-    assert u(p(d)) == "LFP self (~nil @ | ~cons self)"
+    assert u(p(d)) == "LFP self | (~nil @ | ~cons self)"
     # print(u(t))
 
 
 nat = ('''
-(LFP N BOT 
+(LFP N
     | ~zero @  
     | ~succ N 
 )
 ''')
 
 even = ('''
-LFP E BOT 
+LFP E
     | ~zero @ 
     | ~succ ~succ E
 ''')
 
 nat_list = ('''
-LFP NL BOT 
+LFP NL 
     | (~zero @, ~nil @) 
     | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
 ''')
 
 even_list = ('''
-LFP NL BOT 
+LFP NL 
     | (~zero @, ~nil @) 
     | EXI [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
 ''')
@@ -158,7 +158,7 @@ LFP NL BOT
 
 
 nat_equal = ('''
-LFP SELF BOT 
+LFP SELF 
     | (~zero @, ~zero @) 
     | EXI [A B ; (A, B) <: SELF] (~succ A, ~succ B)  
 ''')
@@ -167,7 +167,7 @@ LFP SELF BOT
 
 
 addition_rel = (f'''
-LFP AR BOT 
+LFP AR 
     | (EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
     | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
 ''')
@@ -415,10 +415,10 @@ answer:\n{answer}
 
 
 list_nat_diff = ('''
-(LFP self (
-    (~nil @, ~zero @) | 
-    (EXI [l n ; (l, n) <: self] ((~cons l \\ ~nil @), ~succ n))
-))
+(LFP self
+    | (~nil @, ~zero @)
+    | (EXI [l n ; (l, n) <: self] ((~cons l \\ ~nil @), ~succ n))
+)
 ''')
 
 # list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: LFP SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
@@ -447,7 +447,7 @@ answer:\n{answer}
     assert answer == "~succ ~zero @" 
 
 list_diff = ('''
-LFP SELF (~nil @ | (~cons SELF \\ ~nil @))
+(LFP SELF | ~nil @ | (~cons SELF \\ ~nil @))
 ''')
 
 def test_cons_nil_subs_list_diff():
@@ -916,18 +916,20 @@ less_equal
     assert decode_positive(solver, worlds, typ_var) == "@"
 
 nat_pair_rel = (f'''
-LFP self BOT 
+(LFP self 
     | (EXI [x ; x <: ({nat})] (~zero @, x))
     | (EXI [a b ; (a, b) <: self] (~succ a, ~succ b))
     | (EXI [x ; x <: ({nat})] (~succ x, ~zero @))
+)
 ''')
 
 
 less_equal_rel = (f"""
-LFP self  BOT 
+(LFP self 
     | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
     | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
     | (EXI [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
+)
 """)
 
 def test_two_less_equal_one_query():
@@ -1183,13 +1185,14 @@ fix (case self => (
 ''')
 
 def test_add():
+    # TODO: need to remove extra constraints that have been rewritten to construct LFP type
     (worlds, typ_var, parsetree, solver) = analyze(add)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_exi_add_rel_subs_query():
     exi_add = '''
-(EXI [Y ; (~zero @, ~zero @) <: X ; (X, Y) <: (LFP self ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y)
+(EXI [Y ; (~zero @, ~zero @) <: X ; (X, Y) <: (LFP self | ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y)
     '''
     query = ('''
 Q
@@ -1204,8 +1207,8 @@ Q
 def test_add_imp_subs_zero_zero_imp_query():
 
     add_imp = '''
-(ALL [X ; X <: (LFP self ((EXI [B] (~zero @, B)) | (EXI [B A] (~succ A, B))))] (X -> (
-    EXI [Y ; (X, Y) <: (LFP self ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y
+(ALL [X ; X <: (LFP self | ((EXI [B] (~zero @, B)) | (EXI [B A] (~succ A, B))))] (X -> (
+    EXI [Y ; (X, Y) <: (LFP self | ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y
 ))) 
     '''
     zero_zero_imp_query = ('''
@@ -1237,9 +1240,8 @@ def test_add_one_and_two_equals_three():
 
 lte = (f'''
 (LFP SELF 
-    (EXI [N ; N <: {nat}] (~zero @, N)) |
-    (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B)) |
-    BOT
+    | (EXI [N ; N <: {nat}] (~zero @, N))
+    | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
 )
 ''')
 
@@ -1415,7 +1417,7 @@ def test_extra_exi():
 ~true @
     ''')
     weak = ('''
-(((EXI [X] ~true @) | (EXI [X Y Z ; Z <: LFP self (((EXI [X] ~true @) | (EXI [X Y Z ; Z <: self] Z)) | (EXI [X] ~false @))] Z)) | (EXI [X] ~false @))
+(((EXI [X] ~true @) | (EXI [X Y Z ; Z <: LFP self | (((EXI [X] ~true @) | (EXI [X Y Z ; Z <: self] Z)) | (EXI [X] ~false @))] Z)) | (EXI [X] ~false @))
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, strong, weak)
@@ -1482,6 +1484,7 @@ if __name__ == '__main__':
     # test_preamble_fail()
     # test_application_in_tuple()
     # test_generalized_application_in_tuple()
+
     # TODO
     test_add()
     # test_one_plus_one_equals_two()

@@ -268,7 +268,7 @@ $combo = All($ids.combo, $qualification.combo, $typ.combo)
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'LFP' ID typ {
+| 'LFP' ID '|' typ {
 $combo = LeastFP($ID.text, $typ.combo) 
 }
 
