@@ -2490,7 +2490,11 @@ class BaseRule(Rule):
                 result = Top()
                 for branch in branches:
                     assert len(branch.worlds) == 1
-                    branch_world = branch.worlds[0]
+                    branch_world = World(
+                        branch.worlds[0].constraints.difference(world.constraints),
+                        world.freezer,
+                        world.relids
+                    )
                     rectyp = TField(branch.label, branch.body)
 
                     ######## NOTE: generalization and extrusion #############
@@ -2571,7 +2575,11 @@ class BaseRule(Rule):
                 result = Top()
                 for branch in augmented_branches:
                     assert len(branch.worlds) == 1
-                    branch_world = branch.worlds[0]
+                    branch_world = World(
+                        branch.worlds[0].constraints.difference(world.constraints),
+                        world.freezer,
+                        world.relids
+                    )
                     imp = Imp(branch.pattern, branch.body)
 
                     ######## NOTE: generalization and extrusion #############
@@ -3145,47 +3153,12 @@ class ExprRule(Rule):
                     IH_left_constraints = s()
                 #end if
 
-
-                inner_world = World(inner_world.constraints.difference(self_used_constraints), inner_world.freezer, inner_world.relids)
-
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # $$$$$$$ OOGA START 
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
-
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix rel {i} / len={len(inner_worlds)}
-~~~~~~~~~~~~~~~~~~~~~
-
-BEFORE inner_world.constraints:
-{concretize_constraints(inner_world.constraints)} 
-~~~~~~~~~~~~~~~~~~~~~
-                """)
-
                 inner_world = World(pset(
                     st
-                    for st in inner_world.constraints
+                    for st in inner_world.constraints.difference(self_used_constraints)
                     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 ) , inner_world.freezer, inner_world.relids)
                 reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix rel {i} / len={len(inner_worlds)}
-# ~~~~~~~~~~~~~~~~~~~~~
-
-# inner_world.constraints:
-# {concretize_constraints(inner_world.constraints)} 
-
-# reachable_constraints:
-# {concretize_constraints(reachable_constraints)} 
-
-# outer_world.constraints:
-# {concretize_constraints(outer_world.constraints)} 
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
 
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
                 left_constraints = IH_left_constraints.union(reachable_constraints)
@@ -3215,17 +3188,34 @@ BEFORE inner_world.constraints:
                 induc_body = Unio(constrained_rel, induc_body) 
                 param_body = Unio(constrained_left, param_body)
 
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG combine_fix rel {i} / len={len(inner_worlds)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # rel_pattern: {concretize_typ(rel_pattern)}
-    # constrained rel: {concretize_typ(constrained_rel)}
-    # ======================
-    # body_var: {body_var}
-    # IH_typ: {IH_typ.id}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix rel {i} / len={len(inner_worlds)}
+# ~~~~~~~~~~~~~~~~~~~~~
+
+# outer_world.freezer: {outer_world.freezer}
+
+# outer_world.constraints:
+# {concretize_constraints(outer_world.constraints)}
+
+
+# inner_world.freezer: {inner_world.freezer}
+
+# inner_world.constraints:
+# {concretize_constraints(inner_world.constraints)}
+
+# left_used_constraints:
+# {concretize_constraints(left_used_constraints)}
+
+# self_typ: {concretize_typ(self_typ)}
+# in_typ: {concretize_typ(in_typ)}
+# rel_pattern: {concretize_typ(rel_pattern)}
+# constrained rel: {concretize_typ(constrained_rel)}
+# ======================
+# body_var: {body_var}
+# IH_typ: {IH_typ.id}
+# ~~~~~~~~~~~~~~~~~~~~~
+#                 """)
 
             #end for
 

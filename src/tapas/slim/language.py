@@ -160,7 +160,7 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analy
     else:
         return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)
 
-def analyze_light(code : str) -> analyzer.World:
+def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     input_stream = InputStream(code)
     lexer = SlimLexer(input_stream)
     token_stream : Any = CommonTokenStream(lexer)
@@ -171,7 +171,10 @@ def analyze_light(code : str) -> analyzer.World:
         raise Exception("Parsing Error")
     else:
         assert len(tc.worlds) == 1
-        return tc.worlds[0]
+        world = tc.worlds[0]
+        assert not world.freezer
+        assert not world.relids
+        return world.constraints 
 
 def refine_grammar(code : str) -> analyzer.Grammar:
     input_stream = InputStream(code)

@@ -362,7 +362,14 @@ def extract_annotation_ids(prog : str) -> list[str]:
 #     return (rev_aliasing, new_anno_map)
     
 
-def make_masked_program(code : str, ids : list[str]) -> str:
+
+def make_mask_constraints(ids : list[str]) -> str:
+    return "\n".join([
+        f"; T{i} <: <extra_id_{i}>"
+        for i in ids
+    ])
+
+def make_masked_string(code : str, ids : list[str]) -> str:
     result = code 
     for i in ids:
         result = result.replace(f"T{i}", f"<extra_id_{i}>")
@@ -377,20 +384,17 @@ def make_masked_annotations(
     ])
 
 def make_annotation_example(prog : str) -> str: 
-    # TODO: modify to include serialized unsolved constraints as context in input
     (worlds, t, _, solver) = analyze(prog)
-    context = "<<TODO>>"
+
     ids = extract_annotation_ids(prog)
-    masked_prog = make_masked_program(prog, ids)
+
+    masked_prog = make_masked_string(prog, ids)
+
+    light_constraints = analyze_light(prog)
+    context = concretize_constraints(light_constraints) + "\n" + make_mask_constraints(ids)
 
     anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
     annotations = make_masked_annotations(anno_map)
-
-    # TODO: remove old aliasing code
-    # raw_anno_map = decode_annotations(solver, worlds, [f"T{i}" for i in ids])
-    # (rev_aliasing, anno_map) = to_anno_map_with_rev_aliasing(solver, raw_anno_map, solver.reversed_aliasing) 
-    # aliasing = analyzer.concretize_reversed_aliasing(rev_aliasing)
-    # annotations = make_masked_annotations(anno_map)
 
     return json.dumps({
         'program' : masked_prog, 

@@ -678,17 +678,17 @@ self.update_sr('basepat', [t('('), n('pattern'), t(')')])
 
 record_pattern [Context nt] returns [PatternAttr attr] :
 
-| '_.' {
+| ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
 } body = pattern[nt] {
 $attr = self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.attr)
-self.update_sr('recpat', [t('_.'), ID, t('='), n('pattern')])
+self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
 }
 
-| '_.' {
+| ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
@@ -696,7 +696,7 @@ self.guide_symbol('=')
 } body = pattern[nt] {
 } tail = record_pattern[nt] {
 $attr = self.collect(RecordPatternRule(self._solver, self._light_mode, nt).combine_cons, nt, $ID.text, $body.attr, $tail.attr)
-self.update_sr('recpat', [t('_.'), ID, t('='), n('pattern'), n('recpat')])
+self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
 }
 
 ;

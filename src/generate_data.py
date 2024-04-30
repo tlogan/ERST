@@ -11,14 +11,14 @@ import json
 
 
 def write_init_data():
-    write(project_path("res"), "init_program_examples.txt", "\n".join(init_program_examples))
+    write(project_path("res"), "init_program_grammar_examples.txt", "\n".join(init_program_examples))
 
     json_init_program_examples = [
         from_program_exform_to_json(ex)
         for ex in init_program_examples
     ]
 
-    write(project_path("res"), "init_program_examples.jsonl", "\n".join(json_init_program_examples))
+    write(project_path("res"), "init_program_grammar_examples.jsonl", "\n".join(json_init_program_examples))
 
     init_programs = [
         json.loads(ex)['program']
@@ -29,8 +29,8 @@ def write_init_data():
         for program in init_programs
     ]
 
-    write(project_path("res"), "init_annotation_examples.jsonl", "\n".join(init_annotation_examples))
-    write(project_path("res"), "init_annotation_examples.txt", "\n".join([
+    write(project_path("res"), "init_program_typing_examples.jsonl", "\n".join(init_annotation_examples))
+    write(project_path("res"), "init_program_typing_examples.txt", "\n".join([
         prettify_annotation_example(ex)
         for ex in init_annotation_examples 
     ]))

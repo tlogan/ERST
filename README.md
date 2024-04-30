@@ -7,6 +7,7 @@
         - according to variable order
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
 - when checking a relational key; normalize and factor out the columns from the relational assumption   
+-----------------------
 - generate data with gpt 
 - generate annotations symbolically
 - split into train and test sets
