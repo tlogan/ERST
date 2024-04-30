@@ -1,0 +1,1290 @@
+**********************************************
+<<<description>>> 
+A program that defines a function to calculate the power of a number.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | base "," expr
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+           | "(" expr ")" argchain
+
+
+
+<<<program>>>
+let mult : T0 = fix (case self => ( 
+    case (~zero @, n) => ~zero @
+    case (~succ m, n) => (add)(n, (self)(m, n))
+)) in
+let power : T1 = fix (case self => ( 
+    case (n, ~zero @) => ~succ ~zero @
+    case (n, ~succ m) => (mult)(n, (self)(n, m))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to find the maximum element in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let max : T0 = fix(case self => (
+    case (~nil @) => ~zero @  // Assuming non-empty lists for simplicity
+    case (~cons (x, ~nil @)) => x
+    case (~cons (x, xs)) => (
+        let tail_max = self(xs) in
+        if (lte)(x, tail_max) then
+            tail_max
+        else
+            x
+    )
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to reverse a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let reverse : T0 = fix(case self => (
+    case ~nil @ => ~nil @
+    case ~cons (x, xs) => (
+        let rev_tail = self(xs) in
+        append(rev_tail, ~cons (x, ~nil @))
+    )
+)) in
+let append : T1 = fix(case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the length of a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+           | "(" expr ")" argchain
+
+
+
+<<<program>>>
+let length : T0 = fix(case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => ~succ (self(xs))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to reverse a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let append : T0 = fix(case self => (
+    case (~nil @, l) => l
+    case (~cons (x, xs), l) => ~cons (x, self(xs, l))
+)) in
+let reverse : T1 = fix(case self => (
+    case ~nil @ => ~nil @
+    case ~cons (x, xs) => (append)(self(xs), ~cons (x, ~nil @))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the sum of elements in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix (case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix (case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a list is empty.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_empty : T0 = case xs => (
+    case ~nil @ => ~true @
+    case ~cons (x, xs) => ~false @
+) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a given number is even.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_even : T0 = fix(case self => (
+    case ~zero @ => ~true @
+    case ~succ ~zero @ => ~false @
+    case ~succ ~succ n => self(n)
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to concatenate two lists.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let append : T0 = fix(case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to reverse a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let reverse : T0 = fix(case self => (
+    case ~nil @ => ~nil @
+    case ~cons (x, xs) => (append)(self(xs), ~cons (x, ~nil @))
+)) in
+let append : T1 = fix(case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to concatenate two lists.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let concat : T0 = fix(case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a natural number is zero, and if not, decrement it.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "if" expr "then" expr "else" expr
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_zero : T0 = (case n => (
+    case ~zero @ => ~true @
+    case ~succ m => ~false @
+)) in
+let pred : T1 = fix(case self => (
+    case ~zero @ => ~zero @
+    case ~succ m => m
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to calculate the sum of all elements in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix(case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix(case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to find the maximum value in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let max : T0 = fix(case self => (
+    case (~nil @) => ~zero @  # Assuming zero as the default minimum value
+    case (~cons (x, ~nil @)) => x
+    case (~cons (x, xs)) => (
+        let m = self(xs) in 
+        (if (greater)(x, m) then x else m)
+    )
+)) in
+let greater : T1 = fix(case self => (
+    case (~zero @, ~zero @) => ~false @
+    case (~zero @, ~succ n) => ~false @
+    case (~succ m, ~zero @) => ~true @
+    case (~succ m, ~succ n) => self(m, n)
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to find the length of a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let length : T0 = fix (case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => ~succ (self(xs))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the maximum of two natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let max : T0 = fix (case self => (
+    case (~zero @, n) => n
+    case (m, ~zero @) => m
+    case (~succ m, ~succ n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to find the maximum number in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let max : T0 = fix(case self => (
+    case ~nil @ => ~zero @  // Assuming zero as the minimum value
+    case ~cons (x, ~nil @) => x
+    case ~cons (x, xs) => (
+        let m = self(xs) in
+        case (gte)(x, m) => x
+        case _ => m
+    )
+)) in
+let gte : T1 = fix(case self => (  // Greater than or equal function
+    case (~zero @, n) => ~true @
+    case (n, ~zero @) => ~false @
+    case (~succ m, ~succ n) => self(m, n)
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the factorial of a natural number.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let factorial : T0 = fix (case self => (
+    case ~zero @ => ~succ ~zero @
+    case ~succ n => (mul)(~succ n, self(n))
+)) in
+let mul : T1 = fix (case self => (
+    case (~zero @, n) => ~zero @
+    case (~succ m, n) => (add)(n, self(m, n))
+)) in
+let add : T2 = fix (case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the factorial of a natural number.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let factorial : T0 = fix(case self => (
+    case ~zero @ => ~succ ~zero @
+    case ~succ n => (mult)(~succ n, self(n))
+)) in
+let mult : T1 = fix(case self => (
+    case (~zero @, n) => ~zero @
+    case (~succ m, n) => (add)(n, self(m, n))
+)) in
+let add : T2 = fix(case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to calculate the sum of a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix(case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix(case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the sum of elements in a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix (case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix (case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the factorial of a natural number using recursion.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let factorial : T0 = fix(case self => (
+    case ~zero @ => ~succ ~zero @
+    case ~succ n => (mult)((self)(n), ~succ n)
+)) in
+let mult : T1 = fix(case self => (
+    case (~zero @, n) => ~zero @
+    case (~succ m, n) => (add)(n, self(m, n))
+)) in
+let add : T2 = fix(case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to reverse a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let reverse : T0 = fix (case self => (
+    case ~nil @ => ~nil @
+    case ~cons (x, xs) => (concat)(self(xs), ~cons (x, ~nil @))
+)) in
+let concat : T1 = fix (case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the sum of a list of natural numbers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix(case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix(case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a list is empty.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_empty : T0 = (case lst => (
+    case ~nil @ => ~true @
+    case ~cons (x, xs) => ~false @
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a number is zero.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_zero : T0 = case n => (
+    case ~zero @ => ~true @
+    case ~succ m => ~false @
+) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the sum of all elements in a list of integers.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let sum : T0 = fix (case self => (
+    case ~nil @ => ~zero @
+    case ~cons (x, xs) => (add)(x, self(xs))
+)) in
+let add : T1 = fix (case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to check if a given natural number is zero.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let is_zero : T0 = case n => (
+    case ~zero @ => ~true @
+    case ~succ _ => ~false @
+) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to reverse a list.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let reverse : T0 = fix(case self => (
+    case ~nil @ => ~nil @
+    case ~cons (x, xs) => (append)(self(xs), ~cons (x, ~nil @))
+)) in
+let append : T1 = fix(case self => (
+    case (~nil @, ys) => ys
+    case (~cons (x, xs), ys) => ~cons (x, self(xs, ys))
+)) in
+@
+**********************************************
+<<<description>>> 
+A program that defines a function to compute the factorial of a natural number.
+
+<<<grammar>>>
+expr ::= base argchain
+       | "fix" "(" expr ")"
+       | "let" "[a-zA-Z][_a-zA-Z]*" target "in" expr
+       | base
+
+basepat ::= "[a-zA-Z][_a-zA-Z]*"
+          | "(" pattern ")"
+          | "@"
+          | "~" "[a-zA-Z][_a-zA-Z]*" basepat
+
+target ::= ":" "T[0-9]+" "=" expr
+
+base ::= function
+       | "[a-zA-Z][_a-zA-Z]*"
+       | argchain
+       | "~" "[a-zA-Z][_a-zA-Z]*" base
+       | "@"
+
+function ::= "case" pattern "=>" expr function
+           | "case" pattern "=>" expr
+
+pattern ::= basepat
+          | basepat "," pattern
+
+argchain ::= "(" expr ")"
+
+
+
+<<<program>>>
+let factorial : T0 = fix (case self => (
+    case ~zero @ => ~succ ~zero @
+    case ~succ n => (mul)((self)(n), ~succ n)
+)) in
+let mul : T1 = fix (case self => (
+    case (~zero @, n) => ~zero @
+    case (~succ m, n) => (add)(n, (self)(m, n))
+)) in
+let add : T2 = fix (case self => (
+    case (~zero @, n) => n
+    case (~succ m, n) => ~succ (self(m, n))
+)) in
+@

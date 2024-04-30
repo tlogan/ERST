@@ -33,7 +33,7 @@ import random
 from tapas.util_system import *
 
 
-def from_program_exform_to_json(exform : str) -> str:
+def from_pge_to_json(exform : str) -> str:
     remainder = exform
     description = ""
     grammar = ""
@@ -83,7 +83,7 @@ def generate_program_example(examples):
 You are a functional programming assistant, skilled in conjuring up 
 archetypal and classic functional programming concepts.
 You are generating data about functional programs where each datum is 
-consists of three fields: 'description', 'grammar', and 'program'. 
+consists of three kinds of information: 'description', 'grammar', and 'program'. 
 The format looks like:
 ```
 
@@ -100,13 +100,15 @@ $program_goes_here
          
 The program adheres to the behavior described by the description (English).
 The program is constructed according to the rules of the grammar (EBNF). 
+The programs should consist of multiple functions that operate over trees, lists and natural numbers.
 Make sure that you define all helper functions that you use.
         '''}
     ]
 
     if len(examples) > 0:
-        if len(examples) > 30:
-            examples = random.sample(examples, 30)
+        max_context = 10 
+        if len(examples) > max_context:
+            examples = random.sample(examples, max_context)
         for example in examples:
             messages.append({
                 "role": "assistant",
@@ -115,12 +117,12 @@ Make sure that you define all helper functions that you use.
 
     # response = openai.ChatCompletion.create(
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        # model="gpt-4-turbo",
+        # model="gpt-3.5-turbo",
+        model="gpt-4-turbo",
         messages=messages,
-        temperature=0.7,
-        frequency_penalty=1.5,
-        presence_penalty=1.5,
+        temperature=0.5,
+        # frequency_penalty=1.0,
+        # presence_penalty=1.0,
         # response_format={ "type": "json_object" },
         max_tokens=1354,
     )
@@ -213,107 +215,14 @@ case x => (
 ))
     """).strip())
 
+
+    #TODO: divide, split, merge, sort, reverse, append/concat
+
 # end FunLib
     
 lib = Lib()
 
-init_program_examples = [
-
-    make_program_example(f"""
-A program that defines some basic values.
-    """, f"""
-let unit : T0 = @ in
-let true : T1 = ~true @ in
-let false : T2 = ~false @ in
-let zero : T3 = ~zero @ in
-let one : T4 = ~succ ~zero @ in
-let two : T5 = ~succ ~succ ~zero @ in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines a function that takes a list and returns its length.
-    """, f"""
-let length : T0 = {lib.length} in
-@
-    """),
-
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
-    make_program_example(f"""
-A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
-    """, f"""
-let length : T0 = {lib.length} in
-let maybe_with_length : T1 = {lib.expander('length')} in
-@
-    """),
-
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
-    make_program_example(f"""
-A program that defines construction of a pair by calling two different functions on the same input.
-    """, f"""
-let f : T0 = (case (;uno = x) => x) in
-let g : T1 = (case (;dos = x) => x) in
-let make_pair : T2 = {lib.refiner('f', 'g')} in
-@
-    """),
-
-
-    make_program_example(f"""
-A program that defines addition.
-    """, f"""
-let add : T0 = {lib.add} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines less-than-or-equal of two numbers and maximum of two numbers.
-    """, f"""
-let lte : T0 = {lib.lte} in
-let max : T1 = {lib.max('lte')} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines addition and multiplication.
-    """, f"""
-let add : T0 = {lib.add} in
-let plus : T1 = add in
-let mult : T2 = {lib.mult('add')} in
-let times : T3 = {lib.mult('plus')} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines addition, summation from left, and summation from right.
-    """, f"""
-let add : T0 = {lib.add} in
-let suml : T1 = {lib.suml('add')} in
-let sumr : T2 = {lib.sumr('add')} in
-@
-    """),
-
-    make_program_example(f"""
-a program that defines the fibonacci sequence.
-    """, f"""
-let add : T0 = {lib.add} in
-let fib : T1 = {lib.fib('add')} in
-@
-    """),
-
-    make_program_example(f"""
-a program that defines the factorial.
-    """, f"""
-let add : T0 = {lib.add} in
-let mult : T1 = {lib.mult('add')} in
-let fact : T2 = {lib.fact('mult')} in
-@
-    """),
-
-
-
-]
-
-def generate_program_examples(num_examples):
+def generate_program_grammar_examples(init_program_examples, num_examples):
     new_examples = []
     for i in range(num_examples):
         print(f'Generating GPT example {i}')
@@ -383,7 +292,7 @@ def make_masked_annotations(
         for (k,t) in anno_map.items()
     ])
 
-def make_annotation_example(prog : str) -> str: 
+def make_program_typing_example(prog : str) -> str: 
     (worlds, t, _, solver) = analyze(prog)
 
     ids = extract_annotation_ids(prog)
@@ -402,7 +311,7 @@ def make_annotation_example(prog : str) -> str:
         'annotations' : annotations
     })
 
-def prettify_annotation_example(example) -> str:
+def prettify_program_typing_example(example) -> str:
     sample = json.loads(example) 
     return (f"""
 <<<<<<<<
@@ -419,7 +328,7 @@ def prettify_annotation_example(example) -> str:
 
 def make_annotation_examples(programs : list[str]) -> list[str]: 
     return [
-        make_annotation_example(prog)
+        make_program_typing_example(prog)
         for prog in programs
     ]
 
