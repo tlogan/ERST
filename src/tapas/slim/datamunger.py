@@ -106,7 +106,7 @@ Make sure that you define all helper functions that you use.
     ]
 
     if len(examples) > 0:
-        max_context = 10 
+        max_context = 20 
         if len(examples) > max_context:
             examples = random.sample(examples, max_context)
         for example in examples:

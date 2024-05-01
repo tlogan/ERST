@@ -3062,6 +3062,7 @@ class ExprRule(Rule):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
 
+        assert nt.worlds
         for outer_world in nt.worlds:
 
             '''

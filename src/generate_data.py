@@ -161,10 +161,27 @@ def read_pge_write_pte_data(fname):
         ex['program']
         for ex in parse_jsonl_file(fpath)
     ]
+
+
+    def try_make(program):
+        try:
+            return make_program_typing_example(program)
+        except:
+            return None
+
     program_typing_examples = [
-        make_program_typing_example(program)
+        result
         for program in programs
+        for result in [try_make(program)]
+        if result
     ]
+    print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: program_typing_examples 
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+len(program_typing_examples): {len(program_typing_examples)} 
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
 
     write(project_path("res"), "generated_program_typing_examples.jsonl", "\n".join(program_typing_examples))
     write(project_path("res"), "generated_program_typing_examples.txt", "\n".join([
@@ -193,8 +210,8 @@ def read_split_write(fname):
 
 #############
 # write_init_data()
-write_generated_pge_data()
+# write_generated_pge_data()
 # read_pge_write_pte_data("generated_program_grammar_examples.jsonl")
-# read_split_write("generated_program_typing_examples.jsonl")
+read_split_write("generated_program_typing_examples.jsonl")
 #############
 
