@@ -135,7 +135,7 @@ def write_init_data():
 
 def write_generated_pge_data():
     init_program_examples = make_init_program_examples()
-    generated_examples = generate_program_grammar_examples(init_program_examples, 30)
+    generated_examples = generate_program_grammar_examples(init_program_examples, 200)
     write(project_path("res"), "generated_program_grammar_examples.txt", "\n".join(generated_examples))
     json_examples = [
         from_pge_to_json(ex)
@@ -210,8 +210,8 @@ def read_split_write(fname):
 
 #############
 # write_init_data()
-# write_generated_pge_data()
+write_generated_pge_data()
 # read_pge_write_pte_data("generated_program_grammar_examples.jsonl")
-read_split_write("generated_program_typing_examples.jsonl")
+# read_split_write("generated_program_typing_examples.jsonl")
 #############
 
