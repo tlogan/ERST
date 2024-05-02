@@ -210,8 +210,8 @@ def read_split_write(fname):
 
 #############
 # write_init_data()
-write_generated_pge_data()
+# write_generated_pge_data()
 # read_pge_write_pte_data("generated_program_grammar_examples.jsonl")
-# read_split_write("generated_program_typing_examples.jsonl")
+read_split_write("generated_program_typing_examples.jsonl")
 #############
 
