@@ -71,13 +71,10 @@ def make_program_example(description : str, code : str) -> str:
     """).strip()
 
 
-
-
-
-
 client = OpenAI()
 
 def generate_program_example(examples):
+    # NOTE: inspired by https://colab.research.google.com/drive/1mV9sAY4QBKLmS58dpFGHgwCXQKRASR31?usp=sharing#scrollTo=moVo0led-6tu
     messages : Iterable =[
         {"role": "system", "content": '''
 You are a functional programming assistant, skilled in conjuring up 
@@ -223,6 +220,7 @@ case x => (
 lib = Lib()
 
 def generate_program_grammar_examples(init_program_examples, num_examples):
+    # NOTE: inspired by https://colab.research.google.com/drive/1mV9sAY4QBKLmS58dpFGHgwCXQKRASR31?usp=sharing#scrollTo=moVo0led-6tu
     new_examples = []
     for i in range(num_examples):
         print(f'Generating GPT example {i}')

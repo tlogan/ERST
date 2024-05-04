@@ -2,12 +2,16 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- add `divide`, `merge`, `sort`, and some tree (Red Black) procedures  
+- add addition_rel subtyping test with intersecting variables
+    - see if intersecting variables causes a problem
+    - if it's a problem, figure out way to remove variables from type inference of recursive add 
+- add addition_rel normalization subtyping test
+- when checking a relational key; normalize and factor out the columns from the relational assumption   
 - rewrite non-unrollable relational constraint to match constraint in assumption 
     - consider normalizing relational constraints into rightward tuples before saving
         - according to variable order
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
-- when checking a relational key; normalize and factor out the columns from the relational assumption   
+- add `is_odd`, `halve` (which requires an even number), `split` (a list at index), `merge`, `sort`, and some tree (Red Black) procedures  
 -----------------------
 - generate data with gpt 
 - generate annotations symbolically

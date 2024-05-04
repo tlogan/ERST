@@ -1186,6 +1186,25 @@ fix (case self => (
 
 def test_add():
     # TODO: need to remove extra constraints that have been rewritten to construct LFP type
+
+    # TODO: relation isn't constrained properly
+
+    # addition_rel = (f'''
+    # LFP AR 
+    #     | (EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
+    #     | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
+    # ''')
+
+    # addition_rel_inter = (f'''
+    # (LFP G25
+    #     | (EXI [G24 G5] ((~zero @, (G5 & G24)), G24))
+    #     | (EXI [G8 G29 G7 ; ((G28, G27), G17) <: G25] ((~succ G7, G8), ~succ G29))
+    # )
+    # ''')
+
+
+
+
     (worlds, typ_var, parsetree, solver) = analyze(add)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
@@ -1480,96 +1499,12 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    # test_idprojection_chain()
-    # test_annotated_let()
-    # test_preamble_fail()
-    # test_application_in_tuple()
-    # test_generalized_application_in_tuple()
-
-    # TODO
-    test_add()
+    test_fix()
+    # test_add()
     # test_one_plus_one_equals_two()
     # test_one_plus_one_query()
     # test_add_annotated()
 
-    # test_exi_add_rel_subs_query()
-    # test_add_imp_subs_zero_zero_imp_query()
-    # test_add_zero_and_zero_equals_zero()
-    # test_add_one_and_two_equals_three()
-
-    # TODO
-    # test_fib()
-    # test_fib_zero_equals_zero()
-    # test_fib_two_equals_one()
-    # test_fib_annotated()
-
-    # test_sumr()
-    # test_suml()
-    # test_foldr()
-    # test_foldl()
-
-    #############################
-    # test_plus_equals_two_query()
-    # test_plus_one_equals_query()
-    # test_antecedent_union()
-    # test_consequent_intersection()
-
-    ########################
-    ## Post refactor tests
-    ########################
-    # test_function_cases_disjoint()
-    # test_function()
-    # test_function_with_var()
-    # test_functional()
-    # test_fix()
-    # test_app_identity_unit()
-    # test_app_pattern_match_nil()
-    ########################
-    # test_two_less_equal_one_query()
-    # test_app_less_equal_zero_one()
-    # test_app_less_equal_two_one()
-    # test_less_equal_imp_subs_one_two_imp_query()
-    # test_less_equal_imp_subs_two_one_imp_query()
-    ########################
-    #
-    # test_nested_fun()
-    # test_all_imp_exi_subs_union_imp()
-    # test_if_true_then_else()
-    # test_function_if_then_else()
-    # TODO
-    # test_extra_exi()
-    # test_pattern_match_wrap()
-    # test_arg_specialization()
-    # test_recursion_wrapper()
-    # test_max()
-
-    ########################
-    # p(less_equal_rel)
-    # test_less_equal_imp_subs_two_one_imp_query()
-    # test_weak_diff()
-    # test_weak_diff_in_pair()
-    #########################
-    # test_less_equal()
-    #
-    # TODO
-    # test_fix()
-    # test_nil_query_subs_list_nat_diff()
-    # test_cons_nil_query_subs_list_nat_diff()
-    # test_list_imp_nat_subs_nil_imp_query()
-    # test_list_imp_nat_subs_cons_nil_imp_query()
-    
-    ###############
-    # test_app_fix_nil()
-    # test_app_fix_cons()
-
-    #####################
-    # test_zero_nil_subs_nat_list()
-    # test_one_single_subs_nat_list()
-    # test_two_single_subs_nat_list()
-    #####################
-    # test_even_list_subs_nat_list()
-    # test_nat_list_subs_even_list()
-    # test_one_query_subs_nat_list()
     pass
 
 #######################################################################
