@@ -2,10 +2,7 @@
 
 ### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- add addition_rel subtyping test with intersecting variables
-    - see if intersecting variables causes a problem
-    - if it's a problem, figure out way to remove variables from type inference of recursive add 
-- add addition_rel normalization subtyping test
+- implement relation normalization; testing with less_equal_rel
 - when checking a relational key; normalize and factor out the columns from the relational assumption   
 - rewrite non-unrollable relational constraint to match constraint in assumption 
     - consider normalizing relational constraints into rightward tuples before saving

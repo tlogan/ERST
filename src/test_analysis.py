@@ -316,37 +316,22 @@ def test_nat_list_subs_even_list():
 
 
 def test_one_plus_one_equals_two():
-    print("==================")
-    print(addition_rel)
-    print("==================")
     one_plus_one_equals_two = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_plus_one_equals_two, addition_rel)
     print(f'len(worlds): {len(worlds)}')
-    # assert len(worlds) == 1
-    for world in worlds:
-        print(f'''
-    world: {analyzer.concretize_constraints(tuple(world.constraints))}
-        ''')
+    assert len(worlds) == 1
 
 def test_plus_one_equals_query():
-    # NOTE: potential infinite loop
-    print("==================")
-    print(addition_rel)
-    print("==================")
     query = ('''
 (x : X & y : ~succ ~zero @ & z : Z)
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, query, addition_rel)
     print(f'len(worlds): {len(worlds)}')
-    # assert len(worlds) == 1
-    for world in worlds:
-        print(f'''
-    world: {analyzer.concretize_constraints(tuple(world.constraints))}
-        ''')
+    assert len(worlds) == 1
 
 def test_one_plus_one_query():
     one_plus_one_query = ('''
@@ -932,6 +917,25 @@ less_equal_rel = (f"""
 )
 """)
 
+# (x : ~zero @ & y : Y & z : Z)
+less_equal_rel_xyz = (f"""
+(LFP SELF 
+    | (EXI [Y ; Y <: ({nat})] (x : ~zero @ & y : Y & z : ~true @))
+    | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
+    | (EXI [X ; X <: ({nat})] (x : ~succ X & y : ~zero @ & z : ~false @))
+)
+""")
+
+def test_less_equal_rel_normalization():
+    less_equal_mod = (f"""
+EXI [X Y Z ; (x : X & y : Y & z : Y) <: {less_equal_rel_xyz}] ((X, Y), Z)
+    """)
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, less_equal_rel, less_equal_mod)
+    print(f"len(worlds): {len(worlds)}")
+    # assert worlds
+
 def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
@@ -1185,26 +1189,6 @@ fix (case self => (
 ''')
 
 def test_add():
-    # TODO: need to remove extra constraints that have been rewritten to construct LFP type
-
-    # TODO: relation isn't constrained properly
-
-    # addition_rel = (f'''
-    # LFP AR 
-    #     | (EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
-    #     | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
-    # ''')
-
-    # addition_rel_inter = (f'''
-    # (LFP G25
-    #     | (EXI [G24 G5] ((~zero @, (G5 & G24)), G24))
-    #     | (EXI [G8 G29 G7 ; ((G28, G27), G17) <: G25] ((~succ G7, G8), ~succ G29))
-    # )
-    # ''')
-
-
-
-
     (worlds, typ_var, parsetree, solver) = analyze(add)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
@@ -1499,11 +1483,7 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_fix()
-    # test_add()
-    # test_one_plus_one_equals_two()
-    # test_one_plus_one_query()
-    # test_add_annotated()
+    test_less_equal_rel_normalization()
 
     pass
 
