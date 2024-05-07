@@ -926,9 +926,38 @@ less_equal_rel_xyz = (f"""
 )
 """)
 
+
 def test_less_equal_rel_normalization():
+    strong = p("(x : X & y : Y & z : Z)")
+    weak = p(less_equal_rel_xyz)
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~
+# Normalize Test
+# ~~~~~~~~~~~~~~~~~~~
+# strong: 
+# {analyzer.concretize_typ(strong)}
+
+# weak: 
+# {analyzer.concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~
+#           """)
+    assert isinstance(weak, analyzer.LeastFP)
+    (norm_strong, norm_weak) = analyzer.normalize_relational_constraints(strong, weak)
+    print(f"""
+~~~~~~~~~~~~~~~~~~~
+Normalize Test
+~~~~~~~~~~~~~~~~~~~
+norm_strong: 
+{analyzer.concretize_typ(norm_strong)}
+
+norm_weak: 
+{analyzer.concretize_typ(norm_weak)}
+~~~~~~~~~~~~~~~~~~~
+          """)
+
+def test_less_equal_rel_normalized_subs():
     less_equal_mod = (f"""
-EXI [X Y Z ; (x : X & y : Y & z : Y) <: {less_equal_rel_xyz}] ((X, Y), Z)
+EXI [X Y Z ; (x : X & y : Y & z : Z) <: {less_equal_rel_xyz}] ((X, Y), Z)
     """)
 
     solver = analyzer.Solver(m())
@@ -1483,7 +1512,9 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_less_equal_rel_normalization()
+    # test_fix()
+    # test_less_equal_rel_normalization()
+    test_less_equal_rel_normalized_subs()
 
     pass
 

@@ -1,9 +1,9 @@
-# Lightweight Tapas
+# Extrinsic Relational Subtyping
+- alternate name: **Descriptive** Relational Subtyping
 
-### TODO (Neural Implementation)
 ### TODO (Symbolic Implementation)
-- implement relation normalization; testing with less_equal_rel
-- when checking a relational key; normalize and factor out the columns from the relational assumption   
+- test relational normalization with less_equal_rel
+- implement relational weakening; when checking a relational key; factor out the columns from the relational assumption (after relational normalization)
 - rewrite non-unrollable relational constraint to match constraint in assumption 
     - consider normalizing relational constraints into rightward tuples before saving
         - according to variable order
@@ -241,6 +241,7 @@
     - bidirectional/duality analysis on recursive-decent parse-tree 
     - bidirectional/duality analysis of top-down parse-tree (without left-recursion) for left-associative semantics. 
     - adds layer of complexity that's not apparent in a normalized AST
+    - checking without the overhead of reconstruction requires propagating types downward
 - Relational types
     - extrinsic types 
     - unifies/decides/solves subtyping without base types refined by qualifiers

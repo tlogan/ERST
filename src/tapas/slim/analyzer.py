@@ -682,9 +682,6 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
                 s(tuple([t.label]))
             )
             return result
-
-        
-
     else:
         return pset()
 
@@ -717,7 +714,7 @@ def extract_field_plain(path : tuple[str, ...], t : Typ) -> Typ:
     else:
         raise Exception(f"extract_field_plain error: {path} in {concretize_typ(t)}")
 
-def extract_field(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
+def extract_field_induc(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
     if isinstance(t, Exi):  
         new_constraints = tuple(
             (
@@ -735,7 +732,7 @@ def extract_field(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
 
 def extract_column(path : tuple[str, ...], id_induc : str, choices : list[Typ]) -> Typ:
     choices_column = [
-        extract_field(path, id_induc, choice)
+        extract_field_induc(path, id_induc, choice)
         for choice in choices
         if choice != Bot()
     ] 
@@ -859,7 +856,7 @@ def is_unrollable(key : Typ, rel : LeastFP) -> bool:
             column_key = extract_field_plain(path, key)
             is_key_tag = isinstance(column_key, TTag)
             column_choices = [
-                extract_field(path, rel.id, choice)
+                extract_field_induc(path, rel.id, choice)
                 for choice in choices
                 if choice != Bot()
             ] 
@@ -885,6 +882,101 @@ def is_unrollable(key : Typ, rel : LeastFP) -> bool:
 
         return result
     # endif
+
+
+def extract_kv_pairs(t : Typ) -> PSet[tuple[tuple[str, ...], Typ]]:
+    if False:
+        assert False
+    elif isinstance(t, Exi):
+        return extract_kv_pairs(t.body)
+    elif isinstance(t, Inter):
+        left = extract_kv_pairs(t.left) 
+        right = extract_kv_pairs(t.right)
+        return left.union(right)
+    elif isinstance(t, TField):
+        sub_kv_pairs = extract_kv_pairs(t.body)
+        result = (
+            pset(
+                (tuple([t.label]) + sub_path, v) 
+                for (sub_path, v) in sub_kv_pairs
+            )
+            if bool(sub_kv_pairs) else
+            s((tuple([t.label]), t.body))
+        )
+        return result
+    else:
+        return pset()
+
+
+def make_tuple_typ(xs : list[Typ]) -> Typ: 
+    assert len(xs) >= 2
+    result = make_pair_typ(xs[1], xs[0])
+    for x in xs[2:]:
+        result = make_pair_typ(x, result)
+    return result
+
+def to_tuple_typ(t, ordered_paths : list[tuple[str, ...]]) -> Typ:
+    ordered_targets = [
+        extract_field_plain(path, t)
+        for path in ordered_paths
+    ]
+    return make_tuple_typ(ordered_targets)
+
+
+
+# def extract_field_induc(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
+#     if isinstance(t, Exi):  
+#         new_constraints = tuple(
+#             (
+#             Subtyping(extract_field_plain(path, st.strong), TVar(id_induc))
+#             if st.weak == TVar(id_induc) else
+#             st
+#             )
+#             for st in t.constraints
+#         )
+#         new_body = extract_field_plain(path, t.body)
+#         return Exi(t.ids, new_constraints, new_body)
+#     else:
+#         return extract_field_plain(path, t)
+
+def normalize_choice(induc_id : str, choice : Typ, ordered_paths : list[tuple[str, ...]]) -> Typ:
+    if isinstance(choice, Exi):
+
+
+        new_constraints = tuple(
+            (
+            Subtyping(to_tuple_typ(st.strong, ordered_paths), TVar(induc_id))
+            if st.weak == TVar(induc_id) else
+            st
+            )
+            for st in choice.constraints
+        )
+
+        new_body = to_tuple_typ(choice.body, ordered_paths)
+        return Exi(choice.ids, new_constraints, new_body)
+    else:
+        return to_tuple_typ(choice, ordered_paths)
+
+def normalize_least_fp(t : LeastFP, ordered_paths : list[tuple[str, ...]]) -> LeastFP:
+
+    normalized_body = Bot() 
+    choices = linearize_unions(t.body)
+    for choice in reversed(choices):
+        norm_choice = normalize_choice(t.id, choice, ordered_paths)
+        normalized_body = Unio(norm_choice, normalized_body)
+    return LeastFP(t.id, normalized_body)
+
+def normalize_relational_constraints(strong : Typ, weak : LeastFP) -> tuple[Typ, LeastFP]:
+    def ordering_key(p):
+        return concretize_typ(p[1])
+    path_target_pairs = extract_kv_pairs(strong)
+    ordered_path_target_pairs = sorted(path_target_pairs, key=ordering_key)
+    ordered_targets = [v for (k,v) in ordered_path_target_pairs]
+    ordered_paths = [k for (k,v) in ordered_path_target_pairs]
+    normalized_strong = make_tuple_typ(ordered_targets)
+    normalized_weak = normalize_least_fp(weak, ordered_paths)
+
+    return (normalized_strong, normalized_weak)
 
 def match_strong(world : World, strong : Typ) -> Optional[Typ]:
     for constraint in world.constraints:
@@ -2194,6 +2286,7 @@ class Solver:
             # NOTE: don't interpret learnable variables as frozen variables
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
 
+            # TODO: is this freezer adjacent stuff no longer needed?
             ignored_ids = s()
             reduced_strong, used_constraints = self.interpret_with_polarity(True, world, strong, ignored_ids)
 #             print(f"""
@@ -2250,31 +2343,23 @@ class Solver:
 
                 return worlds
             else:
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- CAN'T UNROLL 
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
-                strong_cache = match_strong(world, strong)
 
-                if strong_cache:
+                # TODO: need to normalize (strong <: weak)  
+                # (normalized_strong, normalized_weak) = normalize_relational_constraint(strong, weak)
+                (normalized_strong, normalized_weak) = (strong, weak)
+                cached_strong = match_strong(world, normalized_strong)
+
+                if cached_strong:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    return self.solve(world, strong_cache, weak)
+                    return self.solve(world, cached_strong, normalized_weak)
                 else:
                     fvs = extract_free_vars_from_typ(s(), strong)  
-#                     print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- Adding relids 
-# ~~~~~~~~~~~~~~~~~~~~~
-# fvs: {fvs}
-# ~~~~~~~~~~~~~~~~~~~~~
-#                     """)
                     if (
                         (all((fv not in world.freezer) for fv in fvs)) and 
-                        self.is_relation_constraint_wellformed(world, strong, weak)
+                        self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
                     ):
                         return [World(
-                            world.constraints.add(Subtyping(strong, weak)),
+                            world.constraints.add(Subtyping(normalized_strong, normalized_weak)),
                             world.freezer, world.relids.union(fvs)
                         )]
                     else:
