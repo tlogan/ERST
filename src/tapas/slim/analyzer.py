@@ -741,10 +741,10 @@ def extract_column(path : tuple[str, ...], id_induc : str, choices : list[Typ]) 
         typ_unio = Unio(typ_unio, choice)
     return LeastFP(id_induc, typ_unio)
 
-def factor_path(path : tuple[str, ...], least : LeastFP) -> Typ:
-    choices = linearize_unions(least.body)
-    column = extract_column(path, least.id, choices)
-    return column 
+# def factor_path(path : tuple[str, ...], least : LeastFP) -> Typ:
+#     choices = linearize_unions(least.body)
+#     column = extract_column(path, least.id, choices)
+#     return column 
 
 
 def insert_at_path(rnode : RNode, path : tuple[str, ...], t : Typ) -> RNode:
@@ -795,25 +795,25 @@ def to_record_typ(rnode : RNode) -> Typ:
             t = to_record_typ(v)
             field = TField(key, t)
         result = Inter(field, result)
-    return result
+    return simplify_typ(result)
 
 
 
-def factor_least(least : LeastFP) -> Typ:
-    choices = linearize_unions(least.body)
-    paths = [
-        path
-        for choice in choices
-        for path in list(extract_paths(choice))
-    ]
+# def factor_least(least : LeastFP) -> Typ:
+#     choices = linearize_unions(least.body)
+#     paths = [
+#         path
+#         for choice in choices
+#         for path in list(extract_paths(choice))
+#     ]
 
-    rnode = RNode(m()) 
-    for path in paths:
-        column = extract_column(path, least.id, choices)
-        assert isinstance(rnode, RNode)
-        rnode = insert_at_path(rnode, path, column)
+#     rnode = RNode(m()) 
+#     for path in paths:
+#         column = extract_column(path, least.id, choices)
+#         assert isinstance(rnode, RNode)
+#         rnode = insert_at_path(rnode, path, column)
 
-    return to_record_typ(rnode) 
+#     return to_record_typ(rnode) 
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return to_nameless((), t1) == to_nameless((), t2)
@@ -826,11 +826,23 @@ def is_record_typ(t : Typ) -> bool:
     else:
         return False
 
-def is_unrollable(key : Typ, rel : LeastFP) -> bool:
+
+def is_decidable_shape(t : Typ) -> bool:
+    # TODO:
+    # simple strategy: anything that's not a variable
+    # 
+    # alternate
+    # a decidable shape could be a union or intersection
+    # as long as each member of union or intersection is a decidable shape 
+    # base case is a tag, top, bot, unit. 
+    # is field a base case?
+    return not isinstance(t, TVar)
+
+def is_decidable(key : Typ, rel : LeastFP) -> bool:
     if not is_record_typ(key):
         return True
     else:
-        # TODO: unrollable iff there is a tag in key and correspond column has at least one tag? 
+        # TODO: decidable iff there is a tag in key and the corresponding column has at least one tag? 
         choices = [
             choice
             for choice in linearize_unions(rel.body)
@@ -854,15 +866,15 @@ def is_unrollable(key : Typ, rel : LeastFP) -> bool:
         result = False 
         for path in pset(paths):
             column_key = extract_field_plain(path, key)
-            is_key_tag = isinstance(column_key, TTag)
+            key_is_decidable = is_decidable_shape(column_key)
             column_choices = [
                 extract_field_induc(path, rel.id, choice)
                 for choice in choices
                 if choice != Bot()
             ] 
-            are_there_tags_in_choices = any(
+            there_are_decidable_shapes_in_choices = any(
                 isinstance(cc, TTag) or
-                (isinstance(cc, Exi) and isinstance(cc.body, TTag))
+                (isinstance(cc, Exi) and is_decidable_shape(cc.body))
                 for cc in column_choices
             )
             # print(f"""
@@ -876,7 +888,7 @@ def is_unrollable(key : Typ, rel : LeastFP) -> bool:
             # are_there_tags_in_choices: {are_there_tags_in_choices}
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # """)
-            if (is_key_tag and are_there_tags_in_choices):
+            if (key_is_decidable and there_are_decidable_shapes_in_choices):
                 return True 
             # endif
 
@@ -960,57 +972,68 @@ def normalize_choice(induc_id : str, choice : Typ, ordered_paths : list[tuple[st
 def normalize_least_fp(t : LeastFP, ordered_paths : list[tuple[str, ...]]) -> LeastFP:
 
     normalized_body = Bot() 
-    choices = linearize_unions(t.body)
+    choices = linearize_unions(simplify_typ(t.body))
     for choice in reversed(choices):
         norm_choice = normalize_choice(t.id, choice, ordered_paths)
         normalized_body = Unio(norm_choice, normalized_body)
     return LeastFP(t.id, normalized_body)
 
-def normalize_relational_constraints(strong : Typ, weak : LeastFP) -> tuple[Typ, LeastFP]:
+# def normalize_relational_constraint(strong : Typ, weak : LeastFP) -> tuple[Typ, LeastFP]:
+#     def ordering_key(p):
+#         return concretize_typ(p[1])
+#     path_target_pairs = extract_kv_pairs(strong)
+#     ordered_path_target_pairs = sorted(path_target_pairs, key=ordering_key)
+#     ordered_targets = [v for (k,v) in ordered_path_target_pairs]
+#     ordered_paths = [k for (k,v) in ordered_path_target_pairs]
+#     normalized_strong = make_tuple_typ(ordered_targets)
+#     normalized_weak = normalize_least_fp(weak, ordered_paths)
+
+#     return (normalized_strong, normalized_weak)
+
+# def match_exact(world : World, strong : Typ) -> Optional[Typ]:
+#     for constraint in world.constraints:
+#         if strong == constraint.strong:
+#             return constraint.weak
+#     return None
+
+
+def extract_ordered_path_target_pairs(key : Typ) -> list[tuple[tuple[str, ...], Typ]]:
     def ordering_key(p):
         return concretize_typ(p[1])
-    path_target_pairs = extract_kv_pairs(strong)
+    path_target_pairs = extract_kv_pairs(key)
     ordered_path_target_pairs = sorted(path_target_pairs, key=ordering_key)
-    ordered_targets = [v for (k,v) in ordered_path_target_pairs]
-    ordered_paths = [k for (k,v) in ordered_path_target_pairs]
-    normalized_strong = make_tuple_typ(ordered_targets)
-    normalized_weak = normalize_least_fp(weak, ordered_paths)
+    return ordered_path_target_pairs
 
-    return (normalized_strong, normalized_weak)
 
-def match_strong(world : World, strong : Typ) -> Optional[Typ]:
+def extract_relational_paths(t : LeastFP) -> PSet[tuple[str, ...]]: 
+    choices = linearize_unions(t.body)
+    paths = s()
+    for choice in reversed(choices):
+        paths = paths.union(k for (k,v) in extract_kv_pairs(choice))
+    return paths 
+
+
+def find_paths(assumed_key : Typ, search_key : Typ) -> Optional[list[tuple[str, ...]]]:
+    search_targets = [v for k,v in extract_kv_pairs(search_key)]
+    ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
+
+    filtered_paths = []
+    for (k,v) in ordered_path_target_pairs:
+        if v in search_targets:
+            search_targets.remove(v)
+            filtered_paths.append(k)
+    if search_targets:
+        return None
+    else:
+        return filtered_paths
+
+def find_assumed_typ(world : World, key : Typ) -> Optional[Typ]:
     for constraint in world.constraints:
-        if strong == constraint.strong:
-            return constraint.weak
+        ordered_paths = find_paths(constraint.strong, key)
+        if ordered_paths != None:
+            if isinstance(constraint.weak, LeastFP):
+                return normalize_least_fp(constraint.weak, ordered_paths)
     return None
-
-
-    # '''
-    # LHS variables in relational constraints: always have relation of variables on LHS; need to factor; then perform union after
-    # case relational: if variable is part of relational constraint, factor out type from rhs
-    # case simple: otherwise, extract rhs
-    # -- NOTE: relational constraints are restricted to record types of variables
-    # -- NOTE: tail-recursion, e.g. reverse list, requires patterns in relational constraint, but, that's bound inside of LeastFP
-    # -- e.g. (A, B, C, L) <: (LeastFP I . (nil, Y, Y) | {(X, cons Y, Z) <: I} (cons X, Y, Z))
-    # ---------------
-    # '''
-    # constraints_relational = [
-    #     st
-    #     for st in world.constraints
-    #     if is_relational_key(world, st.weak) and (id in extract_free_vars_from_typ(s(), st.weak))
-    # ]
-
-    # typ_factored = Top()
-    # for st in constraints_relational:
-    #     paths = extract_paths(st.weak, TVar(id)) 
-    #     for path in paths:
-    #         assert isinstance(st.strong, LeastFP)
-    #         typ_labeled = factor_path(path, st.strong)
-    #         typ_factored = Inter(typ_labeled, typ_factored)
-
-    # typ_final = Inter(typ_strong, typ_factored)
-
-    # return typ_final 
 
 
 def mapOp(f):
@@ -1942,6 +1965,42 @@ class Solver:
     def make_renaming(self, old_ids) -> PMap[str, Typ]:
         return self.make_submap_from_renaming(self.make_renaming_ids(old_ids))
 
+    def solve_or_cache(self, world : World, strong : Typ, weak : Typ) -> list[World]:
+        # TODO: consider if other checks are necessary to soundly cache constraint as assumption 
+        # - e.g. should we ensure that variables constrained by relation are constrained alone?
+        worlds = self.solve(world, strong, weak)
+        if not worlds and isinstance(weak, LeastFP) and not is_decidable(strong, weak):
+
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG SAVING Relational Constraint 
+# ~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {concretize_constraints(world.constraints)}
+
+# strong: 
+# {concretize_typ(strong)}
+
+# weak: 
+# {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
+            # TODO: might need to reduce strong before caching
+        # if (
+        #     (all((fv not in world.freezer) for fv in fvs)) 
+        #     # TODO: remove wellformed check
+        #     # - should be sound without this; not unrollable means it can't be proven to fail 
+        #     # and 
+        #     # self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
+        # ):
+            fvs = extract_free_vars_from_typ(s(), strong)  
+            return [World(
+                world.constraints.add(Subtyping(strong, weak)),
+                world.freezer, world.relids.union(fvs)
+            )]
+        else:
+            return []
+
 
     def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
         self.count += 1
@@ -1983,6 +2042,40 @@ class Solver:
             return self.solve(world, self.aliasing[strong.id], weak)
         #######################################
 
+
+        elif isinstance(strong, LeastFP):
+            if isinstance(weak, LeastFP):
+                '''
+                NOTE: k-induction
+                use the pattern on LHS to dictate number of unrollings needed on RHS 
+                simply need to sub RHS into LHS's self-referencing variable
+                '''
+                '''
+                sub in induction hypothesis to world:
+                '''
+                renaming : PMap[str, Typ] = pmap({strong.id : weak})
+                strong_body = sub_typ(renaming, strong.body)
+                return self.solve(world, strong_body, weak)
+            else:
+                '''
+                rewrite into existential making shape of relation visible
+                '''
+                paths = extract_relational_paths(strong)
+
+                rnode = RNode(m()) 
+                tvars = []
+                for path in paths:
+                    tvar = self.fresh_type_var()
+                    assert isinstance(rnode, RNode)
+                    rnode = insert_at_path(rnode, path, tvar)
+                    tvars.append(tvar)
+                # end for
+
+                key = to_record_typ(rnode) 
+                exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, strong)]), key)
+
+                return self.solve(world, exi, weak)
+
         elif isinstance(strong, Exi):
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
@@ -1994,7 +2087,7 @@ class Solver:
                 worlds = [
                     m1
                     for m0 in worlds
-                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
+                    for m1 in self.solve_or_cache(m0, constraint.strong, constraint.weak)
                 ]  
 
             # print(f"""
@@ -2034,12 +2127,6 @@ class Solver:
                 for m1 in [World(m0.constraints, m0.freezer.union(renamed_ids), m0.relids)]
                 for m2 in self.solve(m1, strong, weak_body)
             ]
-
-
-
-
-
-
 
         #######################################
         #### Learnable variable rules: ####
@@ -2153,31 +2240,6 @@ class Solver:
         #######################################
 
 
-        elif isinstance(strong, LeastFP):
-            if alpha_equiv(strong, weak):
-                return [world]
-            else:
-                worlds = []
-
-                strong_factored = factor_least(strong)
-                worlds = self.solve(world, strong_factored, weak)
-
-                if worlds == []:
-                    '''
-                    NOTE: k-induction
-                    use the pattern on LHS to dictate number of unrollings needed on RHS 
-                    simply need to sub RHS into LHS's self-referencing variable
-                    '''
-                    '''
-                    sub in induction hypothesis to world:
-                    '''
-                    renaming : PMap[str, Typ] = pmap({strong.id : weak})
-                    strong_body = sub_typ(renaming, strong.body)
-                    return self.solve(world, strong_body, weak)
-                    
-                else:
-                    return worlds 
-
         elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
             return self.solve(world, strong, Inter(
                 Imp(weak.antec.left, weak.consq), 
@@ -2283,87 +2345,57 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            # NOTE: don't interpret learnable variables as frozen variables
+            # TODO: don't interpret learnable variables as frozen variables
+            # - is this necessary? this notion breaks the even_list subs nat_list
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
-
-            # TODO: is this freezer adjacent stuff no longer needed?
             ignored_ids = s()
             reduced_strong, used_constraints = self.interpret_with_polarity(True, world, strong, ignored_ids)
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG weak, LeastFP
 # ~~~~~~~~~~~~~~~~~~~~~
-# world.relids: {world.relids}
-# world.freezer: {world.freezer}
-# world.constraints: {concretize_constraints(tuple(world.constraints))}
+# world.relids: 
+# {world.relids}
 
-# strong: {concretize_typ(strong)}
-# reduced_strong: {concretize_typ(reduced_strong)}
-# weak: {concretize_typ(weak)}
+# world.freezer: 
+# {world.freezer}
+
+# world.constraints: 
+# {concretize_constraints(tuple(world.constraints))}
+
+# strong: 
+# {concretize_typ(strong)}
+
+# reduced_strong: 
+# {concretize_typ(reduced_strong)}
+
+# weak: 
+# {concretize_typ(weak)}
+
+# is_decidable:
+# {is_decidable(strong, weak)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
             world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
             if strong != reduced_strong:
                 return self.solve(world, reduced_strong, weak)
-            elif is_unrollable(strong, weak):
+            elif is_decidable(strong, weak):
                 '''
                 unroll
                 '''
                 renaming : PMap[str, Typ] = pmap({weak.id : weak})
                 weak_body = sub_typ(renaming, weak.body)
-
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- Unrolling
-# ~~~~~~~~~~~~~~~~~~~~~
-# strong: {concretize_typ(strong)}
-# weak_body: {concretize_typ(weak_body)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
                 worlds = self.solve(world, strong, weak_body)
-
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP --- Unrolling Result
-# ~~~~~~~~~~~~~~~~~~~~~
-# status: {'FAILURE!!!!!!!!' if len(worlds) == 0 else len(worlds)}
-
-# strong: {concretize_typ(strong)}
-# weak_body: {concretize_typ(weak_body)}
-
-# world.freezer: {world.freezer} 
-# world.constraints: 
-# {list_out_constraints(world.constraints)}
-
-# world.freezer: {world.relids} 
-# ~~~~~~~~~~~~~~~~~~~~~
-#                 """)
-
                 return worlds
             else:
-
-                # TODO: need to normalize (strong <: weak)  
-                # (normalized_strong, normalized_weak) = normalize_relational_constraint(strong, weak)
-                (normalized_strong, normalized_weak) = (strong, weak)
-                cached_strong = match_strong(world, normalized_strong)
-
-                if cached_strong:
+                assumed_typ = find_assumed_typ(world, strong)
+                if assumed_typ:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    return self.solve(world, cached_strong, normalized_weak)
+                    ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(strong)]
+                    normalized_weak = normalize_least_fp(weak, ordered_paths)
+                    return self.solve(world, assumed_typ, normalized_weak)
                 else:
-                    fvs = extract_free_vars_from_typ(s(), strong)  
-                    if (
-                        (all((fv not in world.freezer) for fv in fvs)) and 
-                        self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
-                    ):
-                        return [World(
-                            world.constraints.add(Subtyping(normalized_strong, normalized_weak)),
-                            world.freezer, world.relids.union(fvs)
-                        )]
-                    else:
-                        return []
+                    return []
 
         elif isinstance(strong, Diff):
             if diff_well_formed(strong):
@@ -2479,10 +2511,11 @@ class Solver:
     end solve
     '''
 
-    def is_relation_constraint_wellformed(self, world : World, strong : Typ, weak : LeastFP) -> bool:
-        factored = factor_least(weak)
-        worlds = self.solve(world, strong, factored)  
-        return bool(worlds)
+    # def is_relation_constraint_wellformed(self, world : World, strong : Typ, weak : LeastFP) -> bool:
+    #     # TODO: check that key (strong) can match the pattern in each case
+    #     factored = factor_least(weak)
+    #     worlds = self.solve(world, strong, factored)  
+    #     return bool(worlds)
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[World]: 
         self.count = 0

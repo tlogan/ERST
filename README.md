@@ -4,21 +4,12 @@
 ### TODO (Symbolic Implementation)
 - test relational normalization with less_equal_rel
 - implement relational weakening; when checking a relational key; factor out the columns from the relational assumption (after relational normalization)
-- rewrite non-unrollable relational constraint to match constraint in assumption 
-    - consider normalizing relational constraints into rightward tuples before saving
-        - according to variable order
+- consider adding extract subtyping constraint for mutual flow of variables; see difference between `addition_rel` and `add` function
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
-- add `is_odd`, `halve` (which requires an even number), `split` (a list at index), `merge`, `sort`, and some tree (Red Black) procedures  
------------------------
-- generate data with gpt 
-- generate annotations symbolically
-- split into train and test sets
-- train CodeT5
-- add in  diffing 
-
-
+- add in  diffing; using a disjoint check to remove diffs that aren't necessary 
 
 -------------------
+- add `is_odd`, `halve` (which requires an even number), `split` (a list at index), `merge`, `sort`, and some tree (Red Black) procedures  
 - test `fib`, `sumr`, and `suml` on concrete examples for sanity check
     - figure out how to clean up result for arguments of inductive case
 - add relational constraint weakening (via factoring columns) to enable relational annotations

@@ -306,13 +306,27 @@ def test_even_list_subs_nat_list():
     solver = analyzer.Solver(m())
     worlds = solve(solver, even_list, nat_list)
     print(f"len(worlds): {len(worlds)}")
-    # assert worlds
+    assert worlds
 
 def test_nat_list_subs_even_list():
     solver = analyzer.Solver(m())
     worlds = solve(solver, nat_list, even_list)
     print(f"len(worlds): {len(worlds)}")
     assert not worlds
+
+
+
+def test_addition_rel_sub_less_equal_rel():
+
+    strong = addition_rel
+
+    weak = (f"""
+EXI [X Y Z ; (X,Z) <: {less_equal_rel}] (x : X & y : Y & z : Z)
+    """) 
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f'len(worlds): {len(worlds)}')
+    assert len(worlds) == 1
 
 
 def test_one_plus_one_equals_two():
@@ -908,8 +922,15 @@ nat_pair_rel = (f'''
 )
 ''')
 
-
 less_equal_rel = (f"""
+(LFP self 
+    | (EXI [x ; x <: ({nat})] (~zero @, x))
+    | (EXI [a b ; (a,b) <: self] (~succ a, ~succ b))
+)
+""")
+
+
+less_equal_decision_rel = (f"""
 (LFP self 
     | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
     | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
@@ -918,7 +939,7 @@ less_equal_rel = (f"""
 """)
 
 # (x : ~zero @ & y : Y & z : Z)
-less_equal_rel_xyz = (f"""
+less_equal_xyz_rel = (f"""
 (LFP SELF 
     | (EXI [Y ; Y <: ({nat})] (x : ~zero @ & y : Y & z : ~true @))
     | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
@@ -929,7 +950,7 @@ less_equal_rel_xyz = (f"""
 
 def test_less_equal_rel_normalization():
     strong = p("(x : X & y : Y & z : Z)")
-    weak = p(less_equal_rel_xyz)
+    weak = p(less_equal_xyz_rel)
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~
 # Normalize Test
@@ -942,7 +963,12 @@ def test_less_equal_rel_normalization():
 # ~~~~~~~~~~~~~~~~~~~
 #           """)
     assert isinstance(weak, analyzer.LeastFP)
-    (norm_strong, norm_weak) = analyzer.normalize_relational_constraints(strong, weak)
+
+
+    ordered_path_target_pairs = analyzer.extract_ordered_path_target_pairs(strong)
+    norm_strong = analyzer.make_tuple_typ([v for (k,v) in ordered_path_target_pairs])
+    ordered_paths = [k for (k,v) in ordered_path_target_pairs]
+    norm_weak = analyzer.normalize_least_fp(weak, ordered_paths)
     print(f"""
 ~~~~~~~~~~~~~~~~~~~
 Normalize Test
@@ -956,21 +982,28 @@ norm_weak:
           """)
 
 def test_less_equal_rel_normalized_subs():
-    less_equal_mod = (f"""
-EXI [X Y Z ; (x : X & y : Y & z : Z) <: {less_equal_rel_xyz}] ((X, Y), Z)
+#     strong = (f"""
+# EXI [X ; X <: {less_equal_decision_rel}] X 
+#     """)
+#     strong = (f"""
+# EXI [X Y Z ; ((X,Y),Z) <: {less_equal_decision_rel}] ((X, Y), Z)
+#     """)
+    strong = less_equal_decision_rel
+    weak = (f"""
+EXI [X Y Z ; (x : X & y : Y & z : Z) <: {less_equal_xyz_rel}] ((X, Y), Z)
     """)
 
     solver = analyzer.Solver(m())
-    worlds = solve(solver, less_equal_rel, less_equal_mod)
+    worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
-    # assert worlds
+    assert worlds
 
 def test_two_less_equal_one_query():
     two_less_equal_one_query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
     solver = analyzer.Solver(m())
-    worlds = solve(solver, two_less_equal_one_query, less_equal_rel)
+    worlds = solve(solver, two_less_equal_one_query, less_equal_decision_rel)
     answer = decode_negative(solver, worlds, p("Z"))
     print(f'''
 answer:\n{answer}
@@ -979,7 +1012,7 @@ answer:\n{answer}
 
 less_equal_imp = (f'''
 (ALL [XY ; XY <: ({nat_pair_rel})] (XY -> 
-    (EXI [Z ; (XY, Z) <: ({less_equal_rel})] Z)
+    (EXI [Z ; (XY, Z) <: ({less_equal_decision_rel})] Z)
 ))) 
 ''')
 
@@ -1514,7 +1547,10 @@ let y : T = (~dos @) in
 if __name__ == '__main__':
     # test_fix()
     # test_less_equal_rel_normalization()
-    test_less_equal_rel_normalized_subs()
+    # test_less_equal_rel_normalized_subs()
+    test_addition_rel_sub_less_equal_rel()
+    # test_even_list_subs_nat_list()
+    # test_nat_list_subs_even_list()
 
     pass
 
