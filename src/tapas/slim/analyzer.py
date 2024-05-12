@@ -839,6 +839,14 @@ def is_decidable_shape(t : Typ) -> bool:
     return not isinstance(t, TVar)
 
 def is_decidable(key : Typ, rel : LeastFP) -> bool:
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG is_decidable
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# rel:
+# {concretize_typ(rel)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
     if not is_record_typ(key):
         return True
     else:
@@ -1969,7 +1977,22 @@ class Solver:
         # TODO: consider if other checks are necessary to soundly cache constraint as assumption 
         # - e.g. should we ensure that variables constrained by relation are constrained alone?
         worlds = self.solve(world, strong, weak)
-        if not worlds and isinstance(weak, LeastFP) and not is_decidable(strong, weak):
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG solve_or_cache 
+# ~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {concretize_constraints(world.constraints)}
+
+# strong: 
+# {concretize_typ(strong)}
+
+# weak: 
+# {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#         """)
+        reduced_strong, used_constraints = self.interpret_with_polarity(True, world, strong, s())
+        if not worlds and isinstance(weak, LeastFP) and not is_decidable(reduced_strong, weak):
 
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -1993,20 +2016,20 @@ class Solver:
         #     # and 
         #     # self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
         # ):
-            fvs = extract_free_vars_from_typ(s(), strong)  
+            fvs = extract_free_vars_from_typ(s(), reduced_strong)  
             return [World(
-                world.constraints.add(Subtyping(strong, weak)),
+                # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
+                world.constraints.add(Subtyping(reduced_strong, weak)),
                 world.freezer, world.relids.union(fvs)
             )]
         else:
-            return []
+            return worlds 
 
 
     def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
         self.count += 1
         if self.count > self._limit:
             return []
-
 #         print(f'''
 # || DEBUG SOLVE
 # =================
@@ -2090,16 +2113,6 @@ class Solver:
                     for m1 in self.solve_or_cache(m0, constraint.strong, constraint.weak)
                 ]  
 
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG strong, EXI
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # renamed_ids: {renamed_ids}
-            # new_ids: {[n for n in new_ids]}
-            # new_ids: {[n for n in new_ids]}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
-
             return [
                 m2
                 for m0 in worlds
@@ -2139,18 +2152,6 @@ class Solver:
 
         elif isinstance(strong, TVar) and strong.id not in world.freezer: 
             interp = self.interpret_strong_for_id(world, strong.id)
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG strong, TVar learnable  
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # world.relids: {world.relids}
-            # world.freezer: {world.freezer}
-            # world.constraints: {concretize_constraints(tuple(world.constraints))}
-            # interp: {mapOp(lambda x : concretize_typ(x[0]))(interp)}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
             if not inhabitable(interp[0]):
                 return [World(
                     world.constraints.add(Subtyping(strong, weak)),
@@ -2166,13 +2167,14 @@ class Solver:
             else:
                 # NOTE: if there is a frozen <: learnable constraint then they could simply jump back and forth forever
                 strongest = interp[0]
-                return [
+                worlds = [
                     World(
                         world.constraints.add(Subtyping(strong, weak)),
                         world.freezer, world.relids
                     )
                     for world in self.solve(world, strongest, weak)
                 ]
+                return worlds
 
 
         elif isinstance(weak, TVar) and weak.id not in world.freezer: 
@@ -2274,17 +2276,6 @@ class Solver:
             ]
 
         elif isinstance(weak, Diff): 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, Diff 
-# ~~~~~~~~~~~~~~~~~~~~
-# strong: {concretize_typ(strong)}
-# weak: {concretize_typ(weak)}
-# well_formed: {diff_well_formed(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
             if diff_well_formed(weak):
                 # TODO: need a sound/safe/conservative inhabitable check
                 # only works if we assume T is not empty
@@ -2296,15 +2287,6 @@ class Solver:
                 T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
                 '''
                 context_worlds = self.solve(world, strong, weak.context)
-    #             print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # ~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG weak, Diff 
-    # ~~~~~~~~~~~~~~~~~~~~
-    # len(context_worlds): {len(context_worlds)}
-    # ~~~~~~~~~~~~~~~~~~~~~
-    #             """)
                 return [
                     m
                     for m in context_worlds 
@@ -2371,9 +2353,15 @@ class Solver:
 
 # weak: 
 # {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
-# is_decidable:
-# {is_decidable(strong, weak)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG weak, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# is_decidable: 
+# {is_decidable(reduced_strong, weak)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
             world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
@@ -2388,12 +2376,14 @@ class Solver:
                 worlds = self.solve(world, strong, weak_body)
                 return worlds
             else:
+
                 assumed_typ = find_assumed_typ(world, strong)
                 if assumed_typ:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(strong)]
                     normalized_weak = normalize_least_fp(weak, ordered_paths)
-                    return self.solve(world, assumed_typ, normalized_weak)
+                    worlds = self.solve(world, assumed_typ, normalized_weak)
+                    return worlds
                 else:
                     return []
 
@@ -2458,19 +2448,7 @@ class Solver:
         # NOTE: must interpret frozen/rigid/skolem variables before learning new constraints
         # but if uninterpretable and other type is learnable, then simply add it: 
         elif isinstance(strong, TVar) and strong.id in world.freezer: 
-
-
             interp = self.interpret_weak_for_id(world, strong.id)
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG strong, TVar frozen  
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # strong: {concretize_typ(strong)}
-            # weak: {concretize_typ(weak)}
-            # has interp: {interp != None}
-            # world.relids: {world.relids}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
             if interp != None:
                 weakest_strong = interp[0]
                 return self.solve(world, weakest_strong, weak)

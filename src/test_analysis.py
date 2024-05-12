@@ -1303,16 +1303,36 @@ def test_add_one_and_two_equals_three():
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
-lte = (f'''
-(LFP SELF 
-    | (EXI [N ; N <: {nat}] (~zero @, N))
-    | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
-)
-''')
+
+def test_existential_with_extrusion():
+    strong = ("""
+(EXI [X ; X <: A ] ~thing X)
+    """)
+
+    weak = ("""
+(EXI [Q] ~thing Q)
+    """)
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f'len(worlds): {len(worlds)}')
+    assert len(worlds) == 1
 
 def test_add_annotated():
-    # TODO: requires weakening the relational constraint to just the two variables of interest
-    # e.g. (A, _27) <: (LFP SELF ((EXI [N ; N ...
+
+    # lte = (f'''
+    # (LFP SELF 
+    #     | (EXI [N ; N <: {nat}] (~zero @, N))
+    #     | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+    # )
+    # ''')
+    lte = (f'''
+    (LFP SELF 
+        | (EXI [N] (~zero @, N))
+        | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+    )
+    ''')
+
     code = (f'''
 let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add} in
 @
@@ -1548,7 +1568,10 @@ if __name__ == '__main__':
     # test_fix()
     # test_less_equal_rel_normalization()
     # test_less_equal_rel_normalized_subs()
-    test_addition_rel_sub_less_equal_rel()
+    # test_addition_rel_sub_less_equal_rel()
+    # test_add()
+    # test_existential_with_extrusion()
+    test_add_annotated()
     # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
 

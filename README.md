@@ -2,9 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- test relational normalization with less_equal_rel
-- implement relational weakening; when checking a relational key; factor out the columns from the relational assumption (after relational normalization)
-- consider adding extract subtyping constraint for mutual flow of variables; see difference between `addition_rel` and `add` function
+- consider adding extraction of subtyping constraint for mutual flow of variables; see difference between `addition_rel` and `add` function
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
 - add in  diffing; using a disjoint check to remove diffs that aren't necessary 
 
@@ -51,6 +49,10 @@
     - define typing_st subsumption in terms of syntactic subtyping
     - prove that typing_st is sound wrt typing 
     - prove or state existence of proof that typing_ssin is sound wrt operational semantics 
+- note how ERST is both general purpose and automated; compare to proof assistants (e.g. Lean) and SMT solvers (Z3)
+    - SMT has automation but requires specialized theories or specific domains to work
+    - Proof assistants and dependently typed systems are general purpose but their automation is not general purpose
+    - Both are intrinsic and requires predicates to be defined rather than inferred/reconstructed.
 - note how solving subtyping corresponds to CDCL
     - solving subtyping splits worlds when there is an intersection of implications on left or a union of patterns on the right
         - this corresponds to CDCL's splitting a variable into true or false worlds
