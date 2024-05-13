@@ -1318,20 +1318,34 @@ def test_existential_with_extrusion():
     print(f'len(worlds): {len(worlds)}')
     assert len(worlds) == 1
 
+def test_existential_with_upper_bound():
+    strong = ("""
+(EXI [X] ~thing X)
+    """)
+
+    weak = ("""
+(EXI [Q ; Q <: @ ] ~thing Q)
+    """)
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f'len(worlds): {len(worlds)}')
+    assert len(worlds) == 0
+
 def test_add_annotated():
 
-    # lte = (f'''
-    # (LFP SELF 
-    #     | (EXI [N ; N <: {nat}] (~zero @, N))
-    #     | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
-    # )
-    # ''')
     lte = (f'''
     (LFP SELF 
-        | (EXI [N] (~zero @, N))
+        | (EXI [N ; N <: {nat}] (~zero @, N))
         | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
     )
     ''')
+    # lte = (f'''
+    # (LFP SELF 
+    #     | (EXI [N] (~zero @, N))
+    #     | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+    # )
+    # ''')
 
     code = (f'''
 let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {add} in
@@ -1571,6 +1585,7 @@ if __name__ == '__main__':
     # test_addition_rel_sub_less_equal_rel()
     # test_add()
     # test_existential_with_extrusion()
+    # test_existential_with_upper_bound()
     test_add_annotated()
     # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()

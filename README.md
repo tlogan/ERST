@@ -2,6 +2,12 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- in RHS existential, create witness before checking against uninterpretable (relational key) frozen variable 
+- in RHS existential, use substitution of witness (which might be frozen variable)
+    - instead of reducing to constraint F <: L; this introduces a strange infinite loop where
+        - frozen is weakened to learnable; and learnable is strengthened to frozen;
+- make sure upper bound is checked against frozen variable:
+    - e.g. F <: L, L <: T; should check that F <: T  
 - consider adding extraction of subtyping constraint for mutual flow of variables; see difference between `addition_rel` and `add` function
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
 - add in  diffing; using a disjoint check to remove diffs that aren't necessary 
