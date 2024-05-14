@@ -2,13 +2,13 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- in RHS existential, create witness before checking against uninterpretable (relational key) frozen variable 
-- in RHS existential, use substitution of witness (which might be frozen variable)
-    - instead of reducing to constraint F <: L; this introduces a strange infinite loop where
-        - frozen is weakened to learnable; and learnable is strengthened to frozen;
-- make sure upper bound is checked against frozen variable:
-    - e.g. F <: L, L <: T; should check that F <: T  
-- consider adding extraction of subtyping constraint for mutual flow of variables; see difference between `addition_rel` and `add` function
+- do regression tests after reordering rules
+- consider adding parameter annotations to restrict type inference of function body.
+    - alternatively, let-annotations could restrict if downward type decomposition is implemented, but that's more complicated. 
+        - but requires wasting computation to match one part of the annotation to the right branch
+    - see difference between `addition_rel` and `add` function
+- consider adding extraction of subtyping constraint for mutual flow of variables
+    - see difference between `addition_rel` and `add` function
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
 - add in  diffing; using a disjoint check to remove diffs that aren't necessary 
 
@@ -48,6 +48,23 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+
+- note importance of ordering of rules; 
+
+    - strong:Learnable
+    - strong:Exi
+    - weak:Exi
+    - strong:Frozen
+
+    - weak:Learnable
+    - weak:All 
+    - strong:All 
+    - weak:Frozen
+
+    - strong:Unio, weak:Inter 
+    - weak:Unio, strong:Inter 
+
+- note problematic constraint of frozen/skolem variable subtyping learnable variable (F <: L) 
 - write soundness theorems and proofs.
     - define typing_ssin using subsumption rule as denotation into sets with subset inclusion
     - define (syntactic) subtyping
