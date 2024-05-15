@@ -686,12 +686,12 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
         return pset()
 
 
-def extract_field_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
+def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
     if not path:
         return None
     elif isinstance(t, Inter):
-        left = extract_field_recurse(t.left, path)
-        right = extract_field_recurse(t.right, path)
+        left = project_typ_recurse(t.left, path)
+        right = project_typ_recurse(t.right, path)
         if left and right:
             return Inter(left, right)
         else:
@@ -702,49 +702,32 @@ def extract_field_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
             if len(path) == 1:
                 return t.body
             else:
-                return extract_field_recurse(t.body, path[1:])
+                return project_typ_recurse(t.body, path[1:])
         else:
             return None
 
 
-def extract_field_plain(path : tuple[str, ...], t : Typ) -> Typ:
-    result = extract_field_recurse(t, path)
+def project_typ(t : Typ, path : tuple[str, ...]) -> Typ:
+    result = project_typ_recurse(t, path)
     if result:
         return result
     else:
         raise Exception(f"extract_field_plain error: {path} in {concretize_typ(t)}")
 
-def extract_field_induc(path : tuple[str, ...], id_induc : str, t : Typ) -> Typ:
+def project_typ_induc(id_induc : str, t : Typ, path : tuple[str, ...]) -> Typ:
     if isinstance(t, Exi):  
         new_constraints = tuple(
             (
-            Subtyping(extract_field_plain(path, st.strong), TVar(id_induc))
+            Subtyping(project_typ(st.strong, path), TVar(id_induc))
             if st.weak == TVar(id_induc) else
             st
             )
             for st in t.constraints
         )
-        new_body = extract_field_plain(path, t.body)
+        new_body = project_typ(t.body, path)
         return Exi(t.ids, new_constraints, new_body)
     else:
-        return extract_field_plain(path, t)
-
-
-def extract_column(path : tuple[str, ...], id_induc : str, choices : list[Typ]) -> Typ:
-    choices_column = [
-        extract_field_induc(path, id_induc, choice)
-        for choice in choices
-        if choice != Bot()
-    ] 
-    typ_unio = choices_column[0]
-    for choice in choices_column[1:]:
-        typ_unio = Unio(typ_unio, choice)
-    return LeastFP(id_induc, typ_unio)
-
-# def factor_path(path : tuple[str, ...], least : LeastFP) -> Typ:
-#     choices = linearize_unions(least.body)
-#     column = extract_column(path, least.id, choices)
-#     return column 
+        return project_typ(t, path)
 
 
 def insert_at_path(rnode : RNode, path : tuple[str, ...], t : Typ) -> RNode:
@@ -873,10 +856,10 @@ def is_decidable(key : Typ, rel : LeastFP) -> bool:
         # """)
         result = False 
         for path in pset(paths):
-            column_key = extract_field_plain(path, key)
+            column_key = project_typ(key, path)
             key_is_decidable = is_decidable_shape(column_key)
             column_choices = [
-                extract_field_induc(path, rel.id, choice)
+                project_typ_induc(rel.id, choice, path)
                 for choice in choices
                 if choice != Bot()
             ] 
@@ -937,7 +920,7 @@ def make_tuple_typ(xs : list[Typ]) -> Typ:
 
 def to_tuple_typ(t, ordered_paths : list[tuple[str, ...]]) -> Typ:
     ordered_targets = [
-        extract_field_plain(path, t)
+        project_typ(t, path)
         for path in ordered_paths
     ]
     return make_tuple_typ(ordered_targets)
@@ -1041,6 +1024,47 @@ def find_assumed_typ(world : World, key : Typ) -> Optional[Typ]:
         if ordered_paths != None:
             if isinstance(constraint.weak, LeastFP):
                 return normalize_least_fp(constraint.weak, ordered_paths)
+    return None
+
+def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...]]:
+    ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
+    for (k,v) in ordered_path_target_pairs:
+        if v == search_target:
+            return k
+    return None
+
+def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Typ:
+    if isinstance(choice, Exi):
+
+        new_constraints = tuple(
+            (
+            Subtyping(project_typ(st.strong, path), TVar(induc_id))
+            if st.weak == TVar(induc_id) else
+            st
+            )
+            for st in choice.constraints
+        )
+
+        new_body = project_typ(choice.body, path)
+        return Exi(choice.ids, new_constraints, new_body)
+    else:
+        return project_typ(choice, path)
+
+def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
+
+    factorized_body = Bot() 
+    choices = linearize_unions(simplify_typ(t.body))
+    for choice in reversed(choices):
+        factor_choice = factorize_choice(t.id, choice, path)
+        factorized_body = Unio(factor_choice, factorized_body)
+    return LeastFP(t.id, factorized_body)
+
+def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
+    for constraint in world.constraints:
+        path = find_path(constraint.strong, search_target)
+        if path != None:
+            if isinstance(constraint.weak, LeastFP):
+                return factorize_least_fp(constraint.weak, path)
     return None
 
 
@@ -2032,23 +2056,24 @@ class Solver:
             return []
 #         print(f'''
 # =================
-# || DEBUG SOLVE
+# DEBUG SOLVE
 # =================
-# ||self.aliasing :::
-# ||:::::::: {self.aliasing}
-# ||
-# ||world.freezer::: 
-# ||:::::::: {world.freezer}
-# ||
-# ||world.constraints::: 
+# self.aliasing :::
+# :::::::: {self.aliasing}
+
+# world.freezer::: 
+# :::::::: {world.freezer}
+
+# world.constraints::: 
 # {concretize_constraints(world.constraints)}
-# ||
-# ||strong:
+
+# strong:
 # {concretize_typ(strong)} 
-# ||weak:
+
+# weak:
 # {concretize_typ(weak)}
-# ||
-# ||count: {self.count}
+
+# count: {self.count}
 # =================
 #         ''')
 
@@ -2191,7 +2216,11 @@ class Solver:
                     world.freezer, world.relids
                 )]
             else:
-                return []
+                factor = find_factor_typ(world, strong)
+                if factor != None:
+                    return self.solve(world, factor, weak)
+                else:
+                    return []
             #end if-else
         #end if-else
 

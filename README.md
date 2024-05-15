@@ -48,6 +48,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note interesting concepts of relational normalization and relational factoring
+    - both are weakening rewriting operations
 
 - note importance of ordering of rules; 
 

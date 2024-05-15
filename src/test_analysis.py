@@ -1358,6 +1358,30 @@ def test_existential_with_upper_bound_unguarded():
         print("RecursionError")
         print("!!!!!!!!!!!!!!")
 
+def test_relation_factorized_subs():
+    strong = nat_list
+
+    list = ('''
+(LFP L 
+    | ~nil @
+    | ~cons L 
+)
+    ''')
+
+    weak = (f"""
+({nat}, {list})
+    """)
+
+    try:
+        solver = analyzer.Solver(m())
+        worlds = solve(solver, strong, weak)
+        print(f'len(worlds): {len(worlds)}')
+        assert len(worlds) == 1 
+    except RecursionError:
+        print("!!!!!!!!!!!!!!")
+        print("RecursionError")
+        print("!!!!!!!!!!!!!!")
+
 def test_add_annotated():
 
     lte = (f'''
@@ -1613,7 +1637,9 @@ if __name__ == '__main__':
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
-    test_add_annotated()
+    # test_less_equal_rel_normalized_subs()
+    # test_relation_factorized_subs()
+    # test_add_annotated()
     # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
 
