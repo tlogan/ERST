@@ -2,7 +2,10 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- do regression tests after reordering rules
+- update and run regression tests after reordering rules
+    - replace equality checks of queries with existential typechecking
+        - that is, query can be moved into constraints of LHS, e.g. (EXI [Q ; (A, Q) <: R] Q) <: A | B | C
+    - move commonly used typs and exprs into datamunger libs
 - consider adding parameter annotations to restrict type inference of function body.
     - alternatively, let-annotations could restrict if downward type decomposition is implemented, but that's more complicated. 
         - but requires wasting computation to match one part of the annotation to the right branch
