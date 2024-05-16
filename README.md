@@ -58,16 +58,16 @@
 
     - strong:Learnable
     - strong:Exi
+    - strong:Union, weak:Inter
     - weak:Exi
     - strong:Frozen
 
     - weak:Learnable
     - weak:All 
+    - weak:Unio, strong:Inter 
     - strong:All 
     - weak:Frozen
 
-    - strong:Unio, weak:Inter 
-    - weak:Unio, strong:Inter 
 
 - note problematic constraint of frozen/skolem variable subtyping learnable variable (F <: L) 
 - write soundness theorems and proofs.

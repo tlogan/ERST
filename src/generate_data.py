@@ -9,98 +9,10 @@ import random
 from tapas.util_system import *
 import json
 
+
+
 def make_init_program_examples(): 
     return [
-    make_program_example(f"""
-A program that defines some basic values.
-    """, f"""
-let unit : T0 = @ in
-let true : T1 = ~true @ in
-let false : T2 = ~false @ in
-let zero : T3 = ~zero @ in
-let one : T4 = ~succ ~zero @ in
-let two : T5 = ~succ ~succ ~zero @ in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines a function that takes a list and returns its length.
-    """, f"""
-let length : T0 = {lib.length} in
-@
-    """),
-
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using expansion
-    make_program_example(f"""
-A program that defines a function that takes a boolean and a list and returns its length or the list paired with its length.
-    """, f"""
-let length : T0 = {lib.length} in
-let maybe_with_length : T1 = {lib.expander('length')} in
-@
-    """),
-
-    # NOTE: this demonstrates extrinsic typing and type reconstruction using refinement 
-    make_program_example(f"""
-A program that defines construction of a pair by calling two different functions on the same input.
-    """, f"""
-let f : T0 = (case (;uno = x) => x) in
-let g : T1 = (case (;dos = x) => x) in
-let make_pair : T2 = {lib.refiner('f', 'g')} in
-@
-    """),
-
-
-    make_program_example(f"""
-A program that defines addition.
-    """, f"""
-let add : T0 = {lib.add} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines less-than-or-equal of two numbers and maximum of two numbers.
-    """, f"""
-let lte : T0 = {lib.lte} in
-let max : T1 = {lib.max('lte')} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines addition and multiplication.
-    """, f"""
-let add : T0 = {lib.add} in
-let plus : T1 = add in
-let mult : T2 = {lib.mult('add')} in
-let times : T3 = {lib.mult('plus')} in
-@
-    """),
-
-    make_program_example(f"""
-A program that defines addition, summation from left, and summation from right.
-    """, f"""
-let add : T0 = {lib.add} in
-let suml : T1 = {lib.suml('add')} in
-let sumr : T2 = {lib.sumr('add')} in
-@
-    """),
-
-    make_program_example(f"""
-a program that defines the fibonacci sequence.
-    """, f"""
-let add : T0 = {lib.add} in
-let fib : T1 = {lib.fib('add')} in
-@
-    """),
-
-    make_program_example(f"""
-a program that defines the factorial.
-    """, f"""
-let add : T0 = {lib.add} in
-let mult : T1 = {lib.mult('add')} in
-let fact : T2 = {lib.fact('mult')} in
-@
-    """),
-
     ]
 
 

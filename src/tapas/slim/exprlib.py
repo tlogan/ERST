@@ -45,6 +45,21 @@ fix (case self => (
 ))
 """.strip())
 
+foldr = (f'''
+fix (case self => ( 
+    case (f, ~nil @, b) => b
+    case (f, ~cons (x, xs), b) => f((self)(f, xs, b), x)
+))
+'''.strip())
+
+foldl = (f'''
+fix (case self => ( 
+    case (f, ~nil @, b) => b
+    case (f, ~cons (x, xs), b) => self(f, xs, (f)(b, x))
+))
+'''.strip())
+
+
 fib = (f"""
 let add = {add} in
 fix (case self => ( 
@@ -82,6 +97,9 @@ case (x, y) => (
 
 # NOTE: an example demonstrating refinement abilities
 refiner : Callable[[str, str], str] = (lambda f, g : (f"""
+
+let f : T0 = (case (;uno = x) => x) in
+let g : T1 = (case (;dos = x) => x) in
 case x => (
     (({f})(x), ({g})(x))
 )

@@ -93,10 +93,23 @@ def simp(t):
 
 
 def solve(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
-    solver = analyzer.Solver(m()) 
     x = p(a)
     y = p(b)
     return solver.solve_composition(x, y)
+
+def check(a : str, b : str) -> bool:
+    solver = analyzer.Solver(m()) 
+    worlds = solve(solver, a, b)
+    return len(worlds) > 0
+
+def equiv(a : str, b : str) -> bool:
+    solver = analyzer.Solver(m()) 
+    x = p(a)
+    y = p(b)
+    return (
+        len(solver.solve_composition(x, y)) > 0 and 
+        len(solver.solve_composition(y, x)) > 0
+    )
 
 def decode_negative(solver : analyzer.Solver, worlds, t):
     return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, t))))
@@ -351,24 +364,47 @@ def test_plus_one_equals_two_query():
 # answer:\n{answer}
 #     ''')
 
+
 def test_plus_equals_two_query():
-    print("==================")
-    print(tl.addition)
-    print("==================")
     plus_equals_two_query = ('''
 (x : X & y : Y & z : ~succ ~succ ~zero @)
-    ''')
+#     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, plus_equals_two_query, tl.addition)
     answer = decode_negative(solver, worlds, p("(X, Y)"))
     print(f'''
 answer:\n{answer}
     ''')
-    assert answer == roundtrip([
-        "(~zero @, ~succ ~succ ~zero @)",
-        "(~succ ~zero @, ~succ ~zero @)",
-        "(~succ ~succ ~zero @, ~zero @)",
-    ])
+    # assert answer == roundtrip([
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ])
+    oracle = f"""
+BOT
+| (~zero @, ~succ ~succ ~zero @)
+| (~succ ~zero @, ~succ ~zero @)
+| (~succ ~succ ~zero @, ~zero @)
+    """
+    assert equiv(answer, oracle)
+
+def test_plus_equals_two_union_existential():
+    plus_equals_two_query = ('''
+(x : X & y : Y & z : ~succ ~succ ~zero @)
+#     ''')
+    solver = analyzer.Solver(m())
+    strong = (f"""
+BOT
+| (~zero @, ~succ ~succ ~zero @)
+| (~succ ~zero @, ~succ ~zero @)
+| (~succ ~succ ~zero @, ~zero @)
+    """)
+    weak = (f"""
+(EXI [X Y ; {plus_equals_two_query} <: {tl.addition}] (X, Y))
+    """)
+    worlds = solve(solver, strong, weak)
+    print(len(worlds))
+    assert worlds
 
 
 
@@ -1427,26 +1463,13 @@ def test_suml():
     assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_foldr():
-    foldr = (f'''
-fix (case self => ( 
-    case (f, ~nil @, b) => b
-    case (f, ~cons (x, xs), b) => f((self)(f, xs, b), x)
-))
-    ''')
-
-    (worlds, typ_var, parsetree, solver) = analyze(foldr)
+    (worlds, typ_var, parsetree, solver) = analyze(el.foldr)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_foldl():
-    foldl = (f'''
-fix (case self => ( 
-    case (f, ~nil @, b) => b
-    case (f, ~cons (x, xs), b) => self(f, xs, (f)(b, x))
-))
-    ''')
 
-    (worlds, typ_var, parsetree, solver) = analyze(foldl)
+    (worlds, typ_var, parsetree, solver) = analyze(el.foldl)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
@@ -1535,6 +1558,9 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
+    test_plus_equals_two_query()
+    # test_plus_equals_two_query()
+    ######################################33
     # test_fix()
     # test_less_equal_rel_normalization()
     # test_less_equal_rel_normalized_subs()

@@ -414,7 +414,7 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, Imp):
             plate_entry = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})")  
         elif isinstance(control, Unio):
-            plate_entry = ([control.left,control.right], lambda left, right : f"({left}\n{indent('| ' + right)}")  
+            plate_entry = ([control.left,control.right], lambda left, right : f"({left}\n{indent('| ' + right)})")  
         elif isinstance(control, Inter):
             if (
                 isinstance(control.left, TField) and control.left.label == "head" and 
@@ -2190,6 +2190,67 @@ class Solver:
                 for m2 in self.solve(m1, strong_body, weak)
             ]
 
+        #######################################
+        #######################################
+
+        elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
+            return self.solve(world, strong, Inter(
+                Imp(weak.antec.left, weak.consq), 
+                Imp(weak.antec.right, weak.consq)
+            ))
+
+        elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
+            return self.solve(world, strong, Inter(
+                Imp(weak.antec, weak.consq.left), 
+                Imp(weak.antec, weak.consq.right)
+            ))
+
+        elif isinstance(weak, TField) and isinstance(weak.body, Inter):
+            return [
+                m1
+                for m0 in self.solve(world, strong, TField(weak.label, weak.body.left))
+                for m1 in self.solve(m0, strong, TField(weak.label, weak.body.right))
+            ]
+
+        elif isinstance(strong, Unio):
+            return [
+                m1
+                for m0 in self.solve(world, strong.left, weak)
+                for m1 in self.solve(m0, strong.right, weak)
+            ]
+
+        elif isinstance(weak, Inter):
+            return [
+                m1 
+                for m0 in self.solve(world, strong, weak.left)
+                for m1 in self.solve(m0, strong, weak.right)
+            ]
+
+        elif isinstance(weak, Diff): 
+            if diff_well_formed(weak):
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_worlds = self.solve(world, strong, weak.context)
+                return [
+                    m
+                    for m in context_worlds 
+                    if (
+                        not inhabitable(strong) or 
+                        self.solve(m, strong, weak.negation) == []
+                    )
+                ]   
+            else:
+                return []
+        
+        #######################################
+        #######################################
 
         elif isinstance(weak, Exi): 
             renaming = self.make_renaming(weak.ids)
@@ -2287,67 +2348,6 @@ class Solver:
             strongest_weak = interp[0]
             return self.solve(world, strong, strongest_weak)
 
-        #######################################
-        #### World rules: ####
-        #######################################
-
-
-        elif isinstance(weak, Imp) and isinstance(weak.antec, Unio):
-            return self.solve(world, strong, Inter(
-                Imp(weak.antec.left, weak.consq), 
-                Imp(weak.antec.right, weak.consq)
-            ))
-
-        elif isinstance(weak, Imp) and isinstance(weak.consq, Inter):
-            return self.solve(world, strong, Inter(
-                Imp(weak.antec, weak.consq.left), 
-                Imp(weak.antec, weak.consq.right)
-            ))
-
-        elif isinstance(weak, TField) and isinstance(weak.body, Inter):
-            return [
-                m1
-                for m0 in self.solve(world, strong, TField(weak.label, weak.body.left))
-                for m1 in self.solve(m0, strong, TField(weak.label, weak.body.right))
-            ]
-
-        elif isinstance(strong, Unio):
-            return [
-                m1
-                for m0 in self.solve(world, strong.left, weak)
-                for m1 in self.solve(m0, strong.right, weak)
-            ]
-
-        elif isinstance(weak, Inter):
-            return [
-                m1 
-                for m0 in self.solve(world, strong, weak.left)
-                for m1 in self.solve(m0, strong, weak.right)
-            ]
-
-        elif isinstance(weak, Diff): 
-            if diff_well_formed(weak):
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
-                '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
-                '''
-                context_worlds = self.solve(world, strong, weak.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    if (
-                        not inhabitable(strong) or 
-                        self.solve(m, strong, weak.negation) == []
-                    )
-                ]   
-            else:
-                return []
-        
 
         #######################################
         #### Grounding rules: ####
