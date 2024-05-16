@@ -2,6 +2,10 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- test out `max`
+- test out `fib`
+- test out `suml`
+- test out `sumr`
 - update and run regression tests after reordering rules
     - replace equality checks of queries with existential typechecking
         - that is, query can be moved into constraints of LHS, e.g. (EXI [Q ; (A, Q) <: R] Q) <: A | B | C
@@ -9,8 +13,6 @@
 - consider adding parameter annotations to restrict type inference of function body.
     - alternatively, let-annotations could restrict if downward type decomposition is implemented, but that's more complicated. 
         - but requires wasting computation to match one part of the annotation to the right branch
-    - see difference between `addition_rel` and `add` function
-- consider adding extraction of subtyping constraint for mutual flow of variables
     - see difference between `addition_rel` and `add` function
 - when checking a single frozen id that is relational; factor out the column from relational assumption   
 - add in  diffing; using a disjoint check to remove diffs that aren't necessary 

@@ -1538,7 +1538,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 1000
+        self._limit = 1000 
         self.count = 0
         self.aliasing = aliasing
         self.reversed_aliasing : PMap[Typ, str] = pmap({
@@ -2076,7 +2076,6 @@ class Solver:
 # count: {self.count}
 # =================
 #         ''')
-
         if alpha_equiv(strong, weak): 
             return [world] 
 
@@ -2359,6 +2358,11 @@ class Solver:
         elif isinstance(strong, Bot): 
             return [world] 
 
+        elif isinstance(strong, Top): 
+            return [] 
+
+        elif isinstance(weak, Bot): 
+            return [] 
 
         elif isinstance(weak, LeastFP): 
             # ids = extract_free_vars_from_typ(s(), strong)
