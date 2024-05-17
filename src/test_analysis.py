@@ -1154,8 +1154,14 @@ def test_max():
 def test_max_subtyping():
     solver = analyzer.Solver(m())
     strong = tl.max 
+#     weak = (f'''
+# (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y)
+#     ''')
+#     weak = (f'''
+# (A, B) -> (EXI [Y] Y)
+#     ''')
     weak = (f'''
-(A, B) -> (EXI [Y ; (A, Y) <: ({tl.lte})] Y)
+(A, B) -> TOP
     ''')
     try:
         worlds = solve(solver, strong, weak)
@@ -1499,9 +1505,9 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    # test_max()
+    test_max()
     # test_max_annotated()
-    test_max_subtyping()
+    # test_max_subtyping()
     # test_plus_equals_two_query()
     # test_plus_equals_two_query()
     ######################################33

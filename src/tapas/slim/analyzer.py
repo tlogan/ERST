@@ -1446,16 +1446,18 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
             constraints = constraints.union(new_constraints)
     return constraints
 
-def package_typ(world : World, typ : Typ) -> Typ:
-    constraints = extract_reachable_constraints_from_typ(world, typ)
-    existential_constraints = pset( 
+def extract_existential_constraints(freezer: PSet[str], constraints : PSet[Subtyping]) -> PSet[Subtyping]:
+    return pset( 
         st
         for st in constraints
         for strong_fvs in [extract_free_vars_from_typ(s(), st.strong)]
         for weak_fvs in [extract_free_vars_from_typ(s(), st.weak)]
-        if bool(world.freezer.intersection(strong_fvs.union(weak_fvs))) 
+        if bool(freezer.intersection(strong_fvs.union(weak_fvs))) 
     )
 
+def package_typ(world : World, typ : Typ) -> Typ:
+    constraints = extract_reachable_constraints_from_typ(world, typ)
+    existential_constraints = extract_existential_constraints(world.freezer, constraints)
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
     existential_bound_ids = tuple(world.freezer.intersection(reachable_ids))
 
@@ -2168,6 +2170,17 @@ class Solver:
                 return worlds
 
         elif isinstance(strong, Exi):
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: strong, Exi
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# strong:
+# {concretize_typ(strong)}
+
+# weak:
+# {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
@@ -2515,6 +2528,7 @@ end Solver
 class Rule:
     def __init__(self, solver : Solver, light_mode : bool):
         self.solver = solver
+        # TODO: split all rules into two modes
         self.light_mode = light_mode
 
     def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
@@ -2571,49 +2585,6 @@ class BaseRule(Rule):
         return self.evolve_worlds(nt, TTag(label, body))
 
     def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[World]:
-
-        if self.light_mode:
-            assert len(nt.worlds) == 1
-            if len(branches) == 1:
-                branch = branches[0]
-                assert len(branch.worlds) == 1
-                world = branch.worlds[0]
-                result = TField(branch.label, branch.body)
-                return [
-                    World(world.constraints.add(
-                        Subtyping(simplify_typ(result), nt.typ_var)
-                    ), world.freezer, world.relids)
-                ] 
-            else:
-                world = nt.worlds[0]
-                result = Top()
-                for branch in branches:
-                    assert len(branch.worlds) == 1
-                    branch_world = World(
-                        branch.worlds[0].constraints.difference(world.constraints),
-                        world.freezer,
-                        world.relids
-                    )
-                    field = TField(branch.label, branch.body)
-
-                    ######## NOTE: no generalization since the negative position is merely a label #############
-                    ######## NOTE: However; it can use universal type for its conditional constraints ##########
-                    constraints = tuple(extract_reachable_constraints_from_typ(branch_world, field))
-                    if constraints:
-                        constrained_field = All((), constraints, field)
-                    else:
-                        constrained_field = field 
-                    #############################################
-                    result = Inter(constrained_field, result)
-
-                return [
-                    World(world.constraints.add(
-                        Subtyping(simplify_typ(result), nt.typ_var)
-                    ), world.freezer, world.relids)
-                ] 
-        #end if
-
-
         result = Top() 
         for branch in reversed(branches): 
             for branch_world in reversed(branch.worlds):
@@ -2643,63 +2614,6 @@ class BaseRule(Rule):
 
     def combine_function(self, nt : Context, branches : list[Branch]) -> list[World]:
         augmented_branches = augment_branches_with_diff(branches)
-        if self.light_mode:
-            assert len(nt.worlds) == 1
-            if len(augmented_branches) == 1:
-                branch = augmented_branches[0]
-                assert len(branch.worlds) == 1
-                world = branch.worlds[0]
-                result = Imp(branch.pattern, branch.body)
-                return [
-                    World(world.constraints.add(
-                        Subtyping(simplify_typ(result), nt.typ_var)
-                    ), world.freezer, world.relids)
-                ] 
-            else:
-                world = nt.worlds[0]
-                result = Top()
-                for branch in augmented_branches:
-                    assert len(branch.worlds) == 1
-                    branch_world = World(
-                        branch.worlds[0].constraints.difference(world.constraints),
-                        world.freezer,
-                        world.relids
-                    )
-                    imp = Imp(branch.pattern, branch.body)
-
-                    ######## DEBUG: no generalization #############
-                    # constraints = tuple(extract_reachable_constraints_from_typ(branch_world, imp))
-                    # if constraints:
-                    #     generalized_case = All((), constraints, imp)
-                    # else:
-                    #     generalized_case = imp
-                    ######## NOTE: generalization and extrusion #############
-                    fvs = extract_free_vars_from_typ(s(), imp.antec)
-                    renaming = self.solver.make_renaming_tvars(fvs)
-                    sub_map = cast_up(renaming)
-                    bound_ids = tuple(var.id for var in renaming.values())
-                    # TODO: figure out a less cluttered way to include extrusion
-                    # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
-                    # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items())
-                    extrusion = tuple([])
-                    constraints =  extrusion + (
-                        sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(branch_world, imp)))
-                    )
-
-                    renamed_imp = sub_typ(sub_map, imp)
-                    if bound_ids or constraints:
-                        generalized_case = All(bound_ids, constraints, renamed_imp)
-                    else:
-                        generalized_case = renamed_imp
-                    #############################################
-                    result = Inter(generalized_case, result)
-
-                return [
-                    World(world.constraints.add(
-                        Subtyping(simplify_typ(result), nt.typ_var)
-                    ), world.freezer, world.relids)
-                ] 
-        #end if
         '''
         Example
         ==============
@@ -2744,7 +2658,11 @@ class BaseRule(Rule):
                 # else:
                 #     generalized_case = imp
                 ######## NOTE: generalization and extrusion #############
+                # TODO: need to construct existential for frozen variables: see how package_typ works. 
+                # TODO: unlike package_typ, this does not generalize all free variables; and it extrudes the generalized variables.
+                # TODO: should ensure that the parameter types are NOT frozen
                 fvs = extract_free_vars_from_typ(s(), imp.antec)
+                assert all((fv not in new_world.freezer) for fv in fvs) 
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(var.id for var in renaming.values())
@@ -2755,14 +2673,56 @@ class BaseRule(Rule):
                 constraints = extrusion + (
                     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
                 )
+                reachable_constraints = extract_reachable_constraints_from_typ(new_world, imp)
+                existential_constraints = extract_existential_constraints(new_world.freezer, reachable_constraints)
+                reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
+                existential_bound_ids = tuple(new_world.freezer.intersection(reachable_ids))
 
-                renamed_imp = sub_typ(sub_map, imp)
-                if bound_ids or constraints:
-                    generalized_case = All(bound_ids, constraints, renamed_imp)
+                if not existential_bound_ids:
+                    assert not existential_constraints
+                    body = imp 
                 else:
-                    generalized_case = renamed_imp
+                    body = Exi(existential_bound_ids, tuple(existential_constraints), imp)
+                #end if-else
+
+
+
+                renamed_body = sub_typ(sub_map, body)
+                if bound_ids or constraints:
+                    generalized_case = All(bound_ids, constraints, renamed_body)
+                else:
+                    generalized_case = renamed_body
                 #############################################
                 result = Inter(generalized_case, result)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+new_world.constraints:
+{concretize_constraints(new_world.constraints)}
+
+new_world.freezer: {new_world.freezer} 
+
+new_world.relids: {new_world.relids} 
+
+reachable_constraints:
+{concretize_constraints(reachable_constraints)}
+
+existential_constraints:
+{concretize_constraints(existential_constraints)}
+
+imp:
+{concretize_typ(imp)}
+
+body_typ:
+{concretize_typ(body)}
+
+
+result:
+{concretize_typ(result)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
             '''
             end for
             '''
@@ -2902,21 +2862,6 @@ class ExprRule(Rule):
 
 
     def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[World]: 
-
-        if self.light_mode:
-            assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            constraints = world.constraints
-            pass
-            for key in keys:
-                result_var = self.solver.fresh_type_var()
-                constraints = constraints.add(Subtyping(record_var, TField(key, result_var)))
-                record_var = result_var
-
-            constraints = constraints.add(Subtyping(result_var, nt.typ_var))
-            return [World(constraints, world.freezer, world.relids)]
-        #end if
-    
         worlds = nt.worlds
         for key in keys:
             result_var = self.solver.fresh_type_var()
@@ -2965,21 +2910,6 @@ class ExprRule(Rule):
         return Context('argchain', nt.enviro, worlds, next_cator_var, True)
 
     def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
-
-        if self.light_mode:
-            assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            constraints = world.constraints
-            pass
-            for arg_var in arg_vars:
-                result_var = self.solver.fresh_type_var()
-                constraints = constraints.add(Subtyping(cator_var, Imp(arg_var, result_var)))
-                cator_var = result_var
-
-            constraints = constraints.add(Subtyping(result_var, nt.typ_var))
-            return [World(constraints, world.freezer, world.relids)]
-        #end if
-
         # print(f"""
         # ~~~~~~~~~~~~~~
         # DEBUG application init
@@ -3101,13 +3031,6 @@ class ExprRule(Rule):
             worlds = self.combine_application(app_nt, cator_var, [arg_var])
             arg_var = result_var 
 
-
-        if self.light_mode:
-            assert len(worlds) == 1
-            world = worlds[0]
-            return [World(world.constraints.add(Subtyping(result_var, nt.typ_var)), world.freezer, world.relids)]
-        #end if
-
         # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
         worlds = [
             m1
@@ -3122,21 +3045,6 @@ class ExprRule(Rule):
         return Context('expr', nt.enviro, worlds, body_var)
 
     def combine_fix(self, nt : Context, body_var : TVar) -> list[World]:
-        if self.light_mode: 
-            assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            self_typ = self.solver.fresh_type_var()
-            in_typ = self.solver.fresh_type_var()
-            out_typ = self.solver.fresh_type_var()
-            constraints = [
-                Subtyping(body_var, Imp(self_typ, Imp(in_typ, out_typ))),
-                Subtyping(Imp(in_typ, out_typ), nt.typ_var)
-            ]
-            return [World(
-                world.constraints.update(constraints),
-                world.freezer, world.relids
-            )]
-        #end if
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -3546,17 +3454,6 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
     def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
-        if self.light_mode:
-            assert len(nt.worlds) == 1
-            world = nt.worlds[0]
-            constraints = [
-                Subtyping(anno_typ, nt.typ_var)
-            ]
-            return [World(
-                world.constraints.update(constraints),
-                world.freezer, world.relids
-            )]
-        # endif
         worlds = [
             m1
             for m0 in nt.worlds

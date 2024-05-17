@@ -76,6 +76,13 @@ lte = (f"""
 )
 """)
 
+open_lte = (f"""
+(LFP SELF 
+    | (EXI [x] (~zero @, x))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~succ b))
+)
+""")
+
 
 lted = (f"""
 (LFP self 
@@ -170,5 +177,3 @@ max = (f"""
     ; ((M, N), ~false @) <: {open_lted}
 ] ((M, N) -> M)))
 """)
-
-
