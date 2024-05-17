@@ -2149,12 +2149,8 @@ class Solver:
                 )]
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
-                # TODO: determine if this rule is actually sound 
-                # TODO: figure out why thjis rule is necessary 
-                # NOTE: this is necessary for max example
-                # NOTE: prevent over interprenting into frozen to allow learning new type values 
-                # NOTE: in essence, this has the effect of using annotations to constrain 
-                # NOTE: this seems a bit weird; really the program should describe the limitations without need for type annotations
+                # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
+                # NOTE: this is necessary for the max example
                 return [World(
                     world.constraints.add(Subtyping(strong, weak)),
                     world.freezer, world.relids

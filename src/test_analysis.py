@@ -1307,8 +1307,8 @@ def test_existential_with_extrusion():
     print(f'len(worlds): {len(worlds)}')
     assert len(worlds) == 1
 
+
 def test_existential_with_upper_bound():
-    # TODO: use substitution for existential witness to avoid F <: L circular problem.
     strong = ("""
 (EXI [X] ~thing X)
     """)
@@ -1559,7 +1559,7 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_max()
+    # test_max()
     # test_plus_equals_two_query()
     # test_plus_equals_two_query()
     ######################################33
@@ -1569,7 +1569,7 @@ if __name__ == '__main__':
     # test_addition_rel_sub_less_equal_rel()
     # test_add()
     # test_existential_with_extrusion()
-    # test_existential_with_upper_bound()
+    test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
     # test_less_equal_rel_normalized_subs()
     # test_relation_factorized_subs()
