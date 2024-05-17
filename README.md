@@ -2,7 +2,9 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- determine if there's a way to delay extrusion to only when necessary
+- disable extrusion for now
+- develop example where extrusion is necessary 
+    - determine if there's a way to delay extrusion to only when necessary
     - to keep types uncluttered
 - test out `max`
 - test out `fib`

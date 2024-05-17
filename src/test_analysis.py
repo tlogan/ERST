@@ -288,12 +288,12 @@ def test_nat_list_subs_even_list():
 
 
 
-def test_addition_rel_sub_less_equal_rel():
+def test_addition_subs_lte():
 
     strong = tl.addition
 
     weak = (f"""
-EXI [X Y Z ; (X,Z) <: {less_equal_rel}] (x : X & y : Y & z : Z)
+EXI [X Y Z ; (X,Z) <: {tl.lte}] (x : X & y : Y & z : Z)
     """) 
     solver = analyzer.Solver(m())
     worlds = solve(solver, strong, weak)
@@ -887,65 +887,23 @@ def test_function_if_then_else():
     assert decode_positive(solver, worlds, typ_var) == "(_2 -> (~uno @ | ~dos @))"
 
 
-less_equal = ('''
-fix(case self => (
-    case (~zero @, x) => ~true @ 
-    case (~succ a, ~succ b) => self(a,b) 
-    case (~succ x, ~zero @) => ~false @ 
-))
-''')
-
-def test_less_equal():
-    (worlds, typ_var, parsetree, solver) = analyze(less_equal)
+def test_lted_expr():
+    (worlds, typ_var, parsetree, solver) = analyze(el.lted)
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
-def test_let_less_equal():
-    let_less = (f'''
-let less_equal = {less_equal} in
-less_equal
+def test_let_lted_expr():
+    let_lted = (f'''
+let lted = {el.lted} in
+lted
     ''')
-    (worlds, typ_var, parsetree, solver) = analyze(let_less)
+    (worlds, typ_var, parsetree, solver) = analyze(let_lted)
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
-nat_pair_rel = (f'''
-(LFP self 
-    | (EXI [x ; x <: ({tl.nat})] (~zero @, x))
-    | (EXI [a b ; (a, b) <: self] (~succ a, ~succ b))
-    | (EXI [x ; x <: ({tl.nat})] (~succ x, ~zero @))
-)
-''')
-
-less_equal_rel = (f"""
-(LFP self 
-    | (EXI [x ; x <: ({tl.nat})] (~zero @, x))
-    | (EXI [a b ; (a,b) <: self] (~succ a, ~succ b))
-)
-""")
-
-
-less_equal_decision_rel = (f"""
-(LFP self 
-    | (EXI [x ; x <: ({tl.nat})] ((~zero @, x), ~true @))
-    | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
-    | (EXI [x ; x <: ({tl.nat})] ((~succ x, ~zero @), ~false @))
-)
-""")
-
-# (x : ~zero @ & y : Y & z : Z)
-less_equal_xyz_rel = (f"""
-(LFP SELF 
-    | (EXI [Y ; Y <: ({tl.nat})] (x : ~zero @ & y : Y & z : ~true @))
-    | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
-    | (EXI [X ; X <: ({tl.nat})] (x : ~succ X & y : ~zero @ & z : ~false @))
-)
-""")
-
-
-def test_less_equal_rel_normalization():
+def test_lted_normalization():
     strong = p("(x : X & y : Y & z : Z)")
-    weak = p(less_equal_xyz_rel)
+    weak = p(tl.lted_xyz)
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~
 # Normalize Test
@@ -976,16 +934,10 @@ norm_weak:
 ~~~~~~~~~~~~~~~~~~~
           """)
 
-def test_less_equal_rel_normalized_subs():
-#     strong = (f"""
-# EXI [X ; X <: {less_equal_decision_rel}] X 
-#     """)
-#     strong = (f"""
-# EXI [X Y Z ; ((X,Y),Z) <: {less_equal_decision_rel}] ((X, Y), Z)
-#     """)
-    strong = less_equal_decision_rel
+def test_lted_normalized_subs_lted_xyz():
+    strong = tl.lted
     weak = (f"""
-EXI [X Y Z ; (x : X & y : Y & z : Z) <: {less_equal_xyz_rel}] ((X, Y), Z)
+EXI [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
     """)
 
     solver = analyzer.Solver(m())
@@ -993,23 +945,17 @@ EXI [X Y Z ; (x : X & y : Y & z : Z) <: {less_equal_xyz_rel}] ((X, Y), Z)
     print(f"len(worlds): {len(worlds)}")
     assert worlds
 
-def test_two_less_equal_one_query():
-    two_less_equal_one_query = ('''
+def test_lted_two_one_query():
+    query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
     ''')
     solver = analyzer.Solver(m())
-    worlds = solve(solver, two_less_equal_one_query, less_equal_decision_rel)
+    worlds = solve(solver, query, tl.lted)
     answer = decode_negative(solver, worlds, p("Z"))
     print(f'''
 answer:\n{answer}
     ''')
     assert answer == "~false @"
-
-less_equal_imp = (f'''
-(ALL [XY ; XY <: ({nat_pair_rel})] (XY -> 
-    (EXI [Z ; (XY, Z) <: ({less_equal_decision_rel})] Z)
-))) 
-''')
 
 def test_weak_diff():
     left = ('''
@@ -1045,7 +991,7 @@ def test_less_equal_imp_subs_one_two_imp_query():
 ((~succ ~zero @, ~succ ~succ ~zero @) -> Q)
     ''')
     solver = analyzer.Solver(m())
-    worlds = solve(solver, less_equal_imp, two_one_imp_query)
+    worlds = solve(solver, tl.lted_imp, two_one_imp_query)
     answer = decode_positive(solver, worlds, p("Q"))
     print(f"answer:\n{answer}")
     assert answer == "~true @" 
@@ -1055,24 +1001,24 @@ def test_less_equal_imp_subs_two_one_imp_query():
 ((~succ ~succ ~zero @, ~succ ~zero @) -> Q)
     ''')
     solver = analyzer.Solver(m())
-    worlds = solve(solver, less_equal_imp, two_one_imp_query)
+    worlds = solve(solver, tl.lted_imp, two_one_imp_query)
     answer = decode_positive(solver, worlds, p("Q"))
     print(f"answer:\n{answer}")
     assert answer == "~false @" 
 
 
-def test_app_less_equal_zero_one():
+def test_app_lted_zero_one():
     app_less = (f'''
-({less_equal})(~zero @, ~succ ~zero @)
+({el.lted})(~zero @, ~succ ~zero @)
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(app_less)
     # print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "~true @"
 
 
-def test_app_less_equal_two_one():
+def test_app_lted_two_one():
     app_less = (f'''
-({less_equal})(~succ ~succ ~zero @, ~succ ~zero @)
+({el.lted})(~succ ~succ ~zero @, ~succ ~zero @)
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(app_less)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
@@ -1178,21 +1124,11 @@ def test_passing_pattern_matching():
     assert decode_positive(solver, worlds, typ_var) == "..."
 
 
-max = (f'''
-let less_equal = {less_equal} in
-case (x, y) => (
-    if less_equal(x, y) then
-        y
-    else
-        x
-)
-''')
-
 def test_recursion_wrapper():
 
     program = (f'''
     case (x, y) => (
-        ({less_equal})(x, y)
+        ({el.lted})(x, y)
     )
     ''')
 
@@ -1206,33 +1142,37 @@ def test_recursion_wrapper():
 
 
 def test_max():
-
-    max = (f'''
-    let less_equal = {less_equal} in
-    case (x, y) => (
-        (
-        case (~true @) => y 
-        case (~false @) => x 
-        )(less_equal(x, y))
-    )
-    ''')
-
-    # max = (f'''
-    # let less_equal = {less_equal} in
-    # case (x, y) => (
-    #     if less_equal(x, y) then
-    #         y
-    #     else
-    #         x
-    # )
-    # ''')
-
-    # max = less_equal
-
     try:
-        (worlds, typ_var, parsetree, solver) = analyze(max)
+        (worlds, typ_var, parsetree, solver) = analyze(el.max)
         print("answer:\n" + decode_positive(solver, worlds, typ_var))
         # assert decode_positive(solver, worlds, typ_var) == "@"
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_max_subtyping():
+    solver = analyzer.Solver(m())
+    strong = tl.max 
+    weak = (f'''
+(A, B) -> (EXI [Y ; (A, Y) <: ({tl.lte})] Y)
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_max_annotated():
+    code = (f'''
+let max : (A, B) -> (EXI [Y ; (A, Y) <: ({tl.lte})] Y) = {el.max} in
+@
+    ''')
+    try:
+        (worlds, typ_var, parsetree, solver) = analyze(code)
+        print(f"len(worlds): {len(worlds)}")
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -1370,18 +1310,18 @@ def test_relation_factorized_subs():
 
 def test_add_annotated():
 
-    lte = (f'''
-    (LFP SELF 
-        | (EXI [N ; N <: {tl.nat}] (~zero @, N))
-        | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
-    )
-    ''')
     # lte = (f'''
     # (LFP SELF 
-    #     | (EXI [N] (~zero @, N))
+    #     | (EXI [N ; N <: {tl.nat}] (~zero @, N))
     #     | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
     # )
     # ''')
+    lte = (f'''
+    (LFP SELF 
+        | (EXI [N] (~zero @, N))
+        | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+    )
+    ''')
 
     code = (f'''
 let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {el.add} in
@@ -1560,6 +1500,8 @@ let y : T = (~dos @) in
 
 if __name__ == '__main__':
     # test_max()
+    # test_max_annotated()
+    test_max_subtyping()
     # test_plus_equals_two_query()
     # test_plus_equals_two_query()
     ######################################33
@@ -1569,7 +1511,7 @@ if __name__ == '__main__':
     # test_addition_rel_sub_less_equal_rel()
     # test_add()
     # test_existential_with_extrusion()
-    test_existential_with_upper_bound()
+    # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
     # test_less_equal_rel_normalized_subs()
     # test_relation_factorized_subs()

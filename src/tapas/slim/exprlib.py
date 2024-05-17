@@ -3,6 +3,25 @@ from __future__ import annotations
 from typing import *
 from dataclasses import dataclass
 
+lted = ('''
+fix(case self => (
+    case (~zero @, x) => ~true @ 
+    case (~succ a, ~succ b) => self(a,b) 
+    case (~succ x, ~zero @) => ~false @ 
+))
+''')
+
+max = (f'''
+let lted = {lted} in
+case (x, y) => (
+    if lted(x, y) then
+        y
+    else
+        x
+)
+''')
+
+
 length = (f"""
 fix(case self => (
     case ~nil @ => ~zero @ 
@@ -77,7 +96,7 @@ fix (case self => (
 ))
 """.strip())
 
-lte = (f"""
+lted = (f"""
 fix(case self => (
     case (~zero @, n) => ~true @ 
     case (~succ m, ~succ n) => self(m,n) 
@@ -85,10 +104,11 @@ fix(case self => (
 ))
 """.strip())
 
-max (f"""
-let lte = {lte}
+
+max = (f"""
+let lted = {lted} in
 case (x, y) => (
-    if (lte)(x, y) then
+    if (lted)(x, y) then
         y
     else
         x

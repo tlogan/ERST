@@ -68,3 +68,107 @@ LFP AR
     | (EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
     | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
 ''')
+
+lte = (f"""
+(LFP SELF 
+    | (EXI [x ; x <: ({nat})] (~zero @, x))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~succ b))
+)
+""")
+
+
+lted = (f"""
+(LFP self 
+    | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
+    | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
+    | (EXI [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
+)
+""")
+
+nat_pair = (f"""
+(LFP self 
+    | (EXI [n ; n <: ({nat})] (~zero @, n))
+    | (EXI [m n ; (m,n) <: self] (~succ m, ~succ n))
+    | (EXI [m ; m <: ({nat})] (~succ m, ~zero @))
+)
+""")
+
+lted_imp = (f'''
+(ALL [XY ; XY <: ({nat_pair})] (XY -> 
+    (EXI [Z ; (XY, Z) <: ({lted})] Z)
+))) 
+''')
+
+
+# (x : ~zero @ & y : Y & z : Z)
+lted_xyz = (f"""
+(LFP SELF 
+    | (EXI [Y ; Y <: ({nat})] (x : ~zero @ & y : Y & z : ~true @))
+    | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
+    | (EXI [X ; X <: ({nat})] (x : ~succ X & y : ~zero @ & z : ~false @))
+)
+""")
+
+
+
+open_nat_pair = (f"""
+(LFP SELF 
+    | (EXI [N] (~zero @, N))
+    | (EXI [N M ; (M, N) <: SELF ] (~succ M, ~succ N)) 
+    | (EXI [M] (~succ M, ~zero @))
+)
+""")
+
+open_lted = (f"""
+(LFP SELF 
+    | (EXI [N] ((~zero @, N), ~true @)) 
+    | (EXI [N D M ; ((M, N), D) <: SELF ] ((~succ M, ~succ N), D))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
+)
+""")
+
+
+# NOTE: max, un-simplified
+# max = (f"""
+# (ALL [G44 G45 O] ((ALL [M N
+#     ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
+#     ; ((M, N), O) <: {open_lted}
+#     ; O <: G44 ; G44 <: ~true @
+# ] ((M, N) -> N)) & 
+
+# (ALL [M N
+#     ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
+#     ; ((M, N), O) <: {open_lted}
+#     ; O <: G44 ; G44 <: ~false @
+# ] ((M, N) -> M))))
+# """)
+
+# # NOTE: max, simplified some 
+# max = (f"""
+# (ALL [O] (
+#     (ALL [M N
+#         ; (M, N) <: {open_nat_pair} 
+#         ; ((M, N), O) <: {open_lted}
+#         ; O <: ~true @
+#     ] ((M, N) -> N)) & 
+#     (ALL [M N
+#         ; (M, N) <: {open_nat_pair} 
+#         ; ((M, N), O) <: {open_lted}
+#         ; O <: ~false @
+#     ] ((M, N) -> M)))
+# )
+# """)
+
+# NOTE: max, simplified more 
+max = (f"""
+(ALL [M N
+    ; (M, N) <: {open_nat_pair} 
+    ; ((M, N), ~true @) <: {open_lted}
+] ((M, N) -> N)) & 
+(ALL [M N
+    ; (M, N) <: {open_nat_pair} 
+    ; ((M, N), ~false @) <: {open_lted}
+] ((M, N) -> M)))
+""")
+
+

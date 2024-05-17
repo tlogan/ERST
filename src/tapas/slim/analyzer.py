@@ -2678,7 +2678,11 @@ class BaseRule(Rule):
                     renaming = self.solver.make_renaming_tvars(fvs)
                     sub_map = cast_up(renaming)
                     bound_ids = tuple(var.id for var in renaming.values())
-                    constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                    # TODO: figure out a less cluttered way to include extrusion
+                    # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
+                    # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items())
+                    extrusion = tuple([])
+                    constraints =  extrusion + (
                         sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(branch_world, imp)))
                     )
 
@@ -2744,7 +2748,11 @@ class BaseRule(Rule):
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(var.id for var in renaming.values())
-                constraints = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) + (
+                # TODO: figure out a less cluttered way to include extrusion
+                # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
+                # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) 
+                extrusion = tuple([]) 
+                constraints = extrusion + (
                     sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
                 )
 
