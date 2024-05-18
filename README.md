@@ -2,7 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- need to modify variable learning to soundly check for inhabitability 
+- implement `is_weak_inhabitable`
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary
@@ -64,10 +64,10 @@
 
 - note importance of ordering of rules; 
 
+    - weak:Exi; no need to save the general form to a variable; there can only be one instantiation 
     - strong:Learnable
     - strong:Exi
     - strong:Union, weak:Inter
-    - weak:Exi
     - strong:Frozen
 
     - weak:Learnable

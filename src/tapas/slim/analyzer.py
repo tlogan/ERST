@@ -2051,6 +2051,9 @@ class Solver:
         else:
             return worlds 
 
+    def is_weak_inhabitable(self, world : World, id : str) -> bool:
+        # TODO: ensure that the intersection of the upper bounds is inhabitable
+        return True
 
     def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
         self.count += 1
@@ -2142,30 +2145,77 @@ class Solver:
         #         world.freezer, world.relids
         #     )]
 
+        elif isinstance(weak, Exi): 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: weak, Exi 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+strong:
+{concretize_typ(strong)}
+
+weak:
+{concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            renaming = self.make_renaming(weak.ids)
+            weak_constraints = sub_constraints(renaming, weak.constraints)
+            weak_body = sub_typ(renaming, weak.body)
+            worlds = self.solve(world, strong, weak_body) 
+            for constraint in weak_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
+                ]
+            return worlds
+
+
         elif isinstance(strong, TVar) and strong.id not in world.freezer: 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: strong, TVar-Learnable 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+freezer:
+{world.freezer}
+
+constraints:
+{concretize_constraints(world.constraints)}
+
+strong:
+{concretize_typ(strong)}
+
+weak:
+{concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
             interp = self.interpret_strong_for_id(world, strong.id)
             if not inhabitable(interp[0]):
-                return [World(
+                new_world = World(
                     world.constraints.add(Subtyping(strong, weak)),
                     world.freezer, world.relids
-                )]
+                )
+                return [new_world] if self.is_weak_inhabitable(new_world, strong.id) else [] 
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
-                return [World(
+                new_world = World(
                     world.constraints.add(Subtyping(strong, weak)),
                     world.freezer, world.relids
-                )]
+                )
+                return [new_world] if self.is_weak_inhabitable(new_world, strong.id) else [] 
             ###################################
             else:
                 strongest = interp[0]
                 worlds = [
-                    World(
+                    new_world
+                    for world in self.solve(world, strongest, weak)
+                    for new_world in [World(
                         world.constraints.add(Subtyping(strong, weak)),
                         world.freezer, world.relids
-                    )
-                    for world in self.solve(world, strongest, weak)
+                    )]
+                    if self.is_weak_inhabitable(new_world, strong.id)
                 ]
                 return worlds
 
@@ -2262,30 +2312,6 @@ class Solver:
         
         #######################################
         #######################################
-
-        elif isinstance(weak, Exi): 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: weak, Exi 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-strong:
-{concretize_typ(strong)}
-
-weak:
-{concretize_typ(weak)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
-            renaming = self.make_renaming(weak.ids)
-            weak_constraints = sub_constraints(renaming, weak.constraints)
-            weak_body = sub_typ(renaming, weak.body)
-            worlds = self.solve(world, strong, weak_body) 
-            for constraint in weak_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
-                ]
-            return worlds
 
         elif isinstance(strong, TVar) and strong.id in world.freezer: 
             interp = self.interpret_weak_for_id(world, strong.id)
