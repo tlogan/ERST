@@ -2051,36 +2051,42 @@ class Solver:
         else:
             return worlds 
 
-    def is_weak_inhabitable(self, world : World, id : str) -> bool:
+    def is_weak_intersection_inhabitable(self, world : World, id : str, weak : Typ) -> bool:
         # TODO: ensure that the intersection of the upper bounds is inhabitable
+        # - check that weak can intersect every upper bound of id in world
+        # - for union upper bounds, linearize and check for at least one pair in cross product is_weak_inhabitable is true 
+        # - if both are fields and body is inhabitable, then return true 
+        # - if both are implications and body is inhabitable, then return true 
+        # - if intersection
+
         return True
 
     def solve(self, world : World, strong : Typ, weak : Typ) -> list[World]:
         self.count += 1
         if self.count > self._limit:
             return []
-#         print(f'''
-# =================
-# DEBUG SOLVE
-# =================
-# self.aliasing :::
-# :::::::: {self.aliasing}
+        print(f'''
+=================
+DEBUG SOLVE
+=================
+self.aliasing :::
+:::::::: {self.aliasing}
 
-# world.freezer::: 
-# :::::::: {world.freezer}
+world.freezer::: 
+:::::::: {world.freezer}
 
-# world.constraints::: 
-# {concretize_constraints(world.constraints)}
+world.constraints::: 
+{concretize_constraints(world.constraints)}
 
-# strong:
-# {concretize_typ(strong)} 
+strong:
+{concretize_typ(strong)} 
 
-# weak:
-# {concretize_typ(weak)}
+weak:
+{concretize_typ(weak)}
 
-# count: {self.count}
-# =================
-#         ''')
+count: {self.count}
+=================
+        ''')
         if alpha_equiv(strong, weak): 
             return [world] 
 
@@ -2191,20 +2197,24 @@ weak:
 
             interp = self.interpret_strong_for_id(world, strong.id)
             if not inhabitable(interp[0]):
-                new_world = World(
-                    world.constraints.add(Subtyping(strong, weak)),
-                    world.freezer, world.relids
-                )
-                return [new_world] if self.is_weak_inhabitable(new_world, strong.id) else [] 
+                if self.is_weak_intersection_inhabitable(world, strong.id, weak):
+                    return [World(
+                        world.constraints.add(Subtyping(strong, weak)),
+                        world.freezer, world.relids
+                    )]
+                else:
+                    return [] 
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
-                new_world = World(
-                    world.constraints.add(Subtyping(strong, weak)),
-                    world.freezer, world.relids
-                )
-                return [new_world] if self.is_weak_inhabitable(new_world, strong.id) else [] 
+                if self.is_weak_intersection_inhabitable(world, strong.id, weak):
+                    return [World(
+                        world.constraints.add(Subtyping(strong, weak)),
+                        world.freezer, world.relids
+                    )]
+                else:
+                    return [] 
             ###################################
             else:
                 strongest = interp[0]
@@ -2215,7 +2225,7 @@ weak:
                         world.constraints.add(Subtyping(strong, weak)),
                         world.freezer, world.relids
                     )]
-                    if self.is_weak_inhabitable(new_world, strong.id)
+                    if self.is_weak_intersection_inhabitable(new_world, strong.id, weak)
                 ]
                 return worlds
 

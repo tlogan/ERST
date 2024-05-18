@@ -1186,14 +1186,23 @@ def test_constrained_universal_subtyping():
     # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
     solver = analyzer.Solver(m())
     strong = (f'''
-ALL [Q ; Q <: ~ooga @] Q -> Q 
+ALL [Q; Q <: ~alpha @] Q -> Q 
     ''')
     weak = (f'''
- X -> EXI [Y ; Y <: ~booga @] Y 
+ X -> EXI [Y ; Y <: ~beta @] Y 
     ''')
     try:
         worlds = solve(solver, strong, weak)
         print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -1588,7 +1597,7 @@ if __name__ == '__main__':
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
-    # test_less_equal_rel_normalized_subs()
+    # test_lted_normalized_subs_lted_xyz()
     # test_relation_factorized_subs()
     # test_add_annotated()
     # test_even_list_subs_nat_list()
