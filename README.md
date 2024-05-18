@@ -2,6 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- need to modify variable learning to soundly check for inhabitability 
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary
@@ -57,6 +58,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note importance of checking for inhabitability when learning upper bounds of variables
 - note interesting concepts of relational normalization and relational factoring
     - both are weakening rewriting operations
 

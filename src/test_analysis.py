@@ -1151,21 +1151,88 @@ def test_max():
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
 
+
+# TODO: should only be able to learn inhabitable types
+# - e.g. ~ooga @ & ~booga @ is NOT inhabitable
+"""
+ALL [Q ; Q <: ~ooga @] Q -> Q 
+<:
+X -> EXI [Y ; Y <: ~booga @] Y 
+
+
+Q <: ~ooga @ 
+|-
+Q -> Q 
+<:
+X -> EXI [Y ; Y <: ~booga @] Y 
+
+Q <: ~ooga @ 
+|-
+X <: Q,
+Q <: EXI [Y ; Y <: ~booga @] Y 
+
+Q <: ~ooga @
+|-
+X <: Q,
+Q <: Y, 
+Y <: ~booga @
+
+
+"""
+
+def test_constrained_universal_subtyping():
+    # NOTE: should only be able to learn inhabitable types
+    # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
+    solver = analyzer.Solver(m())
+    strong = (f'''
+ALL [Q ; Q <: ~ooga @] Q -> Q 
+    ''')
+    weak = (f'''
+ X -> EXI [Y ; Y <: ~booga @] Y 
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+
+
 def test_max_subtyping():
     solver = analyzer.Solver(m())
     strong = tl.max 
 #     weak = (f'''
 # (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y)
 #     ''')
-#     weak = (f'''
-# (A, B) -> (EXI [Y] Y)
-#     ''')
     weak = (f'''
-(A, B) -> TOP
+(A, B) -> (EXI [Y ; Y <: @] Y)
     ''')
+#     weak = (f'''
+# (A, B) -> TOP
+#     ''')
+#     weak = (f'''
+# ALL [A B] (A, B) -> TOP
+#     ''')
     try:
         worlds = solve(solver, strong, weak)
         print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG result world
+~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+
+world.freezer:
+{world.freezer}
+
+world.relids:
+{world.relids}
+~~~~~~~~~~~~~~~~~~~~~~~
+            """)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -1505,9 +1572,10 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_max()
+    # test_max()
     # test_max_annotated()
     # test_max_subtyping()
+    test_constrained_universal_subtyping()
     # test_plus_equals_two_query()
     # test_plus_equals_two_query()
     ######################################33

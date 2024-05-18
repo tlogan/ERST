@@ -2264,6 +2264,17 @@ class Solver:
         #######################################
 
         elif isinstance(weak, Exi): 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: weak, Exi 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+strong:
+{concretize_typ(strong)}
+
+weak:
+{concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             renaming = self.make_renaming(weak.ids)
             weak_constraints = sub_constraints(renaming, weak.constraints)
             weak_body = sub_typ(renaming, weak.body)
@@ -2342,6 +2353,17 @@ class Solver:
             ]
 
         elif isinstance(strong, All): 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: strong, All 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# strong:
+# {concretize_typ(strong)}
+
+# weak:
+# {concretize_typ(weak)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             renaming = self.make_renaming(strong.ids)
             strong_constraints = sub_constraints(renaming, strong.constraints)
             strong_body = sub_typ(renaming, strong.body)
@@ -2350,7 +2372,7 @@ class Solver:
                 worlds = [
                     m1
                     for m0 in worlds
-                    for m1 in self.solve(m0, constraint.strong, constraint.weak)
+                    for m1 in self.solve_or_cache(m0, constraint.strong, constraint.weak)
                 ]
             return worlds
 
@@ -2490,6 +2512,17 @@ class Solver:
                 return [] 
 
         elif isinstance(strong, Imp) and isinstance(weak, Imp): 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG: IMP IMP 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+strong:
+{concretize_typ(strong)}
+
+weak:
+{concretize_typ(weak)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             worlds = [
                 m1
                 for m0 in self.solve(world, weak.antec, strong.antec) 

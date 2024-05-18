@@ -134,46 +134,17 @@ open_lted = (f"""
 )
 """)
 
-
 # NOTE: max, un-simplified
-# max = (f"""
-# (ALL [G44 G45 O] ((ALL [M N
-#     ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
-#     ; ((M, N), O) <: {open_lted}
-#     ; O <: G44 ; G44 <: ~true @
-# ] ((M, N) -> N)) & 
-
-# (ALL [M N
-#     ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
-#     ; ((M, N), O) <: {open_lted}
-#     ; O <: G44 ; G44 <: ~false @
-# ] ((M, N) -> M))))
-# """)
-
-# # NOTE: max, simplified some 
-# max = (f"""
-# (ALL [O] (
-#     (ALL [M N
-#         ; (M, N) <: {open_nat_pair} 
-#         ; ((M, N), O) <: {open_lted}
-#         ; O <: ~true @
-#     ] ((M, N) -> N)) & 
-#     (ALL [M N
-#         ; (M, N) <: {open_nat_pair} 
-#         ; ((M, N), O) <: {open_lted}
-#         ; O <: ~false @
-#     ] ((M, N) -> M)))
-# )
-# """)
-
-# NOTE: max, simplified more 
 max = (f"""
-(ALL [M N
-    ; (M, N) <: {open_nat_pair} 
-    ; ((M, N), ~true @) <: {open_lted}
-] ((M, N) -> N)) & 
-(ALL [M N
-    ; (M, N) <: {open_nat_pair} 
-    ; ((M, N), ~false @) <: {open_lted}
-] ((M, N) -> M)))
+(ALL [G44 G45] 
+    ((ALL [M N
+        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
+        ; G44 <: ~true @
+    ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
+
+    (ALL [M N
+        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
+        ; G44 <: ~false @
+    ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
+)
 """)
