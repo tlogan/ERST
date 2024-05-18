@@ -58,7 +58,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- note importance of checking for inhabitability when learning upper bounds of variables
+- note importance of soundly checking for inhabitability when learning upper bounds of variables
 - note interesting concepts of relational normalization and relational factoring
     - both are weakening rewriting operations
 
