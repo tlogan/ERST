@@ -1181,6 +1181,7 @@ Y <: ~booga @
 """
 
 def test_constrained_universal_subtyping():
+    # TODO: this should fail!
     # NOTE: should only be able to learn inhabitable types
     # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
     solver = analyzer.Solver(m())
