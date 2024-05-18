@@ -2657,22 +2657,7 @@ class BaseRule(Rule):
                 #     generalized_case = All((), constraints, imp)
                 # else:
                 #     generalized_case = imp
-                ######## NOTE: generalization and extrusion #############
-                # TODO: need to construct existential for frozen variables: see how package_typ works. 
-                # TODO: unlike package_typ, this does not generalize all free variables; and it extrudes the generalized variables.
-                # TODO: should ensure that the parameter types are NOT frozen
-                fvs = extract_free_vars_from_typ(s(), imp.antec)
-                assert all((fv not in new_world.freezer) for fv in fvs) 
-                renaming = self.solver.make_renaming_tvars(fvs)
-                sub_map = cast_up(renaming)
-                bound_ids = tuple(var.id for var in renaming.values())
-                # TODO: figure out a less cluttered way to include extrusion
-                # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
-                # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) 
-                extrusion = tuple([]) 
-                constraints = extrusion + (
-                    sub_constraints(sub_map, tuple(extract_reachable_constraints_from_typ(new_world, imp)))
-                )
+                ######## NOTE: construct existential #############
                 reachable_constraints = extract_reachable_constraints_from_typ(new_world, imp)
                 existential_constraints = extract_existential_constraints(new_world.freezer, reachable_constraints)
                 reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
@@ -2684,6 +2669,23 @@ class BaseRule(Rule):
                 else:
                     body = Exi(existential_bound_ids, tuple(existential_constraints), imp)
                 #end if-else
+
+
+                ######## NOTE: generalization #############
+                # TODO: figure out a less cluttered way to include extrusion
+                # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
+
+                fvs = extract_free_vars_from_typ(s(), imp.antec).difference(new_world.freezer)
+                renaming = self.solver.make_renaming_tvars(fvs)
+                sub_map = cast_up(renaming)
+                bound_ids = tuple(var.id for var in renaming.values())
+
+                ######## NOTE: extrusion #############
+                # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) 
+                extrusion = tuple([]) 
+                constraints = extrusion + (
+                    sub_constraints(sub_map, tuple(reachable_constraints.difference(existential_constraints)))
+                )
 
 
 
