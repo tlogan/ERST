@@ -2,7 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- redo `interp_lower` to use `extract_uppers` 
 - redo TVar rule to removes direct finding of factors 
     - delete `find_factor_typ` definition
 - implement `is_intersection_inhabitable`

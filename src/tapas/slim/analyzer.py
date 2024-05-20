@@ -1034,14 +1034,16 @@ def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
                 return factorize_least_fp(constraint.upper, path)
     return None
 
-def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
+def find_factors(world : World, search_target : Typ) -> tuple[PSet[Typ], PSet[Subtyping]]:
     result = s()
+    used_constraints = s()
     for constraint in world.constraints:
         path = find_path(constraint.lower, search_target)
         if path != None:
             if isinstance(constraint.upper, LeastFP):
                 result = result.add(factorize_least_fp(constraint.upper, path))
-    return result 
+                used_constraints = used_constraints.add(constraint)
+    return (result, used_constraints) 
 
 
 def mapOp(f):
@@ -1437,7 +1439,7 @@ class Solver:
             return (rev_aliasing, t)
 
 
-    def interpret_lower_id(self, world : World, id : str) -> Optional[tuple[Typ, PSet[Subtyping]]]:
+    def interpret_lower_id(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         '''
         for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
         which is T & U.
@@ -1447,23 +1449,12 @@ class Solver:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
-        # TODO: make everything interpretable including relids;
-        # TODO: use factorization to get the weakest interpretation 
-        should_interpret = id not in world.relids
-
-        if should_interpret:
-            constraints = [
-                st
-                for st in world.constraints
-                if st.lower == TVar(id)
-            ]
-            typ_strong = Top() 
-            for c in reversed(constraints):
-                typ_strong = Inter(c.upper, typ_strong) 
-            
-            return (simplify_typ(typ_strong), pset(constraints))
-        else:
-            return None
+        uppers, constraints = self.extract_uppers(world, id) 
+        result = Top() 
+        for upper in uppers:
+            result = Inter(upper, result) 
+        
+        return (simplify_typ(result), pset(constraints))
 
     def interpret_upper_id(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         # if id in self.aliasing:
@@ -1552,7 +1543,7 @@ class Solver:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
 
-        def interpret_for_id(polarity : bool, id : str): 
+        def interpret_id(polarity : bool, id : str): 
             if polarity:
                 return self.interpret_upper_id(world, id)
             else:
@@ -1564,14 +1555,29 @@ class Solver:
             return (typ, s())
         elif isinstance(typ, TVar) and typ.id not in ignored_ids:
             id = typ.id
-            op = ( 
-                mapOp(simplify_typ)(interpret_for_id(not polarity, id))
+            new_polarity = ( 
+                not polarity
                 if (id in world.freezer) else
-                mapOp(simplify_typ)(interpret_for_id(polarity, id))
+                polarity
             )
+            include_factors = False
+            should_interpret = (
+                new_polarity or include_factors or id not in world.relids 
+            )
+            op = ( 
+                interpret_id(new_polarity, id)
+                if should_interpret else
+                None
+            )
+            # op = ( 
+            #     mapOp(simplify_typ)(interpret_id(not polarity, id))
+            #     if (id in world.freezer) else
+            #     mapOp(simplify_typ)(interpret_id(polarity, id))
+            # )
 
             if op != None:
                 (interp_typ_once, cs_once) = op
+                interp_typ_once = simplify_typ(interp_typ_once)
                 # print(f"""
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # DEBUG: used_constraints: {concretize_constraints(cs_once)}
@@ -1807,16 +1813,18 @@ class Solver:
         else:
             return worlds 
 
-    def extract_uppers(self, world : World, id : str) -> PSet[Typ]:
+    def extract_uppers(self, world : World, id : str) -> tuple[PSet[Typ], PSet[Subtyping]]:
         result = s()
+        used_constraints = s()
         for constraint in world.constraints:
-            if constraint.lower == id:
+            if constraint.lower == TVar(id):
                 result = result.add(constraint.upper)
+                used_constraints = used_constraints.add(constraint)
 
-        factors = find_factors(world, TVar(id))
+        factors, factors_used_constraints = find_factors(world, TVar(id))
         result = result.union(factors)
-
-        return result 
+        used_constraints = used_constraints.union(factors_used_constraints)
+        return (result, used_constraints) 
 
     def is_intersection_inhabitable(self, world : World, legacy : Typ, target : Typ) -> bool:
         #TODO
@@ -1832,7 +1840,7 @@ class Solver:
         # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
         return all(
             self.is_intersection_inhabitable(world, legacy, target)
-            for legacy in self.extract_uppers(world, id)
+            for legacy in self.extract_uppers(world, id)[0]
         ) 
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
@@ -2948,11 +2956,15 @@ class ExprRule(Rule):
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 left_interp = self.solver.interpret_lower_id(inner_world, in_typ.id)
-                (left_typ, left_used_constraints) = (left_interp if left_interp else (in_typ, s()))
+                (left_typ, left_used_constraints) = (
+                    left_interp 
+                    if in_typ.id not in inner_world.relids else 
+                    (in_typ, s())
+                )
                 inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
 
                 right_interp = self.solver.interpret_upper_id(inner_world, out_typ.id)
-                (right_typ, right_used_constraints) = (right_interp if right_interp else (out_typ, s())) 
+                (right_typ, right_used_constraints) = right_interp
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
