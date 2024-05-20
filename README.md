@@ -2,8 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- redo TVar rule to removes direct finding of factors 
-    - delete `find_factor_typ` definition
 - implement `is_intersection_inhabitable`
 - disable extrusion for now
 - develop example where extrusion is necessary 

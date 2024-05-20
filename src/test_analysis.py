@@ -1585,7 +1585,7 @@ if __name__ == '__main__':
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()
-    test_constrained_universal_subtyping()
+    # test_constrained_universal_subtyping()
     # test_plus_equals_two_query()
     # test_plus_equals_two_query()
     ######################################33

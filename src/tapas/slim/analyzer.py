@@ -1025,14 +1025,14 @@ def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
         factorized_body = Unio(factor_choice, factorized_body)
     return LeastFP(t.id, factorized_body)
 
-# TODO: remove
-def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
-    for constraint in world.constraints:
-        path = find_path(constraint.lower, search_target)
-        if path != None:
-            if isinstance(constraint.upper, LeastFP):
-                return factorize_least_fp(constraint.upper, path)
-    return None
+# # TODO: remove
+# def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
+#     for constraint in world.constraints:
+#         path = find_path(constraint.lower, search_target)
+#         if path != None:
+#             if isinstance(constraint.upper, LeastFP):
+#                 return factorize_least_fp(constraint.upper, path)
+#     return None
 
 def find_factors(world : World, search_target : Typ) -> tuple[PSet[Typ], PSet[Subtyping]]:
     result = s()
@@ -2106,8 +2106,6 @@ weak:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id in world.freezer: 
-            # TODO: use a relid check instead of None check
-
             if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.freezer:
                 # NOTE: No interpretation means the variable is relationally constrained;
                 return [World(
@@ -2115,20 +2113,9 @@ weak:
                     world.freezer, world.relids
                 )]
             else:
-                # TODO: simply use interpret_lower (includes factorization) 
                 interp = self.interpret_lower_id(world, lower.id)
-                if lower.id not in world.relids:
-                    assert interp != None
-                    weakest_strong = interp[0]
-                    return self.solve(world, weakest_strong, upper)
-                else:
-                    factor = find_factor_typ(world, lower)
-                    if factor != None:
-                        return self.solve(world, factor, upper)
-                    else:
-                        return []
-                    #end if-else
-                #end if-else
+                weakest_strong = interp[0]
+                return self.solve(world, weakest_strong, upper)
             #end if-else
         #end if-else
 
@@ -2142,7 +2129,6 @@ weak:
                 )]
             else:
                 interp = self.interpret_lower_id(world, upper.id)
-                assert interp
                 if not selective(interp[0]):
                     return [World(
                         world.constraints.add(Subtyping(lower, upper)),
