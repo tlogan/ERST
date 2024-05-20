@@ -2,10 +2,10 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- redo `interp_lower` to use `extract_uppers` 
+- redo TVar rule to removes direct finding of factors 
+    - delete `find_factor_typ` definition
 - implement `is_intersection_inhabitable`
-    - implement `extract_uppers` 
-        - use factorization 
-- redo interp_lower to use `extract_upper` 
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary

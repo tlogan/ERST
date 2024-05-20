@@ -1025,6 +1025,7 @@ def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
         factorized_body = Unio(factor_choice, factorized_body)
     return LeastFP(t.id, factorized_body)
 
+# TODO: remove
 def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
     for constraint in world.constraints:
         path = find_path(constraint.lower, search_target)
@@ -1032,6 +1033,15 @@ def find_factor_typ(world : World, search_target : Typ) -> Optional[Typ]:
             if isinstance(constraint.upper, LeastFP):
                 return factorize_least_fp(constraint.upper, path)
     return None
+
+def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
+    result = s()
+    for constraint in world.constraints:
+        path = find_path(constraint.lower, search_target)
+        if path != None:
+            if isinstance(constraint.upper, LeastFP):
+                result = result.add(factorize_least_fp(constraint.upper, path))
+    return result 
 
 
 def mapOp(f):
@@ -1798,11 +1808,14 @@ class Solver:
             return worlds 
 
     def extract_uppers(self, world : World, id : str) -> PSet[Typ]:
-        # TODO: include factorization
         result = s()
         for constraint in world.constraints:
             if constraint.lower == id:
                 result = result.add(constraint.upper)
+
+        factors = find_factors(world, TVar(id))
+        result = result.union(factors)
+
         return result 
 
     def is_intersection_inhabitable(self, world : World, legacy : Typ, target : Typ) -> bool:
@@ -2086,25 +2099,28 @@ weak:
 
         elif isinstance(lower, TVar) and lower.id in world.freezer: 
             # TODO: use a relid check instead of None check
-            interp = self.interpret_lower_id(world, lower.id)
 
-        
-            if lower.id not in world.relids:
-                assert interp != None
-                weakest_strong = interp[0]
-                return self.solve(world, weakest_strong, upper)
-            elif isinstance(upper, TVar) and upper.id not in world.freezer:
+            if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.freezer:
                 # NOTE: No interpretation means the variable is relationally constrained;
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
             else:
-                factor = find_factor_typ(world, lower)
-                if factor != None:
-                    return self.solve(world, factor, upper)
+                # TODO: simply use interpret_lower (includes factorization) 
+                interp = self.interpret_lower_id(world, lower.id)
+                if lower.id not in world.relids:
+                    assert interp != None
+                    weakest_strong = interp[0]
+                    return self.solve(world, weakest_strong, upper)
                 else:
-                    return []
+                    factor = find_factor_typ(world, lower)
+                    if factor != None:
+                        return self.solve(world, factor, upper)
+                    else:
+                        return []
+                    #end if-else
+                #end if-else
             #end if-else
         #end if-else
 
