@@ -2,7 +2,10 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- implement `is_weak_intersection_inhabitable`
+- implement `is_intersection_inhabitable`
+    - implement `extract_uppers` 
+        - use factorization 
+- redo interp_lower to use `extract_upper` 
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary

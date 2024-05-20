@@ -1437,6 +1437,8 @@ class Solver:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
+        # TODO: make everything interpretable including relids;
+        # TODO: use factorization to get the weakest interpretation 
         should_interpret = id not in world.relids
 
         if should_interpret:
@@ -1796,7 +1798,7 @@ class Solver:
             return worlds 
 
     def extract_uppers(self, world : World, id : str) -> PSet[Typ]:
-        # TODO
+        # TODO: include factorization
         result = s()
         for constraint in world.constraints:
             if constraint.lower == id:
@@ -1815,13 +1817,10 @@ class Solver:
         # - if both are implications and body is inhabitable, then return true 
         # - if intersection
         # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
-        # TODO
-        # all(
-        #     self.is_intersection_inhabitable(world, legacy, target)
-        #     for legacy in self.extract_uppers(world, id)
-        # ) 
-
-        return True
+        return all(
+            self.is_intersection_inhabitable(world, legacy, target)
+            for legacy in self.extract_uppers(world, id)
+        ) 
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
         self.count += 1
@@ -2086,8 +2085,12 @@ weak:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id in world.freezer: 
+            # TODO: use a relid check instead of None check
             interp = self.interpret_lower_id(world, lower.id)
-            if interp != None:
+
+        
+            if lower.id not in world.relids:
+                assert interp != None
                 weakest_strong = interp[0]
                 return self.solve(world, weakest_strong, upper)
             elif isinstance(upper, TVar) and upper.id not in world.freezer:
@@ -2107,27 +2110,31 @@ weak:
 
 
         elif isinstance(upper, TVar) and upper.id not in world.freezer: 
-            interp = self.interpret_lower_id(world, upper.id)
-            if interp == None:
+            if upper.id in world.relids:
                 # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
-            elif not selective(interp[0]):
-                return [World(
-                    world.constraints.add(Subtyping(lower, upper)),
-                    world.freezer, world.relids
-                )]
             else:
-                weakest = interp[0]
-                return [
-                    World(
+                interp = self.interpret_lower_id(world, upper.id)
+                assert interp
+                if not selective(interp[0]):
+                    return [World(
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids
-                    )
-                    for world in self.solve(world, lower, weakest)
-                ]
+                    )]
+                else:
+                    weakest = interp[0]
+                    return [
+                        World(
+                            world.constraints.add(Subtyping(lower, upper)),
+                            world.freezer, world.relids
+                        )
+                        for world in self.solve(world, lower, weakest)
+                    ]
+                #end if-else
+            #end if-else
 
         elif isinstance(upper, All):
             renaming = self.make_renaming(upper.ids)
