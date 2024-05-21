@@ -1057,9 +1057,9 @@ def mapOp(f):
 
 def meaningful(polarity : bool, t : Typ) -> bool:
     if polarity:
-        return inhabitable(t)
+        return is_inhabitable(t)
     else:
-        return selective(t)
+        return is_selective(t)
 
 
 
@@ -1316,7 +1316,10 @@ def package_typ(world : World, typ : Typ) -> Typ:
         univ_typ = All(universal_bound_ids, tuple(universal_constraints), exi_typ)
     return simplify_typ(univ_typ)
 
-def inhabitable(t : Typ) -> bool:
+
+
+def is_inhabitable(t : Typ) -> bool:
+    # TODO: this is currently not sound
     t = simplify_typ(t)
     if False:
         pass
@@ -1326,7 +1329,7 @@ def inhabitable(t : Typ) -> bool:
         # TODO
         return True
 
-def selective(t : Typ) -> bool:
+def is_selective(t : Typ) -> bool:
     t = simplify_typ(t)
     if False:
         pass
@@ -1837,7 +1840,30 @@ class Solver:
     #         # TODO
     #         return True
 
+    def is_disjoint(self, world : World, t1 : Typ, t2 : Typ) -> bool:
+        """
+        True iff certainly disjoint
+        False if either inhabitable or disjoint
+        """
+
+        if False:
+            assert False
+        elif isinstance(t1, Diff):
+            return bool(self.solve(world, t2, t1.negation))
+        elif isinstance(t2, Diff):
+            return bool(self.solve(world, t1, t2.negation))
+        elif isinstance(t1, TTag) and isinstance(t2, TTag):
+            return t1.label != t2.label or (
+                self.is_disjoint(world, t1.body, t2.body)
+            ) 
+        else:
+            return False
+
     def is_intersection_inhabitable(self, world : World, legacy : Typ, target : Typ) -> bool:
+        """
+        True iff certainly inhabitable 
+        False if either disjoint or inhabitable 
+        """
         # NOTE: legacy is already known to be inhabitable
         # NOTE: inhabitability of target is unknown
         #TODO
@@ -1873,11 +1899,21 @@ class Solver:
                 )
             )
 
-        # TODO: add case of intersecting fields
+        elif isinstance(legacy, TField) and isinstance(target, TField): 
+            return legacy.label != target.label or (
+                self.is_intersection_inhabitable(world, legacy.body, target.body)
+            )
+
+        elif isinstance(legacy, Imp) and isinstance(target, Imp): 
+            return self.is_disjoint(world, legacy.antec, target.antec) or (
+                self.is_intersection_inhabitable(world, legacy.consq, target.consq)
+            )
 
         else:
             return (
-                bool(self.solve(world, legacy, target)) or bool(self.solve(world, target, legacy))
+                bool(self.solve(world, legacy, target)) or (
+                    is_inhabitable(target) and bool(self.solve(world, target, legacy))
+                )
             )
 
         # elif isinstance(legacy, Unio): 
@@ -2042,7 +2078,7 @@ weak:
             """)
 
             interp = self.interpret_upper_id(world, lower.id)
-            if not inhabitable(interp[0]):
+            if not is_inhabitable(interp[0]):
                 if self.is_upper_intersection_inhabitable(world, lower.id, upper):
                     return [World(
                         world.constraints.add(Subtyping(lower, upper)),
@@ -2159,7 +2195,7 @@ weak:
                     m
                     for m in context_worlds 
                     if (
-                        not inhabitable(lower) or 
+                        not is_inhabitable(lower) or 
                         self.solve(m, lower, upper.negation) == []
                     )
                 ]   
@@ -2193,7 +2229,7 @@ weak:
                 )]
             else:
                 interp = self.interpret_lower_id(world, upper.id)
-                if not selective(interp[0]):
+                if not is_selective(interp[0]):
                     return [World(
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids

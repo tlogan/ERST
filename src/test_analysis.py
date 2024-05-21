@@ -1152,38 +1152,7 @@ def test_max():
         print("!!!!!!!!!!!!!!!")
 
 
-# TODO: should only be able to learn inhabitable types
-# - e.g. ~ooga @ & ~booga @ is NOT inhabitable
-"""
-ALL [Q ; Q <: ~ooga @] Q -> Q 
-<:
-X -> EXI [Y ; Y <: ~booga @] Y 
-
-
-Q <: ~ooga @ 
-|-
-Q -> Q 
-<:
-X -> EXI [Y ; Y <: ~booga @] Y 
-
-Q <: ~ooga @ 
-|-
-X <: Q,
-Q <: EXI [Y ; Y <: ~booga @] Y 
-
-Q <: ~ooga @
-|-
-X <: Q,
-Q <: Y, 
-Y <: ~booga @
-
-
-"""
-
 def test_constrained_universal_subtyping_fail():
-    # TODO: this should fail!
-    # NOTE: should only be able to learn inhabitable types
-    # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
     solver = analyzer.Solver(m())
     strong = (f'''
 ALL [Q; Q <: ~alpha @] Q -> Q 
@@ -1208,16 +1177,88 @@ world.constraints:
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
 
-def test_constrained_universal_subtyping_pass():
-    # TODO: this should fail!
-    # NOTE: should only be able to learn inhabitable types
-    # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
+def test_constrained_universal_subtyping_record_pass():
     solver = analyzer.Solver(m())
     strong = (f'''
 ALL [Q; Q <: (q : ~alpha @)] Q -> Q 
     ''')
     weak = (f'''
  X -> EXI [Y ; Y <: (y : ~beta @)] Y 
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_constrained_universal_subtyping_record_fail():
+    solver = analyzer.Solver(m())
+    strong = (f'''
+ALL [Q; Q <: (l : ~alpha @)] Q -> Q 
+    ''')
+    weak = (f'''
+ X -> EXI [Y ; Y <: (l : ~beta @)] Y 
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_constrained_universal_subtyping_function_fail():
+    solver = analyzer.Solver(m())
+    strong = (f'''
+ALL [Q; Q <: (@ -> ~alpha @)] Q -> Q 
+    ''')
+    weak = (f'''
+ X -> EXI [Y ; Y <: (@ -> ~beta @)] Y 
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_constrained_universal_subtyping_function_diff_pass():
+    solver = analyzer.Solver(m())
+    strong = (f'''
+ALL [Q; Q <: (~alpha @ -> ~alpha @)] Q -> Q 
+    ''')
+    weak = (f'''
+ X -> EXI [Y ; Y <: ((I \\ (~alpha @)) -> ~beta @)] Y 
     ''')
     try:
         worlds = solve(solver, strong, weak)
@@ -1388,15 +1429,10 @@ def test_existential_with_upper_bound_unguarded():
 (EXI [Q ; Q <: @ ] Q)
     """)
 
-    try:
-        solver = analyzer.Solver(m())
-        worlds = solve(solver, strong, weak)
-        print(f'len(worlds): {len(worlds)}')
-        assert len(worlds) == 0
-    except RecursionError:
-        print("!!!!!!!!!!!!!!")
-        print("RecursionError")
-        print("!!!!!!!!!!!!!!")
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f'len(worlds): {len(worlds)}')
+    assert len(worlds) == 0
 
 def test_relation_factorized_subs():
     strong = tl.nat_list
@@ -1613,10 +1649,13 @@ if __name__ == '__main__':
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()
-    # test_constrained_universal_subtyping_fail()
-    test_constrained_universal_subtyping_pass()
+    test_constrained_universal_subtyping_fail()
+    # test_constrained_universal_subtyping_record_pass()
+    # test_constrained_universal_subtyping_record_fail()
+    # test_constrained_universal_subtyping_function_fail()
+    # test_constrained_universal_subtyping_function_diff_pass()
     # test_plus_equals_two_query()
-    ######################################33
+    #####################################
     # test_fix()
     # test_less_equal_rel_normalization()
     # test_less_equal_rel_normalized_subs()
