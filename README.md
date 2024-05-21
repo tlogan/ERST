@@ -2,13 +2,14 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- add inhabitable check when learning upper bounds of variables
-- allow learning upper bounds in upper, LeastFP rule, if variables are learnable  
-    - use factorization to ensure repeated variables are inhabitable
-    - see `test_max_subtyping` where (A, A) <: LFP ... subproblem is reached   
 - move solve_or_cache to upper, LeastFP rule.  
     - this should be sound if all variables are not frozen  
     - figure out which test case motivated the solve_or_cache move to LHS existential
+- allow learning upper bounds in upper, LeastFP rule, if variables are learnable  
+    - use factorization to ensure repeated variables are inhabitable
+    - see `test_max_subtyping` where (A, A) <: LFP ... subproblem is reached   
+- add inhabitable check when learning single variable upper bound
+- update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary
