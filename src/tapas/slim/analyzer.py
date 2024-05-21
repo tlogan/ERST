@@ -1826,9 +1826,71 @@ class Solver:
         used_constraints = used_constraints.union(factors_used_constraints)
         return (result, used_constraints) 
 
+    # def is_inhabitable(self, world : World, t : Typ) -> bool:
+    #     # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
+    #     t = simplify_typ(t)
+    #     if False:
+    #         pass
+    #     elif isinstance(t, Bot):
+    #         return False
+    #     else:
+    #         # TODO
+    #         return True
+
     def is_intersection_inhabitable(self, world : World, legacy : Typ, target : Typ) -> bool:
+        # NOTE: legacy is already known to be inhabitable
+        # NOTE: inhabitability of target is unknown
         #TODO
-        return True
+        # completed: TVar, Unio, Inter
+        # TODO: TUnit, TTag, TField, Diff, Imp, Exi, All, LeastFP, Top, Bot]
+        # - IDEA: simply use the solver in both directions
+        if False:
+            assert False
+        elif isinstance(legacy, TVar): 
+            legacies = self.extract_uppers(world, legacy.id)[0]
+            return all(
+                self.is_intersection_inhabitable(world, leg, target)
+                for leg in legacies
+            )
+        elif isinstance(target, TVar): 
+            targets = self.extract_uppers(world, target.id)[0]
+            return all(
+                self.is_intersection_inhabitable(world, legacy, targ)
+                for targ in targets
+            )
+
+        elif isinstance(legacy, Inter): 
+            return all(
+                self.is_intersection_inhabitable(world, leg, target)
+                for leg in [legacy.left, legacy.right]
+            )
+        elif isinstance(target, Inter): 
+            return (
+                self.is_intersection_inhabitable(world, legacy, target.left) and
+                all(
+                    self.is_intersection_inhabitable(world, leg, target.right)
+                    for leg in [legacy, target.left]
+                )
+            )
+        elif isinstance(legacy, Unio): 
+            return (
+                self.is_intersection_inhabitable(world, legacy.left, target) or
+                self.is_intersection_inhabitable(world, legacy.right, target)
+            )
+        elif isinstance(target, Unio): 
+            return (
+                self.is_intersection_inhabitable(world, legacy, target.left) or
+                self.is_intersection_inhabitable(world, legacy, target.right)
+            )
+            return False
+        # elif isinstance(legacy, TField): 
+        #     return (
+        #         isinstance(target, TField) and 
+        #         inhabitable(target.body)
+        #     )
+        else:
+            return False 
+
 
     def is_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:
         # TODO: ensure that the intersection of the upper bounds is inhabitable
@@ -1837,7 +1899,9 @@ class Solver:
         # - if both are fields and body is inhabitable, then return true 
         # - if both are implications and body is inhabitable, then return true 
         # - if intersection
-        # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
+        # legacies = self.extract_uppers(world, id)[0]
+        # return self.are_intersections_inhabitable(world, legacies, target)
+
         return all(
             self.is_intersection_inhabitable(world, legacy, target)
             for legacy in self.extract_uppers(world, id)[0]
