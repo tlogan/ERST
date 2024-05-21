@@ -1282,36 +1282,27 @@ world.constraints:
 def test_max_subtyping():
     solver = analyzer.Solver(m())
     strong = tl.max 
-#     weak = (f'''
-# (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y)
-#     ''')
     weak = (f'''
-(A, B) -> (EXI [Y ; Y <: @] Y)
+(A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y)
     ''')
-#     weak = (f'''
-# (A, B) -> TOP
-#     ''')
-#     weak = (f'''
-# ALL [A B] (A, B) -> TOP
-#     ''')
     try:
         worlds = solve(solver, strong, weak)
         print(f"len(worlds): {len(worlds)}")
-        for world in worlds:
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG result world
-~~~~~~~~~~~~~~~~~~~~~~~
-world.constraints:
-{analyzer.concretize_constraints(world.constraints)}
+#         for world in worlds:
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG result world
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {analyzer.concretize_constraints(world.constraints)}
 
-world.freezer:
-{world.freezer}
+# world.freezer:
+# {world.freezer}
 
-world.relids:
-{world.relids}
-~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# world.relids:
+# {world.relids}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -1648,8 +1639,8 @@ let y : T = (~dos @) in
 if __name__ == '__main__':
     # test_max()
     # test_max_annotated()
-    # test_max_subtyping()
-    test_constrained_universal_subtyping_fail()
+    test_max_subtyping()
+    # test_constrained_universal_subtyping_fail()
     # test_constrained_universal_subtyping_record_pass()
     # test_constrained_universal_subtyping_record_fail()
     # test_constrained_universal_subtyping_function_fail()

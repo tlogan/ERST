@@ -1371,6 +1371,7 @@ default_context = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
 class Solver:
     _type_id : int
     _limit : int
+    debug : bool
 
     aliasing : PMap[str, Typ]
     reversed_aliasing : PMap[Typ, str]
@@ -1378,6 +1379,7 @@ class Solver:
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
         self._limit = 1000 
+        self.debug = True
         self.count = 0
         self.aliasing = aliasing
         self.reversed_aliasing : PMap[Typ, str] = pmap({
@@ -1938,37 +1940,50 @@ class Solver:
         # legacies = self.extract_uppers(world, id)[0]
         # return self.are_intersections_inhabitable(world, legacies, target)
 
-        return all(
+        self.debug = False
+        result = all(
             self.is_intersection_inhabitable(world, legacy, target)
             for legacy in self.extract_uppers(world, id)[0]
         ) 
+        self.debug = True
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG is_upper_intersection_inhabitable
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# target: {concretize_typ(target)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+        return result
+        # return True 
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
         self.count += 1
         if self.count > self._limit:
             return []
-        print(f'''
-=================
-DEBUG SOLVE
-=================
-self.aliasing :::
-:::::::: {self.aliasing}
 
-world.freezer::: 
-:::::::: {world.freezer}
+#         if self.debug:
+#             print(f'''
+# =================
+# DEBUG SOLVE
+# =================
+# self.aliasing :::
+# :::::::: {self.aliasing}
 
-world.constraints::: 
-{concretize_constraints(world.constraints)}
+# world.freezer::: 
+# :::::::: {world.freezer}
 
-lower:
-{concretize_typ(lower)} 
+# world.constraints::: 
+# {concretize_constraints(world.constraints)}
 
-upper:
-{concretize_typ(upper)}
+# lower:
+# {concretize_typ(lower)} 
 
-count: {self.count}
-=================
-        ''')
+# upper:
+# {concretize_typ(upper)}
+
+# count: {self.count}
+# =================
+#             ''')
         if alpha_equiv(lower, upper): 
             return [world] 
 
@@ -2059,23 +2074,23 @@ weak:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.freezer: 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: strong, TVar-Learnable 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-freezer:
-{world.freezer}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: strong, TVar-Learnable 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# freezer:
+# {world.freezer}
 
-constraints:
-{concretize_constraints(world.constraints)}
+# constraints:
+# {concretize_constraints(world.constraints)}
 
-strong:
-{concretize_typ(lower)}
+# strong:
+# {concretize_typ(lower)}
 
-weak:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# weak:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             interp = self.interpret_upper_id(world, lower.id)
             if not is_inhabitable(interp[0]):
@@ -2335,38 +2350,38 @@ weak:
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
             ignored_ids = s()
             reduced_strong, used_constraints = self.interpret_with_polarity(True, world, lower, ignored_ids)
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# world.relids: 
-# {world.relids}
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG upper, LeastFP
+~~~~~~~~~~~~~~~~~~~~~
+world.relids: 
+{world.relids}
 
-# world.freezer: 
-# {world.freezer}
+world.freezer: 
+{world.freezer}
 
-# world.constraints: 
-# {concretize_constraints(tuple(world.constraints))}
+world.constraints: 
+{concretize_constraints(tuple(world.constraints))}
 
-# strong: 
-# {concretize_typ(strong)}
+lower: 
+{concretize_typ(lower)}
 
-# reduced_strong: 
-# {concretize_typ(reduced_strong)}
+reduced_strong: 
+{concretize_typ(reduced_strong)}
 
-# weak: 
-# {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+upper: 
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG weak, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# is_decidable: 
-# {is_decidable(reduced_strong, weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG upper, LeastFP
+~~~~~~~~~~~~~~~~~~~~~
+is_decidable: 
+{is_decidable(reduced_strong, upper)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
             world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
             if lower != reduced_strong:
                 return self.solve(world, reduced_strong, upper)
