@@ -1872,24 +1872,24 @@ class Solver:
                     for leg in [legacy, target.left]
                 )
             )
-        elif isinstance(legacy, Unio): 
-            return (
-                self.is_intersection_inhabitable(world, legacy.left, target) or
-                self.is_intersection_inhabitable(world, legacy.right, target)
-            )
-        elif isinstance(target, Unio): 
-            return (
-                self.is_intersection_inhabitable(world, legacy, target.left) or
-                self.is_intersection_inhabitable(world, legacy, target.right)
-            )
-            return False
-        # elif isinstance(legacy, TField): 
-        #     return (
-        #         isinstance(target, TField) and 
-        #         inhabitable(target.body)
-        #     )
+
+        # TODO: add case of intersecting fields
+
         else:
-            return False 
+            return (
+                bool(self.solve(world, legacy, target)) or bool(self.solve(world, target, legacy))
+            )
+
+        # elif isinstance(legacy, Unio): 
+        #     return (
+        #         self.is_intersection_inhabitable(world, legacy.left, target) or
+        #         self.is_intersection_inhabitable(world, legacy.right, target)
+        #     )
+        # elif isinstance(target, Unio): 
+        #     return (
+        #         self.is_intersection_inhabitable(world, legacy, target.left) or
+        #         self.is_intersection_inhabitable(world, legacy, target.right)
+        #     )
 
 
     def is_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:

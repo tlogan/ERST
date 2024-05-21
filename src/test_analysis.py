@@ -1180,7 +1180,7 @@ Y <: ~booga @
 
 """
 
-def test_constrained_universal_subtyping():
+def test_constrained_universal_subtyping_fail():
     # TODO: this should fail!
     # NOTE: should only be able to learn inhabitable types
     # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
@@ -1190,6 +1190,34 @@ ALL [Q; Q <: ~alpha @] Q -> Q
     ''')
     weak = (f'''
  X -> EXI [Y ; Y <: ~beta @] Y 
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_constrained_universal_subtyping_pass():
+    # TODO: this should fail!
+    # NOTE: should only be able to learn inhabitable types
+    # - e.g. ~ooga @ & ~booga @ is NOT inhabitable
+    solver = analyzer.Solver(m())
+    strong = (f'''
+ALL [Q; Q <: (q : ~alpha @)] Q -> Q 
+    ''')
+    weak = (f'''
+ X -> EXI [Y ; Y <: (y : ~beta @)] Y 
     ''')
     try:
         worlds = solve(solver, strong, weak)
@@ -1585,8 +1613,8 @@ if __name__ == '__main__':
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()
-    # test_constrained_universal_subtyping()
-    # test_plus_equals_two_query()
+    # test_constrained_universal_subtyping_fail()
+    test_constrained_universal_subtyping_pass()
     # test_plus_equals_two_query()
     ######################################33
     # test_fix()
