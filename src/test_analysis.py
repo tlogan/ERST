@@ -1330,6 +1330,46 @@ def test_max_subtyping():
 # {world.relids}
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
+        assert bool(worlds)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+
+def test_max_subtyping_fail():
+    solver = analyzer.Solver(m())
+
+    crummy = (f"""
+(LFP SELF 
+    | (EXI [x] (~zero @, ~bad @))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~worse b))
+)
+    """)
+
+
+    strong = tl.max 
+    weak = (f'''
+(A, B) -> (EXI [Y ; (A, Y) <: ({crummy})] Y)
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+#         for world in worlds:
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG result world
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {analyzer.concretize_constraints(world.constraints)}
+
+# world.freezer:
+# {world.freezer}
+
+# world.relids:
+# {world.relids}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+        assert not bool(worlds)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -1668,6 +1708,7 @@ if __name__ == '__main__':
     # test_max_annotated()
     # TODO
     # test_max_subtyping()
+    test_max_subtyping_fail()
     # test_constrained_universal_subtyping_fail()
     # test_constrained_universal_subtyping_record_pass()
     # test_constrained_universal_subtyping_record_fail()

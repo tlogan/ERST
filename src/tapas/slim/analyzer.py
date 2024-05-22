@@ -1961,29 +1961,29 @@ class Solver:
         if self.count > self._limit:
             return []
 
-#         if self.debug:
-#             print(f'''
-# =================
-# DEBUG SOLVE
-# =================
-# self.aliasing :::
-# :::::::: {self.aliasing}
+        if self.debug:
+            print(f'''
+=================
+DEBUG SOLVE
+=================
+self.aliasing :::
+:::::::: {self.aliasing}
 
-# world.freezer::: 
-# :::::::: {world.freezer}
+world.freezer::: 
+:::::::: {world.freezer}
 
-# world.constraints::: 
-# {concretize_constraints(world.constraints)}
+world.constraints::: 
+{concretize_constraints(world.constraints)}
 
-# lower:
-# {concretize_typ(lower)} 
+lower:
+{concretize_typ(lower)} 
 
-# upper:
-# {concretize_typ(upper)}
+upper:
+{concretize_typ(upper)}
 
-# count: {self.count}
-# =================
-#             ''')
+count: {self.count}
+=================
+            ''')
         if alpha_equiv(lower, upper): 
             return [world] 
 
@@ -2454,17 +2454,17 @@ class Solver:
                 return [] 
 
         elif isinstance(lower, Imp) and isinstance(upper, Imp): 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: IMP IMP 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-strong:
-{concretize_typ(lower)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: IMP IMP 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# strong:
+# {concretize_typ(lower)}
 
-weak:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# weak:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             worlds = [
                 m1
                 for m0 in self.solve(world, upper.antec, lower.antec) 
