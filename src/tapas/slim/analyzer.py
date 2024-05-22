@@ -24,6 +24,9 @@ R = TypeVar('R')
 
 Op = Optional
 
+class InhabitableError(Exception):
+    pass
+
 @dataclass(frozen=True, eq=True)
 class Nonterm: 
     id : str 
@@ -1055,13 +1058,6 @@ def mapOp(f):
     return call
 
 
-def meaningful(polarity : bool, t : Typ) -> bool:
-    if polarity:
-        return is_inhabitable(t)
-    else:
-        return is_selective(t)
-
-
 
 def simplify_typ(typ : Typ) -> Typ:
 
@@ -1317,17 +1313,6 @@ def package_typ(world : World, typ : Typ) -> Typ:
     return simplify_typ(univ_typ)
 
 
-
-def is_inhabitable(t : Typ) -> bool:
-    # TODO: this is currently not sound
-    t = simplify_typ(t)
-    if False:
-        pass
-    elif isinstance(t, Bot):
-        return False
-    else:
-        # TODO
-        return True
 
 def is_selective(t : Typ) -> bool:
     t = simplify_typ(t)
@@ -1588,7 +1573,7 @@ class Solver:
                 # DEBUG: used_constraints: {concretize_constraints(cs_once)}
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # """)
-                if (id in world.freezer) or meaningful(polarity, interp_typ_once): 
+                if (id in world.freezer) or self.is_meaningful(polarity, world, interp_typ_once): 
                     m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
                     (t, cs_cont) = self.interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
                     return (simplify_typ(t), cs_once.union(cs_cont))
@@ -1842,6 +1827,32 @@ class Solver:
     #         # TODO
     #         return True
 
+    def is_meaningful(self, polarity : bool, world : World, t : Typ) -> bool:
+        if polarity:
+            return self.is_inhabitable(world, t)
+        else:
+            return is_selective(t)
+
+
+
+    def is_inhabitable(self, world : World, t : Typ) -> bool:
+        """
+        True iff certainly inhabitable 
+        False if either disjoint or inhabitable 
+        """
+        # TODO: this is currently not sound
+        t = simplify_typ(t)
+        if False:
+            pass
+        elif isinstance(t, Bot):
+            return False
+        elif isinstance(t, Inter):
+            return self.is_inhabitable(world, t.left) and self.is_intersection_inhabitable(world, t.left, t.right)
+        else:
+            # TODO: decompose into parts and check subparts are inhabitable
+            return True
+
+
     def is_disjoint(self, world : World, t1 : Typ, t2 : Typ) -> bool:
         """
         True iff certainly disjoint
@@ -1914,7 +1925,7 @@ class Solver:
         else:
             return (
                 bool(self.solve(world, legacy, target)) or (
-                    is_inhabitable(target) and bool(self.solve(world, target, legacy))
+                    self.is_inhabitable(world, target) and bool(self.solve(world, target, legacy))
                 )
             )
 
@@ -1929,6 +1940,11 @@ class Solver:
         #         self.is_intersection_inhabitable(world, legacy, target.right)
         #     )
 
+    def ensure_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:
+        if self.is_upper_intersection_inhabitable(world, id, target):
+            return True
+        else:
+            raise InhabitableError()
 
     def is_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:
         # TODO: ensure that the intersection of the upper bounds is inhabitable
@@ -1956,12 +1972,27 @@ class Solver:
         return result
         # return True 
 
+    def is_relational_constraint_safe(self, world : World, lower : Typ, upper : LeastFP) -> bool: 
+        renaming : PMap[str, Typ] = pmap({upper.id : Top()})
+        weak_body = sub_typ(renaming, upper.body)
+        worlds = self.solve(world, lower, weak_body)
+        return bool(worlds)
+
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
         self.count += 1
         if self.count > self._limit:
             return []
 
         if self.debug:
+
+            print(f'''
+=================
+DEBUG SOLVE UPPER
+=================
+upper:
+{(upper)}
+=================
+            ''')
             print(f'''
 =================
 DEBUG SOLVE
@@ -2093,25 +2124,21 @@ count: {self.count}
 #             """)
 
             interp = self.interpret_upper_id(world, lower.id)
-            if not is_inhabitable(interp[0]):
-                if self.is_upper_intersection_inhabitable(world, lower.id, upper):
-                    return [World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.freezer, world.relids
-                    )]
-                else:
-                    return [] 
+            if not self.is_inhabitable(world, interp[0]):
+                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
+                return [World(
+                    world.constraints.add(Subtyping(lower, upper)),
+                    world.freezer, world.relids
+                )]
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
-                if self.is_upper_intersection_inhabitable(world, lower.id, upper):
-                    return [World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.freezer, world.relids
-                    )]
-                else:
-                    return [] 
+                self.is_upper_intersection_inhabitable(world, lower.id, upper)
+                return [World(
+                    world.constraints.add(Subtyping(lower, upper)),
+                    world.freezer, world.relids
+                )]
             ###################################
             else:
                 strongest = interp[0]
@@ -2122,7 +2149,7 @@ count: {self.count}
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids
                     )]
-                    if self.is_upper_intersection_inhabitable(new_world, lower.id, upper)
+                    if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                 ]
                 return worlds
 
@@ -2211,7 +2238,7 @@ count: {self.count}
                     m
                     for m in context_worlds 
                     if (
-                        not is_inhabitable(lower) or 
+                        not self.is_inhabitable(world, lower) or 
                         self.solve(m, lower, upper.negation) == []
                     )
                 ]   
@@ -2404,7 +2431,7 @@ count: {self.count}
                     normalized_weak = normalize_least_fp(upper, ordered_paths)
                     worlds = self.solve(world, assumed_typ, normalized_weak)
                     return worlds
-                else:
+                elif self.is_relational_constraint_safe(world, lower, upper):
                     """
                     NOTE: frozen variables should be interpreted away at this point 
                     """
@@ -2414,8 +2441,8 @@ count: {self.count}
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids.union(lower_fvs)
                     )]
-                # else:
-                #     return []
+                else:
+                    return []
 
         elif isinstance(lower, Diff):
             if diff_well_formed(lower):

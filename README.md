@@ -2,9 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- use factorization to ensure repeated variables are inhabitable in upper, LeastFP
-    - see `test_max_subtyping_fail` where (A, A) <: LFP ... subproblem is reached   
-- add inhabitable check when learning single variable upper bound
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 
@@ -61,6 +58,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how uncaught exception is used to indicate global failure, and empty result indicates local failure 
+    - local failure can be composed with union to produce global success.
 - note importance of soundly checking for inhabitability when learning upper bounds of variables
 - note interesting concepts of relational normalization and relational factoring
     - both are weakening rewriting operations
