@@ -1766,57 +1766,57 @@ class Solver:
     def make_renaming(self, old_ids) -> PMap[str, Typ]:
         return self.make_submap_from_renaming(self.make_renaming_ids(old_ids))
 
-    def solve_or_cache(self, world : World, lower : Typ, upper : Typ) -> list[World]:
-        # TODO: consider if other checks are necessary to soundly cache constraint as assumption 
-        # - e.g. should we ensure that variables constrained by relation are constrained alone?
-        worlds = self.solve(world, lower, upper)
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG solve_or_cache 
-# ~~~~~~~~~~~~~~~~~~~~~
-# world.constraints:
-# {concretize_constraints(world.constraints)}
+#     def solve_or_cache(self, world : World, lower : Typ, upper : Typ) -> list[World]:
+#         # TODO: consider if other checks are necessary to soundly cache constraint as assumption 
+#         # - e.g. should we ensure that variables constrained by relation are constrained alone?
+#         worlds = self.solve(world, lower, upper)
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG solve_or_cache 
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # world.constraints:
+# # {concretize_constraints(world.constraints)}
 
-# strong: 
-# {concretize_typ(strong)}
+# # strong: 
+# # {concretize_typ(strong)}
 
-# weak: 
-# {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#         """)
-        reduced_lower, used_constraints = self.interpret_with_polarity(True, world, lower, s())
-        if not worlds and isinstance(upper, LeastFP) and not is_decidable(reduced_lower, upper):
+# # weak: 
+# # {concretize_typ(weak)}
+# # ~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+#         reduced_lower, used_constraints = self.interpret_with_polarity(True, world, lower, s())
+#         if not worlds and isinstance(upper, LeastFP) and not is_decidable(reduced_lower, upper):
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG SAVING Relational Constraint 
-# ~~~~~~~~~~~~~~~~~~~~~
-# world.constraints:
-# {concretize_constraints(world.constraints)}
+# #             print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG SAVING Relational Constraint 
+# # ~~~~~~~~~~~~~~~~~~~~~
+# # world.constraints:
+# # {concretize_constraints(world.constraints)}
 
-# strong: 
-# {concretize_typ(strong)}
+# # strong: 
+# # {concretize_typ(strong)}
 
-# weak: 
-# {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-            # TODO: might need to reduce strong before caching
-        # if (
-        #     (all((fv not in world.freezer) for fv in fvs)) 
-        #     # TODO: remove wellformed check
-        #     # - should be sound without this; not unrollable means it can't be proven to fail 
-        #     # and 
-        #     # self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
-        # ):
-            fvs = extract_free_vars_from_typ(s(), reduced_lower)  
-            return [World(
-                # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
-                world.constraints.add(Subtyping(reduced_lower, upper)),
-                world.freezer, world.relids.union(fvs)
-            )]
-        else:
-            return worlds 
+# # weak: 
+# # {concretize_typ(weak)}
+# # ~~~~~~~~~~~~~~~~~~~~~
+# #             """)
+#             # TODO: might need to reduce strong before caching
+#         # if (
+#         #     (all((fv not in world.freezer) for fv in fvs)) 
+#         #     # TODO: remove wellformed check
+#         #     # - should be sound without this; not unrollable means it can't be proven to fail 
+#         #     # and 
+#         #     # self.is_relation_constraint_wellformed(world, normalized_strong, normalized_weak)
+#         # ):
+#             fvs = extract_free_vars_from_typ(s(), reduced_lower)  
+#             return [World(
+#                 # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
+#                 world.constraints.add(Subtyping(reduced_lower, upper)),
+#                 world.freezer, world.relids.union(fvs)
+#             )]
+#         else:
+#             return worlds 
 
     def extract_uppers(self, world : World, id : str) -> tuple[PSet[Typ], PSet[Subtyping]]:
         result = s()
@@ -2049,17 +2049,17 @@ class Solver:
         #     )]
 
         elif isinstance(upper, Exi): 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG: weak, Exi 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-strong:
-{concretize_typ(lower)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: upper, Exi 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# strong:
+# {concretize_typ(lower)}
 
-weak:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# weak:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             renaming = self.make_renaming(upper.ids)
             weak_constraints = sub_constraints(renaming, upper.constraints)
             weak_body = sub_typ(renaming, upper.body)
@@ -2148,7 +2148,8 @@ weak:
                 worlds = [
                     m1
                     for m0 in worlds
-                    for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
                 ]  
 
             return [
@@ -2302,7 +2303,8 @@ weak:
                 worlds = [
                     m1
                     for m0 in worlds
-                    for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
                 ]
             return worlds
 
@@ -2350,38 +2352,38 @@ weak:
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
             ignored_ids = s()
             reduced_strong, used_constraints = self.interpret_with_polarity(True, world, lower, ignored_ids)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG upper, LeastFP
-~~~~~~~~~~~~~~~~~~~~~
-world.relids: 
-{world.relids}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG upper, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# world.relids: 
+# {world.relids}
 
-world.freezer: 
-{world.freezer}
+# world.freezer: 
+# {world.freezer}
 
-world.constraints: 
-{concretize_constraints(tuple(world.constraints))}
+# world.constraints: 
+# {concretize_constraints(tuple(world.constraints))}
 
-lower: 
-{concretize_typ(lower)}
+# lower: 
+# {concretize_typ(lower)}
 
-reduced_strong: 
-{concretize_typ(reduced_strong)}
+# reduced_strong: 
+# {concretize_typ(reduced_strong)}
 
-upper: 
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+# upper: 
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG upper, LeastFP
-~~~~~~~~~~~~~~~~~~~~~
-is_decidable: 
-{is_decidable(reduced_strong, upper)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG upper, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# is_decidable: 
+# {is_decidable(reduced_strong, upper)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
             world = World(world.constraints.difference(used_constraints), world.freezer, world.relids)
             if lower != reduced_strong:
                 return self.solve(world, reduced_strong, upper)
@@ -2394,16 +2396,26 @@ is_decidable:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-
+                lower_fvs = extract_free_vars_from_typ(s(), lower)  
                 assumed_typ = find_assumed_typ(world, lower)
-                if assumed_typ:
+                if assumed_typ != None:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
                     normalized_weak = normalize_least_fp(upper, ordered_paths)
                     worlds = self.solve(world, assumed_typ, normalized_weak)
                     return worlds
                 else:
-                    return []
+                    """
+                    NOTE: frozen variables should be interpreted away at this point 
+                    """
+                    assert all((fv not in world.freezer) for fv in lower_fvs)
+                    return [World(
+                        # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
+                        world.constraints.add(Subtyping(lower, upper)),
+                        world.freezer, world.relids.union(lower_fvs)
+                    )]
+                # else:
+                #     return []
 
         elif isinstance(lower, Diff):
             if diff_well_formed(lower):

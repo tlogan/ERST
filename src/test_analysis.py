@@ -1151,6 +1151,33 @@ def test_max():
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
 
+def test_relationally_constrained_existential_subtyping_fail():
+    solver = analyzer.Solver(m())
+    strong = (f'''
+EXI [A B] (A, B)
+    ''')
+    weak = (f'''
+EXI [X Y ; (X,Y) <: {tl.nat_list}] (X, Y)
+    ''')
+    try:
+        worlds = solve(solver, strong, weak)
+        print(f"len(worlds): {len(worlds)}")
+        for world in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG RESULT WORLD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+        #end for
+        assert not bool(worlds)
+
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
 
 def test_constrained_universal_subtyping_fail():
     solver = analyzer.Solver(m())
@@ -1639,7 +1666,8 @@ let y : T = (~dos @) in
 if __name__ == '__main__':
     # test_max()
     # test_max_annotated()
-    test_max_subtyping()
+    # TODO
+    # test_max_subtyping()
     # test_constrained_universal_subtyping_fail()
     # test_constrained_universal_subtyping_record_pass()
     # test_constrained_universal_subtyping_record_fail()
@@ -1648,9 +1676,6 @@ if __name__ == '__main__':
     # test_plus_equals_two_query()
     #####################################
     # test_fix()
-    # test_less_equal_rel_normalization()
-    # test_less_equal_rel_normalized_subs()
-    # test_addition_rel_sub_less_equal_rel()
     # test_add()
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
@@ -1660,6 +1685,7 @@ if __name__ == '__main__':
     # test_add_annotated()
     # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
+    # test_relationally_constrained_existential_subtyping_fail()
 
     pass
 
