@@ -1847,7 +1847,10 @@ class Solver:
         elif isinstance(t, Bot):
             return False
         elif isinstance(t, Inter):
-            return self.is_inhabitable(world, t.left) and self.is_intersection_inhabitable(world, t.left, t.right)
+            return (
+                self.is_inhabitable(world, t.left) and self.is_inhabitable(world, t.right) and 
+                self.is_intersection_inhabitable(world, t.left, t.right)
+            )
         else:
             # TODO: decompose into parts and check subparts are inhabitable
             return True
@@ -1872,73 +1875,122 @@ class Solver:
         else:
             return False
 
-    def is_intersection_inhabitable(self, world : World, legacy : Typ, target : Typ) -> bool:
+    def is_intersection_inhabitable(self, world : World, left : Typ, right : Typ) -> bool:
+
+        # NOTE: assume left and right are already assumed to be inhabitable 
+        # TODO: to make a symmetrical version 
         """
         True iff certainly inhabitable 
         False if either disjoint or inhabitable 
         """
-        # NOTE: legacy is already known to be inhabitable
-        # NOTE: inhabitability of target is unknown
-        #TODO
-        # completed: TVar, Unio, Inter
-        # TODO: TUnit, TTag, TField, Diff, Imp, Exi, All, LeastFP, Top, Bot]
-        # - IDEA: simply use the solver in both directions
         if False:
             assert False
-        elif isinstance(legacy, TVar): 
-            legacies = self.extract_uppers(world, legacy.id)[0]
+        elif isinstance(right, TVar): 
+            new_rights = self.extract_uppers(world, right.id)[0]
             return all(
-                self.is_intersection_inhabitable(world, leg, target)
-                for leg in legacies
+                self.is_intersection_inhabitable(world, left, new_right)
+                for new_right in new_rights 
             )
-        elif isinstance(target, TVar): 
-            targets = self.extract_uppers(world, target.id)[0]
-            return all(
-                self.is_intersection_inhabitable(world, legacy, targ)
-                for targ in targets
-            )
-
-        elif isinstance(legacy, Inter): 
-            return all(
-                self.is_intersection_inhabitable(world, leg, target)
-                for leg in [legacy.left, legacy.right]
-            )
-        elif isinstance(target, Inter): 
+        elif isinstance(right, Inter): 
             return (
-                self.is_intersection_inhabitable(world, legacy, target.left) and
-                all(
-                    self.is_intersection_inhabitable(world, leg, target.right)
-                    for leg in [legacy, target.left]
-                )
+                self.is_intersection_inhabitable(world, left, right.left) and
+                self.is_intersection_inhabitable(world, left, right.right)
             )
 
-        elif isinstance(legacy, TField) and isinstance(target, TField): 
-            return legacy.label != target.label or (
-                self.is_intersection_inhabitable(world, legacy.body, target.body)
+        elif isinstance(left, TVar): 
+            new_lefts = self.extract_uppers(world, left.id)[0]
+            return all(
+                self.is_intersection_inhabitable(world, new_left, right)
+                for new_left in new_lefts
             )
 
-        elif isinstance(legacy, Imp) and isinstance(target, Imp): 
-            return self.is_disjoint(world, legacy.antec, target.antec) or (
-                self.is_intersection_inhabitable(world, legacy.consq, target.consq)
+        elif isinstance(left, Inter): 
+            return (
+                self.is_intersection_inhabitable(world, left.left, right) and
+                self.is_intersection_inhabitable(world, left.right, right)
+            )
+
+        elif isinstance(left, TField) and isinstance(right, TField): 
+            return left.label != right.label or (
+                self.is_intersection_inhabitable(world, left.body, right.body)
+            )
+
+        elif isinstance(left, Imp) and isinstance(right, Imp): 
+            return self.is_disjoint(world, left.antec, right.antec) or (
+                self.is_intersection_inhabitable(world, left.consq, right.consq)
             )
 
         else:
-            return (
-                bool(self.solve(world, legacy, target)) or (
-                    self.is_inhabitable(world, target) and bool(self.solve(world, target, legacy))
-                )
-            )
+            return bool(self.solve(world, left, right)) or bool(self.solve(world, right, left))
 
-        # elif isinstance(legacy, Unio): 
-        #     return (
-        #         self.is_intersection_inhabitable(world, legacy.left, target) or
-        #         self.is_intersection_inhabitable(world, legacy.right, target)
-        #     )
-        # elif isinstance(target, Unio): 
-        #     return (
-        #         self.is_intersection_inhabitable(world, legacy, target.left) or
-        #         self.is_intersection_inhabitable(world, legacy, target.right)
-        #     )
+    # def is_inhabitable_under_intersection(self, world : World, legacy : Typ, target : Typ) -> bool:
+    #     # TODO: to make symmetrical
+    #     # NOTE: assume legacy is already known to be inhabitable
+    #     # NOTE: assume non-var/non-inter constructions of target are already known to be inhabitable
+    #     # - this avoids reduandtly checking inhabitable for every crossing of subparts
+    #     # - move inhtable types into left for subproblems
+    #     # NOTE: inhabitability of target is unknown
+    #     """
+    #     True iff certainly inhabitable 
+    #     False if either disjoint or inhabitable 
+    #     """
+    #     if False:
+    #         assert False
+    #     elif isinstance(target, TVar): 
+    #         targets = self.extract_uppers(world, target.id)[0]
+    #         return all(
+    #             self.is_inhabitable_under_intersection(world, legacy, targ)
+    #             for targ in targets
+    #         )
+    #     elif isinstance(target, Inter): 
+    #         return (
+    #             self.is_inhabitable_under_intersection(world, legacy, target.left) and
+    #             all(
+    #                 self.is_inhabitable_under_intersection(world, leg, target.right)
+    #                 for leg in [legacy, target.left]
+    #             )
+    #         )
+
+    #     elif isinstance(legacy, TVar): 
+    #         legacies = self.extract_uppers(world, legacy.id)[0]
+    #         return all(
+    #             self.is_inhabitable_under_intersection(world, leg, target)
+    #             for leg in legacies
+    #         )
+
+    #     elif isinstance(legacy, Inter): 
+    #         return all(
+    #             self.is_inhabitable_under_intersection(world, leg, target)
+    #             for leg in [legacy.left, legacy.right]
+    #         )
+
+    #     elif isinstance(legacy, TField) and isinstance(target, TField): 
+    #         return legacy.label != target.label or (
+    #             self.is_inhabitable_under_intersection(world, legacy.body, target.body)
+    #         )
+
+    #     elif isinstance(legacy, Imp) and isinstance(target, Imp): 
+    #         return self.is_disjoint(world, legacy.antec, target.antec) or (
+    #             self.is_inhabitable_under_intersection(world, legacy.consq, target.consq)
+    #         )
+
+    #     else:
+    #         return (
+    #             bool(self.solve(world, legacy, target)) or (
+    #                 self.is_inhabitable(world, target) and bool(self.solve(world, target, legacy))
+    #             )
+    #         )
+
+    #     # elif isinstance(legacy, Unio): 
+    #     #     return (
+    #     #         self.is_intersection_inhabitable(world, legacy.left, target) or
+    #     #         self.is_intersection_inhabitable(world, legacy.right, target)
+    #     #     )
+    #     # elif isinstance(target, Unio): 
+    #     #     return (
+    #     #         self.is_intersection_inhabitable(world, legacy, target.left) or
+    #     #         self.is_intersection_inhabitable(world, legacy, target.right)
+    #     #     )
 
     def ensure_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:
         if self.is_upper_intersection_inhabitable(world, id, target):
@@ -1957,10 +2009,14 @@ class Solver:
         # return self.are_intersections_inhabitable(world, legacies, target)
 
         self.debug = False
-        result = all(
-            self.is_intersection_inhabitable(world, legacy, target)
-            for legacy in self.extract_uppers(world, id)[0]
-        ) 
+        result = (
+            self.is_inhabitable(world, target) and
+            all(
+                self.is_inhabitable(world, legacy) and
+                self.is_intersection_inhabitable(world, legacy, target)
+                for legacy in self.extract_uppers(world, id)[0]
+            ) 
+        )
         self.debug = True
 #         print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
