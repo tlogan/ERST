@@ -1847,10 +1847,25 @@ class Solver:
         elif isinstance(t, Bot):
             return False
         elif isinstance(t, Inter):
-            return (
-                self.is_inhabitable(world, t.left) and self.is_inhabitable(world, t.right) and 
-                self.is_intersection_inhabitable(world, t.left, t.right)
+            l = self.is_inhabitable(world, t.left)
+            r = self.is_inhabitable(world, t.right)
+            b = self.is_intersection_inhabitable(world, t.left, t.right)
+            result = (
+                l and r and b
             )
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+DEBUG is_inhabitable Inter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+t:
+{concretize_typ(t)}
+
+l: {l}
+r: {r}
+b: {b}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+            """)
+            return result
         else:
             # TODO: decompose into parts and check subparts are inhabitable
             return True
@@ -1864,6 +1879,10 @@ class Solver:
 
         if False:
             assert False
+        elif isinstance(t1, Inter):
+            return self.is_disjoint(world, t1.left, t2) or self.is_disjoint(world, t1.right, t2)
+        elif isinstance(t2, Inter):
+            return self.is_disjoint(world, t1, t2.left) or self.is_disjoint(world, t1, t2.right)
         elif isinstance(t1, Diff):
             return bool(self.solve(world, t2, t1.negation))
         elif isinstance(t2, Diff):
@@ -1872,6 +1891,8 @@ class Solver:
             return t1.label != t2.label or (
                 self.is_disjoint(world, t1.body, t2.body)
             ) 
+        elif isinstance(t1, TField) and isinstance(t2, TField) and t1.label == t2.label:
+            return self.is_disjoint(world, t1.body, t2.body) 
         else:
             return False
 
@@ -1901,6 +1922,38 @@ class Solver:
                 self.is_intersection_inhabitable(world, left, new_right)
                 for new_right in new_rights 
             )
+
+        elif isinstance(left, All): 
+            renaming = self.make_renaming(left.ids)
+            constraints = world.constraints.union(sub_constraints(renaming, left.constraints))
+            body = sub_typ(renaming, left.body)
+            world = replace(world, constraints = constraints)
+            return self.is_intersection_inhabitable(world, body, right)
+        elif isinstance(right, All): 
+            renaming = self.make_renaming(right.ids)
+            constraints = world.constraints.union(sub_constraints(renaming, right.constraints))
+            body = sub_typ(renaming, right.body)
+            world = replace(world, constraints = constraints)
+            return self.is_intersection_inhabitable(world, left, body)
+
+# TODO: universal case
+# - rename constraints and add to world 
+# t:
+# ((ALL [G22 G23
+#     ; G3 <: ((G22, G23) -> G17)
+# ] ((~succ G22, ~succ G23) -> G17)) & (ALL [G21] ((~succ G21, ~zero @) -> ~false @)))
+
+# l: True
+# r: True
+# b: False
+
+
+
+
+
+
+
+
         elif isinstance(left, Inter): 
             return (
                 self.is_intersection_inhabitable(world, left.left, right) and
@@ -1920,6 +1973,20 @@ class Solver:
             )
 
         elif isinstance(left, Imp) and isinstance(right, Imp): 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG intersection inhabitable :: Imp Imp
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+left:
+{concretize_typ(left)}
+
+right:
+{concretize_typ(right)}
+
+disjoint antec: 
+{self.is_disjoint(world, left.antec, right.antec)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             return self.is_disjoint(world, left.antec, right.antec) or (
                 self.is_intersection_inhabitable(world, left.consq, right.consq)
             )
@@ -2195,7 +2262,7 @@ class Solver:
 # {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
-                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
+                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
@@ -2211,7 +2278,7 @@ class Solver:
 #                 """)
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
-                self.is_upper_intersection_inhabitable(world, lower.id, upper)
+                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
