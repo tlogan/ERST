@@ -148,17 +148,24 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     return tc.combo
 
 def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analyzer.Solver]:
-    input_stream = InputStream(code)
-    lexer = SlimLexer(input_stream)
-    token_stream : Any = CommonTokenStream(lexer)
-    parser = SlimParser(token_stream)
-    parser.init()
-    tc = parser.program(analyzer.default_context)
-    if tc.worlds == None:
-        print(tc.toStringTree(recog=parser))
-        raise Exception("Parsing Error")
-    else:
-        return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)
+    try:
+        input_stream = InputStream(code)
+        lexer = SlimLexer(input_stream)
+        token_stream : Any = CommonTokenStream(lexer)
+        parser = SlimParser(token_stream)
+        parser.init()
+        tc = parser.program(analyzer.default_context)
+        if tc.worlds == None:
+            raise Exception("Parsing Error")
+        else:
+            return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+        return ([], analyzer.default_context.typ_var, "", parser._solver)
+    except analyzer.InhabitableError:
+        return ([], analyzer.default_context.typ_var, "", parser._solver)
 
 def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     input_stream = InputStream(code)

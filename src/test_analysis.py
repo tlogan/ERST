@@ -1309,7 +1309,7 @@ def test_max_subtyping_fail():
 
 def test_max_annotated():
     code = (f'''
-let max : (A, B) -> (EXI [Y ; (A, Y) <: ({tl.lte})] Y) = {el.max} in
+let max : (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y) = {el.max} in
 @
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -1622,7 +1622,7 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    # test_max()
+    test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()

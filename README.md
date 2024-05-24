@@ -2,7 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- rename `is_intersection_inhabitable` to emphasize the asymmetry
+- test `max_annotated` 
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 

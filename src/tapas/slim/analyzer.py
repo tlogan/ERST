@@ -1885,11 +1885,26 @@ class Solver:
         """
         if False:
             assert False
+        elif isinstance(left, Top): 
+            return True
+        elif isinstance(right, Top): 
+            return True
+        elif isinstance(left, TVar): 
+            new_lefts = self.extract_uppers(world, left.id)[0]
+            return all(
+                self.is_intersection_inhabitable(world, new_left, right)
+                for new_left in new_lefts
+            )
         elif isinstance(right, TVar): 
             new_rights = self.extract_uppers(world, right.id)[0]
             return all(
                 self.is_intersection_inhabitable(world, left, new_right)
                 for new_right in new_rights 
+            )
+        elif isinstance(left, Inter): 
+            return (
+                self.is_intersection_inhabitable(world, left.left, right) and
+                self.is_intersection_inhabitable(world, left.right, right)
             )
         elif isinstance(right, Inter): 
             return (
@@ -1897,18 +1912,7 @@ class Solver:
                 self.is_intersection_inhabitable(world, left, right.right)
             )
 
-        elif isinstance(left, TVar): 
-            new_lefts = self.extract_uppers(world, left.id)[0]
-            return all(
-                self.is_intersection_inhabitable(world, new_left, right)
-                for new_left in new_lefts
-            )
 
-        elif isinstance(left, Inter): 
-            return (
-                self.is_intersection_inhabitable(world, left.left, right) and
-                self.is_intersection_inhabitable(world, left.right, right)
-            )
 
         elif isinstance(left, TField) and isinstance(right, TField): 
             return left.label != right.label or (
@@ -2039,38 +2043,29 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        if self.debug:
+#         if self.debug:
+#             print(f'''
+# =================
+# DEBUG SOLVE
+# =================
+# self.aliasing :::
+# :::::::: {self.aliasing}
 
-            print(f'''
-=================
-DEBUG SOLVE UPPER
-=================
-upper:
-{(upper)}
-=================
-            ''')
-            print(f'''
-=================
-DEBUG SOLVE
-=================
-self.aliasing :::
-:::::::: {self.aliasing}
+# world.freezer::: 
+# :::::::: {world.freezer}
 
-world.freezer::: 
-:::::::: {world.freezer}
+# world.constraints::: 
+# {concretize_constraints(world.constraints)}
 
-world.constraints::: 
-{concretize_constraints(world.constraints)}
+# lower:
+# {concretize_typ(lower)} 
 
-lower:
-{concretize_typ(lower)} 
+# upper:
+# {concretize_typ(upper)}
 
-upper:
-{concretize_typ(upper)}
-
-count: {self.count}
-=================
-            ''')
+# count: {self.count}
+# =================
+#             ''')
         if alpha_equiv(lower, upper): 
             return [world] 
 
@@ -2171,23 +2166,49 @@ count: {self.count}
 # constraints:
 # {concretize_constraints(world.constraints)}
 
-# strong:
+# lower:
 # {concretize_typ(lower)}
 
-# weak:
+# upper:
 # {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
 
             interp = self.interpret_upper_id(world, lower.id)
             if not self.is_inhabitable(world, interp[0]):
-                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG lower-TVar-learnable 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# AAA
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# freezer:
+# {world.freezer}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+
+# lower:
+# {concretize_typ(lower)}
+
+# upper:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
+                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG lower-TVar-learnable 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# BBB
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
                 self.is_upper_intersection_inhabitable(world, lower.id, upper)
@@ -2197,6 +2218,13 @@ count: {self.count}
                 )]
             ###################################
             else:
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG lower-TVar-learnable 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CCC
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 strongest = interp[0]
                 worlds = [
                     new_world
@@ -2755,34 +2783,34 @@ class BaseRule(Rule):
                 #############################################
                 result = Inter(generalized_case, result)
 
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-new_world.constraints:
-{concretize_constraints(new_world.constraints)}
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# new_world.constraints:
+# {concretize_constraints(new_world.constraints)}
 
-new_world.freezer: {new_world.freezer} 
+# new_world.freezer: {new_world.freezer} 
 
-new_world.relids: {new_world.relids} 
+# new_world.relids: {new_world.relids} 
 
-reachable_constraints:
-{concretize_constraints(reachable_constraints)}
+# reachable_constraints:
+# {concretize_constraints(reachable_constraints)}
 
-existential_constraints:
-{concretize_constraints(existential_constraints)}
+# existential_constraints:
+# {concretize_constraints(existential_constraints)}
 
-imp:
-{concretize_typ(imp)}
+# imp:
+# {concretize_typ(imp)}
 
-body_typ:
-{concretize_typ(body)}
+# body_typ:
+# {concretize_typ(body)}
 
 
-result:
-{concretize_typ(result)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+# result:
+# {concretize_typ(result)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
             '''
             end for
             '''
@@ -3120,13 +3148,13 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
-        # print(f"""
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # DEBUG combine_fix
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # nt: {nt}
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # """)
+        print(f"""
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DEBUG combine_fix
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        len(nt.worlds): {len(nt.worlds)}
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         assert nt.worlds
         outer_worlds = []
@@ -3148,6 +3176,11 @@ class ExprRule(Rule):
 
             ###########################
             for i, inner_world in enumerate(reversed(inner_worlds)):
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG comine_fix inner_world iteration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
@@ -3167,6 +3200,33 @@ class ExprRule(Rule):
                 right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
                 bound_ids = left_bound_ids.union(right_bound_ids)
                 rel_pattern = make_pair_typ(left_typ, right_typ)
+                #########################################
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG comine_fix 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+inner_world.relids:
+{inner_world.relids}
+
+inner_world.freezer:
+{inner_world.freezer}
+
+inner_world.constraints:
+{concretize_constraints(inner_world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+in/out:
+{in_typ.id}/{out_typ.id}
+
+left_typ:
+{concretize_typ(left_typ)}
+
+right_typ:
+{concretize_typ(right_typ)}
+
+rel_pattern:
+{concretize_typ(rel_pattern)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
                 #########################################
 
                 self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
