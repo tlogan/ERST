@@ -1816,17 +1816,6 @@ class Solver:
         used_constraints = used_constraints.union(factors_used_constraints)
         return (result, used_constraints) 
 
-    # def is_inhabitable(self, world : World, t : Typ) -> bool:
-    #     # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
-    #     t = simplify_typ(t)
-    #     if False:
-    #         pass
-    #     elif isinstance(t, Bot):
-    #         return False
-    #     else:
-    #         # TODO
-    #         return True
-
     def is_meaningful(self, polarity : bool, world : World, t : Typ) -> bool:
         if polarity:
             return self.is_inhabitable(world, t)
@@ -1847,25 +1836,11 @@ class Solver:
         elif isinstance(t, Bot):
             return False
         elif isinstance(t, Inter):
-            l = self.is_inhabitable(world, t.left)
-            r = self.is_inhabitable(world, t.right)
-            b = self.is_intersection_inhabitable(world, t.left, t.right)
-            result = (
-                l and r and b
+            return (
+                self.is_inhabitable(world, t.left) and
+                self.is_inhabitable(world, t.right) and
+                self.is_intersection_inhabitable(world, t.left, t.right)
             )
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-DEBUG is_inhabitable Inter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-t:
-{concretize_typ(t)}
-
-l: {l}
-r: {r}
-b: {b}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-            """)
-            return result
         else:
             # TODO: decompose into parts and check subparts are inhabitable
             return True
@@ -1935,25 +1910,6 @@ b: {b}
             body = sub_typ(renaming, right.body)
             world = replace(world, constraints = constraints)
             return self.is_intersection_inhabitable(world, left, body)
-
-# TODO: universal case
-# - rename constraints and add to world 
-# t:
-# ((ALL [G22 G23
-#     ; G3 <: ((G22, G23) -> G17)
-# ] ((~succ G22, ~succ G23) -> G17)) & (ALL [G21] ((~succ G21, ~zero @) -> ~false @)))
-
-# l: True
-# r: True
-# b: False
-
-
-
-
-
-
-
-
         elif isinstance(left, Inter): 
             return (
                 self.is_intersection_inhabitable(world, left.left, right) and
@@ -1973,95 +1929,12 @@ b: {b}
             )
 
         elif isinstance(left, Imp) and isinstance(right, Imp): 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG intersection inhabitable :: Imp Imp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-left:
-{concretize_typ(left)}
-
-right:
-{concretize_typ(right)}
-
-disjoint antec: 
-{self.is_disjoint(world, left.antec, right.antec)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
             return self.is_disjoint(world, left.antec, right.antec) or (
                 self.is_intersection_inhabitable(world, left.consq, right.consq)
             )
 
         else:
-            return bool(self.solve(world, left, right)) or bool(self.solve(world, right, left))
-
-    # def is_inhabitable_under_intersection(self, world : World, legacy : Typ, target : Typ) -> bool:
-    #     # TODO: to make symmetrical
-    #     # NOTE: assume legacy is already known to be inhabitable
-    #     # NOTE: assume non-var/non-inter constructions of target are already known to be inhabitable
-    #     # - this avoids reduandtly checking inhabitable for every crossing of subparts
-    #     # - move inhtable types into left for subproblems
-    #     # NOTE: inhabitability of target is unknown
-    #     """
-    #     True iff certainly inhabitable 
-    #     False if either disjoint or inhabitable 
-    #     """
-    #     if False:
-    #         assert False
-    #     elif isinstance(target, TVar): 
-    #         targets = self.extract_uppers(world, target.id)[0]
-    #         return all(
-    #             self.is_inhabitable_under_intersection(world, legacy, targ)
-    #             for targ in targets
-    #         )
-    #     elif isinstance(target, Inter): 
-    #         return (
-    #             self.is_inhabitable_under_intersection(world, legacy, target.left) and
-    #             all(
-    #                 self.is_inhabitable_under_intersection(world, leg, target.right)
-    #                 for leg in [legacy, target.left]
-    #             )
-    #         )
-
-    #     elif isinstance(legacy, TVar): 
-    #         legacies = self.extract_uppers(world, legacy.id)[0]
-    #         return all(
-    #             self.is_inhabitable_under_intersection(world, leg, target)
-    #             for leg in legacies
-    #         )
-
-    #     elif isinstance(legacy, Inter): 
-    #         return all(
-    #             self.is_inhabitable_under_intersection(world, leg, target)
-    #             for leg in [legacy.left, legacy.right]
-    #         )
-
-    #     elif isinstance(legacy, TField) and isinstance(target, TField): 
-    #         return legacy.label != target.label or (
-    #             self.is_inhabitable_under_intersection(world, legacy.body, target.body)
-    #         )
-
-    #     elif isinstance(legacy, Imp) and isinstance(target, Imp): 
-    #         return self.is_disjoint(world, legacy.antec, target.antec) or (
-    #             self.is_inhabitable_under_intersection(world, legacy.consq, target.consq)
-    #         )
-
-    #     else:
-    #         return (
-    #             bool(self.solve(world, legacy, target)) or (
-    #                 self.is_inhabitable(world, target) and bool(self.solve(world, target, legacy))
-    #             )
-    #         )
-
-    #     # elif isinstance(legacy, Unio): 
-    #     #     return (
-    #     #         self.is_intersection_inhabitable(world, legacy.left, target) or
-    #     #         self.is_intersection_inhabitable(world, legacy.right, target)
-    #     #     )
-    #     # elif isinstance(target, Unio): 
-    #     #     return (
-    #     #         self.is_intersection_inhabitable(world, legacy, target.left) or
-    #     #         self.is_intersection_inhabitable(world, legacy, target.right)
-    #     #     )
+            return self.check(world, left, right) or self.check(world, right, left)
 
     def ensure_upper_intersection_inhabitable(self, world : World, id : str, target : Typ) -> bool:
         if self.is_upper_intersection_inhabitable(world, id, target):
@@ -2105,6 +1978,23 @@ disjoint antec:
         worlds = self.solve(world, lower, weak_body)
         return bool(worlds)
 
+    def check(self, world : World, lower : Typ, upper : Typ) -> bool:
+        try:
+            return bool(self.solve(world, lower, upper))
+        except RecursionError:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~
+check: RecursionError 
+~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            return False
+        except InhabitableError:
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# check: InhabitableError 
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+            return False
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
         self.count += 1
         if self.count > self._limit:
@@ -3215,14 +3105,6 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
-        print(f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        DEBUG combine_fix
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        len(nt.worlds): {len(nt.worlds)}
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
-
         assert nt.worlds
         outer_worlds = []
         for outer_world in nt.worlds:
@@ -3243,11 +3125,6 @@ class ExprRule(Rule):
 
             ###########################
             for i, inner_world in enumerate(reversed(inner_worlds)):
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG comine_fix inner_world iteration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
 
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
@@ -3268,32 +3145,32 @@ DEBUG comine_fix inner_world iteration
                 bound_ids = left_bound_ids.union(right_bound_ids)
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG comine_fix 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-inner_world.relids:
-{inner_world.relids}
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# inner_world.relids:
+# {inner_world.relids}
 
-inner_world.freezer:
-{inner_world.freezer}
+# inner_world.freezer:
+# {inner_world.freezer}
 
-inner_world.constraints:
-{concretize_constraints(inner_world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-in/out:
-{in_typ.id}/{out_typ.id}
+# inner_world.constraints:
+# {concretize_constraints(inner_world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# in/out:
+# {in_typ.id}/{out_typ.id}
 
-left_typ:
-{concretize_typ(left_typ)}
+# left_typ:
+# {concretize_typ(left_typ)}
 
-right_typ:
-{concretize_typ(right_typ)}
+# right_typ:
+# {concretize_typ(right_typ)}
 
-rel_pattern:
-{concretize_typ(rel_pattern)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+# rel_pattern:
+# {concretize_typ(rel_pattern)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
                 #########################################
 
                 self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
