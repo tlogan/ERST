@@ -2,7 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- test `max_annotated` 
+- evaluate `test_max` and `test_max_annotated` 
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 

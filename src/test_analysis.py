@@ -1316,6 +1316,28 @@ let max : (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y) = {el.max} in
     print(f"len(worlds): {len(worlds)}")
 
 
+def test_single_shape():
+
+    lower = f'''
+~true @
+    '''
+# PROBLEM: unguarded self reference
+    upper = ('''
+(LFP SELF
+    | (EXI [G43] ~true @)
+    | (EXI [G45 G17 G44 ; G17 <: SELF ] G17)
+    | (EXI [G46] ~false @) 
+    | BOT
+)
+    ''')
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    print(f'len(worlds): {len(worlds)}')
+    assert len(worlds) == 1
+
+
+
 def test_add():
     (worlds, typ_var, parsetree, solver) = analyze(el.add)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
@@ -1622,7 +1644,8 @@ let y : T = (~dos @) in
 
 
 if __name__ == '__main__':
-    test_max()
+    test_single_shape()
+    # test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()

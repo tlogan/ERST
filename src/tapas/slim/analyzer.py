@@ -824,6 +824,34 @@ def is_decidable_shape(t : Typ) -> bool:
     # is field a base case?
     return not isinstance(t, TVar)
 
+def extract_column_comparisons(key : Typ, rel : LeastFP) -> list[tuple[Typ, list[Typ]]]:
+    choices = [
+        choice
+        for choice in linearize_unions(rel.body)
+        if choice != Bot()
+    ]
+
+    if is_record_typ(key):
+        paths = [
+            path
+            for choice in choices
+            for path in list(extract_paths(choice))
+        ]
+
+        result = []
+        for path in pset(paths):
+            column_key = project_typ(key, path)
+            column_choices = [
+                project_typ_induc(rel.id, choice, path)
+                for choice in choices
+                if choice != Bot()
+            ] 
+            result.append((column_key, column_choices))
+        return result 
+    else:
+        return [(key, choices)]
+    #end-if 
+
 def is_decidable(key : Typ, rel : LeastFP) -> bool:
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -833,61 +861,42 @@ def is_decidable(key : Typ, rel : LeastFP) -> bool:
 # {concretize_typ(rel)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     """)
-    if not is_record_typ(key):
-        return True
-    else:
-        # TODO: decidable iff there is a tag in key and the corresponding column has at least one tag? 
-        choices = [
-            choice
-            for choice in linearize_unions(rel.body)
-            if choice != Bot()
-        ]
-        paths = [
-            path
-            for choice in choices
-            for path in list(extract_paths(choice))
-        ]
+    comparisons = extract_column_comparisons(key, rel)
 
-        # nl = "\n"
+    result = False 
+    for column_key, column_choices in comparisons:
+        key_is_decidable = is_decidable_shape(column_key)
+        there_are_decidable_shapes_in_choices = any(
+            isinstance(cc, TTag) or
+            (isinstance(cc, Exi) and is_decidable_shape(cc.body))
+            for cc in column_choices
+        )
+        there_is_no_unguarded_subtyping_of_self = all(
+            cc != TVar(rel.id) and 
+            (not isinstance(cc, Exi) or 
+                all(cc.body != st.lower 
+                    for st in cc.constraints
+                    if st.upper == TVar(rel.id)
+                )
+            )
+            for cc in column_choices
+        ) 
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # DEBUG is_unrollable 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # choices: {nl.join([(concretize_typ(choice)) for choice in choices])}
-        # paths: {pset(paths)}
+        # path: {path}
+        # is_key_tag: {is_key_tag}
+
+        # column_choices: {[concretize_typ(choice) for choice in column_choices]}
+        # are_there_tags_in_choices: {are_there_tags_in_choices}
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
-        result = False 
-        for path in pset(paths):
-            column_key = project_typ(key, path)
-            key_is_decidable = is_decidable_shape(column_key)
-            column_choices = [
-                project_typ_induc(rel.id, choice, path)
-                for choice in choices
-                if choice != Bot()
-            ] 
-            there_are_decidable_shapes_in_choices = any(
-                isinstance(cc, TTag) or
-                (isinstance(cc, Exi) and is_decidable_shape(cc.body))
-                for cc in column_choices
-            )
-            # print(f"""
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DEBUG is_unrollable 
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # path: {path}
-            # is_key_tag: {is_key_tag}
+        if (key_is_decidable and there_are_decidable_shapes_in_choices and there_is_no_unguarded_subtyping_of_self):
+            return True 
+        # endif
 
-            # column_choices: {[concretize_typ(choice) for choice in column_choices]}
-            # are_there_tags_in_choices: {are_there_tags_in_choices}
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # """)
-            if (key_is_decidable and there_are_decidable_shapes_in_choices):
-                return True 
-            # endif
-
-        return result
-    # endif
+    return result
 
 
 def extract_kv_pairs(t : Typ) -> PSet[tuple[tuple[str, ...], Typ]]:
@@ -1363,7 +1372,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 1000 
+        self._limit = 100000000 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -1981,12 +1990,19 @@ class Solver:
     def check(self, world : World, lower : Typ, upper : Typ) -> bool:
         try:
             return bool(self.solve(world, lower, upper))
-        except RecursionError:
+        except RecursionError as e:
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~
 check: RecursionError 
 ~~~~~~~~~~~~~~~~~~~~~~~
+lower:
+{concretize_typ(lower)}
+
+upper:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~
             """)
+            # raise e
             return False
         except InhabitableError:
 #             print(f"""
@@ -2354,13 +2370,13 @@ check: RecursionError
         elif isinstance(lower, All): 
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG: strong, All 
+# DEBUG: lower, All 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# strong:
-# {concretize_typ(strong)}
+# lower:
+# {concretize_typ(lower)}
 
-# weak:
-# {concretize_typ(weak)}
+# upper:
+# {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
             renaming = self.make_renaming(lower.ids)
@@ -2399,6 +2415,23 @@ check: RecursionError
             return [] 
 
         elif isinstance(upper, LeastFP): 
+
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG: upper, LeastFP 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# strong:
+# {concretize_typ(lower)}
+
+# weak:
+# {concretize_typ(upper)}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+
+
             # ids = extract_free_vars_from_typ(s(), strong)
             # sub_map = pmap({
             #     id : interp 
@@ -2531,6 +2564,9 @@ check: RecursionError
 
 # weak:
 # {concretize_typ(upper)}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
             worlds = [
@@ -2729,8 +2765,6 @@ class BaseRule(Rule):
                 constraints = extrusion + (
                     sub_constraints(sub_map, tuple(reachable_constraints.difference(existential_constraints)))
                 )
-
-
 
                 renamed_body = sub_typ(sub_map, body)
                 if bound_ids or constraints:
@@ -3145,33 +3179,6 @@ class ExprRule(Rule):
                 bound_ids = left_bound_ids.union(right_bound_ids)
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# inner_world.relids:
-# {inner_world.relids}
-
-# inner_world.freezer:
-# {inner_world.freezer}
-
-# inner_world.constraints:
-# {concretize_constraints(inner_world.constraints)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# in/out:
-# {in_typ.id}/{out_typ.id}
-
-# left_typ:
-# {concretize_typ(left_typ)}
-
-# right_typ:
-# {concretize_typ(right_typ)}
-
-# rel_pattern:
-# {concretize_typ(rel_pattern)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
-                #########################################
 
                 self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
 
@@ -3234,11 +3241,21 @@ class ExprRule(Rule):
             param_upper = LeastFP(IH_typ.id, param_body)
 
 
+
             param_typ = self.solver.fresh_type_var()
             return_typ = self.solver.fresh_type_var()
             consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
             consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
             result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
+
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# result:
+# {concretize_typ(result)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
 
         # TODO: remove; this shouldn't be necessary since body is interpreted and used constraints are removed
