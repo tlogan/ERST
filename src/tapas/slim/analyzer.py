@@ -950,7 +950,6 @@ def normalize_choice(induc_id : str, choice : Typ, ordered_paths : list[tuple[st
             )
             for st in choice.constraints
         )
-
         new_body = to_tuple_typ(choice.body, ordered_paths)
         return Exi(choice.ids, new_constraints, new_body)
     else:
@@ -996,13 +995,17 @@ def find_paths(assumed_key : Typ, search_key : Typ) -> Optional[list[tuple[str, 
     else:
         return filtered_paths
 
-def find_assumed_typ(world : World, key : Typ) -> Optional[Typ]:
-    for constraint in world.constraints:
-        ordered_paths = find_paths(constraint.lower, key)
-        if ordered_paths != None:
-            if isinstance(constraint.upper, LeastFP):
-                return normalize_least_fp(constraint.upper, ordered_paths)
-    return None
+def find_assumed_relational_typ(world : World, key : Typ) -> Optional[Typ]:
+    if is_record_typ(key):
+        for constraint in world.constraints:
+            ordered_paths = find_paths(constraint.lower, key)
+            if ordered_paths != None:
+                if isinstance(constraint.upper, LeastFP):
+                    return normalize_least_fp(constraint.upper, ordered_paths)
+        return None
+    else:
+        return None
+
 
 def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...]]:
     ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
@@ -1981,11 +1984,10 @@ class Solver:
         return result
         # return True 
 
-    def is_relational_constraint_safe(self, world : World, lower : Typ, upper : LeastFP) -> bool: 
+    def is_leastfp_constraint_safe(self, world : World, lower : Typ, upper : LeastFP) -> bool: 
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
         weak_body = sub_typ(renaming, upper.body)
-        worlds = self.solve(world, lower, weak_body)
-        return bool(worlds)
+        return self.check(world, lower, weak_body)
 
     def check(self, world : World, lower : Typ, upper : Typ) -> bool:
         try:
@@ -2498,14 +2500,14 @@ upper:
                 return worlds
             else:
                 lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                assumed_typ = find_assumed_typ(world, lower)
-                if assumed_typ != None:
+                assumed_relational_typ = find_assumed_relational_typ(world, lower)
+                if assumed_relational_typ != None:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
                     normalized_weak = normalize_least_fp(upper, ordered_paths)
-                    worlds = self.solve(world, assumed_typ, normalized_weak)
+                    worlds = self.solve(world, assumed_relational_typ, normalized_weak)
                     return worlds
-                elif self.is_relational_constraint_safe(world, lower, upper):
+                elif self.is_leastfp_constraint_safe(world, lower, upper):
                     """
                     NOTE: frozen variables should be interpreted away at this point 
                     """
