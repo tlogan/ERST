@@ -1148,6 +1148,39 @@ def test_recursion_wrapper():
     #     print("exception raised")
 
 
+def test_universal_instantiation():
+    # TODO: figure out why G1 is not getting replaces with (I, J)
+    strong = (f"""
+(ALL [X
+    ; X <: (LFP SELF 
+        | (EXI [B] (~zero @, B))
+        | (EXI [A B ; (A, B) <: SELF ] (~succ A, ~succ B)) 
+        | (EXI [A] (~succ A, ~zero @))
+    )
+] (X -> (EXI [Y
+    ; (X, Y) <: (LFP G28 
+        | (EXI [G29] ((~zero @, G29), ~true @))
+        | (EXI [G30 G17 G31 ; ((G30, G31), G17) <: G28 ] ((~succ G30, ~succ G31), G17)) 
+        | (EXI [G32] ((~succ G32, ~zero @), ~false @))
+    )
+] Y)))
+    """)
+    weak = (f"""
+(I,J) -> K 
+    """)
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f"len(worlds): {len(worlds)}")
+    print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG test_universal_instantiation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+worlds[0].constraints:
+{analyzer.concretize_constraints(worlds[0].constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
+
+
 def test_lted_wrapper():
     # TODO: the constraint on the antecedent is disconnected
     # - is it the connection being interpreted away in application?
@@ -1656,7 +1689,8 @@ let y : T = (~dos @) in
 
 if __name__ == '__main__':
     # test_single_shape()
-    test_lted_wrapper()
+    test_universal_instantiation()
+    # test_lted_wrapper()
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()

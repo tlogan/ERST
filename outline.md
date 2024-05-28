@@ -17,6 +17,7 @@
     - unrolling; solve for variable included in a least fixed-point type 
     - shape testing; identify an infinite recursion than can't fail 
         - save constraint that can't be solved but also can't fail.
+    - pattern matching lower,upper together is similar to tree interpolation's decomposing proposition (upper) across a derivation tree (lower).
 - soundness
     - show that there exists a denotation into sets that is sound wrt set theory
 

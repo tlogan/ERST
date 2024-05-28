@@ -3025,24 +3025,29 @@ class ExprRule(Rule):
                 arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_var, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
-                # print(f"""
-                # ~~~~~~~~~~~~~~
-                # DEBUG application
-                # ~~~~~~~~~~~~~~
-                # world.freezer: {tuple(world.freezer)}
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.freezer: {tuple(world.freezer)}
 
-                # world.constraints: 
-                # {list_out_constraints(world.constraints, 4)}
+world.constraints: 
+{concretize_constraints(world.constraints)}
 
-                # cator_var: {concretize_typ(cator_var)}
-                # cator_typ: {concretize_typ(cator_typ)}
 
-                # arg_var: {arg_var.id}
-                # arg_typ: {concretize_typ(arg_typ)}
+cator_typ: {concretize_typ(cator_typ)}
+cator_var: {concretize_typ(cator_var)}
+cator_used_constraints:
+{concretize_constraints(cator_used_constraints)}
 
-                # result_var: {result_var.id}
-                # ~~~~~~~~~~~~~~
-                # """)
+arg_typ: {concretize_typ(arg_typ)}
+arg_var: {arg_var.id}
+arg_used_constraints:
+{concretize_constraints(arg_used_constraints)}
+
+result_var: {result_var.id}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
                 new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
