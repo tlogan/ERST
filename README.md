@@ -2,6 +2,9 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- update disjoint test to handle disjoint constraints in intersected universals 
+    - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
+    - consider if type needs to be constructed differently
 - evaluate `test_max` and `test_max_annotated` 
     - figure out why the antecedent constraint is missing
 - update inhabitable check to be sound
