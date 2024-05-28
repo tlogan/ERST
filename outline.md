@@ -3,6 +3,10 @@
 ## Subtyping 
 - enables flexible use of data constructors without requiring users to write data transliteration to pass type checking.
 - an expression can can have strict bounds in one use case but can weaken to be used in more lenient applications. 
+- General purpose automated reasoning 
+    - allows reasoning about arbitrary domains defined by users' programs and type annotations. 
+    - by contrast, SMT relies on domain specific theories 
+    - by contrast, general proof systems can in check in general, but only automatically prove with specialized reasoning. 
 - mechanisms
     - split subtyping constraint into sub problems by decomposing types, such as intersection and union. 
     - when a standalone variable is found on one side of subtyping and the upper bound is inhabitable, 
@@ -36,8 +40,6 @@
     - extrusion
     - least fixed point construction 
     - constraint localization in branches (cases/fields) 
-
-## General purpose automated reasoning 
-- allows reasoning about arbitrary domains defined by users' programs and type annotations. 
-- by contrast, SMT relies on domain specific theories 
-- by contrast, general proof systems can in check in general, but only automatically prove with specialized reasoning. 
+- soundness
+    - progress and preservation with subset inclusion rule
+    - composition of subtyping soundness

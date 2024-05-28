@@ -4,7 +4,6 @@
 ### TODO (Symbolic Implementation)
 - evaluate `test_max` and `test_max_annotated` 
     - figure out why the antecedent constraint is missing
-    - figure out why the typ isn't simplified more: T vs (ALL [; T <: X] X)
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 
