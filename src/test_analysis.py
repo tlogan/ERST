@@ -1645,8 +1645,8 @@ let y : T = (~dos @) in
 
 if __name__ == '__main__':
     # test_single_shape()
-    # test_max()
-    test_max_annotated()
+    test_max()
+    # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
     # test_constrained_universal_subtyping_fail()

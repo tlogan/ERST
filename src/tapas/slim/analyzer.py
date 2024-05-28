@@ -1562,10 +1562,21 @@ class Solver:
                 if (id in world.freezer) else
                 polarity
             )
+
+
+
+
+
+
+
             include_factors = False
             should_interpret = (
                 new_polarity or include_factors or id not in world.relids 
             )
+
+
+
+
             op = ( 
                 interpret_id(new_polarity, id)
                 if should_interpret else
@@ -1577,6 +1588,27 @@ class Solver:
             #     mapOp(simplify_typ)(interpret_id(polarity, id))
             # )
 
+            if typ.id == "G0":
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG interpret_with_polarity:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typ: {concretize_typ(typ)}
+
+world.freezer: 
+{world.freezer}
+
+world.constraints: 
+{concretize_constraints(tuple(world.constraints))}
+
+should_interpret: {should_interpret}
+
+op: {op}
+~~~~~~~~~
+{concretize_typ(op[0]) if op else "None"}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+
             if op != None:
                 (interp_typ_once, cs_once) = op
                 interp_typ_once = simplify_typ(interp_typ_once)
@@ -1585,11 +1617,26 @@ class Solver:
                 # DEBUG: used_constraints: {concretize_constraints(cs_once)}
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # """)
-                if (id in world.freezer) or self.is_meaningful(polarity, world, interp_typ_once): 
+                # if (id in world.freezer) or self.is_meaningful(polarity, world, interp_typ_once): 
+                # TODO: why is there a condition here?
+                # TODO: refine inhabitable check to prevent this from being unmeaningful 
+                if (id in world.freezer) or self.is_meaningful(new_polarity, world, interp_typ_once): 
+                # if True: 
+
+                    print(f"""
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    AAAAAAAAAAAAAAAAAAA 
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    """)
                     m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
                     (t, cs_cont) = self.interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
                     return (simplify_typ(t), cs_once.union(cs_cont))
                 else:
+                    print(f"""
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    BBBBBBBBBBBBBBBBBBBB 
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    """)
                     return (typ, s())
             else:
                 return (typ, s())

@@ -3,6 +3,8 @@
 
 ### TODO (Symbolic Implementation)
 - evaluate `test_max` and `test_max_annotated` 
+    - figure out why the antecedent constraint is missing
+    - figure out why the typ isn't simplified more: T vs (ALL [; T <: X] X)
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 
@@ -92,11 +94,11 @@
     - SMT has automation but requires specialized theories or specific domains to work
     - Proof assistants and dependently typed systems are general purpose but their automation is not general purpose
     - Both are intrinsic and requires predicates to be defined rather than inferred/reconstructed.
-- note how solving subtyping corresponds to CDCL
+- note how solving subtyping is similar/different to CDCL
     - solving subtyping splits worlds when there is an intersection of implications on left or a union of patterns on the right
         - this corresponds to CDCL's splitting a variable into true or false worlds
     - after splitting worlds, solving searches for the strongest interpretation of type variable (e.g. I <: T)
-        - this corresponds to CDCL's learning a clause due to a conflict
+        - by contrast, CDCL preemptively assigns a value and then learns a clause due to a conflict
         - that is, a conflicting clause in CDCL corresponds to a lower bound in subtyping
         - CDCL uses negation for duality, while subtyping uses lower vs upper bound (therefore, union vs intersection) for duality.
 - discuss the notion of freezer/skolem adjacent learnable variables (frozen <: learnable); 
