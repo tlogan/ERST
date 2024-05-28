@@ -2,11 +2,11 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- evaluate `test_lted_wrapper`, `test_max` and `test_max_annotated` 
+    - figure out why the antecedent constraint is missing
 - update disjoint test to handle disjoint constraints in intersected universals 
     - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
     - consider if type needs to be constructed differently
-- evaluate `test_max` and `test_max_annotated` 
-    - figure out why the antecedent constraint is missing
 - update inhabitable check to be sound
 - disable extrusion for now
 - develop example where extrusion is necessary 
@@ -374,6 +374,12 @@
                 ```
 
 
+### Related Work
+- Decision Procedures for Multisets with Cardinality Constraints 
+    - https://www.cs.yale.edu/homes/piskac/papers/2008PiskacKuncakDecisionProceduresMultisetsCardinality.pdf
+- Solving Constrained Horn Clauses using Interpolation
+    - CHC 
+    - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2013-6.pdf
 
 ### Future work
 - use statistical learning to find necessary types 

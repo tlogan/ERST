@@ -138,13 +138,26 @@ open_lted = (f"""
 max = (f"""
 (ALL [G44 G45] 
     ((ALL [M N
-        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
         ; G44 <: ~true @
+        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
 
     (ALL [M N
-        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
         ; G44 <: ~false @
+        ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
 )
 """)
+
+# # NOTE: without the antecedent constraint
+# max = (f"""
+# (ALL [G44 G45] 
+#     ((ALL [M N
+#         ; G44 <: ~true @
+#     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
+
+#     (ALL [M N
+#         ; G44 <: ~false @
+#     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
+# )
+# """)

@@ -2160,7 +2160,7 @@ upper:
 # {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
-                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
+                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
@@ -2176,7 +2176,7 @@ upper:
 #                 """)
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
-                self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
+                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
@@ -2198,7 +2198,7 @@ upper:
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids
                     )]
-                    if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
+                    # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                 ]
                 return worlds
 
@@ -2709,6 +2709,30 @@ class BaseRule(Rule):
                 (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
                 new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
                 imp = Imp(param_typ, return_typ)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG constrained branches 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+new_world.constraints:
+{concretize_constraints(new_world.constraints)}
+
+return_used_constraints:
+{concretize_constraints(return_used_constraints)}
+
+param_used_constraints:
+{concretize_constraints(param_used_constraints)}
+
+pattern:
+{concretize_typ(branch.pattern)}
+
+body:
+{concretize_typ(branch.body)}
+
+imp:
+{concretize_typ(imp)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
                 constrained_branches.append((new_world, imp))
             '''
             end for 

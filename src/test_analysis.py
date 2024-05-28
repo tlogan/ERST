@@ -1148,6 +1148,19 @@ def test_recursion_wrapper():
     #     print("exception raised")
 
 
+def test_lted_wrapper():
+    # TODO: the constraint on the antecedent is disconnected
+    # - is it the connection being interpreted away in application?
+    wrapper = (f"""
+let lted = {el.lted} in
+case (x, y) => (
+    (lted)(x, y)
+)
+""".strip())
+    (worlds, typ_var, parsetree, solver) = analyze(wrapper)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
 
 def test_max():
     (worlds, typ_var, parsetree, solver) = analyze(el.max)
@@ -1641,11 +1654,10 @@ let y : T = (~dos @) in
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
-
-
 if __name__ == '__main__':
     # test_single_shape()
-    test_max()
+    test_lted_wrapper()
+    # test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
