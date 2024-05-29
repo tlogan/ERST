@@ -1148,38 +1148,31 @@ def test_recursion_wrapper():
     #     print("exception raised")
 
 
-def test_universal_instantiation():
-    # TODO: figure out why G1 is not getting replaces with (I, J)
+def test_implication_unification():
+    # TODO: why is constraint of (I, J) <: X missing?
     strong = (f"""
-(ALL [X
-    ; X <: (LFP SELF 
-        | (EXI [B] (~zero @, B))
-        | (EXI [A B ; (A, B) <: SELF ] (~succ A, ~succ B)) 
-        | (EXI [A] (~succ A, ~zero @))
-    )
-] (X -> (EXI [Y
-    ; (X, Y) <: (LFP G28 
-        | (EXI [G29] ((~zero @, G29), ~true @))
-        | (EXI [G30 G17 G31 ; ((G30, G31), G17) <: G28 ] ((~succ G30, ~succ G31), G17)) 
-        | (EXI [G32] ((~succ G32, ~zero @), ~false @))
-    )
-] Y)))
+(X -> (EXI [Y ; (X, Y) <: (LFP SELF 
+    | (EXI [B] ((~zero @, B), ~true @))
+    | (EXI [A C B ; ((A, B), C) <: SELF ] ((~succ A, ~succ B), C))
+    | (EXI [A] ((~succ A, ~zero @), ~false @))
+)] Y))
     """)
     weak = (f"""
-(I,J) -> K 
+((I, J) -> K)
     """)
     solver = analyzer.Solver(m())
     worlds = solve(solver, strong, weak)
-    print(f"len(worlds): {len(worlds)}")
-    print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG test_universal_instantiation
-~~~~~~~~~~~~~~~~~~~~~~~~~
-worlds[0].constraints:
-{analyzer.concretize_constraints(worlds[0].constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~
-    """)
-
+#     print(f"len(worlds): {len(worlds)}")
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG test_implication_unification
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# worlds[0].constraints:
+# {analyzer.concretize_constraints(worlds[0].constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+    assert len(worlds) == 1
+    assert analyzer.Subtyping(p("(I, J)"), p("X")) in worlds[0].constraints
 
 def test_lted_wrapper():
     # TODO: the constraint on the antecedent is disconnected
@@ -1689,8 +1682,8 @@ let y : T = (~dos @) in
 
 if __name__ == '__main__':
     # test_single_shape()
-    test_universal_instantiation()
-    # test_lted_wrapper()
+    # test_implication_unification()
+    test_lted_wrapper()
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()
