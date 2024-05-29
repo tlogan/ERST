@@ -2,6 +2,9 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- ensure that it's safe to remove constraints
+    - criteria: the interpreted variable in the constraint is guaranteed to not be used again elsewhere 
+    - redo typing rules to avoid extra variables; return fresh variable rather than constraining passed in variable.
 - update disjoint test to handle disjoint constraints in intersected universals 
     - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
     - consider if type needs to be constructed differently
