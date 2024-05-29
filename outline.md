@@ -11,7 +11,7 @@
     - split subtyping constraint into sub problems by decomposing types, such as intersection and union. 
     - when a standalone variable is found on one side of subtyping and the upper bound is inhabitable, 
         - then learn the subtyping constraint to use is subsequent sub problems.
-        - unlike, CDCL, it does not preemptively assign a type to a variable and discover conflicts.
+        - unlike CDCL, it does not learn new subproblems from failures/conflicts and backjump
     - learning upper bound constraints of variables enables interpreting the variable as weakest upper bound via intersection  
     - learning lower bound constraints of variables enables interpreting the variable as the strongest lower bound via union  
     - unrolling; solve for variable included in a least fixed-point type 
