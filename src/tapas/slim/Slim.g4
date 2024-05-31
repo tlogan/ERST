@@ -143,17 +143,17 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 
 ;
 
-program [context : Context] returns [list[World] worlds] :
+program [context : Context] returns [Result result] :
 
 | preamble {
 self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
 } expr[context] {
-$worlds = $expr.worlds
+$result = $expr.result
 }
 
 | expr[context] {
 self._solver = Solver(m())
-$worlds = $expr.worlds
+$result = $expr.result
 }
 
 ;
@@ -318,12 +318,12 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [Context nt] returns [list[World] worlds] : 
+expr [Context nt] returns [Result result] : 
 
 // Base rules
 
 | base[nt] {
-$worlds = $base.worlds
+$result = $base.result
 self.update_sr('expr', [n('base')])
 }
 
@@ -334,11 +334,11 @@ head_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tu
 } head = base[head_nt] {
 self.guide_symbol(',')
 } ',' {
-nt = replace(nt, worlds = $head.worlds)
-tail_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_tail, nt, head_nt.typ_var)
+nt = replace(nt, worlds = $head.result.worlds)
+tail_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_tail, nt, $head.result.typ)
 } tail = expr[tail_nt] {
-nt = replace(nt, worlds = $tail.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, nt, head_nt.typ_var, tail_nt.typ_var) 
+nt = replace(nt, worlds = $tail.result.worlds)
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, nt, $head.result.typ, $tail.result.typ) 
 self.update_sr('expr', [n('base'), t(','), n('expr')])
 }
 
@@ -349,16 +349,16 @@ condition_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).disti
 } condition = expr[condition_nt] {
 self.guide_symbol('then')
 } 'then' {
-true_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, nt, condition_nt.typ_var)
+true_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, nt, $condition.result.typ)
 } true_branch = expr[true_branch_nt] {
 self.guide_symbol('else')
 } 'else' {
-false_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, nt, condition_nt.typ_var, true_branch_nt.typ_var)
+false_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, nt, $condition.result.typ, $true_branch.result.typ)
 } false_branch = expr[false_branch_nt] {
-nt = replace(nt, worlds = $condition.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_ite, nt, condition_nt.typ_var, 
-    $true_branch.worlds, true_branch_nt.typ_var, 
-    $false_branch.worlds, false_branch_nt.typ_var
+nt = replace(nt, worlds = $condition.result.worlds)
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_ite, nt, $condition.result.typ, 
+    $true_branch.result.worlds, $true_branch.result.typ, 
+    $false_branch.result.worlds, $false_branch.result.typ
 ) 
 self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 } 
@@ -367,33 +367,33 @@ self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('
 | {
 rator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_rator, nt)
 } rator = base[rator_nt] {
-nt = replace(nt, worlds = $rator.worlds)
-keychain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_keychain, nt, rator_nt.typ_var)
+nt = replace(nt, worlds = $rator.result.worlds)
+keychain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_keychain, nt, $rator.result.typ)
 } keychain[keychain_nt] {
 nt = replace(nt, worlds = keychain_nt.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_projection, nt, rator_nt.typ_var, $keychain.keys) 
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_projection, nt, $rator.result.typ, $keychain.keys) 
 self.update_sr('expr', [n('base'), n('keychain')])
 }
 
 | {
 cator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_cator, nt)
 } cator = base[cator_nt] {
-nt = replace(nt, worlds = $cator.worlds)
-argchain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_argchain, nt, cator_nt.typ_var)
+nt = replace(nt, worlds = $cator.result.worlds)
+argchain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_argchain, nt, $cator.result.typ)
 } argchain[argchain_nt] {
 nt = replace(nt, worlds = $argchain.attr.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_application, nt, cator_nt.typ_var, $argchain.attr.args)
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_application, nt, $cator.result.typ, $argchain.attr.args)
 self.update_sr('expr', [n('base'), n('argchain')])
 }
 
 | {
 arg_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_arg, nt)
 } arg = base[arg_nt] {
-nt = replace(nt, worlds = $arg.worlds)
-pipeline_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, nt, arg_nt.typ_var)
+nt = replace(nt, worlds = $arg.result.worlds)
+pipeline_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, nt, $arg.result.typ)
 } pipeline[pipeline_nt] {
 nt = replace(nt, worlds = $pipeline.attr.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, nt, arg_nt.typ_var, $pipeline.attr.cators)
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, nt, $arg.result.typ, $pipeline.attr.cators)
 self.update_sr('expr', [n('base'), n('pipeline')])
 }
 
@@ -404,15 +404,12 @@ target_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_
 } target[target_nt] {
 self.guide_symbol('in')
 } 'in' {
-nt = replace(nt, worlds = $target.worlds)
-contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, $ID.text, target_nt.typ_var)
+nt = replace(nt, worlds = $target.result.worlds)
+contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, $ID.text, $target.result.typ)
 } contin = expr[contin_nt] {
-$worlds = $contin.worlds
+$result = $contin.result
 self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
 }
-// nt = replace(nt, worlds = contin.worlds)
-// $worlds = self.guide_nonterm(ExprRule(self._solver, self._light_mode).combine_let_contin, nt, $ID.text, target_nt.typ_var, contin_nt.typ_var)
-
 
 | 'fix' {
 self.guide_symbol('(')
@@ -421,18 +418,18 @@ body_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_fi
 } body = expr[body_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $body.worlds)
-$worlds = self.collect(ExprRule(self._solver, self._light_mode).combine_fix, nt, body_nt.typ_var)
+nt = replace(nt, worlds = $body.result.worlds)
+$result = self.collect(ExprRule(self._solver, self._light_mode).combine_fix, nt, $body.result.typ)
 self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 }
 
 ;
 
-base [Context nt] returns [list[World] worlds] : 
+base [Context nt] returns [Result result] : 
 // Introduction rules
 
 | '@' {
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_unit, nt)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_unit, nt)
 self.update_sr('base', [t('@')])
 } 
 
@@ -442,34 +439,34 @@ self.guide_terminal('ID')
 } ID {
 body_nt = self.guide_nonterm(BaseRule(self._solver, self._light_mode).distill_tag_body, nt, $ID.text)
 } body = base[body_nt] {
-nt = replace(nt, worlds = $body.worlds)
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_tag, nt, $ID.text, body_nt.typ_var)
+nt = replace(nt, worlds = $body.result.worlds)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_tag, nt, $ID.text, $body.result.typ)
 self.update_sr('base', [t('~'), ID, n('base')])
 }
 
 | record[nt] {
 branches = $record.branches
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_record, nt, branches)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_record, nt, branches)
 self.update_sr('base', [n('record')])
 }
 
 | {
 } function[nt] {
 branches = $function.branches
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_function, nt, branches)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_function, nt, branches)
 self.update_sr('base', [n('function')])
 }
 
 // Elimination rules
 
 | ID {
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_var, nt, $ID.text)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_var, nt, $ID.text)
 self.update_sr('base', [ID])
 } 
 
 | argchain[nt] {
 nt = replace(nt, worlds = $argchain.attr.worlds)
-$worlds = self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, nt, $argchain.attr.args)
+$result = self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, nt, $argchain.attr.args)
 self.update_sr('base', [n('argchain')])
 } 
 
@@ -486,7 +483,7 @@ self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_single_body, nt, $ID.text)
 } body = expr[body_nt] {
-$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.worlds, body_nt.typ_var)
+$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.result.worlds, $body.result.typ)
 self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 }
 
@@ -497,10 +494,10 @@ self.guide_symbol('=')
 } '=' {
 body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_body, nt, $ID.text)
 } body = expr[body_nt] {
-tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_tail, nt, $ID.text, body_nt.typ_var)
+tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_tail, nt, $ID.text, $body.result.typ)
 } tail = record[tail_nt] {
 tail_branches = $tail.branches
-$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, $ID.text, $body.worlds, body_nt.typ_var, tail_branches)
+$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, $ID.text, $body.result.worlds, $body.result.typ, tail_branches)
 self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 }
 
@@ -515,7 +512,7 @@ self.guide_symbol('=>')
 } '=>' {
 body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_single_body, nt, $pattern.attr)
 } body = expr[body_nt] {
-$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_single, nt, $pattern.attr.typ, $body.worlds, body_nt.typ_var)
+$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_single, nt, $pattern.attr.typ, $body.result.worlds, $body.result.typ)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
@@ -525,10 +522,10 @@ self.guide_symbol('=>')
 } '=>' {
 body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_body, nt, $pattern.attr)
 } body = expr[body_nt] {
-tail_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_tail, nt, $pattern.attr.typ, body_nt.typ_var)
+tail_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_tail, nt, $pattern.attr.typ, $body.result.typ)
 } tail = function[tail_nt] {
 tail_branches = $tail.branches
-$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, nt, $pattern.attr.typ, $body.worlds, body_nt.typ_var, tail_branches)
+$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, nt, $pattern.attr.typ, $body.result.worlds, $body.result.typ, tail_branches)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 
@@ -561,8 +558,8 @@ content_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).dis
 } content = expr[content_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $content.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, nt, content_nt.typ_var)
+nt = replace(nt, worlds = $content.result.worlds)
+$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, nt, $content.result.typ)
 self.update_sr('argchain', [t('('), n('expr'), t(')')])
 }
 
@@ -572,10 +569,10 @@ head_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distil
 } head = expr[head_nt] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $head.worlds)
+nt = replace(nt, worlds = $head.result.worlds)
 } tail = argchain[nt] {
 nt = replace(nt, worlds = $tail.attr.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, nt, head_nt.typ_var, $tail.attr.args)
+$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, nt, $head.result.typ, $tail.attr.args)
 self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 }
 
@@ -586,39 +583,39 @@ pipeline [Context nt] returns [PipelineAttr attr] :
 | '|>' {
 content_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_single_content, nt) 
 } content = expr[content_nt] {
-nt = replace(nt, worlds = $content.worlds)
-$attr = self.collect(PipelineRule(self._solver, self._light_mode).combine_single, nt, content_nt.typ_var)
+nt = replace(nt, worlds = $content.result.worlds)
+$attr = self.collect(PipelineRule(self._solver, self._light_mode).combine_single, nt, $content.result.typ)
 self.update_sr('pipeline', [t('|>'), n('expr')])
 }
 
 | '|>' {
 head_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_head, nt) 
 } head = expr[head_nt] {
-nt = replace(nt, worlds = $head.worlds)
-tail_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_tail, nt, head_nt.typ_var) 
+nt = replace(nt, worlds = $head.result.worlds)
+tail_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_tail, nt, $head.result.typ) 
 } tail = pipeline[tail_nt] {
 nt = replace(nt, worlds = $tail.attr.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode, nt).combine_cons, nt, head_nt.typ_var, $tail.attr.cators)
+$attr = self.collect(ArgchainRule(self._solver, self._light_mode, nt).combine_cons, nt, $head.result.typ, $tail.attr.cators)
 self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 }
 
 ;
 
 
-target [Context nt] returns [list[Worlds] worlds]:
+target [Context nt] returns [Result result]:
 
 | '=' {
 expr_nt = self.guide_nonterm(lambda: nt)
 } expr[expr_nt] {
-$worlds = $expr.worlds
+$result = $expr.result
 self.update_sr('target', [t('='), n('expr')])
 }
 
 | ':' typ '=' {
 expr_nt = self.guide_nonterm(lambda: nt)
 } expr[expr_nt] {
-nt = replace(nt, worlds = $expr.worlds)
-$worlds = self.collect(TargetRule(self._solver, self._light_mode).combine_anno, nt, $typ.combo) 
+nt = replace(nt, worlds = $expr.result.worlds)
+$result = self.collect(TargetRule(self._solver, self._light_mode).combine_anno, nt, $typ.combo) 
 self.update_sr('target', [t(':'), TID, t('='), n('expr')])
 }
 ;

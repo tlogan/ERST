@@ -252,13 +252,13 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, LeastFP
 class Branch:
     worlds : list[World]
     pattern : Typ 
-    body : TVar
+    body : Typ
 
 @dataclass(frozen=True, eq=True)
 class RecordBranch:
     worlds : list[World]
     label : str 
-    body : TVar
+    body : Typ
 
 
 '''
@@ -509,12 +509,8 @@ class Terminal:
 
 @dataclass(frozen=True, eq=True)
 class Context:
-    name : str 
     enviro : PMap[str, Typ] 
     worlds : list[World]
-    typ_var : TVar 
-    is_applicator : bool = False
-
 
 '''
 NOTE: 
@@ -1363,7 +1359,7 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
         if isinstance(st.upper, TVar) and st.upper.id not in world.freezer  
     ) 
 
-default_context = Context('expr', m(), [World(s(), s(), s())], TVar("G0"))
+default_context = Context(m(), [World(s(), s(), s())])
 
 class Solver:
     _type_id : int
@@ -2577,67 +2573,61 @@ class Rule:
         # TODO: split all rules into two modes
         self.light_mode = light_mode
 
-    def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG evolve_worlds
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# nt.enviro: {nt.enviro}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-        return [
-            m1
-            for m0 in nt.worlds
-            for m1 in self.solver.solve(m0, 
-                t, 
-                nt.typ_var
-            )
-        ]
+#     def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG evolve_worlds
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # nt.enviro: {nt.enviro}
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+#         return [
+#             m1
+#             for m0 in nt.worlds
+#             for m1 in self.solver.solve(m0, 
+#                 t, 
+#                 nt.typ_var
+#             )
+#         ]
+
+@dataclass(frozen=True, eq=True)
+class Result:
+    worlds: list[World]
+    typ: Typ
 
 class BaseRule(Rule):
 
-    def combine_var(self, nt : Context, id : str) -> list[World]:
-        return self.evolve_worlds(nt, nt.enviro[id])
+    def combine_var(self, nt : Context, id : str) -> Result:
+        return Result(nt.worlds, nt.enviro[id])
 
-    def combine_assoc(self, nt : Context, argchain : list[TVar]) -> list[World]:
+    def combine_assoc(self, nt : Context, argchain : list[Typ]) -> Result:
         if len(argchain) == 1:
-            return self.evolve_worlds(nt, argchain[0])
+            return Result(nt.worlds, argchain[0])
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
             result = ExprRule(self.solver, self.light_mode).combine_application(nt, applicator, arguments) 
             return result
 
-    def combine_unit(self, nt : Context) -> list[World]:
-        return self.evolve_worlds(nt, TUnit())
+    def combine_unit(self, nt : Context) -> Result:
+        return Result(nt.worlds, TUnit())
 
     def distill_tag_body(self, nt : Context, label : str) -> Context:
-        body_var = self.solver.fresh_type_var()
         worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = self.evolve_worlds(nt, TTag(label, body_var))
-        return Context('expr', nt.enviro, worlds, body_var)
+        return Context(nt.enviro, worlds)
 
-    def combine_tag(self, nt : Context, label : str, body : TVar) -> list[World]:
-        # TODO: remove existential check now that the types are simply variables
-        # '''
-        # move existential outside
-        # '''
-        # if isinstance(body, Exi):
-        #     return self.evolve_worlds(nt, Exi(body.ids, body.constraints, TTag(label, body.body)))
-        # else:
-        # TODO: note that this constraint is redundant with constraint in distill rule
-        # - consider removing redundancy
-        return self.evolve_worlds(nt, TTag(label, body))
+    def combine_tag(self, nt : Context, label : str, body : TVar) -> Result:
+        return Result(nt.worlds, TTag(label, body))
 
-    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> list[World]:
+    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> Result:
         result = Top() 
         for branch in reversed(branches): 
             for branch_world in reversed(branch.worlds):
                 new_world = branch_world
 
-                (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-                new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
+                # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
+                body_typ = branch.body
+                # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
 
                 field = TField(branch.label, body_typ)
                 ######## NOTE: no generalization since the negative position is merely a label #############
@@ -2656,9 +2646,9 @@ class BaseRule(Rule):
         end for 
         '''
 
-        return self.evolve_worlds(nt, simplify_typ(result))
+        return Result(nt.worlds, simplify_typ(result))
 
-    def combine_function(self, nt : Context, branches : list[Branch]) -> list[World]:
+    def combine_function(self, nt : Context, branches : list[Branch]) -> Result:
         augmented_branches = augment_branches_with_diff(branches)
         '''
         Example
@@ -2679,10 +2669,15 @@ class BaseRule(Rule):
                 '''
                 new_world = branch_world
 
-                (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-                new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
-                (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
-                new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
+                # TODO: ensure that it's safe to remove used constraints after interpretation
+                # - safety criteria: interpreted variables are NOT used elsewhere 
+                # - ERROR: safety criteria doesn't seem to be met by branch body
+                # (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
+                return_typ = branch.body
+                # new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
+                # (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
+                param_typ = branch.pattern
+                # new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
                 imp = Imp(param_typ, return_typ)
 
                 constrained_branches.append((new_world, imp))
@@ -2694,7 +2689,14 @@ class BaseRule(Rule):
         '''
         if len(constrained_branches) == 1:
             new_world, imp = constrained_branches[0]
-            return self.solver.solve(new_world, simplify_typ(imp), nt.typ_var)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function SINGLE BRANCH
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+result: {concretize_typ(simplify_typ(imp))}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            return Result([new_world], simplify_typ(imp))
         else:
             result = Top()
             for new_world, imp in constrained_branches:
@@ -2742,56 +2744,38 @@ class BaseRule(Rule):
                 #############################################
                 result = Inter(generalized_case, result)
 
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# new_world.constraints:
-# {concretize_constraints(new_world.constraints)}
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+new_world.constraints:
+{concretize_constraints(new_world.constraints)}
 
-# new_world.freezer: {new_world.freezer} 
+new_world.freezer: {new_world.freezer} 
 
-# new_world.relids: {new_world.relids} 
+new_world.relids: {new_world.relids} 
 
-# reachable_constraints:
-# {concretize_constraints(reachable_constraints)}
+reachable_constraints:
+{concretize_constraints(reachable_constraints)}
 
-# existential_constraints:
-# {concretize_constraints(existential_constraints)}
+existential_constraints:
+{concretize_constraints(existential_constraints)}
 
-# imp:
-# {concretize_typ(imp)}
+imp:
+{concretize_typ(imp)}
 
-# body_typ:
-# {concretize_typ(body)}
+body_typ:
+{concretize_typ(body)}
 
 
-# result:
-# {concretize_typ(result)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
+result:
+{concretize_typ(result)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
             '''
             end for
             '''
-            worlds = self.evolve_worlds(nt, simplify_typ(result))
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function iteration
-# ~~~~~~~~~~~~~~~~~~~~~
-# choice[0]: {concretize_typ(choice[0])}
-# choice[1]: {concretize_typ(choice[1])}
-
-# param_typ: {concretize_typ(param_typ)}
-# return_typ: {concretize_typ(return_typ)}
-
-# nt.env: {nt.enviro}
-# world.freezer: {world.freezer}
-# world.constraints: {concretize_constraints(tuple(world.constraints))}
-
-# generalized_case: {concretize_typ(generalized_case)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-            return worlds
+            return Result(nt.worlds, simplify_typ(result))
         '''
         end if/else
         '''
@@ -2802,113 +2786,48 @@ class BaseRule(Rule):
 class ExprRule(Rule):
 
     def distill_tuple_head(self, nt : Context) -> Context:
-        head_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = self.evolve_worlds(nt, Inter(TField('head', head_var), TField('tail', Bot())))
-        return Context('expr', nt.enviro, worlds, head_var) 
+        return nt
 
-    def distill_tuple_tail(self, nt : Context, head_var : TVar) -> Context:
-        tail_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = self.evolve_worlds(nt,Inter(TField('head', head_var), TField('tail', tail_var)))
-        return Context('expr', nt.enviro, worlds, tail_var) 
+    def distill_tuple_tail(self, nt : Context, head_typ : Typ) -> Context:
+        return nt 
 
-    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> list[World]:
-        return self.evolve_worlds(nt, Inter(TField('head', head_var), TField('tail', tail_var)))
+    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> Result:
+        return Result(nt.worlds, Inter(TField('head', head_var), TField('tail', tail_var)))
 
     def distill_ite_condition(self, nt : Context) -> Context:
-        condition_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         nt.typ_var,
-        #         Unio(TTag('false', TUnit()), TTag('true', TUnit()))
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, condition_var)
+        return nt
 
-    def distill_ite_true_branch(self, nt : Context, condition_var : TVar) -> Context:
-        '''
-        Find refined prescription Q in the :true? case given (condition : A), and unrefined prescription B.
-        (:true? @ -> Q) <: (A -> B) 
-        '''
-        true_body_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         Imp(TTag('true', TUnit()), true_body_var),
-        #         Imp(true_body_var, nt.typ_var)
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, true_body_var) 
+    def distill_ite_true_branch(self, nt : Context, condition_typ : Typ) -> Context:
+        return nt 
 
-    def distill_ite_false_branch(self, nt : Context, condition_var : TVar, true_body_var : TVar) -> Context:
-        '''
-        Find refined prescription Q in the :false? case given (condition : A), and unrefined prescription B.
-        (:false? @ -> Q) <: (A -> B) 
-        '''
-        false_body_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         Imp(TTag('false', TUnit()), false_body_var),
-        #         Imp(condition_var, nt.typ_var)
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, false_body_var) 
+    def distill_ite_false_branch(self, nt : Context, condition_typ : TVar, true_body_typ : TVar) -> Context:
+        return nt
 
-    def combine_ite(self, nt : Context, condition_var : TVar, 
-                true_body_worlds: list[World], true_body_var : TVar, 
-                false_body_worlds: list[World], false_body_var : TVar
-    ) -> list[World]: 
+    def combine_ite(self, nt : Context, condition_typ : Typ, 
+                true_body_worlds: list[World], true_body_typ : Typ, 
+                false_body_worlds: list[World], false_body_typ :Typ 
+    ) -> Result: 
         branches = [
-            Branch(true_body_worlds, TTag('true', TUnit()), true_body_var), 
-            Branch(false_body_worlds, TTag('false', TUnit()), false_body_var)
+            Branch(true_body_worlds, TTag('true', TUnit()), true_body_typ), 
+            Branch(false_body_worlds, TTag('false', TUnit()), false_body_typ)
         ]
-        cator_var = self.solver.fresh_type_var()
-        function_nt = replace(nt, typ_var = cator_var)
-        function_worlds = BaseRule(self.solver, self.light_mode).combine_function(function_nt, branches)
-        nt = replace(nt, worlds = function_worlds)
+        function_result = BaseRule(self.solver, self.light_mode).combine_function(nt, branches)
+        nt = replace(nt, worlds = function_result.worlds)
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # DEBUG ite len(function_worlds): {len(function_worlds)}
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
-        arguments = [condition_var]
-        return self.combine_application(nt, cator_var, arguments) 
+        arguments = [condition_typ]
+        return self.combine_application(nt, function_result.typ, arguments) 
 
     def distill_projection_rator(self, nt : Context) -> Context:
-        # the type of the record being projected from
-        rator_var = self.solver.fresh_type_var()
-        return Context('expr', nt.enviro, nt.worlds, rator_var)
+        return nt
 
-    def distill_projection_keychain(self, nt : Context, rator_var : TVar) -> Context: 
-        keychain_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         keychain_var,
-        #         rator_var 
-        #     )
-        # ]
-        return Context('keychain', nt.enviro, worlds, keychain_var)
+    def distill_projection_keychain(self, nt : Context, rator_typ : Typ) -> Context: 
+        return nt
 
-
-    def combine_projection(self, nt : Context, record_var : TVar, keys : list[str]) -> list[World]: 
+    def combine_projection(self, nt : Context, record_typ : Typ, keys : list[str]) -> Result: 
         worlds = nt.worlds
         for key in keys:
             result_var = self.solver.fresh_type_var()
@@ -2918,54 +2837,26 @@ class ExprRule(Rule):
                 for m1 in self.solver.solve(m0, record_var, TField(key, result_var))
             ]
             record_var = result_var
-
-        worlds = [
-            m1
-            for m0 in worlds
-            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
-        ]
-        return worlds 
+        return Result(worlds, result_var)
 
     #########
 
     def distill_application_cator(self, nt : Context) -> Context: 
-        cator_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         cator_var,
-        #         Imp(Bot(), Top()) 
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, cator_var)
+        return nt
 
-    def distill_application_argchain(self, nt : Context, cator_var : TVar) -> Context: 
-        next_cator_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         next_cator_var,
-        #         cator_var
-        #     )
-        # ]
-        return Context('argchain', nt.enviro, worlds, next_cator_var, True)
+    def distill_application_argchain(self, nt : Context, cator_typ : Typ) -> Context: 
+        return nt
 
-    def combine_application(self, nt : Context, cator_var : TVar, arg_vars : list[TVar]) -> list[World]: 
+    def combine_application(self, nt : Context, cator_typ : Typ, arg_typs : list[Typ]) -> Result: 
         worlds = nt.worlds 
-        for arg_var in arg_vars:
+        for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
             new_worlds = []
             for world in worlds:
                 # NOTE: interpretation to keep types and constraints compact 
-                cator_typ, cator_used_constraints = self.solver.interpret_with_polarity(True, world, cator_var, s())
+                # cator_typ, cator_used_constraints = self.solver.interpret_with_polarity(True, world, cator_var, s())
                 ignored_ids = get_freezer_adjacent_learnable_ids(world)
-                arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_var, ignored_ids)
+                # arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_typ, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
 #                 print(f"""
@@ -2992,7 +2883,7 @@ class ExprRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
-                world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
+                # world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
                 new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
             worlds = new_worlds
 
@@ -3003,91 +2894,33 @@ class ExprRule(Rule):
             #     for m1 in self.solver.solve(m0, cator_var, Imp(arg_var, result_var))
             # ] 
             ###########################
-            cator_var = result_var
+            cator_typ = result_var
 
-        worlds = [
-            m1
-            for m0 in worlds
-            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
-        ]
-
-        ########################
-        # print(f"""
-        # ~~~~~~~~~~~~~~
-        # DEBUG application results 
-        # len(worlds): {len(worlds)}
-        # ~~~~~~~~~~~~~~
-        # """)
-
-        # for world in worlds:
-        #     print(f"""
-        #     ~~~~~~~~~~~~~~
-        #     DEBUG application results
-        #     ~~~~~~~~~~~~~~
-        #     world.freezer: {tuple(world.freezer)}
-
-        #     world.constraints: 
-        #     {list_out_constraints(world.constraints, 3)}
-
-        #     cator_var: {cator_var}
-        #     arg_var: {arg_var}
-
-        #     cator_typ: {concretize_typ(cator_typ)}
-        #     arg_typ: {concretize_typ(arg_typ)}
-        #     ~~~~~~~~~~~~~~
-        #     """)
-        ########################
-
-        return worlds
+        return Result(worlds, result_var)
 
     #########
     def distill_funnel_arg(self, nt : Context) -> Context: 
-        arg_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        return Context('expr', nt.enviro, worlds, arg_var)
+        return nt
 
-    def distill_funnel_pipeline(self, nt : Context, arg_var : TVar) -> Context: 
-        typ_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         typ_var,
-        #         arg_var
-        #     )
-        # ]
-        return Context('pipeline', nt.enviro, worlds, typ_var)
+    def distill_funnel_pipeline(self, nt : Context, arg_typ : TVar) -> Context: 
+        return nt
 
-    def combine_funnel(self, nt : Context, arg_var : TVar, cator_vars : list[TVar]) -> list[World]: 
+    def combine_funnel(self, nt : Context, arg_typ : Typ, cator_typs : list[Typ]) -> Result: 
         worlds = nt.worlds
-        for cator_var in cator_vars:
-            # print(f"""
-            # ~~~~~~~~
-            # DEBUG funnel
-            # cator_var: {cator_var}
-            # ~~~~~~~~
-            # """)
-            result_var = self.solver.fresh_type_var() 
-            app_nt = replace(nt, worlds = worlds, typ_var = result_var) 
-            worlds = self.combine_application(app_nt, cator_var, [arg_var])
-            arg_var = result_var 
+        for cator_typ in cator_typs:
+            app_nt = replace(nt, worlds = worlds) 
+            app_result = self.combine_application(app_nt, cator_typ, [arg_typ])
+            worlds = app_result.worlds
+            result_typ = app_result.typ
+            arg_typ = result_typ 
 
         # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
-        worlds = [
-            m1
-            for m0 in worlds
-            for m1 in self.solver.solve(m0, result_var, nt.typ_var)
-        ]
-        return worlds 
+        return Result(worlds, result_typ)
 
     def distill_fix_body(self, nt : Context) -> Context:
-        body_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        return Context('expr', nt.enviro, worlds, body_var)
+        return nt
 
-    def combine_fix(self, nt : Context, body_var : TVar) -> list[World]:
+    def combine_fix(self, nt : Context, body_typ : Typ) -> Result:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -3111,9 +2944,9 @@ class ExprRule(Rule):
             Construct a least fixed point type over union from the inner worlds
             '''
 
-            body_interp = self.solver.interpret_upper_id(outer_world, body_var.id)
-            (body_typ, body_used_constraints) = (body_interp if body_interp else (body_var, s())) 
-            outer_world = replace(outer_world, constraints = outer_world.constraints.difference(body_used_constraints))
+            # body_interp = self.solver.interpret_upper_id(outer_world, body_var.id)
+            # (body_typ, body_used_constraints) = (body_interp if body_interp else (body_var, s())) 
+            # outer_world = replace(outer_world, constraints = outer_world.constraints.difference(body_used_constraints))
 
             outer_worlds.append(outer_world)
             inner_worlds = self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
@@ -3126,6 +2959,7 @@ class ExprRule(Rule):
 
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
+                # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
                 left_interp = self.solver.interpret_lower_id(inner_world, in_typ.id)
                 (left_typ, left_used_constraints) = (
                     left_interp 
@@ -3144,7 +2978,11 @@ class ExprRule(Rule):
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
 
+                # TODO: it may not be safe to remove used_constraints from multihop interpretation 
+                # TODO: need a safety argument for removing used_constraints
+                # - argument: constriants aren't removed; but are merely rerwritten
                 self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
+                # self_interp = self.solver.interpret_lower_id(inner_world, self_typ.id)
 
                 self_used_constraints = s()
                 if self_interp and isinstance(self_interp[0], Imp):
@@ -3152,6 +2990,28 @@ class ExprRule(Rule):
                     self_right = self_interp[0].consq
 
                     self_used_constraints = self_interp[1]
+                    # TODO: determine where G1 comes from
+                    # - since G1 is not used elsewhere it is safe to remove
+                    # - how can we determine that it's not used elsewhere?
+
+
+
+                    print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix --- SELF used constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+self_used_constraints:
+{concretize_constraints(self_used_constraints)}
+
+self_used_constraints.intersection(outer_world.constraints):
+{concretize_constraints(self_used_constraints.intersection(outer_world.constraints))}
+
+body_typ: {concretize_typ(body_typ)}
+in_typ: {in_typ.id}
+out_typ: {out_typ.id}
+self_typ: {self_typ.id}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    """)
                     IH_rel_constraints = s(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
                     IH_left_constraints = s(Subtyping(self_left, IH_typ))
 
@@ -3169,6 +3029,8 @@ class ExprRule(Rule):
                 #     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 # ) , inner_world.freezer, inner_world.relids)
 
+                # NOTE: assert that used constaints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
+                assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
                 reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                 rel_constraints = IH_rel_constraints.union(reachable_constraints)
@@ -3231,20 +3093,16 @@ class ExprRule(Rule):
         #     ) , world.freezer, world.relids)
         #     for world in nt.worlds
         # ])
-        nt = replace(nt, worlds = outer_worlds)
-        new_worlds = self.evolve_worlds(nt, result)
+        return Result(outer_worlds, result)
         ##################################
-        return new_worlds
 
     
     def distill_let_target(self, nt : Context, id : str) -> Context:
-        typ_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        return Context('target', nt.enviro, worlds, typ_var)
+        return nt
 
     def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
         enviro = nt.enviro.set(id, target)
-        return Context('expr', enviro, nt.worlds, nt.typ_var)
+        return Context(enviro, nt.worlds)
 
 '''
 end ExprRule
@@ -3254,11 +3112,7 @@ end ExprRule
 class RecordRule(Rule):
 
     def distill_single_body(self, nt : Context, id : str) -> Context:
-        body_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = self.evolve_worlds(nt, TField(id, body_var))
-        return Context('expr', nt.enviro, worlds, body_var) 
+        return nt
 
     def combine_single(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar) -> list[RecordBranch]:
         return [RecordBranch(body_worlds, label, body_var)]
@@ -3267,11 +3121,7 @@ class RecordRule(Rule):
         return self.distill_single_body(nt, id)
 
     def distill_cons_tail(self, nt : Context, id : str, body_var : TVar) -> Context:
-        tail_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = self.evolve_worlds(nt, Inter(TField(id, body_var), tail_var))
-        return Context('record', nt.enviro, worlds, tail_var) 
+        return nt
 
     def combine_cons(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
         return self.combine_single(nt, label, body_worlds, body_var) + tail
@@ -3280,19 +3130,8 @@ class FunctionRule(Rule):
 
     def distill_single_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
         enviro = pattern_attr.enviro
-
-        body_var = self.solver.fresh_type_var()
         worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         nt.typ_var, Imp(pattern_typ, body_var)
-        #     )
-        # ]
-
-        return Context('expr', nt.enviro.update(enviro), worlds, body_var)
+        return Context(nt.enviro.update(enviro), worlds)
 
     def combine_single(self, nt : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar) -> list[Branch]:
         """
@@ -3327,17 +3166,7 @@ class KeychainRule(Rule):
 
 class ArgchainRule(Rule):
     def distill_single_content(self, nt : Context) -> Context:
-        content_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         nt.typ_var, Imp(typ_var, Top())
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, content_var, False)
+        return nt
 
     def distill_cons_head(self, nt : Context) -> Context:
         return self.distill_single_content(nt)
@@ -3353,38 +3182,13 @@ class ArgchainRule(Rule):
 class PipelineRule(Rule):
 
     def distill_single_content(self, nt : Context) -> Context:
-        content_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         content_var, Imp(nt.typ_var, Top())
-        #     )
-        # ]
-        return Context('expr', nt.enviro, worlds, content_var)
-
+        return nt
 
     def distill_cons_head(self, nt : Context) -> Context:
         return self.distill_single_content(nt)
 
     def distill_cons_tail(self, nt : Context, head_var : TVar) -> Context:
-        '''
-        cut the head with the previous tyption
-        resulting in a new tyption of what can cut the next element in the tail
-        '''
-        tail_var = self.solver.fresh_type_var()
-        worlds = nt.worlds
-        # TODO: add constraints in distill for type-guided program synthesis 
-        # worlds = [
-        #     m1
-        #     for m0 in nt.worlds
-        #     for m1 in self.solver.solve(m0, 
-        #         head_var, Imp(nt.typ_var, tail_var)
-        #     )
-        # ]
-        return Context('pipeline', nt.enviro, worlds, tail_var)
+        return nt
 
     def combine_single(self, nt : Context, content_var : TVar) -> PipelineAttr:
         return PipelineAttr(nt.worlds, [content_var])
@@ -3502,14 +3306,6 @@ class RecordPatternRule(Rule):
         return PatternAttr(enviro, pattern)
 
 class TargetRule(Rule):
-    def combine_anno(self, nt : Context, anno_typ : Typ) -> list[World]: 
-        worlds = [
-            m1
-            for m0 in nt.worlds
-            for m1 in self.solver.solve(m0, 
-                nt.typ_var,
-                anno_typ
-            )
-        ]
-        return worlds
+    def combine_anno(self, nt : Context, anno_typ : Typ) -> Result: 
+        return Result(nt.worlds, anno_typ)
 

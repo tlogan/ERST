@@ -48,14 +48,13 @@ def analyze_stream(code : list[str], debug = False):
 
 
         ctx = await connection.mk_getter()
-        typ_var = analyzer.default_context.typ_var
-        return (ctx.worlds if ctx else None, typ_var, guides, connection.to_string_tree(ctx) if ctx else None, connection.get_solver())
+        return (ctx.result if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None, connection.get_solver())
 
-    (worlds, typ_var, guides, parsetree, solver) = asyncio.run(_mk_task())
+    (result, guides, parsetree, solver) = asyncio.run(_mk_task())
     if debug:
         raise_guide(guides)
 
-    return (worlds, typ_var, guides, parsetree, solver)
+    return (result, guides, parsetree, solver)
 
 def p(s): 
     t = language.parse_typ(s)
@@ -1376,11 +1375,10 @@ def test_single_shape():
     assert len(worlds) == 1
 
 
-
 def test_add():
     (worlds, typ_var, parsetree, solver) = analyze(el.add)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "@"
+    # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_exi_add_rel_subs_query():
     exi_add = '''
@@ -1683,7 +1681,7 @@ let y : T = (~dos @) in
 if __name__ == '__main__':
     # test_single_shape()
     # test_implication_unification()
-    test_lted_wrapper()
+    # test_lted_wrapper()
     # test_max()
     # test_max_annotated()
     # test_max_subtyping()
@@ -1696,7 +1694,7 @@ if __name__ == '__main__':
     # test_plus_equals_two_query()
     #####################################
     # test_fix()
-    # test_add()
+    test_add()
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()

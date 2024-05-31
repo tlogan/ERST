@@ -2,9 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- ensure that it's safe to remove constraints
-    - criteria: the interpreted variable in the constraint is guaranteed to not be used again elsewhere 
-    - redo typing rules to avoid extra variables; return fresh variable rather than constraining passed in variable.
 - update disjoint test to handle disjoint constraints in intersected universals 
     - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
     - consider if type needs to be constructed differently
@@ -64,6 +61,11 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how it's same to remove constraints used in interpretation if the constraints are local 
+    - as seen in fix rule
+- note how subtyping/subset inclusion is similar to implication with an important distinction
+    - that being: A <: B means a proof of A can be used as a proof of B
+    - A -> B means a proof of B can be constructed with the option of using a proof of A
 - note how uncaught exception is used to indicate global failure, and empty result indicates local failure 
     - local failure can be composed with union to produce global success.
 - note importance of soundly checking for inhabitability when learning upper bounds of variables

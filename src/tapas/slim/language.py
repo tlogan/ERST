@@ -65,7 +65,7 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
 
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
-            elif ctx.worlds: 
+            elif ctx.result: 
                 await output.put(Done())
                 break
             else:
@@ -147,7 +147,7 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     tc = parser.typ()
     return tc.combo
 
-def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analyzer.Solver]:
+def analyze(code : str) -> tuple[list[analyzer.World], analyzer.Typ, str, analyzer.Solver]:
     try:
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
@@ -155,17 +155,17 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.TVar, str, analy
         parser = SlimParser(token_stream)
         parser.init()
         tc = parser.program(analyzer.default_context)
-        if tc.worlds == None:
+        if tc.result == None:
             raise Exception("Parsing Error")
         else:
-            return (tc.worlds, analyzer.default_context.typ_var, tc.toStringTree(recog=parser), parser._solver)
+            return (tc.result.worlds, tc.result.typ, tc.toStringTree(recog=parser), parser._solver)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
-        return ([], analyzer.default_context.typ_var, "", parser._solver)
+        return ([], analyzer.Bot(), "", parser._solver)
     except analyzer.InhabitableError:
-        return ([], analyzer.default_context.typ_var, "", parser._solver)
+        return ([], analyzer.Bot(), "", parser._solver)
 
 def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     input_stream = InputStream(code)
@@ -174,11 +174,11 @@ def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     parser = SlimParser(token_stream)
     parser.init(light_mode = True)
     tc = parser.program(analyzer.default_context)
-    if tc.worlds == None:
+    if tc.result == None:
         raise Exception("Parsing Error")
     else:
-        assert len(tc.worlds) == 1
-        world = tc.worlds[0]
+        assert len(tc.result.worlds) == 1
+        world = tc.result.worlds[0]
         assert not world.freezer
         assert not world.relids
         return world.constraints 
