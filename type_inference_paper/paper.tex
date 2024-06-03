@@ -34,7 +34,7 @@
     % morekeywords={let, fix, in}
 }
 
-\title{Extrinsic Relational Type Inference}
+\title{Extrinsic Relational Subtyping}
 % \author{}
 % \date{}
 
@@ -573,16 +573,20 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \code{EXI [$\widebar{\alpha}$ $Q$] $\tau$} &\C{existential / indexed union}
   \\
-  \I \code{ALL [$\alpha$<:$\tau$] $\tau$} &\C{universal / indexed intersection}
+  \I \code{ALL [$\widebar{\alpha}$ $Q$] $\tau$} &\C{universal / indexed intersection}
   \\
-  \I \code{LFP $\alpha$ $\tau$} &\C{induction}
+  \I \code{LFP $\alpha$|$\tau$} &\C{induction}
   \\
-  Q ::= &\C{qualification}
+  Q ::= &\C{subtyping qualification}
   \\
   \I \code{;} &\C{empty}
   \\
   \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
   \\
+  \\
+  \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
+  \\
+  \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
 %   \\
 %   \Gamma ::= &\C{typing env}
 %   \\
@@ -792,7 +796,207 @@ The right universal rule checks that subtyping holds for all variations of the p
 the variable's upper bound.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving 
+%% Subtyping Solving (Variables) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+\end{flalign*}
+
+\begin{mathpar}
+
+  \inferrule[LowerExis] {
+    \left< \Delta, \Omega \right>
+    \claim 
+    Q
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \tau_u
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
+    \claim 
+    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+    \subtypes 
+    \tau_u
+  }
+
+
+  \inferrule[UpperExis] {
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_u
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    Q
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+  }
+
+  \inferrule[LearnableSkolemLowerVar] {
+    \alpha \notin \Omega 
+    \\
+    strongest\_upper(\Delta, \alpha) = \alpha' 
+    \\
+    \alpha' \in \Omega 
+    \\\\
+    strongest\_upper(\Delta, \alpha') = \tau_l
+    \\
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta \cup \{\code{$\alpha$<:$\tau_u$}\}, \Omega \right> \claim \alpha \subtypes \tau_u
+  }
+
+  \inferrule[LearnableLowerVar] {
+    \alpha \notin \Omega 
+    \\
+    strongest\_upper(\Delta, \alpha) = \tau_l
+    \\
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta \cup \{\code{$\alpha$<:$\tau_u$}\}, \Omega \right> \claim \alpha \subtypes \tau_u
+  }
+
+  \inferrule[LearnableSkolemUpperVar] {
+    \alpha \notin \Omega 
+    \\
+    weakest\_lower(\Delta, \alpha) = \alpha'
+    \\
+    \alpha' \in \Omega 
+    \\\\
+    weakest\_lower(\Delta, \alpha') = \tau_u
+    \\
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
+    \claim 
+    \tau_l \subtypes \alpha
+  }
+
+  \inferrule[LearnableUpperVar] {
+    \alpha \notin \Omega 
+    \\
+    weakest\_lower(\Delta, \alpha) = \tau_u
+    \\
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
+    \claim 
+    \tau_l \subtypes \alpha
+  }
+
+
+  \inferrule[SkolemLowerVar] {
+    \alpha \in \Omega
+    \\
+    weakest\_lower(\Delta, \alpha) = \tau_l
+    \\
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta, \Omega \right> \claim \alpha \subtypes \tau_u
+  }
+
+
+  \inferrule[SkolemUpperVar] {
+    \alpha \in \Omega
+    \\
+    strongest\_upper(\Delta, \alpha) = \tau_u
+    \\
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta, \Omega \right> \claim \tau_i \subtypes \alpha
+  }
+
+
+  \inferrule[LowerAll] {
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_u
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    Q
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+    \subtypes 
+    \tau_u
+  }
+
+  \inferrule[UpperAll] {
+    \left< \Delta, \Omega \right>
+    \claim 
+    Q
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \tau_u
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+  }
+
+
+
+
+\end{mathpar}
+\caption{Subtyping (Variables)}
+\label{fig:subtyping_variables}
+\end{figure*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Subtyping Solving (Multiple) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\left< \Delta, \Omega \right> \claim Q}&
+\end{flalign*}
+
+\begin{mathpar}
+
+  \inferrule[Extension] {
+    \left< \Delta_i \cup \Delta_o, \Omega_i \cup \Omega_o \right>
+    \claim 
+    Q
+    \\\\
+    \left< \Delta_i \cup  \Delta_o, \Omega_i \cup \Omega_o \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \tau_u
+  } {
+    \left< \Delta_i \cup \Delta_o, \Omega_i \cup \Omega_o \right>
+    \claim 
+    \code{$Q$ ; $\tau_l$<:$\tau_u$}
+  }
+
+  \inferrule[Empty] {
+  } {
+    \left< \Delta_i, \Omega_i \right>
+    \claim 
+    \code{;}
+  }
+
+\end{mathpar}
+\caption{Subtyping (Multiple)}
+\label{fig:subtyping_variables}
+\end{figure*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Subtyping Solving (Inductive) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
@@ -801,143 +1005,7 @@ the variable's upper bound.
 
 \begin{mathpar}
 
-  \inferrule[ExtendStrongExis] {
-    \land_i (\alpha_i \notin FTV(\Delta_i))
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim 
-    \tau_{qs}
-    \subtypes 
-    \tau_{qw}
-    \\\\
-    \left< \Delta_h, \Omega_h \cup \{\alpha_i\}_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \code{([| $Q$] $\tau_s$)}
-    \subtypes 
-    \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_s$)}
-    \subtypes 
-    \tau_w
-  }
-
-  \inferrule[EmptyStrongExis] {
-    \land_i (\alpha_i \notin FTV(\Delta_i))
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim \tau_s \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_s$)}
-    \subtypes 
-    \tau_w
-  }
-
-
-  \inferrule[ExtendWeakExis] {
-    \land_i (\alpha_i \notin FTV(\Delta_i))
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim \tau_s \subtypes \tau_w
-    \\\\
-    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \tau_{qs}
-    \subtypes 
-    \code{([| $Q$] $\tau_{qw}$)}
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \tau_s
-    \subtypes 
-    \code{([| $\widebar{\alpha_i}^i$ $Q$ ; $\tau_{qs}$<:$\tau_{qw}$] $\tau_w$)}
-  }
-
-  \inferrule[EmptyWeakExis] {
-    \land_i (\alpha_i \notin FTV(\Delta_i))
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim 
-    \tau_s
-    \subtypes 
-    \code{([| $\widebar{\alpha_i}^i$ .] $\tau_w$)}
-  }
-
-  \inferrule[StrictStrongVar] {
-    \alpha \in \Omega_i 
-    \\
-    condenseWeakest(\Delta, \alpha) = \tau_s
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \alpha \subtypes \tau_w
-  }
-
-  \inferrule[LenientStrongVar] {
-    \alpha \notin \Omega_i 
-    \\
-    extractStrongest(\Delta_i, \alpha) = \tau_s
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim \tau_s \subtypes \tau_w
-    \\
-    \Delta_h \subseteq \Delta_o
-    \\
-    \Omega_h \subseteq \Omega_o
-    \\
-    \code{$\alpha$<:$\tau_w$} \in \Omega_o
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \alpha \subtypes \tau_w
-  }
-
-
-  \inferrule[StrongUnion] {
-    \\\\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> \claim \tau_1 \subtypes \tau_w
-    \\\\
-    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_2 \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
-  }
-
-  \inferrule[LeftWeakUnion] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_1
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
-  }
-
-  \inferrule[RightWeakUnion] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_2
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
-  }
-
-  \inferrule[Equiv] {
-    \claim \tau_s \equiv \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_w
-  }
-
-  \inferrule[FactorStrongInduc] {
-    factorLeast(\code{induc $\alpha$ $\tau_s$}) = \tau_f 
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_f \subtypes \tau_w
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
-  }
-
-  \inferrule[KInducStrongInduc] {
+  \inferrule[LowerInduc] {
     \alpha \not\in FTV(\Delta_i)
     \\
     subst(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
@@ -947,28 +1015,6 @@ the variable's upper bound.
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
-  }
-
-  \inferrule[UninhabWeakDiff] {
-    \neg inhabitable(\tau_s)
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
-  }
-
-  \inferrule[InhabWeakDiff] {
-    inhabitable(\tau_s)
-    \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_c
-    \\
-    wellformed(\code{$\tau_c$\textbackslash$\tau_n$})
-    \\
-    \neg \left< \Delta_o, \Omega_o \right> \rightsquigarrow \left< \Delta_n, \Omega_n \right> 
-    \claim \tau_s \subtypes \tau_n
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
 
 
@@ -1012,7 +1058,48 @@ the variable's upper bound.
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
   }
+\end{mathpar}
+\caption{Subtyping (inductive)}
+\label{fig:subtyping_inductive}
+\end{figure*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Subtyping Solving (Simple) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\left< \Delta, \Omega \right> \rightsquigarrow \left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+\end{flalign*}
+
+\begin{mathpar}
+
+  \inferrule[LowerUnion] {
+    \\\\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> \claim \tau_1 \subtypes \tau_w
+    \\\\
+    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_2 \subtypes \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+  }
+
+  \inferrule[LeftUpperUnion] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_1
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+  }
+
+  \inferrule[RightUpperUnion] {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_2
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+  }
+
+  \inferrule[AlphaEquiv] {
+    \tau_s \equiv_{\alpha} \tau_w
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_w
+  }
 
   \inferrule[StrongDiff] {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
@@ -1020,6 +1107,29 @@ the variable's upper bound.
   } {
     \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
     \claim \code{$\tau_c$\textbackslash$\tau_n$} \subtypes \tau_w
+  }
+
+
+  \inferrule[EmptyLowerDiff] {
+    \neg inhabitable(\tau_s)
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+  }
+
+  \inferrule[InhabWeakDiff] {
+    inhabitable(\tau_s)
+    \\
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \tau_c
+    \\
+    wellformed(\code{$\tau_c$\textbackslash$\tau_n$})
+    \\
+    \neg \left< \Delta_o, \Omega_o \right> \rightsquigarrow \left< \Delta_n, \Omega_n \right> 
+    \claim \tau_s \subtypes \tau_n
+  } {
+    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
 
   \inferrule[Unit] {
@@ -1051,181 +1161,9 @@ the variable's upper bound.
   }
 
 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%% SET COMPREHENSION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  
-%   \inferrule[StrongUnion] {
-%     \\\\
-%     M = \{ \left< \Delta_2, \Omega_2 \right> \ |\ 
-%     \\\\
-%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \claim \tau_1 \subtypes \tau_w
-%     \ \land \ 
-%     \left< \Delta_1, \Omega_1 \right> \in M_1
-%     \\\\
-%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \claim \tau_2 \subtypes \tau_w
-%     \ \land \ 
-%     \left< \Delta_2, \Omega_2 \right> \in M_2
-%     \\\\
-%     \}
-%     \\
-%   } {
-%     \left< \Delta, \Omega \right> \rightsquigarrow M \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
-%   }
-
-
-%   \inferrule[anteUnion] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
-%     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
-%   } {
-%     \Delta \claim \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
-%   }
-
-%   \inferrule[rightUnion1] {
-%     \Delta \claim \tau_l \subtypes \tau_1
-%   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[rightUnion2] {
-%     \Delta \claim \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[ConsqInter] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
-%     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
-%   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
-%   }
-
-%   \inferrule[rightInter] {
-%     \Delta \claim \tau_l \subtypes \tau_1
-%     \\
-%     \Delta \claim \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
-%   }
-
-%   \inferrule[leftInter1] {
-%     \Delta \claim \tau_1 \subtypes \tau_r
-%   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftInter2] {
-%     \Delta \claim \tau_2 \subtypes \tau_r
-%   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftExis] { 
-%     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \bigand_{\Delta'}
-%     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
-%     \longrightarrow
-%     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
-%   } { 
-%     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[rightExis] { 
-%     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \Delta;\Delta' \claim \tau_l \subtypes \tau
-%     \\
-%     \Delta;\Delta' \claim \tau_1 \subtypes \tau_2
-%   } { 
-%     \Delta \claim \tau_l
-%     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%   }
-
-%   \inferrule[refl] {
-%   } {
-%     \Delta \claim \tau \subtypes \tau 
-%   }
-
-%   \inferrule[impli] {
-%     \Delta \claim \tau_3 \subtypes \tau_1 
-%     \\
-%     \Delta \claim \tau_2 \subtypes \tau_4
-%   } {
-%     \Delta \claim \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
-%   } 
-
-
-%   \inferrule[rightUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\code{$\alpha$<:$\tau'$} \claim \tau_l \subtypes \tau
-%   } { 
-%     \Delta \claim \tau_l
-%     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
-%   }
-
-%   \inferrule[leftUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\Delta' \claim \tau \subtypes \tau_r
-%     \\
-%     \Delta;\Delta' \claim \alpha \subtypes \tau'
-%   } { 
-%     \Delta \claim \code{[$\alpha$<:$\tau'$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[cons] {
-%     \code{$\tau_l$<:$\tau_r$} \in \Delta
-%   } {
-%     \Delta \claim \tau_l \subtypes \tau_r
-%   }
-
-
-%   % left-induc
-%   \inferrule[leftInduc] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\code{$\alpha$<:$\tau_r$} \claim \tau 
-%     \subtypes \tau_r
-%   } { 
-%     \Delta \claim \code{induc[$\alpha$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[field] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \claim \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
-%   } 
-
-
-%   % right-induc
-%   \inferrule[rightInduc] {
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \claim 
-%     \tau_l \subtypes \tau
-%   } {
-%     \Delta \claim \tau_l
-%     \subtypes \code{induc[$\alpha$]$\tau$}
-%   }
-
-%   \inferrule[tag] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \claim (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
-%   } 
 \end{mathpar}
 \caption{Subtyping}
-\label{fig:subtyping}
+\label{fig:subtyping_simple}
 \end{figure*}
 
 
@@ -2240,3 +2178,174 @@ Different: RLT isn't cartesian
 \end{document}
 
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% SET COMPREHENSION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  
+%   \inferrule[StrongUnion] {
+%     \\\\
+%     M = \{ \left< \Delta_2, \Omega_2 \right> \ |\ 
+%     \\\\
+%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \claim \tau_1 \subtypes \tau_w
+%     \ \land \ 
+%     \left< \Delta_1, \Omega_1 \right> \in M_1
+%     \\\\
+%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \claim \tau_2 \subtypes \tau_w
+%     \ \land \ 
+%     \left< \Delta_2, \Omega_2 \right> \in M_2
+%     \\\\
+%     \}
+%     \\
+%   } {
+%     \left< \Delta, \Omega \right> \rightsquigarrow M \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+%   }
+
+
+%   \inferrule[anteUnion] {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \\
+%     \Delta \claim \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
+%   }
+
+%   \inferrule[rightUnion1] {
+%     \Delta \claim \tau_l \subtypes \tau_1
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%   }
+
+%   \inferrule[rightUnion2] {
+%     \Delta \claim \tau_l \subtypes \tau_2
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%   }
+
+%   \inferrule[ConsqInter] {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
+%     \\
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
+%   }
+
+%   \inferrule[rightInter] {
+%     \Delta \claim \tau_l \subtypes \tau_1
+%     \\
+%     \Delta \claim \tau_l \subtypes \tau_2
+%   } {
+%     \Delta \claim \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
+%   }
+
+%   \inferrule[leftInter1] {
+%     \Delta \claim \tau_1 \subtypes \tau_r
+%   } {
+%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%   }
+
+%   \inferrule[leftInter2] {
+%     \Delta \claim \tau_2 \subtypes \tau_r
+%   } {
+%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%   }
+
+%   \inferrule[leftExis] { 
+%     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
+%     \\
+%     \bigand_{\Delta'}
+%     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
+%     \longrightarrow
+%     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
+%   } { 
+%     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[rightExis] { 
+%     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
+%     \\
+%     \Delta;\Delta' \claim \tau_l \subtypes \tau
+%     \\
+%     \Delta;\Delta' \claim \tau_1 \subtypes \tau_2
+%   } { 
+%     \Delta \claim \tau_l
+%     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%   }
+
+%   \inferrule[refl] {
+%   } {
+%     \Delta \claim \tau \subtypes \tau 
+%   }
+
+%   \inferrule[impli] {
+%     \Delta \claim \tau_3 \subtypes \tau_1 
+%     \\
+%     \Delta \claim \tau_2 \subtypes \tau_4
+%   } {
+%     \Delta \claim \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
+%   } 
+
+
+%   \inferrule[rightUniv] { 
+%     \alpha \not\in \F{freeTVs}(\tau_l)
+%     \\
+%     \Delta;\code{$\alpha$<:$\tau'$} \claim \tau_l \subtypes \tau
+%   } { 
+%     \Delta \claim \tau_l
+%     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
+%   }
+
+%   \inferrule[leftUniv] { 
+%     \alpha \not\in \F{freeTVs}(\tau_r)
+%     \\
+%     \Delta;\Delta' \claim \tau \subtypes \tau_r
+%     \\
+%     \Delta;\Delta' \claim \alpha \subtypes \tau'
+%   } { 
+%     \Delta \claim \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[cons] {
+%     \code{$\tau_l$<:$\tau_r$} \in \Delta
+%   } {
+%     \Delta \claim \tau_l \subtypes \tau_r
+%   }
+
+
+%   % left-induc
+%   \inferrule[leftInduc] { 
+%     \alpha \not\in \F{freeTVs}(\tau_r)
+%     \\
+%     \Delta;\code{$\alpha$<:$\tau_r$} \claim \tau 
+%     \subtypes \tau_r
+%   } { 
+%     \Delta \claim \code{induc[$\alpha$]$\tau$}
+%     \subtypes \tau_r
+%   }
+
+%   \inferrule[field] {
+%     \Delta \claim \tau_1 \subtypes \tau_2
+%   } {
+%     \Delta \claim \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
+%   } 
+
+
+%   % right-induc
+%   \inferrule[rightInduc] {
+%     \alpha \not\in \F{freeTVs}(\tau_l)
+%     \\
+%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \claim 
+%     \tau_l \subtypes \tau
+%   } {
+%     \Delta \claim \tau_l
+%     \subtypes \code{induc[$\alpha$]$\tau$}
+%   }
+
+%   \inferrule[tag] {
+%     \Delta \claim \tau_1 \subtypes \tau_2
+%   } {
+%     \Delta \claim (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
+%   } 

@@ -1216,6 +1216,7 @@ world.constraints:
 
 
 def test_constrained_universal_subtyping_fail():
+    # TODO: this should pass; inhabitability check should move to typing rules
     solver = analyzer.Solver(m())
     strong = (f'''
 ALL [Q; Q <: ~alpha @] Q -> Q 
@@ -1225,15 +1226,16 @@ ALL [Q; Q <: ~alpha @] Q -> Q
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
-    for world in worlds:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG RESULT WORLD
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-world.constraints:
-{analyzer.concretize_constraints(world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#     for world in worlds:
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG RESULT WORLD
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {analyzer.concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+    assert not worlds 
 
 def test_constrained_universal_subtyping_record_pass():
     solver = analyzer.Solver(m())
@@ -1254,6 +1256,7 @@ world.constraints:
 {analyzer.concretize_constraints(world.constraints)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)
+    assert worlds 
 
 def test_constrained_universal_subtyping_record_fail():
     solver = analyzer.Solver(m())
@@ -1265,15 +1268,16 @@ ALL [Q; Q <: (l : ~alpha @)] Q -> Q
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
-    for world in worlds:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG RESULT WORLD
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-world.constraints:
-{analyzer.concretize_constraints(world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#     for world in worlds:
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG RESULT WORLD
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# world.constraints:
+# {analyzer.concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+    assert not worlds 
 
 def test_constrained_universal_subtyping_function_fail():
     solver = analyzer.Solver(m())
@@ -1686,7 +1690,7 @@ if __name__ == '__main__':
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
-    # test_constrained_universal_subtyping_fail()
+    test_constrained_universal_subtyping_fail()
     # test_constrained_universal_subtyping_record_pass()
     # test_constrained_universal_subtyping_record_fail()
     # test_constrained_universal_subtyping_function_fail()
@@ -1694,7 +1698,7 @@ if __name__ == '__main__':
     # test_plus_equals_two_query()
     #####################################
     # test_fix()
-    test_add()
+    # test_add()
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()

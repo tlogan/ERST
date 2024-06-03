@@ -1437,9 +1437,9 @@ class Solver:
             return (rev_aliasing, t)
 
 
-    def interpret_lower_id(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+    def interpret_as_weakest_lower(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         '''
-        for constraints X <: T, X <: U; find weakest type stronger than T, stronger than U
+        for constraints X <: T, X <: U; find weakest type lower than T, lower than U
         which is T & U.
         NOTE: related to weakest precondition concept
         '''
@@ -1454,12 +1454,12 @@ class Solver:
         
         return (simplify_typ(result), pset(constraints))
 
-    def interpret_upper_id(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+    def interpret_as_strongest_upper(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
         '''
-        for constraints T <: X, U <: X; find strongest type weaker than T, weaker than U
+        for constraints T <: X, U <: X; find strongest type upper than T, upper than U
         which is T | U.
         NOTE: related to strongest postcondition concept
         '''
@@ -1530,9 +1530,9 @@ class Solver:
     def interpret_with_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
         def interpret_id(polarity : bool, id : str): 
             if polarity:
-                return self.interpret_upper_id(world, id)
+                return self.interpret_as_strongest_upper(world, id)
             else:
-                return self.interpret_lower_id(world, id)
+                return self.interpret_as_weakest_lower(world, id)
 
         if False:
             assert False
@@ -1954,7 +1954,9 @@ class Solver:
         result = (
             self.is_inhabitable(world, target) and
             all(
-                self.is_inhabitable(world, legacy) and
+                # NOTE: no need to check legacy; e.g. self.is_inhabitable(world, legacy)
+                # - we know it's inhabitable since it is in the world
+                # - and only the solver adds constraints to the world
                 self.is_intersection_inhabitable(world, legacy, target)
                 for legacy in self.extract_uppers(world, id)[0]
             ) 
@@ -2117,45 +2119,8 @@ upper:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.freezer: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG: strong, TVar-Learnable 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# freezer:
-# {world.freezer}
-
-# constraints:
-# {concretize_constraints(world.constraints)}
-
-# lower:
-# {concretize_typ(lower)}
-
-# upper:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-            interp = self.interpret_upper_id(world, lower.id)
+            interp = self.interpret_as_strongest_upper(world, lower.id)
             if  isinstance(interp[0], Bot):
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG lower-TVar-learnable 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# AAA
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# freezer:
-# {world.freezer}
-
-# constraints:
-# {concretize_constraints(world.constraints)}
-
-# lower:
-# {concretize_typ(lower)}
-
-# upper:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
@@ -2163,15 +2128,11 @@ upper:
                 )]
             ###################################
             elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG lower-TVar-learnable 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# BBB
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
+
+                # TODO: ensure that strongest upper of frozen <: upper 
+                # - add strongest_upper check of transitive skolem variable 
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
@@ -2179,13 +2140,6 @@ upper:
                 )]
             ###################################
             else:
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG lower-TVar-learnable 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# CCC
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
                 strongest = interp[0]
                 worlds = [
                     new_world
@@ -2301,7 +2255,7 @@ upper:
                     world.freezer, world.relids
                 )]
             else:
-                interp = self.interpret_lower_id(world, lower.id)
+                interp = self.interpret_as_weakest_lower(world, lower.id)
                 weakest_strong = interp[0]
                 return self.solve(world, weakest_strong, upper)
             #end if-else
@@ -2309,29 +2263,28 @@ upper:
 
 
         elif isinstance(upper, TVar) and upper.id not in world.freezer: 
-            if upper.id in world.relids:
-                # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
+            # TODO: remove relational case unless we can determine why it's needed
+            # if upper.id in world.relids:
+            #     # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
+            #     return [World(
+            #         world.constraints.add(Subtyping(lower, upper)),
+            #         world.freezer, world.relids
+            #     )]
+            interp = self.interpret_as_weakest_lower(world, upper.id)
+            if isinstance(interp[0], Top):
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
             else:
-                interp = self.interpret_lower_id(world, upper.id)
-                if isinstance(interp[0], Top):
-                    return [World(
+                weakest = interp[0]
+                return [
+                    World(
                         world.constraints.add(Subtyping(lower, upper)),
                         world.freezer, world.relids
-                    )]
-                else:
-                    weakest = interp[0]
-                    return [
-                        World(
-                            world.constraints.add(Subtyping(lower, upper)),
-                            world.freezer, world.relids
-                        )
-                        for world in self.solve(world, lower, weakest)
-                    ]
-                #end if-else
+                    )
+                    for world in self.solve(world, lower, weakest)
+                ]
             #end if-else
 
         elif isinstance(upper, All):
@@ -2371,7 +2324,7 @@ upper:
             return worlds
 
         elif isinstance(upper, TVar) and upper.id in world.freezer: 
-            interp = self.interpret_upper_id(world, upper.id)
+            interp = self.interpret_as_strongest_upper(world, upper.id)
             strongest_weak = interp[0]
             return self.solve(world, lower, strongest_weak)
 
@@ -2960,7 +2913,7 @@ class ExprRule(Rule):
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
-                left_interp = self.solver.interpret_lower_id(inner_world, in_typ.id)
+                left_interp = self.solver.interpret_as_weakest_lower(inner_world, in_typ.id)
                 (left_typ, left_used_constraints) = (
                     left_interp 
                     if in_typ.id not in inner_world.relids else 
@@ -2968,7 +2921,7 @@ class ExprRule(Rule):
                 )
                 inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
 
-                right_interp = self.solver.interpret_upper_id(inner_world, out_typ.id)
+                right_interp = self.solver.interpret_as_strongest_upper(inner_world, out_typ.id)
                 (right_typ, right_used_constraints) = right_interp
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
 

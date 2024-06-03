@@ -2,6 +2,11 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- move inhabitability check to typing
+    - learning variables to be BOT should be allowed 
+- add learnable skolem case for upper variable
+    - create test example that demonstrates divergence without it
+- add strongest_upper check of transitive skolem variable 
 - update disjoint test to handle disjoint constraints in intersected universals 
     - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
     - consider if type needs to be constructed differently
@@ -61,6 +66,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- update variable rules: skolem, learnable, universal
+- not how using skolem variables in indexed rules is stronger than checking that variables are non free in non-indexed counterpart in the subtyping relation.
 - note how it's same to remove constraints used in interpretation if the constraints are local 
     - as seen in fix rule
 - note how subtyping/subset inclusion is similar to implication with an important distinction
