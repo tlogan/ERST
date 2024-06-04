@@ -66,8 +66,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- update variable rules: skolem, learnable, universal
-- not how using skolem variables in indexed rules is stronger than checking that variables are non free in non-indexed counterpart in the subtyping relation.
+- update variable rules: LFP 
+- note how using skolem variables in indexed rules is stronger than checking that variables are non free in non-indexed counterpart in the subtyping relation.
 - note how it's same to remove constraints used in interpretation if the constraints are local 
     - as seen in fix rule
 - note how subtyping/subset inclusion is similar to implication with an important distinction

@@ -571,11 +571,11 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
   \\
-  \I \code{EXI [$\widebar{\alpha}$ $Q$] $\tau$} &\C{existential / indexed union}
+  \I \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
   \\
-  \I \code{ALL [$\widebar{\alpha}$ $Q$] $\tau$} &\C{universal / indexed intersection}
+  \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
   \\
-  \I \code{LFP $\alpha$|$\tau$} &\C{induction}
+  \I \code{LFP[$\alpha$|$\tau$]} &\C{least fixed point}
   \\
   Q ::= &\C{subtyping qualification}
   \\
@@ -818,7 +818,7 @@ the variable's upper bound.
   } {
     \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
     \claim 
-    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+    \code{(ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
     \subtypes 
     \tau_u
   }
@@ -836,7 +836,7 @@ the variable's upper bound.
     \claim 
     \tau_l
     \subtypes 
-    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+    \code{(ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
   }
 
   \inferrule[LearnableSkolemLowerVar] {
@@ -968,24 +968,20 @@ the variable's upper bound.
 \begin{mathpar}
 
   \inferrule[Extension] {
-    \left< \Delta_i \cup \Delta_o, \Omega_i \cup \Omega_o \right>
-    \claim 
-    Q
-    \\\\
-    \left< \Delta_i \cup  \Delta_o, \Omega_i \cup \Omega_o \right>
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
     \claim 
     \tau_l
     \subtypes 
     \tau_u
   } {
-    \left< \Delta_i \cup \Delta_o, \Omega_i \cup \Omega_o \right>
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
     \claim 
     \code{$Q$ ; $\tau_l$<:$\tau_u$}
   }
 
   \inferrule[Empty] {
   } {
-    \left< \Delta_i, \Omega_i \right>
+    \left< \Delta, \Omega \right>
     \claim 
     \code{;}
   }
@@ -1000,21 +996,21 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\left< \Delta, \Omega \right> \rightsquigarrow \left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+  &\boxed{\left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
 \end{flalign*}
 
 \begin{mathpar}
 
-  \inferrule[LowerInduc] {
-    \alpha \not\in FTV(\Delta_i)
+  \inferrule[LowerInducUpperLeastFP] {
+    \alpha \not\in FTV(\Delta, \code{LFP[$\alpha$ | $\tau_u$]})
     \\
-    subst(\{\alpha \mapsto \tau_w\}, \tau_s) = \tau_s'
+    subst(\{\alpha \mapsto \code{LFP[$\alpha$ | $\tau_u$]}\}, \tau_l) = \tau_l'
     \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s' \subtypes \tau_w
+    \left< \Delta, \Omega \right>
+    \claim \tau_l' \subtypes \code{LFP[$\alpha$ | $\tau_u$]}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \code{(induc $\alpha$ $\tau_s$)} \subtypes \tau_w
+    \left< \Delta, \Omega \right>
+    \claim \code{LFP[$\alpha$ | $\tau_l$]} \subtypes \code{LFP[$\alpha$ | $\tau_u$]}
   }
 
 
