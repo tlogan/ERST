@@ -1919,8 +1919,6 @@ class Solver:
                 self.is_intersection_inhabitable(world, left, right.right)
             )
 
-
-
         elif isinstance(left, TField) and isinstance(right, TField): 
             return left.label != right.label or (
                 self.is_intersection_inhabitable(world, left.body, right.body)
@@ -2061,6 +2059,7 @@ upper:
                 strong_body = sub_typ(renaming, lower.body)
                 return self.solve(world, strong_body, upper)
             else:
+                # TODO: consider case non-relational least fixed point
                 '''
                 rewrite into existential making shape of relation visible
                 '''

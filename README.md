@@ -2,6 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- in lower leastFP rule, consider case of non-relational least fixed point
 - move inhabitability check to typing
     - learning variables to be BOT should be allowed 
 - add learnable skolem case for upper variable

@@ -968,6 +968,10 @@ the variable's upper bound.
 \begin{mathpar}
 
   \inferrule[Extension] {
+    \left< \Delta, \Omega \right>
+    \claim 
+    Q
+    \\
     \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
     \claim 
     \tau_l
@@ -1001,9 +1005,7 @@ the variable's upper bound.
 
 \begin{mathpar}
 
-  \inferrule[LowerInducUpperLeastFP] {
-    \alpha \not\in FTV(\Delta, \code{LFP[$\alpha$ | $\tau_u$]})
-    \\
+  \inferrule[LowerUpperLeastFP] {
     subst(\{\alpha \mapsto \code{LFP[$\alpha$ | $\tau_u$]}\}, \tau_l) = \tau_l'
     \\
     \left< \Delta, \Omega \right>
@@ -1011,6 +1013,21 @@ the variable's upper bound.
   } {
     \left< \Delta, \Omega \right>
     \claim \code{LFP[$\alpha$ | $\tau_l$]} \subtypes \code{LFP[$\alpha$ | $\tau_u$]}
+  }
+
+  \inferrule[LowerLeastFP] {
+    pattern(\code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
+    \\
+    vars(\tau_p) = \widebar{\alpha_i}^i
+    \\\\
+    \left< \Delta, \Omega \right>
+    \claim 
+    \code{ANY[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
+    \subtypes 
+    \tau_u
+  } {
+    \left< \Delta, \Omega \right>
+    \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
   }
 
 
