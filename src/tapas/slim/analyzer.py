@@ -991,7 +991,7 @@ def find_paths(assumed_key : Typ, search_key : Typ) -> Optional[list[tuple[str, 
     else:
         return filtered_paths
 
-def find_assumed_relational_typ(world : World, key : Typ) -> Optional[Typ]:
+def lookup_normalized_relational_typ(world : World, key : Typ) -> Optional[Typ]:
     if is_record_typ(key):
         for constraint in world.constraints:
             ordered_paths = find_paths(constraint.lower, key)
@@ -2426,18 +2426,18 @@ upper:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-                lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                assumed_relational_typ = find_assumed_relational_typ(world, lower)
+                assumed_relational_typ = lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
-                    normalized_weak = normalize_least_fp(upper, ordered_paths)
-                    worlds = self.solve(world, assumed_relational_typ, normalized_weak)
+                    normalized_upper = normalize_least_fp(upper, ordered_paths)
+                    worlds = self.solve(world, assumed_relational_typ, normalized_upper)
                     return worlds
                 elif self.is_leastfp_constraint_safe(world, lower, upper):
                     """
                     NOTE: frozen variables should be interpreted away at this point 
                     """
+                    lower_fvs = extract_free_vars_from_typ(s(), lower)  
                     assert all((fv not in world.freezer) for fv in lower_fvs)
                     return [World(
                         # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),

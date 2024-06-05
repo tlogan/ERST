@@ -1006,17 +1006,17 @@ the variable's upper bound.
 \begin{mathpar}
 
   \inferrule[LowerUpperLeastFP] {
-    subst(\{\alpha \mapsto \code{LFP[$\alpha$ | $\tau_u$]}\}, \tau_l) = \tau_l'
+    subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
     \\
     \left< \Delta, \Omega \right>
-    \claim \tau_l' \subtypes \code{LFP[$\alpha$ | $\tau_u$]}
+    \claim \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   } {
     \left< \Delta, \Omega \right>
-    \claim \code{LFP[$\alpha$ | $\tau_l$]} \subtypes \code{LFP[$\alpha$ | $\tau_u$]}
+    \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
   \inferrule[LowerLeastFP] {
-    pattern(\code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
+    pattern(\Delta, \code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
     \\
     vars(\tau_p) = \widebar{\alpha_i}^i
     \\\\
@@ -1030,50 +1030,62 @@ the variable's upper bound.
     \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
   }
 
-
-  \inferrule[UnrollWeakInduc] {
-    \neg relationalKey(\Delta_i, \tau_s)
+  \inferrule[ReducedUpperLeastFP] {
+    interpret\_positive(\Delta, \Omega, \tau_l) = \tau_l'
     \\
-    subst(\{\alpha \mapsto \code{induc $\alpha$ $\tau_b$}\}, \tau_b) = \tau_b'
+    \tau_l' \neq \tau_l
     \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b'$}
+    \left< \Delta, \Omega \right>
+    \claim 
+    \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+    \left< \Delta, \Omega \right>
+    \claim 
+    \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
-  \inferrule[ReadCacheWeakInduc] {
-    relationalKey(\Delta_i, \tau_s)
+
+  \inferrule[UnrollUpperLeastFP] {
+    decidable(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
     \\
-    \code{$\tau_s$<:$\tau_c$} \in \Delta_i
+    subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_u) = \tau_u'
     \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_c \subtypes \code{induc $\alpha$ $\tau_b$}
+    \left< \Delta, \Omega \right> 
+    \claim 
+    \tau_l \subtypes \tau_u'
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+    \left< \Delta, \Omega \right>
+    \claim 
+    \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
-  \inferrule[WriteCacheWeakInduc] {
-    relationalKey(\Delta_i, \tau_s)
+  \inferrule[LookupUpperLeastFP] {
+    lookup(\Delta, targets(\tau_l)) = \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]}
     \\
-    \land_{\tau_c} (\code{$\tau_s$<:$\tau_c$} \not\in \Delta_i)
+    ordered\_paths(\tau_k) = paths_k
     \\
-    safeToCache(\Delta_i, \tau_s, (\code{induc $\alpha$ $\tau_b$})) 
+    normalize(\code{LFP[$\alpha$|$\tau_v$]}, paths_k) = \code{LFP[$\alpha$|$\tau_v'$]}
+    \\\\
+    ordered\_paths(\tau_l) = paths_l
     \\
-    \Delta_i \subseteq \Delta_o
-    \\
-    \code{$\tau_s$<:(induc $\alpha$ $\tau_b$)} \in \Delta_o
-    \\
-    \Omega_i \subseteq \Omega_o
+    normalize(\code{LFP[$\alpha$|$\tau_u$]}, paths_l) = \code{LFP[$\alpha$|$\tau_u'$]}
+    \\\\
+    \left< \Delta, \Omega \right> 
+    \claim \code{LFP[$\alpha$|$\tau_v'$]} \subtypes \code{LFP[$\alpha$|$\tau_u'$]}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{induc $\alpha$ $\tau_b$}
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+  }
+
+  \inferrule[SaveUpperLeastFP] {
+    consistent(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
+  } {
+    \left< \Delta \cup \{\code{$\tau_l$<:LFP[$\alpha$|$\tau_u$]}\}, \Omega \right> 
+    \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 \end{mathpar}
-\caption{Subtyping (inductive)}
-\label{fig:subtyping_inductive}
+\caption{Subtyping (least fixed point)}
+\label{fig:subtyping_leastfp}
 \end{figure*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
