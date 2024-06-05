@@ -977,8 +977,10 @@ def extract_relational_paths(t : LeastFP) -> PSet[tuple[str, ...]]:
     return paths 
 
 
-def find_paths(assumed_key : Typ, search_key : Typ) -> Optional[list[tuple[str, ...]]]:
-    search_targets = [v for k,v in extract_kv_pairs(search_key)]
+def extract_targets(t : Typ):
+    return [v for k,v in extract_kv_pairs(t)]
+
+def find_paths(assumed_key : Typ, search_targets : list[Typ]) -> Optional[list[tuple[str, ...]]]:
     ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
 
     filtered_paths = []
@@ -991,16 +993,29 @@ def find_paths(assumed_key : Typ, search_key : Typ) -> Optional[list[tuple[str, 
     else:
         return filtered_paths
 
+def targets_match(assumed_key : Typ, search_targets : list[Typ]) -> bool:
+    pairs = extract_kv_pairs(assumed_key)
+    for (k,v) in pairs:
+        if v in search_targets:
+            search_targets.remove(v)
+    return not bool(search_targets)
+
 def lookup_normalized_relational_typ(world : World, key : Typ) -> Optional[Typ]:
     if is_record_typ(key):
         for constraint in world.constraints:
-            ordered_paths = find_paths(constraint.lower, key)
+            ordered_paths = find_paths(constraint.lower, extract_targets(key))
             if ordered_paths != None:
                 if isinstance(constraint.upper, LeastFP):
                     return normalize_least_fp(constraint.upper, ordered_paths)
         return None
     else:
         return None
+
+def lookup_relational_constraint(world : World, targets : list[Typ]) -> Optional[Subtyping]:
+    for constraint in world.constraints:
+        if targets_match(constraint.lower, targets):
+            return constraint
+    return None
 
 
 def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...]]:

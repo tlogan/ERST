@@ -1060,18 +1060,14 @@ the variable's upper bound.
   }
 
   \inferrule[LookupUpperLeastFP] {
-    lookup(\Delta, targets(\tau_l)) = \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]}
+    lookup\_weak\_normal(\Delta, \tau_l) = \code{LFP[$\alpha$|$\tau_a$]}
     \\
-    ordered\_paths(\tau_k) = paths_k
+    ordered\_paths(\tau_l) = paths
     \\
-    normalize(\code{LFP[$\alpha$|$\tau_v$]}, paths_k) = \code{LFP[$\alpha$|$\tau_v'$]}
-    \\\\
-    ordered\_paths(\tau_l) = paths_l
-    \\
-    normalize(\code{LFP[$\alpha$|$\tau_u$]}, paths_l) = \code{LFP[$\alpha$|$\tau_u'$]}
+    normalize(\code{LFP[$\alpha$|$\tau_u$]}, paths) = \code{LFP[$\alpha$|$\tau_u'$]}
     \\\\
     \left< \Delta, \Omega \right> 
-    \claim \code{LFP[$\alpha$|$\tau_v'$]} \subtypes \code{LFP[$\alpha$|$\tau_u'$]}
+    \claim \code{LFP[$\alpha$|$\tau_a$]} \subtypes \code{LFP[$\alpha$|$\tau_u'$]}
   } {
     \left< \Delta, \Omega \right> 
     \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
