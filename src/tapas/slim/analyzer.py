@@ -980,7 +980,7 @@ def extract_relational_paths(t : LeastFP) -> PSet[tuple[str, ...]]:
 def extract_targets(t : Typ):
     return [v for k,v in extract_kv_pairs(t)]
 
-def find_paths(assumed_key : Typ, search_targets : list[Typ]) -> Optional[list[tuple[str, ...]]]:
+def extract_matching_ordered_paths(assumed_key : Typ, search_targets : list[Typ]) -> Optional[list[tuple[str, ...]]]:
     ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
 
     filtered_paths = []
@@ -1003,7 +1003,7 @@ def targets_match(assumed_key : Typ, search_targets : list[Typ]) -> bool:
 def lookup_normalized_relational_typ(world : World, key : Typ) -> Optional[Typ]:
     if is_record_typ(key):
         for constraint in world.constraints:
-            ordered_paths = find_paths(constraint.lower, extract_targets(key))
+            ordered_paths = extract_matching_ordered_paths(constraint.lower, extract_targets(key))
             if ordered_paths != None:
                 if isinstance(constraint.upper, LeastFP):
                     return normalize_least_fp(constraint.upper, ordered_paths)
