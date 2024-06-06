@@ -805,7 +805,7 @@ the variable's upper bound.
 
 \begin{mathpar}
 
-  \inferrule[LowerExis] {
+  \inferrule[LowerAny] {
     \left< \Delta, \Omega \right>
     \claim 
     Q
@@ -824,7 +824,7 @@ the variable's upper bound.
   }
 
 
-  \inferrule[UpperExis] {
+  \inferrule[UpperAny] {
     \left< \Delta, \Omega \right>
     \claim \tau_l \subtypes \tau_u
     \\
@@ -912,7 +912,7 @@ the variable's upper bound.
     \left< \Delta, \Omega \right>
     \claim \tau_l \subtypes \tau_u
   } {
-    \left< \Delta, \Omega \right> \claim \tau_i \subtypes \alpha
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \alpha
   }
 
 
@@ -1005,7 +1005,7 @@ the variable's upper bound.
 
 \begin{mathpar}
 
-  \inferrule[LowerUpperLeastFP] {
+  \inferrule[LowerUpperLFP] {
     subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
     \\
     \left< \Delta, \Omega \right>
@@ -1015,7 +1015,7 @@ the variable's upper bound.
     \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
-  \inferrule[LowerLeastFP] {
+  \inferrule[LowerLFP] {
     pattern(\Delta, \code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
     \\
     vars(\tau_p) = \widebar{\alpha_i}^i
@@ -1030,7 +1030,7 @@ the variable's upper bound.
     \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
   }
 
-  \inferrule[ReducedUpperLeastFP] {
+  \inferrule[ReducedUpperLFP] {
     interpret\_positive(\Delta, \Omega, \tau_l) = \tau_l'
     \\
     \tau_l' \neq \tau_l
@@ -1045,7 +1045,7 @@ the variable's upper bound.
   }
 
 
-  \inferrule[UnrollUpperLeastFP] {
+  \inferrule[UnrollUpperLFP] {
     decidable(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
     \\
     subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_u) = \tau_u'
@@ -1059,7 +1059,7 @@ the variable's upper bound.
     \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
-  \inferrule[LookupUpperLeastFP] {
+  \inferrule[LookupUpperLFP] {
     \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]} \in \Delta
     \\
     matching\_ordered\_paths(\tau_k, targets(\tau_l)) = paths_k
@@ -1077,7 +1077,7 @@ the variable's upper bound.
     \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 
-  \inferrule[SaveUpperLeastFP] {
+  \inferrule[SaveUpperLFP] {
     consistent(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
   } {
     \left< \Delta \cup \{\code{$\tau_l$<:LFP[$\alpha$|$\tau_u$]}\}, \Omega \right> 
