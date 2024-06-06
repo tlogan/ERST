@@ -1093,7 +1093,7 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\left< \Delta, \Omega \right> \rightsquigarrow \left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+  &\boxed{\left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
 \end{flalign*}
 
 \begin{mathpar}
@@ -1108,6 +1108,24 @@ the variable's upper bound.
     \tau_u
   }
 
+  \inferrule[Unit] {
+  } {
+    \left< \Delta, \Omega \right>
+    \claim \code{@} \subtypes \code{@}
+  }
+
+  \inferrule[AntecedentUnion] {
+    \left< \Delta, \Omega \right> 
+    \claim
+    \tau_l
+    \subtypes
+    \code{($\tau_{ub}$->$\tau_{uc}$)\&($\tau_{ua}$->$\tau_{uc}$)}
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l 
+    \subtypes 
+    \code{$\tau_{ua}$|$\tau_{ub}$->$\tau_{uc}$}
+  }
 
   \inferrule[LowerUnion] {
     \left< \Delta, \Omega \right> \claim \tau_{la} \subtypes \tau_u
@@ -1117,16 +1135,71 @@ the variable's upper bound.
     \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> \claim \code{$\tau_{la}$|$\tau_{lb}$} \subtypes \tau_u
   }
 
-  \inferrule[LeftUpperUnion] {
-    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_{ua}
-  } {
-    \left< \Delta, \Omega \right> \claim  \tau_l \subtypes \code{$\tau_{ua}$|$\tau_{ub}$}
-  }
 
   \inferrule[RightUpperUnion] {
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_{ub}
   } {
     \left< \Delta, \Omega \right> \claim  \tau_l \subtypes \code{$\tau_{ua}$|$\tau_{ub}$}
+  }
+
+  \inferrule[ConsequentInter] {
+    \left< \Delta, \Omega \right> 
+    \claim
+    \tau_l
+    \subtypes
+    \code{($\tau_{ua}$->$\tau_{ub}$)\&($\tau_{ua}$->$\tau_{uc}$)}
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l 
+    \subtypes 
+    \code{$\tau_{ua}$->$\tau_{ub}$\&$\tau_{uc}$}
+  }
+
+  \inferrule[TargetInter] {
+    \left< \Delta, \Omega \right> 
+    \claim
+    \tau_l
+    \subtypes
+    \code{($l$:$\tau_{ua}$)\&($l$:$\tau_{ub}$)}
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l 
+    \subtypes 
+    \code{$l$:($\tau_{ua}$\&$\tau_{ub}$)}
+  }
+
+  \inferrule[UpperInter] {
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l \subtypes \tau_{ua}
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> 
+    \claim \tau_l \subtypes \tau_{ub}
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> 
+    \claim 
+    \tau_l 
+    \subtypes
+    \code{$\tau_{ua}$\&$\tau_{ub}$} 
+  }
+
+  \inferrule[LeftLowerInter] {
+    \left< \Delta, \Omega \right> \claim \tau_{la} \subtypes \tau_u
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim  
+    \code{$\tau_{la}$\&$\tau_{lb}$}
+    \subtypes 
+    \tau_u
+  }
+
+  \inferrule[RightLowerInter] {
+    \left< \Delta, \Omega \right> \claim \tau_{lb} \subtypes \tau_u
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim  
+    \code{$\tau_{la}$\&$\tau_{lb}$}
+    \subtypes 
+    \tau_u
   }
 
   \inferrule[LowerDiff] {
@@ -1166,18 +1239,20 @@ the variable's upper bound.
     \claim \tau_l \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
 
-  \inferrule[Unit] {
-  } {
-    \left< \Delta, \Omega \right>
-    \claim \code{@} \subtypes \code{@}
-  }
-
   \inferrule[Tag] {
     \left< \Delta, \Omega \right> 
-    \claim \tau_s \subtypes \tau_w
+    \claim \tau_l \subtypes \tau_u
   } {
     \left< \Delta, \Omega \right> 
-    \claim \code{\textasciitilde$l$ $\tau_s$} \subtypes \code{\textasciitilde$l$ $\tau_w$}
+    \claim \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_u$}
+  }
+
+  \inferrule[Field] {
+    \left< \Delta, \Omega \right> 
+    \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta, \Omega \right> 
+    \claim \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_u$}
   }
 
   \inferrule[Imp] {
