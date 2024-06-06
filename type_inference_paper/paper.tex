@@ -1062,7 +1062,7 @@ the variable's upper bound.
   \inferrule[LookupUpperLeastFP] {
     \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]} \in \Delta
     \\
-    ordered\_paths\_matching(\tau_k, targets(\tau_l)) = paths_k
+    matching\_ordered\_paths(\tau_k, targets(\tau_l)) = paths_k
     \\
     normalize(\code{LFP[$\alpha$|$\tau_v$]}, paths_k) = \code{LFP[$\alpha$|$\tau_v'$]}
     \\
@@ -1098,96 +1098,102 @@ the variable's upper bound.
 
 \begin{mathpar}
 
-  \inferrule[LowerUnion] {
-    \\\\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> \claim \tau_1 \subtypes \tau_w
-    \\\\
-    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_2 \subtypes \tau_w
+  \inferrule[AlphaEquiv] {
+    \tau_l \equiv_{\alpha} \tau_u
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+    \left<\Delta, \Omega \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \tau_u
+  }
+
+
+  \inferrule[LowerUnion] {
+    \left< \Delta, \Omega \right> \claim \tau_{la} \subtypes \tau_u
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> \claim \tau_{lb} \subtypes \tau_u
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> \claim \code{$\tau_{la}$|$\tau_{lb}$} \subtypes \tau_u
   }
 
   \inferrule[LeftUpperUnion] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_1
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_{ua}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+    \left< \Delta, \Omega \right> \claim  \tau_l \subtypes \code{$\tau_{ua}$|$\tau_{ub}$}
   }
 
   \inferrule[RightUpperUnion] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim \tau_s \subtypes \tau_2
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_{ub}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> \claim  \tau_s \subtypes \code{$\tau_1$|$\tau_2$}
+    \left< \Delta, \Omega \right> \claim  \tau_l \subtypes \code{$\tau_{ua}$|$\tau_{ub}$}
   }
 
-  \inferrule[AlphaEquiv] {
-    \tau_s \equiv_{\alpha} \tau_w
+  \inferrule[LowerDiff] {
+    \left< \Delta, \Omega \right>
+    \claim \tau_c \subtypes \code{$\tau_u$|$\tau_n$}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_w
-  }
-
-  \inferrule[StrongDiff] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_c \subtypes \code{$\tau_w$|$\tau_n$}
-  } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \code{$\tau_c$\textbackslash$\tau_n$} \subtypes \tau_w
+    \left< \Delta, \Omega \right> 
+    \claim 
+    \code{$\tau_c$\textbackslash$\tau_n$} 
+    \subtypes 
+    \tau_u
   }
 
 
-  \inferrule[EmptyLowerDiff] {
-    \neg inhabitable(\tau_s)
+  \inferrule[EmptyUpperDiff] {
+    \neg inhabitable(\Delta, \tau_l)
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
 
-  \inferrule[InhabWeakDiff] {
-    inhabitable(\tau_s)
+  \inferrule[InhabUpperDiff] {
+    % TODO: ensure that this rule is guaranteed to be sound 
+    % NOTE: idea: if negation is well-formed then subtyping is complete?  
+    % meaning negation is sound
+    inhabitable(\Delta, \tau_l)
     \\
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \tau_c
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_c
+    \\\\
+    negation\_well\_formed(\tau_n)
     \\
-    wellformed(\code{$\tau_c$\textbackslash$\tau_n$})
-    \\
-    \neg \left< \Delta_o, \Omega_o \right> \rightsquigarrow \left< \Delta_n, \Omega_n \right> 
-    \claim \tau_s \subtypes \tau_n
+    \neg \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \tau_n
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_s \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+    \left< \Delta, \Omega \right>
+    \claim \tau_l \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
   }
 
   \inferrule[Unit] {
-    \Delta_i \subseteq \Delta_o
-    \\
-    \Omega_i \subseteq \Omega_o
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \left< \Delta, \Omega \right>
     \claim \code{@} \subtypes \code{@}
   }
 
   \inferrule[Tag] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \left< \Delta, \Omega \right> 
     \claim \tau_s \subtypes \tau_w
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
+    \left< \Delta, \Omega \right> 
     \claim \code{\textasciitilde$l$ $\tau_s$} \subtypes \code{\textasciitilde$l$ $\tau_w$}
   }
 
   \inferrule[Imp] {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_h, \Omega_h \right> 
-    \claim \tau_{wa} \subtypes \tau_{sa}
+    \left< \Delta, \Omega \right>
+    \claim \tau_{ua} \subtypes \tau_{la}
     \\
-    \left< \Delta_h, \Omega_h \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \tau_{sc} \subtypes \tau_{wc}
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim \tau_{lc} \subtypes \tau_{uc}
   } {
-    \left< \Delta_i, \Omega_i \right> \rightsquigarrow \left< \Delta_o, \Omega_o \right> 
-    \claim \code{$\tau_{sa}$ -> $\tau_{sc}$} \subtypes \code{$\tau_{wa}$ -> $\tau_{wc}$}
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim \code{$\tau_{la}$ -> $\tau_{lc}$} \subtypes \code{$\tau_{ua}$ -> $\tau_{uc}$}
   }
 
 
 \end{mathpar}
-\caption{Subtyping (Simple)}
+\caption{Subtyping (simple)}
 \label{fig:subtyping_simple}
 \end{figure*}
 

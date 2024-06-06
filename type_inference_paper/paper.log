@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  5 JUN 2024 09:53
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  5 JUN 2024 19:22
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1050,27 +1050,27 @@ Class acmart Warning: A possible image without description on input line 1089.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1192.
+Class acmart Warning: A possible image without description on input line 1198.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 1374.
+LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 1380.
 
 
-LaTeX Warning: Reference `fig:infer' on page 8 undefined on input line 1401.
+LaTeX Warning: Reference `fig:infer' on page 8 undefined on input line 1407.
 
 [8.8]
 
-LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 1679.
+LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 1685.
 
 [9.9]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 1714.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 1720.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1745.
+LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1751.
 
 [10.10] [11.11]
 
@@ -1106,18 +1106,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24162 strings out of 474116
- 386304 string characters out of 5743682
+ 24157 strings out of 474116
+ 386157 string characters out of 5743682
  1969187 words of memory out of 5000000
  45461 multiletter control sequences out of 15000+600000
- 745296 words of font info for 407 fonts, out of 8000000 for 9000
+ 744743 words of font info for 404 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (15 pages, 483287 bytes).
+Output written on paper.pdf (15 pages, 482805 bytes).
 PDF statistics:
  297 PDF objects out of 1000 (max. 8388607)
  242 compressed objects within 3 object streams
  88 named destinations out of 1000 (max. 500000)
- 90737 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 88689 words of extra memory for PDF output out of 89155 (max. 10000000)
 
