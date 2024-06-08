@@ -1452,7 +1452,7 @@ class Solver:
             return (rev_aliasing, t)
 
 
-    def interpret_as_weakest_lower(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+    def resolve_weakest_lower(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         '''
         for constraints X <: T, X <: U; find weakest type lower than T, lower than U
         which is T & U.
@@ -1469,7 +1469,7 @@ class Solver:
         
         return (simplify_typ(result), pset(constraints))
 
-    def interpret_as_strongest_upper(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+    def resolve_strongest_upper(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
@@ -1542,12 +1542,12 @@ class Solver:
     #     ] 
     #     return make_unio(constraint_typs)
 
-    def interpret_with_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
-        def interpret_id(polarity : bool, id : str): 
+    def resolve_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
+        def resolve(polarity : bool, id : str): 
             if polarity:
-                return self.interpret_as_strongest_upper(world, id)
+                return self.resolve_strongest_upper(world, id)
             else:
-                return self.interpret_as_weakest_lower(world, id)
+                return self.resolve_weakest_lower(world, id)
 
         if False:
             assert False
@@ -1565,7 +1565,7 @@ class Solver:
                 new_polarity or include_factors or id not in world.relids 
             )
             op = ( 
-                interpret_id(new_polarity, id)
+                resolve(new_polarity, id)
                 if should_interpret else
                 None
             )
@@ -1585,7 +1585,7 @@ class Solver:
                 # """)
                 if (id in world.freezer) or self.is_meaningful(new_polarity, world, interp_typ_once): 
                     m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
-                    (t, cs_cont) = self.interpret_with_polarity(polarity, m, interp_typ_once, ignored_ids)
+                    (t, cs_cont) = self.resolve_polarity(polarity, m, interp_typ_once, ignored_ids)
                     return (simplify_typ(t), cs_once.union(cs_cont))
                 else:
                     return (typ, s())
@@ -1596,28 +1596,28 @@ class Solver:
             return (typ, s())
         elif isinstance(typ, TTag):
             body = typ.body
-            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
             return (TTag(typ.label, body), body_constraints)
         elif isinstance(typ, TField):
             body = typ.body
-            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
             return (TField(typ.label, body), body_constraints)
         elif isinstance(typ, Unio):
-            left, left_constraints = self.interpret_with_polarity(polarity, world, typ.left, ignored_ids)
-            right, right_constraints = self.interpret_with_polarity(polarity, world, typ.right, ignored_ids)
+            left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
+            right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
             return (Unio(left, right), left_constraints.union(right_constraints))
         elif isinstance(typ, Inter):
-            left, left_constraints = self.interpret_with_polarity(polarity, world, typ.left, ignored_ids)
-            right, right_constraints = self.interpret_with_polarity(polarity, world, typ.right, ignored_ids)
+            left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
+            right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
             return (Inter(left, right), left_constraints.union(right_constraints))
         elif isinstance(typ, Diff):
-            context, context_constraints = self.interpret_with_polarity(polarity, world, typ.context, ignored_ids)
+            context, context_constraints = self.resolve_polarity(polarity, world, typ.context, ignored_ids)
             return (Diff(context, typ.negation), context_constraints)
 
         elif isinstance(typ, Imp):
-            consq, consq_constraints = self.interpret_with_polarity(polarity, world, typ.consq, ignored_ids)
+            consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
             world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
-            antec, antec_constraints = self.interpret_with_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
+            antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
             return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
         elif isinstance(typ, Exi):
@@ -1651,7 +1651,7 @@ class Solver:
             # TODO: copy Exi rule
         elif isinstance(typ, LeastFP):
             ignored_ids = ignored_ids.add(typ.id)
-            body, body_constraints = self.interpret_with_polarity(polarity, world, typ.body, ignored_ids)
+            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
             return (LeastFP(typ.id, body), body_constraints)
         elif isinstance(typ, Top):
             return (typ, s())
@@ -1667,7 +1667,7 @@ class Solver:
         constraint_typs = [
             package_typ(m, tt)
             for world in worlds
-            for op in [self.interpret_with_polarity(polarity, world, t, s())]
+            for op in [self.resolve_polarity(polarity, world, t, s())]
             if op != None
             for (tt, cs) in [op]
             # for m in [world]
@@ -2133,7 +2133,7 @@ upper:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.freezer: 
-            interp = self.interpret_as_strongest_upper(world, lower.id)
+            interp = self.resolve_strongest_upper(world, lower.id)
             if  isinstance(interp[0], Bot):
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
@@ -2269,7 +2269,7 @@ upper:
                     world.freezer, world.relids
                 )]
             else:
-                interp = self.interpret_as_weakest_lower(world, lower.id)
+                interp = self.resolve_weakest_lower(world, lower.id)
                 weakest_strong = interp[0]
                 return self.solve(world, weakest_strong, upper)
             #end if-else
@@ -2284,7 +2284,7 @@ upper:
             #         world.constraints.add(Subtyping(lower, upper)),
             #         world.freezer, world.relids
             #     )]
-            interp = self.interpret_as_weakest_lower(world, upper.id)
+            interp = self.resolve_weakest_lower(world, upper.id)
             if isinstance(interp[0], Top):
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
@@ -2338,7 +2338,7 @@ upper:
             return worlds
 
         elif isinstance(upper, TVar) and upper.id in world.freezer: 
-            interp = self.interpret_as_strongest_upper(world, upper.id)
+            interp = self.resolve_strongest_upper(world, upper.id)
             strongest_weak = interp[0]
             return self.solve(world, lower, strongest_weak)
 
@@ -2397,7 +2397,7 @@ upper:
             # - is this necessary? this notion breaks the even_list subs nat_list
             # ignored_ids = get_freezer_adjacent_learnable_ids(world)
             ignored_ids = s()
-            reduced_strong = self.interpret_with_polarity(True, world, lower, ignored_ids)[0]
+            reduced_strong = self.resolve_polarity(True, world, lower, ignored_ids)[0]
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
 # DEBUG upper, LeastFP
@@ -2927,7 +2927,7 @@ class ExprRule(Rule):
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
-                left_interp = self.solver.interpret_as_weakest_lower(inner_world, in_typ.id)
+                left_interp = self.solver.resolve_weakest_lower(inner_world, in_typ.id)
                 (left_typ, left_used_constraints) = (
                     left_interp 
                     if in_typ.id not in inner_world.relids else 
@@ -2935,7 +2935,7 @@ class ExprRule(Rule):
                 )
                 inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
 
-                right_interp = self.solver.interpret_as_strongest_upper(inner_world, out_typ.id)
+                right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 (right_typ, right_used_constraints) = right_interp
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
 
@@ -2948,7 +2948,7 @@ class ExprRule(Rule):
                 # TODO: it may not be safe to remove used_constraints from multihop interpretation 
                 # TODO: need a safety argument for removing used_constraints
                 # - argument: constriants aren't removed; but are merely rerwritten
-                self_interp = self.solver.interpret_with_polarity(False, inner_world, self_typ, s())
+                self_interp = self.solver.resolve_polarity(False, inner_world, self_typ, s())
                 # self_interp = self.solver.interpret_lower_id(inner_world, self_typ.id)
 
                 self_used_constraints = s()

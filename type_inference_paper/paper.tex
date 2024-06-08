@@ -606,6 +606,87 @@ rather than merely a type variable to allow for relational constraints.
 \label{fig:syntax}
 \end{figure*}
 
+\begin{figure*}[h]
+\[
+\begin{array}{rclr}
+\llbracket \Delta, \Omega, \code{$\alpha$} \rrbracket 
+&=& \llbracket (\Delta, \Omega, resolve(\Delta, \Omega, \code{$\alpha$})) \rrbracket 
+& \C{variable}
+\\
+\llbracket \Delta, \Omega, \code{@} \rrbracket 
+&=& 
+\{\code{@}\} 
+& \C{unit} 
+\\
+\llbracket \Delta, \Omega, \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
+&=& 
+\{ \code{\textasciitilde{}$l$ $v$}\ |\ v \in \llbracket \Delta, \Omega, \tau \rrbracket \}
+& \C{tag} 
+\\
+\llbracket \Delta, \Omega, \code{$l$:$\tau$} \rrbracket 
+&=&{} 
+\{ \code{$l$:$v$}\ |\ v \in \llbracket \Delta, \Omega, \tau \rrbracket \}
+& \C{field} 
+\\
+\llbracket \Delta, \Omega, \code{$\tau_a$->$\tau_c$} \rrbracket 
+&=& 
+\begin{array}[t]{@{}l}
+\{ v_f \ |\ 
+\\ \I v_a \in \llbracket \Delta, \Omega, \tau_a \rrbracket\ \land\ 
+\\ \I v_c \in \llbracket \Delta, \Omega, \tau_c \rrbracket\ \land\ 
+\\ \I v_f(v_a) \longrightarrow^* v_c
+\\
+\}
+\end{array}
+& \C{implication} 
+\\
+\llbracket \Delta, \Omega, \code{$\tau_a$|$\tau_b$} \rrbracket 
+&=& 
+\{ 
+\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\cup
+\llbracket \Delta, \Omega, \tau_b \rrbracket 
+\}
+& \C{union}
+\\
+\llbracket \Delta, \Omega, \code{$\tau_a$\&$\tau_b$} \rrbracket 
+&=& 
+\{ 
+\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\cap
+\llbracket \Delta, \Omega, \tau_b \rrbracket 
+\}
+& \C{intersection}
+%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%
+  % \\
+  % \I \code{$\tau$|$\tau$} &\C{union}
+  % \\
+  % \I \code{$\tau$\&$\tau$} &\C{intersection}
+  % \\
+  % \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
+  % \\
+  % \I \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
+  % \\
+  % \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
+  % \\
+  % \I \code{LFP[$\alpha$|$\tau$]} &\C{least fixed point}
+  % \\
+  % Q ::= &\C{subtyping qualification}
+  % \\
+  % \I \code{;} &\C{empty}
+  % \\
+  % \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
+  % \\
+  % \\
+  % \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
+  % \\
+  % \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
+\end{array}
+\]
+\caption{Type Denotation}
+\label{fig:type_denotation}
+\end{figure*}
+
 % \begin{figure*}[h]
 % \[
 % \begin{array}[t]{l r}
@@ -1031,7 +1112,7 @@ the variable's upper bound.
   }
 
   \inferrule[ReducedUpperLFP] {
-    interpret\_positive(\Delta, \Omega, \tau_l) = \tau_l'
+    resolve\_positive(\Delta, \Omega, \tau_l) = \tau_l'
     \\
     \tau_l' \neq \tau_l
     \\
