@@ -642,29 +642,32 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \llbracket \Delta, \Omega, \code{$\tau_a$|$\tau_b$} \rrbracket 
 &=& 
-\{ 
 \llbracket \Delta, \Omega, \tau_a \rrbracket 
 \cup
 \llbracket \Delta, \Omega, \tau_b \rrbracket 
-\}
 & \C{union}
 \\
 \llbracket \Delta, \Omega, \code{$\tau_a$\&$\tau_b$} \rrbracket 
 &=& 
-\{ 
 \llbracket \Delta, \Omega, \tau_a \rrbracket 
 \cap
 \llbracket \Delta, \Omega, \tau_b \rrbracket 
-\}
 & \C{intersection}
+\\
+\llbracket \Delta, \Omega, \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
+&=& 
+\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\ \backslash\ 
+\llbracket \Delta, \Omega, \tau_b \rrbracket 
+& \C{difference}
+\\
+\llbracket \Delta, \Omega, \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} \rrbracket 
+&=& 
+\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\ \backslash\ 
+\llbracket \Delta, \Omega, \tau_b \rrbracket 
+& \C{indexed union}
 %%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%
-  % \\
-  % \I \code{$\tau$|$\tau$} &\C{union}
-  % \\
-  % \I \code{$\tau$\&$\tau$} &\C{intersection}
-  % \\
-  % \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
-  % \\
   % \I \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
   % \\
   % \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
