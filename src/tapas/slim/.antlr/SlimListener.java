@@ -1,4 +1,4 @@
-// Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.13.1
+// Generated from /Users/thomas/tlogan@github.com/ERST/src/tapas/slim/Slim.g4 by ANTLR 4.13.1
 
 from dataclasses import dataclass
 from typing import *
@@ -7,8 +7,8 @@ from contextlib import contextmanager
 
 from tapas.slim.analyzer import * 
 
-from pyrsistent import m, pmap, v
-from pyrsistent.typing import PMap 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -28,6 +28,26 @@ public interface SlimListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIds(SlimParser.IdsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SlimParser#preamble}.
+	 * @param ctx the parse tree
+	 */
+	void enterPreamble(SlimParser.PreambleContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SlimParser#preamble}.
+	 * @param ctx the parse tree
+	 */
+	void exitPreamble(SlimParser.PreambleContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SlimParser#program}.
+	 * @param ctx the parse tree
+	 */
+	void enterProgram(SlimParser.ProgramContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SlimParser#program}.
+	 * @param ctx the parse tree
+	 */
+	void exitProgram(SlimParser.ProgramContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SlimParser#typ_base}.
 	 * @param ctx the parse tree
@@ -99,6 +119,16 @@ public interface SlimListener extends ParseTreeListener {
 	 */
 	void exitBase(SlimParser.BaseContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SlimParser#record}.
+	 * @param ctx the parse tree
+	 */
+	void enterRecord(SlimParser.RecordContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SlimParser#record}.
+	 * @param ctx the parse tree
+	 */
+	void exitRecord(SlimParser.RecordContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SlimParser#function}.
 	 * @param ctx the parse tree
 	 */
@@ -109,15 +139,15 @@ public interface SlimListener extends ParseTreeListener {
 	 */
 	void exitFunction(SlimParser.FunctionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SlimParser#record}.
+	 * Enter a parse tree produced by {@link SlimParser#keychain}.
 	 * @param ctx the parse tree
 	 */
-	void enterRecord(SlimParser.RecordContext ctx);
+	void enterKeychain(SlimParser.KeychainContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SlimParser#record}.
+	 * Exit a parse tree produced by {@link SlimParser#keychain}.
 	 * @param ctx the parse tree
 	 */
-	void exitRecord(SlimParser.RecordContext ctx);
+	void exitKeychain(SlimParser.KeychainContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SlimParser#argchain}.
 	 * @param ctx the parse tree
@@ -139,16 +169,6 @@ public interface SlimListener extends ParseTreeListener {
 	 */
 	void exitPipeline(SlimParser.PipelineContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SlimParser#keychain}.
-	 * @param ctx the parse tree
-	 */
-	void enterKeychain(SlimParser.KeychainContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SlimParser#keychain}.
-	 * @param ctx the parse tree
-	 */
-	void exitKeychain(SlimParser.KeychainContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link SlimParser#target}.
 	 * @param ctx the parse tree
 	 */
@@ -169,23 +189,23 @@ public interface SlimListener extends ParseTreeListener {
 	 */
 	void exitPattern(SlimParser.PatternContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SlimParser#pattern_base}.
+	 * Enter a parse tree produced by {@link SlimParser#base_pattern}.
 	 * @param ctx the parse tree
 	 */
-	void enterPattern_base(SlimParser.Pattern_baseContext ctx);
+	void enterBase_pattern(SlimParser.Base_patternContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SlimParser#pattern_base}.
+	 * Exit a parse tree produced by {@link SlimParser#base_pattern}.
 	 * @param ctx the parse tree
 	 */
-	void exitPattern_base(SlimParser.Pattern_baseContext ctx);
+	void exitBase_pattern(SlimParser.Base_patternContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SlimParser#pattern_record}.
+	 * Enter a parse tree produced by {@link SlimParser#record_pattern}.
 	 * @param ctx the parse tree
 	 */
-	void enterPattern_record(SlimParser.Pattern_recordContext ctx);
+	void enterRecord_pattern(SlimParser.Record_patternContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SlimParser#pattern_record}.
+	 * Exit a parse tree produced by {@link SlimParser#record_pattern}.
 	 * @param ctx the parse tree
 	 */
-	void exitPattern_record(SlimParser.Pattern_recordContext ctx);
+	void exitRecord_pattern(SlimParser.Record_patternContext ctx);
 }

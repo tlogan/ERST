@@ -1,4 +1,4 @@
-// Generated from /Users/thomas/tlogan/lightweight-tapas/src/tapas/slim/Slim.g4 by ANTLR 4.13.1
+// Generated from /Users/thomas/tlogan@github.com/ERST/src/tapas/slim/Slim.g4 by ANTLR 4.13.1
 
 from dataclasses import dataclass
 from typing import *
@@ -7,8 +7,8 @@ from contextlib import contextmanager
 
 from tapas.slim.analyzer import * 
 
-from pyrsistent import m, pmap, v
-from pyrsistent.typing import PMap 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
 
 
 
@@ -35,6 +35,30 @@ public class SlimBaseListener implements SlimListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIds(SlimParser.IdsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPreamble(SlimParser.PreambleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPreamble(SlimParser.PreambleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterProgram(SlimParser.ProgramContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProgram(SlimParser.ProgramContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -124,6 +148,18 @@ public class SlimBaseListener implements SlimListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterRecord(SlimParser.RecordContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRecord(SlimParser.RecordContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFunction(SlimParser.FunctionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -136,13 +172,13 @@ public class SlimBaseListener implements SlimListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterRecord(SlimParser.RecordContext ctx) { }
+	@Override public void enterKeychain(SlimParser.KeychainContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitRecord(SlimParser.RecordContext ctx) { }
+	@Override public void exitKeychain(SlimParser.KeychainContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -172,18 +208,6 @@ public class SlimBaseListener implements SlimListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterKeychain(SlimParser.KeychainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitKeychain(SlimParser.KeychainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterTarget(SlimParser.TargetContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -208,25 +232,25 @@ public class SlimBaseListener implements SlimListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPattern_base(SlimParser.Pattern_baseContext ctx) { }
+	@Override public void enterBase_pattern(SlimParser.Base_patternContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPattern_base(SlimParser.Pattern_baseContext ctx) { }
+	@Override public void exitBase_pattern(SlimParser.Base_patternContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPattern_record(SlimParser.Pattern_recordContext ctx) { }
+	@Override public void enterRecord_pattern(SlimParser.Record_patternContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPattern_record(SlimParser.Pattern_recordContext ctx) { }
+	@Override public void exitRecord_pattern(SlimParser.Record_patternContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

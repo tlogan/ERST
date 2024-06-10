@@ -579,7 +579,7 @@ rather than merely a type variable to allow for relational constraints.
   \\
   Q ::= &\C{subtyping qualification}
   \\
-  \I \code{;} &\C{empty}
+  \I \epsilon &\C{empty}
   \\
   \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
   \\
@@ -691,10 +691,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{LFP[$\alpha$|$\tau$]} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\mu S . \{ v \ |\ v \in  \llbracket \tau \rrbracket \} 
-\{ v \ |\  \forall \sigma . 
-\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
-\\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
+\mu  \mathbb{V}' . \{ v  \ |\  \exists v' . 
+\\ \I v' \in \mathbb{V}' \ \land\ 
+\\ \I v \in \llbracket subst(\{\alpha \mapsto v'\}, \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -720,7 +719,7 @@ rather than merely a type variable to allow for relational constraints.
 \end{flalign*}
 \[
 \begin{array}{rclr}
-\llbracket \code{;} \rrbracket 
+\llbracket \epsilon \rrbracket 
 &=& 
 \top
 & \C{empty} 
@@ -1116,7 +1115,7 @@ the variable's upper bound.
   } {
     \left< \Delta, \Omega \right>
     \claim 
-    \code{;}
+    \epsilon
   }
 
 \end{mathpar}

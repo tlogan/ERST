@@ -231,6 +231,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_ids; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterIds(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitIds(this);
+		}
 	}
 
 	public final IdsContext ids() throws RecognitionException {
@@ -297,6 +305,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_preamble; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterPreamble(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitPreamble(this);
+		}
 	}
 
 	public final PreambleContext preamble() throws RecognitionException {
@@ -376,6 +392,14 @@ public class SlimParser extends Parser {
 			this.context = context;
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterProgram(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitProgram(this);
+		}
 	}
 
 	public final ProgramContext program(Context context) throws RecognitionException {
@@ -446,6 +470,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_typ_base; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterTyp_base(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitTyp_base(this);
+		}
 	}
 
 	public final Typ_baseContext typ_base() throws RecognitionException {
@@ -585,6 +617,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_typ; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterTyp(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitTyp(this);
+		}
 	}
 
 	public final TypContext typ() throws RecognitionException {
@@ -800,6 +840,14 @@ public class SlimParser extends Parser {
 			this.context = context;
 		}
 		@Override public int getRuleIndex() { return RULE_negchain; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterNegchain(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitNegchain(this);
+		}
 	}
 
 	public final NegchainContext negchain(Typ context) throws RecognitionException {
@@ -871,6 +919,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_qualification; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterQualification(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitQualification(this);
+		}
 	}
 
 	public final QualificationContext qualification() throws RecognitionException {
@@ -939,6 +995,14 @@ public class SlimParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_subtyping; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterSubtyping(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitSubtyping(this);
+		}
 	}
 
 	public final SubtypingContext subtyping() throws RecognitionException {
@@ -1045,6 +1109,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitExpr(this);
+		}
 	}
 
 	public final ExprContext expr(Context nt) throws RecognitionException {
@@ -1299,6 +1371,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_base; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterBase(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitBase(this);
+		}
 	}
 
 	public final BaseContext base(Context nt) throws RecognitionException {
@@ -1428,6 +1508,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_record; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterRecord(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitRecord(this);
+		}
 	}
 
 	public final RecordContext record(Context nt) throws RecognitionException {
@@ -1535,6 +1623,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_function; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterFunction(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitFunction(this);
+		}
 	}
 
 	public final FunctionContext function(Context nt) throws RecognitionException {
@@ -1634,6 +1730,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_keychain; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterKeychain(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitKeychain(this);
+		}
 	}
 
 	public final KeychainContext keychain(Context nt) throws RecognitionException {
@@ -1716,6 +1820,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_argchain; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterArgchain(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitArgchain(this);
+		}
 	}
 
 	public final ArgchainContext argchain(Context nt) throws RecognitionException {
@@ -1811,6 +1923,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_pipeline; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterPipeline(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitPipeline(this);
+		}
 	}
 
 	public final PipelineContext pipeline(Context nt) throws RecognitionException {
@@ -1896,6 +2016,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_target; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterTarget(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitTarget(this);
+		}
 	}
 
 	public final TargetContext target(Context nt) throws RecognitionException {
@@ -1981,6 +2109,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterPattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitPattern(this);
+		}
 	}
 
 	public final PatternContext pattern(Context nt) throws RecognitionException {
@@ -2065,6 +2201,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_base_pattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterBase_pattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitBase_pattern(this);
+		}
 	}
 
 	public final Base_patternContext base_pattern(Context nt) throws RecognitionException {
@@ -2180,6 +2324,14 @@ public class SlimParser extends Parser {
 			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_record_pattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).enterRecord_pattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SlimListener ) ((SlimListener)listener).exitRecord_pattern(this);
+		}
 	}
 
 	public final Record_patternContext record_pattern(Context nt) throws RecognitionException {
