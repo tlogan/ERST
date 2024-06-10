@@ -607,65 +607,68 @@ rather than merely a type variable to allow for relational constraints.
 \end{figure*}
 
 \begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\llbracket \tau \rrbracket = \mathbb{V}}&
+\end{flalign*}
 \[
 \begin{array}{rclr}
 % \llbracket \Delta, \Omega, \code{$\alpha$} \rrbracket 
 % &=& \llbracket (\Delta, \Omega, resolve(\Delta, \Omega, \code{$\alpha$})) \rrbracket 
 % & \C{variable}
 % \\
-\llbracket \Delta, \Omega, \code{@} \rrbracket 
+\llbracket \code{@} \rrbracket 
 &=& 
 \{\code{@}\} 
 & \C{unit} 
 \\
-\llbracket \Delta, \Omega, \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
+\llbracket \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
 &=& 
-\{ \code{\textasciitilde{}$l$ $v$}\ |\ v \in \llbracket \Delta, \Omega, \tau \rrbracket \}
+\{ \code{\textasciitilde{}$l$ $v$}\ |\ v \in \llbracket \tau \rrbracket \}
 & \C{tag} 
 \\
-\llbracket \Delta, \Omega, \code{$l$:$\tau$} \rrbracket 
+\llbracket \code{$l$:$\tau$} \rrbracket 
 &=&{} 
-\{ \code{$l$:$v$}\ |\ v \in \llbracket \Delta, \Omega, \tau \rrbracket \}
+\{ \code{$l$:$v$}\ |\ v \in \llbracket \tau \rrbracket \}
 & \C{field} 
 \\
-\llbracket \Delta, \Omega, \code{$\tau_a$->$\tau_c$} \rrbracket 
+\llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
 \{ v_f \ |\ 
-\\ \I v_a \in \llbracket \Delta, \Omega, \tau_a \rrbracket\ \land\ 
-\\ \I v_c \in \llbracket \Delta, \Omega, \tau_c \rrbracket\ \land\ 
+\\ \I v_a \in \llbracket \tau_a \rrbracket\ \land\ 
+\\ \I v_c \in \llbracket \tau_c \rrbracket\ \land\ 
 \\ \I v_f(v_a) \longrightarrow^* v_c
 \\
 \}
 \end{array}
 & \C{implication} 
 \\
-\llbracket \Delta, \Omega, \code{$\tau_a$|$\tau_b$} \rrbracket 
+\llbracket \code{$\tau_a$|$\tau_b$} \rrbracket 
 &=& 
-\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\llbracket \tau_a \rrbracket 
 \cup
-\llbracket \Delta, \Omega, \tau_b \rrbracket 
+\llbracket \tau_b \rrbracket 
 & \C{union}
 \\
-\llbracket \Delta, \Omega, \code{$\tau_a$\&$\tau_b$} \rrbracket 
+\llbracket \code{$\tau_a$\&$\tau_b$} \rrbracket 
 &=& 
-\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\llbracket \tau_a \rrbracket 
 \cap
-\llbracket \Delta, \Omega, \tau_b \rrbracket 
+\llbracket \tau_b \rrbracket 
 & \C{intersection}
 \\
-\llbracket \Delta, \Omega, \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
+\llbracket \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
 &=& 
-\llbracket \Delta, \Omega, \tau_a \rrbracket 
+\llbracket \tau_a \rrbracket 
 \ \backslash\ 
-\llbracket \Delta, \Omega, \tau_b \rrbracket 
+\llbracket \tau_b \rrbracket 
 & \C{difference}
 \\
-\llbracket \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} \rrbracket 
+\llbracket \code{ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
 \{ v \ |\  \exists \sigma . 
-\\ \I keys(\sigma) = \{\widebar{\alpha}\}\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \land\ 
+\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \land\ 
 \\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
 \\
 \}
@@ -673,22 +676,31 @@ rather than merely a type variable to allow for relational constraints.
 & 
 \C{indexed union}
 \\
-\llbracket \Delta, \Omega, \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} \rrbracket 
+\llbracket \code{ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
 \{ v \ |\  \forall \sigma . 
-\\ \I keys(\sigma) = \{\widebar{\alpha}\}\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
+\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
 \\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
 \\
 \}
 \end{array}
 & 
 \C{indexed intersection}
+\\
+\llbracket \code{LFP[$\alpha$|$\tau$]} \rrbracket 
+&=& 
+\begin{array}[t]{@{}l}
+\mu S . \{ v \ |\ v \in  \llbracket \tau \rrbracket \} 
+\{ v \ |\  \forall \sigma . 
+\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
+\\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
+\\
+\}
+\end{array}
+& 
+\C{least fixed point}
 %%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%
-  % \I \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
-  % \\
-  % \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
-  % \\
   % \I \code{LFP[$\alpha$|$\tau$]} &\C{least fixed point}
   % \\
   % Q ::= &\C{subtyping qualification}
@@ -701,6 +713,22 @@ rather than merely a type variable to allow for relational constraints.
   % \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
   % \\
   % \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
+\end{array}
+\]
+\begin{flalign*}
+  &\boxed{\llbracket Q \rrbracket = \phi }&
+\end{flalign*}
+\[
+\begin{array}{rclr}
+\llbracket \code{;} \rrbracket 
+&=& 
+\top
+& \C{empty} 
+\\
+\llbracket \code{$Q$ ; $\tau_l$<:$\tau_u$} \rrbracket 
+&=& 
+\llbracket Q \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
+& \C{extension} 
 \end{array}
 \]
 \caption{Type Denotation}
