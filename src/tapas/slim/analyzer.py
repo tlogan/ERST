@@ -2145,13 +2145,26 @@ upper:
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
 
-                # TODO: ensure that strongest upper of frozen <: upper 
-                # - add strongest_upper check of transitive skolem variable 
+                # TODO: move inhabitable checks to typing rules
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
-                return [World(
-                    world.constraints.add(Subtyping(lower, upper)),
-                    world.freezer, world.relids
-                )]
+                # return [World(
+                #     world.constraints.add(Subtyping(lower, upper)),
+                #     world.freezer, world.relids
+                # )]
+
+                # NOTE: safety check 
+                # - add strongest_upper check of transitive skolem variable 
+                strongest_once_removed = self.resolve_strongest_upper(world, interp[0].id)[0]
+                worlds = [
+                    new_world
+                    for world in self.solve(world, strongest_once_removed, upper)
+                    for new_world in [World(
+                        world.constraints.add(Subtyping(lower, upper)),
+                        world.freezer, world.relids
+                    )]
+                    # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
+                ]
+                return worlds
             ###################################
             else:
                 strongest = interp[0]
@@ -2290,6 +2303,26 @@ upper:
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
+            ###################################
+            elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
+                # NOTE: the existence of a L <: F connstraint implies that a frozen variable can be expanded by subsequent information. 
+                # NOTE: what examples is this necessary for? 
+
+                # return [World(
+                #     world.constraints.add(Subtyping(lower, upper)),
+                #     world.freezer, world.relids
+                # )]
+
+                # TODO: add safety check? what is the safety condition?
+                weakest_once_removed = self.resolve_weakest_lower(world, interp[0].id)[0]
+                return [
+                    World(
+                        world.constraints.add(Subtyping(lower, upper)),
+                        world.freezer, world.relids
+                    )
+                    for world in self.solve(world, lower, weakest_once_removed)
+                ]
+            ###################################
             else:
                 weakest = interp[0]
                 return [

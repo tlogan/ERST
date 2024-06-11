@@ -5,9 +5,6 @@
 - in lower leastFP rule, consider case of non-relational least fixed point
 - move inhabitability check to typing
     - learning variables to be BOT should be allowed 
-- add learnable skolem case for upper variable
-    - create test example that demonstrates divergence without it
-- add strongest_upper check of transitive skolem variable 
 - update disjoint test to handle disjoint constraints in intersected universals 
     - see `test_max`: `G44 <: ~true @` vs `G44 <: ~false @`
     - consider if type needs to be constructed differently
