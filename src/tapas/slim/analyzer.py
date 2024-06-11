@@ -1387,6 +1387,7 @@ class Solver:
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
         self._limit = 100000000 
+        # self._limit = 5
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2059,27 +2060,13 @@ upper:
             return self.solve(world, self.aliasing[lower.id], upper)
         #######################################
 
-
-        elif isinstance(lower, LeastFP):
-            if isinstance(upper, LeastFP):
-                '''
-                NOTE: k-induction
-                use the pattern on LHS to dictate number of unrollings needed on RHS 
-                simply need to sub RHS into LHS's self-referencing variable
-                '''
-                '''
-                sub in induction hypothesis to world:
-                '''
-                renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                strong_body = sub_typ(renaming, lower.body)
-                return self.solve(world, strong_body, upper)
-            else:
-                # TODO: consider case non-relational least fixed point
-                '''
-                rewrite into existential making shape of relation visible
-                '''
-                paths = extract_relational_paths(lower)
-
+        elif isinstance(lower, LeastFP) and not isinstance(upper, LeastFP):
+            '''
+            NOTE: rewrite into existential making shape of relation visible
+            - allows matching shapes even if unrolling is undecidable
+            '''
+            paths = extract_relational_paths(lower)
+            if bool(paths):
                 rnode = RNode(m()) 
                 tvars = []
                 for path in paths:
@@ -2090,22 +2077,14 @@ upper:
                 # end for
 
                 key = to_record_typ(rnode) 
-                exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
+            else:
+                tvar = self.fresh_type_var()
+                tvars = [tvar]
+                key = tvar
 
-                return self.solve(world, exi, upper)
+            exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
 
-        #######################################
-        #######################################
-
-        # elif (
-        #     isinstance(strong, TVar) and strong.id in world.freezer and
-        #     isinstance(weak, TVar) and weak.id not in world.freezer
-        # ):
-        #     # NOTE: no interpretation; simply add constraint
-        #     return [World(
-        #         world.constraints.add(Subtyping(strong, weak)),
-        #         world.freezer, world.relids
-        #     )]
+            return self.solve(world, exi, upper)
 
         elif isinstance(upper, Exi): 
 #             print(f"""
@@ -2391,6 +2370,19 @@ upper:
 
         elif isinstance(upper, Bot): 
             return [] 
+
+        elif isinstance(lower, LeastFP):
+            '''
+            NOTE: k-induction
+            use the pattern on LHS to dictate number of unrollings needed on RHS 
+            simply need to sub RHS into LHS's self-referencing variable
+            '''
+            '''
+            sub in induction hypothesis to world:
+            '''
+            renaming : PMap[str, Typ] = pmap({lower.id : upper})
+            strong_body = sub_typ(renaming, lower.body)
+            return self.solve(world, strong_body, upper)
 
         elif isinstance(upper, LeastFP): 
 

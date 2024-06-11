@@ -952,6 +952,17 @@ EXI [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
     print(f"len(worlds): {len(worlds)}")
     assert worlds
 
+def test_nat_subs_exi():
+    strong = tl.nat
+    weak = (f"""
+EXI [X ;  X <: {tl.nat}] X 
+    """)
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, strong, weak)
+    print(f"len(worlds): {len(worlds)}")
+    assert worlds
+
 def test_lted_two_one_query():
     query = ('''
 ((~succ ~succ ~zero @, ~succ ~zero @), Z)
@@ -1687,7 +1698,7 @@ if __name__ == '__main__':
     # test_implication_unification()
     # test_lted_wrapper()
     # test_max()
-    test_max_annotated()
+    # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
     # test_constrained_universal_subtyping_fail()
@@ -1703,6 +1714,7 @@ if __name__ == '__main__':
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
     # test_lted_normalized_subs_lted_xyz()
+    test_nat_subs_exi()
     # test_relation_factorized_subs()
     # test_add_annotated()
     # test_even_list_subs_nat_list()
