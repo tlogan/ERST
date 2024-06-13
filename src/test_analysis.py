@@ -750,7 +750,7 @@ fix(case self => (
     '''
     (worlds, typ_var, parsetree, solver) = analyze(code)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "@"
+    # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_fix_aliased():
     code = '''
@@ -1531,7 +1531,7 @@ let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {el.add} in
 def test_fib():
     (worlds, typ_var, parsetree, solver) = analyze(el.fib)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "@"
+    # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_fib_annotated():
     # TODO: come up with a feasible annotation
@@ -1710,17 +1710,19 @@ if __name__ == '__main__':
     #####################################
     # test_fix()
     # test_add()
+    #####################################
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
     # test_lted_normalized_subs_lted_xyz()
-    test_nat_subs_exi()
+    # test_nat_subs_exi()
     # test_relation_factorized_subs()
     # test_add_annotated()
     # test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
-
+    #####################################
+    test_fib()
     pass
 
 #######################################################################

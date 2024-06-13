@@ -88,6 +88,37 @@ fix (case self => (
 ))
 """.strip())
 
+tail_fib = (f"""
+let add = {add} in
+let f = fix (case self => ((prev, curr) =>( 
+    case (~zero @) => prev 
+    case (~succ n) => 
+        let new_prev = curr in
+        let new_curr = ({add})(prev, curr) in
+        (self)(new_prev, new_curr)(n)
+))) in
+f(~zero @, ~succ ~zero @)
+""".strip())
+# | prev | curr | input 
+# | 0    | 1    | 2     
+# | 1    | 1    | 1     
+# | 1    | 2    | 0 => answer: 1     
+
+# | prev | curr |input 
+# | 0    | 1    | 3     
+# | 1    | 1    | 2     
+# | 1    | 2    | 1
+# | 2    | 3    | 0 => answer: 2     
+
+# | prev | curr |input 
+# | 0    | 1    | 4     
+# | 1    | 1    | 3     
+# | 1    | 2    | 2 
+# | 2    | 3    | 1     
+# | 3    | 5    | 0 => answer: 3
+
+# 0, 1, 1, 2, 3, 5, 8
+
 fact = (f"""
 let mult = {mult}
 fix (case self => ( 

@@ -656,6 +656,12 @@ def linearize_unions(t : Typ) -> list[Typ]:
     else:
         return [t]
 
+def linearize_intersections(t : Typ) -> list[Typ]:
+    if isinstance(t, Inter):
+        return linearize_intersections(t.left) + linearize_intersections(t.right)
+    else:
+        return [t]
+
 def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]]:  
     if False:
         assert False
@@ -2681,13 +2687,13 @@ class BaseRule(Rule):
         '''
         if len(constrained_branches) == 1:
             new_world, imp = constrained_branches[0]
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function SINGLE BRANCH
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-result: {concretize_typ(simplify_typ(imp))}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function SINGLE BRANCH
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# result: {concretize_typ(simplify_typ(imp))}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             return Result([new_world], simplify_typ(imp))
         else:
             result = Top()
@@ -2722,7 +2728,9 @@ result: {concretize_typ(simplify_typ(imp))}
                 bound_ids = tuple(var.id for var in renaming.values())
 
                 ######## NOTE: extrusion #############
+                # TODO: enable extrusion
                 # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) 
+                # NOTE: disable extrusion
                 extrusion = tuple([]) 
                 constraints = extrusion + (
                     sub_constraints(sub_map, tuple(reachable_constraints.difference(existential_constraints)))
@@ -2736,41 +2744,39 @@ result: {concretize_typ(simplify_typ(imp))}
                 #############################################
                 result = Inter(generalized_case, result)
 
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-new_world.constraints:
-{concretize_constraints(new_world.constraints)}
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# new_world.constraints:
+# {concretize_constraints(new_world.constraints)}
 
-new_world.freezer: {new_world.freezer} 
+# new_world.freezer: {new_world.freezer} 
 
-new_world.relids: {new_world.relids} 
+# new_world.relids: {new_world.relids} 
 
-reachable_constraints:
-{concretize_constraints(reachable_constraints)}
+# reachable_constraints:
+# {concretize_constraints(reachable_constraints)}
 
-existential_constraints:
-{concretize_constraints(existential_constraints)}
+# existential_constraints:
+# {concretize_constraints(existential_constraints)}
 
-imp:
-{concretize_typ(imp)}
+# imp:
+# {concretize_typ(imp)}
 
-body_typ:
-{concretize_typ(body)}
+# body_typ:
+# {concretize_typ(body)}
 
 
-result:
-{concretize_typ(result)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+# result:
+# {concretize_typ(result)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
             '''
             end for
             '''
             return Result(nt.worlds, simplify_typ(result))
-        '''
-        end if/else
-        '''
+        #end if/else
     '''
     end def
     '''
@@ -2922,6 +2928,14 @@ class ExprRule(Rule):
         ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> EXI[Z ; Z <: Y] Z
         """
 
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix START 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+body_typ: {concretize_typ(body_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
@@ -2975,44 +2989,55 @@ class ExprRule(Rule):
                 # - argument: constriants aren't removed; but are merely rerwritten
                 self_interp = self.solver.resolve_polarity(False, inner_world, self_typ, s())
                 # self_interp = self.solver.interpret_lower_id(inner_world, self_typ.id)
-
-                self_used_constraints = s()
-                if self_interp and isinstance(self_interp[0], Imp):
-                    self_left = self_interp[0].antec
-                    self_right = self_interp[0].consq
-
-                    self_used_constraints = self_interp[1]
-                    # TODO: determine where G1 comes from
-                    # - since G1 is not used elsewhere it is safe to remove
-                    # - how can we determine that it's not used elsewhere?
-
-
-
-                    print(f"""
+                # TODO: linearize intersections of self_interp
+                # - remove redudant types
+                # - there could be multiple implications due to multiple applications of recursive function 
+                # - are all of them necessary for constructing inductive hypothesis?
+                self_interps = list(set(linearize_intersections(self_interp[0])))
+                print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix --- SELF used constraints
+DEBUG combine_fix --- self_interp 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-self_used_constraints:
-{concretize_constraints(self_used_constraints)}
+self_interp: {concretize_typ(self_interp[0])}
 
-self_used_constraints.intersection(outer_world.constraints):
-{concretize_constraints(self_used_constraints.intersection(outer_world.constraints))}
+self_interps: 
+{[concretize_typ(t) for t in self_interps]}
 
-body_typ: {concretize_typ(body_typ)}
-in_typ: {in_typ.id}
-out_typ: {out_typ.id}
-self_typ: {self_typ.id}
+self_typ: {concretize_typ(self_typ)}
+
+inner_world.constraints:
+{concretize_constraints(inner_world.constraints)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    """)
-                    IH_rel_constraints = s(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
-                    IH_left_constraints = s(Subtyping(self_left, IH_typ))
+                """)
 
-                else:
-                    self_used_constraints = s()
+                self_used_constraints = self_interp[1]
+                IH_rel_constraints = s()
+                IH_left_constraints = s()
 
-                    IH_rel_constraints = s()
-                    IH_left_constraints = s()
-                #end if
+                for self_interp_case in self_interps:
+                    if isinstance(self_interp_case, Imp):
+                        self_left = self_interp_case.antec
+                        self_right = self_interp_case.consq
+    #                     print(f"""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG combine_fix --- SELF used constraints
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # self_used_constraints:
+    # {concretize_constraints(self_used_constraints)}
+
+    # self_used_constraints.intersection(outer_world.constraints):
+    # {concretize_constraints(self_used_constraints.intersection(outer_world.constraints))}
+
+    # body_typ: {concretize_typ(body_typ)}
+    # in_typ: {in_typ.id}
+    # out_typ: {out_typ.id}
+    # self_typ: {self_typ.id}
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #                     """)
+                        IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
+                        IH_left_constraints = IH_left_constraints.add(Subtyping(self_left, IH_typ))
+                    #end if
+                #end for
 
                 # TODO: remove; this shouldn't be necessary if body is interpreted before solving
                 # inner_world = World(pset(
@@ -3024,9 +3049,10 @@ self_typ: {self_typ.id}
                 # NOTE: assert that used constaints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
                 assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
-                reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                rel_constraints = IH_rel_constraints.union(reachable_constraints)
-                left_constraints = IH_left_constraints.union(reachable_constraints)
+                rel_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints)
+                left_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, left_typ)
+                left_constraints = IH_left_constraints.union(left_reachable_constraints)
 
                 # TODO: what if there are existing frozen variables in inner_world?
                 # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
@@ -3039,6 +3065,21 @@ self_typ: {self_typ.id}
                 # TODO: remove old commented code
                 # rel_world = World(pset(rel_constraints), pset(bound_ids), inner_world.relids)
                 # package_typ(rel_world, rel_pattern)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix --- LEFT TYP 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+IH_left_constraints:
+{concretize_constraints(IH_left_constraints)}
+
+left_reachable_constraints:
+{concretize_constraints(left_reachable_constraints)}
+
+left_typ:
+{concretize_typ(left_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 if bool(left_bound_ids):
                     constrained_left = Exi(tuple(left_bound_ids), tuple(left_constraints), left_typ)
