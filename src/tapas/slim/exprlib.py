@@ -64,6 +64,14 @@ fix (case self => (
 ))
 """.strip())
 
+curried_sumr = (f"""
+let add = {add} in
+fix (case self => b => ( 
+    case (~nil @) => b
+    case (~cons (x, xs)) => (add)((self)(xs, b), x)
+))
+""".strip())
+
 foldr = (f'''
 fix (case self => ( 
     case (f, ~nil @, b) => b
@@ -75,6 +83,13 @@ foldl = (f'''
 fix (case self => ( 
     case (f, ~nil @, b) => b
     case (f, ~cons (x, xs), b) => self(f, xs, (f)(b, x))
+))
+'''.strip())
+
+curried_foldl = (f'''
+fix (case self => b => ( 
+    case (f, ~nil @) => b
+    case (f, ~cons (x, xs)) => self(f, xs, (f)(b, x))
 ))
 '''.strip())
 
@@ -165,6 +180,45 @@ let length = {length} in
     else
         (length)(l)
     )
+))
+""".strip())
+
+
+
+halve_list = (f"""
+fix(case self => (
+    case ~nil @ => (~nil @, ~nil @) 
+    case ~cons (x, ~nil @) => (~cons (x, ~nil @), ~nil @) 
+    case ~cons (x, ~cons(y, zs)) => 
+        self(zs) |> (case (ls, rs) => (
+            (~cons (x, ls), ~cons (y, rs))
+        )   
+))
+""".strip())
+
+merge_lists = (f"""
+let lted = ({lted}) in
+fix(case self => (
+    case (xs, ~nil @) => xs 
+    case (~cons (x, xs), ~cons (y, ys)) => 
+        if lted(x, y) then
+            ~cons (x, self(xs, ~cons (y, ys)))
+        else
+            ~cons (y, self(~cons (x, xs), ys))
+))
+""".strip())
+
+
+merge_sort = (f"""
+let halve = ({halve_list}) in
+let merge = ({merge_lists}) in
+fix(case self => (
+    case ~nil @ => ~nil @
+    case ~cons(x, ~nil @) => ~cons(x, ~nil @)
+    case xs =>
+        halve(xs) |> (case (ys, zs) =>
+            merge(self(ys), self(zs))
+        )
 ))
 """.strip())
 
