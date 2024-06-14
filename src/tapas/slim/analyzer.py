@@ -255,6 +255,12 @@ class Branch:
     body : Typ
 
 @dataclass(frozen=True, eq=True)
+class AugBranch:
+    world : World
+    pattern : Typ 
+    body : Typ
+
+@dataclass(frozen=True, eq=True)
 class RecordBranch:
     worlds : list[World]
     label : str 
@@ -610,45 +616,9 @@ def diff_well_formed(diff : Diff) -> bool:
     '''
     return negation_well_formed(diff.negation)
 
-def make_diff(context : Typ, negs : list[Typ]) -> Typ:
-    result = context 
-    for neg in negs:
-        result = Diff(result, neg)
-    return result
 
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
     return Inter(TField("head", left), TField("tail", right))
-
-def augment_branches_with_diff(branches : list[Branch]) -> list[Branch]:
-    '''
-    nil -> zero
-    cons X -> succ Y 
-    --------------------
-    (nil,zero) | (cons X\\nil, succ Y)
-    '''
-
-    augmented_branches = []
-    negs = []
-
-    for branch in branches:
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG from_branches_to_choices
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG case: {concretize_typ(case)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-        augmented_branches += [Branch(branch.worlds, make_diff(branch.pattern, negs), branch.body)]
-        neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
-        neg = (
-            Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
-            if neg_fvs else
-            branch.pattern 
-        )
-        # TODO
-        # negs += [neg]
-        negs = []
-    return augmented_branches 
 
 def linearize_unions(t : Typ) -> list[Typ]:
     if isinstance(t, Unio):
@@ -1865,6 +1835,37 @@ class Solver:
             # TODO: decompose into parts and check subparts are inhabitable
             return True
 
+    def make_diff(self, world : World, context : Typ, negs : list[Typ]) -> Typ:
+        result = context 
+        for neg in negs:
+            if not self.is_disjoint(world, result, neg):
+                result = Diff(result, neg)
+        return result
+
+    def augment_branches_with_diff(self, branches : list[Branch]) -> list[AugBranch]:
+        '''
+        nil -> zero
+        cons X -> succ Y 
+        --------------------
+        (nil,zero) | (cons X\\nil, succ Y)
+        '''
+
+        augmented_branches = []
+        negs = []
+
+        for branch in branches:
+            for world in branch.worlds:
+                augmented_branches += [AugBranch(world, self.make_diff(world, branch.pattern, negs), branch.body)]
+                neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
+                neg = (
+                    Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
+                    if neg_fvs else
+                    branch.pattern 
+                )
+                negs += [neg]
+        return augmented_branches 
+
+
 
     def is_disjoint(self, world : World, t1 : Typ, t2 : Typ) -> bool:
         """
@@ -1888,6 +1889,13 @@ class Solver:
             ) 
         elif isinstance(t1, TField) and isinstance(t2, TField) and t1.label == t2.label:
             return self.is_disjoint(world, t1.body, t2.body) 
+
+        elif isinstance(t2, Exi):
+            renaming = self.make_renaming(t2.ids)
+            constraints = world.constraints.union(sub_constraints(renaming, t2.constraints))
+            body = sub_typ(renaming, t2.body)
+            world = replace(world, constraints = constraints)
+            return self.is_disjoint(world, t1, body) 
         else:
             return False
 
@@ -2647,7 +2655,7 @@ class BaseRule(Rule):
         return Result(nt.worlds, simplify_typ(result))
 
     def combine_function(self, nt : Context, branches : list[Branch]) -> Result:
-        augmented_branches = augment_branches_with_diff(branches)
+        augmented_branches = self.solver.augment_branches_with_diff(branches)
         '''
         Example
         ==============
@@ -2661,27 +2669,23 @@ class BaseRule(Rule):
 
         constrained_branches = []
         for branch in reversed(augmented_branches): 
-            for branch_world in reversed(branch.worlds):
-                '''
-                interpret
-                '''
-                new_world = branch_world
-
-                # TODO: ensure that it's safe to remove used constraints after interpretation
-                # - safety criteria: interpreted variables are NOT used elsewhere 
-                # - ERROR: safety criteria doesn't seem to be met by branch body
-                # (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-                return_typ = branch.body
-                # new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
-                # (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
-                param_typ = branch.pattern
-                # new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
-                imp = Imp(param_typ, return_typ)
-
-                constrained_branches.append((new_world, imp))
             '''
-            end for 
+            interpret
             '''
+            new_world = branch.world
+
+            # TODO: ensure that it's safe to remove used constraints after interpretation
+            # - safety criteria: interpreted variables are NOT used elsewhere 
+            # - ERROR: safety criteria doesn't seem to be met by branch body
+            # (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
+            return_typ = branch.body
+            # new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
+            # (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
+            param_typ = branch.pattern
+            # new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
+            imp = Imp(param_typ, return_typ)
+
+            constrained_branches.append((new_world, imp))
         '''
         end for 
         '''

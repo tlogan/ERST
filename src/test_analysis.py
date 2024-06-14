@@ -1709,7 +1709,7 @@ if __name__ == '__main__':
     # test_plus_equals_two_query()
     #####################################
     # test_fix()
-    # test_add()
+    test_add()
     #####################################
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
@@ -1722,7 +1722,7 @@ if __name__ == '__main__':
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
-    test_fib()
+    # test_fib()
     pass
 
 #######################################################################

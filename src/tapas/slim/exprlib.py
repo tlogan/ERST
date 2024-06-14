@@ -222,4 +222,4 @@ fix(case self => (
 ))
 """.strip())
 
-#TODO: divide, split, merge, sort, reverse, append/concat
+#TODO: reverse, append/concat
