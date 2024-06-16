@@ -45,6 +45,31 @@ fix (case self => (
 ))
 """.strip())
 
+concat_lists = (f"""
+fix (case self => ( 
+    case (~nil @, ys) => ys 
+    case (~cons (x, xs), ys) => ~cons (x, (self)(xs, ys))
+))
+""".strip())
+
+reverse = (f"""
+let concat = ({concat_lists}) in
+fix (case self => ( 
+    case (~nil @) => ~nil @ 
+    case (~cons (x, xs)) => 
+        concat((self)(xs), ~cons(x, ~nil @))
+))
+""".strip())
+
+tail_reverse = (f"""
+let f = fix (case self => result => ( 
+    case (~nil @) => result 
+    case (~cons (x, xs)) => 
+        self(~cons(x, result))(xs)
+)) in
+f(~nil @)
+""".strip())
+
 
 suml = (f"""
 let add = {add} in
@@ -53,8 +78,6 @@ fix (case self => (
     case (~cons (x, xs), b) => self(xs, (add)(b, x))
 ))
 """.strip())
-
-
 
 sumr = (f"""
 let add = {add} in
@@ -105,12 +128,12 @@ fix (case self => (
 
 tail_fib = (f"""
 let add = {add} in
-let f = fix (case self => ((prev, curr) =>( 
-    case (~zero @) => prev 
+let f = fix (case self => ((result, next) =>( 
+    case (~zero @) => result 
     case (~succ n) => 
-        let new_prev = curr in
-        let new_curr = ({add})(prev, curr) in
-        (self)(new_prev, new_curr)(n)
+        let new_result = next in
+        let new_next = ({add})(result, next) in
+        (self)(new_result, new_next)(n)
 ))) in
 f(~zero @, ~succ ~zero @)
 """.strip())
