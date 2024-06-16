@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import *
 from dataclasses import dataclass
 
+ltd = ('''
+fix(case self => (
+    case (~zero @, ~succ x) => ~true @ 
+    case (~succ a, ~succ b) => self(a,b) 
+    case (x, ~zero @) => ~false @ 
+))
+''')
+
 lted = ('''
 fix(case self => (
     case (~zero @, x) => ~true @ 
@@ -10,6 +18,7 @@ fix(case self => (
     case (~succ x, ~zero @) => ~false @ 
 ))
 ''')
+
 
 max = (f'''
 let lted = {lted} in
@@ -243,6 +252,53 @@ fix(case self => (
             merge(self(ys), self(zs))
         )
 ))
+""".strip())
+
+is_member = (f"""
+let lt = {ltd} in
+fix(case self => (
+    case (x, ~empty @) => ~false @
+    case (x, ~tree (c, l, y, r)) => 
+        if lt(x, y) then 
+            self(x, l)
+        else if lt(y, x) then
+            self(x, r)
+        else
+            ~true @ 
+))
+""".strip())
+
+balance = (f"""
+fix(self =>
+    case (~black @,~tree(~red @,~tree(~red @,a,x,b),y,c),z,d) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
+    case (~black @,~tree(~red @,a,x,~tree(~red @,b,y,c)),z,d) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
+    case (~black @,a,x,~tree(~red @,~tree(~red @,b,y,c),z,d)) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
+    case (~black @,a,x,~tree(~red @,b,y,~tree(~red @,c,z,d))) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
+    case body => ~tree body 
+)
+
+""".strip())
+
+insert = (f"""
+let balance = {balance} in
+let lt = {ltd} in
+case (x, t) => (
+    let f = fix(case self => (
+        case (~empty @) => ~tree (~red @, ~empty @, x, ~empty @) 
+        case (~tree (color, l, y, r)) => (
+            (if lt(x,y) then
+                balance(color, (self)(l), y, r)
+            else if lt(y,x) then
+                balance(color, l, y, (self)(r))
+            else
+                ~tree (color, l, y, r) in 
+            )
+        )
+    )) in
+    f(t) |> (case ~tree (color, l, y, r) =>
+        ~tree (~black @, l, y, r)
+    )
+)
 """.strip())
 
 #TODO: reverse, append/concat
