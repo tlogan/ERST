@@ -34,6 +34,13 @@
     % morekeywords={let, fix, in}
 }
 
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+
 \title{Extrinsic Relational Subtyping}
 % \author{}
 % \date{}
@@ -49,6 +56,7 @@
 \newcommand{\B}[1]{\textbf{#1}}
 \newcommand{\F}[1]{\text{#1}}
 \newcommand{\bigand}{\bigwedge\nolimits}
+\newcommand{\bigor}{\bigvee\nolimits}
 \newcommand{\C}[1]{\color{teal} \rhd\ \emph{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
@@ -581,30 +589,135 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \epsilon &\C{empty}
   \\
-  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
+  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{subtyping extension}
   \\
   \\
   \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
   \\
   \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
-%   \\
-%   \Gamma ::= &\C{typing env}
-%   \\
-%   \I \bullet  &\C{empty}
-%   \\
-%   \I \Gamma; \code{$x$:$\tau$} &\C{extend}
-%   \\
-%   \Delta ::= &\C{subtyping env}
-%   \\
-%   \I \bullet &\C{empty}
-%   \\
-%   \I \Delta; \code{$\tau$<:$\tau$} &\C{extend}
+\end{array}
+\]
+\caption{Type Syntax}
+\label{fig:type_syntax}
+\end{figure*}
+
+
+\begin{figure*}[h]
+\[
+\begin{array}[t]{l r}
+  e ::= &\C{expression}
+  \\
+  \I \code{$x$} &\C{variable}
+  \\
+  \I \code{@} &\C{unit}
+  \\
+  \I \code{\textasciitilde{}$l$ $e$} &\C{tag}
+  \\
+  \I \widebar{\code{;$l$=$e$}} &\C{record}
+  \\
+  \I \code{$e$,$e$} &\C{tuple}
+  \\
+  \I \widebar{\code{case $p$=>$e$}} &\C{function}
+  \\
+  \I \code{$e$.$l$} &\C{projection}
+  \\
+  \I \code{($e$)($e$)} &\C{application}
+  \\
+  \I \code{$e$ |> $e$} &\C{funneling}
+  \\
+  \I \code{fix($e$)} &\C{recursion}
+  \\
+  \I \code{let $x$:$\tau$ = $e$ in $e$} &\C{binding}
+  \\
+  \I \code{($e$)} &\C{association}
+  \\
+  \\
+p ::= &\C{pattern}
+  \\
+  \I \code{$x$} &\C{variable}
+  \\
+  \I \code{@} &\C{unit}
+  \\
+  \I \code{\textasciitilde{}$l$ $p$} &\C{tag}
+  \\
+  \I \widebar{\code{;$l$=$p$}} &\C{record}
+  \\
+  \I \code{$p$,$p$} &\C{tuple}
+  \\
+  \I \code{($p$)} &\C{association}
+  \\
+  \\
+v ::= &\C{value}
+  \\
+  \I \code{@} &\C{unit}
+  \\
+  \I \code{\#$l$ $v$}  &\C{tag}
+  \\
+  \I \widebar{\code{;$l$=$v$}} &\C{record}
+  \\
+  \I \code{$v$,$v$} &\C{tuple}
+  \\
+  \I \widebar{\code{case $p$=>$e$}} &\C{function}
+  \\
+  \I \code{($v$)} &\C{association}
+  \\
+  \\
+  \Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
 \end{array}
 \]
 
-\caption{Syntax}
-\label{fig:syntax}
+\caption{Expression Syntax}
+\label{fig:expr_syntax}
 \end{figure*}
+
+
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{e \longrightarrow e}&
+\end{flalign*}
+\begin{mathpar}
+
+  \inferrule[PopPush] {
+    e \longrightarrow e'
+  } {
+    E[e] \longrightarrow E[e']
+  }
+
+  \inferrule[Projection] {
+    \lor_i(i = j)
+  } {
+    \widebar{\code{;$l_i$=$v_i$}}^i\code{.$l_j$} \longrightarrow v_j
+  }
+\end{mathpar}
+\caption{Operational Semantics}
+\label{fig:operational_semantics}
+\end{figure*}
+
+\begin{theorem}(Progress of typing)
+\begin{mathpar}
+  \inferrule { 
+    \oslash \vdash e : \tau
+  } {
+    (e = v) \vee 
+    e \longrightarrow e'
+  } 
+\end{mathpar}
+\end{theorem}
+
+
+\begin{theorem}(Preservation of typing)
+\begin{mathpar}
+  \inferrule { 
+    \oslash \vdash e : \tau
+    \\
+    e \longrightarrow e'
+  } {
+    \oslash \vdash e' : \tau
+  } 
+\end{mathpar}
+\end{theorem}
+
+
 
 \begin{figure*}[h]
 \begin{flalign*}
@@ -699,19 +812,6 @@ rather than merely a type variable to allow for relational constraints.
 \end{array}
 & 
 \C{least fixed point}
-%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%
-  % \I \code{LFP[$\alpha$|$\tau$]} &\C{least fixed point}
-  % \\
-  % Q ::= &\C{subtyping qualification}
-  % \\
-  % \I \code{;} &\C{empty}
-  % \\
-  % \I \code{$Q$ ; $\tau$<:$\tau$} &\C{extend subtyping}
-  % \\
-  % \\
-  % \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
-  % \\
-  % \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
 \end{array}
 \]
 \begin{flalign*}
@@ -734,79 +834,6 @@ rather than merely a type variable to allow for relational constraints.
 \label{fig:type_denotation}
 \end{figure*}
 
-% \begin{figure*}[h]
-% \[
-% \begin{array}[t]{l r}
-%   e ::= &\C{expression}
-%   \\
-%   \I \code{$x$} &\C{variable}
-%   \\
-%   \I \code{()} &\C{unit}
-%   \\
-%   \I \code{\#$l$ $e$}  &\C{tag}
-%   \\
-%   \I \widebar{\code{@$l$=$e$}} &\C{record}
-%   \\
-%   \I \widebar{\code{path $m$=>$e$}} &\C{function}
-%   \\
-%   \I \code{$e$.$l$} &\C{projection}
-%   \\
-%   \I \code{$e$($e$)} &\C{application}
-%   \\
-%   \I \code{fix($e$)} &\C{fix}
-%   \\
-%   \I \code{let $x$ : $\tau$ = $e$ in $e$}  &\C{let}
-%   \\
-% m ::= &\C{pattern}
-%   \\
-%   \I \code{$x$} &\C{variable}
-%   \\
-%   \I \code{()} &\C{unit}
-%   \\
-%   \I \code{\#$l$ $e$}  &\C{tag}
-%   \\
-%   \I \widebar{\code{@$l$=$e$}} &\C{record}
-% \end{array}
-% \begin{array}[t]{l r}
-% \tau ::= &\C{type}
-%   \\
-%   \I \code{$\alpha$}  &\C{variable}
-%   \\
-%   \I \code{unit} &\C{unit}
-%   \\
-%   \I \code{?$l$ $\tau$} &\C{tag}
-%   \\
-%   \I \code{$l$:$\tau$} &\C{field}
-%   \\
-%   \I \code{$\tau$->$\tau$} &\C{implication}
-%   \\
-%   \I \code{$\tau$|$\tau$} &\C{union}
-%   \\
-%   \I \code{$\tau$\&$\tau$} &\C{intersection}
-%   \\
-%   \I \code{\{$\widebar{\alpha}$//$\tau$ with $\tau$<:$\tau$\}} &\C{existential}
-%   \\
-%   \I \code{[$\alpha$<:$\tau$]$\tau$} &\C{universal}
-%   \\
-%   \I \code{induc[$\alpha$]$\tau$} &\C{induction}
-%   \\
-%   \Gamma ::= &\C{typing env}
-%   \\
-%   \I \bullet  &\C{empty}
-%   \\
-%   \I \Gamma; \code{$x$:$\tau$} &\C{extend}
-%   \\
-%   \Delta ::= &\C{subtyping env}
-%   \\
-%   \I \bullet &\C{empty}
-%   \\
-%   \I \Delta; \code{$\tau$<:$\tau$} &\C{extend}
-% \end{array}
-% \]
-
-% \caption{Syntax}
-% \label{fig:syntax}
-% \end{figure*}
 
 \subsection{Typing}
 The typing is given in \FIG{fig:typing}.
