@@ -663,6 +663,10 @@ v ::= &\C{value}
   \\
   \\
   \Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
+  \\
+  \mathbb{V} \owns v &\C{set of values}
+  \\
+  \mathbb{H} \owns x \mapsto v &\C{set of value bindings}
 \end{array}
 \]
 
@@ -677,16 +681,96 @@ v ::= &\C{value}
 \end{flalign*}
 \begin{mathpar}
 
-  \inferrule[PopPush] {
+  \inferrule[Tag] {
     e \longrightarrow e'
   } {
-    E[e] \longrightarrow E[e']
+    \code{\textasciitilde{}$l$ $e$} \longrightarrow \code{\textasciitilde{}$l$ $e'$}
+  }
+
+  \inferrule[RemainderRecord] {
+    e \longrightarrow e'
+  } {
+    \code{;$l$=$v$} :: e \longrightarrow \code{;$l$=$v$} :: e' 
+  }
+
+  \inferrule[FirstRecord] {
+    e \longrightarrow e'
+  } {
+    \code{;$l$=$e$} :: e_r \longrightarrow \code{;$l$=$e'$} :: e_r
+  }
+
+
+  \inferrule[FirstProjection] {
+    e \longrightarrow e'
+  } {
+    \code{$e$.$l$} \longrightarrow \code{$e'$.$l$}
   }
 
   \inferrule[Projection] {
     \lor_i(i = j)
   } {
     \widebar{\code{;$l_i$=$v_i$}}^i\code{.$l_j$} \longrightarrow v_j
+  }
+
+  \inferrule[FirstApplication] {
+    e \longrightarrow e'
+  } {
+    \code{($e$)($e_a$)} \longrightarrow \code{($e'$)($e_a$)}
+  }
+
+
+  \inferrule[MatchedApplication] {
+    unify(p,v) = \mathbb{H}
+  } {
+    \code{(case $p$=>$e$ $::$ $e_r$)($v$)} \longrightarrow subst(e, \mathbb{H})
+  }
+
+  \inferrule[NextApplication] {
+    unify(p, v) \neq \mathbb{H}
+    \\
+    \code{($cases$)($v$)} \longrightarrow e_b 
+  } {
+    \code{(case $p$=>$e_a$ $::$ $e_r$)($v$)} \longrightarrow e_b 
+  }
+
+  \inferrule[FirstBinding] {
+    e \longrightarrow e'
+  } {
+    \code{let $x$:$\tau$ = $e$ in $e_k$} \longrightarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
+  }
+
+  \inferrule[Binding] {
+  } {
+    \code{let $x$:$\tau$ = $v$ in $e$} \longrightarrow subst(e, \{x \mapsto v\})
+  }
+
+  \inferrule[FirstRecursion] {
+    e \longrightarrow e'
+  } {
+    \code{fix(e)} \longrightarrow \code{fix(e')}
+  }
+
+  \inferrule[Recursion] {
+  } {
+    \code{fix(case $x$ => $e$)} \longrightarrow subst(e, \{x \mapsto \code{fix(case $x$ => $e$)}\})
+  }
+
+  \inferrule[Tuple] {
+    \code{;left=$e_a$ ;right=$e_b$} \longrightarrow e' 
+  } {
+    \code{$e_a$,$e_b$} \longrightarrow e' 
+  }
+
+  \inferrule[Funneling] {
+    \code{($e_b$)($e_a$)} \longrightarrow e' 
+  } {
+    \code{$e_a$ |> $e_b$} \longrightarrow e' 
+  }
+
+  \inferrule[Assoc] {
+    e \longrightarrow e' 
+  } {
+    \code{($e$)} \longrightarrow e' 
   }
 \end{mathpar}
 \caption{Operational Semantics}
