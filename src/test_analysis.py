@@ -1693,6 +1693,36 @@ let y : T = (~dos @) in
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
+
+
+def test_concat_lists():
+    (worlds, typ_var, parsetree, solver) = analyze(el.concat_lists)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_reverse():
+    (worlds, typ_var, parsetree, solver) = analyze(el.reverse)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_tail_reverse():
+    # TODO: compare curried vs non-curried version
+    (worlds, typ_var, parsetree, solver) = analyze(el.tail_reverse)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_stepped_tail_reverse():
+    # TODO: compare curried vs non-curried version
+    (worlds, typ_var, parsetree, solver) = analyze(el.stepped_tail_reverse)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_curried_tail_reverse():
+    # TODO: compare curried vs non-curried version
+    (worlds, typ_var, parsetree, solver) = analyze(el.curried_tail_reverse)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
 if __name__ == '__main__':
     # test_single_shape()
     # test_implication_unification()
@@ -1709,7 +1739,7 @@ if __name__ == '__main__':
     # test_plus_equals_two_query()
     #####################################
     # test_fix()
-    test_add()
+    # test_add()
     #####################################
     # test_existential_with_extrusion()
     # test_existential_with_upper_bound()
@@ -1723,64 +1753,12 @@ if __name__ == '__main__':
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
     # test_fib()
+    #####################################
+    # test_concat_lists()
+    # test_reverse()
+    # test_tail_reverse()
+    test_stepped_tail_reverse()
+    # test_curried_tail_reverse()
     pass
 
 #######################################################################
-    # main(sys.argv)
-####################
-    # interact()
-####################
-
-#     test_parse_tree_serialize(f'''
-# fix (self => (
-#     fun ~nil () => ~zero () 
-#     fun ~cons x => ~succ (self(x)) 
-# ))
-#     ''')
-
-####################
-
-#     test_parse_tree_serialize(f'''
-# .hello = ()
-# .bye = ()
-#     ''')
-
-
-
-
-##############################
- 
-
-# _guidance : Union[Symbol, Terminal, Nonterm]
-# @property
-# def guidance(self) -> Union[Symbol, Terminal, Nonterm]:
-#     return self._guidance
-# 
-# @guidance.setter
-# def guidance(self, value : Union[Symbol, Terminal, Nonterm]):
-#     self._guidance = value
-
-#def getAllText(self):  # include hidden channel
-#    # token_stream = ctx.parser.getTokenStream()
-#    token_stream = self.getTokenStream()
-#    lexer = token_stream.tokenSource
-#    input_stream = lexer.inputStream
-#    # start = ctx.start.start
-#    start = 0
-#    # stop = ctx.stop.stop
-#
-#    # TODO: increment token position in attributes
-#    # TODO: map token position to result 
-#    # TODO: figure out a way to get the current position of the parser
-#    stop = self.getRuleIndex()
-#    # return input_stream.getText(start, stop)
-#    print(f"start: {start}")
-#    print(f"stoppy poop: {stop}")
-#    return "<<not yet implemented>>"
-#    # return input_stream.getText(start, stop)[start:stop]
-
-# @contextmanager
-# def manage_guidance(self):
-#     if not self.overflow():
-#         yield
-#     self.updateOverflow()

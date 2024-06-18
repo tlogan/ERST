@@ -2,6 +2,14 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- update alias type mechanism with check for no free variables
+    - replacement of reconstructed type with alias type
+- update examples with alias to make type reconstruction easier to read
+- update fix type reconstruction to construct simple types
+    - if body type of fix doesn't match expected type structure 
+    - e.g. curried bodies
+- update `extract_field_plain` to handle Diff type
+
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary

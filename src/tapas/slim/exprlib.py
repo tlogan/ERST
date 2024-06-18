@@ -11,13 +11,14 @@ fix(case self => (
 ))
 ''')
 
-lted = ('''
+
+lted = (f"""
 fix(case self => (
-    case (~zero @, x) => ~true @ 
-    case (~succ a, ~succ b) => self(a,b) 
-    case (~succ x, ~zero @) => ~false @ 
+    case (~zero @, n) => ~true @ 
+    case (~succ m, ~succ n) => self(m,n) 
+    case (~succ m, ~zero @) => ~false @ 
 ))
-''')
+""".strip())
 
 
 max = (f'''
@@ -71,7 +72,27 @@ fix (case self => (
 """.strip())
 
 tail_reverse = (f"""
-let f = fix (case self => result => ( 
+let f = fix (case self => ( 
+    case (result, ~nil @) => result 
+    case (result, ~cons (x, xs)) => 
+        self(~cons(x, result), xs)
+)) in
+case xs => f(~nil @, xs)
+""".strip())
+
+stepped_tail_reverse = (f"""
+let f = fix (case self => case (result, l) => ( 
+    l |> (
+    case (~nil @) => result 
+    case (~cons (x, xs)) => 
+        self(~cons(x, result), xs)
+    )
+)) in
+case xs => f(~nil @, xs)
+""".strip())
+
+curried_tail_reverse = (f"""
+let f = fix (case self => case result => ( 
     case (~nil @) => result 
     case (~cons (x, xs)) => 
         self(~cons(x, result))(xs)
@@ -91,37 +112,37 @@ fix (case self => (
 sumr = (f"""
 let add = {add} in
 fix (case self => ( 
-    case (~nil @, b) => b
-    case (~cons (x, xs), b) => (add)((self)(xs, b), x)
+    case (b, ~nil @) => b
+    case (b, ~cons (x, xs)) => (add)((self)(b, xs), x)
 ))
 """.strip())
 
 curried_sumr = (f"""
 let add = {add} in
-fix (case self => b => ( 
+fix (case self => case b => ( 
     case (~nil @) => b
-    case (~cons (x, xs)) => (add)((self)(xs, b), x)
+    case (~cons (x, xs)) => (add)((self)(b)(xs), x)
 ))
 """.strip())
 
 foldr = (f'''
 fix (case self => ( 
-    case (f, ~nil @, b) => b
-    case (f, ~cons (x, xs), b) => f((self)(f, xs, b), x)
+    case (f, b, ~nil @) => b
+    case (f, b, ~cons (x, xs)) => f((self)(f, b, xs), x)
 ))
 '''.strip())
 
 foldl = (f'''
 fix (case self => ( 
-    case (f, ~nil @, b) => b
-    case (f, ~cons (x, xs), b) => self(f, xs, (f)(b, x))
+    case (f, b, ~nil @) => b
+    case (f, b, ~cons (x, xs)) => self(f, (f)(b, x), xs)
 ))
 '''.strip())
 
 curried_foldl = (f'''
-fix (case self => b => ( 
-    case (f, ~nil @) => b
-    case (f, ~cons (x, xs)) => self(f, xs, (f)(b, x))
+fix (case self => case (f, b) => ( 
+    case ~nil @ => b
+    case ~cons (x, xs) => self(f, f(b, x))(xs)
 ))
 '''.strip())
 
@@ -135,9 +156,9 @@ fix (case self => (
 ))
 """.strip())
 
-tail_fib = (f"""
+curried_tail_fib = (f"""
 let add = {add} in
-let f = fix (case self => ((result, next) =>( 
+let f = fix (case self => (case (result, next) =>( 
     case (~zero @) => result 
     case (~succ n) => 
         let new_result = next in
@@ -171,14 +192,6 @@ let mult = {mult}
 fix (case self => ( 
     case (~zero @) => ~succ ~zero @
     case (~succ n) => (mult)((self)(n), ~succ n)
-))
-""".strip())
-
-lted = (f"""
-fix(case self => (
-    case (~zero @, n) => ~true @ 
-    case (~succ m, ~succ n) => self(m,n) 
-    case (~succ m, ~zero @) => ~false @ 
 ))
 """.strip())
 
