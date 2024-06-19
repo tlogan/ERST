@@ -2,8 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- update alias type mechanism with check for no free variables
-    - replacement of reconstructed type with alias type
 - update examples with alias to make type reconstruction easier to read
 - update fix type reconstruction to construct simple types
     - if body type of fix doesn't match expected type structure 

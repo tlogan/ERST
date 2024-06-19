@@ -389,6 +389,12 @@ end to_nameless
 class Subtyping:
     lower : Typ
     upper : Typ
+    def __lt__(self, other):
+        return (
+            concretize_typ(self.lower) + "<:" + concretize_typ(self.upper)
+            <
+            concretize_typ(other.lower) + "<:" + concretize_typ(other.upper)
+        )
 
 
 def concretize_ids(ids : tuple[str, ...]) -> str:
@@ -774,7 +780,30 @@ def to_record_typ(rnode : RNode) -> Typ:
 #     return to_record_typ(rnode) 
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
-    return to_nameless((), t1) == to_nameless((), t2)
+    left_nameless_typ = to_nameless((), t1)
+    right_nameless_typ = to_nameless((), t2)
+    result = left_nameless_typ == right_nameless_typ
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG alpha_equiv
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# t1: 
+# {concretize_typ(t1)}
+# -----------------------
+# t2: 
+# {concretize_typ(t2)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# left_nameless_typ: 
+# {left_nameless_typ}
+# -----------------------
+# right_nameless_typ: 
+# {right_nameless_typ}
+# -----------------------
+# result: {result} 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+    return result
 
 def is_record_typ(t : Typ) -> bool:
     if isinstance(t, TField):
@@ -1288,18 +1317,18 @@ def package_typ(world : World, typ : Typ) -> Typ:
     constraints = extract_reachable_constraints_from_typ(world, typ)
     existential_constraints = extract_existential_constraints(world.freezer, constraints)
     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
-    existential_bound_ids = tuple(world.freezer.intersection(reachable_ids))
+    existential_bound_ids = tuple(sorted(world.freezer.intersection(reachable_ids)))
 
     if not existential_bound_ids:
         assert not existential_constraints
         exi_typ = typ
     else:
-        exi_typ = Exi(existential_bound_ids, tuple(existential_constraints), typ)
+        exi_typ = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), typ)
 
     # return simplify_typ(exi_typ)
 
     universal_constraints = constraints.difference(existential_constraints)
-    universal_bound_ids = tuple(reachable_ids.difference(world.freezer))
+    universal_bound_ids = tuple(sorted(reachable_ids.difference(world.freezer)))
     # NOTE: alternative
     # universal_constraints = extract_reachable_constraints_from_typ(world, exi_typ)
     # universal_bound_ids = tuple(extract_free_vars_from_constraints(s(), universal_constraints).union(extract_free_vars_from_typ(s(), exi_typ)))
@@ -1308,7 +1337,7 @@ def package_typ(world : World, typ : Typ) -> Typ:
         assert not universal_constraints
         univ_typ = exi_typ
     else:
-        univ_typ = All(universal_bound_ids, tuple(universal_constraints), exi_typ)
+        univ_typ = All(universal_bound_ids, tuple(sorted(universal_constraints)), exi_typ)
     return simplify_typ(univ_typ)
 
 
@@ -1352,13 +1381,13 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
 
 default_context = Context(m(), [World(s(), s(), s())])
 
+
 class Solver:
     _type_id : int
     _limit : int
     debug : bool
 
     aliasing : PMap[str, Typ]
-    reversed_aliasing : PMap[Typ, str]
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
@@ -1367,66 +1396,66 @@ class Solver:
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
-        self.reversed_aliasing : PMap[Typ, str] = pmap({
-            t : id
-            for id, t in self.aliasing.items()
-        })
 
-    def to_aliasing_constraints(self, constraints : Iterable[Subtyping], rev_aliasing : PMap[Typ, str]) -> tuple[PMap[Typ, str], tuple[Subtyping, ...]]:
+    def to_aliasing_constraints(self, constraints : Iterable[Subtyping]) -> tuple[Subtyping, ...]:
         new_constraints = []
         for st in constraints:
-            (rev_aliasing, lower) = self.to_aliasing_typ(st.lower, rev_aliasing)
-            (rev_aliasing, upper) = self.to_aliasing_typ(st.upper, rev_aliasing)
+            lower = self.to_aliasing_typ(st.lower)
+            upper = self.to_aliasing_typ(st.upper)
             new_constraints.append(Subtyping(lower, upper))
 
-        return (rev_aliasing, tuple(new_constraints))
+        return tuple(new_constraints)
 
 
-    def to_aliasing_typ(self, t : Typ, rev_aliasing : PMap[Typ, str]) -> tuple[PMap[Typ, str], Typ]:
+    def to_aliasing_typ(self, t : Typ) -> Typ:
 
         if False: 
             pass
         elif isinstance(t, TTag):
-            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
-            return (rev_aliasing, TTag(t.label, body_typ)) 
+            body_typ = self.to_aliasing_typ(t.body)
+            return TTag(t.label, body_typ)
         elif isinstance(t, TField):
-            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
-            return (rev_aliasing, TField(t.label, body_typ)) 
+            body_typ = self.to_aliasing_typ(t.body)
+            return TField(t.label, body_typ)
         elif isinstance(t, Imp):
-            (rev_aliasing, antec_typ) = self.to_aliasing_typ(t.antec, rev_aliasing)
-            (rev_aliasing, consq_typ) = self.to_aliasing_typ(t.consq, rev_aliasing)
-            return (rev_aliasing, Imp(antec_typ, consq_typ)) 
+            antec_typ = self.to_aliasing_typ(t.antec)
+            consq_typ = self.to_aliasing_typ(t.consq)
+            return Imp(antec_typ, consq_typ)
         elif isinstance(t, Unio):
-            (rev_aliasing, left_typ) = self.to_aliasing_typ(t.left, rev_aliasing)
-            (rev_aliasing, right_typ) = self.to_aliasing_typ(t.right, rev_aliasing)
-            return (rev_aliasing, Unio(left_typ, right_typ)) 
+            left_typ = self.to_aliasing_typ(t.left)
+            right_typ = self.to_aliasing_typ(t.right)
+            return Unio(left_typ, right_typ)
         elif isinstance(t, Inter):
-            (rev_aliasing, left_typ) = self.to_aliasing_typ(t.left, rev_aliasing)
-            (rev_aliasing, right_typ) = self.to_aliasing_typ(t.right, rev_aliasing)
-            return (rev_aliasing, Inter(left_typ, right_typ)) 
+            left_typ = self.to_aliasing_typ(t.left)
+            right_typ = self.to_aliasing_typ(t.right)
+            return Inter(left_typ, right_typ)
         elif isinstance(t, Diff):
-            (rev_aliasing, context_typ) = self.to_aliasing_typ(t.context, rev_aliasing)
-            (rev_aliasing, neg_typ) = self.to_aliasing_typ(t.negation, rev_aliasing)
-            return (rev_aliasing, Diff(context_typ, neg_typ)) 
+            context_typ = self.to_aliasing_typ(t.context)
+            neg_typ = self.to_aliasing_typ(t.negation)
+            return Diff(context_typ, neg_typ)
         elif isinstance(t, Exi):
-            (rev_aliasing, constraints) = self.to_aliasing_constraints(t.constraints, rev_aliasing)
-            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
-            return (rev_aliasing, Exi(t.ids, constraints, body_typ))
+            constraints = self.to_aliasing_constraints(t.constraints)
+            body_typ = self.to_aliasing_typ(t.body)
+            return Exi(t.ids, constraints, body_typ)
         elif isinstance(t, All):
-            (rev_aliasing, constraints) = self.to_aliasing_constraints(t.constraints, rev_aliasing)
-            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
-            return (rev_aliasing, All(t.ids, constraints, body_typ))
+            constraints = self.to_aliasing_constraints(t.constraints)
+            body_typ = self.to_aliasing_typ(t.body)
+            return All(t.ids, constraints, body_typ)
         elif isinstance(t, LeastFP):
-            (rev_aliasing, body_typ) = self.to_aliasing_typ(t.body, rev_aliasing)
+            body_typ = self.to_aliasing_typ(t.body)
             new_typ = LeastFP(t.id, body_typ)
-            if new_typ in rev_aliasing:
-                return (rev_aliasing, TVar(rev_aliasing[new_typ]))
+            alias = next((
+                alias
+                for alias,ty in self.aliasing.items()
+                if alpha_equiv(ty, new_typ)
+            ), None)
+            if alias != None:
+                return TVar(alias)
             else:
-                new_id = self.fresh_type_id()
-                rev_aliasing = rev_aliasing.set(new_typ, new_id)
-                return (rev_aliasing, TVar(new_id))
+                return new_typ 
         else:
-            return (rev_aliasing, t)
+            return t
+
 
 
     def resolve_weakest_lower(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
@@ -1702,12 +1731,12 @@ class Solver:
 
     def fresh_type_id(self) -> str:
         self._type_id = self._type_id + 1
-        return (f"G{self._type_id}")
+        return ("G" + f"{self._type_id}".zfill(3))
 
     def fresh_type_var(self) -> TVar:
         return TVar(self.fresh_type_id())
 
-    def make_renaming_tvars(self, old_ids) -> PMap[str, TVar]:
+    def make_renaming_tvars(self, old_ids : Sequence[str]) -> PMap[str, TVar]:
         '''
         Map old_ids to fresh ids
         '''
@@ -2712,13 +2741,13 @@ class BaseRule(Rule):
                 reachable_constraints = extract_reachable_constraints_from_typ(new_world, imp)
                 existential_constraints = extract_existential_constraints(new_world.freezer, reachable_constraints)
                 reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
-                existential_bound_ids = tuple(new_world.freezer.intersection(reachable_ids))
+                existential_bound_ids = tuple(sorted(new_world.freezer.intersection(reachable_ids)))
 
                 if not existential_bound_ids:
                     assert not existential_constraints
                     body = imp 
                 else:
-                    body = Exi(existential_bound_ids, tuple(existential_constraints), imp)
+                    body = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), imp)
                 #end if-else
 
 
@@ -2726,10 +2755,10 @@ class BaseRule(Rule):
                 # TODO: figure out a less cluttered way to include extrusion
                 # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
 
-                fvs = extract_free_vars_from_typ(s(), imp.antec).difference(new_world.freezer)
+                fvs = sorted(extract_free_vars_from_typ(s(), imp.antec).difference(new_world.freezer))
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
-                bound_ids = tuple(var.id for var in renaming.values())
+                bound_ids = tuple(sorted(var.id for var in renaming.values()))
 
                 ######## NOTE: extrusion #############
                 # TODO: enable extrusion
@@ -2737,7 +2766,7 @@ class BaseRule(Rule):
                 # NOTE: disable extrusion
                 extrusion = tuple([]) 
                 constraints = extrusion + (
-                    sub_constraints(sub_map, tuple(reachable_constraints.difference(existential_constraints)))
+                    sub_constraints(sub_map, tuple(sorted(reachable_constraints.difference(existential_constraints))))
                 )
 
                 renamed_body = sub_typ(sub_map, body)
@@ -3061,7 +3090,7 @@ inner_world.constraints:
                 # TODO: what if there are existing frozen variables in inner_world?
                 # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
                 if bool(bound_ids):
-                    constrained_rel = Exi(tuple(bound_ids), tuple(rel_constraints), rel_pattern)
+                    constrained_rel = Exi(tuple(sorted(bound_ids)), tuple(sorted(rel_constraints)), rel_pattern)
                 else:
                     assert not bool(rel_constraints)
                     constrained_rel = rel_pattern
@@ -3086,7 +3115,7 @@ left_typ:
                 """)
 
                 if bool(left_bound_ids):
-                    constrained_left = Exi(tuple(left_bound_ids), tuple(left_constraints), left_typ)
+                    constrained_left = Exi(tuple(sorted(left_bound_ids)), tuple(sorted(left_constraints)), left_typ)
                 else:
                     assert not bool(left_constraints)
                     constrained_left = left_typ

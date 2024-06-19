@@ -122,7 +122,7 @@ def decode_negative(solver : analyzer.Solver, worlds, t):
     return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, t))))
 
 def decode_positive(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))
+    return analyzer.concretize_typ(solver.to_aliasing_typ(analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
@@ -1701,7 +1701,14 @@ def test_concat_lists():
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_reverse():
-    (worlds, typ_var, parsetree, solver) = analyze(el.reverse)
+    code = f"""
+alias CT = (LFP SELF
+    | (EXI [l] ((~nil @, l), l))
+    | (EXI [YS X XS l ; ((XS, l), YS) <: SELF ] ((~cons (X, XS), l), ~cons (X, YS)))
+)
+{el.reverse}
+    """.strip()
+    (worlds, typ_var, parsetree, solver) = analyze(code)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
@@ -1755,9 +1762,9 @@ if __name__ == '__main__':
     # test_fib()
     #####################################
     # test_concat_lists()
-    # test_reverse()
+    test_reverse()
     # test_tail_reverse()
-    test_stepped_tail_reverse()
+    # test_stepped_tail_reverse()
     # test_curried_tail_reverse()
     pass
 
