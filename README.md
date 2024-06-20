@@ -2,7 +2,6 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
-- in fix type reconstruction comment out parameter type constraint 
 - update examples with alias to make type reconstruction easier to read
 - update fix type reconstruction to construct simple types
     - if body type of fix doesn't match expected type structure 

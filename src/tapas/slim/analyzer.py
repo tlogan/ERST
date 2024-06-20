@@ -3027,21 +3027,21 @@ body_typ: {concretize_typ(body_typ)}
                 # - there could be multiple implications due to multiple applications of recursive function 
                 # - are all of them necessary for constructing inductive hypothesis?
                 self_interps = list(set(linearize_intersections(self_interp[0])))
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix --- self_interp 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-self_interp: {concretize_typ(self_interp[0])}
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix --- self_interp 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# self_interp: {concretize_typ(self_interp[0])}
 
-self_interps: 
-{[concretize_typ(t) for t in self_interps]}
+# self_interps: 
+# {[concretize_typ(t) for t in self_interps]}
 
-self_typ: {concretize_typ(self_typ)}
+# self_typ: {concretize_typ(self_typ)}
 
-inner_world.constraints:
-{concretize_constraints(inner_world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
+# inner_world.constraints:
+# {concretize_constraints(inner_world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
 
                 self_used_constraints = self_interp[1]
                 IH_rel_constraints = s()
@@ -3084,8 +3084,10 @@ inner_world.constraints:
                 inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
                 rel_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                 rel_constraints = IH_rel_constraints.union(rel_reachable_constraints)
-                left_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, left_typ)
-                left_constraints = IH_left_constraints.union(left_reachable_constraints)
+
+                # NOTE: parameter constraint isn't actually necessary; sound without it.
+                # left_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, left_typ)
+                # left_constraints = IH_left_constraints.union(left_reachable_constraints)
 
                 # TODO: what if there are existing frozen variables in inner_world?
                 # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
@@ -3099,38 +3101,27 @@ inner_world.constraints:
                 # rel_world = World(pset(rel_constraints), pset(bound_ids), inner_world.relids)
                 # package_typ(rel_world, rel_pattern)
 
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix --- LEFT TYP 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-IH_left_constraints:
-{concretize_constraints(IH_left_constraints)}
 
-left_reachable_constraints:
-{concretize_constraints(left_reachable_constraints)}
-
-left_typ:
-{concretize_typ(left_typ)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                """)
-
-                if bool(left_bound_ids):
-                    constrained_left = Exi(tuple(sorted(left_bound_ids)), tuple(sorted(left_constraints)), left_typ)
-                else:
-                    assert not bool(left_constraints)
-                    constrained_left = left_typ
+                # NOTE: parameter constraint isn't actually necessary; sound without it.
+                # if bool(left_bound_ids):
+                #     constrained_left = Exi(tuple(sorted(left_bound_ids)), tuple(sorted(left_constraints)), left_typ)
+                # else:
+                #     assert not bool(left_constraints)
+                #     constrained_left = left_typ
 
                 # TODO: remove old commented code
                 # left_world = World(pset(left_constraints).difference(left_used_constraints), pset(left_bound_ids), inner_world.relids)
                 # constrained_left = package_typ(left_world, left_typ)
 
                 induc_body = Unio(constrained_rel, induc_body) 
-                param_body = Unio(constrained_left, param_body)
+                # NOTE: parameter constraint isn't actually necessary; sound without it.
+                # param_body = Unio(constrained_left, param_body)
 
             #end for
 
             rel_typ = LeastFP(IH_typ.id, induc_body)
-            param_upper = LeastFP(IH_typ.id, param_body)
+            # NOTE: parameter constraint isn't actually necessary; sound without it.
+            # param_upper = LeastFP(IH_typ.id, param_body)
 
 
 
@@ -3138,7 +3129,9 @@ left_typ:
             return_typ = self.solver.fresh_type_var()
             consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
             consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-            result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
+            result = All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ))  
+            # NOTE: parameter constraint isn't actually necessary; sound without it.
+            # result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
 
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
