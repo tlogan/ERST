@@ -1702,9 +1702,13 @@ def test_concat_lists():
 
 def test_reverse():
     code = f"""
-alias CT = (LFP SELF
+alias CTREL = (LFP SELF
     | (EXI [l] ((~nil @, l), l))
     | (EXI [YS X XS l ; ((XS, l), YS) <: SELF ] ((~cons (X, XS), l), ~cons (X, YS)))
+)
+alias CTPARAM = (LFP SELF 
+    | (EXI [l] (~nil @, l))
+    | (EXI [X XS l ; (XS, l) <: SELF ] (~cons (X, XS), l))
 )
 {el.reverse}
     """.strip()

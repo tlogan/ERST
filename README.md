@@ -2,6 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- in fix type reconstruction comment out parameter type constraint 
 - update examples with alias to make type reconstruction easier to read
 - update fix type reconstruction to construct simple types
     - if body type of fix doesn't match expected type structure 
@@ -68,6 +69,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note that for fix type reconstruction; parameter constraint isn't necessary if it's constrained in the existential return type. 
+    - it is valid that an input out of domain results in a return type of BOT.
 - update variable rules: LFP 
 - note how using skolem variables in indexed rules is stronger than checking that variables are non free in non-indexed counterpart in the subtyping relation.
 - note how it's same to remove constraints used in interpretation if the constraints are local 
