@@ -1494,6 +1494,45 @@ class Solver:
             result = Unio(c.lower, result) 
         return (simplify_typ(result), pset(constraints))
 
+    def is_constraint_dead(self, world : World, ignored : PSet[str], st : Subtyping) -> bool:
+        lower_result = False
+        upper_result = False
+        # if isinstance(st.lower, TVar) and st.lower.id not in ignored and st.lower.id not in world.freezer:
+        if isinstance(st.lower, TVar):
+            lower_result = (
+                st.lower.id not in ignored and 
+                st.lower.id not in world.freezer and 
+                st.lower.id not in extract_free_vars_from_constraints(s(), world.constraints.difference(s(st)))
+            )
+
+        if isinstance(st.upper, TVar): 
+            upper_result = (
+                st.upper.id not in ignored and 
+                st.upper.id not in world.freezer and 
+                st.upper.id not in extract_free_vars_from_constraints(s(), world.constraints.difference(s(st)))
+            )
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG is_constraint_dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ignored: {ignored}
+
+st: {concretize_typ(st.lower)} <: {concretize_typ(st.upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+world.freezer: {world.freezer}
+
+world.constraints:
+{concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lower_result: {lower_result}
+upper_result: {upper_result}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+
+        return lower_result or upper_result 
+
+
     def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
         constraint_typs = [
             package_typ(world, t)
@@ -2961,13 +3000,13 @@ class ExprRule(Rule):
         ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> EXI[Z ; Z <: Y] Z
         """
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix START 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-body_typ: {concretize_typ(body_typ)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix START 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# body_typ: {concretize_typ(body_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
@@ -2991,7 +3030,8 @@ body_typ: {concretize_typ(body_typ)}
             inner_worlds = self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
 
             induc_body = Bot()
-            param_body = Bot()
+            # NOTE: don't actually need the upper bound for param 
+            # param_body = Bot()
 
             ###########################
             for i, inner_world in enumerate(reversed(inner_worlds)):
@@ -3040,6 +3080,21 @@ body_typ: {concretize_typ(body_typ)}
 
 # inner_world.constraints:
 # {concretize_constraints(inner_world.constraints)}
+
+# left_used_constraints:
+# {concretize_constraints(left_used_constraints)}
+
+# right_used_constraints:
+# {concretize_constraints(right_used_constraints)}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# in_typ: {in_typ.id}
+# left_typ: {concretize_typ(left_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# out_typ: {out_typ.id}
+# right_typ: {concretize_typ(right_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
@@ -3082,8 +3137,14 @@ body_typ: {concretize_typ(body_typ)}
                 # NOTE: assert that used constaints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
                 assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
-                rel_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                rel_reachable_constraints = pset(
+                    st
+                    for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                    # if not self.solver.is_constraint_dead(inner_world, s(), st)
+                    if not self.solver.is_constraint_dead(inner_world, extract_free_vars_from_typ(s(), rel_pattern), st)
+                )
                 rel_constraints = IH_rel_constraints.union(rel_reachable_constraints)
+                
 
                 # NOTE: parameter constraint isn't actually necessary; sound without it.
                 # left_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, left_typ)

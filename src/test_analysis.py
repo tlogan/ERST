@@ -1701,14 +1701,16 @@ def test_concat_lists():
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_reverse():
+# TODO: try to soundly remove these used constraints:
+#  ; (G025, ~cons (G040, ~nil @)) <: G027
+#  ; G042 <: G026
+# NOTE: the right type isn't interpreting all the way through
+#   in: ; G042 <: G026; G026 <: G038
+# IDEA: when constructing fix: remove dead constraints by checking if interpretation of variable on RHS is TOP (LHS is BOT)
     code = f"""
 alias CTREL = (LFP SELF
     | (EXI [l] ((~nil @, l), l))
     | (EXI [YS X XS l ; ((XS, l), YS) <: SELF ] ((~cons (X, XS), l), ~cons (X, YS)))
-)
-alias CTPARAM = (LFP SELF 
-    | (EXI [l] (~nil @, l))
-    | (EXI [X XS l ; (XS, l) <: SELF ] (~cons (X, XS), l))
 )
 {el.reverse}
     """.strip()
