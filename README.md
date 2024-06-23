@@ -2,16 +2,17 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- disable extrusion for now
+- develop example where extrusion is necessary 
+    - determine if there's a way to delay extrusion to only when necessary
+    - to keep types uncluttered
+- in `resolve_polarity` - `Imp` case, consider only resolving the consequent and leaving the antecedent alone
+- in `combine_fix`, consider if input (left) variables should be ignored when resolving output (right)
 - update examples with alias to make type reconstruction easier to read
 - update fix type reconstruction to construct simple types
     - if body type of fix doesn't match expected type structure 
     - e.g. curried bodies
 - update `extract_field_plain` to handle Diff type
-
-- disable extrusion for now
-- develop example where extrusion is necessary 
-    - determine if there's a way to delay extrusion to only when necessary
-    - to keep types uncluttered
 - test out `max`
 - test out `fib`
 - test out `suml`
@@ -68,6 +69,9 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how in type reconstruction for fix, 
+    - inputs (left) are resolved one step to avoid hitting extruded variables 
+    - outputs (right) are resolved multi step, since there's no extruded variables in that direction 
 - note that for fix type reconstruction; parameter constraint isn't necessary if it's constrained in the existential return type. 
     - it is valid that an input out of domain results in a return type of BOT.
 - update variable rules: LFP 

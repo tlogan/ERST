@@ -1662,6 +1662,7 @@ upper_result: {upper_result}
         elif isinstance(typ, Imp):
             consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
             world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+            # TODO: consider only resolving the consequent and leaving the antecedent alone
             antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
             return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
@@ -3047,13 +3048,18 @@ class ExprRule(Rule):
                 )
                 inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
 
-                right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
+                # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
+                # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
+                right_interp = self.solver.resolve_polarity(True, inner_world, out_typ, s())
+                # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 (right_typ, right_used_constraints) = right_interp
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
                 right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
-                bound_ids = left_bound_ids.union(right_bound_ids)
+                bound_ids = left_bound_ids.union(right_bound_ids).union(
+                    inner_world.freezer.intersection(extract_free_vars_from_constraints(s(), inner_world.constraints))
+                )
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 #########################################
 
@@ -3150,8 +3156,6 @@ class ExprRule(Rule):
                 # left_reachable_constraints = extract_reachable_constraints_from_typ(inner_world, left_typ)
                 # left_constraints = IH_left_constraints.union(left_reachable_constraints)
 
-                # TODO: what if there are existing frozen variables in inner_world?
-                # - does inner world invariantly lack frozen variables: e.g. (assert not bool(inner_world.freezer))?
                 if bool(bound_ids):
                     constrained_rel = Exi(tuple(sorted(bound_ids)), tuple(sorted(rel_constraints)), rel_pattern)
                 else:
