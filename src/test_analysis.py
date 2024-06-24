@@ -1701,12 +1701,6 @@ def test_concat_lists():
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_reverse():
-# TODO: try to soundly remove these used constraints:
-#  ; (G025, ~cons (G040, ~nil @)) <: G027
-#  ; G042 <: G026
-# NOTE: the right type isn't interpreting all the way through
-#   in: ; G042 <: G026; G026 <: G038
-# IDEA: when constructing fix: remove dead constraints by checking if interpretation of variable on RHS is TOP (LHS is BOT)
     code = f"""
 alias CTREL = (LFP SELF
     | (EXI [l] ((~nil @, l), l))
@@ -1733,6 +1727,21 @@ def test_stepped_tail_reverse():
 def test_curried_tail_reverse():
     # TODO: compare curried vs non-curried version
     (worlds, typ_var, parsetree, solver) = analyze(el.curried_tail_reverse)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_halve_list():
+    code = f"""
+alias R = (LFP SELF
+    | (~nil @, (~nil @, ~nil @))
+    | (EXI [X] (~cons (X, ~nil @), (~cons (X, ~nil @), ~nil @)))
+    | (EXI [YS ZS Y GZ XS ; (XS, (YS, ZS)) <: SELF ] 
+        (~cons (Y, ~cons (GZ, XS)), (~cons (Y, YS), ~cons (GZ, ZS)))
+    )
+)
+{el.halve_list}
+    """.strip()
+    (worlds, typ_var, parsetree, solver) = analyze(code)
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
@@ -1768,10 +1777,12 @@ if __name__ == '__main__':
     # test_fib()
     #####################################
     # test_concat_lists()
-    test_reverse()
+    # test_reverse()
     # test_tail_reverse()
     # test_stepped_tail_reverse()
     # test_curried_tail_reverse()
+    #####################################
+    test_halve_list()
     pass
 
 #######################################################################

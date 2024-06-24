@@ -235,9 +235,9 @@ fix(case self => (
     case ~nil @ => (~nil @, ~nil @) 
     case ~cons (x, ~nil @) => (~cons (x, ~nil @), ~nil @) 
     case ~cons (x, ~cons(y, zs)) => 
-        self(zs) |> (case (ls, rs) => (
+        (self)(zs) |> (case (ls, rs) => (
             (~cons (x, ls), ~cons (y, rs))
-        )   
+        ))   
 ))
 """.strip())
 
