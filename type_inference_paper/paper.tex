@@ -653,20 +653,36 @@ v ::= &\C{value}
   \\
   \I \code{\#$l$ $v$}  &\C{tag}
   \\
-  \I \widebar{\code{;$l$=$v$}} &\C{record}
+  \I \mathbb{R} &\C{record}
   \\
   \I \code{$v$,$v$} &\C{tuple}
   \\
-  \I \widebar{\code{case $p$=>$e$}} &\C{function}
+  \I \mathbb{W} &\C{function}
   \\
   \I \code{($v$)} &\C{association}
   \\
   \\
-  \Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
+\mathbb{V} \owns v &\C{set of values}
   \\
-  \mathbb{V} \owns v &\C{set of values}
+\mathbb{W} \owns (v,v) &\C{set of value-value pairs}
   \\
-  \mathbb{H} \owns x \mapsto v &\C{set of value bindings}
+\mathbb{R} \owns (l,v) &\C{set of label-value pairs}
+  \\
+\mathbb{H} \owns x \mapsto v &\C{set of value bindings}
+  \\
+\Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
+%   \\
+%   \\
+% f ::= &\C{function}
+%   \\
+%   \I \widebar{\code{case $p$=>$e$}} &\C{function}
+%   \\
+%   \\
+% \Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
+%   \\
+% \mathbb{V} \owns v &\C{set of values}
+%   \\
+% \mathbb{H} \owns x \mapsto v &\C{set of value bindings}
 \end{array}
 \]
 
@@ -824,17 +840,20 @@ v ::= &\C{value}
 & \C{tag} 
 \\
 \llbracket \code{$l$:$\tau$} \rrbracket 
-&=&{} 
-\{ \code{$l$:$v$}\ |\ v \in \llbracket \tau \rrbracket \}
+&=& 
+\begin{array}[t]{@{}l}
+\{ \mathbb{R} \ |\ \forall\ v . 
+\\ \I (l, v) \in \mathbb{R} \rightarrow v \in \llbracket \tau \rrbracket
+\\
+\}
+\end{array}
 & \C{field} 
 \\
 \llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ v_f \ |\ 
-\\ \I v_a \in \llbracket \tau_a \rrbracket\ \land\ 
-\\ \I v_c \in \llbracket \tau_c \rrbracket\ \land\ 
-\\ \I v_f(v_a) \longrightarrow^* v_c
+\{ \mathbb{W} \ |\ \forall\ (v_a, v_c) \in \mathbb{W} .
+\\ \I v_a \in \llbracket \tau_a \rrbracket \rightarrow v_c \in \llbracket \tau_c \rrbracket
 \\
 \}
 \end{array}
@@ -864,7 +883,7 @@ v ::= &\C{value}
 \llbracket \code{ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ v \ |\  \exists \sigma . 
+\{ v \ |\ \exists\ \sigma . 
 \\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \land\ 
 \\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
 \\
@@ -876,7 +895,7 @@ v ::= &\C{value}
 \llbracket \code{ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ v \ |\  \forall \sigma . 
+\{ v \ |\  \forall\ \sigma . 
 \\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
 \\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
 \\

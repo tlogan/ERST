@@ -1,6 +1,7 @@
 # Extrinsic Relational Subtyping
 - alternate name: **Descriptive** Relational Subtyping
 
+### TODO (Soundness Proof)
 ### TODO (Symbolic Implementation)
 - update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
@@ -71,6 +72,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how type denotation can't use operational semantics 
+    - since soundness proof would be undecidable since operational semantics is undecidable
 - note how in type reconstruction for fix, 
     - inputs (left) are resolved one step to avoid hitting extruded variables 
     - outputs (right) are resolved multi step, since there's no extruded variables in that direction 
@@ -393,6 +396,9 @@
 - Solving Constrained Horn Clauses using Interpolation
     - CHC 
     - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2013-6.pdf
+- Semantic Subtyping
+    - https://www.irif.fr/~gc/papers/icalp-ppdp05.pdf
+
 
 ### Future work
 - use statistical learning to find necessary types 
