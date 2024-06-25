@@ -261,8 +261,8 @@ fix(case self => (
     case ~nil @ => ~nil @
     case ~cons(x, ~nil @) => ~cons(x, ~nil @)
     case xs =>
-        halve(xs) |> (case (ys, zs) =>
-            merge(self(ys), self(zs))
+        (halve)(xs) |> (case (ys, zs) =>
+            merge((self)(ys), (self)(zs))
         )
 ))
 """.strip())

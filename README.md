@@ -2,6 +2,8 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Symbolic Implementation)
+- update path extraction from records to handle `Diff`
+- double check that label paths from records are extracted correctly in `extract_column_comparisons`
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary

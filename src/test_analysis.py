@@ -895,9 +895,17 @@ def test_function_if_then_else():
 
 
 def test_lted_expr():
-    (worlds, typ_var, parsetree, solver) = analyze(el.lted)
-    # print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "@"
+    code = f"""
+alias R = (LFP SELF
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
+)
+{el.lted}
+    """.strip()
+    (worlds, typ_var, parsetree, solver) = analyze(code)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_let_lted_expr():
     let_lted = (f'''
@@ -1745,6 +1753,33 @@ alias R = (LFP SELF
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
+def test_merge_lists():
+    code = f"""
+alias LTEDR = (LFP SELF
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
+)
+{el.merge_lists}
+    """.strip()
+    (worlds, typ_var, parsetree, solver) = analyze(code)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
+def test_merge_sort():
+    code = f"""
+alias LTEDR = (LFP SELF
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
+)
+
+{el.merge_sort}
+    """.strip()
+    (worlds, typ_var, parsetree, solver) = analyze(code)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
 if __name__ == '__main__':
     # test_single_shape()
     # test_implication_unification()
@@ -1782,7 +1817,10 @@ if __name__ == '__main__':
     # test_stepped_tail_reverse()
     # test_curried_tail_reverse()
     #####################################
-    test_halve_list()
+    # test_halve_list()
+    # test_lted_expr()
+    # test_merge_lists()
+    test_merge_sort()
     pass
 
 #######################################################################

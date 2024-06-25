@@ -670,6 +670,25 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
 def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
     if not path:
         return None
+    elif isinstance(t, Diff):
+        context = project_typ_recurse(t.context, path)
+        negation = project_typ_recurse(t.negation, path)
+        if context and negation:
+            return Diff(context, negation)
+        else:
+            return None
+    elif isinstance(t, Exi):
+        assert not bool(t.constraints)
+        body = project_typ_recurse(t.body, path)
+        if body:
+            ids = tuple(
+                id 
+                for id in t.ids
+                if id in extract_free_vars_from_typ(s(), body)
+            )
+            return Exi(ids, (), body)
+        else:
+            None
     elif isinstance(t, Inter):
         left = project_typ_recurse(t.left, path)
         right = project_typ_recurse(t.right, path)
@@ -833,11 +852,13 @@ def extract_column_comparisons(key : Typ, rel : LeastFP) -> list[tuple[Typ, list
     ]
 
     if is_record_typ(key):
-        paths = [
-            path
-            for choice in choices
-            for path in list(extract_paths(choice))
-        ]
+        paths = list(extract_paths(key))
+        # TODO: double check that it is sound or not too incomplete to do this
+        # paths = [
+        #     path
+        #     for choice in choices
+        #     for path in list(extract_paths(choice))
+        # ]
 
         result = []
         for path in pset(paths):
@@ -858,6 +879,9 @@ def is_decidable(key : Typ, rel : LeastFP) -> bool:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG is_decidable
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# key:
+# {concretize_typ(key)}
+
 # rel:
 # {concretize_typ(rel)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1512,23 +1536,23 @@ class Solver:
                 st.upper.id not in extract_free_vars_from_constraints(s(), world.constraints.difference(s(st)))
             )
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG is_constraint_dead
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ignored: {ignored}
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG is_constraint_dead
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ignored: {ignored}
 
-st: {concretize_typ(st.lower)} <: {concretize_typ(st.upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-world.freezer: {world.freezer}
+# st: {concretize_typ(st.lower)} <: {concretize_typ(st.upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# world.freezer: {world.freezer}
 
-world.constraints:
-{concretize_constraints(world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-lower_result: {lower_result}
-upper_result: {upper_result}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# world.constraints:
+# {concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# lower_result: {lower_result}
+# upper_result: {upper_result}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         return lower_result or upper_result 
 
