@@ -2,6 +2,21 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 ### TODO (Soundness Proof)
+- look at set-theoretic types
+- look at the subtyping super F paper for soundness proof ideas
+- look at soundness proof for roundtrip typing / Synquid
+- consider ways to use expression syntax in type denotation 
+    - but can't use undecidable semantics
+    - can we use pattern typing (for antecedent?)
+- consider defining constraint on subtyping implication  
+    - using subset inclusion of antecedent and consequent
+    - instead subset inclusion of power sets of pairs 
+- rethink definition of type denotation
+    - the current version breaks the cardinality rules 
+    - according to semantic subtyping paper
+- check if language in semantic typing supports functions as inputs
+    - it appears that the interpretation function only supports top level functions
+
 ### TODO (Symbolic Implementation)
 - update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
@@ -72,6 +87,23 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how intersection and union typing rules are unnecessary
+    - they can be derived from subtyping rules
+    - e.g. union:
+        G |- e' : T1 | T2    G, x : T1 |- e : T    G, x : T2 |- e : T  
+        -----------------------------------------------------------------
+                |- T1 <: U    |- T2 <: U    G, x : U |- e : T
+        -----------------------------------------------------------------
+                            |- T1 | T2 <: U
+        -----------------------------------------------------------------
+                              G |- e' : U 
+        -----------------------------------------------------------------
+                              G |- e{e'/x} : T
+
+    - given proof of 
+        G, x : U |- e : T    G |- e' : U 
+        -----------------------------------------------------------------
+                     e{e'/x} : T
 - note how type denotation can't use operational semantics 
     - since soundness proof would be undecidable since operational semantics is undecidable
 - note how in type reconstruction for fix, 
@@ -396,8 +428,14 @@
 - Solving Constrained Horn Clauses using Interpolation
     - CHC 
     - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2013-6.pdf
+- Set-theoretic types
+    - https://www.irif.fr/~gc/papers/set-theoretic-types-2022.pdf
 - Semantic Subtyping
     - https://www.irif.fr/~gc/papers/icalp-ppdp05.pdf
+    - https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
+- Super F
+    - https://lptk.github.io/files/superf-popl24-preprint.pdf
+
 
 
 ### Future work
