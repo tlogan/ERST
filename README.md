@@ -1,21 +1,6 @@
 # Extrinsic Relational Subtyping
 - alternate name: **Descriptive** Relational Subtyping
 
-### TODO (Soundness Proof)
-- look at set-theoretic types
-- look at the subtyping super F paper for soundness proof ideas
-- look at soundness proof for roundtrip typing / Synquid
-- consider ways to use expression syntax in type denotation 
-    - but can't use undecidable semantics
-    - can we use pattern typing (for antecedent?)
-- consider defining constraint on subtyping implication  
-    - using subset inclusion of antecedent and consequent
-    - instead subset inclusion of power sets of pairs 
-- rethink definition of type denotation
-    - the current version breaks the cardinality rules 
-    - according to semantic subtyping paper
-- check if language in semantic typing supports functions as inputs
-    - it appears that the interpretation function only supports top level functions
 
 ### TODO (Symbolic Implementation)
 - update path extraction from records to handle `Diff`
@@ -87,6 +72,61 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- for presentation, only discuss the ideas I want to use;
+    - do NOT discuss the kludgy ideas that don't apply in my setting
+    - or create a separate section for the ideas that don't apply
+- figure out how to close the circle: 
+    - subtyping with {v | empty |- v : T} induces subtyping with [[T]]
+    - it seems that the details are in Frisch PhD thesis; not in the set-theoretic document
+    - define a relation between values and types 
+    - that doesn't depend on typing judgement
+    - then use to show that inclusion of type denotation is equivalent to implication of value/type relation
+    - If so, then why is the type denotation into the contrived domain even necessary?
+        - maybe that's simply for generality; is it necessary for language specific rules?
+- keep in mind that the polymorphic type variable in set-theoretic types corresponds to universally quantified type variables used on left side of subtyping in ERST. Or existentials used on RHS of subtyping.
+- define typing judgement (algorithmic)
+- in set-theoreitic types
+    - think about how polymorphic issues and solution (convexity) relate to ERST
+    - is the convexity restriction accommodating of the ERST reconstruction algorithm 
+    - consider if the subtyping constraints in ALL and ANY subsume the type variable tags
+- determine how algorithm derived from semantic subtyping
+    - corresponds to a syntactic based subtyping constraint solver
+    - a type represents a set of values
+    - akin to how a formula represents a set of assignments
+    - this is NOT akin to reconstructing the types / solving for the types
+    - however type reconstruction is akin to tree interpolation in CHC
+- look at set-theoretic types
+    - semantic subtyping produces an algorithm that is sound AND complete
+    - syntactic subtyping rules may be sound but not complete
+- look at the subtyping super F paper for soundness proof ideas
+- look at soundness proof for roundtrip typing / Synquid
+- consider ways to use expression syntax in type denotation 
+    - but can't use undecidable semantics
+    - can we use pattern typing (for antecedent?)
+- consider defining constraint on subtyping implication  
+    - using subset inclusion of antecedent and consequent
+    - instead subset inclusion of power sets of pairs 
+- rethink definition of type denotation
+    - the current version breaks the cardinality rules 
+    - according to semantic subtyping paper
+- check if language in semantic typing supports functions as inputs
+    - it appears that the interpretation function only supports top level functions
+- note how ERST type reconstruction relies on solving subtyping
+    - in contrast to semantic subtyping, which merely checks subtyping
+        - even if it is polymorphic with type variables; the constraints on type variables are given; not learned
+    - systems with semantic subtyping may rely on typing rules for reconstruction instead of subtyping rules
+- note how in semantic subtyping,
+    - a function type is represented by a set of finite sets of pairs 
+    - the outer set could be infinite, mean a function term could simply be represented as the biggest set necessary, for subset inclusion, but not bigger. 
+- note how in semantic subtyping,
+    - a type represents a set of values
+    - akin to how a formula represents a set of assignments (i.e. tuples/records)
+    - deciding subtyping is akin to solving for values belonging to types. 
+    - this is NOT the same has reconstructing types. Right?
+    - however, type reconstruction is similar to CHC
+        - with abstraction refinement and tree interpolation 
+- note how co-inductive definition of types with contractivity constraint
+    - corresponds to using a co-inductive binder (for intersection of implication types), which corresponds to using inductive binder in consequent of implication.  
 - note how intersection and union typing rules are unnecessary
     - they can be derived from subtyping rules
     - e.g. union:
