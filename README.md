@@ -72,6 +72,28 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- basic ingredients for soundness proof
+    - subtyping (semantic rules via subset inclusion over special domain)
+    - typing (checking rules via subsumption with subtyping)
+    - proof that inclusion of sets of typed values is equivalent to inclusion of type denotation into special domain
+    - subtyping solving (algorithmic rules) (i.e. tallying) 
+    - typing reconstruction (algorithmic rules via subtyping solving)
+    - proof that subtyping solving is sound wrt inclusion of type denotation 
+    - proof that type reconstruction is sound wrt typing 
+    - progress and preservation of typing 
+    - progress and preservation of type reconstruction
+- locate the proof of tallying wrt to semantic subtyping
+- note in ERST we embed the language of constraints in types, 
+    - this allows re-using type combinators
+    - rather than creating a separate language of constraint combinators
+- note how ERST mixes constraint generation and constraint solving
+- note how for parametric polymorphism, solving for instances of variables
+    - is handled by the type-tallying problem in the set-theoretic document
+        - tallying is used for subtyping constraints
+            - note that the set-theoretic document doesn't actually show the tallying algorithm
+        - unification would be used for equality constraints
+    - this corresponds to subtyping solving in ERST
+- figure out how type reconstruction works in set-theoretic document in context of semantic subtyping
 - for presentation, only discuss the ideas I want to use;
     - do NOT discuss the kludgy ideas that don't apply in my setting
     - or create a separate section for the ideas that don't apply
