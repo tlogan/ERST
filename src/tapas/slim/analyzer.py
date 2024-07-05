@@ -1683,42 +1683,24 @@ class Solver:
             context, context_constraints = self.resolve_polarity(polarity, world, typ.context, ignored_ids)
             return (Diff(context, typ.negation), context_constraints)
 
+        # TODO: remove version that resolves antecedent 
+        # elif isinstance(typ, Imp):
+        #     consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
+        #     world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+        #     antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
+        #     return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+
+        # NOTE: only resolve the consequent and leaving the antecedent alone
         elif isinstance(typ, Imp):
-            consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
+            antec = typ.antec
+            consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, antec)))
             world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
-            # TODO: consider only resolving the consequent and leaving the antecedent alone
-            antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
-            return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+            return (Imp(antec, consq), consq_constraints)
 
         elif isinstance(typ, Exi):
             return (typ, s())
-            # TODO: uncomment below: gathering used constraints of negated side first (strong side of <: )
-            # pos_constraints = s() 
-            # weak_constraint_pairs = []
-            # for st in typ.constraints:
-            #     weak, weak_constraints = interpret_with_polarity(not polarity, world, st.weak, ignored_ids)
-            #     pos_constraints = pos_constraints.union(weak_constraints)
-            #     weak_constraint_pairs.append((weak, st))
-            #     ignored_ids = ignored_ids.union(extract_free_vars_from_typ(ignored_ids, weak))
-
-            # world = World(world.constraints.difference(pos_constraints), world.freezer)
-
-            # neg_constraints = s() 
-            # new_constraints = [] 
-            # for (weak, st) in weak_constraint_pairs:
-            #     strong, strong_constraints = interpret_with_polarity(polarity, world, st.strong, ignored_ids)
-            #     pos_constraints = pos_constraints.union(strong_constraints)
-            #     new_constraints.append(Subtyping(strong, weak))
-
-
-            # body, body_constraints = interpret_with_polarity(polarity, world, typ.body, ignored_ids)
-            # ignored_ids = ignored_ids.union(typ.ids)
-            # used_constraints = body_constraints.union(pos_constraints).union(neg_constraints)
-            # return (Exi(typ.ids, tuple(new_constraints), body), used_constraints)
-
         elif isinstance(typ, All):
             return (typ, s())
-            # TODO: copy Exi rule
         elif isinstance(typ, LeastFP):
             ignored_ids = ignored_ids.add(typ.id)
             body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
@@ -3074,7 +3056,9 @@ class ExprRule(Rule):
 
                 # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
-                right_interp = self.solver.resolve_polarity(True, inner_world, out_typ, s())
+                # ignored_ids = s()
+                ignored_ids = extract_free_vars_from_typ(s(), left_typ)
+                right_interp = self.solver.resolve_polarity(True, inner_world, out_typ, ignored_ids)
                 # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 (right_typ, right_used_constraints) = right_interp
                 inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)

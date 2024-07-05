@@ -3,14 +3,12 @@
 
 
 ### TODO (Symbolic Implementation)
-- update path extraction from records to handle `Diff`
+- NOTE: not sure this is necessary; update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
 - disable extrusion for now
 - develop example where extrusion is necessary 
     - determine if there's a way to delay extrusion to only when necessary
     - to keep types uncluttered
-- in `resolve_polarity` - `Imp` case, consider only resolving the consequent and leaving the antecedent alone
-- in `combine_fix`, consider if input (left) variables should be ignored when resolving output (right)
 - update examples with alias to make type reconstruction easier to read
 - update fix type reconstruction to construct simple types
     - if body type of fix doesn't match expected type structure 

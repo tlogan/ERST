@@ -1812,7 +1812,7 @@ if __name__ == '__main__':
     # test_fib()
     #####################################
     # test_concat_lists()
-    # test_reverse()
+    test_reverse()
     # test_tail_reverse()
     # test_stepped_tail_reverse()
     # test_curried_tail_reverse()
@@ -1820,7 +1820,7 @@ if __name__ == '__main__':
     # test_halve_list()
     # test_lted_expr()
     # test_merge_lists()
-    test_merge_sort()
+    # test_merge_sort()
     pass
 
 #######################################################################
