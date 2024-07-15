@@ -6,6 +6,11 @@
 - create a test demonstrating how current method of automated co-induction is unsound 
     - e.g. self reference is on left side of subtyping
     - e.g. non-constraint type <: constrained type  
+    - two possible problems:
+        - A. subbing in RHS into self-reference of LHS without checking for guard
+        - B. how constraint is saved and can be used without checking for guard 
+    - perhaps Cretin's method subsumes both
+        - i.e. subbing is actually a shortcut for inducing a constraint and then simplifying the type 
     - if there's a problem, consider using Cretin's method of two-stage co-induction environment
         - e.g. check even <: nat
             - stage even <: nat
