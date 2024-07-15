@@ -444,9 +444,9 @@ def concretize_typ(typ : Typ) -> str:
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
             if constraints:
-                plate_entry = ([control.body], lambda body : f"(EXI [{ids}\n{indent(constraints)}\n] {body})")
+                plate_entry = ([control.body], lambda body : f"(ANY [{ids}\n{indent(constraints)}\n] {body})")
             else:
-                plate_entry = ([control.body], lambda body : f"(EXI [{ids}] {body})")
+                plate_entry = ([control.body], lambda body : f"(ANY [{ids}] {body})")
         elif isinstance(control, All):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)

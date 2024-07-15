@@ -3,6 +3,15 @@
 
 
 ### TODO (Symbolic Implementation)
+- create a test demonstrating how current method of automated co-induction is unsound 
+    - e.g. self reference is on left side of subtyping
+    - e.g. non-constraint type <: constrained type  
+    - if there's a problem, consider using Cretin's method of two-stage co-induction environment
+        - e.g. check even <: nat
+            - stage even <: nat
+            - when guard is found (succ succ n <: succ m), commit even <: nat 
+        - perhaps could allow for broader form of cached constraints
+- redo LFP syntax do simply be FP or FIX; it doesn't have to be well-founded
 - NOTE: not sure this is necessary; update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
 - disable extrusion for now
@@ -70,6 +79,59 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- Understand how Cretin defines and uses semantic types 
+- note how Cretin's co-induction environment is used
+    - note how there are two stages between writing and reading co-inductive assumption
+        - ensure induction is only allowed on smaller subparts
+    - it is looked up and cached in the proposition rules
+    - what makes it co-inductive? doesn't require a base case?
+    - the well-formedness judgment states that a proposition is satisfiable (without co-induction)
+- note the importance of coherence in subtyping (coercion)
+    - coherence; coercion does not introduce inconsistencies into typing environment
+    - that is, a typing under an empty environment cannot be derived from a typing with false premises
+    - a coherent kind is an inhabitable kind
+    - a coherent subtyping is a satisfiable subtyping 
+- Cretin's kinds for pairs of types corresponds to my notion of type pattern matching
+    - rather than Cretin's X = fst <A,B>, Y = snd <A,B>, I simply have (X, Y) <: (A, B) 
+    - that is, my system can destruct a pair type, rather than a pair of types
+    - Cretin's T : {X : * | ALL Y : <*,*>. X <: (fst Y, snd Y), fst Y <: snd Y corresponds to 
+    - My T <: ANY [A B . A <: B] (A, B)
+    - subtyping constraints should obviate the need for kind constraints
+- Cretin uses a notion of semantic types
+    - as sets of terms
+- Cretin's constrained kinds resemble my universal/existential constraint types
+    - kinds may be thought of as constraints on types
+    - or a subtyping constraint can be thought of as a kind
+    - T : K, K = {X | ... <: ... } -----> T = ANY [X . ... <: ...] X 
+- note that the subtyping rules could use a transitivity rule instead of putting subtyping premises in other rules (e.g. var rule)
+- explicit Eta-expansion rules in Cretin's work correspond to my notion of checking subtyping for subparts
+- Cretin's typing corresponds to my notion of a constrained universal type (indexed intersection)
+- Cretin says a coercion (subtyping) is a proof of subset inclusion (containment) or can even go beyond inclusion
+- Cretin defines coercion a more generalization of a narrow form of subtyping
+    - but I believe that things like instantiation can be viewed a form of subtyping
+        - without needing to use the term coercion
+    - it's up to subtyping to determine if this is safe
+        - essentially, the coercion must prove subsumption
+        - where subsumption requires subtyping
+    - this means subtyping is checked at coercion rather than at application
+- Note the difference between well-founded constraint in inductive vs co-inductive recursive types 
+    - inductive: objects of the type are well-founded wrt the constructors of the type.
+        - i.e. there are a finite number of constructors
+    - coinductive: more relaxed; merely the functor from self to type must be well-founded 
+        - i.e. occurrences of self occur only under a function type or pair type
+- Note that recursive type's instances don't have to be well founded;
+    - the can simply be co-inductive
+- redo syntax for function cases and other list of things
+    - it should NOT use a generic list meta-syntax
+- consider leaving semantic subtyping and tallying for future work
+- note how tallying retains the expressiveness of semantic subtyping
+    - semantic subtyping is more complete than syntactic subtyping
+    - the tallying algorithm uses semantic subtyping in the normalize procedure
+    - the tallying algorithm is sound AND complete wrt to semantic subtyping
+- note that polymorphic semantic subtyping is just a way to deal with variable syntax
+    - could skolem/learnable variables obviate the need for TV-tagged values? 
+    - uses a definition that maintains a convexity property
+    - it isn't necessary if interpretation is subbed in (after type reconstruction)   
 - basic ingredients for soundness proof
     - subtyping (semantic rules via subset inclusion over special domain)
     - typing (checking rules via subsumption with subtyping)
@@ -488,13 +550,22 @@
 - Solving Constrained Horn Clauses using Interpolation
     - CHC 
     - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2013-6.pdf
+    - 
 - Set-theoretic types
     - https://www.irif.fr/~gc/papers/set-theoretic-types-2022.pdf
+    - polymorphic semantic subtyping: https://www.irif.fr/~gc/papers/icfp11.pdf
+    - polymorphic set type for XML: https://www.irif.fr/~gc/papers/polyx-toplas.pdf
+    - type reconstruction and type tallying: 
+        - https://www.irif.fr/~gc/papers/polydeuces-part1.pdf
+        - https://hal.science/hal-00880744v2/file/2part-acmmain.pdf
 - Semantic Subtyping
     - https://www.irif.fr/~gc/papers/icalp-ppdp05.pdf
     - https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
 - Super F
     - https://lptk.github.io/files/superf-popl24-preprint.pdf
+    - proof: https://theses.hal.science/tel-00940511/document
+        - search for subtyping or containment judgments
+
 
 
 
