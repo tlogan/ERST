@@ -1403,6 +1403,29 @@ def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
         if isinstance(st.upper, TVar) and st.upper.id not in world.freezer  
     ) 
 
+def is_typ_structured(t : Typ) -> bool:
+    if False:
+        assert False
+    elif isinstance(t, Exi):
+        return is_typ_structured(t.body)
+    elif isinstance(t, All):
+        return is_typ_structured(t.body)
+    elif isinstance(t, Top):
+        return True
+    elif isinstance(t, Bot):
+        return True
+    elif isinstance(t, TTag):
+        return True
+    elif isinstance(t, TField):
+        return True
+    elif isinstance(t, Unio):
+        return is_typ_structured(t.left) and is_typ_structured(t.right)
+    elif isinstance(t, Inter):
+        return is_typ_structured(t.left) and is_typ_structured(t.right)
+    else:
+        return False
+
+
 default_context = Context(m(), [World(s(), s(), s())])
 
 
@@ -2461,17 +2484,20 @@ upper:
             return [] 
 
         elif isinstance(lower, LeastFP):
-            '''
-            NOTE: k-induction
-            use the pattern on LHS to dictate number of unrollings needed on RHS 
-            simply need to sub RHS into LHS's self-referencing variable
-            '''
-            '''
-            sub in induction hypothesis to world:
-            '''
-            renaming : PMap[str, Typ] = pmap({lower.id : upper})
-            strong_body = sub_typ(renaming, lower.body)
-            return self.solve(world, strong_body, upper)
+            if is_typ_structured(lower.body):
+                '''
+                NOTE: k-induction / bi-simulation
+                use the pattern on LHS to dictate number of unrollings needed on RHS 
+                simply need to sub RHS into LHS's self-referencing variable
+                '''
+                '''
+                sub in induction hypothesis to world:
+                '''
+                renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                strong_body = sub_typ(renaming, lower.body)
+                return self.solve(world, strong_body, upper)
+            else:
+                return []
 
         elif isinstance(upper, LeastFP): 
 

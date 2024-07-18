@@ -190,6 +190,56 @@ def test_two_nat_subs_nat():
     assert worlds
 
 
+def test_coinduction_malformed():
+    # TODO
+    lower = (f"""
+(LFP E | E)
+    """.strip())
+    upper = (f"""
+(LFP E | ~zero @ | ~succ ~succ E)
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert not worlds
+
+def test_top_subs_relational_constraint_false():
+    # TODO: make sure subtyping terminates with false
+    list = (f"""
+(LFP N | ~nil @  | ~cons N )
+    """.strip())
+    lower = (f"""
+({tl.nat}, {list})
+TOP
+    """.strip())
+    upper = (f"""
+(LFP NL 
+    | (~zero @, ~nil @) 
+    | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
+)
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert not worlds
+
+def test_pair_subs_relational_constraint_false():
+    # TODO: make sure subtyping terminates with false
+    list = (f"""
+(LFP N | ~nil @  | ~cons N )
+    """.strip())
+    lower = (f"""
+({tl.nat}, {list})
+TOP
+    """.strip())
+    upper = (f"""
+(LFP NL 
+    | (~zero @, ~nil @) 
+    | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
+)
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert not worlds
+
 def test_even_subs_nat():
     solver = analyzer.Solver(m())
     worlds = solve(solver, tl.even, tl.nat)
@@ -1805,14 +1855,14 @@ if __name__ == '__main__':
     # test_nat_subs_exi()
     # test_relation_factorized_subs()
     # test_add_annotated()
-    # test_even_list_subs_nat_list()
+    test_even_list_subs_nat_list()
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
     # test_fib()
     #####################################
     # test_concat_lists()
-    test_reverse()
+    # test_reverse()
     # test_tail_reverse()
     # test_stepped_tail_reverse()
     # test_curried_tail_reverse()
@@ -1821,6 +1871,10 @@ if __name__ == '__main__':
     # test_lted_expr()
     # test_merge_lists()
     # test_merge_sort()
+    #####################################
+    # test_coinduction_malformed()
+    # test_pair_subs_relational_constraint_false()
+    # test_top_subs_relational_constraint_false()
     pass
 
 #######################################################################

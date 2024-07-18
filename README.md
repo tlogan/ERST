@@ -3,19 +3,7 @@
 
 
 ### TODO (Symbolic Implementation)
-- create a test demonstrating how current method of automated co-induction is unsound 
-    - e.g. self reference is on left side of subtyping
-    - e.g. non-constraint type <: constrained type  
-    - two possible problems:
-        - A. subbing in RHS into self-reference of LHS without checking for guard
-        - B. how constraint is saved and can be used without checking for guard 
-    - perhaps Cretin's method subsumes both
-        - i.e. subbing is actually a shortcut for inducing a constraint and then simplifying the type 
-    - if there's a problem, consider using Cretin's method of two-stage co-induction environment
-        - e.g. check even <: nat
-            - stage even <: nat
-            - when guard is found (succ succ n <: succ m), commit even <: nat 
-        - perhaps could allow for broader form of cached constraints
+- figure out why `test_pair_subs_relational_constraint_false` has recursion error
 - redo LFP syntax do simply be FP or FIX; it doesn't have to be well-founded
 - NOTE: not sure this is necessary; update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
@@ -84,7 +72,13 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- Understand how Cretin defines and uses semantic types 
+- Note that the substitution in the bi-simulation recursive type rule corresponds 
+    - to Cretin's notion of inducing a co-inductive hypothesis
+    - this is separate from adding the hypothesis with relational variables
+        - the difference is due to the algorithmic nature of solving vs Cretin's declarative deciding rules
+- Note how Cretin and uses semantic types in soundness Theorem 101 (p. 134)
+- note how an implication type can be semantically interpreted as a set: |P --> Q| = {f | All x in |P| --> f(x) in |Q|}  
+    - where f is an uninterpreted function
 - note how Cretin's co-induction environment is used
     - note how there are two stages between writing and reading co-inductive assumption
         - ensure induction is only allowed on smaller subparts
