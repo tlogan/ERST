@@ -225,17 +225,17 @@ $combo = Inter(TField('head', $typ_base.combo), TField('tail', $typ.combo))
 }
 
 // Existential unconstrained 
-| 'EXI' '[' ids ']' typ {
+| 'ANY' '[' ids ']' typ {
 $combo = Exi($ids.combo, (), $typ.combo) 
 }
 
 // // Existential 
-// | 'EXI' '[' qualification ']' typ {
+// | 'ANY' '[' qualification ']' typ {
 // $combo = Exi((), $qualification.combo, $typ.combo) 
 // }
 
 // Existential 
-| 'EXI' '[' ids qualification ']' typ {
+| 'ANY' '[' ids qualification ']' typ {
 $combo = Exi($ids.combo, $qualification.combo, $typ.combo) 
 }
 
@@ -268,8 +268,8 @@ $combo = All($ids.combo, $qualification.combo, $typ.combo)
 // least self with 
 // :zero, :nil |  
 // {n, l <: self] succ n, cons l 
-| 'LFP' ID '|' typ {
-$combo = LeastFP($ID.text, $typ.combo) 
+| 'FX' ID '|' typ {
+$combo = Fixpoint($ID.text, $typ.combo) 
 }
 
 

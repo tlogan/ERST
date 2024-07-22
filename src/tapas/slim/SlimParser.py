@@ -196,7 +196,7 @@ class SlimParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'alias'", "'='", "'TOP'", "'BOT'", "'@'", 
                      "'~'", "':'", "'('", "')'", "'|'", "'&'", "'->'", "','", 
-                     "'EXI'", "'['", "']'", "'ALL'", "'LFP'", "'\\'", "';'", 
+                     "'ANY'", "'['", "']'", "'ALL'", "'FX'", "'\\'", "';'", 
                      "'<:'", "'if'", "'then'", "'else'", "'let'", "'in'", 
                      "'fix'", "'case'", "'=>'", "'.'", "'|>'" ]
 
@@ -983,7 +983,7 @@ class SlimParser ( Parser ):
                 self.state = 161
                 localctx._typ = self.typ()
 
-                localctx.combo = LeastFP((None if localctx._ID is None else localctx._ID.text), localctx._typ.combo) 
+                localctx.combo = Fixpoint((None if localctx._ID is None else localctx._ID.text), localctx._typ.combo) 
 
                 pass
 

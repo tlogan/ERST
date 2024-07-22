@@ -3,6 +3,11 @@
 
 
 ### TODO (Symbolic Implementation)
+- figure out non-termination in `test_existential_fixpoint_subs_false`
+    - modify rewriting to avoid infinitely rewriting
+        - ensure that constraint is rewritten int pair of variables to avoid infinite substitution
+        - this seems a little kludgy but it might work
+    - make sure remover recursion limit after debugging
 - figure out why `test_pair_subs_relational_constraint_false` has recursion error
 - redo LFP syntax do simply be FP or FIX; it doesn't have to be well-founded
 - NOTE: not sure this is necessary; update path extraction from records to handle `Diff`
