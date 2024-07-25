@@ -77,7 +77,39 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- Note that the substitution in the bi-simulation recursive type rule corresponds 
+- understand the Forall rules in SuperF
+- understand the extrusion rules in SuperF
+    - note the use of two kinds of rigid variables (including skolems)
+- note how SuperF uses constraint annotations
+    - claim 1. for "immediate type variable cycles". This seems wrong. 
+        - looks like the reflexive rule is sufficient, and skip isn't necessary.
+        - e.g. A <: B, B <: A, A <: Bot
+            - A <: B, B <: A \ A <: Bot
+            - A <: B \ B <: A, A <: Bot
+            - B <: B \ B <: A, A <: Bot
+        - if Skip is actually extraneous, then the guard |> is too, and then constraint annotations are too
+    - claim 2. allows SRLC to catch repeating constraints on roots.
+        - deals with repeating sub-problems with new type variable instantiations. 
+        - this is distinct from the issue of cycles
+        - in Flex rules
+        - see example in appendix: A.5
+        - looking up in the context seems like it would work too
+    - note that SuperF separates constraint annotation from context, because its context condition multiple constraints 
+        - whereas the annotation conditions just one constraint
+
+- Note how SuperF reconstruction rules:
+    - need to understand how skip and rooted variables are connected
+    - mark constraints that have already been solved and can be skipped
+        - to prevent infinite generation of a subproblem that is identical to the original
+        - this means infinite generation corresponds to satisfiable rather than failure.
+    - prevents skipping with a guard (right triangle)
+        - for constraints with variables in the process of being constrained
+        - or not yet fully constrained
+    - why are these concepts needed? 
+- Note in SuperF, how boxed types prevent instantiation of inferred universally quantified types
+    - this only seems necessary for declarative rules since a universal type can be chosen 
+    - in my algorithmic rules, a universal type is never chosen during subtyping solving
+- Note that the substitution in the lower recursive type rule corresponds 
     - to Cretin's notion of inducing a co-inductive hypothesis
     - this is separate from adding the hypothesis with relational variables
         - the difference is due to the algorithmic nature of solving vs Cretin's declarative deciding rules
