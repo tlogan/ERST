@@ -9,6 +9,9 @@
         - this seems a little kludgy but it might work
     - make sure remover recursion limit after debugging
 - figure out why `test_pair_subs_relational_constraint_false` has recursion error
+- consider if it makes sense to use a rigid variable set to solving (as in SuperF)
+    - rigid variables being outer variables (like extruded variables) that should not be generalized.
+    - adding to solving would prevent interpreting rigid variables as flex variables
 - redo LFP syntax do simply be FP or FIX; it doesn't have to be well-founded
 - NOTE: not sure this is necessary; update path extraction from records to handle `Diff`
 - double check that label paths from records are extracted correctly in `extract_column_comparisons`
@@ -77,9 +80,13 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how superF only calls solver in abstraction rule 
+    - it simply adds unsolved constraints for the other rules
+    - seems like merely a stylistic choice
 - understand the Forall rules in SuperF
-- understand the extrusion rules in SuperF
-    - note the use of two kinds of rigid variables (including skolems)
+- note how rigid variable are used in SuperF for extrusion
+    - rigid variables are constructed in typing rules (as extruded variables)
+    - rigid variables are marked in solving rules to prevent flex interpretation
 - note how SuperF uses constraint annotations
     - claim 1. for "immediate type variable cycles". This seems wrong. 
         - looks like the reflexive rule is sufficient, and skip isn't necessary.
