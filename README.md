@@ -83,6 +83,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how subscripting curly braces with an index is a macro for set compression in range under arbitrary n  
+- note how subscripting symbol with proposition or index can be considered a macro for composing a linearize function with set comprehension
 - consider rewriting variable rules to bypass intersection and union 
     - note how union and intersection correspond to solving multiple constraints in Flex (Learnable) rules 
     - intersection of Ti, for each X <: Ti in context corresponds to constraints used in C-Flex-R
