@@ -3,6 +3,9 @@
 
 
 ### TODO (Symbolic Implementation)
+- consider rewriting variable rules to bypass indirection into intersection and union in variable rules 
+- consider rewriting function to avoid erasing constraint relations in output.
+    e.g. (Do not erase input variable information in output of factor function)
 - figure out non-termination in `test_existential_fixpoint_subs_false`
     - modify rewriting to avoid infinitely rewriting
         - ensure that constraint is rewritten int pair of variables to avoid infinite substitution
@@ -80,6 +83,11 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- consider rewriting variable rules to bypass intersection and union 
+    - note how union and intersection correspond to solving multiple constraints in Flex (Learnable) rules 
+    - intersection of Ti, for each X <: Ti in context corresponds to constraints used in C-Flex-R
+    - union of Ti, for each Ti <: X in context corresponds to constraints used in C-Flex-L
+- consider rewriting variable rules to persist subtyping relation. (Do not erase information in factor function)  
 - note how superF only calls solver in abstraction rule 
     - it simply adds unsolved constraints for the other rules
     - seems like merely a stylistic choice

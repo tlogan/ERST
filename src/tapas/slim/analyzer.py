@@ -1503,32 +1503,21 @@ class Solver:
 
 
 
-    def resolve_weakest_lower(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
-        '''
-        for constraints X <: T, X <: U; find weakest type lower than T, lower than U
-        which is T & U.
-        NOTE: related to weakest precondition concept
-        '''
-
+    def resolve_strongest_upper_bound(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
-        uppers, constraints = self.extract_uppers(world, id) 
+        uppers, constraints = self.extract_upper_bounds(world, id) 
         result = Top() 
         for upper in uppers:
             result = Inter(upper, result) 
         
         return (simplify_typ(result), pset(constraints))
 
-    def resolve_strongest_upper(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
+    def resolve_weakest_lower_bound(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
         # if id in self.aliasing:
         #     return (self.aliasing[id], s())
 
-        '''
-        for constraints T <: X, U <: X; find strongest type upper than T, upper than U
-        which is T | U.
-        NOTE: related to strongest postcondition concept
-        '''
         constraints = [
             st
             for st in world.constraints
@@ -1635,9 +1624,9 @@ class Solver:
     def resolve_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
         def resolve(polarity : bool, id : str): 
             if polarity:
-                return self.resolve_strongest_upper(world, id)
+                return self.resolve_weakest_lower_bound(world, id)
             else:
-                return self.resolve_weakest_lower(world, id)
+                return self.resolve_strongest_upper_bound(world, id)
 
         if False:
             assert False
@@ -1886,7 +1875,7 @@ class Solver:
 #         else:
 #             return worlds 
 
-    def extract_uppers(self, world : World, id : str) -> tuple[PSet[Typ], PSet[Subtyping]]:
+    def extract_upper_bounds(self, world : World, id : str) -> tuple[PSet[Typ], PSet[Subtyping]]:
         result = s()
         used_constraints = s()
         for constraint in world.constraints:
@@ -2010,13 +1999,13 @@ class Solver:
         elif isinstance(right, Top): 
             return True
         elif isinstance(left, TVar): 
-            new_lefts = self.extract_uppers(world, left.id)[0]
+            new_lefts = self.extract_upper_bounds(world, left.id)[0]
             return all(
                 self.is_intersection_inhabitable(world, new_left, right)
                 for new_left in new_lefts
             )
         elif isinstance(right, TVar): 
-            new_rights = self.extract_uppers(world, right.id)[0]
+            new_rights = self.extract_upper_bounds(world, right.id)[0]
             return all(
                 self.is_intersection_inhabitable(world, left, new_right)
                 for new_right in new_rights 
@@ -2081,7 +2070,7 @@ class Solver:
                 # - we know it's inhabitable since it is in the world
                 # - and only the solver adds constraints to the world
                 self.is_intersection_inhabitable(world, legacy, target)
-                for legacy in self.extract_uppers(world, id)[0]
+                for legacy in self.extract_upper_bounds(world, id)[0]
             ) 
         )
         return result
@@ -2214,7 +2203,7 @@ upper:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.freezer: 
-            interp = self.resolve_strongest_upper(world, lower.id)
+            interp = self.resolve_weakest_lower_bound(world, lower.id)
             if  isinstance(interp[0], Bot):
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
@@ -2235,7 +2224,7 @@ upper:
 
                 # NOTE: safety check 
                 # - add strongest_upper check of transitive skolem variable 
-                strongest_once_removed = self.resolve_strongest_upper(world, interp[0].id)[0]
+                strongest_once_removed = self.resolve_weakest_lower_bound(world, interp[0].id)[0]
                 worlds = [
                     new_world
                     for world in self.solve(world, strongest_once_removed, upper)
@@ -2363,7 +2352,7 @@ upper:
                     world.freezer, world.relids
                 )]
             else:
-                interp = self.resolve_weakest_lower(world, lower.id)
+                interp = self.resolve_strongest_upper_bound(world, lower.id)
                 weakest_strong = interp[0]
                 return self.solve(world, weakest_strong, upper)
             #end if-else
@@ -2378,7 +2367,7 @@ upper:
             #         world.constraints.add(Subtyping(lower, upper)),
             #         world.freezer, world.relids
             #     )]
-            interp = self.resolve_weakest_lower(world, upper.id)
+            interp = self.resolve_strongest_upper_bound(world, upper.id)
             if isinstance(interp[0], Top):
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
@@ -2395,7 +2384,7 @@ upper:
                 # )]
 
                 # TODO: add safety check? what is the safety condition?
-                weakest_once_removed = self.resolve_weakest_lower(world, interp[0].id)[0]
+                weakest_once_removed = self.resolve_strongest_upper_bound(world, interp[0].id)[0]
                 return [
                     World(
                         world.constraints.add(Subtyping(lower, upper)),
@@ -2452,7 +2441,7 @@ upper:
             return worlds
 
         elif isinstance(upper, TVar) and upper.id in world.freezer: 
-            interp = self.resolve_strongest_upper(world, upper.id)
+            interp = self.resolve_weakest_lower_bound(world, upper.id)
             strongest_weak = interp[0]
             return self.solve(world, lower, strongest_weak)
 
@@ -3067,7 +3056,7 @@ class ExprRule(Rule):
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
-                left_interp = self.solver.resolve_weakest_lower(inner_world, in_typ.id)
+                left_interp = self.solver.resolve_strongest_upper_bound(inner_world, in_typ.id)
                 (left_typ, left_used_constraints) = (
                     left_interp 
                     if in_typ.id not in inner_world.relids else 

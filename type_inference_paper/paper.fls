@@ -521,6 +521,16 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/nxlmi7.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathMI7.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/NewTXMI7.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmr8t.vf
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmr8r.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/nxlmi5.vf
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathMI5.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/NewTXMI5.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/nxlmia.vf
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathRM.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txmiaSTbb.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txmiaX.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 INPUT /usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 INPUT /usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
@@ -531,6 +541,7 @@ INPUT paper.aux
 INPUT ./paper.out
 INPUT ./paper.out
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb

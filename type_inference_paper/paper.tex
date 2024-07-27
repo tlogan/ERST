@@ -1100,11 +1100,11 @@ the variable's upper bound.
   \inferrule[LearnableSkolemLowerVar] {
     \alpha \notin \Omega 
     \\
-    strongest\_upper(\Delta, \alpha) = \alpha' 
+    weakest\_lower\_bound(\Delta, \alpha) = \alpha' 
     \\
     \alpha' \in \Omega 
     \\\\
-    strongest\_upper(\Delta, \alpha') = \tau_l
+    weakest\_lower\_bound(\Delta, \alpha') = \tau_l
     \\
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
   } {
@@ -1114,7 +1114,7 @@ the variable's upper bound.
   \inferrule[LearnableLowerVar] {
     \alpha \notin \Omega 
     \\
-    strongest\_upper(\Delta, \alpha) = \tau_l
+    weakest\_lower\_bound(\Delta, \alpha) = \tau_l
     \\
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
   } {
@@ -1124,11 +1124,11 @@ the variable's upper bound.
   \inferrule[LearnableSkolemUpperVar] {
     \alpha \notin \Omega 
     \\
-    weakest\_lower(\Delta, \alpha) = \alpha'
+    strongest\_upper\_bound(\Delta, \alpha) = \alpha'
     \\
     \alpha' \in \Omega 
     \\\\
-    weakest\_lower(\Delta, \alpha') = \tau_u
+    strongest\_upper\_bound(\Delta, \alpha') = \tau_u
     \\
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
   } {
@@ -1140,9 +1140,19 @@ the variable's upper bound.
   \inferrule[LearnableUpperVar] {
     \alpha \notin \Omega 
     \\
-    weakest\_lower(\Delta, \alpha) = \tau_u
+    strongest\_upper\_bound(\Delta, \alpha) = \tau_u
     \\
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
+  } {
+    \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
+    \claim 
+    \tau_l \subtypes \alpha
+  }
+
+  \inferrule[LearnableUpperVarAlternative] {
+    \alpha \notin \Omega 
+    \\
+    \left< \Delta, \Omega \right> \claim \widebar{(\code{$\tau_l$<:$\tau_u$})}^{(\code{$\alpha$<:$\tau_u$}) \in (\Delta \cup factor(\Delta, \alpha))}
   } {
     \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
     \claim 
@@ -1153,7 +1163,7 @@ the variable's upper bound.
   \inferrule[SkolemLowerVar] {
     \alpha \in \Omega
     \\
-    weakest\_lower(\Delta, \alpha) = \tau_l
+    strongest\_upper\_bound(\Delta, \alpha) = \tau_l
     \\
     \left< \Delta, \Omega \right>
     \claim \tau_l \subtypes \tau_u
