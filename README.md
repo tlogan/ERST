@@ -3,6 +3,14 @@
 
 
 ### TODO (Symbolic Implementation)
+- create rigid and extrusion rules and remove extrusion from function rule
+    - involves both lower and upper bounded extrusions
+    - or in a Rigid rule in subtyping
+    - rationale limits extrusion to cases where a rigid variable is constrained by a flexible variable 
+    - less clutter than eagerly extruding in function rule
+- ensure that multistep resolving/substitution isn't used during solving
+    - only sub out a variable and its constraint when it's clear that the variable will not be referenced elsewhere
+- consider splitting constraints like SuperF's outer/inner functions
 - consider rewriting variable rules to bypass indirection into intersection and union in variable rules 
 - consider rewriting function to avoid erasing constraint relations in output.
     e.g. (Do not erase input variable information in output of factor function)
@@ -83,6 +91,15 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note that SuperF's RHS Universal rule discards the inner constraints
+    - this is because RHS Universal doesn't have constraints
+    - this is different from mine. My system cannot discard inner constraints
+- note how rigid variables may simply be thought have non-generalizable
+    - in SuperF, they use a Rigid variable set
+    - in my implementation this is determined by the rank of the variable
+- note how SuperF doesn't use skolem rules. 
+    - because universal on RHS doesn't have constraints. 
+    - This is very different from my system.
 - note how subscripting curly braces with an index is a macro for set compression in range under arbitrary n  
 - note how subscripting symbol with proposition or index can be considered a macro for composing a linearize function with set comprehension
 - consider rewriting variable rules to bypass intersection and union 
