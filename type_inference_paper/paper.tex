@@ -1162,11 +1162,24 @@ the variable's upper bound.
   \inferrule[LearnableUpperVarAlternativeB] {
     \alpha \notin \Omega 
     \\
-    \left< \Delta, \Omega \right> \claim linearize(\{\code{;$\tau_l$<:$\tau_u$}\ |\ (\code{$\alpha$<:$\tau_u$}) \in (\Delta \cup factor(\Delta, \alpha))\})
+    \left< \Delta, \Omega \right> \claim linearize(\{\code{$\tau_l$<:$\tau_u$}\ |\ (\code{$\alpha$<:$\tau_u$}) \in (\Delta \cup factor(\Delta, \alpha))\})
     \\
     linearize(\emptyset) = \epsilon
     \\
-    linearize(D \cup \{c\}) = linearize(D\backslash \{c\})\ c
+    linearize(D \cup \{c\}) = linearize(D\backslash \{c\})\ ;\ c
+  } {
+    \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
+    \claim 
+    \tau_l \subtypes \alpha
+  }
+
+  \inferrule[LearnableUpperVarAlternativeC] {
+    \alpha \notin \Omega 
+    \\
+    interize(\{\tau_i\ |\ (\code{$\alpha$<:$\tau_i$}) \in (\Delta \cup factor(\Delta, \alpha))\})
+    = \tau_u
+    \\
+    \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
   } {
     \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
     \claim 

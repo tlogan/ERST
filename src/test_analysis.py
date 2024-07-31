@@ -462,18 +462,18 @@ def test_plus_equals_two_query():
     print(f'''
 answer:\n{answer}
     ''')
-    # assert answer == roundtrip([
-    #     "(~zero @, ~succ ~succ ~zero @)",
-    #     "(~succ ~zero @, ~succ ~zero @)",
-    #     "(~succ ~succ ~zero @, ~zero @)",
-    # ])
-    oracle = f"""
-BOT
-| (~zero @, ~succ ~succ ~zero @)
-| (~succ ~zero @, ~succ ~zero @)
-| (~succ ~succ ~zero @, ~zero @)
-    """
-    assert equiv(answer, oracle)
+    assert answer == roundtrip([
+        "(~zero @, ~succ ~succ ~zero @)",
+        "(~succ ~zero @, ~succ ~zero @)",
+        "(~succ ~succ ~zero @, ~zero @)",
+    ])
+#     oracle = f"""
+# BOT
+# | (~zero @, ~succ ~succ ~zero @)
+# | (~succ ~zero @, ~succ ~zero @)
+# | (~succ ~succ ~zero @, ~zero @)
+#     """
+#     assert equiv(answer, oracle)
 
 def test_plus_equals_two_union_existential():
     plus_equals_two_query = ('''
@@ -1915,7 +1915,7 @@ if __name__ == '__main__':
     # test_existential_with_upper_bound()
     # test_existential_with_upper_bound_unguarded()
     # test_existential_lted_normalized_subs_lted_xyz()
-    test_fixpoint_subs_existential()
+    # test_fixpoint_subs_existential()
     # test_lted_normalized_subs_lted_xyz()
     # test_nat_subs_exi()
     # test_relation_factorized_subs()

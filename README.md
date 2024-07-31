@@ -3,7 +3,10 @@
 
 
 ### TODO (Symbolic Implementation)
-- create rigid and extrusion rules and remove extrusion from function rule
+- replace strongest_upper_bound with combo of interize + filtering
+- replace weakest_lower_bound with combo of unionize + filtering
+- debug `test_plus_equals_two_query`
+- create rigid and extrusion rules
     - involves both lower and upper bounded extrusions
     - or in a Rigid rule in subtyping
     - rationale limits extrusion to cases where a rigid variable is constrained by a flexible variable 

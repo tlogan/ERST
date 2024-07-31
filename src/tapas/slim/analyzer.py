@@ -2816,12 +2816,7 @@ class BaseRule(Rule):
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(sorted(var.id for var in renaming.values()))
 
-                ######## NOTE: extrusion #############
-                # TODO: enable extrusion
-                # extrusion = tuple(Subtyping(new_var, TVar(old_id)) for old_id, new_var in renaming.items()) 
-                # NOTE: disable extrusion
-                extrusion = tuple([]) 
-                constraints = extrusion + (
+                constraints = (
                     sub_constraints(sub_map, tuple(sorted(reachable_constraints.difference(existential_constraints))))
                 )
 
