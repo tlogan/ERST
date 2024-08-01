@@ -43,14 +43,14 @@ even = (f"""
 nat_list = (f"""
 (FX NL 
     | (~zero @, ~nil @) 
-    | (ANY [N L ; (N, L) <: NL] (~succ N, ~cons L))
+    | (EXI [N L ; (N, L) <: NL] (~succ N, ~cons L))
 )
 """.strip())
 
 even_list = (f"""
 (FX NL 
     | (~zero @, ~nil @) 
-    | ANY [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
+    | EXI [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
 )
 """.strip())
 
@@ -59,50 +59,50 @@ even_list = (f"""
 nat_equal = (f"""
 (FX SELF 
     | (~zero @, ~zero @) 
-    | ANY [A B ; (A, B) <: SELF] (~succ A, ~succ B)  
+    | EXI [A B ; (A, B) <: SELF] (~succ A, ~succ B)  
 )
 """.strip())
 
 addition = (f'''
 FX AR 
-    | (ANY [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
-    | (ANY [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
+    | (EXI [Y Z ; (Y, Z) <: ({nat_equal})] (x : ~zero @ & y : Y & z : Z))
+    | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: AR] (x : ~succ X & y : Y & z : ~succ Z))
 ''')
 
 lte = (f"""
 (FX SELF 
-    | (ANY [x ; x <: ({nat})] (~zero @, x))
-    | (ANY [a b ; (a,b) <: SELF] (~succ a, ~succ b))
+    | (EXI [x ; x <: ({nat})] (~zero @, x))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~succ b))
 )
 """)
 
 open_lte = (f"""
 (FX SELF 
-    | (ANY [x] (~zero @, x))
-    | (ANY [a b ; (a,b) <: SELF] (~succ a, ~succ b))
+    | (EXI [x] (~zero @, x))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~succ b))
 )
 """)
 
 
 lted = (f"""
 (FX self 
-    | (ANY [x ; x <: ({nat})] ((~zero @, x), ~true @))
-    | (ANY [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
-    | (ANY [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
+    | (EXI [x ; x <: ({nat})] ((~zero @, x), ~true @))
+    | (EXI [a b c ; ((a,b),c) <: self] ((~succ a, ~succ b), c))
+    | (EXI [x ; x <: ({nat})] ((~succ x, ~zero @), ~false @))
 )
 """)
 
 nat_pair = (f"""
 (FX self 
-    | (ANY [n ; n <: ({nat})] (~zero @, n))
-    | (ANY [m n ; (m,n) <: self] (~succ m, ~succ n))
-    | (ANY [m ; m <: ({nat})] (~succ m, ~zero @))
+    | (EXI [n ; n <: ({nat})] (~zero @, n))
+    | (EXI [m n ; (m,n) <: self] (~succ m, ~succ n))
+    | (EXI [m ; m <: ({nat})] (~succ m, ~zero @))
 )
 """)
 
 lted_imp = (f'''
 (ALL [XY ; XY <: ({nat_pair})] (XY -> 
-    (ANY [Z ; (XY, Z) <: ({lted})] Z)
+    (EXI [Z ; (XY, Z) <: ({lted})] Z)
 ))) 
 ''')
 
@@ -110,9 +110,9 @@ lted_imp = (f'''
 # (x : ~zero @ & y : Y & z : Z)
 lted_xyz = (f"""
 (FX SELF 
-    | (ANY [Y ; Y <: ({nat})] (x : ~zero @ & y : Y & z : ~true @))
-    | (ANY [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
-    | (ANY [X ; X <: ({nat})] (x : ~succ X & y : ~zero @ & z : ~false @))
+    | (EXI [Y ; Y <: ({nat})] (x : ~zero @ & y : Y & z : ~true @))
+    | (EXI [X Y Z ; (x : X & y : Y & z : Z) <: SELF] (x : ~succ X & y : ~succ Y & z : Z))
+    | (EXI [X ; X <: ({nat})] (x : ~succ X & y : ~zero @ & z : ~false @))
 )
 """)
 
@@ -120,17 +120,17 @@ lted_xyz = (f"""
 
 open_nat_pair = (f"""
 (FX SELF 
-    | (ANY [N] (~zero @, N))
-    | (ANY [N M ; (M, N) <: SELF ] (~succ M, ~succ N)) 
-    | (ANY [M] (~succ M, ~zero @))
+    | (EXI [N] (~zero @, N))
+    | (EXI [N M ; (M, N) <: SELF ] (~succ M, ~succ N)) 
+    | (EXI [M] (~succ M, ~zero @))
 )
 """)
 
 open_lted = (f"""
 (FX SELF 
-    | (ANY [N] ((~zero @, N), ~true @)) 
-    | (ANY [N D M ; ((M, N), D) <: SELF ] ((~succ M, ~succ N), D))
-    | (ANY [M] ((~succ M, ~zero @), ~false @))
+    | (EXI [N] ((~zero @, N), ~true @)) 
+    | (EXI [N D M ; ((M, N), D) <: SELF ] ((~succ M, ~succ N), D))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
 )
 """)
 
@@ -140,12 +140,12 @@ max = (f"""
     ((ALL [M N
         ; G44 <: ~true @
         ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
-    ] (ANY [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
+    ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
 
     (ALL [M N
         ; G44 <: ~false @
         ; (M, N) <: G45 ; G45 <: {open_nat_pair} 
-    ] (ANY [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
+    ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
 )
 """)
 
@@ -154,10 +154,10 @@ max = (f"""
 # (ALL [G44 G45] 
 #     ((ALL [M N
 #         ; G44 <: ~true @
-#     ] (ANY [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
+#     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44](M, N) -> N)) & 
 
 #     (ALL [M N
 #         ; G44 <: ~false @
-#     ] (ANY [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
+#     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
 # )
 # """)

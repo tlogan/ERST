@@ -214,7 +214,7 @@ TOP
     upper = (f"""
 (FX NL 
     | (~zero @, ~nil @) 
-    | ANY [N L ; (N, L) <: NL] (~succ N, ~cons L)  
+    | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
 )
     """.strip())
     solver = analyzer.Solver(m())
@@ -229,7 +229,7 @@ def test_existential_fixpoint_subs_false():
 (FX N | ~nil @ | ~cons N)
     """.strip())
     lower = (f"""
-(ANY [X ; X <: {fp}] X)
+(EXI [X ; X <: {fp}] X)
     """.strip())
     upper = (f"""
 ~nil @
@@ -263,7 +263,7 @@ def test_pair_subs_relational_constraint_false():
     upper = (f"""
 (FX NL 
     | (~zero @, ~nil @) 
-    | ANY [N L ; (N, L) <: NL] (~succ N, ~cons L)  
+    | EXI [N L ; (N, L) <: NL] (~succ N, ~cons L)  
 )
     """.strip())
     solver = analyzer.Solver(m())
@@ -283,7 +283,7 @@ def test_nat_subs_even():
 
 def test_subs_idx_unio():
     idx_unio = ('''
-ANY [N ; N <: TOP] (~thing N)  
+EXI [N ; N <: TOP] (~thing N)  
     ''')
     thing = ('''
 (~thing @)
@@ -380,7 +380,7 @@ def test_addition_subs_lte():
     strong = tl.addition
 
     weak = (f"""
-ANY [X Y Z ; (X,Z) <: {tl.lte}] (x : X & y : Y & z : Z)
+EXI [X Y Z ; (X,Z) <: {tl.lte}] (x : X & y : Y & z : Z)
     """) 
     solver = analyzer.Solver(m())
     worlds = solve(solver, strong, weak)
@@ -487,7 +487,7 @@ BOT
 | (~succ ~succ ~zero @, ~zero @)
     """)
     weak = (f"""
-(ANY [X Y ; {plus_equals_two_query} <: {tl.addition}] (X, Y))
+(EXI [X Y ; {plus_equals_two_query} <: {tl.addition}] (X, Y))
     """)
     worlds = solve(solver, strong, weak)
     print(len(worlds))
@@ -498,13 +498,13 @@ BOT
 list_nat_diff = ('''
 (FX self
     | (~nil @, ~zero @)
-    | (ANY [l n ; (l, n) <: self] ((~cons l \\ ~nil @), ~succ n))
+    | (EXI [l n ; (l, n) <: self] ((~cons l \\ ~nil @), ~succ n))
 )
 ''')
 
 # list_nat_diff = "((~nil @, ~zero @) | ([| L N . (L, N) <: FX SELF ((~nil @, ~zero @) | ([| L N . (L, N) <: SELF ] ((~cons L \ ~nil @), ~succ N))) ] ((~cons L \ ~nil @), ~succ N)))"
 
-# (~nil @, _2) <: ((~nil @, ~zero @) | (ANY [l n ; (l, n) <: FX self ((~nil @, ~zero @) | (ANY [l n ; (l, n) <: self] ((~cons l \ ~nil @), ~succ n)))] ((~cons l \ ~nil @), ~succ n)))
+# (~nil @, _2) <: ((~nil @, ~zero @) | (EXI [l n ; (l, n) <: FX self ((~nil @, ~zero @) | (EXI [l n ; (l, n) <: self] ((~cons l \ ~nil @), ~succ n)))] ((~cons l \ ~nil @), ~succ n)))
 
 def test_nil_query_subs_list_nat_diff():
     nil_query = ('''
@@ -543,7 +543,7 @@ def test_cons_nil_subs_list_diff():
 
 list_imp_nat = (f'''
 (ALL [X ; X <: ({list_diff})] (X -> 
-    (ANY [Y ; (X, Y) <: ({list_nat_diff})] Y)
+    (EXI [Y ; (X, Y) <: ({list_nat_diff})] Y)
 ))) 
 ''')
 
@@ -685,7 +685,7 @@ case x => ~two @
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # TODO: use type_equiv, instead of syntax equiv.
     # there is some non-determinism in variable names
-    assert decode_positive(solver, worlds, typ_var) == "(ANY [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
+    assert decode_positive(solver, worlds, typ_var) == "(EXI [ ; _7 <: _6] ((~uno @ -> ~one @) & (ALL [_10 ; _10 <: _7] (_10 -> ~two @))))"
 
 def test_projection():
     code = '''
@@ -977,9 +977,9 @@ def test_function_if_then_else():
 def test_lted_expr():
     code = f"""
 alias R = (FX SELF
-    | (ANY [N] ((~zero @, N), ~true @))
-    | (ANY [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
-    | (ANY [M] ((~succ M, ~zero @), ~false @))
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
 )
 {el.lted}
     """.strip()
@@ -1032,16 +1032,16 @@ norm_weak:
 def test_existential_lted_normalized_subs_lted_xyz():
     R = (f"""
 (FX self
-| (ANY [x ; x <: (FX N | (~zero @ | ~succ N)) ] ((~zero @, x), ~true @))
-| (ANY [a b c ; ((a, b), c) <: self ] ((~succ a, ~succ b), c))
-| (ANY [x ; x <: (FX N | (~zero @ | ~succ N)) ] ((~succ x, ~zero @), ~false @))
+| (EXI [x ; x <: (FX N | (~zero @ | ~succ N)) ] ((~zero @, x), ~true @))
+| (EXI [a b c ; ((a, b), c) <: self ] ((~succ a, ~succ b), c))
+| (EXI [x ; x <: (FX N | (~zero @ | ~succ N)) ] ((~succ x, ~zero @), ~false @))
 )
     """.strip())
     strong = (f""" 
-(ANY [X Y Z ; ((X, Y), Z) <: {R} ] ((X, Y), Z))
+(EXI [X Y Z ; ((X, Y), Z) <: {R} ] ((X, Y), Z))
     """.strip())
     weak = (f"""
-ANY [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
+EXI [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
     """)
 
     solver = analyzer.Solver(m())
@@ -1053,7 +1053,7 @@ def test_fixpoint_subs_existential():
     # TODO: figure out wat to verify without rewriting LHS into existential
     lower = tl.even_list
     upper = (f"""
-ANY [X Y ; (X, Y) <: {tl.even_list}] (X, Y) 
+EXI [X Y ; (X, Y) <: {tl.even_list}] (X, Y) 
     """)
 
     solver = analyzer.Solver(m())
@@ -1065,7 +1065,7 @@ def test_lted_normalized_subs_lted_xyz():
     # TODO: figure out wat to verify without rewriting LHS into existential
     strong = tl.lted
     weak = (f"""
-ANY [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
+EXI [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
     """)
 
     solver = analyzer.Solver(m())
@@ -1076,7 +1076,7 @@ ANY [X Y Z ; (x : X & y : Y & z : Z) <: {tl.lted_xyz}] ((X, Y), Z)
 def test_nat_subs_exi():
     strong = tl.nat
     weak = (f"""
-ANY [X ;  X <: {tl.nat}] X 
+EXI [X ;  X <: {tl.nat}] X 
     """)
 
     solver = analyzer.Solver(m())
@@ -1101,7 +1101,7 @@ def test_weak_diff():
 (~succ ~zero @)
     ''')
     right = ('''
-(~succ W) \\ (ANY [x] (~zero @, x))
+(~succ W) \\ (EXI [x] (~zero @, x))
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, left, right)
@@ -1115,7 +1115,7 @@ def test_weak_diff_in_pair():
 ((~succ ~zero @), @)
     ''')
     right = ('''
-(((~succ W) \\ (ANY [x] (~zero @, x))), @)
+(((~succ W) \\ (EXI [x] (~zero @, x))), @)
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, left, right)
@@ -1282,10 +1282,10 @@ def test_recursion_wrapper():
 def test_implication_unification():
     # TODO: why is constraint of (I, J) <: X missing?
     strong = (f"""
-(X -> (ANY [Y ; (X, Y) <: (FX SELF 
-    | (ANY [B] ((~zero @, B), ~true @))
-    | (ANY [A C B ; ((A, B), C) <: SELF ] ((~succ A, ~succ B), C))
-    | (ANY [A] ((~succ A, ~zero @), ~false @))
+(X -> (EXI [Y ; (X, Y) <: (FX SELF 
+    | (EXI [B] ((~zero @, B), ~true @))
+    | (EXI [A C B ; ((A, B), C) <: SELF ] ((~succ A, ~succ B), C))
+    | (EXI [A] ((~succ A, ~zero @), ~false @))
 )] Y))
     """)
     weak = (f"""
@@ -1327,10 +1327,10 @@ def test_max():
 def test_relationally_constrained_existential_subtyping_fail():
     solver = analyzer.Solver(m())
     strong = (f'''
-ANY [A B] (A, B)
+EXI [A B] (A, B)
     ''')
     weak = (f'''
-ANY [X Y ; (X,Y) <: {tl.nat_list}] (X, Y)
+EXI [X Y ; (X,Y) <: {tl.nat_list}] (X, Y)
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1354,7 +1354,7 @@ def test_constrained_universal_subtyping_fail():
 ALL [Q; Q <: ~alpha @] Q -> Q 
     ''')
     weak = (f'''
- X -> ANY [Y ; Y <: ~beta @] Y 
+ X -> EXI [Y ; Y <: ~beta @] Y 
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1375,7 +1375,7 @@ def test_constrained_universal_subtyping_record_pass():
 ALL [Q; Q <: (q : ~alpha @)] Q -> Q 
     ''')
     weak = (f'''
- X -> ANY [Y ; Y <: (y : ~beta @)] Y 
+ X -> EXI [Y ; Y <: (y : ~beta @)] Y 
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1396,7 +1396,7 @@ def test_constrained_universal_subtyping_record_fail():
 ALL [Q; Q <: (l : ~alpha @)] Q -> Q 
     ''')
     weak = (f'''
- X -> ANY [Y ; Y <: (l : ~beta @)] Y 
+ X -> EXI [Y ; Y <: (l : ~beta @)] Y 
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1417,7 +1417,7 @@ def test_constrained_universal_subtyping_function_fail():
 ALL [Q; Q <: (@ -> ~alpha @)] Q -> Q 
     ''')
     weak = (f'''
- X -> ANY [Y ; Y <: (@ -> ~beta @)] Y 
+ X -> EXI [Y ; Y <: (@ -> ~beta @)] Y 
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1437,7 +1437,7 @@ def test_constrained_universal_subtyping_function_diff_pass():
 ALL [Q; Q <: (~alpha @ -> ~alpha @)] Q -> Q 
     ''')
     weak = (f'''
- X -> ANY [Y ; Y <: ((I \\ (~alpha @)) -> ~beta @)] Y 
+ X -> EXI [Y ; Y <: ((I \\ (~alpha @)) -> ~beta @)] Y 
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1456,7 +1456,7 @@ def test_max_subtyping():
     solver = analyzer.Solver(m())
     strong = tl.max 
     weak = (f'''
-(A, B) -> (ANY [Y ; (A, Y) <: ({tl.open_lte})] Y)
+(A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y)
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1467,15 +1467,15 @@ def test_max_subtyping_fail():
 
     crummy = (f"""
 (FX SELF 
-    | (ANY [x] (~zero @, ~succ ~zero @))
-    | (ANY [a b ; (a,b) <: SELF] (~succ a, ~zero @))
+    | (EXI [x] (~zero @, ~succ ~zero @))
+    | (EXI [a b ; (a,b) <: SELF] (~succ a, ~zero @))
 )
     """)
 
 
     strong = tl.max 
     weak = (f'''
-(A, B) -> (ANY [Y ; (A, Y) <: ({crummy})] Y)
+(A, B) -> (EXI [Y ; (A, Y) <: ({crummy})] Y)
     ''')
     worlds = solve(solver, strong, weak)
     print(f"len(worlds): {len(worlds)}")
@@ -1483,7 +1483,7 @@ def test_max_subtyping_fail():
 
 def test_max_annotated():
     code = (f'''
-let max : (A, B) -> (ANY [Y ; (A, Y) <: ({tl.open_lte})] Y) = {el.max} in
+let max : (A, B) -> (EXI [Y ; (A, Y) <: ({tl.open_lte})] Y) = {el.max} in
 @
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -1498,9 +1498,9 @@ def test_single_shape():
 # PROBLEM: unguarded self reference
     upper = ('''
 (FX SELF
-    | (ANY [G43] ~true @)
-    | (ANY [G45 G17 G44 ; G17 <: SELF ] G17)
-    | (ANY [G46] ~false @) 
+    | (EXI [G43] ~true @)
+    | (EXI [G45 G17 G44 ; G17 <: SELF ] G17)
+    | (EXI [G46] ~false @) 
     | BOT
 )
     ''')
@@ -1518,7 +1518,7 @@ def test_add():
 
 def test_exi_add_rel_subs_query():
     exi_add = '''
-(ANY [Y ; (~zero @, ~zero @) <: X ; (X, Y) <: (FX self | ((ANY [B] ((~zero @, B), B)) | (ANY [B A] ((~succ A, B), B))))] Y)
+(EXI [Y ; (~zero @, ~zero @) <: X ; (X, Y) <: (FX self | ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y)
     '''
     query = ('''
 Q
@@ -1533,8 +1533,8 @@ Q
 def test_add_imp_subs_zero_zero_imp_query():
 
     add_imp = '''
-(ALL [X ; X <: (FX self | ((ANY [B] (~zero @, B)) | (ANY [B A] (~succ A, B))))] (X -> (
-    ANY [Y ; (X, Y) <: (FX self | ((ANY [B] ((~zero @, B), B)) | (ANY [B A] ((~succ A, B), B))))] Y
+(ALL [X ; X <: (FX self | ((EXI [B] (~zero @, B)) | (EXI [B A] (~succ A, B))))] (X -> (
+    EXI [Y ; (X, Y) <: (FX self | ((EXI [B] ((~zero @, B), B)) | (EXI [B A] ((~succ A, B), B))))] Y
 ))) 
     '''
     zero_zero_imp_query = ('''
@@ -1567,11 +1567,11 @@ def test_add_one_and_two_equals_three():
 
 def test_existential_with_extrusion():
     strong = ("""
-(ANY [X ; X <: A ] ~thing X)
+(EXI [X ; X <: A ] ~thing X)
     """)
 
     weak = ("""
-(ANY [Q] ~thing Q)
+(EXI [Q] ~thing Q)
     """)
 
     solver = analyzer.Solver(m())
@@ -1582,11 +1582,11 @@ def test_existential_with_extrusion():
 
 def test_existential_with_upper_bound():
     strong = ("""
-(ANY [X] ~thing X)
+(EXI [X] ~thing X)
     """)
 
     weak = ("""
-(ANY [Q ; Q <: @ ] ~thing Q)
+(EXI [Q ; Q <: @ ] ~thing Q)
     """)
 
     solver = analyzer.Solver(m())
@@ -1597,11 +1597,11 @@ def test_existential_with_upper_bound():
 def test_existential_with_upper_bound_unguarded():
     # TODO: use substitution for existential witness to avoid F <: L circular problem.
     strong = ("""
-(ANY [X] X)
+(EXI [X] X)
     """)
 
     weak = ("""
-(ANY [Q ; Q <: @ ] Q)
+(EXI [Q ; Q <: @ ] Q)
     """)
 
     solver = analyzer.Solver(m())
@@ -1629,19 +1629,19 @@ def test_add_annotated():
 
     # lte = (f'''
     # (FX SELF 
-    #     | (ANY [N ; N <: {tl.nat}] (~zero @, N))
-    #     | (ANY [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+    #     | (EXI [N ; N <: {tl.nat}] (~zero @, N))
+    #     | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
     # )
     # ''')
     lte = (f'''
     (FX SELF 
-        | (ANY [N] (~zero @, N))
-        | (ANY [A B ; (A,B) <: SELF] (~succ A, ~succ B))
+        | (EXI [N] (~zero @, N))
+        | (EXI [A B ; (A,B) <: SELF] (~succ A, ~succ B))
     )
     ''')
 
     code = (f'''
-let add : (A, B) -> (ANY [Y ; (A, Y) <: ({lte})] Y) = {el.add} in
+let add : (A, B) -> (EXI [Y ; (A, Y) <: ({lte})] Y) = {el.add} in
 @
     ''')
     (worlds, typ_var, parsetree, solver) = analyze(code)
@@ -1824,8 +1824,8 @@ def test_concat_lists():
 def test_reverse():
     code = f"""
 alias CTREL = (FX SELF
-    | (ANY [l] ((~nil @, l), l))
-    | (ANY [YS X XS l ; ((XS, l), YS) <: SELF ] ((~cons (X, XS), l), ~cons (X, YS)))
+    | (EXI [l] ((~nil @, l), l))
+    | (EXI [YS X XS l ; ((XS, l), YS) <: SELF ] ((~cons (X, XS), l), ~cons (X, YS)))
 )
 {el.reverse}
     """.strip()
@@ -1855,8 +1855,8 @@ def test_halve_list():
     code = f"""
 alias R = (FX SELF
     | (~nil @, (~nil @, ~nil @))
-    | (ANY [X] (~cons (X, ~nil @), (~cons (X, ~nil @), ~nil @)))
-    | (ANY [YS ZS Y GZ XS ; (XS, (YS, ZS)) <: SELF ] 
+    | (EXI [X] (~cons (X, ~nil @), (~cons (X, ~nil @), ~nil @)))
+    | (EXI [YS ZS Y GZ XS ; (XS, (YS, ZS)) <: SELF ] 
         (~cons (Y, ~cons (GZ, XS)), (~cons (Y, YS), ~cons (GZ, ZS)))
     )
 )
@@ -1869,9 +1869,9 @@ alias R = (FX SELF
 def test_merge_lists():
     code = f"""
 alias LTEDR = (FX SELF
-    | (ANY [N] ((~zero @, N), ~true @))
-    | (ANY [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
-    | (ANY [M] ((~succ M, ~zero @), ~false @))
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
 )
 {el.merge_lists}
     """.strip()
@@ -1882,9 +1882,9 @@ alias LTEDR = (FX SELF
 def test_merge_sort():
     code = f"""
 alias LTEDR = (FX SELF
-    | (ANY [N] ((~zero @, N), ~true @))
-    | (ANY [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
-    | (ANY [M] ((~succ M, ~zero @), ~false @))
+    | (EXI [N] ((~zero @, N), ~true @))
+    | (EXI [B M N ; ((M, N), B) <: SELF ] ((~succ M, ~succ N), B))
+    | (EXI [M] ((~succ M, ~zero @), ~false @))
 )
 
 {el.merge_sort}
@@ -1924,7 +1924,7 @@ if __name__ == '__main__':
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
-    # test_fib()
+    test_fib()
     #####################################
     # test_concat_lists()
     # test_reverse()

@@ -225,17 +225,17 @@ $combo = Inter(TField('head', $typ_base.combo), TField('tail', $typ.combo))
 }
 
 // Existential unconstrained 
-| 'ANY' '[' ids ']' typ {
+| 'EXI' '[' ids ']' typ {
 $combo = Exi($ids.combo, (), $typ.combo) 
 }
 
 // // Existential 
-// | 'ANY' '[' qualification ']' typ {
+// | 'EXI' '[' qualification ']' typ {
 // $combo = Exi((), $qualification.combo, $typ.combo) 
 // }
 
 // Existential 
-| 'ANY' '[' ids qualification ']' typ {
+| 'EXI' '[' ids qualification ']' typ {
 $combo = Exi($ids.combo, $qualification.combo, $typ.combo) 
 }
 

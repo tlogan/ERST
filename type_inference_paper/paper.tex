@@ -579,7 +579,7 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
   \\
-  \I \code{ANY[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
+  \I \code{EXI[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
   \\
   \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
   \\
@@ -880,7 +880,7 @@ v ::= &\C{value}
 \llbracket \tau_b \rrbracket 
 & \C{difference}
 \\
-\llbracket \code{ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
+\llbracket \code{EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
 \{ v \ |\ \exists\ \sigma . 
@@ -1076,7 +1076,7 @@ the variable's upper bound.
   } {
     \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
     \claim 
-    \code{(ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
     \subtypes 
     \tau_u
   }
@@ -1094,7 +1094,7 @@ the variable's upper bound.
     \claim 
     \tau_l
     \subtypes 
-    \code{(ANY[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
   }
 
   \inferrule[LearnableSkolemLowerVar] {
@@ -1317,7 +1317,7 @@ the variable's upper bound.
     \\\\
     \left< \Delta, \Omega \right>
     \claim 
-    \code{ANY[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
+    \code{EXI[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
     \subtypes 
     \tau_u
   } {
