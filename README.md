@@ -5,7 +5,7 @@
 ### TODO (Symbolic Implementation)
 - replace strongest_upper_bound with combo of interize + filtering
 - replace weakest_lower_bound with combo of unionize + filtering
-- debug `test_plus_equals_two_query`
+- debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
 - create rigid and extrusion rules
     - involves both lower and upper bounded extrusions
     - or in a Rigid rule in subtyping

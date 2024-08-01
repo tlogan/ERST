@@ -1089,16 +1089,16 @@ def factorize_least_fp(t : Fixpoint, path : tuple[str, ...]) -> Fixpoint:
 #                 return factorize_least_fp(constraint.upper, path)
 #     return None
 
-def find_factors(world : World, search_target : Typ) -> tuple[PSet[Typ], PSet[Subtyping]]:
-    result = s()
-    used_constraints = s()
+def find_factors(world : World, search_target : Typ) -> PSet[Subtyping]:
+    constraints = s()
     for constraint in world.constraints:
         path = find_path(constraint.lower, search_target)
         if path != None:
             if isinstance(constraint.upper, Fixpoint):
-                result = result.add(factorize_least_fp(constraint.upper, path))
-                used_constraints = used_constraints.add(constraint)
-    return (result, used_constraints) 
+                result = factorize_least_fp(constraint.upper, path)
+                constraint = Subtyping(search_target, result)
+                constraints = constraints.add(constraint)
+    return constraints
 
 
 def mapOp(f):
@@ -1502,31 +1502,11 @@ class Solver:
             return t
 
 
+    def resolve_strongest_upper_bound(self, world : World, id : str) -> Typ:
+        return make_inter([st.upper for st in self.extract_upper_bounds(world, id)])
 
-    def resolve_strongest_upper_bound(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
-        # if id in self.aliasing:
-        #     return (self.aliasing[id], s())
-
-        uppers, constraints = self.extract_upper_bounds(world, id) 
-        result = Top() 
-        for upper in uppers:
-            result = Inter(upper, result) 
-        
-        return (simplify_typ(result), pset(constraints))
-
-    def resolve_weakest_lower_bound(self, world : World, id : str) -> tuple[Typ, PSet[Subtyping]]:
-        # if id in self.aliasing:
-        #     return (self.aliasing[id], s())
-
-        constraints = [
-            st
-            for st in world.constraints
-            if st.upper == TVar(id) 
-        ]
-        result = Bot() 
-        for c in reversed(constraints):
-            result = Unio(c.lower, result) 
-        return (simplify_typ(result), pset(constraints))
+    def resolve_weakest_lower_bound(self, world : World, id : str) -> Typ:
+        return make_inter([st.lower for st in self.extract_lower_bounds(world, id)])
 
     def is_constraint_dead(self, world : World, ignored : PSet[str], st : Subtyping) -> bool:
         lower_result = False
@@ -1621,121 +1601,121 @@ class Solver:
     #     ] 
     #     return make_unio(constraint_typs)
 
-    def resolve_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
-        def resolve(polarity : bool, id : str): 
-            if polarity:
-                return self.resolve_weakest_lower_bound(world, id)
-            else:
-                return self.resolve_strongest_upper_bound(world, id)
+    # def resolve_polarity(self, polarity : bool, world : World, typ : Typ, ignored_ids : PSet[str]) -> tuple[Typ, PSet[Subtyping]]:
+    #     def resolve(polarity : bool, id : str): 
+    #         if polarity:
+    #             return self.resolve_weakest_lower_bound(world, id)
+    #         else:
+    #             return self.resolve_strongest_upper_bound(world, id)
 
-        if False:
-            assert False
-        elif isinstance(typ, TVar) and typ.id in ignored_ids:
-            return (typ, s())
-        elif isinstance(typ, TVar) and typ.id not in ignored_ids:
-            id = typ.id
-            new_polarity = ( 
-                not polarity
-                if (id in world.freezer) else
-                polarity
-            )
-            include_factors = False
-            should_interpret = (
-                new_polarity or include_factors or id not in world.relids 
-            )
-            op = ( 
-                resolve(new_polarity, id)
-                if should_interpret else
-                None
-            )
-            # op = ( 
-            #     mapOp(simplify_typ)(interpret_id(not polarity, id))
-            #     if (id in world.freezer) else
-            #     mapOp(simplify_typ)(interpret_id(polarity, id))
-            # )
+    #     if False:
+    #         assert False
+    #     elif isinstance(typ, TVar) and typ.id in ignored_ids:
+    #         return (typ, s())
+    #     elif isinstance(typ, TVar) and typ.id not in ignored_ids:
+    #         id = typ.id
+    #         new_polarity = ( 
+    #             not polarity
+    #             if (id in world.freezer) else
+    #             polarity
+    #         )
+    #         include_factors = False
+    #         should_interpret = (
+    #             new_polarity or include_factors or id not in world.relids 
+    #         )
+    #         op = ( 
+    #             resolve(new_polarity, id)
+    #             if should_interpret else
+    #             None
+    #         )
+    #         # op = ( 
+    #         #     mapOp(simplify_typ)(interpret_id(not polarity, id))
+    #         #     if (id in world.freezer) else
+    #         #     mapOp(simplify_typ)(interpret_id(polarity, id))
+    #         # )
 
-            if op != None:
-                (interp_typ_once, cs_once) = op
-                interp_typ_once = simplify_typ(interp_typ_once)
-                # print(f"""
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # DEBUG: used_constraints: {concretize_constraints(cs_once)}
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # """)
-                if (id in world.freezer) or self.is_meaningful(new_polarity, world, interp_typ_once): 
-                    m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
-                    (t, cs_cont) = self.resolve_polarity(polarity, m, interp_typ_once, ignored_ids)
-                    return (simplify_typ(t), cs_once.union(cs_cont))
-                else:
-                    return (typ, s())
-            else:
-                return (typ, s())
+    #         if op != None:
+    #             (interp_typ_once, cs_once) = op
+    #             interp_typ_once = simplify_typ(interp_typ_once)
+    #             # print(f"""
+    #             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #             # DEBUG: used_constraints: {concretize_constraints(cs_once)}
+    #             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #             # """)
+    #             if (id in world.freezer) or self.is_meaningful(new_polarity, world, interp_typ_once): 
+    #                 m = World(world.constraints.difference(cs_once), world.freezer, world.relids)
+    #                 (t, cs_cont) = self.resolve_polarity(polarity, m, interp_typ_once, ignored_ids)
+    #                 return (simplify_typ(t), cs_once.union(cs_cont))
+    #             else:
+    #                 return (typ, s())
+    #         else:
+    #             return (typ, s())
 
-        elif isinstance(typ, TUnit):
-            return (typ, s())
-        elif isinstance(typ, TTag):
-            body = typ.body
-            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
-            return (TTag(typ.label, body), body_constraints)
-        elif isinstance(typ, TField):
-            body = typ.body
-            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
-            return (TField(typ.label, body), body_constraints)
-        elif isinstance(typ, Unio):
-            left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
-            right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
-            return (Unio(left, right), left_constraints.union(right_constraints))
-        elif isinstance(typ, Inter):
-            left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
-            right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
-            return (Inter(left, right), left_constraints.union(right_constraints))
-        elif isinstance(typ, Diff):
-            context, context_constraints = self.resolve_polarity(polarity, world, typ.context, ignored_ids)
-            return (Diff(context, typ.negation), context_constraints)
+    #     elif isinstance(typ, TUnit):
+    #         return (typ, s())
+    #     elif isinstance(typ, TTag):
+    #         body = typ.body
+    #         body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
+    #         return (TTag(typ.label, body), body_constraints)
+    #     elif isinstance(typ, TField):
+    #         body = typ.body
+    #         body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
+    #         return (TField(typ.label, body), body_constraints)
+    #     elif isinstance(typ, Unio):
+    #         left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
+    #         right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
+    #         return (Unio(left, right), left_constraints.union(right_constraints))
+    #     elif isinstance(typ, Inter):
+    #         left, left_constraints = self.resolve_polarity(polarity, world, typ.left, ignored_ids)
+    #         right, right_constraints = self.resolve_polarity(polarity, world, typ.right, ignored_ids)
+    #         return (Inter(left, right), left_constraints.union(right_constraints))
+    #     elif isinstance(typ, Diff):
+    #         context, context_constraints = self.resolve_polarity(polarity, world, typ.context, ignored_ids)
+    #         return (Diff(context, typ.negation), context_constraints)
 
-        # TODO: remove version that resolves antecedent 
-        # elif isinstance(typ, Imp):
-        #     consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
-        #     world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
-        #     antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
-        #     return (Imp(antec, consq), antec_constraints.union(consq_constraints))
+    #     # TODO: remove version that resolves antecedent 
+    #     # elif isinstance(typ, Imp):
+    #     #     consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids)
+    #     #     world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+    #     #     antec, antec_constraints = self.resolve_polarity(not polarity, world, typ.antec, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, consq)))
+    #     #     return (Imp(antec, consq), antec_constraints.union(consq_constraints))
 
-        # NOTE: only resolve the consequent and leaving the antecedent alone
-        elif isinstance(typ, Imp):
-            antec = typ.antec
-            consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, antec)))
-            world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
-            return (Imp(antec, consq), consq_constraints)
+    #     # NOTE: only resolve the consequent and leaving the antecedent alone
+    #     elif isinstance(typ, Imp):
+    #         antec = typ.antec
+    #         consq, consq_constraints = self.resolve_polarity(polarity, world, typ.consq, ignored_ids.union(extract_free_vars_from_typ(ignored_ids, antec)))
+    #         world = World(world.constraints.difference(consq_constraints), world.freezer, world.relids)
+    #         return (Imp(antec, consq), consq_constraints)
 
-        elif isinstance(typ, Exi):
-            return (typ, s())
-        elif isinstance(typ, All):
-            return (typ, s())
-        elif isinstance(typ, Fixpoint):
-            ignored_ids = ignored_ids.add(typ.id)
-            body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
-            return (Fixpoint(typ.id, body), body_constraints)
-        elif isinstance(typ, Top):
-            return (typ, s())
-        elif isinstance(typ, Bot):
-            return (typ, s())
-        else:
-            assert False
+    #     elif isinstance(typ, Exi):
+    #         return (typ, s())
+    #     elif isinstance(typ, All):
+    #         return (typ, s())
+    #     elif isinstance(typ, Fixpoint):
+    #         ignored_ids = ignored_ids.add(typ.id)
+    #         body, body_constraints = self.resolve_polarity(polarity, world, typ.body, ignored_ids)
+    #         return (Fixpoint(typ.id, body), body_constraints)
+    #     elif isinstance(typ, Top):
+    #         return (typ, s())
+    #     elif isinstance(typ, Bot):
+    #         return (typ, s())
+    #     else:
+    #         assert False
 
 
 
-    def decode_with_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
+    # def decode_with_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
 
-        constraint_typs = [
-            package_typ(m, tt)
-            for world in worlds
-            for op in [self.resolve_polarity(polarity, world, t, s())]
-            if op != None
-            for (tt, cs) in [op]
-            # for m in [world]
-            for m in [World(world.constraints.difference(cs), world.freezer, world.relids)]
-        ] 
-        return make_unio(constraint_typs)
+    #     constraint_typs = [
+    #         package_typ(m, tt)
+    #         for world in worlds
+    #         for op in [self.resolve_polarity(polarity, world, t, s())]
+    #         if op != None
+    #         for (tt, cs) in [op]
+    #         # for m in [world]
+    #         for m in [World(world.constraints.difference(cs), world.freezer, world.relids)]
+    #     ] 
+    #     return make_unio(constraint_typs)
 
 
 
@@ -1875,18 +1855,19 @@ class Solver:
 #         else:
 #             return worlds 
 
-    def extract_upper_bounds(self, world : World, id : str) -> tuple[PSet[Typ], PSet[Subtyping]]:
-        result = s()
-        used_constraints = s()
-        for constraint in world.constraints:
-            if constraint.lower == TVar(id):
-                result = result.add(constraint.upper)
-                used_constraints = used_constraints.add(constraint)
+    def extract_upper_bounds(self, world : World, id : str) -> PSet[Subtyping]:
+        return pset(
+            st 
+            for st in world.constraints
+            if st.lower == TVar(id)
+        ).union(find_factors(world, TVar(id)))
 
-        factors, factors_used_constraints = find_factors(world, TVar(id))
-        result = result.union(factors)
-        used_constraints = used_constraints.union(factors_used_constraints)
-        return (result, used_constraints) 
+    def extract_lower_bounds(self, world : World, id : str) -> PSet[Subtyping]:
+        return pset(
+            st
+            for st in world.constraints
+            if st.upper == TVar(id) 
+        )
 
     def is_meaningful(self, polarity : bool, world : World, t : Typ) -> bool:
         tt = simplify_typ(t)
@@ -1999,13 +1980,13 @@ class Solver:
         elif isinstance(right, Top): 
             return True
         elif isinstance(left, TVar): 
-            new_lefts = self.extract_upper_bounds(world, left.id)[0]
+            new_lefts = [st.upper for st in self.extract_upper_bounds(world, left.id)]
             return all(
                 self.is_intersection_inhabitable(world, new_left, right)
                 for new_left in new_lefts
             )
         elif isinstance(right, TVar): 
-            new_rights = self.extract_upper_bounds(world, right.id)[0]
+            new_rights = [st.upper for st in self.extract_upper_bounds(world, right.id)]
             return all(
                 self.is_intersection_inhabitable(world, left, new_right)
                 for new_right in new_rights 
@@ -2070,7 +2051,7 @@ class Solver:
                 # - we know it's inhabitable since it is in the world
                 # - and only the solver adds constraints to the world
                 self.is_intersection_inhabitable(world, legacy, target)
-                for legacy in self.extract_upper_bounds(world, id)[0]
+                for legacy in [st.upper for st in self.extract_upper_bounds(world, id)]
             ) 
         )
         return result
@@ -2204,14 +2185,14 @@ upper:
 
         elif isinstance(lower, TVar) and lower.id not in world.freezer: 
             interp = self.resolve_weakest_lower_bound(world, lower.id)
-            if  isinstance(interp[0], Bot):
+            if  isinstance(interp, Bot):
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
             ###################################
-            elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
+            elif isinstance(interp, TVar) and (interp.id in world.freezer):
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
                 # NOTE: this is necessary for the max example
 
@@ -2224,7 +2205,7 @@ upper:
 
                 # NOTE: safety check 
                 # - add strongest_upper check of transitive skolem variable 
-                strongest_once_removed = self.resolve_weakest_lower_bound(world, interp[0].id)[0]
+                strongest_once_removed = self.resolve_weakest_lower_bound(world, interp.id)
                 worlds = [
                     new_world
                     for world in self.solve(world, strongest_once_removed, upper)
@@ -2237,7 +2218,7 @@ upper:
                 return worlds
             ###################################
             else:
-                strongest = interp[0]
+                strongest = interp
                 worlds = [
                     new_world
                     for world in self.solve(world, strongest, upper)
@@ -2353,7 +2334,7 @@ upper:
                 )]
             else:
                 interp = self.resolve_strongest_upper_bound(world, lower.id)
-                weakest_strong = interp[0]
+                weakest_strong = interp
                 return self.solve(world, weakest_strong, upper)
             #end if-else
         #end if-else
@@ -2368,13 +2349,13 @@ upper:
             #         world.freezer, world.relids
             #     )]
             interp = self.resolve_strongest_upper_bound(world, upper.id)
-            if isinstance(interp[0], Top):
+            if isinstance(interp, Top):
                 return [World(
                     world.constraints.add(Subtyping(lower, upper)),
                     world.freezer, world.relids
                 )]
             ###################################
-            elif isinstance(interp[0], TVar) and (interp[0].id in world.freezer):
+            elif isinstance(interp, TVar) and (interp.id in world.freezer):
                 # NOTE: the existence of a L <: F connstraint implies that a frozen variable can be expanded by subsequent information. 
                 # NOTE: what examples is this necessary for? 
 
@@ -2384,7 +2365,7 @@ upper:
                 # )]
 
                 # TODO: add safety check? what is the safety condition?
-                weakest_once_removed = self.resolve_strongest_upper_bound(world, interp[0].id)[0]
+                weakest_once_removed = self.resolve_strongest_upper_bound(world, interp.id)
                 return [
                     World(
                         world.constraints.add(Subtyping(lower, upper)),
@@ -2394,7 +2375,7 @@ upper:
                 ]
             ###################################
             else:
-                weakest = interp[0]
+                weakest = interp
                 return [
                     World(
                         world.constraints.add(Subtyping(lower, upper)),
@@ -2442,7 +2423,7 @@ upper:
 
         elif isinstance(upper, TVar) and upper.id in world.freezer: 
             interp = self.resolve_weakest_lower_bound(world, upper.id)
-            strongest_weak = interp[0]
+            strongest_weak = interp
             return self.solve(world, lower, strongest_weak)
 
 
@@ -2512,11 +2493,6 @@ upper:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            # TODO: don't interpret learnable variables as frozen variables
-            # - is this necessary? this notion breaks the even_list subs nat_list
-            # ignored_ids = get_freezer_adjacent_learnable_ids(world)
-            ignored_ids = s()
-            reduced_strong = self.resolve_polarity(True, world, lower, ignored_ids)[0]
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~
 DEBUG upper, LeastFP
@@ -2533,9 +2509,6 @@ world.constraints:
 lower: 
 {concretize_typ(lower)}
 
-reduced_strong: 
-{concretize_typ(reduced_strong)}
-
 upper: 
 {concretize_typ(upper)}
 ~~~~~~~~~~~~~~~~~~~~~
@@ -2549,10 +2522,7 @@ upper:
 # {is_decidable(reduced_strong, upper)}
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
-            if lower != reduced_strong:
-                print("~~~~~~ NOT FULLY REDUCED")
-                return self.solve(world, reduced_strong, upper)
-            elif is_decidable(lower, upper):
+            if is_decidable(lower, upper):
                 print("~~~~~~ UNROLLING")
                 '''
                 unroll
@@ -2571,17 +2541,32 @@ upper:
                     worlds = self.solve(world, assumed_relational_typ, normalized_upper)
                     return worlds
                 elif self.is_fixpoint_constraint_safe(world, lower, upper):
-                    print("~~~~~ B")
-                    """
-                    NOTE: frozen variables should be interpreted away at this point 
-                    """
+
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
                     assert all((fv not in world.freezer) for fv in lower_fvs)
-                    return [World(
-                        # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.freezer, world.relids.union(lower_fvs)
-                    )]
+                    sub_map : PMap[str, Typ] = pmap({
+                        fv : resol
+                        for fv in lower_fvs
+                        for resol in [self.resolve_weakest_lower_bound(world, fv)]
+                        if not isinstance(resol, Bot)
+                    })
+                    if bool(sub_map):
+                        return [
+                            new_world
+                            for world in self.solve(world, sub_typ(sub_map, lower), upper)
+                            for new_world in [World(
+                                world.constraints.add(Subtyping(lower, upper)),
+                                world.freezer, world.relids.union(lower_fvs)
+                            )]
+                            # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
+                        ]
+                    else:
+                        return [World(
+                            # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
+                            world.constraints.add(Subtyping(lower, upper)),
+                            world.freezer, world.relids.union(lower_fvs)
+                        )]
+                    # end if
                 else:
                     print("~~~~~ C")
                     return []
@@ -3052,21 +3037,25 @@ class ExprRule(Rule):
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
                 left_interp = self.solver.resolve_strongest_upper_bound(inner_world, in_typ.id)
-                (left_typ, left_used_constraints) = (
+                left_typ = (
                     left_interp 
                     if in_typ.id not in inner_world.relids else 
-                    (in_typ, s())
+                    in_typ
                 )
-                inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
+                # inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
+                inner_world = World(inner_world.constraints, inner_world.freezer, inner_world.relids)
 
                 # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
                 # ignored_ids = s()
-                ignored_ids = extract_free_vars_from_typ(s(), left_typ)
-                right_interp = self.solver.resolve_polarity(True, inner_world, out_typ, ignored_ids)
+                # ignored_ids = extract_free_vars_from_typ(s(), left_typ)
+                right_interp = self.solver.resolve_weakest_lower_bound(inner_world, out_typ.id)
+                # resolve_polarity(True, inner_world, out_typ, ignored_ids)
                 # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
-                (right_typ, right_used_constraints) = right_interp
-                inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
+                # (right_typ, right_used_constraints) = right_interp
+                right_typ = right_interp
+                # inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
+                inner_world = World(inner_world.constraints, inner_world.freezer, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
                 right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
@@ -3079,13 +3068,14 @@ class ExprRule(Rule):
                 # TODO: it may not be safe to remove used_constraints from multihop interpretation 
                 # TODO: need a safety argument for removing used_constraints
                 # - argument: constriants aren't removed; but are merely rerwritten
-                self_interp = self.solver.resolve_polarity(False, inner_world, self_typ, s())
+                # self_interp = self.solver.resolve_polarity(False, inner_world, self_typ, s())
+                self_interp = self.solver.resolve_strongest_upper_bound(inner_world, self_typ.id)
                 # self_interp = self.solver.interpret_lower_id(inner_world, self_typ.id)
                 # TODO: linearize intersections of self_interp
                 # - remove redudant types
                 # - there could be multiple implications due to multiple applications of recursive function 
                 # - are all of them necessary for constructing inductive hypothesis?
-                self_interps = list(set(linearize_intersections(self_interp[0])))
+                self_interps = list(set(linearize_intersections(self_interp)))
 #                 print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG combine_fix --- self_interp 
@@ -3117,7 +3107,7 @@ class ExprRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
-                self_used_constraints = self_interp[1]
+                # self_used_constraints = self_interp[1]
                 IH_rel_constraints = s()
                 IH_left_constraints = s()
 
@@ -3154,8 +3144,9 @@ class ExprRule(Rule):
                 # ) , inner_world.freezer, inner_world.relids)
 
                 # NOTE: assert that used constaints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
-                assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
-                inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
+                # assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
+                # inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
+                inner_world = replace(inner_world, constraints = inner_world.constraints)
                 rel_reachable_constraints = pset(
                     st
                     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)

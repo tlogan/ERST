@@ -425,10 +425,10 @@ def test_one_plus_equals_two_query():
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_plus_one_query, tl.addition)
     answer = decode_negative(solver, worlds, p("Y"))
-    assert answer == "~succ ~zero @"
     print(f'''
 answer:\n{answer}
     ''')
+    assert answer == "~succ ~zero @"
 
 def test_zero_plus_one_equals_two():
     zero_plus_one_equals_two = ('''
@@ -1894,6 +1894,8 @@ alias LTEDR = (FX SELF
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 if __name__ == '__main__':
+    test_one_plus_equals_two_query()
+    #####################################
     # test_single_shape()
     # test_implication_unification()
     # test_lted_wrapper()
@@ -1924,7 +1926,7 @@ if __name__ == '__main__':
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
-    test_fib()
+    # test_fib()
     #####################################
     # test_concat_lists()
     # test_reverse()
