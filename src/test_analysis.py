@@ -1898,7 +1898,10 @@ alias LTEDR = (FX SELF
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 if __name__ == '__main__':
-    test_one_plus_equals_two_query()
+    # test_zero_subs_nat()
+    test_one_cons_query_subs_nat_list()
+    #####################################
+    # test_one_plus_equals_two_query()
     #####################################
     # test_single_shape()
     # test_implication_unification()
