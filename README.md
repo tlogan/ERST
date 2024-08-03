@@ -3,8 +3,10 @@
 
 
 ### TODO (Symbolic Implementation)
-- replace strongest_upper_bound with combo of interize + filtering
-- replace weakest_lower_bound with combo of unionize + filtering
+- simplify decode_polarity to only return type (without used constraints)
+- remove decode_polarity
+- test out fixpoint subtyping without multistep resolving
+- update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
 - create rigid and extrusion rules
     - involves both lower and upper bounded extrusions

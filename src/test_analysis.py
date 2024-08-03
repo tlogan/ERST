@@ -119,10 +119,14 @@ def equiv(a : str, b : str) -> bool:
     )
 
 def decode_negative(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, t))))
+    return analyzer.concretize_typ((analyzer.simplify_typ(
+        solver.decode_negative_typ(worlds, t))
+    ))
 
 def decode_positive(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ(solver.to_aliasing_typ(analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))
+    return analyzer.concretize_typ(solver.to_aliasing_typ(analyzer.simplify_typ(
+        solver.decode_positive_typ(worlds, t))
+    ))
 
 def roundtrip(ss : list[str]) -> str:
     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
