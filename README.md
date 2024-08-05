@@ -3,8 +3,13 @@
 
 
 ### TODO (Symbolic Implementation)
-- simplify decode_polarity to only return type (without used constraints)
-- remove decode_polarity
+- clean up implementation of resolve_polarity_typ
+    - update resolve_polarity to resolve free variables in constraints
+- update decode_polarity to use resolve_polarity
+- simplify decode_polarity resolve all free variables, including to TOP and BOT; them simplify type
+- update simplify to intersect intersections of unions. e.g. (X | Y) & (Y | Z | X) ===> (X | Y)
+- update decode_negative_typ to use decode_polarity(False)
+- update decode_positive_typ to use decode_polarity(True)
 - test out fixpoint subtyping without multistep resolving
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
