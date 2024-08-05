@@ -1549,39 +1549,19 @@ class Solver:
         return lower_result or upper_result 
 
     def decode_negative_typ(self, worlds : list[World], t : Typ) -> Typ:
-        t = simplify_typ(t)
-        constraint_typs = [
-            package_typ(world, resol)
-            for world in worlds
-            for resol in [
-                self.intersect_upper_bounds(world, t.id)
-                if isinstance(t, TVar) else
-                t 
-            ]
-        ] 
-        return make_unio(constraint_typs)
+        return self.decode_polarity_typ(worlds, False, t)
 
     def decode_positive_typ(self, worlds : list[World], t : Typ) -> Typ:
-        t = simplify_typ(t)
-        constraint_typs = [
-            package_typ(world, resol)
-            for world in worlds
-            for resol in [
-                self.unionize_lower_bounds(world, t.id)
-                if isinstance(t, TVar) else
-                t 
-            ]
-        ] 
-        return make_unio(constraint_typs)
+        return self.decode_polarity_typ(worlds, True, t)
 
 
-    def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
-        t = simplify_typ(t)
-        constraint_typs = [
-            package_typ(world, t)
-            for world in worlds
-        ] 
-        return make_unio(constraint_typs)
+    # def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
+    #     t = simplify_typ(t)
+    #     constraint_typs = [
+    #         package_typ(world, t)
+    #         for world in worlds
+    #     ] 
+    #     return make_unio(constraint_typs)
 
     # def decode_strong_side(self, worlds : list[World], t : Typ, arg : Typ = TUnit()) -> Typ:
 
@@ -1686,13 +1666,17 @@ class Solver:
             return Imp(antec, consq)
 
         elif isinstance(typ, Exi):
-            # TODO: flip the negative positions
-            # - add bound variables to rigids
-            return typ
+            new_world = replace(world, rigids = world.rigids.union(typ.ids))
+            constraints = self.resolve_polar_constraints(new_world, polarity, typ.constraints)
+            body = self.resolve_polarity_typ(new_world, polarity, typ.body)
+            return Exi(typ.ids, constraints, body) 
+
         elif isinstance(typ, All):
-            # TODO: flip the negative positions
-            # - add bound variables to rigids
-            return typ
+            new_world = replace(world, rigids = world.rigids.union(typ.ids))
+            constraints = self.resolve_polar_constraints(new_world, polarity, typ.constraints)
+            body = self.resolve_polarity_typ(new_world, polarity, typ.body)
+            return All(typ.ids, constraints, body) 
+
         elif isinstance(typ, Fixpoint):
             body = self.resolve_polarity_typ(replace(world, rigids = world.rigids.add(typ.id)), polarity, typ.body)
             return Fixpoint(typ.id, body)
@@ -1705,21 +1689,23 @@ class Solver:
 
         #end if
 
+    def resolve_polar_constraints(self, world : World, polarity : bool, constraints : Sequence[Subtyping]) -> tuple[Subtyping, ...]: 
+        return tuple(
+            Subtyping(
+               self.resolve_polarity_typ(world, polarity, st.lower), 
+               self.resolve_polarity_typ(world, not polarity, st.upper)
+            )
+            for st in constraints
+        )
 
-    def decode_polarity(self, polarity : bool, worlds : list[World], t : Typ) -> Typ:
 
-        constraint_typs = [
-            package_typ(m, tt)
+    def decode_polarity_typ(self, worlds : list[World], polarity : bool, t : Typ) -> Typ:
+
+        resolved_typs = [
+            self.resolve_polarity_typ(world, polarity, t)
             for world in worlds
-            for op in [
-                self.resolve_polarity(polarity, world, t, s())
-            ]
-            if op != None
-            for tt in [op]
-            # for m in [world]
-            for m in [World(world.constraints.difference(cs), world.skolems, world.relids)]
         ] 
-        return make_unio(constraint_typs)
+        return make_unio(resolved_typs)
 
 
 
@@ -2191,10 +2177,7 @@ count: {self.count}
             interp = self.unionize_lower_bounds(world, lower.id)
             if  isinstance(interp, Bot):
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
-                return [World(
-                    world.constraints.add(Subtyping(lower, upper)),
-                    world.skolems, world.relids
-                )]
+                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             ###################################
             elif isinstance(interp, TVar) and (interp.id in world.skolems):
                 # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
@@ -2213,10 +2196,7 @@ count: {self.count}
                 worlds = [
                     new_world
                     for world in self.solve(world, strongest_once_removed, upper)
-                    for new_world in [World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.skolems, world.relids
-                    )]
+                    for new_world in [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
                     # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                 ]
                 return worlds
@@ -2226,10 +2206,7 @@ count: {self.count}
                 worlds = [
                     new_world
                     for world in self.solve(world, strongest, upper)
-                    for new_world in [World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.skolems, world.relids
-                    )]
+                    for new_world in [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
                     # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                 ]
                 return worlds
@@ -2263,7 +2240,7 @@ count: {self.count}
             return [
                 m2
                 for m0 in worlds
-                for m1 in [World(m0.constraints, m0.skolems.union(renamed_ids), m0.relids)]
+                for m1 in [replace(m0, skolems = m0.skolems.union(renamed_ids))]
                 for m2 in self.solve(m1, strong_body, upper)
             ]
 
@@ -2332,10 +2309,7 @@ count: {self.count}
         elif isinstance(lower, TVar) and lower.id in world.skolems: 
             if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.skolems:
                 # NOTE: No interpretation means the variable is relationally constrained;
-                return [World(
-                    world.constraints.add(Subtyping(lower, upper)),
-                    world.skolems, world.relids
-                )]
+                return [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 interp = self.intersect_upper_bounds(world, lower.id)
                 weakest_strong = interp
@@ -2354,10 +2328,7 @@ count: {self.count}
             #     )]
             interp = self.intersect_upper_bounds(world, upper.id)
             if isinstance(interp, Top):
-                return [World(
-                    world.constraints.add(Subtyping(lower, upper)),
-                    world.skolems, world.relids
-                )]
+                return [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
             ###################################
             elif isinstance(interp, TVar) and (interp.id in world.skolems):
                 # NOTE: the existence of a L <: F connstraint implies that a frozen variable can be expanded by subsequent information. 
@@ -2371,20 +2342,14 @@ count: {self.count}
                 # TODO: add safety check? what is the safety condition?
                 weakest_once_removed = self.intersect_upper_bounds(world, interp.id)
                 return [
-                    World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.skolems, world.relids
-                    )
+                    replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))
                     for world in self.solve(world, lower, weakest_once_removed)
                 ]
             ###################################
             else:
                 weakest = interp
                 return [
-                    World(
-                        world.constraints.add(Subtyping(lower, upper)),
-                        world.skolems, world.relids
-                    )
+                    replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))
                     for world in self.solve(world, lower, weakest)
                 ]
             #end if-else
@@ -2406,7 +2371,7 @@ count: {self.count}
             return [
                 m2
                 for m0 in worlds
-                for m1 in [World(m0.constraints, m0.skolems.union(renamed_ids), m0.relids)]
+                for m1 in [replace(m0, skolems = m0.skolems.union(renamed_ids))]
                 for m2 in self.solve(m1, lower, weak_body)
             ]
 
@@ -2558,18 +2523,11 @@ upper:
                         return [
                             new_world
                             for world in self.solve(world, sub_typ(sub_map, lower), upper)
-                            for new_world in [World(
-                                world.constraints.add(Subtyping(lower, upper)),
-                                world.skolems, world.relids.union(lower_fvs)
-                            )]
+                            for new_world in [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
                             # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                         ]
                     else:
-                        return [World(
-                            # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
-                            world.constraints.add(Subtyping(lower, upper)),
-                            world.skolems, world.relids.union(lower_fvs)
-                        )]
+                        return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
                     # end if
                 else:
                     print("~~~~~ C")
@@ -2635,7 +2593,7 @@ upper:
 
     def solve_composition(self, strong : Typ, weak : Typ) -> List[World]: 
         self.count = 0
-        world = World(s(), s(), s())
+        world = World(s(), s(), s(), s())
         return self.solve(world, strong, weak)
     '''
     end solve_composition
@@ -3047,7 +3005,6 @@ class ExprRule(Rule):
                     in_typ
                 )
                 # inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
-                inner_world = World(inner_world.constraints, inner_world.skolems, inner_world.relids)
 
                 # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
@@ -3059,7 +3016,6 @@ class ExprRule(Rule):
                 # (right_typ, right_used_constraints) = right_interp
                 right_typ = right_interp
                 # inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
-                inner_world = World(inner_world.constraints, inner_world.skolems, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
                 right_bound_ids = extract_free_vars_from_typ(s(), right_typ)

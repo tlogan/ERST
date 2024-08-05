@@ -347,8 +347,20 @@ def test_one_cons_query_subs_nat_list():
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_cons_query, tl.nat_list)
     answer = decode_negative(solver, worlds, p("X"))
+    for world in worlds:
+        print(f"""
+~~~~~~~~~~~
+world.constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~
+        """)
     print(f"""
-answer:\n{answer}
+~~~~~~~~~~~
+len(worlds): {len(worlds)}
+
+answer:
+{answer}
+~~~~~~~~~~~
     """)
     assert answer == "~nil @"
 
