@@ -542,6 +542,9 @@ class World:
     relids : PSet[str]
     rigids : PSet[str]
 
+def empty_world() -> World:
+    return World(s(), s(), s(), s())
+
 def union_worlds(w1 : World, w2 : World) -> World:
     return World(
         w1.constraints.union(w2.constraints),
@@ -549,6 +552,8 @@ def union_worlds(w1 : World, w2 : World) -> World:
         w1.relids.union(w2.relids),
         w1.rigids.union(w2.rigids)
     )
+
+
 
 def print_worlds(worlds : list[World], msg = ""):
     for i, world in enumerate(worlds):
@@ -629,13 +634,17 @@ def make_pair_typ(left : Typ, right : Typ) -> Typ:
     return Inter(TField("head", left), TField("tail", right))
 
 def linearize_unions(t : Typ) -> list[Typ]:
-    if isinstance(t, Unio):
+    if isinstance(t, Bot):
+        return []
+    elif isinstance(t, Unio):
         return linearize_unions(t.left) + linearize_unions(t.right)
     else:
         return [t]
 
 def linearize_intersections(t : Typ) -> list[Typ]:
-    if isinstance(t, Inter):
+    if isinstance(t, Top):
+        return []
+    elif isinstance(t, Inter):
         return linearize_intersections(t.left) + linearize_intersections(t.right)
     else:
         return [t]
@@ -780,7 +789,8 @@ def to_record_typ(rnode : RNode) -> Typ:
             t = to_record_typ(v)
             field = TField(key, t)
         result = Inter(field, result)
-    return simplify_typ(result)
+    # return simplify_typ(result)
+    return result
 
 
 
@@ -985,7 +995,7 @@ def normalize_choice(induc_id : str, choice : Typ, ordered_paths : list[tuple[st
 def normalize_least_fp(t : Fixpoint, ordered_paths : list[tuple[str, ...]]) -> Fixpoint:
 
     normalized_body = Bot() 
-    choices = linearize_unions(simplify_typ(t.body))
+    choices = linearize_unions(t.body)
     for choice in reversed(choices):
         norm_choice = normalize_choice(t.id, choice, ordered_paths)
         normalized_body = Unio(norm_choice, normalized_body)
@@ -1069,14 +1079,16 @@ def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Ty
         )
 
         new_body = project_typ(choice.body, path)
-        return Exi(choice.ids, new_constraints, new_body)
+        used_ids = extract_free_vars_from_constraints(s(), new_constraints).union(extract_free_vars_from_typ(s(), new_body))
+        new_ids = used_ids.intersection(choice.ids)
+        return Exi(tuple(new_ids), new_constraints, new_body)
     else:
         return project_typ(choice, path)
 
 def factorize_least_fp(t : Fixpoint, path : tuple[str, ...]) -> Fixpoint:
 
     factorized_body = Bot() 
-    choices = linearize_unions(simplify_typ(t.body))
+    choices = linearize_unions(t.body)
     for choice in reversed(choices):
         factor_choice = factorize_choice(t.id, choice, path)
         factorized_body = Unio(factor_choice, factorized_body)
@@ -1112,53 +1124,6 @@ def mapOp(f):
     return call
 
 
-
-def simplify_typ(typ : Typ) -> Typ:
-
-    if False:
-        assert False
-    elif isinstance(typ, TTag):
-        return TTag(typ.label, simplify_typ(typ.body))
-    elif isinstance(typ, TField):
-        return TField(typ.label, simplify_typ(typ.body))
-    elif isinstance(typ, Inter): 
-        typ = Inter(simplify_typ(typ.left), simplify_typ(typ.right))
-        if typ.left == Top():
-            return typ.right
-        elif typ.right == Top() or alpha_equiv(typ.left, typ.right):
-            return typ.left
-        else:
-            return typ
-    elif isinstance(typ, Unio): 
-        typ = Unio(simplify_typ(typ.left), simplify_typ(typ.right))
-        if typ.left == Bot():
-            return typ.right
-        elif typ.right == Bot() or alpha_equiv(typ.left, typ.right):
-            return typ.left
-        else:
-            return typ
-    elif isinstance(typ, Diff): 
-        typ = Diff(simplify_typ(typ.context), simplify_typ(typ.negation))
-        if typ.negation == Bot():
-            return typ.context
-        else:
-            return typ
-    elif isinstance(typ, Imp): 
-        return Imp(simplify_typ(typ.antec), simplify_typ(typ.consq))
-    elif isinstance(typ, Exi):
-        return Exi(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
-    elif isinstance(typ, All):
-        return All(typ.ids, simplify_constraints(typ.constraints), simplify_typ(typ.body))
-    elif isinstance(typ, Fixpoint):
-        return Fixpoint(typ.id, simplify_typ(typ.body))
-    else:
-        return typ
-    
-def simplify_constraints(constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
-    return tuple(
-        Subtyping(simplify_typ(st.lower), simplify_typ(st.upper))
-        for st in constraints
-    )
 
 def extract_constraints_with_id(world : World, id : str) -> PSet[Subtyping]:
     result = pset(
@@ -1339,56 +1304,56 @@ def extract_existential_constraints(freezer: PSet[str], constraints : PSet[Subty
         if bool(freezer.intersection(lower_fvs.union(upper_fvs))) 
     )
 
-def package_typ(world : World, typ : Typ) -> Typ:
-    constraints = extract_reachable_constraints_from_typ(world, typ)
-    existential_constraints = extract_existential_constraints(world.skolems, constraints)
-    reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
-    existential_bound_ids = tuple(sorted(world.skolems.intersection(reachable_ids)))
+# def package_typ(world : World, typ : Typ) -> Typ:
+#     constraints = extract_reachable_constraints_from_typ(world, typ)
+#     existential_constraints = extract_existential_constraints(world.skolems, constraints)
+#     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
+#     existential_bound_ids = tuple(sorted(world.skolems.intersection(reachable_ids)))
 
-    if not existential_bound_ids:
-        assert not existential_constraints
-        exi_typ = typ
-    else:
-        exi_typ = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), typ)
+#     if not existential_bound_ids:
+#         assert not existential_constraints
+#         exi_typ = typ
+#     else:
+#         exi_typ = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), typ)
 
-    # return simplify_typ(exi_typ)
+#     # return simplify_typ(exi_typ)
 
-    universal_constraints = constraints.difference(existential_constraints)
-    universal_bound_ids = tuple(sorted(reachable_ids.difference(world.skolems)))
-    # NOTE: alternative
-    # universal_constraints = extract_reachable_constraints_from_typ(world, exi_typ)
-    # universal_bound_ids = tuple(extract_free_vars_from_constraints(s(), universal_constraints).union(extract_free_vars_from_typ(s(), exi_typ)))
+#     universal_constraints = constraints.difference(existential_constraints)
+#     universal_bound_ids = tuple(sorted(reachable_ids.difference(world.skolems)))
+#     # NOTE: alternative
+#     # universal_constraints = extract_reachable_constraints_from_typ(world, exi_typ)
+#     # universal_bound_ids = tuple(extract_free_vars_from_constraints(s(), universal_constraints).union(extract_free_vars_from_typ(s(), exi_typ)))
 
-    if not universal_bound_ids:
-        assert not universal_constraints
-        univ_typ = exi_typ
-    else:
-        univ_typ = All(universal_bound_ids, tuple(sorted(universal_constraints)), exi_typ)
-    return simplify_typ(univ_typ)
+#     if not universal_bound_ids:
+#         assert not universal_constraints
+#         univ_typ = exi_typ
+#     else:
+#         univ_typ = All(universal_bound_ids, tuple(sorted(universal_constraints)), exi_typ)
+#     return simplify_typ(univ_typ)
 
 
 
-def is_selective(t : Typ) -> bool:
-    t = simplify_typ(t)
-    if False:
-        pass
-    elif isinstance(t, Top):
-        return False
-    else:
-        # TODO
-        return True
+# def is_selective(t : Typ) -> bool:
+#     t = simplify_typ(t)
+#     if False:
+#         pass
+#     elif isinstance(t, Top):
+#         return False
+#     else:
+#         # TODO
+#         return True
 
 def make_unio(ts : list[Typ]) -> Typ:
     u = Bot()
     for t in reversed(ts):
         u = Unio(t, u)
-    return simplify_typ(u)
+    return u
 
 def make_inter(ts : list[Typ]) -> Typ:
-    u = Top()
+    i = Top()
     for t in reversed(ts):
-        u = Inter(t, u)
-    return simplify_typ(u)
+        i = Inter(t, i)
+    return i 
 
 def cast_up(renaming : PMap[str, TVar]) -> PMap[str, Typ]:
     return pmap({
@@ -1443,6 +1408,61 @@ class Solver:
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
+
+    def simplify_typ(self, typ : Typ) -> Typ:
+        if False:
+            assert False
+        elif isinstance(typ, TTag):
+            return TTag(typ.label, self.simplify_typ(typ.body))
+        elif isinstance(typ, TField):
+            return TField(typ.label, self.simplify_typ(typ.body))
+        elif isinstance(typ, Inter): 
+            new_left = self.simplify_typ(typ.left)
+            new_right = self.simplify_typ(typ.right)
+            if  not bool(extract_free_vars_from_typ(s(), typ)): 
+                if self.check(empty_world(), new_left, new_right):
+                    return new_left
+                elif self.check(empty_world(), new_right, new_left): 
+                    return new_right
+                else:
+                    return Inter(new_left, new_right)
+            else:
+                return Inter(new_left, new_right)
+        elif isinstance(typ, Unio): 
+            new_left = self.simplify_typ(typ.left)
+            new_right = self.simplify_typ(typ.right)
+            if  not bool(extract_free_vars_from_typ(s(), typ)): 
+                if self.check(empty_world(), new_left, new_right):
+                    return new_right
+                elif self.check(empty_world(), new_right, new_left): 
+                    return new_left
+                else:
+                    return Unio(new_left, new_right)
+            else:
+                return Unio(new_left, new_right)
+        elif isinstance(typ, Diff): 
+            typ = Diff(self.simplify_typ(typ.context), self.simplify_typ(typ.negation))
+            if typ.negation == Bot():
+                return typ.context
+            else:
+                return typ
+        elif isinstance(typ, Imp): 
+            return Imp(self.simplify_typ(typ.antec), self.simplify_typ(typ.consq))
+        elif isinstance(typ, Exi):
+            return Exi(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
+        elif isinstance(typ, All):
+            return All(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
+        elif isinstance(typ, Fixpoint):
+            return Fixpoint(typ.id, self.simplify_typ(typ.body))
+        else:
+            return typ
+        
+    def simplify_constraints(self, constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
+        return tuple(
+            Subtyping(self.simplify_typ(st.lower), self.simplify_typ(st.upper))
+            for st in constraints
+        )
+
 
     def to_aliasing_constraints(self, constraints : Iterable[Subtyping]) -> tuple[Subtyping, ...]:
         new_constraints = []
@@ -1630,8 +1650,12 @@ class Solver:
             assert False
 
         elif isinstance(typ, TVar):
-            step = self.resolve_polarity_id(world, polarity, typ.id)
-            return self.resolve_polarity_typ(world, polarity, step)
+            if typ.id in world.rigids: 
+                return typ
+            else:
+                step = self.resolve_polarity_id(world, polarity, typ.id)
+                return self.resolve_polarity_typ(world, polarity, step)
+            #end if
 
         elif isinstance(typ, TUnit):
             return typ
@@ -1705,9 +1729,7 @@ class Solver:
             self.resolve_polarity_typ(world, polarity, t)
             for world in worlds
         ] 
-        return make_unio(resolved_typs)
-
-
+        return self.simplify_typ(make_unio(resolved_typs))
 
 
     def flatten_index_unios(self, t : Typ) -> tuple[tuple[str, ...], tuple[Subtyping, ...], Typ]:
@@ -1859,14 +1881,14 @@ class Solver:
             if st.upper == TVar(id) 
         )
 
-    def is_meaningful(self, polarity : bool, world : World, t : Typ) -> bool:
-        tt = simplify_typ(t)
-        if polarity:
-            return not isinstance(tt, Bot)
-            # return self.is_inhabitable(world, t)
-        else:
-            return not isinstance(tt, Top)
-            # return is_selective(t)
+    # def is_meaningful(self, polarity : bool, world : World, t : Typ) -> bool:
+    #     tt = simplify_typ(t)
+    #     if polarity:
+    #         return not isinstance(tt, Bot)
+    #         # return self.is_inhabitable(world, t)
+    #     else:
+    #         return not isinstance(tt, Top)
+    #         # return is_selective(t)
 
 
 
@@ -1876,7 +1898,7 @@ class Solver:
         False if either disjoint or inhabitable 
         """
         # TODO: this is currently not sound
-        t = simplify_typ(t)
+        # t = simplify_typ(t)
         if False:
             pass
         elif isinstance(t, Bot):
@@ -2704,7 +2726,8 @@ class BaseRule(Rule):
         end for 
         '''
 
-        return Result(nt.worlds, simplify_typ(result))
+        # return Result(nt.worlds, simplify_typ(result))
+        return Result(nt.worlds, result)
 
     def combine_function(self, nt : Context, branches : list[Branch]) -> Result:
         augmented_branches = self.solver.augment_branches_with_diff(branches)
@@ -2750,7 +2773,8 @@ class BaseRule(Rule):
 # result: {concretize_typ(simplify_typ(imp))}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
-            return Result([new_world], simplify_typ(imp))
+            # return Result([new_world], simplify_typ(imp))
+            return Result([new_world], imp)
         else:
             result = Top()
             for new_world, imp in constrained_branches:
@@ -2826,7 +2850,8 @@ class BaseRule(Rule):
             '''
             end for
             '''
-            return Result(nt.worlds, simplify_typ(result))
+            # return Result(nt.worlds, simplify_typ(result))
+            return Result(nt.worlds, result)
         #end if/else
     '''
     end def

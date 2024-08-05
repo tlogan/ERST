@@ -87,9 +87,6 @@ def u(t):
     assert s 
     return s 
 
-def simp(t):
-    return analyzer.simplify_typ(t)
-
 
 def solve(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
     x = p(a)
@@ -119,19 +116,19 @@ def equiv(a : str, b : str) -> bool:
     )
 
 def decode_negative(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ((analyzer.simplify_typ(
-        solver.decode_negative_typ(worlds, t))
-    ))
+    return analyzer.concretize_typ(
+        solver.decode_negative_typ(worlds, t)
+    )
 
 def decode_positive(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ(solver.to_aliasing_typ(analyzer.simplify_typ(
+    return analyzer.concretize_typ(solver.to_aliasing_typ(
         solver.decode_positive_typ(worlds, t))
-    ))
+    )
 
-def roundtrip(ss : list[str]) -> str:
-    return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
-        p(s) for s in ss
-    ])))
+# def roundtrip(ss : list[str]) -> str:
+#     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
+#         p(s) for s in ss
+#     ])))
 
 
 """
@@ -361,17 +358,15 @@ worlds[0].constraints:
 {analyzer.concretize_constraints(worlds[0].constraints)}
 ~~~~~~~~~~~
     """)
-#     answer = decode_negative(solver, worlds, p("X"))
-#     print(f"""
-# ~~~~~~~~~~~
-# RESULT
-# ~~~~~~~~~~~
-# len(worlds): {len(worlds)}
-
-# answer:
-# {answer}
-# ~~~~~~~~~~~
-#     """)
+    answer = decode_negative(solver, worlds, p("X"))
+    print(f"""
+~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~
+answer:
+{answer}
+~~~~~~~~~~~
+    """)
     # assert answer == "~nil @"
 
 
@@ -488,18 +483,18 @@ def test_plus_equals_two_query():
     print(f'''
 answer:\n{answer}
     ''')
-    assert answer == roundtrip([
-        "(~zero @, ~succ ~succ ~zero @)",
-        "(~succ ~zero @, ~succ ~zero @)",
-        "(~succ ~succ ~zero @, ~zero @)",
-    ])
-#     oracle = f"""
-# BOT
-# | (~zero @, ~succ ~succ ~zero @)
-# | (~succ ~zero @, ~succ ~zero @)
-# | (~succ ~succ ~zero @, ~zero @)
-#     """
-#     assert equiv(answer, oracle)
+    # assert answer == roundtrip([
+    #     "(~zero @, ~succ ~succ ~zero @)",
+    #     "(~succ ~zero @, ~succ ~zero @)",
+    #     "(~succ ~succ ~zero @, ~zero @)",
+    # ])
+    oracle = f"""
+BOT
+| (~zero @, ~succ ~succ ~zero @)
+| (~succ ~zero @, ~succ ~zero @)
+| (~succ ~succ ~zero @, ~zero @)
+    """
+    assert equiv(answer, oracle)
 
 def test_plus_equals_two_union_existential():
     plus_equals_two_query = ('''
