@@ -2523,11 +2523,17 @@ upper:
                         return [
                             new_world
                             for world in self.solve(world, sub_typ(sub_map, lower), upper)
-                            for new_world in [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
+                            for new_world in [replace(world, 
+                                constaints = world.constraints.add(Subtyping(lower, upper)),
+                                relids = world.relids.union(lower_fvs)
+                            )]
                             # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                         ]
                     else:
-                        return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+                        return [replace(world, 
+                            constraints = world.constraints.add(Subtyping(lower, upper)),
+                            relids = world.relids.union(lower_fvs)
+                        )]
                     # end if
                 else:
                     print("~~~~~ C")
