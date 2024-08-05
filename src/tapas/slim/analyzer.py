@@ -2309,7 +2309,7 @@ count: {self.count}
         elif isinstance(lower, TVar) and lower.id in world.skolems: 
             if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.skolems:
                 # NOTE: No interpretation means the variable is relationally constrained;
-                return [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
+                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 interp = self.intersect_upper_bounds(world, lower.id)
                 weakest_strong = interp
@@ -2327,9 +2327,23 @@ count: {self.count}
             #         world.freezer, world.relids
             #     )]
             interp = self.intersect_upper_bounds(world, upper.id)
-            if isinstance(interp, Top):
-                return [replace(world, constaints = world.constraints.add(Subtyping(lower, upper)))]
-            ###################################
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG upper, TVar
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lower:
+{concretize_typ(lower)}
+
+upper:
+{concretize_typ(upper)}
+
+interp:
+{concretize_typ(interp)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            if isinstance(interp, Top) or interp == Top():
+                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+
             elif isinstance(interp, TVar) and (interp.id in world.skolems):
                 # NOTE: the existence of a L <: F connstraint implies that a frozen variable can be expanded by subsequent information. 
                 # NOTE: what examples is this necessary for? 
@@ -2524,7 +2538,7 @@ upper:
                             new_world
                             for world in self.solve(world, sub_typ(sub_map, lower), upper)
                             for new_world in [replace(world, 
-                                constaints = world.constraints.add(Subtyping(lower, upper)),
+                                constraints = world.constraints.add(Subtyping(lower, upper)),
                                 relids = world.relids.union(lower_fvs)
                             )]
                             # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
@@ -3109,7 +3123,7 @@ class ExprRule(Rule):
                 #     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
                 # ) , inner_world.freezer, inner_world.relids)
 
-                # NOTE: assert that used constaints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
+                # NOTE: assert that used constraints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
                 # assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 # inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
                 inner_world = replace(inner_world, constraints = inner_world.constraints)
