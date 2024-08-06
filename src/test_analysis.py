@@ -343,27 +343,11 @@ def test_one_cons_query_subs_nat_list():
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_cons_query, tl.nat_list)
-    print(f"""
-~~~~~~~~~~~
-RESULT
-~~~~~~~~~~~
-len(worlds): {len(worlds)}
-~~~~~~~~~~~
-    """)
-    print(f"""
-~~~~~~~~~~~
-RESULT WORLD
-~~~~~~~~~~~
-worlds[0].constraints:
-{analyzer.concretize_constraints(worlds[0].constraints)}
-~~~~~~~~~~~
-    """)
     answer = decode_negative(solver, worlds, p("X"))
     print(f"""
 ~~~~~~~~~~~
 RESULT
 ~~~~~~~~~~~
-answer:
 {answer}
 ~~~~~~~~~~~
     """)
@@ -378,7 +362,11 @@ def test_two_cons_query_subs_nat_list():
     worlds = solve(solver, two_cons_query, tl.nat_list)
     answer = decode_negative(solver, worlds, p("X"))
     print(f"""
-answr: {answer}
+~~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~~~~
     """)
     assert answer == "~cons ~nil @"
 
@@ -481,13 +469,12 @@ def test_plus_equals_two_query():
     worlds = solve(solver, plus_equals_two_query, tl.addition)
     answer = decode_negative(solver, worlds, p("(X, Y)"))
     print(f'''
-answer:\n{answer}
+~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~~~
     ''')
-    # assert answer == roundtrip([
-    #     "(~zero @, ~succ ~succ ~zero @)",
-    #     "(~succ ~zero @, ~succ ~zero @)",
-    #     "(~succ ~succ ~zero @, ~zero @)",
-    # ])
     oracle = f"""
 BOT
 | (~zero @, ~succ ~succ ~zero @)
@@ -1916,7 +1903,11 @@ alias LTEDR = (FX SELF
 
 if __name__ == '__main__':
     # test_zero_subs_nat()
-    test_one_cons_query_subs_nat_list()
+    # test_one_cons_query_subs_nat_list()
+    # test_two_cons_query_subs_nat_list()
+    # TODO
+    # test_even_list_subs_nat_list()
+    test_plus_equals_two_query()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################

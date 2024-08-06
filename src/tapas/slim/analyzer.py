@@ -1399,15 +1399,27 @@ default_context = Context(m(), [World(s(), s(), s(), s())])
 class Solver:
     _type_id : int
     _limit : int
+    _checking : bool
 
     aliasing : PMap[str, Typ]
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 100000
+        self._limit = 1000
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
+        self._checking = False 
+
+    def make_checker(self) -> Solver:
+        checker = Solver(m()) 
+        checker._type_id = self._type_id 
+        checker._limit = self._limit
+        checker.debug = self.debug
+        checker.count = self.count
+        checker.aliasing = self.aliasing
+        checker._checking = True 
+        return checker
 
     def simplify_typ(self, typ : Typ) -> Typ:
         if False:
@@ -2075,19 +2087,19 @@ class Solver:
 
     def check(self, world : World, lower : Typ, upper : Typ) -> bool:
         try:
-            return bool(self.solve(world, lower, upper))
+            return bool(self.make_checker().solve(world, lower, upper))
         except RecursionError as e:
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~
-check: RecursionError 
-~~~~~~~~~~~~~~~~~~~~~~~
-lower:
-{concretize_typ(lower)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# check: RecursionError 
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# lower:
+# {concretize_typ(lower)}
 
-upper:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# upper:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             # raise e
             return False
         except InhabitableError:
@@ -2102,28 +2114,30 @@ upper:
         if self.count > self._limit:
             return []
 
-        print(f'''
-=================
-DEBUG SOLVE
-=================
-self.aliasing :::
-:::::::: {self.aliasing}
+#         if not self._checking:
+#             print(f'''
+# =================
+# DEBUG SOLVE
+# =================
+# self.aliasing :::
+# :::::::: {self.aliasing}
 
-world.freezer::: 
-:::::::: {world.skolems}
+# world.freezer::: 
+# :::::::: {world.skolems}
 
-world.constraints::: 
-{concretize_constraints(world.constraints)}
+# world.constraints::: 
+# {concretize_constraints(world.constraints)}
 
-lower:
-{concretize_typ(lower)} 
+# lower:
+# {concretize_typ(lower)} 
 
-upper:
-{concretize_typ(upper)}
+# upper:
+# {concretize_typ(upper)}
 
-count: {self.count}
-=================
-        ''')
+# count: {self.count}
+# =================
+#             ''')
+#         # end if
 
         if alpha_equiv(lower, upper): 
             return [world] 
@@ -2349,20 +2363,20 @@ count: {self.count}
             #         world.freezer, world.relids
             #     )]
             interp = self.intersect_upper_bounds(world, upper.id)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG upper, TVar
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-lower:
-{concretize_typ(lower)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG upper, TVar
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# lower:
+# {concretize_typ(lower)}
 
-upper:
-{concretize_typ(upper)}
+# upper:
+# {concretize_typ(upper)}
 
-interp:
-{concretize_typ(interp)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# interp:
+# {concretize_typ(interp)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             if isinstance(interp, Top) or interp == Top():
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
 
@@ -2498,26 +2512,26 @@ interp:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG upper, LeastFP
-~~~~~~~~~~~~~~~~~~~~~
-world.relids: 
-{world.relids}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~
+# DEBUG upper, LeastFP
+# ~~~~~~~~~~~~~~~~~~~~~
+# world.relids: 
+# {world.relids}
 
-world.freezer: 
-{world.skolems}
+# world.freezer: 
+# {world.skolems}
 
-world.constraints: 
-{concretize_constraints(tuple(world.constraints))}
+# world.constraints: 
+# {concretize_constraints(tuple(world.constraints))}
 
-lower: 
-{concretize_typ(lower)}
+# lower: 
+# {concretize_typ(lower)}
 
-upper: 
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~
-            """)
+# upper: 
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -2528,7 +2542,7 @@ upper:
 # ~~~~~~~~~~~~~~~~~~~~~
 #             """)
             if is_decidable(lower, upper):
-                print("~~~~~~ UNROLLING")
+                # print("~~~~~~ UNROLLING")
                 '''
                 unroll
                 '''
@@ -2539,16 +2553,15 @@ upper:
             else:
                 assumed_relational_typ = lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
-                    print("~~~~~ A")
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
                     normalized_upper = normalize_least_fp(upper, ordered_paths)
                     worlds = self.solve(world, assumed_relational_typ, normalized_upper)
                     return worlds
-                elif self.is_fixpoint_constraint_safe(world, lower, upper):
 
+                elif self.is_fixpoint_constraint_safe(world, lower, upper):
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                    assert all((fv not in world.skolems) for fv in lower_fvs)
+                    assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)
                     sub_map : PMap[str, Typ] = pmap({
                         fv : resol
                         for fv in lower_fvs
@@ -2570,10 +2583,10 @@ upper:
                             constraints = world.constraints.add(Subtyping(lower, upper)),
                             relids = world.relids.union(lower_fvs)
                         )]
-                    # end if
+                    #end if
                 else:
-                    print("~~~~~ C")
                     return []
+                #end if
 
         elif isinstance(lower, Diff):
             if diff_well_formed(lower):
