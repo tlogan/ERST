@@ -374,7 +374,7 @@ def test_even_list_subs_nat_list():
     solver = analyzer.Solver(m())
     worlds = solve(solver, tl.even_list, tl.nat_list)
     print(f"len(worlds): {len(worlds)}")
-    assert worlds
+    assert bool(worlds)
 
 def test_nat_list_subs_even_list():
     solver = analyzer.Solver(m())
@@ -1905,9 +1905,10 @@ if __name__ == '__main__':
     # test_zero_subs_nat()
     # test_one_cons_query_subs_nat_list()
     # test_two_cons_query_subs_nat_list()
+    # test_plus_equals_two_query()
+    #####################################
     # TODO
-    # test_even_list_subs_nat_list()
-    test_plus_equals_two_query()
+    test_even_list_subs_nat_list()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################

@@ -1439,7 +1439,12 @@ class Solver:
                 else:
                     return Inter(new_left, new_right)
             else:
-                return Inter(new_left, new_right)
+                if isinstance(new_left, Top):
+                    return new_right
+                elif isinstance(new_right, Top):
+                    return new_left
+                else:
+                    return Inter(new_left, new_right)
         elif isinstance(typ, Unio): 
             new_left = self.simplify_typ(typ.left)
             new_right = self.simplify_typ(typ.right)
@@ -1451,7 +1456,12 @@ class Solver:
                 else:
                     return Unio(new_left, new_right)
             else:
-                return Unio(new_left, new_right)
+                if isinstance(new_left, Bot):
+                    return new_right
+                elif isinstance(new_right, Bot): 
+                    return new_left
+                else:
+                    return Unio(new_left, new_right)
         elif isinstance(typ, Diff): 
             typ = Diff(self.simplify_typ(typ.context), self.simplify_typ(typ.negation))
             if typ.negation == Bot():
@@ -2080,10 +2090,13 @@ class Solver:
         )
         return result
 
-    def is_fixpoint_constraint_safe(self, world : World, lower : Typ, upper : Fixpoint) -> bool: 
+    def is_fixpoint_constraint_wellformed(self, lower : Typ, upper : Fixpoint) -> bool: 
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
-        weak_body = sub_typ(renaming, upper.body)
-        return self.check(world, lower, weak_body)
+        upper_body = sub_typ(renaming, upper.body)
+        # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
+        # NOTE: this check only cares about the local structure of the types
+        # NOTE: consistency with the rest of the world is handled elsewhere
+        return bool(self.check(empty_world(), lower, upper_body))
 
     def check(self, world : World, lower : Typ, upper : Typ) -> bool:
         try:
@@ -2261,7 +2274,7 @@ class Solver:
 #             """)
             renaming = self.make_renaming(lower.ids)
             strong_constraints = sub_constraints(renaming, lower.constraints)
-            strong_body = sub_typ(renaming, lower.body)
+            lower_body = sub_typ(renaming, lower.body)
             renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
 
             worlds = [world]
@@ -2277,7 +2290,7 @@ class Solver:
                 m2
                 for m0 in worlds
                 for m1 in [replace(m0, skolems = m0.skolems.union(renamed_ids))]
-                for m2 in self.solve(m1, strong_body, upper)
+                for m2 in self.solve(m1, lower_body, upper)
             ]
 
         #######################################
@@ -2428,8 +2441,8 @@ class Solver:
         elif isinstance(lower, All): 
             renaming = self.make_renaming(lower.ids)
             strong_constraints = sub_constraints(renaming, lower.constraints)
-            strong_body = sub_typ(renaming, lower.body)
-            worlds = self.solve(world, strong_body, upper) 
+            lower_body = sub_typ(renaming, lower.body)
+            worlds = self.solve(world, lower_body, upper) 
             for constraint in strong_constraints:
                 worlds = [
                     m1
@@ -2473,8 +2486,21 @@ class Solver:
                 sub in induction hypothesis to world:
                 '''
                 renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                strong_body = sub_typ(renaming, lower.body)
-                return self.solve(world, strong_body, upper)
+                lower_body = sub_typ(renaming, lower.body)
+
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG lower unrolling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lower_body:
+{concretize_typ(lower_body)}
+
+upper:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+                return self.solve(world, lower_body, upper)
             else:
                 return []
 
@@ -2512,37 +2538,30 @@ class Solver:
             
             # reduced_strong = sub_typ(sub_map, strong)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG upper, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# world.relids: 
-# {world.relids}
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG upper, LeastFP
+~~~~~~~~~~~~~~~~~~~~~
+world.relids: 
+{world.relids}
 
-# world.freezer: 
-# {world.skolems}
+world.freezer: 
+{world.skolems}
 
-# world.constraints: 
-# {concretize_constraints(tuple(world.constraints))}
+world.constraints: 
+{concretize_constraints(tuple(world.constraints))}
 
-# lower: 
-# {concretize_typ(lower)}
+lower: 
+{concretize_typ(lower)}
 
-# upper: 
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~
-# DEBUG upper, LeastFP
-# ~~~~~~~~~~~~~~~~~~~~~
-# is_decidable: 
-# {is_decidable(reduced_strong, upper)}
-# ~~~~~~~~~~~~~~~~~~~~~
-#             """)
-            if is_decidable(lower, upper):
-                # print("~~~~~~ UNROLLING")
+upper: 
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~
+            """)
+            # TODO:
+            lower = self.simplify_typ(lower)
+            if is_decidable(lower, upper): # TODO: make is_deciable more strict
+                print("~~~~~~ UNROLLING")
                 '''
                 unroll
                 '''
@@ -2553,13 +2572,16 @@ class Solver:
             else:
                 assumed_relational_typ = lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
+
+                    print("~~~~~~ FIX A")
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
                     normalized_upper = normalize_least_fp(upper, ordered_paths)
                     worlds = self.solve(world, assumed_relational_typ, normalized_upper)
                     return worlds
 
-                elif self.is_fixpoint_constraint_safe(world, lower, upper):
+                elif self.is_fixpoint_constraint_wellformed(lower, upper):
+                    print("~~~~~~ FIX B")
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
                     assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)
                     sub_map : PMap[str, Typ] = pmap({
@@ -2579,6 +2601,7 @@ class Solver:
                             # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                         ]
                     else:
+                        print("~~~~~~ FIX C")
                         return [replace(world, 
                             constraints = world.constraints.add(Subtyping(lower, upper)),
                             relids = world.relids.union(lower_fvs)

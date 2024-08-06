@@ -3,9 +3,7 @@
 
 
 ### TODO (Symbolic Implementation)
-- update simplify to intersect intersections of unions. e.g. (X | Y) & (Y | Z | X) ===> (X | Y)
-- update decode_negative_typ to use decode_polarity(False)
-- update decode_positive_typ to use decode_polarity(True)
+- update is_decidable check to fail on unions
 - test out fixpoint subtyping without multistep resolving
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
