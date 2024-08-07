@@ -846,15 +846,20 @@ def is_record_typ(t : Typ) -> bool:
 
 
 def is_decidable_shape(t : Typ) -> bool:
-    # TODO:
-    # simple strategy: anything that's not a variable
-    # 
-    # alternate
-    # a decidable shape could be a union or intersection
-    # as long as each member of union or intersection is a decidable shape 
-    # base case is a tag, top, bot, unit. 
-    # is field a base case?
-    return not isinstance(t, TVar)
+    if isinstance(t, TUnit):
+        return True
+    elif isinstance(t, Top):
+        return True
+    elif isinstance(t, Bot):
+        return True
+    elif isinstance(t, TTag):
+        return True
+    elif isinstance(t, Unio):
+        return is_decidable_shape(t.left) and is_decidable_shape(t.right)
+    elif isinstance(t, Inter):
+        return is_decidable_shape(t.left) and is_decidable_shape(t.right)
+    else:
+        return False
 
 def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, list[Typ]]]:
     choices = [
@@ -1041,16 +1046,6 @@ def targets_match(assumed_key : Typ, search_targets : list[Typ]) -> bool:
             search_targets.remove(v)
     return not bool(search_targets)
 
-def lookup_normalized_relational_typ(world : World, key : Typ) -> Optional[Typ]:
-    if is_record_typ(key):
-        for constraint in world.constraints:
-            ordered_paths = extract_matching_ordered_paths(constraint.lower, extract_targets(key))
-            if ordered_paths != None:
-                if isinstance(constraint.upper, Fixpoint):
-                    return normalize_least_fp(constraint.upper, ordered_paths)
-        return None
-    else:
-        return None
 
 def lookup_relational_constraint(world : World, targets : list[Typ]) -> Optional[Subtyping]:
     for constraint in world.constraints:
@@ -1410,6 +1405,19 @@ class Solver:
         self.count = 0
         self.aliasing = aliasing
         self._checking = False 
+
+    def lookup_normalized_relational_typ(self, world : World, key : Typ) -> Optional[Typ]:
+        # TODO: update to avoid using simplify_typ
+        key = self.simplify_typ(key)
+        if is_record_typ(key):
+            for constraint in world.constraints:
+                ordered_paths = extract_matching_ordered_paths(constraint.lower, extract_targets(key))
+                if ordered_paths != None:
+                    if isinstance(constraint.upper, Fixpoint):
+                        return normalize_least_fp(constraint.upper, ordered_paths)
+            return None
+        else:
+            return None
 
     def make_checker(self) -> Solver:
         checker = Solver(m()) 
@@ -2558,8 +2566,6 @@ upper:
 {concretize_typ(upper)}
 ~~~~~~~~~~~~~~~~~~~~~
             """)
-            # TODO:
-            lower = self.simplify_typ(lower)
             if is_decidable(lower, upper): # TODO: make is_deciable more strict
                 print("~~~~~~ UNROLLING")
                 '''
@@ -2570,7 +2576,7 @@ upper:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-                assumed_relational_typ = lookup_normalized_relational_typ(world, lower)
+                assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
 
                     print("~~~~~~ FIX A")

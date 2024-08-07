@@ -3,7 +3,8 @@
 
 
 ### TODO (Symbolic Implementation)
-- update is_decidable check to fail on unions
+- update `lookup_normalized_relational_typ`
+- consider using subtyping check when constructing unions and intersections (to keep compact)
 - test out fixpoint subtyping without multistep resolving
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
