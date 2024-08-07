@@ -3,8 +3,9 @@
 
 
 ### TODO (Symbolic Implementation)
-- update `lookup_normalized_relational_typ`
-- consider using subtyping check when constructing unions and intersections (to keep compact)
+- clean up type reconstruction from recursion in `combine_fix` ; see `test_fix`
+    - need to remove extraneous constraints
+    - that are used with when resolving a locally introduced type variable
 - test out fixpoint subtyping without multistep resolving
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`

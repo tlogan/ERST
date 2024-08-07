@@ -566,7 +566,7 @@ def print_worlds(worlds : list[World], msg = ""):
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     DEBUG {msg} WORLD {i}
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    world.freezer: {world.skolems}
+    world.skolems: {world.skolems}
 
     world.constraints: 
     {constraints_str}
@@ -1290,13 +1290,13 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
             constraints = constraints.union(new_constraints)
     return constraints
 
-def extract_existential_constraints(freezer: PSet[str], constraints : PSet[Subtyping]) -> PSet[Subtyping]:
+def extract_existential_constraints(skolems: PSet[str], constraints : PSet[Subtyping]) -> PSet[Subtyping]:
     return pset( 
         st
         for st in constraints
         for lower_fvs in [extract_free_vars_from_typ(s(), st.lower)]
         for upper_fvs in [extract_free_vars_from_typ(s(), st.upper)]
-        if bool(freezer.intersection(lower_fvs.union(upper_fvs))) 
+        if bool(skolems.intersection(lower_fvs.union(upper_fvs))) 
     )
 
 # def package_typ(world : World, typ : Typ) -> Typ:
@@ -1357,7 +1357,7 @@ def cast_up(renaming : PMap[str, TVar]) -> PMap[str, Typ]:
     })
 
 
-def get_freezer_adjacent_learnable_ids(world : World) -> PSet[str]:
+def get_skolems_adjacent_learnable_ids(world : World) -> PSet[str]:
     return pset(
         st.upper.id
         for st in world.constraints
@@ -1563,7 +1563,7 @@ class Solver:
     def is_constraint_dead(self, world : World, ignored : PSet[str], st : Subtyping) -> bool:
         lower_result = False
         upper_result = False
-        # if isinstance(st.lower, TVar) and st.lower.id not in ignored and st.lower.id not in world.freezer:
+        # if isinstance(st.lower, TVar) and st.lower.id not in ignored and st.lower.id not in world.skolems:
         if isinstance(st.lower, TVar):
             lower_result = (
                 st.lower.id not in ignored and 
@@ -1586,7 +1586,7 @@ class Solver:
 
 # st: {concretize_typ(st.lower)} <: {concretize_typ(st.upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# world.freezer: {world.freezer}
+# world.skolems: {world.skolems}
 
 # world.constraints:
 # {concretize_constraints(world.constraints)}
@@ -1620,7 +1620,7 @@ class Solver:
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     # DEBUG decode_strong_side 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # m.freezer: {m.freezer}
+    # m.skolems: {m.skolems}
     # m.constraints: {concretize_constraints(tuple(m.constraints))}
     # t: {concretize_typ(t)}
     # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1633,7 +1633,7 @@ class Solver:
     #         if op != None
     #         for (strongest, cs) in [op]
     #         # for m in [world]
-    #         for m in [World(world.constraints.difference(cs), world.freezer)]
+    #         for m in [World(world.constraints.difference(cs), world.skolems)]
     #     ] 
     #     return make_unio(constraint_typs)
 
@@ -1644,7 +1644,7 @@ class Solver:
     # # ~~~~~~~~~~~~~~~~~~~~~~~~
     # # DEBUG decode_weak_side 
     # # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # # m.freezer: {m.freezer}
+    # # m.skolems: {m.skolems}
     # # m.constraints: {concretize_constraints(tuple(m.constraints))}
     # # t: {concretize_typ(t)}
     # # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1656,7 +1656,7 @@ class Solver:
     #         if op != None
     #         for (weakest, cs) in [op]
     #         # for m in [world]
-    #         for m in [World(world.constraints.difference(cs), world.freezer)]
+    #         for m in [World(world.constraints.difference(cs), world.skolems)]
     #     ] 
     #     return make_unio(constraint_typs)
 
@@ -1882,7 +1882,7 @@ class Solver:
 # #             """)
 #             # TODO: might need to reduce strong before caching
 #         # if (
-#         #     (all((fv not in world.freezer) for fv in fvs)) 
+#         #     (all((fv not in world.skolems) for fv in fvs)) 
 #         #     # TODO: remove wellformed check
 #         #     # - should be sound without this; not unrollable means it can't be proven to fail 
 #         #     # and 
@@ -1892,7 +1892,7 @@ class Solver:
 #             return [World(
 #                 # world.constraints.difference(used_constraints).add(Subtyping(reduced_strong, weak)),
 #                 world.constraints.add(Subtyping(reduced_lower, upper)),
-#                 world.freezer, world.relids.union(fvs)
+#                 world.skolems, world.relids.union(fvs)
 #             )]
 #         else:
 #             return worlds 
@@ -2143,7 +2143,7 @@ class Solver:
 # self.aliasing :::
 # :::::::: {self.aliasing}
 
-# world.freezer::: 
+# world.skolems::: 
 # :::::::: {world.skolems}
 
 # world.constraints::: 
@@ -2244,7 +2244,7 @@ class Solver:
                 # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
                 # return [World(
                 #     world.constraints.add(Subtyping(lower, upper)),
-                #     world.freezer, world.relids
+                #     world.skolems, world.relids
                 # )]
 
                 # NOTE: safety check 
@@ -2381,7 +2381,7 @@ class Solver:
             #     # TODO: add safety check; e.g. that weak is TOP or weaker than strong 
             #     return [World(
             #         world.constraints.add(Subtyping(lower, upper)),
-            #         world.freezer, world.relids
+            #         world.skolems, world.relids
             #     )]
             interp = self.intersect_upper_bounds(world, upper.id)
 #             print(f"""
@@ -2407,7 +2407,7 @@ class Solver:
 
                 # return [World(
                 #     world.constraints.add(Subtyping(lower, upper)),
-                #     world.freezer, world.relids
+                #     world.skolems, world.relids
                 # )]
 
                 # TODO: add safety check? what is the safety condition?
@@ -2536,7 +2536,7 @@ upper:
             #     for id in ids
             #     for pair in [
             #         mapOp(simplify_typ)(interpret_weak_for_id(world, id))
-            #         if id in world.freezer else
+            #         if id in world.skolems else
             #         mapOp(simplify_typ)(interpret_strong_for_id(world, id))
             #     ]
             #     if pair 
@@ -2553,7 +2553,7 @@ DEBUG upper, LeastFP
 world.relids: 
 {world.relids}
 
-world.freezer: 
+world.skolems: 
 {world.skolems}
 
 world.constraints: 
@@ -2579,7 +2579,7 @@ upper:
                 assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
 
-                    print("~~~~~~ FIX A")
+                    # print("~~~~~~ FIX A")
                     # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
                     ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
                     normalized_upper = normalize_least_fp(upper, ordered_paths)
@@ -2587,7 +2587,7 @@ upper:
                     return worlds
 
                 elif self.is_fixpoint_constraint_wellformed(lower, upper):
-                    print("~~~~~~ FIX B")
+                    # print("~~~~~~ FIX B")
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
                     assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)
                     sub_map : PMap[str, Typ] = pmap({
@@ -2607,7 +2607,7 @@ upper:
                             # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
                         ]
                     else:
-                        print("~~~~~~ FIX C")
+                        # print("~~~~~~ FIX C")
                         return [replace(world, 
                             constraints = world.constraints.add(Subtyping(lower, upper)),
                             relids = world.relids.union(lower_fvs)
@@ -2749,7 +2749,7 @@ class BaseRule(Rule):
 
                 # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
                 body_typ = branch.body
-                # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.freezer, new_world.relids)
+                # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.skolems, new_world.relids)
 
                 field = TField(branch.label, body_typ)
                 ######## NOTE: no generalization since the negative position is merely a label #############
@@ -2795,18 +2795,20 @@ class BaseRule(Rule):
             # - safety criteria: interpreted variables are NOT used elsewhere 
             # - ERROR: safety criteria doesn't seem to be met by branch body
             # (return_typ, return_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-            return_typ = branch.body
-            # new_world = World(new_world.constraints.difference(return_used_constraints), new_world.freezer, new_world.relids)
+            body_typ = branch.body
+            # new_world = World(new_world.constraints.difference(return_used_constraints), new_world.skolems, new_world.relids)
             # (param_typ, param_used_constraints) = self.solver.interpret_with_polarity(False, new_world, branch.pattern, extract_free_vars_from_typ(s(), return_typ))
             param_typ = branch.pattern
-            # new_world = World(new_world.constraints.difference(param_used_constraints), new_world.freezer, new_world.relids)
-            imp = Imp(param_typ, return_typ)
+            # new_world = World(new_world.constraints.difference(param_used_constraints), new_world.skolems, new_world.relids)
+            imp = Imp(param_typ, body_typ)
 
             constrained_branches.append((new_world, imp))
         '''
         end for 
         '''
-        if len(constrained_branches) == 1:
+        # TODO: remove single branch case; should always generalize
+        # if len(constrained_branches) == 1:
+        if False:
             new_world, imp = constrained_branches[0]
 #             print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2828,9 +2830,9 @@ class BaseRule(Rule):
                 #     generalized_case = imp
                 ######## NOTE: construct existential #############
                 reachable_constraints = extract_reachable_constraints_from_typ(new_world, imp)
-                existential_constraints = extract_existential_constraints(new_world.freezer, reachable_constraints)
+                existential_constraints = extract_existential_constraints(new_world.skolems, reachable_constraints)
                 reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
-                existential_bound_ids = tuple(sorted(new_world.freezer.intersection(reachable_ids)))
+                existential_bound_ids = tuple(sorted(new_world.skolems.intersection(reachable_ids)))
 
                 if not existential_bound_ids:
                     assert not existential_constraints
@@ -2839,12 +2841,8 @@ class BaseRule(Rule):
                     body = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), imp)
                 #end if-else
 
-
                 ######## NOTE: generalization #############
-                # TODO: figure out a less cluttered way to include extrusion
-                # TODO: consider using special extruded flag and/or representation that igonroes extruded variables
-
-                fvs = sorted(extract_free_vars_from_typ(s(), imp.antec).difference(new_world.freezer))
+                fvs = sorted(extract_free_vars_from_typ(s(), imp.antec).difference(new_world.skolems))
                 renaming = self.solver.make_renaming_tvars(fvs)
                 sub_map = cast_up(renaming)
                 bound_ids = tuple(sorted(var.id for var in renaming.values()))
@@ -2868,7 +2866,7 @@ class BaseRule(Rule):
 # new_world.constraints:
 # {concretize_constraints(new_world.constraints)}
 
-# new_world.freezer: {new_world.freezer} 
+# new_world.skolems: {new_world.skolems} 
 
 # new_world.relids: {new_world.relids} 
 
@@ -2971,7 +2969,7 @@ class ExprRule(Rule):
             for world in worlds:
                 # NOTE: interpretation to keep types and constraints compact 
                 # cator_typ, cator_used_constraints = self.solver.interpret_with_polarity(True, world, cator_var, s())
-                ignored_ids = get_freezer_adjacent_learnable_ids(world)
+                # ignored_ids = get_skolems_adjacent_learnable_ids(world)
                 # arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_typ, ignored_ids)
                 # arg_typ, arg_used_constraints = (arg_var, s())
 
@@ -2979,7 +2977,7 @@ class ExprRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG application
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# world.freezer: {tuple(world.freezer)}
+# world.skolems: {tuple(world.skolems)}
 
 # world.constraints: 
 # {concretize_constraints(world.constraints)}
@@ -2999,7 +2997,7 @@ class ExprRule(Rule):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                 """)
 
-                # world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.freezer, world.relids)
+                # world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.skolems, world.relids)
                 new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
             worlds = new_worlds
 
@@ -3091,7 +3089,7 @@ class ExprRule(Rule):
                     if in_typ.id not in inner_world.relids else 
                     in_typ
                 )
-                # inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.freezer, inner_world.relids)
+                # inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.skolems, inner_world.relids)
 
                 # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
@@ -3102,7 +3100,7 @@ class ExprRule(Rule):
                 # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 # (right_typ, right_used_constraints) = right_interp
                 right_typ = right_interp
-                # inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.freezer, inner_world.relids)
+                # inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.skolems, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
                 right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
@@ -3123,36 +3121,20 @@ class ExprRule(Rule):
                 # - there could be multiple implications due to multiple applications of recursive function 
                 # - are all of them necessary for constructing inductive hypothesis?
                 self_interps = list(set(linearize_intersections(self_interp)))
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_fix --- self_interp 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# self_interp: {concretize_typ(self_interp[0])}
-
-# self_interps: 
-# {[concretize_typ(t) for t in self_interps]}
-
-# self_typ: {concretize_typ(self_typ)}
-
-# inner_world.constraints:
-# {concretize_constraints(inner_world.constraints)}
-
-# left_used_constraints:
-# {concretize_constraints(left_used_constraints)}
-
-# right_used_constraints:
-# {concretize_constraints(right_used_constraints)}
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# in_typ: {in_typ.id}
-# left_typ: {concretize_typ(left_typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# out_typ: {out_typ.id}
-# right_typ: {concretize_typ(right_typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+inner_world.constraints:
+{concretize_constraints(inner_world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+in_typ: {in_typ.id}
+left_typ: {concretize_typ(left_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+out_typ: {out_typ.id}
+right_typ: {concretize_typ(right_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
 
                 # self_used_constraints = self_interp[1]
                 IH_rel_constraints = s()
@@ -3188,12 +3170,12 @@ class ExprRule(Rule):
                 #     st
                 #     for st in inner_world.constraints.difference(self_used_constraints)
                 #     if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-                # ) , inner_world.freezer, inner_world.relids)
+                # ) , inner_world.skolems, inner_world.relids)
 
                 # NOTE: assert that used constraints are local, therefore safe to remove erroneously disconnecting uninterpreted variables elsewhere 
                 # assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 # inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
-                inner_world = replace(inner_world, constraints = inner_world.constraints)
+                # inner_world = replace(inner_world, constraints = inner_world.constraints)
                 rel_reachable_constraints = pset(
                     st
                     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
@@ -3246,6 +3228,13 @@ class ExprRule(Rule):
             consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
             consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
             result = All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ))  
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix result
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(result)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             # NOTE: parameter constraint isn't actually necessary; sound without it.
             # result = All(tuple([param_typ.id]), tuple([Subtyping(param_typ, param_upper)]), Imp(param_typ, consq_typ))  
 
@@ -3265,7 +3254,7 @@ class ExprRule(Rule):
         #         st
         #         for st in world.constraints
         #         if (st.strong != body_var) and (st.weak != body_var) # remove body var which has been merely used for transitivity. 
-        #     ) , world.freezer, world.relids)
+        #     ) , world.skolems, world.relids)
         #     for world in nt.worlds
         # ])
         return Result(outer_worlds, result)

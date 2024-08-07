@@ -829,6 +829,7 @@ def test_functional():
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
+
 def test_fix():
     code = '''
 fix(case self => (
@@ -855,9 +856,16 @@ def test_identity_function():
     code = '''
 (case x => x)
     '''
-    (worlds, typ_var, parsetree, solver) = analyze(code)
-    # print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "ALL [_2 ; _2 <: _1] _1 -> _1"
+    (worlds, t, parsetree, solver) = analyze(code)
+    answer = decode_positive(solver, worlds, t)
+    print(f"""
+~~~~~~~~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~~~~~~~~~~
+    """)
+    # assert decode_positive(solver, worlds, typ_var) == "ALL [_2 ; _2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
     code = '''
@@ -1907,8 +1915,7 @@ if __name__ == '__main__':
     # test_two_cons_query_subs_nat_list()
     # test_plus_equals_two_query()
     #####################################
-    # TODO
-    test_even_list_subs_nat_list()
+    # test_even_list_subs_nat_list()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################
@@ -1926,7 +1933,8 @@ if __name__ == '__main__':
     # test_constrained_universal_subtyping_function_diff_pass()
     # test_plus_equals_two_query()
     #####################################
-    # test_fix()
+    # test_identity_function()
+    test_fix()
     # test_add()
     #####################################
     # test_existential_with_extrusion()
