@@ -3114,13 +3114,12 @@ class ExprRule(Rule):
                 # TODO: need a safety argument for removing used_constraints
                 # - argument: constriants aren't removed; but are merely rerwritten
                 # self_interp = self.solver.resolve_polarity(False, inner_world, self_typ, s())
-                self_interp = self.solver.intersect_upper_bounds(inner_world, self_typ.id)
+                self_constraints = self.solver.extract_upper_bounds(inner_world, self_typ.id)
                 # self_interp = self.solver.interpret_lower_id(inner_world, self_typ.id)
                 # TODO: linearize intersections of self_interp
                 # - remove redudant types
                 # - there could be multiple implications due to multiple applications of recursive function 
                 # - are all of them necessary for constructing inductive hypothesis?
-                self_interps = list(set(linearize_intersections(self_interp)))
                 print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DEBUG combine_fix 
@@ -3134,13 +3133,18 @@ left_typ: {concretize_typ(left_typ)}
 out_typ: {out_typ.id}
 right_typ: {concretize_typ(right_typ)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+self_typ:
+{self_typ.id}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 """)
 
                 # self_used_constraints = self_interp[1]
                 IH_rel_constraints = s()
                 IH_left_constraints = s()
+                used_constraints = self_constraints
 
-                for self_interp_case in self_interps:
+                for self_constraint in self_constraints:
+                    self_interp_case = self_constraint.upper
                     if isinstance(self_interp_case, Imp):
                         self_left = self_interp_case.antec
                         self_right = self_interp_case.consq
@@ -3162,6 +3166,10 @@ right_typ: {concretize_typ(right_typ)}
     #                     """)
                         IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(self_left, self_right), IH_typ))
                         IH_left_constraints = IH_left_constraints.add(Subtyping(self_left, IH_typ))
+                    else:
+                        # NOTE: anything else is an intermediate linking via a type var
+                        assert isinstance(self_interp_case, TVar)
+                        used_constraints = used_constraints.union(self.solver.extract_upper_bounds(inner_world, self_interp_case.id))
                     #end if
                 #end for
 
@@ -3179,10 +3187,25 @@ right_typ: {concretize_typ(right_typ)}
                 rel_reachable_constraints = pset(
                     st
                     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                    # if not self.solver.is_constraint_dead(inner_world, s(), st)
                     if not self.solver.is_constraint_dead(inner_world, extract_free_vars_from_typ(s(), rel_pattern), st)
                 )
-                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints)
+                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints).difference(used_constraints)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix inner_world.constraints 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_constraints(inner_world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
+
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix rel_reachable_constraints 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_constraints(rel_reachable_constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
                 
 
                 # NOTE: parameter constraint isn't actually necessary; sound without it.

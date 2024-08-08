@@ -3,10 +3,8 @@
 
 
 ### TODO (Symbolic Implementation)
-- clean up type reconstruction from recursion in `combine_fix` ; see `test_fix`
-    - need to remove extraneous constraints
-    - that are used with when resolving a locally introduced type variable
-- test out fixpoint subtyping without multistep resolving
+- figure out a clean and concise principal to decide which constraints should be removed in recursion in `combine_fix` ; see `test_fix`
+    - actually; maybe everything with the initial variables should be removed 
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
 - create rigid and extrusion rules
