@@ -3,8 +3,6 @@
 
 
 ### TODO (Symbolic Implementation)
-- figure out a clean and concise principal to decide which constraints should be removed in recursion in `combine_fix` ; see `test_fix`
-    - actually; maybe everything with the initial variables should be removed 
 - update decode to check if typ is a variable, and if so, then unionize lower bound.
 - debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
 - create rigid and extrusion rules

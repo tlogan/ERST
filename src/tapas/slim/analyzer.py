@@ -3083,23 +3083,24 @@ class ExprRule(Rule):
                 # NOTE: avoid over-interpreting into extruded type;
                 # TODO: if this is too restrictive, consider using an extrusion flag to indicate stopping point for interpret_with_polarity. 
                 # NOTE: self_typ, in_typ, and out_typ are created here; we know they are not used elswhere; so it's safe to remove their used constraints
-                left_interp = self.solver.intersect_upper_bounds(inner_world, in_typ.id)
-                left_typ = (
-                    left_interp 
-                    if in_typ.id not in inner_world.relids else 
-                    in_typ
-                )
+                left_constraints = pset()
+                left_typ = in_typ  
+                if in_typ.id not in inner_world.relids:
+                    left_constraints = self.solver.extract_upper_bounds(inner_world, in_typ.id)
+                    left_typ = make_inter([st.upper for st in left_constraints])
+                # end if
                 # inner_world = World(inner_world.constraints.difference(left_used_constraints), inner_world.skolems, inner_world.relids)
 
                 # NOTE: allow multi-step interpretation, since extruded variables don't play a role in this direction
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
                 # ignored_ids = s()
                 # ignored_ids = extract_free_vars_from_typ(s(), left_typ)
-                right_interp = self.solver.unionize_lower_bounds(inner_world, out_typ.id)
+                right_constraints = self.solver.extract_lower_bounds(inner_world, out_typ.id)
+                right_typ = make_unio([st.lower for st in right_constraints])
                 # resolve_polarity(True, inner_world, out_typ, ignored_ids)
                 # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 # (right_typ, right_used_constraints) = right_interp
-                right_typ = right_interp
+                # right_typ = right_interp
                 # inner_world = World(inner_world.constraints.difference(right_used_constraints), inner_world.skolems, inner_world.relids)
 
                 left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
@@ -3141,7 +3142,7 @@ self_typ:
                 # self_used_constraints = self_interp[1]
                 IH_rel_constraints = s()
                 IH_left_constraints = s()
-                used_constraints = self_constraints
+                intermediate_constraints = s() 
 
                 for self_constraint in self_constraints:
                     self_interp_case = self_constraint.upper
@@ -3169,7 +3170,7 @@ self_typ:
                     else:
                         # NOTE: anything else is an intermediate linking via a type var
                         assert isinstance(self_interp_case, TVar)
-                        used_constraints = used_constraints.union(self.solver.extract_upper_bounds(inner_world, self_interp_case.id))
+                        intermediate_constraints = intermediate_constraints.union(self.solver.extract_upper_bounds(inner_world, self_interp_case.id))
                     #end if
                 #end for
 
@@ -3184,12 +3185,27 @@ self_typ:
                 # assert not bool(self_used_constraints.intersection(outer_world.constraints)) 
                 # inner_world = replace(inner_world, constraints = inner_world.constraints.difference(self_used_constraints))
                 # inner_world = replace(inner_world, constraints = inner_world.constraints)
+                #########################
+                # rel_reachable_constraints = pset(
+                #     st
+                #     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                #     if not self.solver.is_constraint_dead(inner_world, extract_free_vars_from_typ(s(), rel_pattern), st)
+                # )
+                # rel_constraints = IH_rel_constraints.union(rel_reachable_constraints).difference(used_constraints)
+                #########################
                 rel_reachable_constraints = pset(
                     st
                     for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                    if not self.solver.is_constraint_dead(inner_world, extract_free_vars_from_typ(s(), rel_pattern), st)
+                    # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
+                    #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
+                    # )
                 )
-                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints).difference(used_constraints)
+                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints) \
+                    .difference(self_constraints) \
+                    .difference(intermediate_constraints) \
+                    .difference(left_constraints) \
+                    .difference(right_constraints)
+                #########################
 
                 print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
