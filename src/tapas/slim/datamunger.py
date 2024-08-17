@@ -154,7 +154,7 @@ def u(t):
 
 def decode_annotations(solver : analyzer.Solver, worlds, placeholders : list[str]) -> PMap[str, analyzer.Typ]:
     return pmap({
-        ph : analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, analyzer.TVar(ph))) 
+        ph : solver.decode_positive_typ(worlds, analyzer.TVar(ph))
         for ph in placeholders
     })
 

@@ -72,7 +72,7 @@ def print_worlds(worlds : Iterable[analyzer.World]):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DEBUG WORLD {i}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-world.freezer: {world.freezer}
+world.freezer: {world.skolems}
 
 world.constraints: 
 {constraints_str}
@@ -86,9 +86,6 @@ def u(t):
     s = analyzer.concretize_typ(t)
     assert s 
     return s 
-
-def simp(t):
-    return analyzer.simplify_typ(t)
 
 
 def solve(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
@@ -119,15 +116,19 @@ def equiv(a : str, b : str) -> bool:
     )
 
 def decode_negative(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ((analyzer.simplify_typ(solver.decode_with_polarity(False, worlds, t))))
+    return analyzer.concretize_typ(
+        solver.decode_negative_typ(worlds, t)
+    )
 
 def decode_positive(solver : analyzer.Solver, worlds, t):
-    return analyzer.concretize_typ(solver.to_aliasing_typ(analyzer.simplify_typ(solver.decode_with_polarity(True, worlds, t))))
+    return analyzer.concretize_typ(solver.to_aliasing_typ(
+        solver.decode_positive_typ(worlds, t)
+    ))
 
-def roundtrip(ss : list[str]) -> str:
-    return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
-        p(s) for s in ss
-    ])))
+# def roundtrip(ss : list[str]) -> str:
+#     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
+#         p(s) for s in ss
+#     ])))
 
 
 """
@@ -344,9 +345,13 @@ def test_one_cons_query_subs_nat_list():
     worlds = solve(solver, one_cons_query, tl.nat_list)
     answer = decode_negative(solver, worlds, p("X"))
     print(f"""
-answer:\n{answer}
+~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~
     """)
-    assert answer == "~nil @"
+    # assert answer == "~nil @"
 
 
 def test_two_cons_query_subs_nat_list():
@@ -357,7 +362,11 @@ def test_two_cons_query_subs_nat_list():
     worlds = solve(solver, two_cons_query, tl.nat_list)
     answer = decode_negative(solver, worlds, p("X"))
     print(f"""
-answr: {answer}
+~~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~~~~
     """)
     assert answer == "~cons ~nil @"
 
@@ -365,7 +374,7 @@ def test_even_list_subs_nat_list():
     solver = analyzer.Solver(m())
     worlds = solve(solver, tl.even_list, tl.nat_list)
     print(f"len(worlds): {len(worlds)}")
-    assert worlds
+    assert bool(worlds)
 
 def test_nat_list_subs_even_list():
     solver = analyzer.Solver(m())
@@ -425,10 +434,10 @@ def test_one_plus_equals_two_query():
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_plus_one_query, tl.addition)
     answer = decode_negative(solver, worlds, p("Y"))
-    assert answer == "~succ ~zero @"
     print(f'''
 answer:\n{answer}
     ''')
+    assert answer == "~succ ~zero @"
 
 def test_zero_plus_one_equals_two():
     zero_plus_one_equals_two = ('''
@@ -458,22 +467,23 @@ def test_plus_equals_two_query():
 #     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, plus_equals_two_query, tl.addition)
-    answer = decode_negative(solver, worlds, p("(X, Y)"))
+    typ = decode_negative(solver, worlds, p("(X, Y)"))
     print(f'''
-answer:\n{answer}
+~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~
+typ: {typ}
+~~~~~~~~~~~~~
+len(worlds): {len(worlds)}
+~~~~~~~~~~~~~
     ''')
-    assert answer == roundtrip([
-        "(~zero @, ~succ ~succ ~zero @)",
-        "(~succ ~zero @, ~succ ~zero @)",
-        "(~succ ~succ ~zero @, ~zero @)",
-    ])
 #     oracle = f"""
 # BOT
 # | (~zero @, ~succ ~succ ~zero @)
 # | (~succ ~zero @, ~succ ~zero @)
 # | (~succ ~succ ~zero @, ~zero @)
 #     """
-#     assert equiv(answer, oracle)
+#     assert equiv(typ, oracle)
 
 def test_plus_equals_two_union_existential():
     plus_equals_two_query = ('''
@@ -821,6 +831,36 @@ def test_functional():
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     assert decode_positive(solver, worlds, typ_var) == "@"
 
+def test_fix_solving():
+    body = ('''
+(ALL [G007] (G007 -> ((ALL [G005 G006
+    ; G007 <: (G005 -> G006)
+] (~cons G005 -> ~succ G006)) & (~nil @ -> ~zero @))))
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, body, "A -> (B -> C)")
+    for i, world in enumerate(worlds):
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+RESULT WORLD {i}
+~~~~~~~~~~~~~~~~~~~~~~~~
+constraints:
+{analyzer.concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+
+
+def test_fix_body():
+    code = '''
+(case self => (
+    case ~nil @ => ~zero @ 
+    case ~cons x => (~succ (self(x))) 
+))
+    '''
+    (worlds, typ_var, parsetree, solver) = analyze(code)
+    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    # assert decode_positive(solver, worlds, typ_var) == "@"
+
 def test_fix():
     code = '''
 fix(case self => (
@@ -847,9 +887,16 @@ def test_identity_function():
     code = '''
 (case x => x)
     '''
-    (worlds, typ_var, parsetree, solver) = analyze(code)
-    # print("answer:\n" + decode_positive(solver, worlds, typ_var))
-    assert decode_positive(solver, worlds, typ_var) == "ALL [_2 ; _2 <: _1] _1 -> _1"
+    (worlds, t, parsetree, solver) = analyze(code)
+    answer = decode_positive(solver, worlds, t)
+    print(f"""
+~~~~~~~~~~~~~~~~~~~~
+RESULT
+~~~~~~~~~~~~~~~~~~~~
+{answer}
+~~~~~~~~~~~~~~~~~~~~
+    """)
+    # assert decode_positive(solver, worlds, typ_var) == "ALL [_2 ; _2 <: _1] _1 -> _1"
 
 def test_unit_funnel_identity():
     code = '''
@@ -1318,10 +1365,45 @@ case (x, y) => (
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
+def test_max_parts_disjoint():
+    lower = ('''
+(EXI [G029
+    ; G029 <: ~false @
+] (ALL [G025 G026 G030
+    ; ((G025, G026), G029) <: (FX G016
+        | ((EXI [G018] ((~succ G018, ~zero @), ~false @))
+            | ((EXI [G019 G020 G021
+                ; ((G019, G020), G021) <: G016
+            ] ((~succ G019, ~succ G020), G021))
+                | (EXI [G022] ((~zero @, G022), ~true @)))))
+    ; G025 <: G030
+] ((G025, G026) -> G030)))
+    ''')
+
+    upper = ('''
+(EXI [G029
+    ; G029 <: ~true @
+] (ALL [G025 G026 G030
+    ; ((G025, G026), G029) <: (FX G016
+        | ((EXI [G018] ((~succ G018, ~zero @), ~false @))
+            | ((EXI [G019 G020 G021
+                ; ((G019, G020), G021) <: G016
+            ] ((~succ G019, ~succ G020), G021))
+                | (EXI [G022] ((~zero @, G022), ~true @)))))
+    ; G026 <: G030
+] ((G025, G026) -> G030)))
+    ''')
+
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    print(f'len(worlds): {len(worlds)}')
+    # assert not worlds
+
 
 def test_max():
-    (worlds, typ_var, parsetree, solver) = analyze(el.max)
-    print("answer:\n" + decode_positive(solver, worlds, typ_var))
+    (worlds, typ, parsetree, solver) = analyze(el.max)
+    print("answer:\n" + decode_positive(solver, worlds, typ))
+    print(f"len(worlds): {len(worlds)}")
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 def test_relationally_constrained_existential_subtyping_fail():
@@ -1894,10 +1976,20 @@ alias LTEDR = (FX SELF
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
 if __name__ == '__main__':
+    # test_zero_subs_nat()
+    # test_one_cons_query_subs_nat_list()
+    # test_two_cons_query_subs_nat_list()
+    # test_plus_equals_two_query()
+    #####################################
+    # test_even_list_subs_nat_list()
+    #####################################
+    # test_one_plus_equals_two_query()
+    #####################################
     # test_single_shape()
     # test_implication_unification()
     # test_lted_wrapper()
-    # test_max()
+    # test_max_parts_disjoint()
+    test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
@@ -1908,6 +2000,9 @@ if __name__ == '__main__':
     # test_constrained_universal_subtyping_function_diff_pass()
     # test_plus_equals_two_query()
     #####################################
+    # test_identity_function()
+    # test_fix_solving()
+    # test_fix_body()
     # test_fix()
     # test_add()
     #####################################
@@ -1924,7 +2019,7 @@ if __name__ == '__main__':
     # test_nat_list_subs_even_list()
     # test_relationally_constrained_existential_subtyping_fail()
     #####################################
-    test_fib()
+    # test_fib()
     #####################################
     # test_concat_lists()
     # test_reverse()

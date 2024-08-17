@@ -3,20 +3,14 @@
 
 
 ### TODO (Symbolic Implementation)
-- replace strongest_upper_bound with combo of interize + filtering
-- replace weakest_lower_bound with combo of unionize + filtering
-- debug `test_plus_equals_two_query`
-- create rigid and extrusion rules
-    - involves both lower and upper bounded extrusions
-    - or in a Rigid rule in subtyping
-    - rationale limits extrusion to cases where a rigid variable is constrained by a flexible variable 
-    - less clutter than eagerly extruding in function rule
-- ensure that multistep resolving/substitution isn't used during solving
-    - only sub out a variable and its constraint when it's clear that the variable will not be referenced elsewhere
+- add inhabitable / well-formed type check to typing rules
 - consider splitting constraints like SuperF's outer/inner functions
-- consider rewriting variable rules to bypass indirection into intersection and union in variable rules 
-- consider rewriting function to avoid erasing constraint relations in output.
-    e.g. (Do not erase input variable information in output of factor function)
+- make sure check is sound before using in `simplify typ`
+    - debug on `test_max`
+    - cases of `test_max` should be disjoint
+
+- consider separating find factors from extract_upper_bounds
+- debug the extra intersections in `test_one_plus_equals_two_query`, `test_plus_equals_two_query`
 - figure out non-termination in `test_existential_fixpoint_subs_false`
     - modify rewriting to avoid infinitely rewriting
         - ensure that constraint is rewritten int pair of variables to avoid infinite substitution
@@ -94,6 +88,25 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how transitive skolems from flex vars are checked and added to worlds
+- No need for extrusion rules
+    - SuperF missed a simpler solution; just keep the constraint local
+    - involves both lower and upper bounded extrusions
+    - or in a Rigid rule in subtyping
+    - rationale limits extrusion to cases where a rigid variable is constrained by a flexible variable 
+    - less clutter than eagerly extruding in function rule
+- note that extrusion a la SuperF isn't necessary
+    - my way: All[A] A -> (All [B ; A <: B -> T] ...B...)   
+    - superF Extrusion: - my way: All[A B' ; A <: B' -> T] A -> (All [B ; B <: B'] ...B...)   
+- assess order of rules and follow order in implementation
+- note that (lower, Exi) must be before (upper, Flex)
+    - and (upper, All) must be before (lower, Flex)
+    - to avoid divergence 
+    - since need to reduce to skolem to detect potential infinite loop
+- note that (lower, Unio) and (upper, Inter) rules can appear before variable rules
+    - to ensure that lower bounds are union-free and upper bounds are inter-free
+- note that (lower, Inter) rule should be after the fixpoint rules.
+    - in order to keep the relation intact, and not over weaken too soon.
 - note that SuperF's RHS Universal rule discards the inner constraints
     - this is because RHS Universal doesn't have constraints
     - this is different from mine. My system cannot discard inner constraints
