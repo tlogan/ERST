@@ -88,6 +88,11 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- rewrite subtype constraint solving rules to match implementation and get order right
+- write type reconstruction rules
+- write declarative subtyping rules
+- write declarative typing rules
+- write interpretation of types into sets
 - note how transitive skolems from flex vars are checked and added to worlds
 - No need for extrusion rules
     - SuperF missed a simpler solution; just keep the constraint local

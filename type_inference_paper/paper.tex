@@ -61,6 +61,8 @@
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
 \newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1}}
+
+\newcommand{\sep}{\ |\ }
      
 
 
@@ -613,11 +615,11 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \code{\textasciitilde{}$l$ $e$} &\C{tag}
   \\
-  \I \widebar{\code{;$l$=$e$}} &\C{record}
+  \I r &\C{record}
   \\
   \I \code{$e$,$e$} &\C{tuple}
   \\
-  \I \widebar{\code{case $p$=>$e$}} &\C{function}
+  \I f &\C{function}
   \\
   \I \code{$e$.$l$} &\C{projection}
   \\
@@ -631,20 +633,26 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \I \code{($e$)} &\C{association}
   \\
+r ::= \code{;$l$=$e$} \sep r\ \code{;$l$=$e$} &\C{record}
+  \\
+f ::= \code{case $p$=>$e$} \sep f\ \code{case $p$=>$e$} &\C{function}
+  \\
   \\
 p ::= &\C{pattern}
   \\
-  \I \code{$x$} &\C{variable}
+  \I \code{$x$} &\C{variable pattern}
   \\
-  \I \code{@} &\C{unit}
+  \I \code{@} &\C{unit pattern}
   \\
-  \I \code{\textasciitilde{}$l$ $p$} &\C{tag}
+  \I \code{\textasciitilde{}$l$ $p$} &\C{tag pattern}
   \\
-  \I \widebar{\code{;$l$=$p$}} &\C{record}
+  \I b &\C{record pattern}
   \\
-  \I \code{$p$,$p$} &\C{tuple}
+  \I \code{$p$,$p$} &\C{tuple pattern}
   \\
-  \I \code{($p$)} &\C{association}
+  \I \code{($p$)} &\C{association pattern}
+  \\
+b ::= \code{;$l$=$p$} \sep b\ \code{;$l$=$p$} &\C{record pattern}
   \\
   \\
 v ::= &\C{value}
@@ -662,15 +670,24 @@ v ::= &\C{value}
   \I \code{($v$)} &\C{association}
   \\
   \\
-\mathbb{V} \owns v &\C{set of values}
+\vec{\alpha} ::= \epsilon \sep \vec{\alpha}\ \alpha &\C{collection of type variables}
   \\
-\mathbb{W} \owns (v,v) &\C{set of value-value pairs}
+\mathbb{V} ::= \epsilon \sep \mathbb{V} \cdot v &\C{collection of values}
   \\
-\mathbb{R} \owns (l,v) &\C{set of label-value pairs}
+\mathbb{W} ::= \epsilon \sep \mathbb{W} \cdot (v,v) &\C{collection of value-value pairs}
   \\
-\mathbb{H} \owns x \mapsto v &\C{set of value bindings}
+\mathbb{R} ::= \epsilon \sep \mathbb{R} \cdot (l,v) &\C{collection of label-value pairs}
   \\
-\Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
+\mathbb{H} ::= \epsilon \sep \mathbb{H} \cdot x \mapsto v &\C{collection of value bindings}
+  \\
+\Gamma ::= \epsilon \sep \Gamma \cdot \code{$x$:$\tau$} &\C{collection of typings}
+  \\
+\Delta ::= \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$} &\C{collection of subtypings}
+  \\
+c ::= \code{$x$:$\tau$} \sep \code{$\tau$<:$\tau$} &\C{collectable}
+  \\
+% \mathbb{C} ::= \mathbb{H} \sep \Gamma &\C{collection}
+C ::= \epsilon \sep C \cdot c \sep C\ c &\C{collection of collectables}
 %   \\
 %   \\
 % f ::= &\C{function}
@@ -686,8 +703,45 @@ v ::= &\C{value}
 \end{array}
 \]
 
-\caption{Expression Syntax}
-\label{fig:expr_syntax}
+\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
+\label{fig:syntax}
+\end{figure*}
+
+
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{c \in C}&
+\end{flalign*}
+\begin{mathpar}
+
+  \inferrule[MatchDot] {
+  } {
+    c \in C \cdot c
+  }
+
+  \inferrule[StepDot] {
+    c \neq c 
+    \\
+    c \in C
+  } {
+    c \in C \cdot c' 
+  }
+
+  \inferrule[MatchSpace] {
+  } {
+    c \in C\ c 
+  }
+
+  \inferrule[StepSpace] {
+    c \neq c 
+    \\
+    c \in C
+  } {
+    c \in C\ c' 
+  }
+\end{mathpar}
+\caption{Collection Tools}
+\label{fig:collection_tools}
 \end{figure*}
 
 
