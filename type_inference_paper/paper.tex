@@ -62,7 +62,9 @@
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
 \newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1}}
 
-\newcommand{\sep}{\ |\ }
+\newcommand{\is}{\ ::=\ }
+\newcommand{\sep}{\ \ |\ \ }
+\newcommand{\nonterm}[2]{#1\ \ \ #2\ }
      
 
 
@@ -531,175 +533,94 @@ rather than merely a type variable to allow for relational constraints.
 
 \begin{figure*}[h]
 \[
-% \begin{array}[t]{l r}
-%   e ::= &\C{expression}
-%   \\
-%   \I \code{$x$} &\C{variable}
-%   \\
-%   \I \code{()} &\C{unit}
-%   \\
-%   \I \code{\#$l$ $e$}  &\C{tag}
-%   \\
-%   \I \widebar{\code{@$l$=$e$}} &\C{record}
-%   \\
-%   \I \widebar{\code{path $m$=>$e$}} &\C{function}
-%   \\
-%   \I \code{$e$.$l$} &\C{projection}
-%   \\
-%   \I \code{$e$($e$)} &\C{application}
-%   \\
-%   \I \code{fix($e$)} &\C{fix}
-%   \\
-%   \I \code{let $x$ : $\tau$ = $e$ in $e$}  &\C{let}
-%   \\
-% m ::= &\C{pattern}
-%   \\
-%   \I \code{$x$} &\C{variable}
-%   \\
-%   \I \code{()} &\C{unit}
-%   \\
-%   \I \code{\#$l$ $e$}  &\C{tag}
-%   \\
-%   \I \widebar{\code{@$l$=$e$}} &\C{record}
-% \end{array}
-\begin{array}[t]{l r}
-\tau ::= &\C{type}
+\begin{array}[t]{r@{}l}
+\nonterm{Type}{\tau} & \is 
+  \begin{array}[t]{@{}l}
+  \code{$\alpha$} \sep 
+  \code{@} \sep
+  \code{\textasciitilde{}$l$ $\tau$} \sep 
+  \code{$l$:$\tau$} \sep 
+  \code{$\tau$->$\tau$} \sep
+  \code{$\tau$|$\tau$} \sep
+  \code{$\tau$\&$\tau$} \sep
+  \code{$\tau$\textbackslash$\tau$} \sep 
   \\
-  \I \code{$\alpha$}  &\C{variable}
+  \code{EXI[$Q$] $\tau$} \sep 
+  \code{ALL[$Q$] $\tau$} \sep 
+  \code{FIX[$\alpha$;$\tau$]}
+  \end{array}
+\\
+\\
+\nonterm{Qualification}{Q} & \is
+  \vec{\alpha} \sep 
+  \code{$Q$ ; $\tau$<:$\tau$} 
+\\
+\\
+\nonterm{Type\ var.\ seq.}{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
+\\
+\\
+\nonterm{Expression}{e} & \is 
+  \begin{array}[t]{@{}l}
+  \code{$x$} \sep 
+  \code{@} \sep
+  \code{\textasciitilde{}$l$ $e$} \sep 
+  r \sep
+  \code{$e$,$e$} \sep
+  f \sep 
+  \code{$e$.$l$} \sep
+  \code{($e$)($e$)} \sep
   \\
-  \I \code{@} &\C{unit}
-  \\
-  \I \code{\textasciitilde{}$l$ $\tau$} &\C{tag}
-  \\
-  \I \code{$l$:$\tau$} &\C{field}
-  \\
-  \I \code{$\tau$->$\tau$} &\C{implication}
-  \\
-  \I \code{$\tau$|$\tau$} &\C{union}
-  \\
-  \I \code{$\tau$\&$\tau$} &\C{intersection}
-  \\
-  \I \code{$\tau$\textbackslash$\tau$} &\C{difference}
-  \\
-  \I \code{EXI[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed union}
-  \\
-  \I \code{ALL[$\widebar{\alpha}$ $Q$] $\tau$} &\C{indexed intersection}
-  \\
-  \I \code{LFP[$\alpha$|$\tau$]} &\C{least fixed point}
-  \\
-  Q ::= &\C{subtyping qualification}
-  \\
-  \I \epsilon &\C{empty}
-  \\
-  \I \code{$Q$ ; $\tau$<:$\tau$} &\C{subtyping extension}
-  \\
-  \\
-  \Delta \owns \code{$\tau$<:$\tau$} &\C{set of subtyping constraints}
-  \\
-  \Omega \owns \code{$\alpha$} &\C{set of skolem type variables}
-\end{array}
-\]
-\caption{Type Syntax}
-\label{fig:type_syntax}
-\end{figure*}
-
-
-\begin{figure*}[h]
-\[
-\begin{array}[t]{l r}
-  e ::= &\C{expression}
-  \\
-  \I \code{$x$} &\C{variable}
-  \\
-  \I \code{@} &\C{unit}
-  \\
-  \I \code{\textasciitilde{}$l$ $e$} &\C{tag}
-  \\
-  \I r &\C{record}
-  \\
-  \I \code{$e$,$e$} &\C{tuple}
-  \\
-  \I f &\C{function}
-  \\
-  \I \code{$e$.$l$} &\C{projection}
-  \\
-  \I \code{($e$)($e$)} &\C{application}
-  \\
-  \I \code{$e$ |> $e$} &\C{funneling}
-  \\
-  \I \code{fix($e$)} &\C{recursion}
-  \\
-  \I \code{let $x$:$\tau$ = $e$ in $e$} &\C{binding}
-  \\
-  \I \code{($e$)} &\C{association}
-  \\
-r ::= \code{;$l$=$e$} \sep r\ \code{;$l$=$e$} &\C{record}
-  \\
-f ::= \code{case $p$=>$e$} \sep f\ \code{case $p$=>$e$} &\C{function}
-  \\
-  \\
-p ::= &\C{pattern}
-  \\
-  \I \code{$x$} &\C{variable pattern}
-  \\
-  \I \code{@} &\C{unit pattern}
-  \\
-  \I \code{\textasciitilde{}$l$ $p$} &\C{tag pattern}
-  \\
-  \I b &\C{record pattern}
-  \\
-  \I \code{$p$,$p$} &\C{tuple pattern}
-  \\
-  \I \code{($p$)} &\C{association pattern}
-  \\
-b ::= \code{;$l$=$p$} \sep b\ \code{;$l$=$p$} &\C{record pattern}
-  \\
-  \\
-v ::= &\C{value}
-  \\
-  \I \code{@} &\C{unit}
-  \\
-  \I \code{\#$l$ $v$}  &\C{tag}
-  \\
-  \I \mathbb{R} &\C{record}
-  \\
-  \I \code{$v$,$v$} &\C{tuple}
-  \\
-  \I \mathbb{W} &\C{function}
-  \\
-  \I \code{($v$)} &\C{association}
-  \\
-  \\
-\vec{\alpha} ::= \epsilon \sep \vec{\alpha}\ \alpha &\C{collection of type variables}
-  \\
-\mathbb{V} ::= \epsilon \sep \mathbb{V} \cdot v &\C{collection of values}
-  \\
-\mathbb{W} ::= \epsilon \sep \mathbb{W} \cdot (v,v) &\C{collection of value-value pairs}
-  \\
-\mathbb{R} ::= \epsilon \sep \mathbb{R} \cdot (l,v) &\C{collection of label-value pairs}
-  \\
-\mathbb{H} ::= \epsilon \sep \mathbb{H} \cdot x \mapsto v &\C{collection of value bindings}
-  \\
-\Gamma ::= \epsilon \sep \Gamma \cdot \code{$x$:$\tau$} &\C{collection of typings}
-  \\
-\Delta ::= \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$} &\C{collection of subtypings}
-  \\
-c ::= \code{$x$:$\tau$} \sep \code{$\tau$<:$\tau$} &\C{collectable}
-  \\
-% \mathbb{C} ::= \mathbb{H} \sep \Gamma &\C{collection}
-C ::= \epsilon \sep C \cdot c \sep C\ c &\C{collection of collectables}
-%   \\
-%   \\
-% f ::= &\C{function}
-%   \\
-%   \I \widebar{\code{case $p$=>$e$}} &\C{function}
-%   \\
-%   \\
-% \Gamma \owns \code{$x$:$\tau$} &\C{set of typing constraints}
-%   \\
-% \mathbb{V} \owns v &\C{set of values}
-%   \\
-% \mathbb{H} \owns x \mapsto v &\C{set of value bindings}
+  \code{$e$ |> $e$} \sep
+  \code{fix($e$)} \sep
+  \code{let $x$:$\tau$ = $e$ in $e$} \sep
+  \code{($e$)}
+  \end{array}
+\\
+\\
+\nonterm{Record}{r} & \is 
+  \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
+\\
+\\
+\nonterm{Function}{f} & \is 
+  \code{case $p$=>$e$} \sep f\ \code{case $p$=>$e$}
+\\
+\\
+\nonterm{Pattern}{p} & \is 
+  \code{$x$} \sep
+  \code{@} \sep
+  \code{\textasciitilde{}$l$ $p$} \sep
+  b \sep
+  \code{$p$,$p$} \sep
+  \code{($p$)} 
+\\
+\\
+\nonterm{Record\ pttn.}{b} & \is 
+  \code{;$l$=$p$} \sep b\ \code{;$l$=$p$}
+\\
+\\
+\nonterm{Value\ ctx.}{\Omega} & \is 
+  \epsilon \sep \Omega \cdot x \mapsto v
+\\  
+\\  
+\nonterm{Typing\ ctx.}{\Gamma} & \is 
+  \epsilon \sep \Gamma \cdot \code{$x$:$\tau$}
+\\
+\\  
+\nonterm{Subtyping\ ctx.}{\Delta} & \is 
+  \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
+\\
+\\
+\nonterm{Collectable}{c} & \is 
+  \cdot \code{$x$:$\tau$} \sep 
+  \cdot \code{$\tau$<:$\tau$} \sep
+  \code{;$l$=$e$} \sep
+  \code{;$l$=$p$} \sep
+  \code{case $p$=>$e$} \sep
+  \alpha
+\\
+\\
+\nonterm{Collection}{C} & \is 
+  \epsilon \sep c \sep C\ c
 \end{array}
 \]
 
@@ -714,26 +635,19 @@ C ::= \epsilon \sep C \cdot c \sep C\ c &\C{collection of collectables}
 \end{flalign*}
 \begin{mathpar}
 
-  \inferrule[MatchDot] {
-  } {
-    c \in C \cdot c
-  }
 
-  \inferrule[StepDot] {
-    c \neq c 
-    \\
-    c \in C
-  } {
-    c \in C \cdot c' 
-  }
-
-  \inferrule[MatchSpace] {
+  \inferrule[MatchOne] {
   } {
     c \in C\ c 
   }
 
-  \inferrule[StepSpace] {
-    c \neq c 
+  \inferrule[MatchAll] {
+  } {
+    c \in c 
+  }
+
+  \inferrule[Step] {
+    c \neq c'
     \\
     c \in C
   } {
