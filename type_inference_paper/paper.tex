@@ -64,7 +64,7 @@
 
 \newcommand{\is}{\ ::=\ }
 \newcommand{\sep}{\ \ |\ \ }
-\newcommand{\nonterm}[2]{#1\ \ \ #2\ }
+\newcommand{\nonterm}[1]{#1\ }
      
 
 
@@ -534,7 +534,7 @@ rather than merely a type variable to allow for relational constraints.
 \begin{figure*}[h]
 \[
 \begin{array}[t]{r@{}l}
-\nonterm{Type}{\tau} & \is 
+\nonterm{\tau} & \is 
   \begin{array}[t]{@{}l}
   \code{$\alpha$} \sep 
   \code{@} \sep
@@ -551,15 +551,15 @@ rather than merely a type variable to allow for relational constraints.
   \end{array}
 \\
 \\
-\nonterm{Qualification}{Q} & \is
+\nonterm{Q} & \is
   \vec{\alpha} \sep 
   \code{$Q$ ; $\tau$<:$\tau$} 
 \\
 \\
-\nonterm{Type\ var.\ seq.}{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
+\nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
 \\
 \\
-\nonterm{Expression}{e} & \is 
+\nonterm{e} & \is 
   \begin{array}[t]{@{}l}
   \code{$x$} \sep 
   \code{@} \sep
@@ -577,15 +577,15 @@ rather than merely a type variable to allow for relational constraints.
   \end{array}
 \\
 \\
-\nonterm{Record}{r} & \is 
+\nonterm{r} & \is 
   \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
 \\
 \\
-\nonterm{Function}{f} & \is 
+\nonterm{f} & \is 
   \code{case $p$=>$e$} \sep f\ \code{case $p$=>$e$}
 \\
 \\
-\nonterm{Pattern}{p} & \is 
+\nonterm{p} & \is 
   \code{$x$} \sep
   \code{@} \sep
   \code{\textasciitilde{}$l$ $p$} \sep
@@ -594,23 +594,23 @@ rather than merely a type variable to allow for relational constraints.
   \code{($p$)} 
 \\
 \\
-\nonterm{Record\ pttn.}{b} & \is 
+\nonterm{b} & \is 
   \code{;$l$=$p$} \sep b\ \code{;$l$=$p$}
 \\
 \\
-\nonterm{Value\ ctx.}{\Omega} & \is 
+\nonterm{\Omega} & \is 
   \epsilon \sep \Omega \cdot x \mapsto v
 \\  
 \\  
-\nonterm{Typing\ ctx.}{\Gamma} & \is 
+\nonterm{\Gamma} & \is 
   \epsilon \sep \Gamma \cdot \code{$x$:$\tau$}
 \\
 \\  
-\nonterm{Subtyping\ ctx.}{\Delta} & \is 
+\nonterm{\Delta} & \is 
   \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
 \\
 \\
-\nonterm{Collectable}{c} & \is 
+\nonterm{c} & \is 
   \cdot \code{$x$:$\tau$} \sep 
   \cdot \code{$\tau$<:$\tau$} \sep
   \code{;$l$=$e$} \sep
@@ -619,7 +619,7 @@ rather than merely a type variable to allow for relational constraints.
   \alpha
 \\
 \\
-\nonterm{Collection}{C} & \is 
+\nonterm{C} & \is 
   \epsilon \sep c \sep C\ c
 \end{array}
 \]
@@ -631,10 +631,9 @@ rather than merely a type variable to allow for relational constraints.
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{c \in C}&
+  &{\boxed{c \in C}}&
 \end{flalign*}
 \begin{mathpar}
-
 
   \inferrule[MatchOne] {
   } {
