@@ -610,9 +610,32 @@ rather than merely a type variable to allow for relational constraints.
   \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
 \\
 \\
+\nonterm{v} & \is 
+  \code{@} \sep
+  \code{\textasciitilde{}$l$ $v$} \sep
+  b \sep
+  \code{$v$,$v$} \sep
+  \code{($v$)} \sep
+  f
+\\
+\\
+\nonterm{u} & \is 
+  \code{@} \sep
+  \code{\textasciitilde{}$l$ $u$} \sep
+  b \sep
+  \code{$u$,$u$} \sep
+  \code{($u$)} \sep
+  W
+\\
+\\
+\nonterm{W} & \is 
+  \epsilon \sep W \cdot (u,u)
+\\
+\\
 \nonterm{c} & \is 
   \cdot \code{$x$:$\tau$} \sep 
   \cdot \code{$\tau$<:$\tau$} \sep
+  \cdot (v,v) \sep 
   \code{;$l$=$e$} \sep
   \code{;$l$=$p$} \sep
   \code{case $p$=>$e$} \sep
@@ -660,100 +683,114 @@ rather than merely a type variable to allow for relational constraints.
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{e \longrightarrow e}&
+  &\boxed{e \rightsquigarrow e}&
 \end{flalign*}
 \begin{mathpar}
 
   \inferrule[Tag] {
-    e \longrightarrow e'
+    e \rightsquigarrow e'
   } {
-    \code{\textasciitilde{}$l$ $e$} \longrightarrow \code{\textasciitilde{}$l$ $e'$}
+    \code{\textasciitilde{}$l$ $e$} \rightsquigarrow \code{\textasciitilde{}$l$ $e'$}
   }
 
-  \inferrule[RemainderRecord] {
-    e \longrightarrow e'
+  \inferrule[RecordBody] {
+    e \rightsquigarrow e'
   } {
-    \code{;$l$=$v$} :: e \longrightarrow \code{;$l$=$v$} :: e' 
+    \code{$r$;$l$=$e$} \rightsquigarrow \code{$r$;$l$=$e'$}
   }
 
-  \inferrule[FirstRecord] {
-    e \longrightarrow e'
+  \inferrule[RecordStep] {
+    r \rightsquigarrow r'
   } {
-    \code{;$l$=$e$} :: e_r \longrightarrow \code{;$l$=$e'$} :: e_r
+    \code{$r$;$l$=$v$} \rightsquigarrow \code{$r'$;$l$=$v$}
   }
 
-
-  \inferrule[FirstProjection] {
-    e \longrightarrow e'
+  \inferrule[Projector] {
+    e \rightsquigarrow e'
   } {
-    \code{$e$.$l$} \longrightarrow \code{$e'$.$l$}
+    \code{$e$.$l$} \rightsquigarrow \code{$e'$.$l$}
   }
 
   \inferrule[Projection] {
-    \lor_i(i = j)
-  } {
-    \widebar{\code{;$l_i$=$v_i$}}^i\code{.$l_j$} \longrightarrow v_j
-  }
-
-  \inferrule[FirstApplication] {
-    e \longrightarrow e'
-  } {
-    \code{($e$)($e_a$)} \longrightarrow \code{($e'$)($e_a$)}
-  }
-
-
-  \inferrule[MatchedApplication] {
-    unify(p,v) = \mathbb{H}
-  } {
-    \code{(case $p$=>$e$ $::$ $e_r$)($v$)} \longrightarrow subst(e, \mathbb{H})
-  }
-
-  \inferrule[NextApplication] {
-    unify(p, v) \neq \mathbb{H}
+    \code{;$l$=$v$} \in r 
     \\
-    \code{($cases$)($v$)} \longrightarrow e_b 
+    \forall\ v' .\ \code{;$l$=$v'$} \in r \rightarrow v = v'
+    % \forall v' . \code{;$l$=$v'$} \in r \rightrarrow v = v'
   } {
-    \code{(case $p$=>$e_a$ $::$ $e_r$)($v$)} \longrightarrow e_b 
+    \code{$r$.$l$} \rightsquigarrow v
   }
 
-  \inferrule[FirstBinding] {
-    e \longrightarrow e'
+  \inferrule[Applicator] {
+    e \rightsquigarrow e'
   } {
-    \code{let $x$:$\tau$ = $e$ in $e_k$} \longrightarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
+    \code{($e$)($e_a$)} \rightsquigarrow \code{($e'$)($e_a$)}
   }
 
-  \inferrule[Binding] {
+  \inferrule[Applicand] {
+    e \rightsquigarrow e'
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \longrightarrow subst(e, \{x \mapsto v\})
+    \code{($v$)($e$)} \rightsquigarrow \code{($v$)($e'$)}
   }
 
-  \inferrule[FirstRecursion] {
-    e \longrightarrow e'
+
+  \inferrule[ApplicationSingle] {
+    \text{unify}(p,v) = \Omega 
   } {
-    \code{fix(e)} \longrightarrow \code{fix(e')}
+    \code{(case $p$=>$e$)($v$)} \rightsquigarrow \text{subst}(e, \Omega)
+  }
+
+  \inferrule[ApplicationStep] {
+    \code{($e$)($v$)} \rightsquigarrow e'
+  } {
+    \code{($e$ case $p$=>$e_a$)($v$)} \rightsquigarrow e' 
+  }
+
+  \inferrule[ApplicationSkip] {
+    \neg (\exists\ e' .\ \code{($e$)($v$)} \rightsquigarrow e')
+    \\
+    \code{(case $p$=>$e$)($v$)} \rightsquigarrow e'
+  } {
+    \code{($e$ case $p$=>$e_a$)($v$)} \rightsquigarrow e' 
+  }
+
+  \inferrule[LetTarget] {
+    e \rightsquigarrow e'
+  } {
+    \code{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
+  }
+
+  \inferrule[LetContin] {
+  } {
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \mapsto v)
+  }
+
+  \inferrule[FixTarget] {
+    e \rightsquigarrow e'
+  } {
+    \code{fix(e)} \rightsquigarrow \code{fix(e')}
   }
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \longrightarrow subst(e, \{x \mapsto \code{fix(case $x$ => $e$)}\})
+    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \mapsto \code{fix(case $x$ => $e$)})
   }
 
   \inferrule[Tuple] {
-    \code{;left=$e_a$ ;right=$e_b$} \longrightarrow e' 
+    \code{;left=$e_a$ ;right=$e_b$} \rightsquigarrow e' 
   } {
-    \code{$e_a$,$e_b$} \longrightarrow e' 
+    \code{$e_a$,$e_b$} \rightsquigarrow e' 
   }
 
   \inferrule[Funneling] {
-    \code{($e_b$)($e_a$)} \longrightarrow e' 
+    \code{($e_b$)($e_a$)} \rightsquigarrow e' 
   } {
-    \code{$e_a$ |> $e_b$} \longrightarrow e' 
+    \code{$e_a$ |> $e_b$} \rightsquigarrow e' 
   }
 
   \inferrule[Assoc] {
-    e \longrightarrow e' 
+    e \rightsquigarrow e' 
   } {
-    \code{($e$)} \longrightarrow e' 
+    \code{($e$)} \rightsquigarrow e' 
   }
 \end{mathpar}
 \caption{Operational Semantics}
@@ -766,7 +803,7 @@ rather than merely a type variable to allow for relational constraints.
     \oslash \vdash e : \tau
   } {
     (e = v) \vee 
-    e \longrightarrow e'
+    e \rightsquigarrow e'
   } 
 \end{mathpar}
 \end{theorem}
@@ -777,7 +814,7 @@ rather than merely a type variable to allow for relational constraints.
   \inferrule { 
     \oslash \vdash e : \tau
     \\
-    e \longrightarrow e'
+    e \rightsquigarrow e'
   } {
     \oslash \vdash e' : \tau
   } 
@@ -803,24 +840,34 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \llbracket \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
 &=& 
-\{ \code{\textasciitilde{}$l$ $v$}\ |\ v \in \llbracket \tau \rrbracket \}
+\{ \code{\textasciitilde{}$l$ $u$}\ |\ u \in \llbracket \tau \rrbracket \}
 & \C{tag} 
 \\
 \llbracket \code{$l$:$\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ \mathbb{R} \ |\ \forall\ v . 
-\\ \I (l, v) \in \mathbb{R} \rightarrow v \in \llbracket \tau \rrbracket
+\{ r \ |\ 
+\\
+\I \code{;$l$=$u$} \in r\ \land\ 
+\\
+\I u \in \llbracket \tau \rrbracket\ \land\ 
+\\
+\I (\forall\ u'\ .\ \code{;$l$=$u'$} \in r \rightarrow u' = u)
 \\
 \}
 \end{array}
-& \C{field} 
+& \C{record} 
 \\
 \llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ \mathbb{W} \ |\ \forall\ (v_a, v_c) \in \mathbb{W} .
-\\ \I v_a \in \llbracket \tau_a \rrbracket \rightarrow v_c \in \llbracket \tau_c \rrbracket
+\{ W \ |\ 
+\\
+\I \cdot (u_a, u_c) \in W\ \land\ 
+\\ 
+\I u_a \in \llbracket \tau_a \rrbracket \rightarrow u_c \in \llbracket \tau_c \rrbracket\ \land\ 
+\\
+\I (\forall\ u_c'\ .\ (u_a, u_c') \in w \rightarrow u_c' = u_c)
 \\
 \}
 \end{array}
@@ -850,9 +897,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ v \ |\ \exists\ \sigma . 
+\{ u \ |\ \exists\ \sigma . 
 \\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \land\ 
-\\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
+\\ \I u \in \llbracket subst(\sigma, \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -862,9 +909,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ v \ |\  \forall\ \sigma . 
+\{ u \ |\  \forall\ \sigma . 
 \\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
-\\ \I v \in \llbracket subst(\sigma, \tau) \rrbracket
+\\ \I u \in \llbracket subst(\sigma, \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -874,9 +921,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{LFP[$\alpha$|$\tau$]} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\mu  \mathbb{V}' . \{ v  \ |\  \exists v' . 
-\\ \I v' \in \mathbb{V}' \ \land\ 
-\\ \I v \in \llbracket subst(\{\alpha \mapsto v'\}, \tau) \rrbracket
+\mu  \mathbb{V}' . \{ u  \ |\  \exists u' . 
+\\ \I u' \in \mathbb{V}' \ \land\ 
+\\ \I u \in \llbracket subst(\{\alpha \mapsto u'\}, \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -1609,7 +1656,7 @@ the variable's upper bound.
 %     \\
 %     \bigand_{\Delta'}
 %     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
-%     \longrightarrow
+%     \rightsquigarrow
 %     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
 %   } { 
 %     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
@@ -2624,7 +2671,7 @@ Different: RLT isn't cartesian
 %     \\
 %     \bigand_{\Delta'}
 %     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
-%     \longrightarrow
+%     \rightsquigarrow
 %     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
 %   } { 
 %     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
