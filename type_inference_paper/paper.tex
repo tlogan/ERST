@@ -598,8 +598,8 @@ rather than merely a type variable to allow for relational constraints.
   \code{;$l$=$p$} \sep b\ \code{;$l$=$p$}
 \\
 \\
-\nonterm{\Omega} & \is 
-  \epsilon \sep \Omega \cdot x \mapsto v
+\nonterm{\sigma} & \is 
+  \epsilon \sep \sigma \cdot x \mapsto v
 \\  
 \\  
 \nonterm{\Gamma} & \is 
@@ -734,9 +734,9 @@ rather than merely a type variable to allow for relational constraints.
 
 
   \inferrule[ApplicationSingle] {
-    \text{unify}(p,v) = \Omega 
+    \text{unify}(p,v) = \sigma 
   } {
-    \code{(case $p$=>$e$)($v$)} \rightsquigarrow \text{subst}(e, \Omega)
+    \code{(case $p$=>$e$)($v$)} \rightsquigarrow \text{subst}(e, \sigma)
   }
 
   \inferrule[ApplicationStep] {
@@ -846,11 +846,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{$l$:$\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ r \ |\ 
+\{ r \ |\ \forall\ u\ .\ (u \in \llbracket \tau \rrbracket) \rightarrow
 \\
 \I \code{;$l$=$u$} \in r\ \land\ 
-\\
-\I u \in \llbracket \tau \rrbracket\ \land\ 
 \\
 \I (\forall\ u'\ .\ \code{;$l$=$u'$} \in r \rightarrow u' = u)
 \\
@@ -861,11 +859,9 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ W \ |\ 
+\{ W \ |\ \forall\ u_a\ u_c\ .\ (u_a \in \llbracket \tau_a \rrbracket) \rightarrow (u_c \in \llbracket \tau_c \rrbracket) \rightarrow
 \\
 \I \cdot (u_a, u_c) \in W\ \land\ 
-\\ 
-\I u_a \in \llbracket \tau_a \rrbracket \rightarrow u_c \in \llbracket \tau_c \rrbracket\ \land\ 
 \\
 \I (\forall\ u_c'\ .\ (u_a, u_c') \in w \rightarrow u_c' = u_c)
 \\
@@ -894,36 +890,50 @@ rather than merely a type variable to allow for relational constraints.
 \llbracket \tau_b \rrbracket 
 & \C{difference}
 \\
-\llbracket \code{EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
+\llbracket \code{EXI[$Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ u \ |\ \exists\ \sigma . 
-\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \land\ 
-\\ \I u \in \llbracket subst(\sigma, \tau) \rrbracket
+\{ u \ |\ \exists\ \omega . 
+\\
+\I \vec{\alpha} \cdot \Delta = Q\ \land\ 
+\\ 
+\I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+\\
+\I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \land\ 
+\\ 
+\I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
 \\
 \}
 \end{array}
 & 
 \C{indexed union}
 \\
-\llbracket \code{ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau$} \rrbracket 
+\llbracket \code{ALL[$Q$] $\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\{ u \ |\  \forall\ \sigma . 
-\\ \I keys(\sigma) = \{\alpha_i\}_i\ \land\ \llbracket subst(\sigma, Q) \rrbracket \ \rightarrow  
-\\ \I u \in \llbracket subst(\sigma, \tau) \rrbracket
+\{ u \ |\  \forall\ \omega . 
+\\
+\I \vec{\alpha} \cdot \Delta = Q\ \land\ 
+\\ 
+\I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+\\
+\I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \rightarrow  
+\\
+\I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
 \\
 \}
 \end{array}
 & 
 \C{indexed intersection}
 \\
-\llbracket \code{LFP[$\alpha$|$\tau$]} \rrbracket 
+\llbracket \code{FIX[$\alpha$]$\tau$} \rrbracket 
 &=& 
 \begin{array}[t]{@{}l}
-\mu  \mathbb{V}' . \{ u  \ |\  \exists u' . 
-\\ \I u' \in \mathbb{V}' \ \land\ 
-\\ \I u \in \llbracket subst(\{\alpha \mapsto u'\}, \tau) \rrbracket
+\mu\ \mathbb{V}'\ .\ \{ u  \ |\ \exists\ \tau'\ .
+\\
+\I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
+\\ 
+\I u \in \llbracket \text{subst}(\epsilon \cdot \alpha \mapsto \tau', \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -932,7 +942,7 @@ rather than merely a type variable to allow for relational constraints.
 \end{array}
 \]
 \begin{flalign*}
-  &\boxed{\llbracket Q \rrbracket = \phi }&
+  &\boxed{\llbracket \Delta \rrbracket = \phi }&
 \end{flalign*}
 \[
 \begin{array}{rclr}
@@ -941,9 +951,9 @@ rather than merely a type variable to allow for relational constraints.
 \top
 & \C{empty} 
 \\
-\llbracket \code{$Q$ ; $\tau_l$<:$\tau_u$} \rrbracket 
+\llbracket \Delta \cdot \code{$\tau_l$<:$\tau_u$} \rrbracket 
 &=& 
-\llbracket Q \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
+\llbracket \Delta \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
 & \C{extension} 
 \end{array}
 \]

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  23 AUG 2024 10:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  23 AUG 2024 20:37
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1044,65 +1044,65 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
 (Font)              scaled to size 10.0pt on input line 800.
 
-Class acmart Warning: A possible image without description on input line 952.
+Class acmart Warning: A possible image without description on input line 962.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 956.
+LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 966.
 
 
-LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 1051.
+LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 1061.
 
 [7.7{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}]
 
-Class acmart Warning: A possible image without description on input line 1267.
+Class acmart Warning: A possible image without description on input line 1277.
 
 
-LaTeX Warning: Float too large for page by 135.25847pt on input line 1267.
+LaTeX Warning: Float too large for page by 135.25847pt on input line 1277.
 
 [8.8]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1305.
+Class acmart Warning: A possible image without description on input line 1315.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1398.
+Class acmart Warning: A possible image without description on input line 1408.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1582.
+Class acmart Warning: A possible image without description on input line 1592.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 9 undefined on input line 1764.
+LaTeX Warning: Reference `fig:internal' on page 9 undefined on input line 1774.
 
 
-LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 1791.
+LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 1801.
 
 [9.9] [10.10]
 
-LaTeX Warning: Reference `fig:unify' on page 11 undefined on input line 2069.
+LaTeX Warning: Reference `fig:unify' on page 11 undefined on input line 2079.
 
 
 Underfull \vbox (badness 6396) has occurred while \output is active []
 
  [11.11]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 12 undefined on input line 2104.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 12 undefined on input line 2114.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 12 undefined on input line 2135.
+LaTeX Warning: Reference `fig:unifyContinue' on page 12 undefined on input line 2145.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1143,13 +1143,13 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 Here is how much of TeX's memory you used:
  24211 strings out of 474116
  387317 string characters out of 5743682
- 1993187 words of memory out of 5000000
+ 1994187 words of memory out of 5000000
  45489 multiletter control sequences out of 15000+600000
  751990 words of font info for 419 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (17 pages, 504167 bytes).
+Output written on paper.pdf (17 pages, 504120 bytes).
 PDF statistics:
  321 PDF objects out of 1000 (max. 8388607)
  260 compressed objects within 3 object streams
