@@ -559,6 +559,9 @@ rather than merely a type variable to allow for relational constraints.
 \nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
 \\
 \\
+\nonterm{K} & \is \vec{\alpha}
+\\
+\\
 \nonterm{e} & \is 
   \begin{array}[t]{@{}l}
   \code{$x$} \sep 
@@ -657,31 +660,90 @@ rather than merely a type variable to allow for relational constraints.
 
 
 \begin{figure*}[h]
-\begin{flalign*}
-  &{\boxed{c \in C}}&
-\end{flalign*}
-\begin{mathpar}
 
-  \inferrule[MatchOne] {
-  } {
-    c \in C\ c 
-  }
+  \begin{flalign*}
+    &{\boxed{C \  C = C}}&
+  \end{flalign*}
 
-  \inferrule[MatchAll] {
-  } {
-    c \in c 
-  }
-
-  \inferrule[Step] {
-    c \neq c'
+  \[\begin{array}{rclr}
+    C\  \epsilon 
+    &=& 
+    C
+    & \C{epsilon} 
     \\
-    c \in C
-  } {
-    c \in C\ c' 
-  }
-\end{mathpar}
-\caption{Collection Tools}
-\label{fig:collection_tools}
+
+    C\  c 
+    &=& 
+    C\ c
+    & \C{single} 
+    \\
+
+    C\  (C'\ c) 
+    &=& 
+    (C\  C')\ c
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &{\boxed{\vec{\alpha} \cdot \Delta = Q}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \vec{\alpha} \cdot \epsilon 
+    &=& 
+    \vec{\alpha} 
+    & \C{epsilon} 
+    \\
+
+    \vec{\alpha} \cdot \Delta \code{;$\tau_l$<:$\tau_r$}
+    &=& 
+    (\vec{\alpha} \cdot \Delta) \code{;$\tau_l$<:$\tau_r$}
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &{\boxed{c \in C}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[MatchOne] {
+    } {
+      c \in C\ c 
+    }
+
+    \inferrule[MatchAll] {
+    } {
+      c \in c 
+    }
+
+    \inferrule[Step] {
+      c \neq c'
+      \\
+      c \in C
+    } {
+      c \in C\ c' 
+    }
+  \end{mathpar}
+
+
+  \begin{flalign*}
+    &{\boxed{C \preceq C}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Refl] {
+    } {
+      C \preceq C 
+    }
+
+    \inferrule[Step] {
+      C \preceq C' 
+    } {
+      C \preceq C'\ c 
+    }
+  \end{mathpar}
+
+  \caption{Collection Tools}
+  \label{fig:collection_tools}
 \end{figure*}
 
 
@@ -1086,27 +1148,23 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\left< \Delta, \Omega \right> \claim \tau \subtypes \tau}&
+  &\boxed{K, \Delta \claim \tau \subtypes \tau}&
 \end{flalign*}
 
 \begin{mathpar}
 
-  \inferrule[LowerAny] {
-    \left< \Delta, \Omega \right>
-    \claim 
-    Q
+  \inferrule[Exi-L] {
+    \vec{\alpha} \cdot \Delta = Q
     \\
-    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
-    \claim 
-    \tau_l
-    \subtypes 
-    \tau_u
+    K, \Delta_0 \claim \Delta
+    \\
+    \Delta_0 \preceq \Delta_1
+    \\\\
+    K\ \vec{\alpha}, \Delta_1 \claim
+    \tau_l \subtypes \tau_u
   } {
-    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
-    \claim 
-    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
-    \subtypes 
-    \tau_u
+    K, \Delta_1 \claim 
+    \code{(EXI[$Q$] $\tau_l$)} \subtypes \tau_u
   }
 
 
