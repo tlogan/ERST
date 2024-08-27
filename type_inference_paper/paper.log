@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  27 AUG 2024 10:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  27 AUG 2024 14:26
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1057,52 +1057,52 @@ LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 1127.
 
 [7.7{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}]
 
-Class acmart Warning: A possible image without description on input line 1339.
+Class acmart Warning: A possible image without description on input line 1341.
 
 
-LaTeX Warning: Float too large for page by 98.41696pt on input line 1339.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1377.
+LaTeX Warning: Float too large for page by 146.23186pt on input line 1341.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1470.
+Class acmart Warning: A possible image without description on input line 1379.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1654.
+Class acmart Warning: A possible image without description on input line 1472.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 1836.
+Class acmart Warning: A possible image without description on input line 1656.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 1838.
 
 
 Underfull \vbox (badness 2573) has occurred while \output is active []
 
  [8.8]
 
-LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 1863.
+LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 1865.
 
 [9.9] [10.10] [11.11]
 
-LaTeX Warning: Reference `fig:unify' on page 12 undefined on input line 2141.
+LaTeX Warning: Reference `fig:unify' on page 12 undefined on input line 2143.
 
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 12 undefined on input line 2176.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 12 undefined on input line 2178.
 
 [12.12]
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 13 undefined on input line 2207.
+LaTeX Warning: Reference `fig:unifyContinue' on page 13 undefined on input line 2209.
 
 [13.13]
 
@@ -1140,13 +1140,13 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 Here is how much of TeX's memory you used:
  24216 strings out of 474116
  387464 string characters out of 5743682
- 2005187 words of memory out of 5000000
+ 2006187 words of memory out of 5000000
  45489 multiletter control sequences out of 15000+600000
  752543 words of font info for 422 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (17 pages, 505864 bytes).
+Output written on paper.pdf (17 pages, 505610 bytes).
 PDF statistics:
  321 PDF objects out of 1000 (max. 8388607)
  260 compressed objects within 3 object streams

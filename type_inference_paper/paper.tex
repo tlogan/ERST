@@ -1148,7 +1148,7 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{K, \Delta \claim \tau \subtypes \tau}&
+  &\boxed{Z, \Delta \claim \tau \subtypes \tau}&
 \end{flalign*}
 
 \begin{mathpar}
@@ -1156,14 +1156,16 @@ the variable's upper bound.
   \inferrule[Exi-L] {
     \vec{\alpha} \cdot \Delta = Q
     \\
-    Z, \Delta_0 \claim \Delta
+    Z_0, \Delta_0 \claim \Delta
     \\\\
+    Z_0\ \vec{\alpha} \preceq Z_1
+    \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z\ \vec{\alpha}, \Delta_1 \claim
+    Z_1, \Delta_1 \claim
     \tau_l \subtypes \tau_u
   } {
-    Z, \Delta_1 \claim 
+    Z_1, \Delta_1 \claim 
     \code{EXI[$Q$]$\tau_l$} \subtypes \tau_u
   }
 

@@ -3,8 +3,6 @@
 
 
 ### TODO (Symbolic Implementation)
-- modify input/outputs to separate skolems from subtypings
-    - only subtyping count as outputs
 - add inhabitable / well-formed type check to typing rules
 - consider splitting constraints like SuperF's outer/inner functions
 - make sure check is sound before using in `simplify typ`
