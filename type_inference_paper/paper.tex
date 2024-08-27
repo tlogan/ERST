@@ -559,7 +559,7 @@ rather than merely a type variable to allow for relational constraints.
 \nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
 \\
 \\
-\nonterm{K} & \is \vec{\alpha}
+\nonterm{Z} & \is \nonterm{\vec{\alpha}}
 \\
 \\
 \nonterm{e} & \is 
@@ -1156,15 +1156,15 @@ the variable's upper bound.
   \inferrule[Exi-L] {
     \vec{\alpha} \cdot \Delta = Q
     \\
-    K, \Delta_0 \claim \Delta
-    \\
-    \Delta_0 \preceq \Delta_1
+    Z, \Delta_0 \claim \Delta
     \\\\
-    K\ \vec{\alpha}, \Delta_1 \claim
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z\ \vec{\alpha}, \Delta_1 \claim
     \tau_l \subtypes \tau_u
   } {
-    K, \Delta_1 \claim 
-    \code{(EXI[$Q$] $\tau_l$)} \subtypes \tau_u
+    Z, \Delta_1 \claim 
+    \code{EXI[$Q$]$\tau_l$} \subtypes \tau_u
   }
 
 
@@ -1180,7 +1180,7 @@ the variable's upper bound.
     \claim 
     \tau_l
     \subtypes 
-    \code{(EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+    \code{EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
   }
 
   \inferrule[LearnableSkolemLowerVar] {
