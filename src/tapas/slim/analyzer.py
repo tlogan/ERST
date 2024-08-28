@@ -1935,15 +1935,39 @@ class Solver:
     def extract_transitive_upper_bounds(self, world : World, id : str) -> PSet[Subtyping]:
         return pset( 
             Subtyping(st0.lower, st1.upper) 
-            for st0 in self.extract_upper_bounds(world, id).union(
-                self.extract_rel_upper_bounds(world, id)
-            )
+            for st0 in self.extract_upper_bounds(world, id)
             for st1 in (
                 self.extract_transitive_upper_bounds(world, st0.upper.id)
                 if isinstance(st0.upper, TVar) and st0.upper.id in world.skolems else
                 [st0]
             )
         )
+
+    def extract_rel_transitive_upper_bounds(self, world : World, id : str) -> PSet[Subtyping]:
+        return pset(
+            Subtyping(st0.lower, st1.upper) 
+            for st0 in self.extract_rel_upper_bounds(world, id)
+            for st1 in (
+                self.extract_transitive_upper_bounds(world, st0.upper.id)
+                if isinstance(st0.upper, TVar) and st0.upper.id in world.skolems else
+                [st0]
+            ) 
+        )
+    
+    def extract_lower_skolems(self, world : World, id : str) -> PSet[str]:
+        return pset(
+            st0.lower.id
+            for st0 in self.extract_lower_bounds(world, id)
+            if isinstance(st0.lower, TVar) and st0.lower.id in world.skolems
+        )
+
+    def extract_transitive_lower_skolems(self, world : World, id : str) -> PSet[str]:
+        lids0 = self.extract_lower_skolems(world, id)
+        return lids0.union(pset( 
+            lid1
+            for lid0 in lids0 
+            for lid1 in self.extract_transitive_lower_skolems(world, lid0)
+        ))
 
     def extract_lower_bounds(self, world : World, id : str) -> PSet[Subtyping]:
         return pset(
@@ -1964,21 +1988,6 @@ class Solver:
         )
 
 
-    def extract_lower_skolems(self, world : World, id : str) -> PSet[str]:
-        return pset(
-            st0.lower.id
-            for st0 in self.extract_lower_bounds(world, id)
-            if isinstance(st0.lower, TVar) and st0.lower.id in world.skolems
-        )
-
-
-    def extract_transitive_lower_skolems(self, world : World, id : str) -> PSet[str]:
-        lids0 = self.extract_lower_skolems(world, id)
-        return lids0.union(pset( 
-            lid1
-            for lid0 in lids0 
-            for lid1 in self.extract_transitive_lower_skolems(world, lid0)
-        ))
 
     def extract_upper_skolems(self, world : World, id : str) -> PSet[str]:
         return pset(
@@ -2317,23 +2326,6 @@ class Solver:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.skolems: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG lower, TVar-Flex
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# lower:
-# {concretize_typ(lower)}
-
-# upper:
-# {concretize_typ(upper)}
-
-# skolems: {world.skolems}
-
-# constraints:
-# {concretize_constraints(world.constraints)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
             lower_constraints = self.extract_transitive_lower_bounds(world, lower.id) 
             renaming = pmap({lower.id : upper})
             new_constraints = sub_constraints(renaming, tuple(lower_constraints))
@@ -2347,44 +2339,6 @@ class Solver:
                 ) 
                 for w0 in self.solve_multi(world, new_constraints)
             ]
-            ############## OLD ########################
-            interp = self.unionize_lower_bounds(world, lower.id)
-            if  isinstance(interp, Bot):
-                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
-                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            ###################################
-            elif isinstance(interp, TVar) and (interp.id in world.skolems):
-                # NOTE: the existence of a F <: L connstraint implies that a frozen variable can be refined by subsequent information. 
-                # NOTE: this is necessary for the max example
-
-                # TODO: move inhabitable checks to typing rules
-                # self.ensure_upper_intersection_inhabitable(world, lower.id, upper)
-                # return [World(
-                #     world.constraints.add(Subtyping(lower, upper)),
-                #     world.skolems, world.relids
-                # )]
-
-                # NOTE: safety check 
-                # - add strongest_upper check of transitive skolem variable 
-                strongest_once_removed = self.unionize_lower_bounds(world, interp.id)
-                worlds = [
-                    new_world
-                    for world in self.solve(world, strongest_once_removed, upper)
-                    for new_world in [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-                    # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
-                ]
-                return worlds
-            ###################################
-            else:
-                strongest = interp
-                worlds = [
-                    new_world
-                    for world in self.solve(world, strongest, upper)
-                    for new_world in [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-                    # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
-                ]
-                return worlds
-            ######################################################################
 
         elif isinstance(lower, Exi):
 #             print(f"""
@@ -2466,7 +2420,9 @@ class Solver:
 #                 for w0 in self.solve_multi(world, new_constraints)
 #             ]
 
-            upper_constraints = self.extract_transitive_upper_bounds(world, upper.id) 
+            upper_constraints = self.extract_transitive_upper_bounds(world, upper.id).union(
+                self.extract_rel_transitive_upper_bounds(world, upper.id)
+            )
             renaming = pmap({upper.id : lower})
             new_constraints = sub_constraints(renaming, tuple(upper_constraints))
             skolem_constraints = pset(

@@ -49,9 +49,9 @@
 
 % \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\claim}{\ \vdash\ }
+\newcommand{\claim}{\vdash}
 \newcommand{\hastype}{\ \ddagger\ }
-\newcommand{\subtypes}{\ \sqsubseteq\ }
+\newcommand{\subtypes}{\sqsubseteq}
 \newcommand{\I}{\hspace{4mm}}
 \newcommand{\B}[1]{\textbf{#1}}
 \newcommand{\F}[1]{\text{#1}}
@@ -1152,6 +1152,30 @@ the variable's upper bound.
 \end{flalign*}
 
 \begin{mathpar}
+  \inferrule[Unio-L] {
+    Z_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
+    \\
+    Z_0 \preceq Z_1
+    \\\\
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_r
+  } {
+    Z_1, \Delta_1 \claim \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+  }
+
+  \inferrule[Inter-R] {
+    Z_0, \Delta_0 \claim \tau_l \subtypes \tau_{rl}
+    \\
+    Z_0 \preceq Z_1
+    \\\\
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z_1, \Delta_1 \claim \tau_l \subtypes \tau_{rr}
+  } {
+    Z_1, \Delta_1 \claim \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+  }
+
 
   \inferrule[Exi-L] {
     \vec{\alpha} \cdot \Delta = Q
@@ -1163,26 +1187,64 @@ the variable's upper bound.
     \Delta_0 \preceq \Delta_1
     \\
     Z_1, \Delta_1 \claim
-    \tau_l \subtypes \tau_u
+    \tau_l \subtypes \tau_r
   } {
     Z_1, \Delta_1 \claim 
-    \code{EXI[$Q$]$\tau_l$} \subtypes \tau_u
+    \code{EXI[$Q$]$\tau_l$} \subtypes \tau_r
+  }
+
+  \inferrule[All-R] {
+    \vec{\alpha} \cdot \Delta = Q
+    \\
+    Z_0, \Delta_0 \claim \Delta
+    \\\\
+    Z_0\ \vec{\alpha} \preceq Z_1
+    \\
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z_1, \Delta_1 \claim
+    \tau_l \subtypes \tau_r
+  } {
+    Z_1, \Delta_1 \claim 
+    \tau_l \subtypes \code{ALL[$Q$]$\tau_r$}
+  }
+
+  \inferrule[Flex-L] {
+    \alpha \notin Z_0
+    \\
+    Z_0, \Delta_0 \claim \vec{\tau} \ll \alpha
+    \\
+    Z_0, \Delta_0 \claim Z \lessdot \alpha
+    \\\\
+    Z_0 \preceq Z_1
+    \\
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z_1, \Delta_1 \claim \Box_{\tau \in \vec{\tau}}(\code{;$\tau$<:$\tau_r$})
+    \\\\
+    \Box_{\alpha_z \in Z}(\code{;$\alpha_z$<:$\tau_r$}) = \Delta_z
+    \\
+    \Delta_1\ \Delta_z \cdot \code{$\alpha$<:$\tau_r$} \preceq \Delta_2
+  } {
+    Z_1, \Delta_2 \claim 
+    \alpha \subtypes \tau_r
   }
 
 
-  \inferrule[UpperAny] {
-    \left< \Delta, \Omega \right>
-    \claim \tau_l \subtypes \tau_u
+  \inferrule[Exi-R] {
+    Z_0, \Delta_0 \claim \tau_l \subtypes \tau_r
     \\
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    Q
+    Z_0 \preceq Z_1
+    \\
+    \Delta_0 \preceq \Delta_1
+    \\\\
+    \vec{\alpha} \cdot \Delta = Q
+    \\
+    Z_1, \Delta_1 \claim Q
   } {
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    \tau_l
+    Z_1, \Delta_1 \claim \tau_l
     \subtypes 
-    \code{EXI[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
+    \code{EXI[$Q$]$\tau_r$}
   }
 
   \inferrule[LearnableSkolemLowerVar] {
@@ -1313,25 +1375,6 @@ the variable's upper bound.
     \subtypes 
     \tau_u
   }
-
-  \inferrule[UpperAll] {
-    \left< \Delta, \Omega \right>
-    \claim 
-    Q
-    \\
-    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
-    \claim 
-    \tau_l
-    \subtypes 
-    \tau_u
-  } {
-    \left< \Delta \cup \Delta', \Omega \cup \{\alpha_i\}_i \cup \Omega' \right>
-    \claim 
-    \tau_l
-    \subtypes 
-    \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_u$)}
-  }
-
 
 
 
@@ -1510,14 +1553,6 @@ the variable's upper bound.
     \code{$\tau_{ua}$|$\tau_{ub}$->$\tau_{uc}$}
   }
 
-  \inferrule[LowerUnion] {
-    \left< \Delta, \Omega \right> \claim \tau_{la} \subtypes \tau_u
-    \\
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> \claim \tau_{lb} \subtypes \tau_u
-  } {
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> \claim \code{$\tau_{la}$|$\tau_{lb}$} \subtypes \tau_u
-  }
-
 
   \inferrule[RightUpperUnion] {
     \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_{ub}
@@ -1549,20 +1584,6 @@ the variable's upper bound.
     \claim \tau_l 
     \subtypes 
     \code{$l$:($\tau_{ua}$\&$\tau_{ub}$)}
-  }
-
-  \inferrule[UpperInter] {
-    \left< \Delta, \Omega \right> 
-    \claim \tau_l \subtypes \tau_{ua}
-    \\
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> 
-    \claim \tau_l \subtypes \tau_{ub}
-  } {
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right> 
-    \claim 
-    \tau_l 
-    \subtypes
-    \code{$\tau_{ua}$\&$\tau_{ub}$} 
   }
 
   \inferrule[LeftLowerInter] {
