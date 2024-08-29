@@ -1575,7 +1575,7 @@ class Solver:
         return make_inter(list(self.extract_upper_bounds(world, id)))
 
     def unionize_lower_bounds(self, world : World, id : str) -> Typ:
-        return make_unio([st.lower for st in self.extract_lower_bounds(world, id)])
+        return make_unio(list(self.extract_lower_bounds(world, id)))
 
     def is_constraint_dead(self, world : World, ignored : PSet[str], st : Subtyping) -> bool:
         lower_result = False
@@ -1987,9 +1987,9 @@ class Solver:
     
     def extract_lower_skolems(self, world : World, id : str) -> PSet[str]:
         return pset(
-            st0.lower.id
-            for st0 in self.extract_lower_bounds(world, id)
-            if isinstance(st0.lower, TVar) and st0.lower.id in world.skolems
+            t0.id
+            for t0 in self.extract_lower_bounds(world, id)
+            if isinstance(t0, TVar) and t0.id in world.skolems
         )
 
     def extract_transitive_lower_skolems(self, world : World, id : str) -> PSet[str]:
@@ -2001,21 +2001,21 @@ class Solver:
         ))
 
 
-    def extract_lower_bounds(self, world : World, id : str) -> PSet[Subtyping]:
+    def extract_lower_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset(
-            st
+            st.lower
             for st in world.constraints
             if st.upper == TVar(id) 
         )
 
-    def extract_transitive_lower_bounds(self, world : World, id : str) -> PSet[Subtyping]:
+    def extract_transitive_lower_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset( 
-            Subtyping(st1.lower, st0.upper) 
-            for st0 in self.extract_lower_bounds(world, id)
-            for st1 in (
-                self.extract_transitive_lower_bounds(world, st0.lower.id)
-                if isinstance(st0.lower, TVar) and st0.lower.id in world.skolems else
-                [st0]
+            t1 
+            for t0 in self.extract_lower_bounds(world, id)
+            for t1 in (
+                self.extract_transitive_lower_bounds(world, t0.id)
+                if isinstance(t0, TVar) and t0.id in world.skolems else
+                [t0]
             )
         )
 
@@ -2342,9 +2342,11 @@ class Solver:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.skolems: 
-            lower_constraints = self.extract_transitive_lower_bounds(world, lower.id) 
             renaming = pmap({lower.id : upper})
-            new_constraints = sub_constraints(renaming, tuple(lower_constraints))
+            new_constraints = list(
+                Subtyping(lowered_lower, upper)
+                for lowered_lower in self.extract_transitive_lower_bounds(world, lower.id) 
+            )
             skolem_constraints = pset(
                 Subtyping(TVar(skolem), upper)
                 for skolem in self.extract_transitive_lower_skolems(world, lower.id)
@@ -2627,8 +2629,8 @@ class Solver:
 #             """)
 
             strict_constraints = tuple( 
-                Subtyping(lower, st.lower)
-                for st in self.extract_lower_bounds(world, upper.id)
+                Subtyping(lower, lowered_upper)
+                for lowered_upper in self.extract_lower_bounds(world, upper.id)
             )
             return self.solve_multi(world, strict_constraints)
 
@@ -3176,8 +3178,8 @@ class ExprRule(Rule):
                 # TODO: should left_typ variables be ignored to prevent over interpretation; see similar idea in resolve_polarity - Imp case 
                 # ignored_ids = s()
                 # ignored_ids = extract_free_vars_from_typ(s(), left_typ)
-                right_constraints = self.solver.extract_lower_bounds(inner_world, out_typ.id)
-                right_typ = make_unio([st.lower for st in right_constraints])
+                rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
+                right_typ = make_unio(list(rights))
                 # resolve_polarity(True, inner_world, out_typ, ignored_ids)
                 # right_interp = self.solver.resolve_strongest_upper(inner_world, out_typ.id)
                 # (right_typ, right_used_constraints) = right_interp
