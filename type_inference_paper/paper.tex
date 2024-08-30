@@ -688,20 +688,20 @@ rather than merely a type variable to allow for relational constraints.
     % \ \text{map}_{z\in\vec{z}}(\code{;$\tau_l$<:$z$})
 
   \begin{flalign*}
-    &{\boxed{\text{map}_{[]\in C}(c[])}}&
+    &{\boxed{\text{map}_{\square\in C}(c)}}&
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \text{map}_{[]\in \epsilon}(c[])
+    \text{map}_{\square \in \epsilon}(c)
     &=& 
     \epsilon
     & \C{epsilon} 
     \\
 
-    \text{map}_{[]\in\ C\ c'}(c[])
+    \text{map}_{\square \in C\ c'}(c)
     &=& 
-    \text{map}_{[]\in\ C}(c[])\ c[c']
-    & \C{single} 
+    \text{map}_{\square \in C}(c)\ c[\square\slash c']
+    & \C{step} 
     \\
   \end{array}\]
 
