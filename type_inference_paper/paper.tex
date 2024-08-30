@@ -685,6 +685,26 @@ rather than merely a type variable to allow for relational constraints.
     \\
   \end{array}\]
 
+    % \ \text{map}_{z\in\vec{z}}(\code{;$\tau_l$<:$z$})
+
+  \begin{flalign*}
+    &{\boxed{\text{map}_{[]\in C}(c[])}}&
+  \end{flalign*}
+
+  \[\begin{array}{rclr}
+    \text{map}_{[]\in \epsilon}(c[])
+    &=& 
+    \epsilon
+    & \C{epsilon} 
+    \\
+
+    \text{map}_{[]\in\ C\ c'}(c[])
+    &=& 
+    \text{map}_{[]\in\ C}(c[])\ c[c']
+    & \C{single} 
+    \\
+  \end{array}\]
+
   \begin{flalign*}
     &{\boxed{\vec{\alpha} \cdot \Delta = Q}}&
   \end{flalign*}
@@ -1235,7 +1255,7 @@ the variable's upper bound.
   \inferrule[Flex-L] {
     \alpha \notin Z_1
     \\\\
-    Z_0, \Delta_0 \claim \Delta_z \lessdot \alpha
+    Z_0, \Delta_0 \claim \vec{z} \lessdot \alpha
     \\
     Z_0, \Delta_0 \claim \vec{\tau} \ll \alpha
     \\\\
@@ -1245,29 +1265,31 @@ the variable's upper bound.
     \\
     Z_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
   } {
-    Z_1, \Delta_1\ \text{subst}(\Delta_z, \alpha \slash \tau_r) \cdot \code{$\alpha$<:$\tau_r$} \claim 
+    Z_1, \Delta_1\ \text{map}_{z\in\vec{z}}(\code{;$z$<:$\tau_r$}) \cdot \code{$\alpha$<:$\tau_r$} \claim 
     \alpha \subtypes \tau_r
   }
 
   \inferrule[Flex-R] {
     \alpha \notin Z_1
     \\\\
-    Z_0, \Delta_0 \claim \alpha \lessdot \Delta_z
+    Z_0, \Delta_0 \claim \alpha \lessdot \vec{z}
     \\
-    Z_0, \Delta_0 \claim \alpha \lessdot^\diamond \Delta_{zrel}
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot^\diamond \Delta_{skol}
     \\\\
     Z_0, \Delta_0 \claim \alpha \ll \vec{\tau} 
     \\
-    Z_0, \Delta_0 \claim \alpha \ll^\diamond \Delta_{rel}
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll^\diamond \Delta_{rel}
     \\\\
     Z_0 \preceq Z_1
     \\
     \Delta_0 \preceq \Delta_1
     \\\\
-    Z_1, \Delta_1 \claim \text{subst}(\Delta_{rel}, \alpha \slash \tau_l) \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
+    Z_1, \Delta_1 \claim \Delta_{rel} \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
   } {
-    Z_1, \Delta_1\ \text{subst}(\Delta_z\ \Delta_{zrel}, \alpha \slash \tau_l) \cdot \code{$\tau_l$<:$\alpha$} \claim 
-    \tau_l \subtypes \alpha
+    Z_1, \Delta_1
+    \ \text{map}_{z\in\vec{z}}(\code{;$\tau_l$<:$z$})
+    \ \Delta_{skol} \cdot \code{$\tau_l$<:$\alpha$} 
+    \claim \tau_l \subtypes \alpha
   }
 
 
