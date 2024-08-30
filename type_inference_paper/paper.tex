@@ -1210,24 +1210,41 @@ the variable's upper bound.
   }
 
   \inferrule[Flex-L] {
-    \alpha \notin Z_0
+    \alpha \notin Z_1
+    \\\\
+    Z_0, \Delta_0 \claim \Delta_z \lessdot \alpha \slash \tau_r
     \\
-    Z_0, \Delta_0 \claim \vec{\tau} \ll \alpha
-    \\
-    Z_0, \Delta_0 \claim Z \lessdot \alpha
+    Z_0, \Delta_0 \claim \Delta \ll \alpha \slash \tau_r
     \\\\
     Z_0 \preceq Z_1
     \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim \Box_{\tau \in \vec{\tau}}(\code{;$\tau$<:$\tau_r$})
-    \\\\
-    \Box_{\alpha_z \in Z}(\code{;$\alpha_z$<:$\tau_r$}) = \Delta_z
-    \\
-    \Delta_1\ \Delta_z \cdot \code{$\alpha$<:$\tau_r$} \preceq \Delta_2
+    Z_1, \Delta_1 \claim \Delta 
   } {
-    Z_1, \Delta_2 \claim 
+    Z_1, \Delta_1\ \Delta_z \cdot \code{$\alpha$<:$\tau_r$} \claim 
     \alpha \subtypes \tau_r
+  }
+
+  \inferrule[Flex-R] {
+    \alpha \notin Z_1
+    \\\\
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot \Delta_z
+    \\
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot^\diamond \Delta_{zrel}
+    \\\\
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll \Delta 
+    \\
+    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll^\diamond \Delta_{rel}
+    \\\\
+    Z_0 \preceq Z_1
+    \\
+    \Delta_0 \preceq \Delta_1
+    \\
+    Z_1, \Delta_1 \claim \Delta\ \Delta_{rel} 
+  } {
+    Z_1, \Delta_1\ \Delta_z\ \Delta_{zrel} \cdot \code{$\tau_l$<:$\alpha$} \claim 
+    \tau_l \subtypes \alpha
   }
 
 
