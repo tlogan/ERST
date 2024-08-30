@@ -2289,6 +2289,12 @@ class Solver:
         #######################################
         #######################################
 
+        elif isinstance(lower, Bot): 
+            return [world] 
+
+        elif isinstance(upper, Top): 
+            return [world] 
+
         elif isinstance(lower, Unio):
             return [
                 m1
@@ -2646,9 +2652,6 @@ class Solver:
         #######################################
 
         elif isinstance(upper, Top): 
-            return [world] 
-
-        elif isinstance(lower, Bot): 
             return [world] 
 
         elif isinstance(lower, Top): 

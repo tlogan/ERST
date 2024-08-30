@@ -3,6 +3,8 @@
 
 
 ### TODO (Symbolic Implementation)
+- rewrite variable rules to use unionize and intersect when possible
+    - this makes rules more readable.
 - consider moving lower,Fixpoint rule before variable rules
 - consider removing ad-hoc lower, Fixpoint rewriting rule
 - add inhabitable / well-formed type check to typing rules

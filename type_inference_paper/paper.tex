@@ -602,11 +602,11 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{\sigma} & \is 
-  \epsilon \sep \sigma \cdot x \mapsto v
+  \epsilon \sep \sigma \cdot x \slash v
 \\
 \\
 \nonterm{\omega} & \is 
-  \epsilon \sep \omega \cdot \alpha \mapsto \tau
+  \epsilon \sep \omega \cdot \alpha \slash \tau
 \\  
 \\  
 \nonterm{\Gamma} & \is 
@@ -827,7 +827,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[LetContin] {
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \mapsto v)
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash v)
   }
 
   \inferrule[FixTarget] {
@@ -838,7 +838,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \mapsto \code{fix(case $x$ => $e$)})
+    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash \code{fix(case $x$ => $e$)})
   }
 
   \inferrule[Tuple] {
@@ -999,7 +999,7 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
 \\ 
-\I u \in \llbracket \text{subst}(\epsilon \cdot \alpha \mapsto \tau', \tau) \rrbracket
+\I u \in \llbracket \text{subst}(\epsilon \cdot \alpha \slash \tau', \tau) \rrbracket
 \\
 \}
 \end{array}
@@ -1152,6 +1152,29 @@ the variable's upper bound.
 \end{flalign*}
 
 \begin{mathpar}
+
+
+
+
+
+  \inferrule[Bot-L] {
+  } {
+    Z_1, \Delta_1 \claim \code{BOT} \subtypes \tau_r
+  }
+
+  \inferrule[Top-R] {
+  } {
+    Z_1, \Delta_1 \claim \tau_l \subtypes \code{TOP}
+  }
+
+
+
+
+
+
+
+
+
   \inferrule[Unio-L] {
     Z_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
     \\
@@ -1212,38 +1235,38 @@ the variable's upper bound.
   \inferrule[Flex-L] {
     \alpha \notin Z_1
     \\\\
-    Z_0, \Delta_0 \claim \Delta_z \lessdot \alpha \slash \tau_r
+    Z_0, \Delta_0 \claim \Delta_z \lessdot \alpha
     \\
-    Z_0, \Delta_0 \claim \Delta \ll \alpha \slash \tau_r
+    Z_0, \Delta_0 \claim \vec{\tau} \ll \alpha
     \\\\
     Z_0 \preceq Z_1
     \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim \Delta 
+    Z_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
   } {
-    Z_1, \Delta_1\ \Delta_z \cdot \code{$\alpha$<:$\tau_r$} \claim 
+    Z_1, \Delta_1\ \text{subst}(\Delta_z, \alpha \slash \tau_r) \cdot \code{$\alpha$<:$\tau_r$} \claim 
     \alpha \subtypes \tau_r
   }
 
   \inferrule[Flex-R] {
     \alpha \notin Z_1
     \\\\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot \Delta_z
+    Z_0, \Delta_0 \claim \alpha \lessdot \Delta_z
     \\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot^\diamond \Delta_{zrel}
+    Z_0, \Delta_0 \claim \alpha \lessdot^\diamond \Delta_{zrel}
     \\\\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll \Delta 
+    Z_0, \Delta_0 \claim \alpha \ll \vec{\tau} 
     \\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll^\diamond \Delta_{rel}
+    Z_0, \Delta_0 \claim \alpha \ll^\diamond \Delta_{rel}
     \\\\
     Z_0 \preceq Z_1
     \\
     \Delta_0 \preceq \Delta_1
-    \\
-    Z_1, \Delta_1 \claim \Delta\ \Delta_{rel} 
+    \\\\
+    Z_1, \Delta_1 \claim \text{subst}(\Delta_{rel}, \alpha \slash \tau_l) \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
   } {
-    Z_1, \Delta_1\ \Delta_z\ \Delta_{zrel} \cdot \code{$\tau_l$<:$\alpha$} \claim 
+    Z_1, \Delta_1\ \text{subst}(\Delta_z\ \Delta_{zrel}, \alpha \slash \tau_l) \cdot \code{$\tau_l$<:$\alpha$} \claim 
     \tau_l \subtypes \alpha
   }
 
@@ -1449,7 +1472,7 @@ the variable's upper bound.
 \begin{mathpar}
 
   \inferrule[LowerUpperLFP] {
-    subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
+    subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
     \\
     \left< \Delta, \Omega \right>
     \claim \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
@@ -1491,7 +1514,7 @@ the variable's upper bound.
   \inferrule[UnrollUpperLFP] {
     decidable(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
     \\
-    subst(\{\alpha \mapsto \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_u) = \tau_u'
+    subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_u) = \tau_u'
     \\
     \left< \Delta, \Omega \right> 
     \claim 
