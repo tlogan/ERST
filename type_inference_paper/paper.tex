@@ -559,7 +559,10 @@ rather than merely a type variable to allow for relational constraints.
 \nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
 \\
 \\
-\nonterm{Z} & \is \nonterm{\vec{\alpha}}
+\nonterm{\vec{z}} & \is \vec{z}
+\\
+\\
+\nonterm{z} & \is \alpha 
 \\
 \\
 \nonterm{e} & \is 
@@ -685,24 +688,39 @@ rather than merely a type variable to allow for relational constraints.
     \\
   \end{array}\]
 
-    % \ \text{map}_{z\in\vec{z}}(\code{;$\tau_l$<:$z$})
 
   \begin{flalign*}
-    &{\boxed{\text{map}_{\square\in C}(c)}}&
+    &{\boxed{\text{map}(C, f) = C}}& 
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \text{map}_{\square \in \epsilon}(c)
+    \text{map}(\epsilon, f)
     &=& 
     \epsilon
     & \C{epsilon} 
     \\
 
-    \text{map}_{\square \in C\ c'}(c)
+    \text{map}(C\ c, f)
     &=& 
-    \text{map}_{\square \in C}(c)\ c[\square\slash c']
+    \text{map}(C, f)\ f(c)
     & \C{step} 
     \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &{\boxed{\widebar{\ c\ }^{i \in C} \circeq C}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \widebar{\ c\ }^{i \in C} 
+    &\circeq& 
+    \text{map}(C, \lambda i . c)
+    & \C{comprehension} 
+    \\
+  %   \text{map}_{\square \in C\ c'}(c)
+  %   &=& 
+  %   \text{map}_{\square \in C}(c)\ c[\square\slash c']
+  %   & \C{step} 
+  %   \\
   \end{array}\]
 
   \begin{flalign*}
@@ -1179,12 +1197,12 @@ the variable's upper bound.
 
   \inferrule[Bot-L] {
   } {
-    Z_1, \Delta_1 \claim \code{BOT} \subtypes \tau_r
+    \vec{z}_1, \Delta_1 \claim \code{BOT} \subtypes \tau_r
   }
 
   \inferrule[Top-R] {
   } {
-    Z_1, \Delta_1 \claim \tau_l \subtypes \code{TOP}
+    \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \code{TOP}
   }
 
 
@@ -1196,115 +1214,115 @@ the variable's upper bound.
 
 
   \inferrule[Unio-L] {
-    Z_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
+    \vec{z}_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
     \\
-    Z_0 \preceq Z_1
+    \vec{z}_0 \preceq \vec{z}_1
     \\\\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_r
+    \vec{z}_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_r
   } {
-    Z_1, \Delta_1 \claim \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+    \vec{z}_1, \Delta_1 \claim \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
   }
 
   \inferrule[Inter-R] {
-    Z_0, \Delta_0 \claim \tau_l \subtypes \tau_{rl}
+    \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_{rl}
     \\
-    Z_0 \preceq Z_1
+    \vec{z}_0 \preceq \vec{z}_1
     \\\\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim \tau_l \subtypes \tau_{rr}
+    \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \tau_{rr}
   } {
-    Z_1, \Delta_1 \claim \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+    \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
   }
 
 
   \inferrule[Exi-L] {
     \vec{\alpha} \cdot \Delta = Q
     \\
-    Z_0, \Delta_0 \claim \Delta
+    \vec{z}_0, \Delta_0 \claim \Delta
     \\\\
-    Z_0\ \vec{\alpha} \preceq Z_1
+    \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
     \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim
+    \vec{z}_1, \Delta_1 \claim
     \tau_l \subtypes \tau_r
   } {
-    Z_1, \Delta_1 \claim 
+    \vec{z}_1, \Delta_1 \claim 
     \code{EXI[$Q$]$\tau_l$} \subtypes \tau_r
   }
 
   \inferrule[All-R] {
     \vec{\alpha} \cdot \Delta = Q
     \\
-    Z_0, \Delta_0 \claim \Delta
+    \vec{z}_0, \Delta_0 \claim \Delta
     \\\\
-    Z_0\ \vec{\alpha} \preceq Z_1
+    \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
     \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim
+    \vec{z}_1, \Delta_1 \claim
     \tau_l \subtypes \tau_r
   } {
-    Z_1, \Delta_1 \claim 
+    \vec{z}_1, \Delta_1 \claim 
     \tau_l \subtypes \code{ALL[$Q$]$\tau_r$}
   }
 
   \inferrule[Flex-L] {
-    \alpha \notin Z_1
+    \alpha \notin \vec{z}_1
     \\\\
-    Z_0, \Delta_0 \claim \vec{z} \lessdot \alpha
+    \vec{z}_0, \Delta_0 \claim \vec{z} \lessdot \alpha
     \\
-    Z_0, \Delta_0 \claim \vec{\tau} \ll \alpha
+    \vec{z}_0, \Delta_0 \claim \vec{\tau} \ll \alpha
     \\\\
-    Z_0 \preceq Z_1
+    \vec{z}_0 \preceq \vec{z}_1
     \\
     \Delta_0 \preceq \Delta_1
     \\
-    Z_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
+    \vec{z}_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
   } {
-    Z_1, \Delta_1\ \text{map}_{z\in\vec{z}}(\code{;$z$<:$\tau_r$}) \cdot \code{$\alpha$<:$\tau_r$} \claim 
+    \vec{z}_1, \Delta_1\ \widebar{\code{;$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} \claim 
     \alpha \subtypes \tau_r
   }
 
   \inferrule[Flex-R] {
     \alpha \notin Z_1
     \\\\
-    Z_0, \Delta_0 \claim \alpha \lessdot \vec{z}
+    \vec{z}_0, \Delta_0 \claim \alpha \lessdot \vec{z}
     \\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot^\diamond \Delta_{skol}
+    \vec{z}_0, \Delta_0 \claim \alpha \slash \tau_l \lessdot^\diamond \Delta_{skol}
     \\\\
-    Z_0, \Delta_0 \claim \alpha \ll \vec{\tau} 
+    \vec{z}_0, \Delta_0 \claim \alpha \ll \vec{\tau} 
     \\
-    Z_0, \Delta_0 \claim \alpha \slash \tau_l \ll^\diamond \Delta_{rel}
+    \vec{z}_0, \Delta_0 \claim \alpha \slash \tau_l \ll^\diamond \Delta_{rel}
     \\\\
-    Z_0 \preceq Z_1
+    \vec{z}_0 \preceq \vec{z}_1
     \\
     \Delta_0 \preceq \Delta_1
     \\\\
-    Z_1, \Delta_1 \claim \Delta_{rel} \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
+    \vec{z}_1, \Delta_1 \claim \Delta_{rel} \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
   } {
-    Z_1, \Delta_1
-    \ \text{map}_{z\in\vec{z}}(\code{;$\tau_l$<:$z$})
+    \vec{z}_1, \Delta_1
+    \ \widebar{\code{;$\tau_l$<:$z$}}^{z\in\vec{z}}
     \ \Delta_{skol} \cdot \code{$\tau_l$<:$\alpha$} 
     \claim \tau_l \subtypes \alpha
   }
 
 
   \inferrule[Exi-R] {
-    Z_0, \Delta_0 \claim \tau_l \subtypes \tau_r
+    \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
     \\
-    Z_0 \preceq Z_1
+    \vec{z}_0 \preceq \vec{z}_1
     \\
     \Delta_0 \preceq \Delta_1
     \\\\
     \vec{\alpha} \cdot \Delta = Q
     \\
-    Z_1, \Delta_1 \claim Q
+    \vec{z}_1, \Delta_1 \claim Q
   } {
-    Z_1, \Delta_1 \claim \tau_l
+    \vec{z}_1, \Delta_1 \claim \tau_l
     \subtypes 
     \code{EXI[$Q$]$\tau_r$}
   }

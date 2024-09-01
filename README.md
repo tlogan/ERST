@@ -92,6 +92,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- change map calls to custom recursive functions (e.g. in Flex rules)
 - in solver rules, distinguish input from out by using a pre-order relation.  
 - rewrite subtype constraint solving rules to match implementation and get order right
 - write type reconstruction rules
