@@ -559,7 +559,7 @@ rather than merely a type variable to allow for relational constraints.
 \nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
 \\
 \\
-\nonterm{\vec{z}} & \is \vec{z}
+\nonterm{\vec{z}} & \is \square \sep \vec{z}\ z
 \\
 \\
 \nonterm{z} & \is \alpha 
@@ -605,19 +605,19 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{\sigma} & \is 
-  \epsilon \sep \sigma \cdot x \slash v
+  \square \sep \sigma \cdot x \slash v
 \\
 \\
 \nonterm{\omega} & \is 
-  \epsilon \sep \omega \cdot \alpha \slash \tau
+  \square \sep \omega \cdot \alpha \slash \tau
 \\  
 \\  
 \nonterm{\Gamma} & \is 
-  \epsilon \sep \Gamma \cdot \code{$x$:$\tau$}
+  \square \sep \Gamma \cdot \code{$x$:$\tau$}
 \\
 \\  
 \nonterm{\Delta} & \is 
-  \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
+  \square \sep \Delta \cdot \code{$\tau$<:$\tau$}
 \\
 \\
 \nonterm{v} & \is 
@@ -639,7 +639,7 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{W} & \is 
-  \epsilon \sep W \cdot (u,u)
+  \square \sep W \cdot (u,u)
 \\
 \\
 \nonterm{c} & \is 
@@ -653,11 +653,11 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{C} & \is 
-  \epsilon \sep c \sep C\ c
+  \square \sep c \sep C\ c
 \end{array}
 \]
 
-\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
+\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\square$" when the context makes it clear that there is a missing term}
 \label{fig:syntax}
 \end{figure*}
 
@@ -669,10 +669,10 @@ rather than merely a type variable to allow for relational constraints.
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    C\  \epsilon 
+    C\  \square 
     &=& 
     C
-    & \C{epsilon} 
+    & \C{empty} 
     \\
 
     C\  c 
@@ -694,10 +694,10 @@ rather than merely a type variable to allow for relational constraints.
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \text{map}(\epsilon, f)
+    \text{map}(\square, f)
     &=& 
-    \epsilon
-    & \C{epsilon} 
+    \square
+    & \C{empty} 
     \\
 
     \text{map}(C\ c, f)
@@ -716,21 +716,16 @@ rather than merely a type variable to allow for relational constraints.
     \text{map}(C, \lambda i . c)
     & \C{comprehension} 
     \\
-  %   \text{map}_{\square \in C\ c'}(c)
-  %   &=& 
-  %   \text{map}_{\square \in C}(c)\ c[\square\slash c']
-  %   & \C{step} 
-  %   \\
   \end{array}\]
 
   \begin{flalign*}
     &{\boxed{\vec{\alpha} \cdot \Delta = Q}}&
   \end{flalign*}
   \[\begin{array}{rclr}
-    \vec{\alpha} \cdot \epsilon 
+    \vec{\alpha} \cdot \square 
     &=& 
     \vec{\alpha} 
-    & \C{epsilon} 
+    & \C{empty} 
     \\
 
     \vec{\alpha} \cdot \Delta \code{;$\tau_l$<:$\tau_r$}
@@ -865,7 +860,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[LetContin] {
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash v)
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \square \cdot x \slash v)
   }
 
   \inferrule[FixTarget] {
@@ -876,7 +871,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash \code{fix(case $x$ => $e$)})
+    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \square \cdot x \slash \code{fix(case $x$ => $e$)})
   }
 
   \inferrule[Tuple] {
@@ -928,142 +923,193 @@ rather than merely a type variable to allow for relational constraints.
 
 
 \begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{\llbracket \tau \rrbracket = \mathbb{V}}&
-\end{flalign*}
-\[
-\begin{array}{rclr}
-% \llbracket \Delta, \Omega, \code{$\alpha$} \rrbracket 
-% &=& \llbracket (\Delta, \Omega, resolve(\Delta, \Omega, \code{$\alpha$})) \rrbracket 
-% & \C{variable}
-% \\
-\llbracket \code{@} \rrbracket 
-&=& 
-\{\code{@}\} 
-& \C{unit} 
-\\
-\llbracket \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
-&=& 
-\{ \code{\textasciitilde{}$l$ $u$}\ |\ u \in \llbracket \tau \rrbracket \}
-& \C{tag} 
-\\
-\llbracket \code{$l$:$\tau$} \rrbracket 
-&=& 
-\begin{array}[t]{@{}l}
-\{ r \ |\ \forall\ u\ .\ (u \in \llbracket \tau \rrbracket) \rightarrow
-\\
-\I \code{;$l$=$u$} \in r\ \land\ 
-\\
-\I (\forall\ u'\ .\ \code{;$l$=$u'$} \in r \rightarrow u' = u)
-\\
-\}
-\end{array}
-& \C{record} 
-\\
-\llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
-&=& 
-\begin{array}[t]{@{}l}
-\{ W \ |\ \forall\ u_a\ u_c\ .\ (u_a \in \llbracket \tau_a \rrbracket) \rightarrow (u_c \in \llbracket \tau_c \rrbracket) \rightarrow
-\\
-\I \cdot (u_a, u_c) \in W\ \land\ 
-\\
-\I (\forall\ u_c'\ .\ (u_a, u_c') \in w \rightarrow u_c' = u_c)
-\\
-\}
-\end{array}
-& \C{implication} 
-\\
-\llbracket \code{$\tau_a$|$\tau_b$} \rrbracket 
-&=& 
-\llbracket \tau_a \rrbracket 
-\cup
-\llbracket \tau_b \rrbracket 
-& \C{union}
-\\
-\llbracket \code{$\tau_a$\&$\tau_b$} \rrbracket 
-&=& 
-\llbracket \tau_a \rrbracket 
-\cap
-\llbracket \tau_b \rrbracket 
-& \C{intersection}
-\\
-\llbracket \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
-&=& 
-\llbracket \tau_a \rrbracket 
-\ \backslash\ 
-\llbracket \tau_b \rrbracket 
-& \C{difference}
-\\
-\llbracket \code{EXI[$Q$] $\tau$} \rrbracket 
-&=& 
-\begin{array}[t]{@{}l}
-\{ u \ |\ \exists\ \omega . 
-\\
-\I \vec{\alpha} \cdot \Delta = Q\ \land\ 
-\\ 
-\I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
-\\
-\I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \land\ 
-\\ 
-\I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
-\\
-\}
-\end{array}
-& 
-\C{indexed union}
-\\
-\llbracket \code{ALL[$Q$] $\tau$} \rrbracket 
-&=& 
-\begin{array}[t]{@{}l}
-\{ u \ |\  \forall\ \omega . 
-\\
-\I \vec{\alpha} \cdot \Delta = Q\ \land\ 
-\\ 
-\I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
-\\
-\I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \rightarrow  
-\\
-\I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
-\\
-\}
-\end{array}
-& 
-\C{indexed intersection}
-\\
-\llbracket \code{FIX[$\alpha$]$\tau$} \rrbracket 
-&=& 
-\begin{array}[t]{@{}l}
-\mu\ \mathbb{V}'\ .\ \{ u  \ |\ \exists\ \tau'\ .
-\\
-\I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
-\\ 
-\I u \in \llbracket \text{subst}(\epsilon \cdot \alpha \slash \tau', \tau) \rrbracket
-\\
-\}
-\end{array}
-& 
-\C{least fixed point}
-\end{array}
-\]
-\begin{flalign*}
-  &\boxed{\llbracket \Delta \rrbracket = \phi }&
-\end{flalign*}
-\[
-\begin{array}{rclr}
-\llbracket \epsilon \rrbracket 
-&=& 
-\top
-& \C{empty} 
-\\
-\llbracket \Delta \cdot \code{$\tau_l$<:$\tau_u$} \rrbracket 
-&=& 
-\llbracket \Delta \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
-& \C{extension} 
-\end{array}
-\]
+  \begin{flalign*}
+    &\boxed{\&(\vec{\tau}) = \tau}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \code{\&}(\square)
+    &=& 
+    \code{TOP}
+    & \C{empty} 
+    \\
+
+    \code{\&}(\square\ \tau)
+    &=& 
+    \tau
+    & \C{single} 
+    \\
+
+    \code{\&}(\vec{\tau}\ \tau)
+    &=& 
+    \code{\&}(\vec{\tau}) \code{\&} \tau
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &\boxed{|(\vec{\tau}) = \tau}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \code{|}(\square)
+    &=& 
+    \code{TOP}
+    & \C{empty} 
+    \\
+
+    \code{|}(\square\ \tau)
+    &=& 
+    \tau
+    & \C{single} 
+    \\
+
+    \code{|}(\vec{\tau}\ \tau)
+    &=& 
+    \code{|}(\vec{\tau}) \code{|} \tau
+    & \C{step} 
+    \\
+  \end{array}\]
+
+\caption{Type Tools}
+\label{fig:type_tools}
+\end{figure*}
+
+\begin{figure*}[h]
+
+  \begin{flalign*}
+    &\boxed{\llbracket \tau \rrbracket = \mathbb{V}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+  % \llbracket \Delta, \Omega, \code{$\alpha$} \rrbracket 
+  % &=& \llbracket (\Delta, \Omega, resolve(\Delta, \Omega, \code{$\alpha$})) \rrbracket 
+  % & \C{variable}
+  % \\
+  \llbracket \code{@} \rrbracket 
+  &=& 
+  \{\code{@}\} 
+  & \C{unit} 
+  \\
+  \llbracket \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
+  &=& 
+  \{ \code{\textasciitilde{}$l$ $u$}\ |\ u \in \llbracket \tau \rrbracket \}
+  & \C{tag} 
+  \\
+  \llbracket \code{$l$:$\tau$} \rrbracket 
+  &=& 
+  \begin{array}[t]{@{}l}
+  \{ r \ |\ \forall\ u\ .\ (u \in \llbracket \tau \rrbracket) \rightarrow
+  \\
+  \I \code{;$l$=$u$} \in r\ \land\ 
+  \\
+  \I (\forall\ u'\ .\ \code{;$l$=$u'$} \in r \rightarrow u' = u)
+  \\
+  \}
+  \end{array}
+  & \C{record} 
+  \\
+  \llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
+  &=& 
+  \begin{array}[t]{@{}l}
+  \{ W \ |\ \forall\ u_a\ u_c\ .\ (u_a \in \llbracket \tau_a \rrbracket) \rightarrow (u_c \in \llbracket \tau_c \rrbracket) \rightarrow
+  \\
+  \I \cdot (u_a, u_c) \in W\ \land\ 
+  \\
+  \I (\forall\ u_c'\ .\ (u_a, u_c') \in w \rightarrow u_c' = u_c)
+  \\
+  \}
+  \end{array}
+  & \C{implication} 
+  \\
+  \llbracket \code{$\tau_a$|$\tau_b$} \rrbracket 
+  &=& 
+  \llbracket \tau_a \rrbracket 
+  \cup
+  \llbracket \tau_b \rrbracket 
+  & \C{union}
+  \\
+  \llbracket \code{$\tau_a$\&$\tau_b$} \rrbracket 
+  &=& 
+  \llbracket \tau_a \rrbracket 
+  \cap
+  \llbracket \tau_b \rrbracket 
+  & \C{intersection}
+  \\
+  \llbracket \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
+  &=& 
+  \llbracket \tau_a \rrbracket 
+  \ \backslash\ 
+  \llbracket \tau_b \rrbracket 
+  & \C{difference}
+  \\
+  \llbracket \code{EXI[$Q$] $\tau$} \rrbracket 
+  &=& 
+  \begin{array}[t]{@{}l}
+  \{ u \ |\ \exists\ \omega . 
+  \\
+  \I \vec{\alpha} \cdot \Delta = Q\ \land\ 
+  \\ 
+  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+  \\
+  \I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \land\ 
+  \\ 
+  \I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
+  \\
+  \}
+  \end{array}
+  & 
+  \C{indexed union}
+  \\
+  \llbracket \code{ALL[$Q$] $\tau$} \rrbracket 
+  &=& 
+  \begin{array}[t]{@{}l}
+  \{ u \ |\  \forall\ \omega . 
+  \\
+  \I \vec{\alpha} \cdot \Delta = Q\ \land\ 
+  \\ 
+  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+  \\
+  \I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \rightarrow  
+  \\
+  \I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
+  \\
+  \}
+  \end{array}
+  & 
+  \C{indexed intersection}
+  \\
+  \llbracket \code{FIX[$\alpha$]$\tau$} \rrbracket 
+  &=& 
+  \begin{array}[t]{@{}l}
+  \mu\ \mathbb{V}'\ .\ \{ u  \ |\ \exists\ \tau'\ .
+  \\
+  \I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
+  \\ 
+  \I u \in \llbracket \text{subst}(\square \cdot \alpha \slash \tau', \tau) \rrbracket
+  \\
+  \}
+  \end{array}
+  & 
+  \C{least fixed point}
+  \end{array}
+  \]
+  \begin{flalign*}
+    &\boxed{\llbracket \Delta \rrbracket = \phi }&
+  \end{flalign*}
+  \[
+  \begin{array}{rclr}
+  \llbracket \square \rrbracket 
+  &=& 
+  \top
+  & \C{empty} 
+  \\
+  \llbracket \Delta \cdot \code{$\tau_l$<:$\tau_u$} \rrbracket 
+  &=& 
+  \llbracket \Delta \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
+  & \C{extension} 
+  \end{array}\]
 \caption{Type Denotation}
 \label{fig:type_denotation}
 \end{figure*}
+
 
 
 \subsection{Typing}
@@ -1394,7 +1440,7 @@ the variable's upper bound.
     \\
     \left< \Delta, \Omega \right> \claim linearize(\{\code{$\tau_l$<:$\tau_u$}\ |\ (\code{$\alpha$<:$\tau_u$}) \in (\Delta \cup factor(\Delta, \alpha))\})
     \\
-    linearize(\emptyset) = \epsilon
+    linearize(\emptyset) = \square
     \\
     linearize(D \cup \{c\}) = linearize(D\backslash \{c\})\ ;\ c
   } {
@@ -1493,7 +1539,7 @@ the variable's upper bound.
   } {
     \left< \Delta, \Omega \right>
     \claim 
-    \epsilon
+    \square
   }
 
 \end{mathpar}
