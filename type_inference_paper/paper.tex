@@ -1253,6 +1253,14 @@ the variable's upper bound.
     } {
       \vec{z}_0, \Delta_0 \cdot \code{$z$<:$\alpha$} \claim \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
     }
+
+    \inferrule[Skip] {
+      \neg (z \in \vec{z}_0 \land \tau_l \in \vec{z}_0 \land \tau_r = \alpha)
+      \\
+      \vec{z}_0, \Delta_0 \claim \vec{z}_1 \lessdot \alpha
+    } {
+      \vec{z}_0, \Delta_0 \cdot \code{$\tau_l$<:$\tau_r$} \claim \vec{z}_1 \lessdot \alpha
+    }
   \end{mathpar}
 
   \caption{Subtyping Tools}
