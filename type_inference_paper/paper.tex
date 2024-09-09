@@ -1234,134 +1234,219 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \vec{z} \lessdot \alpha}&
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \vec{z} \lessdot \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \square \claim \square \lessdot \alpha
+      \vec{z}, \Delta \claim \square \Rightarrow \square \lessdot \alpha
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
       \\\\
-      \vec{z}_0, \Delta_0 \claim \vec{z}_2 \lessdot z 
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{z}_2 \lessdot z 
     } {
-      \vec{z}_0, \Delta_0 \cdot \code{$z$<:$\alpha$} \claim \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
+      \vec{z}_0, \Delta_0 
+      \claim \Delta_1 \cdot \code{$z$<:$\alpha$} 
+      \Rightarrow \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
     }
 
     \inferrule[Skip] {
       \neg (\tau_l \in \vec{z}_0 \land \tau_r = \alpha)
-      \\
-      \vec{z}_0, \Delta_0 \claim \vec{z}_1 \lessdot \alpha
+      \\\\
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
     } {
-      \vec{z}_0, \Delta_0 \cdot \code{$\tau_l$<:$\tau_r$} \claim \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0 
+      \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
+      \Rightarrow \vec{z}_1 \lessdot \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \vec{\tau} \ll \alpha}&
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \vec{\tau} \ll \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \square \claim \square \ll \alpha
+      \vec{z}, \Delta \claim \square \Rightarrow \square \ll \alpha
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta \claim \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta \cdot \code{$\tau$<:$\alpha$} \claim \vec{\tau}\ \tau \ll \alpha
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \ll \alpha
     }
 
     \inferrule[Trans] {
       z \in \vec{z}
       \\
-      \vec{z}, \Delta \claim \vec{\tau}_0 \ll \alpha
-      \\\\
-      \vec{z}, \Delta \claim \vec{\tau}_1 \ll z 
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau}_0 \ll \alpha
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow \vec{\tau}_1 \ll z 
     } {
-      \vec{z}, \Delta \cdot \code{$z$<:$\alpha$} \claim \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$z$<:$\alpha$} \Rightarrow \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
-      \\\\
-      \vec{z}, \Delta \claim \vec{\tau} \ll \alpha
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \claim \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \ll \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \alpha \lessdot \vec{z}}&
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \lessdot \vec{z}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \square \claim \alpha \lessdot \square
+      \vec{z}, \Delta \claim \square \Rightarrow \alpha \lessdot \square
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \lessdot \vec{z}_1 
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1 
       \\\\
-      \vec{z}_0, \Delta_0 \claim z \lessdot \vec{z}_2 
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow z \lessdot \vec{z}_2 
     } {
-      \vec{z}_0, \Delta_0 \cdot \code{$\alpha$<:$z$} \claim \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
+    }
+
+    \inferrule[Skip] {
+      \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
+      \\\\
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
+    } {
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow  \alpha \lessdot \vec{z}_1
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \ll \vec{\tau}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \claim \square \Rightarrow \alpha \ll \square
+    }
+
+    \inferrule[Direct] {
+      \tau \notin \vec{z}
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+    } {
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$\tau$} \Rightarrow \alpha \ll \vec{\tau}\ \tau
+    }
+
+    \inferrule[Trans] {
+      z \in \vec{z}
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}_0
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow z \ll \vec{\tau}_1
+    } {
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
+    }
+
+    \inferrule[Skip] {
+      \tau_l \neq \alpha
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+    } {
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \vec{\tau}
+    }
+  \end{mathpar}
+
+  \caption{Subtyping Tools}
+  \label{fig:subtyping_tools}
+\end{figure*}
+
+\begin{figure*}[h]
+  \begin{flalign*}
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \lessdot \Delta}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \claim \square \Rightarrow \alpha \lessdot \square
+    }
+
+    \inferrule[Match] {
+      \alpha \in \text{FV}(\tau)
+      \\
+      z_0 \in \vec{z}_0
+      \\
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \Delta_2
+      \\
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow z_0 \lessdot \vec{z}_1 
+    } {
+      \vec{z}_0, \Delta_0
+      \claim
+      \Delta_1 \cdot \code{$\tau$<:$z_0$} 
+      \Rightarrow
+      \alpha 
+      \lessdot 
+      \Delta_2\ \widebar{\cdot \code{$\tau$<:$z_1$}}^{z_1 \in \vec{z}_1}\ \cdot \code{$\tau$<:$z_0$} 
     }
 
     \inferrule[Skip] {
       \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
     } {
-      \vec{z}_0, \Delta_0 \cdot \code{$\tau_l$<:$\tau_r$} \claim  \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \lessdot \vec{z}_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \alpha \ll \vec{\tau}}&
+    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \ll \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \square \claim \alpha \ll \square
+      \vec{z}, \Delta \claim \square \Rightarrow \alpha \ll \square
     }
 
     \inferrule[Direct] {
+      \alpha \in \text{FV}(\tau_l)
+      \\
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta \claim \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta \cdot \code{$\alpha$<:$\tau$} \claim \alpha \ll \vec{\tau}\ \tau
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Trans] {
+      \alpha \in \text{FV}(\tau)
+      \\
       z \in \vec{z}
       \\
-      \vec{z}, \Delta \claim \alpha \ll \vec{\tau}_0
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
       \\\\
-      \vec{z}, \Delta \claim z \ll \vec{\tau}_1
+      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow z \ll \Delta_3 
     } {
-      \vec{z}, \Delta \cdot \code{$\alpha$<:$z$} \claim \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau$<:$z$} \Rightarrow \alpha \ll \Delta_2\ \Delta_3
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
-      \\\\
-      \vec{z}, \Delta \claim \alpha \ll \vec{\tau}
+      \\
+      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \claim \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2
     }
   \end{mathpar}
 
-  \caption{Subtyping Tools}
+  \caption{Relational Subtyping Tools}
   \label{fig:subtyping_tools}
 \end{figure*}
 
@@ -1457,9 +1542,9 @@ the variable's upper bound.
     \inferrule[Flex-L] {
       \alpha \notin \vec{z}_1
       \\
-      \vec{z}_0, \Delta_0 \claim \vec{z} \lessdot \alpha
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{z} \lessdot \alpha
       \\
-      \vec{z}_0, \Delta_0 \claim \vec{\tau} \ll \alpha
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{\tau} \ll \alpha
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
@@ -1474,14 +1559,14 @@ the variable's upper bound.
     \inferrule[Flex-R] {
       \alpha \notin \vec{z}_1
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \lessdot \vec{z}
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \lessdot \vec{z}
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \lessdot^\diamond \Delta_{skol}
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \lessdot \Delta_{skol}
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \ll \vec{\tau} 
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \ll \vec{\tau} 
       \\
-      \vec{z}_0, \Delta_0 \claim \alpha \ll^\diamond \Delta_{rel}
-      \\\\
+      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
+      \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
