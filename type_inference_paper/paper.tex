@@ -1454,7 +1454,7 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{Z, \Delta \claim \tau \subtypes \tau}&
+    &\boxed{\vec{z}, \Delta \claim \tau \subtypes \tau}&
   \end{flalign*}
 
   \begin{mathpar}
@@ -1552,7 +1552,7 @@ the variable's upper bound.
       \\
       \vec{z}_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
     } {
-      \vec{z}_1, \Delta_1\ \widebar{\code{;$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} \claim 
+      \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} \claim 
       \alpha \subtypes \tau_r
     }
 
@@ -1571,12 +1571,50 @@ the variable's upper bound.
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \widebar{\code{;$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\code{;$\tau_0$<:$\tau_1$}\in\Delta_{rel}} \code{;$\tau_l$<:}\code{\&}(\vec{\tau})
+      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}} \cdot\code{$\tau_l$<:}\code{\&}(\vec{\tau})
     } {
       \vec{z}_1, \Delta_1
-      \ \widebar{\code{;$\tau_l$<:$z$}}^{z\in\vec{z}}
-      \ \widebar{\code{;$\tau[\alpha\slash\tau_l]$<:$z$}}^{\code{;$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
+      \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
+      \ \widebar{\cdot \code{$\tau[\alpha\slash\tau_l]$<:$z$}}^{\cdot \code{$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
       \claim \tau_l \subtypes \alpha
+    }
+
+    \inferrule[Skolem-L] {
+      \alpha \in \vec{z}
+      \\
+      \widebar{\tau}^{\cdot \alpha \code{<:} \tau \in (\Delta\ \text{factor}(\Delta, \alpha))} = \vec{\tau}
+      \\\\
+      \vec{z}, \Delta\claim \code{\&}(\vec{\tau}) \subtypes \tau_r
+    } {
+      \vec{z}, \Delta \claim \alpha \subtypes \tau_r
+    }
+
+
+    \inferrule[Skolem-R] {
+      \alpha \in \Omega
+      \\
+      \widebar{\tau}^{\cdot \tau \code{<:} \alpha \in \Delta} = \vec{\tau}
+      \\
+      \vec{z}, \Delta
+      \claim \tau_l \subtypes \code{|}(\vec{\tau})
+    } {
+      \vec{z}, \Delta \claim \tau_l \subtypes \alpha
+    }
+
+
+    \inferrule[LowerAll] {
+      \left< \Delta, \Omega \right>
+      \claim \tau_l \subtypes \tau_u
+      \\
+      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+      \claim 
+      Q
+    } {
+      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+      \claim 
+      \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+      \subtypes 
+      \tau_u
     }
 
 
@@ -1594,135 +1632,6 @@ the variable's upper bound.
       \vec{z}_1, \Delta_1 \claim \tau_l
       \subtypes 
       \code{EXI[$Q$]$\tau_r$}
-    }
-
-    \inferrule[LearnableSkolemLowerVar] {
-      \alpha \notin \Omega 
-      \\
-      weakest\_lower\_bound(\Delta, \alpha) = \alpha' 
-      \\
-      \alpha' \in \Omega 
-      \\\\
-      weakest\_lower\_bound(\Delta, \alpha') = \tau_l
-      \\
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta \cup \{\code{$\alpha$<:$\tau_u$}\}, \Omega \right> \claim \alpha \subtypes \tau_u
-    }
-
-    \inferrule[LearnableLowerVar] {
-      \alpha \notin \Omega 
-      \\
-      weakest\_lower\_bound(\Delta, \alpha) = \tau_l
-      \\
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta \cup \{\code{$\alpha$<:$\tau_u$}\}, \Omega \right> \claim \alpha \subtypes \tau_u
-    }
-
-    \inferrule[LearnableSkolemUpperVar] {
-      \alpha \notin \Omega 
-      \\
-      strongest\_upper\_bound(\Delta, \alpha) = \alpha'
-      \\
-      \alpha' \in \Omega 
-      \\\\
-      strongest\_upper\_bound(\Delta, \alpha') = \tau_u
-      \\
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \alpha
-    }
-
-    \inferrule[LearnableUpperVar] {
-      \alpha \notin \Omega 
-      \\
-      strongest\_upper\_bound(\Delta, \alpha) = \tau_u
-      \\
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \alpha
-    }
-
-    \inferrule[LearnableUpperVarAlternativeA] {
-      \alpha \notin \Omega 
-      \\
-      \left< \Delta, \Omega \right> \claim \widebar{\code{;$\tau_l$<:$\tau_u$}}^{(\code{$\alpha$<:$\tau_u$})\in (\Delta \cup factor(\Delta, \alpha))} 
-    } {
-      \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \alpha
-    }
-
-    \inferrule[LearnableUpperVarAlternativeB] {
-      \alpha \notin \Omega 
-      \\
-      \left< \Delta, \Omega \right> \claim linearize(\{\code{$\tau_l$<:$\tau_u$}\ |\ (\code{$\alpha$<:$\tau_u$}) \in (\Delta \cup factor(\Delta, \alpha))\})
-      \\
-      linearize(\emptyset) = \square
-      \\
-      linearize(D \cup \{c\}) = linearize(D\backslash \{c\})\ ;\ c
-    } {
-      \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \alpha
-    }
-
-    \inferrule[LearnableUpperVarAlternativeC] {
-      \alpha \notin \Omega 
-      \\
-      interize(\{\tau_i\ |\ (\code{$\alpha$<:$\tau_i$}) \in (\Delta \cup factor(\Delta, \alpha))\})
-      = \tau_u
-      \\
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta \cup \{\code{$\tau_l$<:$\alpha$}\}, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \alpha
-    }
-
-
-    \inferrule[SkolemLowerVar] {
-      \alpha \in \Omega
-      \\
-      strongest\_upper\_bound(\Delta, \alpha) = \tau_l
-      \\
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta, \Omega \right> \claim \alpha \subtypes \tau_u
-    }
-
-
-    \inferrule[SkolemUpperVar] {
-      \alpha \in \Omega
-      \\
-      strongest\_upper(\Delta, \alpha) = \tau_u
-      \\
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_u
-    } {
-      \left< \Delta, \Omega \right> \claim \tau_l \subtypes \alpha
-    }
-
-
-    \inferrule[LowerAll] {
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_u
-      \\
-      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-      \claim 
-      Q
-    } {
-      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-      \claim 
-      \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
-      \subtypes 
-      \tau_u
     }
 
 
