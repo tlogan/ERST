@@ -1462,15 +1462,19 @@ the variable's upper bound.
 
 
 
+    \inferrule[Refl] {
+    } {
+      \vec{z}, \Delta \claim \tau \subtypes \tau
+    }
 
     \inferrule[Bot-L] {
     } {
-      \vec{z}_1, \Delta_1 \claim \code{BOT} \subtypes \tau_r
+      \vec{z}, \Delta \claim \code{BOT} \subtypes \tau_r
     }
 
     \inferrule[Top-R] {
     } {
-      \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \code{TOP}
+      \vec{z}, \Delta \claim \tau_l \subtypes \code{TOP}
     }
 
 
@@ -1505,7 +1509,6 @@ the variable's upper bound.
     } {
       \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
     }
-
 
     \inferrule[Exi-L] {
       \vec{\alpha} \cdot \Delta = Q
@@ -1601,7 +1604,6 @@ the variable's upper bound.
       \vec{z}, \Delta \claim \tau_l \subtypes \alpha
     }
 
-
     \inferrule[All-L] {
       \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
       \\
@@ -1620,7 +1622,6 @@ the variable's upper bound.
       \tau_r
     }
 
-
     \inferrule[Exi-R] {
       \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
       \\
@@ -1635,6 +1636,30 @@ the variable's upper bound.
       \vec{z}_1, \Delta_1 \claim \tau_l
       \subtypes 
       \code{EXI[$Q$]$\tau_r$}
+    }
+
+    \inferrule[Inter-LL] {
+      \vec{z}, \Delta \claim \tau_{ll} \subtypes \tau_r
+    } {
+      \vec{z}, \Delta \claim \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    }
+
+    \inferrule[Inter-LR] {
+      \vec{z}, \Delta \claim \tau_{lr} \subtypes \tau_r
+    } {
+      \vec{z}, \Delta \claim \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    }
+
+    \inferrule[Unio-RL] {
+      \vec{z}, \Delta \claim \tau_l \subtypes \tau_{rl}
+    } {
+      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+    }
+
+    \inferrule[Unio-RR] {
+      \vec{z}, \Delta \claim \tau_l \subtypes \tau_{rr}
+    } {
+      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
     }
 
 
