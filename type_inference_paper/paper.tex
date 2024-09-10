@@ -1602,19 +1602,22 @@ the variable's upper bound.
     }
 
 
-    \inferrule[LowerAll] {
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_u
+    \inferrule[All-L] {
+      \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
       \\
-      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-      \claim 
-      Q
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\\\
+      \vec{\alpha} \cdot \Delta = Q
+      \\
+      \vec{z}_1, \Delta_1 \claim Q
     } {
-      \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+      \vec{z}_1, \Delta_1 
       \claim 
-      \code{(ALL[$\widebar{\alpha_i}^i$ $Q$] $\tau_l$)}
+      \code{ALL[$Q$]$\tau_l$}
       \subtypes 
-      \tau_u
+      \tau_r
     }
 
 
