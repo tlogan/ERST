@@ -1228,7 +1228,7 @@ The right universal rule checks that subtyping holds for all variations of the p
 the variable's upper bound.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving (Variables) 
+%% Subtyping Solving (A) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -1665,46 +1665,8 @@ the variable's upper bound.
 
 
   \end{mathpar}
-  \caption{Subtyping (Variables)}
-  \label{fig:subtyping_variables}
-\end{figure*}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving (Multiple) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{\left< \Delta, \Omega \right> \claim Q}&
-\end{flalign*}
-
-\begin{mathpar}
-
-  \inferrule[Extension] {
-    \left< \Delta, \Omega \right>
-    \claim 
-    Q
-    \\
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    \tau_l
-    \subtypes 
-    \tau_u
-  } {
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    \code{$Q$ ; $\tau_l$<:$\tau_u$}
-  }
-
-  \inferrule[Empty] {
-  } {
-    \left< \Delta, \Omega \right>
-    \claim 
-    \square
-  }
-
-\end{mathpar}
-\caption{Subtyping (Multiple)}
-\label{fig:subtyping_variables}
+  \caption{Subtyping Reconstruction (A)}
+  \label{fig:subtyping_reconstruction_A}
 \end{figure*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1796,9 +1758,10 @@ the variable's upper bound.
     \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
   }
 \end{mathpar}
-\caption{Subtyping (least fixed point)}
-\label{fig:subtyping_leastfp}
+\caption{Subtyping Reconstruction (B)}
+\label{fig:subtyping_reconstruction_B}
 \end{figure*}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subtyping Solving (Simple) 
@@ -1958,9 +1921,48 @@ the variable's upper bound.
 
 
 \end{mathpar}
-\caption{Subtyping (simple)}
-\label{fig:subtyping_simple}
+\caption{Subtyping Reconstruction (C)}
+\label{fig:subtyping_reconstruction_C}
 \end{figure*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Subtyping Solving (Multiple) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\left< \Delta, \Omega \right> \claim Q}&
+\end{flalign*}
+
+\begin{mathpar}
+
+  \inferrule[Extension] {
+    \left< \Delta, \Omega \right>
+    \claim 
+    Q
+    \\
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    \tau_l
+    \subtypes 
+    \tau_u
+  } {
+    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
+    \claim 
+    \code{$Q$ ; $\tau_l$<:$\tau_u$}
+  }
+
+  \inferrule[Empty] {
+  } {
+    \left< \Delta, \Omega \right>
+    \claim 
+    \square
+  }
+
+\end{mathpar}
+\caption{Subtyping Sequence Reconstruction}
+\label{fig:subtyping_sequence_reconstruction}
+\end{figure*}
+
 
 
 

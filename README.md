@@ -92,6 +92,12 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- keep in mind that the recursive type (FIX) does not need a special least (strongest) vs greatest (weakest) form.
+    - the least or greatest is implied by the subtyping constraint used and the use of intersections vs unions. 
+        - a variable on the right side of subtyping strives to be the strongest type possible and gets weaker 
+        - a variable on the left side of subtyping strives to be the weakest type possible and gets stronger 
+    - the type the strength/weakness learned for the variables within the body of
+        - of the recursive type implies the strength/weakness of the whole recursive type
 - change map calls to custom recursive functions (e.g. in Flex rules)
 - in solver rules, distinguish input from out by using a pre-order relation.  
 - rewrite subtype constraint solving rules to match implementation and get order right
