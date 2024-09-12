@@ -2515,7 +2515,8 @@ class Solver:
         #######################################
 
         elif isinstance(upper, Diff): 
-            if diff_well_formed(upper):
+
+            if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
                 # TODO: need a sound/safe/conservative inhabitable check
                 # only works if we assume T is not empty
                 '''
@@ -2530,7 +2531,9 @@ class Solver:
                     m
                     for m in context_worlds 
                     if (
-                        not self.is_inhabitable(world, lower) or 
+                        # not self.is_inhabitable(world, lower) or 
+                        # just fail (incompletely) if lower is empty
+                        # we don't care to reason about empty types on the LHS.
                         self.solve(m, lower, upper.negation) == []
                     )
                 ]   

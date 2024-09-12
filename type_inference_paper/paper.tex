@@ -1767,40 +1767,23 @@ the variable's upper bound.
       \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
     }
 
-    \inferrule[LowerDiff] {
-      \left< \Delta, \Omega \right>
-      \claim \tau_c \subtypes \code{$\tau_u$|$\tau_n$}
+    \inferrule[Diff-L] {
+      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
     } {
-      \left< \Delta, \Omega \right> 
+      \vec{z}, \Delta \claim 
+      \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
+    }
+
+    \inferrule[Diff-R] {
+      \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
+      \\
+      \vec{z}, \Delta \claim \tau_l \subtypes \tau_r
+      \\
+      \neg(\vec{z}, \Delta \claim \tau_l \subtypes \tau_n)
+    } {
+      \vec{z}, \Delta
       \claim 
-      \code{$\tau_c$\textbackslash$\tau_n$} 
-      \subtypes 
-      \tau_u
-    }
-
-    \inferrule[EmptyUpperDiff] {
-      \neg inhabitable(\Delta, \tau_l)
-    } {
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
-    }
-
-    \inferrule[InhabUpperDiff] {
-      % TODO: ensure that this rule is guaranteed to be sound 
-      % NOTE: idea: if negation is well-formed then subtyping is complete?  
-      % meaning negation is sound
-      inhabitable(\Delta, \tau_l)
-      \\
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_c
-      \\\\
-      negation\_well\_formed(\tau_n)
-      \\
-      \neg \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \tau_n
-    } {
-      \left< \Delta, \Omega \right>
-      \claim \tau_l \subtypes \code{$\tau_c$\textbackslash$\tau_n$}
+      \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
     }
 
     \inferrule[Tag] {
