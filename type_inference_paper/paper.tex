@@ -1689,60 +1689,55 @@ the variable's upper bound.
     &\boxed{\vec{z}, \Delta \claim \tau \subtypes \tau}&
   \end{flalign*}
   \begin{mathpar}
-    \inferrule[LowerUpperLFP] {
-      subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
-      \\
-      \left< \Delta, \Omega \right>
-      \claim \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+    \inferrule[Fixpoint-L] {
+      % \vec{z}\ \alpha, \Delta \cdot \alpha \code{<:} \tau_r \claim \tau_l \subtypes \tau_r 
+      % \\\\
+      % \text{VS}
+      % \\\\
+      \vec{z}, \Delta \claim \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
     } {
-      \left< \Delta, \Omega \right>
-      \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+      \vec{z}, \Delta
+      \claim \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
     }
 
-    \inferrule[LowerLFP] {
-      pattern(\Delta, \code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
+    % \inferrule[LowerUpperLFP] {
+    %   subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
+    %   \\
+    %   \left< \Delta, \Omega \right>
+    %   \claim \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+    % } {
+    %   \left< \Delta, \Omega \right>
+    %   \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+    % }
+
+    % \inferrule[LowerLFP] {
+    %   pattern(\Delta, \code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
+    %   \\
+    %   vars(\tau_p) = \widebar{\alpha_i}^i
+    %   \\\\
+    %   \left< \Delta, \Omega \right>
+    %   \claim 
+    %   \code{EXI[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
+    %   \subtypes 
+    %   \tau_u
+    % } {
+    %   \left< \Delta, \Omega \right>
+    %   \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
+    % }
+
+    \inferrule[Fixpoint-R-Unroll] {
+      \text{decidable}(\Delta, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
       \\
-      vars(\tau_p) = \widebar{\alpha_i}^i
-      \\\\
-      \left< \Delta, \Omega \right>
-      \claim 
-      \code{EXI[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
-      \subtypes 
-      \tau_u
+      \vec{z}, \Delta \claim 
+      \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
     } {
-      \left< \Delta, \Omega \right>
-      \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
+      \vec{z}, \Delta 
+      \claim 
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
-    \inferrule[ReducedUpperLFP] {
-      resolve\_positive(\Delta, \Omega, \tau_l) = \tau_l'
-      \\
-      \tau_l' \neq \tau_l
-      \\
-      \left< \Delta, \Omega \right>
-      \claim 
-      \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
-    } {
-      \left< \Delta, \Omega \right>
-      \claim 
-      \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
-    }
-
-    \inferrule[UnrollUpperLFP] {
-      decidable(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
-      \\
-      subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_u) = \tau_u'
-      \\
-      \left< \Delta, \Omega \right> 
-      \claim 
-      \tau_l \subtypes \tau_u'
-    } {
-      \left< \Delta, \Omega \right>
-      \claim 
-      \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
-    }
-
-    \inferrule[LookupUpperLFP] {
+    % TODO: Should read vs write be determined by skolem vs non-skolem?
+    \inferrule[Fixpoint-R-Read] {
       \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]} \in \Delta
       \\
       matching\_ordered\_paths(\tau_k, targets(\tau_l)) = paths_k
@@ -1760,7 +1755,7 @@ the variable's upper bound.
       \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
     }
 
-    \inferrule[SaveUpperLFP] {
+    \inferrule[Fixpoint-R-Write] {
       consistent(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
     } {
       \left< \Delta \cup \{\code{$\tau_l$<:LFP[$\alpha$|$\tau_u$]}\}, \Omega \right> 

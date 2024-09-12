@@ -3,6 +3,9 @@
 
 
 ### TODO (Symbolic Implementation)
+- experiment with condition for write vs read cases of Fixpoint-R
+    - Should it be determined by skolem vs non-skolem?
+        - as in the single variable rules?
 - rewrite variable rules to use unionize and intersect when possible
     - this makes rules more readable.
 - consider moving lower,Fixpoint rule before variable rules
