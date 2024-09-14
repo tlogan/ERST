@@ -2532,8 +2532,7 @@ class Solver:
                     for m in context_worlds 
                     if (
                         # not self.is_inhabitable(world, lower) or 
-                        # just fail (incompletely) if lower is empty
-                        # we don't care to reason about empty types on the LHS.
+                        # Fail (incompletely) if lower is empty
                         self.solve(m, lower, upper.negation) == []
                     )
                 ]   
@@ -2704,58 +2703,70 @@ class Solver:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-                assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
-                if assumed_relational_typ != None:
 
-                    # print("~~~~~~ FIX A")
-                    # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
-                    normalized_upper = normalize_least_fp(upper, ordered_paths)
-                    worlds = self.solve(world, assumed_relational_typ, normalized_upper)
-                    return worlds
+                lower_fvs = extract_free_vars_from_typ(s(), lower)  
+                if any((fv in world.skolems) for fv in lower_fvs):
+                    assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
+                    if assumed_relational_typ != None:
 
-                elif self.is_fixpoint_constraint_wellformed(lower, upper):
-                    # print("~~~~~~ FIX B")
-                    lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                    # assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)
-                    # sub_map : PMap[str, Typ] = pmap({
-                    #     fv : resol
-                    #     for fv in lower_fvs
-                    #     for resol in [self.unionize_lower_bounds(world, fv)]
-                    #     if not isinstance(resol, Bot)
-                    # })
-                    sub_map : PMap[str, Typ] = pmap({
-                        fv : resol
-                        for fv in lower_fvs
-                        for resol in [
-                            self.unionize_lower_bounds(world, fv)
-                            if fv not in world.skolems else
-                            make_inter(list(
-                                self.extract_upper_bounds(world, fv).union(self.extract_factored_upper_bounds(world, fv))
-                            ))
-                        ]
-                        if not isinstance(resol, Bot)
-                    })
-                    ####################################
-                    if bool(sub_map):
-                        return [
-                            new_world
-                            for world in self.solve(world, sub_typ(sub_map, lower), upper)
-                            for new_world in [replace(world, 
+                        # print("~~~~~~ FIX A")
+                        # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
+                        ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
+                        normalized_upper = normalize_least_fp(upper, ordered_paths)
+                        worlds = self.solve(world, assumed_relational_typ, normalized_upper)
+                        return worlds
+                    else:
+                        return []
+                else:
+                    if self.is_fixpoint_constraint_wellformed(lower, upper):
+                        # print("~~~~~~ FIX B")
+                        lower_fvs = extract_free_vars_from_typ(s(), lower)  
+                        # assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)
+                        # sub_map : PMap[str, Typ] = pmap({
+                        #     fv : resol
+                        #     for fv in lower_fvs
+                        #     for resol in [self.unionize_lower_bounds(world, fv)]
+                        #     if not isinstance(resol, Bot)
+                        # })
+                        sub_map : PMap[str, Typ] = pmap({
+                            fv : resol
+                            for fv in lower_fvs
+                            for resol in [
+                                self.unionize_lower_bounds(world, fv)
+                                # if fv not in world.skolems else
+                                # make_inter(list(
+                                #     self.extract_upper_bounds(world, fv).union(self.extract_factored_upper_bounds(world, fv))
+                                # ))
+                            ]
+                            if not isinstance(resol, Bot)
+                        })
+                        ####################################
+
+                        # learned_constraints = (
+                        #     [Subtyping(lower, upper)]
+                        #     if all((fv not in world.skolems) for fv in lower_fvs) else
+                        #     []
+                        # )
+                        if bool(sub_map):
+                            return [
+                                new_world
+                                for world in self.solve(world, sub_typ(sub_map, lower), upper)
+                                for new_world in [replace(world, 
+                                    constraints = world.constraints.add(Subtyping(lower, upper)),
+                                    relids = world.relids.union(lower_fvs)
+                                )]
+                                # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
+                            ]
+                        else:
+                            # print("~~~~~~ FIX C")
+                            return [replace(world, 
                                 constraints = world.constraints.add(Subtyping(lower, upper)),
                                 relids = world.relids.union(lower_fvs)
                             )]
-                            # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
-                        ]
+                        #end if
                     else:
-                        # print("~~~~~~ FIX C")
-                        return [replace(world, 
-                            constraints = world.constraints.add(Subtyping(lower, upper)),
-                            relids = world.relids.union(lower_fvs)
-                        )]
+                        return []
                     #end if
-                else:
-                    return []
                 #end if
 
         elif isinstance(lower, Diff):
