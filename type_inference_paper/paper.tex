@@ -921,58 +921,6 @@ rather than merely a type variable to allow for relational constraints.
 \end{theorem}
 
 
-
-\begin{figure*}[h]
-  \begin{flalign*}
-    &\boxed{\&(\vec{\tau}) = \tau}&
-  \end{flalign*}
-  \[\begin{array}{rclr}
-    \code{\&}(\square)
-    &=& 
-    \code{TOP}
-    & \C{empty} 
-    \\
-
-    \code{\&}(\square\ \tau)
-    &=& 
-    \tau
-    & \C{single} 
-    \\
-
-    \code{\&}(\vec{\tau}\ \tau)
-    &=& 
-    \code{\&}(\vec{\tau}) \code{\&} \tau
-    & \C{step} 
-    \\
-  \end{array}\]
-
-  \begin{flalign*}
-    &\boxed{|(\vec{\tau}) = \tau}&
-  \end{flalign*}
-  \[\begin{array}{rclr}
-    \code{|}(\square)
-    &=& 
-    \code{TOP}
-    & \C{empty} 
-    \\
-
-    \code{|}(\square\ \tau)
-    &=& 
-    \tau
-    & \C{single} 
-    \\
-
-    \code{|}(\vec{\tau}\ \tau)
-    &=& 
-    \code{|}(\vec{\tau}) \code{|} \tau
-    & \C{step} 
-    \\
-  \end{array}\]
-
-\caption{Type Tools}
-\label{fig:type_tools}
-\end{figure*}
-
 \begin{figure*}[h]
 
   \begin{flalign*}
@@ -1565,7 +1513,7 @@ the variable's upper bound.
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \code{|}(\vec{\tau}) \subtypes \tau_r
+      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
     } {
       \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} \claim 
       \alpha \subtypes \tau_r
@@ -1586,7 +1534,7 @@ the variable's upper bound.
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}} \cdot\code{$\tau_l$<:}\code{\&}(\vec{\tau})
+      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
     } {
       \vec{z}_1, \Delta_1
       \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
@@ -1597,21 +1545,19 @@ the variable's upper bound.
     \inferrule[Skolem-L] {
       \alpha \in \vec{z}
       \\
-      \widebar{\tau}^{\cdot \alpha \code{<:} \tau \in (\Delta\ \text{factor}(\Delta, \alpha))} = \vec{\tau}
-      \\\\
-      \vec{z}, \Delta\claim \code{\&}(\vec{\tau}) \subtypes \tau_r
+      \alpha \code{<:} \tau \in (\Delta\ \text{factor}(\Delta, \alpha))
+      \\
+      \vec{z}, \Delta \claim \tau \subtypes \tau_r
     } {
       \vec{z}, \Delta \claim \alpha \subtypes \tau_r
     }
 
-
     \inferrule[Skolem-R] {
       \alpha \in \Omega
       \\
-      \widebar{\tau}^{\cdot \tau \code{<:} \alpha \in \Delta} = \vec{\tau}
+      \tau \code{<:} \alpha \in \Delta
       \\
-      \vec{z}, \Delta
-      \claim \tau_l \subtypes \code{|}(\vec{\tau})
+      \vec{z}, \Delta \claim \tau_l \subtypes \tau
     } {
       \vec{z}, \Delta \claim \tau_l \subtypes \alpha
     }
@@ -1725,7 +1671,7 @@ the variable's upper bound.
     %   \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
     % }
 
-    \inferrule[Fixpoint-R-Unroll] {
+    \inferrule[Fixpoint-R] {
       \text{decidable}(\Delta, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
       \\
       \vec{z}, \Delta \claim 
@@ -1737,25 +1683,22 @@ the variable's upper bound.
     }
 
     % TODO: Should read vs write be determined by skolem vs non-skolem?
-    \inferrule[Fixpoint-R-Read] {
-      \code{$\tau_k$<:LFP[$\alpha$|$\tau_v$]} \in \Delta
+    % TODO: step 1. get rid of the paths; normalize abstraction should only be in terms of targets
+    \inferrule[Skolem-L-Fixpoint-R] {
+      z \in \text{FV}(\tau_l) \\ z \in \vec{z}
       \\
-      matching\_ordered\_paths(\tau_k, targets(\tau_l)) = paths_k
-      \\
-      normalize(\code{LFP[$\alpha$|$\tau_v$]}, paths_k) = \code{LFP[$\alpha$|$\tau_v'$]}
-      \\
-      ordered\_paths(\tau_l) = paths_l
-      \\
-      normalize(\code{LFP[$\alpha$|$\tau_u$]}, paths_l) = \code{LFP[$\alpha$|$\tau_u'$]}
+      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \code{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
       \\\\
-      \left< \Delta, \Omega \right> 
-      \claim \code{LFP[$\alpha$|$\tau_v'$]} \subtypes \code{LFP[$\alpha$|$\tau_u'$]}
+      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta)
+      \\
+      \vec{z}, \Delta
+      \claim \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
     } {
-      \left< \Delta, \Omega \right> 
-      \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+      \vec{z}, \Delta
+      \claim \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
-    \inferrule[Fixpoint-R-Write] {
+    \inferrule[Flex-L-Fixpoint-R] {
       consistent(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
     } {
       \left< \Delta \cup \{\code{$\tau_l$<:LFP[$\alpha$|$\tau_u$]}\}, \Omega \right> 

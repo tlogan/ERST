@@ -3,11 +3,11 @@
 
 
 ### TODO (Symbolic Implementation)
-- experiment with condition for write vs read cases of Fixpoint-R
-    - Should it be determined by skolem vs non-skolem?
-        - as in the single variable rules?
-- rewrite variable rules to use unionize and intersect when possible
-    - this makes rules more readable.
+- update Fixpoint Subtyping rules
+- update skolem case of Fixpoint to match rule in paper 
+- update variable rules: no need to use intersect and unionize in variable rules
+    - skolem case: equivalent to finding one correct option
+    - flex case: equivalent to checking a sequence of constraints 
 - consider moving lower,Fixpoint rule before variable rules
 - consider removing ad-hoc lower, Fixpoint rewriting rule
 - add inhabitable / well-formed type check to typing rules
