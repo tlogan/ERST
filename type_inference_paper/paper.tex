@@ -1831,11 +1831,11 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\left< \Delta, \Omega \right> \claim Q}&
+  &\boxed{\vec{z}, \Delta \claim Q}&
 \end{flalign*}
   \begin{mathpar}
     \inferrule[Extension] {
-      \vec{z}_0, \Delta_0 \claim Q 
+      \vec{z}_0, \Delta_0 \claim  \Delta
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
@@ -1845,7 +1845,7 @@ the variable's upper bound.
     } {
       \vec{z}_1, \Delta_1
       \claim 
-      \code{$Q$ ; $\tau_l$<:$\tau_u$}
+      \Delta \cdot \code{$\tau_l$<:$\tau_u$}
     }
 
     \inferrule[Empty] {
