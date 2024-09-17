@@ -779,6 +779,30 @@ rather than merely a type variable to allow for relational constraints.
   \label{fig:collection_tools}
 \end{figure*}
 
+\begin{figure*}[h]
+
+  \begin{flalign*}
+    &{\boxed{\code{|}(\vec{\tau}) = \tau}}&
+  \end{flalign*}
+
+  \[\begin{array}{rclr}
+    \code{|}(\square)
+    &=& 
+    \code{BOT}
+    & \C{empty} 
+    \\
+
+    \code{|}(\vec{\tau}\ \tau)
+    &=& 
+    \code{|}(\vec{\tau}) \code{|} \tau
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \caption{Type Tools}
+  \label{fig:collection_tools}
+\end{figure*}
+
 
 \begin{figure*}[h]
 \begin{flalign*}
@@ -1682,8 +1706,6 @@ the variable's upper bound.
       \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
-    % TODO: Should read vs write be determined by skolem vs non-skolem?
-    % TODO: step 1. get rid of the paths; normalize abstraction should only be in terms of targets
     \inferrule[Skolem-L-Fixpoint-R] {
       z \in \text{FV}(\tau_l) \\ z \in \vec{z}
       \\
@@ -1699,10 +1721,17 @@ the variable's upper bound.
     }
 
     \inferrule[Flex-L-Fixpoint-R] {
-      consistent(\Delta, \tau_l, \code{LFP[$\alpha$|$\tau_u$]})
+      \forall \alpha' .\ \alpha' \in \text{FV}(\tau_l) \rightarrow 
+      \alpha' \notin \vec{z} \land
+      \Delta, \alpha' \claim \omega
+      \\
+      \vec{z}, \Delta
+      \claim \tau_l[\omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \\
+      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
     } {
-      \left< \Delta \cup \{\code{$\tau_l$<:LFP[$\alpha$|$\tau_u$]}\}, \Omega \right> 
-      \claim \tau_l \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+      \vec{z}, \Delta \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
+      \claim \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
     \inferrule[Diff-L] {
@@ -1770,6 +1799,33 @@ the variable's upper bound.
   \label{fig:subtyping_reconstruction_B}
 \end{figure*}
 
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\Delta, \alpha \claim \omega}&
+\end{flalign*}
+  \begin{mathpar}
+    \inferrule[Miss] {
+      \forall \tau .\ \cdot \code{$\tau$<:$\alpha$} \notin \Delta
+      \\
+      \forall \tau .\ \cdot \alpha \mapsto \tau \notin \omega
+    } {
+      \Delta, \alpha \claim \omega
+    }
+
+    \inferrule[Match] {
+      \widebar{\ \tau\ }^{\cdot \code{$\tau$<:$\alpha$} \in \Delta} = \vec{\tau}
+      \\
+      \cdot \alpha \mapsto \code{|}(\vec{\tau}) \in \omega
+      \\\\
+      \forall \tau'\ \tau'' .\  \cdot \alpha \mapsto \tau' \in \omega \rightarrow \cdot \alpha \mapsto \tau'' \in \omega \rightarrow \tau' = \tau''
+    } {
+      \Delta, \alpha \claim \omega
+    }
+  \end{mathpar}
+\caption{Type substitution}
+\label{fig:type_substitution}
+\end{figure*}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subtyping Solving (Multiple) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1777,33 +1833,26 @@ the variable's upper bound.
 \begin{flalign*}
   &\boxed{\left< \Delta, \Omega \right> \claim Q}&
 \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Extension] {
+      \vec{z}_0, \Delta_0 \claim Q 
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \tau_u
+    } {
+      \vec{z}_1, \Delta_1
+      \claim 
+      \code{$Q$ ; $\tau_l$<:$\tau_u$}
+    }
 
-\begin{mathpar}
-
-  \inferrule[Extension] {
-    \left< \Delta, \Omega \right>
-    \claim 
-    Q
-    \\
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    \tau_l
-    \subtypes 
-    \tau_u
-  } {
-    \left< \Delta \cup \Delta', \Omega \cup \Omega' \right>
-    \claim 
-    \code{$Q$ ; $\tau_l$<:$\tau_u$}
-  }
-
-  \inferrule[Empty] {
-  } {
-    \left< \Delta, \Omega \right>
-    \claim 
-    \square
-  }
-
-\end{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \claim \square
+    }
+  \end{mathpar}
 \caption{Subtyping Sequence Reconstruction}
 \label{fig:subtyping_sequence_reconstruction}
 \end{figure*}
