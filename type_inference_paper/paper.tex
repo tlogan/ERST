@@ -50,6 +50,9 @@
 % \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\claim}{\vdash}
+
+\newcommand{\ttilde}{\textasciitilde{}}
+
 \newcommand{\hastype}{\ \ddagger\ }
 \newcommand{\subtypes}{\sqsubseteq}
 \newcommand{\I}{\hspace{4mm}}
@@ -545,21 +548,21 @@ rather than merely a type variable to allow for relational constraints.
   \code{$\tau$\&$\tau$} \sep
   \code{$\tau$\textbackslash$\tau$} \sep 
   \\
-  \code{EXI[$Q$] $\tau$} \sep 
-  \code{ALL[$Q$] $\tau$} \sep 
+  \code{EXI[$\vec{\alpha}$ $Q$] $\tau$} \sep 
+  \code{ALL[$\vec{\alpha}$ $Q$] $\tau$} \sep 
   \code{FIX[$\alpha$;$\tau$]}
   \end{array}
 \\
 \\
 \nonterm{Q} & \is
-  \vec{\alpha} \sep 
-  \code{$Q$ ; $\tau$<:$\tau$} 
+  \epsilon \sep 
+  \code{$Q$;$\tau$<:$\tau$} 
 \\
 \\
-\nonterm{\vec{\alpha}} & \is \alpha \sep \vec{\alpha}\ \alpha 
+\nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
 \\
 \\
-\nonterm{\vec{z}} & \is \square \sep \vec{z}\ z
+\nonterm{\vec{z}} & \is \epsilon \sep \vec{z}\ z
 \\
 \\
 \nonterm{z} & \is \alpha 
@@ -584,11 +587,11 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{r} & \is 
-  \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
+  \epsilon \sep r\ \code{;$l$=$e$}
 \\
 \\
 \nonterm{f} & \is 
-  \code{case $p$=>$e$} \sep f\ \code{case $p$=>$e$}
+  \epsilon \sep f\ \code{case $p$=>$e$}
 \\
 \\
 \nonterm{p} & \is 
@@ -605,19 +608,19 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{\sigma} & \is 
-  \square \sep \sigma \cdot x \slash v
+  \epsilon \sep \sigma \cdot x \slash v
 \\
 \\
 \nonterm{\omega} & \is 
-  \square \sep \omega \cdot \alpha \slash \tau
+  \epsilon \sep \omega \cdot \alpha \slash \tau
 \\  
 \\  
 \nonterm{\Gamma} & \is 
-  \square \sep \Gamma \cdot \code{$x$:$\tau$}
+  \epsilon \sep \Gamma \cdot \code{$x$:$\tau$}
 \\
 \\  
 \nonterm{\Delta} & \is 
-  \square \sep \Delta \cdot \code{$\tau$<:$\tau$}
+  \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
 \\
 \\
 \nonterm{v} & \is 
@@ -639,7 +642,7 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{W} & \is 
-  \square \sep W \cdot (u,u)
+  \epsilon \sep W \cdot (u,u)
 \\
 \\
 \nonterm{c} & \is 
@@ -653,11 +656,11 @@ rather than merely a type variable to allow for relational constraints.
 \\
 \\
 \nonterm{C} & \is 
-  \square \sep c \sep C\ c
+  \epsilon \sep C\ c
 \end{array}
 \]
 
-\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\square$" when the context makes it clear that there is a missing term}
+\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
 \label{fig:syntax}
 \end{figure*}
 
@@ -669,16 +672,10 @@ rather than merely a type variable to allow for relational constraints.
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    C\  \square 
+    C\  \epsilon 
     &=& 
     C
     & \C{empty} 
-    \\
-
-    C\  c 
-    &=& 
-    C\ c
-    & \C{single} 
     \\
 
     C\  (C'\ c) 
@@ -694,9 +691,9 @@ rather than merely a type variable to allow for relational constraints.
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \text{map}(\square, f)
+    \text{map}(\epsilon, f)
     &=& 
-    \square
+    \epsilon
     & \C{empty} 
     \\
 
@@ -715,23 +712,6 @@ rather than merely a type variable to allow for relational constraints.
     &\circeq& 
     \text{map}(C, \lambda i . c)
     & \C{comprehension} 
-    \\
-  \end{array}\]
-
-  \begin{flalign*}
-    &{\boxed{\vec{\alpha} \cdot \Delta = Q}}&
-  \end{flalign*}
-  \[\begin{array}{rclr}
-    \vec{\alpha} \cdot \square 
-    &=& 
-    \vec{\alpha} 
-    & \C{empty} 
-    \\
-
-    \vec{\alpha} \cdot \Delta \code{;$\tau_l$<:$\tau_r$}
-    &=& 
-    (\vec{\alpha} \cdot \Delta) \code{;$\tau_l$<:$\tau_r$}
-    & \C{step} 
     \\
   \end{array}\]
 
@@ -786,7 +766,7 @@ rather than merely a type variable to allow for relational constraints.
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \code{|}(\square)
+    \code{|}(\epsilon)
     &=& 
     \code{BOT}
     & \C{empty} 
@@ -884,7 +864,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[LetContin] {
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \square \cdot x \slash v)
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash v)
   }
 
   \inferrule[FixTarget] {
@@ -895,7 +875,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \square \cdot x \slash \code{fix(case $x$ => $e$)})
+    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash \code{fix(case $x$ => $e$)})
   }
 
   \inferrule[Tuple] {
@@ -1012,50 +992,44 @@ rather than merely a type variable to allow for relational constraints.
   \llbracket \tau_b \rrbracket 
   & \C{difference}
   \\
-  \llbracket \code{EXI[$Q$] $\tau$} \rrbracket 
+  \llbracket \code{EXI[$\vec{\alpha}$ $Q$]$\tau$} \rrbracket 
   &=& 
   \begin{array}[t]{@{}l}
-  \{ u \ |\ \exists\ \omega . 
+  \{ u \ |\ \exists\ \Omega . 
   \\
-  \I \vec{\alpha} \cdot \Delta = Q\ \land\ 
-  \\ 
-  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\Omega)))\ \land\ 
   \\
-  \I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \land\ 
-  \\ 
-  \I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
+  \I \llbracket Q[\Omega]\ \rrbracket \ \land\ u \in \llbracket \tau[\Omega] \rrbracket
   \\
   \}
   \end{array}
   & 
   \C{indexed union}
   \\
-  \llbracket \code{ALL[$Q$] $\tau$} \rrbracket 
+  \llbracket \code{ALL[$\vec{\alpha}$ $Q$]$\tau$} \rrbracket 
   &=& 
   \begin{array}[t]{@{}l}
   \{ u \ |\  \forall\ \omega . 
   \\
-  \I \vec{\alpha} \cdot \Delta = Q\ \land\ 
-  \\ 
-  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\omega)))\ \land\ 
+  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\Omega)))\ \land\ 
   \\
-  \I \llbracket \text{subst}(\omega, \Delta) \rrbracket \ \rightarrow  
+  \I \llbracket \Delta[\Omega] \rrbracket \ \rightarrow  
   \\
-  \I u \in \llbracket \text{subst}(\omega, \tau) \rrbracket
+  \I u \in \llbracket \tau[\Omega] \rrbracket
   \\
   \}
   \end{array}
   & 
   \C{indexed intersection}
   \\
-  \llbracket \code{FIX[$\alpha$]$\tau$} \rrbracket 
+  \llbracket \code{FIX[$\alpha$;$\tau]$} \rrbracket 
   &=& 
   \begin{array}[t]{@{}l}
   \mu\ \mathbb{V}'\ .\ \{ u  \ |\ \exists\ \tau'\ .
   \\
   \I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
   \\ 
-  \I u \in \llbracket \text{subst}(\square \cdot \alpha \slash \tau', \tau) \rrbracket
+  \I u \in \llbracket \tau[\alpha \slash \tau'] \rrbracket
   \\
   \}
   \end{array}
@@ -1064,18 +1038,18 @@ rather than merely a type variable to allow for relational constraints.
   \end{array}
   \]
   \begin{flalign*}
-    &\boxed{\llbracket \Delta \rrbracket = \phi }&
+    &\boxed{\llbracket Q \rrbracket = \phi }&
   \end{flalign*}
   \[
   \begin{array}{rclr}
-  \llbracket \square \rrbracket 
+  \llbracket \epsilon \rrbracket 
   &=& 
   \top
   & \C{empty} 
   \\
-  \llbracket \Delta \cdot \code{$\tau_l$<:$\tau_u$} \rrbracket 
+  \llbracket Q \code{;$\tau_l$<:$\tau_u$} \rrbracket 
   &=& 
-  \llbracket \Delta \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
+  \llbracket Q \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
   & \C{extension} 
   \end{array}\]
 \caption{Type Denotation}
@@ -1211,7 +1185,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \square \lessdot \alpha
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \epsilon \lessdot \alpha
     }
 
     \inferrule[Match] {
@@ -1243,7 +1217,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \square \ll \alpha
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \epsilon \ll \alpha
     }
 
     \inferrule[Direct] {
@@ -1279,7 +1253,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \alpha \lessdot \square
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
@@ -1307,7 +1281,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \alpha \ll \square
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
@@ -1348,7 +1322,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \alpha \lessdot \square
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
@@ -1384,7 +1358,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square \Rightarrow \alpha \ll \square
+      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
@@ -1792,7 +1766,7 @@ the variable's upper bound.
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \square \claim \square
+      \vec{z}, \Delta, \epsilon \claim \epsilon
     }
 
     \inferrule[Miss] {
@@ -1820,9 +1794,6 @@ the variable's upper bound.
 \label{fig:type_substitution}
 \end{figure*}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving (Multiple) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
   &\boxed{\vec{z}, \Delta \claim \Delta}&
@@ -1844,9 +1815,66 @@ the variable's upper bound.
 
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \square
+      \vec{z}, \Delta \claim \epsilon
     }
   \end{mathpar}
+\caption{Subtyping Sequence Reconstruction}
+\label{fig:subtyping_sequence_reconstruction}
+\end{figure*}
+
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\Delta, \Gamma \claim e \hastype \tau}&
+\end{flalign*}
+  \begin{mathpar}
+    \inferrule[Unit] {
+    } {
+      \Delta, \Gamma \claim \code{@} \hastype \code{@} 
+    }
+
+    \inferrule[Var] {
+      \cdot \code{$x$:$\tau$} \in \Gamma
+    } {
+      \Delta, \Gamma \claim x \hastype \tau 
+    }
+
+    \inferrule[Tag] {
+      \Delta, \Gamma \claim e \hastype \tau 
+    } {
+      \Delta, \Gamma \claim \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} 
+    }
+
+    \inferrule[Empty] {
+    } {
+      \Delta, \Gamma \claim \epsilon \hastype \code{TOP} 
+    }
+
+    \inferrule[Record] {
+      \Delta, \Gamma \claim r \hastype \tau_0 
+      \\
+      \Delta, \Gamma \claim e \hastype \tau_1
+    } {
+      \Delta, \Gamma \claim r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$}
+    }
+  \end{mathpar}
+
+  \[\begin{array}[t]{@{}l}
+    \code{$x$} \sep 
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $e$} \sep 
+    r \sep
+    \code{$e$,$e$} \sep
+    f \sep 
+    \code{$e$.$l$} \sep
+    \code{($e$)($e$)} \sep
+    \\
+    \code{$e$ |> $e$} \sep
+    \code{fix($e$)} \sep
+    \code{let $x$:$\tau$ = $e$ in $e$} \sep
+    \code{($e$)}
+    \\
+    \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
+  \end{array}\]
 \caption{Subtyping Sequence Reconstruction}
 \label{fig:subtyping_sequence_reconstruction}
 \end{figure*}
