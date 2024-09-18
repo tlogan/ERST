@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  17 SEP 2024 13:42
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  18 SEP 2024 13:01
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1084,43 +1084,43 @@ Class acmart Warning: A possible image without description on input line 1652.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1800.
+Class acmart Warning: A possible image without description on input line 1786.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1827.
+Class acmart Warning: A possible image without description on input line 1821.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1858.
+Class acmart Warning: A possible image without description on input line 1852.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 2041.
+LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 2035.
 
 [8.8]
 
-LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2068.
+LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2062.
 
 [9.9]
 Underfull \vbox (badness 1215) has occurred while \output is active []
 
  [10.10] [11.11] [12.12]
 
-LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2346.
+LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2340.
 
 [13.13]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2381.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2375.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2412.
+LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2406.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1167,7 +1167,7 @@ Here is how much of TeX's memory you used:
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (18 pages, 508370 bytes).
+Output written on paper.pdf (18 pages, 508275 bytes).
 PDF statistics:
  330 PDF objects out of 1000 (max. 8388607)
  268 compressed objects within 3 object streams

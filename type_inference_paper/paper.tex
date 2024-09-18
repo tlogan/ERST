@@ -1721,12 +1721,10 @@ the variable's upper bound.
     }
 
     \inferrule[Flex-L-Fixpoint-R] {
-      \forall \alpha' .\ \alpha' \in \text{FV}(\tau_l) \rightarrow 
-      \alpha' \notin \vec{z} \land
-      \Delta, \alpha' \claim \omega
+      \vec{z}, \Delta, \text{FV}(\tau_l) \claim \Omega
       \\
       \vec{z}, \Delta
-      \claim \tau_l[\omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \claim \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
       \\
       \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
     } {
@@ -1769,18 +1767,6 @@ the variable's upper bound.
       \claim \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
     }
 
-      % \inferrule[Unio-L] {
-      %   \vec{z}_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
-      %   \\
-      %   \vec{z}_0 \preceq \vec{z}_1
-      %   \\\\
-      %   \Delta_0 \preceq \Delta_1
-      %   \\
-      %   \vec{z}_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_r
-      % } {
-      %   \vec{z}_1, \Delta_1 \claim \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
-      % }
-
     \inferrule[Imp] {
       \vec{z}_0, \Delta_0 \claim \tau_{rl} \subtypes \tau_{ll}
       \\
@@ -1801,25 +1787,33 @@ the variable's upper bound.
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\Delta, \alpha \claim \omega}&
+  &\boxed{\vec{z}, \Delta, \vec{\alpha} \claim \Omega}&
 \end{flalign*}
   \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta, \square \claim \square
+    }
+
     \inferrule[Miss] {
+      \alpha \notin \vec{z}
+      \\
       \forall \tau .\ \cdot \code{$\tau$<:$\alpha$} \notin \Delta
       \\
-      \forall \tau .\ \cdot \alpha \mapsto \tau \notin \omega
+      \vec{z}, \Delta, \vec{\alpha} \claim \Omega
     } {
-      \Delta, \alpha \claim \omega
+      \vec{z}, \Delta, \vec{\alpha}\ \alpha \claim \Omega
     }
 
     \inferrule[Match] {
-      \widebar{\ \tau\ }^{\cdot \code{$\tau$<:$\alpha$} \in \Delta} = \vec{\tau}
+      \alpha \notin \vec{z}
       \\
-      \cdot \alpha \mapsto \code{|}(\vec{\tau}) \in \omega
-      \\\\
-      \forall \tau'\ \tau'' .\  \cdot \alpha \mapsto \tau' \in \omega \rightarrow \cdot \alpha \mapsto \tau'' \in \omega \rightarrow \tau' = \tau''
+      \exists \tau .\ \cdot \code{$\tau$<:$\alpha$} \in \Delta
+      \\
+      \vec{z}, \Delta, \vec{\alpha} \claim \Omega
     } {
-      \Delta, \alpha \claim \omega
+      \vec{z}, \Delta, \vec{\alpha}\ \alpha \claim \Omega
+      \cdot \alpha \mapsto \code{|}(\widebar{\ \tau\ }^{\cdot \code{$\tau$<:$\alpha$} \in \Delta})
     }
   \end{mathpar}
 \caption{Type substitution}
@@ -1831,7 +1825,7 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\vec{z}, \Delta \claim Q}&
+  &\boxed{\vec{z}, \Delta \claim \Delta}&
 \end{flalign*}
   \begin{mathpar}
     \inferrule[Extension] {
