@@ -54,6 +54,9 @@
 \newcommand{\ttilde}{\textasciitilde{}}
 
 \newcommand{\hastype}{\ \ddagger\ }
+\newcommand{\liftpat}{\ \lozenge\ }
+\newcommand{\liftfun}{\ \blacktriangle\ }
+ 
 \newcommand{\subtypes}{\sqsubseteq}
 \newcommand{\I}{\hspace{4mm}}
 \newcommand{\B}[1]{\textbf{#1}}
@@ -1823,40 +1826,85 @@ the variable's upper bound.
 \end{figure*}
 
 \begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{\Delta, \Gamma \claim e \hastype \tau}&
-\end{flalign*}
+  \begin{flalign*}
+    &\boxed{\Gamma \claim e \hastype \tau \dashv \vec{W}}&
+  \end{flalign*}
   \begin{mathpar}
     \inferrule[Unit] {
     } {
-      \Delta, \Gamma \claim \code{@} \hastype \code{@} 
+      \Gamma \claim \code{@} \hastype \code{@} \dashv \vec{W}
     }
 
     \inferrule[Var] {
       \cdot \code{$x$:$\tau$} \in \Gamma
     } {
-      \Delta, \Gamma \claim x \hastype \tau 
+      \Gamma \claim x \hastype \tau \dashv \vec{W} 
     }
 
     \inferrule[Tag] {
-      \Delta, \Gamma \claim e \hastype \tau 
+      \Gamma \claim e \hastype \tau \dashv \vec{W}
     } {
-      \Delta, \Gamma \claim \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} 
+      \Gamma \claim \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \dashv \vec{W}
     }
 
     \inferrule[Empty] {
     } {
-      \Delta, \Gamma \claim \epsilon \hastype \code{TOP} 
+      \Gamma \claim \epsilon \hastype \code{TOP} \dashv \vec{W}
     }
 
     \inferrule[Record] {
-      \Delta, \Gamma \claim r \hastype \tau_0 
+      \Gamma \claim r \hastype \tau_0 \dashv \vec{W}_0
       \\
-      \Delta, \Gamma \claim e \hastype \tau_1
+      \vec{W}_0 \looparrowright \vec{W}_1
+      \\
+      \Gamma \claim e \hastype \tau_1 \dashv \vec{W}_1
     } {
-      \Delta, \Gamma \claim r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$}
+      \Gamma \claim r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \dashv \vec{W}_1
+    }
+
+    \inferrule[Function] {
+      \vec{W}, \Gamma \claim f \liftfun \vec{\pi}, \vec{\eta} 
+      \\
+      \Gamma \claim \vec{\pi} \Rrightarrow \tau
+    } {
+      \Gamma \claim f \hastype \tau \dashv \vec{W}
     }
   \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{W}, \Gamma \claim f \liftfun \vec{\pi}, \vec{\eta}}&
+  \end{flalign*}
+  \begin{mathpar}
+
+    \inferrule[Step] {
+      \vec{W}_0, \Gamma_0 \claim f \liftfun \vec{\pi}, \vec{\eta}
+      \\\\
+      \Gamma_1 \claim p \liftpat \tau_0
+      \\
+      \vec{W}_0 \looparrowright \vec{W}_1
+      \\
+      \Gamma_0\ \Gamma_1 \claim e \hastype \tau_1 \dashv \vec{W}_1
+      \\
+      \left< \vec{W}_1, \text{neg}(\tau_0, \vec{\eta}), \tau_1 \right> = \pi
+    } {
+      \vec{W}_0, \Gamma_0 \claim f\ \code{case $p$=>$e$} \liftfun 
+      \vec{\pi}\ \pi, \vec{\eta}\ \tau_0
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{W} \looparrowright \vec{W}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Step] {
+      \forall \vec{z}_1\ \Delta_1.\ \left<\vec{z}_1,\Delta_1\right> \in \vec{W}_1 \rightarrow 
+      \exists \vec{z}_0\ \Delta_0.\ \left<\vec{z}_0,\Delta_0\right> \in \vec{W}_0 \land 
+      \vec{z}_0 \preceq \vec{z}_1 \land \Delta_0 \preceq \Delta_1
+    } {
+      \vec{W}_0 \looparrowright \vec{W}_1
+    }
+  \end{mathpar}
+
 
   \[\begin{array}[t]{@{}l}
     \code{$x$} \sep 
@@ -1875,7 +1923,7 @@ the variable's upper bound.
     \\
     \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
   \end{array}\]
-\caption{Subtyping Sequence Reconstruction}
+\caption{Typing Reconstruction}
 \label{fig:subtyping_sequence_reconstruction}
 \end{figure*}
 
