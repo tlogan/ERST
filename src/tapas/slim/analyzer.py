@@ -3050,9 +3050,9 @@ class ExprRule(Rule):
             worlds = [
                 m1
                 for m0 in worlds
-                for m1 in self.solver.solve(m0, record_var, TField(key, result_var))
+                for m1 in self.solver.solve(m0, record_typ, TField(key, result_var))
             ]
-            record_var = result_var
+            record_typ = result_var
         return Result(worlds, result_var)
 
     #########

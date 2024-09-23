@@ -50,6 +50,7 @@
 % \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\claim}{\vdash}
+\newcommand{\under}{\dashv}
 
 \newcommand{\ttilde}{\textasciitilde{}}
 
@@ -1869,6 +1870,18 @@ the variable's upper bound.
     } {
       \Gamma \claim f \hastype \tau \dashv \vec{W}
     }
+
+    \inferrule[Projection] {
+      \Gamma \claim e \hastype \tau_0 \dashv \vec{W}_0
+      \\
+      \alpha\ \#\ \Gamma, \vec{W}_0
+      \\
+      \vec{W}_0 \looparrowright \vec{W}_1
+      \\
+      \tau_0 \subtypes \code{$l$:$\alpha$} \dashv \vec{W}_1
+    } {
+      \Gamma \claim \code{$e$.$l$} \hastype \alpha \dashv \vec{W}_1
+    }
   \end{mathpar}
 
   \begin{flalign*}
@@ -1879,7 +1892,7 @@ the variable's upper bound.
     \inferrule[Step] {
       \vec{W}_0, \Gamma_0 \claim f \liftfun \vec{\pi}, \vec{\eta}
       \\\\
-      \Gamma_1 \claim p \liftpat \tau_0
+      p \liftpat \tau_0 \dashv \Gamma_1
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
@@ -1896,12 +1909,22 @@ the variable's upper bound.
     &\boxed{\vec{W} \looparrowright \vec{W}}&
   \end{flalign*}
   \begin{mathpar}
-    \inferrule[Step] {
+    \inferrule[Expand] {
       \forall \vec{z}_1\ \Delta_1.\ \left<\vec{z}_1,\Delta_1\right> \in \vec{W}_1 \rightarrow 
       \exists \vec{z}_0\ \Delta_0.\ \left<\vec{z}_0,\Delta_0\right> \in \vec{W}_0 \land 
       \vec{z}_0 \preceq \vec{z}_1 \land \Delta_0 \preceq \Delta_1
     } {
       \vec{W}_0 \looparrowright \vec{W}_1
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\Gamma \claim \vec{\pi} \Rrightarrow \tau}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[TODO] {
+    } {
+      \vec{\Gamma} \claim \vec{\pi} \Rrightarrow \tau
     }
   \end{mathpar}
 
