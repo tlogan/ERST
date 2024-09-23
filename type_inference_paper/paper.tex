@@ -1757,6 +1757,20 @@ the variable's upper bound.
       \vec{z}_1, \Delta_1 
       \claim \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
     }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\tau \subtypes \tau \dashv \vec{W}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Aggregate] {
+      \forall  \vec{z}\ \Delta .\  
+      \tau_l \subtypes \tau_r \dashv \vec{z}, \Delta 
+      \leftrightarrow 
+      \left< \vec{z}, \Delta \right> \in \vec{W}
+    } {
+      \tau_l \subtypes \tau_r \dashv \vec{W}
+    }
 
   \end{mathpar}
   \caption{Subtyping Reconstruction (B)}
@@ -1882,6 +1896,29 @@ the variable's upper bound.
     } {
       \Gamma \claim \code{$e$.$l$} \hastype \alpha \dashv \vec{W}_1
     }
+
+    \inferrule[Application] {
+      \Gamma \claim e_0 \hastype \tau_0 \dashv \vec{W}_0
+      \\
+      \vec{W}_0 \looparrowright \vec{W}_1
+      \\
+      \Gamma \claim e_1 \hastype \tau_1 \dashv \vec{W}_1
+      \\
+      \alpha\ \#\ \Gamma, \vec{W}_1
+      \\
+      \vec{W}_1 \looparrowright \vec{W}_2
+      \\
+      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \dashv \vec{W}_2
+    } {
+      \Gamma \claim \code{$e_0$($e_1$)} \hastype \alpha \dashv \vec{W}_2
+    }
+
+    \inferrule[Recursion] {
+      TODO
+    } {
+      \Gamma \claim \code{fix($e$)} \hastype \alpha \dashv \vec{W}_1
+    }
+
   \end{mathpar}
 
   \begin{flalign*}
