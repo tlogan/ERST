@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  24 SEP 2024 10:16
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  24 SEP 2024 16:09
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1087,46 +1087,46 @@ Class acmart Warning: A possible image without description on input line 1658.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1806.
+Class acmart Warning: A possible image without description on input line 1795.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1841.
+Class acmart Warning: A possible image without description on input line 1830.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 1869.
+Class acmart Warning: A possible image without description on input line 1858.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 2016.
+Class acmart Warning: A possible image without description on input line 2005.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 2199.
+LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 2188.
 
 [8.8]
 
-LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2226.
+LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2215.
 
 [9.9] [10.10] [11.11] [12.12]
 
-LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2504.
+LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2493.
 
 [13.13]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2539.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2528.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2570.
+LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2559.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1167,13 +1167,13 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 Here is how much of TeX's memory you used:
  24240 strings out of 474116
  387955 string characters out of 5743682
- 2039187 words of memory out of 5000000
+ 2040187 words of memory out of 5000000
  45496 multiletter control sequences out of 15000+600000
  753649 words of font info for 428 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (20 pages, 513970 bytes).
+Output written on paper.pdf (20 pages, 514242 bytes).
 PDF statistics:
  340 PDF objects out of 1000 (max. 8388607)
  276 compressed objects within 3 object streams

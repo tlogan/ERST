@@ -1666,76 +1666,58 @@ the variable's upper bound.
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Fixpoint-L] {
-      % \vec{z}\ \alpha, \Delta \cdot \alpha \code{<:} \tau_r \entails \tau_l \subtypes \tau_r 
-      % \\\\
-      % \text{VS}
-      % \\\\
-      \vec{z}, \Delta \entails \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta
-      \entails \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \given \vec{z}, \Delta
     }
 
-    % \inferrule[LowerUpperLFP] {
-    %   subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
-    %   \\
-    %   \left< \Delta, \Omega \right>
-    %   \entails \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
-    % } {
-    %   \left< \Delta, \Omega \right>
-    %   \entails \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
-    % }
-
-    % \inferrule[LowerLFP] {
-    %   pattern(\Delta, \code{LFP[$\alpha$|$\tau_l$]}) = \tau_p
-    %   \\
-    %   vars(\tau_p) = \widebar{\alpha_i}^i
-    %   \\\\
-    %   \left< \Delta, \Omega \right>
-    %   \entails 
-    %   \code{EXI[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
-    %   \subtypes 
-    %   \tau_u
-    % } {
-    %   \left< \Delta, \Omega \right>
-    %   \entails \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
-    % }
-
     \inferrule[Fixpoint-R] {
-      \text{decidable}(\Delta, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
+      \text{decidable}(\Delta_0, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
+      \\\\
+      \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}, \Delta \entails 
       \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
+      \given \vec{z}, \Delta_1
     } {
-      \vec{z}, \Delta 
-      \entails 
       \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}, \Delta_1
     }
 
     \inferrule[Skolem-L-Fixpoint-R] {
-      z \in \text{FV}(\tau_l) \\ z \in \vec{z}
+      z \in \text{FV}(\tau_l) \\ z \in \vec{z}_0
       \\
       \text{norm}(\code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \code{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
       \\\\
-      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta)
+      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
       \\
-      \vec{z}, \Delta
-      \entails \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}, \Delta
-      \entails \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Flex-L-Fixpoint-R] {
-      \vec{z}, \Delta, \text{FV}(\tau_l) \entails \Omega
+      \vec{z}_0, \Delta_0, \text{FV}(\tau_l) 
+      \entails \Omega
       \\
-      \vec{z}, \Delta
-      \entails \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
       \\
       \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
     } {
-      \vec{z}, \Delta \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
-      \entails \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
     }
 
     \inferrule[Diff-L] {
@@ -1748,42 +1730,49 @@ the variable's upper bound.
     \inferrule[Diff-R] {
       \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
       \\
-      \vec{z}, \Delta \entails \tau_l \subtypes \tau_r
-      \\
-      \neg(\vec{z}, \Delta \entails \tau_l \subtypes \tau_n)
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta
+      \\\\
+      \forall \vec{z}'\ \Delta' .\ 
+      \vec{z} \preceq \vec{z}'
+      \rightarrow
+      \Delta \preceq \Delta'
+      \rightarrow
+      \neg(\tau_l \subtypes \tau_n \given \vec{z}', \Delta')
     } {
-      \vec{z}, \Delta
-      \entails 
       \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Tag] {
-      \vec{z}, \Delta 
-      \entails \tau_l \subtypes \tau_r
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta 
     } {
-      \vec{z}, \Delta 
-      \entails \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
+      \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
+      \given \vec{z}, \Delta 
     }
 
     \inferrule[Record] {
-      \vec{z}, \Delta 
-      \entails \tau_l \subtypes \tau_r
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta 
     } {
-      \vec{z}, \Delta 
-      \entails \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
+      \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
+      \given \vec{z}, \Delta 
     }
 
     \inferrule[Imp] {
-      \vec{z}_0, \Delta_0 \entails \tau_{rl} \subtypes \tau_{ll}
+      \tau_{rl} \subtypes \tau_{ll}
+      \given \vec{z}_0, \Delta_0
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \entails \tau_{lr} \subtypes \tau_{rr}
+      \tau_{lr} \subtypes \tau_{rr}
+      \given \vec{z}_1, \Delta_1 
     } {
-      \vec{z}_1, \Delta_1 
-      \entails \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
+      \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
+      \given \vec{z}_1, \Delta_1 
     }
   \end{mathpar}
 
