@@ -49,8 +49,9 @@
 
 % \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\claim}{\vdash}
-\newcommand{\under}{\dashv}
+\newcommand{\entails}{\vdash}
+\newcommand{\given}{\dashv}
+\newcommand{\quiv}{\ \leftrightarrow\ }
 
 \newcommand{\ttilde}{\textasciitilde{}}
 
@@ -1077,80 +1078,80 @@ The let-binding rule allows for prenex polymorphism by generalizing via subtypin
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{figure*}[h]
 % \begin{flalign*}
-%   &\boxed{\Gamma \claim e \hastype \tau}&
+%   &\boxed{\Gamma \entails e \hastype \tau}&
 % \end{flalign*}
 % \begin{mathpar}
 %   \inferrule[var] { 
 %     \code{$x$:$\tau$} \in \Gamma
 %   } {
-%     \Gamma \claim x \hastype \tau 
+%     \Gamma \entails x \hastype \tau 
 %   } 
 
 %   \inferrule[unit] { 
 %   } {
-%     \Gamma \claim \code{()} \hastype \code{unit}
+%     \Gamma \entails \code{()} \hastype \code{unit}
 %   } 
 
 
 %   \inferrule[tag] { 
-%     \Gamma \claim e \hastype \tau 
+%     \Gamma \entails e \hastype \tau 
 %   } {
-%      \Gamma \claim (\code{\#$l$ $e$}) \hastype (\code{?$l$ $\tau$})
+%      \Gamma \entails (\code{\#$l$ $e$}) \hastype (\code{?$l$ $\tau$})
 %   }
 
 %   \inferrule[rec] { 
-%     \bigand_i \Gamma \claim e_i \hastype  \tau_i  
+%     \bigand_i \Gamma \entails e_i \hastype  \tau_i  
 %   } {
-%     \Gamma \claim (\widebar{\code{@$l_i$=$e_i$}}^i)
+%     \Gamma \entails (\widebar{\code{@$l_i$=$e_i$}}^i)
 %     \hastype \code{\&}_i({\code{$l_i$:$\tau_i$}})
 %   } 
 
 %   \inferrule[fun] {
-%     \bigand_i \Gamma_i \claim m_i \hastype \tau_i
+%     \bigand_i \Gamma_i \entails m_i \hastype \tau_i
 %     \\
-%     \bigand_i \Gamma;\Gamma_i \claim e_i \hastype \tau'_i
+%     \bigand_i \Gamma;\Gamma_i \entails e_i \hastype \tau'_i
 %   } {
-%     \Gamma \claim (\widebar{\code{path $m_i$=>$e_i$}}^i)
+%     \Gamma \entails (\widebar{\code{path $m_i$=>$e_i$}}^i)
 %     : \code{\&}_i(\code{$\tau_i$->$\tau'_i$})  
 %   } 
 
 %   \inferrule[proj] {
-%     \Gamma \claim e \hastype \code{$l$:$\tau$}
+%     \Gamma \entails e \hastype \code{$l$:$\tau$}
 %   } {
-%     \Gamma \claim \code{$e$.$l$} \hastype \tau
+%     \Gamma \entails \code{$e$.$l$} \hastype \tau
 %   } 
 
 %   \inferrule[app] { 
-%     \Gamma \claim e_f \hastype \code{$\tau'$->$\tau$}
+%     \Gamma \entails e_f \hastype \code{$\tau'$->$\tau$}
 %     \\
-%     \Gamma \claim e_a \hastype \tau'
+%     \Gamma \entails e_a \hastype \tau'
 %   } {
-%     \Gamma \claim \code{$e_f$($e_a$)} \hastype \tau
+%     \Gamma \entails \code{$e_f$($e_a$)} \hastype \tau
 %   } 
 
 %   \inferrule[let] { 
-%     \Gamma \claim e_a \hastype \tau_a
+%     \Gamma \entails e_a \hastype \tau_a
 %     \\
-%     \bullet \claim  \tau_a \subtypes \tau'
+%     \bullet \entails  \tau_a \subtypes \tau'
 %     \\
-%     \Gamma;\code{$x$:$\tau_a$} \claim e_b \hastype \tau
+%     \Gamma;\code{$x$:$\tau_a$} \entails e_b \hastype \tau
 %   } {
-%     \Gamma \claim (\code{let $x$:$\tau'$ = $e_a$ in $e_b$}) 
+%     \Gamma \entails (\code{let $x$:$\tau'$ = $e_a$ in $e_b$}) 
 %     \hastype \tau
 %   } 
 
 %   \inferrule[fix] { 
-%     \Gamma \claim e \hastype \code{$\tau$->$\tau$}
+%     \Gamma \entails e \hastype \code{$\tau$->$\tau$}
 %   } {
-%     \Gamma \claim \code{fix($e$)} \hastype \tau
+%     \Gamma \entails \code{fix($e$)} \hastype \tau
 %   } 
 
 %   \inferrule[subsump] { 
-%     \Gamma \claim e \hastype \tau' 
+%     \Gamma \entails e \hastype \tau' 
 %     \\
-%     \bullet \claim \tau' \subtypes \tau
+%     \bullet \entails \tau' \subtypes \tau
 %   } {
-%     \Gamma \claim e \hastype \tau
+%     \Gamma \entails e \hastype \tau
 %   } 
 % \end{mathpar}
 % \caption{Typing}
@@ -1184,134 +1185,134 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \vec{z} \lessdot \alpha}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{z} \lessdot \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \epsilon \lessdot \alpha
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \lessdot \alpha
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
       \\\\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{z}_2 \lessdot z 
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{z}_2 \lessdot z 
     } {
       \vec{z}_0, \Delta_0 
-      \claim \Delta_1 \cdot \code{$z$<:$\alpha$} 
+      \entails \Delta_1 \cdot \code{$z$<:$\alpha$} 
       \Rightarrow \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
     }
 
     \inferrule[Skip] {
       \neg (\tau_l \in \vec{z}_0 \land \tau_r = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
     } {
       \vec{z}_0, \Delta_0 
-      \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
+      \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
       \Rightarrow \vec{z}_1 \lessdot \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \vec{\tau} \ll \alpha}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \ll \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \epsilon \ll \alpha
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \ll \alpha
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \ll \alpha
     }
 
     \inferrule[Trans] {
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau}_0 \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau}_0 \ll \alpha
       \\
-      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow \vec{\tau}_1 \ll z 
+      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow \vec{\tau}_1 \ll z 
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$z$<:$\alpha$} \Rightarrow \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$z$<:$\alpha$} \Rightarrow \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \ll \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \lessdot \vec{z}}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \lessdot \vec{z}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \lessdot \epsilon
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1 
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1 
       \\\\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow z \lessdot \vec{z}_2 
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow z \lessdot \vec{z}_2 
     } {
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
     }
 
     \inferrule[Skip] {
       \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
     } {
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow  \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow  \alpha \lessdot \vec{z}_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \ll \vec{\tau}}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \ll \vec{\tau}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \ll \epsilon
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$\tau$} \Rightarrow \alpha \ll \vec{\tau}\ \tau
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$\tau$} \Rightarrow \alpha \ll \vec{\tau}\ \tau
     }
 
     \inferrule[Trans] {
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}_0
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}_0
       \\
-      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow z \ll \vec{\tau}_1
+      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow z \ll \vec{\tau}_1
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \vec{\tau}
     }
   \end{mathpar}
 
@@ -1321,12 +1322,12 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \lessdot \Delta}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \lessdot \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \lessdot \epsilon
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
@@ -1334,12 +1335,12 @@ the variable's upper bound.
       \\
       z_0 \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \Delta_2
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \Delta_2
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow z_0 \lessdot \vec{z}_1 
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow z_0 \lessdot \vec{z}_1 
     } {
       \vec{z}_0, \Delta_0
-      \claim
+      \entails
       \Delta_1 \cdot \code{$\tau$<:$z_0$} 
       \Rightarrow
       \alpha 
@@ -1350,19 +1351,19 @@ the variable's upper bound.
     \inferrule[Skip] {
       \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
     } {
-      \vec{z}_0, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \lessdot \vec{z}_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \Delta \Rightarrow \alpha \ll \Delta}&
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \ll \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon \Rightarrow \alpha \ll \epsilon
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
@@ -1370,9 +1371,9 @@ the variable's upper bound.
       \\
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Trans] {
@@ -1380,19 +1381,19 @@ the variable's upper bound.
       \\
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
       \\\\
-      \vec{z}, \Delta_0 \claim \Delta_0 \Rightarrow z \ll \Delta_3 
+      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow z \ll \Delta_3 
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau$<:$z$} \Rightarrow \alpha \ll \Delta_2\ \Delta_3
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$z$} \Rightarrow \alpha \ll \Delta_2\ \Delta_3
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
       \\
-      \vec{z}, \Delta_0 \claim \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0 \claim \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2
     }
   \end{mathpar}
 
@@ -1404,222 +1405,249 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \tau \subtypes \tau}&
+    &\boxed{\tau \subtypes \tau \given \vec{z}, \Delta}&
   \end{flalign*}
 
   \begin{mathpar}
     \inferrule[Refl] {
     } {
-      \vec{z}, \Delta \claim \tau \subtypes \tau
+      \tau \subtypes \tau \given \vec{z}, \Delta
     }
 
     \inferrule[Bot-L] {
     } {
-      \vec{z}, \Delta \claim \code{BOT} \subtypes \tau_r
+      \code{BOT} \subtypes \tau_r \given \vec{z}, \Delta
     }
 
     \inferrule[Top-R] {
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes \code{TOP}
+      \tau_l \subtypes \code{TOP} \given \vec{z}, \Delta
     }
 
     \inferrule[Inter-Target] {
-      \vec{z}, \Delta \claim \tau_l
+      \tau_l
       \subtypes
       \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes 
+      \tau_l \subtypes 
       \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Unio-L] {
-      \vec{z}_0, \Delta_0 \claim \tau_{ll} \subtypes \tau_r
+      \tau_{ll} \subtypes \tau_r
+      \given \vec{z}_0, \Delta_0
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_r
+      \tau_{lr} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 \claim \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+      \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Inter-R] {
-      \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_{rl}
+      \tau_l \subtypes \tau_{rl}
+      \given \vec{z}_0, \Delta_0
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \tau_{rr}
+      \tau_l \subtypes \tau_{rr}
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+      \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Union-Antec] {
-      \vec{z}, \Delta \claim \tau_l \subtypes
+      \tau_l \subtypes
       \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes 
+      \tau_l \subtypes 
       \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Inter-Conseq] {
-      \vec{z}, \Delta \claim
       \tau_l \subtypes
       \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Exi-L] {
-      \vec{\alpha} \cdot \Delta = Q
-      \\
-      \vec{z}_0, \Delta_0 \claim \Delta
+      Q \given \vec{z}_0, \Delta_0
       \\\\
       \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim
       \tau_l \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 \claim 
-      \code{EXI[$Q$]$\tau_l$} \subtypes \tau_r
+      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_l$} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[All-R] {
-      \vec{\alpha} \cdot \Delta = Q
-      \\
-      \vec{z}_0, \Delta_0 \claim \Delta
+      Q \given \vec{z}_0, \Delta_0
       \\\\
       \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim
       \tau_l \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 \claim 
-      \tau_l \subtypes \code{ALL[$Q$]$\tau_r$}
+      \tau_l \subtypes \code{ALL[$\vec{\alpha}$ $Q$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Flex-L] {
-      \alpha \notin \vec{z}_1
+      \alpha \notin \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{z} \lessdot \alpha
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{z} \lessdot \alpha
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{\tau} \ll \alpha
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
+      \widebar{\code{;} \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} \claim 
       \alpha \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} 
     }
 
     \inferrule[Flex-R] {
-      \alpha \notin \vec{z}_1
+      \alpha \notin \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \lessdot \vec{z}
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \lessdot \vec{z}
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \lessdot \Delta_{skol}
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \lessdot \Delta_{skol}
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \ll \vec{\tau} 
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \vec{\tau} 
       \\
-      \vec{z}_0, \Delta_0 \claim \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
+      \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1
+      \tau_l \subtypes \alpha
+      \given \vec{z}_1, \Delta_1
       \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
       \ \widebar{\cdot \code{$\tau[\alpha\slash\tau_l]$<:$z$}}^{\cdot \code{$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
-      \claim \tau_l \subtypes \alpha
     }
 
     \inferrule[Skolem-L] {
-      \alpha \in \vec{z}
+      \alpha \in \vec{z}_0
       \\
-      \alpha \code{<:} \tau \in (\Delta\ \text{factor}(\Delta, \alpha))
+      \cdot \alpha \code{<:} \tau \in (\Delta_0\ \text{factor}(\Delta_0, \alpha))
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
       \\
-      \vec{z}, \Delta \claim \tau \subtypes \tau_r
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}, \Delta \claim \alpha \subtypes \tau_r
+      \alpha \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Skolem-R] {
-      \alpha \in \Omega
+      \alpha \in \vec{z}_0
       \\
-      \tau \code{<:} \alpha \in \Delta
+      \cdot \tau \code{<:} \alpha \in \Delta_0
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
       \\
-      \vec{z}, \Delta \claim \tau_l \subtypes \tau
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes \alpha
+      \tau_l \subtypes \alpha
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[All-L] {
-      \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
-      \\
+      \tau_l \subtypes \tau_r \given \vec{z}_0, \Delta_0
+      \\\\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
-      \\\\
-      \vec{\alpha} \cdot \Delta = Q
       \\
-      \vec{z}_1, \Delta_1 \claim Q
+      Q
+      \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 
-      \claim 
-      \code{ALL[$Q$]$\tau_l$}
+      \code{ALL[$\vec{\alpha}$ $Q$]$\tau_l$}
       \subtypes 
       \tau_r
+      \given \vec{z}_1, \Delta_1 
     }
 
     \inferrule[Exi-R] {
-      \vec{z}_0, \Delta_0 \claim \tau_l \subtypes \tau_r
-      \\
+      \tau_l \subtypes \tau_r
+      \given \vec{z}_0, \Delta_0
+      \\\\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
-      \\\\
-      \vec{\alpha} \cdot \Delta = Q
       \\
-      \vec{z}_1, \Delta_1 \claim Q
+      Q \given \vec{z}_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1 \claim \tau_l
+      \tau_l
       \subtypes 
-      \code{EXI[$Q$]$\tau_r$}
+      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
     }
 
     \inferrule[Inter-LL] {
-      \vec{z}, \Delta \claim \tau_{ll} \subtypes \tau_r
+      \tau_{ll} \subtypes \tau_r
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Inter-LR] {
-      \vec{z}, \Delta \claim \tau_{lr} \subtypes \tau_r
+      \tau_{lr} \subtypes \tau_r
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Unio-RL] {
-      \vec{z}, \Delta \claim \tau_l \subtypes \tau_{rl}
+      \tau_l \subtypes \tau_{rl}
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \given \vec{z}, \Delta
     }
 
     \inferrule[Unio-RR] {
-      \vec{z}, \Delta \claim \tau_l \subtypes \tau_{rr}
+      \tau_l \subtypes \tau_{rr}
+      \given \vec{z}, \Delta
     } {
-      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \given \vec{z}, \Delta
     }
 
 
@@ -1634,28 +1662,28 @@ the variable's upper bound.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \claim \tau \subtypes \tau}&
+    &\boxed{\vec{z}, \Delta \entails \tau \subtypes \tau}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Fixpoint-L] {
-      % \vec{z}\ \alpha, \Delta \cdot \alpha \code{<:} \tau_r \claim \tau_l \subtypes \tau_r 
+      % \vec{z}\ \alpha, \Delta \cdot \alpha \code{<:} \tau_r \entails \tau_l \subtypes \tau_r 
       % \\\\
       % \text{VS}
       % \\\\
-      \vec{z}, \Delta \claim \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
+      \vec{z}, \Delta \entails \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
     } {
       \vec{z}, \Delta
-      \claim \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \entails \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
     }
 
     % \inferrule[LowerUpperLFP] {
     %   subst(\{\alpha \slash \code{LFP[$\alpha$|$\tau_u$]}\}, \tau_l) = \tau_l'
     %   \\
     %   \left< \Delta, \Omega \right>
-    %   \claim \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+    %   \entails \tau_l' \subtypes \code{LFP[$\alpha$|$\tau_u$]}
     % } {
     %   \left< \Delta, \Omega \right>
-    %   \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
+    %   \entails \code{LFP[$\alpha$|$\tau_l$]} \subtypes \code{LFP[$\alpha$|$\tau_u$]}
     % }
 
     % \inferrule[LowerLFP] {
@@ -1664,23 +1692,23 @@ the variable's upper bound.
     %   vars(\tau_p) = \widebar{\alpha_i}^i
     %   \\\\
     %   \left< \Delta, \Omega \right>
-    %   \claim 
+    %   \entails 
     %   \code{EXI[$\widebar{\alpha_i}^i$ ; $\tau_p$<:LFP[$\alpha$|$\tau_l$]]$\tau_p$}
     %   \subtypes 
     %   \tau_u
     % } {
     %   \left< \Delta, \Omega \right>
-    %   \claim \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
+    %   \entails \code{LFP[$\alpha$|$\tau_l$]} \subtypes \tau_u
     % }
 
     \inferrule[Fixpoint-R] {
       \text{decidable}(\Delta, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
       \\
-      \vec{z}, \Delta \claim 
+      \vec{z}, \Delta \entails 
       \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
     } {
       \vec{z}, \Delta 
-      \claim 
+      \entails 
       \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
@@ -1692,84 +1720,84 @@ the variable's upper bound.
       \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta)
       \\
       \vec{z}, \Delta
-      \claim \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
+      \entails \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
     } {
       \vec{z}, \Delta
-      \claim \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \entails \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
     \inferrule[Flex-L-Fixpoint-R] {
-      \vec{z}, \Delta, \text{FV}(\tau_l) \claim \Omega
+      \vec{z}, \Delta, \text{FV}(\tau_l) \entails \Omega
       \\
       \vec{z}, \Delta
-      \claim \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \entails \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
       \\
       \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
     } {
       \vec{z}, \Delta \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
-      \claim \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \entails \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
     }
 
     \inferrule[Diff-L] {
-      \vec{z}, \Delta \claim \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
+      \vec{z}, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
     } {
-      \vec{z}, \Delta \claim 
+      \vec{z}, \Delta \entails 
       \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
     }
 
     \inferrule[Diff-R] {
       \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
       \\
-      \vec{z}, \Delta \claim \tau_l \subtypes \tau_r
+      \vec{z}, \Delta \entails \tau_l \subtypes \tau_r
       \\
-      \neg(\vec{z}, \Delta \claim \tau_l \subtypes \tau_n)
+      \neg(\vec{z}, \Delta \entails \tau_l \subtypes \tau_n)
     } {
       \vec{z}, \Delta
-      \claim 
+      \entails 
       \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
     }
 
     \inferrule[Tag] {
       \vec{z}, \Delta 
-      \claim \tau_l \subtypes \tau_r
+      \entails \tau_l \subtypes \tau_r
     } {
       \vec{z}, \Delta 
-      \claim \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
+      \entails \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
     }
 
     \inferrule[Record] {
       \vec{z}, \Delta 
-      \claim \tau_l \subtypes \tau_r
+      \entails \tau_l \subtypes \tau_r
     } {
       \vec{z}, \Delta 
-      \claim \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
+      \entails \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
     }
 
     \inferrule[Imp] {
-      \vec{z}_0, \Delta_0 \claim \tau_{rl} \subtypes \tau_{ll}
+      \vec{z}_0, \Delta_0 \entails \tau_{rl} \subtypes \tau_{ll}
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \tau_{lr} \subtypes \tau_{rr}
+      \vec{z}_1, \Delta_1 \entails \tau_{lr} \subtypes \tau_{rr}
     } {
       \vec{z}_1, \Delta_1 
-      \claim \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
+      \entails \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\tau \subtypes \tau \dashv \vec{W}}&
+    &\boxed{\tau \subtypes \tau \given \vec{W}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Aggregate] {
       \forall  \vec{z}\ \Delta .\  
-      \tau_l \subtypes \tau_r \dashv \vec{z}, \Delta 
-      \leftrightarrow 
+      \tau_l \subtypes \tau_r \given \vec{z}, \Delta 
+      \quiv
       \left< \vec{z}, \Delta \right> \in \vec{W}
     } {
-      \tau_l \subtypes \tau_r \dashv \vec{W}
+      \tau_l \subtypes \tau_r \given \vec{W}
     }
 
   \end{mathpar}
@@ -1779,12 +1807,12 @@ the variable's upper bound.
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\vec{z}, \Delta, \vec{\alpha} \claim \Omega}&
+  &\boxed{\vec{z}, \Delta, \vec{\alpha} \entails \Omega}&
 \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \claim \epsilon
+      \vec{z}, \Delta, \epsilon \entails \epsilon
     }
 
     \inferrule[Miss] {
@@ -1792,9 +1820,9 @@ the variable's upper bound.
       \\
       \forall \tau .\ \cdot \code{$\tau$<:$\alpha$} \notin \Delta
       \\
-      \vec{z}, \Delta, \vec{\alpha} \claim \Omega
+      \vec{z}, \Delta, \vec{\alpha} \entails \Omega
     } {
-      \vec{z}, \Delta, \vec{\alpha}\ \alpha \claim \Omega
+      \vec{z}, \Delta, \vec{\alpha}\ \alpha \entails \Omega
     }
 
     \inferrule[Match] {
@@ -1802,9 +1830,9 @@ the variable's upper bound.
       \\
       \exists \tau .\ \cdot \code{$\tau$<:$\alpha$} \in \Delta
       \\
-      \vec{z}, \Delta, \vec{\alpha} \claim \Omega
+      \vec{z}, \Delta, \vec{\alpha} \entails \Omega
     } {
-      \vec{z}, \Delta, \vec{\alpha}\ \alpha \claim \Omega
+      \vec{z}, \Delta, \vec{\alpha}\ \alpha \entails \Omega
       \cdot \alpha \mapsto \code{|}(\widebar{\ \tau\ }^{\cdot \code{$\tau$<:$\alpha$} \in \Delta})
     }
   \end{mathpar}
@@ -1814,26 +1842,26 @@ the variable's upper bound.
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\vec{z}, \Delta \claim \Delta}&
+  &\boxed{\vec{z}, \Delta \entails \Delta}&
 \end{flalign*}
   \begin{mathpar}
     \inferrule[Extension] {
-      \vec{z}_0, \Delta_0 \claim  \Delta
+      \vec{z}_0, \Delta_0 \entails  \Delta
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \claim \tau_l \subtypes \tau_r
+      \vec{z}_1, \Delta_1 \entails \tau_l \subtypes \tau_r
     } {
       \vec{z}_1, \Delta_1
-      \claim 
+      \entails 
       \Delta \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \claim \epsilon
+      \vec{z}, \Delta \entails \epsilon
     }
   \end{mathpar}
 \caption{Subtyping Sequence Reconstruction}
@@ -1842,102 +1870,102 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\Gamma \claim e \hastype \tau \dashv \vec{W}}&
+    &\boxed{\Gamma \entails e \hastype \tau \given \vec{W}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Unit] {
     } {
-      \Gamma \claim \code{@} \hastype \code{@} \dashv \vec{W}
+      \Gamma \entails \code{@} \hastype \code{@} \given \vec{W}
     }
 
     \inferrule[Var] {
       \cdot \code{$x$:$\tau$} \in \Gamma
     } {
-      \Gamma \claim x \hastype \tau \dashv \vec{W} 
+      \Gamma \entails x \hastype \tau \given \vec{W} 
     }
 
     \inferrule[Tag] {
-      \Gamma \claim e \hastype \tau \dashv \vec{W}
+      \Gamma \entails e \hastype \tau \given \vec{W}
     } {
-      \Gamma \claim \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \dashv \vec{W}
+      \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given \vec{W}
     }
 
     \inferrule[Empty] {
     } {
-      \Gamma \claim \epsilon \hastype \code{TOP} \dashv \vec{W}
+      \Gamma \entails \epsilon \hastype \code{TOP} \given \vec{W}
     }
 
     \inferrule[Record] {
-      \Gamma \claim r \hastype \tau_0 \dashv \vec{W}_0
+      \Gamma \entails r \hastype \tau_0 \given \vec{W}_0
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
-      \Gamma \claim e \hastype \tau_1 \dashv \vec{W}_1
+      \Gamma \entails e \hastype \tau_1 \given \vec{W}_1
     } {
-      \Gamma \claim r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \dashv \vec{W}_1
+      \Gamma \entails r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given \vec{W}_1
     }
 
     \inferrule[Function] {
-      \vec{W}, \Gamma \claim f \liftfun \vec{\pi}, \vec{\eta} 
+      \vec{W}, \Gamma \entails f \liftfun \vec{\pi}, \vec{\eta} 
       \\
-      \Gamma \claim \vec{\pi} \Rrightarrow \tau
+      \Gamma \entails \vec{\pi} \Rrightarrow \tau
     } {
-      \Gamma \claim f \hastype \tau \dashv \vec{W}
+      \Gamma \entails f \hastype \tau \given \vec{W}
     }
 
     \inferrule[Projection] {
-      \Gamma \claim e \hastype \tau_0 \dashv \vec{W}_0
+      \Gamma \entails e \hastype \tau_0 \given \vec{W}_0
       \\
       \alpha\ \#\ \Gamma, \vec{W}_0
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
-      \tau_0 \subtypes \code{$l$:$\alpha$} \dashv \vec{W}_1
+      \tau_0 \subtypes \code{$l$:$\alpha$} \given \vec{W}_1
     } {
-      \Gamma \claim \code{$e$.$l$} \hastype \alpha \dashv \vec{W}_1
+      \Gamma \entails \code{$e$.$l$} \hastype \alpha \given \vec{W}_1
     }
 
     \inferrule[Application] {
-      \Gamma \claim e_0 \hastype \tau_0 \dashv \vec{W}_0
+      \Gamma \entails e_0 \hastype \tau_0 \given \vec{W}_0
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
-      \Gamma \claim e_1 \hastype \tau_1 \dashv \vec{W}_1
+      \Gamma \entails e_1 \hastype \tau_1 \given \vec{W}_1
       \\
       \alpha\ \#\ \Gamma, \vec{W}_1
       \\
       \vec{W}_1 \looparrowright \vec{W}_2
       \\
-      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \dashv \vec{W}_2
+      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \vec{W}_2
     } {
-      \Gamma \claim \code{$e_0$($e_1$)} \hastype \alpha \dashv \vec{W}_2
+      \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given \vec{W}_2
     }
 
     \inferrule[Recursion] {
       TODO
     } {
-      \Gamma \claim \code{fix($e$)} \hastype \alpha \dashv \vec{W}_1
+      \Gamma \entails \code{fix($e$)} \hastype \alpha \given \vec{W}_1
     }
 
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{W}, \Gamma \claim f \liftfun \vec{\pi}, \vec{\eta}}&
+    &\boxed{\vec{W}, \Gamma \entails f \liftfun \vec{\pi}, \vec{\eta}}&
   \end{flalign*}
   \begin{mathpar}
 
     \inferrule[Step] {
-      \vec{W}_0, \Gamma_0 \claim f \liftfun \vec{\pi}, \vec{\eta}
+      \vec{W}_0, \Gamma_0 \entails f \liftfun \vec{\pi}, \vec{\eta}
       \\\\
-      p \liftpat \tau_0 \dashv \Gamma_1
+      p \liftpat \tau_0 \given \Gamma_1
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
-      \Gamma_0\ \Gamma_1 \claim e \hastype \tau_1 \dashv \vec{W}_1
+      \Gamma_0\ \Gamma_1 \entails e \hastype \tau_1 \given \vec{W}_1
       \\
       \left< \vec{W}_1, \text{neg}(\tau_0, \vec{\eta}), \tau_1 \right> = \pi
     } {
-      \vec{W}_0, \Gamma_0 \claim f\ \code{case $p$=>$e$} \liftfun 
+      \vec{W}_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
       \vec{\pi}\ \pi, \vec{\eta}\ \tau_0
     }
   \end{mathpar}
@@ -1956,12 +1984,12 @@ the variable's upper bound.
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\Gamma \claim \vec{\pi} \Rrightarrow \tau}&
+    &\boxed{\Gamma \entails \vec{\pi} \Rrightarrow \tau}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[TODO] {
     } {
-      \vec{\Gamma} \claim \vec{\pi} \Rrightarrow \tau
+      \vec{\Gamma} \entails \vec{\pi} \Rrightarrow \tau
     }
   \end{mathpar}
 
@@ -1997,128 +2025,128 @@ the variable's upper bound.
 
 % \begin{figure*}[h]
 % \begin{flalign*}
-%   &\boxed{\Delta \claim \tau \subtypes \tau}&
+%   &\boxed{\Delta \entails \tau \subtypes \tau}&
 % \end{flalign*}
 
 % \begin{mathpar}
 
 %   \inferrule[anteUnion] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
 %     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
 %   }
 
 %   \inferrule[leftUnion] {
-%     \Delta \claim \tau_1 \subtypes \tau_r
+%     \Delta \entails \tau_1 \subtypes \tau_r
 %     \\
-%     \Delta \claim \tau_2 \subtypes \tau_r
+%     \Delta \entails \tau_2 \subtypes \tau_r
 %   } {
-%     \Delta \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \code{$\tau_1$|$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[rightUnion1] {
-%     \Delta \claim \tau_l \subtypes \tau_1
+%     \Delta \entails \tau_l \subtypes \tau_1
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[rightUnion2] {
-%     \Delta \claim \tau_l \subtypes \tau_2
+%     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[ConsqInter] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
 %     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
 %   }
 
 %   \inferrule[rightInter] {
-%     \Delta \claim \tau_l \subtypes \tau_1
+%     \Delta \entails \tau_l \subtypes \tau_1
 %     \\
-%     \Delta \claim \tau_l \subtypes \tau_2
+%     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
 %   }
 
 %   \inferrule[leftInter1] {
-%     \Delta \claim \tau_1 \subtypes \tau_r
+%     \Delta \entails \tau_1 \subtypes \tau_r
 %   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftInter2] {
-%     \Delta \claim \tau_2 \subtypes \tau_r
+%     \Delta \entails \tau_2 \subtypes \tau_r
 %   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftExis] { 
 %     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
 %     \\
 %     \bigand_{\Delta'}
-%     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
+%     (\Delta;\Delta' \entails \tau_1 \subtypes \tau_2)
 %     \rightsquigarrow
-%     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
+%     (\Delta;\Delta' \entails \tau \subtypes \tau_r)
 %   } { 
-%     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \Delta \entails \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[rightExis] { 
 %     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
 %     \\
-%     \Delta;\Delta' \claim \tau_l \subtypes \tau
+%     \Delta;\Delta' \entails \tau_l \subtypes \tau
 %     \\
-%     \Delta;\Delta' \claim \tau_1 \subtypes \tau_2
+%     \Delta;\Delta' \entails \tau_1 \subtypes \tau_2
 %   } { 
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %   }
 
 %   \inferrule[refl] {
 %   } {
-%     \Delta \claim \tau \subtypes \tau 
+%     \Delta \entails \tau \subtypes \tau 
 %   }
 
 %   \inferrule[impli] {
-%     \Delta \claim \tau_3 \subtypes \tau_1 
+%     \Delta \entails \tau_3 \subtypes \tau_1 
 %     \\
-%     \Delta \claim \tau_2 \subtypes \tau_4
+%     \Delta \entails \tau_2 \subtypes \tau_4
 %   } {
-%     \Delta \claim \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
+%     \Delta \entails \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
 %   } 
 
 
 %   \inferrule[rightUniv] { 
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau'$} \claim \tau_l \subtypes \tau
+%     \Delta;\code{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
 %   } { 
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
 %   }
 
 %   \inferrule[leftUniv] { 
 %     \alpha \not\in \F{freeTVs}(\tau_r)
 %     \\
-%     \Delta;\Delta' \claim \tau \subtypes \tau_r
+%     \Delta;\Delta' \entails \tau \subtypes \tau_r
 %     \\
-%     \Delta;\Delta' \claim \alpha \subtypes \tau'
+%     \Delta;\Delta' \entails \alpha \subtypes \tau'
 %   } { 
-%     \Delta \claim \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \Delta \entails \code{[$\alpha$<:$\tau'$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[cons] {
 %     \code{$\tau_l$<:$\tau_r$} \in \Delta
 %   } {
-%     \Delta \claim \tau_l \subtypes \tau_r
+%     \Delta \entails \tau_l \subtypes \tau_r
 %   }
 
 
@@ -2126,17 +2154,17 @@ the variable's upper bound.
 %   \inferrule[leftInduc] { 
 %     \alpha \not\in \F{freeTVs}(\tau_r)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau_r$} \claim \tau 
+%     \Delta;\code{$\alpha$<:$\tau_r$} \entails \tau 
 %     \subtypes \tau_r
 %   } { 
-%     \Delta \claim \code{induc[$\alpha$]$\tau$}
+%     \Delta \entails \code{induc[$\alpha$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[field] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
+%     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \claim \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
+%     \Delta \entails \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
 %   } 
 
 
@@ -2144,17 +2172,17 @@ the variable's upper bound.
 %   \inferrule[rightInduc] {
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \claim 
+%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
 %     \tau_l \subtypes \tau
 %   } {
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{induc[$\alpha$]$\tau$}
 %   }
 
 %   \inferrule[tag] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
+%     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \claim (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
+%     \Delta \entails (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
 %   } 
 % \end{mathpar}
 % \caption{Subtyping}
@@ -3010,130 +3038,130 @@ Different: RLT isn't cartesian
 %     \\\\
 %     M = \{ \left< \Delta_2, \Omega_2 \right> \ |\ 
 %     \\\\
-%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \claim \tau_1 \subtypes \tau_w
+%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \entails \tau_1 \subtypes \tau_w
 %     \ \land \ 
 %     \left< \Delta_1, \Omega_1 \right> \in M_1
 %     \\\\
-%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \claim \tau_2 \subtypes \tau_w
+%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \entails \tau_2 \subtypes \tau_w
 %     \ \land \ 
 %     \left< \Delta_2, \Omega_2 \right> \in M_2
 %     \\\\
 %     \}
 %     \\
 %   } {
-%     \left< \Delta, \Omega \right> \rightsquigarrow M \claim \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
+%     \left< \Delta, \Omega \right> \rightsquigarrow M \entails \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
 %   }
 
 
 %   \inferrule[anteUnion] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
 %     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
 %   }
 
 %   \inferrule[rightUnion1] {
-%     \Delta \claim \tau_l \subtypes \tau_1
+%     \Delta \entails \tau_l \subtypes \tau_1
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[rightUnion2] {
-%     \Delta \claim \tau_l \subtypes \tau_2
+%     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[ConsqInter] {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
 %     \\
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
 %   }
 
 %   \inferrule[rightInter] {
-%     \Delta \claim \tau_l \subtypes \tau_1
+%     \Delta \entails \tau_l \subtypes \tau_1
 %     \\
-%     \Delta \claim \tau_l \subtypes \tau_2
+%     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \claim \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
 %   }
 
 %   \inferrule[leftInter1] {
-%     \Delta \claim \tau_1 \subtypes \tau_r
+%     \Delta \entails \tau_1 \subtypes \tau_r
 %   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftInter2] {
-%     \Delta \claim \tau_2 \subtypes \tau_r
+%     \Delta \entails \tau_2 \subtypes \tau_r
 %   } {
-%     \Delta \claim \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftExis] { 
 %     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
 %     \\
 %     \bigand_{\Delta'}
-%     (\Delta;\Delta' \claim \tau_1 \subtypes \tau_2)
+%     (\Delta;\Delta' \entails \tau_1 \subtypes \tau_2)
 %     \rightsquigarrow
-%     (\Delta;\Delta' \claim \tau \subtypes \tau_r)
+%     (\Delta;\Delta' \entails \tau \subtypes \tau_r)
 %   } { 
-%     \Delta \claim \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \Delta \entails \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[rightExis] { 
 %     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
 %     \\
-%     \Delta;\Delta' \claim \tau_l \subtypes \tau
+%     \Delta;\Delta' \entails \tau_l \subtypes \tau
 %     \\
-%     \Delta;\Delta' \claim \tau_1 \subtypes \tau_2
+%     \Delta;\Delta' \entails \tau_1 \subtypes \tau_2
 %   } { 
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %   }
 
 %   \inferrule[refl] {
 %   } {
-%     \Delta \claim \tau \subtypes \tau 
+%     \Delta \entails \tau \subtypes \tau 
 %   }
 
 %   \inferrule[impli] {
-%     \Delta \claim \tau_3 \subtypes \tau_1 
+%     \Delta \entails \tau_3 \subtypes \tau_1 
 %     \\
-%     \Delta \claim \tau_2 \subtypes \tau_4
+%     \Delta \entails \tau_2 \subtypes \tau_4
 %   } {
-%     \Delta \claim \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
+%     \Delta \entails \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
 %   } 
 
 
 %   \inferrule[rightUniv] { 
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau'$} \claim \tau_l \subtypes \tau
+%     \Delta;\code{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
 %   } { 
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
 %   }
 
 %   \inferrule[leftUniv] { 
 %     \alpha \not\in \F{freeTVs}(\tau_r)
 %     \\
-%     \Delta;\Delta' \claim \tau \subtypes \tau_r
+%     \Delta;\Delta' \entails \tau \subtypes \tau_r
 %     \\
-%     \Delta;\Delta' \claim \alpha \subtypes \tau'
+%     \Delta;\Delta' \entails \alpha \subtypes \tau'
 %   } { 
-%     \Delta \claim \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \Delta \entails \code{[$\alpha$<:$\tau'$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[cons] {
 %     \code{$\tau_l$<:$\tau_r$} \in \Delta
 %   } {
-%     \Delta \claim \tau_l \subtypes \tau_r
+%     \Delta \entails \tau_l \subtypes \tau_r
 %   }
 
 
@@ -3141,17 +3169,17 @@ Different: RLT isn't cartesian
 %   \inferrule[leftInduc] { 
 %     \alpha \not\in \F{freeTVs}(\tau_r)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau_r$} \claim \tau 
+%     \Delta;\code{$\alpha$<:$\tau_r$} \entails \tau 
 %     \subtypes \tau_r
 %   } { 
-%     \Delta \claim \code{induc[$\alpha$]$\tau$}
+%     \Delta \entails \code{induc[$\alpha$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[field] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
+%     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \claim \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
+%     \Delta \entails \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
 %   } 
 
 
@@ -3159,15 +3187,15 @@ Different: RLT isn't cartesian
 %   \inferrule[rightInduc] {
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \claim 
+%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
 %     \tau_l \subtypes \tau
 %   } {
-%     \Delta \claim \tau_l
+%     \Delta \entails \tau_l
 %     \subtypes \code{induc[$\alpha$]$\tau$}
 %   }
 
 %   \inferrule[tag] {
-%     \Delta \claim \tau_1 \subtypes \tau_2
+%     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \claim (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
+%     \Delta \entails (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
 %   } 
