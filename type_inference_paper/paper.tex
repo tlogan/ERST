@@ -1931,9 +1931,17 @@ the variable's upper bound.
     }
 
     \inferrule[Recursion] {
-      TODO
+      \Gamma \entails e \hastype \tau \given \vec{W}_0
+      \\
+      \alpha_0, \alpha_1, \alpha_2\ \#\ \Gamma, \vec{W}
+      \\
+      \vec{W}_0 \looparrowright \vec{W}_1
+      \\
+      \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \vec{W}_1
+      \\\\
+      \text{FTV}(\Gamma), \vec{W}_1 \entails \alpha_0 \circlearrowleft \code{$\alpha_1$->$\alpha_2$} \rightsquigarrow \tau_{rel}
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \alpha \given \vec{W}_1
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_7$]$\alpha_7$->EXI[$\alpha_8$;($\alpha_7$,$\alpha_8$)<:$\tau_{rel}$]$\alpha_1$} \given \vec{W}
     }
 
   \end{mathpar}
