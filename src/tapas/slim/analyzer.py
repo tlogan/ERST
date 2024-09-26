@@ -3163,9 +3163,10 @@ class ExprRule(Rule):
         for outer_world in nt.worlds:
             outer_worlds.append(outer_world)
             inner_worlds = self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
-
+            # fix(a => (b0 => c0),(b1 => c1),(b2 => c2),...) 
+            # has type: 
+            # FIX[A](intersect worlds: ALL[A <: ...]B -> C)
             induc_body = Bot()
-
             ###########################
             for i, inner_world in enumerate(reversed(inner_worlds)):
                 lefts = pset()

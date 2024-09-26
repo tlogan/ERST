@@ -1939,9 +1939,9 @@ the variable's upper bound.
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \vec{W}_1
       \\\\
-      \text{FTV}(\Gamma), \vec{W}_1 \entails \alpha_0 \circlearrowleft \code{$\alpha_1$->$\alpha_2$} \rightsquigarrow \tau_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft \vec{W}_1 \cdot \code{$\alpha_1$->$\alpha_2$} \rightsquigarrow \tau_{rel}
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_7$]$\alpha_7$->EXI[$\alpha_8$;($\alpha_7$,$\alpha_8$)<:$\tau_{rel}$]$\alpha_1$} \given \vec{W}
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_3$]$\alpha_3$->EXI[$\alpha_4$;($\alpha_3$,$\alpha_4$)<:$\tau_{rel}$]$\alpha_4$} \given \vec{W}_0
     }
 
   \end{mathpar}
@@ -1979,7 +1979,11 @@ the variable's upper bound.
       \vec{W}_0 \looparrowright \vec{W}_1
     }
   \end{mathpar}
+\caption{Typing Reconstruction (A)}
+\label{fig:typing_reconstruction_part_a}
+\end{figure*}
 
+\begin{figure*}[h]
   \begin{flalign*}
     &\boxed{\Gamma \entails \vec{\pi} \Rrightarrow \tau}&
   \end{flalign*}
@@ -1990,26 +1994,19 @@ the variable's upper bound.
     }
   \end{mathpar}
 
-
-  \[\begin{array}[t]{@{}l}
-    \code{$x$} \sep 
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $e$} \sep 
-    r \sep
-    \code{$e$,$e$} \sep
-    f \sep 
-    \code{$e$.$l$} \sep
-    \code{($e$)($e$)} \sep
-    \\
-    \code{$e$ |> $e$} \sep
-    \code{fix($e$)} \sep
-    \code{let $x$:$\tau$ = $e$ in $e$} \sep
-    \code{($e$)}
-    \\
-    \code{;$l$=$e$} \sep r\ \code{;$l$=$e$}
-  \end{array}\]
-\caption{Typing Reconstruction}
-\label{fig:subtyping_sequence_reconstruction}
+  \begin{flalign*}
+    &\boxed{\vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \rightsquigarrow \tau}&
+  \end{flalign*}
+  % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
+  % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: T
+  \begin{mathpar}
+    \inferrule[TODO] {
+    } {
+      \vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \rightsquigarrow \tau
+    }
+  \end{mathpar}
+\caption{Typing Reconstruction (B)}
+\label{fig:typing_reconstruction_part_b}
 \end{figure*}
 
 

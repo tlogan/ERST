@@ -95,6 +95,8 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- redo sequence subtyping to use a separate internal subtyping syntax (square less than sign) rather than <: used in surface syntax. 
+    - this emphasizes that the surface syntax operates on a more restrictive form
 - keep in mind that the recursive type (FIX) does not need a special least (strongest) vs greatest (weakest) form.
     - the least or greatest is implied by the subtyping constraint used and the use of intersections vs unions. 
         - a variable on the right side of subtyping strives to be the strongest type possible and gets weaker 
