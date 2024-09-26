@@ -1933,15 +1933,15 @@ the variable's upper bound.
     \inferrule[Recursion] {
       \Gamma \entails e \hastype \tau \given \vec{W}_0
       \\
-      \alpha_0, \alpha_1, \alpha_2\ \#\ \Gamma, \vec{W}
+      \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, \vec{W}
       \\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \vec{W}_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft \vec{W}_1 \cdot \code{$\alpha_1$->$\alpha_2$} \rightsquigarrow \tau_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft \vec{W}_1 \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}_{rel}
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_3$]$\alpha_3$->EXI[$\alpha_4$;($\alpha_3$,$\alpha_4$)<:$\tau_{rel}$]$\alpha_4$} \given \vec{W}_0
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$;($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$]|$(\vec{\tau}_{rel})$]$\alpha_5$} \given \vec{W}_0
     }
 
   \end{mathpar}
@@ -1995,14 +1995,14 @@ the variable's upper bound.
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \rightsquigarrow \tau}&
+    &\boxed{\vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}}&
   \end{flalign*}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
-  % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: T
+  % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
     \inferrule[TODO] {
     } {
-      \vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \rightsquigarrow \tau
+      \vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}
     }
   \end{mathpar}
 \caption{Typing Reconstruction (B)}
