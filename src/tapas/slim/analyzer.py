@@ -3171,18 +3171,16 @@ class ExprRule(Rule):
             for i, inner_world in enumerate(reversed(inner_worlds)):
                 lefts = pset()
                 left_typ = in_typ  
+                # assert in_typ.id not in inner_world.relids
+                ###### TODO: ensure that the assertion is invariant
                 if in_typ.id not in inner_world.relids:
                     lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
                     left_typ = make_inter(list(lefts))
                 # end if
+                ###########################
                 rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
                 right_typ = make_unio(list(rights))
 
-                left_bound_ids = extract_free_vars_from_typ(s(), left_typ)
-                right_bound_ids = extract_free_vars_from_typ(s(), right_typ)
-                bound_ids = left_bound_ids.union(right_bound_ids).union(
-                    inner_world.skolems.intersection(extract_free_vars_from_constraints(s(), inner_world.constraints))
-                )
                 rel_pattern = make_pair_typ(left_typ, right_typ)
                 fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
                 IH_rel_constraints = s()
@@ -3213,16 +3211,28 @@ class ExprRule(Rule):
                     [IH_typ.id] 
                 ) 
 
-                rel_reachable_constraints = pset(
+                influential_constraints = pset(
                     st
                     # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
                     for st in inner_world.constraints
+                    # NOTE: contains at least one influential variable
                     if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
                     # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
                     #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
                     # )
                 )
-                rel_constraints = IH_rel_constraints.union(rel_reachable_constraints)
+
+                # TODO: make sure skolems are considered properly
+                # TODO: perhaps skolems should be universally bound on the far outside.
+                bound_ids = extract_free_vars_from_typ(s(), rel_pattern).union(
+                    extract_free_vars_from_constraints(s(), influential_constraints)
+                    # .intersection(inner_world.skolems)
+                    # .difference(inner_world.skolems)
+                )
+                # TODO: or perhaps there is an invariant that bound_ids have no skolems
+                assert not bool(bound_ids.intersection(inner_world.skolems))
+
+                rel_constraints = IH_rel_constraints.union(influential_constraints)
                 if bool(bound_ids):
                     constrained_rel = Exi(tuple(sorted(bound_ids)), tuple(sorted(rel_constraints)), rel_pattern)
                 else:

@@ -1995,14 +1995,79 @@ the variable's upper bound.
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}}&
+    &\boxed{\vec{n} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}}&
   \end{flalign*}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
-    \inferrule[TODO] {
+    \inferrule[Empty] {
     } {
-      \vec{z} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}
+      \vec{n} \entails \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \epsilon 
+    }
+
+    \inferrule[Step] {
+      \vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha_2
+      \\
+      \code{($\alpha_1$,|$(\vec{\tau})$)} = \tau_p
+      \\
+      \text{FTV}(\code{($\alpha_1$,|$(\vec{\tau})$)}) = \vec{\alpha}_0 
+      \\
+      \text{FTV}(\Delta) = \vec{\alpha}_1
+      % TODO: should skolems be added to existential?
+    } {
+      \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}\ \tau
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \subtypes \alpha
+    }
+
+    \inferrule[Direct] {
+      \tau \notin \vec{z}
+      \\
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \subtypes \alpha
+    } {
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \subtypes \alpha
+    }
+
+    \inferrule[Skip] {
+      \tau_r \neq \alpha
+      \\
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \subtypes \alpha
+    } {
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \subtypes \alpha
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \subtypes \epsilon
+    }
+
+    \inferrule[Direct] {
+      \tau \notin \vec{z}
+      \\
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \subtypes \vec{\tau}
+    } {
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \alpha \subtypes \vec{\tau}\ \tau
+    }
+
+    \inferrule[Skip] {
+      \tau_r \neq \alpha
+      \\
+      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \subtypes \vec{\tau}
+    } {
+      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \subtypes \vec{\tau}
     }
   \end{mathpar}
 \caption{Typing Reconstruction (B)}
