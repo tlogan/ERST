@@ -3226,12 +3226,11 @@ class ExprRule(Rule):
                 # TODO: perhaps skolems should be universally bound on the far outside.
                 bound_ids = extract_free_vars_from_typ(s(), rel_pattern).union(
                     extract_free_vars_from_constraints(s(), influential_constraints)
-                    # .intersection(inner_world.skolems)
-                    # .difference(inner_world.skolems)
                 )
                 # TODO: or perhaps there is an invariant that bound_ids have no skolems
                 assert not bool(bound_ids.intersection(inner_world.skolems))
 
+                # TODO: bind skolem variables with All 
                 rel_constraints = IH_rel_constraints.union(influential_constraints)
                 if bool(bound_ids):
                     constrained_rel = Exi(tuple(sorted(bound_ids)), tuple(sorted(rel_constraints)), rel_pattern)

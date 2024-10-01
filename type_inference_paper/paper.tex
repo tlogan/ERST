@@ -2010,64 +2010,96 @@ the variable's upper bound.
       \\
       \code{($\alpha_1$,|$(\vec{\tau})$)} = \tau_p
       \\
-      \text{FTV}(\code{($\alpha_1$,|$(\vec{\tau})$)}) = \vec{\alpha}_0 
+      \text{FTV}(\tau_p) = \vec{\alpha}_p 
       \\
-      \text{FTV}(\Delta) = \vec{\alpha}_1
-      % TODO: should skolems be added to existential?
+      \Delta \entails \vec{n}\ \vec{\alpha}_p\ \alpha_3 \ \pitchfork \Delta_i  
+      \\
+      \text{FTV}(\Delta_i) = \vec{\alpha}_i
+      \\
+      \text{constrain}(\vec{\alpha}_i, \Delta_i, \tau_p) = \tau
+      % TODO: should skolems be included using universal constraint? 
     } {
       \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}\ \tau
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha}&
+    &\boxed{\Delta \entails \vec{\alpha} \pitchfork \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \subtypes \alpha
+      \epsilon \entails \vec{\alpha} \pitchfork \epsilon 
     }
 
-    \inferrule[Direct] {
-      \tau \notin \vec{z}
+    \inferrule[Match] {
+      \alpha \in \vec{\alpha}  
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \subtypes \alpha
+      \alpha \in \text{FTV}(\tau_l)\ \text{FTV}(\tau_r)
+      \\
+      \Delta \entails \vec{\alpha} \pitchfork \Delta_i
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \subtypes \alpha
+      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\alpha} \pitchfork \Delta_i \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Skip] {
-      \tau_r \neq \alpha
+      \forall \alpha .\ \alpha \in \vec{\alpha} \rightarrow \alpha \notin \text{FTV}(\tau_l)\ \text{FTV}(\tau_r)
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \subtypes \alpha
+      \Delta \entails \vec{\alpha} \pitchfork \Delta_i
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \subtypes \alpha
+      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\alpha} \pitchfork \Delta_i
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha}&
+    &\boxed{\vec{z}, \Delta \entails  \vec{\tau} \subtypes \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \subtypes \epsilon
+      \vec{z}, \epsilon \entails \epsilon \subtypes \alpha
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \subtypes \vec{\tau}
+      \vec{z}, \Delta \entails \vec{\tau} \subtypes \alpha
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \alpha \subtypes \vec{\tau}\ \tau
+      \vec{z}, \Delta \cdot \code{$\tau$<:$\alpha$} \entails \vec{\tau}\ \tau \subtypes \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \subtypes \vec{\tau}
+      \vec{z}, \Delta \entails \vec{\tau} \subtypes \alpha
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \subtypes \vec{\tau}
+      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\tau} \subtypes \alpha
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\vec{z} \Delta \entails \vec{\tau} \subtypes \alpha}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \vec{z} \epsilon \entails \alpha \subtypes \epsilon
+    }
+
+    \inferrule[Direct] {
+      \tau \notin \vec{z}
+      \\
+      \vec{z}, \Delta \entails \alpha \subtypes \vec{\tau}
+    } {
+      \vec{z}, \Delta \cdot \code{$\tau$<:$\alpha$} \entails \alpha \subtypes \vec{\tau}\ \tau
+    }
+
+    \inferrule[Skip] {
+      \tau_r \neq \alpha
+      \\
+      \vec{z}, \Delta \entails \alpha \subtypes \vec{\tau}
+    } {
+      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \subtypes \vec{\tau}
     }
   \end{mathpar}
 \caption{Typing Reconstruction (B)}
