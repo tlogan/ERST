@@ -3204,14 +3204,10 @@ class ExprRule(Rule):
             induc_body = Bot()
             ###########################
             for i, inner_world in enumerate(reversed(inner_worlds)):
-                lefts = pset()
-                left_typ = in_typ  
-                # assert in_typ.id not in inner_world.relids
                 ###### TODO: ensure that the assertion is invariant
-                if in_typ.id not in inner_world.relids:
-                    lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
-                    left_typ = make_inter(list(lefts))
-                # end if
+                assert in_typ.id not in inner_world.relids
+                lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
+                left_typ = make_inter(list(lefts))
                 ###########################
                 rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
                 right_typ = make_unio(list(rights))

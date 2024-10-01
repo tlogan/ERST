@@ -2006,10 +2006,12 @@ the variable's upper bound.
     }
 
     \inferrule[Step] {
-      \vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \subtypes \alpha_2
+      \vec{z}, \Delta \entails \Delta \Rightarrow \alpha_1 \subtypes \vec{\tau}_l 
       \\
-      \code{($\alpha_1$,|$(\vec{\tau})$)} = \tau_p
+      \vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau}_r \subtypes \alpha_2
       \\
+      \code{(\&$(\vec{\tau_l})$,|$(\vec{\tau_r})$)} = \tau_p
+      \\\\
       \text{FTV}(\tau_p) = \vec{\alpha}_p 
       \\
       \Delta \entails \vec{n}\ \vec{\alpha}_p\ \alpha_3 \ \pitchfork \Delta_i  

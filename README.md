@@ -3,7 +3,6 @@
 
 
 ### TODO (Symbolic Implementation)
-- determine why relational id check is necessary in `combine_fix`
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
 - update variable rules: no need to use intersect and unionize in variable rules
