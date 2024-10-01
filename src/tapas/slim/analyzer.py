@@ -1398,6 +1398,41 @@ def is_typ_structured(t : Typ) -> bool:
     else:
         return False
 
+def make_constraint_typ(positive : bool):
+    (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
+    def make(free_vars : PSet[str], skolems : PSet[str], constraints : PSet[Subtyping], payload : Typ):
+        payload_vars = extract_free_vars_from_typ(s(), payload)
+        assert not bool(free_vars.intersection(skolems))
+        outer_constraints = pset(
+            st
+            for st in constraints
+            for fvs in [extract_free_vars_from_constraints(s(), [st])]
+            if not bool (fvs.difference(skolems)) # every fvs is a skolem
+        )
+        inner_constraints = constraints.difference(outer_constraints)
+
+        outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(skolems)
+        inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(skolems).difference(free_vars)
+
+        if outer_ids and inner_ids:
+            return outer_con(
+                tuple(outer_ids), tuple(outer_constraints),
+                inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
+            )
+        elif outer_ids:
+            assert not inner_constraints
+            return outer_con(tuple(outer_ids), tuple(outer_constraints), payload)
+        elif inner_ids:
+            assert not outer_constraints
+            return inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
+        else:
+            assert not inner_constraints and not outer_constraints
+            return payload
+        # end if/else
+    # end def
+    return make
+# end def
+
 
 default_context = Context(m(), [World(s(), s(), s())])
 
@@ -3221,23 +3256,8 @@ class ExprRule(Rule):
                     #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
                     # )
                 )
-
-                # TODO: make sure skolems are considered properly
-                # TODO: perhaps skolems should be universally bound on the far outside.
-                bound_ids = extract_free_vars_from_typ(s(), rel_pattern).union(
-                    extract_free_vars_from_constraints(s(), influential_constraints)
-                )
-                # TODO: or perhaps there is an invariant that bound_ids have no skolems
-                assert not bool(bound_ids.intersection(inner_world.skolems))
-
-                # TODO: bind skolem variables with All 
                 rel_constraints = IH_rel_constraints.union(influential_constraints)
-                if bool(bound_ids):
-                    constrained_rel = Exi(tuple(sorted(bound_ids)), tuple(sorted(rel_constraints)), rel_pattern)
-                else:
-                    assert not bool(rel_constraints)
-                    constrained_rel = rel_pattern
-
+                constrained_rel = make_constraint_typ(False)(pset([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
                 induc_body = Unio(constrained_rel, induc_body) 
                 # NOTE: parameter constraint isn't actually necessary; sound without it.
                 # param_body = Unio(constrained_left, param_body)

@@ -4,10 +4,6 @@
 
 ### TODO (Symbolic Implementation)
 - determine why relational id check is necessary in `combine_fix`
-- reconsider if SKOLEMS should be intersected with FTV constraints to get bound variables in `combine_fix`
-    - bind skolem variables with All, instead of Exi
-    - or if the skolems should be subtracted instead
-    - do the bound IDs result in flexible or skolem variables when solved?
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
 - update variable rules: no need to use intersect and unionize in variable rules
