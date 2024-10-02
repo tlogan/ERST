@@ -1897,9 +1897,9 @@ the variable's upper bound.
     \inferrule[Function] {
       \vec{W}, \Gamma \entails f \liftfun \vec{\pi}, \vec{\eta} 
       \\
-      \Gamma \entails \vec{\pi} \Rrightarrow \tau
+      \Gamma \entails \vec{\pi} \Rrightarrow \vec{\tau}
     } {
-      \Gamma \entails f \hastype \tau \given \vec{W}
+      \Gamma \entails f \hastype \code{\&}(\vec{\tau}) \given \vec{W}
     }
 
     \inferrule[Projection] {
@@ -1960,10 +1960,10 @@ the variable's upper bound.
       \\
       \Gamma_0\ \Gamma_1 \entails e \hastype \tau_1 \given \vec{W}_1
       \\
-      \left< \vec{W}_1, \text{neg}(\tau_0, \vec{\eta}), \tau_1 \right> = \pi
+      text{neg}(\tau_0, \vec{\eta}) = \tau_2
     } {
       \vec{W}_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
-      \vec{\pi}\ \pi, \vec{\eta}\ \tau_0
+      \vec{\pi}\ \widebar{\left< W_1,  \tau_2, \tau_1 \right>}^{W_1 \in \vec{W}_1}, \vec{\eta}\ \tau_0
     }
   \end{mathpar}
 
@@ -1985,12 +1985,26 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\Gamma \entails \vec{\pi} \Rrightarrow \tau}&
+    &\boxed{\Gamma \entails \vec{\pi} \Rrightarrow \vec{\tau}}&
   \end{flalign*}
   \begin{mathpar}
-    \inferrule[TODO] {
+    \inferrule[Empty] {
     } {
-      \vec{\Gamma} \entails \vec{\pi} \Rrightarrow \tau
+      \vec{n} \entails \epsilon \Rrightarrow \epsilon 
+    }
+
+    \inferrule[Step] {
+      \vec{n} \entails \vec{\pi} \Rrightarrow \vec{\tau} 
+      \\
+      \text{FTV}(\tau_l) = \vec{\alpha}_l
+      \\
+      \text{FTV}(\tau_r) = \vec{\alpha}_r
+      \\\\
+      \Delta \entails \vec{n}\ \vec{\alpha}_l\ \vec{\alpha}_r \ \pitchfork \Delta_i  
+      \\
+      \text{constrain}^+(\epsilon, \vec{z}, \Delta_i, \code{$\tau_l$->$\tau_r$}) = \tau
+    } {
+      \vec{n} \entails \vec{\pi}\ \left<\vec{z}, \Delta, \tau_l, \tau_r \right> \Rrightarrow \vec{\tau}\ \tau 
     }
   \end{mathpar}
 

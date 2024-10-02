@@ -3,6 +3,9 @@
 
 
 ### TODO (Symbolic Implementation)
+- refactor `combine_function` to match rules in paper
+- refactor `combine_fix` to match rules in paper
+- in `combine_function` and `combine_fix`: reconsider if skolems should be considered influential
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
 - update variable rules: no need to use intersect and unionize in variable rules

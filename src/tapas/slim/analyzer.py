@@ -2973,6 +2973,7 @@ class BaseRule(Rule):
             for t in nt.enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
+        # TODO: move augmentation outside
         augmented_branches = self.solver.augment_branches_with_diff(branches)
         generalized_branches = []
         for branch in augmented_branches: 
@@ -2981,6 +2982,7 @@ class BaseRule(Rule):
             imp = Imp(param_typ, body_typ)
             for branch_world in branch.worlds:
                 influential_vars = rigids.union(
+                    # TODO: reconsider if skolems should be considered influential
                     branch_world.skolems
                 ).union(
                     extract_free_vars_from_typ(s(), imp)
@@ -2991,6 +2993,7 @@ class BaseRule(Rule):
                     for st in branch_world.constraints
                     if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
                 )
+                #TODO: replace with make_constraint function
                 universal_constraints = extract_universal_constraints(branch_world.skolems, reachable_constraints)
                 reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
                 universal_bound_ids = tuple(sorted(reachable_ids.difference(branch_world.skolems).difference(rigids)))
