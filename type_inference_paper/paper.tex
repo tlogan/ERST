@@ -570,6 +570,9 @@ rather than merely a type variable to allow for relational constraints.
 \nonterm{\vec{z}} & \is \epsilon \sep \vec{z}\ z
 \\
 \\
+\nonterm{Z} & \is \epsilon \sep Z\ z
+\\
+\\
 \nonterm{z} & \is \alpha 
 \\
 \\
@@ -1953,17 +1956,17 @@ the variable's upper bound.
 
     \inferrule[Step] {
       \vec{W}_0, \Gamma_0 \entails f \liftfun \vec{\pi}, \vec{\eta}
-      \\\\
-      p \liftpat \tau_0 \given \Gamma_1
       \\
+      p \hastype \tau_l \given \Gamma_1
+      \\
+      \text{neg}(\tau_l, \vec{\eta}) = \tau_l'
+      \\\\
       \vec{W}_0 \looparrowright \vec{W}_1
       \\
-      \Gamma_0\ \Gamma_1 \entails e \hastype \tau_1 \given \vec{W}_1
-      \\
-      text{neg}(\tau_0, \vec{\eta}) = \tau_2
+      \Gamma_0\ \Gamma_1 \entails e \hastype \tau_r \given \vec{W}_1
     } {
       \vec{W}_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
-      \vec{\pi}\ \widebar{\left< W_1,  \tau_2, \tau_1 \right>}^{W_1 \in \vec{W}_1}, \vec{\eta}\ \tau_0
+      \vec{\pi}\ \widebar{\left< Z, \Delta, \tau_l', \tau_r \right>}^{\left<Z, \Delta\right> \in \vec{W}_1}, \vec{\eta}\ \tau_0
     }
   \end{mathpar}
 
