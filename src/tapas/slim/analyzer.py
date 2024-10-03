@@ -1292,24 +1292,6 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
             constraints = constraints.union(new_constraints)
     return constraints
 
-def extract_existential_constraints(skolems: PSet[str], constraints : PSet[Subtyping]) -> PSet[Subtyping]:
-    return pset( 
-        st
-        for st in constraints
-        for lower_fvs in [extract_free_vars_from_typ(s(), st.lower)]
-        for upper_fvs in [extract_free_vars_from_typ(s(), st.upper)]
-        if bool(skolems.intersection(lower_fvs.union(upper_fvs))) 
-    )
-
-def extract_universal_constraints(skolems: PSet[str], constraints : PSet[Subtyping]) -> PSet[Subtyping]:
-    return pset( 
-        st
-        for st in constraints
-        for lower_fvs in [extract_free_vars_from_typ(s(), st.lower)]
-        for upper_fvs in [extract_free_vars_from_typ(s(), st.upper)]
-        if bool(lower_fvs.union(upper_fvs).difference(skolems)) 
-    )
-
 # def package_typ(world : World, typ : Typ) -> Typ:
 #     constraints = extract_reachable_constraints_from_typ(world, typ)
 #     existential_constraints = extract_existential_constraints(world.skolems, constraints)
@@ -3000,36 +2982,7 @@ class BaseRule(Rule):
                 for st in branch.world.constraints
                 if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
             )
-            #TODO: replace with make_constraint function
-            universal_constraints = extract_universal_constraints(branch.world.skolems, reachable_constraints)
-            reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
-            universal_bound_ids = tuple(sorted(reachable_ids.difference(branch.world.skolems).difference(rigids)))
-
-            if not universal_bound_ids:
-                assert not universal_bound_ids
-                body = imp 
-            else:
-                body = All(universal_bound_ids, tuple(sorted(universal_constraints)), imp)
-            #end if-else
-
-            ######## NOTE: generalization #############
-
-            constraints = (
-                tuple(sorted(reachable_constraints.difference(universal_constraints)))
-            )
-
-            fvs = sorted(
-                extract_free_vars_from_typ(s(), body).union(
-                    extract_free_vars_from_constraints(s(), constraints)
-                ).intersection(branch.world.skolems)
-            )
-            bound_ids = tuple(fvs)
-            renamed_constraints = constraints
-            renamed_body = body
-            if bound_ids or constraints:
-                generalized_case = Exi(bound_ids, renamed_constraints, renamed_body)
-            else:
-                generalized_case = renamed_body
+            generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, reachable_constraints, imp)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
@@ -3263,7 +3216,7 @@ class ExprRule(Rule):
                     # )
                 )
                 rel_constraints = IH_rel_constraints.union(influential_constraints)
-                constrained_rel = make_constraint_typ(False)(pset([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
+                constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
                 induc_body = Unio(constrained_rel, induc_body) 
                 # NOTE: parameter constraint isn't actually necessary; sound without it.
                 # param_body = Unio(constrained_left, param_body)

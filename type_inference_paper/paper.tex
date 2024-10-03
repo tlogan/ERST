@@ -2005,7 +2005,7 @@ the variable's upper bound.
       \\\\
       \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_l\ \vec{\alpha}_r \ \pitchfork \Delta_i  
       \\
-      \text{constrain}^+(\epsilon, \vec{z}, \Delta_i, \code{$\tau_l$->$\tau_r$}) = \tau
+      \text{constrain}^+(\vec{n}, \vec{z}, \Delta_i, \code{$\tau_l$->$\tau_r$}) = \tau
     } {
       \vec{n} \entails \vec{\pi}\ \left<\vec{z}, \Delta, \tau_l, \tau_r \right> \Rrightarrow \vec{\tau}\ \tau 
     }
@@ -2033,7 +2033,7 @@ the variable's upper bound.
       \\
       \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_p\ \alpha_3 \ \pitchfork \Delta_i  
       \\
-      \text{constrain}^{-}(\alpha_3, \vec{z}, \Delta_i, \tau_p) = \tau
+      \text{constrain}^{-}(\vec{n}\ \alpha_3, \vec{z}, \Delta_i, \tau_p) = \tau
       % TODO: should skolems be included using universal constraint? 
     } {
       \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}\ \tau

@@ -3,7 +3,6 @@
 
 
 ### TODO (Symbolic Implementation)
-- rewrite type construction in `combine_function` to use `make_constraint_typ` 
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
 - update variable rules: no need to use intersect and unionize in variable rules
