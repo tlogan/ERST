@@ -3153,75 +3153,70 @@ class ExprRule(Rule):
 
         IH_typ = self.solver.fresh_type_var()
 
+        induc_body = Bot()
         assert nt.worlds
-        outer_worlds = []
-        for outer_world in nt.worlds:
-            outer_worlds.append(outer_world)
-            inner_worlds = self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
-            # fix(a => (b0 => c0),(b1 => c1),(b2 => c2),...) 
-            # has type: 
-            # FIX[A](intersect worlds: ALL[A <: ...]B -> C)
-            induc_body = Bot()
+        inner_worlds = [
+            inner_world
+            for outer_world in nt.worlds
+            for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
+        ]
+        for i, inner_world in enumerate(reversed(inner_worlds)):
+            ###### TODO: ensure that the assertion is invariant
+            assert in_typ.id not in inner_world.relids
+            lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
+            left_typ = make_inter(list(lefts))
             ###########################
-            for i, inner_world in enumerate(reversed(inner_worlds)):
-                ###### TODO: ensure that the assertion is invariant
-                assert in_typ.id not in inner_world.relids
-                lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
-                left_typ = make_inter(list(lefts))
-                ###########################
-                rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
-                right_typ = make_unio(list(rights))
+            rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
+            right_typ = make_unio(list(rights))
 
-                rel_pattern = make_pair_typ(left_typ, right_typ)
-                fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
-                IH_rel_constraints = s()
-                IH_left_constraints = s()
-                intermediate_constraints = s() 
+            rel_pattern = make_pair_typ(left_typ, right_typ)
+            fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
+            IH_rel_constraints = s()
+            IH_left_constraints = s()
+            intermediate_constraints = s() 
 
-                for fixpoint_interp in fixpoint_interps:
-                    if isinstance(fixpoint_interp, Imp):
-                        fixpoint_left = fixpoint_interp.antec
-                        fixpoint_right = fixpoint_interp.consq
-                        IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
-                        IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
-                    else:
-                        # NOTE: anything else is an intermediate linking via a type var
-                        assert isinstance(fixpoint_interp, TVar)
-                        intermediate_constraints = intermediate_constraints.union(pset(
-                            Subtyping(fixpoint_interp, t)
-                            for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
-                        ))
-                    #end if
-                #end for
-
-                # NOTE: only keep constraints on vars that continue to have influence
-                # - all other vars influence has been fully realized and captured by remaining constraints
-
-                influential_vars = rigids.union(
-                    inner_world.skolems
-                ).union(
-                    extract_free_vars_from_typ(s(), rel_pattern)
-                ).union(
-                    [IH_typ.id] 
-                ) 
-
-                influential_constraints = pset(
-                    st
-                    # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                    for st in inner_world.constraints
-                    # NOTE: contains at least one influential variable
-                    if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
-                    # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
-                    #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
-                    # )
-                )
-                rel_constraints = IH_rel_constraints.union(influential_constraints)
-                constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
-                induc_body = Unio(constrained_rel, induc_body) 
-                # NOTE: parameter constraint isn't actually necessary; sound without it.
-                # param_body = Unio(constrained_left, param_body)
-
+            for fixpoint_interp in fixpoint_interps:
+                if isinstance(fixpoint_interp, Imp):
+                    fixpoint_left = fixpoint_interp.antec
+                    fixpoint_right = fixpoint_interp.consq
+                    IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
+                    IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
+                else:
+                    # NOTE: anything else is an intermediate linking via a type var
+                    assert isinstance(fixpoint_interp, TVar)
+                    intermediate_constraints = intermediate_constraints.union(pset(
+                        Subtyping(fixpoint_interp, t)
+                        for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
+                    ))
+                #end if
             #end for
+
+            # NOTE: only keep constraints on vars that continue to have influence
+            # - all other vars influence has been fully realized and captured by remaining constraints
+
+            influential_vars = rigids.union(
+                inner_world.skolems
+            ).union(
+                extract_free_vars_from_typ(s(), rel_pattern)
+            ).union(
+                [IH_typ.id] 
+            ) 
+
+            influential_constraints = pset(
+                st
+                # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                for st in inner_world.constraints
+                # NOTE: contains at least one influential variable
+                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
+                # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
+                #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
+                # )
+            )
+            rel_constraints = IH_rel_constraints.union(influential_constraints)
+            constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
+            induc_body = Unio(constrained_rel, induc_body) 
+            # NOTE: parameter constraint isn't actually necessary; sound without it.
+            # param_body = Unio(constrained_left, param_body)
         #end for
 
         rel_typ = Fixpoint(IH_typ.id, induc_body)
@@ -3230,7 +3225,7 @@ class ExprRule(Rule):
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
         result = All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ))  
-        return Result(outer_worlds, result)
+        return Result(nt.worlds, result)
         ##################################
 
     
