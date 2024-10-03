@@ -255,6 +255,12 @@ class Branch:
     body : Typ
 
 @dataclass(frozen=True, eq=True)
+class AugBranch:
+    world : World
+    pattern : Typ 
+    body : Typ
+
+@dataclass(frozen=True, eq=True)
 class RecordBranch:
     worlds : list[World]
     label : str 
@@ -2095,7 +2101,7 @@ class Solver:
                 result = Diff(result, neg)
         return result
 
-    def augment_branches_with_diff(self, branches : list[Branch]) -> list[Branch]:
+    def augment_branches_with_diff(self, branches : list[Branch]) -> list[AugBranch]:
         '''
         nil -> zero
         cons X -> succ Y 
@@ -2107,7 +2113,10 @@ class Solver:
         negs = []
 
         for branch in branches:
-            augmented_branches += [replace(branch, pattern = self.make_diff(empty_world(), branch.pattern, negs))]
+            augmented_branches += [
+                AugBranch(world, self.make_diff(empty_world(), branch.pattern, negs), branch.body)
+                for world in branch.worlds
+            ]
             neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
             neg = (
                 Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
@@ -2980,54 +2989,50 @@ class BaseRule(Rule):
             body_typ = branch.body
             param_typ = branch.pattern
             imp = Imp(param_typ, body_typ)
-            for branch_world in branch.worlds:
-                influential_vars = rigids.union(
-                    # TODO: reconsider if skolems should be considered influential
-                    branch_world.skolems
-                ).union(
-                    extract_free_vars_from_typ(s(), imp)
-                )
+            influential_vars = rigids.union(
+                # TODO: reconsider if skolems should be considered influential
+                branch.world.skolems
+            ).union(
+                extract_free_vars_from_typ(s(), imp)
+            )
 
-                reachable_constraints = pset(
-                    st
-                    for st in branch_world.constraints
-                    if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
-                )
-                #TODO: replace with make_constraint function
-                universal_constraints = extract_universal_constraints(branch_world.skolems, reachable_constraints)
-                reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
-                universal_bound_ids = tuple(sorted(reachable_ids.difference(branch_world.skolems).difference(rigids)))
+            reachable_constraints = pset(
+                st
+                for st in branch.world.constraints
+                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
+            )
+            #TODO: replace with make_constraint function
+            universal_constraints = extract_universal_constraints(branch.world.skolems, reachable_constraints)
+            reachable_ids = extract_free_vars_from_constraints(s(), reachable_constraints).union(extract_free_vars_from_typ(s(), imp))
+            universal_bound_ids = tuple(sorted(reachable_ids.difference(branch.world.skolems).difference(rigids)))
 
-                if not universal_bound_ids:
-                    assert not universal_bound_ids
-                    body = imp 
-                else:
-                    body = All(universal_bound_ids, tuple(sorted(universal_constraints)), imp)
-                #end if-else
+            if not universal_bound_ids:
+                assert not universal_bound_ids
+                body = imp 
+            else:
+                body = All(universal_bound_ids, tuple(sorted(universal_constraints)), imp)
+            #end if-else
 
-                ######## NOTE: generalization #############
+            ######## NOTE: generalization #############
 
-                constraints = (
-                    tuple(sorted(reachable_constraints.difference(universal_constraints)))
-                )
+            constraints = (
+                tuple(sorted(reachable_constraints.difference(universal_constraints)))
+            )
 
-                fvs = sorted(
-                    extract_free_vars_from_typ(s(), body).union(
-                        extract_free_vars_from_constraints(s(), constraints)
-                    ).intersection(branch_world.skolems)
-                )
-                bound_ids = tuple(fvs)
-                renamed_constraints = constraints
-                renamed_body = body
-                if bound_ids or constraints:
-                    generalized_case = Exi(bound_ids, renamed_constraints, renamed_body)
-                else:
-                    generalized_case = renamed_body
-                #############################################
-                generalized_branches = generalized_branches + [generalized_case]
-            '''
-            end for
-            '''
+            fvs = sorted(
+                extract_free_vars_from_typ(s(), body).union(
+                    extract_free_vars_from_constraints(s(), constraints)
+                ).intersection(branch.world.skolems)
+            )
+            bound_ids = tuple(fvs)
+            renamed_constraints = constraints
+            renamed_body = body
+            if bound_ids or constraints:
+                generalized_case = Exi(bound_ids, renamed_constraints, renamed_body)
+            else:
+                generalized_case = renamed_body
+            #############################################
+            generalized_branches = generalized_branches + [generalized_case]
         '''
         end for 
         '''

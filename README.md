@@ -3,9 +3,8 @@
 
 
 ### TODO (Symbolic Implementation)
-- refactor `combine_function` to match rules in paper
-- refactor `combine_fix` to match rules in paper
 - in `combine_function` and `combine_fix`: reconsider if skolems should be considered influential
+- rewrite type construction in `combine_function` to use `make_constraint_typ` 
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
 - update variable rules: no need to use intersect and unionize in variable rules
@@ -98,6 +97,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- update collection symbols to avoid vector symbols
 - redo sequence subtyping to use a separate internal subtyping syntax (square less than sign) rather than <: used in surface syntax. 
     - this emphasizes that the surface syntax operates on a more restrictive form
 - keep in mind that the recursive type (FIX) does not need a special least (strongest) vs greatest (weakest) form.
