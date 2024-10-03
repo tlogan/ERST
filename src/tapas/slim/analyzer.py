@@ -2990,7 +2990,6 @@ class BaseRule(Rule):
             param_typ = branch.pattern
             imp = Imp(param_typ, body_typ)
             influential_vars = rigids.union(
-                # TODO: reconsider if skolems should be considered influential
                 branch.world.skolems
             ).union(
                 extract_free_vars_from_typ(s(), imp)
@@ -3244,7 +3243,10 @@ class ExprRule(Rule):
 
                 # NOTE: only keep constraints on vars that continue to have influence
                 # - all other vars influence has been fully realized and captured by remaining constraints
+
                 influential_vars = rigids.union(
+                    inner_world.skolems
+                ).union(
                     extract_free_vars_from_typ(s(), rel_pattern)
                 ).union(
                     [IH_typ.id] 

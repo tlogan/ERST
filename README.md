@@ -3,7 +3,6 @@
 
 
 ### TODO (Symbolic Implementation)
-- in `combine_function` and `combine_fix`: reconsider if skolems should be considered influential
 - rewrite type construction in `combine_function` to use `make_constraint_typ` 
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
