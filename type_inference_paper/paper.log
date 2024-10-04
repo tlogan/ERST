@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  3 OCT 2024 18:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  4 OCT 2024 18:38
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1115,21 +1115,27 @@ Class acmart Warning: A possible image without description on input line 2124.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `fig:internal' on page 9 undefined on input line 2307.
+Class acmart Warning: A possible image without description on input line 2199.
 
 
-LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2334.
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: Reference `fig:internal' on page 9 undefined on input line 2382.
+
+
+LaTeX Warning: Reference `fig:infer' on page 9 undefined on input line 2409.
 
 [9.9] [10.10] [11.11] [12.12]
 
-LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2612.
+LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2687.
 
 [13.13]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2647.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2722.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2678.
+LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2753.
 
 [14.14] [15.15]
 
@@ -1141,11 +1147,11 @@ Class acmart Warning: ACM keywords are mandatory for papers over two pages.
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
-[16.16] [17.17] [18.18] [19.19] (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
+[16.16] [17.17] [18.18] [19.19] [20.20] (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 ) (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-utf8.def
 File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
-) [20.20] (./paper.aux)
+) [21.21] (./paper.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -1165,18 +1171,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24243 strings out of 474116
- 388040 string characters out of 5743682
- 2046187 words of memory out of 5000000
- 45498 multiletter control sequences out of 15000+600000
- 753649 words of font info for 428 fonts, out of 8000000 for 9000
+ 24247 strings out of 474116
+ 388082 string characters out of 5743682
+ 2053187 words of memory out of 5000000
+ 45499 multiletter control sequences out of 15000+600000
+ 753896 words of font info for 429 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (20 pages, 517725 bytes).
+</usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
+Output written on paper.pdf (21 pages, 521658 bytes).
 PDF statistics:
- 341 PDF objects out of 1000 (max. 8388607)
- 277 compressed objects within 3 object streams
- 103 named destinations out of 1000 (max. 500000)
+ 351 PDF objects out of 1000 (max. 8388607)
+ 284 compressed objects within 3 object streams
+ 105 named destinations out of 1000 (max. 500000)
  98929 words of extra memory for PDF output out of 106986 (max. 10000000)
 

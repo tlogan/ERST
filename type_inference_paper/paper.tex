@@ -1988,16 +1988,16 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\Gamma \entails \vec{\pi} \Rrightarrow \vec{\tau}}&
+    &\boxed{\Gamma \entails \vec{\pi} \doteq \vec{\tau}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{n} \entails \epsilon \Rrightarrow \epsilon 
+      \vec{n} \entails \epsilon \doteq \epsilon 
     }
 
     \inferrule[Step] {
-      \vec{n} \entails \vec{\pi} \Rrightarrow \vec{\tau} 
+      \vec{n} \entails \vec{\pi} \doteq \vec{\tau} 
       \\
       \text{FTV}(\tau_l) = \vec{\alpha}_l
       \\
@@ -2005,21 +2005,21 @@ the variable's upper bound.
       \\\\
       \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_l\ \vec{\alpha}_r \ \pitchfork \Delta_i  
       \\
-      \text{constrain}^+(\vec{n}, \vec{z}, \Delta_i, \code{$\tau_l$->$\tau_r$}) = \tau
+      \vec{n}, \vec{z}, \Delta_i \entails \code{$\tau_l$->$\tau_r$} \equiv^{+} \tau
     } {
-      \vec{n} \entails \vec{\pi}\ \left<\vec{z}, \Delta, \tau_l, \tau_r \right> \Rrightarrow \vec{\tau}\ \tau 
+      \vec{n} \entails \vec{\pi}\ \left<\vec{z}, \Delta, \tau_l, \tau_r \right> \doteq \vec{\tau}\ \tau 
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{n} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \Rrightarrow \alpha \circlearrowright \vec{\tau}}&
+    &\boxed{\vec{n} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \vec{\tau}}&
   \end{flalign*}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{n} \entails \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \epsilon 
+      \vec{n} \entails \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \epsilon 
     }
 
     \inferrule[Step] {
@@ -2033,10 +2033,10 @@ the variable's upper bound.
       \\
       \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_p\ \alpha_3 \ \pitchfork \Delta_i  
       \\
-      \text{constrain}^{-}(\vec{n}\ \alpha_3, \vec{z}, \Delta_i, \tau_p) = \tau
+      \vec{n}\ \alpha_3, \vec{z}, \Delta_i \entails \tau_p \equiv^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
-      \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}\ \tau
+      \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \vec{\tau}\ \tau
     }
   \end{mathpar}
 
@@ -2121,6 +2121,81 @@ the variable's upper bound.
   \end{mathpar}
 \caption{Typing Reconstruction (B)}
 \label{fig:typing_reconstruction_part_b}
+\end{figure*}
+
+
+
+\begin{figure*}[h]
+
+  \begin{flalign*}
+    &\boxed{\text{outer}(+|-) = \code{ALL}|\code{EXI}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \\
+    \text{outer}(+) 
+    &=& 
+    \code{EXI} 
+    & \C{positive} 
+    \\
+    \text{outer}(-) 
+    &=& 
+    \code{ALL} 
+    & \C{negative} 
+  \end{array}\]
+
+  \begin{flalign*}
+    &\boxed{\text{inner}(+|-) = \code{ALL}|\code{EXI}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \\
+    \text{inner}(+) 
+    &=& 
+    \code{ALL} 
+    & \C{positive} 
+    \\
+    \text{inner}(-) 
+    &=& 
+    \code{EXI} 
+    & \C{negative} 
+  \end{array}\]
+
+  \begin{flalign*}
+    &\boxed{\text{build}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \\
+    \text{build}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
+    &=& 
+    \tau
+    \\
+    \text{build}^{+|-}(\epsilon, \epsilon, \mathrm{A}_i, \Delta_i, \tau) 
+    &=& 
+    \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}\tau
+    \\
+    \text{build}^{+|-}(\mathrm{A}_o, \Delta_o, \epsilon, \epsilon, \tau) 
+    &=& 
+    \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}\tau
+    \\
+    \text{build}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) 
+    &=& 
+    \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}
+    \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}
+    \tau
+    \\
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &\boxed{\mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Main] {
+    } {
+      \mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau
+    }
+  \end{mathpar}
+\caption{HELPERS}
+\label{fig:helpers}
 \end{figure*}
 
 
