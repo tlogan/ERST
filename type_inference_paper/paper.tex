@@ -2160,23 +2160,23 @@ the variable's upper bound.
   \end{array}\]
 
   \begin{flalign*}
-    &\boxed{\text{build}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}&
+    &\boxed{\text{quantify}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}&
   \end{flalign*}
   \[\begin{array}{rclr}
     \\
-    \text{build}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
+    \text{quantify}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
     &=& 
     \tau
     \\
-    \text{build}^{+|-}(\epsilon, \epsilon, \mathrm{A}_i, \Delta_i, \tau) 
+    \text{quantify}^{+|-}(\epsilon, \epsilon, \mathrm{A}_i, \Delta_i, \tau) 
     &=& 
     \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}\tau
     \\
-    \text{build}^{+|-}(\mathrm{A}_o, \Delta_o, \epsilon, \epsilon, \tau) 
+    \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
     \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}\tau
     \\
-    \text{build}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) 
+    \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) 
     &=& 
     \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}
     \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}
@@ -2189,9 +2189,47 @@ the variable's upper bound.
     &\boxed{\mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau}&
   \end{flalign*}
   \begin{mathpar}
+
     \inferrule[Main] {
+      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \\\\
+      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \cap\ \mathrm{A}_z = \mathrm{A}_o
+      \\
+      (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \mathrm{A}_z \ \backslash\ \mathrm{A}_r = \mathrm{A}_i
+      \\\\
+      \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) = \tau'
     } {
-      \mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau
+      \mathrm{A}_r, \mathrm{A}_z, \Delta \entails \tau \equiv^{+|-} \tau'
+    }
+  \end{mathpar}
+
+  \begin{flalign*}
+    &\boxed{\mathrm{A}, \Delta \entails \Delta \wr \Delta}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] {
+    } {
+      \mathrm{A}_z, \epsilon \entails \epsilon \wr \epsilon 
+    }
+
+    \inferrule[Outer] {
+      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
+      \\
+      \forall \alpha .\ \alpha \in \mathrm{A}_q \rightarrow \alpha \in \mathrm{A}_z
+      \\
+      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+    } {
+      \mathrm{A}_z, \Delta\ \code{;$\tau_l$<:$\tau_r$} \entails \Delta_o\ \code{;$\tau_l$<:$\tau_r$} \wr \Delta_i 
+    }
+
+    \inferrule[Inner] {
+      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
+      \\
+      \alpha \in \mathrm{A}_q \land \alpha \notin \mathrm{A}_z
+      \\
+      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+    } {
+      \mathrm{A}_z, \Delta\ \code{;$\tau_l$<:$\tau_r$} \entails \Delta_o \wr \Delta_i\ \code{;$\tau_l$<:$\tau_r$} 
     }
   \end{mathpar}
 \caption{HELPERS}
