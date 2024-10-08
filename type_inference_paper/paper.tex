@@ -1188,134 +1188,133 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{z} \lessdot \alpha}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \vec{z} \lessdot \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \lessdot \alpha
+      \vec{z}, \Delta, \epsilon \entails \epsilon \lessdot \alpha
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \vec{z}_1 \lessdot \alpha
       \\\\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{z}_2 \lessdot z 
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z}_2 \lessdot z 
     } {
-      \vec{z}_0, \Delta_0 
-      \entails \Delta_1 \cdot \code{$z$<:$\alpha$} 
-      \Rightarrow \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
+      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$z$<:$\alpha$} 
+      \entails \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
     }
 
     \inferrule[Skip] {
       \neg (\tau_l \in \vec{z}_0 \land \tau_r = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \vec{z}_1 \lessdot \alpha
     } {
-      \vec{z}_0, \Delta_0 
-      \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
-      \Rightarrow \vec{z}_1 \lessdot \alpha
+      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
+      \entails \vec{z}_1 \lessdot \alpha
     }
   \end{mathpar}
 
+
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau} \ll \alpha}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \vec{\tau} \ll \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \epsilon \ll \alpha
+      \vec{z}, \Delta, \epsilon \entails \epsilon \ll \alpha
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$\alpha$} \Rightarrow \vec{\tau}\ \tau \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau$<:$\alpha$} \entails \vec{\tau}\ \tau \ll \alpha
     }
 
     \inferrule[Trans] {
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau}_0 \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau}_0 \ll \alpha
       \\
-      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow \vec{\tau}_1 \ll z 
+      \vec{z}, \Delta_0, \Delta_0 \entails \vec{\tau}_1 \ll z 
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$z$<:$\alpha$} \Rightarrow \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$z$<:$\alpha$} \entails \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau} \ll \alpha
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\tau} \ll \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \lessdot \vec{z}}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \lessdot \vec{z}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \lessdot \epsilon
+      \vec{z}, \Delta, \epsilon \entails \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
       z \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1 
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1 
       \\\\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow z \lessdot \vec{z}_2 
+      \vec{z}_0, \Delta_0, \Delta_0 \entails z \lessdot \vec{z}_2 
     } {
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
+      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$z$} \entails \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
     }
 
     \inferrule[Skip] {
       \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1
     } {
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow  \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \lessdot \vec{z}_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \ll \vec{\tau}}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \ll \vec{\tau}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \ll \epsilon
+      \vec{z}, \Delta, \epsilon \entails \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$\tau$} \Rightarrow \alpha \ll \vec{\tau}\ \tau
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$\tau$} \entails \alpha \ll \vec{\tau}\ \tau
     }
 
     \inferrule[Trans] {
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}_0
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}_0
       \\
-      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow z \ll \vec{\tau}_1
+      \vec{z}, \Delta_0, \Delta_0 \entails z \ll \vec{\tau}_1
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\alpha$<:$z$} \Rightarrow \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$z$} \entails \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \vec{\tau}
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \vec{\tau}
     }
   \end{mathpar}
 
@@ -1325,12 +1324,12 @@ the variable's upper bound.
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \lessdot \Delta}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \lessdot \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \lessdot \epsilon
+      \vec{z}, \Delta, \epsilon \entails \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
@@ -1338,14 +1337,14 @@ the variable's upper bound.
       \\
       z_0 \in \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \Delta_2
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow z_0 \lessdot \vec{z}_1 
+      \vec{z}_0, \Delta_0, \Delta_0 \entails z_0 \lessdot \vec{z}_1 
     } {
       \vec{z}_0, \Delta_0
       \entails
       \Delta_1 \cdot \code{$\tau$<:$z_0$} 
-      \Rightarrow
+      \entails
       \alpha 
       \lessdot 
       \Delta_2\ \widebar{\cdot \code{$\tau$<:$z_1$}}^{z_1 \in \vec{z}_1}\ \cdot \code{$\tau$<:$z_0$} 
@@ -1354,19 +1353,19 @@ the variable's upper bound.
     \inferrule[Skip] {
       \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1
     } {
-      \vec{z}_0, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \lessdot \vec{z}_1
+      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \lessdot \vec{z}_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \Delta \Rightarrow \alpha \ll \Delta}&
+    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \ll \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon \Rightarrow \alpha \ll \epsilon
+      \vec{z}, \Delta, \epsilon \entails \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
@@ -1374,9 +1373,9 @@ the variable's upper bound.
       \\
       \tau \notin \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Trans] {
@@ -1384,19 +1383,19 @@ the variable's upper bound.
       \\
       z \in \vec{z}
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
       \\\\
-      \vec{z}, \Delta_0 \entails \Delta_0 \Rightarrow z \ll \Delta_3 
+      \vec{z}, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau$<:$z$} \Rightarrow \alpha \ll \Delta_2\ \Delta_3
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau$<:$z$} \entails \alpha \ll \Delta_2\ \Delta_3
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
       \\
-      \vec{z}, \Delta_0 \entails \Delta_1 \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0 \entails \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \Rightarrow \alpha \ll \Delta_2
+      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \Delta_2
     }
   \end{mathpar}
 
@@ -1518,9 +1517,9 @@ the variable's upper bound.
     \inferrule[Flex-L] {
       \alpha \notin \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{z} \lessdot \alpha
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z} \lessdot \alpha
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \vec{\tau} \ll \alpha
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{\tau} \ll \alpha
       \\
       \vec{z}_0 \preceq \vec{z}_1
       \\
@@ -1536,11 +1535,11 @@ the variable's upper bound.
     \inferrule[Flex-R] {
       \alpha \notin \vec{z}_0
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \lessdot \vec{z}
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \vec{z}
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \lessdot \Delta_{skol}
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \vec{\tau} 
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \ll \vec{\tau} 
       \\
       \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
       \\
