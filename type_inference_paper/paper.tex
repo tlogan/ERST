@@ -540,136 +540,123 @@ rather than merely a type variable to allow for relational constraints.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{figure*}[h]
-\[
-\begin{array}[t]{r@{}l}
-\nonterm{\tau} & \is 
+  \[\begin{array}[t]{r@{}l}
+  \nonterm{\tau} & \is 
   \begin{array}[t]{@{}l}
-  \code{$\alpha$} \sep 
-  \code{@} \sep
-  \code{\textasciitilde{}$l$ $\tau$} \sep 
-  \code{$l$:$\tau$} \sep 
-  \code{$\tau$->$\tau$} \sep
-  \code{$\tau$|$\tau$} \sep
-  \code{$\tau$\&$\tau$} \sep
-  \code{$\tau$\textbackslash$\tau$} \sep 
-  \\
-  \code{EXI[$\vec{\alpha}$ $Q$] $\tau$} \sep 
-  \code{ALL[$\vec{\alpha}$ $Q$] $\tau$} \sep 
-  \code{FIX[$\alpha$;$\tau$]}
+    \code{$\alpha$} \sep 
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $\tau$} \sep 
+    \code{$l$:$\tau$} \sep 
+    \code{$\tau$->$\tau$} \sep
+    \code{$\tau$|$\tau$} \sep
+    \code{$\tau$\&$\tau$} \sep
+    \code{$\tau$\textbackslash$\tau$} \sep 
+    \\
+    \code{EXI[$\mathrm{A}$ $\Delta$]$\tau$} \sep 
+    \code{ALL[$\mathrm{A}$ $\Delta$]$\tau$} \sep 
+    \code{FIX[$\alpha$;$\tau$]}
   \end{array}
-\\
-\\
-\nonterm{Q} & \is
-  \epsilon \sep 
-  \code{$Q$;$\tau$<:$\tau$} 
-\\
-\\
-\nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
-\\
-\\
-\nonterm{\vec{z}} & \is \epsilon \sep \vec{z}\ z
-\\
-\\
-\nonterm{Z} & \is \epsilon \sep Z\ z
-\\
-\\
-\nonterm{z} & \is \alpha 
-\\
-\\
-\nonterm{e} & \is 
-  \begin{array}[t]{@{}l}
-  \code{$x$} \sep 
-  \code{@} \sep
-  \code{\textasciitilde{}$l$ $e$} \sep 
-  r \sep
-  \code{$e$,$e$} \sep
-  f \sep 
-  \code{$e$.$l$} \sep
-  \code{($e$)($e$)} \sep
   \\
-  \code{$e$ |> $e$} \sep
-  \code{fix($e$)} \sep
-  \code{let $x$:$\tau$ = $e$ in $e$} \sep
-  \code{($e$)}
-  \end{array}
-\\
-\\
-\nonterm{r} & \is 
-  \epsilon \sep r\ \code{;$l$=$e$}
-\\
-\\
-\nonterm{f} & \is 
-  \epsilon \sep f\ \code{case $p$=>$e$}
-\\
-\\
-\nonterm{p} & \is 
-  \code{$x$} \sep
-  \code{@} \sep
-  \code{\textasciitilde{}$l$ $p$} \sep
-  b \sep
-  \code{$p$,$p$} \sep
-  \code{($p$)} 
-\\
-\\
-\nonterm{b} & \is 
-  \code{;$l$=$p$} \sep b\ \code{;$l$=$p$}
-\\
-\\
-\nonterm{\sigma} & \is 
-  \epsilon \sep \sigma \cdot x \slash v
-\\
-\\
-\nonterm{\omega} & \is 
-  \epsilon \sep \omega \cdot \alpha \slash \tau
-\\  
-\\  
-\nonterm{\Gamma} & \is 
-  \epsilon \sep \Gamma \cdot \code{$x$:$\tau$}
-\\
-\\  
-\nonterm{\Delta} & \is 
-  \epsilon \sep \Delta \cdot \code{$\tau$<:$\tau$}
-\\
-\\
-\nonterm{v} & \is 
-  \code{@} \sep
-  \code{\textasciitilde{}$l$ $v$} \sep
-  b \sep
-  \code{$v$,$v$} \sep
-  \code{($v$)} \sep
-  f
-\\
-\\
-\nonterm{u} & \is 
-  \code{@} \sep
-  \code{\textasciitilde{}$l$ $u$} \sep
-  b \sep
-  \code{$u$,$u$} \sep
-  \code{($u$)} \sep
-  W
-\\
-\\
-\nonterm{W} & \is 
-  \epsilon \sep W \cdot (u,u)
-\\
-\\
-\nonterm{c} & \is 
-  \cdot \code{$x$:$\tau$} \sep 
-  \cdot \code{$\tau$<:$\tau$} \sep
-  \cdot (v,v) \sep 
-  \code{;$l$=$e$} \sep
-  \code{;$l$=$p$} \sep
-  \code{case $p$=>$e$} \sep
-  \alpha
-\\
-\\
-\nonterm{C} & \is 
-  \epsilon \sep C\ c
-\end{array}
-\]
+  \nonterm{\delta} & \is \code{;$\tau$<:$\tau$} 
+  \\
+  \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
+  \\
+  \nonterm{\mathrm{A}} & \is \epsilon \sep \mathrm{A}\ \alpha 
+  \\
+  \nonterm{\mathrm{B}} & \is \epsilon \sep \mathrm{B}\ \beta
+  \\
+  \nonterm{e} & \is 
+    \begin{array}[t]{@{}l}
+    \code{$x$} \sep 
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $e$} \sep 
+    R \sep
+    \code{$e$,$e$} \sep
+    F \sep 
+    \code{$e$.$l$} \sep
+    \code{($e$)($e$)} \sep
+    \\
+    \code{$e$ |> $e$} \sep
+    \code{fix($e$)} \sep
+    \code{let $x$:$\tau$ = $e$ in $e$} \sep
+    \code{($e$)}
+    \end{array}
+  \\
+  \\
+  \nonterm{r} & \is \code{;$l$=$e$}
+  \\
+  \nonterm{R} & \is \epsilon \sep R\ r
+  \\
+  \nonterm{f} & \is \code{case $p$=>$e$}
+  \\
+  \nonterm{F} & \is \epsilon \sep F\ f
+  \\
+  \\
+  \nonterm{p} & \is 
+    \code{$x$} \sep
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $p$} \sep
+    K \sep
+    \code{$p$,$p$} \sep
+    \code{($p$)} 
+  \\
+  \nonterm{k} & \is \code{;$l$=$p$}
+  \\
+  \nonterm{K} & \is \epsilon \sep K\ k
+  \\
+  \\
+  \nonterm{\sigma} & \is \cdot x \slash v
+  \\
+  \nonterm{\Sigma} & \is \epsilon \sep \Sigma\ \sigma
+  \\
+  \nonterm{\omega} & \is \cdot \alpha \slash \tau
+  \\
+  \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
+  \\  
+  \nonterm{\gamma} & \is \cdot\code{$x$:$\tau$}
+  \\  
+  \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
+  \\
+  \nonterm{v} & \is 
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $v$} \sep
+    G \sep
+    \code{$v$,$v$} \sep
+    \code{($v$)} \sep
+    F 
+  \\
+  \nonterm{g} & \is \code{;$l$=$v$}
+  \\
+  \nonterm{G} & \is \epsilon \sep G\ g
+  \\
+  \nonterm{u} & \is 
+    \code{@} \sep
+    \code{\textasciitilde{}$l$ $u$} \sep
+    G \sep
+    \code{$u$,$u$} \sep
+    \code{($u$)} \sep
+    W
+  \\
+  \nonterm{w} & \is \cdot (u,u)
+  \\
+  \nonterm{W} & \is \epsilon \sep W\ w
+  \\
+  \nonterm{c} & \is 
+    \gamma \sep 
+    \delta \sep
+    w \sep 
+    r \sep
+    k \sep
+    f \sep
+    \alpha \sep
+    \beta
+  \\
+  \nonterm{C} & \is 
+    \epsilon \sep C\ c
+  \end{array}\]
 
-\caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
-\label{fig:syntax}
+  \caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
+  \label{fig:syntax}
 \end{figure*}
 
 
