@@ -55,11 +55,11 @@
 
 \newcommand{\ttilde}{\textasciitilde{}}
 
-\newcommand{\hastype}{\ \ddagger\ }
+\newcommand{\hastype}{:}
 \newcommand{\liftpat}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
-\newcommand{\subtypes}{\sqsubseteq}
+\newcommand{\subtypes}{<:}
 \newcommand{\I}{\hspace{4mm}}
 \newcommand{\B}[1]{\textbf{#1}}
 \newcommand{\F}[1]{\text{#1}}
@@ -546,7 +546,7 @@ rather than merely a type variable to allow for relational constraints.
     \code{$\alpha$} \sep 
     \code{@} \sep
     \code{\textasciitilde{}$l$ $\tau$} \sep 
-    \code{$l$:$\tau$} \sep 
+    \code{$l$->$\tau$} \sep 
     \code{$\tau$->$\tau$} \sep
     \code{$\tau$|$\tau$} \sep
     \code{$\tau$\&$\tau$} \sep
@@ -557,7 +557,9 @@ rather than merely a type variable to allow for relational constraints.
     \code{FIX[$\alpha$;$\tau$]}
   \end{array}
   \\
-  \nonterm{\delta} & \is \code{;$\tau$<:$\tau$} 
+  \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
+  \\
+  \nonterm{\delta} & \is \code{*$\tau$<:$\tau$} 
   \\
   \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
   \\
@@ -583,7 +585,7 @@ rather than merely a type variable to allow for relational constraints.
     \end{array}
   \\
   \\
-  \nonterm{r} & \is \code{;$l$=$e$}
+  \nonterm{r} & \is \code{*$l$=>$e$}
   \\
   \nonterm{R} & \is \epsilon \sep R\ r
   \\
@@ -600,7 +602,7 @@ rather than merely a type variable to allow for relational constraints.
     \code{$p$,$p$} \sep
     \code{($p$)} 
   \\
-  \nonterm{k} & \is \code{;$l$=$p$}
+  \nonterm{k} & \is \code{*$l$=>$p$}
   \\
   \nonterm{K} & \is \epsilon \sep K\ k
   \\
@@ -625,7 +627,7 @@ rather than merely a type variable to allow for relational constraints.
     \code{($v$)} \sep
     F 
   \\
-  \nonterm{g} & \is \code{;$l$=$v$}
+  \nonterm{g} & \is \code{*$l$=>$v$}
   \\
   \nonterm{G} & \is \epsilon \sep G\ g
   \\
@@ -637,7 +639,7 @@ rather than merely a type variable to allow for relational constraints.
     \code{($u$)} \sep
     W
   \\
-  \nonterm{w} & \is \cdot (u,u)
+  \nonterm{w} & \is \cdot u \triangleright u
   \\
   \nonterm{W} & \is \epsilon \sep W\ w
   \\
@@ -663,49 +665,68 @@ rather than merely a type variable to allow for relational constraints.
 \begin{figure*}[h]
 
   \begin{flalign*}
-    &{\boxed{C \  C = C}}&
+    &{\boxed{C \sqcup  C = C}}&
   \end{flalign*}
-
   \[\begin{array}{rclr}
-    C\  \epsilon 
+    C \sqcup \epsilon 
     &=& 
     C
     & \C{empty} 
     \\
 
-    C\  (C'\ c) 
+    C \sqcup (C'\ c) 
     &=& 
-    (C\  C')\ c
+    (C \sqcup C')\ c
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &{\boxed{C \sqcap  C = C}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    C \sqcap \epsilon 
+    &=& 
+    \epsilon 
+    & \C{empty} 
+    \\
+
+    C \sqcap (C'\ c) 
+    &=& 
+    \begin{cases}
+      (C \sqcap C')\ c & \text{if } c \in C\\
+      (C \sqcap C') & \text{otherwise}
+    \end{cases}
     & \C{step} 
     \\
   \end{array}\]
 
 
   \begin{flalign*}
-    &{\boxed{\text{map}(C, f) = C}}& 
+    &{\boxed{\text{map}(C, t) = C}}& 
   \end{flalign*}
 
   \[\begin{array}{rclr}
-    \text{map}(\epsilon, f)
+    \text{map}(\epsilon, t)
     &=& 
     \epsilon
     & \C{empty} 
     \\
 
-    \text{map}(C\ c, f)
+    \text{map}(C\ c, t)
     &=& 
-    \text{map}(C, f)\ f(c)
+    \text{map}(C, t) \sqcup t(c)
     & \C{step} 
     \\
   \end{array}\]
 
   \begin{flalign*}
-    &{\boxed{\widebar{\ c\ }^{i \in C} \circeq C}}&
+    &{\boxed{\widebar{\ c\ }^{c \in C} \circeq C}}&
   \end{flalign*}
   \[\begin{array}{rclr}
-    \widebar{\ c\ }^{i \in C} 
+    \widebar{\ c'\ }^{c \in C} 
     &\circeq& 
-    \text{map}(C, \lambda i . c)
+    \text{map}(C, \lambda c . c')
     & \C{comprehension} 
     \\
   \end{array}\]
@@ -714,19 +735,12 @@ rather than merely a type variable to allow for relational constraints.
     &{\boxed{c \in C}}&
   \end{flalign*}
   \begin{mathpar}
-    \inferrule[MatchOne] {
+    \inferrule[Match] {
     } {
       c \in C\ c 
     }
 
-    \inferrule[MatchAll] {
-    } {
-      c \in c 
-    }
-
     \inferrule[Step] {
-      c \neq c'
-      \\
       c \in C
     } {
       c \in C\ c' 
