@@ -55,6 +55,7 @@
 
 \newcommand{\ttilde}{\textasciitilde{}}
 
+\newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
 \newcommand{\liftpat}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
@@ -771,9 +772,8 @@ rather than merely a type variable to allow for relational constraints.
 \begin{figure*}[h]
 
   \begin{flalign*}
-    &{\boxed{\code{|}(\vec{\tau}) = \tau}}&
+    &{\boxed{\code{|}(\mathrm{T}) = \tau}}&
   \end{flalign*}
-
   \[\begin{array}{rclr}
     \code{|}(\epsilon)
     &=& 
@@ -781,9 +781,26 @@ rather than merely a type variable to allow for relational constraints.
     & \C{empty} 
     \\
 
-    \code{|}(\vec{\tau}\ \tau)
+    \code{|}(\mathrm{T}\ \tau)
     &=& 
-    \code{|}(\vec{\tau}) \code{|} \tau
+    \code{|}(\mathrm{T}) \code{|} \tau
+    & \C{step} 
+    \\
+  \end{array}\]
+
+  \begin{flalign*}
+    &{\boxed{\code{\&}(\mathrm{T}) = \tau}}&
+  \end{flalign*}
+  \[\begin{array}{rclr}
+    \code{\&}(\epsilon)
+    &=& 
+    \code{TOP}
+    & \C{empty} 
+    \\
+
+    \code{\&}(\mathrm{T}\ \tau)
+    &=& 
+    \code{\&}(\mathrm{T}) \code{\&} \tau
     & \C{step} 
     \\
   \end{array}\]
@@ -808,13 +825,13 @@ rather than merely a type variable to allow for relational constraints.
   \inferrule[RecordBody] {
     e \rightsquigarrow e'
   } {
-    \code{$r$;$l$=$e$} \rightsquigarrow \code{$r$;$l$=$e'$}
+    \code{$R$*$l$=>$e$} \rightsquigarrow \code{$R$*$l$=>$e'$}
   }
 
   \inferrule[RecordStep] {
-    r \rightsquigarrow r'
+    R \rightsquigarrow R'
   } {
-    \code{$r$;$l$=$v$} \rightsquigarrow \code{$r'$;$l$=$v$}
+    \code{$R$*$l$=>$v$} \rightsquigarrow \code{$R'$*$l$=>$v$}
   }
 
   \inferrule[Projector] {
@@ -824,12 +841,11 @@ rather than merely a type variable to allow for relational constraints.
   }
 
   \inferrule[Projection] {
-    \code{;$l$=$v$} \in r 
+    \code{*$l$=>$v$} \in G 
     \\
-    \forall\ v' .\ \code{;$l$=$v'$} \in r \rightarrow v = v'
-    % \forall v' . \code{;$l$=$v'$} \in r \rightrarrow v = v'
+    \forall\ v' .\ \code{*$l$=>$v'$} \in G \rightarrow v = v'
   } {
-    \code{$r$.$l$} \rightsquigarrow v
+    \code{$G$.$l$} \rightsquigarrow v
   }
 
   \inferrule[Applicator] {
@@ -845,24 +861,26 @@ rather than merely a type variable to allow for relational constraints.
   }
 
 
-  \inferrule[ApplicationSingle] {
-    \text{unify}(p,v) = \sigma 
-  } {
-    \code{(case $p$=>$e$)($v$)} \rightsquigarrow \text{subst}(e, \sigma)
-  }
-
-  \inferrule[ApplicationStep] {
-    \code{($e$)($v$)} \rightsquigarrow e'
-  } {
-    \code{($e$ case $p$=>$e_a$)($v$)} \rightsquigarrow e' 
-  }
+  % \inferrule[ApplicationSingle] {
+  %   \text{unify}(p,v) = \Sigma 
+  % } {
+  %   \code{(case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
+  % }
 
   \inferrule[ApplicationSkip] {
-    \neg (\exists\ e' .\ \code{($e$)($v$)} \rightsquigarrow e')
-    \\
-    \code{(case $p$=>$e$)($v$)} \rightsquigarrow e'
+    \code{($F$)($v$)} \rightsquigarrow e'
   } {
-    \code{($e$ case $p$=>$e_a$)($v$)} \rightsquigarrow e' 
+    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e' 
+  }
+
+  \inferrule[ApplicationMatch] {
+     \forall e' .\ \neg \code{($F$)($v$)} \rightsquigarrow e'
+    % \\
+    % \code{(case $p$=>$e$)($v$)} \rightsquigarrow e'
+    \\
+    \text{unify}(p,v) = \Sigma 
+  } {
+    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
   }
 
   \inferrule[LetTarget] {
@@ -873,7 +891,7 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[LetContin] {
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash v)
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[\cdot x \slash v]
   }
 
   \inferrule[FixTarget] {
@@ -884,13 +902,13 @@ rather than merely a type variable to allow for relational constraints.
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow \text{subst}(e, \epsilon \cdot x \slash \code{fix(case $x$ => $e$)})
+    \code{fix(case $x$ => $e$)} \rightsquigarrow e[\cdot x \slash \code{fix(case $x$ => $e$)}]
   }
 
   \inferrule[Tuple] {
-    \code{;left=$e_a$ ;right=$e_b$} \rightsquigarrow e' 
+    \code{*left=>$e_l$ *right=>$e_r$} \rightsquigarrow e' 
   } {
-    \code{$e_a$,$e_b$} \rightsquigarrow e' 
+    \code{$e_l$,$e_r$} \rightsquigarrow e' 
   }
 
   \inferrule[Funneling] {
