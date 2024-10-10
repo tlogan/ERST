@@ -95,6 +95,11 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- Note how subtyping reconstruction is independent of typing reconstruction
+    - but subtype semantics is defined in terms of type semantics
+    - need to prove that this dependency is derivable from reconstruction
+    - see if declarative typing semantics can be skipped and go directly to type semantics
+- Redo type denotation as inference rules
 - update collection symbols to avoid vector symbols
 - redo sequence subtyping to use a separate internal subtyping syntax (square less than sign) rather than <: used in surface syntax. 
     - this emphasizes that the surface syntax operates on a more restrictive form

@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1728503538.5289 "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" "paper.pdf" "paper" 1728503540.63063 0
-  "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" 1728503538.29158 107364 9e37f91015a2fe1fe537e1b46d96a402 ""
+["pdflatex"] 1728592546.907 "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" "paper.pdf" "paper" 1728592548.90929 0
+  "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" 1728592544.5547 107400 925242f482f1621152eea3050c35b2bf ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1490131464 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1490131464 2933 9ad527ce78d7c5fa0a642dead095f172 ""
@@ -84,7 +84,6 @@
   "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb" 1635022465 56686 b959be5e2e4a0232f5aa4c1c4be4574a ""
   "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb" 1692649180 44726 c0c4f2d62278d1adbb6a666ba2cb0447 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb" 1699567298 45943 7899c7ea4fdd83f3625178689816dcee ""
-  "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb" 1302307949 27430 0e29b053ae98d5f87d872ee72a12d5f5 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb" 1136849748 27693 bfb340b71292c6ead561e4943433945d ""
   "/usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmb8t.vf" 1136768653 2156 2ffbcc3d25d55597f2891dda61e4040a ""
   "/usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmr8t.vf" 1136768653 2156 58631a68efc4afbec92c522ba77a542f ""
@@ -238,9 +237,9 @@
   "/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1715614394.6337 5467645 128b85b7cde5f5edc5cb7f1dd7ff8736 ""
   "/usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt" 1715614389 8221427 c1e14827797dc57048b4fe582769dcbf ""
   "/usr/local/texlive/2024/texmf.cnf" 1710266656 577 e590dabc9e28c5b61546e15f63eebcdf ""
-  "paper.aux" 1728503540.42804 8038 78eb063240cf4fe1de6cfa96eb063487 "pdflatex"
-  "paper.out" 1728503540.42887 1527 fc1b27203c6c82e1f8d35574f679f266 "pdflatex"
-  "paper.tex" 1728503538.29158 107364 9e37f91015a2fe1fe537e1b46d96a402 ""
+  "paper.aux" 1728592548.72075 8035 8525b8363f2f7eb214e40a0f54ba86d6 "pdflatex"
+  "paper.out" 1728592548.72163 1527 fc1b27203c6c82e1f8d35574f679f266 "pdflatex"
+  "paper.tex" 1728592544.5547 107400 925242f482f1621152eea3050c35b2bf ""
   (generated)
   "paper.aux"
   "paper.log"

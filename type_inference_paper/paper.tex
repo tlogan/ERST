@@ -57,6 +57,7 @@
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
+\newcommand{\uhastype}{\ \dagger\ }
 \newcommand{\liftpat}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
@@ -553,20 +554,30 @@ rather than merely a type variable to allow for relational constraints.
     \code{$\tau$\&$\tau$} \sep
     \code{$\tau$\textbackslash$\tau$} \sep 
     \\
-    \code{EXI[$\mathrm{A}$ $\Delta$]$\tau$} \sep 
-    \code{ALL[$\mathrm{A}$ $\Delta$]$\tau$} \sep 
+    \code{EXI[$\mathrm{A}$ $Q$]$\tau$} \sep 
+    \code{ALL[$\mathrm{A}$ $Q$]$\tau$} \sep 
     \code{FIX[$\alpha$;$\tau$]}
   \end{array}
   \\
   \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
   \\
-  \nonterm{\delta} & \is \code{*$\tau$<:$\tau$} 
+  \nonterm{q} & \is \code{*$\tau$<:$\tau$} 
+  \\
+  \nonterm{Q} & \is \epsilon \sep Q\ q
+  \\
+  \nonterm{\delta} & \is \cdot \tau <: \tau 
   \\
   \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
   \\
   \nonterm{\mathrm{A}} & \is \epsilon \sep \mathrm{A}\ \alpha 
   \\
+  \nonterm{\beta} & \is \cdot \alpha
+  \\
   \nonterm{\mathrm{B}} & \is \epsilon \sep \mathrm{B}\ \beta
+  \\
+  \nonterm{n} & \is \cdot \alpha
+  \\
+  \nonterm{N} & \is \epsilon \sep N\ n
   \\
   \nonterm{e} & \is 
     \begin{array}[t]{@{}l}
@@ -616,7 +627,7 @@ rather than merely a type variable to allow for relational constraints.
   \\
   \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
   \\  
-  \nonterm{\gamma} & \is \cdot\code{$x$:$\tau$}
+  \nonterm{\gamma} & \is \cdot x : \tau
   \\  
   \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
   \\
@@ -635,10 +646,14 @@ rather than merely a type variable to allow for relational constraints.
   \nonterm{u} & \is 
     \code{@} \sep
     \code{\textasciitilde{}$l$ $u$} \sep
-    G \sep
+    H \sep
     \code{$u$,$u$} \sep
     \code{($u$)} \sep
     W
+  \\
+  \nonterm{h} & \is \code{*$l$=>$u$}
+  \\
+  \nonterm{H} & \is \epsilon \sep H\ h
   \\
   \nonterm{w} & \is \cdot u \triangleright u
   \\
@@ -955,132 +970,118 @@ rather than merely a type variable to allow for relational constraints.
 \begin{figure*}[h]
 
   \begin{flalign*}
-    &\boxed{\llbracket \tau \rrbracket = \mathbb{V}}&
+    &\boxed{\Omega \entails u \uhastype \tau}&
   \end{flalign*}
-  \[\begin{array}{rclr}
-  % \llbracket \Delta, \Omega, \code{$\alpha$} \rrbracket 
-  % &=& \llbracket (\Delta, \Omega, resolve(\Delta, \Omega, \code{$\alpha$})) \rrbracket 
-  % & \C{variable}
-  % \\
-  \llbracket \code{@} \rrbracket 
-  &=& 
-  \{\code{@}\} 
-  & \C{unit} 
-  \\
-  \llbracket \code{\textasciitilde{}$l$ $\tau$} \rrbracket 
-  &=& 
-  \{ \code{\textasciitilde{}$l$ $u$}\ |\ u \in \llbracket \tau \rrbracket \}
-  & \C{tag} 
-  \\
-  \llbracket \code{$l$:$\tau$} \rrbracket 
-  &=& 
-  \begin{array}[t]{@{}l}
-  \{ r \ |\ \forall\ u\ .\ (u \in \llbracket \tau \rrbracket) \rightarrow
-  \\
-  \I \code{;$l$=$u$} \in r\ \land\ 
-  \\
-  \I (\forall\ u'\ .\ \code{;$l$=$u'$} \in r \rightarrow u' = u)
-  \\
-  \}
-  \end{array}
-  & \C{record} 
-  \\
-  \llbracket \code{$\tau_a$->$\tau_c$} \rrbracket 
-  &=& 
-  \begin{array}[t]{@{}l}
-  \{ W \ |\ \forall\ u_a\ u_c\ .\ (u_a \in \llbracket \tau_a \rrbracket) \rightarrow (u_c \in \llbracket \tau_c \rrbracket) \rightarrow
-  \\
-  \I \cdot (u_a, u_c) \in W\ \land\ 
-  \\
-  \I (\forall\ u_c'\ .\ (u_a, u_c') \in w \rightarrow u_c' = u_c)
-  \\
-  \}
-  \end{array}
-  & \C{implication} 
-  \\
-  \llbracket \code{$\tau_a$|$\tau_b$} \rrbracket 
-  &=& 
-  \llbracket \tau_a \rrbracket 
-  \cup
-  \llbracket \tau_b \rrbracket 
-  & \C{union}
-  \\
-  \llbracket \code{$\tau_a$\&$\tau_b$} \rrbracket 
-  &=& 
-  \llbracket \tau_a \rrbracket 
-  \cap
-  \llbracket \tau_b \rrbracket 
-  & \C{intersection}
-  \\
-  \llbracket \code{$\tau_a$\textbackslash$\tau_b$} \rrbracket 
-  &=& 
-  \llbracket \tau_a \rrbracket 
-  \ \backslash\ 
-  \llbracket \tau_b \rrbracket 
-  & \C{difference}
-  \\
-  \llbracket \code{EXI[$\vec{\alpha}$ $Q$]$\tau$} \rrbracket 
-  &=& 
-  \begin{array}[t]{@{}l}
-  \{ u \ |\ \exists\ \Omega . 
-  \\
-  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\Omega)))\ \land\ 
-  \\
-  \I \llbracket Q[\Omega]\ \rrbracket \ \land\ u \in \llbracket \tau[\Omega] \rrbracket
-  \\
-  \}
-  \end{array}
-  & 
-  \C{indexed union}
-  \\
-  \llbracket \code{ALL[$\vec{\alpha}$ $Q$]$\tau$} \rrbracket 
-  &=& 
-  \begin{array}[t]{@{}l}
-  \{ u \ |\  \forall\ \omega . 
-  \\
-  \I (\forall\ \alpha\ .\ (\alpha \in \vec{\alpha}) \rightarrow (\alpha \in \text{dom}(\Omega)))\ \land\ 
-  \\
-  \I \llbracket \Delta[\Omega] \rrbracket \ \rightarrow  
-  \\
-  \I u \in \llbracket \tau[\Omega] \rrbracket
-  \\
-  \}
-  \end{array}
-  & 
-  \C{indexed intersection}
-  \\
-  \llbracket \code{FIX[$\alpha$;$\tau]$} \rrbracket 
-  &=& 
-  \begin{array}[t]{@{}l}
-  \mu\ \mathbb{V}'\ .\ \{ u  \ |\ \exists\ \tau'\ .
-  \\
-  \I \llbracket \tau' \rrbracket = \mathbb{V'}\ \land\ 
-  \\ 
-  \I u \in \llbracket \tau[\alpha \slash \tau'] \rrbracket
-  \\
-  \}
-  \end{array}
-  & 
-  \C{least fixed point}
-  \end{array}
-  \]
+  \begin{mathpar}
+    \inferrule[Var] { 
+      \cdot \alpha \slash \tau \in \Omega
+      \\
+      \Omega \entails u \uhastype \tau
+    } {
+      \Omega \entails u \uhastype \alpha 
+    } 
+
+    \inferrule[Unit] { 
+    } {
+      \Omega \entails \code{@} \uhastype \code{@}
+    } 
+
+    \inferrule[Tag] { 
+      \Omega \entails u \uhastype \tau
+    } {
+      \Omega \entails \code{\textasciitilde{}$l$ $u$} \uhastype \code{\textasciitilde{}$l$ $\tau$}
+    } 
+
+    \inferrule[Record] { 
+      \code{*$l$=>$u$} \in H 
+      \\
+      \Omega \entails u \uhastype \tau 
+      \\
+      \forall u' .\ \code{*$l$=>$u'$} \in H \rightarrow u' = u 
+    } {
+      \Omega \entails H \uhastype \code{$l$->$\tau$}
+    } 
+
+    \inferrule[Implication] { 
+      \cdot u_l \triangleright u_r \in W 
+      \\
+      \Omega \entails u_l \uhastype \tau_l
+      \\
+      \Omega \entails u_r \uhastype \tau_r
+      \\
+      \forall u_r' .\ \cdot u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
+    } {
+      \Omega \entails W \uhastype \code{$\tau_l$->$\tau_r$}
+    } 
+
+    \inferrule[Union-L] { 
+      \Omega \entails u \uhastype \code{$\tau_l$}
+    } {
+      \Omega \entails u \uhastype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule[Union-R] { 
+      \Omega \entails u \uhastype \code{$\tau_r$}
+    } {
+      \Omega \entails u \uhastype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule[Inter] { 
+      \Omega \entails u \uhastype \code{$\tau_l$}
+      \\
+      \Omega \entails u \uhastype \code{$\tau_r$}
+    } {
+      \Omega \entails u \uhastype \code{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule[Diff] { 
+      \Omega \entails u \uhastype \code{$\tau_l$}
+      \\
+      \neg\ (\Omega \entails u \uhastype \code{$\tau_r$})
+    } {
+      \Omega \entails u \uhastype \code{$\tau_l$\textbackslash$\tau_r$}
+    } 
+
+    \inferrule[IndUnion] { 
+      \Omega \sqcup \Omega' \entails Q
+      \\
+      \Omega \sqcup \Omega' \entails u \uhastype \tau
+    } {
+      \Omega \entails u \uhastype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
+    } 
+
+    \inferrule[IndInter] { 
+      \forall \Omega' .\ \Omega \sqcup \Omega' \entails Q \rightarrow 
+      \Omega \sqcup \Omega' \entails u \uhastype \tau
+    } {
+      \Omega \entails u \uhastype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
+    } 
+
+    \inferrule[Fixpoint] { 
+      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \entails u \uhastype \tau
+    } {
+      \Omega \entails u \uhastype \code{FIX[$\alpha$*$\tau$]}
+    } 
+  \end{mathpar}
   \begin{flalign*}
-    &\boxed{\llbracket Q \rrbracket = \phi }&
+    &\boxed{\Omega \entails Q}&
   \end{flalign*}
-  \[
-  \begin{array}{rclr}
-  \llbracket \epsilon \rrbracket 
-  &=& 
-  \top
-  & \C{empty} 
-  \\
-  \llbracket Q \code{;$\tau_l$<:$\tau_u$} \rrbracket 
-  &=& 
-  \llbracket Q \rrbracket \ \land\ \llbracket \tau_l \rrbracket \subseteq \llbracket \tau_u \rrbracket
-  & \C{extension} 
-  \end{array}\]
-\caption{Type Denotation}
-\label{fig:type_denotation}
+  \begin{mathpar}
+    \inferrule[Empty] { 
+    } {
+      \Omega \entails \epsilon
+    } 
+
+    \inferrule[Step] { 
+      \Omega \entails Q 
+      \\
+      \forall u .\ \Omega \entails u \uhastype \tau_l \rightarrow u \uhastype \tau_r
+    } {
+      \Omega \entails Q \code{*$\tau_l$<:$\tau_r$}  
+    } 
+  \end{mathpar}
+\caption{Type Semantics}
+\label{fig:type_semantics}
 \end{figure*}
 
 
