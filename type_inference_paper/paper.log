@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  10 OCT 2024 15:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  11 OCT 2024 12:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1025,126 +1025,124 @@ LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
 (Font)              scaled to size 8.99994pt on input line 538.
 
 
-Class acmart Warning: A possible image without description on input line 678.
+LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 542.
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 637.
 
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 757.
 
-Class acmart Warning: A possible image without description on input line 785.
+LaTeX Warning: Reference `fig:internal' on page 7 undefined on input line 842.
 
+[7.7]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 825.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 943.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 945.
-
-Class acmart Warning: A possible image without description on input line 1085.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 1090.
-
-
-LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 1185.
-
-[7.7{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}]
-
-Class acmart Warning: A possible image without description on input line 1343.
-
-[8.8]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1424.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1680.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1817.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1852.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 1880.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 2006.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 2143.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Class acmart Warning: A possible image without description on input line 2256.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: Reference `fig:internal' on page 9 undefined on input line 2439.
-
-[9.9]
-
-LaTeX Warning: Reference `fig:infer' on page 10 undefined on input line 2466.
-
-[10.10]
-Underfull \vbox (badness 1077) has occurred while \output is active []
-
- [11.11] [12.12]
-
-LaTeX Warning: Reference `fig:unify' on page 13 undefined on input line 2744.
-
-[13.13]
-
-LaTeX Warning: Reference `fig:unifyDecomp' on page 14 undefined on input line 2779.
-
-
-LaTeX Warning: Reference `fig:unifyContinue' on page 14 undefined on input line 2810.
+LaTeX Warning: Reference `fig:infer' on page 8 undefined on input line 869.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [14.14] [15.15]
+ [8.8]
+
+LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 1147.
+
+
+LaTeX Warning: Reference `fig:unifyDecomp' on page 9 undefined on input line 1182.
+
+
+Underfull \vbox (badness 6396) has occurred while \output is active []
+
+ [9.9]
+
+LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1213.
+
+[10.10]
+
+Class acmart Warning: A possible image without description on input line 1811.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
+(Font)              scaled to size 9.0pt on input line 1890.
+
+Class acmart Warning: A possible image without description on input line 1918.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 1958.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2076.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2195.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2331.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2412.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2668.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2805.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2840.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2868.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 2994.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 3131.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Class acmart Warning: A possible image without description on input line 3244.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
+(Font)              scaled to size 10.0pt on input line 3249.
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1154,11 +1152,11 @@ Class acmart Warning: ACM keywords are mandatory for papers over two pages.
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
-[16.16] [17.17] [18.18] [19.19] [20.20] (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
+[11.11{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [12.12] [13.13] [14.14] [15.15] [16.16] [17.17] [18.18] [19.19] [20.20] [21.21] (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 ) (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-utf8.def
 File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
-) [21.21] (./paper.aux)
+) [22.22] (./paper.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -1178,18 +1176,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24251 strings out of 474116
- 388148 string characters out of 5743682
- 2058187 words of memory out of 5000000
+ 24253 strings out of 474116
+ 388166 string characters out of 5743682
+ 2067187 words of memory out of 5000000
  45503 multiletter control sequences out of 15000+600000
  753896 words of font info for 429 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (21 pages, 524536 bytes).
+Output written on paper.pdf (22 pages, 524730 bytes).
 PDF statistics:
- 351 PDF objects out of 1000 (max. 8388607)
- 284 compressed objects within 3 object streams
- 105 named destinations out of 1000 (max. 500000)
+ 356 PDF objects out of 1000 (max. 8388607)
+ 288 compressed objects within 3 object streams
+ 107 named destinations out of 1000 (max. 500000)
  98929 words of extra memory for PDF output out of 106986 (max. 10000000)
 
