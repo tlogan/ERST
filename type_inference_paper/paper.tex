@@ -1676,143 +1676,150 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \[\begin{array}[t]{r@{}l}
-  \nonterm{\tau} & \is 
-  \begin{array}[t]{@{}l}
-    \code{$\alpha$} \sep 
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $\tau$} \sep 
-    \code{$l$->$\tau$} \sep 
-    \code{$\tau$->$\tau$} \sep
-    \code{$\tau$|$\tau$} \sep
-    \code{$\tau$\&$\tau$} \sep
-    \code{$\tau$\textbackslash$\tau$} \sep 
+    \nonterm{e} & \is 
+      \begin{array}[t]{@{}l}
+      \code{$x$} \sep 
+      \code{@} \sep
+      \code{\textasciitilde{}$l$ $e$} \sep 
+      R \sep
+      \code{$e$,$e$} \sep
+      F \sep 
+      \code{$e$.$l$} \sep
+      \code{($e$)($e$)} \sep
+      \\
+      \code{$e$ |> $e$} \sep
+      \code{fix($e$)} \sep
+      \code{let $x$:$\tau$ = $e$ in $e$} \sep
+      \code{($e$)}
+      \end{array}
     \\
-    \code{EXI[$\mathrm{A}$ $Q$]$\tau$} \sep 
-    \code{ALL[$\mathrm{A}$ $Q$]$\tau$} \sep 
-    \code{FIX[$\alpha$;$\tau$]}
-  \end{array}
-  \\
-  \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
-  \\
-  \nonterm{q} & \is \code{*$\tau$<:$\tau$} 
-  \\
-  \nonterm{Q} & \is \epsilon \sep Q\ q
-  \\
-  \nonterm{\delta} & \is \cdot \tau <: \tau 
-  \\
-  \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
-  \\
-  \nonterm{\mathrm{A}} & \is \epsilon \sep \mathrm{A}\ \alpha 
-  \\
-  \nonterm{\beta} & \is \cdot \alpha
-  \\
-  \nonterm{\mathrm{B}} & \is \epsilon \sep \mathrm{B}\ \beta
-  \\
-  \nonterm{n} & \is \cdot \alpha
-  \\
-  \nonterm{N} & \is \epsilon \sep N\ n
-  \\
-  \nonterm{e} & \is 
-    \begin{array}[t]{@{}l}
-    \code{$x$} \sep 
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $e$} \sep 
-    R \sep
-    \code{$e$,$e$} \sep
-    F \sep 
-    \code{$e$.$l$} \sep
-    \code{($e$)($e$)} \sep
+    \nonterm{R} & \is \epsilon \sep R\ r
     \\
-    \code{$e$ |> $e$} \sep
-    \code{fix($e$)} \sep
-    \code{let $x$:$\tau$ = $e$ in $e$} \sep
-    \code{($e$)}
-    \end{array}
-  \\
-  \\
-  \nonterm{r} & \is \code{*$l$=>$e$}
-  \\
-  \nonterm{R} & \is \epsilon \sep R\ r
-  \\
-  \nonterm{f} & \is \code{case $p$=>$e$}
-  \\
-  \nonterm{F} & \is \epsilon \sep F\ f
-  \\
-  \\
-  \nonterm{p} & \is 
-    \code{$x$} \sep
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $p$} \sep
-    K \sep
-    \code{$p$,$p$} \sep
-    \code{($p$)} 
-  \\
-  \nonterm{k} & \is \code{*$l$=>$p$}
-  \\
-  \nonterm{K} & \is \epsilon \sep K\ k
-  \\
-  \\
-  \nonterm{\sigma} & \is \cdot x \slash v
-  \\
-  \nonterm{\Sigma} & \is \epsilon \sep \Sigma\ \sigma
-  \\
-  \nonterm{\omega} & \is \cdot \alpha \slash \tau
-  \\
-  \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
-  \\  
-  \nonterm{\gamma} & \is \cdot x : \tau
-  \\  
-  \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
-  \\
-  \nonterm{v} & \is 
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $v$} \sep
-    G \sep
-    \code{$v$,$v$} \sep
-    \code{($v$)} \sep
-    F 
-  \\
-  \nonterm{g} & \is \code{*$l$=>$v$}
-  \\
-  \nonterm{G} & \is \epsilon \sep G\ g
-  \\
-  \nonterm{u} & \is 
-    \code{@} \sep
-    \code{\textasciitilde{}$l$ $u$} \sep
-    H \sep
-    \code{$u$,$u$} \sep
-    \code{($u$)} \sep
-    W
-  \\
-  \nonterm{h} & \is \code{*$l$=>$u$}
-  \\
-  \nonterm{H} & \is \epsilon \sep H\ h
-  \\
-  \nonterm{w} & \is \cdot u \triangleright u
-  \\
-  \nonterm{W} & \is \epsilon \sep W\ w
-  \\
-  \nonterm{c} & \is 
-    \gamma \sep 
-    \delta \sep
-    w \sep 
-    r \sep
-    k \sep
-    f \sep
-    \alpha \sep
-    \beta
-  \\
-  \nonterm{C} & \is 
-    \epsilon \sep C\ c
+    \nonterm{r} & \is \code{*$l$=>$e$}
+    \\
+    \nonterm{F} & \is \epsilon \sep F\ f
+    \\
+    \nonterm{f} & \is \code{case $p$=>$e$}
+    \\
+    \\
+    \nonterm{p} & \is 
+      \code{$x$} \sep
+      \code{@} \sep
+      \code{\textasciitilde{}$l$ $p$} \sep
+      K \sep
+      \code{$p$,$p$} \sep
+      \code{($p$)} 
+    \\
+    \nonterm{K} & \is \epsilon \sep K\ k
+    \\
+    \nonterm{k} & \is \code{*$l$=>$p$}
+    \\
+    \\
+    \nonterm{v} & \is 
+      \code{@} \sep
+      \code{\textasciitilde{}$l$ $v$} \sep
+      G \sep
+      \code{$v$,$v$} \sep
+      \code{($v$)} \sep
+      F 
+    \\
+    \nonterm{G} & \is \epsilon \sep G\ g
+    \\
+    \nonterm{g} & \is \code{*$l$=>$v$}
+    \\
+    \\
+    \nonterm{\Sigma} & \is \epsilon \sep \Sigma\ \sigma
+    \\
+    \nonterm{\sigma} & \is \cdot x \slash v
+    \\
   \end{array}\]
-
-  \caption{Syntax. When using syntax in other rules, we may use an empty string "" in place of "$\epsilon$" when the context makes it clear that there is a missing term}
-  \label{fig:syntax}
+  \caption{Expression syntax}
+  \label{fig:expression_syntax}
 \end{figure*}
 
 
 \begin{figure*}[h]
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{\tau} & \is 
+    \begin{array}[t]{@{}l}
+      \code{$\alpha$} \sep 
+      \code{@} \sep
+      \code{\textasciitilde{}$l$ $\tau$} \sep 
+      \code{$l$->$\tau$} \sep 
+      \code{$\tau$->$\tau$} \sep
+      \code{$\tau$|$\tau$} \sep
+      \code{$\tau$\&$\tau$} \sep
+      \code{$\tau$\textbackslash$\tau$} \sep 
+      \\
+      \code{EXI[$\mathrm{A}$ $Q$]$\tau$} \sep 
+      \code{ALL[$\mathrm{A}$ $Q$]$\tau$} \sep 
+      \code{FIX[$\alpha$;$\tau$]}
+    \end{array}
+    \\
+    \nonterm{\mathrm{A}} & \is \epsilon \sep \mathrm{A}\ \alpha 
+    \\
+    \nonterm{Q} & \is \epsilon \sep Q\ q
+    \\
+    \nonterm{q} & \is \code{*$\tau$<:$\tau$} 
+    \\
+    \\
+    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
+    \\
+    \nonterm{\delta} & \is \cdot \tau <: \tau 
+    \\
+    \nonterm{\mathrm{B}} & \is \epsilon \sep \mathrm{B}\ \beta
+    \\
+    \nonterm{\beta} & \is \cdot \alpha
+    \\
+    \nonterm{N} & \is \epsilon \sep N\ n
+    \\
+    \nonterm{n} & \is \cdot \alpha
+    \\
+    \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
+    \\
+    \\
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
+    \\
+    \nonterm{\gamma} & \is \cdot x : \tau
+    \\
+    \\
+  \end{array}\]
+  \caption{Type syntax}
+  \label{fig:type_syntax}
+\end{figure*}
 
+\begin{figure*}[h]
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{u} & \is 
+      \code{@} \sep
+      \code{\textasciitilde{}$l$ $u$} \sep
+      H \sep
+      \code{$u$,$u$} \sep
+      \code{($u$)} \sep
+      W
+    \\
+    \nonterm{H} & \is \epsilon \sep H\ h
+    \\
+    \nonterm{h} & \is \code{*$l$=>$u$}
+    \\
+    \nonterm{W} & \is \epsilon \sep W\ w
+    \\
+    \nonterm{w} & \is \cdot u \triangleright u
+    \\
+    \\
+    \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
+    \\  
+    \nonterm{\omega} & \is \cdot \alpha \slash \tau
+  \end{array}\]
+  \label{fig:model_syntax}
+  \caption{Model Syntax}
+\end{figure*}
+
+
+\begin{figure*}[h]
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{C} & \is \epsilon \sep C\ c
+  \end{array}\]
   \begin{flalign*}
     &{\boxed{C \sqcup  C = C}}&
   \end{flalign*}
