@@ -95,6 +95,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- use the terminology model semantics for semantic subtyping and proof semantics for syntax-directed subtyping. Proof of model semantics requires using the meta-logic, while proofs using proof semantics merely rely on a tree of proof rules.
 - Note how subtyping reconstruction is independent of typing reconstruction
     - but subtype semantics is defined in terms of type semantics
     - need to prove that this dependency is derivable from reconstruction

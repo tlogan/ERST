@@ -50,6 +50,7 @@
 % \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\entails}{\vdash}
+\newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
 \newcommand{\quiv}{\ \leftrightarrow\ }
 
@@ -57,7 +58,7 @@
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
-\newcommand{\uhastype}{\ \dagger\ }
+\newcommand{\intype}{\pitchfork}
 \newcommand{\liftpat}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
@@ -2087,117 +2088,117 @@ Different: RLT isn't cartesian
 \begin{figure*}[h]
 
   \begin{flalign*}
-    &\boxed{\Omega \entails u \uhastype \tau}&
+    &\boxed{\Omega \satisfies u \intype \tau}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Var] { 
       \cdot \alpha \slash \tau \in \Omega
       \\
-      \Omega \entails u \uhastype \tau
+      \Omega \satisfies u \intype \tau
     } {
-      \Omega \entails u \uhastype \alpha 
+      \Omega \satisfies u \intype \alpha 
     } 
 
     \inferrule[Unit] { 
     } {
-      \Omega \entails \code{@} \uhastype \code{@}
+      \Omega \satisfies \code{@} \intype \code{@}
     } 
 
     \inferrule[Tag] { 
-      \Omega \entails u \uhastype \tau
+      \Omega \satisfies u \intype \tau
     } {
-      \Omega \entails \code{\textasciitilde{}$l$ $u$} \uhastype \code{\textasciitilde{}$l$ $\tau$}
+      \Omega \satisfies \code{\textasciitilde{}$l$ $u$} \intype \code{\textasciitilde{}$l$ $\tau$}
     } 
 
     \inferrule[Record] { 
       \code{*$l$=>$u$} \in H 
       \\
-      \Omega \entails u \uhastype \tau 
+      \Omega \satisfies u \intype \tau 
       \\
       \forall u' .\ \code{*$l$=>$u'$} \in H \rightarrow u' = u 
     } {
-      \Omega \entails H \uhastype \code{$l$->$\tau$}
+      \Omega \satisfies H \intype \code{$l$->$\tau$}
     } 
 
     \inferrule[Implication] { 
       \cdot u_l \triangleright u_r \in W 
       \\
-      \Omega \entails u_l \uhastype \tau_l
+      \Omega \satisfies u_l \intype \tau_l
       \\
-      \Omega \entails u_r \uhastype \tau_r
+      \Omega \satisfies u_r \intype \tau_r
       \\
       \forall u_r' .\ \cdot u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
     } {
-      \Omega \entails W \uhastype \code{$\tau_l$->$\tau_r$}
+      \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
     } 
 
     \inferrule[Union-L] { 
-      \Omega \entails u \uhastype \code{$\tau_l$}
+      \Omega \satisfies u \intype \code{$\tau_l$}
     } {
-      \Omega \entails u \uhastype \code{$\tau_l$|$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule[Union-R] { 
-      \Omega \entails u \uhastype \code{$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_r$}
     } {
-      \Omega \entails u \uhastype \code{$\tau_l$|$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule[Inter] { 
-      \Omega \entails u \uhastype \code{$\tau_l$}
+      \Omega \satisfies u \intype \code{$\tau_l$}
       \\
-      \Omega \entails u \uhastype \code{$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_r$}
     } {
-      \Omega \entails u \uhastype \code{$\tau_l$\&$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_l$\&$\tau_r$}
     } 
 
     \inferrule[Diff] { 
-      \Omega \entails u \uhastype \code{$\tau_l$}
+      \Omega \satisfies u \intype \code{$\tau_l$}
       \\
-      \neg\ (\Omega \entails u \uhastype \code{$\tau_r$})
+      \neg\ (\Omega \satisfies u \intype \code{$\tau_r$})
     } {
-      \Omega \entails u \uhastype \code{$\tau_l$\textbackslash$\tau_r$}
+      \Omega \satisfies u \intype \code{$\tau_l$\textbackslash$\tau_r$}
     } 
 
     \inferrule[IndUnion] { 
-      \Omega \sqcup \Omega' \entails Q
+      \Omega \sqcup \Omega' \satisfies Q
       \\
-      \Omega \sqcup \Omega' \entails u \uhastype \tau
+      \Omega \sqcup \Omega' \satisfies u \intype \tau
     } {
-      \Omega \entails u \uhastype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega \satisfies u \intype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
     } 
 
     \inferrule[IndInter] { 
-      \forall \Omega' .\ \Omega \sqcup \Omega' \entails Q \rightarrow 
-      \Omega \sqcup \Omega' \entails u \uhastype \tau
+      \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \rightarrow 
+      \Omega \sqcup \Omega' \satisfies u \intype \tau
     } {
-      \Omega \entails u \uhastype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega \satisfies u \intype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
     } 
 
     \inferrule[Fixpoint] { 
-      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \entails u \uhastype \tau
+      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \satisfies u \intype \tau
     } {
-      \Omega \entails u \uhastype \code{FIX[$\alpha$*$\tau$]}
+      \Omega \satisfies u \intype \code{FIX[$\alpha$*$\tau$]}
     } 
   \end{mathpar}
   \begin{flalign*}
-    &\boxed{\Omega \entails Q}&
+    &\boxed{\Omega \satisfies Q}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] { 
     } {
-      \Omega \entails \epsilon
+      \Omega \satisfies \epsilon
     } 
 
     \inferrule[Step] { 
-      \Omega \entails Q 
+      \Omega \satisfies Q 
       \\
-      \forall u .\ \Omega \entails u \uhastype \tau_l \rightarrow u \uhastype \tau_r
+      \forall u .\ \Omega \satisfies u \intype \tau_l \rightarrow u \intype \tau_r
     } {
-      \Omega \entails Q \code{*$\tau_l$<:$\tau_r$}  
+      \Omega \satisfies Q \code{*$\tau_l$<:$\tau_r$}  
     } 
   \end{mathpar}
-\caption{Type semantics and subtype semantics}
+\caption{Model semantics}
 \label{fig:type_semantics}
 \end{figure*}
 
@@ -3268,7 +3269,7 @@ Different: RLT isn't cartesian
     % \ \land\ 
     % \Omega 
   } {
-    \entails u \uhastype \tau'
+    \entails u \intype \tau'
   } 
 \end{mathpar}
 \end{theorem}
