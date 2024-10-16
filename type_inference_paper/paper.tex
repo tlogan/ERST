@@ -1740,6 +1740,118 @@ Different: RLT isn't cartesian
 
 
 \begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{e \rightsquigarrow e}&
+\end{flalign*}
+\begin{mathpar}
+
+  \inferrule[Tag] {
+    e \rightsquigarrow e'
+  } {
+    \code{\textasciitilde{}$l$ $e$} \rightsquigarrow \code{\textasciitilde{}$l$ $e'$}
+  }
+
+  \inferrule[RecordBody] {
+    e \rightsquigarrow e'
+  } {
+    \code{$R$*$l$=>$e$} \rightsquigarrow \code{$R$*$l$=>$e'$}
+  }
+
+  \inferrule[RecordStep] {
+    R \rightsquigarrow R'
+  } {
+    \code{$R$*$l$=>$v$} \rightsquigarrow \code{$R'$*$l$=>$v$}
+  }
+
+  \inferrule[Projector] {
+    e \rightsquigarrow e'
+  } {
+    \code{$e$.$l$} \rightsquigarrow \code{$e'$.$l$}
+  }
+
+  \inferrule[Projection] {
+    \code{*$l$=>$v$} \in G 
+    \\
+    \forall\ v' .\ \code{*$l$=>$v'$} \in G \rightarrow v = v'
+  } {
+    \code{$G$.$l$} \rightsquigarrow v
+  }
+
+  \inferrule[Applicator] {
+    e \rightsquigarrow e'
+  } {
+    \code{($e$)($e_a$)} \rightsquigarrow \code{($e'$)($e_a$)}
+  }
+
+  \inferrule[Applicand] {
+    e \rightsquigarrow e'
+  } {
+    \code{($v$)($e$)} \rightsquigarrow \code{($v$)($e'$)}
+  }
+
+
+  \inferrule[ApplicationSkip] {
+    \code{($F$)($v$)} \rightsquigarrow e'
+  } {
+    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e' 
+  }
+
+  \inferrule[ApplicationMatch] {
+     \forall e' .\ \neg \code{($F$)($v$)} \rightsquigarrow e'
+    % \\
+    % \code{(case $p$=>$e$)($v$)} \rightsquigarrow e'
+    \\
+    p \equiv v \given \Sigma 
+  } {
+    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
+  }
+
+  \inferrule[LetTarget] {
+    e \rightsquigarrow e'
+  } {
+    \code{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
+  }
+
+  \inferrule[LetContin] {
+  } {
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[\cdot x \slash v]
+  }
+
+  \inferrule[FixTarget] {
+    e \rightsquigarrow e'
+  } {
+    \code{fix(e)} \rightsquigarrow \code{fix(e')}
+  }
+
+  \inferrule[Recursion] {
+  } {
+    \code{fix(case $x$ => $e$)} \rightsquigarrow e[\cdot x \slash \code{fix(case $x$ => $e$)}]
+  }
+
+  \inferrule[Tuple] {
+    \code{*left=>$e_l$ *right=>$e_r$} \rightsquigarrow e' 
+  } {
+    \code{$e_l$,$e_r$} \rightsquigarrow e' 
+  }
+
+  \inferrule[Funneling] {
+    \code{($e_b$)($e_a$)} \rightsquigarrow e' 
+  } {
+    \code{$e_a$ |> $e_b$} \rightsquigarrow e' 
+  }
+
+  \inferrule[Assoc] {
+    e \rightsquigarrow e' 
+  } {
+    \code{($e$)} \rightsquigarrow e' 
+  }
+\end{mathpar}
+\caption{Operational semantics}
+\label{fig:operational_semantics}
+\end{figure*}
+
+
+\begin{figure*}[h]
   \[\begin{array}[t]{r@{}l}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
@@ -1761,32 +1873,585 @@ Different: RLT isn't cartesian
     \\
     \nonterm{Q} & \is \epsilon \sep Q\ q
     \\
-    \nonterm{q} & \is \code{*$\tau$<:$\tau$} 
+    \nonterm{q} & \is \code{.$\tau$<:$\tau$} 
     \\
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
     \\
-    \nonterm{\delta} & \is \cdot \tau <: \tau 
+    \nonterm{\delta} & \is \tau <: \tau 
     \\
-    \nonterm{\mathrm{B}} & \is \epsilon \sep \mathrm{B}\ \beta
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
     \\
-    \nonterm{\beta} & \is \cdot \alpha
+    \nonterm{\gamma} & \is x : \tau
+    \\
+    \\
+    \nonterm{M} & \is \epsilon \sep M\ m
+    \\
+    \nonterm{m} & \is \alpha
     \\
     \nonterm{N} & \is \epsilon \sep N\ n
     \\
-    \nonterm{n} & \is \cdot \alpha
+    \nonterm{n} & \is \alpha
+    \\
+    \\
+    \nonterm{Z} & \is \epsilon \sep Z\ z
+    \\
+    \nonterm{z} & \is \left< M, \Delta \right>
+    \\
     \\
     \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
     \\
     \\
-    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
+    \nonterm{\mathrm{\Pi}} & \is \epsilon \sep \Pi\ \pi
     \\
-    \nonterm{\gamma} & \is \cdot x : \tau
-    \\
-    \\
+    \nonterm{\pi} & \is \left< M, \Delta, \tau, \tau\right>
   \end{array}\]
   \caption{Type syntax}
   \label{fig:type_syntax}
+\end{figure*}
+
+\begin{figure*}[h]
+  \begin{flalign*}
+    &\boxed{\Gamma \entails e \hastype \tau \given Z}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Unit] {
+    } {
+      \Gamma \entails \code{@} \hastype \code{@} \given Z 
+    }
+
+    \inferrule[Var] {
+      \code{$x$:$\tau$} \in \Gamma
+    } {
+      \Gamma \entails x \hastype \tau \given Z 
+    }
+
+    \inferrule[Tag] {
+      \Gamma \entails e \hastype \tau \given Z 
+    } {
+      \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given Z 
+    }
+
+    \inferrule[Record] {
+      \Gamma \entails r \hastype \tau_0 \given Z_0
+      \\
+      Z_0 \looparrowright Z_1
+      \\
+      \Gamma \entails e \hastype \tau_1 \given Z_1
+    } {
+      \Gamma \entails r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
+    }
+
+    \inferrule[Function] {
+      Z, \Gamma \entails f \liftfun \Pi, \mathrm{T}_n 
+      \\
+      \Gamma \entails \Pi \equiv \mathrm{T} 
+    } {
+      \Gamma \entails f \hastype \code{\&}(\mathrm{T}) \given Z
+    }
+
+    \inferrule[Projection] {
+      \Gamma \entails e \hastype \tau_0 \given Z_0
+      \\
+      \alpha\ \#\ \Gamma, Z_0
+      \\
+      Z_0 \looparrowright Z_1
+      \\
+      \tau_0 \subtypes \code{$l$:$\alpha$} \given Z_1
+    } {
+      \Gamma \entails \code{$e$.$l$} \hastype \alpha \given Z_1
+    }
+
+    \inferrule[Application] {
+      \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+      \\
+      Z_0 \looparrowright Z_1
+      \\
+      \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+      \\
+      \alpha\ \#\ \Gamma, Z_1
+      \\
+      Z_1 \looparrowright Z_2
+      \\
+      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
+    } {
+      \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
+    }
+
+    \inferrule[Recursion] {
+      \Gamma \entails e \hastype \tau \given Z_0
+      \\
+      \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
+      \\
+      Z_0 \looparrowright Z_1
+      \\
+      \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+      \\\\
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \vec{\tau}_{rel}
+    } {
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\vec{\tau}_{rel})$]]$\alpha_5$} \given Z_0
+    }
+  \end{mathpar}
+
+
+
+
+  \begin{flalign*}
+    &\boxed{Z, \Gamma \entails f \liftfun \Pi, T}&
+  \end{flalign*}
+  \begin{mathpar}
+
+    \inferrule[Step] {
+      Z_0, \Gamma_0 \entails f \liftfun \Pi, T 
+      \\
+      p \hastype \tau_l \given \Gamma_1
+      \\
+      \text{neg}(\tau_l, T) = \tau_l'
+      \\\\
+      Z_0 \looparrowright Z_1
+      \\
+      \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
+    } {
+      Z_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
+      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l', \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
+    }
+  \end{mathpar}
+
+
+
+  \begin{flalign*}
+    &\boxed{Z \looparrowright Z}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Expand] {
+      \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \rightarrow 
+      \exists M_0\ \Delta_0.\ \left<M_0,\Delta_0\right> \in Z_0 \land 
+      M_0 \preceq M_1 \land \Delta_0 \preceq \Delta_1
+    } {
+      Z_0 \looparrowright Z_1
+    }
+  \end{mathpar}
+\caption{Proof semantics (typing, etc)}
+\label{fig:proof_semantics_part_a}
+\end{figure*}
+
+
+\begin{figure*}[h]
+  \begin{flalign*}
+    &\boxed{\tau \subtypes \tau \given \vec{z}, \Delta}&
+  \end{flalign*}
+
+  \begin{mathpar}
+    \inferrule[Refl] {
+    } {
+      \tau \subtypes \tau \given \vec{z}, \Delta
+    }
+
+    \inferrule[Bot-L] {
+    } {
+      \code{BOT} \subtypes \tau_r \given \vec{z}, \Delta
+    }
+
+    \inferrule[Top-R] {
+    } {
+      \tau_l \subtypes \code{TOP} \given \vec{z}, \Delta
+    }
+
+    \inferrule[Inter-Target] {
+      \tau_l
+      \subtypes
+      \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+      \given \vec{z}, \Delta
+    } {
+      \tau_l \subtypes 
+      \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Unio-L] {
+      \tau_{ll} \subtypes \tau_r
+      \given \vec{z}_0, \Delta_0
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\\\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_{lr} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    } {
+      \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Inter-R] {
+      \tau_l \subtypes \tau_{rl}
+      \given \vec{z}_0, \Delta_0
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\\\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_{rr}
+      \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Union-Antec] {
+      \tau_l \subtypes
+      \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+      \given \vec{z}, \Delta
+    } {
+      \tau_l \subtypes 
+      \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Inter-Conseq] {
+      \tau_l \subtypes
+      \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+      \given \vec{z}, \Delta
+    } {
+      \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Exi-L] {
+      Q \given \vec{z}_0, \Delta_0
+      \\\\
+      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    } {
+      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_l$} \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[All-R] {
+      Q \given \vec{z}_0, \Delta_0
+      \\\\
+      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l \subtypes \code{ALL[$\vec{\alpha}$ $Q$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Flex-L] {
+      \alpha \notin \vec{z}_0
+      \\
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z} \lessdot \alpha
+      \\
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{\tau} \ll \alpha
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \widebar{\code{;} \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
+      \given \vec{z}_1, \Delta_1
+    } {
+      \alpha \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} 
+    }
+
+    \inferrule[Flex-R] {
+      \alpha \notin \vec{z}_0
+      \\
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \vec{z}
+      \\
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+      \\
+      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \ll \vec{\tau} 
+      \\
+      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
+      \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l \subtypes \alpha
+      \given \vec{z}_1, \Delta_1
+      \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
+      \ \widebar{\cdot \code{$\tau[\alpha\slash\tau_l]$<:$z$}}^{\cdot \code{$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
+    }
+
+    \inferrule[Skolem-L] {
+      \alpha \in \vec{z}_0
+      \\
+      \cdot \alpha \code{<:} \tau \in (\Delta_0\ \text{factor}(\Delta_0, \alpha))
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    } {
+      \alpha \subtypes \tau_r
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Skolem-R] {
+      \alpha \in \vec{z}_0
+      \\
+      \cdot \tau \code{<:} \alpha \in \Delta_0
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau
+      \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l \subtypes \alpha
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[All-L] {
+      \tau_l \subtypes \tau_r \given \vec{z}_0, \Delta_0
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      Q
+      \given \vec{z}_1, \Delta_1
+    } {
+      \code{ALL[$\vec{\alpha}$ $Q$]$\tau_l$}
+      \subtypes 
+      \tau_r
+      \given \vec{z}_1, \Delta_1 
+    }
+
+    \inferrule[Exi-R] {
+      \tau_l \subtypes \tau_r
+      \given \vec{z}_0, \Delta_0
+      \\\\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      Q \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l
+      \subtypes 
+      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Inter-LL] {
+      \tau_{ll} \subtypes \tau_r
+      \given \vec{z}, \Delta
+    } {
+      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Inter-LR] {
+      \tau_{lr} \subtypes \tau_r
+      \given \vec{z}, \Delta
+    } {
+      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Unio-RL] {
+      \tau_l \subtypes \tau_{rl}
+      \given \vec{z}, \Delta
+    } {
+      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Unio-RR] {
+      \tau_l \subtypes \tau_{rr}
+      \given \vec{z}, \Delta
+    } {
+      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \given \vec{z}, \Delta
+    }
+
+
+
+  \end{mathpar}
+  \caption{Subtyping Reconstruction (A)}
+  \label{fig:subtyping_reconstruction_A}
+\end{figure*}
+
+\begin{figure*}[h]
+  \begin{flalign*}
+    &\boxed{\vec{z}, \Delta \entails \tau \subtypes \tau}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Fixpoint-L] {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
+      \given \vec{z}, \Delta
+    } {
+      \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Fixpoint-R] {
+      \text{decidable}(\Delta_0, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
+      \\\\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
+      \given \vec{z}, \Delta_1
+    } {
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}, \Delta_1
+    }
+
+    \inferrule[Skolem-L-Fixpoint-R] {
+      z \in \text{FV}(\tau_l) \\ z \in \vec{z}_0
+      \\
+      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \code{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
+      \\\\
+      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
+      \given \vec{z}_1, \Delta_1
+    } {
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
+    }
+
+    \inferrule[Flex-L-Fixpoint-R] {
+      \vec{z}_0, \Delta_0, \text{FV}(\tau_l) 
+      \entails \Omega
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1
+      \\
+      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
+    } {
+      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \given \vec{z}_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
+    }
+
+    \inferrule[Diff-L] {
+      \vec{z}, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
+    } {
+      \vec{z}, \Delta \entails 
+      \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
+    }
+
+    \inferrule[Diff-R] {
+      \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
+      \\
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta
+      \\\\
+      \forall \vec{z}'\ \Delta' .\ 
+      \vec{z} \preceq \vec{z}'
+      \rightarrow
+      \Delta \preceq \Delta'
+      \rightarrow
+      \neg(\tau_l \subtypes \tau_n \given \vec{z}', \Delta')
+    } {
+      \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
+      \given \vec{z}, \Delta
+    }
+
+    \inferrule[Tag] {
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta 
+    } {
+      \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
+      \given \vec{z}, \Delta 
+    }
+
+    \inferrule[Record] {
+      \tau_l \subtypes \tau_r
+      \given \vec{z}, \Delta 
+    } {
+      \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
+      \given \vec{z}, \Delta 
+    }
+
+    \inferrule[Imp] {
+      \tau_{rl} \subtypes \tau_{ll}
+      \given \vec{z}_0, \Delta_0
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_{lr} \subtypes \tau_{rr}
+      \given \vec{z}_1, \Delta_1 
+    } {
+      \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
+      \given \vec{z}_1, \Delta_1 
+    }
+  \end{mathpar}
+
+
+  \begin{flalign*}
+    &\boxed{\tau \subtypes \tau \given \vec{W}}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Aggregate] {
+      \forall  \vec{z}\ \Delta .\  
+      \tau_l \subtypes \tau_r \given \vec{z}, \Delta 
+      \quiv
+      \left< \vec{z}, \Delta \right> \in \vec{W}
+    } {
+      \tau_l \subtypes \tau_r \given \vec{W}
+    }
+
+  \end{mathpar}
+  \caption{Subtyping Reconstruction (B)}
+  \label{fig:subtyping_reconstruction_B}
+\end{figure*}
+
+
+\begin{figure*}[h]
+\begin{flalign*}
+  &\boxed{\vec{z}, \Delta \entails \Delta}&
+\end{flalign*}
+  \begin{mathpar}
+    \inferrule[Extension] {
+      \vec{z}_0, \Delta_0 \entails  \Delta
+      \\
+      \vec{z}_0 \preceq \vec{z}_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \vec{z}_1, \Delta_1 \entails \tau_l \subtypes \tau_r
+    } {
+      \vec{z}_1, \Delta_1
+      \entails 
+      \Delta \cdot \code{$\tau_l$<:$\tau_r$}
+    }
+
+    \inferrule[Empty] {
+    } {
+      \vec{z}, \Delta \entails \epsilon
+    }
+  \end{mathpar}
+\caption{Subtyping Sequence Reconstruction}
+\label{fig:subtyping_sequence_reconstruction}
 \end{figure*}
 
 \begin{figure*}[h]
@@ -1812,8 +2477,8 @@ Different: RLT isn't cartesian
     \\  
     \nonterm{\omega} & \is \cdot \alpha \slash \tau
   \end{array}\]
-  \label{fig:model_syntax}
-  \caption{Model Syntax}
+  \label{fig:finite_value_syntax}
+  \caption{Finite value syntax}
 \end{figure*}
 
 
@@ -1963,124 +2628,6 @@ Different: RLT isn't cartesian
 
   \caption{Type Tools}
   \label{fig:collection_tools}
-\end{figure*}
-
-
-\begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{e \rightsquigarrow e}&
-\end{flalign*}
-\begin{mathpar}
-
-  \inferrule[Tag] {
-    e \rightsquigarrow e'
-  } {
-    \code{\textasciitilde{}$l$ $e$} \rightsquigarrow \code{\textasciitilde{}$l$ $e'$}
-  }
-
-  \inferrule[RecordBody] {
-    e \rightsquigarrow e'
-  } {
-    \code{$R$*$l$=>$e$} \rightsquigarrow \code{$R$*$l$=>$e'$}
-  }
-
-  \inferrule[RecordStep] {
-    R \rightsquigarrow R'
-  } {
-    \code{$R$*$l$=>$v$} \rightsquigarrow \code{$R'$*$l$=>$v$}
-  }
-
-  \inferrule[Projector] {
-    e \rightsquigarrow e'
-  } {
-    \code{$e$.$l$} \rightsquigarrow \code{$e'$.$l$}
-  }
-
-  \inferrule[Projection] {
-    \code{*$l$=>$v$} \in G 
-    \\
-    \forall\ v' .\ \code{*$l$=>$v'$} \in G \rightarrow v = v'
-  } {
-    \code{$G$.$l$} \rightsquigarrow v
-  }
-
-  \inferrule[Applicator] {
-    e \rightsquigarrow e'
-  } {
-    \code{($e$)($e_a$)} \rightsquigarrow \code{($e'$)($e_a$)}
-  }
-
-  \inferrule[Applicand] {
-    e \rightsquigarrow e'
-  } {
-    \code{($v$)($e$)} \rightsquigarrow \code{($v$)($e'$)}
-  }
-
-
-  % \inferrule[ApplicationSingle] {
-  %   \text{unify}(p,v) = \Sigma 
-  % } {
-  %   \code{(case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
-  % }
-
-  \inferrule[ApplicationSkip] {
-    \code{($F$)($v$)} \rightsquigarrow e'
-  } {
-    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e' 
-  }
-
-  \inferrule[ApplicationMatch] {
-     \forall e' .\ \neg \code{($F$)($v$)} \rightsquigarrow e'
-    % \\
-    % \code{(case $p$=>$e$)($v$)} \rightsquigarrow e'
-    \\
-    \text{unify}(p,v) = \Sigma 
-  } {
-    \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
-  }
-
-  \inferrule[LetTarget] {
-    e \rightsquigarrow e'
-  } {
-    \code{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
-  }
-
-  \inferrule[LetContin] {
-  } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[\cdot x \slash v]
-  }
-
-  \inferrule[FixTarget] {
-    e \rightsquigarrow e'
-  } {
-    \code{fix(e)} \rightsquigarrow \code{fix(e')}
-  }
-
-  \inferrule[Recursion] {
-  } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow e[\cdot x \slash \code{fix(case $x$ => $e$)}]
-  }
-
-  \inferrule[Tuple] {
-    \code{*left=>$e_l$ *right=>$e_r$} \rightsquigarrow e' 
-  } {
-    \code{$e_l$,$e_r$} \rightsquigarrow e' 
-  }
-
-  \inferrule[Funneling] {
-    \code{($e_b$)($e_a$)} \rightsquigarrow e' 
-  } {
-    \code{$e_a$ |> $e_b$} \rightsquigarrow e' 
-  }
-
-  \inferrule[Assoc] {
-    e \rightsquigarrow e' 
-  } {
-    \code{($e$)} \rightsquigarrow e' 
-  }
-\end{mathpar}
-\caption{Operational Semantics}
-\label{fig:operational_semantics}
 \end{figure*}
 
 
@@ -2420,397 +2967,9 @@ Different: RLT isn't cartesian
 \end{figure*}
 
 
-
-\begin{figure*}[h]
-  \begin{flalign*}
-    &\boxed{\tau \subtypes \tau \given \vec{z}, \Delta}&
-  \end{flalign*}
-
-  \begin{mathpar}
-    \inferrule[Refl] {
-    } {
-      \tau \subtypes \tau \given \vec{z}, \Delta
-    }
-
-    \inferrule[Bot-L] {
-    } {
-      \code{BOT} \subtypes \tau_r \given \vec{z}, \Delta
-    }
-
-    \inferrule[Top-R] {
-    } {
-      \tau_l \subtypes \code{TOP} \given \vec{z}, \Delta
-    }
-
-    \inferrule[Inter-Target] {
-      \tau_l
-      \subtypes
-      \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-      \given \vec{z}, \Delta
-    } {
-      \tau_l \subtypes 
-      \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Unio-L] {
-      \tau_{ll} \subtypes \tau_r
-      \given \vec{z}_0, \Delta_0
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_{lr} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    } {
-      \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Inter-R] {
-      \tau_l \subtypes \tau_{rl}
-      \given \vec{z}_0, \Delta_0
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_{rr}
-      \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Union-Antec] {
-      \tau_l \subtypes
-      \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-      \given \vec{z}, \Delta
-    } {
-      \tau_l \subtypes 
-      \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Inter-Conseq] {
-      \tau_l \subtypes
-      \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-      \given \vec{z}, \Delta
-    } {
-      \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Exi-L] {
-      Q \given \vec{z}_0, \Delta_0
-      \\\\
-      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    } {
-      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_l$} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[All-R] {
-      Q \given \vec{z}_0, \Delta_0
-      \\\\
-      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l \subtypes \code{ALL[$\vec{\alpha}$ $Q$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Flex-L] {
-      \alpha \notin \vec{z}_0
-      \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z} \lessdot \alpha
-      \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{\tau} \ll \alpha
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \widebar{\code{;} \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
-      \given \vec{z}_1, \Delta_1
-    } {
-      \alpha \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} 
-    }
-
-    \inferrule[Flex-R] {
-      \alpha \notin \vec{z}_0
-      \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \vec{z}
-      \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
-      \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \ll \vec{\tau} 
-      \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
-      \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l \subtypes \alpha
-      \given \vec{z}_1, \Delta_1
-      \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
-      \ \widebar{\cdot \code{$\tau[\alpha\slash\tau_l]$<:$z$}}^{\cdot \code{$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
-    }
-
-    \inferrule[Skolem-L] {
-      \alpha \in \vec{z}_0
-      \\
-      \cdot \alpha \code{<:} \tau \in (\Delta_0\ \text{factor}(\Delta_0, \alpha))
-      \\\\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    } {
-      \alpha \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Skolem-R] {
-      \alpha \in \vec{z}_0
-      \\
-      \cdot \tau \code{<:} \alpha \in \Delta_0
-      \\\\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau
-      \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l \subtypes \alpha
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[All-L] {
-      \tau_l \subtypes \tau_r \given \vec{z}_0, \Delta_0
-      \\\\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      Q
-      \given \vec{z}_1, \Delta_1
-    } {
-      \code{ALL[$\vec{\alpha}$ $Q$]$\tau_l$}
-      \subtypes 
-      \tau_r
-      \given \vec{z}_1, \Delta_1 
-    }
-
-    \inferrule[Exi-R] {
-      \tau_l \subtypes \tau_r
-      \given \vec{z}_0, \Delta_0
-      \\\\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      Q \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l
-      \subtypes 
-      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Inter-LL] {
-      \tau_{ll} \subtypes \tau_r
-      \given \vec{z}, \Delta
-    } {
-      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Inter-LR] {
-      \tau_{lr} \subtypes \tau_r
-      \given \vec{z}, \Delta
-    } {
-      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Unio-RL] {
-      \tau_l \subtypes \tau_{rl}
-      \given \vec{z}, \Delta
-    } {
-      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Unio-RR] {
-      \tau_l \subtypes \tau_{rr}
-      \given \vec{z}, \Delta
-    } {
-      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
-      \given \vec{z}, \Delta
-    }
-
-
-
-  \end{mathpar}
-  \caption{Subtyping Reconstruction (A)}
-  \label{fig:subtyping_reconstruction_A}
-\end{figure*}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subtyping Solving (Inductive) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure*}[h]
-  \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \tau \subtypes \tau}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Fixpoint-L] {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
-      \given \vec{z}, \Delta
-    } {
-      \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Fixpoint-R] {
-      \text{decidable}(\Delta_0, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
-      \\\\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
-      \given \vec{z}, \Delta_1
-    } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}, \Delta_1
-    }
-
-    \inferrule[Skolem-L-Fixpoint-R] {
-      z \in \text{FV}(\tau_l) \\ z \in \vec{z}_0
-      \\
-      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \code{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
-      \\\\
-      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
-      \given \vec{z}_1, \Delta_1
-    } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
-    }
-
-    \inferrule[Flex-L-Fixpoint-R] {
-      \vec{z}_0, \Delta_0, \text{FV}(\tau_l) 
-      \entails \Omega
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
-      \\
-      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
-    } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
-    }
-
-    \inferrule[Diff-L] {
-      \vec{z}, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
-    } {
-      \vec{z}, \Delta \entails 
-      \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
-    }
-
-    \inferrule[Diff-R] {
-      \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
-      \\
-      \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta
-      \\\\
-      \forall \vec{z}'\ \Delta' .\ 
-      \vec{z} \preceq \vec{z}'
-      \rightarrow
-      \Delta \preceq \Delta'
-      \rightarrow
-      \neg(\tau_l \subtypes \tau_n \given \vec{z}', \Delta')
-    } {
-      \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
-      \given \vec{z}, \Delta
-    }
-
-    \inferrule[Tag] {
-      \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta 
-    } {
-      \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
-      \given \vec{z}, \Delta 
-    }
-
-    \inferrule[Record] {
-      \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta 
-    } {
-      \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
-      \given \vec{z}, \Delta 
-    }
-
-    \inferrule[Imp] {
-      \tau_{rl} \subtypes \tau_{ll}
-      \given \vec{z}_0, \Delta_0
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_{lr} \subtypes \tau_{rr}
-      \given \vec{z}_1, \Delta_1 
-    } {
-      \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
-      \given \vec{z}_1, \Delta_1 
-    }
-  \end{mathpar}
-
-  \begin{flalign*}
-    &\boxed{\tau \subtypes \tau \given \vec{W}}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Aggregate] {
-      \forall  \vec{z}\ \Delta .\  
-      \tau_l \subtypes \tau_r \given \vec{z}, \Delta 
-      \quiv
-      \left< \vec{z}, \Delta \right> \in \vec{W}
-    } {
-      \tau_l \subtypes \tau_r \given \vec{W}
-    }
-
-  \end{mathpar}
-  \caption{Subtyping Reconstruction (B)}
-  \label{fig:subtyping_reconstruction_B}
-\end{figure*}
 
 \begin{figure*}[h]
 \begin{flalign*}
@@ -2847,159 +3006,6 @@ Different: RLT isn't cartesian
 \label{fig:type_substitution}
 \end{figure*}
 
-\begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{\vec{z}, \Delta \entails \Delta}&
-\end{flalign*}
-  \begin{mathpar}
-    \inferrule[Extension] {
-      \vec{z}_0, \Delta_0 \entails  \Delta
-      \\
-      \vec{z}_0 \preceq \vec{z}_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \vec{z}_1, \Delta_1 \entails \tau_l \subtypes \tau_r
-    } {
-      \vec{z}_1, \Delta_1
-      \entails 
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$}
-    }
-
-    \inferrule[Empty] {
-    } {
-      \vec{z}, \Delta \entails \epsilon
-    }
-  \end{mathpar}
-\caption{Subtyping Sequence Reconstruction}
-\label{fig:subtyping_sequence_reconstruction}
-\end{figure*}
-
-\begin{figure*}[h]
-  \begin{flalign*}
-    &\boxed{\Gamma \entails e \hastype \tau \given \vec{W}}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Unit] {
-    } {
-      \Gamma \entails \code{@} \hastype \code{@} \given \vec{W}
-    }
-
-    \inferrule[Var] {
-      \cdot \code{$x$:$\tau$} \in \Gamma
-    } {
-      \Gamma \entails x \hastype \tau \given \vec{W} 
-    }
-
-    \inferrule[Tag] {
-      \Gamma \entails e \hastype \tau \given \vec{W}
-    } {
-      \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given \vec{W}
-    }
-
-    \inferrule[Empty] {
-    } {
-      \Gamma \entails \epsilon \hastype \code{TOP} \given \vec{W}
-    }
-
-    \inferrule[Record] {
-      \Gamma \entails r \hastype \tau_0 \given \vec{W}_0
-      \\
-      \vec{W}_0 \looparrowright \vec{W}_1
-      \\
-      \Gamma \entails e \hastype \tau_1 \given \vec{W}_1
-    } {
-      \Gamma \entails r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given \vec{W}_1
-    }
-
-    \inferrule[Function] {
-      \vec{W}, \Gamma \entails f \liftfun \vec{\pi}, \vec{\eta} 
-      \\
-      \Gamma \entails \vec{\pi} \Rrightarrow \vec{\tau}
-    } {
-      \Gamma \entails f \hastype \code{\&}(\vec{\tau}) \given \vec{W}
-    }
-
-    \inferrule[Projection] {
-      \Gamma \entails e \hastype \tau_0 \given \vec{W}_0
-      \\
-      \alpha\ \#\ \Gamma, \vec{W}_0
-      \\
-      \vec{W}_0 \looparrowright \vec{W}_1
-      \\
-      \tau_0 \subtypes \code{$l$:$\alpha$} \given \vec{W}_1
-    } {
-      \Gamma \entails \code{$e$.$l$} \hastype \alpha \given \vec{W}_1
-    }
-
-    \inferrule[Application] {
-      \Gamma \entails e_0 \hastype \tau_0 \given \vec{W}_0
-      \\
-      \vec{W}_0 \looparrowright \vec{W}_1
-      \\
-      \Gamma \entails e_1 \hastype \tau_1 \given \vec{W}_1
-      \\
-      \alpha\ \#\ \Gamma, \vec{W}_1
-      \\
-      \vec{W}_1 \looparrowright \vec{W}_2
-      \\
-      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \vec{W}_2
-    } {
-      \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given \vec{W}_2
-    }
-
-    \inferrule[Recursion] {
-      \Gamma \entails e \hastype \tau \given \vec{W}_0
-      \\
-      \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, \vec{W}
-      \\
-      \vec{W}_0 \looparrowright \vec{W}_1
-      \\
-      \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \vec{W}_1
-      \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft \vec{W}_1 \cdot \code{$\alpha_1$->$\alpha_2$} \Rrightarrow \alpha_3 \circlearrowright \vec{\tau}_{rel}
-    } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$;($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$]|$(\vec{\tau}_{rel})$]$\alpha_5$} \given \vec{W}_0
-    }
-
-  \end{mathpar}
-
-  \begin{flalign*}
-    &\boxed{\vec{W}, \Gamma \entails f \liftfun \vec{\pi}, \vec{\eta}}&
-  \end{flalign*}
-  \begin{mathpar}
-
-    \inferrule[Step] {
-      \vec{W}_0, \Gamma_0 \entails f \liftfun \vec{\pi}, \vec{\eta}
-      \\
-      p \hastype \tau_l \given \Gamma_1
-      \\
-      \text{neg}(\tau_l, \vec{\eta}) = \tau_l'
-      \\\\
-      \vec{W}_0 \looparrowright \vec{W}_1
-      \\
-      \Gamma_0\ \Gamma_1 \entails e \hastype \tau_r \given \vec{W}_1
-    } {
-      \vec{W}_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
-      \vec{\pi}\ \widebar{\left< Z, \Delta, \tau_l', \tau_r \right>}^{\left<Z, \Delta\right> \in \vec{W}_1}, \vec{\eta}\ \tau_0
-    }
-  \end{mathpar}
-
-  \begin{flalign*}
-    &\boxed{\vec{W} \looparrowright \vec{W}}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Expand] {
-      \forall \vec{z}_1\ \Delta_1.\ \left<\vec{z}_1,\Delta_1\right> \in \vec{W}_1 \rightarrow 
-      \exists \vec{z}_0\ \Delta_0.\ \left<\vec{z}_0,\Delta_0\right> \in \vec{W}_0 \land 
-      \vec{z}_0 \preceq \vec{z}_1 \land \Delta_0 \preceq \Delta_1
-    } {
-      \vec{W}_0 \looparrowright \vec{W}_1
-    }
-  \end{mathpar}
-\caption{Typing Reconstruction (A)}
-\label{fig:typing_reconstruction_part_a}
-\end{figure*}
 
 \begin{figure*}[h]
   \begin{flalign*}
@@ -3056,30 +3062,30 @@ Different: RLT isn't cartesian
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\Delta \entails \vec{\alpha} \pitchfork \Delta}&
+    &\boxed{\Delta \entails N \pitchfork \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \epsilon \entails \vec{\alpha} \pitchfork \epsilon 
+      \epsilon \entails N \pitchfork \epsilon 
     }
 
     \inferrule[Match] {
-      \alpha \in \vec{\alpha}  
+      \alpha \in N  
       \\
-      \alpha \in \text{FTV}(\tau_l)\ \text{FTV}(\tau_r)
+      \alpha \in \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
-      \Delta \entails \vec{\alpha} \pitchfork \Delta_i
+      \Delta \entails N \pitchfork \Delta_i
     } {
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\alpha} \pitchfork \Delta_i \cdot \code{$\tau_l$<:$\tau_r$}
+      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails N \pitchfork \Delta_i \cdot \code{$\tau_l$<:$\tau_r$}
     }
 
     \inferrule[Skip] {
-      \forall \alpha .\ \alpha \in \vec{\alpha} \rightarrow \alpha \notin \text{FTV}(\tau_l)\ \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in N \rightarrow \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
-      \Delta \entails \vec{\alpha} \pitchfork \Delta_i
+      \Delta \entails N \pitchfork \Delta_i
     } {
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\alpha} \pitchfork \Delta_i
+      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails N \pitchfork \Delta_i
     }
   \end{mathpar}
 
