@@ -2038,256 +2038,252 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\tau \subtypes \tau \given \vec{z}, \Delta}&
+    &\boxed{\tau \subtypes \tau \given M, \Delta}&
   \end{flalign*}
-
   \begin{mathpar}
     \inferrule[Refl] {
     } {
-      \tau \subtypes \tau \given \vec{z}, \Delta
+      \tau \subtypes \tau \given M, \Delta
     }
 
     \inferrule[Bot-L] {
     } {
-      \code{BOT} \subtypes \tau_r \given \vec{z}, \Delta
+      \code{BOT} \subtypes \tau_r \given M, \Delta
     }
 
     \inferrule[Top-R] {
     } {
-      \tau_l \subtypes \code{TOP} \given \vec{z}, \Delta
+      \tau_l \subtypes \code{TOP} \given M, \Delta
     }
 
     \inferrule[Inter-Target] {
       \tau_l
       \subtypes
       \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \tau_l \subtypes 
       \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Unio-L] {
       \tau_{ll} \subtypes \tau_r
-      \given \vec{z}_0, \Delta_0
+      \given M_0, \Delta_0
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_{lr} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
       \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     }
 
     \inferrule[Inter-R] {
       \tau_l \subtypes \tau_{rl}
-      \given \vec{z}_0, \Delta_0
+      \given M_0, \Delta_0
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_{rr}
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
       \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     }
 
     \inferrule[Union-Antec] {
       \tau_l \subtypes
       \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \tau_l \subtypes 
       \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Inter-Conseq] {
       \tau_l \subtypes
       \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Exi-L] {
-      Q \given \vec{z}_0, \Delta_0
+      Q \given M_0, \Delta_0
       \\\\
-      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
+      M_0 \sqcup \mathrm{A} \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
-      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_l$} \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \code{EXI[$\mathrm{A}$ $Q$]$\tau_l$} \subtypes \tau_r
+      \given M_1, \Delta_1
     }
 
     \inferrule[All-R] {
-      Q \given \vec{z}_0, \Delta_0
+      Q \given M_0, \Delta_0
       \\\\
-      \vec{z}_0\ \vec{\alpha} \preceq \vec{z}_1
+      M_0 \sqcup \mathrm{A} \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{ALL[$\vec{\alpha}$ $Q$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
+      \tau_l \subtypes \code{ALL[$\mathrm{A}$ $Q$]$\tau_r$}
+      \given M_1, \Delta_1
     }
 
     \inferrule[Flex-L] {
-      \alpha \notin \vec{z}_0
+      \alpha \notin M_0
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z} \lessdot \alpha
+      M_0, \Delta_0, \Delta_0 \entails M \lessdot \alpha
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{\tau} \ll \alpha
+      M_0, \Delta_0, \Delta_0 \entails \mathrm{T} \ll \alpha
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \widebar{\code{;} \tau \code{<:} \tau_r}^{\tau \in \vec{\tau}}
-      \given \vec{z}_1, \Delta_1
+      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \mathrm{T}}
+      \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1\ \widebar{\cdot \code{$z$<:$\tau_r$}}^{z \in \vec{z}} \cdot \code{$\alpha$<:$\tau_r$} 
+      \given M_1, \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M} \ \alpha <: \tau_r
     }
 
     \inferrule[Flex-R] {
-      \alpha \notin \vec{z}_0
+      \alpha \notin M_0
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \vec{z}
+      M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot M
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+      M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \alpha \ll \vec{\tau} 
+      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \mathrm{T} 
       \\
-      \vec{z}_0, \Delta_0 \entails \Delta_0 \Rightarrow \alpha \ll \Delta_{rel}
+      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \widebar{\cdot \code{$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\cdot \code{$\tau_0$<:$\tau_1$}\in\Delta_{rel}}\ \widebar{\cdot\code{$\tau_l$<:$\tau$}}^{\tau \in \vec{\tau}}
-      \given \vec{z}_1, \Delta_1
+      \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \mathrm{T}}
+      \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
-      \given \vec{z}_1, \Delta_1
-      \ \widebar{\cdot \code{$\tau_l$<:$z$}}^{z\in\vec{z}}
-      \ \widebar{\cdot \code{$\tau[\alpha\slash\tau_l]$<:$z$}}^{\cdot \code{$\tau$<:$z$} \in \Delta_{skol}} \cdot \code{$\tau_l$<:$\alpha$} 
+      \given M_1, \Delta_1
+      \sqcup \widebar{\tau_l<:z}^{z \in M}
+      \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
     }
 
     \inferrule[Skolem-L] {
-      \alpha \in \vec{z}_0
+      \alpha \in M_0
       \\
-      \cdot \alpha \code{<:} \tau \in (\Delta_0\ \text{factor}(\Delta_0, \alpha))
+      \alpha <: \tau \in (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha))
       \\\\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     }
 
     \inferrule[Skolem-R] {
-      \alpha \in \vec{z}_0
+      \alpha \in M_0
       \\
-      \cdot \tau \code{<:} \alpha \in \Delta_0
+      \tau <: \alpha \in \Delta_0
       \\\\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     }
 
     \inferrule[All-L] {
-      \tau_l \subtypes \tau_r \given \vec{z}_0, \Delta_0
+      \tau_l \subtypes \tau_r \given M_0, \Delta_0
       \\\\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       Q
-      \given \vec{z}_1, \Delta_1
+      \given M_1, \Delta_1
     } {
-      \code{ALL[$\vec{\alpha}$ $Q$]$\tau_l$}
+      \code{ALL[$\mathrm{A}$ $Q$]$\tau_l$}
       \subtypes 
       \tau_r
-      \given \vec{z}_1, \Delta_1 
+      \given M_1, \Delta_1 
     }
 
     \inferrule[Exi-R] {
       \tau_l \subtypes \tau_r
-      \given \vec{z}_0, \Delta_0
+      \given M_0, \Delta_0
       \\\\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      Q \given \vec{z}_1, \Delta_1
+      Q \given M_1, \Delta_1
     } {
       \tau_l
       \subtypes 
-      \code{EXI[$\vec{\alpha}$ $Q$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
+      \code{EXI[$\mathrm{A}$ $Q$]$\tau_r$}
+      \given M_1, \Delta_1
     }
 
     \inferrule[Inter-LL] {
       \tau_{ll} \subtypes \tau_r
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Inter-LR] {
       \tau_{lr} \subtypes \tau_r
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Unio-RL] {
       \tau_l \subtypes \tau_{rl}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Unio-RR] {
       \tau_l \subtypes \tau_{rr}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
-
-
-
   \end{mathpar}
-  \caption{Subtyping Reconstruction (A)}
-  \label{fig:subtyping_reconstruction_A}
+  \caption{Proof semantics (subtyping . 1/2)}
+  \label{fig:proof_semantics_part_b}
 \end{figure*}
 
 \begin{figure*}[h]
