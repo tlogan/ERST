@@ -1905,6 +1905,11 @@ Different: RLT isn't cartesian
     \nonterm{\mathrm{\Pi}} & \is \epsilon \sep \Pi\ \pi
     \\
     \nonterm{\pi} & \is \left< M, \Delta, \tau, \tau\right>
+    \\
+    \\
+    \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
+    \\  
+    \nonterm{\omega} & \is \alpha \slash \tau
   \end{array}\]
   \caption{Type syntax}
   \label{fig:type_syntax}
@@ -2288,15 +2293,15 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails \tau \subtypes \tau}&
+    &\boxed{\tau \subtypes \tau \given M, \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Fixpoint-L] {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
-      \given \vec{z}, \Delta
+      \given M, \Delta
     } {
       \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Fixpoint-R] {
@@ -2305,51 +2310,51 @@ Different: RLT isn't cartesian
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
-      \given \vec{z}, \Delta_1
+      \given M, \Delta_1
     } {
       \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}, \Delta_1
+      \given M, \Delta_1
     }
 
     \inferrule[Skolem-L-Fixpoint-R] {
-      z \in \text{FV}(\tau_l) \\ z \in \vec{z}_0
+      m \in \text{FTV}(\tau_l) \\ m \in M_0
       \\
-      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \code{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
+      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$.$\tau_r$]}) = \code{$\tau_l'$<:FIX[$\alpha$.$\tau_r'$]}
       \\\\
       \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau \subtypes \code{FIX[$\alpha$]$\tau_r'$}
-      \given \vec{z}_1, \Delta_1
+      \tau \subtypes \code{FIX[$\alpha$.$\tau_r'$]}
+      \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
+      \tau_l \subtypes \code{FIX[$\alpha$.$\tau_r$]}
+      \given M_1, \Delta_1
     }
 
     \inferrule[Flex-L-Fixpoint-R] {
-      \vec{z}_0, \Delta_0, \text{FV}(\tau_l) 
+      M_0, \Delta_0, \text{FV}(\tau_l) 
       \entails \Omega
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1
+      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$.$\tau_r$]}
+      \given M_1, \Delta_1
       \\
-      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$]$\tau_r$})
+      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$.$\tau_r$]})
     } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
-      \given \vec{z}_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \code{FIX[$\alpha$.$\tau_r$]}
+      \given M_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$.$\tau_r$]}
     }
 
     \inferrule[Diff-L] {
-      \vec{z}, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
+      M, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
     } {
-      \vec{z}, \Delta \entails 
+      M, \Delta \entails 
       \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
     }
 
@@ -2357,97 +2362,91 @@ Different: RLT isn't cartesian
       \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
       \\
       \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta
+      \given M, \Delta
       \\\\
-      \forall \vec{z}'\ \Delta' .\ 
-      \vec{z} \preceq \vec{z}'
+      \forall M'\ \Delta' .\ 
+      M \preceq M'
       \rightarrow
       \Delta \preceq \Delta'
       \rightarrow
-      \neg(\tau_l \subtypes \tau_n \given \vec{z}', \Delta')
+      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
     } {
       \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
-      \given \vec{z}, \Delta
+      \given M, \Delta
     }
 
     \inferrule[Tag] {
       \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta 
+      \given M, \Delta 
     } {
       \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
-      \given \vec{z}, \Delta 
+      \given M, \Delta 
     }
 
     \inferrule[Record] {
       \tau_l \subtypes \tau_r
-      \given \vec{z}, \Delta 
+      \given M, \Delta 
     } {
       \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
-      \given \vec{z}, \Delta 
+      \given M, \Delta 
     }
 
     \inferrule[Imp] {
       \tau_{rl} \subtypes \tau_{ll}
-      \given \vec{z}_0, \Delta_0
+      \given M_0, \Delta_0
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_{lr} \subtypes \tau_{rr}
-      \given \vec{z}_1, \Delta_1 
+      \given M_1, \Delta_1 
     } {
       \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
-      \given \vec{z}_1, \Delta_1 
+      \given M_1, \Delta_1 
     }
   \end{mathpar}
 
 
   \begin{flalign*}
-    &\boxed{\tau \subtypes \tau \given \vec{W}}&
+    &\boxed{\tau \subtypes \tau \given Z}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Aggregate] {
-      \forall  \vec{z}\ \Delta .\  
-      \tau_l \subtypes \tau_r \given \vec{z}, \Delta 
+      \forall  M\ \Delta .\  
+      \tau_l \subtypes \tau_r \given M, \Delta 
       \quiv
-      \left< \vec{z}, \Delta \right> \in \vec{W}
+      \left< M, \Delta \right> \in Z 
     } {
-      \tau_l \subtypes \tau_r \given \vec{W}
+      \tau_l \subtypes \tau_r \given Z 
     }
 
   \end{mathpar}
-  \caption{Subtyping Reconstruction (B)}
-  \label{fig:subtyping_reconstruction_B}
-\end{figure*}
-
-
-\begin{figure*}[h]
-\begin{flalign*}
-  &\boxed{\vec{z}, \Delta \entails \Delta}&
-\end{flalign*}
+  \begin{flalign*}
+    &\boxed{Q \given M, \Delta}&
+  \end{flalign*}
   \begin{mathpar}
     \inferrule[Extension] {
-      \vec{z}_0, \Delta_0 \entails  \Delta
+      Q \given M_0, \Delta_0
       \\
-      \vec{z}_0 \preceq \vec{z}_1
+      M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \vec{z}_1, \Delta_1 \entails \tau_l \subtypes \tau_r
+      \tau_l \subtypes \tau_r \given M_1, \Delta_1
     } {
-      \vec{z}_1, \Delta_1
-      \entails 
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$}
+      Q \code{.$\tau_l$<:$\tau_r$}
+      \given
+      M_1, \Delta_1
     }
 
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta \entails \epsilon
+      M, \Delta \entails \epsilon
     }
   \end{mathpar}
-\caption{Subtyping Sequence Reconstruction}
-\label{fig:subtyping_sequence_reconstruction}
+  \caption{Proof semantics (subtyping 2/2, collective subtyping, multiverse subtyping)}
+  \label{fig:proof_semantics_c}
 \end{figure*}
 
 \begin{figure*}[h]
@@ -2466,12 +2465,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{W} & \is \epsilon \sep W\ w
     \\
-    \nonterm{w} & \is \cdot u \triangleright u
-    \\
-    \\
-    \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
-    \\  
-    \nonterm{\omega} & \is \cdot \alpha \slash \tau
+    \nonterm{w} & \is u \triangleright u
   \end{array}\]
   \label{fig:finite_value_syntax}
   \caption{Finite value syntax}
@@ -2582,8 +2576,8 @@ Different: RLT isn't cartesian
     }
   \end{mathpar}
 
-  \caption{Collection Tools}
-  \label{fig:collection_tools}
+  \caption{Tools (collection)}
+  \label{fig:toos_collection}
 \end{figure*}
 
 \begin{figure*}[h]
@@ -2622,128 +2616,11 @@ Different: RLT isn't cartesian
     \\
   \end{array}\]
 
-  \caption{Type Tools}
-  \label{fig:collection_tools}
+  \caption{Tools (Type)}
+  \label{fig:tools_type}
 \end{figure*}
 
 
-
-\begin{figure*}[h]
-
-  \begin{flalign*}
-    &\boxed{\Omega \satisfies u \intype \tau}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Var] { 
-      \cdot \alpha \slash \tau \in \Omega
-      \\
-      \Omega \satisfies u \intype \tau
-    } {
-      \Omega \satisfies u \intype \alpha 
-    } 
-
-    \inferrule[Unit] { 
-    } {
-      \Omega \satisfies \code{@} \intype \code{@}
-    } 
-
-    \inferrule[Tag] { 
-      \Omega \satisfies u \intype \tau
-    } {
-      \Omega \satisfies \code{\textasciitilde{}$l$ $u$} \intype \code{\textasciitilde{}$l$ $\tau$}
-    } 
-
-    \inferrule[Record] { 
-      \code{*$l$=>$u$} \in H 
-      \\
-      \Omega \satisfies u \intype \tau 
-      \\
-      \forall u' .\ \code{*$l$=>$u'$} \in H \rightarrow u' = u 
-    } {
-      \Omega \satisfies H \intype \code{$l$->$\tau$}
-    } 
-
-    \inferrule[Implication] { 
-      \cdot u_l \triangleright u_r \in W 
-      \\
-      \Omega \satisfies u_l \intype \tau_l
-      \\
-      \Omega \satisfies u_r \intype \tau_r
-      \\
-      \forall u_r' .\ \cdot u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
-    } {
-      \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
-    } 
-
-    \inferrule[Union-L] { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
-    } {
-      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule[Union-R] { 
-      \Omega \satisfies u \intype \code{$\tau_r$}
-    } {
-      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule[Inter] { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
-      \\
-      \Omega \satisfies u \intype \code{$\tau_r$}
-    } {
-      \Omega \satisfies u \intype \code{$\tau_l$\&$\tau_r$}
-    } 
-
-    \inferrule[Diff] { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
-      \\
-      \neg\ (\Omega \satisfies u \intype \code{$\tau_r$})
-    } {
-      \Omega \satisfies u \intype \code{$\tau_l$\textbackslash$\tau_r$}
-    } 
-
-    \inferrule[IndUnion] { 
-      \Omega \sqcup \Omega' \satisfies Q
-      \\
-      \Omega \sqcup \Omega' \satisfies u \intype \tau
-    } {
-      \Omega \satisfies u \intype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
-    } 
-
-    \inferrule[IndInter] { 
-      \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \rightarrow 
-      \Omega \sqcup \Omega' \satisfies u \intype \tau
-    } {
-      \Omega \satisfies u \intype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
-    } 
-
-    \inferrule[Fixpoint] { 
-      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \satisfies u \intype \tau
-    } {
-      \Omega \satisfies u \intype \code{FIX[$\alpha$*$\tau$]}
-    } 
-  \end{mathpar}
-  \begin{flalign*}
-    &\boxed{\Omega \satisfies Q}&
-  \end{flalign*}
-  \begin{mathpar}
-    \inferrule[Empty] { 
-    } {
-      \Omega \satisfies \epsilon
-    } 
-
-    \inferrule[Step] { 
-      \Omega \satisfies Q 
-      \\
-      \forall u .\ \Omega \satisfies u \intype \tau_l \rightarrow u \intype \tau_r
-    } {
-      \Omega \satisfies Q \code{*$\tau_l$<:$\tau_r$}  
-    } 
-  \end{mathpar}
-\caption{Model semantics}
-\label{fig:type_semantics}
-\end{figure*}
 
 \begin{figure*}[h]
   \begin{flalign*}
@@ -2877,8 +2754,8 @@ Different: RLT isn't cartesian
     }
   \end{mathpar}
 
-  \caption{Subtyping Tools}
-  \label{fig:subtyping_tools}
+  \caption{Proof semantics (misc)}
+  \label{fig:proof_semantics_misc}
 \end{figure*}
 
 \begin{figure*}[h]
@@ -3251,6 +3128,124 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \caption{HELPERS}
 \label{fig:helpers}
+\end{figure*}
+
+
+\begin{figure*}[h]
+
+  \begin{flalign*}
+    &\boxed{\Omega \satisfies u \intype \tau}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Var] { 
+      \cdot \alpha \slash \tau \in \Omega
+      \\
+      \Omega \satisfies u \intype \tau
+    } {
+      \Omega \satisfies u \intype \alpha 
+    } 
+
+    \inferrule[Unit] { 
+    } {
+      \Omega \satisfies \code{@} \intype \code{@}
+    } 
+
+    \inferrule[Tag] { 
+      \Omega \satisfies u \intype \tau
+    } {
+      \Omega \satisfies \code{\textasciitilde{}$l$ $u$} \intype \code{\textasciitilde{}$l$ $\tau$}
+    } 
+
+    \inferrule[Record] { 
+      \code{*$l$=>$u$} \in H 
+      \\
+      \Omega \satisfies u \intype \tau 
+      \\
+      \forall u' .\ \code{*$l$=>$u'$} \in H \rightarrow u' = u 
+    } {
+      \Omega \satisfies H \intype \code{$l$->$\tau$}
+    } 
+
+    \inferrule[Implication] { 
+      \cdot u_l \triangleright u_r \in W 
+      \\
+      \Omega \satisfies u_l \intype \tau_l
+      \\
+      \Omega \satisfies u_r \intype \tau_r
+      \\
+      \forall u_r' .\ \cdot u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
+    } {
+      \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
+    } 
+
+    \inferrule[Union-L] { 
+      \Omega \satisfies u \intype \code{$\tau_l$}
+    } {
+      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule[Union-R] { 
+      \Omega \satisfies u \intype \code{$\tau_r$}
+    } {
+      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule[Inter] { 
+      \Omega \satisfies u \intype \code{$\tau_l$}
+      \\
+      \Omega \satisfies u \intype \code{$\tau_r$}
+    } {
+      \Omega \satisfies u \intype \code{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule[Diff] { 
+      \Omega \satisfies u \intype \code{$\tau_l$}
+      \\
+      \neg\ (\Omega \satisfies u \intype \code{$\tau_r$})
+    } {
+      \Omega \satisfies u \intype \code{$\tau_l$\textbackslash$\tau_r$}
+    } 
+
+    \inferrule[IndUnion] { 
+      \Omega \sqcup \Omega' \satisfies Q
+      \\
+      \Omega \sqcup \Omega' \satisfies u \intype \tau
+    } {
+      \Omega \satisfies u \intype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
+    } 
+
+    \inferrule[IndInter] { 
+      \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \rightarrow 
+      \Omega \sqcup \Omega' \satisfies u \intype \tau
+    } {
+      \Omega \satisfies u \intype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
+    } 
+
+    \inferrule[Fixpoint] { 
+      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \satisfies u \intype \tau
+    } {
+      \Omega \satisfies u \intype \code{FIX[$\alpha$*$\tau$]}
+    } 
+  \end{mathpar}
+  \begin{flalign*}
+    &\boxed{\Omega \satisfies Q}&
+  \end{flalign*}
+  \begin{mathpar}
+    \inferrule[Empty] { 
+    } {
+      \Omega \satisfies \epsilon
+    } 
+
+    \inferrule[Step] { 
+      \Omega \satisfies Q 
+      \\
+      \forall u .\ \Omega \satisfies u \intype \tau_l \rightarrow u \intype \tau_r
+    } {
+      \Omega \satisfies Q \code{*$\tau_l$<:$\tau_r$}  
+    } 
+  \end{mathpar}
+\caption{Model semantics}
+\label{fig:type_semantics}
 \end{figure*}
 
 
