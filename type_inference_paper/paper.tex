@@ -69,6 +69,7 @@
 \newcommand{\bigand}{\bigwedge\nolimits}
 \newcommand{\bigor}{\bigvee\nolimits}
 \newcommand{\C}[1]{\color{teal} \rhd\ \emph{#1}}
+\newcommand{\D}[1]{\textsc{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
 \newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1}}
@@ -2624,133 +2625,132 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \vec{z} \lessdot \alpha}&
+    &\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \epsilon \lessdot \alpha
+      M, \Delta, \epsilon \entails \epsilon \lessdot \alpha
     }
 
     \inferrule[Match] {
-      z \in \vec{z}_0
+      m \in M_0
       \\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \vec{z}_1 \lessdot \alpha
+      M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
       \\\\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails \vec{z}_2 \lessdot z 
+      M_0, \Delta_0, \Delta_0 \entails M_2 \lessdot m 
     } {
-      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$z$<:$\alpha$} 
-      \entails \vec{z}_1\ \vec{z}_2\ z \lessdot \alpha
+      M_0, \Delta_0, \Delta_1 \ m<:\alpha 
+      \entails M_1 \sqcup M_2 \ m \lessdot \alpha
     }
 
     \inferrule[Skip] {
-      \neg (\tau_l \in \vec{z}_0 \land \tau_r = \alpha)
+      \neg (\tau_l \in M_0 \land \tau_r = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \vec{z}_1 \lessdot \alpha
+      M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
     } {
-      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} 
-      \entails \vec{z}_1 \lessdot \alpha
+      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r
+      \entails M_1 \lessdot \alpha
     }
   \end{mathpar}
 
-
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \vec{\tau} \ll \alpha}&
+    &\boxed{M, \Delta, \Delta \entails \mathrm{T} \ll \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \epsilon \ll \alpha
+      M, \Delta, \epsilon \entails \epsilon \ll \alpha
     }
 
     \inferrule[Direct] {
-      \tau \notin \vec{z}
+      \tau \notin M
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau} \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \mathrm{T} \ll \alpha
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau$<:$\alpha$} \entails \vec{\tau}\ \tau \ll \alpha
+      M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \mathrm{T}\ \tau \ll \alpha
     }
 
     \inferrule[Trans] {
-      z \in \vec{z}
+      m \in M
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau}_0 \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \mathrm{T}_0 \ll \alpha
       \\
-      \vec{z}, \Delta_0, \Delta_0 \entails \vec{\tau}_1 \ll z 
+      M, \Delta_0, \Delta_0 \entails \mathrm{T}_1 \ll z 
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$z$<:$\alpha$} \entails \vec{\tau}_0\ \vec{\tau}_1 \ll \alpha
+      M, \Delta_0, \Delta_1 \ m<:\alpha \entails \mathrm{T}_0 \sqcup \mathrm{T}_1 \ll \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \vec{\tau} \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \mathrm{T} \ll \alpha
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\tau} \ll \alpha
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \mathrm{T} \ll \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \lessdot \vec{z}}&
+    &\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \alpha \lessdot \epsilon
+      M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
-      z \in \vec{z}_0
+      m \in M_0
       \\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1 
+      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1 
       \\\\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails z \lessdot \vec{z}_2 
+      M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
     } {
-      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$z$} \entails \alpha \lessdot \vec{z}_1\ \vec{z}_2\ z 
+      M_0, \Delta_0, \Delta_1 \ \alpha<:z \entails \alpha \lessdot M_1 \sqcup M_2\ m 
     }
 
     \inferrule[Skip] {
-      \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
+      \neg (\tau_r \in M_0 \land \tau_l = \alpha)
       \\\\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1
+      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1
     } {
-      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \lessdot \vec{z}_1
+      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot M_1
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \ll \vec{\tau}}&
+    &\boxed{M, \Delta, \Delta \entails \alpha \ll \mathrm{T}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \alpha \ll \epsilon
+      M, \Delta, \epsilon \entails \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
-      \tau \notin \vec{z}
+      \tau \notin M
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$\tau$} \entails \alpha \ll \vec{\tau}\ \tau
+      M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \mathrm{T}\ \tau
     }
 
     \inferrule[Trans] {
-      z \in \vec{z}
+      m \in M
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}_0
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}_0
       \\
-      \vec{z}, \Delta_0, \Delta_0 \entails z \ll \vec{\tau}_1
+      M, \Delta_0, \Delta_0 \entails m \ll \mathrm{T}_1
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\alpha$<:$z$} \entails \alpha \ll \vec{\tau}_0\ \vec{\tau}_1
+      M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \mathrm{T}_0 \sqcup \mathrm{T}_1
     }
 
     \inferrule[Skip] {
       \tau_l \neq \alpha
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \vec{\tau}
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \vec{\tau}
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \mathrm{T}
     }
   \end{mathpar}
 
