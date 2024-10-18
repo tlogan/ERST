@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  18 OCT 2024 09:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  18 OCT 2024 13:48
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1124,31 +1124,31 @@ Class acmart Warning: A possible image without description on input line 2840.
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 2880.
+Class acmart Warning: A possible image without description on input line 2881.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 3018.
+Class acmart Warning: A possible image without description on input line 3019.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 3131.
+Class acmart Warning: A possible image without description on input line 3132.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Class acmart Warning: A possible image without description on input line 3249.
+Class acmart Warning: A possible image without description on input line 3250.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 3254.
+(Font)              scaled to size 10.0pt on input line 3255.
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1179,15 +1179,15 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24253 strings out of 474116
- 388063 string characters out of 5743682
- 2057187 words of memory out of 5000000
+ 24252 strings out of 474116
+ 388106 string characters out of 5743682
+ 2055187 words of memory out of 5000000
  45508 multiletter control sequences out of 15000+600000
- 753227 words of font info for 425 fonts, out of 8000000 for 9000
+ 752928 words of font info for 424 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (22 pages, 526038 bytes).
+Output written on paper.pdf (22 pages, 526490 bytes).
 PDF statistics:
  361 PDF objects out of 1000 (max. 8388607)
  291 compressed objects within 3 object streams

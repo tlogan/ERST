@@ -2706,7 +2706,7 @@ Different: RLT isn't cartesian
       \\\\
       M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
     } {
-      M_0, \Delta_0, \Delta_1 \ \alpha<:z \entails \alpha \lessdot M_1 \sqcup M_2\ m 
+      M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \sqcup M_2\ m 
     }
 
     \inferrule[Skip] {
@@ -2760,83 +2760,83 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \lessdot \Delta}&
+    &\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \alpha \lessdot \epsilon
+      M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
     }
 
     \inferrule[Match] {
-      \alpha \in \text{FV}(\tau)
+      \alpha \in \text{FTV}(\tau)
       \\
-      z_0 \in \vec{z}_0
+      m_0 \in M_0
       \\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
+      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
       \\
-      \vec{z}_0, \Delta_0, \Delta_0 \entails z_0 \lessdot \vec{z}_1 
+      M_0, \Delta_0, \Delta_0 \entails m_0 \lessdot M_1 
     } {
-      \vec{z}_0, \Delta_0
+      M_0, \Delta_0
       \entails
-      \Delta_1 \cdot \code{$\tau$<:$z_0$} 
+      \Delta_1 \ \tau<:m_0
       \entails
       \alpha 
       \lessdot 
-      \Delta_2\ \widebar{\cdot \code{$\tau$<:$z_1$}}^{z_1 \in \vec{z}_1}\ \cdot \code{$\tau$<:$z_0$} 
+      \Delta_2 \sqcup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
     }
 
     \inferrule[Skip] {
-      \neg (\tau_r \in \vec{z}_0 \land \tau_l = \alpha)
+      \neg (\tau_r \in M_0 \land \alpha \in \text{FTV}(\tau_l))
       \\
-      \vec{z}_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \vec{z}_1
+      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2 
     } {
-      \vec{z}_0, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \lessdot \vec{z}_1
+      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot \Delta_2
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta, \Delta \entails \alpha \ll \Delta}&
+    &\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \alpha \ll \epsilon
+      M, \Delta, \epsilon \entails \alpha \ll \epsilon
     }
 
     \inferrule[Direct] {
-      \alpha \in \text{FV}(\tau_l)
+      \alpha \in \text{FTV}(\tau_l)
       \\
-      \tau \notin \vec{z}
+      \tau \notin M 
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \Delta_2 \cdot \code{$\tau_l$<:$\tau_r$}
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2 \ \tau_l<:\tau_r
     }
 
     \inferrule[Trans] {
-      \alpha \in \text{FV}(\tau)
+      \alpha \in \text{FTV}(\tau)
       \\
-      z \in \vec{z}
+      m \in M 
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
       \\\\
-      \vec{z}, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
+      M, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau$<:$z$} \entails \alpha \ll \Delta_2\ \Delta_3
+      M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \sqcup \Delta_3
     }
 
     \inferrule[Skip] {
-      \tau_l \neq \alpha
+      \alpha \notin \text{FTV}(\tau_l)
       \\
-      \vec{z}, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
     } {
-      \vec{z}, \Delta_0, \Delta_1 \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \ll \Delta_2
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2
     }
   \end{mathpar}
 
-  \caption{Relational Subtyping Tools}
-  \label{fig:subtyping_tools}
+  \caption{Proof semantics (transitive relation extraction)}
+  \label{fig:proof_semantics_transitive_relation_extraction}
 \end{figure*}
 
 
@@ -2846,37 +2846,38 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
 \begin{flalign*}
-  &\boxed{\vec{z}, \Delta, \vec{\alpha} \entails \Omega}&
+  &\boxed{M, \Delta, \mathrm{A} \entails \Omega}&
 \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \Delta, \epsilon \entails \epsilon
+      M, \Delta, \epsilon \entails \epsilon
     }
 
     \inferrule[Miss] {
-      \alpha \notin \vec{z}
+      \alpha \notin M 
       \\
-      \forall \tau .\ \cdot \code{$\tau$<:$\alpha$} \notin \Delta
+      \forall \tau .\ \tau<:\alpha \notin \Delta
       \\
-      \vec{z}, \Delta, \vec{\alpha} \entails \Omega
+      M, \Delta, A \entails \Omega
     } {
-      \vec{z}, \Delta, \vec{\alpha}\ \alpha \entails \Omega
+      M, \Delta, A \ \alpha \entails \Omega
     }
 
     \inferrule[Match] {
-      \alpha \notin \vec{z}
+      \alpha \notin M 
       \\
-      \exists \tau .\ \cdot \code{$\tau$<:$\alpha$} \in \Delta
+      \exists \tau .\  \tau<:\alpha \in \Delta
       \\
-      \vec{z}, \Delta, \vec{\alpha} \entails \Omega
+      M, \Delta, \mathrm{A} \entails \Omega
     } {
-      \vec{z}, \Delta, \vec{\alpha}\ \alpha \entails \Omega
-      \cdot \alpha \mapsto \code{|}(\widebar{\ \tau\ }^{\cdot \code{$\tau$<:$\alpha$} \in \Delta})
+      M, \Delta, \mathrm{A}\ \alpha 
+      \entails 
+      \Omega\ \alpha \slash \code{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
     }
   \end{mathpar}
-\caption{Type substitution}
-\label{fig:type_substitution}
+\caption{Proof semantics (type interpretation)}
+\label{fig:proof_semantics_type_interpretation}
 \end{figure*}
 
 
