@@ -1732,7 +1732,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{\Sigma} & \is \epsilon \sep \Sigma\ \sigma
     \\
-    \nonterm{\sigma} & \is \cdot x \slash v
+    \nonterm{\sigma} & \is x \slash v
     \\
   \end{array}\]
   \caption{Expression syntax}
@@ -1815,7 +1815,7 @@ Different: RLT isn't cartesian
 
   \inferrule[LetContin] {
   } {
-    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[\cdot x \slash v]
+    \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
   }
 
   \inferrule[FixTarget] {
@@ -1826,7 +1826,7 @@ Different: RLT isn't cartesian
 
   \inferrule[Recursion] {
   } {
-    \code{fix(case $x$ => $e$)} \rightsquigarrow e[\cdot x \slash \code{fix(case $x$ => $e$)}]
+    \code{fix(case $x$ => $e$)} \rightsquigarrow e[x \slash \code{fix(case $x$ => $e$)}]
   }
 
   \inferrule[Tuple] {
@@ -1905,7 +1905,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{\mathrm{\Pi}} & \is \epsilon \sep \Pi\ \pi
     \\
-    \nonterm{\pi} & \is \left< M, \Delta, \tau, \tau\right>
+    \nonterm{\pi} & \is \left< M, \Delta, \tau \code{->} \tau\right>
     \\
     \\
     \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
@@ -1939,21 +1939,21 @@ Different: RLT isn't cartesian
     }
 
     \inferrule[Record] {
-      \Gamma \entails r \hastype \tau_0 \given Z_0
+      \Gamma \entails R \hastype \tau_0 \given Z_0
       \\
       Z_0 \looparrowright Z_1
       \\
       \Gamma \entails e \hastype \tau_1 \given Z_1
     } {
-      \Gamma \entails r\ \code{;$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
+      \Gamma \entails R\ \code{*$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
     }
 
     \inferrule[Function] {
-      Z, \Gamma \entails f \liftfun \Pi, \mathrm{T}_n 
+      Z, \Gamma \entails F \liftfun \Pi, \mathrm{T}_n 
       \\
       \Gamma \entails \Pi \equiv \mathrm{T} 
     } {
-      \Gamma \entails f \hastype \code{\&}(\mathrm{T}) \given Z
+      \Gamma \entails F \hastype \code{\&}(\mathrm{T}) \given Z
     }
 
     \inferrule[Projection] {
@@ -1993,9 +1993,9 @@ Different: RLT isn't cartesian
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \vec{\tau}_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\vec{\tau}_{rel})$]]$\alpha_5$} \given Z_0
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
     }
   \end{mathpar}
 
@@ -2003,7 +2003,7 @@ Different: RLT isn't cartesian
 
 
   \begin{flalign*}
-    &\boxed{Z, \Gamma \entails f \liftfun \Pi, T}&
+    &\boxed{Z, \Gamma \entails F \liftfun \Pi, T}&
   \end{flalign*}
   \begin{mathpar}
 
@@ -2018,8 +2018,8 @@ Different: RLT isn't cartesian
       \\
       \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
     } {
-      Z_0, \Gamma_0 \entails f\ \code{case $p$=>$e$} \liftfun 
-      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l', \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
+      Z_0, \Gamma_0 \entails F\ \code{case $p$=>$e$} \liftfun 
+      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \code{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
     }
   \end{mathpar}
 
@@ -2349,7 +2349,7 @@ Different: RLT isn't cartesian
       \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$.$\tau_r$]})
     } {
       \tau_l \subtypes \code{FIX[$\alpha$.$\tau_r$]}
-      \given M_1, \Delta_1 \cdot \code{$\tau_l$<:FIX[$\alpha$.$\tau_r$]}
+      \given M_1, \Delta_1 \ \tau_l<:\code{FIX[$\alpha$.$\tau_r$]}
     }
 
     \inferrule[Diff-L] {
@@ -2883,55 +2883,61 @@ Different: RLT isn't cartesian
 
 \begin{figure*}[h]
   \begin{flalign*}
-    &\boxed{\Gamma \entails \vec{\pi} \doteq \vec{\tau}}&
+    &\boxed{N, M \entails \Pi \equiv \mathrm{T}}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{n} \entails \epsilon \doteq \epsilon 
+      N, M \entails \epsilon \equiv \epsilon 
     }
 
     \inferrule[Step] {
-      \vec{n} \entails \vec{\pi} \doteq \vec{\tau} 
+      N, M \entails \Pi \equiv \mathrm{T} 
       \\
-      \text{FTV}(\tau_l) = \vec{\alpha}_l
+      \text{FTV}(\tau_l) = A_l
       \\
-      \text{FTV}(\tau_r) = \vec{\alpha}_r
+      \text{FTV}(\tau_r) = A_r
       \\\\
-      \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_l\ \vec{\alpha}_r \ \pitchfork \Delta_i  
+      \Delta \entails N \sqcup M \sqcup A_l \sqcup A_r \pitchfork \Delta' 
       \\
-      \vec{n}, \vec{z}, \Delta_i \entails \code{$\tau_l$->$\tau_r$} \equiv^{+} \tau
+      N, M, \Delta' \entails \tau_l\code{->}\tau_r \equiv^{+} \tau
     } {
-      \vec{n} \entails \vec{\pi}\ \left<\vec{z}, \Delta, \tau_l, \tau_r \right> \doteq \vec{\tau}\ \tau 
+      N, M \entails \Pi \left<M, \Delta, \tau_l \code{->} \tau_r \right> \equiv \mathrm{T}\ \tau 
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{n} \entails \alpha \circlearrowleft \vec{W} \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \vec{\tau}}&
+    &\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}&
   \end{flalign*}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{n} \entails \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \epsilon 
+      N \entails 
+      \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} 
+      \fallingdotseq 
+      \alpha_3 \circlearrowright \epsilon 
     }
 
     \inferrule[Step] {
-      \vec{z}, \Delta \entails \Delta \Rightarrow \alpha_1 \subtypes \vec{\tau}_l 
+      M, \Delta, \Delta \entails \alpha_1 \subtypes \mathrm{T}_l 
       \\
-      \vec{z}, \Delta \entails \Delta \Rightarrow \vec{\tau}_r \subtypes \alpha_2
+      M, \Delta, \Delta \entails \mathrm{T}_r \subtypes \alpha_2
       \\
-      \code{(\&$(\vec{\tau_l})$,|$(\vec{\tau_r})$)} = \tau_p
+      \code{(\&$(\mathrm{T_l})$,|$(\mathrm{T_r})$)} = \tau_p
       \\\\
-      \text{FTV}(\tau_p) = \vec{\alpha}_p 
+      \text{FTV}(\tau_p) = \mathrm{A}_p 
       \\
-      \Delta \entails \vec{n}\ \vec{z}\ \vec{\alpha}_p\ \alpha_3 \ \pitchfork \Delta_i  
+      \Delta \entails N \sqcup M \sqcup A_p\ \alpha_3 \pitchfork \Delta_i  
       \\
-      \vec{n}\ \alpha_3, \vec{z}, \Delta_i \entails \tau_p \equiv^{-} \tau
+      N\ \alpha_3, M, \Delta_i \entails \tau_p \equiv^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
-      \vec{n} \entails \alpha_0 \circlearrowleft \vec{W}\ \left<\vec{z},\Delta\right> \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \vec{\tau}\ \tau
+      N \entails 
+      \alpha_0 \circlearrowleft Z \ \left< M,\Delta \right> \cdot \code{$\alpha_1$->$\alpha_2$} 
+      \fallingdotseq 
+      \alpha_3 \circlearrowright \mathrm{T}\ \tau
     }
   \end{mathpar}
 
@@ -2951,77 +2957,76 @@ Different: RLT isn't cartesian
       \\
       \Delta \entails N \pitchfork \Delta_i
     } {
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails N \pitchfork \Delta_i \cdot \code{$\tau_l$<:$\tau_r$}
+      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta_i \ \tau_l<:\tau_r
     }
 
     \inferrule[Skip] {
       \forall \alpha .\ \alpha \in N \rightarrow \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
-      \Delta \entails N \pitchfork \Delta_i
+      \Delta \entails N \pitchfork \Delta'
     } {
-      \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails N \pitchfork \Delta_i
+      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta'
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z}, \Delta \entails  \vec{\tau} \subtypes \alpha}&
+    &\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z}, \epsilon \entails \epsilon \subtypes \alpha
+      M, \epsilon \entails \epsilon \subtypes \alpha
     }
 
     \inferrule[Direct] {
-      \tau \notin \vec{z}
+      \tau \notin M 
       \\
-      \vec{z}, \Delta \entails \vec{\tau} \subtypes \alpha
+      M, \Delta \entails \mathrm{T} \subtypes \alpha
     } {
-      \vec{z}, \Delta \cdot \code{$\tau$<:$\alpha$} \entails \vec{\tau}\ \tau \subtypes \alpha
+      M, \Delta \ \tau<:\alpha \entails \mathrm{T}\ \tau \subtypes \alpha
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta \entails \vec{\tau} \subtypes \alpha
+      M, \Delta \entails \mathrm{T} \subtypes \alpha
     } {
-      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \vec{\tau} \subtypes \alpha
+      M, \Delta \ \tau_l<:\tau_r \entails \mathrm{T} \subtypes \alpha
     }
   \end{mathpar}
 
   \begin{flalign*}
-    &\boxed{\vec{z} \Delta \entails \vec{\tau} \subtypes \alpha}&
+    &\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}&
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Empty] {
     } {
-      \vec{z} \epsilon \entails \alpha \subtypes \epsilon
+      M, \epsilon \entails \alpha \subtypes \epsilon
     }
 
     \inferrule[Direct] {
-      \tau \notin \vec{z}
+      \tau \notin M 
       \\
-      \vec{z}, \Delta \entails \alpha \subtypes \vec{\tau}
+      M, \Delta \entails \alpha \subtypes \mathrm{T}
     } {
-      \vec{z}, \Delta \cdot \code{$\tau$<:$\alpha$} \entails \alpha \subtypes \vec{\tau}\ \tau
+      M, \Delta \ \tau<:\alpha \entails \alpha \subtypes \mathrm{T}\ \tau
     }
 
     \inferrule[Skip] {
       \tau_r \neq \alpha
       \\
-      \vec{z}, \Delta \entails \alpha \subtypes \vec{\tau}
+      M, \Delta \entails \alpha \subtypes \mathrm{T}
     } {
-      \vec{z}, \Delta \cdot \code{$\tau_l$<:$\tau_r$} \entails \alpha \subtypes \vec{\tau}
+      M, \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \mathrm{T}
     }
   \end{mathpar}
-\caption{Typing Reconstruction (B)}
-\label{fig:typing_reconstruction_part_b}
+\caption{Proof semantics (rewriting)}
+\label{fig:proof_semantics_rewriting}
 \end{figure*}
 
 
 
 \begin{figure*}[h]
-
   \begin{flalign*}
     &\boxed{\text{outer}(+|-) = \code{ALL}|\code{EXI}}&
   \end{flalign*}
@@ -3088,7 +3093,7 @@ Different: RLT isn't cartesian
     \inferrule[Main] {
       \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
       \\\\
-      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \cap\ \mathrm{A}_z = \mathrm{A}_o
+      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \sqcap\ \mathrm{A}_z = \mathrm{A}_o
       \\
       (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \mathrm{A}_z \ \backslash\ \mathrm{A}_r = \mathrm{A}_i
       \\\\
@@ -3114,21 +3119,21 @@ Different: RLT isn't cartesian
       \\
       \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \mathrm{A}_z, \Delta\ \code{;$\tau_l$<:$\tau_r$} \entails \Delta_o\ \code{;$\tau_l$<:$\tau_r$} \wr \Delta_i 
+      \mathrm{A}_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \ \tau_l<:\tau_r \wr \Delta_i 
     }
 
     \inferrule[Inner] {
       \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
       \\
-      \alpha \in \mathrm{A}_q \land \alpha \notin \mathrm{A}_z
+      \alpha \in \mathrm{A}_q \\ \alpha \notin \mathrm{A}_z
       \\
       \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \mathrm{A}_z, \Delta\ \code{;$\tau_l$<:$\tau_r$} \entails \Delta_o \wr \Delta_i\ \code{;$\tau_l$<:$\tau_r$} 
+      \mathrm{A}_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \wr \Delta_i \ \tau_l<:\tau_r
     }
   \end{mathpar}
-\caption{HELPERS}
-\label{fig:helpers}
+\caption{Tools (rewriting)}
+\label{fig:tools_rewriting}
 \end{figure*}
 
 
@@ -3139,7 +3144,7 @@ Different: RLT isn't cartesian
   \end{flalign*}
   \begin{mathpar}
     \inferrule[Var] { 
-      \cdot \alpha \slash \tau \in \Omega
+      \alpha \slash \tau \in \Omega
       \\
       \Omega \satisfies u \intype \tau
     } {
@@ -3168,13 +3173,13 @@ Different: RLT isn't cartesian
     } 
 
     \inferrule[Implication] { 
-      \cdot u_l \triangleright u_r \in W 
+      u_l \triangleright u_r \in W 
       \\
       \Omega \satisfies u_l \intype \tau_l
       \\
       \Omega \satisfies u_r \intype \tau_r
       \\
-      \forall u_r' .\ \cdot u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
+      \forall u_r' .\ u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
     } {
       \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
     } 
@@ -3223,9 +3228,9 @@ Different: RLT isn't cartesian
     } 
 
     \inferrule[Fixpoint] { 
-      \Omega \cdot \alpha \slash \code{FIX[$\alpha$*$\tau$]} \satisfies u \intype \tau
+      \Omega \ \alpha \slash \code{FIX[$\alpha$.$\tau$]} \satisfies u \intype \tau
     } {
-      \Omega \satisfies u \intype \code{FIX[$\alpha$*$\tau$]}
+      \Omega \satisfies u \intype \code{FIX[$\alpha$.$\tau$]}
     } 
   \end{mathpar}
   \begin{flalign*}
@@ -3242,7 +3247,7 @@ Different: RLT isn't cartesian
       \\
       \forall u .\ \Omega \satisfies u \intype \tau_l \rightarrow u \intype \tau_r
     } {
-      \Omega \satisfies Q \code{*$\tau_l$<:$\tau_r$}  
+      \Omega \satisfies Q \code{.$\tau_l$<:$\tau_r$}  
     } 
   \end{mathpar}
 \caption{Model semantics}
