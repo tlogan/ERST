@@ -3159,18 +3159,18 @@ Different: RLT isn't cartesian
 
 
 
-\begin{semantics}\boxed{e\ \textbf{valid}}
+\begin{semantics}\boxed{e\ \textbf{progressive}}
   \begin{mathpar}
     \inferrule { 
       e \rightsquigarrow e' 
     } {
-      e\ \textbf{valid}
+      e\ \textbf{progressive}
     } 
 
     \inferrule { 
       e = v 
     } {
-      e\ \textbf{valid}
+      e\ \textbf{progressive}
     } 
   \end{mathpar}
 \end{semantics}
@@ -3179,9 +3179,9 @@ Different: RLT isn't cartesian
   \label{semantics:sound}
   \begin{mathpar}
     \inferrule { 
-      e\ \textbf{valid} 
+      e\ \textbf{progressive} 
       \\
-      \forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{valid}
+      \forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}
     } {
       e\ \textbf{sound}
     } 
@@ -3202,26 +3202,26 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof by induction on $e \rightsquigarrow^\star e$.
   \item $\textbf{assume}\ \entails e \hastype \tau$
-  \item \I $e\ \textbf{valid}$ by \ref{lemma:progress}
+  \item \I $e\ \textbf{progressive}$ by \ref{lemma:progress}
   \item \I$\textbf{assume}\ e \rightsquigarrow^\star e'$
 
   \item \I\I $\textbf{case}\ e = e'$
-  \item \I\I\I $e'\ \textbf{valid}$ by equality 
+  \item \I\I\I $e'\ \textbf{progressive}$ by equality 
 
   \item \I\I $\textbf{case}\ e \rightsquigarrow e'$ 
   \item \I\I\I $\entails e' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}} 
-  \item \I\I\I $e'\ \textbf{valid}$ by \D{Lemma \ref{lemma:progress}}
+  \item \I\I\I $e'\ \textbf{progressive}$ by \D{Lemma \ref{lemma:progress}}
 
   \item \I\I $\textbf{case}\ e \rightsquigarrow e'' \I e'' \rightsquigarrow^\star e' \I 
     \entails e'' \hastype \tau \implies e''\ \textbf{sound} \D{ (IH)}$
   \item \I\I\I $\entails e'' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}}
   \item \I\I\I $e''\ \textbf{sound}$ by \D{IH}
-  \item \I\I\I $e''\ \textbf{valid}$ by \D{Semantics \ref{semantics:sound}} 
-  \item \I\I\I $\forall e''' .\ e'' \rightsquigarrow^\star e''' \implies e'''\ \textbf{valid}$ by \D{Semantics \ref{semantics:sound}}
-  \item \I\I\I $e'' \rightsquigarrow^\star e' \implies e'\ \textbf{valid}$ by universal 
-  \item \I\I\I $e'\ \textbf{valid}$ by implication 
+  \item \I\I\I $e''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}} 
+  \item \I\I\I $\forall e''' .\ e'' \rightsquigarrow^\star e''' \implies e'''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}}
+  \item \I\I\I $e'' \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by universal 
+  \item \I\I\I $e'\ \textbf{progressive}$ by implication 
 
-  \item \I $\forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{valid}$ by derivation
+  \item \I $\forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by derivation
   \item \I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound}} 
   \item $\square$
 \end{theorem}
@@ -3232,7 +3232,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       \vdash e : \tau
     } {
-      e\ \textbf{valid} 
+      e\ \textbf{progressive} 
     } 
   \end{mathpar}
 \end{lemma}
