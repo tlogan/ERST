@@ -1771,7 +1771,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \code{*$l$=>$v$} \in G 
       \\
-      \forall\ v' .\ \code{*$l$=>$v'$} \in G \rightarrow v = v'
+      \forall\ v' .\ \code{*$l$=>$v'$} \in G \implies v = v'
     } {
       \code{$G$.$l$} \rightsquigarrow v
     }
@@ -2016,7 +2016,7 @@ Different: RLT isn't cartesian
 \begin{semantics} \boxed{Z \looparrowright Z}
   \begin{mathpar}
     \inferrule {
-      \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \rightarrow 
+      \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
       \exists M_0\ \Delta_0.\ \left<M_0,\Delta_0\right> \in Z_0 \land 
       M_0 \preceq M_1 \land \Delta_0 \preceq \Delta_1
     } {
@@ -2345,9 +2345,9 @@ Different: RLT isn't cartesian
       \\\\
       \forall M'\ \Delta' .\ 
       M \preceq M'
-      \rightarrow
+      \implies
       \Delta \preceq \Delta'
-      \rightarrow
+      \implies
       \neg(\tau_l \subtypes \tau_n \given M', \Delta')
     } {
       \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
@@ -2888,7 +2888,7 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in N \rightarrow \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in N \implies \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
       \Delta \entails N \pitchfork \Delta'
     } {
@@ -3027,7 +3027,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
       \\
-      \forall \alpha .\ \alpha \in \mathrm{A}_q \rightarrow \alpha \in \mathrm{A}_z
+      \forall \alpha .\ \alpha \in \mathrm{A}_q \implies \alpha \in \mathrm{A}_z
       \\
       \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
     } {
@@ -3073,7 +3073,7 @@ Different: RLT isn't cartesian
       \\
       \Omega \satisfies u \intype \tau 
       \\
-      \forall u' .\ \code{*$l$=>$u'$} \in H \rightarrow u' = u 
+      \forall u' .\ \code{*$l$=>$u'$} \in H \implies u' = u 
     } {
       \Omega \satisfies H \intype \code{$l$->$\tau$}
     } 
@@ -3085,7 +3085,7 @@ Different: RLT isn't cartesian
       \\
       \Omega \satisfies u_r \intype \tau_r
       \\
-      \forall u_r' .\ u_l \triangleright u_r \in W \rightarrow u_r' = u_r 
+      \forall u_r' .\ u_l \triangleright u_r \in W \implies u_r' = u_r 
     } {
       \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
     } 
@@ -3127,7 +3127,7 @@ Different: RLT isn't cartesian
     } 
 
     \inferrule { 
-      \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \rightarrow 
+      \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \implies 
       \Omega \sqcup \Omega' \satisfies u \intype \tau
     } {
       \Omega \satisfies u \intype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
@@ -3150,7 +3150,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       \Omega \satisfies Q 
       \\
-      \forall u .\ \Omega \satisfies u \intype \tau_l \rightarrow u \intype \tau_r
+      \forall u .\ \Omega \satisfies u \intype \tau_l \implies u \intype \tau_r
     } {
       \Omega \satisfies Q \code{.$\tau_l$<:$\tau_r$}  
     } 
@@ -3159,57 +3159,83 @@ Different: RLT isn't cartesian
 
 
 
+\begin{semantics}\boxed{e\ \textbf{valid}}
+  \begin{mathpar}
+    \inferrule { 
+      e \rightsquigarrow e' 
+    } {
+      e\ \textbf{valid}
+    } 
 
-\begin{theorem}(Soundness of type reconstruction)
-\begin{mathpar}
-  \inferrule { 
-    \entails e \hastype \tau \given \mathbb{W}
-    \\
-    \mathbb{W} \entails \tau \equiv \tau'
-    \\\\
-    e \rightsquigarrow^+ v
-    \\
-    v << u
-    % \forall B\ \Delta.\ \left<B, \Delta \right> \in \mathbb{W} \rightarrow 
-    % \Delta \entails Q
-    % \ \land\ 
-    % \Omega 
-  } {
-    \entails u \intype \tau'
-  } 
-\end{mathpar}
+    \inferrule { 
+      e = v 
+    } {
+      e\ \textbf{valid}
+    } 
+  \end{mathpar}
+\end{semantics}
+
+\begin{semantics}\boxed{e\ \textbf{sound}}
+  \begin{mathpar}
+    \inferrule { 
+      e\ \textbf{valid} 
+      \\
+      \forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{valid}
+    } {
+      e\ \textbf{sound}
+    } 
+  \end{mathpar}
+\end{semantics}
+
+
+
+
+
+\begin{theorem}(Soundness of typing)
+  \begin{mathpar}
+    \inferrule { 
+      \vdash e : \tau
+    } {
+      e\ \textbf{sound} 
+    } 
+  \end{mathpar}
+  Proof by induction on $e \rightsquigarrow^\star e$.
+  \begin{itemize}
+    \item $\textbf{let}\ e\ \textbf{s.t.}\ e\ \textbf{valid}$
+    \item $\textbf{for}\ e'\ \textbf{assume}\ e \rightsquigarrow^\star e'$
+      \begin{itemize}
+        \item \textbf{case}\ $e = e'$
+        \begin{itemize}
+          \item $e \rightsquigarrow^\star e$ by semantics 
+          \item $e \rightsquigarrow^\star e'$ by substitution 
+          \item $e'\ \textbf{valid}$ by substitution
+          \item $e\ \textbf{sound}$ by semantics
+        \end{itemize}
+      \end{itemize}
+  \end{itemize}
 \end{theorem}
 
+\begin{lemma}(Progress of typing)
+  \begin{mathpar}
+    \inferrule { 
+      \vdash e : \tau
+    } {
+      e\ \textbf{valid} 
+    } 
+  \end{mathpar}
+\end{lemma}
 
-\begin{theorem}(Progress of typing)
-\begin{mathpar}
-  \inferrule { 
-    \vdash e : \tau
-  } {
-    (e = v) \vee 
-    e \rightsquigarrow e'
-  } 
-\end{mathpar}
-\end{theorem}
-
-
-\begin{theorem}(Preservation of typing)
-\begin{mathpar}
-  \inferrule { 
-    \vdash e : \tau
-    \\
-    e \rightsquigarrow e'
-  } {
-    \vdash e' : \tau
-  } 
-\end{mathpar}
-\end{theorem}
-
-
-
-
-
-
+\begin{lemma}(Preservation of typing)
+  \begin{mathpar}
+    \inferrule { 
+      \vdash e : \tau
+      \\
+      e \rightsquigarrow e'
+    } {
+      \vdash e' : \tau
+    } 
+  \end{mathpar}
+\end{lemma}
 
 \end{document}
 

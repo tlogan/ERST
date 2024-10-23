@@ -95,6 +95,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- replace value-based model semantics with Cretin's semantic types
 - add English name to notation definitions
     - remove labels from rules, relying on syntax to distinguish  
     - (possibly) move distinguishing conditions into side condition
