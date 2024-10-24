@@ -3188,10 +3188,6 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{semantics}
 
-
-
-
-
 \begin{theorem}(Soundness of typing)
   \begin{mathpar}
     \inferrule { 
@@ -3224,6 +3220,26 @@ Different: RLT isn't cartesian
   \item \I $\forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by derivation
   \item \I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound}} 
   \item $\square$
+  \\
+  \TODO{Cretin claims indexing of terms or steps is required if reduction may not terminate}
+  \\
+  \TODO{Doees Cretin's "stable by reduction" mean there is only one reduction path}
+  \\
+  \TODO{the index needs to be on expression for strong reduction. why?}
+  \\
+  \TODO{Strong reduction implicitly seems to mean reduction by either value or need}
+  \\
+  \TODO{Cretin Page 4: there's no subject reduction (preservation) property}
+  \\
+  \TODO{semantics types are defined in terms of expansion/reduction rather than type syntax}
+  \\
+  \TODO{semantics types contain head normal forms}
+  \\
+  \TODO{head normal forms appear to be the same forms as the introduction rules of my typing rules}
+  \\
+  \TODO{semantic types bridge the gap between dynamic and static semantics in lieu of subject reduction}
+  \\
+  \TODO{create definitions analogous to semantic types instantiated with interpreted types, avoiding higher order predicates (if possible)}
 \end{theorem}
 
 \begin{lemma}(Progress of typing)

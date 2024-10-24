@@ -95,7 +95,10 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
-- replace value-based model semantics with Cretin's semantic types
+- figure out what Cretin's semantic types are used for
+    - determine if ERST needs the same thing
+    - replace value-based model semantics with Cretin's semantic types
+    - find the Cretin's soundness proof for the indexed semantics 
 - add English name to notation definitions
     - remove labels from rules, relying on syntax to distinguish  
     - (possibly) move distinguishing conditions into side condition
