@@ -3179,97 +3179,126 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{lemma}
 
-\begin{semantics}\boxed{\Omega \satisfies u \intype \tau}
-  \label{semantics:model}
+\begin{semantics}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}
+  \label{semantics:model_typing}
   \begin{mathpar}
     \inferrule { 
       \alpha \slash \tau \in \Omega
       \\
-      \Omega \satisfies u \intype \tau
+      \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      \Omega \satisfies u \intype \alpha 
+      \Omega, \Gamma \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
-    } {
-      \Omega \satisfies \code{@} \intype \code{@}
-    } 
-
-    \inferrule { 
-      \Omega \satisfies u \intype \tau
-    } {
-      \Omega \satisfies \code{\textasciitilde{}$l$ $u$} \intype \code{\textasciitilde{}$l$ $\tau$}
-    } 
-
-    \inferrule { 
-      \code{*$l$=>$u$} \in H 
+      x:\tau \in \Gamma
       \\
-      \Omega \satisfies u \intype \tau 
-      \\
-      \forall u' .\ \code{*$l$=>$u'$} \in H \implies u' = u 
+      \tau\ \textbf{wf}
     } {
-      \Omega \satisfies H \intype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies x \hastype \tau 
     } 
 
     \inferrule { 
-      u_l \triangleright u_r \in W 
-      \\
-      \Omega \satisfies u_l \intype \tau_l
-      \\
-      \Omega \satisfies u_r \intype \tau_r
-      \\
-      \forall u_r' .\ u_l \triangleright u_r \in W \implies u_r' = u_r 
     } {
-      \Omega \satisfies W \intype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies \code{@} \hastype \code{@}
     } 
 
     \inferrule { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
+      \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
+      \Omega, \Gamma \satisfies \code{\ttilde$l$ $e$} \hastype \code{\ttilde$l$ $\tau$}
     } 
 
     \inferrule { 
-      \Omega \satisfies u \intype \code{$\tau_r$}
-    } {
-      \Omega \satisfies u \intype \code{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
+      \code{*$l$=>$e$} \in R 
       \\
-      \Omega \satisfies u \intype \code{$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \tau 
+      \\\\
+      \forall e' .\ \code{*$l$=>$e'$} \in R \implies e' = e
     } {
-      \Omega \satisfies u \intype \code{$\tau_l$\&$\tau_r$}
+      \Omega, \Gamma \satisfies R \hastype \code{$l$->$\tau$}
     } 
 
     \inferrule { 
-      \Omega \satisfies u \intype \code{$\tau_l$}
+      \code{case $p$=>$e$} \in F 
       \\
-      \neg\ (\Omega \satisfies u \intype \code{$\tau_r$})
+      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+      \\\\
+      \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+      \\
+      \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
     } {
-      \Omega \satisfies u \intype \code{$\tau_l$\textbackslash$\tau_r$}
+      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    } 
+
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+    } {
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_r$}
+    } {
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+      \\
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_r$}
+    } {
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+      \\
+      \neg\ (\Omega, \Gamma \satisfies e \hastype \code{$\tau_r$})
+    } {
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$\textbackslash$\tau_r$}
     } 
 
     \inferrule { 
       \Omega \sqcup \Omega' \satisfies Q
       \\
-      \Omega \sqcup \Omega' \satisfies u \intype \tau
+      \Omega \sqcup \Omega' \satisfies e \hastype \tau
     } {
-      \Omega \satisfies u \intype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega \satisfies e \hastype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
     } 
 
     \inferrule { 
       \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \implies 
-      \Omega \sqcup \Omega' \satisfies u \intype \tau
+      \Omega \sqcup \Omega', \Gamma \satisfies e \hastype \tau
     } {
-      \Omega \satisfies u \intype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
     } 
 
     \inferrule { 
-      \Omega \ \alpha \slash \code{FIX[$\alpha$.$\tau$]} \satisfies u \intype \tau
+      \Omega \ \alpha \slash \code{FIX[$\alpha$.$\tau$]} \satisfies e \hastype \tau
     } {
-      \Omega \satisfies u \intype \code{FIX[$\alpha$.$\tau$]}
+      \Omega, \Gamma \satisfies e \hastype \code{FIX[$\alpha$.$\tau$]}
+    } 
+  \end{mathpar}
+\end{semantics}
+
+
+\begin{semantics}\boxed{\Omega \satisfies Q}
+  \label{semantics:model_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \Omega \satisfies \epsilon 
+    } 
+
+    \inferrule { 
+      \Omega \satisfies Q
+      \\
+      \forall e\ \Gamma .\ 
+      \Omega, \Gamma \satisfies e \hastype \tau_l \implies 
+      \Omega, \Gamma \satisfies e \hastype \tau_r 
+    } {
+      \Omega \satisfies Q\ \code{.$\tau_l$<:$\tau_r$}
     } 
   \end{mathpar}
 \end{semantics}
