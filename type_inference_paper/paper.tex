@@ -55,7 +55,6 @@
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
-\newcommand{\quiv}{\ \leftrightarrow\ }
 
 \newcommand{\ttilde}{\textasciitilde{}}
 
@@ -2393,7 +2392,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \forall  M\ \Delta .\  
       \tau_l \subtypes \tau_r \given M, \Delta 
-      \quiv
+      \iff
       \left< M, \Delta \right> \in Z 
     } {
       \tau_l \subtypes \tau_r \given Z 
@@ -3075,6 +3074,25 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{semantics}
 
+\begin{semantics}\boxed{e\ \textbf{sound}}
+  \label{semantics:sound_alternative}
+  \begin{mathpar}
+    \inferrule { 
+      e = v
+    } {
+      e\ \textbf{sound}
+    } 
+
+    \inferrule { 
+      e \rightsquigarrow e' 
+      \\
+      e'\ \textbf{sound}
+    } {
+      e\ \textbf{sound}
+    } 
+  \end{mathpar}
+\end{semantics}
+
 \begin{theorem}(Soundness of typing)
   \begin{mathpar}
     \inferrule { 
@@ -3132,6 +3150,32 @@ Different: RLT isn't cartesian
   \\
   \TODO{Definition 88 typo is due to lack of flipping of quantifier when moving from outside to inside the premise}
   
+\end{theorem}
+
+\begin{theorem}(Soundness of typing (Alternative))
+  \begin{mathpar}
+    \inferrule { 
+      \vdash e : \tau
+    } {
+      e\ \textbf{sound} 
+    } 
+  \end{mathpar}
+  Proof by induction on $e\ \textbf{sound}$.
+  \item $\textbf{assume}\ \entails e \hastype \tau$
+  \item \I $e\ \textbf{progressive}$ by \ref{lemma:progress}
+
+  \item \I $\textbf{case}\ e = v$
+  \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
+
+  \item \I $\textbf{case}\ e \rightsquigarrow e' \I \entails e' \hastype \tau \implies e'\ \textbf{sound} (IH)$ 
+  \item \I\I $\entails e' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}}
+  \item \I\I $e'\ \textbf{sound}$ by \D{IH}
+  \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
+
+
+  \item \I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
+
+  \item $\square$
 \end{theorem}
 
 \begin{lemma}(Progress of typing)
@@ -3257,6 +3301,14 @@ Different: RLT isn't cartesian
       \Omega \ \alpha \slash \code{FIX[$\alpha$.$\tau$]} \satisfies e \hastype \tau
     } {
       \Omega, \Gamma \satisfies e \hastype \code{FIX[$\alpha$.$\tau$]}
+    } 
+
+    \inferrule { 
+      e \rightsquigarrow e'
+      \\
+      \Omega, \Gamma \satisfies e' \hastype \tau 
+    } {
+      \Omega, \Gamma \satisfies e \hastype \tau 
     } 
   \end{mathpar}
 \end{semantics}

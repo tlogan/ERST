@@ -96,6 +96,11 @@
 
 ### TODO (Symbolic Paper)
 - connect my model semantics to Cretin's semantic types and type interpretation for soundness proof 
+    - the model semantics only define introductions, but we need a way to infer eliminations (e.g application)
+    - so we add an expansion rule (opposite of subject reduction). 
+    - this expansion rule corresponds to Cretin's expansion closure operator
+- construct proofs of elimination model typings
+- determine if subject reduction can be inferred from the model typing
 - add English name to notation definitions
     - remove labels from rules, relying on syntax to distinguish  
     - (possibly) move distinguishing conditions into side condition
