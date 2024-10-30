@@ -95,6 +95,9 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- (maybe) prove that generated subtyping environments are coherent, i.e. logically consistent  
+- Cretin p. 149 explains why their system lacks subject reduction.
+    - my system should have a strong enough subtyping environment for subject reduction to hold.
 - connect my model semantics to Cretin's semantic types and type interpretation for soundness proof 
     - the model semantics only define introductions, but we need a way to infer eliminations (e.g application)
     - so we add an expansion rule (opposite of subject reduction). 
