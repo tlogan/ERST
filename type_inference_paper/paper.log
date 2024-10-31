@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  30 OCT 2024 09:21
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  30 OCT 2024 19:38
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -745,7 +745,14 @@ Package hyperref Info: Option `pdfdisplaydoctitle' set `true' on input line 51.
 File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count340
 \l__pdf_internal_box=\box113
-) (./paper.aux)
+) (./paper.aux
+
+LaTeX Warning: Label `lemma:soundness_proof_typing' multiply defined.
+
+
+LaTeX Warning: Label `lemma:soundness_proof_typing' multiply defined.
+
+)
 \openout1 = `paper.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 51.
@@ -1152,11 +1159,35 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/it' will be
 LaTeX Font Warning: Command \small invalid in math mode on input line 3117.
 
 [20.20{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ki75ao.enc}]
-Underfull \hbox (badness 10000) in paragraph at lines 3202--3214
+Underfull \hbox (badness 10000) in paragraph at lines 3185--3187
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 3203--3204
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3206--3207
+
+ []
+
+LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 3214.
+LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
+(Font)              scaled to size 8.09995pt on input line 3214.
 [21.21]
+Underfull \hbox (badness 10000) in paragraph at lines 3233--3234
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3264--3276
+
+ []
+
+[22.22]
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1170,7 +1201,7 @@ Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 ) (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/se-utf8.def
 File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
-) [22.22] (./paper.aux)
+) [23.23] (./paper.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -1183,22 +1214,25 @@ LaTeX Font Warning: Size substitutions with differences
 
 LaTeX Warning: There were undefined references.
 
+
+LaTeX Warning: There were multiply-defined labels.
+
 Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24385 strings out of 474116
- 390791 string characters out of 5743682
+ 24393 strings out of 474116
+ 390891 string characters out of 5743682
  1968187 words of memory out of 5000000
- 45544 multiletter control sequences out of 15000+600000
- 789016 words of font info for 464 fonts, out of 8000000 for 9000
+ 45547 multiletter control sequences out of 15000+600000
+ 789671 words of font info for 466 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTBI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (22 pages, 580848 bytes).
+Output written on paper.pdf (23 pages, 590600 bytes).
 PDF statistics:
- 424 PDF objects out of 1000 (max. 8388607)
- 350 compressed objects within 4 object streams
- 139 named destinations out of 1000 (max. 500000)
- 118897 words of extra memory for PDF output out of 128383 (max. 10000000)
+ 431 PDF objects out of 1000 (max. 8388607)
+ 356 compressed objects within 4 object streams
+ 142 named destinations out of 1000 (max. 500000)
+ 119409 words of extra memory for PDF output out of 128383 (max. 10000000)
 

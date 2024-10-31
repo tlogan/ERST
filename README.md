@@ -95,6 +95,7 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- write proof of model typing. (Should be easy as the soundness and model typing definitions are somewhat isomorphic).
 - (maybe) prove that generated subtyping environments are coherent, i.e. logically consistent  
 - Cretin p. 149 explains why their system lacks subject reduction.
     - my system should have a strong enough subtyping environment for subject reduction to hold.
