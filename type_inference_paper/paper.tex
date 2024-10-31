@@ -3113,10 +3113,8 @@ Different: RLT isn't cartesian
   \item \I\I\I $\entails e' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}} 
   \item \I\I\I $e'\ \textbf{progressive}$ by \D{Lemma \ref{lemma:progress}}
 
-  \item \I\I $\textbf{case}\ e \rightsquigarrow e'' \I e'' \rightsquigarrow^\star e' \I 
-    \entails e'' \hastype \tau \implies e''\ \textbf{sound} \D{ (IH)}$
-  \item \I\I\I $\entails e'' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}}
-  \item \I\I\I $e''\ \textbf{sound}$ by \D{IH}
+  \item \I\I $\textbf{case}\ e \rightsquigarrow e'' \I e'' \rightsquigarrow^\star e'$
+  \item \I\I $\textbf{with IH}\ e''\ \textbf{sound}$
   \item \I\I\I $e''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}} 
   \item \I\I\I $\forall e''' .\ e'' \rightsquigarrow^\star e''' \implies e'''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}}
   \item \I\I\I $e'' \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by universal 
@@ -3143,9 +3141,8 @@ Different: RLT isn't cartesian
   \item \I $\textbf{case}\ e = v$
   \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
 
-  \item \I $\textbf{case}\ e \rightsquigarrow e' \I \entails e' \hastype \tau \implies e'\ \textbf{sound} (IH)$ 
-  \item \I\I $\entails e' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}}
-  \item \I\I $e'\ \textbf{sound}$ by \D{IH}
+  \item \I $\textbf{case}\ e \rightsquigarrow e'$
+  \item \I $\textbf{with IH }e'\ \textbf{sound}$ 
   \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
 
 
@@ -3153,6 +3150,7 @@ Different: RLT isn't cartesian
 
   \item $\square$
 \end{theorem}
+\TODO{Note that this definition of sound does not require preservation (subject reduction)}
 
 
 \begin{theorem}(Soundness of typing)
