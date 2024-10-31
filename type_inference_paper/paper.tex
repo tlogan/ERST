@@ -3197,9 +3197,15 @@ Different: RLT isn't cartesian
   Proof:
   \item $\textbf{assume }\Omega, \Gamma \satisfies e \hastype \tau$
 
+  \TODO{should induct over e; don't really care what $\tau$ is}
+  \TODO{this is wrong below. would need}
   \item \I $\textbf{case } \tau = \alpha \I \alpha \slash \tau' \in \Omega \I \Omega, \Gamma \satisfies e \hastype \tau'$
-  \item \I\I \TODO{tricky. See how Cretin handle's such a case}
+  \item \I\I $\textbf{case } e = v$
+  \item \I\I\I $e \textbf{ sound}$
+  \item \I\I $\textbf{case } e \rightsquigarrow e' \I e' \textbf{ sound}$
+  \item \I\I $e \textbf{ sound}$ by Semantics \ref{semantics:sound_alternative} (Sound)
 
+  \TODO{consider removing explicit variable rule; a variable is an elimination rule}
   \item \I $\textbf{case } e = x \I x \hastype \tau \in \Gamma \I \tau \textbf{ inhab}$
   \item \I\I \TODO{tricky. See how Cretin handle's such a case}
 
@@ -3307,13 +3313,13 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e \hastype \alpha 
     } 
 
-    \inferrule { 
-      x:\tau \in \Gamma
-      \\
-      \tau \textbf{ inhab}
-    } {
-      \Omega, \Gamma \satisfies x \hastype \tau 
-    } 
+    % \inferrule { 
+    %   x:\tau \in \Gamma
+    %   \\
+    %   \tau \textbf{ inhab}
+    % } {
+    %   \Omega, \Gamma \satisfies x \hastype \tau 
+    % } 
 
     \inferrule { 
     } {
@@ -3398,9 +3404,11 @@ Different: RLT isn't cartesian
     } 
 
     \inferrule { 
-      e \rightsquigarrow e'
+      e \rightsquigarrow e'[x \slash v]
       \\
-      \Omega, \Gamma \satisfies e' \hastype \tau 
+      \Omega, \Gamma \satisfies v \hastype \tau' 
+      \\
+      \Omega, \Gamma \ x \slash v \satisfies e' \hastype \tau 
     } {
       \Omega, \Gamma \satisfies e \hastype \tau 
     } 
