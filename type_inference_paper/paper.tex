@@ -3197,29 +3197,17 @@ Different: RLT isn't cartesian
   Proof:
   \item $\textbf{assume }\Omega, \Gamma \satisfies e \hastype \tau$
 
-  \TODO{should induct over e; don't really care what $\tau$ is}
-  \TODO{this is wrong below. would need}
-  \item \I $\textbf{case } \tau = \alpha \I \alpha \slash \tau' \in \Omega \I \Omega, \Gamma \satisfies e \hastype \tau'$
-  \item \I\I $\textbf{case } e = v$
-  \item \I\I\I $e \textbf{ sound}$
-  \item \I\I $\textbf{case } e \rightsquigarrow e' \I e' \textbf{ sound}$
-  \item \I\I $e \textbf{ sound}$ by Semantics \ref{semantics:sound_alternative} (Sound)
-
-  \TODO{consider removing explicit variable rule; a variable is an elimination rule}
-  \item \I $\textbf{case } e = x \I x \hastype \tau \in \Gamma \I \tau \textbf{ inhab}$
-  \item \I\I \TODO{tricky. See how Cretin handle's such a case}
-
   \item \I $\textbf{case } e = \code{@}$
   \item \I\I $\textbf{let } v = \code{@}$
   \item \I\I $e = v$
-  \item \I\I $e \textbf{ sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
+  \item \I\I $e \textbf{ sound}$
 
 
   \item \I $\textbf{case } e = \code{\ttilde}\ e' \I 
             \tau = \code{\ttilde}\ \tau' \I 
-            \Omega, \Gamma \satisfies e' \hastype \tau' \I
-            e' \textbf{ sound} \ (IH)
+            \Omega, \Gamma \satisfies e' \hastype \tau'
             $
+  \item \I $\textbf{w/ IH } e' \textbf{ sound}$
 
   \item \I\I $\textbf{case } e' = v$
   \item \I\I\I $\text{let } v' \textbf{ s.t. } v' = \code{\ttilde}\ v$
@@ -3232,6 +3220,11 @@ Different: RLT isn't cartesian
   \item \I\I\I $\code{\ttilde}\ e' \textbf{ sound}$
   \item \I\I\I $e \textbf{ sound}$
 
+  \item \I\I $e \textbf{ sound}$ by cases on $e' \textbf{ sound}$ (Semantics \ref{semantics:sound_alternative})
+
+  \item \I $e \textbf{ sound}$ by induction on $e$ (Syntax \ref{syntax:expression})
+
+  \item $\square$
       
 \end{lemma}
 \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
@@ -3413,6 +3406,24 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \tau 
     } {
       \Omega, \Gamma \satisfies e \hastype \tau 
+    } 
+  \end{mathpar}
+\end{semantics}
+
+\begin{semantics}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}
+  \label{semantics:model_typing_environment}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \Omega, \Sigma \satisfies \epsilon  
+    } 
+
+    \inferrule { 
+      \Omega, \Sigma \satisfies \Gamma 
+      \\
+      \Omega \satisfies v \hastype \tau 
+    } {
+      \Omega, \Sigma \ x \slash v \satisfies \Gamma \ x:\tau 
     } 
   \end{mathpar}
 \end{semantics}
