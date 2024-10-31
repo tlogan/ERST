@@ -3404,11 +3404,13 @@ Different: RLT isn't cartesian
     } 
 
     \inferrule { 
-      e \rightsquigarrow e'[x \slash v]
+      \Omega, \Sigma \satisfies \Gamma 
       \\
-      \Omega, \Gamma \satisfies v \hastype \tau' 
+      e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
       \\
-      \Omega, \Gamma \ x \slash v \satisfies e' \hastype \tau 
+      \Omega, \Sigma' \satisfies \Gamma' 
+      \\
+      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \tau 
     } {
       \Omega, \Gamma \satisfies e \hastype \tau 
     } 
