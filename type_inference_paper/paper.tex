@@ -75,7 +75,7 @@
 \newcommand{\D}[1]{\small \textsc{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
-\newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1} \newline}
+\newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1}}
 
 \newcommand{\is}{\ ::=\ }
 \newcommand{\sep}{\ \ |\ \ }
@@ -3097,66 +3097,6 @@ Different: RLT isn't cartesian
 \begin{theorem}(Soundness of typing)
   \begin{mathpar}
     \inferrule { 
-      \vdash e : \tau
-    } {
-      e\ \textbf{sound} 
-    } 
-  \end{mathpar}
-  Proof by induction on $e \rightsquigarrow^\star e$.
-  \item $\textbf{assume}\ \entails e \hastype \tau$
-  \item \I $e\ \textbf{progressive}$ by \ref{lemma:progress}
-  \item \I$\textbf{assume}\ e \rightsquigarrow^\star e'$
-
-  \item \I\I $\textbf{case}\ e = e'$
-  \item \I\I\I $e'\ \textbf{progressive}$ by equality 
-
-  \item \I\I $\textbf{case}\ e \rightsquigarrow e'$ 
-  \item \I\I\I $\entails e' \hastype \tau$ by \D{Lemma \ref{lemma:preserveration}} 
-  \item \I\I\I $e'\ \textbf{progressive}$ by \D{Lemma \ref{lemma:progress}}
-
-  \item \I\I $\textbf{case}\ e \rightsquigarrow e'' \I e'' \rightsquigarrow^\star e'$
-  \item \I\I $\textbf{with IH}\ e''\ \textbf{sound}$
-  \item \I\I\I $e''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}} 
-  \item \I\I\I $\forall e''' .\ e'' \rightsquigarrow^\star e''' \implies e'''\ \textbf{progressive}$ by \D{Semantics \ref{semantics:sound}}
-  \item \I\I\I $e'' \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by universal 
-  \item \I\I\I $e'\ \textbf{progressive}$ by implication 
-
-  \item \I $\forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}$ by derivation
-  \item \I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound}} 
-  \item $\square$
-  
-\end{theorem}
-
-\begin{theorem}(Soundness of typing (Alternative))
-  \begin{mathpar}
-    \inferrule { 
-      \vdash e : \tau
-    } {
-      e\ \textbf{sound} 
-    } 
-  \end{mathpar}
-  Proof by induction on $e\ \textbf{progressive}$.
-  \item $\textbf{assume}\ \entails e \hastype \tau$
-  \item \I $e\ \textbf{progressive}$ by \ref{lemma:progress}
-
-  \item \I $\textbf{case}\ e = v$
-  \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
-
-  \item \I $\textbf{case}\ e \rightsquigarrow e'$
-  \item \I $\textbf{with IH }e'\ \textbf{sound}$ 
-  \item \I\I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
-
-
-  \item \I $e\ \textbf{sound}$ by \D{Semantics \ref{semantics:sound_alternative}}
-
-  \item $\square$
-\end{theorem}
-\TODO{Note that this definition of sound does not require preservation (subject reduction)}
-
-
-\begin{theorem}(Soundness of typing)
-  \begin{mathpar}
-    \inferrule { 
       \entails e \hastype \tau \given Z
     } {
       e\ \textbf{sound}
@@ -3239,6 +3179,39 @@ Different: RLT isn't cartesian
   \item \Z\Z $x[\Sigma] = v$
   \item \Z\Z $e[\Sigma] = v$
   \item \Z\Z $e[\Sigma] \textbf{ sound}$
+
+
+  \item \Z $\textbf{case } e = e_0\code{(} e_1 \code{)}$
+  \item \Z $\textbf{w/ IH } e_0[\Sigma] \textbf{ sound} \I e_1[\Sigma] \textbf{ sound}$
+  \item \Z\Z \TODO{what does Cretin do? see Lemma 91, p. 129}
+  \item \Z\Z \TODO{CANNOT apply induction to reduction in small step, since small step result is not strictly smaller, i.e. a sequence of small steps is possibly infinite.}
+    % \inferrule { 
+    %   x \hastype \tau \in \Gamma 
+    % } {
+    %   \Omega, \Gamma \satisfies x \hastype \tau 
+    % } 
+
+    % \inferrule { 
+    %   \Omega, \Sigma \satisfies \Gamma 
+    %   \\
+    %   e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
+    %   \\
+    %   \Omega, \Sigma' \satisfies \Gamma' 
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \tau 
+    % } {
+    %   \Omega, \Gamma \satisfies e \hastype \tau 
+    % } 
+
+    % \inferrule { 
+    %   \Omega, \Sigma \satisfies \Gamma 
+    %   \\
+    %   e[\Sigma] \rightsquigarrow e'
+    %   \\
+    %   \Omega, \Gamma \satisfies e' \hastype \tau 
+    % } {
+    %   \Omega, \Gamma \satisfies e \hastype \tau 
+    % } 
 
   \item \Z \TODO{remaining elimination cases}
 
@@ -3431,6 +3404,16 @@ Different: RLT isn't cartesian
       \Omega, \Sigma' \satisfies \Gamma' 
       \\
       \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \tau 
+    } {
+      \Omega, \Gamma \satisfies e \hastype \tau 
+    } 
+
+    \inferrule { 
+      \Omega, \Sigma \satisfies \Gamma 
+      \\
+      e[\Sigma] \rightsquigarrow e'
+      \\
+      \Omega, \Gamma \satisfies e' \hastype \tau 
     } {
       \Omega, \Gamma \satisfies e \hastype \tau 
     } 
