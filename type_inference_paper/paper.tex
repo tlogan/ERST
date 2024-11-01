@@ -3183,6 +3183,29 @@ Different: RLT isn't cartesian
 
   \item \Z $\textbf{case } e = e_0\code{(} e_1 \code{)}$
   \item \Z $\textbf{w/ IH } e_0[\Sigma] \textbf{ sound} \I e_1[\Sigma] \textbf{ sound}$
+  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e_0\code{(} e_1 \code{)} \rightsquigarrow e'$ 
+
+  \item \Z\Z $\textbf{case } e_0[\Sigma] = F \I e_1[\Sigma] = v$ 
+  \item \Z\Z\Z \TODO{easy}
+  \item \Z\Z\Z $e_0[\Sigma]\code{(} e_1[\Sigma] \code{)} \textbf{ sound}$ 
+
+  \item \Z\Z $\textbf{case } e_0[\Sigma] = F \I e_1[\Sigma] \rightsquigarrow e_1'$ 
+  \item \Z\Z\Z \TODO{...}
+  \item \Z\Z\Z $e_0[\Sigma]\code{(} e_1[\Sigma] \code{)} \textbf{ sound}$ 
+
+  \item \Z\Z $\textbf{case } e_0[\Sigma] \rightsquigarrow e_0'$ 
+  \item \Z\Z\Z \TODO{think carefully}
+  \item \Z\Z\Z $e_0[\Sigma]\code{(} e_1[\Sigma] \code{)} \textbf{ sound}$ 
+
+  % \item \Z\Z $\textbf{case } e_0[\Sigma] \rightsquigarrow e_0' \I e_1[\Sigma] = v$ 
+  % \item \Z\Z\Z \TODO{think carefully}
+  % \item \Z\Z\Z $e_0[\Sigma]\code{(} e_1[\Sigma] \code{)} \textbf{ sound}$ 
+
+  % \item \Z\Z $\textbf{case } e_0[\Sigma] \rightsquigarrow e_0' \I e_1[\Sigma] \rightsquigarrow e_1'$ 
+  % \item \Z\Z\Z \TODO{think carefully}
+  % \item \Z\Z\Z $e_0[\Sigma]\code{(} e_1[\Sigma] \code{)} \textbf{ sound}$ 
+
+  \item \Z\Z $e[\Sigma] \textbf{ sound}$ by cases on $e_0\code{(} e_1 \code{)} \rightsquigarrow e'$
   \item \Z\Z \TODO{what does Cretin do? see Lemma 91, p. 129}
   \item \Z\Z \TODO{CANNOT apply induction to reduction in small step, since small step result is not strictly smaller, i.e. a sequence of small steps is possibly infinite.}
     % \inferrule { 
