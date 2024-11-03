@@ -3139,7 +3139,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof:
-  \item \TODO{the induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ e' < e \implies P(e) \implies Q(e)$ if inducting on predicate $P$} 
+  \item \TODO{the induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ P(e') \implies Q(e')$ if inducting on predicate $P$} 
   \item $\textbf{assume }
         \Omega, \Sigma \satisfies \Gamma 
         \Z \Omega, \Gamma \satisfies e \hastype \tau
@@ -3184,10 +3184,13 @@ Different: RLT isn't cartesian
 
   \item \Z $\textbf{case } e = e_0\code{(} e_1 \code{)}$ and all other elimination cases 
   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e[\Sigma] \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau$ by inversion on $\Omega, \Gamma \satisfies e \hastype \tau$
-  \item \Z\Z $e' \textbf{ sound}$ by induction hypothesis assuming $e' < e[\Sigma]$???
+  \item \Z\Z $e' \textbf{ sound}$ by induction hypothesis or some lemma akin to subject reduction???
+  \item \Z\Z \TODO{does IH allow this if we induction on $\Omega, \Gamma \satisfies e \hastype \tau$ instead of $e$?, as the predicate acts as a guard/ordering in lieu of a decreasing e?}
+  \item \Z\Z \TODO{without inducting on the assumed predicate, using induction here might be problematic; this sort of thing would make subject reduction trivial}
   \item \Z\Z $e \textbf{ sound}$
 
-  \item \Z $e \textbf{ sound}$ by induction on $e$
+  % \item \Z $e \textbf{ sound}$ by induction on $e$
+  \item \Z $e[\Sigma] \textbf{ sound}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
   \item $\square$
   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
   \item \TODO{
