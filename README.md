@@ -95,6 +95,19 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note some aspects of Cretin's system, lemmas, and proofs
+  - Cretin claims indexing of terms or steps is required if reduction may not terminate
+  - Does Cretin's "stable by reduction" mean there is only one reduction path
+  - the index needs to be on expression for strong reduction. why?
+  - Strong reduction implicitly seems to mean reduction by either value or need
+  - Cretin Page 4: there's no subject reduction (preservation) property
+  - semantics types are defined in terms of expansion/reduction rather than type syntax
+  - semantics types contain head normal forms
+  - head normal forms appear to be the same forms as the introduction rules of my typing rules
+  - semantic types bridge the gap between dynamic and static semantics in lieu of subject reduction
+  - create definitions analogous to semantic types instantiated with interpreted types, avoiding higher order predicates (if possible)
+  - Cretin's Definition 88 has a typo. semantic judgment |= should be defined with an existential substituion mapping
+  - Definition 88 typo is due to lack of flipping of quantifier when moving from outside to inside the premise
 - write proof of model typing. (Should be easy as the soundness and model typing definitions are somewhat isomorphic).
 - (maybe) prove that generated subtyping environments are coherent, i.e. logically consistent  
 - Cretin p. 149 explains why their system lacks subject reduction.

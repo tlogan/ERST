@@ -60,7 +60,6 @@
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
-\newcommand{\intype}{\pitchfork}
 \newcommand{\liftpat}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
@@ -3026,92 +3025,47 @@ Different: RLT isn't cartesian
 \end{semantics}
 
 
-
-\begin{semantics}\boxed{\Omega \satisfies Q}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \Omega \satisfies \epsilon
-    } 
-
-    \inferrule { 
-      \Omega \satisfies Q 
-      \\
-      \forall u .\ \Omega \satisfies u \intype \tau_l \implies u \intype \tau_r
-    } {
-      \Omega \satisfies Q \code{.$\tau_l$<:$\tau_r$}  
-    } 
-  \end{mathpar}
-\end{semantics}
-
-
-
-\begin{semantics}\boxed{e\ \textbf{progressive}}
-  \begin{mathpar}
-    \inferrule { 
-      e \rightsquigarrow e' 
-    } {
-      e\ \textbf{progressive}
-    } 
-
-    \inferrule { 
-      e = v 
-    } {
-      e\ \textbf{progressive}
-    } 
-  \end{mathpar}
-\end{semantics}
-
-\begin{semantics}\boxed{e\ \textbf{sound}}
-  \label{semantics:sound}
-  \begin{mathpar}
-    \inferrule { 
-      e\ \textbf{progressive} 
-      \\
-      \forall e' .\ e \rightsquigarrow^\star e' \implies e'\ \textbf{progressive}
-    } {
-      e\ \textbf{sound}
-    } 
-  \end{mathpar}
-\end{semantics}
-
-\begin{semantics}\boxed{e\ \textbf{sound}}
-  \label{semantics:sound_alternative}
+\begin{semantics}\boxed{e\ \textbf{wellformed}}
+  \label{semantics:expression_wellformed}
   \begin{mathpar}
     \inferrule { 
       e = v
     } {
-      e\ \textbf{sound}
+      e\ \textbf{wellformed}
     } 
 
     \inferrule { 
       e \rightsquigarrow e' 
       \\
-      e'\ \textbf{sound}
+      e'\ \textbf{wellformed}
     } {
-      e\ \textbf{sound}
+      e\ \textbf{wellformed}
     } 
   \end{mathpar}
 \end{semantics}
 
 \begin{theorem}(Soundness of typing)
+  \label{theorem:typing_soundness}
   \begin{mathpar}
     \inferrule { 
       \entails e \hastype \tau \given Z
     } {
-      e\ \textbf{sound}
+      e \textbf{ wellformed}
     } 
   \end{mathpar}
   Proof:
   \item $\textbf{assume } \entails e \hastype \tau \given Z$
-  \item \I $\textbf{let } \Omega\ \Gamma' \ \tau' \textbf{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{lemma:soundness_proof_typing}}
-  \item \I $e \textbf{ sound} $ by \D{Lemma \ref{lemma:soundness_model_typing}}
+  \item \I $\textbf{let } \Omega\ \Gamma' \ \tau' \textbf{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{lemma:proof_typing_soundness}}
+  \item \I $\Omega, \Sigma \satisfies \Gamma'$ by ...
+  \item \I $e[\Sigma] \textbf{ wellformed} $ by lemma \ref{lemma:model_typing_soundness}
+  \item \I $e[\Sigma] = e$ by ...
+  \item \I $e \textbf{ wellformed} $ by substitution 
   \item $\square$
 \end{theorem}
 
 
 \begin{lemma}(Soundness of proof typing)
-  \label{lemma:soundness_proof_typing}
+  \label{lemma:proof_typing_soundness}
   \begin{mathpar}
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  
@@ -3119,13 +3073,12 @@ Different: RLT isn't cartesian
       \exists \Omega\ \Gamma' \ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'
     } 
   \end{mathpar}
-  Proof ... 
-  \item \TODO{Cretin has lemmas showing elimination forms mirror proof typing rules. see Lemma 91, p. 129}
+  Proof: 
+  \item \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
+  \item \TODO{See how Cretin proves this without using subject reduction}
 \end{lemma}
-\TODO{Cretin's corresponding theorem is on p. 134}
-\TODO{See how Cretin proves this without using subject reduction}
 
-\begin{lemma}(Subsumption in model typing)
+\begin{lemma}(Subsumption of model typing)
   \label{lemma:subsumption_model_typing}
   \begin{mathpar}
     \inferrule { 
@@ -3136,7 +3089,7 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e \hastype \tau_r
     } 
   \end{mathpar}
-  Proof ... 
+  Proof: 
   \item $\textbf{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
   \I \Omega, \Gamma \satisfies \tau_l <: \tau_r
   $
@@ -3146,8 +3099,8 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{lemma}
 
-\begin{lemma}(Application in model typing)
-  \label{lemma:application_model_typing}
+\begin{lemma}(Construction of application of model typing)
+  \label{lemma:model_typing_construction_application}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
@@ -3157,21 +3110,21 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r
     } 
   \end{mathpar}
-  Proof ... 
-  \item \TODO{Cretin has lemmas showing elimination forms mirror proof typing rules. see Lemma 91, p. 129}
+  Proof: 
+  \item \TODO{Cretin shows how elimination forms mirror proof typing rules. see Lemma 91, p. 129}
 \end{lemma}
 
 
 
 \begin{lemma}(Soundness of model typing)
-  \label{lemma:soundness_model_typing}
+  \label{lemma:model_typing_soundness}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Sigma \satisfies \Gamma 
       \\
       \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      e[\Sigma]\ \textbf{sound}
+      e[\Sigma]\ \textbf{wellformed}
     } 
   \end{mathpar}
   Proof:
@@ -3182,30 +3135,30 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{case } e = \code{@}$
   \item \Z\Z $\textbf{let } v \textbf{ s.t. } \code{@} = v$
   \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e \textbf{ sound}$
+  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
 
 
   \item \Z $\textbf{case } e = \code{\ttilde}l\ e' 
   \I \tau = \code{\ttilde}l\ \tau'
   \I \Omega, \Gamma \satisfies e' \hastype \tau'
   $
-  \item \Z\Z $e' \textbf{ sound}$ by induction hypothesis
+  \item \Z\Z $e' \textbf{ wellformed}$ by induction hypothesis
 
   \item \Z\Z $\textbf{case } e'[\Sigma] = v$
   \item \Z\Z\Z $\textbf{let } v' \textbf{ s.t. } \code{\ttilde}l\ v = v'$
   \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] = v'$
   \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] = v'$
   \item \Z\Z\Z $e[\Sigma] = v'$
-  \item \Z\Z\Z $e[\Sigma] \textbf{ sound}$
+  \item \Z\Z\Z $e[\Sigma] \textbf{ wellformed}$
 
-  \item \Z\Z $\textbf{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \textbf{ sound}$
+  \item \Z\Z $\textbf{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \textbf{ wellformed}$
   \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \rightsquigarrow \code{\ttilde}l\ e''$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'' \textbf{ sound}$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \textbf{ sound}$
-  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \textbf{ sound}$
-  \item \Z\Z\Z $e[\Sigma] \textbf{ sound}$
+  \item \Z\Z\Z $\code{\ttilde}l\ e'' \textbf{ wellformed}$
+  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z\Z $e[\Sigma] \textbf{ wellformed}$
 
-  \item \Z\Z $e[\Sigma] \textbf{ sound}$ by cases on $e' \textbf{ sound}$
+  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$ by cases on $e' \textbf{ wellformed}$
 
   \item \Z \TODO{remaining introduction cases}
 
@@ -3215,24 +3168,16 @@ Different: RLT isn't cartesian
   $
   \item \Z\Z $x[\Sigma] = v$
   \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] \textbf{ sound}$
+  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
 
   \item \Z $\textbf{case } e = e_0\code{(} e_1 \code{)}$ and all other elimination cases 
   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e[\Sigma] \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau$ by inversion on $\Omega, \Gamma \satisfies e \hastype \tau$
-  \item \Z\Z $e'[\Sigma] \textbf{ sound}$ by induction hypothesis
-  \item \Z\Z $e[\Sigma] \textbf{ sound}$
+  \item \Z\Z $e'[\Sigma] \textbf{ wellformed}$ by induction hypothesis
+  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
 
-  \item \Z $e[\Sigma] \textbf{ sound}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
+  \item \Z $e[\Sigma] \textbf{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
   \item $\square$
   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
-  \item \TODO{
-    Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
-    has been progress in observing the elements of the stream (guardedness) and there is no
-    further analysis of the tails (opacity)".
-  }
-  \item \TODO{
-    Kozen demonstrates a legal proof by induction on infinite streamts too
-  }
 \end{lemma}
 
 \noindent
@@ -3242,70 +3187,36 @@ Different: RLT isn't cartesian
 \textbf{NOTE: } we induct on $\Omega, \Gamma \satisfies e \hastype \tau$ instead of $e$, as the predicate acts as a guard/ordering in lieu of a decreasing e.
 This allows us to use the induction hypothesis on the reduction step result in the elimination case.
 
-\begin{lemma}(Progress of proof typing)
-  \label{lemma:soundness_proof_typing}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-    } {
-      e \textbf{ progressive}
-    } 
-  \end{mathpar}
-  Proof ... 
-\end{lemma}
+\noindent
+\textbf{NOTE: } Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
+has been progress in observing the elements of the stream (guardedness) and there is no
+further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
 
-\begin{lemma}(Preservation of proof typing)
-  \label{lemma:soundness_proof_typing}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-      \\
-      e \rightsquigarrow e'
-    } {
-      \Gamma \entails e' \hastype \tau \given Z  
-    } 
-  \end{mathpar}
-  Proof ... 
-\end{lemma}
+% \begin{lemma}(Progress of proof typing)
+%   \label{lemma:proof_typing_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \Gamma \entails e \hastype \tau \given Z  
+%     } {
+%       e \textbf{ progressive}
+%     } 
+%   \end{mathpar}
+%   Proof ... 
+% \end{lemma}
 
+% \begin{lemma}(Preservation of proof typing)
+%   \begin{mathpar}
+%     \inferrule { 
+%       \Gamma \entails e \hastype \tau \given Z  
+%       \\
+%       e \rightsquigarrow e'
+%     } {
+%       \Gamma \entails e' \hastype \tau \given Z  
+%     } 
+%   \end{mathpar}
+%   Proof ... 
+% \end{lemma}
 
-
-  \TODO{Cretin claims indexing of terms or steps is required if reduction may not terminate}
-  \TODO{Doees Cretin's "stable by reduction" mean there is only one reduction path}
-  \TODO{the index needs to be on expression for strong reduction. why?}
-  \TODO{Strong reduction implicitly seems to mean reduction by either value or need}
-  \TODO{Cretin Page 4: there's no subject reduction (preservation) property}
-  \TODO{semantics types are defined in terms of expansion/reduction rather than type syntax}
-  \TODO{semantics types contain head normal forms}
-  \TODO{head normal forms appear to be the same forms as the introduction rules of my typing rules}
-  \TODO{semantic types bridge the gap between dynamic and static semantics in lieu of subject reduction}
-  \TODO{create definitions analogous to semantic types instantiated with interpreted types, avoiding higher order predicates (if possible)}
-  \TODO{Cretin's Definition 88 has a typo. semantic judgment |= should be defined with an existential substituion mapping}
-  \TODO{Definition 88 typo is due to lack of flipping of quantifier when moving from outside to inside the premise}
-
-\begin{lemma}(Progress of typing)
-  \label{lemma:progress}
-  \begin{mathpar}
-    \inferrule { 
-      \vdash e : \tau
-    } {
-      e\ \textbf{progressive} 
-    } 
-  \end{mathpar}
-\end{lemma}
-
-\begin{lemma}(Preservation of typing)
-  \label{lemma:preserveration}
-  \begin{mathpar}
-    \inferrule { 
-      \vdash e : \tau
-      \\
-      e \rightsquigarrow e'
-    } {
-      \vdash e' : \tau
-    } 
-  \end{mathpar}
-\end{lemma}
 
 \begin{semantics}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}
   \label{semantics:model_typing}
@@ -3317,14 +3228,6 @@ This allows us to use the induction hypothesis on the reduction step result in t
     } {
       \Omega, \Gamma \satisfies e \hastype \alpha 
     } 
-
-    % \inferrule { 
-    %   x:\tau \in \Gamma
-    %   \\
-    %   \tau \textbf{ inhab}
-    % } {
-    %   \Omega, \Gamma \satisfies x \hastype \tau 
-    % } 
 
     \inferrule { 
     } {
