@@ -3125,6 +3125,42 @@ Different: RLT isn't cartesian
 \TODO{Cretin's corresponding theorem is on p. 134}
 \TODO{See how Cretin proves this without using subject reduction}
 
+\begin{lemma}(Subsumption in model typing)
+  \label{lemma:subsumption_model_typing}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \tau_l 
+      \\
+      \Omega, \Gamma \satisfies \tau_l <: \tau_r
+    } {
+      \Omega, \Gamma \satisfies e \hastype \tau_r
+    } 
+  \end{mathpar}
+  Proof ... 
+  \item $\textbf{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
+  \I \Omega, \Gamma \satisfies \tau_l <: \tau_r
+  $
+  \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion on $\Omega, \Gamma \satisfies \tau_l <: \tau_r$
+  \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
+  \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by modus ponens
+  \item $\square$
+\end{lemma}
+
+\begin{lemma}(Application in model typing)
+  \label{lemma:application_model_typing}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
+      \\
+      \Omega, \Gamma \satisfies e_1 \hastype \tau_l
+    } {
+      \Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r
+    } 
+  \end{mathpar}
+  Proof ... 
+  \item \TODO{Cretin has lemmas showing elimination forms mirror proof typing rules. see Lemma 91, p. 129}
+\end{lemma}
+
 
 
 \begin{lemma}(Soundness of model typing)
@@ -3423,8 +3459,23 @@ This allows us to use the induction hypothesis on the reduction step result in t
 \end{semantics}
 
 
-\begin{semantics}\boxed{\Omega \satisfies Q}
+
+\begin{semantics}\boxed{\Omega \satisfies \tau <: \tau}
   \label{semantics:model_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+      \forall e\ \Gamma .\ 
+      \Omega, \Gamma \satisfies e \hastype \tau_l \implies 
+      \Omega, \Gamma \satisfies e \hastype \tau_r 
+    } {
+      \Omega \satisfies \tau_l <: \tau_r
+    } 
+  \end{mathpar}
+\end{semantics}
+
+
+\begin{semantics}\boxed{\Omega \satisfies Q}
+  \label{semantics:model_sequence_subtyping}
   \begin{mathpar}
     \inferrule { 
     } {
@@ -3434,9 +3485,7 @@ This allows us to use the induction hypothesis on the reduction step result in t
     \inferrule { 
       \Omega \satisfies Q
       \\
-      \forall e\ \Gamma .\ 
-      \Omega, \Gamma \satisfies e \hastype \tau_l \implies 
-      \Omega, \Gamma \satisfies e \hastype \tau_r 
+      \Omega \satisfies \tau_l <: \tau_r
     } {
       \Omega \satisfies Q\ \code{.$\tau_l$<:$\tau_r$}
     } 
