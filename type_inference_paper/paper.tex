@@ -3099,8 +3099,8 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{lemma}
 
-\begin{lemma}(Construction of application of model typing)
-  \label{lemma:model_typing_construction_application}
+\begin{lemma}(Elimination of implication of model typing)
+  \label{lemma:model_typing_implication_elimination}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
@@ -3111,6 +3111,24 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
+  \item $\textbf{assume }
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
+    \I 
+    \Omega, \Gamma \satisfies e_1 \hastype \tau_l
+  $ 
+  \item \Z $\textbf{case }$
+  \item \Z $\textbf{case }
+    \Omega, \Sigma \satisfies \Gamma
+    \I
+    e_0[\Sigma] \rightsquigarrow e_0'
+    \I
+    \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+  $
+  \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by induction hypothesis
+  \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
+  \item \Z\Z ($e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0'\code{(}e_1\code{)}$
+  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+  \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $\Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
   \item \TODO{Cretin shows how elimination forms mirror proof typing rules. see Lemma 91, p. 129}
 \end{lemma}
 
@@ -3130,7 +3148,7 @@ Different: RLT isn't cartesian
   Proof:
   \item $\textbf{assume }
         \Omega, \Sigma \satisfies \Gamma 
-        \Z \Omega, \Gamma \satisfies e \hastype \tau
+        \I \Omega, \Gamma \satisfies e \hastype \tau
   $
   \item \Z $\textbf{case } e = \code{@}$
   \item \Z\Z $\textbf{let } v \textbf{ s.t. } \code{@} = v$
