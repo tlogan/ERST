@@ -3116,7 +3116,28 @@ Different: RLT isn't cartesian
     \I 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
-  \item \Z $\textbf{case }$
+  \item \Z $\textbf{case }
+    e_0 = v_0
+    \I
+    e_1 = v_1
+  $
+  \item \Z\Z \TODO{...}
+
+  \item \Z $\textbf{case }
+    e_0 = v_0
+    \I
+    \Omega, \Sigma \satisfies \Gamma
+    \I
+    e_1[\Sigma] \rightsquigarrow e_1'
+    \I
+    \Omega, \Gamma \satisfies e_1' \hastype \tau_l
+  $
+  \item \Z\Z $\Omega, \Gamma \satisfies v_0\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
+  \item \Z\Z $v_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow v_0\code{(}e_1'\code{)}$
+  \item \Z\Z ($v_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow v_0\code{(}e_1'\code{)}$
+  \item \Z\Z $\Omega, \Gamma \satisfies v_0\code{(}e_1\code{)} \hastype \tau_r$ 
+  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+
   \item \Z $\textbf{case }
     \Omega, \Sigma \satisfies \Gamma
     \I
@@ -3128,7 +3149,8 @@ Different: RLT isn't cartesian
   \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
   \item \Z\Z ($e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0'\code{(}e_1\code{)}$
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
-  \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $\Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
+
+  \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $\Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$ and $\Omega, \Gamma \satisfies e_1 \hastype \tau_l$ 
   \item \TODO{Cretin shows how elimination forms mirror proof typing rules. see Lemma 91, p. 129}
 \end{lemma}
 
