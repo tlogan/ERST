@@ -2494,6 +2494,7 @@ Different: RLT isn't cartesian
 \begin{semantics}\boxed{c \in C}
   \begin{mathpar}
     \inferrule {
+      c \notin C
     } {
       c \in C\ c 
     }
@@ -3131,11 +3132,14 @@ Different: RLT isn't cartesian
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \TODO{...} 
   \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v$ 
+  \item \Z\Z\Z $\textbf{let } e_1' \textbf{ s.t. } F\code{(}v\code{)} \rightsquigarrow e_1'$ by \TODO{How do we know that application takes a step}
+  \item \Z\Z\Z \TODO{probably by cases on v}
+  \item \Z\Z\Z \TODO{may need lemma connection the case containment to traverses the list of cases}
   \item \Z\Z\Z \TODO{May need lemma inducting on F}
   \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed}$ 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
   \item \Z\Z\Z $F\code{(}e_1[\Sigma]\code{)} \rightsquigarrow F\code{(}e_1'\code{)}$
-  \item \Z\Z\Z ($F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow F\code{(}e_1'\code{)}$
+  \item \Z\Z\Z $(F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow F\code{(}e_1'\code{)}$
   \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ 
 
   \item \Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
@@ -3159,6 +3163,55 @@ Different: RLT isn't cartesian
 \end{lemma}
 
 
+\begin{lemma}(Progress of pattern matching)
+  \label{lemma:pattern_matching_progress}
+  \begin{mathpar}
+    \inferrule { 
+      \code{case $p$=>$e$} \in F 
+      \\
+      p \equiv v \given \Sigma 
+      \\
+      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+    } {
+      \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\textbf{for } p\ e\ F\ v\ \Sigma\ \textbf{assume }
+      \code{case $p$=>$e$} \in F 
+      \I
+      p \equiv v \given \Sigma 
+      \I
+      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+  $
+
+  \item \Z $\textbf{case }
+    F = F' \code{ case $p$=>$e$} 
+    \I
+    \code{case $p$=>$e$} \notin F'
+  $
+
+  \item \Z\Z $\textbf{for } e'$
+  \item \Z\Z\Z $\code{case $p$=>$e$} \in F \implies e' = e$ by instantiation
+  \item \Z\Z\Z $e' = e$ by modus ponens 
+  \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
+  \item \Z\Z\Z $\neg \code{$F'$($v$)} \rightsquigarrow e'$ by absence
+  \item \Z\Z $\forall e' .\ \neg \code{$F'$($v$)} \rightsquigarrow e'$ by generalization
+  \item \Z\Z $(F'\code{ case $p$=>$e$})\code{(}v\code{)} \rightsquigarrow e[\Sigma]$
+  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e' = e[\Sigma]$ 
+  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
+
+  \item \Z $\textbf{case }
+    F = F'\ f 
+    \I
+    \code{case $p$=>$e$} \in F' 
+  $
+  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
+  \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$
+  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
+  \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{case $p$=>$e$} \in F$
+  \item $\square$
+\end{lemma}
 
 \begin{lemma}(Soundness of model typing)
   \label{lemma:model_typing_soundness}
