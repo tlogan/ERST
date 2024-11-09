@@ -3096,7 +3096,7 @@ Different: RLT isn't cartesian
   $
   \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion on $\Omega, \Gamma \satisfies \tau_l <: \tau_r$
   \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
-  \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by modus ponens
+  \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by application
   \item $\square$
 \end{lemma}
 
@@ -3197,14 +3197,16 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z $\code{case $p$=>$e'$} \in F \implies e' = e$ by instantiation
 
   \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \in F$
-  \item \Z\Z\Z\Z $e' = e$ by modus ponens 
+  \item \Z\Z\Z\Z $e' = e$ by application 
   \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
   \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F$
   \item \Z\Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F'$
   \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by cases on $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$
 
-  \item \Z\Z\Z $\neg \code{$F'$($v$)} \rightsquigarrow e'$ by absence
-  \item \Z\Z $\forall e' .\ \neg \code{$F'$($v$)} \rightsquigarrow e'$ by generalization
+  \item \Z\Z\Z $\textbf{assume } \code{$F'$($v$)} \rightsquigarrow e'$
+  \item \Z\Z\Z\Z $\bot$ by inversion
+  \item \Z\Z\Z $\neg \code{$F'$($v$)} \rightsquigarrow e'$ by summarization
+  \item \Z\Z $\forall e' .\ \neg \code{$F'$($v$)} \rightsquigarrow e'$ by summarization 
   \item \Z\Z $(F'\code{ case $p$=>$e$})\code{(}v\code{)} \rightsquigarrow e[\Sigma]$
   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e' = e[\Sigma]$ 
   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
