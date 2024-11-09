@@ -3200,7 +3200,10 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $e' = e$ by application 
   \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
   \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F$
-  \item \Z\Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F'$
+  \item \Z\Z\Z\Z $\textbf{assume }\code{case $p$=>$e'$} \in F'$
+  \item \Z\Z\Z\Z\Z $\code{case $p$=>$e'$} \in F$
+  \item \Z\Z\Z\Z\Z $\bot$ by application
+  \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by summarization
   \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by cases on $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$
 
   \item \Z\Z\Z $\textbf{assume } \code{$F'$($v$)} \rightsquigarrow e'$
