@@ -3122,7 +3122,7 @@ Different: RLT isn't cartesian
     \I
     \code{case $p$=>$e$} \in F 
     \I
-    \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+    \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
     $
   \item \Z $
     \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
@@ -3171,7 +3171,7 @@ Different: RLT isn't cartesian
       \\
       p \equiv v \given \Sigma 
       \\
-      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
     } {
       \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
     } 
@@ -3182,8 +3182,10 @@ Different: RLT isn't cartesian
       \I
       p \equiv v \given \Sigma 
       \I
-      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
   $
+
+  \item \Z $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$ by decidability 
 
   \item \Z $\textbf{case }
     F = F' \code{ case $p$=>$e$} 
@@ -3192,9 +3194,15 @@ Different: RLT isn't cartesian
   $
 
   \item \Z\Z $\textbf{for } e'$
-  \item \Z\Z\Z $\code{case $p$=>$e$} \in F \implies e' = e$ by instantiation
-  \item \Z\Z\Z $e' = e$ by modus ponens 
-  \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
+  \item \Z\Z\Z $\code{case $p$=>$e'$} \in F \implies e' = e$ by instantiation
+
+  \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \in F$
+  \item \Z\Z\Z\Z $e' = e$ by modus ponens 
+  \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
+  \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F$
+  \item \Z\Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F'$
+  \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by cases on $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$
+
   \item \Z\Z\Z $\neg \code{$F'$($v$)} \rightsquigarrow e'$ by absence
   \item \Z\Z $\forall e' .\ \neg \code{$F'$($v$)} \rightsquigarrow e'$ by generalization
   \item \Z\Z $(F'\code{ case $p$=>$e$})\code{(}v\code{)} \rightsquigarrow e[\Sigma]$
@@ -3350,7 +3358,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     \inferrule { 
       \code{case $p$=>$e$} \in F 
       \\
-      \forall e' .\ \code{case $p$=>$e$} \in F \implies e' = e 
+      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
       \\\\
       \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
       \\
