@@ -1700,11 +1700,11 @@ Different: RLT isn't cartesian
     \\
     \nonterm{R} & \is \epsilon \sep R\ r
     \\
-    \nonterm{r} & \is \code{*$l$=>$e$}
+    \nonterm{r} & \is \code{$l$=>$e$}
     \\
     \nonterm{F} & \is \epsilon \sep F\ f
     \\
-    \nonterm{f} & \is \code{case $p$=>$e$}
+    \nonterm{f} & \is \code{*$p$=>$e$}
     \\
     \\
     \nonterm{p} & \is 
@@ -1717,7 +1717,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{K} & \is \epsilon \sep K\ k
     \\
-    \nonterm{k} & \is \code{*$l$=>$p$}
+    \nonterm{k} & \is \code{$l$=>$p$}
     \\
     \\
     \nonterm{v} & \is 
@@ -1795,9 +1795,9 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \forall e' .\ \neg \code{($F$)($v$)} \rightsquigarrow e'
-      \\
       p \equiv v \given \Sigma 
+      \\
+      \forall e'.\ \neg F\code{($v$)} \rightsquigarrow e' 
     } {
       \code{($F$ case $p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
     }
@@ -2004,7 +2004,7 @@ Different: RLT isn't cartesian
       \\
       \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
     } {
-      Z_0, \Gamma_0 \entails F\ \code{case $p$=>$e$} \liftfun 
+      Z_0, \Gamma_0 \entails F\ \code{*$p$=>$e$} \liftfun 
       \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \code{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
     }
   \end{mathpar}
@@ -3120,9 +3120,9 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{case }
     e_0 = F 
     \I
-    \code{case $p$=>$e$} \in F 
+    \code{*$p$=>$e$} \in F 
     \I
-    \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
+    \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
     $
   \item \Z $
     \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
@@ -3166,65 +3166,49 @@ Different: RLT isn't cartesian
 \begin{lemma}(Progress of pattern matching)
   \label{lemma:pattern_matching_progress}
   \begin{mathpar}
-    \inferrule { 
-      \code{case $p$=>$e$} \in F 
+    \inferrule {
+      \code{*$p$=>$e$} \in F 
       \\
       p \equiv v \given \Sigma 
       \\
-      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
+      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
     } {
       \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
     } 
   \end{mathpar}
   Proof:
   \item $\textbf{for } p\ e\ F\ v\ \Sigma\ \textbf{assume }
-      \code{case $p$=>$e$} \in F 
+      \code{*$p$=>$e$} \in F 
       \I
       p \equiv v \given \Sigma 
       \I
-      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
+      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
   $
 
-  \item \Z $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$ by decidability 
-
   \item \Z $\textbf{case }
-    F = F' \code{ case $p$=>$e$} 
+    F = F'\ \code{*$p$=>$e$} 
     \I
-    \code{case $p$=>$e$} \notin F'
+    \code{*$p$=>$e$} \notin F'
   $
 
   \item \Z\Z $\textbf{for } e'$
-  \item \Z\Z\Z $\code{case $p$=>$e'$} \in F \implies e' = e$ by instantiation
-
-  \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \in F$
-  \item \Z\Z\Z\Z $e' = e$ by application 
-  \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by substitution
-  \item \Z\Z\Z $\textbf{case } \code{case $p$=>$e'$} \notin F$
-  \item \Z\Z\Z\Z $\textbf{assume }\code{case $p$=>$e'$} \in F'$
-  \item \Z\Z\Z\Z\Z $\code{case $p$=>$e'$} \in F$
-  \item \Z\Z\Z\Z\Z $\bot$ by application
-  \item \Z\Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by summarization
-  \item \Z\Z\Z $\code{case $p$=>$e'$} \notin F'$ by cases on $\code{case $p$=>$e'$} \in F \lor \code{case $p$=>$e'$} \notin F$
-
-  \item \Z\Z\Z $\textbf{assume } \code{$F'$($v$)} \rightsquigarrow e'$
-  \item \Z\Z\Z\Z $\bot$ by inversion
-  \item \Z\Z\Z $\neg \code{$F'$($v$)} \rightsquigarrow e'$ by summarization
-  \item \Z\Z $\forall e' .\ \neg \code{$F'$($v$)} \rightsquigarrow e'$ by summarization 
-  \item \Z\Z $(F'\code{ case $p$=>$e$})\code{(}v\code{)} \rightsquigarrow e[\Sigma]$
-  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e' = e[\Sigma]$ 
-  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
+  \item \Z\Z\Z \TODO{...}
+  \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
+  \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
+  \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
 
   \item \Z $\textbf{case }
     F = F'\ f 
     \I
-    \code{case $p$=>$e$} \in F' 
+    \code{*$p$=>$e$} \in F' 
   $
   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
   \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$
   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
-  \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{case $p$=>$e$} \in F$
+  \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
   \item $\square$
 \end{lemma}
+
 
 \begin{lemma}(Soundness of model typing)
   \label{lemma:model_typing_soundness}
@@ -3361,9 +3345,9 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
-      \code{case $p$=>$e$} \in F 
+      \code{*$p$=>$e$} \in F 
       \\
-      \forall e' .\ \code{case $p$=>$e'$} \in F \implies e' = e 
+      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
       \\\\
       \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
       \\
