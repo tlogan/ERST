@@ -3129,14 +3129,17 @@ Different: RLT isn't cartesian
     \I
     \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
   $
-  \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \TODO{...} 
+  \item \Z $
+    \textbf{for} \ F \ p \ e \ \Omega' \ \Gamma' \  
+  $
+  \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
   \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
-  \item \Z\Z $\textbf{case } e_1[\Sigma] = v$ 
-  \item \Z\Z\Z $\textbf{let } e_1' \textbf{ s.t. } F\code{(}v\code{)} \rightsquigarrow e_1'$ by \TODO{How do we know that application takes a step}
+  \item \Z\Z $\textbf{case } e_1[\Sigma] = v \ \textbf{for} \ v$  
+  \item \Z\Z\Z $\textbf{let } e_1' \textbf{ s.t. } F\code{(}v\code{)} \rightsquigarrow e_1'$ by lemma \ref{lemma:pattern_matching_progress} 
   \item \Z\Z\Z \TODO{probably by cases on v}
   \item \Z\Z\Z \TODO{may need lemma connection the case containment to traverses the list of cases}
   \item \Z\Z\Z \TODO{May need lemma inducting on F}
-  \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed}$ 
+  \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
   \item \Z\Z\Z $F\code{(}e_1[\Sigma]\code{)} \rightsquigarrow F\code{(}e_1'\code{)}$
   \item \Z\Z\Z $(F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow F\code{(}e_1'\code{)}$
@@ -3151,6 +3154,7 @@ Different: RLT isn't cartesian
     e_0[\Sigma] \rightsquigarrow e_0'
     \I
     \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+    \ \textbf{for}\ \Sigma\ e_0' 
   $
   \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by induction hypothesis
   \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
@@ -3158,8 +3162,7 @@ Different: RLT isn't cartesian
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
 
   \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $\Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$  
-% and $\Omega, \Gamma \satisfies e_1 \hastype \tau_l$
-  \item \TODO{Cretin shows how elimination forms mirror proof typing rules. see Lemma 91, p. 129}
+  \item $\square$
 \end{lemma}
 
 
@@ -3212,6 +3215,19 @@ Different: RLT isn't cartesian
   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
   \item $\square$
+\end{lemma}
+
+\begin{lemma}(Assignability of model typing)
+  \label{lemma:model_typing_assignability}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \tau
+    } {
+      \exists \Sigma .\ \Omega, \Sigma \satisfies \Gamma 
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
 \end{lemma}
 
 
