@@ -3192,7 +3192,12 @@ Different: RLT isn't cartesian
   $
 
   \item \Z\Z $\textbf{for } e'$
-  \item \Z\Z\Z \TODO{...}
+  \item \Z\Z\Z $\textbf{case}\ F'\code{($v$)} \rightsquigarrow e'$
+  \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e'$ by definition
+  \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by substitution 
+  \item \Z\Z\Z $\textbf{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
+  \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e[\Sigma]$ by definition
+  \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e[\Sigma]$ by substitution 
   \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
   \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
   \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
@@ -3203,8 +3208,8 @@ Different: RLT isn't cartesian
     \code{*$p$=>$e$} \in F' 
   $
   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
-  \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$
-  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$
+  \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$ by definition
+  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
   \item $\square$
 \end{lemma}
