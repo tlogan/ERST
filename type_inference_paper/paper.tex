@@ -3146,21 +3146,35 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
   \item \Z\Z $e_0[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
-  \item \Z\Z $(F\ \code{*$p$=>$e$})[\Sigma] \textbf{ wellformed}$ by substitution 
-  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = (F\ \code{*$p$=>$e$})[\Sigma]$ by lemma \TODO{... inversion ...} 
+  \item \Z\Z $\code{(F *$p$=>$e$)}[\Sigma] \textbf{ wellformed}$ by substitution 
+  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = \code{(F *$p$=>$e$)}[\Sigma]$ by lemma \TODO{... inversion ...} 
   \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
+  \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by lemma \TODO{...} 
+  \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
+  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by lemma \TODO{...} 
+  \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
+  \item \Z\Z\Z\Z $\textbf{for } e'$ 
+  \item \Z\Z\Z\Z\Z $\neg \epsilon\code{($v_1$)} \rightsquigarrow e'$ by definition
+  \item \Z\Z\Z\Z\Z $\neg F\code{($v_1$)} \rightsquigarrow e'$ by substitution 
+  \item \Z\Z\Z\Z $\forall e' .\ \neg F\code{($v_1$)} \rightsquigarrow e'$ by summarization 
+  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)($v_1$)} \rightsquigarrow e[\Sigma']$ by definition 
+  \item \Z\Z\Z\Z \TODO{...} 
+  \item \Z\Z\Z $\textbf{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
+  \item \Z\Z\Z\Z \TODO{...} 
+  \item \Z\Z\Z $...$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
   \item \Z\Z\Z \TODO{...}  
 
   \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies (F\ \code{*$p$=>$e$})\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{(F *$p$=>$e$)}\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
   \item \Z\Z\Z $v_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow v_0\code{(}e_1'\code{)}$ by definition
-  \item \Z\Z\Z $(F\ \code{*$p$=>$e$})[\Sigma]\code{(}e_1[\Sigma]\code{)} \rightsquigarrow (F\ \code{*$p$=>$e$})[\Sigma]\code{(}e_1'\code{)}$ by substitution 
+  \item \Z\Z\Z $\code{(F *$p$=>$e$)}[\Sigma]\code{($e_1[\Sigma]$)} \rightsquigarrow \code{(F *$p$=>$e$)}[\Sigma]\code{($e_1'$)}$ by substitution 
 
-  \item \Z\Z\Z $((F\ \code{*$p$=>$e$})\code{(}e_1\code{)})[\Sigma] \rightsquigarrow ((F\ \code{*$p$=>$e$})\code{(}e_1'\code{)})[\Sigma]$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies (F\ \code{*$p$=>$e$})\code{(}e_1\code{)} \hastype \tau_r$ by definition
+  \item \Z\Z\Z $(\code{(F *$p$=>$e$)}\code{($e_1$)})[\Sigma] \rightsquigarrow (\code{(F *$p$=>$e$)}\code{($e_1'$)})[\Sigma]$ by definition
 
-  \item \Z\Z $\Omega, \Gamma \satisfies (F\ \code{*$p$=>$e$})\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{(F *$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
+
+  \item \Z\Z $\Omega, \Gamma \satisfies \code{(F *$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
