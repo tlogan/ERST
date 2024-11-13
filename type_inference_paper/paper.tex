@@ -3144,18 +3144,20 @@ Different: RLT isn't cartesian
   % \item \Z\Z\Z \TODO{...} 
   % \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
 
+  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = F\ \code{*$p$=>$e$}$ by definition 
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
   \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
-  \item \Z\Z $\textbf{case } e_1[\Sigma] = v \ \textbf{for} \ v$  
+  \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
   \item \Z\Z\Z \TODO{...}  
 
   \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
-  \item \Z\Z\Z $e_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow e_0\code{(}e_1'\code{)}$
-  \item \Z\Z\Z $(e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0\code{(}e_1'\code{)}$
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies v_0\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
+  \item \Z\Z\Z $v_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow v_0\code{(}e_1'\code{)}$ by definition
+  \item \Z\Z\Z $(v_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow v_0\code{(}e_1'\code{)}$ by definition
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies v_0\code{(}e_1\code{)} \hastype \tau_r$ by definition
 
-  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z $\Omega, \Gamma \satisfies v_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % \item \Z $\textbf{case }
