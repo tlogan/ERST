@@ -3163,7 +3163,10 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition \TODO{generalize definition}
   \item \Z\Z\Z $\textbf{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
-  \item \Z\Z\Z\Z \TODO{...} 
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by (outer) induction hypothesis \TODO{... make hypothesis explicit in each case, with application}
+  \item \Z\Z\Z\Z $\textbf{let } e' \textbf{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by lemma \TODO{inversion} 
+  \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
 
   \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
@@ -3230,72 +3233,72 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{lemma}
 
-\begin{lemma}(Preservation of model typing)
-  \label{lemma:model_typing_preservation}
-  \begin{mathpar}
-    \inferrule {
-      \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r 
-      \\
-      F\code{(}v\code{)} \rightsquigarrow e
-    } {
-      \Omega, \Gamma \satisfies e \hastype \tau_r 
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{lemma}
+% \begin{lemma}(Preservation of model typing)
+%   \label{lemma:model_typing_preservation}
+%   \begin{mathpar}
+%     \inferrule {
+%       \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r 
+%       \\
+%       F\code{(}v\code{)} \rightsquigarrow e
+%     } {
+%       \Omega, \Gamma \satisfies e \hastype \tau_r 
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{lemma}
 
 
-\begin{lemma}(Progress of pattern matching)
-  \label{lemma:pattern_matching_progress}
-  \begin{mathpar}
-    \inferrule {
-      \code{*$p$=>$e$} \in F 
-      \\
-      p \equiv v \given \Sigma 
-      \\
-      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
-    } {
-      \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\textbf{for } p\ e\ F\ v\ \Sigma\ \textbf{assume }
-      \code{*$p$=>$e$} \in F 
-      \I
-      p \equiv v \given \Sigma 
-      \I
-      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
-  $
+% \begin{lemma}(Progress of pattern matching)
+%   \label{lemma:pattern_matching_progress}
+%   \begin{mathpar}
+%     \inferrule {
+%       \code{*$p$=>$e$} \in F 
+%       \\
+%       p \equiv v \given \Sigma 
+%       \\
+%       \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
+%     } {
+%       \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\textbf{for } p\ e\ F\ v\ \Sigma\ \textbf{assume }
+%       \code{*$p$=>$e$} \in F 
+%       \I
+%       p \equiv v \given \Sigma 
+%       \I
+%       \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
+%   $
 
-  \item \Z $\textbf{case }
-    F = F'\ \code{*$p$=>$e$} 
-    \I
-    \code{*$p$=>$e$} \notin F'
-  $
+%   \item \Z $\textbf{case }
+%     F = F'\ \code{*$p$=>$e$} 
+%     \I
+%     \code{*$p$=>$e$} \notin F'
+%   $
 
-  \item \Z\Z $\textbf{for } e'$
-  \item \Z\Z\Z $\textbf{case}\ F'\code{($v$)} \rightsquigarrow e'$
-  \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e'$ by definition
-  \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by substitution 
-  \item \Z\Z\Z $\textbf{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
-  \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e[\Sigma]$ by definition
-  \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e[\Sigma]$ by substitution 
-  \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
-  \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
-  \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
+%   \item \Z\Z $\textbf{for } e'$
+%   \item \Z\Z\Z $\textbf{case}\ F'\code{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by substitution 
+%   \item \Z\Z\Z $\textbf{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e[\Sigma]$ by definition
+%   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e[\Sigma]$ by substitution 
+%   \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
+%   \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
 
-  \item \Z $\textbf{case }
-    F = F'\ f 
-    \I
-    \code{*$p$=>$e$} \in F' 
-  $
-  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
-  \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$ by definition
-  \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
-  \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
-  \item $\square$
-\end{lemma}
+%   \item \Z $\textbf{case }
+%     F = F'\ f 
+%     \I
+%     \code{*$p$=>$e$} \in F' 
+%   $
+%   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
+%   \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
+%   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
+%   \item $\square$
+% \end{lemma}
 
 \begin{lemma}(Assignability of model typing)
   \label{lemma:model_typing_assignability}
