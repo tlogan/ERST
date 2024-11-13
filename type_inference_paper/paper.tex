@@ -3117,13 +3117,13 @@ Different: RLT isn't cartesian
     \I 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
+
   \item \Z $\textbf{case }
-    e_0 = F 
+    e_0 = F\ \code{*$p$=>$e$} 
     \I
-    \code{*$p$=>$e$} \in F 
+    F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
     \I
-    \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
-    $
+  $
   \item \Z $
     \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
     \I
@@ -3132,21 +3132,65 @@ Different: RLT isn't cartesian
   \item \Z $
     \textbf{for} \ F \ p \ e \ \Omega' \ \Gamma' \  
   $
+  % \item \Z\Z $\textbf{case}\ F = \epsilon$
+  % \item \Z\Z\Z \TODO{...} 
+  % \item \Z\Z\Z $\textbf{for}\ e'$
+  % \item \Z\Z\Z\Z $\neg \epsilon\code{(}e_1\code{)} \rightsquigarrow e'$ by definition 
+  % \item \Z\Z\Z\Z $\neg F\code{(}e_1\code{)} \rightsquigarrow e'$ by substitution 
+  % \item \Z\Z\Z $\forall e' .\ \neg F\code{(}e_1\code{)} \rightsquigarrow e'$ by summarization 
+  % \item \Z\Z\Z \TODO{...} 
+  % \item \Z\Z $\textbf{case}\ \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+  % \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by induction hypothesis 
+  % \item \Z\Z\Z \TODO{...} 
+  % \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
   \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v \ \textbf{for} \ v$  
-  \item \Z\Z\Z $\textbf{let } e_1' \textbf{ s.t. } F\code{(}v\code{)} \rightsquigarrow e_1'$ by lemma \ref{lemma:pattern_matching_progress} 
-  \item \Z\Z\Z \TODO{probably by cases on v}
-  \item \Z\Z\Z \TODO{may need lemma connection the case containment to traverses the list of cases}
-  \item \Z\Z\Z \TODO{May need lemma inducting on F}
-  \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
-  \item \Z\Z\Z $F\code{(}e_1[\Sigma]\code{)} \rightsquigarrow F\code{(}e_1'\code{)}$
-  \item \Z\Z\Z $(F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow F\code{(}e_1'\code{)}$
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ 
+  \item \Z\Z\Z \TODO{...}  
 
-  \item \Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
-  \item \Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by substitution
+  \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
+  \item \Z\Z\Z $e_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow e_0\code{(}e_1'\code{)}$
+  \item \Z\Z\Z $(e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0\code{(}e_1'\code{)}$
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+
+  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % \item \Z $\textbf{case }
+  %   e_0 = F 
+  %   \I
+  %   \code{*$p$=>$e$} \in F 
+  %   \I
+  %   \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
+  %   $
+  % \item \Z $
+  %   \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+  %   \I
+  %   \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+  % $
+  % \item \Z $
+  %   \textbf{for} \ F \ p \ e \ \Omega' \ \Gamma' \  
+  % $
+  % \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
+  % \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
+  % \item \Z\Z $\textbf{case } e_1[\Sigma] = v \ \textbf{for} \ v$  
+  % \item \Z\Z\Z $\textbf{let } e_1' \textbf{ s.t. } F\code{(}v\code{)} \rightsquigarrow e_1'$ by lemma \ref{lemma:pattern_matching_progress} 
+  % \item \Z\Z\Z $F\code{(}e_1[\Sigma]\code{)} \rightsquigarrow e_1'$ 
+  % \item \Z\Z\Z $(F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_1'$ 
+  % \item \Z\Z\Z \TODO{...}
+  % \item \Z\Z\Z $\Omega, \Gamma \satisfies e_1' \hastype \tau_r$
+  % \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$
+  % \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
+  % \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
+  % \item \Z\Z\Z $F\code{(}e_1[\Sigma]\code{)} \rightsquigarrow F\code{(}e_1'\code{)}$
+  % \item \Z\Z\Z $(F\code{(}e_1\code{)})[\Sigma] \rightsquigarrow F\code{(}e_1'\code{)}$
+  % \item \Z\Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ 
+
+  % \item \Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by induction on $e_1[\Sigma] \textbf{ wellformed}$
+  % \item \Z\Z $\Omega, \Gamma \satisfies F\code{(}e_1\code{)} \hastype \tau_r$ by substitution
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   \item \Z $\textbf{case }
     \Omega, \Sigma \satisfies \Gamma
@@ -3163,6 +3207,21 @@ Different: RLT isn't cartesian
 
   \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction on $\Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$  
   \item $\square$
+\end{lemma}
+
+\begin{lemma}(Preservation of model typing)
+  \label{lemma:model_typing_preservation}
+  \begin{mathpar}
+    \inferrule {
+      \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r 
+      \\
+      F\code{(}v\code{)} \rightsquigarrow e
+    } {
+      \Omega, \Gamma \satisfies e \hastype \tau_r 
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
 \end{lemma}
 
 
@@ -3366,15 +3425,13 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
-      \code{*$p$=>$e$} \in F 
+      F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
       \\
-      \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
-      \\\\
       \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
       \\
       \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
     } {
-      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies F\ \code{*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     } 
 
     \inferrule { 
@@ -3510,186 +3567,4 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
   \end{mathpar}
 \end{semantics}
 
-
-
-
-
-
-
-
-
 \end{document}
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%% SET COMPREHENSION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  
-%   \inferrule[StrongUnion] {
-%     \\\\
-%     M = \{ \left< \Delta_2, \Omega_2 \right> \ |\ 
-%     \\\\
-%     \left< \Delta, \Omega \right> \rightsquigarrow M_1 \entails \tau_1 \subtypes \tau_w
-%     \ \land \ 
-%     \left< \Delta_1, \Omega_1 \right> \in M_1
-%     \\\\
-%     \left< \Delta_1, \Omega_1 \right> \rightsquigarrow M_2 \entails \tau_2 \subtypes \tau_w
-%     \ \land \ 
-%     \left< \Delta_2, \Omega_2 \right> \in M_2
-%     \\\\
-%     \}
-%     \\
-%   } {
-%     \left< \Delta, \Omega \right> \rightsquigarrow M \entails \code{$\tau_1$|$\tau_2$} \subtypes \tau_w
-%   }
-
-
-%   \inferrule[anteUnion] {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
-%     \\
-%     \Delta \entails \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
-%   } {
-%     \Delta \entails \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
-%   }
-
-%   \inferrule[rightUnion1] {
-%     \Delta \entails \tau_l \subtypes \tau_1
-%   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[rightUnion2] {
-%     \Delta \entails \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[ConsqInter] {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
-%     \\
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
-%   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
-%   }
-
-%   \inferrule[rightInter] {
-%     \Delta \entails \tau_l \subtypes \tau_1
-%     \\
-%     \Delta \entails \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
-%   }
-
-%   \inferrule[leftInter1] {
-%     \Delta \entails \tau_1 \subtypes \tau_r
-%   } {
-%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftInter2] {
-%     \Delta \entails \tau_2 \subtypes \tau_r
-%   } {
-%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftExis] { 
-%     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \bigand_{\Delta'}
-%     (\Delta;\Delta' \entails \tau_1 \subtypes \tau_2)
-%     \rightsquigarrow
-%     (\Delta;\Delta' \entails \tau \subtypes \tau_r)
-%   } { 
-%     \Delta \entails \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[rightExis] { 
-%     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \Delta;\Delta' \entails \tau_l \subtypes \tau
-%     \\
-%     \Delta;\Delta' \entails \tau_1 \subtypes \tau_2
-%   } { 
-%     \Delta \entails \tau_l
-%     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%   }
-
-%   \inferrule[refl] {
-%   } {
-%     \Delta \entails \tau \subtypes \tau 
-%   }
-
-%   \inferrule[impli] {
-%     \Delta \entails \tau_3 \subtypes \tau_1 
-%     \\
-%     \Delta \entails \tau_2 \subtypes \tau_4
-%   } {
-%     \Delta \entails \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
-%   } 
-
-
-%   \inferrule[rightUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\code{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
-%   } { 
-%     \Delta \entails \tau_l
-%     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
-%   }
-
-%   \inferrule[leftUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\Delta' \entails \tau \subtypes \tau_r
-%     \\
-%     \Delta;\Delta' \entails \alpha \subtypes \tau'
-%   } { 
-%     \Delta \entails \code{[$\alpha$<:$\tau'$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[cons] {
-%     \code{$\tau_l$<:$\tau_r$} \in \Delta
-%   } {
-%     \Delta \entails \tau_l \subtypes \tau_r
-%   }
-
-
-%   % left-induc
-%   \inferrule[leftInduc] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\code{$\alpha$<:$\tau_r$} \entails \tau 
-%     \subtypes \tau_r
-%   } { 
-%     \Delta \entails \code{induc[$\alpha$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[field] {
-%     \Delta \entails \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \entails \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
-%   } 
-
-
-%   % right-induc
-%   \inferrule[rightInduc] {
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
-%     \tau_l \subtypes \tau
-%   } {
-%     \Delta \entails \tau_l
-%     \subtypes \code{induc[$\alpha$]$\tau$}
-%   }
-
-%   \inferrule[tag] {
-%     \Delta \entails \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \entails (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
-%   } 
-
