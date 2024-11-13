@@ -3160,10 +3160,11 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $\forall e' .\ \neg F\code{($v_1$)} \rightsquigarrow e'$ by summarization 
   \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)($v_1$)} \rightsquigarrow e[\Sigma']$ by definition 
   \item \Z\Z\Z\Z \TODO{...} 
+  \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition \TODO{generalize definition}
   \item \Z\Z\Z $\textbf{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
   \item \Z\Z\Z\Z \TODO{...} 
-  \item \Z\Z\Z $...$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
-  \item \Z\Z\Z \TODO{...}  
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by cases on $F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
 
   \item \Z\Z $\textbf{case } e_1[\Sigma] \rightsquigarrow e_1' \I e_1' \textbf{ wellformed} \ \textbf{for} \ e_1' $ 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{(F *$p$=>$e$)}\code{(}e_1'\code{)} \hastype \tau_r$ by induction hypothesis
