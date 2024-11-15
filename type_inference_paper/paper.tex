@@ -34,11 +34,8 @@
     % morekeywords={let, fix, in}
 }
 
+\theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{corollary}{Corollary}[theorem]
-
-% \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section]
 \newtheorem{syntax}{Syntax}[section]
 \newtheorem{semantics}{Semantics}[section]
@@ -3056,17 +3053,17 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof:
   \item $\textbf{assume } \entails e \hastype \tau \given Z$
-  \item \I $\textbf{let } \Omega\ \Gamma' \ \tau' \textbf{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{lemma:proof_typing_soundness}}
+  \item \I $\textbf{let } \Omega\ \Gamma' \ \tau' \textbf{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
   \item \I $\Omega, \Sigma \satisfies \Gamma'$ by ...
-  \item \I $e[\Sigma] \textbf{ wellformed} $ by lemma \ref{lemma:model_typing_soundness}
+  \item \I $e[\Sigma] \textbf{ wellformed} $ by theorem \ref{theorem:model_typing_soundness}
   \item \I $e[\Sigma] = e$ by ...
   \item \I $e \textbf{ wellformed} $ by substitution 
   \item $\square$
 \end{theorem}
 
 
-\begin{lemma}(Soundness of proof typing)
-  \label{lemma:proof_typing_soundness}
+\begin{theorem}(Soundness of proof typing)
+  \label{theorem:proof_typing_soundness}
   \begin{mathpar}
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  
@@ -3077,10 +3074,10 @@ Different: RLT isn't cartesian
   Proof: 
   \item \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
   \item \TODO{See how Cretin proves this without using subject reduction}
-\end{lemma}
+\end{theorem}
 
-\begin{lemma}(Subsumption of model typing)
-  \label{lemma:subsumption_model_typing}
+\begin{theorem}(Subsumption of model typing)
+  \label{theorem:subsumption_model_typing}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau_l 
@@ -3094,14 +3091,17 @@ Different: RLT isn't cartesian
   \item $\textbf{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
   \I \Omega, \Gamma \satisfies \tau_l <: \tau_r
   $
-  \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion on $\Omega, \Gamma \satisfies \tau_l <: \tau_r$
+  \item \Z $\textbf{invert on}\ \Omega, \Gamma \satisfies \tau_l <: \tau_r$
+  \item \Z $\textbf{case}\ \forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$
+  \item \Z\Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by identity
+  \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion
   \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
   \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by application
   \item $\square$
-\end{lemma}
+\end{theorem}
 
-\begin{lemma}(Elimination of implication of model typing)
-  \label{lemma:model_typing_implication_elimination}
+\begin{theorem}(Elimination of implication of model typing)
+  \label{theorem:model_typing_implication_elimination}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
@@ -3118,7 +3118,7 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
-  \item $\textbf{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
+  \item \Z $\textbf{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
   \item \Z $\textbf{case }
     e_0 = \code{($F$ *$p$=>$e$)} 
     \I
@@ -3138,22 +3138,22 @@ Different: RLT isn't cartesian
     \textbf{for} \ F \ p \ e \ \Omega' \ \Gamma' \  
   $
 
-  \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by lemma \ref{lemma:model_typing_assignability} 
-  \item \Z\Z $e_0[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
+  \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+  \item \Z\Z $e_0[\Sigma] \textbf{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
   \item \Z\Z $\code{(F *$p$=>$e$)}[\Sigma] \textbf{ wellformed}$ by substitution 
-  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = \code{(F *$p$=>$e$)}[\Sigma]$ by lemma \TODO{... inversion ...} 
-  \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by lemma \ref{lemma:model_typing_soundness}
+  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = \code{(F *$p$=>$e$)}[\Sigma]$ by theorem \TODO{... inversion ...} 
+  \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
 
 
 
   \item \Z\Z $\textbf{induct on}\ e_1[\Sigma] \textbf{ wellformed}$
 
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
-  \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by lemma \TODO{...} 
+  \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \TODO{...} 
   \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by lemma \TODO{...} 
+  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by theorem \TODO{...} 
 
-  \item \Z\Z\Z $\textbf{split on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+  \item \Z\Z\Z $\textbf{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
   \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
   \item \Z\Z\Z\Z $\textbf{for } e'$ 
   \item \Z\Z\Z\Z\Z $\neg \epsilon\code{($v_1$)} \rightsquigarrow e'$ by definition
@@ -3167,10 +3167,10 @@ Different: RLT isn't cartesian
 
   \item \Z\Z\Z $\textbf{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application 
-  \item \Z\Z\Z\Z $\textbf{let } e' \textbf{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by lemma \TODO{inversion} 
+  \item \Z\Z\Z\Z $\textbf{let } e' \textbf{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \TODO{inversion} 
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by splitting 
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{(F *$p$=>$e$)}\code{(}e_1'\code{)} \hastype \tau_r$ by application 
   \item \Z\Z\Z $v_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow v_0\code{(}e_1'\code{)}$ by definition
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)}[\Sigma]\code{($e_1[\Sigma]$)} \rightsquigarrow \code{(F *$p$=>$e$)}[\Sigma]\code{($e_1'$)}$ by substitution 
@@ -3182,7 +3182,7 @@ Different: RLT isn't cartesian
   \item \Z\Z $\textbf{for}\ e_1' $
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
-  \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by lemma \TODO{...} 
+  \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by theorem \TODO{...} 
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
   \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition \TODO{ensure the definitional assumptions are proven} 
@@ -3212,10 +3212,10 @@ Different: RLT isn't cartesian
 
   \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item $\square$
-\end{lemma}
+\end{theorem}
 
-% \begin{lemma}(Preservation of model typing)
-%   \label{lemma:model_typing_preservation}
+% \begin{theorem}(Preservation of model typing)
+%   \label{theorem:model_typing_preservation}
 %   \begin{mathpar}
 %     \inferrule {
 %       \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r 
@@ -3227,11 +3227,11 @@ Different: RLT isn't cartesian
 %   \end{mathpar}
 %   Proof:
 %   \item \TODO{...}
-% \end{lemma}
+% \end{theorem}
 
 
-% \begin{lemma}(Progress of pattern matching)
-%   \label{lemma:pattern_matching_progress}
+% \begin{theorem}(Progress of pattern matching)
+%   \label{theorem:pattern_matching_progress}
 %   \begin{mathpar}
 %     \inferrule {
 %       \code{*$p$=>$e$} \in F 
@@ -3279,10 +3279,10 @@ Different: RLT isn't cartesian
 %   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
 %   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
 %   \item $\square$
-% \end{lemma}
+% \end{theorem}
 
-\begin{lemma}(Assignability of model typing)
-  \label{lemma:model_typing_assignability}
+\begin{theorem}(Assignability of model typing)
+  \label{theorem:model_typing_assignability}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau
@@ -3292,11 +3292,11 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof:
   \item \TODO{...}
-\end{lemma}
+\end{theorem}
 
 
-\begin{lemma}(Soundness of model typing)
-  \label{lemma:model_typing_soundness}
+\begin{theorem}(Soundness of model typing)
+  \label{theorem:model_typing_soundness}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Sigma \satisfies \Gamma 
@@ -3357,7 +3357,7 @@ Different: RLT isn't cartesian
   \item \Z $e[\Sigma] \textbf{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
   \item $\square$
   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
-\end{lemma}
+\end{theorem}
 
 \noindent
 \textbf{NOTE: } The induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ (P(e') \implies P(e)), P(e') \implies Q(e')$ if inducting on predicate $P$
@@ -3371,8 +3371,8 @@ This allows us to use the induction hypothesis on the reduction step result in t
 has been progress in observing the elements of the stream (guardedness) and there is no
 further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
 
-% \begin{lemma}(Progress of proof typing)
-%   \label{lemma:proof_typing_soundness}
+% \begin{theorem}(Progress of proof typing)
+%   \label{theorem:proof_typing_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \Gamma \entails e \hastype \tau \given Z  
@@ -3381,9 +3381,9 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 %     } 
 %   \end{mathpar}
 %   Proof ... 
-% \end{lemma}
+% \end{theorem}
 
-% \begin{lemma}(Preservation of proof typing)
+% \begin{theorem}(Preservation of proof typing)
 %   \begin{mathpar}
 %     \inferrule { 
 %       \Gamma \entails e \hastype \tau \given Z  
@@ -3394,7 +3394,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 %     } 
 %   \end{mathpar}
 %   Proof ... 
-% \end{lemma}
+% \end{theorem}
 
 
 \begin{semantics}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}\ (Model Typing)
