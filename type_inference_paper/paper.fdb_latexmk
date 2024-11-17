@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1731706607.57669 "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" "paper.pdf" "paper" 1731706609.8076 0
-  "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" 1731706607.34828 114678 1eccbc4251ff36e68f2af1715614a5de ""
+["pdflatex"] 1731870898.67485 "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" "paper.pdf" "paper" 1731870900.94631 0
+  "/Users/thomas/tlogan@github.com/ERST/type_inference_paper/paper.tex" 1731870898.4507 115967 0daa329bdb805521c85363def2a6faf6 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1490131464 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1490131464 2933 9ad527ce78d7c5fa0a642dead095f172 ""
@@ -235,9 +235,9 @@
   "/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1715614394.6337 5467645 128b85b7cde5f5edc5cb7f1dd7ff8736 ""
   "/usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt" 1715614389 8221427 c1e14827797dc57048b4fe582769dcbf ""
   "/usr/local/texlive/2024/texmf.cnf" 1710266656 577 e590dabc9e28c5b61546e15f63eebcdf ""
-  "paper.aux" 1731706609.61923 5661 44c283da4f466b33b9508769bb061375 "pdflatex"
-  "paper.out" 1731706609.62009 1527 fc1b27203c6c82e1f8d35574f679f266 "pdflatex"
-  "paper.tex" 1731706607.34828 114678 1eccbc4251ff36e68f2af1715614a5de ""
+  "paper.aux" 1731870900.75112 5816 5c43739eca2d03ad4e172c1cd12fa2e4 "pdflatex"
+  "paper.out" 1731870900.75243 1527 fc1b27203c6c82e1f8d35574f679f266 "pdflatex"
+  "paper.tex" 1731870898.4507 115967 0daa329bdb805521c85363def2a6faf6 ""
   (generated)
   "paper.aux"
   "paper.log"
