@@ -3152,10 +3152,14 @@ Different: RLT isn't cartesian
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
   \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
   \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by theorem \ref{theorem:model_typing_pattern_matching} 
 
   \item \Z\Z\Z $\textbf{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
   \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by lemma \TODO{unwrap}
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
+  \item \Z\Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ 
+    by theorem \ref{theorem:model_typing_pattern_matching} 
   \item \Z\Z\Z\Z $\textbf{for } e'$ 
   \item \Z\Z\Z\Z\Z $\neg \epsilon\code{($v_1$)} \rightsquigarrow e'$ by definition
   \item \Z\Z\Z\Z\Z $\neg F\code{($v_1$)} \rightsquigarrow e'$ by substitution 
@@ -3239,21 +3243,20 @@ Different: RLT isn't cartesian
 
 \begin{theorem}(Model typing pattern matching)
   \label{theorem:model_typing_pattern_matching}
-  \TODO{this doesn't actually seem valid}
   \begin{mathpar}
     \inferrule {
-      \Omega, \Gamma \satisfies p \hastype \tau 
+      \Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r
       \\
-      \Omega \satisfies v \hastype \tau 
+      \Omega \satisfies v \hastype \tau_l 
     } {
-      \exists \Sigma .\ p \equiv v \given \Sigma
+      \exists \Sigma .\  p \equiv v \given \Sigma
     } 
   \end{mathpar}
   Proof:
   \item $\textbf{assume } 
-    \Omega, \Gamma \satisfies p \hastype \tau 
+    \Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r
     \I
-    \Omega \satisfies v \hastype \tau 
+    \Omega \satisfies v \hastype \tau_l 
   $
   \item \TODO{...}
   \item $\square$
@@ -3507,11 +3510,11 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     \inferrule { 
       F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
       \\
-      \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+      \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
       \\
-      \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
     } {
-      \Omega, \Gamma \satisfies F\ \code{*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     } 
 
     \inferrule { 
