@@ -3127,15 +3127,15 @@ Different: RLT isn't cartesian
   $
   \item \Z $
     \textbf{... }
-    \Omega \sqcup \Omega', \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+    \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
     \I
-    \Omega \sqcup \Omega', \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
   $
   \item \Z $
     \textbf{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
   $
   \item \Z $
-    \textbf{for} \ F \ p \ e \ \Omega' \ \Gamma' \  
+    \textbf{for} \ F \ p \ e \ \Gamma' \  
   $
 
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
@@ -3152,7 +3152,7 @@ Different: RLT isn't cartesian
   \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
   \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
   \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by theorem \TODO{...} 
+  \item \Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ by theorem \ref{theorem:model_typing_pattern_matching} 
 
   \item \Z\Z\Z $\textbf{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
   \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
@@ -3231,6 +3231,29 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e \hastype \tau 
     \I
     \Omega, \Sigma \satisfies \Gamma
+  $
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
+
+\begin{theorem}(Model typing pattern matching)
+  \label{theorem:model_typing_pattern_matching}
+  \TODO{this doesn't actually seem valid}
+  \begin{mathpar}
+    \inferrule {
+      \Omega, \Gamma \satisfies p \hastype \tau 
+      \\
+      \Omega \satisfies v \hastype \tau 
+    } {
+      \exists \Sigma .\ p \equiv v \given \Sigma
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\textbf{assume } 
+    \Omega, \Gamma \satisfies p \hastype \tau 
+    \I
+    \Omega \satisfies v \hastype \tau 
   $
   \item \TODO{...}
   \item $\square$
