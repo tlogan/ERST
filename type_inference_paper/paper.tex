@@ -3189,7 +3189,12 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
   \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition \TODO{ensure the definitional assumptions are proven} 
+  \item \Z\Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
+  \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
+  \item \Z\Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
+  \item \Z\Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
+  \item \Z\Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$*$p$=>$e$)($e_1'$)}$ by substitution 
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
   \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
 
