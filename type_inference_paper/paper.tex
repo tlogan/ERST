@@ -37,8 +37,6 @@
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{definition}{Definition}[section]
-\newtheorem{syntax}{Syntax}[section]
-\newtheorem{semantics}{Semantics}[section]
 
 
 \title{Extrinsic Relational Subtyping}
@@ -1674,7 +1672,8 @@ Different: RLT isn't cartesian
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Syntax %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{syntax}(Expression)
+\begin{definition}(Expression syntax)
+  \label{definition:expression_syntax}
   \[\begin{array}[t]{r@{}l}
     \nonterm{e} 
     & 
@@ -1734,11 +1733,11 @@ Different: RLT isn't cartesian
     \\
     \nonterm{\sigma} & \is x \slash v
   \end{array}\]
-  \label{syntax:expression}
-\end{syntax}
+\end{definition}
 
 
-\begin{semantics}\boxed{e \rightsquigarrow e}\ (Structural)
+\begin{definition}\boxed{e \rightsquigarrow e}\ (Progression)
+  \label{definition:progression}
   \begin{mathpar}
     \inferrule {
       e \rightsquigarrow e'
@@ -1839,11 +1838,11 @@ Different: RLT isn't cartesian
       \code{($e$)} \rightsquigarrow e' 
     }
   \end{mathpar}
-  \label{semantics:operational_semantics}
-\end{semantics}
+\end{definition}
 
 
-\begin{syntax} (Type)
+\begin{definition} (Type syntax)
+  \label{definition:type_syntax}
   \[\begin{array}[t]{r@{}l}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
@@ -1903,10 +1902,9 @@ Different: RLT isn't cartesian
     \\  
     \nonterm{\omega} & \is \alpha \slash \tau
   \end{array}\]
-  \label{syntax:type}
-\end{syntax}
+\end{definition}
 
-\begin{semantics} \boxed{\Gamma \entails e \hastype \tau \given Z}
+\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1985,9 +1983,9 @@ Different: RLT isn't cartesian
       \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics} \boxed{Z, \Gamma \entails F \liftfun \Pi, T}
+\begin{definition} \boxed{Z, \Gamma \entails F \liftfun \Pi, T}
   \begin{mathpar}
 
     \inferrule {
@@ -2005,11 +2003,12 @@ Different: RLT isn't cartesian
       \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \code{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
 
-\begin{semantics} \boxed{Z \looparrowright Z}
+\begin{definition} \boxed{Z \looparrowright Z}
+  \label{definition:multiverse_ordering}
   \begin{mathpar}
     \inferrule {
       \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
@@ -2019,11 +2018,11 @@ Different: RLT isn't cartesian
       Z_0 \looparrowright Z_1
     }
   \end{mathpar}
-  \label{semantics:multiverse_ordering}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{\tau \subtypes \tau \given M, \Delta}
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof typing)
+  \label{definition:proof_typing}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2266,10 +2265,9 @@ Different: RLT isn't cartesian
       \given M, \Delta
     }
   \end{mathpar}
-  \label{semantics:proof_typing}
-\end{semantics}
+\end{definition}
 
-\begin{semantics} \boxed{\tau \subtypes \tau \given M, \Delta}
+\begin{definition} \boxed{\tau \subtypes \tau \given M, \Delta}
   \begin{mathpar}
     \inferrule[Fixpoint-L] {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
@@ -2381,10 +2379,10 @@ Different: RLT isn't cartesian
       \given M_1, \Delta_1 
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{\tau \subtypes \tau \given Z}
+\begin{definition}\boxed{\tau \subtypes \tau \given Z}
   \begin{mathpar}
     \inferrule {
       \forall  M\ \Delta .\  
@@ -2396,9 +2394,9 @@ Different: RLT isn't cartesian
     }
 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{Q \given M, \Delta}
+\begin{definition}\boxed{Q \given M, \Delta}
   \begin{mathpar}
     \inferrule {
       Q \given M_0, \Delta_0
@@ -2419,14 +2417,14 @@ Different: RLT isn't cartesian
       M, \Delta \entails \epsilon
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{syntax}(Collection)
+\begin{definition}(Collection)
   \[\begin{array}[t]{r@{}l}
     \nonterm{C} & \is \epsilon \sep C\ c
   \end{array}\]
-\end{syntax}
-\begin{semantics}\boxed{C \sqcup  C = C}
+\end{definition}
+\begin{definition}\boxed{C \sqcup  C = C}
   \[\begin{array}{rclr}
     C \sqcup \epsilon 
     &=& 
@@ -2440,9 +2438,9 @@ Different: RLT isn't cartesian
     & \C{step} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{C \sqcap  C = C}
+\begin{definition}\boxed{C \sqcap  C = C}
   \[\begin{array}{rclr}
     C \sqcap \epsilon 
     &=& 
@@ -2459,10 +2457,10 @@ Different: RLT isn't cartesian
     & \D{Step} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{\text{map}(C, t) = C}
+\begin{definition}\boxed{\text{map}(C, t) = C}
   \[\begin{array}{rclr}
     \text{map}(\epsilon, t)
     &=& 
@@ -2476,9 +2474,9 @@ Different: RLT isn't cartesian
     & \C{step} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}
+\begin{definition}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}
   \[\begin{array}{rclr}
     \widebar{\ c'\ }^{c \in C} 
     &\circeq& 
@@ -2486,9 +2484,9 @@ Different: RLT isn't cartesian
     & \C{comprehension} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{c \in C}
+\begin{definition}\boxed{c \in C}
   \begin{mathpar}
     \inferrule {
       c \notin C
@@ -2502,10 +2500,10 @@ Different: RLT isn't cartesian
       c \in C\ c' 
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics} \boxed{C \preceq C}
+\begin{definition} \boxed{C \preceq C}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2518,9 +2516,9 @@ Different: RLT isn't cartesian
       C \preceq C'\ c 
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\code{|}(\mathrm{T}) = \tau}
+\begin{definition}\boxed{\code{|}(\mathrm{T}) = \tau}
   \[\begin{array}{rclr}
     \code{|}(\epsilon)
     &=& 
@@ -2534,9 +2532,9 @@ Different: RLT isn't cartesian
     & \C{step} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\code{\&}(\mathrm{T}) = \tau}
+\begin{definition}\boxed{\code{\&}(\mathrm{T}) = \tau}
   \[\begin{array}{rclr}
     \code{\&}(\epsilon)
     &=& 
@@ -2550,10 +2548,10 @@ Different: RLT isn't cartesian
     & \C{step} 
     \\
   \end{array}\]
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}
+\begin{definition}\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2580,9 +2578,9 @@ Different: RLT isn't cartesian
       \entails M_1 \lessdot \alpha
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails \mathrm{T} \ll \alpha}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \mathrm{T} \ll \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2615,9 +2613,9 @@ Different: RLT isn't cartesian
       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \mathrm{T} \ll \alpha
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2642,9 +2640,9 @@ Different: RLT isn't cartesian
       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot M_1
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails \alpha \ll \mathrm{T}}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \mathrm{T}}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2677,9 +2675,9 @@ Different: RLT isn't cartesian
       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \mathrm{T}
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2712,9 +2710,9 @@ Different: RLT isn't cartesian
       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot \Delta_2
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2751,13 +2749,13 @@ Different: RLT isn't cartesian
       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subtyping Solving (Inductive) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{semantics}\boxed{M, \Delta, \mathrm{A} \entails \Omega}
+\begin{definition}\boxed{M, \Delta, \mathrm{A} \entails \Omega}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2786,10 +2784,10 @@ Different: RLT isn't cartesian
       \Omega\ \alpha \slash \code{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{N, M \entails \Pi \equiv \mathrm{T}}
+\begin{definition}\boxed{N, M \entails \Pi \equiv \mathrm{T}}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2810,9 +2808,9 @@ Different: RLT isn't cartesian
       N, M \entails \Pi \left<M, \Delta, \tau_l \code{->} \tau_r \right> \equiv \mathrm{T}\ \tau 
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}
+\begin{definition}\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
@@ -2844,9 +2842,9 @@ Different: RLT isn't cartesian
       \alpha_3 \circlearrowright \mathrm{T}\ \tau
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\Delta \entails N \pitchfork \Delta}
+\begin{definition}\boxed{\Delta \entails N \pitchfork \Delta}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2871,9 +2869,9 @@ Different: RLT isn't cartesian
       \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta'
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
+\begin{definition}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2896,9 +2894,9 @@ Different: RLT isn't cartesian
       M, \Delta \ \tau_l<:\tau_r \entails \mathrm{T} \subtypes \alpha
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
+\begin{definition}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2921,11 +2919,11 @@ Different: RLT isn't cartesian
       M, \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \mathrm{T}
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
 
-\begin{semantics}\boxed{\text{outer}(+|-) = \code{ALL}|\code{EXI}}
+\begin{definition}\boxed{\text{outer}(+|-) = \code{ALL}|\code{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{outer}(+) 
@@ -2938,9 +2936,9 @@ Different: RLT isn't cartesian
     \code{ALL} 
     & \C{negative} 
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\text{inner}(+|-) = \code{ALL}|\code{EXI}}
+\begin{definition}\boxed{\text{inner}(+|-) = \code{ALL}|\code{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{inner}(+) 
@@ -2953,9 +2951,9 @@ Different: RLT isn't cartesian
     \code{EXI} 
     & \C{negative} 
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\text{quantify}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}
+\begin{definition}\boxed{\text{quantify}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}
   \[\begin{array}{rclr}
     \text{quantify}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
     &=& 
@@ -2975,9 +2973,9 @@ Different: RLT isn't cartesian
     \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}
     \tau
   \end{array}\]
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau}
+\begin{definition}\boxed{\mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau}
   \begin{mathpar}
     \inferrule {
       \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
@@ -2991,9 +2989,9 @@ Different: RLT isn't cartesian
       \mathrm{A}_r, \mathrm{A}_z, \Delta \entails \tau \equiv^{+|-} \tau'
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\mathrm{A}, \Delta \entails \Delta \wr \Delta}
+\begin{definition}\boxed{\mathrm{A}, \Delta \entails \Delta \wr \Delta}
   \begin{mathpar}
     \inferrule {
     } {
@@ -3020,13 +3018,13 @@ Different: RLT isn't cartesian
       \mathrm{A}_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \wr \Delta_i \ \tau_l<:\tau_r
     }
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{e\ \textbf{wellformed}}
-  \label{semantics:expression_wellformed}
+\begin{definition}\boxed{e\ \textbf{wellformed}}
+  \label{definition:expression_good_formation}
   \begin{mathpar}
-    \inferrule { 
+    \inferrule {
       e = v
     } {
       e\ \textbf{wellformed}
@@ -3040,7 +3038,7 @@ Different: RLT isn't cartesian
       e\ \textbf{wellformed}
     } 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 \begin{theorem}(Typing Soundness)
   \label{theorem:typing_soundness}
@@ -3529,8 +3527,8 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 % \end{theorem}
 
 
-\begin{semantics}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}\ (Model Typing)
-  \label{semantics:model_typing}
+\begin{definition}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}\ (Model Typing)
+  \label{definition:model_typing}
   \begin{mathpar}
     \inferrule { 
       \alpha \slash \tau \in \Omega
@@ -3641,10 +3639,10 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
-\begin{semantics}\boxed{\Omega, \Sigma \satisfies \Gamma}
-  \label{semantics:model_typing_environment}
+\begin{definition}\boxed{\Omega, \Sigma \satisfies \Gamma}
+  \label{definition:model_typing_environment}
   \begin{mathpar}
     \inferrule { 
     } {
@@ -3659,12 +3657,12 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \Omega, \Sigma \ x \slash v \satisfies \Gamma \ x:\tau 
     } 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
 
-\begin{semantics}\boxed{\Omega \satisfies \tau <: \tau}
-  \label{semantics:model_subtyping}
+\begin{definition}\boxed{\Omega \satisfies \tau <: \tau}
+  \label{definition:model_subtyping}
   \begin{mathpar}
     \inferrule { 
       \forall e\ \Gamma .\ 
@@ -3674,11 +3672,11 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \Omega \satisfies \tau_l <: \tau_r
     } 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 
-\begin{semantics}\boxed{\Omega \satisfies Q}
-  \label{semantics:model_sequence_subtyping}
+\begin{definition}\boxed{\Omega \satisfies Q}
+  \label{definition:model_sequence_subtyping}
   \begin{mathpar}
     \inferrule { 
     } {
@@ -3693,6 +3691,6 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \Omega \satisfies Q\ \code{.$\tau_l$<:$\tau_r$}
     } 
   \end{mathpar}
-\end{semantics}
+\end{definition}
 
 \end{document}
