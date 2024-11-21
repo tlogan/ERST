@@ -3156,7 +3156,7 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z $\textbf{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
   \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by lemma \TODO{unwrap}
+  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
   \item \Z\Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ 
     by theorem \ref{theorem:model_typing_pattern_matching} 
@@ -3187,7 +3187,8 @@ Different: RLT isn't cartesian
   \item \Z\Z $\textbf{for}\ e_1' $
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
-  \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by theorem \TODO{...} 
+  \item \Z\Z\Z $\forall x .\ x \notin \textbf{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
+  \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
   \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition \TODO{ensure the definitional assumptions are proven} 
@@ -3218,6 +3219,24 @@ Different: RLT isn't cartesian
   \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item $\square$
 \end{theorem}
+
+\begin{theorem}(Model typing unwrapping)
+  \label{theorem:model_typing_unwrapping}
+  \begin{mathpar}
+    \inferrule {
+      \Omega, \Gamma \satisfies \code{($e$)} \hastype \tau 
+    } {
+      \Omega, \Gamma \satisfies e \hastype \tau 
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\textbf{assume } 
+    \Omega, \Gamma \satisfies \code{($e$)} \hastype \tau 
+  $
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
 
 \begin{theorem}(Model typing valuation)
   \label{theorem:model_typing_valuation}
@@ -3306,6 +3325,41 @@ Different: RLT isn't cartesian
     by inversion
   \item $\square$
 \end{theorem}
+
+\begin{theorem}(Reduction closed)
+  \label{theorem:reduction_closed}
+  \begin{mathpar}
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \forall x .\ x \notin \textbf{FV}(e')
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\textbf{assume } 
+    e \rightsquigarrow e'
+  $
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Closed substitution)
+  \label{theorem:closed_substitution}
+  \begin{mathpar}
+    \inferrule {
+      \forall x .\ x \notin \textbf{FV}(e)
+    } {
+      e = e[\Sigma]
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\textbf{assume } 
+    \forall x .\ x \notin \textbf{FV}(e)
+  $
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
 
 
 % \begin{theorem}(Progress of pattern matching)
