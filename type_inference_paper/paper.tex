@@ -3133,7 +3133,7 @@ Different: RLT isn't cartesian
     \textbf{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
   $
   \item \Z $
-    \textbf{for} \ F \ p \ e \ \Gamma' \  
+    \textbf{wrt} \ F \ p \ e \ \Gamma' \  
   $
 
   \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
@@ -3182,7 +3182,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $\textbf{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \textbf{wellformed}$
   \item \Z\Z $\textbf{hypo}\ e_1'\ \textbf{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
-  \item \Z\Z $\textbf{for}\ e_1' $
+  \item \Z\Z $\textbf{wrt}\ e_1' $
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
   \item \Z\Z\Z $\forall x .\ x \notin \textbf{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
@@ -3212,7 +3212,7 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies \code{$e_0'$($e_1$)} \hastype \tau_r
   $
   \item \Z $ 
-  \textbf{for}\ \Sigma\ e_0' 
+  \textbf{wrt}\ \Sigma\ e_0' 
   $
   \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by application 
   \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
@@ -3300,7 +3300,7 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{case } v = F$
   \item \Z\Z $v = F$ by identity
   \item \Z $\textbf{case } F \rightsquigarrow e$
-  \item \Z $\textbf{for } e$
+  \item \Z $\textbf{wrt } e$
   \item \Z\Z $\neg F \rightsquigarrow e$ by definition
   \item \Z\Z $\bot$ by application 
   \item \Z $v = F$ by inversion 
@@ -3322,7 +3322,7 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{case } ...$
   \item \Z \TODO{vacuous cases} 
   \item \Z $\textbf{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
-  \item \Z $\textbf{for } e'$
+  \item \Z $\textbf{wrt } e'$
   \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by identity
   \item \Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
     by inversion
