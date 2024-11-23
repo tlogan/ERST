@@ -3323,7 +3323,10 @@ Different: RLT isn't cartesian
   \item \Z \TODO{vacuous cases} 
   \item \Z $\textbf{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
   \item \Z $\textbf{wrt } e'$
-  \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by identity
+  \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ 
+    by conjunction 
+  \item \Z\Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
+    by witness 
   \item \Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
     by inversion
   \item $\square$
