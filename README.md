@@ -95,6 +95,10 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note the weirdness of the axiom of choice
+    - it allows us to choose an arbitrary value without knowing what it is or how it is chosen.
+    - Here’s an interpretation that I just developed so I may be off the mark but here goes: it seems like the axiom of choice defeats one of the definitional properties of a function. That every element in the domain has a unique counterpart in the range. The axiom of choice would allow us to magically transform any set of pairs ie relation into a function by simply making an arbitrary choice of the counterpart in the range. So is adding the axiom of choice equivalent to relaxing the definition of a function? Or put another way, for any statement whose proof relies on the axiom of choice, can we simply weaken the statement to be in terms of relations rather than functions?
+- note how the set-theoretic definition of function corresponds to type implication elimination 
 - note some aspects of Cretin's system, lemmas, and proofs
   - Cretin claims indexing of terms or steps is required if reduction may not terminate
   - Does Cretin's "stable by reduction" mean there is only one reduction path

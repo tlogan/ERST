@@ -1904,7 +1904,7 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}
+\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}\ (Proof typing)
   \begin{mathpar}
     \inferrule {
     } {
@@ -3070,8 +3070,114 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
+  \item $\textbf{assume } \Gamma \entails e \hastype \tau \given Z$ 
+  \item \Z $\textbf{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+
+  \item \Z $\textbf{case } e = \code{@} \I \tau = \code{@}$ 
+  \item \Z\Z $\textbf{for } \Omega$
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{@}$ by substitution
+  \item \Z\Z\Z $\exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by witness
+  \item \Z\Z $\forall \Omega .\ \exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by generalization 
+  \item \Z\Z $\exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by independence 
+
+  \item \Z $\textbf{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
+  \item \Z $\textbf{wrt } x$ 
+  \item \Z\Z $\textbf{for } \Omega $
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$ 
+  \item \Z\Z\Z $\exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by witness
+  \item \Z\Z $\forall \Omega .\ \exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by generalization 
+  \item \Z\Z $\exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by independence 
+
+
+
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \item \Z $\textbf{case } $ 
+  \item \Z $\textbf{hypo } $ 
+  \item \Z $\textbf{wrt } $ 
+  % \begin{mathpar}
+  %   \inferrule {
+  %     \code{$x$:$\tau$} \in \Gamma
+  %   } {
+  %     \Gamma \entails x \hastype \tau \given Z 
+  %   }
+
+  %   \inferrule {
+  %     \Gamma \entails e \hastype \tau \given Z 
+  %   } {
+  %     \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given Z 
+  %   }
+
+  %   \inferrule {
+  %     \Gamma \entails R \hastype \tau_0 \given Z_0
+  %     \\
+  %     Z_0 \looparrowright Z_1
+  %     \\
+  %     \Gamma \entails e \hastype \tau_1 \given Z_1
+  %   } {
+  %     \Gamma \entails R\ \code{*$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
+  %   }
+
+  %   \inferrule {
+  %     Z, \Gamma \entails F \liftfun \Pi, \mathrm{T}_n 
+  %     \\
+  %     \Gamma \entails \Pi \equiv \mathrm{T} 
+  %   } {
+  %     \Gamma \entails F \hastype \code{\&}(\mathrm{T}) \given Z
+  %   }
+
+  %   \inferrule {
+  %     \Gamma \entails e \hastype \tau_0 \given Z_0
+  %     \\
+  %     \alpha\ \#\ \Gamma, Z_0
+  %     \\
+  %     Z_0 \looparrowright Z_1
+  %     \\
+  %     \tau_0 \subtypes \code{$l$:$\alpha$} \given Z_1
+  %   } {
+  %     \Gamma \entails \code{$e$.$l$} \hastype \alpha \given Z_1
+  %   }
+
+  %   \inferrule {
+  %     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+  %     \\
+  %     Z_0 \looparrowright Z_1
+  %     \\
+  %     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+  %     \\
+  %     \alpha\ \#\ \Gamma, Z_1
+  %     \\
+  %     Z_1 \looparrowright Z_2
+  %     \\
+  %     \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
+  %   } {
+  %     \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
+  %   }
+
+  %   \inferrule {
+  %     \Gamma \entails e \hastype \tau \given Z_0
+  %     \\
+  %     \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
+  %     \\
+  %     Z_0 \looparrowright Z_1
+  %     \\
+  %     \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+  %     \\\\
+  %     \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
+  %   } {
+  %     \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
+  %   }
+  % \end{mathpar}
+  \item \Z\Z \TODO{...} 
+  \item $\exists \Omega\ \Gamma' \ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$
+    by induction
   \item \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
   \item \TODO{See how Cretin proves this without using subject reduction}
+  \item $\square$
 \end{theorem}
 
 \begin{theorem}(Model typing subsumption)
