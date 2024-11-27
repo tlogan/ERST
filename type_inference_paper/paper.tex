@@ -3116,8 +3116,7 @@ Different: RLT isn't cartesian
     \exists \Omega\ \Gamma' \ \tau''' .\ \Gamma' \satisfies e \hastype \tau'''
   $ by witness
 
-
-  \item \Z \TODO{...} 
+  \item \Z \TODO{remaining trivial introduction cases} 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3125,14 +3124,7 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{case } $ 
   \item \Z $\textbf{hypo } $ 
   \item \Z $\textbf{wrt } $ 
-  % \begin{mathpar}
-
-  %   \inferrule {
-  %     \Gamma \entails e \hastype \tau \given Z 
-  %   } {
-  %     \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given Z 
-  %   }
-
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %   \inferrule {
   %     \Gamma \entails R \hastype \tau_0 \given Z_0
   %     \\
@@ -3150,7 +3142,55 @@ Different: RLT isn't cartesian
   %   } {
   %     \Gamma \entails F \hastype \code{\&}(\mathrm{T}) \given Z
   %   }
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+  \item \Z $\textbf{case } e = \code{$e'$.$l$} \I \tau = \alpha \I Z = Z_1
+    \I
+    \Gamma \entails e' \hastype \tau_0 \given Z_0
+    \I
+    \alpha\ \#\ \Gamma, Z_0
+    \I
+    Z_0 \looparrowright Z_1
+    \I
+    \tau_0 \subtypes \code{$l$->$\alpha$} \given Z_1
+  $
+   
+  \item \Z $\textbf{hypo } 
+    \Gamma \entails e' \hastype \tau_0 \given Z_0 
+    \implies 
+    \exists \Omega \ \Gamma' \tau' .\  \Gamma' \satisfies e' \hastype \tau'
+  $ 
+  \item \Z $\textbf{wrt } e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
+  \item \Z\Z $
+    \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
+  $ by theorem \ref{} \TODO{subtyping soundness}
+  \item \Z\Z $
+    \forall e \ \Gamma .\ \satisfies e \hastype  \tau_0  \implies \satisfies e \hastype \code{$l$->$\alpha$}
+  $ by theorem \ref{} \TODO{model subtyping to typing}
+
+  \item \Z\Z $
+    \exists \Omega \ \Gamma' \tau' .\  \Gamma' \satisfies e' \hastype \tau'
+  $ by application
+  \item \TODO{... details ...}
+  \item \Z\Z $
+    \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau''
+  $ 
+  \item \Z\Z $
+    \exists \Omega\ \Gamma' \ \tau''' .\ \Gamma' \satisfies e \hastype \tau'''
+  $ by witness
+
+
+  \item \Z \TODO{remaining elimination caseis} 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \item \Z $\textbf{case } $ 
+  \item \Z $\textbf{hypo } $ 
+  \item \Z $\textbf{wrt } $ 
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %   \inferrule {
   %     \Gamma \entails e \hastype \tau_0 \given Z_0
   %     \\
