@@ -1905,13 +1905,17 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}\ (Proof typing)
+  \label{definition:proof_typing}
   \begin{mathpar}
     \inferrule {
+      \left< M, \Delta \right> \in Z
     } {
       \Gamma \entails \code{@} \hastype \code{@} \given Z 
     }
 
     \inferrule {
+      \left< M, \Delta \right> \in Z
+      \\
       \code{$x$:$\tau$} \in \Gamma
     } {
       \Gamma \entails x \hastype \tau \given Z 
@@ -2007,8 +2011,8 @@ Different: RLT isn't cartesian
 
 
 
-\begin{definition} \boxed{Z \looparrowright Z}
-  \label{definition:multiverse_ordering}
+\begin{definition} \boxed{Z \looparrowright Z}\ (Universe ordering)
+  \label{definition:universe_ordering}
   \begin{mathpar}
     \inferrule {
       \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
@@ -2267,9 +2271,10 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition} \boxed{\tau \subtypes \tau \given M, \Delta}
+\begin{definition} \boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof world subtyping)
+  \label{definition:proof_world_subtyping}
   \begin{mathpar}
-    \inferrule[Fixpoint-L] {
+    \inferrule {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
       \given M, \Delta
     } {
@@ -2382,9 +2387,12 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{\tau \subtypes \tau \given Z}
+\begin{definition}\boxed{\tau \subtypes \tau \given Z}\ (Proof universe subtyping)
+  \label{definition:proof_universe_subtyping}
   \begin{mathpar}
     \inferrule {
+      \left< M, \Delta \right> \in Z 
+      \\
       \forall  M\ \Delta .\  
       \tau_l \subtypes \tau_r \given M, \Delta 
       \iff
@@ -3065,29 +3073,29 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  
+      \\
+      \left<M, \Delta\right> \in Z
+      \\
+      \left<M, \Delta\right> \leadsto \Omega 
     } {
-      \exists \Omega\ \Gamma' \ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'
+      \Omega, \Gamma \satisfies e \hastype \tau
     } 
   \end{mathpar}
   Proof: 
-  \item $\textbf{assume } \Gamma \entails e \hastype \tau \given Z$ 
+  \item $\textbf{assume } \Gamma \entails e \hastype \tau \given Z 
+    \I \left< M, \Delta \right> \in Z 
+    \I \left<M, \Delta\right> \leadsto \Omega
+  $ 
   \item \Z $\textbf{induct on } \Gamma \entails e \hastype \tau \given Z$ 
 
   \item \Z $\textbf{case } e = \code{@} \I \tau = \code{@}$ 
-  \item \Z\Z $\textbf{for } \Omega$
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{@}$ by substitution
-  \item \Z\Z\Z $\exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by witness
-  \item \Z\Z $\forall \Omega .\ \exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by generalization 
-  \item \Z\Z $\exists \Omega\ \Gamma'\ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$ by independence 
+  \item \Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$ by definition
+  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
 
   \item \Z $\textbf{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
   \item \Z $\textbf{wrt } x$ 
-  \item \Z\Z $\textbf{for } \Omega $
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$ 
-  \item \Z\Z\Z $\exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by witness
-  \item \Z\Z $\forall \Omega .\ \exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by generalization 
-  \item \Z\Z $\exists \Omega, \tau' \Omega, \Gamma \satisfies x \hastype \tau'$ by independence 
+  \item \Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$  by definition
+  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
 
 
 
@@ -3097,24 +3105,18 @@ Different: RLT isn't cartesian
   \item \Z $\textbf{hypo } 
       \Gamma \entails e' \hastype \tau' \given Z  
       \implies
-      \exists \Omega\ \Gamma' \ \tau'' .\ \Omega, \Gamma' \satisfies e' \hastype \tau''
+      \Omega, \Gamma \satisfies e' \hastype \tau'
   $ 
   \item \Z $\textbf{wrt } e' \ \tau'$ 
   \item \Z\Z $
-    \exists \Omega\ \Gamma' \ \tau'' .\ \Omega, \Gamma' \satisfies e' \hastype \tau''
+    \Omega, \Gamma \satisfies e' \hastype \tau'
   $ by application
   \item \Z\Z $
-    \textbf{let } \Omega\ \Gamma' \ \tau'' \textbf{ s.t. } \Omega, \Gamma' \satisfies e' \hastype \tau''
-  $
-  \item \Z\Z $
-    \Omega, \Gamma' \satisfies \code{\ttilde $l$ $e'$} \hastype \code{\ttilde $l$ $\tau''$}
+    \Omega, \Gamma \satisfies \code{\ttilde $l$ $e'$} \hastype \code{\ttilde $l$ $\tau'$}
   $ by definition
   \item \Z\Z $
-    \Omega, \Gamma' \satisfies e \hastype \code{\ttilde $l$ $\tau''$} 
+    \Omega, \Gamma \satisfies e \hastype \tau 
   $ by substitution
-  \item \Z\Z $
-    \exists \Omega\ \Gamma' \ \tau''' .\ \Gamma' \satisfies e \hastype \tau'''
-  $ by witness
 
   \item \Z \TODO{remaining trivial introduction cases} 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3145,9 +3147,9 @@ Different: RLT isn't cartesian
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-  \item \Z $\textbf{case } e = \code{$e'$.$l$} \I \tau = \alpha \I Z = Z_1
+  \item \Z $\textbf{case } e = \code{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
     \I
-    \Gamma \entails e' \hastype \tau_0 \given Z_0
+    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
     \I
     \alpha\ \#\ \Gamma, Z_0
     \I
@@ -3157,28 +3159,40 @@ Different: RLT isn't cartesian
   $
    
   \item \Z $\textbf{hypo } 
-    \Gamma \entails e' \hastype \tau_0 \given Z_0 
+    \Gamma \entails e_0 \hastype \tau_0 \given Z_0 
     \implies 
-    \exists \Omega \ \Gamma' \tau' .\  \Gamma' \satisfies e' \hastype \tau'
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
   $ 
   \item \Z $\textbf{wrt } e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
+
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
+  $ by application
+
+  \item \Z\Z $
+    \left< M, \Delta \right> \in Z_1
+  $ by substitution 
+
+
+  \item \Z\Z $
+    \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
+  $ by theorem \ref{}  \TODO{...}
+
+
   \item \Z\Z $
     \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
-  $ by theorem \ref{} \TODO{subtyping soundness}
+  $ by theorem \ref{theorem:proof_subtyping_soundness}
   \item \Z\Z $
     \forall e \ \Gamma .\ \satisfies e \hastype  \tau_0  \implies \satisfies e \hastype \code{$l$->$\alpha$}
   $ by theorem \ref{} \TODO{model subtyping to typing}
 
+  \item \Z\Z \TODO{... details ...}
   \item \Z\Z $
-    \exists \Omega \ \Gamma' \tau' .\  \Gamma' \satisfies e' \hastype \tau'
-  $ by application
-  \item \TODO{... details ...}
-  \item \Z\Z $
-    \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau''
+    \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
   $ 
   \item \Z\Z $
-    \exists \Omega\ \Gamma' \ \tau''' .\ \Gamma' \satisfies e \hastype \tau'''
-  $ by witness
+    \Omega, \Gamma \satisfies e \hastype \tau
+  $ by substitution 
 
 
   \item \Z \TODO{remaining elimination caseis} 
@@ -3233,12 +3247,29 @@ Different: RLT isn't cartesian
   %     \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
   %   }
   % \end{mathpar}
-  \item $\exists \Omega\ \Gamma' \ \tau' .\ \Omega, \Gamma' \satisfies e \hastype \tau'$
+  \item $\Omega, \Gamma \satisfies e \hastype \tau$
     by induction
   \item \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
   \item \TODO{See how Cretin proves this without using subject reduction}
   \item $\square$
 \end{theorem}
+
+\begin{theorem}(Proof subtyping soundness)
+  \label{theorem:proof_subtyping_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given M, \Delta 
+      \\
+      \left<M, \Delta\right> \leadsto \Omega 
+    } {
+      \Omega \satisfies \tau_l \subtypes \tau_r
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
 
 \begin{theorem}(Model typing subsumption)
   \label{theorem:subsumption_model_typing}
