@@ -3176,26 +3176,30 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
-  $ by theorem \ref{}  \TODO{...}
+  $ by theorem \ref{theorem:proof_subtyping_specialization}
 
 
   \item \Z\Z $
     \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
   $ by theorem \ref{theorem:proof_subtyping_soundness}
   \item \Z\Z $
-    \forall e \ \Gamma .\ \satisfies e \hastype  \tau_0  \implies \satisfies e \hastype \code{$l$->$\alpha$}
-  $ by theorem \ref{} \TODO{model subtyping to typing}
-
-  \item \Z\Z \TODO{... details ...}
+    \forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_0  \implies \Omega, \Gamma \satisfies e \hastype \code{$l$->$\alpha$}
+  $ by theorem \ref{theorem:model_subtyping_inversion}
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0  \implies \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
+  $ by instantiation 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
+  $ by application 
   \item \Z\Z $
     \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
-  $ 
+  $ by theorem \ref{theorem:model_subtyping_record_elimination} 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
 
 
-  \item \Z \TODO{remaining elimination caseis} 
+  \item \Z \TODO{remaining elimination cases} 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3253,6 +3257,55 @@ Different: RLT isn't cartesian
   \item \TODO{See how Cretin proves this without using subject reduction}
   \item $\square$
 \end{theorem}
+
+\begin{theorem}(Proof subtyping specialization)
+  \label{theorem:proof_subtyping_specialization}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given Z 
+      \\
+      \left< M, \Delta \right> \in Z
+    } {
+      \tau_l \subtypes \tau_r \given M, \Delta
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+
+\begin{theorem}(Model subtyping inversion)
+  \label{theorem:model_subtyping_inversion}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \tau_l \subtypes \tau_r
+    } {
+      \forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_l  \implies \Omega, \Gamma \satisfies e \hastype \tau_r 
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_l  \implies \Omega, \Gamma \satisfies e \hastype \tau_r$
+    by inversion
+  \item $\square$
+\end{theorem}
+
+
+\begin{theorem}(Model typing record elimination)
+  \label{theorem:model_subtyping_record_elimination}
+  \begin{mathpar}
+    \inferrule { 
+    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+    } {
+    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
 
 \begin{theorem}(Proof subtyping soundness)
   \label{theorem:proof_subtyping_soundness}
