@@ -69,7 +69,7 @@
 \newcommand{\D}[1]{\small \textsc{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
-\newcommand{\TODO}[1]{\noindent \textbf{\color{red} TODO: #1}}
+\newcommand{\TODO}[1]{\noindent \B{\color{red} TODO: #1}}
 
 \newcommand{\is}{\ ::=\ }
 \newcommand{\sep}{\ \ |\ \ }
@@ -3029,21 +3029,21 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{e\ \textbf{wellformed}}
+\begin{definition}\boxed{e\ \B{wellformed}}
   \label{definition:expression_good_formation}
   \begin{mathpar}
     \inferrule {
       e = v
     } {
-      e\ \textbf{wellformed}
+      e\ \B{wellformed}
     } 
 
     \inferrule { 
       e \rightsquigarrow e' 
       \\
-      e'\ \textbf{wellformed}
+      e'\ \B{wellformed}
     } {
-      e\ \textbf{wellformed}
+      e\ \B{wellformed}
     } 
   \end{mathpar}
 \end{definition}
@@ -3054,16 +3054,16 @@ Different: RLT isn't cartesian
     \inferrule { 
       \entails e \hastype \tau \given Z
     } {
-      e \textbf{ wellformed}
+      e \B{ wellformed}
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } \entails e \hastype \tau \given Z$
-  \item \I $\textbf{let } \Omega\ \Gamma' \ \tau' \textbf{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
+  \item $\B{assume } \entails e \hastype \tau \given Z$
+  \item \I $\B{let } \Omega\ \Gamma' \ \tau' \B{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
   \item \I $\Omega, \Sigma \satisfies \Gamma'$ by ...
-  \item \I $e[\Sigma] \textbf{ wellformed} $ by theorem \ref{theorem:model_typing_soundness}
+  \item \I $e[\Sigma] \B{ wellformed} $ by theorem \ref{theorem:model_typing_soundness}
   \item \I $e[\Sigma] = e$ by ...
-  \item \I $e \textbf{ wellformed} $ by substitution 
+  \item \I $e \B{ wellformed} $ by substitution 
   \item $\square$
 \end{theorem}
 
@@ -3082,32 +3082,36 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item $\textbf{assume } \Gamma \entails e \hastype \tau \given Z 
+  \item $\B{assume } \Gamma \entails e \hastype \tau \given Z 
     \I \left< M, \Delta \right> \in Z 
     \I \left<M, \Delta\right> \leadsto \Omega
   $ 
-  \item \Z $\textbf{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+  \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
 
-  \item \Z $\textbf{case } e = \code{@} \I \tau = \code{@}$ 
+  \item \Z $\B{case } e = \code{@} \I \tau = \code{@}$ 
   \item \Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$ by definition
   \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
 
-  \item \Z $\textbf{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
-  \item \Z $\textbf{wrt } x$ 
+  \item \Z $\B{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
+  \item \Z $\B{wrt } x$ 
   \item \Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$  by definition
   \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
 
 
 
-  \item \Z $\textbf{case } e = \code{\ttilde $l$ $e'$} \I \tau = \code{\ttilde $l$ $\tau'$}
-    \I \Gamma \entails e' \hastype \tau' \given Z
+  \item \Z $\B{case } 
+    \Gamma \entails e' \hastype \tau' \given Z
+    \I
+    \tau = \code{\ttilde $l$ $\tau'$}
+    \I
+    e = \code{\ttilde $l$ $e'$} 
   $ 
-  \item \Z $\textbf{hypo } 
+  \item \Z $\B{hypo } 
       \Gamma \entails e' \hastype \tau' \given Z  
       \implies
       \Omega, \Gamma \satisfies e' \hastype \tau'
   $ 
-  \item \Z $\textbf{wrt } e' \ \tau'$ 
+  \item \Z $\B{wrt } e' \ \tau'$ 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e' \hastype \tau'
   $ by application
@@ -3123,9 +3127,9 @@ Different: RLT isn't cartesian
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \item \Z $\textbf{case } $ 
-  \item \Z $\textbf{hypo } $ 
-  \item \Z $\textbf{wrt } $ 
+  \item \Z $\B{case } $ 
+  \item \Z $\B{hypo } $ 
+  \item \Z $\B{wrt } $ 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %   \inferrule {
   %     \Gamma \entails R \hastype \tau_0 \given Z_0
@@ -3147,8 +3151,7 @@ Different: RLT isn't cartesian
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-  \item \Z $\textbf{case } e = \code{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
-    \I
+  \item \Z $\B{case } 
     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
     \I
     \alpha\ \#\ \Gamma, Z_0
@@ -3156,14 +3159,16 @@ Different: RLT isn't cartesian
     Z_0 \looparrowright Z_1
     \I
     \tau_0 \subtypes \code{$l$->$\alpha$} \given Z_1
+    \I
+    e = \code{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
   $
    
-  \item \Z $\textbf{hypo } 
+  \item \Z $\B{hypo } 
     \Gamma \entails e_0 \hastype \tau_0 \given Z_0 
     \implies 
     \Omega, \Gamma \satisfies e_0 \hastype \tau_0
   $ 
-  \item \Z $\textbf{wrt } e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
+  \item \Z $\B{wrt } e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e_0 \hastype \tau_0
@@ -3199,27 +3204,55 @@ Different: RLT isn't cartesian
   $ by substitution 
 
 
+  \item \Z $\B{case } 
+    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+    \I
+    Z_0 \looparrowright Z_1
+    \I
+    \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+    \I
+    e = \code{$e_0$($e_1$)} 
+    \I 
+    \tau = \alpha 
+    \I
+    Z = Z_2
+  $ 
+  \item \Z $ 
+    \alpha\ \#\ \Gamma, Z_1
+    \I
+    Z_1 \looparrowright Z_2
+    \I
+    \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
+  $ 
+  \item \Z $\B{hypo } 
+    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+    \implies 
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
+    \I
+    \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+    \implies 
+    \Omega, \Gamma \satisfies e_1 \hastype \tau_1
+  $ 
+  \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_1\ \tau_2\ Z_0\ Z_1\ Z_2 $ 
+  \item \Z\Z \TODO{...} 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
+  $ by ... 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e \hastype \tau
+  $ by substitution 
+
+
   \item \Z \TODO{remaining elimination cases} 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \item \Z $\textbf{case } $ 
-  \item \Z $\textbf{hypo } $ 
-  \item \Z $\textbf{wrt } $ 
+  \item \Z $\B{case } $ 
+  \item \Z $\B{hypo } $ 
+  \item \Z $\B{wrt } $ 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %   \inferrule {
-  %     \Gamma \entails e \hastype \tau_0 \given Z_0
-  %     \\
-  %     \alpha\ \#\ \Gamma, Z_0
-  %     \\
-  %     Z_0 \looparrowright Z_1
-  %     \\
-  %     \tau_0 \subtypes \code{$l$:$\alpha$} \given Z_1
-  %   } {
-  %     \Gamma \entails \code{$e$.$l$} \hastype \alpha \given Z_1
-  %   }
 
   %   \inferrule {
   %     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
@@ -3336,11 +3369,11 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item $\textbf{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
+  \item $\B{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
   \I \Omega, \Gamma \satisfies \tau_l <: \tau_r
   $
-  \item \Z $\textbf{invert on}\ \Omega, \Gamma \satisfies \tau_l <: \tau_r$
-  \item \Z $\textbf{case}\ \forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$
+  \item \Z $\B{invert on}\ \Omega, \Gamma \satisfies \tau_l <: \tau_r$
+  \item \Z $\B{case}\ \forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$
   \item \Z\Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by identity
   \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion
   \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
@@ -3360,55 +3393,53 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item $\textbf{assume }
+  \item $\B{assume }
     \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
     \I 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
-  \item \Z $\textbf{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
-  \item \Z $\textbf{case }
-    e_0 = \code{($F$*$p$=>$e$)} 
-    \I
-    F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
-    \I
-  $
-  \item \Z $
-    \textbf{... }
+  \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
+  \item \Z $\B{case }
     \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
     \I
     \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
   $
   \item \Z $
-    \textbf{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
+    \I
+    e_0 = \code{($F$*$p$=>$e$)} 
   $
   \item \Z $
-    \textbf{wrt} \ F \ p \ e \ \Gamma' \  
+    \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+  $
+  \item \Z $
+    \B{wrt} \ F \ p \ e \ \Gamma' \  
   $
 
-  \item \Z\Z $\textbf{let } \Sigma \textbf{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-  \item \Z\Z $e_0[\Sigma] \textbf{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
-  \item \Z\Z $\code{($F$*$p$=>$e$)}[\Sigma] \textbf{ wellformed}$ by substitution 
-  \item \Z\Z $\textbf{let } v_0 \textbf{ s.t. } v_0 = \code{($F$*$p$=>$e$)}[\Sigma]$ 
+  \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+  \item \Z\Z $e_0[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
+  \item \Z\Z $\code{($F$*$p$=>$e$)}[\Sigma] \B{ wellformed}$ by substitution 
+  \item \Z\Z $\B{let } v_0 \B{ s.t. } v_0 = \code{($F$*$p$=>$e$)}[\Sigma]$ 
     by theorem \ref{theorem:wellformed_function_valuation} 
-  \item \Z\Z $e_1[\Sigma] \textbf{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
+  \item \Z\Z $e_1[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
 
 
 
-  \item \Z\Z $\textbf{induct on}\ e_1[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z $\B{induct on}\ e_1[\Sigma] \B{ wellformed}$
 
-  \item \Z\Z $\textbf{case } e_1[\Sigma] = v_1 \ \textbf{for} \ v_1$  
+  \item \Z\Z $\B{case } e_1[\Sigma] = v_1 \ \B{for} \ v_1$  
   \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
   \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
 
-  \item \Z\Z\Z $\textbf{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
-  \item \Z\Z\Z $\textbf{case } F = \epsilon$ 
+  \item \Z\Z\Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+  \item \Z\Z\Z $\B{case } F = \epsilon$ 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
-  \item \Z\Z\Z\Z $\textbf{let}\ \Sigma' \textbf{ s.t. } p \equiv v_1 \given \Sigma'$ 
+  \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
     by theorem \ref{theorem:model_typing_pattern_matching} 
-  \item \Z\Z\Z\Z $\textbf{for } e'$ 
+  \item \Z\Z\Z\Z $\B{for } e'$ 
   \item \Z\Z\Z\Z\Z $\neg \epsilon\code{($v_1$)} \rightsquigarrow e'$ by definition
   \item \Z\Z\Z\Z\Z $\neg F\code{($v_1$)} \rightsquigarrow e'$ by substitution 
   \item \Z\Z\Z\Z $\forall e' .\ \neg F\code{($v_1$)} \rightsquigarrow e'$ by generalization 
@@ -3418,9 +3449,9 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
-  \item \Z\Z\Z $\textbf{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
+  \item \Z\Z\Z $\B{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application 
-  \item \Z\Z\Z\Z $\textbf{let } e' \textbf{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+  \item \Z\Z\Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
@@ -3430,12 +3461,12 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z $(\code{($F$*$p$=>$e$)}\code{($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)}\code{($e_1'$)})[\Sigma]$ by definition
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
 
-  \item \Z\Z $\textbf{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \textbf{wellformed}$
-  \item \Z\Z $\textbf{hypo}\ e_1'\ \textbf{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
-  \item \Z\Z $\textbf{wrt}\ e_1' $
+  \item \Z\Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \B{wellformed}$
+  \item \Z\Z $\B{hypo}\ e_1'\ \B{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
+  \item \Z\Z $\B{wrt}\ e_1' $
   \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
-  \item \Z\Z\Z $\forall x .\ x \notin \textbf{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
+  \item \Z\Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
   \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
   \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
   \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
@@ -3449,20 +3480,20 @@ Different: RLT isn't cartesian
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
 
 
-  \item \Z $\textbf{case }
+  \item \Z $\B{case }
     \Omega, \Sigma \satisfies \Gamma
     \I
     e_0[\Sigma] \rightsquigarrow e_0'
     \I
     \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
   $
-  \item \Z $\textbf{hypo}\ 
+  \item \Z $\B{hypo}\ 
     \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
     \implies
     \Omega, \Gamma \satisfies \code{$e_0'$($e_1$)} \hastype \tau_r
   $
   \item \Z $ 
-  \textbf{wrt}\ \Sigma\ e_0' 
+  \B{wrt}\ \Sigma\ e_0' 
   $
   \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by application 
   \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
@@ -3483,7 +3514,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } 
+  \item $\B{assume } 
     \Omega, \Gamma \satisfies \code{($e$)} \hastype \tau 
   $
   \item \TODO{...}
@@ -3503,7 +3534,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } 
+  \item $\B{assume } 
     \Omega, \Gamma \satisfies e \hastype \tau 
     \I
     \Omega, \Sigma \satisfies \Gamma
@@ -3525,7 +3556,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } 
+  \item $\B{assume } 
     \Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r
     \I
     \Omega \satisfies v \hastype \tau_l 
@@ -3539,18 +3570,18 @@ Different: RLT isn't cartesian
   \label{theorem:wellformed_function_valuation}
   \begin{mathpar}
     \inferrule {
-      F \textbf{ wellformed}
+      F \B{ wellformed}
     } {
       \exists v .\ v = F 
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } F \textbf{ wellformed}$ 
-  \item \Z $\textbf{invert on } F \textbf{ wellformed}$
-  \item \Z $\textbf{case } v = F$
+  \item $\B{assume } F \B{ wellformed}$ 
+  \item \Z $\B{invert on } F \B{ wellformed}$
+  \item \Z $\B{case } v = F$
   \item \Z\Z $v = F$ by identity
-  \item \Z $\textbf{case } F \rightsquigarrow e$
-  \item \Z $\textbf{wrt } e$
+  \item \Z $\B{case } F \rightsquigarrow e$
+  \item \Z $\B{wrt } e$
   \item \Z\Z $\neg F \rightsquigarrow e$ by definition
   \item \Z\Z $\bot$ by application 
   \item \Z $v = F$ by inversion 
@@ -3567,12 +3598,12 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-  \item \Z $\textbf{invert on } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-  \item \Z $\textbf{case } ...$
+  \item $\B{assume } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
+  \item \Z $\B{invert on } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
+  \item \Z $\B{case } ...$
   \item \Z \TODO{vacuous cases} 
-  \item \Z $\textbf{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
-  \item \Z $\textbf{wrt } e'$
+  \item \Z $\B{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
+  \item \Z $\B{wrt } e'$
   \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ 
     by conjunction 
   \item \Z\Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
@@ -3588,11 +3619,11 @@ Different: RLT isn't cartesian
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \forall x .\ x \notin \textbf{FV}(e')
+      \forall x .\ x \notin \B{FV}(e')
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } 
+  \item $\B{assume } 
     e \rightsquigarrow e'
   $
   \item \TODO{...}
@@ -3603,14 +3634,14 @@ Different: RLT isn't cartesian
   \label{theorem:closed_substitution}
   \begin{mathpar}
     \inferrule {
-      \forall x .\ x \notin \textbf{FV}(e)
+      \forall x .\ x \notin \B{FV}(e)
     } {
       e = e[\Sigma]
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume } 
-    \forall x .\ x \notin \textbf{FV}(e)
+  \item $\B{assume } 
+    \forall x .\ x \notin \B{FV}(e)
   $
   \item \TODO{...}
   \item $\square$
@@ -3632,7 +3663,7 @@ Different: RLT isn't cartesian
 %     } 
 %   \end{mathpar}
 %   Proof:
-%   \item $\textbf{for } p\ e\ F\ v\ \Sigma\ \textbf{assume }
+%   \item $\B{for } p\ e\ F\ v\ \Sigma\ \B{assume }
 %       \code{*$p$=>$e$} \in F 
 %       \I
 %       p \equiv v \given \Sigma 
@@ -3640,29 +3671,29 @@ Different: RLT isn't cartesian
 %       \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
 %   $
 
-%   \item \Z $\textbf{case }
+%   \item \Z $\B{case }
 %     F = F'\ \code{*$p$=>$e$} 
 %     \I
 %     \code{*$p$=>$e$} \notin F'
 %   $
 
-%   \item \Z\Z $\textbf{for } e'$
-%   \item \Z\Z\Z $\textbf{case}\ F'\code{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z $\B{for } e'$
+%   \item \Z\Z\Z $\B{case}\ F'\code{($v$)} \rightsquigarrow e'$
 %   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e'$ by definition
 %   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by substitution 
-%   \item \Z\Z\Z $\textbf{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z $\B{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
 %   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e[\Sigma]$ by definition
 %   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e[\Sigma]$ by substitution 
 %   \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
 %   \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
 %   \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
 
-%   \item \Z $\textbf{case }
+%   \item \Z $\B{case }
 %     F = F'\ f 
 %     \I
 %     \code{*$p$=>$e$} \in F' 
 %   $
-%   \item \Z\Z $\textbf{let } e' \textbf{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
+%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
 %   \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$ by definition
 %   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
 %   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
@@ -3691,71 +3722,80 @@ Different: RLT isn't cartesian
       \\
       \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      e[\Sigma]\ \textbf{wellformed}
+      e[\Sigma]\ \B{wellformed}
     } 
   \end{mathpar}
   Proof:
-  \item $\textbf{assume }
+  \item $\B{assume }
         \Omega, \Sigma \satisfies \Gamma 
         \I \Omega, \Gamma \satisfies e \hastype \tau
   $
-  \item \Z $\textbf{case } e = \code{@}$
-  \item \Z\Z $\textbf{let } v \textbf{ s.t. } \code{@} = v$
+  \item \Z $\B{case } e = \code{@}$
+  \item \Z\Z $\B{let } v \B{ s.t. } \code{@} = v$
   \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
 
-  \item \Z $\textbf{case } e = \code{\ttilde}l\ e' 
-  \I \tau = \code{\ttilde}l\ \tau'
-  \I \Omega, \Gamma \satisfies e' \hastype \tau'
+  \item \Z $\B{case } 
+    \Omega, \Gamma \satisfies e' \hastype \tau'
+    \I 
+    e = \code{\ttilde}l\ e' 
+    \I 
+    \tau = \code{\ttilde}l\ \tau'
   $
-  \item \Z\Z $e' \textbf{ wellformed}$ by induction hypothesis
+  \item \Z\Z $e' \B{ wellformed}$ by induction hypothesis
 
-  \item \Z\Z $\textbf{case } e'[\Sigma] = v$
-  \item \Z\Z\Z $\textbf{let } v' \textbf{ s.t. } \code{\ttilde}l\ v = v'$
+  \item \Z\Z $\B{case } e'[\Sigma] = v$
+  \item \Z\Z\Z $\B{let } v' \B{ s.t. } \code{\ttilde}l\ v = v'$
   \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] = v'$
   \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] = v'$
   \item \Z\Z\Z $e[\Sigma] = v'$
-  \item \Z\Z\Z $e[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z\Z $\textbf{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \textbf{ wellformed}$
+  \item \Z\Z $\B{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \B{ wellformed}$
   \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \rightsquigarrow \code{\ttilde}l\ e''$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'' \textbf{ wellformed}$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \textbf{ wellformed}$
-  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \textbf{ wellformed}$
-  \item \Z\Z\Z $e[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z\Z $\code{\ttilde}l\ e'' \B{ wellformed}$
+  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \B{ wellformed}$
+  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \B{ wellformed}$
+  \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$ by cases on $e' \textbf{ wellformed}$
+  \item \Z\Z $e[\Sigma] \B{ wellformed}$ by cases on $e' \B{ wellformed}$
 
   \item \Z \TODO{remaining introduction cases}
 
-  \item \Z $\textbf{case } e = x
-  \I x \hastype \tau \in \Gamma
-  \I x \slash v \in \Sigma
+  \item \Z $\B{case } 
+    x \hastype \tau \in \Gamma
+    \I 
+    x \slash v \in \Sigma
+    \I 
+    e = x
   $
   \item \Z\Z $x[\Sigma] = v$
   \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
+  \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z $\textbf{case } e = e_0\code{(} e_1 \code{)}$ and all other elimination cases 
-  \item \Z\Z $\textbf{let } e' \textbf{ s.t. } e[\Sigma] \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau$ by inversion on $\Omega, \Gamma \satisfies e \hastype \tau$
-  \item \Z\Z $e'[\Sigma] \textbf{ wellformed}$ by induction hypothesis
-  \item \Z\Z $e[\Sigma] \textbf{ wellformed}$
+  \item \Z $\B{case } 
+    e[\Sigma] \rightsquigarrow e' 
+    \I 
+    \Omega, \Gamma \satisfies e' \hastype \tau
+  $ 
+  \item \Z\Z $e'[\Sigma] \B{ wellformed}$ by induction hypothesis
+  \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z $e[\Sigma] \textbf{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
+  \item \Z $e[\Sigma] \B{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
   \item $\square$
   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
 \end{theorem}
 
 \noindent
-\textbf{NOTE: } The induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ (P(e') \implies P(e)), P(e') \implies Q(e')$ if inducting on predicate $P$
+\B{NOTE: } The induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ (P(e') \implies P(e)), P(e') \implies Q(e')$ if inducting on predicate $P$
 
 \noindent
-\textbf{NOTE: } we induct on $\Omega, \Gamma \satisfies e \hastype \tau$ instead of $e$, as the predicate acts as a guard/ordering in lieu of a decreasing e.
+\B{NOTE: } we induct on $\Omega, \Gamma \satisfies e \hastype \tau$ instead of $e$, as the predicate acts as a guard/ordering in lieu of a decreasing e.
 This allows us to use the induction hypothesis on the reduction step result in the elimination case.
 
 \noindent
-\textbf{NOTE: } Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
+\B{NOTE: } Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
 has been progress in observing the elements of the stream (guardedness) and there is no
 further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
 
@@ -3765,7 +3805,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 %     \inferrule { 
 %       \Gamma \entails e \hastype \tau \given Z  
 %     } {
-%       e \textbf{ progressive}
+%       e \B{ progressive}
 %     } 
 %   \end{mathpar}
 %   Proof ... 
