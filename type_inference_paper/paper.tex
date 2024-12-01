@@ -3265,33 +3265,61 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
 
-
-  \item \Z \TODO{remaining elimination cases} 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \item \Z $\B{case } $ 
-  \item \Z $\B{hypo } $ 
-  \item \Z $\B{wrt } $ 
+  \item \Z $\B{case } 
+    \Gamma \entails e' \hastype \tau' \given Z_0
+    \I
+    \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
+    \I
+    Z_0 \looparrowright Z_1
+    \I
+    \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+  $ 
+  \item \Z $
+    \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
+    \I
+    e = \code{fix($e'$)}
+  $
+  \item \Z $
+    \tau = \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$}
+  $
+  \item \Z $
+    Z = Z_1 
+  $
+  \item \Z $\B{hypo } 
+    \Gamma \entails e' \hastype \tau' \given Z_0 
+    \implies
+    \Omega, \Gamma \satisfies e' \hastype \tau'
+  $ 
+  \item \Z $\B{wrt } e'\ \tau'\ \alpha_0 ... \alpha_5\ T_{rel}\ Z_0\ Z_1 $ 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e' \hastype \tau'
+  $ by application
+  \item \Z\Z $
+    \left< M, \Delta \right> \in Z_1 
+  $ by substitution 
+  \item \Z\Z $
+    \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \left< M, \Delta \right> 
+  $ by theorem \ref{theorem:proof_subtyping_choice}
+  \item \Z\Z $
+    \Omega \satisfies \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+  $ by theorem \ref{theorem:proof_subtyping_soundness}
+  \item \Z\Z $
+    \forall e .\ \Omega \satisfies e \hastype \tau' \implies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+  $ by theorem \ref{theorem:model_subtyping_inversion}
+  \item \Z\Z $
+   \Omega \satisfies e' \hastype \tau' \implies e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+  $ by instantiation 
+  \item \Z\Z $
+   e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+  $ by application 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \code{fix($e'$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
+  $ by theorem \ref{theorem:model_typing_fix_elimination} \TODO{...}
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e \hastype \tau
+  $ by substitution 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  %   \inferrule {
-  %     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-  %     \\
-  %     Z_0 \looparrowright Z_1
-  %     \\
-  %     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
-  %     \\
-  %     \alpha\ \#\ \Gamma, Z_1
-  %     \\
-  %     Z_1 \looparrowright Z_2
-  %     \\
-  %     \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
-  %   } {
-  %     \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
-  %   }
 
   %   \inferrule {
   %     \Gamma \entails e \hastype \tau \given Z_0
