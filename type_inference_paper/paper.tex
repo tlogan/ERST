@@ -3233,7 +3233,7 @@ Different: RLT isn't cartesian
     \implies 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_1
   $ 
-  \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_1\ \tau_2\ Z_0\ Z_1\ Z_2 $ 
+  \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_0\ \tau_1\ Z_0\ Z_1\ Z_2 $ 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e_0 \hastype \tau_0
   $ by application
@@ -3304,13 +3304,13 @@ Different: RLT isn't cartesian
     \Omega \satisfies \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
   $ by theorem \ref{theorem:proof_subtyping_soundness}
   \item \Z\Z $
-    \forall e .\ \Omega \satisfies e \hastype \tau' \implies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+    \forall e .\ \Omega, \Gamma \satisfies e \hastype \tau' \implies \Omega \Gamma \satisfies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
   $ by theorem \ref{theorem:model_subtyping_inversion}
   \item \Z\Z $
-   \Omega \satisfies e' \hastype \tau' \implies e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+   \Omega, \Gamma \satisfies e' \hastype \tau' \implies \Omega, \Gamma .\ e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
   $ by instantiation 
   \item \Z\Z $
-   e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+   \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
   $ by application 
   \item \Z\Z $
     \Omega, \Gamma \satisfies \code{fix($e'$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
@@ -3319,28 +3319,14 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  %   \inferrule {
-  %     \Gamma \entails e \hastype \tau \given Z_0
-  %     \\
-  %     \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
-  %     \\
-  %     Z_0 \looparrowright Z_1
-  %     \\
-  %     \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
-  %     \\\\
-  %     \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
-  %   } {
-  %     \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
-  %   }
-  % \end{mathpar}
-  \item $\Omega, \Gamma \satisfies e \hastype \tau$
+  \item \Z $\Omega, \Gamma \satisfies e \hastype \tau$
     by induction
-  \item \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
-  \item \TODO{See how Cretin proves this without using subject reduction}
   \item $\square$
 \end{theorem}
+
+\TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
+
+\TODO{See how Cretin proves this without using subject reduction}
 
 \begin{theorem}(Proof subtyping choice)
   \label{theorem:proof_subtyping_choice}
