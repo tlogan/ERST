@@ -3181,7 +3181,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
-  $ by theorem \ref{theorem:proof_subtyping_specialization}
+  $ by theorem \ref{theorem:proof_subtyping_choice}
 
 
   \item \Z\Z $
@@ -3234,10 +3234,33 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e_1 \hastype \tau_1
   $ 
   \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_1\ \tau_2\ Z_0\ Z_1\ Z_2 $ 
-  \item \Z\Z \TODO{...} 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
+  $ by application
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_1 \hastype \tau_1
+  $ by application
+  \item \Z\Z $
+    \left<M, \Delta \right> \in Z_2
+  $ by substitution 
+  \item \Z\Z $
+    \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
+  $ by theorem \ref{theorem:proof_subtyping_choice} 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
+  $ by theorem \ref{theorem:proof_subtyping_soundness} 
+  \item \Z\Z $
+    \forall e .\ \Omega, \Gamma \satisfies e \hastype \tau_0 \implies e \hastype \code{$\tau_1$->$\alpha$} 
+  $ by theorem \ref{theorem:model_subtyping_inversion} 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_0 \implies e_0 \hastype \code{$\tau_1$->$\alpha$} 
+  $ by instantiation 
+  \item \Z\Z $
+    e_0 \hastype \code{$\tau_1$->$\alpha$} 
+  $ by application 
   \item \Z\Z $
     \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
-  $ by ... 
+  $ by theorem \ref{theorem:model_typing_implication_elimination} 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
@@ -3291,8 +3314,8 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
-\begin{theorem}(Proof subtyping specialization)
-  \label{theorem:proof_subtyping_specialization}
+\begin{theorem}(Proof subtyping choice)
+  \label{theorem:proof_subtyping_choice}
   \begin{mathpar}
     \inferrule { 
       \tau_l \subtypes \tau_r \given Z 
