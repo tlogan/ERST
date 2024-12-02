@@ -1766,7 +1766,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \code{*$l$=>$v$} \in G 
       \\
-      \forall\ v' .\ \code{*$l$=>$v'$} \in G \implies v = v'
+      \forall\ e .\ \code{*$l$=>$e$} \in G \implies e = v
     } {
       \code{$G$.$l$} \rightsquigarrow v
     }
@@ -3358,13 +3358,99 @@ Different: RLT isn't cartesian
   \label{theorem:model_subtyping_record_elimination}
   \begin{mathpar}
     \inferrule { 
-    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
     } {
-    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+      \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
     } 
   \end{mathpar}
   Proof: 
-  \item \TODO{...} 
+  \item $\B{assume } 
+    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+  $ 
+  \item \Z $\B{induct on } 
+    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+  $ 
+  \item \Z $\B{case }
+    \code{*$l$=>$v$} \in G
+    \I
+    \Omega, \Gamma \satisfies v \hastype \tau
+    \I
+    \forall e' .\ \code{*$l$=>$e'$} \in G \implies e' = v 
+    \I
+    e = R
+  $ 
+  \item \Z $\B{wrt }
+    v\ R
+  $
+  
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
+  $ by substitution
+
+  \item \Z\Z $
+    \code{$G$.$l$} \rightsquigarrow v
+  $ by definition 
+
+  \item \Z\Z $
+    \exists \Sigma .\ \Omega, \Gamma \satisfies \Sigma 
+  $ by theorem \ref{...} 
+  \item \Z\Z $
+    \B{let } \Sigma \B{ s.t. } \Omega, \Gamma \satisfies \Sigma 
+  $ by declaration 
+  \item \Z\Z $
+    \code{$G$.$l$}[\Sigma] \rightsquigarrow v
+  $ by definition 
+  \item \Z\Z $
+    \code{$G$.$l$}[\Sigma] \rightsquigarrow v[\Sigma \sqcup \epsilon] 
+  $ by definition 
+  \item \Z\Z $
+    \Omega, \epsilon \satisfies \epsilon 
+  $ by definition 
+
+  \item \Z\Z $
+    \Omega, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
+  $ by definition 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \code{$G$.$l$} \hastype \tau 
+  $ by definition 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+  $ by substitution
+
+
+  \item \Z $\B{case }
+    \Omega, \Sigma \satisfies \Gamma
+    \I
+    e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
+    \I
+    \Omega, \Sigma' \satisfies \Gamma'
+    \I
+    \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+  $
+  \item \Z $\B{hypo }
+    \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+    \implies
+    \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+  $
+  \item \Z $\B{wrt }
+    \Sigma\ e'\ \Sigma'\ \Gamma'
+  $
+  \item \Z\Z $
+    \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+  $ by application
+  \item \Z\Z $
+    \code{$e[\Sigma]$.$l$} \rightsquigarrow \code{$e'[\Sigma \sqcup \Sigma']$.$l$}
+  $ by definition 
+  \item \Z\Z $
+    \code{$e$.$l$}[\Sigma] \rightsquigarrow \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
+  $ by definition 
+  \item \Z\Z $
+    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+  $ by definition 
+
+  \item \Z $
+    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+  $ by induction 
   \item $\square$
 \end{theorem}
 
@@ -3871,19 +3957,19 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \tau
+      \Omega, \Gamma \satisfies v \hastype \tau
     } {
-      \Omega, \Gamma \satisfies \code{\ttilde$l$ $e$} \hastype \code{\ttilde$l$ $\tau$}
+      \Omega, \Gamma \satisfies \code{\ttilde$l$ $v$} \hastype \code{\ttilde$l$ $\tau$}
     } 
 
     \inferrule { 
-      \code{*$l$=>$e$} \in R 
+      \code{*$l$=>$v$} \in G 
       \\
       \Omega, \Gamma \satisfies e \hastype \tau 
       \\\\
-      \forall e' .\ \code{*$l$=>$e'$} \in R \implies e' = e
+      \forall e .\ \code{*$l$=>$e$} \in G \implies e = v 
     } {
-      \Omega, \Gamma \satisfies R \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
     } 
 
     \inferrule { 
