@@ -3532,11 +3532,8 @@ Different: RLT isn't cartesian
     \B{wrt} \ F \ p \ e \ \Gamma' \  
   $
 
-  \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-  \item \Z\Z $e_0[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
-  \item \Z\Z $\code{($F$*$p$=>$e$)}[\Sigma] \B{ wellformed}$ by substitution 
-  \item \Z\Z $\B{let } v_0 \B{ s.t. } v_0 = \code{($F$*$p$=>$e$)}[\Sigma]$ 
-    by theorem \ref{theorem:wellformed_function_valuation} 
+  \item \Z\Z $\exists \Sigma .\ \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+  \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by declaration 
   \item \Z\Z $e_1[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
 
 
@@ -3552,15 +3549,20 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
-  \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
+
+  \item \Z\Z\Z\Z $\exists \Sigma' .\ p \equiv v_1 \given \Sigma'$ 
     by theorem \ref{theorem:model_typing_pattern_matching} 
+  \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
+    by declaration
   \item \Z\Z\Z\Z $\B{for } e'$ 
-  \item \Z\Z\Z\Z\Z $\neg \epsilon\code{($v_1$)} \rightsquigarrow e'$ by definition
-  \item \Z\Z\Z\Z\Z $\neg F\code{($v_1$)} \rightsquigarrow e'$ by substitution 
-  \item \Z\Z\Z\Z $\forall e' .\ \neg F\code{($v_1$)} \rightsquigarrow e'$ by generalization 
+  \item \Z\Z\Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
+  \item \Z\Z\Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
+  \item \Z\Z\Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
+
+  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma]$)($v_1$)} \rightsquigarrow e[\Sigma][\Sigma']$ by definition 
+  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by theorem \ref{...} \TODO{subbing with concat}
   \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
-  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
-  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
+  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition  
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
@@ -3569,12 +3571,7 @@ Different: RLT isn't cartesian
   \item \Z\Z\Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
   \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
   \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application 
-  \item \Z\Z\Z $v_0\code{(}e_1[\Sigma]\code{)} \rightsquigarrow v_0\code{($e_1'$)}$ by definition
-  \item \Z\Z\Z $\code{($F$*$p$=>$e$)}[\Sigma]\code{($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)}[\Sigma]\code{($e_1'$)}$ by substitution 
-  \item \Z\Z\Z $(\code{($F$*$p$=>$e$)}\code{($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)}\code{($e_1'$)})[\Sigma]$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
+  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by induction 
 
   \item \Z\Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \B{wellformed}$
   \item \Z\Z $\B{hypo}\ e_1'\ \B{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
