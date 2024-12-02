@@ -1948,8 +1948,6 @@ Different: RLT isn't cartesian
     \inferrule {
       \Gamma \entails e \hastype \tau_0 \given Z_0
       \\
-      \alpha\ \#\ \Gamma, Z_0
-      \\
       Z_0 \looparrowright Z_1
       \\
       \tau_0 \subtypes \code{$l$:$\alpha$} \given Z_1
@@ -1964,8 +1962,6 @@ Different: RLT isn't cartesian
       \\
       \Gamma \entails e_1 \hastype \tau_1 \given Z_1
       \\
-      \alpha\ \#\ \Gamma, Z_1
-      \\
       Z_1 \looparrowright Z_2
       \\
       \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
@@ -1975,8 +1971,6 @@ Different: RLT isn't cartesian
 
     \inferrule {
       \Gamma \entails e \hastype \tau \given Z_0
-      \\
-      \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
       \\
       Z_0 \looparrowright Z_1
       \\
@@ -2025,8 +2019,8 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof typing)
-  \label{definition:proof_typing}
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof subtyping)
+  \label{definition:proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
@@ -3154,8 +3148,6 @@ Different: RLT isn't cartesian
   \item \Z $\B{case } 
     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
     \I
-    \alpha\ \#\ \Gamma, Z_0
-    \I
     Z_0 \looparrowright Z_1
     \I
     \tau_0 \subtypes \code{$l$->$\alpha$} \given Z_1
@@ -3218,8 +3210,6 @@ Different: RLT isn't cartesian
     Z = Z_2
   $ 
   \item \Z $ 
-    \alpha\ \#\ \Gamma, Z_1
-    \I
     Z_1 \looparrowright Z_2
     \I
     \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
@@ -3267,8 +3257,6 @@ Different: RLT isn't cartesian
 
   \item \Z $\B{case } 
     \Gamma \entails e' \hastype \tau' \given Z_0
-    \I
-    \alpha_0, \alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5\ \#\ \Gamma, Z
     \I
     Z_0 \looparrowright Z_1
     \I

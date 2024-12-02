@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  1 DEC 2024 17:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  1 DEC 2024 19:35
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -742,11 +742,7 @@ Package hyperref Info: Option `pdfdisplaydoctitle' set `true' on input line 46.
 File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count337
 \l__pdf_internal_box=\box113
-) (./paper.aux
-
-LaTeX Warning: Label `definition:proof_typing' multiply defined.
-
-)
+) (./paper.aux)
 \openout1 = `paper.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 46.
@@ -1068,13 +1064,13 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [15.15]
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 2465.
+LaTeX Font Warning: Command \small invalid in math mode on input line 2459.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 2465.
+(Font)              scaled to size 9.0pt on input line 2459.
 [16.16{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [17.17] [18.18] [19.19] [20.20]
 
-LaTeX Warning: Reference `theorem:model_typing_fix_elimination' on page 21 undefined on input line 3317.
+LaTeX Warning: Reference `theorem:model_typing_fix_elimination' on page 21 undefined on input line 3305.
 
 [21.21] [22.22] [23.23] [24.24] [25.25]
 Underfull \vbox (badness 1715) has occurred while \output is active []
@@ -1106,22 +1102,19 @@ LaTeX Font Warning: Size substitutions with differences
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: There were multiply-defined labels.
-
 Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24334 strings out of 474116
- 389831 string characters out of 5743682
+ 24335 strings out of 474116
+ 389859 string characters out of 5743682
  1969187 words of memory out of 5000000
- 45523 multiletter control sequences out of 15000+600000
+ 45524 multiletter control sequences out of 15000+600000
  768783 words of font info for 440 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (27 pages, 537283 bytes).
+Output written on paper.pdf (27 pages, 536920 bytes).
 PDF statistics:
  457 PDF objects out of 1000 (max. 8388607)
  381 compressed objects within 4 object streams
