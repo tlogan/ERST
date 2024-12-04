@@ -3570,8 +3570,15 @@ Different: RLT isn't cartesian
 
   \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
 
-  \item \Z\Z\Z\Z $e[\Sigma\backslash\B{FV}(p)][\Sigma'] = e[\Sigma \sqcup \Sigma']$ by theorem \ref{...} \TODO{subbing with concat}
+  \item \Z\Z\Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
+    by theorem \ref{theorem:pattern_matching_consistency}
+  \item \Z\Z\Z\Z $\Sigma\backslash\B{FV}(p) = \Sigma\backslash\B{dom}(\Sigma')$ 
+    by theorem \ref{theorem:consistency_diffing}
+  \item \Z\Z\Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
+    by theorem \ref{theorem:concatenation_substitution}
 
+  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
+    by substitution
   \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
     by substitution 
   \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
@@ -3629,6 +3636,49 @@ Different: RLT isn't cartesian
   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
 
   \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}\ (Pattern matching consistency)
+  \label{theorem:pattern_matching_consistency}
+  \begin{mathpar}
+    \inferrule {
+      p \equiv v \given \Sigma
+    } {
+      \forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma)
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
+
+
+\begin{theorem}\ (Consistency diffing)
+  \label{theorem:consistency_diffing}
+  \begin{mathpar}
+    \inferrule {
+      \forall x .\ x \in X_l \iff x \in X_r 
+    } {
+      \Sigma\backslash X_l = \Sigma\backslash X_r
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Concatenation Substitution )
+  \label{theorem:concatenation_substitution}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
   \item $\square$
 \end{theorem}
 
