@@ -61,6 +61,8 @@
 \newcommand{\subtypes}{<:}
 \newcommand{\I}{\hspace{4mm}}
 \newcommand{\Z}{.\hspace{4mm}}
+\newcommand{\Alpha}{\mathrm{A}}
+\newcommand{\Tau}{\mathrm{T}}
 \newcommand{\B}[1]{\textbf{#1}}
 \newcommand{\F}[1]{\text{#1}}
 \newcommand{\bigand}{\bigwedge\nolimits}
@@ -3319,6 +3321,49 @@ Different: RLT isn't cartesian
 \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
 
 \TODO{See how Cretin proves this without using subject reduction}
+
+
+
+\begin{theorem}(Model typing fixpoint duality)
+  \label{theorem:model_typing_fixpoint_duality}
+  \begin{mathpar}
+    \inferrule { 
+      \left< M, \Delta \right> \in Z
+      \\
+      \left< M, \Delta \right> \leadsto \Omega 
+      \\\\
+      \Omega \satisfies \alpha_0 \subtypes \code{$\alpha_1$->$\alpha_2$} 
+      \\
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+    } {
+      \Omega \satisfies \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]}
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\TODO{note that $\alpha_1$ and $\alpha_2$ could have further constraints in terms of $\alpha_0$ ; therefore the constraint here implies type recursion} 
+
+\TODO{interpretation of the $\alpha_0$ seems to be missing from the rule in paper} 
+
+\begin{theorem}(Model typing implication fixing)
+  \label{theorem:model_typing_implication_fixing}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega, \Gamma \satisfies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
+      \\
+      \Omega \satisfies \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]}
+    } {
+      \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
 
 \begin{theorem}(Proof subtyping choice)
   \label{theorem:proof_subtyping_choice}
