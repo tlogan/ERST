@@ -3427,6 +3427,8 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \code{BOT->$\tau$} 
+      \\
+      \satisfies \tau
     } {
       \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \tau
     } 
