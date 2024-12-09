@@ -1857,12 +1857,12 @@ Different: RLT isn't cartesian
       \code{$\tau$\&$\tau$} \sep
       \code{$\tau$\textbackslash$\tau$} \sep 
       \\
-      \code{EXI[$\mathrm{A}$ $Q$]$\tau$} \sep 
-      \code{ALL[$\mathrm{A}$ $Q$]$\tau$} \sep 
+      \code{EXI[$\Alpha$ $Q$]$\tau$} \sep 
+      \code{ALL[$\Alpha$ $Q$]$\tau$} \sep 
       \code{FIX[$\alpha$;$\tau$]}
     \end{array}
     \\
-    \nonterm{\mathrm{A}} & \is \epsilon \sep \mathrm{A}\ \alpha 
+    \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
     \\
     \nonterm{Q} & \is \epsilon \sep Q\ q
     \\
@@ -1892,10 +1892,10 @@ Different: RLT isn't cartesian
     \nonterm{z} & \is \left< M, \Delta \right>
     \\
     \\
-    \nonterm{\mathrm{T}} & \is \epsilon \sep \mathrm{T}\ \tau
+    \nonterm{\Tau} & \is \epsilon \sep \Tau\ \tau
     \\
     \\
-    \nonterm{\mathrm{\Pi}} & \is \epsilon \sep \Pi\ \pi
+    \nonterm{\Pi} & \is \epsilon \sep \Pi\ \pi
     \\
     \nonterm{\pi} & \is \left< M, \Delta, \tau \code{->} \tau\right>
     \\
@@ -1940,11 +1940,11 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      Z, \Gamma \entails F \liftfun \Pi, \mathrm{T}_n 
+      Z, \Gamma \entails F \liftfun \Pi, \Tau_n 
       \\
-      \Gamma \entails \Pi \equiv \mathrm{T} 
+      \Gamma \entails \Pi \equiv \Tau 
     } {
-      \Gamma \entails F \hastype \code{\&}(\mathrm{T}) \given Z
+      \Gamma \entails F \hastype \code{\&}(\Tau) \given Z
     }
 
     \inferrule {
@@ -1978,9 +1978,9 @@ Different: RLT isn't cartesian
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} \given Z_0
+      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
     }
   \end{mathpar}
 \end{definition}
@@ -2104,14 +2104,14 @@ Different: RLT isn't cartesian
       \\
       A\ \#\ \tau_r
       \\\\
-      M_0 \sqcup \mathrm{A} \preceq M_1
+      M_0 \sqcup \Alpha \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_r
       \given M_1, \Delta_1
     } {
-      \code{EXI[$\mathrm{A}$ $Q$]$\tau_l$} \subtypes \tau_r
+      \code{EXI[$\Alpha$ $Q$]$\tau_l$} \subtypes \tau_r
       \given M_1, \Delta_1
     }
 
@@ -2120,14 +2120,14 @@ Different: RLT isn't cartesian
       \\
       A\ \#\ \tau_l
       \\\\
-      M_0 \sqcup \mathrm{A} \preceq M_1
+      M_0 \sqcup \Alpha \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
       \tau_l \subtypes \tau_r
       \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{ALL[$\mathrm{A}$ $Q$]$\tau_r$}
+      \tau_l \subtypes \code{ALL[$\Alpha$ $Q$]$\tau_r$}
       \given M_1, \Delta_1
     }
 
@@ -2136,13 +2136,13 @@ Different: RLT isn't cartesian
       \\
       M_0, \Delta_0, \Delta_0 \entails M \lessdot \alpha
       \\
-      M_0, \Delta_0, \Delta_0 \entails \mathrm{T} \ll \alpha
+      M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
       \\
       M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \mathrm{T}}
+      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
       \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
@@ -2156,7 +2156,7 @@ Different: RLT isn't cartesian
       \\
       M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
       \\
-      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \mathrm{T} 
+      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Tau 
       \\
       M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
       \\
@@ -2164,7 +2164,7 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \mathrm{T}}
+      \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
       \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
@@ -2215,7 +2215,7 @@ Different: RLT isn't cartesian
       Q
       \given M_1, \Delta_1
     } {
-      \code{ALL[$\mathrm{A}$ $Q$]$\tau_l$}
+      \code{ALL[$\Alpha$ $Q$]$\tau_l$}
       \subtypes 
       \tau_r
       \given M_1, \Delta_1 
@@ -2233,7 +2233,7 @@ Different: RLT isn't cartesian
     } {
       \tau_l
       \subtypes 
-      \code{EXI[$\mathrm{A}$ $Q$]$\tau_r$}
+      \code{EXI[$\Alpha$ $Q$]$\tau_r$}
       \given M_1, \Delta_1
     }
 
@@ -2526,7 +2526,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\code{|}(\mathrm{T}) = \tau}
+\begin{definition}\boxed{\code{|}(\Tau) = \tau}
   \[\begin{array}{rclr}
     \code{|}(\epsilon)
     &=& 
@@ -2534,15 +2534,15 @@ Different: RLT isn't cartesian
     & \C{empty} 
     \\
 
-    \code{|}(\mathrm{T}\ \tau)
+    \code{|}(\Tau\ \tau)
     &=& 
-    \code{|}(\mathrm{T}) \code{|} \tau
+    \code{|}(\Tau) \code{|} \tau
     & \C{step} 
     \\
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\code{\&}(\mathrm{T}) = \tau}
+\begin{definition}\boxed{\code{\&}(\Tau) = \tau}
   \[\begin{array}{rclr}
     \code{\&}(\epsilon)
     &=& 
@@ -2550,9 +2550,9 @@ Different: RLT isn't cartesian
     & \C{empty} 
     \\
 
-    \code{\&}(\mathrm{T}\ \tau)
+    \code{\&}(\Tau\ \tau)
     &=& 
-    \code{\&}(\mathrm{T}) \code{\&} \tau
+    \code{\&}(\Tau) \code{\&} \tau
     & \C{step} 
     \\
   \end{array}\]
@@ -2588,7 +2588,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \mathrm{T} \ll \alpha}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \Tau \ll \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2598,27 +2598,27 @@ Different: RLT isn't cartesian
     \inferrule {
       \tau \notin M
       \\
-      M, \Delta_0, \Delta_1 \entails \mathrm{T} \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
     } {
-      M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \mathrm{T}\ \tau \ll \alpha
+      M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \Tau\ \tau \ll \alpha
     }
 
     \inferrule {
       m \in M
       \\
-      M, \Delta_0, \Delta_1 \entails \mathrm{T}_0 \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \Tau_0 \ll \alpha
       \\
-      M, \Delta_0, \Delta_0 \entails \mathrm{T}_1 \ll z 
+      M, \Delta_0, \Delta_0 \entails \Tau_1 \ll z 
     } {
-      M, \Delta_0, \Delta_1 \ m<:\alpha \entails \mathrm{T}_0 \sqcup \mathrm{T}_1 \ll \alpha
+      M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \sqcup \Tau_1 \ll \alpha
     }
 
     \inferrule {
       \tau_r \neq \alpha
       \\
-      M, \Delta_0, \Delta_1 \entails \mathrm{T} \ll \alpha
+      M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
     } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \mathrm{T} \ll \alpha
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \Tau \ll \alpha
     }
   \end{mathpar}
 \end{definition}
@@ -2650,7 +2650,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \mathrm{T}}
+\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Tau}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2660,27 +2660,27 @@ Different: RLT isn't cartesian
     \inferrule {
       \tau \notin M
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
     } {
-      M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \mathrm{T}\ \tau
+      M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \Tau\ \tau
     }
 
     \inferrule {
       m \in M
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}_0
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau_0
       \\
-      M, \Delta_0, \Delta_0 \entails m \ll \mathrm{T}_1
+      M, \Delta_0, \Delta_0 \entails m \ll \Tau_1
     } {
-      M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \mathrm{T}_0 \sqcup \mathrm{T}_1
+      M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \sqcup \Tau_1
     }
 
     \inferrule {
       \tau_l \neq \alpha
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \mathrm{T}
+      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
     } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \mathrm{T}
+      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Tau
     }
   \end{mathpar}
 \end{definition}
@@ -2763,7 +2763,7 @@ Different: RLT isn't cartesian
 %% Subtyping Solving (Inductive) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{definition}\boxed{M, \Delta, \mathrm{A} \entails \Omega}
+\begin{definition}\boxed{M, \Delta, \Alpha \entails \Omega}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2785,9 +2785,9 @@ Different: RLT isn't cartesian
       \\
       \exists \tau .\  \tau<:\alpha \in \Delta
       \\
-      M, \Delta, \mathrm{A} \entails \Omega
+      M, \Delta, \Alpha \entails \Omega
     } {
-      M, \Delta, \mathrm{A}\ \alpha 
+      M, \Delta, \Alpha\ \alpha 
       \entails 
       \Omega\ \alpha \slash \code{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
     }
@@ -2795,7 +2795,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{N, M \entails \Pi \equiv \mathrm{T}}
+\begin{definition}\boxed{N, M \entails \Pi \equiv \Tau}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2803,7 +2803,7 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      N, M \entails \Pi \equiv \mathrm{T} 
+      N, M \entails \Pi \equiv \Tau 
       \\
       \text{FTV}(\tau_l) = A_l
       \\
@@ -2813,13 +2813,13 @@ Different: RLT isn't cartesian
       \\
       N, M, \Delta' \entails \tau_l\code{->}\tau_r \equiv^{+} \tau
     } {
-      N, M \entails \Pi \left<M, \Delta, \tau_l \code{->} \tau_r \right> \equiv \mathrm{T}\ \tau 
+      N, M \entails \Pi \left<M, \Delta, \tau_l \code{->} \tau_r \right> \equiv \Tau\ \tau 
     }
   \end{mathpar}
 \end{definition}
 
 \begin{definition}
-\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}
+\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \Tau}
 \ (Fixpoint duality)
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
@@ -2839,11 +2839,11 @@ Different: RLT isn't cartesian
       \\\\
       M, \Delta, \Delta \entails \alpha_1 \subtypes \Tau_l 
       \\
-      M, \Delta, \Delta \entails \mathrm{T}_r \subtypes \alpha_2
+      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_2
       \\
-      \code{(\&$(\mathrm{T_l})$,|$(\mathrm{T_r})$)} = \tau_p
+      \code{(\&$(\Tau_l)$,|$(\Tau_r)$)} = \tau_p
       \\\\
-      \text{FTV}(\tau_p) = \mathrm{A}_p 
+      \text{FTV}(\tau_p) = \Alpha_p 
       \\
       \Delta \entails N \sqcup M \sqcup A_p\ \alpha_3 \pitchfork \Delta_i  
       \\
@@ -2853,7 +2853,7 @@ Different: RLT isn't cartesian
       N \entails 
       \alpha_0 \circlearrowleft Z \ \left< M,\Delta \right> \cdot \code{$\alpha_1$->$\alpha_2$} 
       \fallingdotseq 
-      \alpha_3 \circlearrowright \mathrm{T}\ \tau
+      \alpha_3 \circlearrowright \Tau\ \tau
     }
   \end{mathpar}
 \end{definition}
@@ -2885,7 +2885,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
+\begin{definition}\boxed{M, \Delta \entails \Tau \subtypes \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2895,22 +2895,22 @@ Different: RLT isn't cartesian
     \inferrule {
       \tau \notin M 
       \\
-      M, \Delta \entails \mathrm{T} \subtypes \alpha
+      M, \Delta \entails \Tau \subtypes \alpha
     } {
-      M, \Delta \ \tau<:\alpha \entails \mathrm{T}\ \tau \subtypes \alpha
+      M, \Delta \ \tau<:\alpha \entails \Tau\ \tau \subtypes \alpha
     }
 
     \inferrule {
       \tau_r \neq \alpha
       \\
-      M, \Delta \entails \mathrm{T} \subtypes \alpha
+      M, \Delta \entails \Tau \subtypes \alpha
     } {
-      M, \Delta \ \tau_l<:\tau_r \entails \mathrm{T} \subtypes \alpha
+      M, \Delta \ \tau_l<:\tau_r \entails \Tau \subtypes \alpha
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \mathrm{T} \subtypes \alpha}
+\begin{definition}\boxed{M, \Delta \entails \Tau \subtypes \alpha}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2920,17 +2920,17 @@ Different: RLT isn't cartesian
     \inferrule {
       \tau \notin M 
       \\
-      M, \Delta \entails \alpha \subtypes \mathrm{T}
+      M, \Delta \entails \alpha \subtypes \Tau
     } {
-      M, \Delta \ \tau<:\alpha \entails \alpha \subtypes \mathrm{T}\ \tau
+      M, \Delta \ \tau<:\alpha \entails \alpha \subtypes \Tau\ \tau
     }
 
     \inferrule {
       \tau_r \neq \alpha
       \\
-      M, \Delta \entails \alpha \subtypes \mathrm{T}
+      M, \Delta \entails \alpha \subtypes \Tau
     } {
-      M, \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \mathrm{T}
+      M, \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \Tau
     }
   \end{mathpar}
 \end{definition}
@@ -2967,69 +2967,69 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{quantify}^{+|-}(\mathrm{A}, \Delta, \mathrm{A}, \Delta, \tau) = \tau}
+\begin{definition}\boxed{\text{quantify}^{+|-}(\Alpha, \Delta, \Alpha, \Delta, \tau) = \tau}
   \[\begin{array}{rclr}
     \text{quantify}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
     &=& 
     \tau
     \\
-    \text{quantify}^{+|-}(\epsilon, \epsilon, \mathrm{A}_i, \Delta_i, \tau) 
+    \text{quantify}^{+|-}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}\tau
+    \text{inner}(+|-)\code{[}\Alpha_i\code{ }\Delta_i\code{]}\tau
     \\
-    \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \epsilon, \epsilon, \tau) 
+    \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
-    \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}\tau
+    \text{outer}(+|-)\code{[}\Alpha_o\code{ }\Delta_o\code{]}\tau
     \\
-    \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) 
+    \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{outer}(+|-)\code{[}\mathrm{A}_o\code{ }\Delta_o\code{]}
-    \text{inner}(+|-)\code{[}\mathrm{A}_i\code{ }\Delta_i\code{]}
+    \text{outer}(+|-)\code{[}\Alpha_o\code{ }\Delta_o\code{]}
+    \text{inner}(+|-)\code{[}\Alpha_i\code{ }\Delta_i\code{]}
     \tau
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\mathrm{A}, \mathrm{A}, \Delta \entails \tau \equiv^{+|-} \tau}
+\begin{definition}\boxed{\Alpha, \Alpha, \Delta \entails \tau \equiv^{+|-} \tau}
   \begin{mathpar}
     \inferrule {
-      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
       \\\\
-      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \sqcap\ \mathrm{A}_z = \mathrm{A}_o
+      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \sqcap\ \Alpha_z = \Alpha_o
       \\
-      (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \mathrm{A}_z \ \backslash\ \mathrm{A}_r = \mathrm{A}_i
+      (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \Alpha_z \ \backslash\ \Alpha_r = \Alpha_i
       \\\\
-      \text{quantify}^{+|-}(\mathrm{A}_o, \Delta_o, \mathrm{A}_i, \Delta_i, \tau) = \tau'
+      \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) = \tau'
     } {
-      \mathrm{A}_r, \mathrm{A}_z, \Delta \entails \tau \equiv^{+|-} \tau'
+      \Alpha_r, \Alpha_z, \Delta \entails \tau \equiv^{+|-} \tau'
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\mathrm{A}, \Delta \entails \Delta \wr \Delta}
+\begin{definition}\boxed{\Alpha, \Delta \entails \Delta \wr \Delta}
   \begin{mathpar}
     \inferrule {
     } {
-      \mathrm{A}_z, \epsilon \entails \epsilon \wr \epsilon 
+      \Alpha_z, \epsilon \entails \epsilon \wr \epsilon 
     }
 
     \inferrule {
-      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
+      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \Alpha_q
       \\
-      \forall \alpha .\ \alpha \in \mathrm{A}_q \implies \alpha \in \mathrm{A}_z
+      \forall \alpha .\ \alpha \in \Alpha_q \implies \alpha \in \Alpha_z
       \\
-      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \mathrm{A}_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \ \tau_l<:\tau_r \wr \Delta_i 
+      \Alpha_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \ \tau_l<:\tau_r \wr \Delta_i 
     }
 
     \inferrule {
-      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \mathrm{A}_q
+      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \Alpha_q
       \\
-      \alpha \in \mathrm{A}_q \\ \alpha \notin \mathrm{A}_z
+      \alpha \in \Alpha_q \\ \alpha \notin \Alpha_z
       \\
-      \mathrm{A}_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \mathrm{A}_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \wr \Delta_i \ \tau_l<:\tau_r
+      \Alpha_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \wr \Delta_i \ \tau_l<:\tau_r
     }
   \end{mathpar}
 \end{definition}
@@ -3148,11 +3148,11 @@ Different: RLT isn't cartesian
   %   }
 
   %   \inferrule {
-  %     Z, \Gamma \entails F \liftfun \Pi, \mathrm{T}_n 
+  %     Z, \Gamma \entails F \liftfun \Pi, \Tau_n 
   %     \\
-  %     \Gamma \entails \Pi \equiv \mathrm{T} 
+  %     \Gamma \entails \Pi \equiv \Tau 
   %   } {
-  %     \Gamma \entails F \hastype \code{\&}(\mathrm{T}) \given Z
+  %     \Gamma \entails F \hastype \code{\&}(\Tau) \given Z
   %   }
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3263,12 +3263,12 @@ Different: RLT isn't cartesian
     \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
   $ 
   \item \Z $
-    \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \mathrm{T}_{rel}
+    \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
     \I
     e = \code{fix($e'$)}
   $
   \item \Z $
-    \tau = \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$}
+    \tau = \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$}
   $
   \item \Z $
     Z = Z_0
@@ -3289,7 +3289,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \tau' \subtypes 
-    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
+    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
     \given Z_0 
   $ by theorem \ref{theorem:proof_subtyping_interpolation}
 
@@ -3310,7 +3310,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \Omega \satisfies 
-    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
+    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
   $ by theorem \ref{} \TODO{...}
 
 
@@ -4168,14 +4168,14 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \\
       \Omega \sqcup \Omega' \satisfies e \hastype \tau
     } {
-      \Omega \satisfies e \hastype \code{EXI[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
       \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \implies 
       \Omega \sqcup \Omega', \Gamma \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{ALL[$\mathrm{A}$ $Q$]$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
