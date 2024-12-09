@@ -2818,7 +2818,9 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}
+\begin{definition}
+\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \mathrm{T}}
+\ (Fixpoint duality)
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
@@ -2831,7 +2833,11 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      M, \Delta, \Delta \entails \alpha_1 \subtypes \mathrm{T}_l 
+      M, \Delta, \Delta \entails \alpha_1 \subtypes \Tau_h
+      \\
+      \widebar{\code{($\tau_l$,$\tau_r$)<:$\alpha_3$}}^{\forall \tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \\\\
+      M, \Delta, \Delta \entails \alpha_1 \subtypes \Tau_l 
       \\
       M, \Delta, \Delta \entails \mathrm{T}_r \subtypes \alpha_2
       \\
@@ -2841,7 +2847,7 @@ Different: RLT isn't cartesian
       \\
       \Delta \entails N \sqcup M \sqcup A_p\ \alpha_3 \pitchfork \Delta_i  
       \\
-      N\ \alpha_3, M, \Delta_i \entails \tau_p \equiv^{-} \tau
+      N\ \alpha_3, M, \Delta_i \sqcup \Delta_h \entails \tau_p \equiv^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
       N \entails 
@@ -3299,6 +3305,10 @@ Different: RLT isn't cartesian
   $ by theorem \ref{theorem:proof_subtyping_soundness} 
 
   \item \Z\Z $
+    \Omega \satisfies e' \hastype \code{BOT->$\tau$}
+  $ by theorem \ref{theorem:model_subtyping_elimination} 
+
+  \item \Z\Z $
     \Omega \satisfies 
     \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
   $ by theorem \ref{} \TODO{...}
@@ -3361,7 +3371,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$->$\tau_r$} 
       \\
-      \satisfies \tau_r
+      \Omega \satisfies \tau_r
     } {
       \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \tau_r
     } 
