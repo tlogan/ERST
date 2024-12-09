@@ -3186,14 +3186,8 @@ Different: RLT isn't cartesian
     \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
   $ by theorem \ref{theorem:proof_subtyping_soundness}
   \item \Z\Z $
-    \forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_0  \implies \Omega, \Gamma \satisfies e \hastype \code{$l$->$\alpha$}
-  $ by theorem \ref{theorem:model_subtyping_inversion}
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_0 \hastype \tau_0  \implies \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
-  $ by instantiation 
-  \item \Z\Z $
     \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
-  $ by application 
+  $ by theorem \ref{theorem:model_subtyping_elimination} 
   \item \Z\Z $
     \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
   $ by theorem \ref{theorem:model_subtyping_record_elimination} 
@@ -3246,14 +3240,8 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
   $ by theorem \ref{theorem:proof_subtyping_soundness} 
   \item \Z\Z $
-    \forall e .\ \Omega, \Gamma \satisfies e \hastype \tau_0 \implies e \hastype \code{$\tau_1$->$\alpha$} 
-  $ by theorem \ref{theorem:model_subtyping_inversion} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_0 \hastype \tau_0 \implies e_0 \hastype \code{$\tau_1$->$\alpha$} 
-  $ by instantiation 
-  \item \Z\Z $
-    e_0 \hastype \code{$\tau_1$->$\alpha$} 
-  $ by application 
+    \Omega \satisfies e_0 \hastype \code{$\tau_1$->$\alpha$} 
+  $ by theorem \ref{theorem:model_subtyping_elimination} 
   \item \Z\Z $
     \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
   $ by theorem \ref{theorem:model_typing_implication_elimination} 
@@ -3277,7 +3265,7 @@ Different: RLT isn't cartesian
     \tau = \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$}
   $
   \item \Z $
-    Z = Z_1 
+    Z = Z_0
   $
   \item \Z $\B{hypo } 
     \Gamma \entails e' \hastype \tau' \given Z_0 
@@ -3289,28 +3277,44 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e' \hastype \tau'
   $ by application
   \item \Z\Z $
-    \left< M, \Delta \right> \in Z_1 
+    \left< M, \Delta \right> \in Z_0
   $ by substitution 
+
+
   \item \Z\Z $
-    \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given \left< M, \Delta \right> 
-  $ by theorem \ref{theorem:proof_subtyping_choice}
+    \tau' \subtypes 
+    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
+    \given Z_0 
+  $ by theorem \ref{theorem:proof_subtyping_interpolation}
+
   \item \Z\Z $
-    \Omega \satisfies \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
-  $ by theorem \ref{theorem:proof_subtyping_soundness}
+    \tau' \subtypes 
+    \code{BOT->$\tau$}
+    \given Z_0 
+  $ by substitution
+
   \item \Z\Z $
-    \forall e .\ \Omega, \Gamma \satisfies e \hastype \tau' \implies \Omega \Gamma \satisfies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
-  $ by theorem \ref{theorem:model_subtyping_inversion}
+    \Omega \satisfies \tau' \subtypes 
+    \code{BOT->$\tau$}
+  $ by theorem \ref{theorem:proof_subtyping_soundness} 
+
   \item \Z\Z $
-   \Omega, \Gamma \satisfies e' \hastype \tau' \implies \Omega, \Gamma .\ e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
-  $ by instantiation 
+    \Omega \satisfies 
+    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
+  $ by theorem \ref{} \TODO{...}
+
+
   \item \Z\Z $
-   \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
-  $ by application 
+    \Omega \satisfies 
+    \tau
+  $ by substitution 
+
   \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{fix($e'$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\mathrm{T}_{rel})$]]$\alpha_5$} 
-  $ by theorem \ref{theorem:model_typing_fix_elimination} \TODO{...}
+    \Omega \satisfies \code{fix($e'$)} \hastype \tau 
+  $ by theorem \ref{theorem:model_typing_implication_independence}
+
   \item \Z\Z $
-    \Omega, \Gamma \satisfies e \hastype \tau
+    \Omega \satisfies e \hastype \tau 
   $ by substitution 
 
   \item \Z $\Omega, \Gamma \satisfies e \hastype \tau$
@@ -3322,58 +3326,6 @@ Different: RLT isn't cartesian
 
 \TODO{See how Cretin proves this without using subject reduction}
 
-% \begin{theorem}(Model typing fixpoint sketch)
-%   \label{theorem:model_typing_fixpoint_sketch}
-%   \begin{mathpar}
-%     \inferrule { 
-%       \Omega \satisfies \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]}
-%     } {
-%       \Omega \satisfies \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
-%       \subtypes \code{$\alpha_1$->$\alpha_2$} 
-%     } 
-%   \end{mathpar}
-%   Proof: 
-%   \item \TODO{...} 
-%   \item $\square$
-% \end{theorem}
-
-% \begin{theorem}(Proof typing fixpoint idea)
-%   \label{theorem:model_typing_fixpoint_ideai}
-%   \begin{mathpar}
-%     \inferrule { 
-%       \alpha_0 \subtypes \code{$\alpha_1$->$\alpha_2$} \given Z
-%       \\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
-%     } {
-%       \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]} \given Z
-%     } 
-%   \end{mathpar}
-%   Proof: 
-%   \item \TODO{...} 
-%   \item $\square$
-% \end{theorem}
-
-
-% \begin{theorem}(Model typing fixpoint duality)
-%   \label{theorem:model_typing_fixpoint_duality}
-%   \begin{mathpar}
-%     \inferrule { 
-%       \left< M, \Delta \right> \in Z
-%       \\
-%       \left< M, \Delta \right> \leadsto \Omega 
-%       \\\\
-%       % \Omega \satisfies \alpha_0 \subtypes \code{$\alpha_1$->$\alpha_2$} 
-%       % \\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
-%     } {
-%       \Omega \satisfies \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]}
-%     } 
-%   \end{mathpar}
-%   Proof: 
-%   \item \TODO{...} 
-%   \item $\square$
-% \end{theorem}
-
 \TODO{note that $\alpha_1$ and $\alpha_2$ could have further constraints in terms of $\alpha_0$ ; therefore the constraint here implies type recursion} 
 
 \TODO{interpretation of the $\alpha_0$ seems to be missing from the rule in paper} 
@@ -3382,29 +3334,10 @@ Different: RLT isn't cartesian
 
 \TODO{can't rely $\tau \subtypes \alpha_0$->$\alpha_1$->$\alpha_2$ gets wrapped up; so can't be reduced to a single choice in $Z$; very different from application, i.e. implication elimination} 
 
-% \begin{theorem}(Model typing implication fixing)
-%   \label{theorem:model_typing_implication_fixing}
-%   \begin{mathpar}
-%     \inferrule { 
-%       \Omega, \Gamma \satisfies e \hastype \code{$\alpha_0$->$\alpha_1$->$\alpha_2$}
-%       (WRONG!!!)
-%       \\
-%       \Omega \satisfies \code{($\alpha_1$,$\alpha_2$)} \subtypes \code{FIX[$\alpha_3$.|$(\Tau_{rel})$]}
-%     } {
-%       \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
-%     } 
-%   \end{mathpar}
-%   Proof: 
-%   \item \TODO{...} 
-%   \item $\square$
-% \end{theorem}
-
-\begin{theorem}(Proof subtyping strongest post-condition interpolation)
-  \label{theorem:fix_duality}
+\begin{theorem}(Proof subtyping interpolation (strongest post-condition))
+  \label{theorem:proof_subtyping_interpolation}
   \begin{mathpar}
     \inferrule { 
-      Z_0 \entails \tau 
-      \\
       Z_0 \looparrowright Z_1
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
@@ -3422,15 +3355,15 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
-\begin{theorem}(Model typing vacuity elimination)
-  \label{theorem:model_typing_vacuity_elimination}
+\begin{theorem}(Model typing implication independence)
+  \label{theorem:model_typing_implication_independence}
   \begin{mathpar}
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{BOT->$\tau$} 
+      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$->$\tau_r$} 
       \\
-      \satisfies \tau
+      \satisfies \tau_r
     } {
-      \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \tau
+      \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof: 
@@ -3475,21 +3408,29 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
-
-\begin{theorem}(Model subtyping inversion)
-  \label{theorem:model_subtyping_inversion}
+\begin{theorem}(Model subtyping elimination)
+  \label{theorem:model_subtyping_elimination}
   \begin{mathpar}
     \inferrule { 
       \Omega \satisfies \tau_l \subtypes \tau_r
+      \\
+      \Omega, \Gamma \satisfies e \hastype  \tau_l  
     } {
-      \forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_l  \implies \Omega, \Gamma \satisfies e \hastype \tau_r 
+      \Omega, \Gamma \satisfies e \hastype \tau_r 
     } 
   \end{mathpar}
   Proof: 
-  \item \TODO{...} 
-  \item $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype  \tau_l  \implies \Omega, \Gamma \satisfies e \hastype \tau_r$
-    by inversion
-  \item $\square$
+  \item $\B{assume } 
+    \Omega \satisfies \tau_l \subtypes \tau_r
+    \I
+    \Omega, \Gamma \satisfies e \hastype  \tau_l  
+  $
+  \item \Z $\B{invert on } \Omega \satisfies \tau_l \subtypes \tau_r$
+  \item \Z $\B{case } \forall e'\ \Gamma' .\ \Omega, \Gamma' \satisfies e' \hastype  \tau_l  \implies \Omega, \Gamma' \satisfies e' \hastype \tau_r$
+  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype  \tau_l  \implies \Omega, \Gamma \satisfies e \hastype \tau_r$ by instantiation
+  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$ by application 
+  \item \Z $\Omega, \Gamma \satisfies e \hastype \tau_r$ by inversion
+  \item $\square$ by implication
 \end{theorem}
 
 
