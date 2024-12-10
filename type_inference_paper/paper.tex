@@ -1978,7 +1978,7 @@ Different: RLT isn't cartesian
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
     } {
       \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
     }
@@ -2819,7 +2819,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition}
-\boxed{N \entails \alpha \circlearrowleft Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \circlearrowright \Tau}
+\boxed{N \entails \alpha \cdot Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \cdot \Tau}
 \ (Fixpoint duality)
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
@@ -2827,33 +2827,31 @@ Different: RLT isn't cartesian
     \inferrule {
     } {
       N \entails 
-      \alpha_0 \circlearrowleft \epsilon \cdot \code{$\alpha_1$->$\alpha_2$} 
+      \alpha_{h^+} \cdot \epsilon \cdot \code{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
-      \alpha_3 \circlearrowright \epsilon 
+      \alpha_{h^-} \cdot \epsilon 
     }
 
     \inferrule {
-      M, \Delta, \Delta \entails \alpha_1 \subtypes \Tau_h
+      M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
-      \widebar{\code{($\tau_l$,$\tau_r$)<:$\alpha_3$}}^{\forall \tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+      \\
+      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      M, \Delta, \Delta \entails \alpha_1 \subtypes \Tau_l 
-      \\
-      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_2
-      \\
-      \code{(\&$(\Tau_l)$,|$(\Tau_r)$)} = \tau_p
+      \widebar{\code{($\tau_l$,$\tau_r$)<:$\alpha_{h^-}$}}^{\forall \tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
       \\\\
-      \text{FTV}(\tau_p) = \Alpha_p 
+      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\
-      \Delta \entails N \sqcup M \sqcup A_p\ \alpha_3 \pitchfork \Delta_i  
-      \\
-      N\ \alpha_3, M, \Delta_i \sqcup \Delta_h \entails \tau_p \equiv^{-} \tau
+      \Delta \entails \Alpha \pitchfork \Delta_i  
+      \\\\
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{(\&$(\Tau_l)$,|$(\Tau_r)$)} \equiv^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
       N \entails 
-      \alpha_0 \circlearrowleft Z \ \left< M,\Delta \right> \cdot \code{$\alpha_1$->$\alpha_2$} 
+      \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \code{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
-      \alpha_3 \circlearrowright \Tau\ \tau
+      \alpha_{h^-} \cdot \Tau\ \tau
     }
   \end{mathpar}
 \end{definition}
@@ -3260,15 +3258,15 @@ Different: RLT isn't cartesian
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau' \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+    \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
   \item \Z $
-    \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     \I
     e = \code{fix($e'$)}
   $
   \item \Z $
-    \tau = \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$}
+    \tau = \code{ALL[$\alpha_l'$]$\alpha_l$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$}
   $
   \item \Z $
     Z = Z_0
@@ -3278,7 +3276,7 @@ Different: RLT isn't cartesian
     \implies
     \Omega, \Gamma \satisfies e' \hastype \tau'
   $ 
-  \item \Z $\B{wrt } e'\ \tau'\ \alpha_0 ... \alpha_5\ T_{rel}\ Z_0\ Z_1 $ 
+  \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
   \item \Z\Z $
     \Omega, \Gamma \satisfies e' \hastype \tau'
   $ by application
@@ -3289,7 +3287,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \tau' \subtypes 
-    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
     \given Z_0 
   $ by theorem \ref{theorem:proof_subtyping_interpolation}
 
@@ -3310,7 +3308,7 @@ Different: RLT isn't cartesian
 
   \item \Z\Z $
     \Omega \satisfies 
-    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
   $ by theorem \ref{} \TODO{...}
 
 
@@ -3352,7 +3350,7 @@ Different: RLT isn't cartesian
       \\
       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
     } {
       \tau
       \subtypes
@@ -3388,7 +3386,7 @@ Different: RLT isn't cartesian
 %     \inferrule { 
 %       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
 %       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \circlearrowleft Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
 %     } {
 %       \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
 %       \subtypes

@@ -532,6 +532,9 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertine
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/libertine/LinLibertineT-tlf-sc-t1.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-sc-t1--base.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/ntxsy5.vf
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txsys.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txex-bar.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmr8t.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmr8r.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineTB-tlf-t1.tfm
