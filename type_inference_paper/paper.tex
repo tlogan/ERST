@@ -2833,6 +2833,11 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
+      N \entails 
+      \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+      \fallingdotseq 
+      \alpha_{h^-} \cdot \Tau
+      \\\\
       M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
       M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
@@ -3289,7 +3294,7 @@ Different: RLT isn't cartesian
     \tau' \subtypes 
     \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
     \given Z_0 
-  $ by theorem \ref{theorem:proof_subtyping_interpolation}
+  $ by theorem \ref{theorem:fixpoint_duality_soundness}
 
   \item \Z\Z $
     \tau' \subtypes 
@@ -3342,26 +3347,39 @@ Different: RLT isn't cartesian
 
 \TODO{can't rely $\tau \subtypes \alpha_0$->$\alpha_1$->$\alpha_2$ gets wrapped up; so can't be reduced to a single choice in $Z$; very different from application, i.e. implication elimination} 
 
-\begin{theorem}(Proof subtyping interpolation (strongest post-condition))
-  \label{theorem:proof_subtyping_interpolation}
+\begin{theorem}(Fixpoint duality soundness)
+  \label{theorem:fixpoint_duality_soundness}
   \begin{mathpar}
     \inferrule { 
       Z_0 \looparrowright Z_1
       \\
-      \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
-      \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
+      \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
+      \\
+      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \tau
       \subtypes
-      \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+      \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given Z_0
     } 
   \end{mathpar}
   Proof: 
   \item \TODO{...} 
-  \item $\square$
+  \item $\B{assume }
+    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    \I
+    Z_0 \looparrowright Z_1
+    \I
+    \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
+  $
+  \item \Z $\B{induct on } 
+    ... 
+  $ \TODO{can't induct on fixpoint duality; $\tau$ must decompose in step with $Z_1$; $\tau$ determins $Z_1$, therefore inducting on $\tau$ should be sufficient}
+  \item \Z $...$  by induction
+  \item $\square$ by implication
+
 \end{theorem}
+
 
 \begin{theorem}(Model typing implication independence)
   \label{theorem:model_typing_implication_independence}
