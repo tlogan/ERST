@@ -1971,16 +1971,28 @@ Different: RLT isn't cartesian
       \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
     }
 
+    % \inferrule {
+    %   \Gamma \entails e \hastype \tau \given Z_0
+    %   \\
+    %   Z_0 \looparrowright Z_1
+    %   \\
+    %   \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+    %   \\\\
+    %   \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
+    % } {
+    %   \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
+    % }
+
     \inferrule {
-      \Gamma \entails e \hastype \tau \given Z_0
+      \Gamma \entails e \hastype \code{$\alpha_{h^+}$->$\tau$} \given Z_0
       \\
       Z_0 \looparrowright Z_1
       \\
-      \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
+      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
-      \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
+      \Gamma \entails \code{loop($e$)} \hastype \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} \given Z_0
     }
   \end{mathpar}
 \end{definition}
@@ -3265,6 +3277,7 @@ Different: RLT isn't cartesian
     \I
     \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
+  \item \TODO{redo conditions for looping case}
   \item \Z $
     \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     \I
@@ -3290,6 +3303,7 @@ Different: RLT isn't cartesian
   $ by substitution 
 
 
+  \item \TODO{redo how fixpoint duality lemmas are used}
   \item \Z\Z $
     \tau' \subtypes 
     \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
@@ -3339,99 +3353,25 @@ Different: RLT isn't cartesian
 
 \TODO{See how Cretin proves this without using subject reduction}
 
-\TODO{note that $\alpha_1$ and $\alpha_2$ could have further constraints in terms of $\alpha_0$ ; therefore the constraint here implies type recursion} 
-
-\TODO{interpretation of the $\alpha_0$ seems to be missing from the rule in paper} 
-
-\TODO{can't rely $\alpha_1$->$\alpha_2$; it's overly specialized in particular model typing world} 
-
-\TODO{can't rely $\tau \subtypes \alpha_0$->$\alpha_1$->$\alpha_2$ gets wrapped up; so can't be reduced to a single choice in $Z$; very different from application, i.e. implication elimination} 
-
-\begin{theorem}(Fixpoint duality soundness redo)
-  \label{theorem:fixpoint_duality_soundness_redo}
-  \TODO{redo fixpoint typing rule to require that body of fix has type $\alpha_{h^+}$->$\tau$}
-
-  \TODO{this will simplify the interpretation of $\alpha_{h^+}$ and avoid intermediate variables}
+\begin{theorem}(Fixpoint duality soundness)
+  \label{theorem:fixpoint_duality_soundness}
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given M, \Delta
-      \\\\
-      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-      \\\\
-      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z 
-      \implies M \preceq M' \land \Delta \preceq \Delta' 
-    } {
-      \tau
-      \subtypes
-      \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
-      \given M, \Delta
-    } 
-  \end{mathpar}
-  Proof: 
-\end{theorem}
-
-\begin{theorem}(Fixpoint duality reduction)
-  \label{theorem:fixpoint_duality_reduction}
-  \begin{mathpar}
-    \inferrule { 
-      \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given M, \Delta
-      \\\\
       N \entails \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    } {
-      \exists \alpha\ \tau .\ \tau' = \code{$\alpha$->$\tau$}
-      \land
-      \alpha_{h^+} \subtypes \alpha \given M, \Delta
-      \land
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M, \Delta
-    } 
-  \end{mathpar}
-  Proof: 
-\end{theorem}
-
-\begin{theorem}(Fixpoint duality soundness inductable)
-  \label{theorem:fixpoint_duality_soundness_inductable}
-  \TODO{figure out statement that breaks down $\tau$ and $\Tau$ in parallel}
-  \begin{mathpar}
-    \inferrule { 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M_1, \Delta_1 
       \\\\
-      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z 
-      \implies M \preceq M' \land \Delta \preceq \Delta' 
-      \\\\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z \implies M \preceq M' \land \Delta \preceq \Delta' 
     } {
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z 
+      \implies
       \tau
       \subtypes
       \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given M, \Delta
     } 
   \end{mathpar}
+  \TODO{induct on fixpoint duality}
   Proof: 
 \end{theorem}
-
-\begin{theorem}(Fixpoint duality soundness)
-  \label{theorem:fixpoint_duality_soundness}
-
-
-  \TODO{remove this version}
-
-  \begin{mathpar}
-    \inferrule { 
-      Z_0 \looparrowright Z_1
-      \\
-      \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
-      \\
-      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    } {
-      \tau
-      \subtypes
-      \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
-      \given Z_0
-    } 
-  \end{mathpar}
-  Proof: 
-\end{theorem}
-
 
 \begin{theorem}(Model typing implication independence)
   \label{theorem:model_typing_implication_independence}
