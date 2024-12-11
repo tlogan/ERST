@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  10 DEC 2024 16:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  11 DEC 2024 10:01
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1072,11 +1072,17 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
 
 LaTeX Warning: Reference `' on page 21 undefined on input line 3317.
 
-[21.21]
+[21.21] [22.22]
 
-LaTeX Warning: Reference `...' on page 22 undefined on input line 3502.
+LaTeX Warning: Reference `...' on page 23 undefined on input line 3567.
 
-[22.22] [23.23] [24.24] [25.25] [26.26] [27.27] [28.28]
+[23.23] [24.24]
+Underfull \vbox (badness 1715) has occurred while \output is active []
+
+ [25.25] [26.26] [27.27]
+Underfull \vbox (badness 1715) has occurred while \output is active []
+
+ [28.28]
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1115,7 +1121,7 @@ Here is how much of TeX's memory you used:
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (29 pages, 555383 bytes).
+Output written on paper.pdf (29 pages, 544727 bytes).
 PDF statistics:
  473 PDF objects out of 1000 (max. 8388607)
  395 compressed objects within 4 object streams

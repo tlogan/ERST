@@ -1683,7 +1683,7 @@ Different: RLT isn't cartesian
     \begin{array}[t]{@{}l}
       \code{$x$} \sep 
       \code{@} \sep
-      \code{\textasciitilde{}$l$ $e$} \sep 
+      \code{\ttilde$l$ $e$} \sep 
       R \sep
       \code{$e$,$e$} \sep
       F \sep 
@@ -1708,7 +1708,7 @@ Different: RLT isn't cartesian
     \nonterm{p} & \is 
       \code{$x$} \sep
       \code{@} \sep
-      \code{\textasciitilde{}$l$ $p$} \sep
+      \code{\ttilde$l$ $p$} \sep
       K \sep
       \code{$p$,$p$} \sep
       \code{($p$)} 
@@ -1720,7 +1720,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{v} & \is 
       \code{@} \sep
-      \code{\textasciitilde{}$l$ $v$} \sep
+      \code{\ttilde$l$ $v$} \sep
       G \sep
       \code{$v$,$v$} \sep
       \code{($v$)} \sep
@@ -1744,7 +1744,7 @@ Different: RLT isn't cartesian
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{\textasciitilde{}$l$ $e$} \rightsquigarrow \code{\textasciitilde{}$l$ $e'$}
+      \code{\ttilde$l$ $e$} \rightsquigarrow \code{\ttilde$l$ $e'$}
     }
 
     \inferrule {
@@ -1850,7 +1850,7 @@ Different: RLT isn't cartesian
     \begin{array}[t]{@{}l}
       \code{$\alpha$} \sep 
       \code{@} \sep
-      \code{\textasciitilde{}$l$ $\tau$} \sep 
+      \code{\ttilde$l$ $\tau$} \sep 
       \code{$l$->$\tau$} \sep 
       \code{$\tau$->$\tau$} \sep
       \code{$\tau$|$\tau$} \sep
@@ -2357,7 +2357,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M, \Delta 
     } {
-      \code{\textasciitilde$l$ $\tau_l$} \subtypes \code{\textasciitilde$l$ $\tau_r$}
+      \code{\ttilde$l$ $\tau_l$} \subtypes \code{\ttilde$l$ $\tau_r$}
       \given M, \Delta 
     }
 
@@ -3364,7 +3364,6 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item \TODO{...} 
   \item $\B{assume }
     \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     \I
@@ -3372,10 +3371,76 @@ Different: RLT isn't cartesian
     \I
     \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
   $
-  \item \Z $\B{induct on } 
-    ... 
-  $ \TODO{can't induct on fixpoint duality; $\tau$ must decompose in step with $Z_1$; $\tau$ determins $Z_1$, therefore inducting on $\tau$ should be sufficient}
-  \item \Z $...$  by induction
+  \item \Z $\B{induct on } \tau$ 
+
+  \item \Z $\B{case } 
+    \tau = \alpha 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{@} 
+  $
+  \item \Z\Z $TODO$
+  \item \Z\Z $\bot$ by application
+
+  \item \Z $\B{case } 
+    \tau = \code{\ttilde $l$ $\tau'$} 
+  $
+  \item \Z\Z $TODO$
+  \item \Z\Z $\bot$ by application
+
+  \item \Z $\B{case } 
+    \tau = \code{$l$->$\tau'$} 
+  $
+  \item \Z\Z $TODO$
+  \item \Z\Z $\bot$ by application
+
+  \item \Z $\B{case } 
+    \tau = \code{$\tau_l$->$\tau_r$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{$\tau_l$|$\tau_r$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{$\tau_l$\&$\tau_r$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{$\tau_l$\textbackslash$\tau_r$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{EXI[$\Alpha$ $Q$]$\tau'$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{ALL[$\Alpha$ $Q$]$\tau'$} 
+  $
+  \item \Z\Z $TODO$
+
+  \item \Z $\B{case } 
+    \tau = \code{FIX[$\alpha$;$\tau'$]} 
+  $
+  \item \Z\Z $TODO$
+    % \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
+    % \\
+    % \nonterm{Q} & \is \epsilon \sep Q\ q
+    % \\
+    % \nonterm{q} & \is \code{.$\tau$<:$\tau$} 
+  \item \Z $
+    \tau
+    \subtypes
+    \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+    \given Z_0
+  $ by induction
   \item $\square$ by implication
 
 \end{theorem}
