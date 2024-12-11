@@ -3347,8 +3347,74 @@ Different: RLT isn't cartesian
 
 \TODO{can't rely $\tau \subtypes \alpha_0$->$\alpha_1$->$\alpha_2$ gets wrapped up; so can't be reduced to a single choice in $Z$; very different from application, i.e. implication elimination} 
 
+\begin{theorem}(Fixpoint duality soundness redo)
+  \label{theorem:fixpoint_duality_soundness_redo}
+  \TODO{redo fixpoint typing rule to require that body of fix has type $\alpha_{h^+}$->$\tau$}
+
+  \TODO{this will simplify the interpretation of $\alpha_{h^+}$ and avoid intermediate variables}
+  \begin{mathpar}
+    \inferrule { 
+      \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given M, \Delta
+      \\\\
+      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      \\\\
+      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z 
+      \implies M \preceq M' \land \Delta \preceq \Delta' 
+    } {
+      \tau
+      \subtypes
+      \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \given M, \Delta
+    } 
+  \end{mathpar}
+  Proof: 
+\end{theorem}
+
+\begin{theorem}(Fixpoint duality reduction)
+  \label{theorem:fixpoint_duality_reduction}
+  \begin{mathpar}
+    \inferrule { 
+      \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given M, \Delta
+      \\\\
+      N \entails \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    } {
+      \exists \alpha\ \tau .\ \tau' = \code{$\alpha$->$\tau$}
+      \land
+      \alpha_{h^+} \subtypes \alpha \given M, \Delta
+      \land
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M, \Delta
+    } 
+  \end{mathpar}
+  Proof: 
+\end{theorem}
+
+\begin{theorem}(Fixpoint duality soundness inductable)
+  \label{theorem:fixpoint_duality_soundness_inductable}
+  \TODO{figure out statement that breaks down $\tau$ and $\Tau$ in parallel}
+  \begin{mathpar}
+    \inferrule { 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M_1, \Delta_1 
+      \\\\
+      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z 
+      \implies M \preceq M' \land \Delta \preceq \Delta' 
+      \\\\
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    } {
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \given M, \Delta
+    } 
+  \end{mathpar}
+  Proof: 
+\end{theorem}
+
 \begin{theorem}(Fixpoint duality soundness)
   \label{theorem:fixpoint_duality_soundness}
+
+
+  \TODO{remove this version}
+
   \begin{mathpar}
     \inferrule { 
       Z_0 \looparrowright Z_1
@@ -3364,85 +3430,6 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item $\B{assume }
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    \I
-    Z_0 \looparrowright Z_1
-    \I
-    \tau \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
-  $
-  \item \Z $\B{induct on } \tau$ 
-
-  \item \Z $\B{case } 
-    \tau = \alpha 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{@} 
-  $
-  \item \Z\Z $TODO$
-  \item \Z\Z $\bot$ by application
-
-  \item \Z $\B{case } 
-    \tau = \code{\ttilde $l$ $\tau'$} 
-  $
-  \item \Z\Z $TODO$
-  \item \Z\Z $\bot$ by application
-
-  \item \Z $\B{case } 
-    \tau = \code{$l$->$\tau'$} 
-  $
-  \item \Z\Z $TODO$
-  \item \Z\Z $\bot$ by application
-
-  \item \Z $\B{case } 
-    \tau = \code{$\tau_l$->$\tau_r$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{$\tau_l$|$\tau_r$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{$\tau_l$\&$\tau_r$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{$\tau_l$\textbackslash$\tau_r$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{EXI[$\Alpha$ $Q$]$\tau'$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{ALL[$\Alpha$ $Q$]$\tau'$} 
-  $
-  \item \Z\Z $TODO$
-
-  \item \Z $\B{case } 
-    \tau = \code{FIX[$\alpha$;$\tau'$]} 
-  $
-  \item \Z\Z $TODO$
-    % \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
-    % \\
-    % \nonterm{Q} & \is \epsilon \sep Q\ q
-    % \\
-    % \nonterm{q} & \is \code{.$\tau$<:$\tau$} 
-  \item \Z $
-    \tau
-    \subtypes
-    \code{BOT->ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
-    \given Z_0
-  $ by induction
-  \item $\square$ by implication
-
 \end{theorem}
 
 
