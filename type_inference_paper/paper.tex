@@ -3275,13 +3275,6 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
 
-  % \item \Z $\B{case } 
-  %   \Gamma \entails e' \hastype \tau' \given Z_0
-  %   \I
-  %   Z_0 \looparrowright Z_1
-  %   \I
-  %   \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
-  % $ 
   \item \Z $\B{case } 
     e = \code{loop($e'$)} 
   $ 
@@ -3311,10 +3304,18 @@ Different: RLT isn't cartesian
   $ by substitution 
 
   \item \Z\Z $
-    \tau' \subtypes 
+    \forall \tau .\ 
+    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+    \implies
+    \tau \subtypes 
     \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
     \given Z_0 
   $ by theorem \ref{theorem:fixpoint_duality_soundness}
+  \item \Z\Z $
+    \tau' \subtypes 
+    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
+    \given Z_0 
+  $ by instantiation and application 
 
   \item \Z\Z $
     \tau' \subtypes \tau \given Z_0 
