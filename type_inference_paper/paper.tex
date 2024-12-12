@@ -76,6 +76,11 @@
 \newcommand{\is}{\ ::=\ }
 \newcommand{\sep}{\ \ |\ \ }
 \newcommand{\nonterm}[1]{#1\ }
+\newcommand{\contin}{\downharpoonleft\ }
+\newcommand{\case}{\B{case }}
+\newcommand{\wrt}{\B{wrt }}
+% \newcommand{\let}{\B{let }}
+% \newcommand{\for}{\B{for }}
      
 
 
@@ -619,7 +624,7 @@ The let-binding rule allows for prenex polymorphism by generalizing via subtypin
 %   \inferrule[fix] { 
 %     \Gamma \entails e \hastype \code{$\tau$->$\tau$}
 %   } {
-%     \Gamma \entails \code{fix($e$)} \hastype \tau
+%     \Gamma \entails \code{loop($e$)} \hastype \tau
 %   } 
 
 %   \inferrule[subsump] { 
@@ -1107,7 +1112,7 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{fix}
 %     \\
-%     \I \B{case } \code{fix($e$)} :  
+%     \I \B{case } \code{loop($e$)} :  
 %     \\
 %     \I\I \Omega_{stale} \leftarrow \F{staleTVs}()
 %     \\
@@ -1691,7 +1696,7 @@ Different: RLT isn't cartesian
       \code{($e$)($e$)} \sep
       \\
       \code{$e$ |> $e$} \sep
-      \code{fix($e$)} \sep
+      \code{loop($e$)} \sep
       \code{let $x$:$\tau$ = $e$ in $e$} \sep
       \code{($e$)}
     \end{array}
@@ -1814,12 +1819,12 @@ Different: RLT isn't cartesian
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{fix(e)} \rightsquigarrow \code{fix(e')}
+      \code{loop(e)} \rightsquigarrow \code{loop(e')}
     }
 
     \inferrule {
     } {
-      \code{fix(case $x$ => $e$)} \rightsquigarrow e[x \slash \code{fix(case $x$ => $e$)}]
+      \code{loop(case $x$ => $e$)} \rightsquigarrow e[x \slash \code{loop(case $x$ => $e$)}]
     }
 
     \inferrule {
@@ -1980,7 +1985,7 @@ Different: RLT isn't cartesian
     %   \\\\
     %   \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
     % } {
-    %   \Gamma \entails \code{fix($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
+    %   \Gamma \entails \code{loop($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
     % }
 
     \inferrule {
@@ -3270,64 +3275,62 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e \hastype \tau
   $ by substitution 
 
+  % \item \Z $\B{case } 
+  %   \Gamma \entails e' \hastype \tau' \given Z_0
+  %   \I
+  %   Z_0 \looparrowright Z_1
+  %   \I
+  %   \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
+  % $ 
   \item \Z $\B{case } 
-    \Gamma \entails e' \hastype \tau' \given Z_0
+    e = \code{loop($e'$)} 
+  $ 
+  \item \Z $\contin  
+    \tau = \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
+  $
+  \item \Z $\contin 
+    Z = Z_0 
+  $
+  \item \Z $\contin  
+    \Gamma \entails e' \hastype \code{$\alpha_{h^+}$->$\tau'$} \given Z_0
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau' \subtypes \code{$\alpha_{h^+}$->$\alpha_l$->$\alpha_r$} \given Z_1
+    \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
-  \item \TODO{redo conditions for looping case}
-  \item \Z $
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    \I
-    e = \code{fix($e'$)}
-  $
-  \item \Z $
-    \tau = \code{ALL[$\alpha_l'$]$\alpha_l$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$}
-  $
-  \item \Z $
-    Z = Z_0
-  $
   \item \Z $\B{hypo } 
-    \Gamma \entails e' \hastype \tau' \given Z_0 
-    \implies
-    \Omega, \Gamma \satisfies e' \hastype \tau'
+    \Gamma \entails e' \hastype \code{$\alpha_{h^+}$->$\tau'$} \given Z_0 \implies 
+    \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
   $ 
   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
   \item \Z\Z $
-    \Omega, \Gamma \satisfies e' \hastype \tau'
+    \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
   $ by application
   \item \Z\Z $
     \left< M, \Delta \right> \in Z_0
   $ by substitution 
 
-
-  \item \TODO{redo how fixpoint duality lemmas are used}
   \item \Z\Z $
     \tau' \subtypes 
-    \code{BOT->ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
+    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
     \given Z_0 
   $ by theorem \ref{theorem:fixpoint_duality_soundness}
 
   \item \Z\Z $
-    \tau' \subtypes 
-    \code{BOT->$\tau$}
-    \given Z_0 
+    \tau' \subtypes \tau \given Z_0 
   $ by substitution
 
   \item \Z\Z $
-    \Omega \satisfies \tau' \subtypes 
-    \code{BOT->$\tau$}
+    \Omega \satisfies \tau' \subtypes \tau
   $ by theorem \ref{theorem:proof_subtyping_soundness} 
 
   \item \Z\Z $
-    \Omega \satisfies e' \hastype \code{BOT->$\tau$}
+    \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
   $ by theorem \ref{theorem:model_subtyping_elimination} 
 
   \item \Z\Z $
     \Omega \satisfies 
-    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
+    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
   $ by theorem \ref{} \TODO{...}
 
 
@@ -3337,7 +3340,7 @@ Different: RLT isn't cartesian
   $ by substitution 
 
   \item \Z\Z $
-    \Omega \satisfies \code{fix($e'$)} \hastype \tau 
+    \Omega \satisfies \code{loop($e'$)} \hastype \tau 
   $ by theorem \ref{theorem:model_typing_implication_independence}
 
   \item \Z\Z $
@@ -3357,16 +3360,16 @@ Different: RLT isn't cartesian
   \label{theorem:fixpoint_duality_soundness}
   \begin{mathpar}
     \inferrule { 
-      N \entails \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-      \\\\
-      \forall M'\ \Delta' .\ \left< M', \Delta' \right> \in Z \implies M \preceq M' \land \Delta \preceq \Delta' 
+      Z_0 \looparrowright Z_1
+      \\
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
       \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
-      \given M, \Delta
+      \given Z_0
     } 
   \end{mathpar}
   \TODO{induct on fixpoint duality}
@@ -3381,7 +3384,7 @@ Different: RLT isn't cartesian
       \\
       \Omega \satisfies \tau_r
     } {
-      \Omega, \Gamma \satisfies \code{fix($e$)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \code{loop($e$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof: 
