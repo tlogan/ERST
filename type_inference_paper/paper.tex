@@ -3364,6 +3364,7 @@ Different: RLT isn't cartesian
       \\
       N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
+      \forall \tau .\ 
       \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
@@ -3372,8 +3373,165 @@ Different: RLT isn't cartesian
       \given Z_0
     } 
   \end{mathpar}
-  \TODO{induct on fixpoint duality}
   Proof: 
+  \item $\B{assume }
+    Z_0 \looparrowright Z_1
+    \I
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+  $ 
+  \item \Z $\B{induct on }
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+  $
+  \item \Z $\B{case }
+    Z_1 = \epsilon \I \Tau = \epsilon
+  $
+    \item \Z\Z $\B{for } \tau$
+      \item \Z\Z\Z $\B{assume }
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      $
+        \item \Z\Z\Z\Z $
+          \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given \epsilon 
+        $ by substitution
+        \item \Z\Z\Z\Z $
+          \neg(\tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given \epsilon)
+        $ by theorem \ref{...} \TODO{...} 
+        \item \Z\Z\Z\Z $\bot$ by application
+      \item \Z\Z\Z $
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+        \implies
+        \tau
+        \subtypes
+        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+        \given Z_0
+      $ by implication
+    \item \Z\Z $
+      \forall \tau .\ 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \implies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \given Z_0
+    $ by generalization 
+  \item \Z $\B{case }
+    Z_1 = Z\ \left<M, \Delta \right> \I \Tau = \Tau_i\ \tau_i
+  $
+  \item \Z $\contin
+    N \entails 
+    \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+    \fallingdotseq 
+    \alpha_{h^-} \cdot \Tau_i
+  $
+  \item \Z $\contin
+    M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+    \I
+    M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+    \I
+    M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+  $
+  \item \Z $\contin
+    \widebar{\code{($\tau_l$,$\tau_r$)<:$\alpha_{h^-}$}}^{\forall \tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+  $
+  \item \Z $\contin
+    N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+    \I
+    \Delta \entails \Alpha \pitchfork \Delta_i  
+  $
+  \item \Z $\contin
+    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{(\&$(\Tau_l)$,|$(\Tau_r)$)} \equiv^{-} \tau_i
+  $
+  \item \Z $\B{hypo }
+    N \entails 
+    \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+    \fallingdotseq 
+    \alpha_{h^-} \cdot \Tau_i
+    \implies
+    \\
+    \forall \tau .\ 
+    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+    \implies
+    \tau
+    \subtypes
+    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
+    \given Z_0
+  $
+  \item \Z $\B{wrt }
+    Z\ M\ \Delta\ \Tau_i\ \tau_i
+  $
+
+    \item \Z\Z $\B{for } \tau$
+      \item \Z\Z\Z $\B{assume }
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      $
+        \item \Z\Z\Z\Z $
+          \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+        $ by substitution
+        \item \Z\Z\Z\Z $
+          \exists \tau' \tau'' .\ \tau = \code{$\tau'$\&$\tau''$} 
+          \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+          \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+        $ by theorem \ref{...} \TODO{...}
+        \item \Z\Z\Z\Z $
+          \B{let } \tau' \tau'' \B{ s.t. } \tau = \code{$\tau'$\&$\tau''$}
+          \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+          \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+        $ by declaration 
+        \item \Z\Z\Z\Z $
+          \tau = \code{$\tau'$\&$\tau''$}
+        $ by splitting 
+        \item \Z\Z\Z\Z $
+          \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+        $ by splitting
+        \item \Z\Z\Z\Z $
+          \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+        $ by splitting 
+        \item \Z\Z\Z\Z $
+          \tau'
+          \subtypes
+          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
+          \given Z_0
+        $ by instantiation and application 
+        \item \Z\Z\Z\Z $
+          \code{$\tau'$\&$\tau''$}
+          \subtypes
+          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
+          \given Z_0
+        $ by theorem \ref{...} \TODO{...} 
+        \item \Z\Z\Z\Z $
+          \tau
+          \subtypes
+          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+          \given Z_0
+        $ by substitution 
+      \item \Z\Z\Z $
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+        \implies
+        \tau
+        \subtypes
+        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+        \given Z_0
+      $ by implication 
+    \item \Z\Z $
+      \forall \tau .\ 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \implies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \given Z_0
+    $ by generalization 
+
+
+  \item \Z $
+    \forall \tau .\ 
+    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+    \implies
+    \tau
+    \subtypes
+    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+    \given Z_0
+  $ by induction
+  \item $\square$ by implication
 \end{theorem}
 
 \begin{theorem}(Model typing implication independence)
