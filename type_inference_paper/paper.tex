@@ -3393,10 +3393,14 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z\Z $
           \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given \epsilon 
         $ by substitution
+
         \item \Z\Z\Z\Z $
-          \neg(\tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given \epsilon)
-        $ by theorem \ref{...} \TODO{...} 
-        \item \Z\Z\Z\Z $\bot$ by application
+          \exists M\ \Delta\ .\ \left<M, \Delta\right> \in \epsilon 
+        $ by theorem \ref{theorem:universe_proof_typing_worldly}  
+        \item \Z\Z\Z\Z $
+          \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
+        $ by declaration  
+        \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
       \item \Z\Z\Z $
         \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
@@ -3468,12 +3472,14 @@ Different: RLT isn't cartesian
           \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
         $ by substitution
         \item \Z\Z\Z\Z $
-          \exists \tau' \tau'' .\ \tau = \code{$\tau'$\&$\tau''$} 
+          \exists \tau'\ \tau'' .\ 
+          \tau \subtypes \code{$\tau'$\&$\tau''$}\given Z\ \left<M, \Delta\right>
           \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
           \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-        $ by theorem \ref{...} \TODO{...}
+        $ by theorem \ref{theorem:proof_subtyping_decomposition}
         \item \Z\Z\Z\Z $
-          \B{let } \tau' \tau'' \B{ s.t. } \tau = \code{$\tau'$\&$\tau''$}
+          \B{let } \tau'\ \tau'' \B{ s.t. } 
+          \tau \subtypes \code{$\tau'$\&$\tau''$}\given Z\ \left<M, \Delta\right>
           \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
           \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
         $ by declaration 
@@ -3503,7 +3509,7 @@ Different: RLT isn't cartesian
           \subtypes
           \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
           \given Z_0
-        $ by substitution 
+        $ by \ref{...} \TODO{proof subtyping transitivity} 
       \item \Z\Z\Z $
         \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
@@ -3533,6 +3539,51 @@ Different: RLT isn't cartesian
     \given Z_0
   $ by induction
   \item $\square$ by implication
+\end{theorem}
+
+\begin{theorem}(Universe proof typing worldly)
+  \label{theorem:universe_proof_typing_worldly}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given Z 
+    } {
+      \exists M\ \Delta\ .\ \left<M, \Delta\right> \in Z
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Empty containment absurd)
+  \label{theorem:empty_containment_absurd}
+  \begin{mathpar}
+    \inferrule { 
+      \left<M, \Delta\right> \in \epsilon 
+    } {
+      \bot
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Proof subtyping decomposition)
+  \label{theorem:proof_subtyping_decomposition}
+  \begin{mathpar}
+    \inferrule { 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+    } {
+      \exists \tau'\ \tau'' .\ 
+      \tau \subtypes \code{$\tau'$\&$\tau''$} \given Z\ \left<M, \Delta\right>
+      \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+      \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
 \end{theorem}
 
 \begin{theorem}(Model typing implication independence)
