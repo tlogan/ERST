@@ -3503,13 +3503,13 @@ Different: RLT isn't cartesian
           \subtypes
           \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
           \given Z_0
-        $ by theorem \ref{...} \TODO{...} 
+        $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
         \item \Z\Z\Z\Z $
           \tau
           \subtypes
           \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
           \given Z_0
-        $ by \ref{...} \TODO{proof subtyping transitivity} 
+        $ by theorem \ref{theorem:universe_proof_typing_transitivity} 
       \item \Z\Z\Z $
         \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
@@ -3540,6 +3540,127 @@ Different: RLT isn't cartesian
   $ by induction
   \item $\square$ by implication
 \end{theorem}
+
+\begin{theorem}(Universe proof typing fixpoint extension)
+  \label{theorem:universe_proof_typing_fixpoint_extension}
+  \begin{mathpar}
+    \inferrule { 
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r$} 
+      \given Z
+      \\\\
+      \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \\
+      M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+      \\
+      M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+      \\
+      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+      \\
+      \widebar{\code{($\tau_l$,$\tau_r$)<:$\alpha_{h^-}$}}^{\forall \tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \\
+      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      \\ 
+      \Delta \entails \Alpha \pitchfork \Delta_i  
+      \\
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{(\&$(\Tau_l)$,|$(\Tau_r)$)} \equiv^{-} \tau_i
+    } {
+      \code{$\tau$\&$\tau'$}
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r$} 
+      \given Z
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+% \begin{theorem}(Universe proof typing implication expansion)
+%   \label{theorem:universe_proof_typing_implication}
+%   \begin{mathpar}
+%     \inferrule { 
+%       M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+%       \\
+%       M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+%       \\
+%     } {
+%       \code{\&$(\Tau_l)$->|$(\Tau_r)$}
+%       \subtypes
+%       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
+%       \given M, \Delta
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
+%   \item $\square$
+% \end{theorem}
+
+\begin{theorem}(Universe proof typing implication expansion)
+  \label{theorem:universe_proof_typing_implication_expansion}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \code{$\tau_l$->$\tau_r$}
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
+      \given M, \Delta
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
+  \item \TODO{$X \rightarrow Y$ is equivalent to $\forall x \in X .\ \exists y .\ (x,y) \in (X \times Y)$} 
+  \item \TODO{$X \rightarrow Y$ is equivalent to $\neg (\exists x \in X \land \nexists y \in Y)$} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Upper bound interpretation sound)
+  \label{theorem:upper_bound_interpretation_sound}
+  \begin{mathpar}
+    \inferrule { 
+      M, \Delta, \Delta \entails \alpha \subtypes \Tau 
+    } {
+     \alpha \subtypes \code{\&$(\Tau)$} \given \left<M, \Delta\right>
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Lower bound interpretation sound)
+  \label{theorem:lower_bound_interpretation_sound}
+  \begin{mathpar}
+    \inferrule { 
+      M, \Delta, \Delta \entails \Tau \subtypes \alpha
+      \\
+    } {
+     \code{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+
+\begin{theorem}(Universe proof typing transitivity)
+  \label{theorem:universe_proof_typing_transitivity}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_0 \subtypes \tau_1 \given Z
+      \\
+      \tau_1 \subtypes \tau_2 \given Z
+    } {
+      \tau_0 \subtypes \tau_2 \given Z
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
 
 \begin{theorem}(Universe proof typing worldly)
   \label{theorem:universe_proof_typing_worldly}
