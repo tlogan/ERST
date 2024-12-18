@@ -3509,7 +3509,7 @@ Different: RLT isn't cartesian
           \subtypes
           \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
           \given Z_0
-        $ by theorem \ref{theorem:universe_proof_typing_transitivity} 
+        $ by theorem \ref{theorem:universe_proof_subtyping_transitivity} 
       \item \Z\Z\Z $
         \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
@@ -3645,8 +3645,8 @@ Different: RLT isn't cartesian
 \end{theorem}
 
 
-\begin{theorem}(Universe proof typing transitivity)
-  \label{theorem:universe_proof_typing_transitivity}
+\begin{theorem}(Universe proof subtyping transitivity)
+  \label{theorem:universe_proof_subtyping_transitivity}
   \begin{mathpar}
     \inferrule { 
       \tau_0 \subtypes \tau_1 \given Z
@@ -3901,14 +3901,47 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \tau_l \subtypes \tau_r \given M, \Delta 
-      \\
-      \left<M, \Delta\right> \leadsto \Omega 
     } {
+      \forall \Omega .\ 
+      \left<M, \Delta\right> \leadsto \Omega 
+      \implies
       \Omega \satisfies \tau_l \subtypes \tau_r
     } 
   \end{mathpar}
   Proof: 
   \item \TODO{...} 
+  \item $\B{assume } 
+    \tau_l \subtypes \tau_r \given M, \Delta 
+    \I
+    \left<M, \Delta\right> \leadsto \Omega 
+  $
+    \item \Z $\B{induct on } \tau_l \subtypes \tau_r \given M, \Delta$
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
+
+      \item \Z\Z $\B{for } \Omega \B{ assume } \left<M, \Delta\right> \leadsto \Omega$
+        \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$
+          \item \Z\Z\Z\Z $...$
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$
+          by ... 
+        \item \Z\Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies \Omega, \Gamma \satisfies e \hastype \tau_r$ 
+        by implication and generalization
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by definition
+      \item \Z\Z $\forall \Omega .\ \left<M, \Delta\right> \leadsto \Omega \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      by implication and generalization 
+
+    %% TODO
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
+    %%%%%%%%%%%%%%%%%%%%%
+    \item \Z $
+      \forall \Omega .\ 
+      \left<M, \Delta\right> \leadsto \Omega 
+      \implies
+      \Omega \satisfies \tau_l \subtypes \tau_r
+    $ by induction
   \item $\square$
 \end{theorem}
 
