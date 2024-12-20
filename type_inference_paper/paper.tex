@@ -3099,14 +3099,12 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  
-      \\
-      \left<M, \Delta\right> \in Z
-      \\
-      \left<M, \Delta\right> \leadsto \Omega 
     } {
-      \Omega, \Gamma \satisfies e \hastype \tau
+      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
     } 
   \end{mathpar}
+  \TODO{convert to using existential $\Omega$}
+
   Proof: 
   \item $\B{assume } \Gamma \entails e \hastype \tau \given Z 
     \I \left< M, \Delta \right> \in Z 
@@ -3902,9 +3900,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       \tau_l \subtypes \tau_r \given M, \Delta 
     } {
-      \forall \Omega .\ 
-      \left<M, \Delta\right> \leadsto \Omega 
-      \implies
+      \exists \Omega .\ 
       \Omega \satisfies \tau_l \subtypes \tau_r
     } 
   \end{mathpar}
@@ -3912,34 +3908,284 @@ Different: RLT isn't cartesian
   \item \TODO{...} 
   \item $\B{assume } 
     \tau_l \subtypes \tau_r \given M, \Delta 
-    \I
-    \left<M, \Delta\right> \leadsto \Omega 
   $
     \item \Z $\B{induct on } \tau_l \subtypes \tau_r \given M, \Delta$
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
 
-      \item \Z\Z $\B{for } \Omega \B{ assume } \left<M, \Delta\right> \leadsto \Omega$
-        \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$
-          \item \Z\Z\Z\Z $...$
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$
-          by ... 
-        \item \Z\Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies \Omega, \Gamma \satisfies e \hastype \tau_r$ 
-        by implication and generalization
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by definition
-      \item \Z\Z $\forall \Omega .\ \left<M, \Delta\right> \leadsto \Omega \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
+    \item \Z $\B{case } \tau_l = \tau \I \tau_r = \tau$
+    \item \Z $\B{wrt } \tau $
+      \item \Z\Z $\B{for } \Omega $
+        \item \Z\Z\Z $\Omega \satisfies \tau \subtypes \tau$
+        by theorem \ref{...} \TODO{model typing reflexivity}
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
+      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
 
-    %% TODO
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
+    \item \Z $\B{case } \tau_l = \code{BOT}$
+      \item \Z\Z $\B{for } \Omega $
+        \item \Z\Z\Z $\Omega \satisfies \code{BOT} \subtypes \tau_r$ by definition
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
+      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
+
+    \item \Z $\B{case } \tau_r = \code{TOP}$
+      \item \Z\Z $\B{for } \Omega $
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{TOP}$ by definition
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
+      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
+
+    %% TODO 
+    %%% TEMPLATE
+    % \item \Z $\B{case } $
+    % \item \Z $\B{hypo } $
+    % \item \Z $\B{wrt } $
+
+    %   \item \Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$
+    %     \item \Z\Z\Z $...$
+    %     \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$
+    %     by ... 
+    %   \item \Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies \Omega, \Gamma \satisfies e \hastype \tau_r$ 
+    %   by implication and generalization
+    %   \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by definition
+    %   \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule {
+    %   \tau_l
+    %   \subtypes
+    %   \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes 
+    %   \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   \tau_{ll} \subtypes \tau_r
+    %   \given M_0, \Delta_0
+    %   \\
+    %   M_0 \preceq M_1
+    %   \\\\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_{lr} \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % } {
+    %   \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes \tau_{rl}
+    %   \given M_0, \Delta_0
+    %   \\
+    %   M_0 \preceq M_1
+    %   \\\\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_l \subtypes \tau_{rr}
+    %   \given M_1, \Delta_1
+    % } {
+    %   \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes
+    %   \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes 
+    %   \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes
+    %   \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   Q \given M_0, \Delta_0
+    %   \\
+    %   A\ \#\ \tau_r
+    %   \\\\
+    %   M_0 \sqcup \Alpha \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_l \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % } {
+    %   \code{EXI[$\Alpha$ $Q$]$\tau_l$} \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   Q \given M_0, \Delta_0
+    %   \\
+    %   A\ \#\ \tau_l
+    %   \\\\
+    %   M_0 \sqcup \Alpha \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_l \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % } {
+    %   \tau_l \subtypes \code{ALL[$\Alpha$ $Q$]$\tau_r$}
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \alpha \notin M_0
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails M \lessdot \alpha
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
+    %   \\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
+    %   \given M_1, \Delta_1
+    % } {
+    %   \alpha \subtypes \tau_r
+    %   \given M_1, \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M} \ \alpha <: \tau_r
+    % }
+
+    % \inferrule {
+    %   \alpha \notin M_0
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot M
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Tau 
+    %   \\
+    %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
+    %   \\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+    %   \given M_1, \Delta_1
+    % } {
+    %   \tau_l \subtypes \alpha
+    %   \given M_1, \Delta_1
+    %   \sqcup \widebar{\tau_l<:z}^{z \in M}
+    %   \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
+    % }
+
+    % \inferrule {
+    %   \alpha \in M_0
+    %   \\
+    %   \alpha <: \tau \in (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha))
+    %   \\\\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % } {
+    %   \alpha \subtypes \tau_r
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \alpha \in M_0
+    %   \\
+    %   \tau <: \alpha \in \Delta_0
+    %   \\\\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_l \subtypes \tau
+    %   \given M_1, \Delta_1
+    % } {
+    %   \tau_l \subtypes \alpha
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes \tau_r \given M_0, \Delta_0
+    %   \\\\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   Q
+    %   \given M_1, \Delta_1
+    % } {
+    %   \code{ALL[$\Alpha$ $Q$]$\tau_l$}
+    %   \subtypes 
+    %   \tau_r
+    %   \given M_1, \Delta_1 
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes \tau_r
+    %   \given M_0, \Delta_0
+    %   \\\\
+    %   M_0 \preceq M_1
+    %   \\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   Q \given M_1, \Delta_1
+    % } {
+    %   \tau_l
+    %   \subtypes 
+    %   \code{EXI[$\Alpha$ $Q$]$\tau_r$}
+    %   \given M_1, \Delta_1
+    % }
+
+    % \inferrule {
+    %   \tau_{ll} \subtypes \tau_r
+    %   \given M, \Delta
+    % } {
+    %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   \tau_{lr} \subtypes \tau_r
+    %   \given M, \Delta
+    % } {
+    %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes \tau_{rl}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+    %   \given M, \Delta
+    % }
+
+    % \inferrule {
+    %   \tau_l \subtypes \tau_{rr}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+    %   \given M, \Delta
+    % }
     %%%%%%%%%%%%%%%%%%%%%
     \item \Z $
-      \forall \Omega .\ 
-      \left<M, \Delta\right> \leadsto \Omega 
-      \implies
+      \exists \Omega .\ 
       \Omega \satisfies \tau_l \subtypes \tau_r
     $ by induction
   \item $\square$
