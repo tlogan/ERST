@@ -546,8 +546,6 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txmiaX.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/ntxsy.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txsys.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/txex-bar.tfm
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/ntxsyc.vf
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/txfonts/txsyc.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
@@ -578,6 +576,5 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb

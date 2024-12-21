@@ -3103,25 +3103,26 @@ Different: RLT isn't cartesian
       \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
     } 
   \end{mathpar}
-  \TODO{convert to using existential $\Omega$}
 
   Proof: 
-  \item $\B{assume } \Gamma \entails e \hastype \tau \given Z 
-    \I \left< M, \Delta \right> \in Z 
-    \I \left<M, \Delta\right> \leadsto \Omega
+  \item $
+    \B{assume } 
+    \Gamma \entails e \hastype \tau \given Z 
   $ 
-  \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+    \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
 
-  \item \Z $\B{case } e = \code{@} \I \tau = \code{@}$ 
-  \item \Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$ by definition
-  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
+    \item \Z $\B{case } e = \code{@} \I \tau = \code{@}$ 
+      \item \Z\Z $\B{let } \Omega$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
+      \item \Z\Z $\exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau$ by witness 
 
-  \item \Z $\B{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
-  \item \Z $\B{wrt } x$ 
-  \item \Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$  by definition
-  \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
-
-
+    \item \Z $\B{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
+    \item \Z $\B{wrt } x$ 
+      \item \Z\Z $\B{let } \Omega$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$  by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
+      \item \Z\Z $\exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau$ by witness 
 
   \item \Z $\B{case } 
     \Gamma \entails e' \hastype \tau' \given Z
@@ -3136,15 +3137,19 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e' \hastype \tau'
   $ 
   \item \Z $\B{wrt } e' \ \tau'$ 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e' \hastype \tau'
-  $ by application
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{\ttilde $l$ $e'$} \hastype \code{\ttilde $l$ $\tau'$}
-  $ by definition
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e \hastype \tau 
-  $ by substitution
+    \item \Z\Z $\B{let } \Omega $ by definition
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e' \hastype \tau'
+    $ by application
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies \code{\ttilde $l$ $e'$} \hastype \code{\ttilde $l$ $\tau'$}
+    $ by definition
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e \hastype \tau 
+    $ by substitution
+    \item \Z\Z $
+      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau 
+    $ by witness 
 
   \item \Z \TODO{remaining trivial introduction cases} 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3190,34 +3195,35 @@ Different: RLT isn't cartesian
     \implies 
     \Omega, \Gamma \satisfies e_0 \hastype \tau_0
   $ 
-  \item \Z $\B{wrt } e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
+  \item \Z $\B{wrt } \Omega\ e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
-  $ by application
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e_0 \hastype \tau_0
+    $ by application
 
-  \item \Z\Z $
-    \left< M, \Delta \right> \in Z_1
-  $ by substitution 
-
-
-  \item \Z\Z $
-    \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
-  $ by theorem \ref{theorem:proof_subtyping_choice}
+    \item \Z\Z $
+      \B{let }
+      M\ \Delta
+      \B{ s.t. }
+      \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
+    $ by theorem \ref{theorem:proof_subtyping_choice}
 
 
-  \item \Z\Z $
-    \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
-  $ by theorem \ref{theorem:proof_subtyping_soundness}
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
-  $ by theorem \ref{theorem:model_subtyping_elimination} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
-  $ by theorem \ref{theorem:model_subtyping_record_elimination} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e \hastype \tau
-  $ by substitution 
+    \item \Z\Z $
+      \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
+    $ by theorem \ref{theorem:proof_subtyping_soundness}
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
+    $ by theorem \ref{theorem:model_subtyping_elimination} 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
+    $ by theorem \ref{theorem:model_subtyping_record_elimination} 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e \hastype \tau
+    $ by substitution 
+    \item \Z\Z $
+      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
+    $ by witness 
 
 
   \item \Z $\B{case } 
@@ -3248,30 +3254,33 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e_1 \hastype \tau_1
   $ 
   \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_0\ \tau_1\ Z_0\ Z_1\ Z_2 $ 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_0 \hastype \tau_0
-  $ by application
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e_1 \hastype \tau_1
-  $ by application
-  \item \Z\Z $
-    \left<M, \Delta \right> \in Z_2
-  $ by substitution 
-  \item \Z\Z $
-    \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
-  $ by theorem \ref{theorem:proof_subtyping_choice} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
-  $ by theorem \ref{theorem:proof_subtyping_soundness} 
-  \item \Z\Z $
-    \Omega \satisfies e_0 \hastype \code{$\tau_1$->$\alpha$} 
-  $ by theorem \ref{theorem:model_subtyping_elimination} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
-  $ by theorem \ref{theorem:model_typing_implication_elimination} 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e \hastype \tau
-  $ by substitution 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e_0 \hastype \tau_0
+    $ by application
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e_1 \hastype \tau_1
+    $ by application
+
+    \item \Z\Z $
+      \B{let } M\ \Delta
+      \B{ s.t. }
+      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
+    $ by theorem \ref{theorem:proof_subtyping_choice} 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
+    $ by theorem \ref{theorem:proof_subtyping_soundness} 
+    \item \Z\Z $
+      \Omega \satisfies e_0 \hastype \code{$\tau_1$->$\alpha$} 
+    $ by theorem \ref{theorem:model_subtyping_elimination} 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
+    $ by theorem \ref{theorem:model_typing_implication_elimination} 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e \hastype \tau
+    $ by substitution 
+    \item \Z\Z $
+      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
+    $ by substitution 
 
   \item \Z $\B{case } 
     e = \code{loop($e'$)} 
@@ -3294,57 +3303,57 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
   $ 
   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
-  $ by application
-  \item \Z\Z $
-    \left< M, \Delta \right> \in Z_0
-  $ by substitution 
+    \item \Z\Z $
+      \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
+    $ by application
 
-  \item \Z\Z $
-    \forall \tau .\ 
-    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
-    \implies
-    \tau \subtypes 
-    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
-    \given Z_0 
-  $ by theorem \ref{theorem:fixpoint_duality_soundness}
-  \item \Z\Z $
-    \tau' \subtypes 
-    \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
-    \given Z_0 
-  $ by instantiation and application 
+    \item \Z\Z $
+      \forall \tau .\ 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \implies
+      \tau \subtypes 
+      \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
+      \given Z_0 
+    $ by theorem \ref{theorem:fixpoint_duality_soundness}
+    \item \Z\Z $
+      \tau' \subtypes 
+      \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
+      \given Z_0 
+    $ by instantiation and application 
 
-  \item \Z\Z $
-    \tau' \subtypes \tau \given Z_0 
-  $ by substitution
+    \item \Z\Z $
+      \tau' \subtypes \tau \given Z_0 
+    $ by substitution
 
-  \item \Z\Z $
-    \Omega \satisfies \tau' \subtypes \tau
-  $ by theorem \ref{theorem:proof_subtyping_soundness} 
+    \item \Z\Z $
+      \Omega \satisfies \tau' \subtypes \tau
+    $ by theorem \ref{theorem:proof_subtyping_soundness} 
 
-  \item \Z\Z $
-    \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
-  $ by theorem \ref{theorem:model_subtyping_elimination} 
+    \item \Z\Z $
+      \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
+    $ by theorem \ref{theorem:model_subtyping_elimination} 
 
-  \item \Z\Z $
-    \Omega \satisfies 
-    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
-  $ by theorem \ref{} \TODO{...}
+    \item \Z\Z $
+      \Omega \satisfies 
+      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
+    $ by theorem \ref{} \TODO{...}
 
 
-  \item \Z\Z $
-    \Omega \satisfies 
-    \tau
-  $ by substitution 
+    \item \Z\Z $
+      \Omega \satisfies 
+      \tau
+    $ by substitution 
 
-  \item \Z\Z $
-    \Omega \satisfies \code{loop($e'$)} \hastype \tau 
-  $ by theorem \ref{theorem:model_typing_implication_independence}
+    \item \Z\Z $
+      \Omega \satisfies \code{loop($e'$)} \hastype \tau 
+    $ by theorem \ref{theorem:model_typing_implication_independence}
 
-  \item \Z\Z $
-    \Omega \satisfies e \hastype \tau 
-  $ by substitution 
+    \item \Z\Z $
+      \Omega \satisfies e \hastype \tau 
+    $ by substitution 
+    \item \Z\Z $
+      \exists \Omega .\ \Omega \satisfies e \hastype \tau 
+    $ by substitution 
 
   \item \Z $\Omega, \Gamma \satisfies e \hastype \tau$
     by induction
@@ -3747,10 +3756,8 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \tau_l \subtypes \tau_r \given Z 
-      \\
-      \left< M, \Delta \right> \in Z
     } {
-      \tau_l \subtypes \tau_r \given M, \Delta
+      \exists M\ \Delta .\ \tau_l \subtypes \tau_r \given M, \Delta
     } 
   \end{mathpar}
   Proof: 
