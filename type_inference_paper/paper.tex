@@ -37,6 +37,7 @@
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{definition}{Definition}[section]
+% \newtheorem{proof}{Proof}[section]
 
 
 \title{Extrinsic Relational Subtyping}
@@ -3085,11 +3086,11 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof:
   \item $\B{assume } \entails e \hastype \tau \given Z$
-  \item \I $\B{let } \Omega\ \Gamma' \ \tau' \B{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
-  \item \I $\Omega, \Sigma \satisfies \Gamma'$ by ...
-  \item \I $e[\Sigma] \B{ wellformed} $ by theorem \ref{theorem:model_typing_soundness}
-  \item \I $e[\Sigma] = e$ by ...
-  \item \I $e \B{ wellformed} $ by substitution 
+    \item \Z $\B{let } \Omega\ \Gamma' \ \tau' \B{ s.t. } \Omega, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
+    \item \Z $\Omega, \Sigma \satisfies \Gamma'$ by ...
+    \item \Z $e[\Sigma] \B{ wellformed} $ by theorem \ref{theorem:model_typing_soundness}
+    \item \Z $e[\Sigma] = e$ by ...
+    \item \Z $e \B{ wellformed} $ by substitution 
   \item $\square$
 \end{theorem}
 
@@ -3804,99 +3805,99 @@ Different: RLT isn't cartesian
   \item $\B{assume } 
     \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
   $ 
-  \item \Z $\B{induct on } 
-    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
-  $ 
-  \item \Z $\B{case }
-    \code{*$l$=>$v$} \in G
-    \I
-    \Omega, \Gamma \satisfies v \hastype \tau
-    \I
-    \forall e' .\ \code{*$l$=>$e'$} \in G \implies e' = v 
-    \I
-    e = R
-  $ 
-  \item \Z $\B{wrt }
-    v\ R
-  $
+    \item \Z $\B{induct on } 
+      \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+    $ 
+    \item \Z $\B{case }
+      \code{*$l$=>$v$} \in G
+      \I
+      \Omega, \Gamma \satisfies v \hastype \tau
+      \I
+      \forall e' .\ \code{*$l$=>$e'$} \in G \implies e' = v 
+      \I
+      e = R
+    $ 
+    \item \Z $\B{wrt }
+      v\ R
+    $
   
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
-  $ by substitution
+      \item \Z\Z $
+        \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
+      $ by substitution
 
-  \item \Z\Z $
-    \code{$G$.$l$} \rightsquigarrow v
-  $ by definition 
+      \item \Z\Z $
+        \code{$G$.$l$} \rightsquigarrow v
+      $ by definition 
 
-  \item \Z\Z $
-    \exists \Sigma .\ \Omega, \Gamma \satisfies \Sigma 
-  $ by theorem \ref{...} 
-  \item \Z\Z $
-    \B{let } \Sigma \B{ s.t. } \Omega, \Gamma \satisfies \Sigma 
-  $ by declaration 
-  \item \Z\Z $
-    \code{$G$.$l$}[\Sigma] \rightsquigarrow v
-  $ by definition 
-  \item \Z\Z $
-    v = v[\Sigma \sqcup \epsilon] 
-  $ by definition 
-  \item \Z\Z $
-    \code{$G$.$l$}[\Sigma] \rightsquigarrow v[\Sigma \sqcup \epsilon] 
-  $ by substitution 
-  \item \Z\Z $
-    \Omega, \epsilon \satisfies \epsilon 
-  $ by definition 
+      \item \Z\Z $
+        \exists \Sigma .\ \Omega, \Gamma \satisfies \Sigma 
+      $ by theorem \ref{...} 
+      \item \Z\Z $
+        \B{let } \Sigma \B{ s.t. } \Omega, \Gamma \satisfies \Sigma 
+      $ by declaration 
+      \item \Z\Z $
+        \code{$G$.$l$}[\Sigma] \rightsquigarrow v
+      $ by definition 
+      \item \Z\Z $
+        v = v[\Sigma \sqcup \epsilon] 
+      $ by definition 
+      \item \Z\Z $
+        \code{$G$.$l$}[\Sigma] \rightsquigarrow v[\Sigma \sqcup \epsilon] 
+      $ by substitution 
+      \item \Z\Z $
+        \Omega, \epsilon \satisfies \epsilon 
+      $ by definition 
 
-  \item \Z\Z $
-    \Omega, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
-  $ by definition 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{$G$.$l$} \hastype \tau 
-  $ by definition 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
-  $ by substitution
+      \item \Z\Z $
+        \Omega, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
+      $ by definition 
+      \item \Z\Z $
+        \Omega, \Gamma \satisfies \code{$G$.$l$} \hastype \tau 
+      $ by definition 
+      \item \Z\Z $
+        \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+      $ by substitution
 
 
-  \item \Z $\B{case }
-    \Omega, \Sigma \satisfies \Gamma
-    \I
-    e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
-    \I
-    \Omega, \Sigma' \satisfies \Gamma'
-    \I
-    \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
-  $
-  \item \Z $\B{hypo }
-    \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
-    \implies
-    \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
-  $
-  \item \Z $\B{wrt }
-    \Sigma\ e'\ \Sigma'\ \Gamma'
-  $
-  \item \Z\Z $
-    \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
-  $ by application
-  \item \Z\Z $
-    \code{$e[\Sigma]$.$l$} \rightsquigarrow \code{$e'[\Sigma \sqcup \Sigma']$.$l$}
-  $ by definition 
-  \item \Z\Z $
-    \code{$e[\Sigma]$.$l$} = \code{$e$.$l$}[\Sigma]
-  $ by definition 
-  \item \Z\Z $
-    \code{$e'[\Sigma \sqcup \Sigma']$.$l$} = \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
-  $ by definition 
-  \item \Z\Z $
-    \code{$e$.$l$}[\Sigma] \rightsquigarrow \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
-  $ by substitution 
-  \item \Z\Z $
-    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
-  $ by definition 
+    \item \Z $\B{case }
+      \Omega, \Sigma \satisfies \Gamma
+      \I
+      e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
+      \I
+      \Omega, \Sigma' \satisfies \Gamma'
+      \I
+      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+    $
+    \item \Z $\B{hypo }
+      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+      \implies
+      \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+    $
+    \item \Z $\B{wrt }
+      \Sigma\ e'\ \Sigma'\ \Gamma'
+    $
+      \item \Z\Z $
+        \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+      $ by application
+      \item \Z\Z $
+        \code{$e[\Sigma]$.$l$} \rightsquigarrow \code{$e'[\Sigma \sqcup \Sigma']$.$l$}
+      $ by definition 
+      \item \Z\Z $
+        \code{$e[\Sigma]$.$l$} = \code{$e$.$l$}[\Sigma]
+      $ by definition 
+      \item \Z\Z $
+        \code{$e'[\Sigma \sqcup \Sigma']$.$l$} = \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
+      $ by definition 
+      \item \Z\Z $
+        \code{$e$.$l$}[\Sigma] \rightsquigarrow \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
+      $ by substitution 
+      \item \Z\Z $
+        \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+      $ by definition 
 
-  \item \Z $
-    \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
-  $ by induction 
+    \item \Z $
+      \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+    $ by induction 
   \item $\square$
 \end{theorem}
 
@@ -3920,29 +3921,23 @@ Different: RLT isn't cartesian
 
     \item \Z $\B{case } \tau_l = \tau \I \tau_r = \tau$
     \item \Z $\B{wrt } \tau $
-      \item \Z\Z $\B{for } \Omega $
-        \item \Z\Z\Z $\Omega \satisfies \tau \subtypes \tau$
-        by theorem \ref{...} \TODO{model typing reflexivity}
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
-        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
-      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
-      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
+      \item \Z\Z $\B{let } \Omega $
+      \item \Z\Z $\Omega \satisfies \tau \subtypes \tau$
+      by theorem \ref{...} \TODO{model typing reflexivity}
+      \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
 
     \item \Z $\B{case } \tau_l = \code{BOT}$
-      \item \Z\Z $\B{for } \Omega $
-        \item \Z\Z\Z $\Omega \satisfies \code{BOT} \subtypes \tau_r$ by definition
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
-        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
-      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
-      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
+      \item \Z\Z $\B{let } \Omega $
+      \item \Z\Z $\Omega \satisfies \code{BOT} \subtypes \tau_r$ by definition
+      \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
 
     \item \Z $\B{case } \tau_r = \code{TOP}$
-      \item \Z\Z $\B{for } \Omega $
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{TOP}$ by definition
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
-        \item \Z\Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
-      \item \Z\Z $\forall \Omega .\ \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by generalization 
-      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by independence 
+      \item \Z\Z $\B{let } \Omega $
+      \item \Z\Z $\Omega \satisfies \tau_l \subtypes \code{TOP}$ by definition
+      \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
 
     %% TODO 
     %%% TEMPLATE
@@ -4195,7 +4190,7 @@ Different: RLT isn't cartesian
       \exists \Omega .\ 
       \Omega \satisfies \tau_l \subtypes \tau_r
     $ by induction
-  \item $\square$
+  \item $\square$ by implication
 \end{theorem}
 
 
@@ -4214,13 +4209,13 @@ Different: RLT isn't cartesian
   \item $\B{assume } \Omega, \Gamma \satisfies e \hastype \tau_l 
   \I \Omega, \Gamma \satisfies \tau_l <: \tau_r
   $
-  \item \Z $\B{invert on}\ \Omega, \Gamma \satisfies \tau_l <: \tau_r$
-  \item \Z $\B{case}\ \forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$
-  \item \Z\Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by identity
-  \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion
-  \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
-  \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by application
-  \item $\square$
+    \item \Z $\B{invert on}\ \Omega, \Gamma \satisfies \tau_l <: \tau_r$
+    \item \Z $\B{case}\ \forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$
+      \item \Z\Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by identity
+    \item \Z $\forall e' .\ \Omega, \Gamma \satisfies e' : \tau_l \implies \Omega, \Gamma \satisfies e' : \tau_r$ by inversion
+    \item \Z $\Omega, \Gamma \satisfies e : \tau_l \implies \Omega, \Gamma \satisfies e : \tau_r$ by instantiation 
+    \item \Z $\Omega, \Gamma \satisfies e : \tau_r$ by application
+  \item $\square$ by implication 
 \end{theorem}
 
 \begin{theorem}(Model typing implication elimination)
@@ -4234,128 +4229,132 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r
     } 
   \end{mathpar}
-  Proof: 
+\end{theorem}
+
+\begin{proof}
   \item $\B{assume }
     \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
     \I 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
-  \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
-  \item \Z $\B{case }
-    \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
-    \I
-    \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-  $
-  \item \Z $
-    F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
-    \I
-    e_0 = \code{($F$*$p$=>$e$)} 
-  $
-  \item \Z $
-    \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
-  $
-  \item \Z $
-    \B{wrt} \ F \ p \ e \ \Gamma' \  
-  $
+    \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
+    \item \Z $\B{case }
+      \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+      \I
+      \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    $
+    \item \Z $
+      F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
+      \I
+      e_0 = \code{($F$*$p$=>$e$)} 
+    $
+    \item \Z $
+      \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    $
+    \item \Z $
+      \B{wrt} \ F \ p \ e \ \Gamma' \  
+    $
 
-  \item \Z\Z $\exists \Sigma .\ \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-  \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by declaration 
-  \item \Z\Z $e_1[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
-
-
-
-  \item \Z\Z $\B{induct on}\ e_1[\Sigma] \B{ wellformed}$
-
-  \item \Z\Z $\B{case } e_1[\Sigma] = v_1 \ \B{for} \ v_1$  
-  \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
-  \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-
-  \item \Z\Z\Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
-  \item \Z\Z\Z $\B{case } F = \epsilon$ 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
-
-  \item \Z\Z\Z\Z $\exists \Sigma' .\ p \equiv v_1 \given \Sigma'$ 
-    by theorem \ref{theorem:model_typing_pattern_matching} 
-  \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
-    by declaration
-  \item \Z\Z\Z\Z $\B{for } e'$ 
-  \item \Z\Z\Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
-  \item \Z\Z\Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
-  \item \Z\Z\Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
-
-  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
-
-  \item \Z\Z\Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
-    by theorem \ref{theorem:pattern_matching_consistency}
-  \item \Z\Z\Z\Z $\Sigma\backslash\B{FV}(p) = \Sigma\backslash\B{dom}(\Sigma')$ 
-    by theorem \ref{theorem:consistency_diffing}
-  \item \Z\Z\Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
-    by theorem \ref{theorem:concatenation_substitution}
-
-  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
-    by substitution
-  \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
-    by substitution 
-  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
-  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
-
-  \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\code{($F$*$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
-  \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
-
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-
-  \item \Z\Z\Z $\B{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application 
-  \item \Z\Z\Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-  \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
-  \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by induction 
-
-  \item \Z\Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \B{wellformed}$
-  \item \Z\Z $\B{hypo}\ e_1'\ \B{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
-  \item \Z\Z $\B{wrt}\ e_1' $
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-  \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
-  \item \Z\Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
-  \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
-  \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
-  \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
-  \item \Z\Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
-  \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
-  \item \Z\Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
-  \item \Z\Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
-  \item \Z\Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$*$p$=>$e$)($e_1'$)}$ by substitution 
-  \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
-  \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
-  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
+      \item \Z\Z $\exists \Sigma .\ \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+      \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by declaration 
+      \item \Z\Z $e_1[\Sigma] \B{ wellformed}$ by theorem \ref{theorem:model_typing_soundness}
 
 
-  \item \Z $\B{case }
-    \Omega, \Sigma \satisfies \Gamma
-    \I
-    e_0[\Sigma] \rightsquigarrow e_0'
-    \I
-    \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
-  $
-  \item \Z $\B{hypo}\ 
-    \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
-    \implies
-    \Omega, \Gamma \satisfies \code{$e_0'$($e_1$)} \hastype \tau_r
-  $
-  \item \Z $ 
-  \B{wrt}\ \Sigma\ e_0' 
-  $
-  \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by application 
-  \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
-  \item \Z\Z ($e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0'\code{(}e_1\code{)}$
-  \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
 
-  \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
+      \item \Z\Z $\B{induct on}\ e_1[\Sigma] \B{ wellformed}$
+
+      \item \Z\Z $\B{case } e_1[\Sigma] = v_1 \ \B{for} \ v_1$  
+        \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
+        \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
+
+        \item \Z\Z\Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+        \item \Z\Z\Z $\B{case } F = \epsilon$ 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{*$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
+
+          \item \Z\Z\Z\Z $\exists \Sigma' .\ p \equiv v_1 \given \Sigma'$ 
+          by theorem \ref{theorem:model_typing_pattern_matching} 
+          \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
+          by declaration
+          \item \Z\Z\Z\Z $\B{for } e'$ 
+            \item \Z\Z\Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
+            \item \Z\Z\Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
+          \item \Z\Z\Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
+
+          \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
+
+          \item \Z\Z\Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
+          by theorem \ref{theorem:pattern_matching_consistency}
+          \item \Z\Z\Z\Z $\Sigma\backslash\B{FV}(p) = \Sigma\backslash\B{dom}(\Sigma')$ 
+          by theorem \ref{theorem:consistency_diffing}
+          \item \Z\Z\Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
+          by theorem \ref{theorem:concatenation_substitution}
+
+          \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
+            by substitution
+          \item \Z\Z\Z\Z $\code{($F[\Sigma]$*$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
+            by substitution 
+          \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
+          \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+
+          \item \Z\Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\code{($F$*$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
+          \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+
+          \item \Z\Z\Z $\B{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application 
+          \item \Z\Z\Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+          \item \Z\Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1$)} \hastype \tau_r$ by induction 
+
+      \item \Z\Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I e_1'\ \B{wellformed}$
+      \item \Z\Z $\B{hypo}\ e_1'\ \B{wellformed} \implies \Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$
+      \item \Z\Z $\B{wrt}\ e_1' $
+
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+        \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
+        \item \Z\Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
+        \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
+        \item \Z\Z\Z $\code{($F$*$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$*$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
+        \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
+        \item \Z\Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
+        \item \Z\Z\Z $(\code{($F$*$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$*$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
+        \item \Z\Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
+        \item \Z\Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
+        \item \Z\Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$*$p$=>$e$)($e_1'$)}$ by substitution 
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$*$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
+      \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
+
+
+    \item \Z $\B{case }
+      \Omega, \Sigma \satisfies \Gamma
+      \I
+      e_0[\Sigma] \rightsquigarrow e_0'
+      \I
+      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+    $
+    \item \Z $\B{hypo}\ 
+      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+      \implies
+      \Omega, \Gamma \satisfies \code{$e_0'$($e_1$)} \hastype \tau_r
+    $
+    \item \Z $ 
+    \B{wrt}\ \Sigma\ e_0' 
+    $
+      \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by application 
+      \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
+      \item \Z\Z ($e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0'\code{(}e_1\code{)}$
+      \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+
+    \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item $\square$
-\end{theorem}
+\end{proof}
+
 
 \begin{theorem}\ (Pattern matching consistency)
   \label{theorem:pattern_matching_consistency}
@@ -4471,18 +4470,19 @@ Different: RLT isn't cartesian
       \exists v .\ v = F 
     } 
   \end{mathpar}
-  Proof:
-  \item $\B{assume } F \B{ wellformed}$ 
-  \item \Z $\B{invert on } F \B{ wellformed}$
-  \item \Z $\B{case } v = F$
-  \item \Z\Z $v = F$ by identity
-  \item \Z $\B{case } F \rightsquigarrow e$
-  \item \Z $\B{wrt } e$
-  \item \Z\Z $\neg F \rightsquigarrow e$ by definition
-  \item \Z\Z $\bot$ by application 
-  \item \Z $v = F$ by inversion 
-  \item $\square$
 \end{theorem}
+\begin{proof}
+  \item $\B{assume } F \B{ wellformed}$ 
+    \item \Z $\B{invert on } F \B{ wellformed}$
+    \item \Z $\B{case } v = F$
+      \item \Z\Z $v = F$ by identity
+    \item \Z $\B{case } F \rightsquigarrow e$
+    \item \Z $\B{wrt } e$
+      \item \Z\Z $\neg F \rightsquigarrow e$ by definition
+      \item \Z\Z $\bot$ by application 
+    \item \Z $v = F$ by inversion 
+  \item $\square$
+\end{proof}
 
 \begin{theorem}(Model typing function progress)
   \label{theorem:model_typing_function_progress}
@@ -4495,17 +4495,17 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof:
   \item $\B{assume } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-  \item \Z $\B{invert on } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-  \item \Z $\B{case } ...$
-  \item \Z \TODO{vacuous cases} 
-  \item \Z $\B{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
-  \item \Z $\B{wrt } e'$
-  \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ 
-    by conjunction 
-  \item \Z\Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
-    by witness 
-  \item \Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
-    by inversion
+    \item \Z $\B{invert on } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
+    \item \Z $\B{case } ...$
+    \item \Z \TODO{vacuous cases} 
+    \item \Z $\B{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
+    \item \Z $\B{wrt } e'$
+      \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ 
+        by conjunction 
+      \item \Z\Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
+        by witness 
+    \item \Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
+      by inversion
   \item $\square$
 \end{theorem}
 
@@ -4626,59 +4626,58 @@ Different: RLT isn't cartesian
         \Omega, \Sigma \satisfies \Gamma 
         \I \Omega, \Gamma \satisfies e \hastype \tau
   $
-  \item \Z $\B{case } e = \code{@}$
-  \item \Z\Z $\B{let } v \B{ s.t. } \code{@} = v$
-  \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] \B{ wellformed}$
+    \item \Z $\B{case } e = \code{@}$
+      \item \Z\Z $\B{let } v \B{ s.t. } \code{@} = v$
+      \item \Z\Z $e[\Sigma] = v$
+      \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
 
-  \item \Z $\B{case } 
-    \Omega, \Gamma \satisfies e' \hastype \tau'
-    \I 
-    e = \code{\ttilde}l\ e' 
-    \I 
-    \tau = \code{\ttilde}l\ \tau'
-  $
-  \item \Z\Z $e' \B{ wellformed}$ by induction hypothesis
+    \item \Z $\B{case } 
+      \Omega, \Gamma \satisfies e' \hastype \tau'
+      \I 
+      e = \code{\ttilde}l\ e' 
+      \I 
+      \tau = \code{\ttilde}l\ \tau'
+    $
+      \item \Z\Z $e' \B{ wellformed}$ by induction hypothesis
+      \item \Z\Z $\B{case } e'[\Sigma] = v$
+        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \code{\ttilde}l\ v = v'$
+        \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] = v'$
+        \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] = v'$
+        \item \Z\Z\Z $e[\Sigma] = v'$
+        \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z\Z $\B{case } e'[\Sigma] = v$
-  \item \Z\Z\Z $\B{let } v' \B{ s.t. } \code{\ttilde}l\ v = v'$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] = v'$
-  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] = v'$
-  \item \Z\Z\Z $e[\Sigma] = v'$
-  \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
+      \item \Z\Z $\B{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \B{ wellformed}$
+        \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \rightsquigarrow \code{\ttilde}l\ e''$
+        \item \Z\Z\Z $\code{\ttilde}l\ e'' \B{ wellformed}$
+        \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \B{ wellformed}$
+        \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \B{ wellformed}$
+        \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z\Z $\B{case } e'[\Sigma] \rightsquigarrow e'' \I e'' \B{ wellformed}$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \rightsquigarrow \code{\ttilde}l\ e''$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'' \B{ wellformed}$
-  \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \B{ wellformed}$
-  \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] \B{ wellformed}$
-  \item \Z\Z\Z $e[\Sigma] \B{ wellformed}$
+      \item \Z\Z $e[\Sigma] \B{ wellformed}$ by cases on $e' \B{ wellformed}$
 
-  \item \Z\Z $e[\Sigma] \B{ wellformed}$ by cases on $e' \B{ wellformed}$
+    \item \Z \TODO{remaining introduction cases}
 
-  \item \Z \TODO{remaining introduction cases}
+    \item \Z $\B{case } 
+      x \hastype \tau \in \Gamma
+      \I 
+      x \slash v \in \Sigma
+      \I 
+      e = x
+    $
+      \item \Z\Z $x[\Sigma] = v$
+      \item \Z\Z $e[\Sigma] = v$
+      \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z $\B{case } 
-    x \hastype \tau \in \Gamma
-    \I 
-    x \slash v \in \Sigma
-    \I 
-    e = x
-  $
-  \item \Z\Z $x[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] = v$
-  \item \Z\Z $e[\Sigma] \B{ wellformed}$
+    \item \Z $\B{case } 
+      e[\Sigma] \rightsquigarrow e' 
+      \I 
+      \Omega, \Gamma \satisfies e' \hastype \tau
+    $ 
+      \item \Z\Z $e'[\Sigma] \B{ wellformed}$ by induction hypothesis
+      \item \Z\Z $e[\Sigma] \B{ wellformed}$
 
-  \item \Z $\B{case } 
-    e[\Sigma] \rightsquigarrow e' 
-    \I 
-    \Omega, \Gamma \satisfies e' \hastype \tau
-  $ 
-  \item \Z\Z $e'[\Sigma] \B{ wellformed}$ by induction hypothesis
-  \item \Z\Z $e[\Sigma] \B{ wellformed}$
-
-  \item \Z $e[\Sigma] \B{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
+    \item \Z $e[\Sigma] \B{ wellformed}$ by induction on $\Omega, \Gamma \satisfies e \hastype \tau$
   \item $\square$
   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
 \end{theorem}
