@@ -3472,60 +3472,29 @@ Different: RLT isn't cartesian
     Z\ M\ \Delta\ \Tau_i\ \tau_i
   $
 
-    \item \Z\Z $\B{for } \tau$
-      \item \Z\Z\Z $\B{assume }
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
-      $
-        \item \Z\Z\Z\Z $
-          \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
-        $ by substitution
-        \item \Z\Z\Z\Z $
-          \exists \tau'\ \tau'' .\ 
-          \tau \subtypes \code{$\tau'$\&$\tau''$}\given Z\ \left<M, \Delta\right>
-          \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
-          \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-        $ by theorem \ref{theorem:proof_subtyping_decomposition}
-        \item \Z\Z\Z\Z $
-          \B{let } \tau'\ \tau'' \B{ s.t. } 
-          \tau \subtypes \code{$\tau'$\&$\tau''$}\given Z\ \left<M, \Delta\right>
-          \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
-          \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-        $ by declaration 
-        \item \Z\Z\Z\Z $
-          \tau = \code{$\tau'$\&$\tau''$}
-        $ by splitting 
-        \item \Z\Z\Z\Z $
-          \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
-        $ by splitting
-        \item \Z\Z\Z\Z $
-          \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-        $ by splitting 
-        \item \Z\Z\Z\Z $
-          \tau'
-          \subtypes
-          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
-          \given Z_0
-        $ by instantiation and application 
-        \item \Z\Z\Z\Z $
-          \code{$\tau'$\&$\tau''$}
-          \subtypes
-          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
-          \given Z_0
-        $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
-        \item \Z\Z\Z\Z $
-          \tau
-          \subtypes
-          \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
-          \given Z_0
-        $ by theorem \ref{theorem:universe_proof_subtyping_transitivity} 
+    \item \Z\Z $\B{for } \tau \B{ assume }
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+    $
       \item \Z\Z\Z $
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
-        \implies
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+      $ by substitution
+
+      \item \Z\Z\Z $
+        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      $ by theorem \ref{theorem:proof_subtyping_decomposition}
+
+      \item \Z\Z\Z $
         \tau
         \subtypes
-        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
         \given Z_0
-      $ by implication 
+      $ by instantiation and application 
+      \item \Z\Z\Z $
+        \tau
+        \subtypes
+        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
+        \given Z_0
+      $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
     \item \Z\Z $
       \forall \tau .\ 
       \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
@@ -3534,7 +3503,7 @@ Different: RLT isn't cartesian
       \subtypes
       \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given Z_0
-    $ by generalization 
+    $ by implication and generalization 
 
 
   \item \Z $
@@ -3558,7 +3527,7 @@ Different: RLT isn't cartesian
       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r$} 
       \given Z
       \\\\
-      \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\
       M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
@@ -3653,23 +3622,6 @@ Different: RLT isn't cartesian
 \end{theorem}
 
 
-\begin{theorem}(Universe proof subtyping transitivity)
-  \label{theorem:universe_proof_subtyping_transitivity}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_0 \subtypes \tau_1 \given Z
-      \\
-      \tau_1 \subtypes \tau_2 \given Z
-    } {
-      \tau_0 \subtypes \tau_2 \given Z
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-
 \begin{theorem}(Universe proof typing worldly)
   \label{theorem:universe_proof_typing_worldly}
   \begin{mathpar}
@@ -3698,22 +3650,6 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
-\begin{theorem}(Proof subtyping decomposition)
-  \label{theorem:proof_subtyping_decomposition}
-  \begin{mathpar}
-    \inferrule { 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
-    } {
-      \exists \tau'\ \tau'' .\ 
-      \tau \subtypes \code{$\tau'$\&$\tau''$} \given Z\ \left<M, \Delta\right>
-      \land \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
-      \land \tau'' \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
 
 \begin{theorem}(Model typing implication independence)
   \label{theorem:model_typing_implication_independence}
@@ -3750,6 +3686,20 @@ Different: RLT isn't cartesian
 %   \item \TODO{...} 
 %   \item $\square$
 % \end{theorem}
+
+\begin{theorem}(Proof subtyping decomposition)
+  \label{theorem:proof_subtyping_decomposition}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given Z\ \left<M, \Delta\right>
+    } {
+      \tau_l \subtypes \tau_r \given \left<M, \Delta\right>
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
 
 
 \begin{theorem}(Proof subtyping choice)
