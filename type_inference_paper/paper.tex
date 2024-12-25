@@ -3403,11 +3403,9 @@ Different: RLT isn't cartesian
         $ by substitution
 
         \item \Z\Z\Z\Z $
-          \exists M\ \Delta\ .\ \left<M, \Delta\right> \in \epsilon 
-        $ by theorem \ref{theorem:universe_proof_typing_worldly}  
-        \item \Z\Z\Z\Z $
           \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
-        $ by declaration  
+        $ by theorem \ref{theorem:universe_proof_typing_worldly}  
+
         \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
       \item \Z\Z\Z $
         \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
@@ -3780,11 +3778,8 @@ Different: RLT isn't cartesian
       $ by definition 
 
       \item \Z\Z $
-        \exists \Sigma .\ \Omega, \Gamma \satisfies \Sigma 
-      $ by theorem \ref{...} 
-      \item \Z\Z $
         \B{let } \Sigma \B{ s.t. } \Omega, \Gamma \satisfies \Sigma 
-      $ by declaration 
+      $ by theorem \ref{...} 
       \item \Z\Z $
         \code{$G$.$l$}[\Sigma] \rightsquigarrow v
       $ by definition 
@@ -4206,8 +4201,7 @@ Different: RLT isn't cartesian
       \B{wrt} \ F \ p \ e \ \Gamma' \  
     $
 
-      \item \Z\Z $\exists \Sigma .\ \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-      \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by declaration 
+      \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
       \item \Z\Z $\VDash e_1[\Sigma]$ by theorem \ref{theorem:model_typing_soundness}
 
 
@@ -4224,10 +4218,9 @@ Different: RLT isn't cartesian
           \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
           \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
 
-          \item \Z\Z\Z\Z $\exists \Sigma' .\ p \equiv v_1 \given \Sigma'$ 
-          by theorem \ref{theorem:model_typing_pattern_matching} 
           \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
-          by declaration
+          by theorem \ref{theorem:model_typing_pattern_matching} 
+
           \item \Z\Z\Z\Z $\B{for } e'$ 
             \item \Z\Z\Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
             \item \Z\Z\Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
