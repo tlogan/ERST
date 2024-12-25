@@ -4201,76 +4201,11 @@ Different: RLT isn't cartesian
       \B{wrt} \ F \ p \ e \ \Gamma' \  
     $
 
-      \item \Z\Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-      \item \Z\Z $\VDash e_1[\Sigma]$ by theorem \ref{theorem:model_typing_soundness}
+      %%%%%%%%%%%%%%%%%%%%%
 
-
-
-      \item \Z\Z $\B{induct on}\ \VDash e_1[\Sigma]$
-
-      \item \Z\Z $\B{case } e_1[\Sigma] = v_1 \ \B{for} \ v_1$  
-        \item \Z\Z\Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
-        \item \Z\Z\Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-
-        \item \Z\Z\Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
-        \item \Z\Z\Z $\B{case } F = \epsilon$ 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
-
-          \item \Z\Z\Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
-          by theorem \ref{theorem:model_typing_pattern_matching} 
-
-          \item \Z\Z\Z\Z $\B{for } e'$ 
-            \item \Z\Z\Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
-            \item \Z\Z\Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
-          \item \Z\Z\Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
-
-          \item \Z\Z\Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
-
-          \item \Z\Z\Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
-          by theorem \ref{theorem:pattern_matching_consistency}
-          \item \Z\Z\Z\Z $\Sigma\backslash\B{FV}(p) = \Sigma\backslash\B{dom}(\Sigma')$ 
-          by theorem \ref{theorem:consistency_diffing}
-          \item \Z\Z\Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
-          by theorem \ref{theorem:concatenation_substitution}
-
-          \item \Z\Z\Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
-            by substitution
-          \item \Z\Z\Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
-            by substitution 
-          \item \Z\Z\Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
-          \item \Z\Z\Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
-
-          \item \Z\Z\Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
-          \item \Z\Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
-
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-
-          \item \Z\Z\Z $\B{case } \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$ 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application 
-          \item \Z\Z\Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-          \item \Z\Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by induction 
-
-      \item \Z\Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I \VDash e_1'$
-      \item \Z\Z $\B{hypo}\ \VDash e_1' \implies \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$
-      \item \Z\Z $\B{wrt}\ e_1' $
-
-        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-        \item \Z\Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
-        \item \Z\Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
-        \item \Z\Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
-        \item \Z\Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
-        \item \Z\Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
-        \item \Z\Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
-        \item \Z\Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
-        \item \Z\Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$\$$p$=>$e$)($e_1'$)}$ by substitution 
-        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
+      \item \Z\Z $F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
       \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
 
 
@@ -4297,6 +4232,117 @@ Different: RLT isn't cartesian
     \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item $\square$
 \end{proof}
+
+\begin{theorem}\ Model typing reduced implication elimination  
+
+  \label{theorem:model_typing_reduced_implication_elimination}
+  \begin{mathpar}
+    \inferrule {
+      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r
+      \\
+      \Omega, \Gamma \satisfies e_1 \hastype \tau_l
+      \\
+      F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    } {
+      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r
+    } 
+  \end{mathpar}
+
+  \item $\B{assume } \VDash e_1[\Sigma]$
+
+
+    \item \Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+    \item \Z $\VDash e_1[\Sigma]$ by theorem \ref{theorem:model_typing_soundness}
+    \item \Z $\B{induct on } \VDash e_1[\Sigma]$
+
+    \item \Z $\B{case } e_1[\Sigma] = v_1 $
+    \item \Z $\B{wrt } v_1$  
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+
+    \item \Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I \VDash e_1'$
+    \item \Z $\B{hypo}\ \VDash e_1' \implies \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$
+    \item \Z $\B{wrt}\ e_1' $
+
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
+      \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
+      \item \Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
+      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
+      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
+      \item \Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
+      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
+      \item \Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
+      \item \Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
+      \item \Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$\$$p$=>$e$)($e_1'$)}$ by substitution 
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
+    \item \Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
+  \item $\square$ by implication 
+\end{theorem}
+
+\begin{theorem}\ Model typing fully reduced implication elimination 
+  \label{theorem:model_typing_fully_reduced_implication_elimination}
+  \begin{mathpar}
+    \inferrule {
+      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r
+      \\
+      F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+      \\
+      \Omega \satisfies e_1 \hastype \tau_l
+      \\
+      \Omega, \Sigma \satisfies \Gamma 
+      \\
+      e_1[\Sigma] = v_1
+      \\
+    } {
+      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\B{assume}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+    \TODO{add more assumptions}
+    \item \Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
+    \item \Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
+    \item \Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+    \item \Z $\B{case } F = \epsilon$ 
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{$F$\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
+
+      \item \Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
+      by theorem \ref{theorem:model_typing_pattern_matching} 
+
+      \item \Z\Z $\B{for } e'$ 
+        \item \Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
+        \item \Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
+      \item \Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
+
+      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
+
+      \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
+      by theorem \ref{theorem:pattern_matching_consistency}
+      \item \Z\Z $\Sigma\backslash\B{FV}(p) = \Sigma\backslash\B{dom}(\Sigma')$ 
+      by theorem \ref{theorem:consistency_diffing}
+      \item \Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
+      by theorem \ref{theorem:concatenation_substitution}
+
+      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
+        by substitution
+      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
+        by substitution 
+      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
+      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+
+      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
+      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+
+    \item \Z $\B{case } \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ 
+      \item \Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+    \item \Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+  \item $\square$ by implication
+\end{theorem}
 
 
 \begin{theorem}\ (Pattern matching consistency)
