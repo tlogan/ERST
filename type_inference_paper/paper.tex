@@ -4873,6 +4873,12 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } {
       \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     } 
+
+    \inferrule { 
+      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    } {
+      \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    } 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
