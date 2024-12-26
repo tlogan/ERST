@@ -56,7 +56,7 @@
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
-\newcommand{\liftpat}{\ \lozenge\ }
+\newcommand{\pattype}{\ \lozenge\ }
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
 \newcommand{\subtypes}{<:}
@@ -4185,6 +4185,24 @@ Different: RLT isn't cartesian
   \item \TODO{...}
 \end{theorem}
 
+\begin{theorem} Model typing implication introduction 
+  \label{theorem:model_typing_implication_introduction}
+  \TODO{this is really messed up}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \code{$e_0$($e_1$)} \hastype \tau_r
+      \\
+      \Omega \satisfies e_1 \hastype \tau_l
+      \\
+      \forall \tau .\ \Omega \satisfies e_1 \hastype \tau \implies \tau_l \subtypes \tau
+    } {
+      \Omega \satisfies e_0 \hastype \code{$\tau_l$->$\tau_r$}
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
 \begin{theorem} Model typing intersection elimination 
   \label{theorem:model_typing_intersection_elimination}
   \begin{mathpar}
@@ -4245,6 +4263,7 @@ Different: RLT isn't cartesian
 
 \begin{theorem}(Model typing implication elimination)
   \label{theorem:model_typing_implication_elimination}
+  \TODO{Must redo using new implication rule}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
@@ -4254,9 +4273,7 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r
     } 
   \end{mathpar}
-\end{theorem}
 
-\begin{proof}
   \item $\B{assume }
     \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
     \I 
@@ -4311,7 +4328,7 @@ Different: RLT isn't cartesian
 
     \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
   \item $\square$
-\end{proof}
+\end{theorem}
 
 \begin{theorem}\ Model typing reduced implication elimination  
 
@@ -4821,15 +4838,43 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
     } 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ORIGINAL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule { 
+    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    % } {
+    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    % } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ALTERNATIVE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \inferrule { 
-      F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
-      \\
-      \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+      \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
       \\
       \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \\\\
+      \forall \tau_n\ \tau\ e\ .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$}
+        \implies
+        \Omega, \Gamma \satisfies e \hastype \tau_l 
+        \implies
+        \neg(\Omega, \Gamma \satisfies e \hastype \tau_n)
+      \\\\
+      \forall e .\ 
+        \Omega, \Gamma \satisfies e \hastype \tau_l 
+        \implies
+        \Omega, \Gamma \satisfies e \hastype \tau_p 
     } {
       \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     } 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
