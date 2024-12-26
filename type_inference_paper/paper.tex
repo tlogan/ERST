@@ -3868,7 +3868,7 @@ Different: RLT isn't cartesian
     \item \Z $\B{wrt } \tau $
       \item \Z\Z $\B{let } \Omega $
       \item \Z\Z $\Omega \satisfies \tau \subtypes \tau$
-      by theorem \ref{...} \TODO{model typing reflexivity}
+      by theorem \ref{theorem:model_typing_reflexivity}
       \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
 
@@ -3883,6 +3883,50 @@ Different: RLT isn't cartesian
       \item \Z\Z $\Omega \satisfies \tau_l \subtypes \code{TOP}$ by definition
       \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
+
+    \item \Z $\B{case } 
+      \tau_r = \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
+      \I
+      \tau_l
+      \subtypes
+      \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \given M, \Delta
+    $
+    \item \Z $\B{hypo }
+      \tau_l \subtypes \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \given M, \Delta
+      \implies
+      \exists \Omega .\ \Omega \satisfies \tau_l \subtypes \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+    $ 
+    \item \Z $\B{wrt } l\ \tau_{rl}\ \tau_{rr}$ 
+      \item \Z\Z $\B{let } \Omega \B{ s.t. } \Omega \satisfies \tau_l \subtypes \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+      by application and declaration
+      \item \Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$ 
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+        by theorem \ref{theorem:model_typing_subsumption} 
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \code{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
+      \item \Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies \Omega, \Gamma \satisfies e \hastype 
+        \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
+      $ by implication and generalization
+      \item \Z\Z $\Omega \satisfies \tau_l \subtypes \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$
+      by definition 
+      \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by substitution and witness 
+
+    % \inferrule {
+    %   \tau_l
+    %   \subtypes
+    %   \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+    %   \given M, \Delta
+    % } {
+    %   \tau_l \subtypes 
+    %   \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+    %   \given M, \Delta
+    % }
 
     %% TODO 
     %%% TEMPLATE
@@ -3901,16 +3945,6 @@ Different: RLT isn't cartesian
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % \inferrule {
-    %   \tau_l
-    %   \subtypes
-    %   \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-    %   \given M, \Delta
-    % } {
-    %   \tau_l \subtypes 
-    %   \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-    %   \given M, \Delta
-    % }
 
     % \inferrule {
     %   \tau_{ll} \subtypes \tau_r
@@ -4138,9 +4172,55 @@ Different: RLT isn't cartesian
   \item $\square$ by implication
 \end{theorem}
 
+\begin{theorem} Model typing record introduction 
+  \label{theorem:model_typing_record_introduction}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \code{$e$.$l$} \hastype \tau
+    } {
+      \Omega \satisfies e \hastype \code{$l$->$\tau$}
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model typing intersection elimination 
+  \label{theorem:model_typing_intersection_elimination}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies e \hastype \tau_l \& \tau_r
+    } {
+      \Omega \satisfies e \hastype \tau_l 
+      \land
+      \Omega \satisfies e \hastype \tau_r
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+
+
+\begin{theorem} Model typing reflexivity
+  \label{theorem:model_typing_reflexivity}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \Omega \satisfies \tau \subtypes \tau
+    } 
+  \end{mathpar}
+  Proof:
+  \item $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau$
+    \item \Z $\Omega, \Gamma \satisfies e \hastype \tau$ by identity
+  \item $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau \implies \Omega, \Gamma \satisfies e \hastype \tau$
+  by implication and generalization
+  \item $\square$ by definition
+\end{theorem}
+
 
 \begin{theorem}(Model typing subsumption)
-  \label{theorem:subsumption_model_typing}
+  \label{theorem:model_typing_subsumption}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau_l 
