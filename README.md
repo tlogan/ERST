@@ -95,6 +95,11 @@
 - understand what polarity types are and how they are related to relational typing
 
 ### TODO (Symbolic Paper)
+- note how abstraction refinement in CHC solving corresponds and differs from the subtyping solver.
+    - CHCs consists of two interwoven structures: horn clauses and constraints. It's goal is to validate the query. Backwards unification of horn clauses constructs abstract derivations and smt solver checks if derivation is a proof of refutation. If it's not actually refuted, then learn predicates
+    through bottom-up interpolation, and run again. The next run uses the learned predicates to constrain search to find a new derivation. 
+    - My subtyping algorithm does not have a coarse syntactic distinction. Its goal is merely to satisfy the subtyping. Constraint types sort of correspond to both horn clauses and constraints. Failure is checked at the same time the derivation is constructed and the variables are learned bottom-up. Essentially, there is no need for a special checker; it's built-in.
+
 - note the weirdness of the axiom of choice
     - it allows us to choose an arbitrary value without knowing what it is or how it is chosen.
     - Here’s an interpretation that I just developed so I may be off the mark but here goes: it seems like the axiom of choice defeats one of the definitional properties of a function. That every element in the domain has a unique counterpart in the range. The axiom of choice would allow us to magically transform any set of pairs ie relation into a function by simply making an arbitrary choice of the counterpart in the range. So is adding the axiom of choice equivalent to relaxing the definition of a function? Or put another way, for any statement whose proof relies on the axiom of choice, can we simply weaken the statement to be in terms of relations rather than functions?
