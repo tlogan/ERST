@@ -4334,9 +4334,9 @@ Different: RLT isn't cartesian
       \item \Z\Z $\B{wrt } e'$
         \item \Z\Z\Z $(\code{$F$($e_1$)})[\Sigma] = \code{$F[\Sigma]$($e_1[\Sigma]$)}$ by definition
         \item \Z\Z\Z $\code{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e'$ by substitution 
-        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e$$[\Sigma]$)($e_1[\Sigma]$)} \rightsquigarrow e'$ by definition 
+        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e[\Sigma]\backslash\text{FV}(p)$)($e_1[\Sigma]$)} \rightsquigarrow e'$ by definition 
 
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] = \code{$F[\Sigma]$\$$p$=>$e$$[\Sigma]$)($e_1[\Sigma]$)}
+        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] = \code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)}
         $ by definition
         \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by substitution 
         \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
