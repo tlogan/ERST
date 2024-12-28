@@ -3859,7 +3859,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
   Proof: 
-  \item \TODO{...} 
+  \item \TODO{May need to redo subtyping definition to avoid mutual recursion with multi-subtyping} 
   \item $\B{assume } 
     \tau_l \subtypes \tau_r \given M, \Delta 
   $
@@ -4282,29 +4282,58 @@ Different: RLT isn't cartesian
   $ 
 
     \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
-    \item \Z $\B{case }
-      \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
-      \I
-      \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    $
-    \item \Z $
-      F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
-      \I
-      e_0 = \code{($F$\$$p$=>$e$)} 
-    $
-    \item \Z $
-      \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
-    $
-    \item \Z $
-      \B{wrt} \ F \ p \ e \ \Gamma' \  
-    $
 
-      %%%%%%%%%%%%%%%%%%%%%
+    \item \Z $\B{case }$ \TODO{...}
 
-      \item \Z\Z $F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
-      \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
+    % \inferrule { 
+    %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \\\\
+    %   \forall e .\ 
+    %     \Omega, \Gamma \satisfies e \hastype \tau_l 
+    %     \implies
+    %     \Omega, \Gamma \satisfies e \hastype \tau_p 
+    %     \land
+    %     (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
+    % } {
+    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    % }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule { 
+    %   \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    % } {
+    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    % } 
+    \item \Z $\B{case }$ \TODO{...}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% OLD 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % \item \Z $\B{case }
+    %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+    %   \I
+    %   \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    % $
+    % \item \Z $ 
+    %   \contin
+    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
+    %   \I
+    %   e_0 = \code{($F$\$$p$=>$e$)} 
+    % $
+    % \item \Z $
+    %   \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    % $
+    % \item \Z $
+    %   \B{wrt} \ F \ p \ e \ \Gamma' \  
+    % $
+    %   \item \Z\Z $F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application
+    %   \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
+    %   \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+    %   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     \item \Z $\B{case }
@@ -4807,7 +4836,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 % \end{theorem}
 
 
-\begin{definition}\boxed{\Omega, \Gamma \satisfies e \hastype \tau} Model typing
+\begin{definition}\boxed{\Omega, \Gamma \satisfies e \hastype \tau}\ Model typing
   \label{definition:model_typing}
   \begin{mathpar}
     \inferrule { 
@@ -4860,12 +4889,6 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
       \\
       \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-      % \\\\
-      % \forall \tau_n\ \tau\ e\ .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$}
-      %   \implies
-      %   \Omega, \Gamma \satisfies e \hastype \tau_l 
-      %   \implies
-      %   \neg(\Omega, \Gamma \satisfies e \hastype \tau_n)
       \\\\
       \forall e .\ 
         \Omega, \Gamma \satisfies e \hastype \tau_l 
@@ -4875,32 +4898,35 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
         (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
     } {
       \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
-    } 
+    }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \inferrule { 
-      \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau_r$}
-      \\
-      \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-      \\
-      \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-      \\\\
-      \forall e .\ 
-        \Omega, \Gamma \satisfies e \hastype \tau_l 
-        \implies
-        \Omega, \Gamma \satisfies e \hastype \tau_p 
-        \lor
-        \Omega, \Gamma \satisfies e \hastype \tau_n 
-    } {
-      \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
-    } 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \inferrule { 
       \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
     } {
       \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DERIVABLE??
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % \inferrule { 
+    %   \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau_r$}
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \\
+    %   \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \\\\
+    %   \forall e .\ 
+    %     \Omega, \Gamma \satisfies e \hastype \tau_l 
+    %     \implies
+    %     \Omega, \Gamma \satisfies e \hastype \tau_p 
+    %     \lor
+    %     \Omega, \Gamma \satisfies e \hastype \tau_n 
+    % } {
+    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    % } 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
