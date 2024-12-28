@@ -4281,6 +4281,7 @@ Different: RLT isn't cartesian
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
+    \item \Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma$ by theorem \ref{...}
     \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
 
     \item \Z $\B{case }$ \TODO{...}
@@ -4307,8 +4308,39 @@ Different: RLT isn't cartesian
     % } {
     %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     % } 
-    \item \Z $\B{case }$ \TODO{...}
+    \item \Z $\B{case }
+      e_0 = \code{$F$*$p$=>$e$}
+      \I
+      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    $ 
+    \item \Z $\B{hypo }
+      \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    $
+    \item \Z $\B{wrt }
+      F\ p\ e 
+    $
+      \item \Z\Z $\VDash \code{$F$($e_1$)}[\Sigma] $
+      by theorem \ref{theorem:model_typing_soundness}
+      \item \Z\Z $\B{invert on } \VDash \code{$F$($e_1$)}[\Sigma]$
+      \item \Z\Z $\B{case } \code{$F$($e_1$)}[\Sigma] = v$
+      \item \Z\Z $\B{wrt } v$
+        \item \Z\Z\Z $\code{$F$($e_1$)}[\Sigma] \neq v$ by definition 
+        \item \Z\Z\Z $\bot$ by application
+      \item \Z\Z $\B{case } 
+        (\code{$F$($e_1$)})[\Sigma] \rightsquigarrow e'
+        \I
+        \Omega, \Gamma \satisfies e' \hastype \tau_r
+      $
+      \item \Z\Z $\B{wrt } e'$
+        \item \Z\Z\Z $(\code{$F$($e_1$)})[\Sigma] = \code{$F[\Sigma]$($e_1[\Sigma]$)}$ by definition
+        \item \Z\Z\Z $\code{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e'$ by substitution 
+        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e$$[\Sigma]$)($e_1[\Sigma]$)} \rightsquigarrow e'$ by definition 
 
+        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] = \code{$F[\Sigma]$\$$p$=>$e$$[\Sigma]$)($e_1[\Sigma]$)}
+        $ by definition
+        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by substitution 
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% OLD 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4606,7 +4638,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r
     } {
-      \exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r
+      \exists e' \Sigma .\ \code{$F$($e$)}[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r
     } 
   \end{mathpar}
   Proof:
@@ -4730,9 +4762,9 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_soundness}
   \begin{mathpar}
     \inferrule { 
-      \Omega, \Sigma \satisfies \Gamma 
-      \\
       \Omega, \Gamma \satisfies e \hastype \tau
+      \\
+      \Omega, \Sigma \satisfies \Gamma
     } {
       \VDash e[\Sigma]
     } 
