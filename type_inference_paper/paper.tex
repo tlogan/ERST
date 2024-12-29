@@ -1744,7 +1744,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{e \rightsquigarrow e}\ (Progression)
+\begin{definition}\boxed{e \rightsquigarrow e}\ Progression
   \label{definition:progression}
   \begin{mathpar}
     \inferrule {
@@ -1793,7 +1793,9 @@ Different: RLT isn't cartesian
 
 
     \inferrule {
-      \code{($F$)($v$)} \rightsquigarrow e'
+      \code{$F$($v$)} \rightsquigarrow e'
+      \\
+      \text{FV}(e) \subseteq \text{FV}(p)
     } {
       \code{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e' 
     }
@@ -4309,7 +4311,7 @@ Different: RLT isn't cartesian
     %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
     % } 
     \item \Z $\B{case }
-      e_0 = \code{$F$*$p$=>$e$}
+      e_0 = \code{$F$\$$p$=>$e_2$}
       \I
       \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
     $ 
@@ -4317,7 +4319,7 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
     $
     \item \Z $\B{wrt }
-      F\ p\ e 
+      F\ p\ e_2 
     $
       \item \Z\Z $\VDash \code{$F$($e_1$)}[\Sigma] $
       by theorem \ref{theorem:model_typing_soundness}
@@ -4327,18 +4329,28 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\code{$F$($e_1$)}[\Sigma] \neq v$ by definition 
         \item \Z\Z\Z $\bot$ by application
       \item \Z\Z $\B{case } 
-        (\code{$F$($e_1$)})[\Sigma] \rightsquigarrow e'
+        (\code{$F$($e_1$)})[\Sigma] \rightsquigarrow e_3
         \I
-        \Omega, \Gamma \satisfies e' \hastype \tau_r
+        \Omega, \Gamma \satisfies e_3 \hastype \tau_r
       $
-      \item \Z\Z $\B{wrt } e'$
+      \item \Z\Z $\B{wrt } e_3$
         \item \Z\Z\Z $(\code{$F$($e_1$)})[\Sigma] = \code{$F[\Sigma]$($e_1[\Sigma]$)}$ by definition
-        \item \Z\Z\Z $\code{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e'$ by substitution 
-        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e[\Sigma]\backslash\text{FV}(p)$)($e_1[\Sigma]$)} \rightsquigarrow e'$ by definition 
+        \item \Z\Z\Z $\code{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] = \code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)}
+        \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\Sigma] = F'$ by theorem \ref{...} \TODO{...}
+        \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\Sigma] = e_1'$ by theorem \ref{...} \TODO{...}
+
+        \item \Z\Z\Z $\text{FV}(e_2[\Sigma\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
+        by theorem \ref{...} \TODO{...}
+
+        \item \Z\Z\Z $\code{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\code{($F'$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
+        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
+
+        \item \Z\Z\Z $(\code{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] = \code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)}
         $ by definition
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by substitution 
+        \item \Z\Z\Z $(\code{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] \rightsquigarrow e_3$ by substitution 
+
         \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
       \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4763,13 +4775,15 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau
-      \\
-      \Omega, \Sigma \satisfies \Gamma
     } {
+      \forall \Sigma .\ 
+      \Omega, \Sigma \satisfies \Gamma
+      \implies
       \VDash e[\Sigma]
     } 
   \end{mathpar}
   Proof:
+  \item \TODO{redo using universal/implication}
   \item $\B{assume }
         \Omega, \Sigma \satisfies \Gamma 
         \I \Omega, \Gamma \satisfies e \hastype \tau
@@ -5022,11 +5036,11 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     \inferrule { 
       \Omega, \Sigma \satisfies \Gamma 
       \\
-      e[\Sigma] \rightsquigarrow e'[\Sigma \sqcup \Sigma']
+      e[\Sigma] \rightsquigarrow e'[\Sigma']
       \\
       \Omega, \Sigma' \satisfies \Gamma' 
       \\
-      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \tau 
+      \Omega, \Gamma' \satisfies e' \hastype \tau 
     } {
       \Omega, \Gamma \satisfies e \hastype \tau 
     } 
