@@ -3744,7 +3744,6 @@ Different: RLT isn't cartesian
 
 \begin{theorem}(Model typing record elimination)
   \label{theorem:model_subtyping_record_elimination}
-  \TODO{update according to updated model typing rule}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
@@ -3760,16 +3759,16 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
     $ 
     \item \Z $\B{case }
+      e = G
+      \I
       \code{\$$l$=>$v$} \in G
       \I
       \Omega, \Gamma \satisfies v \hastype \tau
       \I
-      \forall e' .\ \code{\$$l$=>$e'$} \in G \implies e' = v 
-      \I
-      e = R
+      \forall v' .\ \code{\$$l$=>$v'$} \in G \implies v' = v 
     $ 
     \item \Z $\B{wrt }
-      v\ R
+      G\ v 
     $
   
       \item \Z\Z $
@@ -4266,7 +4265,6 @@ Different: RLT isn't cartesian
 
 \begin{theorem}(Model typing implication elimination)
   \label{theorem:model_typing_implication_elimination}
-  \TODO{Must redo using new implication rule}
   \begin{mathpar}
     \inferrule { 
       \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
@@ -4559,22 +4557,6 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
-\begin{theorem}(Model typing unwrapping)
-  \label{theorem:model_typing_unwrapping}
-  \begin{mathpar}
-    \inferrule {
-      \Omega, \Gamma \satisfies \code{($e$)} \hastype \tau 
-    } {
-      \Omega, \Gamma \satisfies e \hastype \tau 
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } 
-    \Omega, \Gamma \satisfies \code{($e$)} \hastype \tau 
-  $
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
 
 
 \begin{theorem}(Model typing valuation)
@@ -4644,30 +4626,6 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{proof}
 
-\begin{theorem}(Model typing function progress)
-  \label{theorem:model_typing_function_progress}
-  \begin{mathpar}
-    \inferrule {
-      \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r
-    } {
-      \exists e' \Sigma .\ \code{$F$($e$)}[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-    \item \Z $\B{invert on } \Omega, \Gamma \satisfies \code{$F$($e$)} \hastype \tau_r$
-    \item \Z $\B{case } ...$
-    \item \Z \TODO{vacuous cases} 
-    \item \Z $\B{case } \code{$F$($e$)} \rightsquigarrow e' \I \Omega, \Gamma \satisfies e' \hastype \tau_r$
-    \item \Z $\B{wrt } e'$
-      \item \Z\Z $\code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ 
-        by conjunction 
-      \item \Z\Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
-        by witness 
-    \item \Z $\exists e' .\ \code{$F$($e$)} \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$
-      by inversion
-  \item $\square$
-\end{theorem}
 
 \begin{theorem}(Reduction closed)
   \label{theorem:reduction_closed}
@@ -4905,13 +4863,13 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
-      \code{\$$l$=>$e$} \in R 
+      \code{\$$l$=>$v$} \in G 
       \\
-      \Omega, \Gamma \satisfies e \hastype \tau 
+      \Omega, \Gamma \satisfies v \hastype \tau 
       \\\\
-      \forall e' .\ \code{\$$l$=>$e$} \in R \implies e = e'
+      \forall v' .\ \code{\$$l$=>$v'$} \in G \implies v' = v
     } {
-      \Omega, \Gamma \satisfies R \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
     } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
