@@ -2305,7 +2305,7 @@ class Solver:
 # count: {self.count}
 # =================
 #             ''')
-#         # end if
+        # end if
 
         if alpha_equiv(lower, upper): 
             return [world] 
@@ -2591,7 +2591,10 @@ class Solver:
                     self.extract_factored_upper_bounds(world, lower.id)
                 )
             )
-            return self.solve_multi(world, strict_constraints)
+            if strict_constraints:
+                return self.solve_multi(world, strict_constraints)
+            else:
+                return self.solve(world, Top(), upper)
 
             ####################### OLD ###########################
             # if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.skolems:
@@ -2666,7 +2669,10 @@ class Solver:
                 Subtyping(lower, lowered_upper)
                 for lowered_upper in self.extract_lower_bounds(world, upper.id)
             )
-            return self.solve_multi(world, strict_constraints)
+            if strict_constraints:
+                return self.solve_multi(world, strict_constraints)
+            else:
+                return self.solve(world, lower, Bot())
 
             ################ OLD #################################
             interp = self.unionize_lower_bounds(world, upper.id)

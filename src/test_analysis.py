@@ -1975,7 +1975,52 @@ alias LTEDR = (FX SELF
     print("answer:\n" + decode_positive(solver, worlds, typ_var))
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
+def test_skolem_subtyping_A():
+    lower = (f"""
+BOT -> TOP 
+    """.strip())
+
+    lower = (f"""
+@ -> @
+    """.strip())
+
+    upper = (f"""
+ALL[X] X -> X
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert not worlds
+
+def test_skolem_subtyping_B():
+    lower = (f"""
+TOP -> BOT 
+    """.strip())
+
+    upper = (f"""
+ALL[X] X -> X
+    """.strip())
+
+    upper = (f"""
+@ -> @
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert worlds
+
+def test_skolem_subtyping_C():
+    lower = (f"""
+(~uno @ | ~dos @) -> ~uno @ 
+    """.strip())
+
+    upper = (f"""
+ALL[X ; ~uno @ <: X ; X <: ~uno @ | ~dos @] X -> X
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    assert worlds
+
 if __name__ == '__main__':
+    test_skolem_subtyping_C()
     # test_zero_subs_nat()
     # test_one_cons_query_subs_nat_list()
     # test_two_cons_query_subs_nat_list()
@@ -1989,7 +2034,7 @@ if __name__ == '__main__':
     # test_implication_unification()
     # test_lted_wrapper()
     # test_max_parts_disjoint()
-    test_max()
+    # test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()

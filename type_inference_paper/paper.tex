@@ -3856,13 +3856,14 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r \given M, \Delta 
     } {
       \forall \Omega .\ 
-      M, \Omega \satisfies \Delta
+      \Omega \satisfies \Delta
       \implies
       \Omega \satisfies \tau_l \subtypes \tau_r
     } 
   \end{mathpar}
   Proof: 
-  \item \TODO{May need to redo subtyping definition to avoid mutual recursion with multi-subtyping} 
+  \item \TODO{convert existentials to universals/implicaitons} 
+  \item \TODO{think about how to handle the mutually recursive definition} 
   \item $\B{assume } 
     \tau_l \subtypes \tau_r \given M, \Delta 
   $
@@ -3940,46 +3941,26 @@ Different: RLT isn't cartesian
       \tau_{lr} \subtypes \tau_r
       \given M_1, \Delta_1
     $
-    \item \Z $\B{hypo } 
-      \exists \Omega .\ \Omega \satisfies \tau_{ll} \subtypes \tau_r
-      \I
-      \exists \Omega .\ \Omega \satisfies \tau_{lr} \subtypes \tau_r
-    $
 
     \item \Z $\B{hypo } 
-      \forall \Omega .\ M_0, \Omega \satisfies \Delta_0  \implies \Omega \satisfies \tau_{ll} \subtypes \tau_r
+      \forall \Omega .\ \Omega \satisfies \Delta_0 \implies \Omega \satisfies \tau_{ll} \subtypes \tau_r
       \I
-      \forall \Omega .\ M_1, \Omega \satisfies \Delta_1 .\ \Omega \satisfies \tau_{lr} \subtypes \tau_r
+      \forall \Omega .\ \Omega \satisfies \Delta_1 \implies \Omega \satisfies \tau_{lr} \subtypes \tau_r
     $
     \item \Z $\B{wrt } \tau_{ll}\ \tau_{lr}$
 
       \item \Z\Z $\B{for } \Omega \B{ assume } M, \Omega \satisfies \Delta$
-        \item \Z\Z\Z $M_1, \Omega \satisfies \Delta_1$ by substitution 
+        \item \Z\Z\Z $\Omega \satisfies \Delta_1$ by substitution 
         \item \Z\Z\Z $\Omega \satisfies \tau_{lr} \subtypes \tau_r$ by application 
-        \item \Z\Z\Z $M_0, \Omega \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
+        \item \Z\Z\Z $\Omega \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
         \item \Z\Z\Z $\Omega \satisfies \tau_{ll} \subtypes \tau_r$ by application 
         \item \Z\Z\Z $\Omega \satisfies \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
         by definition
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ 
         by substitution 
 
-      \item \Z\Z $\forall \Omega .\ M, \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization
-
-    % \inferrule {
-    %   \tau_{ll} \subtypes \tau_r
-    %   \given M_0, \Delta_0
-    %   \\
-    %   M_0 \preceq M_1
-    %   \\\\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \tau_{lr} \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % } {
-    %    \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % }
 
 
     %% TODO 
@@ -3988,14 +3969,6 @@ Different: RLT isn't cartesian
     % \item \Z $\B{hypo } $
     % \item \Z $\B{wrt } $
 
-    %   \item \Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$
-    %     \item \Z\Z\Z $...$
-    %     \item \Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$
-    %     by ... 
-    %   \item \Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies \Omega, \Gamma \satisfies e \hastype \tau_r$ 
-    %   by implication and generalization
-    %   \item \Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by definition
-    %   \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by witness 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -4205,11 +4178,7 @@ Different: RLT isn't cartesian
     %   \given M, \Delta
     % }
     %%%%%%%%%%%%%%%%%%%%%
-    \item \Z $
-      \exists \Omega .\ 
-      \Omega \satisfies \tau_l \subtypes \tau_r
-    $ by induction
-    \item \Z $\forall \Omega .\ M, \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+    \item \Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
     by induction
   \item $\square$ by implication
 \end{theorem}
