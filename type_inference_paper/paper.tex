@@ -3855,7 +3855,9 @@ Different: RLT isn't cartesian
     \inferrule { 
       \tau_l \subtypes \tau_r \given M, \Delta 
     } {
-      \exists \Omega .\ 
+      \forall \Omega .\ 
+      M, \Omega \satisfies \Delta
+      \implies
       \Omega \satisfies \tau_l \subtypes \tau_r
     } 
   \end{mathpar}
@@ -3919,16 +3921,66 @@ Different: RLT isn't cartesian
       by definition 
       \item \Z\Z $\exists \Omega .\ \Omega \satisfies \tau_l \subtypes \tau_r$ by substitution and witness 
 
+
+    \item \Z $\B{case } 
+      \tau_l = \code{$\tau_{ll}$|$\tau_{lr}$}
+      \I
+      M = M_1
+      \I
+      \Delta = \Delta_1
+    $
+    \item \Z $\contin
+      \tau_{ll} \subtypes \tau_r
+      \given M_0, \Delta_0
+      \I
+      M_0 \preceq M_1
+      \I
+      \Delta_0 \preceq \Delta_1
+      \I
+      \tau_{lr} \subtypes \tau_r
+      \given M_1, \Delta_1
+    $
+    \item \Z $\B{hypo } 
+      \exists \Omega .\ \Omega \satisfies \tau_{ll} \subtypes \tau_r
+      \I
+      \exists \Omega .\ \Omega \satisfies \tau_{lr} \subtypes \tau_r
+    $
+
+    \item \Z $\B{hypo } 
+      \forall \Omega .\ M_0, \Omega \satisfies \Delta_0  \implies \Omega \satisfies \tau_{ll} \subtypes \tau_r
+      \I
+      \forall \Omega .\ M_1, \Omega \satisfies \Delta_1 .\ \Omega \satisfies \tau_{lr} \subtypes \tau_r
+    $
+    \item \Z $\B{wrt } \tau_{ll}\ \tau_{lr}$
+
+      \item \Z\Z $\B{for } \Omega \B{ assume } M, \Omega \satisfies \Delta$
+        \item \Z\Z\Z $M_1, \Omega \satisfies \Delta_1$ by substitution 
+        \item \Z\Z\Z $\Omega \satisfies \tau_{lr} \subtypes \tau_r$ by application 
+        \item \Z\Z\Z $M_0, \Omega \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
+        \item \Z\Z\Z $\Omega \satisfies \tau_{ll} \subtypes \tau_r$ by application 
+        \item \Z\Z\Z $\Omega \satisfies \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
+        by definition
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ 
+        by substitution 
+
+      \item \Z\Z $\forall \Omega .\ M, \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      by implication and generalization
+
     % \inferrule {
-    %   \tau_l
-    %   \subtypes
-    %   \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-    %   \given M, \Delta
+    %   \tau_{ll} \subtypes \tau_r
+    %   \given M_0, \Delta_0
+    %   \\
+    %   M_0 \preceq M_1
+    %   \\\\
+    %   \Delta_0 \preceq \Delta_1
+    %   \\
+    %   \tau_{lr} \subtypes \tau_r
+    %   \given M_1, \Delta_1
     % } {
-    %   \tau_l \subtypes 
-    %   \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-    %   \given M, \Delta
+    %    \subtypes \tau_r
+    %   \given M_1, \Delta_1
     % }
+
 
     %% TODO 
     %%% TEMPLATE
@@ -3948,20 +4000,6 @@ Different: RLT isn't cartesian
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    % \inferrule {
-    %   \tau_{ll} \subtypes \tau_r
-    %   \given M_0, \Delta_0
-    %   \\
-    %   M_0 \preceq M_1
-    %   \\\\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \tau_{lr} \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % } {
-    %   \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % }
 
     % \inferrule {
     %   \tau_l \subtypes \tau_{rl}
@@ -4171,6 +4209,8 @@ Different: RLT isn't cartesian
       \exists \Omega .\ 
       \Omega \satisfies \tau_l \subtypes \tau_r
     $ by induction
+    \item \Z $\forall \Omega .\ M, \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+    by induction
   \item $\square$ by implication
 \end{theorem}
 

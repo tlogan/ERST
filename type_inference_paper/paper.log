@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  30 DEC 2024 10:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  30 DEC 2024 13:30
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1078,32 +1078,33 @@ LaTeX Warning: Reference `...' on page 24 undefined on input line 3784.
 
 [24.24] [25.25]
 
-LaTeX Warning: Reference `...' on page 26 undefined on input line 4284.
+LaTeX Warning: Reference `...' on page 26 undefined on input line 3959.
 
 [26.26]
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4338.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4324.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4339.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4378.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4342.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4379.
+
+
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4382.
 
 [27.27]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 28 undefined on input line 4476.
-
-
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 28 undefined on input line 4509.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 28 undefined on input line 4516.
 
 [28.28]
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 4617.
- [29.29] [30.30]
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [31.31]
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 29 undefined on input line 4549.
+
+[29.29]
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
+(Font)              scaled to size 10.0pt on input line 4657.
+ [30.30] [31.31]
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1142,7 +1143,7 @@ Here is how much of TeX's memory you used:
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (32 pages, 555409 bytes).
+Output written on paper.pdf (32 pages, 556282 bytes).
 PDF statistics:
  511 PDF objects out of 1000 (max. 8388607)
  429 compressed objects within 5 object streams
