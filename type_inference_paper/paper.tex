@@ -2154,9 +2154,9 @@ Different: RLT isn't cartesian
     \inferrule {
       \alpha \notin M_0
       \\
-      M_0, \Delta_0, \Delta_0 \entails M \lessdot \alpha
+      M_0, \Delta_0 \entails M <:^\star \alpha
       \\
-      M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
+      M_0, \Delta_0 \entails \Tau <:^\star \alpha
       \\
       M_0 \preceq M_1
       \\
@@ -2171,15 +2171,15 @@ Different: RLT isn't cartesian
 
     \inferrule {
       \alpha \notin M_0
+      \\\\
+      M_0, \Delta_0 \entails \alpha <:^\star M
       \\
-      M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot M
+      M_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
       \\
-      M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+      M_0, \Delta_0 \entails \alpha <:^\star \Tau 
       \\
-      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Tau 
-      \\
-      M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
-      \\
+      M_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
+      \\\\
       M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
@@ -2576,6 +2576,43 @@ Different: RLT isn't cartesian
     & \C{step} 
     \\
   \end{array}\]
+\end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha} Alternative
+  \begin{mathpar}
+
+
+    \inferrule {
+      m \in M
+      \\
+      m <: \alpha \in \Delta
+    } {
+      M, \Delta \entails  m <:^\star \alpha
+    }
+
+    \inferrule {
+      M, \Delta \entails m <:^\star m' 
+      \\
+      m' \in M
+      \\
+      m' <: \alpha \in \Delta
+    } {
+      M, \Delta \entails  m <:^\star \alpha
+    }
+
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails M <:^\star \alpha} Alternative
+  \begin{mathpar}
+
+    \inferrule {
+      \forall m .\ m \in M_r \iff  M, \Delta \entails m <:^\star \alpha
+    } {
+      M, \Delta \entails M_r <:^\star \alpha
+    }
+
+  \end{mathpar}
 \end{definition}
 
 
@@ -3963,33 +4000,42 @@ Different: RLT isn't cartesian
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization
 
+    \item \Z $\B{case } 
+      \tau_r = \code{$\tau_{rl}$\&$\tau_{rr}$}
+      \I
+      M = M_1
+      \I
+      \Delta = \Delta_1
+    $
+    \item \Z $\contin 
+      \tau_l \subtypes \tau_{rl} \given M_0, \Delta_0
+      \I
+      M_0 \preceq M_1
+      \I
+      \Delta_0 \preceq \Delta_1
+      \I
+      \tau_l \subtypes \tau_{rr} \given M_1, \Delta_1
+    $
+    \item \Z $\B{hypo } 
+      \forall \Omega .\ \Omega \satisfies \Delta_0 \implies \Omega \satisfies \tau_l \subtypes \tau_{rl} 
+      \I
+      \forall \Omega .\ \Omega \satisfies \Delta_1 \implies \Omega \satisfies \tau_l \subtypes \tau_{rr} 
+    $
+    \item \Z $\B{wrt } $
+      \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
+        \item \Z\Z\Z $\Omega \satisfies \Delta_1 $ by substitution
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_{rr}$ by instantiation and application 
+        \item \Z\Z\Z $\Omega \satisfies \Delta_0 $ by theorem \ref{...} \TODO{...} 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_{rl}$ by instantiation and application 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution
+      \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      by implication and generalization
 
-    %% TODO 
-    %%% TEMPLATE
-    % \item \Z $\B{case } $
-    % \item \Z $\B{hypo } $
-    % \item \Z $\B{wrt } $
 
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-    % \inferrule {
-    %   \tau_l \subtypes \tau_{rl}
-    %   \given M_0, \Delta_0
-    %   \\
-    %   M_0 \preceq M_1
-    %   \\\\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \tau_l \subtypes \tau_{rr}
-    %   \given M_1, \Delta_1
-    % } {
-    %   \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
-    %   \given M_1, \Delta_1
-    % }
-
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
     %   \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
@@ -3999,7 +4045,12 @@ Different: RLT isn't cartesian
     %   \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
     %   \given M, \Delta
     % }
+      \item \Z\Z \TODO{...} 
 
+    %%% TEMPLATE
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
     %   \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
@@ -4008,7 +4059,12 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
     %   \given M, \Delta
     % }
+      \item \Z\Z \TODO{...} 
 
+    %%% TEMPLATE
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   Q \given M_0, \Delta_0
     %   \\
@@ -4024,7 +4080,11 @@ Different: RLT isn't cartesian
     %   \code{EXI[$\Alpha$ $Q$]$\tau_l$} \subtypes \tau_r
     %   \given M_1, \Delta_1
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   Q \given M_0, \Delta_0
     %   \\
@@ -4040,7 +4100,33 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \code{ALL[$\Alpha$ $Q$]$\tau_r$}
     %   \given M_1, \Delta_1
     % }
+      \item \Z\Z \TODO{...} 
 
+
+    \item \Z $\B{case } 
+      \tau_l = \alpha
+      \I
+      M = M_1
+      \I
+      \Delta = \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M'} \ \alpha <: \tau_r
+    $
+    \item \Z $\contin
+      \alpha \notin M_0
+      \I
+      M_0, \Delta_0, \Delta_0 \entails M' \lessdot \alpha
+      \I
+      M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
+    $
+    \item \Z $\contin
+      M_0 \preceq M_1
+      \I
+      \Delta_0 \preceq \Delta_1
+      \I
+      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
+      \given M_1, \Delta_1
+    $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M'$
     % \inferrule {
     %   \alpha \notin M_0
     %   \\
@@ -4058,7 +4144,11 @@ Different: RLT isn't cartesian
     %   \alpha \subtypes \tau_r
     %   \given M_1, \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M} \ \alpha <: \tau_r
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \alpha \notin M_0
     %   \\
@@ -4082,7 +4172,11 @@ Different: RLT isn't cartesian
     %   \sqcup \widebar{\tau_l<:z}^{z \in M}
     %   \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \alpha \in M_0
     %   \\
@@ -4098,7 +4192,11 @@ Different: RLT isn't cartesian
     %   \alpha \subtypes \tau_r
     %   \given M_1, \Delta_1
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \alpha \in M_0
     %   \\
@@ -4114,7 +4212,11 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \alpha
     %   \given M_1, \Delta_1
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes \tau_r \given M_0, \Delta_0
     %   \\\\
@@ -4131,6 +4233,11 @@ Different: RLT isn't cartesian
     %   \given M_1, \Delta_1 
     % }
 
+      \item \Z\Z \TODO{...} 
+
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes \tau_r
     %   \given M_0, \Delta_0
@@ -4146,7 +4253,11 @@ Different: RLT isn't cartesian
     %   \code{EXI[$\Alpha$ $Q$]$\tau_r$}
     %   \given M_1, \Delta_1
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_{ll} \subtypes \tau_r
     %   \given M, \Delta
@@ -4154,7 +4265,11 @@ Different: RLT isn't cartesian
     %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_{lr} \subtypes \tau_r
     %   \given M, \Delta
@@ -4162,7 +4277,11 @@ Different: RLT isn't cartesian
     %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
+      \item \Z\Z \TODO{...} 
 
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes \tau_{rl}
     %   \given M, \Delta
@@ -4171,6 +4290,11 @@ Different: RLT isn't cartesian
     %   \given M, \Delta
     % }
 
+      \item \Z\Z \TODO{...} 
+
+    \item \Z $\B{case } $
+    \item \Z $\B{hypo } $
+    \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes \tau_{rr}
     %   \given M, \Delta
@@ -4178,7 +4302,8 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
     %   \given M, \Delta
     % }
-    %%%%%%%%%%%%%%%%%%%%%
+      \item \Z\Z \TODO{...} 
+
     \item \Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
     by induction
   \item $\square$ by implication
