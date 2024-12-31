@@ -2196,13 +2196,13 @@ Different: RLT isn't cartesian
     \inferrule {
       \alpha \in M_0
       \\
-      \alpha <: \tau \in (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha))
+      M_0, (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha)) \entails \alpha <: \Tau 
       \\\\
       M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau \subtypes \tau_r
+      \code{\&}(\tau) \subtypes \tau_r
       \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
@@ -2212,13 +2212,13 @@ Different: RLT isn't cartesian
     \inferrule {
       \alpha \in M_0
       \\
-      \tau <: \alpha \in \Delta_0
+      \Delta_0 \entails \Tau <: \alpha
       \\\\
       M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l \subtypes \tau
+      \tau_l \subtypes \code{|}(\Tau)
       \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
@@ -2908,52 +2908,48 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \Tau \subtypes \alpha}
+\begin{definition}\boxed{\Delta \entails \Tau \subtypes \alpha}
   \begin{mathpar}
     \inferrule {
     } {
-      M, \epsilon \entails \epsilon \subtypes \alpha
+      \epsilon \entails \epsilon \subtypes \alpha
     }
 
     \inferrule {
-      \tau \notin M 
-      \\
-      M, \Delta \entails \Tau \subtypes \alpha
+      \Delta \entails \Tau \subtypes \alpha
     } {
-      M, \Delta \ \tau<:\alpha \entails \Tau\ \tau \subtypes \alpha
+      \Delta \ \tau<:\alpha \entails \Tau\ \tau \subtypes \alpha
     }
 
     \inferrule {
       \tau_r \neq \alpha
       \\
-      M, \Delta \entails \Tau \subtypes \alpha
+      \Delta \entails \Tau \subtypes \alpha
     } {
-      M, \Delta \ \tau_l<:\tau_r \entails \Tau \subtypes \alpha
+      \Delta \ \tau_l<:\tau_r \entails \Tau \subtypes \alpha
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \Tau \subtypes \alpha}
+\begin{definition}\boxed{\Delta \entails \alpha \subtypes \Tau}
   \begin{mathpar}
     \inferrule {
     } {
-      M, \epsilon \entails \alpha \subtypes \epsilon
+      \epsilon \entails \alpha \subtypes \epsilon
     }
 
     \inferrule {
-      \tau \notin M 
-      \\
-      M, \Delta \entails \alpha \subtypes \Tau
+      \Delta \entails \alpha \subtypes \Tau
     } {
-      M, \Delta \ \tau<:\alpha \entails \alpha \subtypes \Tau\ \tau
+      \Delta \ \alpha<:\tau \entails \alpha \subtypes \Tau\ \tau
     }
 
     \inferrule {
-      \tau_r \neq \alpha
+      \tau_l \neq \alpha
       \\
-      M, \Delta \entails \alpha \subtypes \Tau
+      \Delta \entails \alpha \subtypes \Tau
     } {
-      M, \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \Tau
+      \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \Tau
     }
   \end{mathpar}
 \end{definition}

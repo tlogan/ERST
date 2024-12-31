@@ -1980,9 +1980,9 @@ def test_skolem_subtyping_A():
 BOT -> TOP 
     """.strip())
 
-    lower = (f"""
-@ -> @
-    """.strip())
+#     lower = (f"""
+# @ -> @
+#     """.strip())
 
     upper = (f"""
 ALL[X] X -> X
@@ -2000,9 +2000,9 @@ TOP -> BOT
 ALL[X] X -> X
     """.strip())
 
-    upper = (f"""
-@ -> @
-    """.strip())
+#     upper = (f"""
+# @ -> @
+#     """.strip())
     solver = analyzer.Solver(m())
     worlds = solve(solver, lower, upper)
     assert worlds

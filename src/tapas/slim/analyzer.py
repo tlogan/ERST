@@ -1942,7 +1942,6 @@ class Solver:
             for st in world.constraints
             if st.lower == TVar(id) 
         )
-        # .union(find_factors(world, TVar(id)))
 
     def extract_factored_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
         return find_factors(world, TVar(id))
@@ -2571,30 +2570,23 @@ class Solver:
 
 
         elif isinstance(lower, TVar) and lower.id in world.skolems: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG lower, TVar-Skolem
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# lower:
-# {concretize_typ(lower)}
 
-# upper:
-# {concretize_typ(upper)}
+            # strict_constraints = tuple( 
+            #     Subtyping(t, upper)
+            #     for t in self.extract_upper_bounds(world, lower.id).union(
+            #         self.extract_factored_upper_bounds(world, lower.id)
+            #     )
+            # )
+            # if strict_constraints:
+            #     return self.solve_multi(world, strict_constraints)
+            # else:
+            #     return self.solve(world, Top(), upper)
 
-# skolems: {world.skolems}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-            strict_constraints = tuple( 
-                Subtyping(t, upper)
-                for t in self.extract_upper_bounds(world, lower.id).union(
-                    self.extract_factored_upper_bounds(world, lower.id)
-                )
+            bounds =  self.extract_upper_bounds(world, lower.id).union(
+                self.extract_factored_upper_bounds(world, lower.id)
             )
-            if strict_constraints:
-                return self.solve_multi(world, strict_constraints)
-            else:
-                return self.solve(world, Top(), upper)
+
+            return self.solve(world, make_inter(list(bounds)), upper)
 
             ####################### OLD ###########################
             # if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.skolems:
@@ -2651,28 +2643,19 @@ class Solver:
             return worlds
 
         elif isinstance(upper, TVar) and upper.id in world.skolems: 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG upper, TVar-Skolem
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# lower:
-# {concretize_typ(lower)}
 
-# upper:
-# {concretize_typ(upper)}
-
-# skolems: {world.skolems}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-            strict_constraints = tuple( 
-                Subtyping(lower, lowered_upper)
-                for lowered_upper in self.extract_lower_bounds(world, upper.id)
+            # strict_constraints = tuple( 
+            #     Subtyping(lower, lowered_upper)
+            #     for lowered_upper in self.extract_lower_bounds(world, upper.id)
+            # )
+            # if strict_constraints:
+            #     return self.solve_multi(world, strict_constraints)
+            # else:
+            #     return self.solve(world, lower, Bot())
+            
+            return self.solve(world, lower, 
+                make_unio(list(self.extract_lower_bounds(world, upper.id)))
             )
-            if strict_constraints:
-                return self.solve_multi(world, strict_constraints)
-            else:
-                return self.solve(world, lower, Bot())
 
             ################ OLD #################################
             interp = self.unionize_lower_bounds(world, upper.id)
