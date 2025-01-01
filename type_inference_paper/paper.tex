@@ -2156,7 +2156,7 @@ Different: RLT isn't cartesian
       \\
       M_0, \Delta_0 \entails M <:^\star \alpha
       \\
-      M_0, \Delta_0 \entails \Tau <:^\star \alpha
+      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
       \\
       M_0 \preceq M_1
       \\
@@ -2174,11 +2174,11 @@ Different: RLT isn't cartesian
       \\\\
       M_0, \Delta_0 \entails \alpha <:^\star M
       \\
-      M_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+      M_0, \Delta_0 \entails \alpha \star \Delta_{skol}
       \\
-      M_0, \Delta_0 \entails \alpha <:^\star \Tau 
+      M_0, \Delta_0 \entails \alpha <:^\dagger \Tau 
       \\
-      M_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
+      M_0, \Delta_0 \entails \alpha \dagger \Delta_{rel}
       \\\\
       M_0 \preceq M_1
       \\
@@ -2578,10 +2578,8 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha} Alternative
+\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha}\ Lower skolem transitive subtyping 
   \begin{mathpar}
-
-
     \inferrule {
       m \in M
       \\
@@ -2591,230 +2589,392 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      M, \Delta \entails m <:^\star m' 
-      \\
       m' \in M
+      \\
+      M, \Delta \entails m <:^\star m' 
       \\
       m' <: \alpha \in \Delta
     } {
       M, \Delta \entails  m <:^\star \alpha
     }
-
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails M <:^\star \alpha} Alternative
+\begin{definition}\boxed{M, \Delta \entails M <:^\star \alpha}\ Universal lower skolem transitive subtyping
   \begin{mathpar}
-
     \inferrule {
-      \forall m .\ m \in M_r \iff  M, \Delta \entails m <:^\star \alpha
+      \forall m .\ m \in M_u \iff  M, \Delta \entails m <:^\star \alpha
     } {
-      M, \Delta \entails M_r <:^\star \alpha
+      M, \Delta \entails M_u <:^\star \alpha
     }
-
   \end{mathpar}
 \end{definition}
 
-
-\begin{definition}\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}
+\begin{definition}\boxed{M, \Delta \entails \alpha <:^\star m}\ Upper skolem transitive subtyping 
   \begin{mathpar}
     \inferrule {
-    } {
-      M, \Delta, \epsilon \entails \epsilon \lessdot \alpha
-    }
-
-    \inferrule {
-      m \in M_0
+      m \in M
       \\
-      M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
-      \\\\
-      M_0, \Delta_0, \Delta_0 \entails M_2 \lessdot m 
+      \alpha <: m \in \Delta
     } {
-      M_0, \Delta_0, \Delta_1 \ m<:\alpha 
-      \entails M_1 \sqcup M_2 \ m \lessdot \alpha
-    }
-
-    \inferrule {
-      \neg (\tau_l \in M_0 \land \tau_r = \alpha)
-      \\\\
-      M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
-    } {
-      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r
-      \entails M_1 \lessdot \alpha
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{M, \Delta, \Delta \entails \Tau \ll \alpha}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      M, \Delta, \epsilon \entails \epsilon \ll \alpha
-    }
-
-    \inferrule {
-      \tau \notin M
-      \\
-      M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
-    } {
-      M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \Tau\ \tau \ll \alpha
+      M, \Delta \entails  \alpha <:^\star m 
     }
 
     \inferrule {
       m \in M
       \\
-      M, \Delta_0, \Delta_1 \entails \Tau_0 \ll \alpha
+      \alpha <: m \in \Delta
       \\
-      M, \Delta_0, \Delta_0 \entails \Tau_1 \ll z 
+      M, \Delta \entails m <:^\star m' 
     } {
-      M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \sqcup \Tau_1 \ll \alpha
-    }
-
-    \inferrule {
-      \tau_r \neq \alpha
-      \\
-      M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
-    } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \Tau \ll \alpha
+      M, \Delta \entails  \alpha <:^\star m' 
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}
+\begin{definition}\boxed{M, \Delta \entails \alpha <:^\star M}\ Universal upper skolem transitive subtyping
   \begin{mathpar}
     \inferrule {
+      \forall m .\ m \in M_u \iff  M, \Delta \entails \alpha <:^\star m 
     } {
-      M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
-    }
-
-    \inferrule {
-      m \in M_0
-      \\
-      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1 
-      \\\\
-      M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
-    } {
-      M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \sqcup M_2\ m 
-    }
-
-    \inferrule {
-      \neg (\tau_r \in M_0 \land \tau_l = \alpha)
-      \\\\
-      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1
-    } {
-      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot M_1
+      M, \Delta \entails \alpha <:^\star M_u
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Tau}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      M, \Delta, \epsilon \entails \alpha \ll \epsilon
-    }
 
+% \begin{definition}\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \epsilon \lessdot \alpha
+%     }
+
+%     \inferrule {
+%       m \in M_0
+%       \\
+%       M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
+%       \\\\
+%       M_0, \Delta_0, \Delta_0 \entails M_2 \lessdot m 
+%     } {
+%       M_0, \Delta_0, \Delta_1 \ m<:\alpha 
+%       \entails M_1 \sqcup M_2 \ m \lessdot \alpha
+%     }
+
+%     \inferrule {
+%       \neg (\tau_l \in M_0 \land \tau_r = \alpha)
+%       \\\\
+%       M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
+%     } {
+%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r
+%       \entails M_1 \lessdot \alpha
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+
+\begin{definition}\boxed{M, \Delta \entails \tau <:^\dagger \alpha}\ Lower transitive subtyping 
+  \begin{mathpar}
     \inferrule {
       \tau \notin M
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
+      \tau <: \alpha \in \Delta 
     } {
-      M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \Tau\ \tau
+      M, \Delta \entails \tau <:^\dagger \alpha
     }
 
     \inferrule {
       m \in M
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau_0
+      M, \Delta \entails \tau <:^\dagger m 
       \\
-      M, \Delta_0, \Delta_0 \entails m \ll \Tau_1
+      m <: \alpha \in \Delta 
     } {
-      M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \sqcup \Tau_1
-    }
-
-    \inferrule {
-      \tau_l \neq \alpha
-      \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
-    } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Tau
+      M, \Delta \entails \tau <:^\dagger \alpha
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
+\begin{definition}\boxed{M, \Delta \entails \Tau <:^\dagger \alpha}\ Universal lower transitive subtyping
   \begin{mathpar}
     \inferrule {
+      \forall \tau .\ \tau \in \Tau \iff  M, \Delta \entails \tau <:^\dagger \alpha
     } {
-      M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
-    }
-
-    \inferrule {
-      \alpha \in \text{FTV}(\tau)
-      \\
-      m_0 \in M_0
-      \\
-      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
-      \\
-      M_0, \Delta_0, \Delta_0 \entails m_0 \lessdot M_1 
-    } {
-      M_0, \Delta_0
-      \entails
-      \Delta_1 \ \tau<:m_0
-      \entails
-      \alpha 
-      \lessdot 
-      \Delta_2 \sqcup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
-    }
-
-    \inferrule {
-      \neg (\tau_r \in M_0 \land \alpha \in \text{FTV}(\tau_l))
-      \\
-      M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2 
-    } {
-      M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot \Delta_2
+      M, \Delta \entails \Tau <:^\dagger \alpha
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+\begin{definition}\boxed{M, \Delta \entails \alpha <:^\dagger \tau}\ Upper transitive subtyping 
   \begin{mathpar}
     \inferrule {
+      \tau \notin M
+      \\
+      \alpha <: \tau \in \Delta 
     } {
-      M, \Delta, \epsilon \entails \alpha \ll \epsilon
+      M, \Delta \entails \alpha <:^\dagger \tau
     }
 
     \inferrule {
-      \alpha \in \text{FTV}(\tau_l)
+      m \in M
       \\
-      \tau \notin M 
+      \alpha <: m \in \Delta 
       \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+      M, \Delta \entails m <:^\dagger \tau 
     } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2 \ \tau_l<:\tau_r
-    }
-
-    \inferrule {
-      \alpha \in \text{FTV}(\tau)
-      \\
-      m \in M 
-      \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
-      \\\\
-      M, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
-    } {
-      M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \sqcup \Delta_3
-    }
-
-    \inferrule {
-      \alpha \notin \text{FTV}(\tau_l)
-      \\
-      M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
-    } {
-      M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2
+      M, \Delta \entails \alpha <:^\dagger \tau 
     }
   \end{mathpar}
 \end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails \alpha <:^\dagger \Tau}\ Universal upper transitive subtyping
+  \begin{mathpar}
+    \inferrule {
+      \forall \tau .\ \tau \in \Tau \iff  M, \Delta \entails \alpha <:^\dagger \Tau
+    } {
+      M, \Delta \entails \alpha <:^\dagger \Tau
+    }
+  \end{mathpar}
+\end{definition}
+
+% \begin{definition}\boxed{M, \Delta, \Delta \entails \Tau \ll \alpha}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \epsilon \ll \alpha
+%     }
+
+%     \inferrule {
+%       \tau \notin M
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \Tau\ \tau \ll \alpha
+%     }
+
+%     \inferrule {
+%       m \in M
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \Tau_0 \ll \alpha
+%       \\
+%       M, \Delta_0, \Delta_0 \entails \Tau_1 \ll z 
+%     } {
+%       M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \sqcup \Tau_1 \ll \alpha
+%     }
+
+%     \inferrule {
+%       \tau_r \neq \alpha
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \Tau \ll \alpha
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
+%     }
+
+%     \inferrule {
+%       m \in M_0
+%       \\
+%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1 
+%       \\\\
+%       M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
+%     } {
+%       M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \sqcup M_2\ m 
+%     }
+
+%     \inferrule {
+%       \neg (\tau_r \in M_0 \land \tau_l = \alpha)
+%       \\\\
+%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1
+%     } {
+%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot M_1
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Tau}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \alpha \ll \epsilon
+%     }
+
+%     \inferrule {
+%       \tau \notin M
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
+%     } {
+%       M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \Tau\ \tau
+%     }
+
+%     \inferrule {
+%       m \in M
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau_0
+%       \\
+%       M, \Delta_0, \Delta_0 \entails m \ll \Tau_1
+%     } {
+%       M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \sqcup \Tau_1
+%     }
+
+%     \inferrule {
+%       \tau_l \neq \alpha
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Tau
+%     }
+%   \end{mathpar}
+% \end{definition}
+\begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive skolem subtyping 
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \text{FTV}(\tau_l) 
+      \\
+      m \in M
+    } {
+      M, \Delta \entails \alpha \star \tau <: m 
+    }
+
+    \inferrule {
+      \alpha \in \text{FTV}(\tau_l) 
+      \\
+      m \in M
+      \\
+      \tau <: m \in \Delta
+      \\
+      M, \Delta \entails m <:^\star m' 
+    } {
+      M, \Delta \entails \alpha \star \tau <: m' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive skolem subtyping
+  \begin{mathpar}
+    \inferrule {
+      \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \star \tau_l <: \tau_r
+    } {
+      M, \Delta \entails \alpha \star \Delta 
+    }
+  \end{mathpar}
+\end{definition}
+
+% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
+%     }
+
+%     \inferrule {
+%       \alpha \in \text{FTV}(\tau)
+%       \\
+%       m_0 \in M_0
+%       \\
+%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
+%       \\
+%       M_0, \Delta_0, \Delta_0 \entails m_0 \lessdot M_1 
+%     } {
+%       M_0, \Delta_0
+%       \entails
+%       \Delta_1 \ \tau<:m_0
+%       \entails
+%       \alpha 
+%       \lessdot 
+%       \Delta_2 \sqcup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
+%     }
+
+%     \inferrule {
+%       \neg (\tau_r \in M_0 \land \alpha \in \text{FTV}(\tau_l))
+%       \\
+%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2 
+%     } {
+%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot \Delta_2
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails \alpha \dagger \tau <: \tau}\ Relational transitive subtyping 
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \text{FTV}(\tau_l) 
+      \\
+      \tau_r \notin M
+    } {
+      M, \Delta \entails \alpha \dagger \tau_l <: \tau_r 
+    }
+
+    \inferrule {
+      \alpha \in \text{FTV}(\tau_l) 
+      \\
+      m \in M
+      \\
+      \tau_l <: m \in \Delta
+      \\
+      M, \Delta \entails m <:^\dagger \tau_r 
+    } {
+      M, \Delta \entails \alpha \dagger \tau_l <: \tau_r 
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails \alpha \dagger \Delta}\ Universal relational transitive subtyping
+  \begin{mathpar}
+    \inferrule {
+      \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \dagger \tau_l <: \tau_r
+    } {
+      M, \Delta \entails \alpha \dagger \Delta 
+    }
+  \end{mathpar}
+\end{definition}
+
+% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       M, \Delta, \epsilon \entails \alpha \ll \epsilon
+%     }
+
+%     \inferrule {
+%       \alpha \in \text{FTV}(\tau_l)
+%       \\
+%       \tau \notin M 
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2 \ \tau_l<:\tau_r
+%     }
+
+%     \inferrule {
+%       \alpha \in \text{FTV}(\tau)
+%       \\
+%       m \in M 
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+%       \\\\
+%       M, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \sqcup \Delta_3
+%     }
+
+%     \inferrule {
+%       \alpha \notin \text{FTV}(\tau_l)
+%       \\
+%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
+%     } {
+%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2
+%     }
+%   \end{mathpar}
+% \end{definition}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subtyping Solving (Inductive) 
@@ -4113,9 +4273,9 @@ Different: RLT isn't cartesian
     \item \Z $\contin
       \alpha \notin M_0
       \I
-      M_0, \Delta_0, \Delta_0 \entails M' \lessdot \alpha
+      M_0, \Delta_0 \entails M' <:^\star \alpha
       \I
-      M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
+      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
     $
     \item \Z $\contin
       M_0 \preceq M_1
