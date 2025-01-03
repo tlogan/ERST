@@ -2,6 +2,7 @@
 - alternate name: **Descriptive** Relational Subtyping
 
 
+
 ### TODO (Symbolic Implementation)
 - update Fixpoint Subtyping rules
 - update skolem case of Fixpoint to match rule in paper 
