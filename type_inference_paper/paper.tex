@@ -77,7 +77,7 @@
 \newcommand{\is}{\ ::=\ }
 \newcommand{\sep}{\ \ |\ \ }
 \newcommand{\nonterm}[1]{#1\ }
-\newcommand{\contin}{\downharpoonleft\ }
+\newcommand{\contin}{|\ \ \ \ \ \ \ }
 \newcommand{\case}{\B{case }}
 \newcommand{\wrt}{\B{wrt }}
 % \newcommand{\let}{\B{let }}
@@ -1979,18 +1979,6 @@ Different: RLT isn't cartesian
       \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
     }
 
-    % \inferrule {
-    %   \Gamma \entails e \hastype \tau \given Z_0
-    %   \\
-    %   Z_0 \looparrowright Z_1
-    %   \\
-    %   \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
-    %   \\\\
-    %   \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \cdot \Tau_{rel}
-    % } {
-    %   \Gamma \entails \code{loop($e$)} \hastype \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} \given Z_0
-    % }
-
     \inferrule {
       \Gamma \entails e \hastype \code{$\alpha_{h^+}$->$\tau$} \given Z_0
       \\
@@ -3055,13 +3043,13 @@ Different: RLT isn't cartesian
       \fallingdotseq 
       \alpha_{h^-} \cdot \Tau
       \\\\
-      M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
-      M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+      \Delta \entails \alpha_l \subtypes \Tau_l 
       \\
-      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+      \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
       \\\\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\
@@ -3296,9 +3284,13 @@ Different: RLT isn't cartesian
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  
     } {
-      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
+      \forall \Omega .\ \Omega \satisfies Z \implies \Omega, \Gamma \satisfies e \hastype \tau
     } 
   \end{mathpar}
+
+  \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
+
+  \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
 
   Proof: 
   \item $
@@ -3482,7 +3474,7 @@ Different: RLT isn't cartesian
     e = \code{loop($e'$)} 
   $ 
   \item \Z $\contin  
-    \tau = \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
+    \tau = \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
   $
   \item \Z $\contin 
     Z = Z_0 
@@ -3494,74 +3486,78 @@ Different: RLT isn't cartesian
     \I
     \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
+  \item \Z $\contin  
+    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+  $
   \item \Z $\B{hypo } 
-    \Gamma \entails e' \hastype \code{$\alpha_{h^+}$->$\tau'$} \given Z_0 \implies 
+    \forall \Omega .\ \Omega \satisfies Z_0 \implies
     \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
   $ 
   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
-    \item \Z\Z $
-      \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
-    $ by application
+    \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies Z$
+      \item \Z\Z\Z $\Omega \satisfies Z_0$ by substitution
+      \item \Z\Z\Z $
+        \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
+      $ by instantiation and application
+      \item \Z\Z\Z $
+        \Omega \satisfies \tau' \subtypes 
+        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$}
+      $ by theorem \ref{theorem:fixpoint_duality_soundness}
+
+      \item \Z\Z\Z $
+        \Omega \satisfies \tau' \subtypes \tau
+      $ by substitution  
+
+      \item \Z\Z\Z $
+        \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
+      $ by theorem \ref{theorem:model_subtyping_elimination} 
+
+      \item \Z\Z\Z $
+        \Omega \satisfies \code{loop($e'$)} \hastype \tau 
+      $ by theorem \ref{theorem:model_typing_implication_independence}
+
+      \item \Z\Z\Z $
+        \Omega \satisfies e \hastype \tau 
+      $ by substitution 
 
     \item \Z\Z $
-      \forall \tau .\ 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
-      \implies
-      \tau \subtypes 
-      \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.$\alpha_4$*$\alpha_5$<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
-      \given Z_0 
-    $ by theorem \ref{theorem:fixpoint_duality_soundness}
-    \item \Z\Z $
-      \tau' \subtypes 
-      \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.$\alpha_4$*$\alpha_5$<:FIX[$\alpha_3$.|$(\Tau)$]]$\alpha_5$} 
-      \given Z_0 
-    $ by instantiation and application 
-
-    \item \Z\Z $
-      \tau' \subtypes \tau \given Z_0 
-    $ by substitution
-
-    \item \Z\Z $
-      \Omega \satisfies \tau' \subtypes \tau
-    $ by theorem \ref{theorem:proof_subtyping_soundness} 
-
-    \item \Z\Z $
-      \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
-    $ by theorem \ref{theorem:model_subtyping_elimination} 
-
-    \item \Z\Z $
-      \Omega \satisfies 
-      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
-    $ by theorem \ref{} \TODO{...}
-
-
-    \item \Z\Z $
-      \Omega \satisfies 
-      \tau
-    $ by substitution 
-
-    \item \Z\Z $
-      \Omega \satisfies \code{loop($e'$)} \hastype \tau 
-    $ by theorem \ref{theorem:model_typing_implication_independence}
-
-    \item \Z\Z $
-      \Omega \satisfies e \hastype \tau 
-    $ by substitution 
-    \item \Z\Z $
-      \exists \Omega .\ \Omega \satisfies e \hastype \tau 
-    $ by substitution 
+      \forall \Omega .\ \Omega \satisfies Z \implies \Omega \satisfies e \hastype \tau 
+    $ by implication and generalization 
 
   \item \Z $\Omega, \Gamma \satisfies e \hastype \tau$
     by induction
   \item $\square$
 \end{theorem}
 
+\begin{theorem}(Fixpoint duality soundness (new))
+  \label{theorem:fixpoint_duality_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \\
+      \text{FTV}(\tau) \subseteq N
+      \\
+      \alpha_l \notin N
+      \\
+      \alpha_r \notin N
+      \\
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    } {
+      \Omega \satisfies 
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+    } 
+  \end{mathpar}
+  \TODO{...}
+\end{theorem}
+
 \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
 
 \TODO{See how Cretin proves this without using subject reduction}
 
-\begin{theorem}(Fixpoint duality soundness)
-  \label{theorem:fixpoint_duality_soundness}
+\begin{theorem}(Fixpoint duality soundness old)
+  \label{theorem:fixpoint_duality_soundness_old}
   \begin{mathpar}
     \inferrule { 
       Z_0 \looparrowright Z_1
@@ -3740,6 +3736,31 @@ Different: RLT isn't cartesian
       \subtypes
       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r$} 
       \given Z
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}\ Influential soundness 
+  \TODO{figure out the proper influential soundness statement}
+  \label{theorem:influential_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given \left< M, \Delta \right>
+      \\
+      \Delta \entails \Alpha \pitchfork \Delta_i  
+      \\
+      \alpha \in \Alpha
+      \\\\
+      N, M, \Delta \given \alpha \equiv^- \tau
+      \\
+      N, M, \Delta_i \given \alpha \equiv^- \tau_i
+    } {
+      \Omega \satisfies \tau \subtypes \tau_i 
+      \land
+      \Omega \satisfies \tau_i \subtypes \tau
     } 
   \end{mathpar}
   Proof: 

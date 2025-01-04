@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  31 DEC 2024 17:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  4 JAN 2025 15:34
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1064,56 +1064,49 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [15.15]
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 2485.
+LaTeX Font Warning: Command \small invalid in math mode on input line 2473.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 2485.
-[16.16{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [17.17] [18.18] [19.19] [20.20] [21.21]
+(Font)              scaled to size 9.0pt on input line 2473.
+[16.16{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [17.17] [18.18] [19.19] [20.20] [21.21] [22.22] [23.23] [24.24]
 
-LaTeX Warning: Reference `' on page 22 undefined on input line 3535.
+LaTeX Warning: Reference `...' on page 25 undefined on input line 3998.
 
-[22.22] [23.23]
+[25.25]
 
-LaTeX Warning: Reference `...' on page 24 undefined on input line 3977.
-
-[24.24] [25.25]
-
-LaTeX Warning: Reference `...' on page 26 undefined on input line 4153.
+LaTeX Warning: Reference `...' on page 26 undefined on input line 4174.
 
 
-LaTeX Warning: Reference `...' on page 26 undefined on input line 4188.
+LaTeX Warning: Reference `...' on page 26 undefined on input line 4209.
 
 [26.26]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [27.27]
+ [27.27] [28.28]
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 4579.
-
-[28.28]
-
-LaTeX Warning: Reference `...' on page 29 undefined on input line 4633.
+LaTeX Warning: Reference `...' on page 29 undefined on input line 4600.
 
 
-LaTeX Warning: Reference `...' on page 29 undefined on input line 4634.
+LaTeX Warning: Reference `...' on page 29 undefined on input line 4654.
 
 
-LaTeX Warning: Reference `...' on page 29 undefined on input line 4637.
+LaTeX Warning: Reference `...' on page 29 undefined on input line 4655.
+
+
+LaTeX Warning: Reference `...' on page 29 undefined on input line 4658.
 
 [29.29]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 30 undefined on input line 4771.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 30 undefined on input line 4792.
 
 [30.30]
 
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 31 undefined on input line 4804.
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 31 undefined on input line 4825.
 
+[31.31]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 4912.
-[31.31] [32.32]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [33.33]
+(Font)              scaled to size 10.0pt on input line 4933.
+ [32.32] [33.33]
 
 Class acmart Warning: Some images may lack descriptions.
 
@@ -1144,18 +1137,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24424 strings out of 474116
- 391725 string characters out of 5743682
+ 24430 strings out of 474116
+ 391893 string characters out of 5743682
  1969187 words of memory out of 5000000
- 45564 multiletter control sequences out of 15000+600000
- 776587 words of font info for 456 fonts, out of 8000000 for 9000
+ 45565 multiletter control sequences out of 15000+600000
+ 776852 words of font info for 458 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (34 pages, 559048 bytes).
+Output written on paper.pdf (34 pages, 559698 bytes).
 PDF statistics:
  528 PDF objects out of 1000 (max. 8388607)
  444 compressed objects within 5 object streams
- 182 named destinations out of 1000 (max. 500000)
+ 184 named destinations out of 1000 (max. 500000)
  108145 words of extra memory for PDF output out of 128383 (max. 10000000)
 
