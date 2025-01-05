@@ -2020,7 +2020,7 @@ ALL[X ; ~uno @ <: X ; X <: ~uno @ | ~dos @] X -> X
     assert worlds
 
 if __name__ == '__main__':
-    test_skolem_subtyping_C()
+    # test_skolem_subtyping_C()
     # test_zero_subs_nat()
     # test_one_cons_query_subs_nat_list()
     # test_two_cons_query_subs_nat_list()
@@ -2034,7 +2034,7 @@ if __name__ == '__main__':
     # test_implication_unification()
     # test_lted_wrapper()
     # test_max_parts_disjoint()
-    # test_max()
+    test_max()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()

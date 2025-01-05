@@ -3026,6 +3026,8 @@ Different: RLT isn't cartesian
 \begin{definition}
 \boxed{N \entails \alpha \cdot Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \cdot \Tau}
 \ (Fixpoint duality)
+
+\TODO{Note the reason for excluding rigids and skolems from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
@@ -3066,29 +3068,29 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\Delta \entails N \pitchfork \Delta}
+\begin{definition}\boxed{\Delta \entails \Alpha \pitchfork \Delta}\ Influential Filter 
   \begin{mathpar}
     \inferrule {
     } {
-      \epsilon \entails N \pitchfork \epsilon 
+      \epsilon \entails \Alpha \pitchfork \epsilon 
     }
 
     \inferrule {
-      \alpha \in N  
+      \alpha \in \Alpha  
       \\
       \alpha \in \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
-      \Delta \entails N \pitchfork \Delta_i
+      \Delta \entails \Alpha \pitchfork \Delta'
     } {
-      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta_i \ \tau_l<:\tau_r
+      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta' \ \tau_l<:\tau_r
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in N \implies \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
       \\
-      \Delta \entails N \pitchfork \Delta'
+      \Delta \entails \Alpha \pitchfork \Delta'
     } {
-      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta'
+      \Delta \ \tau_l<:\tau_r \entails \Alpha \pitchfork \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -3711,20 +3713,20 @@ Different: RLT isn't cartesian
   \label{theorem:universe_proof_typing_fixpoint_extension}
   \begin{mathpar}
     \inferrule { 
+      \Omega \satisfies
       \tau
       \subtypes
       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r$} 
-      \given Z
       \\\\
       \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \\\\
+      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
-      M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+      \Delta \entails \alpha_l \subtypes \Tau_l 
       \\
-      M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
-      \\
-      M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
-      \\
-      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \Delta \entails \Tau_r \subtypes \alpha_r
+      \\\\
+      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
       \\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
@@ -3732,10 +3734,66 @@ Different: RLT isn't cartesian
       \\
       N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
     } {
-      \code{$\tau$\&$\tau'$}
+      \Omega \satisfies
+      \tau
       \subtypes
       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r$} 
-      \given Z
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Universe proof typing case soundness)
+  \label{theorem:universe_proof_typing_case_soundnes}
+  \begin{mathpar}
+    \inferrule { 
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \\\\
+      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+      \\
+      \Delta \entails \alpha_l \subtypes \Tau_l 
+      \\
+      \Delta \entails \Tau_r \subtypes \alpha_r
+      \\\\
+      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \\
+      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      \\ 
+      \Delta \entails \Alpha \pitchfork \Delta_i  
+      \\
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+    } {
+      \Omega \satisfies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau_i$]]$\alpha_r$} 
+    } 
+  \end{mathpar}
+  Proof: 
+  \item \TODO{...} 
+  \item $\square$
+\end{theorem}
+
+\begin{theorem}(Universe proof typing fixpoint union)
+  \label{theorem:universe_proof_typing_fixpoint_union}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau$)]]$\alpha_r$} 
+      \\
+      \Omega \satisfies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau$]]$\alpha_r$} 
+    } {
+      \Omega \satisfies
+      \tau
+      \subtypes
+      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau\ \tau$)]]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3744,19 +3802,25 @@ Different: RLT isn't cartesian
 \end{theorem}
 
 \begin{theorem}\ Influential soundness 
-  \TODO{figure out the proper influential soundness statement}
   \label{theorem:influential_soundness}
+
+  \TODO{Prove that any constraints on non-influential variables with have been transitively applied to the influential variables}
+
   \begin{mathpar}
     \inferrule { 
-      \tau_l \subtypes \tau_r \given \left< M, \Delta \right>
+      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M, \Delta
       \\
+      \Delta \entails \alpha_l \subtypes \Tau_l 
+      \\
+      \Delta \entails \Tau_r \subtypes \alpha_r
+      \\\\
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      \alpha \in \Alpha
+      \text{FTV}(\tau) \subseteq \Alpha
       \\\\
-      N, M, \Delta \given \alpha \equiv^- \tau
+      N, M, \Delta \given \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau
       \\
-      N, M, \Delta_i \given \alpha \equiv^- \tau_i
+      N, M, \Delta_i \given \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau_i
     } {
       \Omega \satisfies \tau \subtypes \tau_i 
       \land
