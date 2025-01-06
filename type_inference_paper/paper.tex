@@ -2142,43 +2142,44 @@ Different: RLT isn't cartesian
     \inferrule {
       \alpha \notin M_0
       \\
-      M_0, \Delta_0 \entails M <:^\star \alpha
+      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
       \\
       M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
       \\
       M_0 \preceq M_1
       \\
-      \Delta_0 \preceq \Delta_1
+      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \\
-      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
+      \code{|$(\Tau)$} <: \tau_r
       \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
-      \given M_1, \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M} \ \alpha <: \tau_r
+      \given M_1, \Delta_1 \ \alpha <: \tau_r
     }
 
     \inferrule {
       \alpha \notin M_0
       \\\\
-      M_0, \Delta_0 \entails \alpha <:^\star M
-      \\
-      M_0, \Delta_0 \entails \alpha \star \Delta_{skol}
+      M_0, \Delta_0 \entails \alpha \slash \tau_l <:^\star \Delta_m
+      % \\
+      % M_0, \Delta_0 \entails \alpha \star \Delta_{skol}
       \\
       M_0, \Delta_0 \entails \alpha <:^\dagger \Tau 
       \\
-      M_0, \Delta_0 \entails \alpha \dagger \Delta_{rel}
+      M_0, \Delta_0 \entails \alpha \slash \tau_l \dagger \Delta_{rel}
       \\\\
       M_0 \preceq M_1
       \\
-      \Delta_0 \preceq \Delta_1
+      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \\
-      \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+      \Delta_{rel}\ \code{$\tau_l$<:\&$(\Tau)$} 
+      % \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
       \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
       \given M_1, \Delta_1
-      \sqcup \widebar{\tau_l<:z}^{z \in M}
-      \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
+      % \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} 
+      \ \tau_l<:\alpha 
     }
 
     \inferrule {
@@ -2461,7 +2462,7 @@ Different: RLT isn't cartesian
     C \sqcap \epsilon 
     &=& 
     \epsilon 
-    & \C{empty} 
+    % & \C{empty} 
     \\
 
     C \sqcap (C'\ c) 
@@ -2470,9 +2471,19 @@ Different: RLT isn't cartesian
       (C \sqcap C')\ c & \text{if } c \in C\\
       (C \sqcap C') & \text{otherwise}
     \end{cases}
-    & \D{Step} 
+    % & \D{Step} 
     \\
   \end{array}\]
+\end{definition}
+
+\begin{definition}\boxed{\widebar{\ c\ }^{\vec{t}[P]} \circeq C}\ Comprehension 
+  \begin{mathpar}
+    \inferrule {
+      \forall 
+    } {
+      \widebar{\ c\ }^{A[P]} \circeq C
+    }
+  \end{mathpar}
 \end{definition}
 
 
@@ -2492,12 +2503,12 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}
+\begin{definition}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}\ Map sugar 
   \[\begin{array}{rclr}
     \widebar{\ c'\ }^{c \in C} 
     &\circeq& 
     \text{map}(C, \lambda c . c')
-    & \C{comprehension} 
+    % & \C{comprehension} 
     \\
   \end{array}\]
 \end{definition}
@@ -2566,7 +2577,7 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha}\ Lower skolem transitive subtyping 
+\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha}\ Lower skolem subtyping 
   \begin{mathpar}
     \inferrule {
       m \in M
@@ -2576,56 +2587,54 @@ Different: RLT isn't cartesian
       M, \Delta \entails  m <:^\star \alpha
     }
 
-    \inferrule {
-      m' \in M
-      \\
-      M, \Delta \entails m <:^\star m' 
-      \\
-      m' <: \alpha \in \Delta
-    } {
-      M, \Delta \entails  m <:^\star \alpha
-    }
+    % \inferrule {
+    %   m' \in M
+    %   \\
+    %   M, \Delta \entails m <:^\star m' 
+    %   \\
+    %   m' <: \alpha \in \Delta
+    % } {
+    %   M, \Delta \entails  m <:^\star \alpha
+    % }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails M <:^\star \alpha}\ Universal lower skolem transitive subtyping
+\begin{definition}\boxed{M, \Delta \entails \Delta <:^\star \alpha \slash \tau}\ Universal lower skolem subtyping
   \begin{mathpar}
     \inferrule {
-      \forall m .\ m \in M_u \iff  M, \Delta \entails m <:^\star \alpha
-    } {
-      M, \Delta \entails M_u <:^\star \alpha
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{M, \Delta \entails \alpha <:^\star m}\ Upper skolem transitive subtyping 
-  \begin{mathpar}
-    \inferrule {
+      \forall m\ \tau .\ m <: \tau \in \Delta' \iff  M, \Delta \entails 
       m \in M
-      \\
-      \alpha <: m \in \Delta
+      \land
+      m <: \alpha \in \Delta
+      % m <:^\star \alpha
     } {
-      M, \Delta \entails  \alpha <:^\star m 
-    }
-
-    \inferrule {
-      m \in M
-      \\
-      \alpha <: m \in \Delta
-      \\
-      M, \Delta \entails m <:^\star m' 
-    } {
-      M, \Delta \entails  \alpha <:^\star m' 
+      M, \Delta \entails \Delta' <:^\star \alpha \slash \tau
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \alpha <:^\star M}\ Universal upper skolem transitive subtyping
+% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\star m}\ Upper skolem subtyping 
+%   \begin{mathpar}
+%     \inferrule {
+%       m \in M
+%       \\
+%       \alpha <: m \in \Delta
+%     } {
+%       M, \Delta \entails  \alpha <:^\star m 
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\star \Delta}\ Universal upper skolem subtyping
   \begin{mathpar}
     \inferrule {
-      \forall m .\ m \in M_u \iff  M, \Delta \entails \alpha <:^\star m 
+      \forall \tau\ m .\ \tau <: m \in \Delta' \iff  
+      m \in M
+      \land
+      \alpha <: m \in \Delta
+% M, \Delta \entails \alpha <:^\star m 
     } {
-      M, \Delta \entails \alpha <:^\star M_u
+      M, \Delta \entails \alpha <:^\star \Delta' 
     }
   \end{mathpar}
 \end{definition}
@@ -2822,39 +2831,40 @@ Different: RLT isn't cartesian
 %     }
 %   \end{mathpar}
 % \end{definition}
-\begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive skolem subtyping 
-  \begin{mathpar}
-    \inferrule {
-      \alpha \in \text{FTV}(\tau_l) 
-      \\
-      m \in M
-    } {
-      M, \Delta \entails \alpha \star \tau <: m 
-    }
 
-    \inferrule {
-      \alpha \in \text{FTV}(\tau_l) 
-      \\
-      m \in M
-      \\
-      \tau <: m \in \Delta
-      \\
-      M, \Delta \entails m <:^\star m' 
-    } {
-      M, \Delta \entails \alpha \star \tau <: m' 
-    }
-  \end{mathpar}
-\end{definition}
+% \begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive skolem subtyping 
+%   \begin{mathpar}
+%     \inferrule {
+%       \alpha \in \text{FTV}(\tau_l) 
+%       \\
+%       m \in M
+%     } {
+%       M, \Delta \entails \alpha \star \tau <: m 
+%     }
 
-\begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive skolem subtyping
-  \begin{mathpar}
-    \inferrule {
-      \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \star \tau_l <: \tau_r
-    } {
-      M, \Delta \entails \alpha \star \Delta 
-    }
-  \end{mathpar}
-\end{definition}
+%     \inferrule {
+%       \alpha \in \text{FTV}(\tau_l) 
+%       \\
+%       m \in M
+%       \\
+%       \tau <: m \in \Delta
+%       \\
+%       M, \Delta \entails m <:^\star m' 
+%     } {
+%       M, \Delta \entails \alpha \star \tau <: m' 
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+% \begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive skolem subtyping
+%   \begin{mathpar}
+%     \inferrule {
+%       \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \star \tau_l <: \tau_r
+%     } {
+%       M, \Delta \entails \alpha \star \Delta 
+%     }
+%   \end{mathpar}
+% \end{definition}
 
 % \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
 %   \begin{mathpar}
@@ -2891,36 +2901,24 @@ Different: RLT isn't cartesian
 %   \end{mathpar}
 % \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \alpha \dagger \tau <: \tau}\ Relational transitive subtyping 
+\begin{definition}\boxed{M, \Delta \entails \alpha \dagger \tau <: \tau}\ Relational subtyping 
   \begin{mathpar}
     \inferrule {
+      \alpha \neq \tau_l
+      \\
       \alpha \in \text{FTV}(\tau_l) 
-      \\
-      \tau_r \notin M
     } {
-      M, \Delta \entails \alpha \dagger \tau_l <: \tau_r 
-    }
-
-    \inferrule {
-      \alpha \in \text{FTV}(\tau_l) 
-      \\
-      m \in M
-      \\
-      \tau_l <: m \in \Delta
-      \\
-      M, \Delta \entails m <:^\dagger \tau_r 
-    } {
-      M, \Delta \entails \alpha \dagger \tau_l <: \tau_r 
+      \Delta \entails \alpha \dagger \tau_l <: \tau_r 
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \alpha \dagger \Delta}\ Universal relational transitive subtyping
+\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau \dagger \Delta}\ Relational substitution 
   \begin{mathpar}
     \inferrule {
-      \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \dagger \tau_l <: \tau_r
+      \forall \tau_l\ \tau_r .\ \tau_l[\alpha\slash\tau] <: \tau_r \in \Delta' \iff  M, \Delta \entails \alpha \dagger \tau_l <: \tau_r
     } {
-      M, \Delta \entails \alpha \dagger \Delta 
+      M, \Delta \entails \alpha \slash \tau \dagger \Delta' 
     }
   \end{mathpar}
 \end{definition}

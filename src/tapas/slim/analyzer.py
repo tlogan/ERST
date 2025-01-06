@@ -1946,44 +1946,6 @@ class Solver:
     def extract_factored_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
         return find_factors(world, TVar(id))
 
-    def extract_rel_upper_bounds(self, world : World, id : str) -> PSet[Subtyping]:
-        return pset(
-            st 
-            for st in world.constraints
-            if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
-        )
-
-    def extract_upper_skolems(self, world : World, id : str) -> PSet[str]:
-        return pset(
-            t0.id
-            for t0 in self.extract_upper_bounds(world, id)
-            if isinstance(t0, TVar) and t0.id in world.skolems
-        )
-
-    def extract_rel_upper_skolems(self, world : World, id : str) -> PSet[tuple[Typ, str]]:
-        return pset(
-            (st.lower, st.upper.id) 
-            for st in self.extract_rel_upper_bounds(world, id)
-            if isinstance(st.upper, TVar) and st.upper.id in world.skolems
-        )
-
-
-    def extract_transitive_upper_skolems(self, world : World, id : str) -> PSet[str]:
-        uids0 = self.extract_upper_skolems(world, id)
-        return uids0.union(pset( 
-            uid1
-            for uid0 in uids0 
-            for uid1 in self.extract_transitive_upper_skolems(world, uid0)
-        ))
-
-    def extract_rel_transitive_upper_skolems(self, world : World, id : str) -> PSet[tuple[Typ, str]]:
-        sts0 = self.extract_rel_upper_skolems(world, id)
-        return sts0.union(pset( 
-            (st0[0], skol)
-            for st0 in sts0 
-            for skol in self.extract_transitive_upper_skolems(world, st0[1])
-        ))
-
     def extract_transitive_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset( 
             t1 
@@ -1994,34 +1956,6 @@ class Solver:
                 [t0]
             )
         )
-
-    def extract_rel_transitive_upper_bounds(self, world : World, id : str) -> PSet[Subtyping]:
-        return pset(
-            Subtyping(st.lower, upper) 
-            for st in self.extract_rel_upper_bounds(world, id)
-            for upper in (
-                self.extract_transitive_upper_bounds(world, st.upper.id)
-                if isinstance(st.upper, TVar) and st.upper.id in world.skolems else
-                [st.upper]
-            ) 
-        )
-
-    
-    def extract_lower_skolems(self, world : World, id : str) -> PSet[str]:
-        return pset(
-            t0.id
-            for t0 in self.extract_lower_bounds(world, id)
-            if isinstance(t0, TVar) and t0.id in world.skolems
-        )
-
-    def extract_transitive_lower_skolems(self, world : World, id : str) -> PSet[str]:
-        lids0 = self.extract_lower_skolems(world, id)
-        return lids0.union(pset( 
-            lid1
-            for lid0 in lids0 
-            for lid1 in self.extract_transitive_lower_skolems(world, lid0)
-        ))
-
 
     def extract_lower_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset(
@@ -2373,21 +2307,19 @@ class Solver:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.skolems: 
-            renaming = pmap({lower.id : upper})
-            new_constraints = list(
-                Subtyping(lowered_lower, upper)
-                for lowered_lower in self.extract_transitive_lower_bounds(world, lower.id) 
-            )
+            trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
             skolem_constraints = pset(
-                Subtyping(TVar(skolem), upper)
-                for skolem in self.extract_transitive_lower_skolems(world, lower.id)
+                Subtyping(st.lower, upper)
+                for st in world.constraints
+                if st.upper == lower 
+                if isinstance(st.lower, TVar) and st.lower.id in world.skolems
             )
+            new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
             return [
-                replace(w0, constraints = 
-                        w0.constraints.add(Subtyping(lower, upper)).union(skolem_constraints)
-                ) 
-                for w0 in self.solve_multi(world, new_constraints)
+                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
             ]
+
 
         elif isinstance(lower, Exi):
 #             print(f"""
@@ -2448,73 +2380,28 @@ class Solver:
         #######################################
 
         elif isinstance(upper, TVar) and upper.id not in world.skolems: 
-#             self.print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG upper, TVar-Flex
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# lower:
-# {concretize_typ(lower)}
 
-# upper:
-# {concretize_typ(upper)}
-
-# skolems: {world.skolems}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-#             upper_constraints = self.extract_upper_bounds(world, upper.id) 
-#             renaming = pmap({upper.id : lower})
-#             new_constraints = sub_constraints(renaming, tuple(upper_constraints))
-#             return [
-#                 replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-#                 for w0 in self.solve_multi(world, new_constraints)
-#             ]
-
-            upper_constraints = pset(
-                Subtyping(upper, farther_upper)
-                for farther_upper in self.extract_transitive_upper_bounds(world, upper.id)
-            ).union(
-                self.extract_rel_transitive_upper_bounds(world, upper.id)
+            trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
+            simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
+            rel_constraints = pset(
+                Subtyping(sub_typ(pmap({upper.id : lower}), st.lower), st.upper) 
+                for st in world.constraints
+                if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
             )
-            renaming = pmap({upper.id : lower})
-            new_constraints = sub_constraints(renaming, tuple(upper_constraints))
+
             skolem_constraints = pset(
-                Subtyping(lower, TVar(skolem))
-                for skolem in self.extract_transitive_upper_skolems(world, upper.id)
+                Subtyping(lower, st.upper)
+                for st in world.constraints  
+                if st.lower == upper
+                if isinstance(st.upper, TVar) and st.upper.id in world.skolems
             )
+
+            new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
             return [
-                replace(w0, constraints = 
-                    w0.constraints.add(Subtyping(lower, upper)).union(skolem_constraints)
-                ) 
-                for w0 in self.solve_multi(world, new_constraints)
+                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                for w0 in self.solve_multi(new_world, list(rel_constraints.add(simple_constraint)))
             ]
 
-            ############## OLD #######################
-            interp = self.intersect_upper_bounds(world, upper.id)
-            if isinstance(interp, TVar) and (interp.id in world.skolems):
-                # NOTE: the existence of a L <: F connstraint implies that a frozen variable can be expanded by subsequent information. 
-                # NOTE: what examples is this necessary for? 
-
-                # return [World(
-                #     world.constraints.add(Subtyping(lower, upper)),
-                #     world.skolems, world.relids
-                # )]
-
-                # TODO: add safety check? what is the safety condition?
-                weakest_once_removed = self.intersect_upper_bounds(world, interp.id)
-                return [
-                    replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))
-                    for world in self.solve(world, lower, weakest_once_removed)
-                ]
-            elif isinstance(interp, Top) or interp == Top():
-                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            else:
-                weakest = interp
-                return [
-                    replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))
-                    for world in self.solve(world, lower, weakest)
-                ]
-            #end if-else
-            ###################################
         #######################################
 
         elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
