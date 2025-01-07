@@ -3399,7 +3399,7 @@ Different: RLT isn't cartesian
 
     \item \Z\Z $
       \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
-    $ by theorem \ref{theorem:proof_subtyping_soundness}
+    $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
     \item \Z\Z $
       \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
     $ by theorem \ref{theorem:model_subtyping_elimination} 
@@ -3456,7 +3456,7 @@ Different: RLT isn't cartesian
     $ by theorem \ref{theorem:proof_subtyping_choice} 
     \item \Z\Z $
       \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
-    $ by theorem \ref{theorem:proof_subtyping_soundness} 
+    $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
     \item \Z\Z $
       \Omega \satisfies e_0 \hastype \code{$\tau_1$->$\alpha$} 
     $ by theorem \ref{theorem:model_subtyping_elimination} 
@@ -4124,9 +4124,33 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
+\begin{theorem}(Proof subtyping consistency)
+  \label{theorem:proof_subtyping_consistency}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given M, \Delta 
+    } {
+      \exists \Omega .\ 
+      \Omega \satisfies \Delta
+    } 
+  \end{mathpar}
+\end{theorem}
 
 \begin{theorem}(Proof subtyping soundness)
   \label{theorem:proof_subtyping_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \tau_l \subtypes \tau_r \given M, \Delta 
+    } {
+      \exists \Omega .\ 
+      \Omega \satisfies \tau_l \subtypes \tau_r
+    } 
+  \end{mathpar}
+\end{theorem}
+
+
+\begin{theorem}(Proof subtyping weak soundness)
+  \label{theorem:proof_subtyping_weak_soundness}
   \begin{mathpar}
     \inferrule { 
       \tau_l \subtypes \tau_r \given M, \Delta 
@@ -4351,42 +4375,32 @@ Different: RLT isn't cartesian
       \I
       M = M_1
       \I
-      \Delta = \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M'} \ \alpha <: \tau_r
+      \Delta = \Delta_1\ \alpha <: \tau_r
     $
     \item \Z $\contin
       \alpha \notin M_0
       \I
-      M_0, \Delta_0 \entails M' <:^\star \alpha
+      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
       \I
       M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
+      \I
+      M_0 \preceq M_1
     $
     \item \Z $\contin
-      M_0 \preceq M_1
+      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \I
-      \Delta_0 \preceq \Delta_1
-      \I
-      \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
-      \given M_1, \Delta_1
+      \code{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
     $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M'$
-    % \inferrule {
-    %   \alpha \notin M_0
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails M \lessdot \alpha
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails \Tau \ll \alpha
-    %   \\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \widebar{\code{.} \tau \code{<:} \tau_r}^{\tau \in \Tau}
-    %   \given M_1, \Delta_1
-    % } {
-    %   \alpha \subtypes \tau_r
-    %   \given M_1, \Delta_1 \sqcup \widebar{z <: \tau_r}^{z \in M} \ \alpha <: \tau_r
-    % }
+    \item \Z $\B{hypo } \forall \Omega .\ \Omega \satisfies \Delta_1 \implies
+      \Omega \satisfies \code{|$(\Tau)$} <: \tau_r
+    $
+    \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
+      \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
+        \item \Z\Z\Z $\Omega \satisfies \Delta_1 \code{($\alpha$<:$\tau_r$)}$ by substitution
+        \item \Z\Z\Z $\Omega \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l <: \tau_r$ by substitution 
+      \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      by implication and generalization 
       \item \Z\Z \TODO{...} 
 
     \item \Z $\B{case } $
@@ -4551,6 +4565,120 @@ Different: RLT isn't cartesian
     by induction
   \item $\square$ by implication
 \end{theorem}
+
+\begin{theorem} Model subtyping sequence last 
+  \label{theorem:model_subtyping_sequence_last}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \Delta\ \code{($\tau_l$<:$\tau_r$)}
+    } {
+      \Omega \satisfies \tau_l \subtypes \tau_r 
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model subtyping sequence reduction 
+  \label{theorem:model_subtyping_sequence_reduction}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \Delta\ \delta
+    } {
+      \Omega \satisfies \Delta
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model subtyping sequence prefix  
+  \label{theorem:model_subtyping_sequence_prefix}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \Delta'
+      \\
+      \Delta \preceq \Delta'
+    } {
+      \Omega \satisfies \Delta
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model subtyping sequence uncat 
+  \label{theorem:model_subtyping_sequence_uncat}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \Delta \sqcup \Delta'
+    } {
+      \Omega \satisfies \Delta
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} concatenation prefix 
+  \label{theorem:concatenation prefix}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \Delta \preceq \Delta \sqcup \Delta'
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+
+
+\begin{theorem} Model subtyping unsub left 
+  \label{theorem:Modle_subtyping_unsub_left}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \tau_l \subtypes \tau_r
+      \\
+      \alpha\slash\tau_l \in \Omega
+    } {
+      \Omega \satisfies \alpha \subtypes \tau_r
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model subtyping unsub right 
+  \label{theorem:Modle_subtyping_unsub_right}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \tau_l \subtypes \tau_r
+      \\
+      \alpha\slash\tau_r \in \Omega
+    } {
+      \Omega \satisfies \tau_l \subtypes \alpha
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
+\begin{theorem} Model subtyping something 
+  \label{theorem:Modle_subtyping_something}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies \Delta 
+      \\
+      M, \Delta \entails \Tau \subtypes^\star \alpha  
+    } {
+      \alpha\slash\code{|$(\Tau)$} \in \Omega
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
+\end{theorem}
+
 
 \begin{theorem} Model typing record introduction 
   \label{theorem:model_typing_record_introduction}
