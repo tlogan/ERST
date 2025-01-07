@@ -3277,9 +3277,33 @@ Different: RLT isn't cartesian
   \item $\square$
 \end{theorem}
 
+\begin{theorem}(Proof typing consistency)
+  \label{theorem:proof_typing_consistency}
+  \begin{mathpar}
+    \inferrule { 
+      \Gamma \entails e \hastype \tau \given Z  
+    } {
+      \exists \Omega .\ \Omega \satisfies Z
+    } 
+  \end{mathpar}
+  \TODO{...}
+\end{theorem}
 
 \begin{theorem}(Proof typing soundness)
   \label{theorem:proof_typing_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \Gamma \entails e \hastype \tau \given Z  
+    } {
+      \exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau
+    } 
+  \end{mathpar}
+  \TODO{...}
+\end{theorem}
+
+
+\begin{theorem}(Proof typing weak soundness)
+  \label{theorem:proof_typing_weak_soundness}
   \begin{mathpar}
     \inferrule { 
       \Gamma \entails e \hastype \tau \given Z  

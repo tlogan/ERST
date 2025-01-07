@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  7 JAN 2025 17:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  7 JAN 2025 17:26
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1067,43 +1067,40 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
 (Font)              scaled to size 9.0pt on input line 3272.
  [20.20{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [21.21] [22.22] [23.23] [24.24]
 
-LaTeX Warning: Reference `...' on page 25 undefined on input line 4060.
+LaTeX Warning: Reference `...' on page 25 undefined on input line 4084.
 
 [25.25] [26.26]
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4260.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4284.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4295.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4319.
 
-[27.27]
-Underfull \vbox (badness 4647) has occurred while \output is active []
+[27.27] [28.28] [29.29] [30.30]
 
- [28.28] [29.29]
-
-LaTeX Warning: Reference `...' on page 30 undefined on input line 4790.
-
-[30.30]
-
-LaTeX Warning: Reference `...' on page 31 undefined on input line 4844.
+LaTeX Warning: Reference `...' on page 31 undefined on input line 4814.
 
 
-LaTeX Warning: Reference `...' on page 31 undefined on input line 4845.
+LaTeX Warning: Reference `...' on page 31 undefined on input line 4868.
 
 
-LaTeX Warning: Reference `...' on page 31 undefined on input line 4848.
+LaTeX Warning: Reference `...' on page 31 undefined on input line 4869.
+
+
+LaTeX Warning: Reference `...' on page 31 undefined on input line 4872.
 
 [31.31]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 32 undefined on input line 4982.
-
-
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 32 undefined on input line 5015.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 32 undefined on input line 5006.
 
 [32.32]
+
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 33 undefined on input line 5039.
+
+[33.33]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 5123.
- [33.33] [34.34]
+(Font)              scaled to size 10.0pt on input line 5147.
+ [34.34]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [35.35]
@@ -1137,18 +1134,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: FC1B27203C6C82E1F8D35574F679F266;1527.
  ) 
 Here is how much of TeX's memory you used:
- 24443 strings out of 474116
- 392187 string characters out of 5743682
+ 24447 strings out of 474116
+ 392282 string characters out of 5743682
  1969187 words of memory out of 5000000
- 45573 multiletter control sequences out of 15000+600000
+ 45575 multiletter control sequences out of 15000+600000
  768871 words of font info for 454 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,30n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (36 pages, 561887 bytes).
+Output written on paper.pdf (36 pages, 562360 bytes).
 PDF statistics:
- 549 PDF objects out of 1000 (max. 8388607)
- 463 compressed objects within 5 object streams
- 196 named destinations out of 1000 (max. 500000)
+ 551 PDF objects out of 1000 (max. 8388607)
+ 465 compressed objects within 5 object streams
+ 198 named destinations out of 1000 (max. 500000)
  104049 words of extra memory for PDF output out of 106986 (max. 10000000)
 
