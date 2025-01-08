@@ -2110,7 +2110,7 @@ Different: RLT isn't cartesian
     \inferrule {
       Q \given M_0, \Delta_0
       \\
-      A\ \#\ \tau_r
+      \Alpha\ \#\ \tau_r
       \\\\
       M_0 \sqcup \Alpha \preceq M_1
       \\
@@ -2276,6 +2276,17 @@ Different: RLT isn't cartesian
     } {
       \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
       \given M, \Delta
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} \boxed{\Alpha\ \#\ \tau}\ Fresh variables 
+  \label{definition:fresh_variables}
+  \begin{mathpar}
+    \inferrule {
+      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FV}(\tau)
+    } {
+      \Alpha\ \#\ \tau
     }
   \end{mathpar}
 \end{definition}
@@ -4353,9 +4364,47 @@ Different: RLT isn't cartesian
       \item \Z\Z \TODO{...} 
 
     %%% TEMPLATE
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
+    \item \Z $\B{case } 
+      \tau_l = \code{EXI[$\Alpha$ $Q$]$\tau_b$}
+      \I
+      M = M_1
+      \I
+      \Delta = \Delta_1
+    $
+    \item \Z $\contin
+      Q \given M_0, \Delta_0
+      \I
+      A\ \#\ \tau_r
+      \I
+      M_0 \sqcup \Alpha \preceq M_1
+      \I
+      \Delta_0 \preceq \Delta_1
+      \I
+      \tau_b \subtypes \tau_r
+      \given M_1, \Delta_1
+    $
+    \item \Z $\B{hypo } 
+      \forall \Omega .\ \Omega \satisfies \Delta_1 \implies \Omega \satisfies \tau_b \subtypes \tau_r 
+    $
+    \item \Z $\B{mutu } 
+      \forall \Omega .\ \Omega \satisfies \Delta_0 \implies \Omega \satisfies Q 
+    $ by theorem \ref{...} \TODO{sequence soundness / mutual dependence}
+    \item \Z $\B{wrt } \Alpha\ Q\ \tau_b\ M_1\ \Delta_1\ M_0\ \Delta_0$
+      \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
+        \item \Z\Z\Z $\Omega \satisfies \Delta_1 $ by substitution
+        \item \Z\Z\Z $\Omega \satisfies \tau_b \subtypes \tau_r$ by application
+        \item \Z\Z\Z $\Omega \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
+        \item \Z\Z\Z $\Omega \satisfies Q$ by application
+        \item \Z\Z\Z $\B{for } e \B{ assume } \Omega \satisfies e \hastype \tau_l$ 
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_b$ by theorem \ref{theorem:model_subtyping_existential_elimination} 
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_subsumption} 
+        \item \Z\Z\Z $\forall e .\ \Omega \satisfies e \hastype \tau_l 
+          \implies \Omega \satisfies e \hastype \tau_r
+        $ 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by definition 
+      \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
+      by implication and generalization
     % \inferrule {
     %   Q \given M_0, \Delta_0
     %   \\
@@ -4368,7 +4417,7 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \tau_r
     %   \given M_1, \Delta_1
     % } {
-    %   \code{EXI[$\Alpha$ $Q$]$\tau_l$} \subtypes \tau_r
+    %    \subtypes \tau_r
     %   \given M_1, \Delta_1
     % }
       \item \Z\Z \TODO{...} 
@@ -4588,6 +4637,21 @@ Different: RLT isn't cartesian
     \item \Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
     by induction
   \item $\square$ by implication
+\end{theorem}
+
+\begin{theorem} Model subtyping existential elimination 
+  \label{theorem:model_subtyping_existential_elimination}
+  \begin{mathpar}
+    \inferrule { 
+      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau$}
+      \\
+      \Omega \satisfies Q
+    } {
+      \Omega \satisfies e \hastype \tau
+    } 
+  \end{mathpar}
+  Proof:
+  \item \TODO{...}
 \end{theorem}
 
 \begin{theorem} Model subtyping sequence last 
