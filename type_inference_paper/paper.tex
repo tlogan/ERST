@@ -5446,6 +5446,14 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
+      \alpha \slash \tau \notin \Omega
+      \\
+      \Omega, \Gamma \satisfies e \hastype \code{TOP} 
+    } {
+      \Omega, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
     } {
       \Omega, \Gamma \satisfies \code{@} \hastype \code{@}
     } 
