@@ -4196,6 +4196,19 @@ Different: RLT isn't cartesian
       \Omega \satisfies \tau_l \subtypes \tau_r
     } 
   \end{mathpar}
+
+\TODO{skolems simply remove variables from soundness consideration}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% (EXI[X . 1 <: X, X <: 3] X) <: 2  -| 1 <: X, X <: 3, ..., X <: 2  
+% FAILS, not considered for soundness
+% (EXI[X . 1 <: X, X <: 2] X) <: 2  -| 1 <: X, X <: 2, ..., X <: 2  
+% PASSES, is considered for soundness
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2 <: (EXI[X . 1 <: X, X <: 3] X)  -| 2 <: X, ..., 1 <: X, X <: 3 
+% PASSES, is considered for soundness
+% 2 <: (EXI[X . X <: 1 ] X)  -| 2 <: X, ..., X <: 1
+% FAILS, not considered for soundness
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   Proof: 
   \item \TODO{think about how to handle the mutually recursive definition} 
   \item $\B{assume } 
@@ -4384,7 +4397,7 @@ Different: RLT isn't cartesian
       \given M_1, \Delta_1
     $
     \item \Z $\B{hypo } 
-      \forall \Omega .\ \Omega \satisfies \Delta_1 \implies \Omega \satisfies \tau_b \subtypes \tau_r 
+      \forall \Omega .\ \Omega \satisfies \Delta_1 \implies \Omega \satisfies M_1, \tau_b \subtypes \tau_r 
     $
     \item \Z $\B{mutu } 
       \forall \Omega .\ \Omega \satisfies \Delta_0 \implies \Omega \satisfies Q 
@@ -4397,9 +4410,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies Q$ by application
         \item \Z\Z\Z $\B{for } e \B{ assume } \Omega \satisfies e \hastype \tau_l$ 
           \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
-          \item \Z\Z\Z\Z \TODO{necessary conditions for existential elimination}
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_b$ by theorem \ref{theorem:model_subtyping_existential_elimination} 
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_subsumption} 
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
         \item \Z\Z\Z $\forall e .\ \Omega \satisfies e \hastype \tau_l 
           \implies \Omega \satisfies e \hastype \tau_r
         $ 
@@ -4439,9 +4450,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
         \item \Z\Z\Z $\Omega \satisfies Q$ by application 
         \item \Z\Z\Z $\B{for } e \B{ assume } \Omega \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_b$ by theorem \ref{theorem:model_typing_subsumption} 
-          \item \Z\Z\Z\Z \TODO{necessary conditions for universal introduction}
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_subtyping_universal_introduction} 
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
           \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by substitution 
         \item \Z\Z\Z $\forall e .\ \Omega \satisfies e \hastype \tau_l 
           \implies \Omega \satisfies e \hastype \tau_r
@@ -4648,36 +4657,64 @@ Different: RLT isn't cartesian
   \item $\square$ by implication
 \end{theorem}
 
-\begin{theorem} Model subtyping existential elimination 
-  \label{theorem:model_subtyping_existential_elimination}
+\begin{theorem} Model typing existential elimination 
+  \label{theorem:model_typing_existential_elimination}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau$}
+      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau_l$}
       \\
       \Omega \satisfies Q
+      \\
+      \tau_l \subtypes \tau_r \given M, \Delta
+      \\
+      \Alpha \#\ \tau_r
+      \\
+      \Alpha \subseteq M
+      \\
+      \Omega \satisfies \Delta
     } {
-      \Omega \satisfies e \hastype \tau
+      \Omega \satisfies e \hastype \tau_r
     } 
   \end{mathpar}
   Proof:
-  \item \TODO{WRONG!!! need stricter conditions}
-% x/1 |- exists x . x < 3 and x = 2, x/1 |- x < 3 ====> x/1 |- x = 2 
+  \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: 
+% depends on proof subtyping 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ... |= 2 : (EXI[X . 1 <: X, X <: 3] X)
+% X/1 |= 1 <: X, X <: 3
+% -------------------------
+% X/1 |= 2 : 1 (FAIL) 
+% -------------------------
+% X/1 |= 2 : 4  (PASS)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% X <: 4  -| X, 1 <: X, X <: 3
+
 \end{theorem}
 
-\begin{theorem} Model subtyping universal introduction 
-  \label{theorem:model_subtyping_universal_introduction}
+\begin{theorem} Model typing universal introduction 
+  \label{theorem:model_typing_universal_introduction}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies e \hastype \tau
+      \Omega \satisfies e \hastype \tau_l
       \\
       \Omega \satisfies Q
+      \\
+      \tau_l \subtypes \tau_r \given M, \Delta
+      \\
+      \Alpha \#\ \tau_l
+      \\
+      \Alpha \subseteq M
+      \\
+      \Omega \satisfies \Delta
     } {
-      \Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau$}
+      \Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau_r$}
     } 
   \end{mathpar}
   Proof:
-  \item \TODO{WRONG!!! need stricter conditions}
-% x/2 |- x = 2, x/2 |- x < 3 ====> x/2 |- forall x . x < 3 --> x = 2 
+  \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
 \end{theorem}
 
 
