@@ -291,6 +291,8 @@ Consider the function $\obj{trivial}$, which completes a simple English phrase:
       \\
       \I \obj{\$ \ttilde good @ => \ttilde morning @} 
       \\
+      \I \obj{\$ \ttilde thank @ => \ttilde you @} 
+      \\
     \obj{)}
   \end{array}
 \]
@@ -298,7 +300,7 @@ Consider the function $\obj{trivial}$, which completes a simple English phrase:
 This program is defined by paths over hardcoded tags.
 The system infers the type to be an intersection of implication types:
 \[
-  \obj{(\ttilde hello @ -> \ttilde world @) \& (\ttilde good @ -> \ttilde morning @)}
+  \obj{(\ttilde hello @ -> \ttilde world @) \& (\ttilde good @ -> \ttilde morning @) \& (\ttilde thank @ -> \ttilde you @)}
 \]
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
@@ -308,10 +310,10 @@ Just as type inference constructs precise types for introduction forms,
 type inference can select the only viable paths of an application. In the most simple case where
 the argument is a singleton, there can be only one viable path, just like the runtime semantics.   
 
-Consider the application $\obj{trivial(\ttilde hello @)}$. 
-Type inference breaks apart the intersection into paths and finds that only one path 
-matches the type of the argument. It determines the type of the application to be the singleton
-$\obj{\ttilde world @}$.
+Consider the application \obj{trivial(x)} where \obj{x} has the type \obj{(\ttilde hello @)|(\ttilde thank @)}. 
+Type inference breaks apart the intersection into paths and finds that only two of the three paths 
+match the type of the argument. It determines the type of the application to be the type 
+\obj{(\ttilde world @)|(\ttilde you @)}.
 
 \paragraph{Relational typing.} 
 Consider the function \obj{repeat} that takes a natural number and returns a list of that length. 
