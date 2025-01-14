@@ -450,66 +450,13 @@ Suppose we have the application \obj{boo(n)} where n guaranteed to be an even nu
 The application requires that type inference check that the nat type is weaker than the even type. 
 Type inference sees that if both types were to unroll into an infinite sequence of values
 every value in nat would also be in even, therefore the application type checks. 
-
-\paragraph{Relational subtyping.} Due to the precise relational types that the system infers, 
-it may also be necessary to verify that a relation subtypes another relation, 
-such as a list with an even length subtyping an list with a natural number length.
-This situation is similar to inductive subtyping of simple types, but it is complicated
-by relational constraints in the inductive relations, which must be added to the context.
-\begin{mathpar}
-\\
-  \inferrule {
-    \inferrule {
-      even\_list\ \alpha =  
-      \left(
-      \begin{array}[]{@{} l}
-          \obj{induc[EL]}
-          \arcr
-          \hspace{4mm} \obj{?zero * ?nil |}
-          \arcr
-          \hspace{4mm} \obj{\{?succ ?succ E * ?cons ?cons ($\alpha$ * L) with E * L <: EL\}}
-      \end{array}
-      \right)
-      \\\\
-      \Delta, \obj{E * L <: $nat\_list$ unit} \vdash 
-      \left(
-      \begin{array}[]{@{} l}
-        \obj{?zero * ?nil |} 
-        \arcr
-        \obj{?succ ?succ E * }
-        \arcr
-        \hspace{4mm}\obj{?cons (unit * ?cons (unit * L))}
-      \end{array}
-      \right)
-      \sqsubseteq nat\_list
-    } {
-      \left(
-      \Delta, 
-      \begin{array}[]{@{} l}
-        \obj{$even\_list$ unit <:$nat\_list$ unit},
-        \arcr
-        \obj{E * L <: $even\_list$ unit}
-      \end{array}
-      \right)
-      \vdash 
-      \left(
-      \begin{array}[]{@{} l}
-        \obj{?zero * ?nil |} 
-        \arcr
-        \obj{?succ ?succ E * }
-        \arcr
-        \hspace{4mm}\obj{?cons (unit * ?cons (unit * L))}
-      \end{array}
-      \right)
-      \sqsubseteq nat\_list
-      % \\\\
-    }
-  } {
-    \Delta \vdash \obj{($even\_list$ unit)} \sqsubseteq \obj{($nat\_list$ unit)} 
-  }
-\\
-\end{mathpar}
-
+In particular, type inference leverages the inductive hypothesis, by learning that weaker 
+types hold for all the recursive constraints of the stronger type. 
+In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
+on a single variable.
+In the case of comparing two relations such as \obj{natList}(\obj{T}) and a corresponding even version, 
+the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
+constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
 \paragraph{Refinement.}
