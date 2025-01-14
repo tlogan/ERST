@@ -13,6 +13,7 @@
 \usepackage{listings}
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
+\usepackage[dvipsnames]{xcolor}
 
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
@@ -46,8 +47,9 @@
 
 \begin{document}
 
-% \newcommand{\code}[1]{\texttt{\small #1}}
-\newcommand{\code}[1]{\texttt{#1}}
+% \newcommand{\obj}[1]{\texttt{\small #1}}
+\newcommand{\obj}[1]{\texttt{\color{RoyalBlue} #1}}
+% \newcommand{\obj}[1]{\textbf{\texttt{#1}}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
@@ -100,10 +102,16 @@ Languages, such as Java and ML, are \textit{intrinsically typed},
 requiring nearly all terms to be associated with some type specified by the user. 
 The clever design of ML allows annotations to be fairly sparse by 
 having types specified at constructor definitions and relying on type inference elsewhere.
+However, one of the drawbacks of intrinsically typed languages is that they prevent reusing of
+constructors in contexts that are less precise than their intrinsic specifications. For instance,
+a \emph{cons} constructor belonging to a list datatype could not be considered amongst a \emph{leaf} constructor
+defined as belong to a tree datatype. The user would have to define a new datatype that includes both isomorphs of both \emph{cons}
+and \emph{leaf} and also write functions that translate between the isomorphs and the list and tree constructors. 
+This not only bloats the codebase, but hurts either the runtime or compiler performance.
 
-For various reasons that aren't completely clear, intrinsically typed languages have lost favor,
+For various reasons that may include the reusability drawbacks, intrinsically typed languages have lost favor,
 and untyped or \textit{extrinsically typed} languages, 
-such as Javascript/Typescript and Python, have surged in popularity. 
+such as Javascript and Python, have increased in popularity. 
 Untyped languages place less initial burden on the programmer to define the upper bounds
 on specific combinations of constructors.
 The flexibility and reusability of writing code that doesn't have to fit some predefined restriction 
@@ -142,9 +150,8 @@ beyond the mere shapes of expressions.
 Thus, the challenge is to bring rich expressive types to extrinsically typed languages.
 
 \paragraph{Innovation.} 
-To overcome these limitations, we introduce \textit{extrinsic relational type inference}: 
-a novel system
-that automatically infers expressive properties from untyped functional programs. 
+To overcome the limitations of intrinsic type systems and expand the kinds of programs and types that can be type checked, we introduce \textit{extrinsic relational type inference}: 
+a novel system that automatically infers expressive properties from untyped functional programs. 
 
 The main idea behind relational typing is to leverage subtyping as a means to express relations
 between objects. This completely obviates the need for the two-level type language
@@ -223,29 +230,29 @@ Thus, parametric types are extended with constraints in the form of subtyping.
     \begin{lstlisting}[mathescape=true]
 
         let trivial =
-            path #hello => #world
-            path #good => #morning in
+            case ~hello @ => ~world @
+            case ~good @ => ~morning @ in
 
-        let repeat = path x => fix(path self =>
-            path #zero => #nil
-            path #succ n => #cons (x, self n)) in
+        let repeat = case x => fix(case self =>
+            case ~zero @ => ~nil @
+            case ~succ n => ~cons (x, self n)) in
 
-        let fromList = fix(path self =>
-            path #nil => $\hdots$
-            path #cons (x, xs) => $\hdots$) in
+        let fromList = fix(case self =>
+            case ~nil @ => $\hdots$
+            case ~cons (x, xs) => $\hdots$) in
 
-        let fromNat = path x n => fromList (repeat x n)
+        let fromNat = case x n => fromList (repeat x n)
 
-        let fromUno = path (@uno = content) => $\hdots$ in
-        let fromDos = path (@dos = content) => $\hdots$ in
-        let fromBoth = path x => (fromUno x, fromDos, x)
+        let fromUno = case (uno => content) => $\hdots$ in
+        let fromDos = case (dos => content) => $\hdots$ in
+        let fromBoth = case x => (fromUno x, fromDos, x)
 
-        let lessOrEq = fix(path self =>
-            path (#zero, _) => #true
-            path (#succ x, #succ y) => self (x, y)
-            path (#succ _, #zero) => #false) in
+        let lessOrEq = fix(case self =>
+            case (~zero @, y) => ~true @
+            case (~succ x, ~succ y) => self (x, y)
+            case (~succ x, ~zero) => ~false @) in
 
-        let max = (path (x, y) => 
+        let max = (case (x, y) => 
             if lessOrEq (x, y) then y else x) in
 
         $\hdots$
@@ -260,81 +267,90 @@ Thus, parametric types are extended with constraints in the form of subtyping.
 
 \subsection{Type Inference}
 
+For a given program, type inference constructs a very precise type. Some programs are simple enough
+such that type inference generates singleton types. 
+
 \TODO{example of a inference of intersection of function param applied to multiple arguments (not novel)}
 
 \TODO{example of a inference of intersection of param with multiple functions applied to it (not novel)}
 
 \TODO{example of a inference of union type of branching (not novel)}
 
+\TODO{break example program into parts; inline instead of using figure}
+
 We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
 \paragraph{Path typing.}
-Consider the function \code{trivial} that completes an English phrase:
+Consider the function $\obj{trivial}$, which completes a simple English phrase:
+
+\[
+  \begin{array}[t]{@{} l}
+    \obj{let trivial = (}
+      \\
+      \I \obj{\$ \ttilde hello @ => \ttilde world @}
+      \\
+      \I \obj{\$ \ttilde good @ => \ttilde morning @} 
+      \\
+    \obj{)}
+  \end{array}
+\]
 
 This program is defined by paths over hardcoded tags.
 The system infers the type to be an intersection of implication types:
-\begin{mathpar}
-\\
-  \inferrule {} {
-    \Delta \cdot \Gamma
-    \vdash 
-    \code{trivial} : 
-        \code{(?hello -> ?world) \& (?good -> ?morning)}
-  }
-\\
-\end{mathpar}
+\[
+  \obj{(\ttilde hello @ -> \ttilde world @) \& (\ttilde good @ -> \ttilde morning @)}
+\]
+
+Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
 
 \paragraph{Path selection.}
+Just as type inference constructs precise types for introduction forms, 
+type inference can select the only viable paths of an application. In the most simple case where
+the argument is a singleton, there can be only one viable path, just like the runtime semantics.   
 
-Suppose the function \code{trivial} is applied to a literal value \code{\#hello}. 
-The system can discard the irrelevant clauses and infer the singleton type \code{?world}.
-\begin{mathpar}
-\\
-    \inferrule {} {
-        \Delta \cdot \Gamma
-        \vdash 
-        \code{trivial \#hello} :\ \code{?world} 
-    }
-\\
-\end{mathpar}
-
+Consider the application $\obj{trivial(\ttilde hello @)}$. 
+Type inference breaks apart the intersection into paths and finds that only one path 
+matches the type of the argument. It determines the type of the application to be the singleton
+$\obj{\ttilde world @}$.
 
 \paragraph{Relational typing.} 
-Consider the function \code{repeat} that takes a natural number and returns a list of that length. 
+Consider the function \obj{repeat} that takes a natural number and returns a list of that length. 
 Without specifying any requirements besides the function definition, the system 
 can infer the property that the resulting list has the length of the input number. 
-\begin{mathpar}
-\\
-  \inferrule {
-    nat = \code{induc[N] ?zero | ?succ N} 
-    \\\\
-    nat\_list\ \alpha =  
-    \left(
-    \begin{array}[]{@{} l}
-        \code{induc[NL]} 
-        \arcr
-        \hspace{4mm} \code{?zero * ?nil |}
-        \arcr
-        \hspace{4mm} \code{\{?succ N * ?cons ($\alpha$ * L) with N * L <: NL\}}
-    \end{array}
-    \right)
-  } {
-    \Delta \cdot \Gamma
-    \vdash 
-    \code{repeat} : \code{[X]X -> [F<:\{N -> L with N * L <:\ $nat\_list$\ X\}]F} 
-  }
-\\
-\end{mathpar}
+To construct a type for \obj{repeat}, type inference constructs a relation between nats and lists.
+The type of repeat depends on a parameterized relation between nats and lists.
+\[
+  \text{natList}(\alpha) = \begin{array}[t]{@{} l}
+      \obj{FIX[SELF;} 
+      \\
+      \I \obj{(\ttilde zero @)*(\ttilde nil @) |}
+      \\
+      \I \obj{(EXI[N L ; N*L <: SELF](\ttilde succ N)*(\ttilde cons (}\alpha\obj{*L))}
+      \\
+      \obj{]} 
+  \end{array}
+\]
 
-\paragraph{Relational selection.} Suppose the function \code{repeat} is applied to the hardcoded number two, 
-represented as \code{(\#succ \#succ \#zero)}. The system can infer the result to be a singleton type representing a single list,
+Using the \text{natList} relation, type inference then lifts the function repeat into its precise type form.
+
+\[
+  \obj{repeat} : \obj{ALL[T]T -> ALL[X]X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{]Y}
+\]
+
+Using this precise type form, type inference can go on to solve and check subtyping constraints generated from elimination forms 
+such as applications, or check that a program satisfies a particular specification.
+
+
+
+\paragraph{Relational selection.} Suppose the function \obj{repeat} is applied to the hardcoded number two, 
+represented as \obj{(\#succ \#succ \#zero)}. The system can infer the result to be a singleton type representing a single list,
 much like how Prolog evaluates logic programs.
 \begin{mathpar}
 \\
   \inferrule {} {
     \Delta \cdot \Gamma
     \vdash 
-    \code{repeat ()  (\#succ \#succ \#zero)}: \code{?cons (unit * ?cons (unit * ?nil))}
+    \obj{repeat @  (\ttilde succ \ttilde succ \ttilde zero @)}: \obj{\ttilde cons(@*(\ttilde cons(@*(\ttilde nil @))))}
   }
 \\
 \end{mathpar}
@@ -347,26 +363,26 @@ The next examples illustrate how the system can compose abstract properties to i
 which are not reproducible by dynamic semantics.
 
 
-\paragraph{Factoring.} Suppose the function \code{fromList}, which expects a list, 
-is applied to a list that's related to a natural number, as would be the result of \code{(repeat x n)},
-illustrated in the body of \code{fromNat}.
-The system must verify that the type of \code{(repeat x n)} is a subtype of the parameter type of \code{(fromList)}.
-The argument type of \code{(repeat x n)} is a type projected from a relation with an abstract natural number,
+\paragraph{Factoring.} Suppose the function \obj{fromList}, which expects a list, 
+is applied to a list that's related to a natural number, as would be the result of \obj{(repeat x n)},
+illustrated in the body of \obj{fromNat}.
+The system must verify that the type of \obj{(repeat x n)} is a subtype of the parameter type of \obj{(fromList)}.
+The argument type of \obj{(repeat x n)} is a type projected from a relation with an abstract natural number,
 since its arguments are not hardcoded.
 This abstract type information cannot be handled by dynamic semantics. 
 Despite these complexities, the the system is able to ensure that these abstract inferred types
-can safely be composed, by factoring \code{($nat\_list\ \alpha$)} into the weaker pair \code{($nat$ * $list\ \alpha$)}.
+can safely be composed, by factoring \obj{($nat\_list\ \alpha$)} into the weaker pair \obj{($nat$ * $list\ \alpha$)}.
 Once factored out, the list type of the argument type's relation can be projected and unified with the parameter's list type. 
 \begin{mathpar}
 \\
   \inferrule {
-    list\ \alpha = \code{induc[L] ?nil | ?cons ($\alpha$ * L)} 
+    list\ \alpha = \obj{induc[L] ?nil | ?cons ($\alpha$ * L)} 
     \\\\
-    \Delta \vdash \code{$nat\_list$\ X} \sqsubseteq \code{$nat$ * $list$\ X} 
+    \Delta \vdash \obj{$nat\_list$\ X} \sqsubseteq \obj{$nat$ * $list$\ X} 
     \\
-    \Delta \vdash \code{$list$\ X} \sqsubseteq \code{$list$ Y} 
+    \Delta \vdash \obj{$list$\ X} \sqsubseteq \obj{$list$ Y} 
   } {
-    \Delta \vdash \code{\{L with N * L <: $nat\_list$\ X\}} \sqsubseteq \code{$list$ Y} 
+    \Delta \vdash \obj{\{L with N * L <: $nat\_list$\ X\}} \sqsubseteq \obj{$list$ Y} 
   }
 \\
 \end{mathpar}
@@ -380,11 +396,11 @@ The induction hypothesis allows weakening the inductive component of the even ty
 \\
   \inferrule {
     \inferrule {
-      even = \code{induc[N] ?zero | ?succ ?succ N} 
+      even = \obj{induc[N] ?zero | ?succ ?succ N} 
       \\\\
-      \Delta \vdash \code{(?zero | ?succ ?succ $nat$)} \sqsubseteq nat 
+      \Delta \vdash \obj{(?zero | ?succ ?succ $nat$)} \sqsubseteq nat 
     } {
-      \Delta, \code{$even$ <: $nat$}  \vdash \code{(?zero | ?succ ?succ $even$)} \sqsubseteq nat 
+      \Delta, \obj{$even$ <: $nat$}  \vdash \obj{(?zero | ?succ ?succ $even$)} \sqsubseteq nat 
     }
   } {
     \Delta \vdash even \sqsubseteq nat 
@@ -404,22 +420,22 @@ by relational constraints in the inductive relations, which must be added to the
       even\_list\ \alpha =  
       \left(
       \begin{array}[]{@{} l}
-          \code{induc[EL]}
+          \obj{induc[EL]}
           \arcr
-          \hspace{4mm} \code{?zero * ?nil |}
+          \hspace{4mm} \obj{?zero * ?nil |}
           \arcr
-          \hspace{4mm} \code{\{?succ ?succ E * ?cons ?cons ($\alpha$ * L) with E * L <: EL\}}
+          \hspace{4mm} \obj{\{?succ ?succ E * ?cons ?cons ($\alpha$ * L) with E * L <: EL\}}
       \end{array}
       \right)
       \\\\
-      \Delta, \code{E * L <: $nat\_list$ unit} \vdash 
+      \Delta, \obj{E * L <: $nat\_list$ unit} \vdash 
       \left(
       \begin{array}[]{@{} l}
-        \code{?zero * ?nil |} 
+        \obj{?zero * ?nil |} 
         \arcr
-        \code{?succ ?succ E * }
+        \obj{?succ ?succ E * }
         \arcr
-        \hspace{4mm}\code{?cons (unit * ?cons (unit * L))}
+        \hspace{4mm}\obj{?cons (unit * ?cons (unit * L))}
       \end{array}
       \right)
       \sqsubseteq nat\_list
@@ -427,26 +443,26 @@ by relational constraints in the inductive relations, which must be added to the
       \left(
       \Delta, 
       \begin{array}[]{@{} l}
-        \code{$even\_list$ unit <:$nat\_list$ unit},
+        \obj{$even\_list$ unit <:$nat\_list$ unit},
         \arcr
-        \code{E * L <: $even\_list$ unit}
+        \obj{E * L <: $even\_list$ unit}
       \end{array}
       \right)
       \vdash 
       \left(
       \begin{array}[]{@{} l}
-        \code{?zero * ?nil |} 
+        \obj{?zero * ?nil |} 
         \arcr
-        \code{?succ ?succ E * }
+        \obj{?succ ?succ E * }
         \arcr
-        \hspace{4mm}\code{?cons (unit * ?cons (unit * L))}
+        \hspace{4mm}\obj{?cons (unit * ?cons (unit * L))}
       \end{array}
       \right)
       \sqsubseteq nat\_list
       % \\\\
     }
   } {
-    \Delta \vdash \code{($even\_list$ unit)} \sqsubseteq \code{($nat\_list$ unit)} 
+    \Delta \vdash \obj{($even\_list$ unit)} \sqsubseteq \obj{($nat\_list$ unit)} 
   }
 \\
 \end{mathpar}
@@ -454,18 +470,18 @@ by relational constraints in the inductive relations, which must be added to the
 
 
 \paragraph{Refinement.}
-Consider the function \code{fromBoth} that calls two functions on some variable of unknown value or type.  
+Consider the function \obj{fromBoth} that calls two functions on some variable of unknown value or type.  
 The same variable is used as an argument to two separate functions that have different parameter types.
 The type of the variable can be refined by intersecting both parameter types that it must satisfy.
 \begin{mathpar}
 \\
   \inferrule {} {
-    \Delta \cdot \Gamma \vdash \code{fromBoth} : \code{(uno : X) \& (dos : Y) -> $\hdots$} 
+    \Delta \cdot \Gamma \vdash \obj{fromBoth} : \obj{(uno : X) \& (dos : Y) -> $\hdots$} 
   }
 \\
 \end{mathpar}
 
-\paragraph{Path sensitivity.} Consider the function \code{max} that chooses the maximum of two natural numbers. 
+\paragraph{Path sensitivity.} Consider the function \obj{max} that chooses the maximum of two natural numbers. 
 The function must satisfy the property that the result is greater or equal to each of the inputs. 
 The system can infer this property by relying on multiple type inference mechanisms, including
 relational typing, path selection, refinement, and a special form of refinement that refines a type
@@ -487,26 +503,26 @@ the possible values of the argument.
     leq\_decide =  
     \left(
     \begin{array}[]{@{} l}
-        \code{induc[LED]} 
+        \obj{induc[LED]} 
         \arcr
-        \hspace{4mm} \code{\{?zero * \_ * ?true\} |}
+        \hspace{4mm} \obj{\{?zero * \_ * ?true\} |}
         \arcr
-        \hspace{4mm} \code{\{?succ X * ?succ Y * B  with X * Y * B <: LED\} |}
+        \hspace{4mm} \obj{\{?succ X * ?succ Y * B  with X * Y * B <: LED\} |}
         \arcr
-        \hspace{4mm} \code{\{?succ \_ * ?zero * ?false\}}
+        \hspace{4mm} \obj{\{?succ \_ * ?zero * ?false\}}
     \end{array}
     \right)
     \\\\
     max\_spec =  
     \left(
     \begin{array}[]{@{} l}
-        \code{X * Y -> Y \& \{Z with (X * Z * ?true) <: $leq\_decide$\} |}
+        \obj{X * Y -> Y \& \{Z with (X * Z * ?true) <: $leq\_decide$\} |}
         \arcr
-        \code{X * Y -> X \& \{Z with (Z * Y * ?false) <: $leq\_decide$\}}
+        \obj{X * Y -> X \& \{Z with (Z * Y * ?false) <: $leq\_decide$\}}
     \end{array}
     \right)
   } {
-    \Delta \cdot \Gamma \vdash \code{max} : max\_spec 
+    \Delta \cdot \Gamma \vdash \obj{max} : max\_spec 
   }
 \\
 \end{mathpar}
@@ -533,16 +549,16 @@ The existential type consists of multiple bound variables, a payload containing 
 and a subtyping constraint over the bound variables. 
 If the bound variables aren't indicated, then all variables in the payload are
 assumed to be bound variables. If the subtyping constraint isn't indicated, then it is assumed to 
-be a tautology, such as (\code{unit<:unit}).
+be a tautology, such as (\obj{unit<:unit}).
 The universal type consists of a bound variable, the variable's upper bound, and a payload. If the upper
-bound is not indicated, it is assumed to be the top type (\code{top}).
+bound is not indicated, it is assumed to be the top type (\obj{top}).
 The typing semantics rely on a typing environment for keeping track of typings of term variables.
 The subtyping semantics rely on subtyping environment for keeping track of and constraints on type variables. 
 Note that the syntax of the subtyping environment allows an upper bound constraint over a type
 rather than merely a type variable to allow for relational constraints. 
 
 
-\TODO{update tag syntax: \code{cons;cons;e:cons//cons//T}\ \ \code{nil;():nil//unit}}
+\TODO{update tag syntax: \obj{cons;cons;e:cons//cons//T}\ \ \obj{nil;():nil//unit}}
 
 
 \subsection{Typing}
@@ -564,28 +580,28 @@ The let-binding rule allows for prenex polymorphism by generalizing via subtypin
 % \end{flalign*}
 % \begin{mathpar}
 %   \inferrule[var] { 
-%     \code{$x$:$\tau$} \in \Gamma
+%     \obj{$x$:$\tau$} \in \Gamma
 %   } {
 %     \Gamma \entails x \hastype \tau 
 %   } 
 
 %   \inferrule[unit] { 
 %   } {
-%     \Gamma \entails \code{()} \hastype \code{unit}
+%     \Gamma \entails \obj{()} \hastype \obj{unit}
 %   } 
 
 
 %   \inferrule[tag] { 
 %     \Gamma \entails e \hastype \tau 
 %   } {
-%      \Gamma \entails (\code{\#$l$ $e$}) \hastype (\code{?$l$ $\tau$})
+%      \Gamma \entails (\obj{\#$l$ $e$}) \hastype (\obj{?$l$ $\tau$})
 %   }
 
 %   \inferrule[rec] { 
 %     \bigand_i \Gamma \entails e_i \hastype  \tau_i  
 %   } {
-%     \Gamma \entails (\widebar{\code{@$l_i$=$e_i$}}^i)
-%     \hastype \code{\&}_i({\code{$l_i$:$\tau_i$}})
+%     \Gamma \entails (\widebar{\obj{@$l_i$=$e_i$}}^i)
+%     \hastype \obj{\&}_i({\obj{$l_i$:$\tau_i$}})
 %   } 
 
 %   \inferrule[fun] {
@@ -593,22 +609,22 @@ The let-binding rule allows for prenex polymorphism by generalizing via subtypin
 %     \\
 %     \bigand_i \Gamma;\Gamma_i \entails e_i \hastype \tau'_i
 %   } {
-%     \Gamma \entails (\widebar{\code{path $m_i$=>$e_i$}}^i)
-%     : \code{\&}_i(\code{$\tau_i$->$\tau'_i$})  
+%     \Gamma \entails (\widebar{\obj{path $m_i$=>$e_i$}}^i)
+%     : \obj{\&}_i(\obj{$\tau_i$->$\tau'_i$})  
 %   } 
 
 %   \inferrule[proj] {
-%     \Gamma \entails e \hastype \code{$l$:$\tau$}
+%     \Gamma \entails e \hastype \obj{$l$:$\tau$}
 %   } {
-%     \Gamma \entails \code{$e$.$l$} \hastype \tau
+%     \Gamma \entails \obj{$e$.$l$} \hastype \tau
 %   } 
 
 %   \inferrule[app] { 
-%     \Gamma \entails e_f \hastype \code{$\tau'$->$\tau$}
+%     \Gamma \entails e_f \hastype \obj{$\tau'$->$\tau$}
 %     \\
 %     \Gamma \entails e_a \hastype \tau'
 %   } {
-%     \Gamma \entails \code{$e_f$($e_a$)} \hastype \tau
+%     \Gamma \entails \obj{$e_f$($e_a$)} \hastype \tau
 %   } 
 
 %   \inferrule[let] { 
@@ -616,16 +632,16 @@ The let-binding rule allows for prenex polymorphism by generalizing via subtypin
 %     \\
 %     \bullet \entails  \tau_a \subtypes \tau'
 %     \\
-%     \Gamma;\code{$x$:$\tau_a$} \entails e_b \hastype \tau
+%     \Gamma;\obj{$x$:$\tau_a$} \entails e_b \hastype \tau
 %   } {
-%     \Gamma \entails (\code{let $x$:$\tau'$ = $e_a$ in $e_b$}) 
+%     \Gamma \entails (\obj{let $x$:$\tau'$ = $e_a$ in $e_b$}) 
 %     \hastype \tau
 %   } 
 
 %   \inferrule[fix] { 
-%     \Gamma \entails e \hastype \code{$\tau$->$\tau$}
+%     \Gamma \entails e \hastype \obj{$\tau$->$\tau$}
 %   } {
-%     \Gamma \entails \code{loop($e$)} \hastype \tau
+%     \Gamma \entails \obj{loop($e$)} \hastype \tau
 %   } 
 
 %   \inferrule[subsump] { 
@@ -681,11 +697,11 @@ the variable's upper bound.
 % \begin{mathpar}
 
 %   \inferrule[anteUnion] {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_3$}
 %     \\
-%     \Delta \entails \tau_l \subtypes \code{$\tau_2$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_2$->$\tau_3$}
 %   } {
-%     \Delta \entails \tau_l \subtypes \code{($\tau_1$|$\tau_2$)->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \obj{($\tau_1$|$\tau_2$)->$\tau_3$}
 %   }
 
 %   \inferrule[leftUnion] {
@@ -693,27 +709,27 @@ the variable's upper bound.
 %     \\
 %     \Delta \entails \tau_2 \subtypes \tau_r
 %   } {
-%     \Delta \entails \code{$\tau_1$|$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \obj{$\tau_1$|$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[rightUnion1] {
 %     \Delta \entails \tau_l \subtypes \tau_1
 %   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[rightUnion2] {
 %     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$|$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$|$\tau_2$}
 %   }
 
 %   \inferrule[ConsqInter] {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_2$}
 %     \\
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->$\tau_3$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_3$}
 %   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$->($\tau_2$\&$\tau_3$)}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->($\tau_2$\&$\tau_3$)}
 %   }
 
 %   \inferrule[rightInter] {
@@ -721,19 +737,19 @@ the variable's upper bound.
 %     \\
 %     \Delta \entails \tau_l \subtypes \tau_2
 %   } {
-%     \Delta \entails \tau_l \subtypes \code{$\tau_1$\&$\tau_2$}
+%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$\&$\tau_2$}
 %   }
 
 %   \inferrule[leftInter1] {
 %     \Delta \entails \tau_1 \subtypes \tau_r
 %   } {
-%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \obj{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftInter2] {
 %     \Delta \entails \tau_2 \subtypes \tau_r
 %   } {
-%     \Delta \entails \code{$\tau_1$\&$\tau_2$} \subtypes \tau_r
+%     \Delta \entails \obj{$\tau_1$\&$\tau_2$} \subtypes \tau_r
 %   }
 
 %   \inferrule[leftExis] { 
@@ -744,7 +760,7 @@ the variable's upper bound.
 %     \rightsquigarrow
 %     (\Delta;\Delta' \entails \tau \subtypes \tau_r)
 %   } { 
-%     \Delta \entails \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \Delta \entails \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %     \subtypes \tau_r
 %   }
 
@@ -756,7 +772,7 @@ the variable's upper bound.
 %     \Delta;\Delta' \entails \tau_1 \subtypes \tau_2
 %   } { 
 %     \Delta \entails \tau_l
-%     \subtypes \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
+%     \subtypes \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
 %   }
 
 %   \inferrule[refl] {
@@ -769,17 +785,17 @@ the variable's upper bound.
 %     \\
 %     \Delta \entails \tau_2 \subtypes \tau_4
 %   } {
-%     \Delta \entails \code{$\tau_1$->$\tau_2$} \subtypes \code{$\tau_3$->$\tau_4$}
+%     \Delta \entails \obj{$\tau_1$->$\tau_2$} \subtypes \obj{$\tau_3$->$\tau_4$}
 %   } 
 
 
 %   \inferrule[rightUniv] { 
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
+%     \Delta;\obj{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
 %   } { 
 %     \Delta \entails \tau_l
-%     \subtypes \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \subtypes \obj{[$\alpha$<:$\tau'$]$\tau$}
 %   }
 
 %   \inferrule[leftUniv] { 
@@ -789,12 +805,12 @@ the variable's upper bound.
 %     \\
 %     \Delta;\Delta' \entails \alpha \subtypes \tau'
 %   } { 
-%     \Delta \entails \code{[$\alpha$<:$\tau'$]$\tau$}
+%     \Delta \entails \obj{[$\alpha$<:$\tau'$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[cons] {
-%     \code{$\tau_l$<:$\tau_r$} \in \Delta
+%     \obj{$\tau_l$<:$\tau_r$} \in \Delta
 %   } {
 %     \Delta \entails \tau_l \subtypes \tau_r
 %   }
@@ -804,17 +820,17 @@ the variable's upper bound.
 %   \inferrule[leftInduc] { 
 %     \alpha \not\in \F{freeTVs}(\tau_r)
 %     \\
-%     \Delta;\code{$\alpha$<:$\tau_r$} \entails \tau 
+%     \Delta;\obj{$\alpha$<:$\tau_r$} \entails \tau 
 %     \subtypes \tau_r
 %   } { 
-%     \Delta \entails \code{induc[$\alpha$]$\tau$}
+%     \Delta \entails \obj{induc[$\alpha$]$\tau$}
 %     \subtypes \tau_r
 %   }
 
 %   \inferrule[field] {
 %     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \entails \code{$l$:$\tau_1$} \subtypes \code{$l$:$\tau_2$}
+%     \Delta \entails \obj{$l$:$\tau_1$} \subtypes \obj{$l$:$\tau_2$}
 %   } 
 
 
@@ -822,17 +838,17 @@ the variable's upper bound.
 %   \inferrule[rightInduc] {
 %     \alpha \not\in \F{freeTVs}(\tau_l)
 %     \\
-%     \Delta;\code{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
+%     \Delta;\obj{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
 %     \tau_l \subtypes \tau
 %   } {
 %     \Delta \entails \tau_l
-%     \subtypes \code{induc[$\alpha$]$\tau$}
+%     \subtypes \obj{induc[$\alpha$]$\tau$}
 %   }
 
 %   \inferrule[tag] {
 %     \Delta \entails \tau_1 \subtypes \tau_2
 %   } {
-%     \Delta \entails (\code{?$l$ $\tau_1$}) \subtypes (\code{?$l$ $\tau_2$})
+%     \Delta \entails (\obj{?$l$ $\tau_1$}) \subtypes (\obj{?$l$ $\tau_2$})
 %   } 
 % \end{mathpar}
 % \caption{Subtyping}
@@ -962,15 +978,15 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{unit}
 %     \\
-%     \I \B{case } \code{()} : \{(\Omega, \Delta, \code{unit})\}
+%     \I \B{case } \obj{()} : \{(\Omega, \Delta, \obj{unit})\}
 
 %     \\
 
 %     \I \C{variable}
 %     \\
-%     \I \B{case } \code{$x$} : 
+%     \I \B{case } \obj{$x$} : 
 %     \\
-%     \I\I \B{match } (\code{$x$:\_} \in \Gamma)
+%     \I\I \B{match } (\obj{$x$:\_} \in \Gamma)
 %     \\
 %     \I\I \B{case } \F{some}(\tau) : \{(\Omega, \Delta, \tau)\}
 %     \\
@@ -980,21 +996,21 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{tag}
 %     \\
-%     \I \B{case } \code{\#$l$ $e$}  :  
+%     \I \B{case } \obj{\#$l$ $e$}  :  
 %     \\
 %     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e): 
 %      \\
-%     \I\I\I \{(\Omega, \Delta, \code{?$l$ $\tau$})\}
+%     \I\I\I \{(\Omega, \Delta, \obj{?$l$ $\tau$})\}
 
 %     \\
 
 %     \I \C{record}
 %     \\
-%     \I \B{case } \widebar{\code{@$l$=$e$}}  :  
+%     \I \B{case } \widebar{\obj{@$l$=$e$}}  :  
 %     \\
-%     \I\I T \leftarrow \{(\Omega, \Delta, \code{top})\}
+%     \I\I T \leftarrow \{(\Omega, \Delta, \obj{top})\}
 %     \\
-%     \I\I \B{for } (\code{@$l$=$e$}) \leftarrow \widebar{\code{@$l$=$e$}}:
+%     \I\I \B{for } (\obj{@$l$=$e$}) \leftarrow \widebar{\obj{@$l$=$e$}}:
 %     \\
 %     \I\I\I T \leftarrow (
 %     \\
@@ -1002,7 +1018,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I\I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e): 
 %     \\
-%     \I\I\I\I\I \{(\Omega, \Delta, \code{($l$:$\tau$)\&$\tau_{res}$})\}
+%     \I\I\I\I\I \{(\Omega, \Delta, \obj{($l$:$\tau$)\&$\tau_{res}$})\}
 %     \\
 %     \I\I\I )
 %     \\
@@ -1012,11 +1028,11 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{function}
 %     \\
-%     \I \B{case } (\widebar{\code{path $m$=>$e$}})  :  
+%     \I \B{case } (\widebar{\obj{path $m$=>$e$}})  :  
 %     \\
-%     \I\I T \leftarrow \{(\Omega, \Delta, \code{top})\}
+%     \I\I T \leftarrow \{(\Omega, \Delta, \obj{top})\}
 %     \\
-%     \I\I \B{for } (\code{path $m$=>$e$}) \leftarrow (\widebar{\code{path $m$=>$e$}}): 
+%     \I\I \B{for } (\obj{path $m$=>$e$}) \leftarrow (\widebar{\obj{path $m$=>$e$}}): 
 %     \\
 %     \I\I\I \Omega' \leftarrow \emptyset
 %     \\
@@ -1028,7 +1044,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I\I\I \Omega' \leftarrow \Omega' \cup \{\alpha\} 
 %     \\
-%     \I\I\I\I \Gamma' \leftarrow \Gamma';\code{$x$:$\alpha$}
+%     \I\I\I\I \Gamma' \leftarrow \Gamma';\obj{$x$:$\alpha$}
 %     \\
 %     \I\I\I T \leftarrow (
 %     \\
@@ -1042,7 +1058,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I\I\I\I\I \Omega \leftarrow \Omega \backslash \Omega'
 %     \\
-%     \I\I\I\I\I\I \{(\Omega, \Delta, \code{($\tau_{m}$->$\tau_{e}$)\&$\tau_{res}$})\}
+%     \I\I\I\I\I\I \{(\Omega, \Delta, \obj{($\tau_{m}$->$\tau_{e}$)\&$\tau_{res}$})\}
 %     \\
 %     \I\I\I )
 %     \\
@@ -1052,20 +1068,20 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{projection}
 %     \\
-%     \I \B{case } \code{$e$.$l$} :  
+%     \I \B{case } \obj{$e$.$l$} :  
 %     \\
 %     \I\I \alpha \leftarrow \F{freshTV}()
 %     \\
 %     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e):
 %     \\
-%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\code{$l$:$\alpha$})):
+%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\obj{$l$:$\alpha$})):
 %     \\
 %     \I\I\I \{(\Omega, \Delta, \alpha)\}
 % \end{array}
 % \begin{array}[t]{@{} l}
 %     \I \C{application}
 %     \\
-%     \I \B{case } \code{$e_f$($e_a$)} :  
+%     \I \B{case } \obj{$e_f$($e_a$)} :  
 %     \\
 %     \I\I \alpha \leftarrow \F{freshTV}()
 %     \\
@@ -1075,7 +1091,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I \B{for } (\Omega, \Delta, \tau_f) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e_f):
 %     \\
-%     \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_f, (\code{$\tau_a$->$\alpha$}))
+%     \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_f, (\obj{$\tau_a$->$\alpha$}))
 %     \\
 %     \I\I\I \B{if } \F{empty}(C) \B{ then } \B{break} \B{ else }
 %     \\
@@ -1089,7 +1105,7 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{let}
 %     \\
-%     \I \B{case } (\code{let $x$ : $\tau_p$ = $e_a$ in $e_b$}) :  
+%     \I \B{case } (\obj{let $x$ : $\tau_p$ = $e_a$ in $e_b$}) :  
 %     \\
 %     \I\I \Omega_{stale} \leftarrow \F{staleTVs}()
 %     \\
@@ -1103,7 +1119,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I\I\I\I \alpha \leftarrow \F{freshTV}()
 %     \\
-%     \I\I\I\I\I \F{infer}(\Omega, \Delta, (\Gamma;\code{$x$:[$\alpha$<:$\tau_{\Delta}$]$\alpha$}), e_b)
+%     \I\I\I\I\I \F{infer}(\Omega, \Delta, (\Gamma;\obj{$x$:[$\alpha$<:$\tau_{\Delta}$]$\alpha$}), e_b)
 %     \\
 %     \I\I\I ) 
 %     \\
@@ -1113,7 +1129,7 @@ Finally, the implication type is projected from the constructed relation and gen
 
 %     \I \C{fix}
 %     \\
-%     \I \B{case } \code{loop($e$)} :  
+%     \I \B{case } \obj{loop($e$)} :  
 %     \\
 %     \I\I \Omega_{stale} \leftarrow \F{staleTVs}()
 %     \\
@@ -1123,7 +1139,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e):
 %     \\
-%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\code{$\alpha_{IH}$->$\alpha_{IC}$})): 
+%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\obj{$\alpha_{IH}$->$\alpha_{IC}$})): 
 %     \\
 %     \I\I\I \tau_{rel} \leftarrow \F{makeRelation}(\Omega_{stale}, \Delta, \tau_{IH}, \tau_{IC})
 %     \\
@@ -1135,7 +1151,7 @@ Finally, the implication type is projected from the constructed relation and gen
 %     \\
 %     \I\I\I \tau_{res} \leftarrow (
 %     \\
-%     \I\I\I\I \code{[$\alpha$<:\{$\alpha_1$->$\alpha_2$ with ($\alpha_1$*$\alpha_2$)<:$\tau_{rel}$\}] }
+%     \I\I\I\I \obj{[$\alpha$<:\{$\alpha_1$->$\alpha_2$ with ($\alpha_1$*$\alpha_2$)<:$\tau_{rel}$\}] }
 %     \\
 %     \I\I\I\I \alpha
 %     \\
@@ -1268,7 +1284,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I \B{case } \tau_l, \alpha : 
 %     \\
-%     \I\I \B{match } (\code{$\alpha$<:\_} \in \Delta)
+%     \I\I \B{match } (\obj{$\alpha$<:\_} \in \Delta)
 %     \\
 %     \I\I \B{case } \F{some}(\tau) :
 %     \\
@@ -1278,9 +1294,9 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I\I\I \B{else if } (\alpha \in \Omega) \wedge 
 %     \\
-%     \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\code{$\tau_l$|$\tau$})) 
+%     \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\obj{$\tau_l$|$\tau$})) 
 %     \\
-%     \I\I\I \B{then } \{\Delta;\code{$\alpha$<:($\tau_l$|$\tau$)}\}
+%     \I\I\I \B{then } \{\Delta;\obj{$\alpha$<:($\tau_l$|$\tau$)}\}
 %     \\
 %     \I\I\I \B{else } \emptyset 
 %     \\
@@ -1296,7 +1312,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I\I\I \B{else if } \F{constraintWF}(\Delta, \alpha, \tau_l) \B{ then }
 %     \\
-%     \I\I\I\I \{\Delta;\code{$\alpha$<:$\tau_l$}\}
+%     \I\I\I\I \{\Delta;\obj{$\alpha$<:$\tau_l$}\}
 %     \\
 %     \I\I\I \B{else } \emptyset 
 % \end{array}
@@ -1305,7 +1321,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %   \\
 %   \I \B{case } \alpha, \tau_r : 
 %   \\
-%   \I\I \B{match } (\code{$\alpha$<:\_} \in \Delta)
+%   \I\I \B{match } (\obj{$\alpha$<:\_} \in \Delta)
 %   \\
 %   \I\I \B{case } \F{some}(\tau) :
 %   \\
@@ -1315,9 +1331,9 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %   \\
 %   \I\I\I \B{else if } (\alpha \in \Omega) \wedge 
 %   \\
-%   \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\code{$\tau_r$\&$\tau$})) 
+%   \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\obj{$\tau_r$\&$\tau$})) 
 %   \\
-%   \I\I\I \B{then } \{\Delta;\code{$\alpha$<:($\tau_r$\&$\tau$)}\}
+%   \I\I\I \B{then } \{\Delta;\obj{$\alpha$<:($\tau_r$\&$\tau$)}\}
 %   \\
 %   \I\I\I \B{else } \emptyset 
 %   \\
@@ -1333,7 +1349,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %   \\
 %   \I\I\I \B{else if } \F{constraintWF}(\Delta, \alpha, \tau_r) \B{ then }
 %   \\
-%   \I\I\I\I \{\Delta;\code{$\alpha$<:$\tau_r$}\}
+%   \I\I\I\I \{\Delta;\obj{$\alpha$<:$\tau_r$}\}
 %   \\
 %   \I\I\I \B{else } \emptyset 
 
@@ -1362,7 +1378,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{left existential}
 %     \\
-%     \I \B{case } \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}, \tau_r : 
+%     \I \B{case } \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}, \tau_r : 
 %     \\
 %     \I\I (\widebar{\alpha}, [\tau, \tau_1]) \leftarrow \F{rename}(\widebar{\alpha}, [\tau, \tau_1])
 %     \\
@@ -1390,11 +1406,11 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{right universal}
 %     \\
-%     \I \B{case } \tau_l, (\code{[$\alpha$<:$\tau'$]$\tau$}) : 
+%     \I \B{case } \tau_l, (\obj{[$\alpha$<:$\tau'$]$\tau$}) : 
 %     \\
 %     \I\I ([\alpha], [\tau]) \leftarrow \F{rename}([\alpha], [\tau])
 %     \\
-%     \I\I \Delta \leftarrow \Delta;\code{$\alpha$<:$\tau'$}
+%     \I\I \Delta \leftarrow \Delta;\obj{$\alpha$<:$\tau'$}
 %     \\
 %     \I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau)
 %     \\
@@ -1404,9 +1420,9 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{left induction}
 %     \\
-%     \I \B{case } \code{induc[$\alpha$]$\tau$}, \tau_r :
+%     \I \B{case } \obj{induc[$\alpha$]$\tau$}, \tau_r :
 %     \\
-%     \I\I \tau_{fac} \leftarrow \F{factor}(\code{induc[$\alpha$]$\tau$})
+%     \I\I \tau_{fac} \leftarrow \F{factor}(\obj{induc[$\alpha$]$\tau$})
 %     \\
 %     \I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_{fac}, \tau_r)
 %     \\
@@ -1414,7 +1430,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I\I \B{else }
 %     \\
-%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\code{$\alpha$<:$\tau_r$}, \tau) 
+%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\obj{$\alpha$<:$\tau_r$}, \tau) 
 %     \\
 %     \I\I\I \F{unify}(\Omega, \Delta, \tau, \tau_r)
 % \end{array}
@@ -1422,27 +1438,27 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{antecedent union}
 %     \\
-%     \I \B{case } \tau_l, (\code{($\tau_1$|$\tau_2$)->$\tau_{res}$}) : 
+%     \I \B{case } \tau_l, (\obj{($\tau_1$|$\tau_2$)->$\tau_{res}$}) : 
 %     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\code{$\tau_1$->$\tau_{res}$})):
+%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_1$->$\tau_{res}$})):
 %     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\code{$\tau_2$->$\tau_{res}$})) 
+%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_2$->$\tau_{res}$})) 
 
 %     \\
 
 %     \I \C{consequent intersection}
 %     \\
-%     \I \B{case } \tau_l, (\code{$\tau_{arg}$->($\tau_1$\&$\tau_2$)}) : 
+%     \I \B{case } \tau_l, (\obj{$\tau_{arg}$->($\tau_1$\&$\tau_2$)}) : 
 %     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\code{$\tau_{arg}$->$\tau_1$})):
+%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_{arg}$->$\tau_1$})):
 %     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\code{$\tau_{arg}$->$\tau_2$}))
+%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_{arg}$->$\tau_2$}))
 
 %     \\
 
 %     \I \C{left union}
 %     \\
-%     \I \B{case } (\code{$\tau_1$|$\tau_2$}), \tau_r : 
+%     \I \B{case } (\obj{$\tau_1$|$\tau_2$}), \tau_r : 
 %     \\
 %     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_1, \tau_r):
 %     \\
@@ -1452,7 +1468,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{right intersection}
 %     \\
-%     \I \B{case } \tau_l, (\code{$\tau_1$\&$\tau_2$}) : 
+%     \I \B{case } \tau_l, (\obj{$\tau_1$\&$\tau_2$}) : 
 %     \\
 %     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau_1):
 %     \\
@@ -1484,7 +1500,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{right existential}
 %     \\
-%     \I \B{case } \tau_l, \code{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}} : 
+%     \I \B{case } \tau_l, \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}} : 
 %     \\
 %     \I\I (\widebar{\alpha}, [\tau, \tau_1]) \leftarrow \F{rename}(\widebar{\alpha}, [\tau, \tau_1])
 %     \\
@@ -1496,7 +1512,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I \C{left universal}
 %     \\
-%     \I \B{case } (\code{[$\alpha$<:$\tau'$]$\tau$}), \tau_r : 
+%     \I \B{case } (\obj{[$\alpha$<:$\tau'$]$\tau$}), \tau_r : 
 %     \\
 %     \I\I ([\alpha], [\tau]) \leftarrow \F{rename}([\alpha], [\tau])
 %     \\
@@ -1508,19 +1524,19 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{right induction}
 %     \\
-%     \I \B{case } \tau_l, \code{induc[$\alpha$]$\tau$} :
+%     \I \B{case } \tau_l, \obj{induc[$\alpha$]$\tau$} :
 %     \\
 %     \I\I \tau_l \leftarrow \F{sub}(\Delta, \tau_l)
 %     \\
 %     \I\I \B{if } \F{reducible}(\tau_l, \tau_r) \B{ then }
 %     \\
-%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\code{$\alpha$<:$\tau_r$}, \tau) 
+%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\obj{$\alpha$<:$\tau_r$}, \tau) 
 %     \\
 %     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, \tau)
 %     \\
 %     \I\I \B{else }
 %     \\
-%     \I\I\I \B{match } (\code{$\tau_l$<:\_} \in \Delta)
+%     \I\I\I \B{match } (\obj{$\tau_l$<:\_} \in \Delta)
 %     \\
 %     \I\I\I \B{case } \F{some}(\tau_{cache}) :
 %     \\
@@ -1530,14 +1546,14 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 %     \\
 %     \I\I\I\I \B{if } \F{constraintWF}(\Delta, \tau_l, \tau_r) \B{ then }
 %     \\
-%     \I\I\I\I\I \{\Delta;\code{$\tau_l$<:$\tau_r$}\}
+%     \I\I\I\I\I \{\Delta;\obj{$\tau_l$<:$\tau_r$}\}
 %     \\
 %     \I\I\I\I \B{else } \emptyset 
 % \end{array}
 % \begin{array}[t]{@{} l}
 %     \I \C{right union}
 %     \\
-%     \I \B{case } \tau_l, (\code{$\tau_1$|$\tau_2$}) : 
+%     \I \B{case } \tau_l, (\obj{$\tau_1$|$\tau_2$}) : 
 %     \\
 %     \I\I \F{unify}(\Omega, \Delta, \tau_l, \tau_1) \cup \F{unify}(\Omega, \Delta, \tau_l, \tau_2) 
 
@@ -1545,7 +1561,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{left intersection}
 %     \\
-%     \I \B{case } (\code{$\tau_1$\&$\tau_2$}), \tau_r : 
+%     \I \B{case } (\obj{$\tau_1$\&$\tau_2$}), \tau_r : 
 %     \\
 %     \I\I \F{unify}(\Omega, \Delta, \tau_1, \tau_r) \cup \F{unify}(\Omega, \Delta, \tau_2\ \tau_r) 
 
@@ -1553,19 +1569,19 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{top}
 %     \\
-%     \I \B{case } \_, \code{top} : \{\Delta\}
+%     \I \B{case } \_, \obj{top} : \{\Delta\}
 
 %     \\
 
 %     \I \C{bottom}
 %     \\
-%     \I \B{case } \code{bot}, \_ : \{\Delta\}
+%     \I \B{case } \obj{bot}, \_ : \{\Delta\}
 
 %     \\
 
 %     \I \C{implication}
 %     \\
-%     \I \B{case } (\code{$\tau_{par}$->$\tau_{body}$}), (\code{$\tau_{arg}$->$\tau_{res}$}) : 
+%     \I \B{case } (\obj{$\tau_{par}$->$\tau_{body}$}), (\obj{$\tau_{arg}$->$\tau_{res}$}) : 
 %     \\
 %     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_{arg}, \tau_{par}):
 %     \\
@@ -1575,7 +1591,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{field}
 %     \\
-%     \I \B{case } (\code{$l_1$:$\tau_1$}), (\code{$l_2$:$\tau_2$}) :
+%     \I \B{case } (\obj{$l_1$:$\tau_1$}), (\obj{$l_2$:$\tau_2$}) :
 %     \\
 %     \I\I \B{if } l_1 = l_2 \B{ then } \F{unify}(\Omega, \Delta, \tau_1, \tau_2)
 %     \\
@@ -1585,7 +1601,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 %     \I \C{tag}
 %     \\
-%     \I \B{case } (\code{?$l_1$ $\tau_1$}), (\code{?$l_2$ $\tau_2$}) :
+%     \I \B{case } (\obj{?$l_1$ $\tau_1$}), (\obj{?$l_2$ $\tau_2$}) :
 %     \\
 %     \I\I \B{if } l_1 = l_2 \B{ then } \F{unify}(\Omega, \Delta, \tau_1, \tau_2)
 %     \\
@@ -1597,6 +1613,9 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 % \label{fig:unifyContinue}
 % \end{figure*}
 
+\section{Correctness}
+
+\TODO{introduce model typing and soundness properties}
 
 \section{Experiments}
 
@@ -1604,11 +1623,16 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 \section{Related work}
 
+
+\paragraph{Tree interpolation}
+Exemplified by CHC duality solver.
+
 \paragraph{Hindley-Milner type inference}
 Exemplified by ML.
 
 \paragraph{Logic programming.}
 Exemplified by Prolog. 
+
 
 Similar: both have backchaining. 
 
@@ -1680,6 +1704,12 @@ Different: RLT isn't cartesian
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Syntax %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\TODO{separate out syntactic sugar like pairs, pipe, and let, parens}
+
+\TODO{consider if BOT and TOP should be sugar for unconstrained univesal and existential, respectively}
+
 \begin{definition}(Expression syntax)
   \label{definition:expression_syntax}
   \[\begin{array}[t]{r@{}l}
@@ -1687,54 +1717,54 @@ Different: RLT isn't cartesian
     & 
     \is 
     \begin{array}[t]{@{}l}
-      \code{$x$} \sep 
-      \code{@} \sep
-      \code{\ttilde$l$ $e$} \sep 
+      \obj{$x$} \sep 
+      \obj{@} \sep
+      \obj{\ttilde$l$ $e$} \sep 
       R \sep
-      \code{$e$,$e$} \sep
+      \obj{$e$,$e$} \sep
       F \sep 
-      \code{$e$.$l$} \sep
-      \code{($e$)($e$)} \sep
+      \obj{$e$.$l$} \sep
+      \obj{($e$)($e$)} \sep
       \\
-      \code{$e$ |> $e$} \sep
-      \code{loop($e$)} \sep
-      \code{let $x$:$\tau$ = $e$ in $e$} \sep
-      \code{($e$)}
+      \obj{$e$ |> $e$} \sep
+      \obj{loop($e$)} \sep
+      \obj{let $x$:$\tau$ = $e$ in $e$} \sep
+      \obj{($e$)}
     \end{array}
     \\
     \nonterm{R} & \is \epsilon \sep R\ r
     \\
-    \nonterm{r} & \is \code{\$$l$=>$e$}
+    \nonterm{r} & \is \obj{\$$l$=>$e$}
     \\
     \nonterm{F} & \is \epsilon \sep F\ f
     \\
-    \nonterm{f} & \is \code{\$$p$=>$e$}
+    \nonterm{f} & \is \obj{\$$p$=>$e$}
     \\
     \\
     \nonterm{p} & \is 
-      \code{$x$} \sep
-      \code{@} \sep
-      \code{\ttilde$l$ $p$} \sep
+      \obj{$x$} \sep
+      \obj{@} \sep
+      \obj{\ttilde$l$ $p$} \sep
       K \sep
-      \code{$p$,$p$} \sep
-      \code{($p$)} 
+      \obj{$p$,$p$} \sep
+      \obj{($p$)} 
     \\
     \nonterm{K} & \is \epsilon \sep K\ k
     \\
-    \nonterm{k} & \is \code{\$$l$=>$p$}
+    \nonterm{k} & \is \obj{\$$l$=>$p$}
     \\
     \\
     \nonterm{v} & \is 
-      \code{@} \sep
-      \code{\ttilde$l$ $v$} \sep
+      \obj{@} \sep
+      \obj{\ttilde$l$ $v$} \sep
       G \sep
-      \code{$v$,$v$} \sep
-      \code{($v$)} \sep
+      \obj{$v$,$v$} \sep
+      \obj{($v$)} \sep
       F 
     \\
     \nonterm{G} & \is \epsilon \sep G\ g
     \\
-    \nonterm{g} & \is \code{\$$l$=>$v$}
+    \nonterm{g} & \is \obj{\$$l$=>$v$}
     \\
     \\
     \nonterm{\Sigma} & \is \epsilon \sep \Sigma\ \sigma
@@ -1750,103 +1780,124 @@ Different: RLT isn't cartesian
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{\ttilde$l$ $e$} \rightsquigarrow \code{\ttilde$l$ $e'$}
+      \obj{\ttilde$l$ $e$} \rightsquigarrow \obj{\ttilde$l$ $e'$}
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{$R$\$$l$=>$e$} \rightsquigarrow \code{$R$\$$l$=>$e'$}
+      \obj{$R$\$$l$=>$e$} \rightsquigarrow \obj{$R$\$$l$=>$e'$}
     }
 
     \inferrule {
       R \rightsquigarrow R'
     } {
-      \code{$R$\$$l$=>$v$} \rightsquigarrow \code{$R'$\$$l$=>$v$}
+      \obj{$R$\$$l$=>$v$} \rightsquigarrow \obj{$R'$\$$l$=>$v$}
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{$e$.$l$} \rightsquigarrow \code{$e'$.$l$}
+      \obj{$e$.$l$} \rightsquigarrow \obj{$e'$.$l$}
     }
 
     \inferrule {
-      \code{\$$l$=>$v$} \in G 
+      \obj{\$$l$=>$v$} \in G 
       \\
-      \forall\ e .\ \code{\$$l$=>$e$} \in G \implies e = v
+      \forall\ e .\ \obj{\$$l$=>$e$} \in G \implies e = v
     } {
-      \code{$G$.$l$} \rightsquigarrow v
+      \obj{$G$.$l$} \rightsquigarrow v
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{($e$)($e_a$)} \rightsquigarrow \code{($e'$)($e_a$)}
+      \obj{($e$)($e_a$)} \rightsquigarrow \obj{($e'$)($e_a$)}
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{($v$)($e$)} \rightsquigarrow \code{($v$)($e'$)}
+      \obj{($v$)($e$)} \rightsquigarrow \obj{($v$)($e'$)}
     }
 
 
     \inferrule {
-      \code{$F$($v$)} \rightsquigarrow e'
+      \obj{$F$($v$)} \rightsquigarrow e'
       \\
       \text{FV}(e) \subseteq \text{FV}(p)
     } {
-      \code{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e' 
+      \obj{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e' 
     }
 
     \inferrule {
       p \equiv v \given \Sigma 
       \\
-      \forall e'.\ \neg F\code{($v$)} \rightsquigarrow e' 
+      \forall e'.\ \neg F\obj{($v$)} \rightsquigarrow e' 
     } {
-      \code{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
+      \obj{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e[\Sigma]
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \code{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \code{let $x$:$\tau$ = $e'$ in $e_k$}
+      \obj{loop(e)} \rightsquigarrow \obj{loop(e')}
     }
 
     \inferrule {
     } {
-      \code{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
+      \obj{loop(\$$x$=>$e$)} \rightsquigarrow e[x \slash \obj{loop(\$$x$=>$e$)}]
     }
 
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \code{loop(e)} \rightsquigarrow \code{loop(e')}
-    }
 
-    \inferrule {
-    } {
-      \code{loop(\$$x$=>$e$)} \rightsquigarrow e[x \slash \code{loop(\$$x$=>$e$)}]
-    }
 
-    \inferrule {
-      \code{\$left=>$e_l$ \$right=>$e_r$} \rightsquigarrow e' 
-    } {
-      \code{$e_l$,$e_r$} \rightsquigarrow e' 
-    }
+  \end{mathpar}
+\end{definition}
 
+\begin{definition}\boxed{e \rightsquigarrow e}\ Progression sugar
+  \begin{mathpar}
     \inferrule {
-      \code{($e_b$)($e_a$)} \rightsquigarrow e' 
+      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
     } {
-      \code{$e_a$ |> $e_b$} \rightsquigarrow e' 
+      e_a \obj{|>} e_b \rightsquigarrow e' 
     }
 
     \inferrule {
       e \rightsquigarrow e' 
     } {
-      \code{($e$)} \rightsquigarrow e' 
+      \obj{(} e \obj{)} \rightsquigarrow e' 
     }
+
+    \inferrule {
+      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
+    } {
+      e_l\obj{,}e_r \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \obj{(\$\ttilde true @=>}e_t \obj{\ \$\ttilde false @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+    } {
+      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
+    }
+
+
+    \inferrule {
+      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
+      \rightsquigarrow e'
+    } {
+      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
+    }
+
+    % \inferrule {
+    %   e \rightsquigarrow e'
+    % } {
+    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
+    % }
+
+    % \inferrule {
+    % } {
+    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
+    % }
   \end{mathpar}
 \end{definition}
 
@@ -1856,30 +1907,26 @@ Different: RLT isn't cartesian
   \[\begin{array}[t]{r@{}l}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
-      \code{$\alpha$} \sep 
-      \code{@} \sep
-      \code{\ttilde$l$ $\tau$} \sep 
-      \code{$l$->$\tau$} \sep 
-      \code{$\tau$->$\tau$} \sep
-      \code{$\tau$|$\tau$} \sep
-      \code{$\tau$\&$\tau$} \sep
-      \code{$\tau$\textbackslash$\tau$} \sep 
+      \alpha \sep
+      \obj{@} \sep
+      \obj{\ttilde}l\ \tau \sep 
+      l\obj{->}\tau \sep 
+      \tau\obj{->}\tau \sep 
+      \tau\obj{|}\tau \sep 
+      \tau\obj{\&}\tau \sep 
+      \tau\obj{\textbackslash}\tau \sep 
       \\
-      \code{EXI[$\Alpha$ $Q$]$\tau$} \sep 
-      \code{ALL[$\Alpha$ $Q$]$\tau$} \sep 
-      \code{FIX[$\alpha$;$\tau$]}
+      \obj{EXI[}\Alpha \ \Delta \obj{]} \tau \sep 
+      \obj{ALL[}\Alpha \ \Delta \obj{]} \tau \sep 
+      \obj{FIX[}\alpha \obj{;} \tau \obj{]}
     \end{array}
     \\
     \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
     \\
-    \nonterm{Q} & \is \epsilon \sep Q\ q
-    \\
-    \nonterm{q} & \is \code{.$\tau$<:$\tau$} 
-    \\
-    \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
     \\
-    \nonterm{\delta} & \is \tau <: \tau 
+    \nonterm{\delta} & \is \obj{;} \tau \obj{<:} \tau
+    \\
     \\
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
     \\
@@ -1905,7 +1952,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ \pi
     \\
-    \nonterm{\pi} & \is \left< M, \Delta, \tau \code{->} \tau\right>
+    \nonterm{\pi} & \is \left< M, \Delta, \tau \obj{->} \tau\right>
     \\
     \\
     \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
@@ -1920,13 +1967,13 @@ Different: RLT isn't cartesian
     \inferrule {
       \left< M, \Delta \right> \in Z
     } {
-      \Gamma \entails \code{@} \hastype \code{@} \given Z 
+      \Gamma \entails \obj{@} \hastype \obj{@} \given Z 
     }
 
     \inferrule {
       \left< M, \Delta \right> \in Z
       \\
-      \code{$x$:$\tau$} \in \Gamma
+      \obj{$x$:$\tau$} \in \Gamma
     } {
       \Gamma \entails x \hastype \tau \given Z 
     }
@@ -1934,7 +1981,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \Gamma \entails e \hastype \tau \given Z 
     } {
-      \Gamma \entails \code{\ttilde $l$ $e$} \hastype \code{\ttilde $l$ $\tau$} \given Z 
+      \Gamma \entails \obj{\ttilde $l$ $e$} \hastype \obj{\ttilde $l$ $\tau$} \given Z 
     }
 
     \inferrule {
@@ -1944,7 +1991,7 @@ Different: RLT isn't cartesian
       \\
       \Gamma \entails e \hastype \tau_1 \given Z_1
     } {
-      \Gamma \entails R\ \code{*$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
+      \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
     }
 
     \inferrule {
@@ -1952,7 +1999,7 @@ Different: RLT isn't cartesian
       \\
       \Gamma \entails \Pi \equiv \Tau 
     } {
-      \Gamma \entails F \hastype \code{\&}(\Tau) \given Z
+      \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
     }
 
     \inferrule {
@@ -1960,9 +2007,9 @@ Different: RLT isn't cartesian
       \\
       Z_0 \looparrowright Z_1
       \\
-      \tau_0 \subtypes \code{$l$:$\alpha$} \given Z_1
+      \tau_0 \subtypes \obj{$l$:$\alpha$} \given Z_1
     } {
-      \Gamma \entails \code{$e$.$l$} \hastype \alpha \given Z_1
+      \Gamma \entails \obj{$e$.$l$} \hastype \alpha \given Z_1
     }
 
     \inferrule {
@@ -1974,21 +2021,21 @@ Different: RLT isn't cartesian
       \\
       Z_1 \looparrowright Z_2
       \\
-      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
+      \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
     } {
-      \Gamma \entails \code{$e_0$($e_1$)} \hastype \alpha \given Z_2
+      \Gamma \entails \obj{$e_0$($e_1$)} \hastype \alpha \given Z_2
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \code{$\alpha_{h^+}$->$\tau$} \given Z_0
+      \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given Z_0
       \\
       Z_0 \looparrowright Z_1
       \\
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
-      \Gamma \entails \code{loop($e$)} \hastype \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} \given Z_0
+      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} \given Z_0
     }
   \end{mathpar}
 \end{definition}
@@ -2007,8 +2054,8 @@ Different: RLT isn't cartesian
       \\
       \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
     } {
-      Z_0, \Gamma_0 \entails F\ \code{\$$p$=>$e$} \liftfun 
-      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \code{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
+      Z_0, \Gamma_0 \entails F\ \obj{\$$p$=>$e$} \liftfun 
+      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \obj{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
     }
   \end{mathpar}
 \end{definition}
@@ -2029,6 +2076,11 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
+\TODO{bifurcate proof subtyping into either duals or weakening vs strengthening rules}
+
+\TODO{separate out semantic sugar like combination of implication with union/intersection}
+
+\TODO{add color to program and type syntax for readabilitiy}
 \begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof subtyping)
   \label{definition:proof_subtyping}
   \begin{mathpar}
@@ -2039,22 +2091,22 @@ Different: RLT isn't cartesian
 
     \inferrule {
     } {
-      \code{BOT} \subtypes \tau_r \given M, \Delta
+      \obj{BOT} \subtypes \tau_r \given M, \Delta
     }
 
     \inferrule {
     } {
-      \tau_l \subtypes \code{TOP} \given M, \Delta
+      \tau_l \subtypes \obj{TOP} \given M, \Delta
     }
 
     \inferrule {
       \tau_l
       \subtypes
-      \code{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
       \given M, \Delta
     } {
       \tau_l \subtypes 
-      \code{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
       \given M, \Delta
     }
 
@@ -2069,7 +2121,7 @@ Different: RLT isn't cartesian
       \tau_{lr} \subtypes \tau_r
       \given M_1, \Delta_1
     } {
-      \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+      \obj{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
       \given M_1, \Delta_1
     }
 
@@ -2084,26 +2136,26 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_{rr}
       \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$} 
+      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
       \given M_1, \Delta_1
     }
 
     \inferrule {
       \tau_l \subtypes
-      \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
       \given M, \Delta
     } {
       \tau_l \subtypes 
-      \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
       \given M, \Delta
     }
 
     \inferrule {
       \tau_l \subtypes
-      \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
       \given M, \Delta
     } {
-      \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
       \given M, \Delta
     }
 
@@ -2119,7 +2171,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M_1, \Delta_1
     } {
-      \code{EXI[$\Alpha$ $Q$]$\tau_l$} \subtypes \tau_r
+      \obj{EXI[}\Alpha\ Q \obj{]}\tau_l \subtypes \tau_r
       \given M_1, \Delta_1
     }
 
@@ -2135,7 +2187,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{ALL[$\Alpha$ $Q$]$\tau_r$}
+      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
       \given M_1, \Delta_1
     }
 
@@ -2150,7 +2202,7 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \\
-      \code{|$(\Tau)$} <: \tau_r
+      \obj{|$(\Tau)$} <: \tau_r
       \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
@@ -2172,8 +2224,8 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \\
-      \Delta_{rel}\ \code{$\tau_l$<:\&$(\Tau)$} 
-      % \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+      \Delta_{rel}\ \obj{$\tau_l$<:\&$(\Tau)$} 
+      % \sqcup \widebar{\obj{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
       \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
@@ -2191,7 +2243,7 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \code{\&}(\tau) \subtypes \tau_r
+      \obj{\&}(\tau) \subtypes \tau_r
       \given M_1, \Delta_1
     } {
       \alpha \subtypes \tau_r
@@ -2207,7 +2259,7 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l \subtypes \code{|}(\Tau)
+      \tau_l \subtypes \obj{|}(\Tau)
       \given M_1, \Delta_1
     } {
       \tau_l \subtypes \alpha
@@ -2224,7 +2276,7 @@ Different: RLT isn't cartesian
       Q
       \given M_1, \Delta_1
     } {
-      \code{ALL[$\Alpha$ $Q$]$\tau_l$}
+      \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
       \subtypes 
       \tau_r
       \given M_1, \Delta_1 
@@ -2242,7 +2294,7 @@ Different: RLT isn't cartesian
     } {
       \tau_l
       \subtypes 
-      \code{EXI[$\Alpha$ $Q$]$\tau_r$}
+      \obj{EXI[$\Alpha$ $Q$]$\tau_r$}
       \given M_1, \Delta_1
     }
 
@@ -2250,7 +2302,7 @@ Different: RLT isn't cartesian
       \tau_{ll} \subtypes \tau_r
       \given M, \Delta
     } {
-      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
       \given M, \Delta
     }
 
@@ -2258,7 +2310,7 @@ Different: RLT isn't cartesian
       \tau_{lr} \subtypes \tau_r
       \given M, \Delta
     } {
-      \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
       \given M, \Delta
     }
 
@@ -2266,7 +2318,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_{rl}
       \given M, \Delta
     } {
-      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
       \given M, \Delta
     }
 
@@ -2274,7 +2326,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_{rr}
       \given M, \Delta
     } {
-      \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+      \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
       \given M, \Delta
     }
   \end{mathpar}
@@ -2298,37 +2350,37 @@ Different: RLT isn't cartesian
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
       \given M, \Delta
     } {
-      \code{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \obj{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
       \given M, \Delta
     }
 
     \inferrule {
-      \text{decidable}(\Delta_0, \tau_l, \code{FIX[$\alpha$]$\tau_r$})
+      \text{decidable}(\Delta_0, \tau_l, \obj{FIX[$\alpha$]$\tau_r$})
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l \subtypes \tau_r[\alpha \slash \code{FIX[$\alpha$]$\tau_r$}]
+      \tau_l \subtypes \tau_r[\alpha \slash \obj{FIX[$\alpha$]$\tau_r$}]
       \given M, \Delta_1
     } {
-      \tau_l \subtypes \code{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \obj{FIX[$\alpha$]$\tau_r$}
       \given M, \Delta_1
     }
 
     \inferrule {
       m \in \text{FTV}(\tau_l) \\ m \in M_0
       \\
-      \text{norm}(\code{$\tau_l$<:FIX[$\alpha$.$\tau_r$]}) = \code{$\tau_l'$<:FIX[$\alpha$.$\tau_r'$]}
+      \text{norm}(\obj{$\tau_l$<:FIX[$\alpha$.$\tau_r$]}) = \obj{$\tau_l'$<:FIX[$\alpha$.$\tau_r'$]}
       \\\\
-      \code{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
+      \obj{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
       \\
       M_0 \preceq M_1
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau \subtypes \code{FIX[$\alpha$.$\tau_r'$]}
+      \tau \subtypes \obj{FIX[$\alpha$.$\tau_r'$]}
       \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \code{FIX[$\alpha$.$\tau_r$]}
+      \tau_l \subtypes \obj{FIX[$\alpha$.$\tau_r$]}
       \given M_1, \Delta_1
     }
 
@@ -2340,24 +2392,24 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l[\Omega] \subtypes \code{FIX[$\alpha$.$\tau_r$]}
+      \tau_l[\Omega] \subtypes \obj{FIX[$\alpha$.$\tau_r$]}
       \given M_1, \Delta_1
       \\
-      \text{WF}(\tau_l\code{<:}\code{FIX[$\alpha$.$\tau_r$]})
+      \text{WF}(\tau_l\obj{<:}\obj{FIX[$\alpha$.$\tau_r$]})
     } {
-      \tau_l \subtypes \code{FIX[$\alpha$.$\tau_r$]}
-      \given M_1, \Delta_1 \ \tau_l<:\code{FIX[$\alpha$.$\tau_r$]}
+      \tau_l \subtypes \obj{FIX[$\alpha$.$\tau_r$]}
+      \given M_1, \Delta_1 \ \tau_l<:\obj{FIX[$\alpha$.$\tau_r$]}
     }
 
     \inferrule {
-      M, \Delta \entails \tau_l \subtypes \code{$\tau_r$|$\tau_n$}
+      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
     } {
       M, \Delta \entails 
-      \code{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
+      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
     }
 
     \inferrule {
-      \text{DF}(\code{$\tau_r$\textbackslash$\tau_n$})
+      \text{DF}(\obj{$\tau_r$\textbackslash$\tau_n$})
       \\
       \tau_l \subtypes \tau_r
       \given M, \Delta
@@ -2369,7 +2421,7 @@ Different: RLT isn't cartesian
       \implies
       \neg(\tau_l \subtypes \tau_n \given M', \Delta')
     } {
-      \tau_l \subtypes \code{$\tau_r$\textbackslash$\tau_n$}
+      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
       \given M, \Delta
     }
 
@@ -2377,7 +2429,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M, \Delta 
     } {
-      \code{\ttilde$l$ $\tau_l$} \subtypes \code{\ttilde$l$ $\tau_r$}
+      \obj{\ttilde$l$ $\tau_l$} \subtypes \obj{\ttilde$l$ $\tau_r$}
       \given M, \Delta 
     }
 
@@ -2385,7 +2437,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M, \Delta 
     } {
-      \code{$l$:$\tau_l$} \subtypes \code{$l$:$\tau_r$}
+      \obj{$l$:$\tau_l$} \subtypes \obj{$l$:$\tau_r$}
       \given M, \Delta 
     }
 
@@ -2400,7 +2452,7 @@ Different: RLT isn't cartesian
       \tau_{lr} \subtypes \tau_{rr}
       \given M_1, \Delta_1 
     } {
-      \code{$\tau_{ll}$->$\tau_{lr}$} \subtypes \code{$\tau_{rl}$->$\tau_{rr}$}
+      \obj{$\tau_{ll}$->$\tau_{lr}$} \subtypes \obj{$\tau_{rl}$->$\tau_{rr}$}
       \given M_1, \Delta_1 
     }
   \end{mathpar}
@@ -2435,7 +2487,7 @@ Different: RLT isn't cartesian
       \\
       \tau_l \subtypes \tau_r \given M_1, \Delta_1
     } {
-      Q \code{.$\tau_l$<:$\tau_r$}
+      Q \obj{.$\tau_l$<:$\tau_r$}
       \given
       M_1, \Delta_1
     }
@@ -2556,33 +2608,33 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\code{|}(\Tau) = \tau}
+\begin{definition}\boxed{\obj{|}(\Tau) = \tau}
   \[\begin{array}{rclr}
-    \code{|}(\epsilon)
+    \obj{|}(\epsilon)
     &=& 
-    \code{BOT}
+    \obj{BOT}
     & \C{empty} 
     \\
 
-    \code{|}(\Tau\ \tau)
+    \obj{|}(\Tau\ \tau)
     &=& 
-    \code{|}(\Tau) \code{|} \tau
+    \obj{|}(\Tau) \obj{|} \tau
     & \C{step} 
     \\
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\code{\&}(\Tau) = \tau}
+\begin{definition}\boxed{\obj{\&}(\Tau) = \tau}
   \[\begin{array}{rclr}
-    \code{\&}(\epsilon)
+    \obj{\&}(\epsilon)
     &=& 
-    \code{TOP}
+    \obj{TOP}
     & \C{empty} 
     \\
 
-    \code{\&}(\Tau\ \tau)
+    \obj{\&}(\Tau\ \tau)
     &=& 
-    \code{\&}(\Tau) \code{\&} \tau
+    \obj{\&}(\Tau) \obj{\&} \tau
     & \C{step} 
     \\
   \end{array}\]
@@ -3003,7 +3055,7 @@ Different: RLT isn't cartesian
     } {
       M, \Delta, \Alpha\ \alpha 
       \entails 
-      \Omega\ \alpha \slash \code{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
+      \Omega\ \alpha \slash \obj{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
     }
   \end{mathpar}
 \end{definition}
@@ -3025,15 +3077,15 @@ Different: RLT isn't cartesian
       \\\\
       \Delta \entails N \sqcup M \sqcup A_l \sqcup A_r \pitchfork \Delta' 
       \\
-      N, M, \Delta' \entails \tau_l\code{->}\tau_r \equiv^{+} \tau
+      N, M, \Delta' \entails \tau_l\obj{->}\tau_r \equiv^{+} \tau
     } {
-      N, M \entails \Pi \left<M, \Delta, \tau_l \code{->} \tau_r \right> \equiv \Tau\ \tau 
+      N, M \entails \Pi \left<M, \Delta, \tau_l \obj{->} \tau_r \right> \equiv \Tau\ \tau 
     }
   \end{mathpar}
 \end{definition}
 
 \begin{definition}
-\boxed{N \entails \alpha \cdot Z \cdot \code{$\alpha$->$\alpha$} \fallingdotseq \alpha \cdot \Tau}
+\boxed{N \entails \alpha \cdot Z \cdot \obj{$\alpha$->$\alpha$} \fallingdotseq \alpha \cdot \Tau}
 \ (Fixpoint duality)
 
 \TODO{Note the reason for excluding rigids and skolems from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
@@ -3043,14 +3095,14 @@ Different: RLT isn't cartesian
     \inferrule {
     } {
       N \entails 
-      \alpha_{h^+} \cdot \epsilon \cdot \code{$\alpha_l$->$\alpha_r$} 
+      \alpha_{h^+} \cdot \epsilon \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \epsilon 
     }
 
     \inferrule {
       N \entails 
-      \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+      \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \Tau
       \\\\
@@ -3060,17 +3112,17 @@ Different: RLT isn't cartesian
       \\
       \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
       \\\\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\\\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
       N \entails 
-      \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \code{$\alpha_l$->$\alpha_r$} 
+      \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \Tau\ \tau
     }
@@ -3152,32 +3204,32 @@ Different: RLT isn't cartesian
 
 
 
-\begin{definition}\boxed{\text{outer}(+|-) = \code{ALL}|\code{EXI}}
+\begin{definition}\boxed{\text{outer}(+|-) = \obj{ALL}|\obj{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{outer}(+) 
     &=& 
-    \code{EXI} 
+    \obj{EXI} 
     & \C{positive} 
     \\
     \text{outer}(-) 
     &=& 
-    \code{ALL} 
+    \obj{ALL} 
     & \C{negative} 
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{inner}(+|-) = \code{ALL}|\code{EXI}}
+\begin{definition}\boxed{\text{inner}(+|-) = \obj{ALL}|\obj{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{inner}(+) 
     &=& 
-    \code{ALL} 
+    \obj{ALL} 
     & \C{positive} 
     \\
     \text{inner}(-) 
     &=& 
-    \code{EXI} 
+    \obj{EXI} 
     & \C{negative} 
   \end{array}\]
 \end{definition}
@@ -3190,16 +3242,16 @@ Different: RLT isn't cartesian
     \\
     \text{quantify}^{+|-}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{inner}(+|-)\code{[}\Alpha_i\code{ }\Delta_i\code{]}\tau
+    \text{inner}(+|-)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}\tau
     \\
     \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
-    \text{outer}(+|-)\code{[}\Alpha_o\code{ }\Delta_o\code{]}\tau
+    \text{outer}(+|-)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}\tau
     \\
     \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{outer}(+|-)\code{[}\Alpha_o\code{ }\Delta_o\code{]}
-    \text{inner}(+|-)\code{[}\Alpha_i\code{ }\Delta_i\code{]}
+    \text{outer}(+|-)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}
+    \text{inner}(+|-)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}
     \tau
   \end{array}\]
 \end{definition}
@@ -3334,13 +3386,13 @@ Different: RLT isn't cartesian
   $ 
     \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
 
-    \item \Z $\B{case } e = \code{@} \I \tau = \code{@}$ 
+    \item \Z $\B{case } e = \obj{@} \I \tau = \obj{@}$ 
       \item \Z\Z $\B{let } \Omega$ by definition
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{@} \hastype \code{@}$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{@} \hastype \obj{@}$ by definition
       \item \Z\Z $\Omega, \Gamma \satisfies e \hastype \tau$ by substitution
       \item \Z\Z $\exists \Omega .\ \Omega, \Gamma \satisfies e \hastype \tau$ by witness 
 
-    \item \Z $\B{case } e = x \I \code{$x$:$\tau$} \in \Gamma$ 
+    \item \Z $\B{case } e = x \I \obj{$x$:$\tau$} \in \Gamma$ 
     \item \Z $\B{wrt } x$ 
       \item \Z\Z $\B{let } \Omega$ by definition
       \item \Z\Z $\Omega, \Gamma \satisfies x \hastype \tau$  by definition
@@ -3350,9 +3402,9 @@ Different: RLT isn't cartesian
   \item \Z $\B{case } 
     \Gamma \entails e' \hastype \tau' \given Z
     \I
-    \tau = \code{\ttilde $l$ $\tau'$}
+    \tau = \obj{\ttilde $l$ $\tau'$}
     \I
-    e = \code{\ttilde $l$ $e'$} 
+    e = \obj{\ttilde $l$ $e'$} 
   $ 
   \item \Z $\B{hypo } 
       \Gamma \entails e' \hastype \tau' \given Z  
@@ -3365,7 +3417,7 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e' \hastype \tau'
     $ by application
     \item \Z\Z $
-      \Omega, \Gamma \satisfies \code{\ttilde $l$ $e'$} \hastype \code{\ttilde $l$ $\tau'$}
+      \Omega, \Gamma \satisfies \obj{\ttilde $l$ $e'$} \hastype \obj{\ttilde $l$ $\tau'$}
     $ by definition
     \item \Z\Z $
       \Omega, \Gamma \satisfies e \hastype \tau 
@@ -3390,7 +3442,7 @@ Different: RLT isn't cartesian
   %     \\
   %     \Gamma \entails e \hastype \tau_1 \given Z_1
   %   } {
-  %     \Gamma \entails R\ \code{*$l$=$e$} \hastype \tau_0\ \code{\&}\ \code{$l$:$\tau_1$} \given Z_1
+  %     \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
   %   }
 
   %   \inferrule {
@@ -3398,7 +3450,7 @@ Different: RLT isn't cartesian
   %     \\
   %     \Gamma \entails \Pi \equiv \Tau 
   %   } {
-  %     \Gamma \entails F \hastype \code{\&}(\Tau) \given Z
+  %     \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
   %   }
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3408,9 +3460,9 @@ Different: RLT isn't cartesian
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau_0 \subtypes \code{$l$->$\alpha$} \given Z_1
+    \tau_0 \subtypes \obj{$l$->$\alpha$} \given Z_1
     \I
-    e = \code{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
+    e = \obj{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
   $
    
   \item \Z $\B{hypo } 
@@ -3428,18 +3480,18 @@ Different: RLT isn't cartesian
       \B{let }
       M\ \Delta
       \B{ s.t. }
-      \tau_0 \subtypes \code{$l$->$\alpha$} \given M, \Delta
+      \tau_0 \subtypes \obj{$l$->$\alpha$} \given M, \Delta
     $ by theorem \ref{theorem:proof_subtyping_choice}
 
 
     \item \Z\Z $
-      \Omega \satisfies \tau_0  \subtypes \code{$l$->$\alpha$}
+      \Omega \satisfies \tau_0  \subtypes \obj{$l$->$\alpha$}
     $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
     \item \Z\Z $
-      \Omega, \Gamma \satisfies e_0 \hastype \code{$l$->$\alpha$}
+      \Omega, \Gamma \satisfies e_0 \hastype \obj{$l$->$\alpha$}
     $ by theorem \ref{theorem:model_subtyping_elimination} 
     \item \Z\Z $
-      \Omega, \Gamma \satisfies \code{$e_0$.$l$} \hastype \alpha 
+      \Omega, \Gamma \satisfies \obj{$e_0$.$l$} \hastype \alpha 
     $ by theorem \ref{theorem:model_subtyping_record_elimination} 
     \item \Z\Z $
       \Omega, \Gamma \satisfies e \hastype \tau
@@ -3456,7 +3508,7 @@ Different: RLT isn't cartesian
     \I
     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
     \I
-    e = \code{$e_0$($e_1$)} 
+    e = \obj{$e_0$($e_1$)} 
     \I 
     \tau = \alpha 
     \I
@@ -3465,7 +3517,7 @@ Different: RLT isn't cartesian
   \item \Z $ 
     Z_1 \looparrowright Z_2
     \I
-    \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given Z_2
+    \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
   $ 
   \item \Z $\B{hypo } 
     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
@@ -3487,16 +3539,16 @@ Different: RLT isn't cartesian
     \item \Z\Z $
       \B{let } M\ \Delta
       \B{ s.t. }
-      \tau_0 \subtypes \code{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
+      \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
     $ by theorem \ref{theorem:proof_subtyping_choice} 
     \item \Z\Z $
-      \Omega, \Gamma \satisfies \tau_0 \subtypes \code{$\tau_1$->$\alpha$} 
+      \Omega, \Gamma \satisfies \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} 
     $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
     \item \Z\Z $
-      \Omega \satisfies e_0 \hastype \code{$\tau_1$->$\alpha$} 
+      \Omega \satisfies e_0 \hastype \obj{$\tau_1$->$\alpha$} 
     $ by theorem \ref{theorem:model_subtyping_elimination} 
     \item \Z\Z $
-      \Omega, \Gamma \satisfies \code{$e_0$($e_1$)} \hastype \alpha
+      \Omega, \Gamma \satisfies \obj{$e_0$($e_1$)} \hastype \alpha
     $ by theorem \ref{theorem:model_typing_implication_elimination} 
     \item \Z\Z $
       \Omega, \Gamma \satisfies e \hastype \tau
@@ -3506,37 +3558,37 @@ Different: RLT isn't cartesian
     $ by substitution 
 
   \item \Z $\B{case } 
-    e = \code{loop($e'$)} 
+    e = \obj{loop($e'$)} 
   $ 
   \item \Z $\contin  
-    \tau = \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
+    \tau = \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$} 
   $
   \item \Z $\contin 
     Z = Z_0 
   $
   \item \Z $\contin  
-    \Gamma \entails e' \hastype \code{$\alpha_{h^+}$->$\tau'$} \given Z_0
+    \Gamma \entails e' \hastype \obj{$\alpha_{h^+}$->$\tau'$} \given Z_0
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau' \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+    \tau' \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
   \item \Z $\contin  
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $
   \item \Z $\B{hypo } 
     \forall \Omega .\ \Omega \satisfies Z_0 \implies
-    \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
+    \Omega, \Gamma \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau'$}
   $ 
   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
     \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies Z$
       \item \Z\Z\Z $\Omega \satisfies Z_0$ by substitution
       \item \Z\Z\Z $
-        \Omega, \Gamma \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau'$}
+        \Omega, \Gamma \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau'$}
       $ by instantiation and application
       \item \Z\Z\Z $
         \Omega \satisfies \tau' \subtypes 
-        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$}
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r$}
       $ by theorem \ref{theorem:fixpoint_duality_soundness}
 
       \item \Z\Z\Z $
@@ -3544,11 +3596,11 @@ Different: RLT isn't cartesian
       $ by substitution  
 
       \item \Z\Z\Z $
-        \Omega \satisfies e' \hastype \code{$\alpha_{h^+}$->$\tau$}
+        \Omega \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau$}
       $ by theorem \ref{theorem:model_subtyping_elimination} 
 
       \item \Z\Z\Z $
-        \Omega \satisfies \code{loop($e'$)} \hastype \tau 
+        \Omega \satisfies \obj{loop($e'$)} \hastype \tau 
       $ by theorem \ref{theorem:model_typing_implication_independence}
 
       \item \Z\Z\Z $
@@ -3568,7 +3620,7 @@ Different: RLT isn't cartesian
   \label{theorem:fixpoint_duality_soundness}
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       \\
       \text{FTV}(\tau) \subseteq N
       \\
@@ -3576,12 +3628,12 @@ Different: RLT isn't cartesian
       \\
       \alpha_r \notin N
       \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \Omega \satisfies 
       \tau
       \subtypes
-      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
     } 
   \end{mathpar}
   \TODO{...}
@@ -3597,14 +3649,14 @@ Different: RLT isn't cartesian
     \inferrule { 
       Z_0 \looparrowright Z_1
       \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \forall \tau .\ 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given Z_0
     } 
   \end{mathpar}
@@ -3612,20 +3664,20 @@ Different: RLT isn't cartesian
   \item $\B{assume }
     Z_0 \looparrowright Z_1
     \I
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $ 
   \item \Z $\B{induct on }
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \code{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $
   \item \Z $\B{case }
     Z_1 = \epsilon \I \Tau = \epsilon
   $
     \item \Z\Z $\B{for } \tau$
       \item \Z\Z\Z $\B{assume }
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       $
         \item \Z\Z\Z\Z $
-          \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given \epsilon 
+          \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given \epsilon 
         $ by substitution
 
         \item \Z\Z\Z\Z $
@@ -3634,20 +3686,20 @@ Different: RLT isn't cartesian
 
         \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
       \item \Z\Z\Z $
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
         \tau
         \subtypes
-        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
         \given Z_0
       $ by implication
     \item \Z\Z $
       \forall \tau .\ 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given Z_0
     $ by generalization 
   \item \Z $\B{case }
@@ -3655,7 +3707,7 @@ Different: RLT isn't cartesian
   $
   \item \Z $\contin
     N \entails 
-    \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+    \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
     \fallingdotseq 
     \alpha_{h^-} \cdot \Tau_i
   $
@@ -3667,7 +3719,7 @@ Different: RLT isn't cartesian
     M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
   $
   \item \Z $\contin
-    \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+    \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
   $
   \item \Z $\contin
     N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
@@ -3675,21 +3727,21 @@ Different: RLT isn't cartesian
     \Delta \entails \Alpha \pitchfork \Delta_i  
   $
   \item \Z $\contin
-    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
   $
   \item \Z $\B{hypo }
     N \entails 
-    \alpha_{h^+} \cdot Z \cdot \code{$\alpha_l$->$\alpha_r$} 
+    \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
     \fallingdotseq 
     \alpha_{h^-} \cdot \Tau_i
     \implies
     \\
     \forall \tau .\ 
-    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z
+    \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z
     \implies
     \tau
     \subtypes
-    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
+    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
     \given Z_0
   $
   \item \Z $\B{wrt }
@@ -3697,46 +3749,46 @@ Different: RLT isn't cartesian
   $
 
     \item \Z\Z $\B{for } \tau \B{ assume }
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
     $
       \item \Z\Z\Z $
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
       $ by substitution
 
       \item \Z\Z\Z $
-        \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       $ by theorem \ref{theorem:proof_subtyping_decomposition}
 
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r'$} 
         \given Z_0
       $ by instantiation and application 
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r'$} 
         \given Z_0
       $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
     \item \Z\Z $
       \forall \tau .\ 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
       \given Z_0
     $ by implication and generalization 
 
 
   \item \Z $
     \forall \tau .\ 
-    \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given Z_1
+    \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
     \implies
     \tau
     \subtypes
-    \code{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
+    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$.|$(\Tau)$]]$\alpha_r'$} 
     \given Z_0
   $ by induction
   \item $\square$ by implication
@@ -3749,9 +3801,9 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$.|$(\Tau_i)$]]$\alpha_r$} 
       \\\\
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\\\
       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
@@ -3759,18 +3811,18 @@ Different: RLT isn't cartesian
       \\
       \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
       \\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
     } {
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|$(\Tau_i\ \tau_i)$]]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3782,7 +3834,7 @@ Different: RLT isn't cartesian
   \label{theorem:universe_proof_typing_case_soundnes}
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\\\
       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
@@ -3790,18 +3842,18 @@ Different: RLT isn't cartesian
       \\
       \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\code{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\code{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
       \\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
     } {
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau_i$]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau_i$]]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3816,17 +3868,17 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau$)]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau$)]]$\alpha_r$} 
       \\
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau$]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.$\tau$]]$\alpha_r$} 
     } {
       \Omega \satisfies
       \tau
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau\ \tau$)]]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$.|($\Tau\ \tau$)]]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3841,7 +3893,7 @@ Different: RLT isn't cartesian
 
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \code{$\alpha_l$->$\alpha_r$} \given M, \Delta
+      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M, \Delta
       \\
       \Delta \entails \alpha_l \subtypes \Tau_l 
       \\
@@ -3851,9 +3903,9 @@ Different: RLT isn't cartesian
       \\
       \text{FTV}(\tau) \subseteq \Alpha
       \\\\
-      N, M, \Delta \sqcup \Delta' \given \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau
+      N, M, \Delta \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau
       \\
-      N, M, \Delta_i \sqcup \Delta' \given \code{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau_i
+      N, M, \Delta_i \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau_i
     } {
       \Omega \satisfies \tau \subtypes \tau_i 
       \land
@@ -3874,9 +3926,9 @@ Different: RLT isn't cartesian
 %       M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
 %       \\
 %     } {
-%       \code{\&$(\Tau_l)$->|$(\Tau_r)$}
+%       \obj{\&$(\Tau_l)$->|$(\Tau_r)$}
 %       \subtypes
-%       \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
+%       \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
 %       \given M, \Delta
 %     } 
 %   \end{mathpar}
@@ -3890,9 +3942,9 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule { 
     } {
-      \code{$\tau_l$->$\tau_r$}
+      \obj{$\tau_l$->$\tau_r$}
       \subtypes
-      \code{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
       \given M, \Delta
     } 
   \end{mathpar}
@@ -3909,7 +3961,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       M, \Delta, \Delta \entails \alpha \subtypes \Tau 
     } {
-     \alpha \subtypes \code{\&$(\Tau)$} \given \left<M, \Delta\right>
+     \alpha \subtypes \obj{\&$(\Tau)$} \given \left<M, \Delta\right>
     } 
   \end{mathpar}
   Proof: 
@@ -3924,7 +3976,7 @@ Different: RLT isn't cartesian
       M, \Delta, \Delta \entails \Tau \subtypes \alpha
       \\
     } {
-     \code{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
+     \obj{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
     } 
   \end{mathpar}
   Proof: 
@@ -3966,11 +4018,11 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_implication_independence}
   \begin{mathpar}
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$->$\tau_r$} 
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$->$\tau_r$} 
       \\
       \Omega \satisfies \tau_r
     } {
-      \Omega, \Gamma \satisfies \code{loop($e$)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \obj{loop($e$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof: 
@@ -3983,13 +4035,13 @@ Different: RLT isn't cartesian
 %   \label{theorem:fix_duality}
 %   \begin{mathpar}
 %     \inferrule { 
-%       \tau \subtypes \code{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+%       \tau \subtypes \obj{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
 %       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \code{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \obj{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
 %     } {
-%       \code{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+%       \obj{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
 %       \subtypes
-%       \code{$\alpha_1$->$\alpha_2$}
+%       \obj{$\alpha_1$->$\alpha_2$}
 %       \given Z_1
 %     } 
 %   \end{mathpar}
@@ -4057,50 +4109,50 @@ Different: RLT isn't cartesian
   \label{theorem:model_subtyping_record_elimination}
   \begin{mathpar}
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
     } {
-      \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+      \Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
     } 
   \end{mathpar}
   Proof: 
   \item $\B{assume } 
-    \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+    \Omega, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
   $ 
     \item \Z $\B{induct on } 
-      \Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
     $ 
     \item \Z $\B{case }
       e = G
       \I
-      \code{\$$l$=>$v$} \in G
+      \obj{\$$l$=>$v$} \in G
       \I
       \Omega, \Gamma \satisfies v \hastype \tau
       \I
-      \forall v' .\ \code{\$$l$=>$v'$} \in G \implies v' = v 
+      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v 
     $ 
     \item \Z $\B{wrt }
       G\ v 
     $
   
       \item \Z\Z $
-        \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
+        \Omega, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
       $ by substitution
 
       \item \Z\Z $
-        \code{$G$.$l$} \rightsquigarrow v
+        \obj{$G$.$l$} \rightsquigarrow v
       $ by definition 
 
       \item \Z\Z $
         \B{let } \Sigma \B{ s.t. } \Omega, \Gamma \satisfies \Sigma 
       $ by theorem \ref{...} 
       \item \Z\Z $
-        \code{$G$.$l$}[\Sigma] \rightsquigarrow v
+        \obj{$G$.$l$}[\Sigma] \rightsquigarrow v
       $ by definition 
       \item \Z\Z $
         v = v[\Sigma \sqcup \epsilon] 
       $ by definition 
       \item \Z\Z $
-        \code{$G$.$l$}[\Sigma] \rightsquigarrow v[\Sigma \sqcup \epsilon] 
+        \obj{$G$.$l$}[\Sigma] \rightsquigarrow v[\Sigma \sqcup \epsilon] 
       $ by substitution 
       \item \Z\Z $
         \Omega, \epsilon \satisfies \epsilon 
@@ -4110,10 +4162,10 @@ Different: RLT isn't cartesian
         \Omega, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
       $ by definition 
       \item \Z\Z $
-        \Omega, \Gamma \satisfies \code{$G$.$l$} \hastype \tau 
+        \Omega, \Gamma \satisfies \obj{$G$.$l$} \hastype \tau 
       $ by definition 
       \item \Z\Z $
-        \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+        \Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
       $ by substitution
 
 
@@ -4124,37 +4176,37 @@ Different: RLT isn't cartesian
       \I
       \Omega, \Sigma' \satisfies \Gamma'
       \I
-      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \obj{$l$->$\tau$}
     $
     \item \Z $\B{hypo }
-      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \sqcup \Gamma' \satisfies e' \hastype \obj{$l$->$\tau$}
       \implies
-      \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+      \Omega, \Gamma \sqcup \Gamma' \satisfies \obj{$e'$.$l$} \hastype \tau
     $
     \item \Z $\B{wrt }
       \Sigma\ e'\ \Sigma'\ \Gamma'
     $
       \item \Z\Z $
-        \Omega, \Gamma \sqcup \Gamma' \satisfies \code{$e'$.$l$} \hastype \tau
+        \Omega, \Gamma \sqcup \Gamma' \satisfies \obj{$e'$.$l$} \hastype \tau
       $ by application
       \item \Z\Z $
-        \code{$e[\Sigma]$.$l$} \rightsquigarrow \code{$e'[\Sigma \sqcup \Sigma']$.$l$}
+        \obj{$e[\Sigma]$.$l$} \rightsquigarrow \obj{$e'[\Sigma \sqcup \Sigma']$.$l$}
       $ by definition 
       \item \Z\Z $
-        \code{$e[\Sigma]$.$l$} = \code{$e$.$l$}[\Sigma]
+        \obj{$e[\Sigma]$.$l$} = \obj{$e$.$l$}[\Sigma]
       $ by definition 
       \item \Z\Z $
-        \code{$e'[\Sigma \sqcup \Sigma']$.$l$} = \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
+        \obj{$e'[\Sigma \sqcup \Sigma']$.$l$} = \obj{$e'$.$l$}[\Sigma \sqcup \Sigma']
       $ by definition 
       \item \Z\Z $
-        \code{$e$.$l$}[\Sigma] \rightsquigarrow \code{$e'$.$l$}[\Sigma \sqcup \Sigma']
+        \obj{$e$.$l$}[\Sigma] \rightsquigarrow \obj{$e'$.$l$}[\Sigma \sqcup \Sigma']
       $ by substitution 
       \item \Z\Z $
-        \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+        \Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
       $ by definition 
 
     \item \Z $
-      \Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau 
+      \Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
     $ by induction 
   \item $\square$
 \end{theorem}
@@ -4225,47 +4277,47 @@ Different: RLT isn't cartesian
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
-    \item \Z $\B{case } \tau_l = \code{BOT}$
+    \item \Z $\B{case } \tau_l = \obj{BOT}$
       \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
-        \item \Z\Z\Z $\Omega \satisfies \code{BOT} \subtypes \tau_r$ by definition
+        \item \Z\Z\Z $\Omega \satisfies \obj{BOT} \subtypes \tau_r$ by definition
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
-    \item \Z $\B{case } \tau_r = \code{TOP}$
+    \item \Z $\B{case } \tau_r = \obj{TOP}$
       \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{TOP}$ by definition
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \obj{TOP}$ by definition
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
     \item \Z $\B{case } 
-      \tau_r = \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
+      \tau_r = \obj{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
       \I
       \tau_l
       \subtypes
-      \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
       \given M, \Delta
     $
     \item \Z $\B{hypo }
       \forall \Omega .\ 
       \Omega \satisfies \Delta
       \implies
-      \Omega \satisfies \tau_l \subtypes \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \Omega \satisfies \tau_l \subtypes \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
     $ 
     \item \Z $\B{wrt } l\ \tau_{rl}\ \tau_{rr}$ 
       \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
         by application
         \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \Omega, \Gamma \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
           by theorem \ref{theorem:model_typing_subsumption} 
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \code{$e$.$l$} \hastype \code{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
-          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \code{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \obj{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \obj{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies \obj{$e$.$l$} \hastype \obj{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
+          \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \obj{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
           \item \Z\Z\Z\Z $\Omega, \Gamma \satisfies e \hastype \tau_r$ by substitution 
         \item \Z\Z\Z $\forall e\ \Gamma .\ \Omega, \Gamma \satisfies e \hastype \tau_l \implies 
           \Omega, \Gamma \satisfies e \hastype \tau_r
@@ -4277,7 +4329,7 @@ Different: RLT isn't cartesian
 
 
     \item \Z $\B{case } 
-      \tau_l = \code{$\tau_{ll}$|$\tau_{lr}$}
+      \tau_l = \obj{$\tau_{ll}$|$\tau_{lr}$}
       \I
       M = M_1
       \I
@@ -4307,7 +4359,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies \tau_{lr} \subtypes \tau_r$ by application 
         \item \Z\Z\Z $\Omega \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
         \item \Z\Z\Z $\Omega \satisfies \tau_{ll} \subtypes \tau_r$ by application 
-        \item \Z\Z\Z $\Omega \satisfies \code{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
+        \item \Z\Z\Z $\Omega \satisfies \obj{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
         by definition
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ 
         by substitution 
@@ -4316,7 +4368,7 @@ Different: RLT isn't cartesian
       by implication and generalization
 
     \item \Z $\B{case } 
-      \tau_r = \code{$\tau_{rl}$\&$\tau_{rr}$}
+      \tau_r = \obj{$\tau_{rl}$\&$\tau_{rr}$}
       \I
       M = M_1
       \I
@@ -4342,7 +4394,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_{rr}$ by instantiation and application 
         \item \Z\Z\Z $\Omega \satisfies \Delta_0 $ by theorem \ref{...} \TODO{...} 
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_{rl}$ by instantiation and application 
-        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \code{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
+        \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
         \item \Z\Z\Z $\Omega \satisfies \tau_l \subtypes \tau_r$ by substitution
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization
@@ -4353,11 +4405,11 @@ Different: RLT isn't cartesian
     \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
-    %   \code{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+    %   \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
     %   \given M, \Delta
     % } {
     %   \tau_l \subtypes 
-    %   \code{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+    %   \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -4368,17 +4420,17 @@ Different: RLT isn't cartesian
     \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
-    %   \code{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+    %   \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \code{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+    %   \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
 
     %%% TEMPLATE
     \item \Z $\B{case } 
-      \tau_l = \code{EXI[$\Alpha$ $Q$]$\tau_b$}
+      \tau_l = \obj{EXI[$\Alpha$ $Q$]$\tau_b$}
       \I
       M = M_1
       \I
@@ -4409,7 +4461,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
         \item \Z\Z\Z $\Omega \satisfies Q$ by application
         \item \Z\Z\Z $\B{for } e \B{ assume } \Omega \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
           \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
         \item \Z\Z\Z $\forall e .\ \Omega \satisfies e \hastype \tau_l 
           \implies \Omega \satisfies e \hastype \tau_r
@@ -4419,7 +4471,7 @@ Different: RLT isn't cartesian
       by implication and generalization
 
     \item \Z $\B{case } 
-      \tau_r = \code{ALL[$\Alpha$ $Q$]$\tau_b$}
+      \tau_r = \obj{ALL[$\Alpha$ $Q$]$\tau_b$}
       \I
       M = M_1
       \I
@@ -4450,7 +4502,7 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\Omega \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
         \item \Z\Z\Z $\Omega \satisfies Q$ by application 
         \item \Z\Z\Z $\B{for } e \B{ assume } \Omega \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
+          \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
           \item \Z\Z\Z\Z $\Omega \satisfies e \hastype \tau_r$ by substitution 
         \item \Z\Z\Z $\forall e .\ \Omega \satisfies e \hastype \tau_l 
           \implies \Omega \satisfies e \hastype \tau_r
@@ -4480,14 +4532,14 @@ Different: RLT isn't cartesian
     \item \Z $\contin
       \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \I
-      \code{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
+      \obj{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
     $
     \item \Z $\B{hypo } \forall \Omega .\ \Omega \satisfies \Delta_1 \implies
-      \Omega \satisfies \code{|$(\Tau)$} <: \tau_r
+      \Omega \satisfies \obj{|$(\Tau)$} <: \tau_r
     $
     \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
       \item \Z\Z $\B{for } \Omega \B{ assume } \Omega \satisfies \Delta$
-        \item \Z\Z\Z $\Omega \satisfies \Delta_1 \code{($\alpha$<:$\tau_r$)}$ by substitution
+        \item \Z\Z\Z $\Omega \satisfies \Delta_1 \obj{($\alpha$<:$\tau_r$)}$ by substitution
         \item \Z\Z\Z $\Omega \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
         \item \Z\Z\Z $\Omega \satisfies \tau_l <: \tau_r$ by substitution 
       \item \Z\Z $\forall \Omega .\ \Omega \satisfies \Delta \implies \Omega \satisfies \tau_l \subtypes \tau_r$ 
@@ -4512,7 +4564,7 @@ Different: RLT isn't cartesian
     %   \\
     %   \Delta_0 \preceq \Delta_1
     %   \\
-    %   \widebar{\code{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\code{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+    %   \widebar{\obj{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\obj{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
     %   \given M_1, \Delta_1
     % } {
     %   \tau_l \subtypes \alpha
@@ -4575,7 +4627,7 @@ Different: RLT isn't cartesian
     %   Q
     %   \given M_1, \Delta_1
     % } {
-    %   \code{ALL[$\Alpha$ $Q$]$\tau_l$}
+    %   \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
     %   \subtypes 
     %   \tau_r
     %   \given M_1, \Delta_1 
@@ -4598,7 +4650,7 @@ Different: RLT isn't cartesian
     % } {
     %   \tau_l
     %   \subtypes 
-    %   \code{EXI[$\Alpha$ $Q$]$\tau_r$}
+    %   \obj{EXI[$\Alpha$ $Q$]$\tau_r$}
     %   \given M_1, \Delta_1
     % }
       \item \Z\Z \TODO{...} 
@@ -4610,7 +4662,7 @@ Different: RLT isn't cartesian
     %   \tau_{ll} \subtypes \tau_r
     %   \given M, \Delta
     % } {
-    %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -4622,7 +4674,7 @@ Different: RLT isn't cartesian
     %   \tau_{lr} \subtypes \tau_r
     %   \given M, \Delta
     % } {
-    %   \code{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -4634,7 +4686,7 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \tau_{rl}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+    %   \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
     %   \given M, \Delta
     % }
 
@@ -4647,7 +4699,7 @@ Different: RLT isn't cartesian
     %   \tau_l \subtypes \tau_{rr}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \code{$\tau_{rl}$|$\tau_{rr}$}
+    %   \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -4661,7 +4713,7 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_existential_elimination}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau_l$}
+      \Omega \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau_l$}
       \\
       \Omega \satisfies Q
       \\
@@ -4702,7 +4754,7 @@ Different: RLT isn't cartesian
       \\
       \Alpha\ \#\ \tau_l
     } {
-      \Omega \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau_r$}
+      \Omega \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau_r$}
     } 
   \end{mathpar}
   Proof:
@@ -4717,7 +4769,7 @@ Different: RLT isn't cartesian
   \label{theorem:model_subtyping_sequence_last}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies \Delta\ \code{($\tau_l$<:$\tau_r$)}
+      \Omega \satisfies \Delta\ \obj{($\tau_l$<:$\tau_r$)}
     } {
       \Omega \satisfies \tau_l \subtypes \tau_r 
     } 
@@ -4819,7 +4871,7 @@ Different: RLT isn't cartesian
       \\
       M, \Delta \entails \Tau \subtypes^\star \alpha  
     } {
-      \alpha\slash\code{|$(\Tau)$} \in \Omega
+      \alpha\slash\obj{|$(\Tau)$} \in \Omega
     } 
   \end{mathpar}
   Proof:
@@ -4831,9 +4883,9 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_record_introduction}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies \code{$e$.$l$} \hastype \tau
+      \Omega \satisfies \obj{$e$.$l$} \hastype \tau
     } {
-      \Omega \satisfies e \hastype \code{$l$->$\tau$}
+      \Omega \satisfies e \hastype \obj{$l$->$\tau$}
     } 
   \end{mathpar}
   Proof:
@@ -4845,13 +4897,13 @@ Different: RLT isn't cartesian
   \TODO{this is really messed up}
   \begin{mathpar}
     \inferrule { 
-      \Omega \satisfies \code{$e_0$($e_1$)} \hastype \tau_r
+      \Omega \satisfies \obj{$e_0$($e_1$)} \hastype \tau_r
       \\
       \Omega \satisfies e_1 \hastype \tau_l
       \\
       \forall \tau .\ \Omega \satisfies e_1 \hastype \tau \implies \tau_l \subtypes \tau
     } {
-      \Omega \satisfies e_0 \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega \satisfies e_0 \hastype \obj{$\tau_l$->$\tau_r$}
     } 
   \end{mathpar}
   Proof:
@@ -4920,22 +4972,22 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_implication_elimination}
   \begin{mathpar}
     \inferrule { 
-      \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r
       \\
       \Omega, \Gamma \satisfies e_1 \hastype \tau_l
     } {
-      \Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r
+      \Omega, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r
     } 
   \end{mathpar}
 
   \item $\B{assume }
-    \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r
+    \Omega, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r
     \I 
     \Omega, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
     \item \Z $\B{let } \Sigma \B{ s.t. } \Omega, \Sigma \satisfies \Gamma$ by theorem \ref{...}
-    \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \code{->} \tau_r$
+    \item \Z $\B{induct on } \Omega, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r$
 
     \item \Z $\B{case }$ \TODO{...}
 
@@ -4949,44 +5001,44 @@ Different: RLT isn't cartesian
     %     \implies
     %     \Omega, \Gamma \satisfies e \hastype \tau_p 
     %     \land
-    %     (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
+    %     (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
     % } {
-    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     % }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % \inferrule { 
-    %   \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
     % } {
-    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     % } 
     \item \Z $\B{case }
-      e_0 = \code{$F$\$$p$=>$e_2$}
+      e_0 = \obj{$F$\$$p$=>$e_2$}
       \I
-      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
     $ 
     \item \Z $\B{hypo }
-      \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
     $
     \item \Z $\B{wrt }
       F\ p\ e_2 
     $
-      \item \Z\Z $\VDash \code{$F$($e_1$)}[\Sigma] $
+      \item \Z\Z $\VDash \obj{$F$($e_1$)}[\Sigma] $
       by theorem \ref{theorem:model_typing_soundness}
-      \item \Z\Z $\B{invert on } \VDash \code{$F$($e_1$)}[\Sigma]$
-      \item \Z\Z $\B{case } \code{$F$($e_1$)}[\Sigma] = v$
+      \item \Z\Z $\B{invert on } \VDash \obj{$F$($e_1$)}[\Sigma]$
+      \item \Z\Z $\B{case } \obj{$F$($e_1$)}[\Sigma] = v$
       \item \Z\Z $\B{wrt } v$
-        \item \Z\Z\Z $\code{$F$($e_1$)}[\Sigma] \neq v$ by definition 
+        \item \Z\Z\Z $\obj{$F$($e_1$)}[\Sigma] \neq v$ by definition 
         \item \Z\Z\Z $\bot$ by application
       \item \Z\Z $\B{case } 
-        (\code{$F$($e_1$)})[\Sigma] \rightsquigarrow e_3
+        (\obj{$F$($e_1$)})[\Sigma] \rightsquigarrow e_3
         \I
         \Omega, \Gamma \satisfies e_3 \hastype \tau_r
       $
       \item \Z\Z $\B{wrt } e_3$
-        \item \Z\Z\Z $(\code{$F$($e_1$)})[\Sigma] = \code{$F[\Sigma]$($e_1[\Sigma]$)}$ by definition
-        \item \Z\Z\Z $\code{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $(\obj{$F$($e_1$)})[\Sigma] = \obj{$F[\Sigma]$($e_1[\Sigma]$)}$ by definition
+        \item \Z\Z\Z $\obj{$F[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
 
         \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\Sigma] = F'$ by theorem \ref{...} \TODO{...}
         \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\Sigma] = e_1'$ by theorem \ref{...} \TODO{...}
@@ -4994,16 +5046,16 @@ Different: RLT isn't cartesian
         \item \Z\Z\Z $\text{FV}(e_2[\Sigma\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
         by theorem \ref{...} \TODO{...}
 
-        \item \Z\Z\Z $\code{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
-        \item \Z\Z\Z $\code{($F'$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
-        \item \Z\Z\Z $(\code{$F[\Sigma]$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\obj{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\obj{($F'$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
+        \item \Z\Z\Z $(\obj{$F[\Sigma]$\$$p$=>$e_2[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)} \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] = \code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)}
+        \item \Z\Z\Z $(\obj{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] = \obj{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\text{FV}(p)]$)($e_1[\Sigma]$)}
         $ by definition
-        \item \Z\Z\Z $(\code{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $(\obj{($F$\$$p$=>$e_2$)($e_1$)})[\Sigma] \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+        \item \Z\Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% OLD 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5014,20 +5066,20 @@ Different: RLT isn't cartesian
     % $
     % \item \Z $ 
     %   \contin
-    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r
+    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r
     %   \I
-    %   e_0 = \code{($F$\$$p$=>$e$)} 
+    %   e_0 = \obj{($F$\$$p$=>$e$)} 
     % $
     % \item \Z $
-    %   \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r \implies \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+    %   \B{hypo} \  \Omega, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r \implies \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
     % $
     % \item \Z $
     %   \B{wrt} \ F \ p \ e \ \Gamma' \  
     % $
-    %   \item \Z\Z $F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ by application
-    %   \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r$ by substitution 
-    %   \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
-    %   \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by substitution 
+    %   \item \Z\Z $F = \epsilon \lor \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ by application
+    %   \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r$ by substitution 
+    %   \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+    %   \item \Z\Z $\Omega, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ by substitution 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -5036,22 +5088,22 @@ Different: RLT isn't cartesian
       \I
       e_0[\Sigma] \rightsquigarrow e_0'
       \I
-      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \obj{->} \tau_r
     $
     \item \Z $\B{hypo}\ 
-      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies e_0' \hastype \tau_l \obj{->} \tau_r
       \implies
-      \Omega, \Gamma \satisfies \code{$e_0'$($e_1$)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \obj{$e_0'$($e_1$)} \hastype \tau_r
     $
     \item \Z $ 
     \B{wrt}\ \Sigma\ e_0' 
     $
-      \item \Z\Z $\Omega, \Gamma \satisfies e_0'\code{(}e_1\code{)} \hastype \tau_r$ by application 
-      \item \Z\Z $e_0[\Sigma]\code{(}e_1\code{)} \rightsquigarrow e_0'\code{(}e_1\code{)}$
-      \item \Z\Z ($e_0\code{(}e_1\code{)})[\Sigma] \rightsquigarrow e_0'\code{(}e_1\code{)}$
-      \item \Z\Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ 
+      \item \Z\Z $\Omega, \Gamma \satisfies e_0'\obj{(}e_1\obj{)} \hastype \tau_r$ by application 
+      \item \Z\Z $e_0[\Sigma]\obj{(}e_1\obj{)} \rightsquigarrow e_0'\obj{(}e_1\obj{)}$
+      \item \Z\Z ($e_0\obj{(}e_1\obj{)})[\Sigma] \rightsquigarrow e_0'\obj{(}e_1\obj{)}$
+      \item \Z\Z $\Omega, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ 
 
-    \item \Z $\Omega, \Gamma \satisfies e_0\code{(}e_1\code{)} \hastype \tau_r$ by induction
+    \item \Z $\Omega, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
   \item $\square$
 \end{theorem}
 
@@ -5060,13 +5112,13 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
       \\
       \Omega, \Gamma \satisfies e_1 \hastype \tau_l
       \\
-      F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+      F = \epsilon \lor \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
     } {
-      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r
     } 
   \end{mathpar}
 
@@ -5079,25 +5131,25 @@ Different: RLT isn't cartesian
 
     \item \Z $\B{case } e_1[\Sigma] = v_1 $
     \item \Z $\B{wrt } v_1$  
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
 
     \item \Z $\B{case}\ e_1[\Sigma] \rightsquigarrow e_1' \I \VDash e_1'$
-    \item \Z $\B{hypo}\ \VDash e_1' \implies \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$
+    \item \Z $\B{hypo}\ \VDash e_1' \implies \Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$
     \item \Z $\B{wrt}\ e_1' $
 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1'$)}$ by definition 
       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
       \item \Z\Z $e_1' = e_1'[\Sigma]$ by by theorem \ref{theorem:closed_substitution} 
-      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \code{($F$\$$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
-      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
+      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow \obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1'[\Sigma]$)}$ by substitution 
+      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\obj{($F$\$$p$=>$e$)($e_1'$)})[\Sigma]$ by definition 
       \item \Z\Z $\Sigma \sqcup \epsilon = \Sigma$ by definition 
-      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\code{($F$\$$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
+      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow (\obj{($F$\$$p$=>$e$)($e_1'$)})[\Sigma \sqcup \epsilon]$ by substitution 
       \item \Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
       \item \Z\Z $\Omega, \epsilon \satisfies \epsilon$ by definition
-      \item \Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \code{($F$\$$p$=>$e$)($e_1'$)}$ by substitution 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by definition
-    \item \Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)}\code{(}e_1\code{)} \hastype \tau_r$ by induction
+      \item \Z\Z $\Omega, \Gamma \sqcup \epsilon \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)}$ by substitution 
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by definition
+    \item \Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
   \item $\square$ by implication 
 \end{theorem}
 
@@ -5105,9 +5157,9 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_fully_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)} \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
       \\
-      F = \epsilon \lor \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r
+      F = \epsilon \lor \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
       \\
       \Omega \satisfies e_1 \hastype \tau_l
       \\
@@ -5116,28 +5168,28 @@ Different: RLT isn't cartesian
       e_1[\Sigma] = v_1
       \\
     } {
-      \Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r
+      \Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof:
-  \item $\B{assume}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+  \item $\B{assume}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r$
     \TODO{add more assumptions}
     \item \Z $\Omega \satisfies e_1[\Sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
     \item \Z $\Omega \satisfies v_1 \hastype \tau_l$ by substitution 
-    \item \Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \code{->} \tau_r$
+    \item \Z $\B{invert on}\ F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r$
     \item \Z $\B{case } F = \epsilon$ 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{$F$\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r$ by substitution 
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{$F$\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by substitution 
 
       \item \Z\Z $\B{let}\ \Sigma' \B{ s.t. } p \equiv v_1 \given \Sigma'$ 
       by theorem \ref{theorem:model_typing_pattern_matching} 
 
       \item \Z\Z $\B{for } e'$ 
-        \item \Z\Z\Z $\neg \epsilon[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by definition
-        \item \Z\Z\Z $\neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by substitution 
-      \item \Z\Z $\forall e' .\ \neg F[\Sigma]\code{($v_1$)} \rightsquigarrow e'$ by generalization 
+        \item \Z\Z\Z $\neg \epsilon[\Sigma]\obj{($v_1$)} \rightsquigarrow e'$ by definition
+        \item \Z\Z\Z $\neg F[\Sigma]\obj{($v_1$)} \rightsquigarrow e'$ by substitution 
+      \item \Z\Z $\forall e' .\ \neg F[\Sigma]\obj{($v_1$)} \rightsquigarrow e'$ by generalization 
 
-      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
+      \item \Z\Z $\obj{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{FV}(p)][\Sigma]$ by definition 
 
       \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\Sigma')$ 
       by theorem \ref{theorem:pattern_matching_consistency}
@@ -5146,23 +5198,23 @@ Different: RLT isn't cartesian
       \item \Z\Z $e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma'] = e[\Sigma \sqcup \Sigma']$ 
       by theorem \ref{theorem:concatenation_substitution}
 
-      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
+      \item \Z\Z $\obj{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma\backslash\B{dom}(\Sigma')][\Sigma]$ 
         by substitution
-      \item \Z\Z $\code{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
+      \item \Z\Z $\obj{($F[\Sigma]$\$$p$=>$e[\Sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ 
         by substitution 
-      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
-      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\Sigma]$($v_1$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by definition 
+      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
 
-      \item \Z\Z $\code{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
-      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
+      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\Sigma]$($e_1[\Sigma]$)} = (\obj{($F$\$$p$=>$e$)($e_1$)})[\Sigma]$ by definition  
+      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e[\Sigma \sqcup \Sigma']$ by substitution  
 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
-    \item \Z $\B{case } \Omega, \Gamma \satisfies \code{$F$($e_1$)} \hastype \tau_r$ 
-      \item \Z\Z $\B{let } e' \B{ s.t. } (\code{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-      \item \Z\Z $(\code{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
-      \item \Z\Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-    \item \Z $\Omega, \Gamma \satisfies \code{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+    \item \Z $\B{case } \Omega, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ 
+      \item \Z\Z $\B{let } e' \B{ s.t. } (\obj{$F$($e_1$}))[\Sigma] \rightsquigarrow e' \land \Omega, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\Sigma] \rightsquigarrow e'$ by definition 
+      \item \Z\Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+    \item \Z $\Omega, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
   \item $\square$ by implication
 \end{theorem}
 
@@ -5238,7 +5290,7 @@ Different: RLT isn't cartesian
   \label{theorem:model_typing_pattern_matching}
   \begin{mathpar}
     \inferrule {
-      \Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r
+      \Omega, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
       \\
       \Omega \satisfies v \hastype \tau_l 
     } {
@@ -5247,7 +5299,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
   Proof:
   \item $\B{assume } 
-    \Omega, \Gamma \satisfies \code{\$$p$=>$e$} \hastype \tau_l \code{->} \tau_r
+    \Omega, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
     \I
     \Omega \satisfies v \hastype \tau_l 
   $
@@ -5320,50 +5372,50 @@ Different: RLT isn't cartesian
 %   \label{theorem:pattern_matching_progress}
 %   \begin{mathpar}
 %     \inferrule {
-%       \code{*$p$=>$e$} \in F 
+%       \obj{*$p$=>$e$} \in F 
 %       \\
 %       p \equiv v \given \Sigma 
 %       \\
-%       \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
+%       \forall e' .\ \obj{*$p$=>$e'$} \in F \implies e' = e 
 %     } {
-%       \exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'
+%       \exists e' .\ F\obj{(}v\obj{)} \rightsquigarrow e'
 %     } 
 %   \end{mathpar}
 %   Proof:
 %   \item $\B{for } p\ e\ F\ v\ \Sigma\ \B{assume }
-%       \code{*$p$=>$e$} \in F 
+%       \obj{*$p$=>$e$} \in F 
 %       \I
 %       p \equiv v \given \Sigma 
 %       \I
-%       \forall e' .\ \code{*$p$=>$e'$} \in F \implies e' = e 
+%       \forall e' .\ \obj{*$p$=>$e'$} \in F \implies e' = e 
 %   $
 
 %   \item \Z $\B{case }
-%     F = F'\ \code{*$p$=>$e$} 
+%     F = F'\ \obj{*$p$=>$e$} 
 %     \I
-%     \code{*$p$=>$e$} \notin F'
+%     \obj{*$p$=>$e$} \notin F'
 %   $
 
 %   \item \Z\Z $\B{for } e'$
-%   \item \Z\Z\Z $\B{case}\ F'\code{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by substitution 
-%   \item \Z\Z\Z $\B{case}\ \neg F'\code{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\code{(}F'\ \code{*}p\code{=>}e\code{)(} v \code{)} \rightsquigarrow e[\Sigma]$ by definition
-%   \item \Z\Z\Z\Z $F\code{(}v\code{)} \rightsquigarrow e[\Sigma]$ by substitution 
-%   \item \Z\Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by decidability of $F'\code{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by summarization
-%   \item \Z\Z $\exists e'' .\ F\code{(}v\code{)} \rightsquigarrow e''$ by independence 
+%   \item \Z\Z\Z $\B{case}\ F'\obj{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\obj{(}F'\ \obj{*}p\obj{=>}e\obj{)(} v \obj{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z\Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e'$ by substitution 
+%   \item \Z\Z\Z $\B{case}\ \neg F'\obj{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\obj{(}F'\ \obj{*}p\obj{=>}e\obj{)(} v \obj{)} \rightsquigarrow e[\Sigma]$ by definition
+%   \item \Z\Z\Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e[\Sigma]$ by substitution 
+%   \item \Z\Z\Z $\exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by decidability of $F'\obj{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by summarization
+%   \item \Z\Z $\exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by independence 
 
 %   \item \Z $\B{case }
 %     F = F'\ f 
 %     \I
-%     \code{*$p$=>$e$} \in F' 
+%     \obj{*$p$=>$e$} \in F' 
 %   $
-%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\code{(}v\code{)} \rightsquigarrow e'$ by induction hypothesis
-%   \item \Z\Z $F'\ f\code{(}v\code{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z $F\code{(}v\code{)} \rightsquigarrow e'$ by definition
-%   \item \Z $\exists e' .\ F\code{(}v\code{)} \rightsquigarrow e'$ by induction on $\code{*$p$=>$e$} \in F$
+%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\obj{(}v\obj{)} \rightsquigarrow e'$ by induction hypothesis
+%   \item \Z\Z $F'\ f\obj{(}v\obj{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e'$ by definition
+%   \item \Z $\exists e' .\ F\obj{(}v\obj{)} \rightsquigarrow e'$ by induction on $\obj{*$p$=>$e$} \in F$
 %   \item $\square$
 % \end{theorem}
 
@@ -5399,8 +5451,8 @@ Different: RLT isn't cartesian
         \Omega, \Sigma \satisfies \Gamma 
         \I \Omega, \Gamma \satisfies e \hastype \tau
   $
-    \item \Z $\B{case } e = \code{@}$
-      \item \Z\Z $\B{let } v \B{ s.t. } \code{@} = v$
+    \item \Z $\B{case } e = \obj{@}$
+      \item \Z\Z $\B{let } v \B{ s.t. } \obj{@} = v$
       \item \Z\Z $e[\Sigma] = v$
       \item \Z\Z $ \VDash e[\Sigma]$
 
@@ -5408,23 +5460,23 @@ Different: RLT isn't cartesian
     \item \Z $\B{case } 
       \Omega, \Gamma \satisfies e' \hastype \tau'
       \I 
-      e = \code{\ttilde}l\ e' 
+      e = \obj{\ttilde}l\ e' 
       \I 
-      \tau = \code{\ttilde}l\ \tau'
+      \tau = \obj{\ttilde}l\ \tau'
     $
       \item \Z\Z $\Vdash e'$ by induction hypothesis
       \item \Z\Z $\B{case } e'[\Sigma] = v$
-        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \code{\ttilde}l\ v = v'$
-        \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] = v'$
-        \item \Z\Z\Z $(\code{\ttilde}l\ e')[\Sigma] = v'$
+        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \obj{\ttilde}l\ v = v'$
+        \item \Z\Z\Z $\obj{\ttilde}l\ e'[\Sigma] = v'$
+        \item \Z\Z\Z $(\obj{\ttilde}l\ e')[\Sigma] = v'$
         \item \Z\Z\Z $e[\Sigma] = v'$
         \item \Z\Z\Z $\VDash e[\Sigma] $
 
       \item \Z\Z $\B{case } e'[\Sigma] \rightsquigarrow e'' \I \VDash e''$
-        \item \Z\Z\Z $\code{\ttilde}l\ e'[\Sigma] \rightsquigarrow \code{\ttilde}l\ e''$
-        \item \Z\Z\Z $\VDash \code{\ttilde}l\ e'' $
-        \item \Z\Z\Z $\VDash \code{\ttilde}l\ e'[\Sigma] $
-        \item \Z\Z\Z $\VDash (\code{\ttilde}l\ e')[\Sigma] $
+        \item \Z\Z\Z $\obj{\ttilde}l\ e'[\Sigma] \rightsquigarrow \obj{\ttilde}l\ e''$
+        \item \Z\Z\Z $\VDash \obj{\ttilde}l\ e'' $
+        \item \Z\Z\Z $\VDash \obj{\ttilde}l\ e'[\Sigma] $
+        \item \Z\Z\Z $\VDash (\obj{\ttilde}l\ e')[\Sigma] $
         \item \Z\Z\Z $\VDash e[\Sigma] $
 
       \item \Z\Z $\VDash e[\Sigma] $ by cases on $\VDash e' $
@@ -5507,30 +5559,30 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     \inferrule { 
       \alpha \slash \tau \notin \Omega
       \\
-      \Omega, \Gamma \satisfies e \hastype \code{TOP} 
+      \Omega, \Gamma \satisfies e \hastype \obj{TOP} 
     } {
       \Omega, \Gamma \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
     } {
-      \Omega, \Gamma \satisfies \code{@} \hastype \code{@}
+      \Omega, \Gamma \satisfies \obj{@} \hastype \obj{@}
     } 
 
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies \code{\ttilde$l$ $e$} \hastype \code{\ttilde$l$ $\tau$}
+      \Omega, \Gamma \satisfies \obj{\ttilde$l$ $e$} \hastype \obj{\ttilde$l$ $\tau$}
     } 
 
     \inferrule { 
-      \code{\$$l$=>$v$} \in G 
+      \obj{\$$l$=>$v$} \in G 
       \\
       \Omega, \Gamma \satisfies v \hastype \tau 
       \\\\
-      \forall v' .\ \code{\$$l$=>$v'$} \in G \implies v' = v
+      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
     } {
-      \Omega, \Gamma \satisfies G \hastype \code{$l$->$\tau$}
+      \Omega, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
     } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5538,13 +5590,13 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % \inferrule { 
-    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+    %   F = \epsilon \lor \Omega, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
     %   \\
     %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
     %   \\
     %   \Omega, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
     % } {
-    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     % } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5560,24 +5612,24 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
         \implies
         \Omega, \Gamma \satisfies e \hastype \tau_p 
         \land
-        (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
+        (\forall \tau_n\ \tau .\ \Omega, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\Omega, \Gamma \satisfies e \hastype \tau_n))
     } {
-      \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     \inferrule { 
-      \Omega, \Gamma \satisfies F \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
     } {
-      \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+      \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DERIVABLE??
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % \inferrule { 
-    %   \Omega, \Gamma \satisfies F \hastype \code{$\tau_n$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
     %   \\
     %   \Omega, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
     %   \\
@@ -5590,37 +5642,37 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     %     \lor
     %     \Omega, \Gamma \satisfies e \hastype \tau_n 
     % } {
-    %   \Omega, \Gamma \satisfies \code{$F$*$p$=>$e$} \hastype \code{$\tau_l$->$\tau_r$}
+    %   \Omega, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     % } 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$}
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$|$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_r$}
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$|$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$}
       \\
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_r$}
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$\&$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
     } 
 
     \inferrule { 
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$}
       \\
-      \neg\ (\Omega, \Gamma \satisfies e \hastype \code{$\tau_r$})
+      \neg\ (\Omega, \Gamma \satisfies e \hastype \obj{$\tau_r$})
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{$\tau_l$\textbackslash$\tau_r$}
+      \Omega, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
     } 
 
     \inferrule { 
@@ -5628,20 +5680,20 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \\
       \Omega \sqcup \Omega' \satisfies e \hastype \tau
     } {
-      \Omega \satisfies e \hastype \code{EXI[$\Alpha$ $Q$]$\tau$}
+      \Omega \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
       \forall \Omega' .\ \Omega \sqcup \Omega' \satisfies Q \implies 
       \Omega \sqcup \Omega', \Gamma \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{ALL[$\Alpha$ $Q$]$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
-      \Omega \ \alpha \slash \code{FIX[$\alpha$.$\tau$]} \satisfies e \hastype \tau
+      \Omega \ \alpha \slash \obj{FIX[$\alpha$.$\tau$]} \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies e \hastype \code{FIX[$\alpha$.$\tau$]}
+      \Omega, \Gamma \satisfies e \hastype \obj{FIX[$\alpha$.$\tau$]}
     } 
 
 
@@ -5714,7 +5766,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
       \\
       \Omega \satisfies \tau_l <: \tau_r
     } {
-      \Omega \satisfies Q\ \code{.$\tau_l$<:$\tau_r$}
+      \Omega \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
     } 
   \end{mathpar}
 \end{definition}
