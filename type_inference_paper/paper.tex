@@ -54,7 +54,7 @@
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
 
-\newcommand{\ttilde}{\textasciitilde{}}
+\newcommand{\tl}{\textasciitilde{}}
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
@@ -229,10 +229,6 @@ Thus, parametric types are extended with constraints in the form of subtyping.
 
     \begin{lstlisting}[mathescape=true]
 
-        let trivial =
-            case ~hello @ => ~world @
-            case ~good @ => ~morning @ in
-
         let repeat = case x => fix(case self =>
             case ~zero @ => ~nil @
             case ~succ n => ~cons (x, self n)) in
@@ -287,11 +283,11 @@ Consider the function $\obj{trivial}$, which completes a simple English phrase:
   \begin{array}[t]{@{} l}
     \obj{let trivial = (}
       \\
-      \I \obj{\$ \ttilde hello @ => \ttilde world @}
+      \I \obj{\$ \tl hello @ => \tl world @}
       \\
-      \I \obj{\$ \ttilde good @ => \ttilde morning @} 
+      \I \obj{\$ \tl good @ => \tl morning @} 
       \\
-      \I \obj{\$ \ttilde thank @ => \ttilde you @} 
+      \I \obj{\$ \tl thank @ => \tl you @} 
       \\
     \obj{)}
   \end{array}
@@ -300,7 +296,7 @@ Consider the function $\obj{trivial}$, which completes a simple English phrase:
 This program is defined by paths over hardcoded tags.
 The system infers the type to be an intersection of implication types:
 \[
-  \obj{(\ttilde hello @ -> \ttilde world @) \& (\ttilde good @ -> \ttilde morning @) \& (\ttilde thank @ -> \ttilde you @)}
+  \obj{(\tl hello @ -> \tl world @) \& (\tl good @ -> \tl morning @) \& (\tl thank @ -> \tl you @)}
 \]
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
@@ -310,24 +306,42 @@ Just as type inference constructs precise types for introduction forms,
 type inference can select the only viable paths of an application. In the most simple case where
 the argument is a singleton, there can be only one viable path, just like the runtime semantics.   
 
-Consider the application \obj{trivial(x)} where \obj{x} has the type \obj{(\ttilde hello @)|(\ttilde thank @)}. 
+Consider the application \obj{trivial(x)} where \obj{x} has the type \obj{(\tl hello @)|(\tl thank @)}. 
 Type inference breaks apart the intersection into paths and finds that only two of the three paths 
 match the type of the argument. It determines the type of the application to be the type 
-\obj{(\ttilde world @)|(\ttilde you @)}.
+\obj{(\tl world @)|(\tl you @)}.
 
 \paragraph{Relational typing.} 
 Consider the function \obj{repeat} that takes a natural number and returns a list of that length. 
-Without specifying any requirements besides the function definition, the system 
-can infer the property that the resulting list has the length of the input number. 
-To construct a type for \obj{repeat}, type inference constructs a relation between nats and lists.
-The type of repeat depends on a parameterized relation between nats and lists.
+
+\[
+  \begin{array}[t]{@{} l}
+      \obj{let repeat = \$ x => loop(\$ self =>}
+      \\
+      \I \obj{\$ \tl zero @ => \tl nil @}
+      \\
+      \I \obj{\$ \tl succ n => \tl cons(x,self(n))}
+      \\
+      \obj{)}
+  \end{array}
+\]
+
+
+        % let repeat = case x => fix(case self =>
+        %     case ~zero @ => ~nil @
+        %     case ~succ n => ~cons (x, self n)) in
+
+Without specifying any requirements besides the function definition, type inference lifts 
+the function into the definitional property as a type. 
+To construct the type, type inference constructs a relation between nats and lists.
+The type of \obj{repeat} depends on relation between nats and lists (parametrically named here for readability).
 \[
   \text{natList}(\alpha) = \begin{array}[t]{@{} l}
       \obj{FIX[SELF;} 
       \\
-      \I \obj{(\ttilde zero @)*(\ttilde nil @) |}
+      \I \obj{(\tl zero @)*(\tl nil @) |}
       \\
-      \I \obj{(EXI[N L ; N*L <: SELF](\ttilde succ N)*(\ttilde cons (}\alpha\obj{*L))}
+      \I \obj{(EXI[N L ; N*L <: SELF](\tl succ N)*(\tl cons (}\alpha\obj{*L))}
       \\
       \obj{]} 
   \end{array}
@@ -339,23 +353,34 @@ Using the \text{natList} relation, type inference then lifts the function repeat
   \obj{repeat} : \obj{ALL[T]T -> ALL[X]X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{]Y}
 \]
 
-Using this precise type form, type inference can go on to solve and check subtyping constraints generated from elimination forms 
-such as applications, or check that a program satisfies a particular specification.
+It may worth noting that there exists a semantically equivalent type in terms of a greatest fixed point. 
+\TODO{forward reference to correctness/model semantics}
+\[
+  \begin{array}[t]{@{} l}
+      \obj{ALL[T]} 
+      \obj{FIX[SELF;} 
+      \\
+      \I \obj{(\tl zero @)->(\tl nil @) \&}
+      \\
+      \I \obj{(ALL[N L ; SELF <: N->L](\tl succ N)->(\tl cons(T*L))}
+      \\
+      \obj{]} 
+  \end{array}
+\]
+
+Type inference reasons in the least fixed point form, but the greatest fixed point form could
+be easily handled as semantic sugar via rewriting.  
+
+Using the precise type form, type inference can leverage solving and checking subtyping constraints 
+to reason in a number ways: it can reason forward from inputs to outputs (just like the runtime semantics), 
+reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
 
 
-
-\paragraph{Relational selection.} Suppose the function \obj{repeat} is applied to the hardcoded number two, 
-represented as \obj{(\#succ \#succ \#zero)}. The system can infer the result to be a singleton type representing a single list,
-much like how Prolog evaluates logic programs.
-\begin{mathpar}
-\\
-  \inferrule {} {
-    \Delta \cdot \Gamma
-    \vdash 
-    \obj{repeat @  (\ttilde succ \ttilde succ \ttilde zero @)}: \obj{\ttilde cons(@*(\ttilde cons(@*(\ttilde nil @))))}
-  }
-\\
-\end{mathpar}
+\paragraph{Fixed point forward path selection.} Consider the application \obj{repeat(\tl succ \tl succ \tl zero @)(@)}. Type inference
+constructs a singleton type, mirroring the results achieved by simply running the program.  
+\[
+  \obj{\tl cons(@*\tl cons(@*\tl nil@))}
+\]
 
 Path selection and relational selection demonstrate that the declarative type language is expressive enough
 to perform evaluation. However, this simply reproduces the effect of the dynamic semantics, 
@@ -364,51 +389,67 @@ express properties with incomplete information.
 The next examples illustrate how the system can compose abstract properties to infer useful properties,
 which are not reproducible by dynamic semantics.
 
+\paragraph{Fixed point backwards path selection.} Now suppose we have a function \obj{foo} whose input
+type is inferred to be an empty list or a singleton list, \obj{\tl nil @ | \tl cons(T,\tl nil @)}.
+Given the application \obj{foo(repeat(n)(x))} where \obj{x} has type \obj{T}, type inference can reason backwards to learn
+that the type of \obj{n} must be either zero or one. 
+\[
+  \obj{\tl zero @ | \tl succ \tl zero @}
+\]
 
-\paragraph{Factoring.} Suppose the function \obj{fromList}, which expects a list, 
-is applied to a list that's related to a natural number, as would be the result of \obj{(repeat x n)},
-illustrated in the body of \obj{fromNat}.
-The system must verify that the type of \obj{(repeat x n)} is a subtype of the parameter type of \obj{(fromList)}.
-The argument type of \obj{(repeat x n)} is a type projected from a relation with an abstract natural number,
-since its arguments are not hardcoded.
-This abstract type information cannot be handled by dynamic semantics. 
-Despite these complexities, the the system is able to ensure that these abstract inferred types
-can safely be composed, by factoring \obj{($nat\_list\ \alpha$)} into the weaker pair \obj{($nat$ * $list\ \alpha$)}.
-Once factored out, the list type of the argument type's relation can be projected and unified with the parameter's list type. 
-\begin{mathpar}
-\\
-  \inferrule {
-    list\ \alpha = \obj{induc[L] ?nil | ?cons ($\alpha$ * L)} 
-    \\\\
-    \Delta \vdash \obj{$nat\_list$\ X} \sqsubseteq \obj{$nat$ * $list$\ X} 
-    \\
-    \Delta \vdash \obj{$list$\ X} \sqsubseteq \obj{$list$ Y} 
-  } {
-    \Delta \vdash \obj{\{L with N * L <: $nat\_list$\ X\}} \sqsubseteq \obj{$list$ Y} 
-  }
-\\
-\end{mathpar}
 
-\paragraph{Inductive subtyping.} 
-Consider applying a function that expects a natural number to an argument whose type is an even natural number.
-In order to verify that this application is allowed, the system must verify that an even number is 
-a subtype of a natural number. The system can soundly verify this subtyping by relying on an induction hypothesis.
-The induction hypothesis allows weakening the inductive component of the even type to the natural number type as it unrolls. 
-\begin{mathpar}
-\\
-  \inferrule {
-    \inferrule {
-      even = \obj{induc[N] ?zero | ?succ ?succ N} 
-      \\\\
-      \Delta \vdash \obj{(?zero | ?succ ?succ $nat$)} \sqsubseteq nat 
-    } {
-      \Delta, \obj{$even$ <: $nat$}  \vdash \obj{(?zero | ?succ ?succ $even$)} \sqsubseteq nat 
-    }
-  } {
-    \Delta \vdash even \sqsubseteq nat 
-  }
-\\
-\end{mathpar}
+
+\paragraph{Vertical weakening (Factoring).} 
+Now suppose we have a function \obj{woo} whose input
+type is inferred to be a list over elements of type \obj{T}.
+\[
+  \begin{array}[t]{@{} l}
+      \obj{FIX[SELF;} 
+      \\
+      \I \obj{\tl nil @ |}
+      \\
+      \I \obj{\tl cons T*SELF}
+      \\
+      \obj{]} 
+  \end{array}
+\]
+
+Given the application \obj{woo(repeat(n)(x))} where \obj{x} has type \obj{T}, type 
+inference discovers that the argument type depends on the relation \text{natList}(\obj{T}), 
+and the relation can be factored into a weaker cross product of nats and lists. 
+Therefore, the argument meets the requirements
+of \obj{woo} and the type of \obj{n} must be the natural numbers.
+
+\[
+  \begin{array}[t]{@{} l}
+      \obj{FIX[SELF;} 
+      \\
+      \I \obj{\tl zero @ |}
+      \\
+      \I \obj{\tl succ SELF}
+      \\
+      \obj{]} 
+  \end{array}
+\]
+
+
+\paragraph{Horizontol weakening (infilling).} 
+Now consider a function \obj{boo} whose input type is the natural numbers. 
+Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
+\[
+  \begin{array}[t]{@{} l}
+      \obj{FIX[SELF;} 
+      \\
+      \I \obj{\tl zero @ |}
+      \\
+      \I \obj{\tl succ \tl succ SELF}
+      \\
+      \obj{]} 
+  \end{array}
+\]
+The application requires that type inference check that the nat type is weaker than the even type. 
+Type inference sees that if both types were to unroll into an infinite sequence of values
+every value in nat would also be in even, therefore the application type checks. 
 
 \paragraph{Relational subtyping.} Due to the precise relational types that the system infers, 
 it may also be necessary to verify that a relation subtypes another relation, 
@@ -1721,7 +1762,7 @@ Different: RLT isn't cartesian
     \begin{array}[t]{@{}l}
       \obj{$x$} \sep 
       \obj{@} \sep
-      \obj{\ttilde$l$ $e$} \sep 
+      \obj{\tl$l$ $e$} \sep 
       R \sep
       \obj{$e$,$e$} \sep
       F \sep 
@@ -1746,7 +1787,7 @@ Different: RLT isn't cartesian
     \nonterm{p} & \is 
       \obj{$x$} \sep
       \obj{@} \sep
-      \obj{\ttilde$l$ $p$} \sep
+      \obj{\tl$l$ $p$} \sep
       K \sep
       \obj{$p$,$p$} \sep
       \obj{($p$)} 
@@ -1758,7 +1799,7 @@ Different: RLT isn't cartesian
     \\
     \nonterm{v} & \is 
       \obj{@} \sep
-      \obj{\ttilde$l$ $v$} \sep
+      \obj{\tl$l$ $v$} \sep
       G \sep
       \obj{$v$,$v$} \sep
       \obj{($v$)} \sep
@@ -1782,7 +1823,7 @@ Different: RLT isn't cartesian
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{\ttilde$l$ $e$} \rightsquigarrow \obj{\ttilde$l$ $e'$}
+      \obj{\tl$l$ $e$} \rightsquigarrow \obj{\tl$l$ $e'$}
     }
 
     \inferrule {
@@ -1877,7 +1918,7 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \obj{(\$\ttilde true @=>}e_t \obj{\ \$\ttilde false @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+      \obj{(\$\tl true @=>}e_t \obj{\ \$\tl false @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
     } {
       \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
     }
@@ -1911,7 +1952,7 @@ Different: RLT isn't cartesian
     \begin{array}[t]{@{}l}
       \alpha \sep
       \obj{@} \sep
-      \obj{\ttilde}l\ \tau \sep 
+      \obj{\tl}l\ \tau \sep 
       l\obj{->}\tau \sep 
       \tau\obj{->}\tau \sep 
       \tau\obj{|}\tau \sep 
@@ -1983,7 +2024,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \Gamma \entails e \hastype \tau \given Z 
     } {
-      \Gamma \entails \obj{\ttilde $l$ $e$} \hastype \obj{\ttilde $l$ $\tau$} \given Z 
+      \Gamma \entails \obj{\tl $l$ $e$} \hastype \obj{\tl $l$ $\tau$} \given Z 
     }
 
     \inferrule {
@@ -2431,7 +2472,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \tau_r
       \given M, \Delta 
     } {
-      \obj{\ttilde$l$ $\tau_l$} \subtypes \obj{\ttilde$l$ $\tau_r$}
+      \obj{\tl$l$ $\tau_l$} \subtypes \obj{\tl$l$ $\tau_r$}
       \given M, \Delta 
     }
 
@@ -3404,9 +3445,9 @@ Different: RLT isn't cartesian
   \item \Z $\B{case } 
     \Gamma \entails e' \hastype \tau' \given Z
     \I
-    \tau = \obj{\ttilde $l$ $\tau'$}
+    \tau = \obj{\tl $l$ $\tau'$}
     \I
-    e = \obj{\ttilde $l$ $e'$} 
+    e = \obj{\tl $l$ $e'$} 
   $ 
   \item \Z $\B{hypo } 
       \Gamma \entails e' \hastype \tau' \given Z  
@@ -3419,7 +3460,7 @@ Different: RLT isn't cartesian
       \Omega, \Gamma \satisfies e' \hastype \tau'
     $ by application
     \item \Z\Z $
-      \Omega, \Gamma \satisfies \obj{\ttilde $l$ $e'$} \hastype \obj{\ttilde $l$ $\tau'$}
+      \Omega, \Gamma \satisfies \obj{\tl $l$ $e'$} \hastype \obj{\tl $l$ $\tau'$}
     $ by definition
     \item \Z\Z $
       \Omega, \Gamma \satisfies e \hastype \tau 
@@ -5462,23 +5503,23 @@ Different: RLT isn't cartesian
     \item \Z $\B{case } 
       \Omega, \Gamma \satisfies e' \hastype \tau'
       \I 
-      e = \obj{\ttilde}l\ e' 
+      e = \obj{\tl}l\ e' 
       \I 
-      \tau = \obj{\ttilde}l\ \tau'
+      \tau = \obj{\tl}l\ \tau'
     $
       \item \Z\Z $\Vdash e'$ by induction hypothesis
       \item \Z\Z $\B{case } e'[\Sigma] = v$
-        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \obj{\ttilde}l\ v = v'$
-        \item \Z\Z\Z $\obj{\ttilde}l\ e'[\Sigma] = v'$
-        \item \Z\Z\Z $(\obj{\ttilde}l\ e')[\Sigma] = v'$
+        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \obj{\tl}l\ v = v'$
+        \item \Z\Z\Z $\obj{\tl}l\ e'[\Sigma] = v'$
+        \item \Z\Z\Z $(\obj{\tl}l\ e')[\Sigma] = v'$
         \item \Z\Z\Z $e[\Sigma] = v'$
         \item \Z\Z\Z $\VDash e[\Sigma] $
 
       \item \Z\Z $\B{case } e'[\Sigma] \rightsquigarrow e'' \I \VDash e''$
-        \item \Z\Z\Z $\obj{\ttilde}l\ e'[\Sigma] \rightsquigarrow \obj{\ttilde}l\ e''$
-        \item \Z\Z\Z $\VDash \obj{\ttilde}l\ e'' $
-        \item \Z\Z\Z $\VDash \obj{\ttilde}l\ e'[\Sigma] $
-        \item \Z\Z\Z $\VDash (\obj{\ttilde}l\ e')[\Sigma] $
+        \item \Z\Z\Z $\obj{\tl}l\ e'[\Sigma] \rightsquigarrow \obj{\tl}l\ e''$
+        \item \Z\Z\Z $\VDash \obj{\tl}l\ e'' $
+        \item \Z\Z\Z $\VDash \obj{\tl}l\ e'[\Sigma] $
+        \item \Z\Z\Z $\VDash (\obj{\tl}l\ e')[\Sigma] $
         \item \Z\Z\Z $\VDash e[\Sigma] $
 
       \item \Z\Z $\VDash e[\Sigma] $ by cases on $\VDash e' $
@@ -5574,7 +5615,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     \inferrule { 
       \Omega, \Gamma \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies \obj{\ttilde$l$ $e$} \hastype \obj{\ttilde$l$ $\tau$}
+      \Omega, \Gamma \satisfies \obj{\tl$l$ $e$} \hastype \obj{\tl$l$ $\tau$}
     } 
 
     \inferrule { 
