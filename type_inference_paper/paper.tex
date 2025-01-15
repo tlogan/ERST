@@ -335,17 +335,15 @@ Consider the function \obj{repeat} that takes a natural number and returns a lis
 \]
 
 
-        % let repeat = case x => fix(case self =>
-        %     case ~zero @ => ~nil @
-        %     case ~succ n => ~cons (x, self n)) in
-
 Without specifying any requirements besides the function definition, type inference lifts 
 the function into the definitional property as a type. 
 To construct the type, type inference constructs a relation between nats and lists.
-The type of \obj{repeat} depends on relation between nats and lists (parametrically named here for readability).
+The type of \obj{repeat} depends on a least fixed point relation between nats and lists 
+(parametrically named here for readability).
+
 \[
   \text{natList}(\alpha) = \begin{array}[t]{@{} l}
-      \obj{FIX[R]( BOT} 
+      \obj{LFP[R]( BOT} 
       \\
       \I \obj{| (<zero> @)*(<nil> @)}
       \\
@@ -361,12 +359,13 @@ Using the \text{natList} relation, type inference then lifts the function repeat
   \obj{ALL[T] T -> ALL[X] X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{] Y}
 \]
 
-It may worth noting that there exists a semantically equivalent type in terms of a greatest fixed point. 
+It may be worth noting that there could be semantically equivalent recursive type in terms of intersections instead of unions. 
+
 \TODO{forward reference to correctness/model semantics}
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{ALL[T] FIX[R]( TOP} 
+      \obj{ALL[T] GFP[R]( TOP} 
       \\
       \I \obj{\& (<zero> @)->(<nil> @)}
       \\
@@ -376,8 +375,9 @@ It may worth noting that there exists a semantically equivalent type in terms of
   \end{array}
 \]
 
-Type inference reasons in the least fixed point form, but the greatest fixed point form could
-be easily handled as syntactic sugar with rewriting.  
+
+Type inference reasons in terms least fixed points, but the greatest fixed point form could
+be handled with syntactic sugar and rewriting.  
 
 Using the precise type form, type inference can leverage solving and checking subtyping constraints 
 to reason in a number ways: it can reason forward from inputs to outputs (just like the runtime semantics), 
@@ -413,7 +413,7 @@ Now suppose we have a function \obj{woo} whose input
 type is inferred to be a list over elements of type \obj{T}.
 \[
   \begin{array}[t]{@{} l}
-      \obj{FIX[R]( BOT}
+      \obj{LFP[R]( BOT}
       \\
       \I \obj{| <nil> @ }
       \\
@@ -431,7 +431,7 @@ of \obj{woo} and the type of \obj{n} must be the natural numbers.
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{FIX[R]( BOT} 
+      \obj{LFP[R]( BOT} 
       \\
       \I \obj{| <zero> @}
       \\
@@ -447,7 +447,7 @@ Now consider a function \obj{boo} whose input type is the natural numbers.
 Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
 \[
   \begin{array}[t]{@{} l}
-      \obj{FIX[R]( BOT} 
+      \obj{LFP[R]( BOT} 
       \\
       \I \obj{| <zero> @}
       \\
@@ -1915,7 +1915,7 @@ Different: RLT isn't cartesian
       \\
       \obj{EXI[}\Alpha \ \Delta \obj{]} \tau \sep 
       \obj{ALL[}\Alpha \ \Delta \obj{]} \tau \sep 
-      \obj{FIX[}\alpha\obj{]}\tau
+      \obj{LFP[}\alpha\obj{]}\tau
     \end{array}
     \\
     \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
@@ -2032,7 +2032,7 @@ Different: RLT isn't cartesian
       \\\\
       \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
-      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
+      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
     }
   \end{mathpar}
 \end{definition}
@@ -2351,26 +2351,26 @@ Different: RLT isn't cartesian
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
       \given M, \Delta
     } {
-      \obj{FIX[$\alpha$]$\tau_l$} \subtypes \tau_r 
+      \obj{LFP[$\alpha$]$\tau_l$} \subtypes \tau_r 
       \given M, \Delta
     }
 
     \inferrule {
-      \text{decidable}(\Delta_0, \tau_l, \obj{FIX[$\alpha$]$\tau_r$})
+      \text{decidable}(\Delta_0, \tau_l, \obj{LFP[$\alpha$]$\tau_r$})
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l \subtypes \tau_r[\alpha \slash \obj{FIX[$\alpha$]$\tau_r$}]
+      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[$\alpha$]$\tau_r$}]
       \given M, \Delta_1
     } {
-      \tau_l \subtypes \obj{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
       \given M, \Delta_1
     }
 
     \inferrule {
       m \in \text{FTV}(\tau_l) \\ m \in M_0
       \\
-      \text{norm}(\obj{$\tau_l$<:FIX[$\alpha$]$\tau_r$}) = \obj{$\tau_l'$<:FIX[$\alpha$]$\tau_r'$}
+      \text{norm}(\obj{$\tau_l$<:LFP[$\alpha$]$\tau_r$}) = \obj{$\tau_l'$<:LFP[$\alpha$]$\tau_r'$}
       \\\\
       \obj{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
       \\
@@ -2378,10 +2378,10 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau \subtypes \obj{FIX[$\alpha$]$\tau_r'$}
+      \tau \subtypes \obj{LFP[$\alpha$]$\tau_r'$}
       \given M_1, \Delta_1
     } {
-      \tau_l \subtypes \obj{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
       \given M_1, \Delta_1
     }
 
@@ -2393,13 +2393,13 @@ Different: RLT isn't cartesian
       \\
       \Delta_0 \preceq \Delta_1
       \\
-      \tau_l[\Omega] \subtypes \obj{FIX[$\alpha$]$\tau_r$}
+      \tau_l[\Omega] \subtypes \obj{LFP[$\alpha$]$\tau_r$}
       \given M_1, \Delta_1
       \\
-      \text{WF}(\tau_l\obj{<:}\obj{FIX[$\alpha$]$\tau_r$})
+      \text{WF}(\tau_l\obj{<:}\obj{LFP[$\alpha$]$\tau_r$})
     } {
-      \tau_l \subtypes \obj{FIX[$\alpha$]$\tau_r$}
-      \given M_1, \Delta_1 \ \tau_l<:\obj{FIX[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
+      \given M_1, \Delta_1 \ \tau_l<:\obj{LFP[$\alpha$]$\tau_r$}
     }
 
     \inferrule {
@@ -3091,7 +3091,7 @@ Different: RLT isn't cartesian
 
 \TODO{Note the reason for excluding rigids and skolems from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
-  % - forall x y, (FIX[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
+  % - forall x y, (LFP[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
     \inferrule {
     } {
@@ -3562,7 +3562,7 @@ Different: RLT isn't cartesian
     e = \obj{loop($e'$)} 
   $ 
   \item \Z $\contin  
-    \tau = \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFFIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
+    \tau = \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFLFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
   $
   \item \Z $\contin 
     Z = Z_0 
@@ -3589,7 +3589,7 @@ Different: RLT isn't cartesian
       $ by instantiation and application
       \item \Z\Z\Z $
         \Omega \satisfies \tau' \subtypes 
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
       $ by theorem \ref{theorem:fixpoint_duality_soundness}
 
       \item \Z\Z\Z $
@@ -3634,7 +3634,7 @@ Different: RLT isn't cartesian
       \Omega \satisfies 
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
     } 
   \end{mathpar}
   \TODO{...}
@@ -3657,7 +3657,7 @@ Different: RLT isn't cartesian
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     } 
   \end{mathpar}
@@ -3691,7 +3691,7 @@ Different: RLT isn't cartesian
         \implies
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
         \given Z_0
       $ by implication
     \item \Z\Z $
@@ -3700,7 +3700,7 @@ Different: RLT isn't cartesian
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     $ by generalization 
   \item \Z $\B{case }
@@ -3742,7 +3742,7 @@ Different: RLT isn't cartesian
     \implies
     \tau
     \subtypes
-    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
     \given Z_0
   $
   \item \Z $\B{wrt }
@@ -3763,13 +3763,13 @@ Different: RLT isn't cartesian
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
         \given Z_0
       $ by instantiation and application 
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
+        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
         \given Z_0
       $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
     \item \Z\Z $
@@ -3778,7 +3778,7 @@ Different: RLT isn't cartesian
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     $ by implication and generalization 
 
@@ -3789,7 +3789,7 @@ Different: RLT isn't cartesian
     \implies
     \tau
     \subtypes
-    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:FIX[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
     \given Z_0
   $ by induction
   \item $\square$ by implication
@@ -3802,7 +3802,7 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:FIX[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
       \\\\
       \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\\\
@@ -3823,7 +3823,7 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3854,7 +3854,7 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -3869,17 +3869,17 @@ Different: RLT isn't cartesian
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
       \\
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
     } {
       \Omega \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:FIX[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
+      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -4040,7 +4040,7 @@ Different: RLT isn't cartesian
 %       \\\\
 %       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \obj{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
 %     } {
-%       \obj{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:FIX[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+%       \obj{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
 %       \subtypes
 %       \obj{$\alpha_1$->$\alpha_2$}
 %       \given Z_1
@@ -5692,9 +5692,9 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
     } 
 
     \inferrule { 
-      \Omega \ \alpha \slash \obj{FIX[$\alpha$]$\tau$} \satisfies e \hastype \tau
+      \Omega \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
     } {
-      \Omega, \Gamma \satisfies e \hastype \obj{FIX[$\alpha$]$\tau$}
+      \Omega, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
     } 
 
 
