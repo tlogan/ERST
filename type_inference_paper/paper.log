@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  14 JAN 2025 18:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  15 JAN 2025 11:35
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1003,93 +1003,99 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 7.3pt on input line 280.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 5.5pt on input line 280.
-[3.3{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc}] [4.4] [5.5{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}] [6.6]
 
-LaTeX Warning: Reference `fig:syntax' on page 7 undefined on input line 532.
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [3.3{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc}] [4.4] [5.5] [6.6{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}]
+
+LaTeX Warning: Reference `fig:syntax' on page 7 undefined on input line 540.
 
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 8.99994pt on input line 552.
+(Font)              scaled to size 8.99994pt on input line 560.
 
-LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 556.
-
-
-LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 651.
-
-[7.7]
-
-LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 856.
+LaTeX Warning: Reference `fig:typing' on page 7 undefined on input line 564.
 
 
-LaTeX Warning: Reference `fig:infer' on page 8 undefined on input line 883.
+LaTeX Warning: Reference `fig:subtyping' on page 7 undefined on input line 659.
 
 
-Underfull \vbox (badness 1377) has occurred while \output is active []
+Underfull \vbox (badness 1371) has occurred while \output is active []
 
- [8.8]
+ [7.7]
 
-LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 1161.
+LaTeX Warning: Reference `fig:internal' on page 8 undefined on input line 864.
+
+
+LaTeX Warning: Reference `fig:infer' on page 8 undefined on input line 891.
+
+[8.8]
+
+LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 1169.
 
 [9.9]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 1196.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 1204.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1227.
+LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1235.
 
-[10.10] [11.11] [12.12]
-Underfull \vbox (badness 6268) has occurred while \output is active []
+[10.10] [11.11]
+Underfull \vbox (badness 3439) has occurred while \output is active []
+
+ [12.12]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [13.13]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [14.14] [15.15] [16.16] [17.17] [18.18] [19.19]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 3328.
+(Font)              scaled to size 9.0pt on input line 3336.
  [20.20{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [21.21] [22.22] [23.23] [24.24]
 
-LaTeX Warning: Reference `...' on page 25 undefined on input line 4140.
+LaTeX Warning: Reference `...' on page 25 undefined on input line 4148.
 
 [25.25] [26.26]
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4353.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4361.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4388.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4396.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 4449.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 4457.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [27.27]
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 4490.
+LaTeX Warning: Reference `...' on page 28 undefined on input line 4498.
 
 [28.28] [29.29] [30.30] [31.31]
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 4982.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 4990.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 5036.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 5044.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 5037.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 5045.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 5040.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 5048.
 
 [32.32]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 33 undefined on input line 5174.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 33 undefined on input line 5182.
 
 [33.33]
 
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 34 undefined on input line 5207.
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 34 undefined on input line 5215.
 
 [34.34]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 5315.
+(Font)              scaled to size 10.0pt on input line 5323.
  [35.35]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
@@ -1125,14 +1131,14 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  24541 strings out of 474116
- 393978 string characters out of 5743682
- 1966187 words of memory out of 5000000
+ 393975 string characters out of 5743682
+ 1965187 words of memory out of 5000000
  45651 multiletter control sequences out of 15000+600000
  770151 words of font info for 462 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,23n,131p,1060b,1306s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (37 pages, 581756 bytes).
+Output written on paper.pdf (37 pages, 581714 bytes).
 PDF statistics:
  568 PDF objects out of 1000 (max. 8388607)
  481 compressed objects within 5 object streams

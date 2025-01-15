@@ -277,17 +277,17 @@ such that type inference generates singleton types.
 We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
 \paragraph{Path typing.}
-Consider the function $\obj{trivial}$, which completes a simple English phrase:
+Consider the function $\obj{talky}$, which completes a simple English phrase:
 
 \[
   \begin{array}[t]{@{} l}
-    \obj{let trivial = (}
+    \obj{let talky = (}
       \\
-      \I \obj{\$ \tl hello @ => \tl world @}
+      \I \obj{\$ <hello> @ => <world> @}
       \\
-      \I \obj{\$ \tl good @ => \tl morning @} 
+      \I \obj{\$ <good> @ => <morning> @} 
       \\
-      \I \obj{\$ \tl thank @ => \tl you @} 
+      \I \obj{\$ <thank> @ => <you> @} 
       \\
     \obj{)}
   \end{array}
@@ -296,7 +296,15 @@ Consider the function $\obj{trivial}$, which completes a simple English phrase:
 This program is defined by paths over hardcoded tags.
 The system infers the type to be an intersection of implication types:
 \[
-  \obj{(\tl hello @ -> \tl world @) \& (\tl good @ -> \tl morning @) \& (\tl thank @ -> \tl you @)}
+  \begin{array}[t]{@{} l}
+    \obj{TOP}
+    \\
+    \obj{\& (<hello> @ -> <world> @)}
+    \\
+    \obj{\& (<good> @ -> <morning> @)} 
+    \\
+    \obj{\& (<thank> @ -> <you> @)}
+  \end{array}
 \]
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
@@ -306,10 +314,10 @@ Just as type inference constructs precise types for introduction forms,
 type inference can select the only viable paths of an application. In the most simple case where
 the argument is a singleton, there can be only one viable path, just like the runtime semantics.   
 
-Consider the application \obj{trivial(x)} where \obj{x} has the type \obj{(\tl hello @)|(\tl thank @)}. 
+Consider the application \obj{talky(x)} where \obj{x} has the type \obj{(<hello> @)|(<thank> @)}. 
 Type inference breaks apart the intersection into paths and finds that only two of the three paths 
 match the type of the argument. It determines the type of the application to be the type 
-\obj{(\tl world @)|(\tl you @)}.
+\obj{(<world> @)|(<you> @)}.
 
 \paragraph{Relational typing.} 
 Consider the function \obj{repeat} that takes a natural number and returns a list of that length. 
@@ -318,9 +326,9 @@ Consider the function \obj{repeat} that takes a natural number and returns a lis
   \begin{array}[t]{@{} l}
       \obj{let repeat = \$ x => loop(\$ self =>}
       \\
-      \I \obj{\$ \tl zero @ => \tl nil @}
+      \I \obj{\$ <zero> @ => <nil> @}
       \\
-      \I \obj{\$ \tl succ n => \tl cons(x,self(n))}
+      \I \obj{\$ <succ> n => <cons>(x,self(n))}
       \\
       \obj{)}
   \end{array}
@@ -337,20 +345,20 @@ To construct the type, type inference constructs a relation between nats and lis
 The type of \obj{repeat} depends on relation between nats and lists (parametrically named here for readability).
 \[
   \text{natList}(\alpha) = \begin{array}[t]{@{} l}
-      \obj{LFP[SELF;} 
+      \obj{FIX[R]( BOT} 
       \\
-      \I \obj{(\tl zero @)*(\tl nil @) |}
+      \I \obj{| (<zero> @)*(<nil> @)}
       \\
-      \I \obj{(EXI[N L ; N*L <: SELF](\tl succ N)*(\tl cons (}\alpha\obj{*L))}
+      \I \obj{| (EXI[N L ; N*L <: R](<succ> N)*(<cons> (}\alpha\obj{*L))}
       \\
-      \obj{]} 
+      \obj{)} 
   \end{array}
 \]
 
 Using the \text{natList} relation, type inference then lifts the function repeat into its precise type form.
 
 \[
-  \obj{repeat} : \obj{ALL[T]T -> ALL[X]X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{]Y}
+  \obj{ALL[T] T -> ALL[X] X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{] Y}
 \]
 
 It may worth noting that there exists a semantically equivalent type in terms of a greatest fixed point. 
@@ -358,14 +366,13 @@ It may worth noting that there exists a semantically equivalent type in terms of
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{ALL[T]} 
-      \obj{GFP[SELF;} 
+      \obj{ALL[T] FIX[R]( TOP} 
       \\
-      \I \obj{(\tl zero @)->(\tl nil @) \&}
+      \I \obj{\& (<zero> @)->(<nil> @)}
       \\
-      \I \obj{(ALL[N L ; SELF <: N->L](\tl succ N)->(\tl cons(T*L))}
+      \I \obj{\& (ALL[N L ; R <: N->L](<succ> N)->(<cons> T*L)}
       \\
-      \obj{]} 
+      \obj{)} 
   \end{array}
 \]
 
@@ -377,10 +384,11 @@ to reason in a number ways: it can reason forward from inputs to outputs (just l
 reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
 
 
-\paragraph{Fixed point forward path selection.} Consider the application \obj{repeat(\tl succ \tl succ \tl zero @)(@)}. Type inference
+\paragraph{Fixed point forward path selection.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
+has type \obj{T}. Type inference
 constructs a singleton type, mirroring the results achieved by simply running the program.  
 \[
-  \obj{\tl cons(@*\tl cons(@*\tl nil@))}
+  \obj{<cons> T * <cons> T * <nil> @}
 \]
 
 Path selection and relational selection demonstrate that the declarative type language is expressive enough
@@ -391,11 +399,11 @@ The next examples illustrate how the system can compose abstract properties to i
 which are not reproducible by dynamic semantics.
 
 \paragraph{Fixed point backwards path selection.} Now suppose we have a function \obj{foo} whose input
-type is inferred to be an empty list or a singleton list, \obj{\tl nil @ | \tl cons(T,\tl nil @)}.
+type is inferred to be an empty list or a singleton list, \obj{<nil> @ |  <cons> T * <nil> @}.
 Given the application \obj{foo(repeat(n)(x))} where \obj{x} has type \obj{T}, type inference can reason backwards to learn
 that the type of \obj{n} must be either zero or one. 
 \[
-  \obj{\tl zero @ | \tl succ \tl zero @}
+  \obj{<zero> @ | <succ> <zero> @}
 \]
 
 
@@ -405,13 +413,13 @@ Now suppose we have a function \obj{woo} whose input
 type is inferred to be a list over elements of type \obj{T}.
 \[
   \begin{array}[t]{@{} l}
-      \obj{LFP[SELF;} 
+      \obj{FIX[R]( BOT}
       \\
-      \I \obj{\tl nil @ |}
+      \I \obj{| <nil> @ }
       \\
-      \I \obj{\tl cons T*SELF}
+      \I \obj{| <cons> T*R}
       \\
-      \obj{]} 
+      \obj{)}
   \end{array}
 \]
 
@@ -423,13 +431,13 @@ of \obj{woo} and the type of \obj{n} must be the natural numbers.
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{LFP[SELF;} 
+      \obj{FIX[R]( BOT} 
       \\
-      \I \obj{\tl zero @ |}
+      \I \obj{| <zero> @}
       \\
-      \I \obj{\tl succ SELF}
+      \I \obj{| <succ> R}
       \\
-      \obj{]} 
+      \obj{)} 
   \end{array}
 \]
 
@@ -439,13 +447,13 @@ Now consider a function \obj{boo} whose input type is the natural numbers.
 Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
 \[
   \begin{array}[t]{@{} l}
-      \obj{LFP[SELF;} 
+      \obj{FIX[R]( BOT} 
       \\
-      \I \obj{\tl zero @ |}
+      \I \obj{| <zero> @}
       \\
-      \I \obj{\tl succ \tl succ SELF}
+      \I \obj{| <succ> <succ> R}
       \\
-      \obj{]} 
+      \obj{)} 
   \end{array}
 \]
 The application requires that type inference check that the nat type is weaker than the even type. 
