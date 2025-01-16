@@ -49,6 +49,7 @@
 
 % \newcommand{\obj}[1]{\texttt{\small #1}}
 \newcommand{\obj}[1]{\texttt{\color{RoyalBlue} #1}}
+% \newcommand{\obj}[1]{\texttt{#1}}
 % \newcommand{\obj}[1]{\textbf{\texttt{#1}}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
@@ -223,44 +224,6 @@ available for types, such as existential types, union types, and inductive types
 Since parametric types are second order, constraining relations requires subtyping.
 Thus, parametric types are extended with constraints in the form of subtyping.
 
-
-
-\begin{figure*}[h]
-
-    \begin{lstlisting}[mathescape=true]
-
-        let repeat = case x => fix(case self =>
-            case ~zero @ => ~nil @
-            case ~succ n => ~cons (x, self n)) in
-
-        let fromList = fix(case self =>
-            case ~nil @ => $\hdots$
-            case ~cons (x, xs) => $\hdots$) in
-
-        let fromNat = case x n => fromList (repeat x n)
-
-        let fromUno = case (uno => content) => $\hdots$ in
-        let fromDos = case (dos => content) => $\hdots$ in
-        let fromBoth = case x => (fromUno x, fromDos, x)
-
-        let lessOrEq = fix(case self =>
-            case (~zero @, y) => ~true @
-            case (~succ x, ~succ y) => self (x, y)
-            case (~succ x, ~zero) => ~false @) in
-
-        let max = (case (x, y) => 
-            if lessOrEq (x, y) then y else x) in
-
-        $\hdots$
-
-
-    \end{lstlisting}
-
-\caption{Example program}
-\label{fig:program}
-\end{figure*}
-
-
 \subsection{Type Inference}
 
 For a given program, type inference constructs a very precise type. Some programs are simple enough
@@ -309,14 +272,15 @@ The system infers the type to be an intersection of implication types:
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
 
-\paragraph{Path selection.}
+\paragraph{Output broadening.}
 Just as type inference constructs precise types for introduction forms, 
-type inference can select the only viable paths of an application. In the most simple case where
-the argument is a singleton, there can be only one viable path, just like the runtime semantics.   
+type inference can select the only viable paths of an application. 
 
 Consider the application \obj{talky(x)} where \obj{x} has the type \obj{(<hello> @)|(<thank> @)}. 
-Type inference breaks apart the intersection into paths and finds that only two of the three paths 
-match the type of the argument. It determines the type of the application to be the type 
+Type inference breaks apart the function type's intersection into paths and 
+constructs the strongest output type possible by expanding the output type
+only for each viable path. Since only two of the three paths 
+match the type of the argument, Type inference determines the type of the application to be the type 
 \obj{(<world> @)|(<you> @)}.
 
 \paragraph{Relational typing.} 
@@ -384,21 +348,14 @@ to reason in a number ways: it can reason forward from inputs to outputs (just l
 reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
 
 
-\paragraph{Fixed point forward path selection.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
+\paragraph{Fixed point forward broadening.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
 has type \obj{T}. Type inference
 constructs a singleton type, mirroring the results achieved by simply running the program.  
 \[
   \obj{<cons> T * <cons> T * <nil> @}
 \]
 
-Path selection and relational selection demonstrate that the declarative type language is expressive enough
-to perform evaluation. However, this simply reproduces the effect of the dynamic semantics, 
-albeit in a declarative style. For types to be useful in practice, they need to offer ways to
-express properties with incomplete information.
-The next examples illustrate how the system can compose abstract properties to infer useful properties,
-which are not reproducible by dynamic semantics.
-
-\paragraph{Fixed point backwards path selection.} Now suppose we have a function \obj{foo} whose input
+\paragraph{Fixed point backwards broadening.} Now suppose we have a function \obj{foo} whose input
 type is inferred to be an empty list or a singleton list, \obj{<nil> @ |  <cons> T * <nil> @}.
 Given the application \obj{foo(repeat(n)(x))} where \obj{x} has type \obj{T}, type inference can reason backwards to learn
 that the type of \obj{n} must be either zero or one. 
@@ -463,68 +420,52 @@ In particular, type inference leverages the inductive hypothesis, by learning th
 types hold for all the recursive constraints of the stronger type. 
 In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
 on a single variable.
-In the case of comparing two relations such as \obj{natList}(\obj{T}) and a corresponding even version, 
+In the case of comparing two relations such as \text{natList}(\obj{T}) and a corresponding even version, 
 the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
 constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
-\paragraph{Refinement.}
-Consider the function \obj{fromBoth} that calls two functions on some variable of unknown value or type.  
-The same variable is used as an argument to two separate functions that have different parameter types.
-The type of the variable can be refined by intersecting both parameter types that it must satisfy.
-\begin{mathpar}
-\\
-  \inferrule {} {
-    \Delta \cdot \Gamma \vdash \obj{fromBoth} : \obj{(uno : X) \& (dos : Y) -> $\hdots$} 
-  }
-\\
-\end{mathpar}
+\paragraph{Input refinement.}
+Consider two functions: \obj{uno} of type \obj{U->V} and \obj{dos} of type \obj{D->E}. 
+Now suppose these two functions are called on the same variable, e.g. \obj{(uno(x),dos(x))}.
+Type inference learns that the type of \obj{x} can be no weaker than the intersection
+of the functions' input types: \obj{U\&D}. 
+
 
 \paragraph{Path sensitivity.} Consider the function \obj{max} that chooses the maximum of two natural numbers. 
-The function must satisfy the property that the result is greater or equal to each of the inputs. 
-The system can infer this property by relying on multiple type inference mechanisms, including
-relational typing, path selection, refinement, and a special form of refinement that refines a type
-by specializing relations it belongs to. The \emph{if-then-else} expression is merely sugar for applying
-a function with a \emph{true} path and \emph{false} path to a boolean expression. 
-Note that the variables are used in both the condition and the bodies of the if-then-else expression.
-To infer a precise type for the if-then-else expression, the types of the variables need to be refined according to 
-each path's expected type, but without leaking the refinement outside of that path. 
-That is, the refinements must be local or path sensitive.
-Moreover, there must be enough paths of the applied function to handle all 
-the possible values of the argument.
 
-\TODO{make sure inductive type (LED) is explained clearly}
 
-\TODO{max type inference is wrong; should be an intersection}
-\begin{mathpar}
-\\
-  \inferrule {
-    leq\_decide =  
-    \left(
-    \begin{array}[]{@{} l}
-        \obj{induc[LED]} 
-        \arcr
-        \hspace{4mm} \obj{\{?zero * \_ * ?true\} |}
-        \arcr
-        \hspace{4mm} \obj{\{?succ X * ?succ Y * B  with X * Y * B <: LED\} |}
-        \arcr
-        \hspace{4mm} \obj{\{?succ \_ * ?zero * ?false\}}
-    \end{array}
-    \right)
-    \\\\
-    max\_spec =  
-    \left(
-    \begin{array}[]{@{} l}
-        \obj{X * Y -> Y \& \{Z with (X * Z * ?true) <: $leq\_decide$\} |}
-        \arcr
-        \obj{X * Y -> X \& \{Z with (Z * Y * ?false) <: $leq\_decide$\}}
-    \end{array}
-    \right)
-  } {
-    \Delta \cdot \Gamma \vdash \obj{max} : max\_spec 
-  }
-\\
-\end{mathpar}
+
+\[
+  \begin{array}[t]{@{} l}
+      \obj{let lessOrEq = loop(\$ self =>}
+      \\
+      \I \obj{\$ (<zero> @),y => <true> @}
+      \\
+      \I \obj{\$ (<succ> x),(<succ> y) => self(x,y)}
+      \\
+      \I \obj{\$ (<succ> x),(<zero> @) => <false> @}
+      \\
+      \obj{) in}
+      \\
+      \obj{let max = \$ (x,y) => }
+      \\
+      \I \obj{if lessOrEq(x,y) then y else x}
+  \end{array}
+\]
+
+
+The function \obj{max} must satisfy the property that the result is greater or equal to each of the inputs. 
+Type inference must learn constraints on the inputs to \obj{max}: \obj{x} and \obj{y}, which 
+depends on the output of \obj{lessOrEq(x,y)}. The application \obj{lessOrEq(x,y)} can evaluate to either \obj{<true>@}
+or \obj{<false>@}, which result from different paths taken in \obj{lessOrEq}. 
+Type inference considers both cases and maintains the learned constraints
+exist in different possible worlds, since they are learned from different paths. Finally, type inference
+connects the inputs to the outputs by considering the two possible paths of the \obj{if-then-else}.
+
+
+\TODO{show type generated from code}
+
 
 \TODO{more motivating and elucidating examples}
 % \paragraph{List bounds.}
