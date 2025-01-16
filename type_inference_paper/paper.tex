@@ -273,18 +273,18 @@ The system infers the type to be an intersection of implication types:
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
 
 \paragraph{Output broadening.}
-Just as type inference constructs precise types for introduction forms, 
-type inference can select the only viable paths of an application. 
-
 Consider the application \obj{talky(x)} where \obj{x} has the type \obj{(<hello> @)|(<thank> @)}. 
 Type inference breaks apart the function type's intersection into paths and 
 constructs the strongest output type possible by expanding the output type
-only for each viable path. Since only two of the three paths 
-match the type of the argument, Type inference determines the type of the application to be the type 
+for each viable path. Since only two of the three paths 
+match the type of the argument, type inference determines the type of the application to be the type 
 \obj{(<world> @)|(<you> @)}.
+Broadening from the bottom up contrasts with refinement type systems, which start from
+the weakest type intrinsic to the constructors and refines down to a stronger type
+through intersections of types or conjunctions of qualifiers.
 
 \paragraph{Relational typing.} 
-Consider the function \obj{repeat} that takes a natural number and returns a list of that length. 
+Consider the function \obj{repeat} that takes a natural number and returns a list of whose length is that number. 
 
 \[
   \begin{array}[t]{@{} l}
@@ -462,6 +462,38 @@ or \obj{<false>@}, which result from different paths taken in \obj{lessOrEq}.
 Type inference considers both cases and maintains the learned constraints
 exist in different possible worlds, since they are learned from different paths. Finally, type inference
 connects the inputs to the outputs by considering the two possible paths of the \obj{if-then-else}.
+It first lifts the function \obj{lessOrEq} into a relational type. For readability, we name the relational type \text{LED} (as in "less than or equal decision"). 
+
+\[
+  \text{LED} = 
+  \begin{array}[t]{@{} l}
+      \obj{LFP[R] ( BOT}
+      \\
+      \I \obj{| (EXI [Y] ((<zero> @),Y),(<true> @))}
+      \\
+      \I \obj{| (EXI [X Y Z ; ((X,Y),Z) <: R] ((<succ> X),(<succ> Y)),Z)}
+      \\
+      \I \obj{| (EXI [X] ((<succ> X), (<zero> @)),(<false> @))}
+      \\
+      \obj{)}
+  \end{array}
+\]
+
+using the \text{LED} relation, type inference combines the constraints learned
+for each possible world and combines them into a function type with multiple paths. 
+
+\TODO{update code to replace skolem variables based on constraints when constructing type}
+
+\TODO{update code to simplify learnable vairables too}
+\[
+  \begin{array}[t]{@{} l}
+    \obj{TOP}
+    \\
+    \obj{\& (ALL [X Y ; ((X,Y),(<true> @)) <: }\text{LED}\obj{] (X,Y) -> Y)}
+    \\
+    \obj{\& (ALL [X Y ; ((X,Y),(<false> @)) <: }\text{LED}\obj{] (X,Y) -> X)}
+  \end{array}
+\]
 
 
 \TODO{show type generated from code}
