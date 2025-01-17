@@ -482,9 +482,22 @@ It first lifts the function \obj{lessOrEq} into a relational type. For readabili
 using the \text{LED} relation, type inference combines the constraints learned
 for each possible world and combines them into a function type with multiple paths. 
 
-\TODO{update code to replace skolem variables based on constraints when constructing type}
+\[
+  \begin{array}[t]{@{} l}
+    \obj{TOP}
+    \\
+    \obj{\& (EXI [D ; D <: (<true> @)]}
+    \\
+    \I \obj{(ALL [X Y Z ; Y <: Z ; ((X,Y),D) <:}\text{LED}\obj{] (X,Y) -> Z))}
+    \\
+    \obj{\& (EXI [D ; D <: (<false> @)]}
+    \\
+    \I \obj{(ALL [X Y Z ; X <: Z ; ((X,Y),D) <: }\text{LED}\obj{] (X,Y) -> Z))}
+  \end{array}
+\]
 
-\TODO{update code to simplify learnable vairables too}
+We could simplify the type by eliminating simple constraints without loss of safety or precision:
+
 \[
   \begin{array}[t]{@{} l}
     \obj{TOP}
@@ -494,6 +507,8 @@ for each possible world and combines them into a function type with multiple pat
     \obj{\& (ALL [X Y ; ((X,Y),(<false> @)) <: }\text{LED}\obj{] (X,Y) -> X)}
   \end{array}
 \]
+
+However, we have not included this rewriting in the semantics or implementation. 
 
 
 \TODO{show type generated from code}
