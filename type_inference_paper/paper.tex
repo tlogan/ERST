@@ -469,11 +469,11 @@ It first lifts the function \obj{lessOrEq} into a relational type. For readabili
   \begin{array}[t]{@{} l}
       \obj{LFP[R] ( BOT}
       \\
-      \I \obj{| (EXI [Y] ((<zero> @),Y),(<true> @))}
+      \I \obj{| (EXI [Y] ((<zero> @)*Y)*(<true> @))}
       \\
-      \I \obj{| (EXI [X Y Z ; ((X,Y),Z) <: R] ((<succ> X),(<succ> Y)),Z)}
+      \I \obj{| (EXI [X Y D ; ((X*Y)*Z) <: R] ((<succ> X)*(<succ> Y))*D)}
       \\
-      \I \obj{| (EXI [X] ((<succ> X), (<zero> @)),(<false> @))}
+      \I \obj{| (EXI [X] ((<succ> X)*(<zero> @))*(<false> @))}
       \\
       \obj{)}
   \end{array}
@@ -488,11 +488,11 @@ for each possible world and combines them into a function type with multiple pat
     \\
     \obj{\& (EXI [D ; D <: (<true> @)]}
     \\
-    \I \obj{(ALL [X Y Z ; Y <: Z ; ((X,Y),D) <:}\text{LED}\obj{] (X,Y) -> Z))}
+    \I \obj{(ALL [X Y Z ; Y <: Z ; ((X*Y)*D) <:}\text{LED}\obj{] (X,Y) -> Z))}
     \\
     \obj{\& (EXI [D ; D <: (<false> @)]}
     \\
-    \I \obj{(ALL [X Y Z ; X <: Z ; ((X,Y),D) <: }\text{LED}\obj{] (X,Y) -> Z))}
+    \I \obj{(ALL [X Y Z ; X <: Z ; ((X*Y)*D) <: }\text{LED}\obj{] (X,Y) -> Z))}
   \end{array}
 \]
 
@@ -502,9 +502,9 @@ We could simplify the type by eliminating simple constraints without loss of saf
   \begin{array}[t]{@{} l}
     \obj{TOP}
     \\
-    \obj{\& (ALL [X Y ; ((X,Y),(<true> @)) <: }\text{LED}\obj{] (X,Y) -> Y)}
+    \obj{\& (ALL [X Y ; ((X*Y)*(<true> @)) <: }\text{LED}\obj{] (X,Y) -> Y)}
     \\
-    \obj{\& (ALL [X Y ; ((X,Y),(<false> @)) <: }\text{LED}\obj{] (X,Y) -> X)}
+    \obj{\& (ALL [X Y ; ((X*Y)*(<false> @)) <: }\text{LED}\obj{] (X,Y) -> X)}
   \end{array}
 \]
 
@@ -519,1184 +519,10 @@ However, we have not included this rewriting in the semantics or implementation.
 % \paragraph{Generalization.} This is motivated by applying the same function to multiple arguments of varying types.
 % \paragraph{Object oriented.}  
 
-\section{Language}
-The programming language is pure and functional. Its syntax and dynamic semantics 
-are fairly standard. The main departure from tradition is that its function
-and application rules subsume pattern matching. This departure enables a more direct  
-correspondence between the structures of programs and their types, but it is 
-not a necessary condition.
-The syntax is given in \FIG{fig:syntax}.
-It includes functions with pattern matching, records, a fixed point combinator, let binding, 
-tags for discriminating cases, and application.
-A function consists of a sequence of paths, where each path maps a pattern to an expression.
-A record consists of a sequence of fields, where each field maps a unique label to an expression. 
-The type language includes tag types, field types, implications, unions, intersections, 
-inductions, existentials, universals, top, and bottom. 
-The existential type consists of multiple bound variables, a payload containing the bound variables, 
-and a subtyping constraint over the bound variables. 
-If the bound variables aren't indicated, then all variables in the payload are
-assumed to be bound variables. If the subtyping constraint isn't indicated, then it is assumed to 
-be a tautology, such as (\obj{unit<:unit}).
-The universal type consists of a bound variable, the variable's upper bound, and a payload. If the upper
-bound is not indicated, it is assumed to be the top type (\obj{top}).
-The typing semantics rely on a typing environment for keeping track of typings of term variables.
-The subtyping semantics rely on subtyping environment for keeping track of and constraints on type variables. 
-Note that the syntax of the subtyping environment allows an upper bound constraint over a type
-rather than merely a type variable to allow for relational constraints. 
+\section{Dynamic Semantics}
 
-
-\TODO{update tag syntax: \obj{cons;cons;e:cons//cons//T}\ \ \obj{nil;():nil//unit}}
-
-
-\subsection{Typing}
-The typing is given in \FIG{fig:typing}.
-Most of the rules are fairly standard. 
-The rule for function typing is a bit special in that
-it treats a function as a sequence of paths whose type is an intersection of implications,
-rather than having a separate pattern matching rule. 
-Likewise, the type of a record is an intersection of field types.
-The let-binding rule allows for prenex polymorphism by generalizing via subtyping. 
-
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %% Typing 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\Gamma \entails e \hastype \tau}&
-% \end{flalign*}
-% \begin{mathpar}
-%   \inferrule[var] { 
-%     \obj{$x$:$\tau$} \in \Gamma
-%   } {
-%     \Gamma \entails x \hastype \tau 
-%   } 
-
-%   \inferrule[unit] { 
-%   } {
-%     \Gamma \entails \obj{()} \hastype \obj{unit}
-%   } 
-
-
-%   \inferrule[tag] { 
-%     \Gamma \entails e \hastype \tau 
-%   } {
-%      \Gamma \entails (\obj{\#$l$ $e$}) \hastype (\obj{?$l$ $\tau$})
-%   }
-
-%   \inferrule[rec] { 
-%     \bigand_i \Gamma \entails e_i \hastype  \tau_i  
-%   } {
-%     \Gamma \entails (\widebar{\obj{@$l_i$=$e_i$}}^i)
-%     \hastype \obj{\&}_i({\obj{$l_i$:$\tau_i$}})
-%   } 
-
-%   \inferrule[fun] {
-%     \bigand_i \Gamma_i \entails m_i \hastype \tau_i
-%     \\
-%     \bigand_i \Gamma;\Gamma_i \entails e_i \hastype \tau'_i
-%   } {
-%     \Gamma \entails (\widebar{\obj{path $m_i$=>$e_i$}}^i)
-%     : \obj{\&}_i(\obj{$\tau_i$->$\tau'_i$})  
-%   } 
-
-%   \inferrule[proj] {
-%     \Gamma \entails e \hastype \obj{$l$:$\tau$}
-%   } {
-%     \Gamma \entails \obj{$e$.$l$} \hastype \tau
-%   } 
-
-%   \inferrule[app] { 
-%     \Gamma \entails e_f \hastype \obj{$\tau'$->$\tau$}
-%     \\
-%     \Gamma \entails e_a \hastype \tau'
-%   } {
-%     \Gamma \entails \obj{$e_f$($e_a$)} \hastype \tau
-%   } 
-
-%   \inferrule[let] { 
-%     \Gamma \entails e_a \hastype \tau_a
-%     \\
-%     \bullet \entails  \tau_a \subtypes \tau'
-%     \\
-%     \Gamma;\obj{$x$:$\tau_a$} \entails e_b \hastype \tau
-%   } {
-%     \Gamma \entails (\obj{let $x$:$\tau'$ = $e_a$ in $e_b$}) 
-%     \hastype \tau
-%   } 
-
-%   \inferrule[fix] { 
-%     \Gamma \entails e \hastype \obj{$\tau$->$\tau$}
-%   } {
-%     \Gamma \entails \obj{loop($e$)} \hastype \tau
-%   } 
-
-%   \inferrule[subsump] { 
-%     \Gamma \entails e \hastype \tau' 
-%     \\
-%     \bullet \entails \tau' \subtypes \tau
-%   } {
-%     \Gamma \entails e \hastype \tau
-%   } 
-% \end{mathpar}
-% \caption{Typing}
-% \label{fig:typing}
-% \end{figure*}
-
-\subsection{Subtyping}
-The subtyping is given in \FIG{fig:subtyping}.
-Some of the rules are fairly standard, including implication, the union rules, and intersection rules.
-Note that in addition to left and right rules, union and intersection each have rules for 
-interacting with implication's antecedent and consequent, respectively.
-The constraint rule checks that a subtyping relation exists as a constraint in the subtyping environment.
-The right induction rule is standard and simply unrolls the induction.
-The left induction rule relies on the induction principle to construct an 
-inductive constraint hypothesis.  
-The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
-The existential rules are quite special, as they involve a subtyping constraint as part of 
-a second-order comprehension. 
-The left existential rule checks that subtyping holds for all variations of the payload 
-where the subtyping constraint holds. 
-The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
-The left universal rule checks that subtyping holds for some variation of the payload consistent with
-the variable's upper bound. 
-The right universal rule checks that subtyping holds for all variations of the payload consistent with
-the variable's upper bound.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving (A) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %% Subtyping
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\Delta \entails \tau \subtypes \tau}&
-% \end{flalign*}
-
-% \begin{mathpar}
-
-%   \inferrule[anteUnion] {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_3$}
-%     \\
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_2$->$\tau_3$}
-%   } {
-%     \Delta \entails \tau_l \subtypes \obj{($\tau_1$|$\tau_2$)->$\tau_3$}
-%   }
-
-%   \inferrule[leftUnion] {
-%     \Delta \entails \tau_1 \subtypes \tau_r
-%     \\
-%     \Delta \entails \tau_2 \subtypes \tau_r
-%   } {
-%     \Delta \entails \obj{$\tau_1$|$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[rightUnion1] {
-%     \Delta \entails \tau_l \subtypes \tau_1
-%   } {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[rightUnion2] {
-%     \Delta \entails \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$|$\tau_2$}
-%   }
-
-%   \inferrule[ConsqInter] {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_2$}
-%     \\
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->$\tau_3$}
-%   } {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$->($\tau_2$\&$\tau_3$)}
-%   }
-
-%   \inferrule[rightInter] {
-%     \Delta \entails \tau_l \subtypes \tau_1
-%     \\
-%     \Delta \entails \tau_l \subtypes \tau_2
-%   } {
-%     \Delta \entails \tau_l \subtypes \obj{$\tau_1$\&$\tau_2$}
-%   }
-
-%   \inferrule[leftInter1] {
-%     \Delta \entails \tau_1 \subtypes \tau_r
-%   } {
-%     \Delta \entails \obj{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftInter2] {
-%     \Delta \entails \tau_2 \subtypes \tau_r
-%   } {
-%     \Delta \entails \obj{$\tau_1$\&$\tau_2$} \subtypes \tau_r
-%   }
-
-%   \inferrule[leftExis] { 
-%     \F{freeTVs}(\tau_r) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \bigand_{\Delta'}
-%     (\Delta;\Delta' \entails \tau_1 \subtypes \tau_2)
-%     \rightsquigarrow
-%     (\Delta;\Delta' \entails \tau \subtypes \tau_r)
-%   } { 
-%     \Delta \entails \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[rightExis] { 
-%     \F{freeTVs}(\tau_l) \cap \widebar{\alpha} \subseteq \emptyset 
-%     \\
-%     \Delta;\Delta' \entails \tau_l \subtypes \tau
-%     \\
-%     \Delta;\Delta' \entails \tau_1 \subtypes \tau_2
-%   } { 
-%     \Delta \entails \tau_l
-%     \subtypes \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}
-%   }
-
-%   \inferrule[refl] {
-%   } {
-%     \Delta \entails \tau \subtypes \tau 
-%   }
-
-%   \inferrule[impli] {
-%     \Delta \entails \tau_3 \subtypes \tau_1 
-%     \\
-%     \Delta \entails \tau_2 \subtypes \tau_4
-%   } {
-%     \Delta \entails \obj{$\tau_1$->$\tau_2$} \subtypes \obj{$\tau_3$->$\tau_4$}
-%   } 
-
-
-%   \inferrule[rightUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\obj{$\alpha$<:$\tau'$} \entails \tau_l \subtypes \tau
-%   } { 
-%     \Delta \entails \tau_l
-%     \subtypes \obj{[$\alpha$<:$\tau'$]$\tau$}
-%   }
-
-%   \inferrule[leftUniv] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\Delta' \entails \tau \subtypes \tau_r
-%     \\
-%     \Delta;\Delta' \entails \alpha \subtypes \tau'
-%   } { 
-%     \Delta \entails \obj{[$\alpha$<:$\tau'$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[cons] {
-%     \obj{$\tau_l$<:$\tau_r$} \in \Delta
-%   } {
-%     \Delta \entails \tau_l \subtypes \tau_r
-%   }
-
-
-%   % left-induc
-%   \inferrule[leftInduc] { 
-%     \alpha \not\in \F{freeTVs}(\tau_r)
-%     \\
-%     \Delta;\obj{$\alpha$<:$\tau_r$} \entails \tau 
-%     \subtypes \tau_r
-%   } { 
-%     \Delta \entails \obj{induc[$\alpha$]$\tau$}
-%     \subtypes \tau_r
-%   }
-
-%   \inferrule[field] {
-%     \Delta \entails \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \entails \obj{$l$:$\tau_1$} \subtypes \obj{$l$:$\tau_2$}
-%   } 
-
-
-%   % right-induc
-%   \inferrule[rightInduc] {
-%     \alpha \not\in \F{freeTVs}(\tau_l)
-%     \\
-%     \Delta;\obj{$\alpha$<:induc[$\alpha$]$\tau$} \entails 
-%     \tau_l \subtypes \tau
-%   } {
-%     \Delta \entails \tau_l
-%     \subtypes \obj{induc[$\alpha$]$\tau$}
-%   }
-
-%   \inferrule[tag] {
-%     \Delta \entails \tau_1 \subtypes \tau_2
-%   } {
-%     \Delta \entails (\obj{?$l$ $\tau_1$}) \subtypes (\obj{?$l$ $\tau_2$})
-%   } 
-% \end{mathpar}
-% \caption{Subtyping}
-% \label{fig:subtyping}
-% \end{figure*}
-
-
-\section{Analysis}
-
-The analysis consists of two main parts. The top level is type inference, which corresponds to typing
-and generates a type for an expression. When type inference encounters constraints that its types must adhere to,
-it calls unification to solve these constraints. Note that since the types are expressive enough to represent constraints,
-an alternative approach of generating constraints and solving them in separate stages could also be designed 
-using the same structures. Additional structures for the analysis are given in \FIG{fig:internal}. 
-Inference generates a solution set $T$, which contains triples, each with a type variable set, a subtyping environment, and a type.  
-Unification generates a solution set $C$, which contains subtyping environments. 
-
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %% Internal Structures %%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \begin{figure*}[h]
-% \[
-% \begin{array}{l @{} l}
-%   \Omega 
-%   &{} \owns \alpha 
-%   \\
-%   T 
-%   &{} \owns (\Omega, \Delta, \tau)
-%   \\
-%   C 
-%   &{} \owns \Delta
-%   \\
-% \end{array}
-% \]
-% \caption{Internal Structures}
-% \label{fig:internal}
-% \end{figure*}
-
-\subsection{Type inference}
-The type inference procedure is given in \FIG{fig:infer}.
-The procedure depends on four parameters: an type variable set, a subtyping environment, 
-a typing environment, and an expression.
-The variable set indicates if a type variable's assigned type is allowed to be strengthened or weakened  
-during unification.
-The subtyping environment indicates the assumed constraints on types containing type variables,
-including relational constraints and constraints over single type variables, 
-which we also refer to as type assignments.
-The typing environment indicates the assumed constraints on term variables.
-The expression indicates the inhabitant of the type that is to be inferred.
-The procedure returns a set of triples, where each triple consists of a variable set, a subtyping environment,
-and a type.
-The unit case simply returns a singleton set with the unit type and the environments unchanged. 
-The variable case uses the variable as a key to find its type in the typing environment. 
-It returns a singleton set containing the found type along with the adjustment set and subtyping environment.
-The tag case infers the type of its constituent type and uses its label to construct a tag type.
-The record case infers the type of its fields and intersects the constructed field types together.
-
-The function case is of particular importance to type inference in an untyped setting.
-For each path in the function, it extracts the term variables of the pattern and associates 
-the term variables with fresh type variables. It infers the body of each path 
-with an updated variable set and an updated typing environment containing the fresh
-type variables of the pattern. By adding the pattern's type variables to the adjustment variable set,
-it implies that the parameter type of the path can be strengthened by applications
-occurring in the body of the path. This enables adjusting a parameter type to reflect all of its 
-occurrences in the body, 
-rather than reflecting just its first occurrence and failing on subsequent occurrences. 
-Before returning the inferred implication type for the path, the case removes
-the the pattern's type variables from the adjustment variable set, ensuring
-that those type variables cannot be strengthened or weakened from the outside. 
-As with the record case, the inferred implications are intersected together.
-
-The projection case infers the type of the record expression. 
-It then calls unify to solve for the projected type by finding
-a single field type that is subtyped by the record type. 
-
-The application case also plays an important role in type inference of untyped programs.
-It creates a fresh type variable as a placeholder for the inferred type of the application result.
-It infers the type of the function and the argument, and then solves for the result type
-by unifying the function's type with an implication from the argument type to the result type.
-It adds the result type variable to the adjustment variable set when unifying to allow inferring 
-types accounting for all the paths that the function might take.
-After unifying, it removes the result type variable from the adjustment variable set to ensure
-that the type cannot be modified from the outside.
-Additionally, since inference and unification actually return sets of solutions,
-the application must type check for all function types and all argument types.
-If even one combination cannot be unified then the inference of application fails,
-indicated by breaking the for-loop, which then implicitly returns an empty set.  
-
-\TODO{update application to merely require some function cases to type check}
-
-the let-binding case infers the type of the argument and checks that
-all possible types subtype the annotation and result in a well-typed body. 
-It generalizes type variables in the inferred argument type while maintaining
-the constraints indicated by the subtyping environment. 
-
-\TODO{update let-binding to generalize only if something is a function-type: e.g. intersection, univeral, implication }
-
-\TODO{update let-binding to merely require some bodies to type check}
-
-The fix case infers inductive types for the parameters and bodies of its
-target expression. Moreover, it inductively relates the parameter and body types to each other.
-First, it infers the type of the target and calls unify to deconstruct it into the antecedent
-and consequent of an implication type. According to the semantics of fix, the antecedent
-represents and inductive hypothesis, while the consequent represents and inductive conclusion.
-Thus, it uses the inferred structures of the antecedent and consequent to construct an 
-inductive relation by ensuring that the antecedent subtypes the inductively bound variable of 
-the resulting inductive type.
-Finally, the implication type is projected from the constructed relation and generalized with universal.
-
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %% Type inference 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\F{infer}(\Omega, \Delta, \Gamma, e) = T}&
-% \end{flalign*}
-% \[
-% \begin{array}[t]{@{} l}
-%     \F{infer}(\Omega, \Delta, \Gamma, e) \triangleq 
-%     \\
-%     \I \B{match}\ e
-
-%     \\
-
-%     \I \C{unit}
-%     \\
-%     \I \B{case } \obj{()} : \{(\Omega, \Delta, \obj{unit})\}
-
-%     \\
-
-%     \I \C{variable}
-%     \\
-%     \I \B{case } \obj{$x$} : 
-%     \\
-%     \I\I \B{match } (\obj{$x$:\_} \in \Gamma)
-%     \\
-%     \I\I \B{case } \F{some}(\tau) : \{(\Omega, \Delta, \tau)\}
-%     \\
-%     \I\I \B{case } \F{none} : \emptyset 
-
-%     \\
-
-%     \I \C{tag}
-%     \\
-%     \I \B{case } \obj{\#$l$ $e$}  :  
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e): 
-%      \\
-%     \I\I\I \{(\Omega, \Delta, \obj{?$l$ $\tau$})\}
-
-%     \\
-
-%     \I \C{record}
-%     \\
-%     \I \B{case } \widebar{\obj{@$l$=$e$}}  :  
-%     \\
-%     \I\I T \leftarrow \{(\Omega, \Delta, \obj{top})\}
-%     \\
-%     \I\I \B{for } (\obj{@$l$=$e$}) \leftarrow \widebar{\obj{@$l$=$e$}}:
-%     \\
-%     \I\I\I T \leftarrow (
-%     \\
-%     \I\I\I\I \B{for } (\Omega, \Delta, \tau_{res}) \leftarrow T:
-%     \\
-%     \I\I\I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e): 
-%     \\
-%     \I\I\I\I\I \{(\Omega, \Delta, \obj{($l$:$\tau$)\&$\tau_{res}$})\}
-%     \\
-%     \I\I\I )
-%     \\
-%     \I\I T
-
-%     \\
-
-%     \I \C{function}
-%     \\
-%     \I \B{case } (\widebar{\obj{path $m$=>$e$}})  :  
-%     \\
-%     \I\I T \leftarrow \{(\Omega, \Delta, \obj{top})\}
-%     \\
-%     \I\I \B{for } (\obj{path $m$=>$e$}) \leftarrow (\widebar{\obj{path $m$=>$e$}}): 
-%     \\
-%     \I\I\I \Omega' \leftarrow \emptyset
-%     \\
-%     \I\I\I \Gamma' \leftarrow \bullet
-%     \\
-%     \I\I\I \B{for } x \leftarrow \F{freevars}(m):
-%     \\
-%     \I\I\I\I \alpha \leftarrow \F{freshTV}() 
-%     \\
-%     \I\I\I\I \Omega' \leftarrow \Omega' \cup \{\alpha\} 
-%     \\
-%     \I\I\I\I \Gamma' \leftarrow \Gamma';\obj{$x$:$\alpha$}
-%     \\
-%     \I\I\I T \leftarrow (
-%     \\
-%     \I\I\I\I \B{for } (\Omega, \Delta, \tau_{res}) \leftarrow T: 
-%     \\
-%     \I\I\I\I\I \Omega \leftarrow \Omega \cup \Omega'
-%     \\
-%     \I\I\I\I\I \B{for } (\Omega, \Delta, \tau_{m}) \leftarrow \F{infer}(\Omega, \Delta, (\Gamma;\Gamma'), m): 
-%     \\
-%     \I\I\I\I\I \B{for } (\Omega, \Delta, \tau_{e}) \leftarrow \F{infer}(\Omega, \Delta, (\Gamma;\Gamma'), e): 
-%     \\
-%     \I\I\I\I\I\I \Omega \leftarrow \Omega \backslash \Omega'
-%     \\
-%     \I\I\I\I\I\I \{(\Omega, \Delta, \obj{($\tau_{m}$->$\tau_{e}$)\&$\tau_{res}$})\}
-%     \\
-%     \I\I\I )
-%     \\
-%     \I\I T
-
-%     \\
-
-%     \I \C{projection}
-%     \\
-%     \I \B{case } \obj{$e$.$l$} :  
-%     \\
-%     \I\I \alpha \leftarrow \F{freshTV}()
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e):
-%     \\
-%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\obj{$l$:$\alpha$})):
-%     \\
-%     \I\I\I \{(\Omega, \Delta, \alpha)\}
-% \end{array}
-% \begin{array}[t]{@{} l}
-%     \I \C{application}
-%     \\
-%     \I \B{case } \obj{$e_f$($e_a$)} :  
-%     \\
-%     \I\I \alpha \leftarrow \F{freshTV}()
-%     \\
-%     \I\I \Omega \leftarrow \Omega \cup \{\alpha\}
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau_a) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e_a):
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau_f) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e_f):
-%     \\
-%     \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_f, (\obj{$\tau_a$->$\alpha$}))
-%     \\
-%     \I\I\I \B{if } \F{empty}(C) \B{ then } \B{break} \B{ else }
-%     \\
-%     \I\I\I\I \B{for } (\Omega, \Delta) \leftarrow C:
-%     \\
-%     \I\I\I\I\I \Omega \leftarrow \Omega \backslash \{\alpha\}
-%     \\
-%     \I\I\I\I\I \{(\Omega, \Delta, \alpha)\}
-
-%     \\
-
-%     \I \C{let}
-%     \\
-%     \I \B{case } (\obj{let $x$ : $\tau_p$ = $e_a$ in $e_b$}) :  
-%     \\
-%     \I\I \Omega_{stale} \leftarrow \F{staleTVs}()
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau_a) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e_a):
-%     \\
-%     \I\I\I C \leftarrow (
-%     \\
-%     \I\I\I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau_a, \tau_p):
-%     \\
-%     \I\I\I\I\I \tau_{\Delta} \leftarrow \F{pack}(\Omega_{stale}, \Delta, \tau_a)
-%     \\
-%     \I\I\I\I\I \alpha \leftarrow \F{freshTV}()
-%     \\
-%     \I\I\I\I\I \F{infer}(\Omega, \Delta, (\Gamma;\obj{$x$:[$\alpha$<:$\tau_{\Delta}$]$\alpha$}), e_b)
-%     \\
-%     \I\I\I ) 
-%     \\
-%     \I\I\I \B{if } \F{empty}(C) \B{ then } \B{break} \B{ else } C
-
-%     \\
-
-%     \I \C{fix}
-%     \\
-%     \I \B{case } \obj{loop($e$)} :  
-%     \\
-%     \I\I \Omega_{stale} \leftarrow \F{staleTVs}()
-%     \\
-%     \I\I \alpha_{IH} \leftarrow \F{freshTV}()
-%     \\
-%     \I\I \alpha_{IC} \leftarrow \F{freshTV}()
-%     \\
-%     \I\I \B{for } (\Omega, \Delta, \tau) \leftarrow \F{infer}(\Omega, \Delta, \Gamma, e):
-%     \\
-%     \I\I \B{for } (\Omega, \Delta) \leftarrow \F{unify}(\Omega, \Delta, \tau, (\obj{$\alpha_{IH}$->$\alpha_{IC}$})): 
-%     \\
-%     \I\I\I \tau_{rel} \leftarrow \F{makeRelation}(\Omega_{stale}, \Delta, \tau_{IH}, \tau_{IC})
-%     \\
-%     \I\I\I \alpha \leftarrow \F{freshTV}()
-%     \\
-%     \I\I\I \alpha_1 \leftarrow \F{freshTV}()
-%     \\
-%     \I\I\I \alpha_2 \leftarrow \F{freshTV}()
-%     \\
-%     \I\I\I \tau_{res} \leftarrow (
-%     \\
-%     \I\I\I\I \obj{[$\alpha$<:\{$\alpha_1$->$\alpha_2$ with ($\alpha_1$*$\alpha_2$)<:$\tau_{rel}$\}] }
-%     \\
-%     \I\I\I\I \alpha
-%     \\
-%     \I\I\I )
-%     \\
-%     \I\I\I \{(\Omega, \Delta, \tau_{res})\}
-
-% \end{array}
-% \]
-% \caption{Type inference}
-% \label{fig:infer}
-% \end{figure*}
-
-
-\subsection{Subtype unification}
-The subtype unification procedure is given in \FIG{fig:unify}.
-Unification depends on four parameters: a set of type variables, a subtyping environment, and two types.
-The set of type variables indicates the type of variables that may be adjusted 
-(triggered by the function and application cases of inference). 
-The subtyping environment indicates constraints on type variables.
-the left type indicates the stronger type, and the right type indicates the weaker type.
-Both types may contain type variables that are unsolved or partially solved.
-The procedure returns a set of subtyping environments.
-
-The procedure begins by checking if the two types are syntactically equal.
-If equal then subtyping holds but there is nothing that can be unified 
-without circular references so the assumed subtyping environment is returned 
-unchanged in a singleton set. 
-
-The procedure then pattern matches on the left and right types. 
-The first two cases handle assigning variables to types.
-The right-variable case first looks up a solution  
-for the variable. If a solution is found, then unification proceeds
-between the original left type and the solution for the right type.
-In the case where unification fails, but the type variable is adjustable,
-the procedure updates the type variable with the union of the left type
-and the found right type (assuming the constraint is well-formed, 
-which includes avoiding circular references). 
-If no solution is found for the right variable, then 
-the procedure looks for any relational constraints in the subtyping environment
-where the left side contains the type variable.
-It checks that the left type is consistent with the relational constraints. 
-If there are no relational constraints, then the variable is assigned
-to the left type (if the constraint is well-formed).
-The left-variable rule is similar to the right-variable rule with
-one difference being that it uses intersection to strengthen the type variable 
-in the case of adjustment. In the case of checking relational constraints, it
-ensures that the right type is weaker than what the relational constraints would allow. 
-
-The subsequent cases decompose the types into subproblems. 
-The decomposition is given in \FIG{fig:unifyDecomp}. 
-The order of the rules 
-is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the left side or weaken the right side occur before rules that
-weaken the left side or strengthen the right side.
-
-The left existential case first tries to unify the constraint. It's possible that the
-constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
-simply updates the subtyping environment with the unsolved relational constraint. 
-With the updated environment, the procedure then unifies the existential type's payload with the right type.
-It must do a safety check to ensure that 
-the left existential's variables are merely assumed and not witnessed. 
-If the constraint is solved then the procedure 
-checks that the payload subtypes the right type for every constraint solution.
-
-The right universal case updates the subtyping environment with the universal's variable constraint
-and unifies the left type with the payload. As with left existential, the procedure checks that
-the universal's type variable is merely assumed and not instantiated.
-
-The left induction rule first tries to factor the inductive type and unify the weakened factored type
-with the right type. For example, a relational type between a natural number and a list, can be factored into
-a cross product of a natural number type and a list type. 
-If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
-in for the inductive variable of the left type and unifies the new left type with the right type.    
-Note that factoring is employed for the special
-case where the right type has variables which cannot be unified 
-using induction due to our circularity restriction.  
-
-The cases for antecedent union, consequent intersection, left union, and right intersection
-decompose into sub-problems in the same way as the declarative subtyping semantics.
-
-The remaining cases are continued in \FIG{fig:unifyContinue}.
-The right existential case simply unifies the left type with the existential's payload
-and then unifies the existential's constraint, such that unifying the payload
-may bear witness to a type that leads to verifying the constraint. 
-
-\TODO{consider using both forward and backtracking in unification and subtyping rules. 
-Since it is not certain which constraint is stronger (in contrast to prolog). Union solutions together}
-
-The right existential case resembles the unification and backtracking approach in Prolog, 
-where unification of the payload corresponds to unification of a query with the head of a horn clause,
-and solving the existential's constraint after the payload unification corresponds to
-solving the horn clause's body after the head's unification.  
-
-The left universal case also unifies in a backtracking fashion analogous to Prolog.
-The procedure unifies the universal's payload with the right type,
-possibly instantiating the universal's type variable,
-which may then be used to unify and check the universal's constraint.
-
-The right induction case attempts to unroll the inductive type just enough
-to unify with the left type. To avoid potential infinite unrolling
-the procedure relies on a heuristic to see if the left type's pattern
-lines up with parts of the the inductive type that are guaranteed to be well-founded. 
-If the left type is a pattern with variables that prevents it from being reduced,
-then the procedure checks if it is well-formed, meaning it could be solved 
-if more information were specified, and then the unsolved relational constraint
-is added to the subtyping environment. 
-
-The remaining cases closely mirror their counterparts in the declarative subtyping rules.
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% %% Subtype unification 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\F{unify}(\Omega, \Delta, \tau_{l}, \tau_{r}) = C}&
-% \end{flalign*}
-% \[
-% \begin{array}[t]{@{} l}
-%     \F{unify}(\Omega, \Delta, \tau_{l}, \tau_{r}) \triangleq 
-%     \\
-%     \I \B{if}\ \tau_l = \tau_r \B{ then } 
-%     \\
-%     \I\I \{\Delta\} 
-%     \\
-%     \I \B{else } \B{match}\ \tau_{l}, \tau_{r} 
-%     \\
-
-%     \I \C{right variable}
-%     \\
-%     \I \B{case } \tau_l, \alpha : 
-%     \\
-%     \I\I \B{match } (\obj{$\alpha$<:\_} \in \Delta)
-%     \\
-%     \I\I \B{case } \F{some}(\tau) :
-%     \\
-%     \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau)
-%     \\
-%     \I\I\I \B{if } \neg \F{empty}(C) \B{ then } C
-%     \\
-%     \I\I\I \B{else if } (\alpha \in \Omega) \wedge 
-%     \\
-%     \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\obj{$\tau_l$|$\tau$})) 
-%     \\
-%     \I\I\I \B{then } \{\Delta;\obj{$\alpha$<:($\tau_l$|$\tau$)}\}
-%     \\
-%     \I\I\I \B{else } \emptyset 
-%     \\
-%     \I\I \B{case } \F{none} :
-%     \\
-%     \I\I\I \Delta_{rel} \leftarrow \F{relCons}(\Delta, \alpha)  
-%     \\
-%     \I\I\I \B{if } \neg \F{empty}(\Delta_{rel}) \wedge 
-%     \\
-%     \I\I\I\I \F{strongEnough}(\alpha, \tau_l, \Delta_{rel}) \B{ then }
-%     \\
-%     \I\I\I\I \{\Delta\}
-%     \\
-%     \I\I\I \B{else if } \F{constraintWF}(\Delta, \alpha, \tau_l) \B{ then }
-%     \\
-%     \I\I\I\I \{\Delta;\obj{$\alpha$<:$\tau_l$}\}
-%     \\
-%     \I\I\I \B{else } \emptyset 
-% \end{array}
-% \begin{array}[t]{@{} l}
-%   \I \C{left variable}
-%   \\
-%   \I \B{case } \alpha, \tau_r : 
-%   \\
-%   \I\I \B{match } (\obj{$\alpha$<:\_} \in \Delta)
-%   \\
-%   \I\I \B{case } \F{some}(\tau) :
-%   \\
-%   \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau, \tau_r)
-%   \\
-%   \I\I\I \B{if } \neg \F{empty}(C) \B{ then } C
-%   \\
-%   \I\I\I \B{else if } (\alpha \in \Omega) \wedge 
-%   \\
-%   \I\I\I\I \F{constraintWF}(\Delta, \alpha, (\obj{$\tau_r$\&$\tau$})) 
-%   \\
-%   \I\I\I \B{then } \{\Delta;\obj{$\alpha$<:($\tau_r$\&$\tau$)}\}
-%   \\
-%   \I\I\I \B{else } \emptyset 
-%   \\
-%   \I\I \B{case } \F{none} :
-%   \\
-%   \I\I\I \Delta_{rel} \leftarrow \F{relCons}(\Delta, \alpha)  
-%   \\
-%   \I\I\I \B{if } \neg \F{empty}(\Delta_{rel}) \wedge 
-%   \\
-%   \I\I\I\I \F{weakEnough}(\alpha, \Delta_{rel}, \tau_r) \B{ then }
-%   \\
-%   \I\I\I\I \{\Delta\}
-%   \\
-%   \I\I\I \B{else if } \F{constraintWF}(\Delta, \alpha, \tau_r) \B{ then }
-%   \\
-%   \I\I\I\I \{\Delta;\obj{$\alpha$<:$\tau_r$}\}
-%   \\
-%   \I\I\I \B{else } \emptyset 
-
-%   \\
-
-%   \I \B{case}\ \tau_{l}, \tau_{r}:
-%   \\
-%   \I\I \F{unifyDecomp}(\Omega, \Delta, \tau_{l}, \tau_{r})
-% \end{array}
-% \]
-
-% \caption{Subtype unification}
-% \label{fig:unify}
-% \end{figure*}
-
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\F{unifyDecomp}(\Omega, \Delta, \tau_{l}, \tau_{r}) = C}&
-% \end{flalign*}
-% \[
-% \begin{array}[t]{@{} l}
-%     \F{unifyDecomp}(\Omega, \Delta, \tau_{l}, \tau_{r}) \triangleq 
-%     \\
-%     \I \B{match}\ \tau_{l}, \tau_{r} 
-%     \\
-
-%     \I \C{left existential}
-%     \\
-%     \I \B{case } \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}}, \tau_r : 
-%     \\
-%     \I\I (\widebar{\alpha}, [\tau, \tau_1]) \leftarrow \F{rename}(\widebar{\alpha}, [\tau, \tau_1])
-%     \\
-%     \I\I C \leftarrow \F{unify}(\Delta, \tau_1, \tau_2)
-%     \\
-%     \I\I \B{match } \F{unsolved}(C)
-%     \\
-%     \I\I \B{case } \F{some}(\Delta) :
-%     \\
-%     \I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau, \tau_r)
-%     \\
-%     \I\I\I \B{if } \F{safe}(\widebar{\alpha}, \Delta, C) \B{ then }
-%     C \B{ else } \emptyset 
-%     \\
-%     \I\I \B{case } \F{none} :
-%     \\
-%     \I\I\I \B{for } \Delta \leftarrow C:
-%     \\
-%     \I\I\I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau, \tau_r)
-%     \\
-%     \I\I\I\I \B{if } \F{empty}(C) \B{ then } 
-%     \B{break} \B{ else } C 
-
-%     \\
-
-%     \I \C{right universal}
-%     \\
-%     \I \B{case } \tau_l, (\obj{[$\alpha$<:$\tau'$]$\tau$}) : 
-%     \\
-%     \I\I ([\alpha], [\tau]) \leftarrow \F{rename}([\alpha], [\tau])
-%     \\
-%     \I\I \Delta \leftarrow \Delta;\obj{$\alpha$<:$\tau'$}
-%     \\
-%     \I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau)
-%     \\
-%     \I\I \B{if } \F{safe}(\{\alpha\}, \Delta, C) \B{ then } C \B{ else } \emptyset 
-
-%     \\
-
-%     \I \C{left induction}
-%     \\
-%     \I \B{case } \obj{induc[$\alpha$]$\tau$}, \tau_r :
-%     \\
-%     \I\I \tau_{fac} \leftarrow \F{factor}(\obj{induc[$\alpha$]$\tau$})
-%     \\
-%     \I\I C \leftarrow \F{unify}(\Omega, \Delta, \tau_{fac}, \tau_r)
-%     \\
-%     \I\I \B{if } \neg \F{empty}(C) \B{ then } C
-%     \\
-%     \I\I \B{else }
-%     \\
-%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\obj{$\alpha$<:$\tau_r$}, \tau) 
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau, \tau_r)
-% \end{array}
-% \begin{array}[t]{@{} l}
-
-%     \I \C{antecedent union}
-%     \\
-%     \I \B{case } \tau_l, (\obj{($\tau_1$|$\tau_2$)->$\tau_{res}$}) : 
-%     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_1$->$\tau_{res}$})):
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_2$->$\tau_{res}$})) 
-
-%     \\
-
-%     \I \C{consequent intersection}
-%     \\
-%     \I \B{case } \tau_l, (\obj{$\tau_{arg}$->($\tau_1$\&$\tau_2$)}) : 
-%     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_{arg}$->$\tau_1$})):
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, (\obj{$\tau_{arg}$->$\tau_2$}))
-
-%     \\
-
-%     \I \C{left union}
-%     \\
-%     \I \B{case } (\obj{$\tau_1$|$\tau_2$}), \tau_r : 
-%     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_1, \tau_r):
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_2, \tau_r) 
-
-%     \\
-
-%     \I \C{right intersection}
-%     \\
-%     \I \B{case } \tau_l, (\obj{$\tau_1$\&$\tau_2$}) : 
-%     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau_1):
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, \tau_2) 
-
-%     \\
-
-%     \I \C{Continue}
-%     \\
-%     \I \B{case } \tau_l, \tau_r : \F{unifyContinue}(\Omega, \Delta, \tau_l, \tau_r)
-% \end{array}
-% \]
-
-% \caption{Subtype unification decomposition}
-% \label{fig:unifyDecomp}
-% \end{figure*}
-
-% \begin{figure*}[h]
-% \begin{flalign*}
-%   &\boxed{\F{unifyContinue}(\Omega, \Delta, \tau_{l}, \tau_{r}) = C}&
-% \end{flalign*}
-% \[
-% \begin{array}[t]{@{} l}
-%     \F{unifyContinue}(\Omega, \Delta, \tau_{l}, \tau_{r}) \triangleq 
-%     \\
-%     \I \B{match}\ \tau_{l}, \tau_{r} 
-
-%     \\
-
-%     \I \C{right existential}
-%     \\
-%     \I \B{case } \tau_l, \obj{\{$\widebar{\alpha}$//$\tau$ with $\tau_1$<:$\tau_2$\}} : 
-%     \\
-%     \I\I (\widebar{\alpha}, [\tau, \tau_1]) \leftarrow \F{rename}(\widebar{\alpha}, [\tau, \tau_1])
-%     \\
-%     \I\I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_l, \tau):
-%     \\
-%     \I\I\I\I \F{unify}(\Omega, \Delta, \tau_1, \tau_2)
-
-
-%     \\
-%     \I \C{left universal}
-%     \\
-%     \I \B{case } (\obj{[$\alpha$<:$\tau'$]$\tau$}), \tau_r : 
-%     \\
-%     \I\I ([\alpha], [\tau]) \leftarrow \F{rename}([\alpha], [\tau])
-%     \\
-%     \I\I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau, \tau_r):
-%     \\
-%     \I\I\I\I \F{unify}(\Omega, \Delta, \alpha, \tau')
-
-%     \\
-
-%     \I \C{right induction}
-%     \\
-%     \I \B{case } \tau_l, \obj{induc[$\alpha$]$\tau$} :
-%     \\
-%     \I\I \tau_l \leftarrow \F{sub}(\Delta, \tau_l)
-%     \\
-%     \I\I \B{if } \F{reducible}(\tau_l, \tau_r) \B{ then }
-%     \\
-%     \I\I\I \tau \leftarrow \F{sub}(\bullet;\obj{$\alpha$<:$\tau_r$}, \tau) 
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_l, \tau)
-%     \\
-%     \I\I \B{else }
-%     \\
-%     \I\I\I \B{match } (\obj{$\tau_l$<:\_} \in \Delta)
-%     \\
-%     \I\I\I \B{case } \F{some}(\tau_{cache}) :
-%     \\
-%     \I\I\I\I \F{unify}(\Omega, \Delta, \tau_{cache}, \tau_r)
-%     \\
-%     \I\I\I \B{case } \F{none} :
-%     \\
-%     \I\I\I\I \B{if } \F{constraintWF}(\Delta, \tau_l, \tau_r) \B{ then }
-%     \\
-%     \I\I\I\I\I \{\Delta;\obj{$\tau_l$<:$\tau_r$}\}
-%     \\
-%     \I\I\I\I \B{else } \emptyset 
-% \end{array}
-% \begin{array}[t]{@{} l}
-%     \I \C{right union}
-%     \\
-%     \I \B{case } \tau_l, (\obj{$\tau_1$|$\tau_2$}) : 
-%     \\
-%     \I\I \F{unify}(\Omega, \Delta, \tau_l, \tau_1) \cup \F{unify}(\Omega, \Delta, \tau_l, \tau_2) 
-
-%     \\
-
-%     \I \C{left intersection}
-%     \\
-%     \I \B{case } (\obj{$\tau_1$\&$\tau_2$}), \tau_r : 
-%     \\
-%     \I\I \F{unify}(\Omega, \Delta, \tau_1, \tau_r) \cup \F{unify}(\Omega, \Delta, \tau_2\ \tau_r) 
-
-%     \\
-
-%     \I \C{top}
-%     \\
-%     \I \B{case } \_, \obj{top} : \{\Delta\}
-
-%     \\
-
-%     \I \C{bottom}
-%     \\
-%     \I \B{case } \obj{bot}, \_ : \{\Delta\}
-
-%     \\
-
-%     \I \C{implication}
-%     \\
-%     \I \B{case } (\obj{$\tau_{par}$->$\tau_{body}$}), (\obj{$\tau_{arg}$->$\tau_{res}$}) : 
-%     \\
-%     \I\I \B{for } \Delta \leftarrow \F{unify}(\Omega, \Delta, \tau_{arg}, \tau_{par}):
-%     \\
-%     \I\I\I \F{unify}(\Omega, \Delta, \tau_{body}, \tau_{res})
-
-%     \\
-
-%     \I \C{field}
-%     \\
-%     \I \B{case } (\obj{$l_1$:$\tau_1$}), (\obj{$l_2$:$\tau_2$}) :
-%     \\
-%     \I\I \B{if } l_1 = l_2 \B{ then } \F{unify}(\Omega, \Delta, \tau_1, \tau_2)
-%     \\
-%     \I\I \B{else } \emptyset 
-
-%     \\
-
-%     \I \C{tag}
-%     \\
-%     \I \B{case } (\obj{?$l_1$ $\tau_1$}), (\obj{?$l_2$ $\tau_2$}) :
-%     \\
-%     \I\I \B{if } l_1 = l_2 \B{ then } \F{unify}(\Omega, \Delta, \tau_1, \tau_2)
-%     \\
-%     \I\I \B{else } \emptyset 
-% \end{array}
-% \]
-
-% \caption{Subtype unification continuation}
-% \label{fig:unifyContinue}
-% \end{figure*}
-
-\section{Correctness}
-
-\TODO{introduce model typing and soundness properties}
-
-\section{Experiments}
-
-\TODO{develop 12 tree/list experiments}
-
-\section{Related work}
-
-
-\paragraph{Tree interpolation}
-Exemplified by CHC duality solver.
-
-\paragraph{Hindley-Milner type inference}
-Exemplified by ML.
-
-\paragraph{Logic programming.}
-Exemplified by Prolog. 
-
-
-Similar: both have backchaining. 
-
-Different: RLT is fully declarative, lacks negations, but has implication. 
-
-Different: RLT allows comparing inductive relations via subtyping. 
-
-\paragraph{Semantic subtyping.} 
-Exemplified by XDuce and CDuce. complete subtyping.
-
-Similar: set-like combinators: union and intersection.
-
-Different: RLT uses rigid syntactic rules; incomplete subtyping.
-
-% set theoretic notes: https://pnwamk.github.io/sst-tutorial/#%28part._sec~3asemantic-subtyping%29
-% semantic subtyping: https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
-The terminology "semantic subtyping" vs "syntactic subtyping" are confusing terms. 
-"semantics subtyping" means the semantics of types is determined indirectly by the semantics of another structure.
-"syntactic subtyping" means the semantics of types is determined directly by the type structure
-
-\paragraph{Extrinsic typing.}
-Exemplified by Typescript, which is unsound. Maybe not as lenient?  
-The static behavior of a program is not necessarily specified/prescribed; 
-it may be over-approximated from the program composition. 
-Intrinsic vs extrinsic is orthogonal to static vs dynamic, although static and dynamic are often used to mean the former.
-All modern languages use a combination of static and dynamic type checking.
-The term "dynamically typed" some times refers to a language that doesn't prescribe static meaning,
-even if it uses both static and dynamic type checking. The term "extrinsic typing" is less ambiguous.
-
-\paragraph{Refinement Types.}
-Exemplified by Refinement ML. Base types with intersections and subtyping.
-
-\paragraph{Predicate Subtyping.}
-Exemplified by Liquid Types. An extension of refinement types.
-
-Similar: both use type inference to infer expressive relational properties. 
-
-Different: RLT starts with an invalid post-condition, then weakens return type to a valid post-condition from outside in by expanding unions.
-
-Different: RLT starts with an invalid pre-condition, then strengthens parameter type to a valid pre-condition from inside out by adding intersections.
-
-Different: Liquid types starts with an invalid post-condition, then uses iterative weakening by dropping conjunctions until a valid post-condition is reached.
-
-
-\paragraph{Abstraction Refinement.} 
-Similar: type unification over subtyping resembles abstraction refinement  
-where solving for variables and failing on different sides of the subtyping relation corresponds to
-solving with the abstractor vs solving with the refiner.
-
-\paragraph{Craig interpolation.} 
-Similar: extracting an inductive type with unions and intersections 
-from a recursive program without needing to specify a predicate universe might be similar to
-craig interpolation.
-
-\paragraph{PDR.}
-exemplified by IC3. 
-
-Similar: RLT infers abstract type for return type, 
-then safely constrains the variables in previous step (fix's antecedent) 
-to subtype the least fixed point.
-This lazily propagates the type for the last step to the previous steps.
-This is safe as antecedent is stronger than consequent at any step.
-Seems similar to the notion in PDR of propagating negation of loss points to previous steps. 
-
-Different: RLT isn't cartesian
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Syntax %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-\TODO{separate out syntactic sugar like pairs, pipe, and let, parens}
-
-\begin{definition}(Expression syntax)
-  \label{definition:expression_syntax}
+\begin{definition}(Expressions)
+  \label{definition:expressions}
   \[\begin{array}[t]{r@{}l}
     \nonterm{e} 
     & 
@@ -1737,8 +563,12 @@ Different: RLT isn't cartesian
     \nonterm{K} & \is \epsilon \sep K\ k
     \\
     \nonterm{k} & \is \obj{\$$l$=>$p$}
-    \\
-    \\
+  \end{array}\]
+\end{definition}
+
+\begin{definition} Others
+  \label{definition:others}
+  \[\begin{array}[t]{r@{}l}
     \nonterm{v} & \is 
       \obj{@} \sep
       \obj{<$l$> $v$} \sep
@@ -1757,6 +587,9 @@ Different: RLT isn't cartesian
     \nonterm{\sigma} & \is x \slash v
   \end{array}\]
 \end{definition}
+
+
+
 
 
 \begin{definition}\boxed{e \rightsquigarrow e}\ Progression
@@ -1887,8 +720,59 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition} (Type syntax)
-  \label{definition:type_syntax}
+
+
+
+
+The programming language is pure and functional. Its syntax and dynamic semantics 
+are fairly standard. The main departure from tradition is that its function
+and application rules subsume pattern matching. This departure enables a more direct  
+correspondence between the structures of programs and their types, but it is 
+not a necessary condition.
+The syntax is given in \FIG{fig:syntax}.
+It includes functions with pattern matching, records, a fixed point combinator, let binding, 
+tags for discriminating cases, and application.
+A function consists of a sequence of paths, where each path maps a pattern to an expression.
+A record consists of a sequence of fields, where each field maps a unique label to an expression. 
+The type language includes tag types, field types, implications, unions, intersections, 
+inductions, existentials, universals, top, and bottom. 
+The existential type consists of multiple bound variables, a payload containing the bound variables, 
+and a subtyping constraint over the bound variables. 
+If the bound variables aren't indicated, then all variables in the payload are
+assumed to be bound variables. If the subtyping constraint isn't indicated, then it is assumed to 
+be a tautology, such as (\obj{unit<:unit}).
+The universal type consists of a bound variable, the variable's upper bound, and a payload. If the upper
+bound is not indicated, it is assumed to be the top type (\obj{top}).
+The typing semantics rely on a typing environment for keeping track of typings of term variables.
+The subtyping semantics rely on subtyping environment for keeping track of and constraints on type variables. 
+Note that the syntax of the subtyping environment allows an upper bound constraint over a type
+rather than merely a type variable to allow for relational constraints. 
+
+
+\TODO{update tag syntax: \obj{cons;cons;e:cons//cons//T}\ \ \obj{nil;():nil//unit}}
+
+\section{Static Semantics}
+The static semantics is a system for proving that an expression satisfies a type.
+The type syntax is rich and allows free type variables along with universally and existentially quantified type variables. Thus,  
+One can think of the static semantics and either type checking or type inference, since 
+checking against free type variable or an existentially quantified type, requires constructing types to witness 
+the variables allowed by the type syntax.
+Furthermore, when verifying elimination forms of expressions, such as application, the static semantics 
+translates the eliminations into subtyping constraints and then learns constraints on type variables
+necessary for the subtyping constraint to hold. 
+
+
+\subsection{Types}
+
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd   
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+
+\begin{definition} Types 
+  \label{definition:types}
   \[\begin{array}[t]{r@{}l}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
@@ -1911,8 +795,19 @@ Different: RLT isn't cartesian
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
     \\
     \nonterm{\delta} & \is \obj{;} \tau \obj{<:} \tau
-    \\
-    \\
+  \end{array}\]
+\end{definition}
+
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd   
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
+
+\begin{definition} Internals 
+  \label{definition:internals}
+  \[\begin{array}[t]{r@{}l}
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
     \\
     \nonterm{\gamma} & \is x : \tau
@@ -1946,7 +841,11 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}\ (Proof typing)
+
+\subsection{Proof Typing}
+
+
+\begin{definition} Proof Typing \I \boxed{\Gamma \entails e \hastype \tau \given Z}
   \label{definition:proof_typing}
   \begin{mathpar}
     \inferrule {
@@ -2061,6 +960,102 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
+
+
+
+
+
+
+
+The typing is given in \FIG{fig:typing}.
+Most of the rules are fairly standard. 
+The rule for function typing is a bit special in that
+it treats a function as a sequence of paths whose type is an intersection of implications,
+rather than having a separate pattern matching rule. 
+Likewise, the type of a record is an intersection of field types.
+The let-binding rule allows for prenex polymorphism by generalizing via subtyping. 
+
+The type inference procedure is given in \FIG{fig:infer}.
+The procedure depends on four parameters: an type variable set, a subtyping environment, 
+a typing environment, and an expression.
+The variable set indicates if a type variable's assigned type is allowed to be strengthened or weakened  
+during unification.
+The subtyping environment indicates the assumed constraints on types containing type variables,
+including relational constraints and constraints over single type variables, 
+which we also refer to as type assignments.
+The typing environment indicates the assumed constraints on term variables.
+The expression indicates the inhabitant of the type that is to be inferred.
+The procedure returns a set of triples, where each triple consists of a variable set, a subtyping environment,
+and a type.
+The unit case simply returns a singleton set with the unit type and the environments unchanged. 
+The variable case uses the variable as a key to find its type in the typing environment. 
+It returns a singleton set containing the found type along with the adjustment set and subtyping environment.
+The tag case infers the type of its constituent type and uses its label to construct a tag type.
+The record case infers the type of its fields and intersects the constructed field types together.
+
+The function case is of particular importance to type inference in an untyped setting.
+For each path in the function, it extracts the term variables of the pattern and associates 
+the term variables with fresh type variables. It infers the body of each path 
+with an updated variable set and an updated typing environment containing the fresh
+type variables of the pattern. By adding the pattern's type variables to the adjustment variable set,
+it implies that the parameter type of the path can be strengthened by applications
+occurring in the body of the path. This enables adjusting a parameter type to reflect all of its 
+occurrences in the body, 
+rather than reflecting just its first occurrence and failing on subsequent occurrences. 
+Before returning the inferred implication type for the path, the case removes
+the the pattern's type variables from the adjustment variable set, ensuring
+that those type variables cannot be strengthened or weakened from the outside. 
+As with the record case, the inferred implications are intersected together.
+
+The projection case infers the type of the record expression. 
+It then calls unify to solve for the projected type by finding
+a single field type that is subtyped by the record type. 
+
+The application case also plays an important role in type inference of untyped programs.
+It creates a fresh type variable as a placeholder for the inferred type of the application result.
+It infers the type of the function and the argument, and then solves for the result type
+by unifying the function's type with an implication from the argument type to the result type.
+It adds the result type variable to the adjustment variable set when unifying to allow inferring 
+types accounting for all the paths that the function might take.
+After unifying, it removes the result type variable from the adjustment variable set to ensure
+that the type cannot be modified from the outside.
+Additionally, since inference and unification actually return sets of solutions,
+the application must type check for all function types and all argument types.
+If even one combination cannot be unified then the inference of application fails,
+indicated by breaking the for-loop, which then implicitly returns an empty set.  
+
+\TODO{update application to merely require some function cases to type check}
+
+the let-binding case infers the type of the argument and checks that
+all possible types subtype the annotation and result in a well-typed body. 
+It generalizes type variables in the inferred argument type while maintaining
+the constraints indicated by the subtyping environment. 
+
+\TODO{update let-binding to generalize only if something is a function-type: e.g. intersection, univeral, implication }
+
+\TODO{update let-binding to merely require some bodies to type check}
+
+The fix case infers inductive types for the parameters and bodies of its
+target expression. Moreover, it inductively relates the parameter and body types to each other.
+First, it infers the type of the target and calls unify to deconstruct it into the antecedent
+and consequent of an implication type. According to the semantics of fix, the antecedent
+represents and inductive hypothesis, while the consequent represents and inductive conclusion.
+Thus, it uses the inferred structures of the antecedent and consequent to construct an 
+inductive relation by ensuring that the antecedent subtypes the inductively bound variable of 
+the resulting inductive type.
+Finally, the implication type is projected from the constructed relation and generalized with universal.
+
+\subsection{Proof Subtyping}
+
+Due to the complexity of types along with two positions for types to occur in subtyping,
+there are many rules needed to define the proof system of subtyping. For clarity,
+we show only a subset of the rules in this section in order to explain the essence of the system.
+We leave the remaining rules in an annex. 
+The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
+as well as additional rules for increased precision.  
+
+\TODO{separate out syntactic sugar like pairs, pipe, and let, parens}
+
 \TODO{bifurcate proof subtyping into either duals or weakening vs strengthening rules}
 
 \TODO{separate out semantic sugar like combination of implication with union/intersection}
@@ -2068,35 +1063,15 @@ Different: RLT isn't cartesian
 \TODO{note that constraint types are insufficient to represent union, when union is on the rhs (or intersection on the left)}
 
 \TODO{add color to program and type syntax for readabilitiy}
-\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof subtyping)
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof Subtyping
 
+\TODO{double check LFP rules against code}
 
   \label{definition:proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
       \tau \subtypes \tau \given M, \Delta
-    }
-
-    \inferrule {
-    } {
-      \obj{BOT} \subtypes \tau_r \given M, \Delta
-    }
-
-    \inferrule {
-    } {
-      \tau_l \subtypes \obj{TOP} \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_l
-      \subtypes
-      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-      \given M, \Delta
     }
 
     \inferrule {
@@ -2115,40 +1090,6 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_{rl}
-      \given M_0, \Delta_0
-      \\
-      M_0 \preceq M_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_{rr}
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-      \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-      \given M, \Delta
-    }
-
-    \inferrule {
       Q \given M_0, \Delta_0
       \\
       \Alpha\ \#\ \tau_r
@@ -2162,40 +1103,6 @@ Different: RLT isn't cartesian
     } {
       \obj{EXI[}\Alpha\ Q \obj{]}\tau_l \subtypes \tau_r
       \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      Q \given M_0, \Delta_0
-      \\
-      A\ \#\ \tau_l
-      \\\\
-      M_0 \sqcup \Alpha \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \alpha \notin M_0
-      \\
-      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
-      \\
-      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
-      \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
-      \\
-      \obj{|$(\Tau)$} <: \tau_r
-      \given M_1, \Delta_1
-    } {
-      \alpha \subtypes \tau_r
-      \given M_1, \Delta_1 \ \alpha <: \tau_r
     }
 
     \inferrule {
@@ -2240,38 +1147,6 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \alpha \in M_0
-      \\
-      \Delta_0 \entails \Tau <: \alpha
-      \\\\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \obj{|}(\Tau)
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \alpha
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_r \given M_0, \Delta_0
-      \\\\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      Q
-      \given M_1, \Delta_1
-    } {
-      \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
-      \subtypes 
-      \tau_r
-      \given M_1, \Delta_1 
-    }
-
-    \inferrule {
       \tau_l \subtypes \tau_r
       \given M_0, \Delta_0
       \\\\
@@ -2285,22 +1160,6 @@ Different: RLT isn't cartesian
       \subtypes 
       \obj{EXI[$\Alpha$ $Q$]$\tau_r$}
       \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \tau_{ll} \subtypes \tau_r
-      \given M, \Delta
-    } {
-      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_{lr} \subtypes \tau_r
-      \given M, \Delta
-    } {
-      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given M, \Delta
     }
 
     \inferrule {
@@ -2318,23 +1177,7 @@ Different: RLT isn't cartesian
       \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
       \given M, \Delta
     }
-  \end{mathpar}
-\end{definition}
 
-\begin{definition} \boxed{\Alpha\ \#\ \tau}\ Fresh variables 
-  \label{definition:fresh_variables}
-  \begin{mathpar}
-    \inferrule {
-      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FV}(\tau)
-    } {
-      \Alpha\ \#\ \tau
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition} \boxed{\tau \subtypes \tau \given M, \Delta}\ (Proof world subtyping)
-  \label{definition:proof_world_subtyping}
-  \begin{mathpar}
     \inferrule {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
       \given M, \Delta
@@ -2391,30 +1234,6 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
-    } {
-      M, \Delta \entails 
-      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
-    }
-
-    \inferrule {
-      \text{DF}(\obj{$\tau_r$\textbackslash$\tau_n$})
-      \\
-      \tau_l \subtypes \tau_r
-      \given M, \Delta
-      \\\\
-      \forall M'\ \Delta' .\ 
-      M \preceq M'
-      \implies
-      \Delta \preceq \Delta'
-      \implies
-      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
-    } {
-      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
-      \given M, \Delta
-    }
-
-    \inferrule {
       \tau_l \subtypes \tau_r
       \given M, \Delta 
     } {
@@ -2443,6 +1262,401 @@ Different: RLT isn't cartesian
     } {
       \obj{$\tau_{ll}$->$\tau_{lr}$} \subtypes \obj{$\tau_{rl}$->$\tau_{rr}$}
       \given M_1, \Delta_1 
+    }
+  \end{mathpar}
+\end{definition}
+
+
+
+dddd ddd ddd ddd 
+
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof subtyping annex 
+  \label{definition:proof_subtyping_annex}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \obj{BOT} \subtypes \tau_r \given M, \Delta
+    }
+
+    \inferrule {
+    } {
+      \tau_l \subtypes \obj{TOP} \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l
+      \subtypes
+      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes 
+      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_{rl}
+      \given M_0, \Delta_0
+      \\
+      M_0 \preceq M_1
+      \\\\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_{rr}
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \tau_l \subtypes
+      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes 
+      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l \subtypes
+      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      Q \given M_0, \Delta_0
+      \\
+      A\ \#\ \tau_l
+      \\\\
+      M_0 \sqcup \Alpha \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_r
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \alpha \in M_0
+      \\
+      \Delta_0 \entails \Tau <: \alpha
+      \\\\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \obj{|}(\Tau)
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \alpha
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \alpha \notin M_0
+      \\
+      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
+      \\
+      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
+      \\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
+      \\
+      \obj{|$(\Tau)$} <: \tau_r
+      \given M_1, \Delta_1
+    } {
+      \alpha \subtypes \tau_r
+      \given M_1, \Delta_1 \ \alpha <: \tau_r
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given M_0, \Delta_0
+      \\\\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      Q
+      \given M_1, \Delta_1
+    } {
+      \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
+      \subtypes 
+      \tau_r
+      \given M_1, \Delta_1 
+    }
+
+
+    \inferrule {
+      \tau_{ll} \subtypes \tau_r
+      \given M, \Delta
+    } {
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_{lr} \subtypes \tau_r
+      \given M, \Delta
+    } {
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given M, \Delta
+    }
+
+    \inferrule {
+      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
+    } {
+      M, \Delta \entails 
+      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
+    }
+
+    \inferrule {
+      \text{DF}(\obj{$\tau_r$\textbackslash$\tau_n$})
+      \\
+      \tau_l \subtypes \tau_r
+      \given M, \Delta
+      \\\\
+      \forall M'\ \Delta' .\ 
+      M \preceq M'
+      \implies
+      \Delta \preceq \Delta'
+      \implies
+      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
+    } {
+      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
+      \given M, \Delta
+    }
+
+  \end{mathpar}
+\end{definition}
+
+
+
+The subtyping is given in \FIG{fig:subtyping}.
+Some of the rules are fairly standard, including implication, the union rules, and intersection rules.
+Note that in addition to left and right rules, union and intersection each have rules for 
+interacting with implication's antecedent and consequent, respectively.
+The constraint rule checks that a subtyping relation exists as a constraint in the subtyping environment.
+The right induction rule is standard and simply unrolls the induction.
+The left induction rule relies on the induction principle to construct an 
+inductive constraint hypothesis.  
+The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
+The existential rules are quite special, as they involve a subtyping constraint as part of 
+a second-order comprehension. 
+The left existential rule checks that subtyping holds for all variations of the payload 
+where the subtyping constraint holds. 
+The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
+The left universal rule checks that subtyping holds for some variation of the payload consistent with
+the variable's upper bound. 
+The right universal rule checks that subtyping holds for all variations of the payload consistent with
+the variable's upper bound.
+
+The subtype unification procedure is given in \FIG{fig:unify}.
+Unification depends on four parameters: a set of type variables, a subtyping environment, and two types.
+The set of type variables indicates the type of variables that may be adjusted 
+(triggered by the function and application cases of inference). 
+The subtyping environment indicates constraints on type variables.
+the left type indicates the stronger type, and the right type indicates the weaker type.
+Both types may contain type variables that are unsolved or partially solved.
+The procedure returns a set of subtyping environments.
+
+The procedure begins by checking if the two types are syntactically equal.
+If equal then subtyping holds but there is nothing that can be unified 
+without circular references so the assumed subtyping environment is returned 
+unchanged in a singleton set. 
+
+The procedure then pattern matches on the left and right types. 
+The first two cases handle assigning variables to types.
+The right-variable case first looks up a solution  
+for the variable. If a solution is found, then unification proceeds
+between the original left type and the solution for the right type.
+In the case where unification fails, but the type variable is adjustable,
+the procedure updates the type variable with the union of the left type
+and the found right type (assuming the constraint is well-formed, 
+which includes avoiding circular references). 
+If no solution is found for the right variable, then 
+the procedure looks for any relational constraints in the subtyping environment
+where the left side contains the type variable.
+It checks that the left type is consistent with the relational constraints. 
+If there are no relational constraints, then the variable is assigned
+to the left type (if the constraint is well-formed).
+The left-variable rule is similar to the right-variable rule with
+one difference being that it uses intersection to strengthen the type variable 
+in the case of adjustment. In the case of checking relational constraints, it
+ensures that the right type is weaker than what the relational constraints would allow. 
+
+The subsequent cases decompose the types into subproblems. 
+The decomposition is given in \FIG{fig:unifyDecomp}. 
+The order of the rules 
+is critical to ensure that easier constraints are generated. To that end, cases that
+strengthen the left side or weaken the right side occur before rules that
+weaken the left side or strengthen the right side.
+
+The left existential case first tries to unify the constraint. It's possible that the
+constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
+simply updates the subtyping environment with the unsolved relational constraint. 
+With the updated environment, the procedure then unifies the existential type's payload with the right type.
+It must do a safety check to ensure that 
+the left existential's variables are merely assumed and not witnessed. 
+If the constraint is solved then the procedure 
+checks that the payload subtypes the right type for every constraint solution.
+
+The right universal case updates the subtyping environment with the universal's variable constraint
+and unifies the left type with the payload. As with left existential, the procedure checks that
+the universal's type variable is merely assumed and not instantiated.
+
+The left induction rule first tries to factor the inductive type and unify the weakened factored type
+with the right type. For example, a relational type between a natural number and a list, can be factored into
+a cross product of a natural number type and a list type. 
+If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
+in for the inductive variable of the left type and unifies the new left type with the right type.    
+Note that factoring is employed for the special
+case where the right type has variables which cannot be unified 
+using induction due to our circularity restriction.  
+
+The cases for antecedent union, consequent intersection, left union, and right intersection
+decompose into sub-problems in the same way as the declarative subtyping semantics.
+
+The remaining cases are continued in \FIG{fig:unifyContinue}.
+The right existential case simply unifies the left type with the existential's payload
+and then unifies the existential's constraint, such that unifying the payload
+may bear witness to a type that leads to verifying the constraint. 
+
+\TODO{consider using both forward and backtracking in unification and subtyping rules. 
+Since it is not certain which constraint is stronger (in contrast to prolog). Union solutions together}
+
+The right existential case resembles the unification and backtracking approach in Prolog, 
+where unification of the payload corresponds to unification of a query with the head of a horn clause,
+and solving the existential's constraint after the payload unification corresponds to
+solving the horn clause's body after the head's unification.  
+
+The left universal case also unifies in a backtracking fashion analogous to Prolog.
+The procedure unifies the universal's payload with the right type,
+possibly instantiating the universal's type variable,
+which may then be used to unify and check the universal's constraint.
+
+The right induction case attempts to unroll the inductive type just enough
+to unify with the left type. To avoid potential infinite unrolling
+the procedure relies on a heuristic to see if the left type's pattern
+lines up with parts of the the inductive type that are guaranteed to be well-founded. 
+If the left type is a pattern with variables that prevents it from being reduced,
+then the procedure checks if it is well-formed, meaning it could be solved 
+if more information were specified, and then the unsolved relational constraint
+is added to the subtyping environment. 
+
+The remaining cases closely mirror their counterparts in the declarative subtyping rules.
+
+
+\section{Correctness}
+
+\TODO{introduce model typing and soundness properties}
+
+\section{Experiments}
+
+\TODO{develop 12 tree/list experiments}
+
+\section{Related work}
+
+
+\paragraph{Tree interpolation}
+Exemplified by CHC duality solver.
+
+\paragraph{Hindley-Milner type inference}
+Exemplified by ML.
+
+\paragraph{Logic programming.}
+Exemplified by Prolog. 
+
+
+Similar: both have backchaining. 
+
+Different: RLT is fully declarative, lacks negations, but has implication. 
+
+Different: RLT allows comparing inductive relations via subtyping. 
+
+\paragraph{Semantic subtyping.} 
+Exemplified by XDuce and CDuce. complete subtyping.
+
+Similar: set-like combinators: union and intersection.
+
+Different: RLT uses rigid syntactic rules; incomplete subtyping.
+
+% set theoretic notes: https://pnwamk.github.io/sst-tutorial/#%28part._sec~3asemantic-subtyping%29
+% semantic subtyping: https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
+The terminology "semantic subtyping" vs "syntactic subtyping" are confusing terms. 
+"semantics subtyping" means the semantics of types is determined indirectly by the semantics of another structure.
+"syntactic subtyping" means the semantics of types is determined directly by the type structure
+
+\paragraph{Extrinsic typing.}
+Exemplified by Typescript, which is unsound. Maybe not as lenient?  
+The static behavior of a program is not necessarily specified/prescribed; 
+it may be over-approximated from the program composition. 
+Intrinsic vs extrinsic is orthogonal to static vs dynamic, although static and dynamic are often used to mean the former.
+All modern languages use a combination of static and dynamic type checking.
+The term "dynamically typed" some times refers to a language that doesn't prescribe static meaning,
+even if it uses both static and dynamic type checking. The term "extrinsic typing" is less ambiguous.
+
+\paragraph{Refinement Types.}
+Exemplified by Refinement ML. Base types with intersections and subtyping.
+
+\paragraph{Predicate Subtyping.}
+Exemplified by Liquid Types. An extension of refinement types.
+
+Similar: both use type inference to infer expressive relational properties. 
+
+Different: RLT starts with an invalid post-condition, then weakens return type to a valid post-condition from outside in by expanding unions.
+
+Different: RLT starts with an invalid pre-condition, then strengthens parameter type to a valid pre-condition from inside out by adding intersections.
+
+Different: Liquid types starts with an invalid post-condition, then uses iterative weakening by dropping conjunctions until a valid post-condition is reached.
+
+
+\paragraph{Abstraction Refinement.} 
+Similar: type unification over subtyping resembles abstraction refinement  
+where solving for variables and failing on different sides of the subtyping relation corresponds to
+solving with the abstractor vs solving with the refiner.
+
+\paragraph{Craig interpolation.} 
+Similar: extracting an inductive type with unions and intersections 
+from a recursive program without needing to specify a predicate universe might be similar to
+craig interpolation.
+
+\paragraph{PDR.}
+exemplified by IC3. 
+
+Similar: RLT infers abstract type for return type, 
+then safely constrains the variables in previous step (fix's antecedent) 
+to subtype the least fixed point.
+This lazily propagates the type for the last step to the previous steps.
+This is safe as antecedent is stronger than consequent at any step.
+Seems similar to the notion in PDR of propagating negation of loss points to previous steps. 
+
+Different: RLT isn't cartesian
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Syntax %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Appendix}
+
+\begin{definition} \boxed{\Alpha\ \#\ \tau}\ Fresh variables 
+  \label{definition:fresh_variables}
+  \begin{mathpar}
+    \inferrule {
+      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FV}(\tau)
+    } {
+      \Alpha\ \#\ \tau
     }
   \end{mathpar}
 \end{definition}
