@@ -1390,7 +1390,8 @@ def is_typ_structured(t : Typ) -> bool:
 # TODO: integrate resolving type and relational constraints with make_constraint_typ
 # TODO: eliminate simple constraints; 
 # TODO: separate simple constraints from target terms: relational constraints or expressions' types. 
-# TODO: a variable is resolvable iff it exists in exactly one target term: a relational constraint or an expression's type.  
+# TODO: a variable is resolvable iff it exists in exactly one target term: a relational constraint or an expression's type
+# and has consistent polarity in all occurences.  
 # TODO: calculate the set of resolvablae variables, and resolve each target terms and remove simple constrains with resolvable variable.
 # TODO: modify resolve to take resolvable, skolems, simple constraints, target
 # -- resolve_polarity_typ(self, world : World, rigids : PSet[str], polarity : bool, typ : Typ)
