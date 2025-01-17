@@ -1292,32 +1292,6 @@ def extract_reachable_constraints_from_typ(world : World, typ : Typ, debug = Fal
             constraints = constraints.union(new_constraints)
     return constraints
 
-# def package_typ(world : World, typ : Typ) -> Typ:
-#     constraints = extract_reachable_constraints_from_typ(world, typ)
-#     existential_constraints = extract_existential_constraints(world.skolems, constraints)
-#     reachable_ids = extract_free_vars_from_constraints(s(), constraints).union(extract_free_vars_from_typ(s(), typ))
-#     existential_bound_ids = tuple(sorted(world.skolems.intersection(reachable_ids)))
-
-#     if not existential_bound_ids:
-#         assert not existential_constraints
-#         exi_typ = typ
-#     else:
-#         exi_typ = Exi(existential_bound_ids, tuple(sorted(existential_constraints)), typ)
-
-#     # return simplify_typ(exi_typ)
-
-#     universal_constraints = constraints.difference(existential_constraints)
-#     universal_bound_ids = tuple(sorted(reachable_ids.difference(world.skolems)))
-#     # NOTE: alternative
-#     # universal_constraints = extract_reachable_constraints_from_typ(world, exi_typ)
-#     # universal_bound_ids = tuple(extract_free_vars_from_constraints(s(), universal_constraints).union(extract_free_vars_from_typ(s(), exi_typ)))
-
-#     if not universal_bound_ids:
-#         assert not universal_constraints
-#         univ_typ = exi_typ
-#     else:
-#         univ_typ = All(universal_bound_ids, tuple(sorted(universal_constraints)), exi_typ)
-#     return simplify_typ(univ_typ)
 
 
 
@@ -1386,15 +1360,259 @@ def is_typ_structured(t : Typ) -> bool:
     else:
         return False
 
-# TODO: create package_typ(positive: bool) that resolves targets and then builds constraint typ
-# TODO: integrate resolving type and relational constraints with make_constraint_typ
-# TODO: eliminate simple constraints; 
-# TODO: separate simple constraints from target terms: relational constraints or expressions' types. 
-# TODO: a variable is resolvable iff it exists in exactly one target term: a relational constraint or an expression's type
-# and has consistent polarity in all occurences.  
-# TODO: calculate the set of resolvablae variables, and resolve each target terms and remove simple constrains with resolvable variable.
-# TODO: modify resolve to take resolvable, skolems, simple constraints, target
-# -- resolve_polarity_typ(self, world : World, rigids : PSet[str], polarity : bool, typ : Typ)
+
+
+@dataclass(frozen=True, eq=True)
+class Pos:
+    pass
+@dataclass(frozen=True, eq=True)
+class Neg:
+    pass
+@dataclass(frozen=True, eq=True)
+class Zero:
+    pass
+Polarity = Union[Pos, Neg, Zero]
+
+def extract_lower_bounds(constraints : Iterable[Subtyping], id : str) -> list[Typ]:
+    return [
+        st.lower
+        for st in constraints
+        if st.upper == TVar(id) 
+    ]
+
+def extract_upper_bounds(constraints : Iterable[Subtyping], id : str) -> list[Typ]:
+    return [ 
+        st.upper 
+        for st in constraints
+        if st.lower == TVar(id) 
+    ]
+
+def intersect_upper_bounds(constraints : Iterable[Subtyping], id : str) -> Typ:
+    return make_inter(extract_upper_bounds(constraints, id))
+
+def unionize_lower_bounds(constraints : Iterable[Subtyping], id : str) -> Typ:
+    return make_unio(extract_lower_bounds(constraints, id))
+
+def resolve_id(positive : bool, skolems : PSet[str], constraints : Iterable[Subtyping], id : str) -> Typ:
+    if False:
+        pass
+    elif positive and id not in skolems:
+        return unionize_lower_bounds(constraints, id)
+    elif not positive and id not in skolems:
+        return intersect_upper_bounds(constraints, id)
+    elif positive and id in skolems:
+        return intersect_upper_bounds(constraints, id)
+    elif not positive and id in skolems:
+        return unionize_lower_bounds(constraints, id)
+    else:
+        assert False
+    #end if
+
+def compare_polarities(a : Optional[Polarity], b : Optional[Polarity]) -> Optional[Polarity]:
+    if a == None:
+        return b
+    elif b == None:
+        return a
+    elif a == Zero():
+        return Zero()
+    elif b == Zero():
+        return Zero()
+    elif a == Pos() and b == Pos():
+        return Pos()
+    elif a == Neg() and b == Neg():
+        return Neg()
+    else:
+        return None
+
+
+def get_polarity_from_constraints(positive : bool, constraints : Sequence[Subtyping], id : str) -> Optional[Polarity]: 
+    pol = None
+    for st in constraints:
+        lower = get_polarity_from_target(positive, st.lower, id)
+        upper = get_polarity_from_target(not positive, st.upper, id)
+        combo = compare_polarities(lower, upper)
+        pol = compare_polarities(pol, combo)
+    return pol
+
+def get_polarity_from_target(positive : bool, target : Typ, id : str) -> Optional[Polarity]: 
+
+
+    if False:
+        assert False
+
+    elif isinstance(target, TVar):
+        if target.id == id and positive: 
+            return Pos() 
+        elif target.id == id and not positive: 
+            return Neg() 
+        else:
+            return None
+        #end if
+
+    elif isinstance(target, TUnit):
+        return None 
+
+    elif isinstance(target, TTag):
+        body = target.body
+        return get_polarity_from_target(positive, body, id)
+
+    elif isinstance(target, TField):
+        body = target.body
+        return get_polarity_from_target(positive, body, id)
+
+    elif isinstance(target, Unio):
+        left = get_polarity_from_target(positive, target.left, id)
+        right = get_polarity_from_target(positive, target.right, id)
+        return compare_polarities(left, right)
+
+
+
+    elif isinstance(target, Inter):
+        left = get_polarity_from_target(positive, target.left, id)
+        right = get_polarity_from_target(positive, target.right, id)
+        return compare_polarities(left, right)
+
+    elif isinstance(target, Diff):
+        context = get_polarity_from_target(positive, target.context, id)
+        # invariant: negation should have no free variables
+        return context
+
+    elif isinstance(target, Imp):
+        antec = get_polarity_from_target(not positive, target.antec, id)
+        consq = get_polarity_from_target(positive, target.consq, id)
+        return compare_polarities(antec, consq)
+
+    elif isinstance(target, Exi):
+        if id in target.ids:
+            return None
+        else:
+            constraints = get_polarity_from_constraints(positive, target.constraints, id)
+            body = get_polarity_from_target(positive, target.body, id)
+            return compare_polarities(constraints, body)
+
+    elif isinstance(target, All):
+        if id in target.ids:
+            return None
+        else:
+            constraints = get_polarity_from_constraints(positive, target.constraints, id)
+            body = get_polarity_from_target(positive, target.body, id)
+            return compare_polarities(constraints, body)
+
+    elif isinstance(target, Fixpoint):
+
+        if id == target.id:
+            return None
+        else:
+            return get_polarity_from_target(positive, target.body, id)
+
+    elif isinstance(target, Top):
+        return None 
+
+    elif isinstance(target, Bot):
+        return None 
+
+def get_polarity_from_targets(positive : bool, targets : Iterable[Typ], id : str) -> Optional[Polarity]: 
+    id_targets = [ 
+        t
+        for t in targets
+        if id in extract_free_vars_from_typ(s(), t)
+    ]
+    if len(id_targets) != 1:
+        return Zero() 
+    else:
+        target = id_targets[0] 
+        return get_polarity_from_target(positive, target, id)
+    
+# def elmiinate_simple_constraints(positive : bool, 
+#     free_vars : PSet[str], skolems : PSet[str], constraints : PSet[Subtyping], payload : Typ
+# ):
+#     # TODO: modify to rewrite constraint type with simple constraints eliminated. 
+#     """
+#     Determine which variables can be resolved;
+#     we know that variables cannot be eliminated if the most lenient safe interpretation cannot be determined.
+#     we know that relational constraints cannot necessarily be eliminated without loss of precision.
+#     Therefore, the following conditions must be met: 
+#     - safety: 
+#         - the strongest interpretation for a variable is safe, and we have determined that the variable cannot get any weaker. 
+#         - the weakest itnerpretation for a variable is safe, and we have determined that the variable cannot get any stronger. 
+#     - precision: 
+#         - variables are not constrained by a another relational constraint 
+#         - variables are in the lower type of a relational constraint are also in the payload type 
+#     """
+
+#     simple_constraints = [
+#         st
+#         for st in constraints
+#         if isinstance(st.lower, TVar) or isinstance(st.upper, TVar)
+#     ]
+
+#     relational_constraints = [
+#         st
+#         for st in constraints
+#         if not isinstance(st.lower, TVar) and not isinstance(st.upper, TVar)
+#     ]
+
+#     targets = pset([
+#         st.lower
+#         for st in relational_constraints
+#     ] + [payload])
+
+#     print()
+#     print()
+#     print("###################################################")
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# constriants
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_constraints(constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+#     print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# relational_constriants
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_constraints(relational_constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     """)
+#     for i, targ in enumerate(targets):
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# targets[{i}]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(targ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+
+#     resolution_map = pmap({
+#         id : resol 
+#         for target in targets
+#         for id in extract_free_vars_from_typ(s(), target)
+#         if id not in free_vars
+#         for pol in [get_polarity_from_targets(positive, targets, id)]
+#         if pol != None
+#         if pol != Zero() 
+#         for resol in [resolve_id(pol == Pos(), skolems, simple_constraints, id)]
+#     })
+
+#     resolved_ids = pset(resolution_map.keys())
+
+#     remaining_constraints = [
+#         st
+#         for st in simple_constraints
+#         if not (
+#             isinstance(st.lower, TVar) and st.lower.id in resolved_ids
+#         )
+#         if not (
+#             isinstance(st.upper, TVar) and st.upper.id in resolved_ids
+#         )
+#     ] 
+#     resolved_relational_constraints = [
+#         Subtyping(lower, st.upper) 
+#         for st in relational_constraints
+#         for lower in [sub_typ(resolution_map, st.lower)]
+#     ]
+#     resolved_payload = sub_typ(resolution_map, payload)
+
 
 def make_constraint_typ(positive : bool):
     (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
@@ -1655,61 +1873,6 @@ class Solver:
         return self.decode_polarity_typ(worlds, True, t)
 
 
-    # def decode_typ(self, worlds : list[World], t : Typ) -> Typ:
-    #     t = simplify_typ(t)
-    #     constraint_typs = [
-    #         package_typ(world, t)
-    #         for world in worlds
-    #     ] 
-    #     return make_unio(constraint_typs)
-
-    # def decode_strong_side(self, worlds : list[World], t : Typ, arg : Typ = TUnit()) -> Typ:
-
-    #     for m in worlds:
-    #         print(f"""
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # DEBUG decode_strong_side 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # m.skolems: {m.skolems}
-    # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # t: {concretize_typ(t)}
-    # ~~~~~~~~~~~~~~~~~~~~~~~~
-    #         """)
-
-    #     constraint_typs = [
-    #         package_typ(m, strongest)
-    #         for world in worlds
-    #         for op in [interpret_with_polarity(True, world, t)]
-    #         if op != None
-    #         for (strongest, cs) in [op]
-    #         # for m in [world]
-    #         for m in [World(world.constraints.difference(cs), world.skolems)]
-    #     ] 
-    #     return make_unio(constraint_typs)
-
-    # def decode_weak_side(self, worlds : list[World], t : Typ) -> Typ:
-
-    # #     for m in worlds:
-    # #         print(f"""
-    # # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # # DEBUG decode_weak_side 
-    # # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # # m.skolems: {m.skolems}
-    # # m.constraints: {concretize_constraints(tuple(m.constraints))}
-    # # t: {concretize_typ(t)}
-    # # ~~~~~~~~~~~~~~~~~~~~~~~~
-    # #         """)
-    #     constraint_typs = [
-    #         package_typ(m, weakest)
-    #         for world in worlds
-    #         for op in [interpret_with_polarity(world, t, False)]
-    #         if op != None
-    #         for (weakest, cs) in [op]
-    #         # for m in [world]
-    #         for m in [World(world.constraints.difference(cs), world.skolems)]
-    #     ] 
-    #     return make_unio(constraint_typs)
-
     def resolve_polarity_id(self, world : World, rigids : PSet[str], polarity : bool, id : str) -> Typ:
         if id in rigids:
             return TVar(id) 
@@ -1947,13 +2110,6 @@ class Solver:
 #         else:
 #             return worlds 
 
-    def extract_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
-        return pset(
-            st.upper 
-            for st in world.constraints
-            if st.lower == TVar(id) 
-        )
-
     def extract_factored_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
         return find_factors(world, TVar(id))
 
@@ -1973,6 +2129,13 @@ class Solver:
             st.lower
             for st in world.constraints
             if st.upper == TVar(id) 
+        )
+
+    def extract_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
+        return pset(
+            st.upper 
+            for st in world.constraints
+            if st.lower == TVar(id) 
         )
 
     def extract_transitive_lower_bounds(self, world : World, id : str) -> PSet[Typ]:
@@ -2864,13 +3027,14 @@ class BaseRule(Rule):
                 extract_free_vars_from_typ(s(), imp)
             )
 
-            reachable_constraints = pset(
+            influential_constraints = pset(
                 st
                 for st in branch.world.constraints
                 if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
             )
             # TODO: switch to using package_typ, which will resolve targets if possible
-            generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, reachable_constraints, imp)
+            # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
+            generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, influential_constraints, imp)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
