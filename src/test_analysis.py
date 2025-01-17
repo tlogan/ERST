@@ -1401,8 +1401,10 @@ def test_max_parts_disjoint():
 
 
 def test_max():
+    # TODO: remove decoding; expression typing should already package types and combine together 
     (worlds, typ, parsetree, solver) = analyze(el.max)
-    print("answer:\n" + decode_positive(solver, worlds, typ))
+    print("answer:\n" + analyzer.concretize_typ(typ))
+    # print("answer:\n" + decode_positive(solver, worlds, typ))
     print(f"len(worlds): {len(worlds)}")
     # assert decode_positive(solver, worlds, typ_var) == "@"
 
@@ -2034,6 +2036,7 @@ if __name__ == '__main__':
     # test_implication_unification()
     # test_lted_wrapper()
     # test_max_parts_disjoint()
+    ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
     test_max()
     # test_max_annotated()
     # test_max_subtyping()

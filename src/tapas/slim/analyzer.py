@@ -1386,6 +1386,15 @@ def is_typ_structured(t : Typ) -> bool:
     else:
         return False
 
+# TODO: create package_typ(positive: bool) that resolves targets and then builds constraint typ
+# TODO: integrate resolving type and relational constraints with make_constraint_typ
+# TODO: eliminate simple constraints; 
+# TODO: separate simple constraints from target terms: relational constraints or expressions' types. 
+# TODO: a variable is resolvable iff it exists in exactly one target term: a relational constraint or an expression's type.  
+# TODO: calculate the set of resolvablae variables, and resolve each target terms and remove simple constrains with resolvable variable.
+# TODO: modify resolve to take resolvable, skolems, simple constraints, target
+# -- resolve_polarity_typ(self, world : World, rigids : PSet[str], polarity : bool, typ : Typ)
+
 def make_constraint_typ(positive : bool):
     (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
     def make(free_vars : PSet[str], skolems : PSet[str], constraints : PSet[Subtyping], payload : Typ):
@@ -1795,6 +1804,7 @@ class Solver:
 
     def decode_polarity_typ(self, worlds : list[World], polarity : bool, t : Typ) -> Typ:
         resolved_typs = [
+            # TODO: switch to using package_typ, (to be implemented).
             self.resolve_polarity_typ(world, s(), polarity, t)
             for world in worlds
         ] 
@@ -2858,6 +2868,7 @@ class BaseRule(Rule):
                 for st in branch.world.constraints
                 if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
             )
+            # TODO: switch to using package_typ, which will resolve targets if possible
             generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, reachable_constraints, imp)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
@@ -3089,6 +3100,7 @@ class ExprRule(Rule):
                 # )
             )
             rel_constraints = IH_rel_constraints.union(influential_constraints)
+            # TODO: switch to using package_typ, which will resolve targets if possible
             constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
             # NOTE: parameter constraint isn't actually necessary; sound without it.
