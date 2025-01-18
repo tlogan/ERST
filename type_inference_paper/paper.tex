@@ -879,6 +879,8 @@ necessary for the subtyping constraint to hold.
     }
 
     \inferrule {
+      \TODO{simplifiy with one world as input; construction of multiple branches from one world}
+      \\\\
       Z, \Gamma \entails F \liftfun \Pi, \Tau_n 
       \\
       \Gamma \entails \Pi \equiv \Tau 
@@ -920,6 +922,20 @@ necessary for the subtyping constraint to hold.
       \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
+    }
+
+    \inferrule {
+      \TODO{alt}
+      \\\\
+      \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given M, \Delta
+      \\\\
+      \exists M\ \Delta .\ \left<M, \Delta \right> \in Z 
+      \\\\
+      \forall M'\ \Delta' .\ \left< M\ M', \Delta\ \Delta' \right> \in Z \implies \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M\ M', \Delta\ \Delta' 
+      \\\\
+      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    } {
+      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$]}\text{union}(\Tau)\obj{]]$\alpha_r'$} \given M, \Delta 
     }
   \end{mathpar}
 \end{definition}
@@ -1187,7 +1203,7 @@ as well as additional rules for increased precision.
     }
 
     \inferrule {
-      \text{decidable}(\Delta_0, \tau_l, \obj{LFP[$\alpha$]$\tau_r$})
+      \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[$\alpha$]$\tau_r$})
       \\\\
       \Delta_0 \preceq \Delta_1
       \\
@@ -1272,6 +1288,7 @@ dddd ddd ddd ddd
 
 \begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof subtyping annex 
   \label{definition:proof_subtyping_annex}
+  \TODO{switch from extension predicate to using concat}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1418,8 +1435,13 @@ dddd ddd ddd ddd
       \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
     }
 
+
     \inferrule {
-      \text{DF}(\obj{$\tau_r$\textbackslash$\tau_n$})
+      \TODO{create a negation syntax}
+      \\
+      \TODO{prove subtyping is complete for negation syntax}
+      \\
+      \text{negsyn}(\obj{$\tau_r$\textbackslash$\tau_n$})
       \\
       \tau_l \subtypes \tau_r
       \given M, \Delta
@@ -1707,87 +1729,103 @@ Different: RLT isn't cartesian
     \nonterm{C} & \is \epsilon \sep C\ c
   \end{array}\]
 \end{definition}
-\begin{definition}\boxed{C \sqcup  C = C}
+\begin{definition}\boxed{C\ C = C}\ Concatenation
   \[\begin{array}{rclr}
-    C \sqcup \epsilon 
+    C\ \epsilon 
     &=& 
     C
     & \C{empty} 
     \\
 
-    C \sqcup (C'\ c) 
+    C\ (C'\ c) 
     &=& 
-    (C \sqcup C')\ c
+    (C\ C')\ c
     & \C{step} 
     \\
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{C \sqcap  C = C}
+\begin{definition}\boxed{C \diamond  C = C}\ Filter
   \[\begin{array}{rclr}
-    C \sqcap \epsilon 
+    C \diamond \epsilon 
     &=& 
     \epsilon 
     % & \C{empty} 
     \\
 
-    C \sqcap (C'\ c) 
+    C \diamond (C'\ c) 
     &=& 
     \begin{cases}
-      (C \sqcap C')\ c & \text{if } c \in C\\
-      (C \sqcap C') & \text{otherwise}
+      (C \diamond C')\ c & \text{if } c \in C\\
+      (C \diamond C') & \text{otherwise}
     \end{cases}
     % & \D{Step} 
     \\
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\widebar{\ c\ }^{\vec{t}[P]} \circeq C}\ Comprehension 
+% \begin{definition}\boxed{\widebar{\ c\ }^{\vec{t}[P]} \circeq C}\ Comprehension 
+%   \begin{mathpar}
+%     \inferrule {
+%       \forall 
+%     } {
+%       \widebar{\ c\ }^{A[P]} \circeq C
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+% \begin{definition}\boxed{\text{map}(C, t) = C}
+%   \[\begin{array}{rclr}
+%     \text{map}(\epsilon, t)
+%     &=& 
+%     \epsilon
+%     & \C{empty} 
+%     \\
+
+%     \text{map}(C\ c, t)
+%     &=& 
+%     \text{map}(C, t) \sqcup t(c)
+%     & \C{step} 
+%     \\
+%   \end{array}\]
+% \end{definition}
+
+% \begin{definition}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}\ Map sugar 
+%   \[\begin{array}{rclr}
+%     \widebar{\ c'\ }^{c \in C} 
+%     &\circeq& 
+%     \text{map}(C, \lambda c . c')
+%     % & \C{comprehension} 
+%     \\
+%   \end{array}\]
+% \end{definition}
+
+% \begin{definition}\boxed{c \in C}\ Collection Containment
+%   \begin{mathpar}
+%     \inferrule {
+%       c \notin C
+%     } {
+%       c \in C\ c 
+%     }
+
+%     \inferrule {
+%       c \in C
+%     } {
+%       c \in C\ c' 
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+\begin{definition}\boxed{c \in C}\ Collection Containment
   \begin{mathpar}
     \inferrule {
-      \forall 
-    } {
-      \widebar{\ c\ }^{A[P]} \circeq C
-    }
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\text{map}(C, t) = C}
-  \[\begin{array}{rclr}
-    \text{map}(\epsilon, t)
-    &=& 
-    \epsilon
-    & \C{empty} 
-    \\
-
-    \text{map}(C\ c, t)
-    &=& 
-    \text{map}(C, t) \sqcup t(c)
-    & \C{step} 
-    \\
-  \end{array}\]
-\end{definition}
-
-\begin{definition}\boxed{\widebar{\ c\ }^{c \in C} \circeq C}\ Map sugar 
-  \[\begin{array}{rclr}
-    \widebar{\ c'\ }^{c \in C} 
-    &\circeq& 
-    \text{map}(C, \lambda c . c')
-    % & \C{comprehension} 
-    \\
-  \end{array}\]
-\end{definition}
-
-\begin{definition}\boxed{c \in C}
-  \begin{mathpar}
-    \inferrule {
-      c \notin C
     } {
       c \in C\ c 
     }
 
     \inferrule {
+      c \neq c'
+      \\
       c \in C
     } {
       c \in C\ c' 
@@ -1811,33 +1849,33 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\obj{|}(\Tau) = \tau}
+\begin{definition}\boxed{\text{union}(\Tau) = \tau}\ Collective Union
   \[\begin{array}{rclr}
-    \obj{|}(\epsilon)
+    \text{union}(\epsilon)
     &=& 
     \obj{BOT}
     & \C{empty} 
     \\
 
-    \obj{|}(\Tau\ \tau)
+    \text{union}(\Tau\ \tau)
     &=& 
-    \obj{|}(\Tau) \obj{|} \tau
+    \text{union}(\Tau) \obj{|} \tau
     & \C{step} 
     \\
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\obj{\&}(\Tau) = \tau}
+\begin{definition}\boxed{\text{inter}(\Tau) = \tau}\ Collective Intersection
   \[\begin{array}{rclr}
-    \obj{\&}(\epsilon)
+    \text{inter}(\epsilon)
     &=& 
     \obj{TOP}
     & \C{empty} 
     \\
 
-    \obj{\&}(\Tau\ \tau)
+    \text{inter}(\Tau\ \tau)
     &=& 
-    \obj{\&}(\Tau) \obj{\&} \tau
+    \text{inter}(\Tau) \obj{\&} \tau
     & \C{step} 
     \\
   \end{array}\]
@@ -2464,7 +2502,7 @@ Different: RLT isn't cartesian
     \inferrule {
       \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
       \\\\
-      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \sqcap\ \Alpha_z = \Alpha_o
+      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \diamond\ \Alpha_z = \Alpha_o
       \\
       (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \Alpha_z \ \backslash\ \Alpha_r = \Alpha_i
       \\\\

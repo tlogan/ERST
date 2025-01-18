@@ -2998,6 +2998,7 @@ class BaseRule(Rule):
         # return Result(nt.worlds, simplify_typ(result))
         return Result(nt.worlds, result)
 
+    # TODO: redo Context such that it only has a single world as input
     def combine_function(self, nt : Context, branches : list[Branch]) -> Result:
         '''
         Example
