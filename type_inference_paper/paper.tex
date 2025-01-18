@@ -521,7 +521,7 @@ However, we have not included this rewriting in the semantics or implementation.
 
 \section{Dynamic Semantics}
 
-\begin{definition}(Expressions)
+\begin{definition} Expressions
   \label{definition:expressions}
   \[\begin{array}[t]{r@{}l}
     \nonterm{e} 
@@ -531,9 +531,9 @@ However, we have not included this rewriting in the semantics or implementation.
       \obj{$x$} \sep 
       \obj{@} \sep
       \obj{<$l$>$e$} \sep 
-      R \sep
+      \vec{r} \sep
       \obj{$e$,$e$} \sep
-      F \sep 
+      \vec{f} \sep 
       \obj{$e$.$l$} \sep
       \obj{($e$)($e$)} \sep
       \\
@@ -543,11 +543,11 @@ However, we have not included this rewriting in the semantics or implementation.
       \obj{($e$)}
     \end{array}
     \\
-    \nonterm{R} & \is \epsilon \sep R\ r
+    \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     \\
     \nonterm{r} & \is \obj{\$$l$=>$e$}
     \\
-    \nonterm{F} & \is \epsilon \sep F\ f
+    \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
     \\
     \nonterm{f} & \is \obj{\$$p$=>$e$}
     \\
@@ -556,11 +556,11 @@ However, we have not included this rewriting in the semantics or implementation.
       \obj{$x$} \sep
       \obj{@} \sep
       \obj{<$l$>$p$} \sep
-      K \sep
+      \vec{k} \sep
       \obj{$p$,$p$} \sep
       \obj{($p$)} 
     \\
-    \nonterm{K} & \is \epsilon \sep K\ k
+    \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     \\
     \nonterm{k} & \is \obj{\$$l$=>$p$}
   \end{array}\]
@@ -785,16 +785,23 @@ necessary for the subtyping constraint to hold.
       \tau\obj{\&}\tau \sep 
       \tau\obj{\textbackslash}\tau \sep 
       \\
-      \obj{EXI[}\Alpha \ \Delta \obj{]} \tau \sep 
-      \obj{ALL[}\Alpha \ \Delta \obj{]} \tau \sep 
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
+      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
       \obj{LFP[}\alpha\obj{]}\tau
     \end{array}
     \\
-    \nonterm{\Alpha} & \is \epsilon \sep \Alpha\ \alpha 
+    \nonterm{\phi} & \is 
+    \begin{array}[t]{@{}l}
+      \alpha \sep
+      \obj{@} \sep
+      \obj{<}l\obj{>}\phi \sep 
+      l\obj{->}\phi \sep 
+      \phi\obj{\&}\phi \sep 
+    \end{array}
     \\
-    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \delta
+    \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
     \\
-    \nonterm{\delta} & \is \obj{;} \tau \obj{<:} \tau
+    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \obj{;} \tau \obj{<:} \tau
   \end{array}\]
 \end{definition}
 
@@ -808,106 +815,94 @@ necessary for the subtyping constraint to hold.
 \begin{definition} Internals 
   \label{definition:internals}
   \[\begin{array}[t]{r@{}l}
-    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ \gamma
-    \\
-    \nonterm{\gamma} & \is x : \tau
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
     \\
     \\
-    \nonterm{M} & \is \epsilon \sep M\ m
-    \\
-    \nonterm{m} & \is \alpha
-    \\
-    \nonterm{N} & \is \epsilon \sep N\ n
-    \\
-    \nonterm{n} & \is \alpha
+    \nonterm{\Theta} & \is \epsilon \sep \Theta\ \left< \vec{\alpha}, \Delta \right>
     \\
     \\
-    \nonterm{Z} & \is \epsilon \sep Z\ z
+    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
     \\
-    \nonterm{z} & \is \left< M, \Delta \right>
-    \\
-    \\
-    \nonterm{\Tau} & \is \epsilon \sep \Tau\ \tau
+    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
     \\
     \\
-    \nonterm{\Pi} & \is \epsilon \sep \Pi\ \pi
-    \\
-    \nonterm{\pi} & \is \left< M, \Delta, \tau \obj{->} \tau\right>
+    \nonterm{\Pi} & \is \epsilon \sep \Pi\ \left< M, \Delta, \tau \obj{->} \tau\right>
     \\
     \\
-    \nonterm{\Omega} & \is \epsilon \sep \Omega\ \omega
-    \\  
-    \nonterm{\omega} & \is \alpha \slash \tau
+    \nonterm{\Omega} & \is \epsilon \sep \Omega\ \alpha \slash \tau
   \end{array}\]
 \end{definition}
 
 
 \subsection{Proof Typing}
 
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}\ Proof Typing
+\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta}\ Proof Typing
   \label{definition:proof_typing}
   \begin{mathpar}
     \inferrule {
     } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given M, \Delta 
+      \Gamma \entails \obj{@} \hastype \obj{@} \given \vec{\alpha}, \Delta 
     }
 
     \inferrule {
-      x\obj{:}\tau \in \Gamma
+      x:\tau \in \Gamma
     } {
-      \Gamma \entails x \hastype \tau \given M, \Delta 
+      \Gamma \entails x \hastype \tau \given \vec{\alpha}, \Delta 
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \tau \given M, \Delta 
+      \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta 
     } {
-      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given M, \Delta 
+      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \vec{\alpha}, \Delta 
     }
 
     \inferrule {
-      \Gamma \entails R \hastype \tau_0 \given M, \Delta 
+      \Gamma \entails R \hastype \tau_0 \given \vec{\alpha}, \Delta 
       \\
-      \Gamma \entails e \hastype \tau_1 \given M\ M', \Delta\ \Delta' 
+      \Gamma \entails e \hastype \tau_1 \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
     } {
-      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given M\ M, \Delta\ \Delta' 
+      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given \vec{\alpha}\ \vec{\alpha}, \Delta\ \Delta' 
     }
 
     \inferrule {
-      M, \Delta, \Gamma \entails F \liftfun \Pi, \Tau_n 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \Pi, \vec{\phi} 
       \\
-      \Gamma \entails \vec{\pi} \cong \vec{\tau} 
+      \Gamma \entails \Pi \cong \vec{\tau} 
     } {
-      \Gamma \entails F \hastype \text{inter}(\vec{\tau}) \given M, \Delta 
+      \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta 
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \tau_0 \given M, \Delta
+      \Gamma \entails e \hastype \tau_0 \given \vec{\alpha}, \Delta
       \\
-      \tau_0 \subtypes l\obj{->}\alpha \given M\ M', \Delta\ \Delta'
+      \tau_0 \subtypes l\obj{->}\alpha \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta'
     } {
-      \Gamma \entails e\obj{.}l \hastype \alpha \given M\ M', \Delta\ \Delta'
+      \Gamma \entails e\obj{.}l \hastype \alpha \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta'
     }
 
     \inferrule {
-      \Gamma \entails e_0 \hastype \tau_0 \given M_0, \Delta_0 
+      \Gamma \entails e_0 \hastype \tau_0 \given \vec{\alpha}_0, \Delta_0 
       \\
-      \Gamma \entails e_1 \hastype \tau_1 \given M_0\ M_1, \Delta_0\ \Delta_1
+      \Gamma \entails e_1 \hastype \tau_1 \given \vec{\alpha}_0\ \vec{\alpha}_1, \Delta_0\ \Delta_1
       \\\\
-      \tau_0 \subtypes \tau_1\obj{->}\alpha \given M_0\ M_1\ M_2, \Delta_0\ \Delta_1\ \Delta_2
+      \tau_0 \subtypes \tau_1\obj{->}\alpha \given \vec{\alpha}_0\ \vec{\alpha}_1\ \vec{\alpha}_2, \Delta_0\ \Delta_1\ \Delta_2
     } {
-      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given M_0\ M_1\ M_2, \Delta_0\ \Delta_1\ \Delta_2
+      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given \vec{\alpha}_0\ \vec{\alpha}_1\ \vec{\alpha}_2, \Delta_0\ \Delta_1\ \Delta_2
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given M, \Delta
+      \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given \vec{\alpha}, \Delta
       \\\\
-      \exists z.\ z \in Z 
+      \exists \vec{\alpha}\ \Delta.\ \left< \vec{\alpha},\Delta \right> \in \Theta 
       \\\\
-      \forall M'\ \Delta' .\ \left< M\ M', \Delta\ \Delta' \right> \in Z \iff \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M\ M', \Delta\ \Delta' 
+      \forall \vec{\alpha}'\ \Delta' .\ \left< \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' \right> \in \Theta 
+      \iff 
+      \tau \subtypes \alpha_l\obj{->}\alpha_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
-      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      \text{FTV}(\Gamma) \entails \nu\alpha^+.\Theta.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
     } {
-      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$]}\text{union}(\Tau)\obj{]]$\alpha_r'$} \given M, \Delta 
+      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
     }
   \end{mathpar}
 \end{definition}
@@ -995,7 +990,7 @@ necessary for the subtyping constraint to hold.
 %   \end{mathpar}
 % \end{definition}
 
-\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
+\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \Pi, \vec{\phi}}\ Function Lifting
   \begin{mathpar}
     \inferrule {
     } {
@@ -1003,20 +998,20 @@ necessary for the subtyping constraint to hold.
     }
 
     \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \Pi, \vec{\phi} 
       \\\\
       p \hastype \phi \given \Gamma'
       \\
-      \text{neg}(\phi, \vec{\eta}) = \tau_l
+      \text{neg}(\phi, \vec{\phi}) = \tau_l
       \\
-      \exists \pi .\ \pi \in \vec{\pi}' 
+      \exists \vec{\alpha}\ \Delta\ \tau.\ \left< \vec{\alpha},\Delta,\tau \right> \in \Pi' 
       \\\\
-      \forall \vec{\alpha'}\ \Delta'\ \tau_r .\ \left< \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r \right> \in \Pi' 
+      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ \left< \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r \right> \in \Pi' 
       \iff
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
     } {
-      M, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
-      \vec{\pi}\ \vec{\pi}', \vec{\eta}\ (\obj{EXI[}\text{range}(\Gamma')\obj{]}\phi)
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
+      \Pi\ \Pi', \vec{\phi}\ \phi
     }
   \end{mathpar}
 \end{definition}
