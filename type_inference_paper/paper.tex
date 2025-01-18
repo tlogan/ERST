@@ -844,94 +844,66 @@ necessary for the subtyping constraint to hold.
 
 \subsection{Proof Typing}
 
-
-\begin{definition} Proof Typing \I \boxed{\Gamma \entails e \hastype \tau \given Z}
+\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given Z}\ Proof Typing
   \label{definition:proof_typing}
   \begin{mathpar}
     \inferrule {
-      \left< M, \Delta \right> \in Z
     } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given Z 
+      \Gamma \entails \obj{@} \hastype \obj{@} \given M, \Delta 
     }
 
     \inferrule {
-      \left< M, \Delta \right> \in Z
+      x\obj{:}\tau \in \Gamma
+    } {
+      \Gamma \entails x \hastype \tau \given M, \Delta 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given M, \Delta 
+    } {
+      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given M, \Delta 
+    }
+
+    \inferrule {
+      \Gamma \entails R \hastype \tau_0 \given M, \Delta 
       \\
-      \obj{$x$:$\tau$} \in \Gamma
+      \Gamma \entails e \hastype \tau_1 \given M\ M', \Delta\ \Delta' 
     } {
-      \Gamma \entails x \hastype \tau \given Z 
+      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given M\ M, \Delta\ \Delta' 
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \tau \given Z 
-    } {
-      \Gamma \entails \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$} \given Z 
-    }
-
-    \inferrule {
-      \Gamma \entails R \hastype \tau_0 \given Z_0
+      M, \Delta, \Gamma \entails F \liftfun \Pi, \Tau_n 
       \\
-      Z_0 \looparrowright Z_1
-      \\
-      \Gamma \entails e \hastype \tau_1 \given Z_1
+      \Gamma \entails \vec{\pi} \cong \vec{\tau} 
     } {
-      \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
+      \Gamma \entails F \hastype \text{inter}(\vec{\tau}) \given M, \Delta 
     }
 
     \inferrule {
-      \TODO{simplifiy with one world as input; construction of multiple branches from one world}
+      \Gamma \entails e \hastype \tau_0 \given M, \Delta
+      \\
+      \tau_0 \subtypes l\obj{->}\alpha \given M\ M', \Delta\ \Delta'
+    } {
+      \Gamma \entails e\obj{.}l \hastype \alpha \given M\ M', \Delta\ \Delta'
+    }
+
+    \inferrule {
+      \Gamma \entails e_0 \hastype \tau_0 \given M_0, \Delta_0 
+      \\
+      \Gamma \entails e_1 \hastype \tau_1 \given M_0\ M_1, \Delta_0\ \Delta_1
       \\\\
-      Z, \Gamma \entails F \liftfun \Pi, \Tau_n 
-      \\
-      \Gamma \entails \Pi \equiv \Tau 
+      \tau_0 \subtypes \tau_1\obj{->}\alpha \given M_0\ M_1\ M_2, \Delta_0\ \Delta_1\ \Delta_2
     } {
-      \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
+      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given M_0\ M_1\ M_2, \Delta_0\ \Delta_1\ \Delta_2
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \tau_0 \given Z_0
-      \\
-      Z_0 \looparrowright Z_1
-      \\
-      \tau_0 \subtypes \obj{$l$:$\alpha$} \given Z_1
-    } {
-      \Gamma \entails \obj{$e$.$l$} \hastype \alpha \given Z_1
-    }
-
-    \inferrule {
-      \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-      \\
-      Z_0 \looparrowright Z_1
-      \\
-      \Gamma \entails e_1 \hastype \tau_1 \given Z_1
-      \\
-      Z_1 \looparrowright Z_2
-      \\
-      \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
-    } {
-      \Gamma \entails \obj{$e_0$($e_1$)} \hastype \alpha \given Z_2
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given Z_0
-      \\
-      Z_0 \looparrowright Z_1
-      \\
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
-      \\\\
-      \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    } {
-      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
-    }
-
-    \inferrule {
-      \TODO{alt}
-      \\\\
       \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given M, \Delta
       \\\\
-      \exists M\ \Delta .\ \left<M, \Delta \right> \in Z 
+      \exists z.\ z \in Z 
       \\\\
-      \forall M'\ \Delta' .\ \left< M\ M', \Delta\ \Delta' \right> \in Z \implies \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M\ M', \Delta\ \Delta' 
+      \forall M'\ \Delta' .\ \left< M\ M', \Delta\ \Delta' \right> \in Z \iff \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M\ M', \Delta\ \Delta' 
       \\\\
       \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
@@ -940,40 +912,148 @@ necessary for the subtyping constraint to hold.
   \end{mathpar}
 \end{definition}
 
-\begin{definition} \boxed{Z, \Gamma \entails F \liftfun \Pi, T}
+
+% \begin{definition} Proof Typing \I \boxed{\Gamma \entails e \hastype \tau \given Z}
+%   \label{definition:proof_typing}
+%   \begin{mathpar}
+%     \inferrule {
+%       \left< M, \Delta \right> \in Z
+%     } {
+%       \Gamma \entails \obj{@} \hastype \obj{@} \given Z 
+%     }
+
+%     \inferrule {
+%       \left< M, \Delta \right> \in Z
+%       \\
+%       \obj{$x$:$\tau$} \in \Gamma
+%     } {
+%       \Gamma \entails x \hastype \tau \given Z 
+%     }
+
+%     \inferrule {
+%       \Gamma \entails e \hastype \tau \given Z 
+%     } {
+%       \Gamma \entails \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$} \given Z 
+%     }
+
+%     \inferrule {
+%       \Gamma \entails R \hastype \tau_0 \given Z_0
+%       \\
+%       Z_0 \looparrowright Z_1
+%       \\
+%       \Gamma \entails e \hastype \tau_1 \given Z_1
+%     } {
+%       \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
+%     }
+
+%     \inferrule {
+%       \TODO{simplifiy with one world as input; construction of multiple branches from one world}
+%       \\\\
+%       Z, \Gamma \entails F \liftfun \Pi, \Tau_n 
+%       \\
+%       \Gamma \entails \Pi \equiv \Tau 
+%     } {
+%       \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
+%     }
+
+%     \inferrule {
+%       \Gamma \entails e \hastype \tau_0 \given Z_0
+%       \\
+%       Z_0 \looparrowright Z_1
+%       \\
+%       \tau_0 \subtypes \obj{$l$:$\alpha$} \given Z_1
+%     } {
+%       \Gamma \entails \obj{$e$.$l$} \hastype \alpha \given Z_1
+%     }
+
+%     \inferrule {
+%       \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+%       \\
+%       Z_0 \looparrowright Z_1
+%       \\
+%       \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+%       \\
+%       Z_1 \looparrowright Z_2
+%       \\
+%       \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
+%     } {
+%       \Gamma \entails \obj{$e_0$($e_1$)} \hastype \alpha \given Z_2
+%     }
+
+%     \inferrule {
+%       \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given Z_0
+%       \\
+%       Z_0 \looparrowright Z_1
+%       \\
+%       \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+%       \\\\
+%       \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%     } {
+%       \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
+%     }
+
+%   \end{mathpar}
+% \end{definition}
+
+\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
   \begin{mathpar}
+    \inferrule {
+    } {
+      \vec{\alpha}, \Delta, \Gamma \entails \epsilon \liftfun \epsilon, \epsilon 
+    }
 
     \inferrule {
-      Z_0, \Gamma_0 \entails f \liftfun \Pi, T 
-      \\
-      p \hastype \tau_l \given \Gamma_1
-      \\
-      \text{neg}(\tau_l, T) = \tau_l'
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
       \\\\
-      Z_0 \looparrowright Z_1
+      p \hastype \phi \given \Gamma'
       \\
-      \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
+      \text{neg}(\phi, \vec{\eta}) = \tau_l
+      \\
+      \exists \pi .\ \pi \in \vec{\pi}' 
+      \\\\
+      \forall \vec{\alpha'}\ \Delta'\ \tau_r .\ \left< \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r \right> \in \Pi' 
+      \iff
+      \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
     } {
-      Z_0, \Gamma_0 \entails F\ \obj{\$$p$=>$e$} \liftfun 
-      \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \obj{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
+      M, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
+      \vec{\pi}\ \vec{\pi}', \vec{\eta}\ (\obj{EXI[}\text{range}(\Gamma')\obj{]}\phi)
     }
   \end{mathpar}
 \end{definition}
 
+% \begin{definition} \boxed{Z, \Gamma \entails F \liftfun \Pi, T}
+%   \begin{mathpar}
+
+%     \inferrule {
+%       Z_0, \Gamma_0 \entails f \liftfun \Pi, T 
+%       \\
+%       p \hastype \tau_l \given \Gamma_1
+%       \\
+%       \text{neg}(\tau_l, T) = \tau_l'
+%       \\\\
+%       Z_0 \looparrowright Z_1
+%       \\
+%       \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
+%     } {
+%       Z_0, \Gamma_0 \entails F\ \obj{\$$p$=>$e$} \liftfun 
+%       \Pi \sqcup \widebar{\left< M, \Delta, \tau_l' \obj{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
+%     }
+%   \end{mathpar}
+% \end{definition}
 
 
-\begin{definition} \boxed{Z \looparrowright Z}\ (Universe ordering)
-  \label{definition:universe_ordering}
-  \begin{mathpar}
-    \inferrule {
-      \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
-      \exists M_0\ \Delta_0.\ \left<M_0,\Delta_0\right> \in Z_0 \land 
-      M_0 \preceq M_1 \land \Delta_0 \preceq \Delta_1
-    } {
-      Z_0 \looparrowright Z_1
-    }
-  \end{mathpar}
-\end{definition}
+% \begin{definition} \boxed{Z \looparrowright Z}\ (Universe ordering)
+%   \label{definition:universe_ordering}
+%   \begin{mathpar}
+%     \inferrule {
+%       \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
+%       \exists M_0\ \Delta_0.\ \left<M_0,\Delta_0\right> \in Z_0 \land 
+%       M_0 \preceq M_1 \land \Delta_0 \preceq \Delta_1
+%     } {
+%       Z_0 \looparrowright Z_1
+%     }
+%   \end{mathpar}
+% \end{definition}
 
 
 
@@ -2302,32 +2382,32 @@ Different: RLT isn't cartesian
 \end{definition}
 
 
-\begin{definition}\boxed{N, M \entails \Pi \equiv \Tau}
+\begin{definition}\boxed{\vec{\alpha}, \vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
   \begin{mathpar}
     \inferrule {
     } {
-      N, M \entails \epsilon \equiv \epsilon 
+      \vec{\alpha}_f, \vec{\alpha}_m \entails \epsilon \cong \epsilon 
     }
 
     \inferrule {
-      N, M \entails \Pi \equiv \Tau 
+      \vec{\alpha}_f, \vec{\alpha}_m \entails \vec{\pi} \cong \vec{\tau} 
       \\
-      \text{FTV}(\tau_l) = A_l
+      \text{FTV}(\tau_l) = \vec{\alpha}_l
       \\
-      \text{FTV}(\tau_r) = A_r
+      \text{FTV}(\tau_r) = \vec{\alpha}_r
       \\\\
-      \Delta \entails N \sqcup M \sqcup A_l \sqcup A_r \pitchfork \Delta' 
+      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_m\ \vec{\alpha}_l\ \vec{\alpha}_r \pitchfork \Delta' 
       \\
-      N, M, \Delta' \entails \tau_l\obj{->}\tau_r \equiv^{+} \tau
+      \vec{\alpha}_f, \vec{\alpha}_m, \Delta' \entails \tau_l\obj{->}\tau_r \cong^{+} \tau
     } {
-      N, M \entails \Pi \left<M, \Delta, \tau_l \obj{->} \tau_r \right> \equiv \Tau\ \tau 
+      \vec{\alpha}_f, \vec{\alpha}_m \entails \vec{\pi}\ \left<M, \Delta, \tau_l \obj{->} \tau_r \right> \cong \vec{\tau}\ \tau 
     }
   \end{mathpar}
 \end{definition}
 
 \begin{definition}
-\boxed{N \entails \alpha \cdot Z \cdot \obj{$\alpha$->$\alpha$} \fallingdotseq \alpha \cdot \Tau}
-\ (Fixpoint duality)
+\boxed{\vec{\alpha} \entails \nu \alpha.Z.\alpha \rightarrow \alpha \fallingdotseq \mu \alpha.\vec{\tau}}
+\ Fixpoint Duality
 
 \TODO{Note the reason for excluding rigids and skolems from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
@@ -2335,14 +2415,14 @@ Different: RLT isn't cartesian
   \begin{mathpar}
     \inferrule {
     } {
-      N \entails 
+      \vec{\alpha}_f \entails 
       \alpha_{h^+} \cdot \epsilon \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \epsilon 
     }
 
     \inferrule {
-      N \entails 
+      \vec{\alpha}_f \entails 
       \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \Tau
@@ -2355,14 +2435,14 @@ Different: RLT isn't cartesian
       \\\\
       \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
       \\\\
-      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      \vec{\alpha}_f \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\\\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau
+      \vec{\alpha}_f\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau
       % TODO: should skolems be included using universal constraint? 
     } {
-      N \entails 
+      \vec{\alpha}_f \entails 
       \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \obj{$\alpha_l$->$\alpha_r$} 
       \fallingdotseq 
       \alpha_{h^-} \cdot \Tau\ \tau
@@ -2497,7 +2577,7 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\Alpha, \Alpha, \Delta \entails \tau \equiv^{+|-} \tau}
+\begin{definition}\boxed{\Alpha, \Alpha, \Delta \entails \tau \cong^{+|-} \tau}
   \begin{mathpar}
     \inferrule {
       \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
@@ -2508,7 +2588,7 @@ Different: RLT isn't cartesian
       \\\\
       \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) = \tau'
     } {
-      \Alpha_r, \Alpha_z, \Delta \entails \tau \equiv^{+|-} \tau'
+      \Alpha_r, \Alpha_z, \Delta \entails \tau \cong^{+|-} \tau'
     }
   \end{mathpar}
 \end{definition}
@@ -2968,7 +3048,7 @@ Different: RLT isn't cartesian
     \Delta \entails \Alpha \pitchfork \Delta_i  
   $
   \item \Z $\contin
-    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
   $
   \item \Z $\B{hypo }
     N \entails 
@@ -3058,7 +3138,7 @@ Different: RLT isn't cartesian
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \Omega \satisfies
       \tau
@@ -3089,7 +3169,7 @@ Different: RLT isn't cartesian
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \Omega \satisfies
       \tau
@@ -3144,9 +3224,9 @@ Different: RLT isn't cartesian
       \\
       \text{FTV}(\tau) \subseteq \Alpha
       \\\\
-      N, M, \Delta \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau
+      N, M, \Delta \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
       \\
-      N, M, \Delta_i \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \equiv^- \tau_i
+      N, M, \Delta_i \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
     } {
       \Omega \satisfies \tau \subtypes \tau_i 
       \land
