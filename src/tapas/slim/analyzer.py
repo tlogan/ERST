@@ -265,6 +265,10 @@ class Switch:
     branches : list[Branch]
 
 @dataclass(frozen=True, eq=True)
+class Keychain:
+    keys : list[str]
+
+@dataclass(frozen=True, eq=True)
 class RecordBranch:
     worlds : list[World]
     label : str 
@@ -536,6 +540,15 @@ class Terminal:
 class Context:
     enviro : PMap[str, Typ] 
     world : World
+
+
+@dataclass(frozen=True, eq=True)
+class Prompt:
+    enviro : PMap[str, Typ] 
+    world : World
+    args : Any 
+
+
 
 '''
 NOTE: 
@@ -3067,19 +3080,28 @@ class ExprRule(Rule):
     def distill_ite_condition(self, context : Context) -> Context:
         return context
 
-    def distill_ite_true_branch(self, context : Context, condition_typ : Typ) -> Context:
+    def distill_ite_true_branch(self, context : Context, 
+        true_body_results: list[Result], 
+        false_body_results: list[Result] 
+    ) -> Context:
         return context
 
-    def distill_ite_false_branch(self, context : Context, condition_typ : TVar, true_body_typ : TVar) -> Context:
+    def distill_ite_false_branch(self, context : Context, 
+        true_body_results: list[Result], 
+        false_body_results: list[Result] 
+    ) -> Context:
         return context
 
     def combine_ite(self, context : Context, condition_typ : Typ, 
-                true_body_worlds: list[World], true_body_typ : Typ, 
-                false_body_worlds: list[World], false_body_typ :Typ 
+        true_body_results: list[Result], 
+        false_body_results: list[Result] 
     ) -> list[Result]: 
         switch = Switch([
-            Branch(true_body_worlds, TTag('true', TUnit()), true_body_typ), 
-            Branch(false_body_worlds, TTag('false', TUnit()), false_body_typ)
+            Branch([result.world], TTag('true', TUnit()), result.typ)
+            for result in true_body_results
+        ] + [
+            Branch([result.world], TTag('false', TUnit()), result.typ)
+            for result in false_body_results
         ])
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3351,13 +3373,13 @@ class FunctionRule(Rule):
         enviro = pattern_attr.enviro
         return replace(context, enviro = context.enviro.update(enviro))
 
-    def combine_single(self, context : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar) -> Switch:
+    def combine_single(self, context : Context, pattern_typ : Typ, body_results : list[Result]) -> Switch:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return Switch([Branch(body_worlds, pattern_typ, body_var)])
+        return Switch([Branch([result.world], pattern_typ, result.typ) for result in body_results])
 
     def distill_cons_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(context, pattern_attr)
@@ -3369,18 +3391,18 @@ class FunctionRule(Rule):
         '''
         return context
 
-    def combine_cons(self, context : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar, tail : Switch) -> Switch:
-        switch = self.combine_single(context, pattern_typ, body_worlds, body_var) 
+    def combine_cons(self, context : Context, pattern_typ : Typ, body_results : list[Result], tail : Switch) -> Switch:
+        switch = self.combine_single(context, pattern_typ, body_results) 
         return Switch(switch.branches + tail.branches)
 
 
 class KeychainRule(Rule):
 
-    def combine_single(self, context : Context, key : str) -> list[str]:
-        return [key]
+    def combine_single(self, context : Context, key : str) -> Keychain:
+        return Keychain([key])
 
-    def combine_cons(self, context : Context, key : str, keys : list[str]) -> list[str]:
-        return [key] + keys
+    def combine_cons(self, context : Context, key : str, kc : Keychain) -> Keychain:
+        return Keychain([key] + kc.keys)
 
 
 class ArgchainRule(Rule):

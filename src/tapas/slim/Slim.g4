@@ -27,12 +27,12 @@ _syntax_rules : PSet[SyntaxRule] = s()
 
 def init(self, light_mode = False): 
     self._cache = {}
-    self._guidance = default_context
+    self._guidance = [Prompt(default_context, [])]
     self._overflow = False  
     self._light_mode = light_mode  
 
 def reset(self): 
-    self._guidance = default_context 
+    self._guidance = [Instane(default_context, [])]
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
@@ -54,21 +54,22 @@ def getSolver(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def guide_nonterm(self, f : Callable, *args) -> Optional[Context]:
+def refine_prompt(self, f : Callable, prompt : Prompt) -> Optional[Prompt]:
+    args = [Context(prompt.world, prompt.enviro)] + prompt.args
     for arg in args:
         if arg == None:
             self._overflow = True
 
-    result_nt = None
+    result_context = None
     if not self._overflow:
-        result_nt = f(*args)
+        result_context = f(*args)
         self._guidance = result_nt
 
         tok = self.getCurrentToken()
         if tok.type == self.EOF :
             self._overflow = True 
 
-    return result_nt 
+    return Prompt(result_context.world, result_context.enviro, [])
 
 
 
@@ -89,7 +90,8 @@ def guide_terminal(self, text : str):
 
 
 
-def collect(self, f : Callable, *args):
+def collect(self, f : Callable, prompt : Prompt):
+    args = [Context(prompt.world, prompt.enviro)] + prompt.args
 
     if self._overflow:
         return None
@@ -143,17 +145,17 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 
 ;
 
-program [context : Context] returns [Result result] :
+program [list[Prompts] prompts] returns [list[Result] results] :
 
 | preamble {
 self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
-} expr[context] {
-$result = $expr.result
+} expr[prompts] {
+$results = $expr.results
 }
 
-| expr[context] {
+| expr[prompts] {
 self._solver = Solver(m())
-$result = $expr.result
+$results = $expr.results
 }
 
 ;
@@ -318,118 +320,268 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [Context nt] returns [Result result] : 
+expr [list[Prompts] prompts] returns [list[Result] results] : 
 
 // Base rules
 
-| base[nt] {
-$result = $base.result
+| base[prompts] {
+$results = $base.results
 self.update_sr('expr', [n('base')])
 }
 
-// Introduction rules
-
 | {
-head_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_head, nt)
-} head = base[head_nt] {
+head_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_tuple_head, prompt)
+    for prompt in prompts 
+]
+} head = base[head_prompts] {
 self.guide_symbol(',')
 } ',' {
-nt = replace(nt, worlds = $head.result.worlds)
-tail_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_tail, nt, $head.result.typ)
-} tail = expr[tail_nt] {
-nt = replace(nt, worlds = $tail.result.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, nt, $head.result.typ, $tail.result.typ) 
+prompts = [
+    replace(prompt, 
+        world = head_result.world,
+        args = prompt.args + [head_result.typ]
+    )
+    for prompt in prompts
+    for head_result in $head.results
+] 
+tail_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_tuple_tail, prompt)
+    for prompt in prompts
+]
+} tail = expr[tail_contexts] {
+prompts = [
+    replace(prompt, 
+        world = tail_result.world,
+        args = prompt.args + [tail_result.typ]
+    )
+    for prompt in prompts
+    for tail_result in $tail.results
+] 
+
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, prompt) 
+    for prompt in prompts
+]
 self.update_sr('expr', [n('base'), t(','), n('expr')])
 }
 
-// Elimination rules
-
 | 'if' {
-condition_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_condition, nt)
-} condition = expr[condition_nt] {
+condition_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_condition, prompt)
+    for prompt in prompt
+]
+} condition = expr[condition_prompts] {
 self.guide_symbol('then')
 } 'then' {
-true_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, nt, $condition.result.typ)
-} true_branch = expr[true_branch_nt] {
+prompts = [
+    replace(prompt, 
+        world = condition_result.world,
+        args = prompt.args + [condition_result.typ]
+    )
+    for prompt in prompts
+    for condition_result in $condition.results 
+]
+true_branch_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, prompt)
+    for prompt in prompt
+]
+} true_branch = expr[true_branch_prompt] {
 self.guide_symbol('else')
 } 'else' {
-false_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, nt, $condition.result.typ, $true_branch.result.typ)
-} false_branch = expr[false_branch_nt] {
-nt = replace(nt, worlds = $condition.result.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_ite, nt, $condition.result.typ, 
-    $true_branch.result.worlds, $true_branch.result.typ, 
-    $false_branch.result.worlds, $false_branch.result.typ
-) 
+prompts = [
+    replace(prompt, 
+        world = condition_result.world,
+        args = prompt.args + [$true_branch.results]
+    )
+    for prompt in prompts
+]
+false_branch_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, prompt)
+    for prompt in prompts
+]
+} false_branch = expr[false_branch_prompts] {
+prompts = [
+    replace(prompt, 
+        world = condition_result.world,
+        args = prompt.args + [$false_branch.results]
+    )
+    for prompt in prompts
+]
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompts, prompt)
+    for prompt in prompts
+]
 self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 } 
 
 // the rator below refers to the record being projected from
 | {
-rator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_rator, nt)
-} rator = base[rator_nt] {
-nt = replace(nt, worlds = $rator.result.worlds)
-keychain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_keychain, nt, $rator.result.typ)
-} keychain[keychain_nt] {
-nt = replace(nt, worlds = keychain_nt.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_projection, nt, $rator.result.typ, $keychain.keys) 
+rator_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_rator, prompt)
+    for prompt in prompts
+]
+} rator = base[rator_prompts] {
+prompts = [
+    replace(prompt, 
+        world = rator_result.world
+        args = prompt.args + [rator_result.typ]
+    )
+    for prompt in prompts
+    for rator_result in $rator.results
+]
+keychain_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_keychain, prompt)
+    for prompt in prompts
+]
+} keychain[keychain_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [keychain]
+    )
+    for prompt in prompts
+    for keychain in $keychain.keychains
+]
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
+    for prompt in prompts
+]
 self.update_sr('expr', [n('base'), n('keychain')])
 }
 
 | {
-cator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_cator, nt)
-} cator = base[cator_nt] {
-nt = replace(nt, worlds = $cator.result.worlds)
-argchain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_argchain, nt, $cator.result.typ)
-} argchain[argchain_nt] {
-nt = replace(nt, worlds = $argchain.attr.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_application, nt, $cator.result.typ, $argchain.attr.args)
+cator_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_cator, prompt)
+    for prompt in prompts
+]
+} cator = base[cator_prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = caotr_result.world
+        args = prompt.args + [cator_result.typ]
+    )
+    for prompt in prompts
+    for cator_result in $cator.results
+]
+argchain_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_argchain, prompt)
+    for prompt in prompt
+]
+} argchain[argchain_prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = argchain_attr.world,
+        args = prompt.args + [argchain_attr.args]
+    )
+    for argchain_attr in $argchain.attrs
+]
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_application, prompt)
+    for prompt in prompts
+]
 self.update_sr('expr', [n('base'), n('argchain')])
 }
 
 | {
-arg_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_arg, nt)
-} arg = base[arg_nt] {
-nt = replace(nt, worlds = $arg.result.worlds)
-pipeline_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, nt, $arg.result.typ)
-} pipeline[pipeline_nt] {
-nt = replace(nt, worlds = $pipeline.attr.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, nt, $arg.result.typ, $pipeline.attr.cators)
+arg_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_arg, prompt)
+    for prompt in prompts
+]
+} arg = base[arg_prompts] {
+prompts = [
+    replace(prompt, 
+        world = arg_result.worlds
+        args = prompt.args + [arg_result.typ]
+    )
+    for arg_result in $arg.results
+]
+pipeline_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompts)
+    for prompt in prompts
+]
+} pipeline[pipeline_prompts] {
+prompts = [
+    replace(prompt, 
+        world = pipeline_attr.worlds
+        args = prompt.args + [pipeline_attr.cators]
+    )
+    for pipeline_attr in $pipeline.attrs
+]
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, prompts)
+    for prompt in prompts
+]
 self.update_sr('expr', [n('base'), n('pipeline')])
 }
 
 | 'let' {
 self.guide_terminal('ID')
 } ID {
-target_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_target, nt, $ID.text)
-} target[target_nt] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+target_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_target, prompts)
+    for prompt in prompts
+]
+} target[target_prompts] {
 self.guide_symbol('in')
 } 'in' {
-nt = replace(nt, worlds = $target.result.worlds)
-contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, $ID.text, $target.result.typ)
-} contin = expr[contin_nt] {
-$result = $contin.result
+prompts = [
+    replace(prompt, 
+        world = target_result.world
+        args = prompt.args + [target_result.typ]
+    )
+    for prompt in prompts
+    for target_result in $target.results
+]
+contin_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_contin, prompt)
+    for prompt in prompt
+]
+} contin = expr[contin_prompts] {
+$results = $contin.results
 self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
 }
 
 | 'fix' {
 self.guide_symbol('(')
 } '(' {
-body_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_fix_body, nt)
-} body = expr[body_nt] {
+body_prompts = [
+    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_fix_body, prompt)
+    for prompt in prompts
+]
+} body = expr[body_prompts] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $body.result.worlds)
-$result = self.collect(ExprRule(self._solver, self._light_mode).combine_fix, nt, $body.result.typ)
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [body_result.typ]
+    )
+    for prompt in prompts
+    for body_result in $body.results
+]
+$results = [
+    self.collect(ExprRule(self._solver, self._light_mode).combine_fix, prompt)
+    for prompt in prompts
+]
 self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 }
 
 ;
 
-base [Context nt] returns [Result result] : 
+base [list[Prompt] prompts] returns [list[Result] results] : 
 // Introduction rules
 
 | '@' {
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_unit, nt)
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_unit, prompt)
+    for prompt in prompts
+]
 self.update_sr('base', [t('@')])
 } 
 
@@ -437,53 +589,127 @@ self.update_sr('base', [t('@')])
 | '~' {
 self.guide_terminal('ID')
 } ID {
-body_nt = self.guide_nonterm(BaseRule(self._solver, self._light_mode).distill_tag_body, nt, $ID.text)
-} body = base[body_nt] {
-nt = replace(nt, worlds = $body.result.worlds)
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_tag, nt, $ID.text, $body.result.typ)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+body_prompts = [
+    self.refine_prompt(BaseRule(self._solver, self._light_mode).distill_tag_body, prompt)
+    for prompt in prompts
+]
+} body = base[body_prompts] {
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [body_result.typ]
+    )
+    for prompt in prompts
+    for body_result in $body.results
+]
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_tag, prompts)
+    for prompt in prompts
+]
 self.update_sr('base', [t('~'), ID, n('base')])
 }
 
-| record[nt] {
-branches = $record.branches
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_record, nt, branches)
+| record[prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [record_switch]
+    )
+    for prompt in prompts
+    for record_switch in $record.switches
+]
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
+    for prompts in prompt
+]
 self.update_sr('base', [n('record')])
 }
 
 | {
-} function[nt] {
-branches = $function.branches
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_function, nt, branches)
+} function[prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [function_switch]
+    )
+    for prompt in prompts
+    for function_switch in $function.switches
+]
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompts)
+    for prompt in prompts
+]
 self.update_sr('base', [n('function')])
 }
 
 // Elimination rules
 
 | ID {
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_var, nt, $ID.text)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_var, prompt)
+    for prompt in prompts
+]
 self.update_sr('base', [ID])
 } 
 
-| argchain[nt] {
-nt = replace(nt, worlds = $argchain.attr.worlds)
-$result = self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, nt, $argchain.attr.args)
+| argchain[prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = argchain_attr.worlds,
+        args = prompt.args + [argchain_attr.args]
+    )
+    for prompt in prompts
+    for argchain_attr in $argchain.attrs
+]
+$results = [
+    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
+    for prompt in prompts
+]
 self.update_sr('base', [n('argchain')])
 } 
 
 ;
 
 
-
-record [Context nt] returns [list[RecordBranch] branches] :
-
+record [list[Prompt] prompts] returns [list[RecordSwitch] switches] :
 | ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_single_body, nt, $ID.text)
-} body = expr[body_nt] {
-$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.result.worlds, $body.result.typ)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+body_prompts = [
+    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_single_body, prompts)
+    for prompt in prompts
+]
+} body = expr[body_prompts] {
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [body_result.typ]
+    )
+    for prompt in prompts
+    for body_result in $body.results
+]
+$switches = [
+    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts 
+]
 self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 }
 
@@ -492,27 +718,75 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_body, nt, $ID.text)
-} body = expr[body_nt] {
-tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_tail, nt, $ID.text, $body.result.typ)
-} tail = record[tail_nt] {
-tail_branches = $tail.branches
-$branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, $ID.text, $body.result.worlds, $body.result.typ, tail_branches)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+body_prompts = [
+    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_body, prompt)
+    for prompt in prompts
+]
+} body = expr[body_prompts] {
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [body_result.typ]
+    )
+    for prompt in prompts
+    for body_result in $body.results
+]
+tail_prompts = [
+    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_tail, prompts, $ID.text, body_result.typ)
+    for prompt in prompts
+]
+} tail = record[tail_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [tail_switch]
+    )
+    for prompt in prompts
+    for tail_switch in $tail.switches
+]
+$switches = [
+    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt)
+    for prompt in prompts
+]
 self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 }
 
 ;
 
 
-function [Context nt] returns [list[Branch] branches] :
+function [list[Prompt] prompts] returns [list[Switch] switches] :
 
 | 'case' {
-} pattern[nt] {
+} pattern[prompt] {
 self.guide_symbol('=>')
 } '=>' {
-body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_single_body, nt, $pattern.attr)
-} body = expr[body_nt] {
-$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_single, nt, $pattern.attr.typ, $body.result.worlds, $body.result.typ)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [pattern_attr]
+    )
+    for prompt in prompts
+    for pattern_attr in $pattern.attrs
+]
+body_prompts = [
+    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_single_body, prompt)
+    for prompt in prompts
+]
+} body = expr[body_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$body.results]
+    )
+    for prompt in prompts
+]
+$switches = [
+    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts
+]
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
@@ -520,179 +794,427 @@ self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 } pattern[nt] {
 self.guide_symbol('=>')
 } '=>' {
-body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_body, nt, $pattern.attr)
-} body = expr[body_nt] {
-tail_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_tail, nt, $pattern.attr.typ, $body.result.typ)
-} tail = function[tail_nt] {
-tail_branches = $tail.branches
-$branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, nt, $pattern.attr.typ, $body.result.worlds, $body.result.typ, tail_branches)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [pattern_attr]
+    )
+    for prompt in prompts
+    for pattern_attr in $pattern.attrs
+]
+body_prompts = [
+    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_body, prompt)
+    for prompt in prompts
+]
+} body = expr[body_prompts] {
+
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [body_result.typ]
+    )
+    for prompt in prompts
+    for body_result in $body.results
+]
+tail_prompts = [
+    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_tail, prompt)
+    for prompt in prompts
+]
+} tail = function[tail_prompts] {
+
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [tail_switch]
+    )
+    for prompt in prompts
+    for tail_switch in $tail.switches
+]
+$switches = [
+    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
+    for prompt in prompt
+]
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 
 ;
 
 // NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
-keychain [Context nt] returns [list[str] keys] :
+keychain [list[Prompt] prompts] returns [list[Keychain] keychains] :
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-$keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_single, nt, $ID.text)
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+$keychains = [
+    self.collect(KeychainRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts 
+]
 self.update_sr('keychain', [t('.'), ID])
 }
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-} tail = keychain[nt] {
-$keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, nt, $ID.text, $tail.keys)
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts 
+] 
+} tail = keychain[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        world = body_result.world
+        args = prompt.args + [tail_kc]
+    )
+    for prompt in prompts
+    for tail_kc in $tail.keychains
+]
+$keychains = [
+    self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, prompts)
+    for prompt in prompts
+]
 self.update_sr('keychain', [t('.'), ID, n('keychain')])
 }
 
 ;
 
-argchain [Context nt] returns [ArgchainAttr attr] :
+argchain [list[Prompt] prompts] returns [list[ArgchainAttr] attrs] :
 
 | '(' {
-content_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_single_content, nt) 
-} content = expr[content_nt] {
+content_prompts = self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_single_content, prompts) 
+} content = expr[content_prompts] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $content.result.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, nt, $content.result.typ)
+prompts = [
+    replace(prompt, 
+        world = content_result.world
+        args = prompt.args + [content_result.typ]
+    )
+    for prompt in prompts
+    for content_result in $content.results
+]
+$attrs = [
+    self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompts)
+    for prompt in prompts
+]
 self.update_sr('argchain', [t('('), n('expr'), t(')')])
 }
 
 
 | '(' {
-head_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_cons_head, nt) 
-} head = expr[head_nt] {
+head_prompts = [
+    self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_cons_head, prompt) 
+    for prompt in prompts
+]
+} head = expr[head_prompts] {
 self.guide_symbol(')')
 } ')' {
-nt = replace(nt, worlds = $head.result.worlds)
-} tail = argchain[nt] {
-nt = replace(nt, worlds = $tail.attr.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, nt, $head.result.typ, $tail.attr.args)
+prompts = [
+    replace(prompt, 
+        world = head_result.world
+        args = prompt.args + [head_result.typ]
+    )
+    for prompt in prompts
+    for head_result in $head.results
+]
+tail_prompts = [
+    replace(prompt, args = [])
+    prompt in prompts
+] 
+} tail = argchain[tail_prompts] {
+prompts = [
+    replace(prompts, 
+        world = tail_attr.world
+        args = prompt.args + [tail_attr.args]
+    )
+    for prompt in prompt
+    for tail_attr in $tail.attrs
+]
+$attrs = [
+    self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, prompt)
+    for prompt in prompts
+]
 self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 }
 
 ;
 
-pipeline [Context nt] returns [PipelineAttr attr] :
+pipeline [list[Prompts] prompts] returns [list[PipelineAttr] attrs] :
 
 | '|>' {
-content_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_single_content, nt) 
-} content = expr[content_nt] {
-nt = replace(nt, worlds = $content.result.worlds)
-$attr = self.collect(PipelineRule(self._solver, self._light_mode).combine_single, nt, $content.result.typ)
+content_prompts = [
+    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_single_content, prompt)
+    for prompt in prompts
+]
+} content = expr[content_prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = content_result.world,
+        args = prompt.args + [content_result.typ]
+    )
+    for prompt in prompts
+    for content_result in $content.results
+]
+$attrs = [
+    self.collect(PipelineRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts
+]
 self.update_sr('pipeline', [t('|>'), n('expr')])
 }
 
 | '|>' {
-head_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_head, nt) 
-} head = expr[head_nt] {
-nt = replace(nt, worlds = $head.result.worlds)
-tail_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_tail, nt, $head.result.typ) 
-} tail = pipeline[tail_nt] {
-nt = replace(nt, worlds = $tail.attr.worlds)
-$attr = self.collect(ArgchainRule(self._solver, self._light_mode, nt).combine_cons, nt, $head.result.typ, $tail.attr.cators)
+head_prompts = [
+    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_cons_head, prompt) 
+    for prompt in prompts
+]
+} head = expr[head_prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = head_result.world,
+        args = prompt.args + [head_result.typ]
+    )
+    for prompt in prompts
+    for head_result in $head.results
+]
+tail_prompts = [
+    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_cons_tail, prompt) 
+    for prompt in prompts
+]
+} tail = pipeline[tail_prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = tail_attr.world,
+        args = prompt.args + [tail_attr.cators]
+    )
+    for prompt in prompts
+    for tail_attr in $tail.attrs
+]
+$attrs = [
+    self.collect(ArgchainRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
+    for prompt in prompt
+]
 self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 }
 
 ;
 
 
-target [Context nt] returns [Result result]:
+target [list[Prompt] prompts] returns [list[Result] results]:
 
 | '=' {
-expr_nt = self.guide_nonterm(lambda: nt)
-} expr[expr_nt] {
-$result = $expr.result
+} expr[prompts] {
+$results = $expr.results
 self.update_sr('target', [t('='), n('expr')])
 }
 
 | ':' typ '=' {
-expr_nt = self.guide_nonterm(lambda: nt)
-} expr[expr_nt] {
-nt = replace(nt, worlds = $expr.result.worlds)
-$result = self.collect(TargetRule(self._solver, self._light_mode).combine_anno, nt, $typ.combo) 
+} expr[prompts] {
+prompts = [
+    replace(prompt, 
+        worlds = expr_result.world,
+        args = prompt.args + [$typ.combo]
+    )
+    for prompt in prompts
+]
+$results = [
+    self.collect(TargetRule(self._solver, self._light_mode).combine_anno, prompts) 
+    for prompt in prompts
+]
 self.update_sr('target', [t(':'), TID, t('='), n('expr')])
 }
 ;
 
 
 
-pattern [Context nt] returns [PatternAttr attr]:  
+pattern [list[Prompt] prompts] returns [list[PatternAttr] attrs]:  
 
-| base_pattern[nt] {
-$attr = $base_pattern.attr
+| base_pattern[prompts] {
+$attrs = $base_pattern.attrs
 self.update_sr('pattern', [n('basepat')])
 }
 
 | {
-} head = base_pattern[nt] {
+} head = base_pattern[prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [head_attr]
+    )
+    for prompt in prompts
+    for head_attr in $head.attrs
+]
 self.guide_symbol(',')
 } ',' {
-} tail = pattern[nt] {
-$attr = self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, nt, $head.attr, $tail.attr) 
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts 
+] 
+} tail = pattern[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [tail_attr]
+    )
+    for prompt in prompts
+    for tail_attr in $tail.attrs
+]
+$attrs = [
+    self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, prompts) 
+    for prompt in prompts
+]
 self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
 }
 
 ;
 
-base_pattern [Context nt] returns [PatternAttr attr]:  
+base_pattern [list[Prompt] prompts] returns [list[PatternAttr] attrs]:  
 
 | ID {
-$attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, nt, $ID.text)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+$attrs = [
+    self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, prompt)
+    for prompt in prompts
+]
 self.update_sr('basepat', [ID])
 } 
 
 | '@' {
-$attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, nt)
+$attrs = [
+    self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, prompt)
+    for prompt in prompts
+]
 self.update_sr('basepat', [t('@')])
 } 
 
 | '~' {
 self.guide_terminal('ID')
 } ID {
-} body = base_pattern[nt] {
-$attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, nt, $ID.text, $body.attr)
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
+
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts 
+] 
+} body = base_pattern[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [body_attr]
+    )
+    for prompt in prompts
+    for body_attr in $body.attrs
+]
+$attrs = [
+    self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, prompts, $ID.text)
+    for prompt in prompts
+]
 self.update_sr('basepat', [t('~'), ID, n('basepat')])
 }
 
-| record_pattern[nt] {
-$attr = $record_pattern.attr
+| record_pattern[prompts] {
+$attrs = $record_pattern.attrs
 self.update_sr('basepat', [n('recpat')])
 }
 
-| '(' pattern[nt] ')' {
-$attr = $pattern.attr
+| '(' pattern[prompts] ')' {
+$attrs = $pattern.attrs
 self.update_sr('basepat', [t('('), n('pattern'), t(')')])
 }
 
 
 ;
 
-record_pattern [Context nt] returns [PatternAttr attr] :
+record_pattern [list[Prompt] prompt] returns [list[PatternAttr] attrs] :
 
 | ';' {
 self.guide_terminal('ID')
 } ID {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
 self.guide_symbol('=')
 } '=' {
-} body = pattern[nt] {
-$attr = self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, nt, $ID.text, $body.attr)
+
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts 
+] 
+} body = pattern[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [body_attr]
+    )
+    for prompt in prompts
+    for body_attr in $body.attrs
+]
+$attrs = [
+    self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts
+]
 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
 }
 
 | ';' {
 self.guide_terminal('ID')
 } ID {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
 self.guide_symbol('=')
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts
+]
 } '=' {
-} body = pattern[nt] {
-} tail = record_pattern[nt] {
-$attr = self.collect(RecordPatternRule(self._solver, self._light_mode, nt).combine_cons, nt, $ID.text, $body.attr, $tail.attr)
+} body = pattern[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [body_attr]
+    )
+    for prompt in prompts
+    for body_attr in $body.attrs
+]
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts
+]
+} tail = record_pattern[sub_prompts] {
+prompts = [
+    replace(prompt, 
+        args = prompt.args + [tail_attr]
+    )
+    for prompt in prompts
+    for tail_attr in $tail.attrs
+]
+$attrs = [
+    self.collect(RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
+    for prompt in prompts
+]
 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
 }
 
