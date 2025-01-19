@@ -504,12 +504,12 @@ class PatternAttr:
 
 @dataclass(frozen=True, eq=True)
 class ArgchainAttr:
-    worlds : list[World]
+    world : World
     args : list[TVar]
 
 @dataclass(frozen=True, eq=True)
 class PipelineAttr:
-    worlds : list[World]
+    world : World
     cators : list[TVar]
 
 """
@@ -527,7 +527,7 @@ class Terminal:
 @dataclass(frozen=True, eq=True)
 class Context:
     enviro : PMap[str, Typ] 
-    worlds : list[World]
+    world : World
 
 '''
 NOTE: 
@@ -1650,7 +1650,7 @@ def make_constraint_typ(positive : bool):
 # end def
 
 
-default_context = Context(m(), [World(s(), s(), s())])
+default_context = Context(m(), World(s(), s(), s()))
 
 
 class Solver:
@@ -2922,7 +2922,7 @@ class Rule:
         # TODO: split all rules into two modes
         self.light_mode = light_mode
 
-#     def evolve_worlds(self, nt : Context, t : Typ) -> list[World]:
+#     def evolve_worlds(self, contexts : list[Context], t : Typ) -> list[World]:
 # #         print(f"""
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # # DEBUG evolve_worlds
@@ -2941,34 +2941,35 @@ class Rule:
 
 @dataclass(frozen=True, eq=True)
 class Result:
-    worlds: list[World]
+    world: World
     typ: Typ
 
 class BaseRule(Rule):
 
-    def combine_var(self, nt : Context, id : str) -> Result:
-        return Result(nt.worlds, nt.enviro[id])
+    def combine_var(self, contexts : list[Context], id : str) -> list[Result]:
+        return [
+            Result(context.world, context.enviro[id]) 
+            for context in contexts
+        ]
 
-    def combine_assoc(self, nt : Context, argchain : list[Typ]) -> Result:
+    def combine_assoc(self, contexts : list[Context], argchain : list[Typ]) -> list[Result]:
         if len(argchain) == 1:
-            return Result(nt.worlds, argchain[0])
+            return [Result(context.world, argchain[0]) for context in contexts]
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            result = ExprRule(self.solver, self.light_mode).combine_application(nt, applicator, arguments) 
-            return result
+            return ExprRule(self.solver, self.light_mode).combine_application(contexts, applicator, arguments) 
 
-    def combine_unit(self, nt : Context) -> Result:
-        return Result(nt.worlds, TUnit())
+    def combine_unit(self, contexts : list[Context]) -> list[Result]:
+        return [Result(context.world, TUnit()) for context in contexts]
 
-    def distill_tag_body(self, nt : Context, label : str) -> Context:
-        worlds = nt.worlds
-        return Context(nt.enviro, worlds)
+    def distill_tag_body(self, contexts : list[Context], label : str) -> list[Context]:
+        return contexts
 
-    def combine_tag(self, nt : Context, label : str, body : TVar) -> Result:
-        return Result(nt.worlds, TTag(label, body))
+    def combine_tag(self, contexts : list[Context], label : str, body : TVar) -> list[Result]:
+        return [Result(context.world, TTag(label, body)) for context in contexts]
 
-    def combine_record(self, nt : Context, branches : list[RecordBranch]) -> Result:
+    def combine_record(self, contexts : list[Context], branches : list[RecordBranch]) -> list[Result]:
         result = Top() 
         for branch in reversed(branches): 
             for branch_world in reversed(branch.worlds):
@@ -2996,10 +2997,10 @@ class BaseRule(Rule):
         '''
 
         # return Result(nt.worlds, simplify_typ(result))
-        return Result(nt.worlds, result)
+        return [Result(context.world, result) for context in contexts]
 
     # TODO: redo Context such that it only has a single world as input
-    def combine_function(self, nt : Context, branches : list[Branch]) -> Result:
+    def combine_function(self, contexts : list[Context], branches : list[Branch]) -> list[Result]:
         '''
         Example
         ==============
@@ -3010,89 +3011,100 @@ class BaseRule(Rule):
         --------------- OR -----------------------
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
-        rigids = pset( 
-            id
-            for t in nt.enviro.values()
-            for id in extract_free_vars_from_typ(s(), t)
-        )
-        # TODO: move augmentation outside
-        augmented_branches = self.solver.augment_branches_with_diff(branches)
-        generalized_branches = []
-        for branch in augmented_branches: 
-            body_typ = branch.body
-            param_typ = branch.pattern
-            imp = Imp(param_typ, body_typ)
-            influential_vars = rigids.union(
-                branch.world.skolems
-            ).union(
-                extract_free_vars_from_typ(s(), imp)
-            )
 
-            influential_constraints = pset(
-                st
-                for st in branch.world.constraints
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
+        results = []
+        for context in contexts:
+            rigids = pset( 
+                id
+                for t in context.enviro.values()
+                for id in extract_free_vars_from_typ(s(), t)
             )
-            # TODO: switch to using package_typ, which will resolve targets if possible
-            # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
-            generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, influential_constraints, imp)
-            #############################################
-            generalized_branches = generalized_branches + [generalized_case]
+            # TODO: move augmentation outside
+            augmented_branches = self.solver.augment_branches_with_diff(branches)
+            generalized_branches = []
+            for branch in augmented_branches: 
+                body_typ = branch.body
+                param_typ = branch.pattern
+                imp = Imp(param_typ, body_typ)
+                influential_vars = rigids.union(
+                    branch.world.skolems
+                ).union(
+                    extract_free_vars_from_typ(s(), imp)
+                )
+
+                influential_constraints = pset(
+                    st
+                    for st in branch.world.constraints
+                    if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
+                )
+                # TODO: switch to using package_typ, which will resolve targets if possible
+                # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
+                generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, influential_constraints, imp)
+                #############################################
+                generalized_branches = generalized_branches + [generalized_case]
+            '''
+            end for 
+            '''
+            result = make_inter(generalized_branches)
+            results = results + [result]
         '''
         end for 
         '''
-        result = make_inter(generalized_branches)
-        return Result(nt.worlds, result)
+        return results 
     '''
     end def
     '''
 
 class ExprRule(Rule):
 
-    def distill_tuple_head(self, nt : Context) -> Context:
-        return nt
+    def distill_tuple_head(self, contexts : list[Context]) -> list[Context]:
+        return contexts 
 
-    def distill_tuple_tail(self, nt : Context, head_typ : Typ) -> Context:
-        return nt 
+    def distill_tuple_tail(self, contexts : list[Context], head_typ : Typ) -> list[Context]:
+        return contexts 
 
-    def combine_tuple(self, nt : Context, head_var : TVar, tail_var : TVar) -> Result:
-        return Result(nt.worlds, Inter(TField('head', head_var), TField('tail', tail_var)))
+    def combine_tuple(self, contexts : list[Context], head_var : TVar, tail_var : TVar) -> list[Result]:
+        return [Result(context.world, Inter(TField('head', head_var), TField('tail', tail_var))) for context in contexts]
 
-    def distill_ite_condition(self, nt : Context) -> Context:
-        return nt
+    def distill_ite_condition(self, contexts : list[Context]) -> list[Context]:
+        return contexts 
 
-    def distill_ite_true_branch(self, nt : Context, condition_typ : Typ) -> Context:
-        return nt 
+    def distill_ite_true_branch(self, contexts : list[Context], condition_typ : Typ) -> list[Context]:
+        return contexts 
 
-    def distill_ite_false_branch(self, nt : Context, condition_typ : TVar, true_body_typ : TVar) -> Context:
-        return nt
+    def distill_ite_false_branch(self, contexts : list[Context], condition_typ : TVar, true_body_typ : TVar) -> list[Context]:
+        return contexts 
 
-    def combine_ite(self, nt : Context, condition_typ : Typ, 
+    def combine_ite(self, contexts : list[Context], condition_typ : Typ, 
                 true_body_worlds: list[World], true_body_typ : Typ, 
                 false_body_worlds: list[World], false_body_typ :Typ 
-    ) -> Result: 
+    ) -> list[Result]: 
         branches = [
             Branch(true_body_worlds, TTag('true', TUnit()), true_body_typ), 
             Branch(false_body_worlds, TTag('false', TUnit()), false_body_typ)
         ]
-        function_result = BaseRule(self.solver, self.light_mode).combine_function(nt, branches)
-        nt = replace(nt, worlds = function_result.worlds)
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # DEBUG ite len(function_worlds): {len(function_worlds)}
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # """)
-        arguments = [condition_typ]
-        return self.combine_application(nt, function_result.typ, arguments) 
+        return [
+            result
+            for function_result in BaseRule(self.solver, self.light_mode).combine_function(contexts, branches)
+            for result in self.combine_application([
+                replace(context, world = function_result.world)
+                for context in contexts
+            ], function_result.typ, [condition_typ]) 
+        ]
 
-    def distill_projection_rator(self, nt : Context) -> Context:
-        return nt
+    def distill_projection_rator(self, contexts : list[Context]) -> list[Context]:
+        return contexts
 
-    def distill_projection_keychain(self, nt : Context, rator_typ : Typ) -> Context: 
-        return nt
+    def distill_projection_keychain(self, contexts : list[Context], rator_typ : Typ) -> list[Context]: 
+        return contexts
 
-    def combine_projection(self, nt : Context, record_typ : Typ, keys : list[str]) -> Result: 
-        worlds = nt.worlds
+    def combine_projection(self, contexts : list[Context], record_typ : Typ, keys : list[str]) -> list[Result]: 
+        worlds = [context.world for context in contexts] 
         for key in keys:
             result_var = self.solver.fresh_type_var()
             worlds = [
@@ -3101,18 +3113,21 @@ class ExprRule(Rule):
                 for m1 in self.solver.solve(m0, record_typ, TField(key, result_var))
             ]
             record_typ = result_var
-        return Result(worlds, result_var)
+        return [
+            Result(world, result_var)
+            for world in worlds
+        ]
 
     #########
 
-    def distill_application_cator(self, nt : Context) -> Context: 
-        return nt
+    def distill_application_cator(self, contexts : list[Context]) -> list[Context]: 
+        return contexts
 
-    def distill_application_argchain(self, nt : Context, cator_typ : Typ) -> Context: 
-        return nt
+    def distill_application_argchain(self, contexts : list[Context], cator_typ : Typ) -> list[Context]: 
+        return contexts
 
-    def combine_application(self, nt : Context, cator_typ : Typ, arg_typs : list[Typ]) -> Result: 
-        worlds = nt.worlds 
+    def combine_application(self, contexts : list[Context], cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
+        worlds = [context.world for context in contexts] 
         for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
             new_worlds = []
@@ -3160,31 +3175,50 @@ class ExprRule(Rule):
             ###########################
             cator_typ = result_var
 
-        return Result(worlds, result_var)
+        return [
+            Result(world, result_var)
+            for world in worlds
+        ]
 
     #########
-    def distill_funnel_arg(self, nt : Context) -> Context: 
-        return nt
+    def distill_funnel_arg(self, contexts : list[Context]) -> list[Context]: 
+        return contexts
 
-    def distill_funnel_pipeline(self, nt : Context, arg_typ : TVar) -> Context: 
-        return nt
+    def distill_funnel_pipeline(self, contexts : list[Context], arg_typ : TVar) -> list[Context]: 
+        return contexts
 
-    def combine_funnel(self, nt : Context, arg_typ : Typ, cator_typs : list[Typ]) -> Result: 
-        worlds = nt.worlds
-        for cator_typ in cator_typs:
-            app_nt = replace(nt, worlds = worlds) 
-            app_result = self.combine_application(app_nt, cator_typ, [arg_typ])
-            worlds = app_result.worlds
-            result_typ = app_result.typ
-            arg_typ = result_typ 
+    def combine_funnel(self, contexts : list[Context], arg_typ : Typ, cator_typs : list[Typ]) -> list[Result]: 
 
-        # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
-        return Result(worlds, result_typ)
+        results = [Result(context.world, arg_typ) for context in contexts]
+        for cator_typ in cator_typs: 
+            results = [
+                result1
+                for result0 in results
+                for result1 in self.combine_application([
+                    replace(context, world = result0.world)
+                    for context in contexts
+                ] , cator_typ, [arg_typ])
+            ]
+        return results
 
-    def distill_fix_body(self, nt : Context) -> Context:
-        return nt
+        # worlds = [nt.world]
+        # for cator_typ in cator_typs:
+        #     app_nt = replace(nt, worlds = worlds) 
+        #     app_result = self.combine_application(app_nt, cator_typ, [arg_typ])
+        #     worlds = app_result.worlds
+        #     result_typ = app_result.typ
+        #     arg_typ = result_typ 
 
-    def combine_fix(self, nt : Context, body_typ : Typ) -> Result:
+        # # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
+        # return [
+        #     Result(world, result_typ)
+        #     for world in worlds
+        # ]
+
+    def distill_fix_body(self, contexts : list[Context]) -> list[Context]:
+        return contexts
+
+    def combine_fix(self, contexts : list[Context], body_typ : Typ) -> list[Result]:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -3194,11 +3228,6 @@ class ExprRule(Rule):
         ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> EXI[Z ; Z <: Y] Z
         """
 
-        rigids = pset( 
-            id
-            for t in nt.enviro.values()
-            for id in extract_free_vars_from_typ(s(), t)
-        )
 
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
@@ -3207,88 +3236,100 @@ class ExprRule(Rule):
         IH_typ = self.solver.fresh_type_var()
 
         induc_body = Bot()
-        assert nt.worlds
-        inner_worlds = [
-            inner_world
-            for outer_world in nt.worlds
-            for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
-        ]
-        for i, inner_world in enumerate(reversed(inner_worlds)):
-            ###### TODO: ensure that the assertion is invariant
-            assert in_typ.id not in inner_world.relids
-            lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
-            left_typ = make_inter(list(lefts))
-            ###########################
-            rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
-            right_typ = make_unio(list(rights))
 
-            rel_pattern = make_pair_typ(left_typ, right_typ)
-            fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
-            IH_rel_constraints = s()
-            IH_left_constraints = s()
-            intermediate_constraints = s() 
+        results = [] 
+        for context in contexts:
+            outer_world = context.world
 
-            for fixpoint_interp in fixpoint_interps:
-                if isinstance(fixpoint_interp, Imp):
-                    fixpoint_left = fixpoint_interp.antec
-                    fixpoint_right = fixpoint_interp.consq
-                    IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
-                    IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
-                else:
-                    # NOTE: anything else is an intermediate linking via a type var
-                    assert isinstance(fixpoint_interp, TVar)
-                    intermediate_constraints = intermediate_constraints.union(pset(
-                        Subtyping(fixpoint_interp, t)
-                        for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
-                    ))
-                #end if
+            rigids = pset( 
+                id
+                for t in context.enviro.values()
+                for id in extract_free_vars_from_typ(s(), t)
+            )
+            inner_worlds = [
+                inner_world
+                for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
+            ]
+            for i, inner_world in enumerate(reversed(inner_worlds)):
+                ###### TODO: ensure that the assertion is invariant
+                assert in_typ.id not in inner_world.relids
+                lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
+                left_typ = make_inter(list(lefts))
+                ###########################
+                rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
+                right_typ = make_unio(list(rights))
+
+                rel_pattern = make_pair_typ(left_typ, right_typ)
+                fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
+                IH_rel_constraints = s()
+                IH_left_constraints = s()
+                intermediate_constraints = s() 
+
+                for fixpoint_interp in fixpoint_interps:
+                    if isinstance(fixpoint_interp, Imp):
+                        fixpoint_left = fixpoint_interp.antec
+                        fixpoint_right = fixpoint_interp.consq
+                        IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
+                        IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
+                    else:
+                        # NOTE: anything else is an intermediate linking via a type var
+                        assert isinstance(fixpoint_interp, TVar)
+                        intermediate_constraints = intermediate_constraints.union(pset(
+                            Subtyping(fixpoint_interp, t)
+                            for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
+                        ))
+                    #end if
+                #end for
+
+                # NOTE: only keep constraints on vars that continue to have influence
+                # - all other vars influence has been fully realized and captured by remaining constraints
+
+                influential_vars = rigids.union(
+                    inner_world.skolems
+                ).union(
+                    extract_free_vars_from_typ(s(), rel_pattern)
+                ).union(
+                    [IH_typ.id] 
+                ) 
+
+                influential_constraints = pset(
+                    st
+                    # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
+                    for st in inner_world.constraints
+                    # NOTE: contains at least one influential variable
+                    if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
+                    # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
+                    #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
+                    # )
+                )
+                rel_constraints = IH_rel_constraints.union(influential_constraints)
+                # TODO: switch to using package_typ, which will resolve targets if possible
+                constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
+                induc_body = Unio(constrained_rel, induc_body) 
+                # NOTE: parameter constraint isn't actually necessary; sound without it.
+                # param_body = Unio(constrained_left, param_body)
             #end for
 
-            # NOTE: only keep constraints on vars that continue to have influence
-            # - all other vars influence has been fully realized and captured by remaining constraints
-
-            influential_vars = rigids.union(
-                inner_world.skolems
-            ).union(
-                extract_free_vars_from_typ(s(), rel_pattern)
-            ).union(
-                [IH_typ.id] 
-            ) 
-
-            influential_constraints = pset(
-                st
-                # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                for st in inner_world.constraints
-                # NOTE: contains at least one influential variable
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
-                # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
-                #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
-                # )
-            )
-            rel_constraints = IH_rel_constraints.union(influential_constraints)
-            # TODO: switch to using package_typ, which will resolve targets if possible
-            constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
-            induc_body = Unio(constrained_rel, induc_body) 
-            # NOTE: parameter constraint isn't actually necessary; sound without it.
-            # param_body = Unio(constrained_left, param_body)
-        #end for
-
-        rel_typ = Fixpoint(IH_typ.id, induc_body)
-        param_typ = self.solver.fresh_type_var()
-        return_typ = self.solver.fresh_type_var()
-        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        result = All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ))  
-        return Result(nt.worlds, result)
+            rel_typ = Fixpoint(IH_typ.id, induc_body)
+            param_typ = self.solver.fresh_type_var()
+            return_typ = self.solver.fresh_type_var()
+            consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+            consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+            result = All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ))  
+            results = results + [Result(outer_world, result)]
+        # end for outer_world in nt.worlds:
+        return results
         ##################################
 
     
-    def distill_let_target(self, nt : Context, id : str) -> Context:
-        return nt
+    def distill_let_target(self, contexts : list[Context], id : str) -> list[Context]:
+        return contexts
 
-    def distill_let_contin(self, nt : Context, id : str, target : Typ) -> Context:
-        enviro = nt.enviro.set(id, target)
-        return Context(enviro, nt.worlds)
+    def distill_let_contin(self, contexts : list[Context], id : str, target : Typ) -> list[Context]:
+        return [
+            replace(context, enviro = context.enviro.set(id, target))
+            for context in contexts
+        ]
 
 '''
 end ExprRule
@@ -3297,28 +3338,31 @@ end ExprRule
 
 class RecordRule(Rule):
 
-    def distill_single_body(self, nt : Context, id : str) -> Context:
-        return nt
+    def distill_single_body(self, contexts : list[Context], id : str) -> list[Context]:
+        return contexts
 
-    def combine_single(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar) -> list[RecordBranch]:
+    def combine_single(self, contexts : list[Context], label : str, body_worlds : list[World], body_var : TVar) -> list[RecordBranch]:
         return [RecordBranch(body_worlds, label, body_var)]
 
-    def distill_cons_body(self, nt : Context, id : str) -> Context:
-        return self.distill_single_body(nt, id)
+    def distill_cons_body(self, contexts : list[Context], id : str) -> list[Context]:
+        return self.distill_single_body(contexts, id)
 
-    def distill_cons_tail(self, nt : Context, id : str, body_var : TVar) -> Context:
-        return nt
+    def distill_cons_tail(self, contexts : list[Context], id : str, body_var : TVar) -> list[Context]:
+        return contexts
 
-    def combine_cons(self, nt : Context, label : str, body_worlds : list[World], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
-        return self.combine_single(nt, label, body_worlds, body_var) + tail
+    def combine_cons(self, contexts : list[Context], label : str, body_worlds : list[World], body_var : TVar, tail : list[RecordBranch]) -> list[RecordBranch]:
+        return self.combine_single(contexts, label, body_worlds, body_var) + tail
 
 class FunctionRule(Rule):
 
-    def distill_single_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
+    def distill_single_body(self, contexts : list[Context], pattern_attr : PatternAttr) -> list[Context]:
         enviro = pattern_attr.enviro
-        return Context(nt.enviro.update(enviro), nt.worlds)
+        return [
+            replace(context, enviro = context.enviro.update(enviro))
+            for context in contexts
+        ]
 
-    def combine_single(self, nt : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar) -> list[Branch]:
+    def combine_single(self, contexts : list[Context], pattern_typ : Typ, body_worlds : list[World], body_var : TVar) -> list[Branch]:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
@@ -3326,60 +3370,59 @@ class FunctionRule(Rule):
         """
         return [Branch(body_worlds, pattern_typ, body_var)]
 
-    def distill_cons_body(self, nt : Context, pattern_attr : PatternAttr) -> Context:
-        return self.distill_single_body(nt, pattern_attr)
+    def distill_cons_body(self, contexts : list[Context], pattern_attr : PatternAttr) -> list[Context]:
+        return self.distill_single_body(contexts, pattern_attr)
 
-    def distill_cons_tail(self, nt : Context, pattern_typ : Typ, body_var : TVar) -> Context:
+    def distill_cons_tail(self, contexts : list[Context], pattern_typ : Typ, body_var : TVar) -> list[Context]:
         '''
         - the previous pattern should not influence what pattern occurs next
         - patterns may overlap
         '''
-        return nt
+        return contexts 
 
-    def combine_cons(self, nt : Context, pattern_typ : Typ, body_worlds : list[World], body_var : TVar, tail : list[Branch]) -> list[Branch]:
-        return self.combine_single(nt, pattern_typ, body_worlds, body_var) + tail
+    def combine_cons(self, contexts : list[Context], pattern_typ : Typ, body_worlds : list[World], body_var : TVar, tail : list[Branch]) -> list[Branch]:
+        return self.combine_single(contexts, pattern_typ, body_worlds, body_var) + tail
 
 
 class KeychainRule(Rule):
 
-    def combine_single(self, nt : Context, key : str) -> list[str]:
+    def combine_single(self, contexts : list[Context], key : str) -> list[str]:
         return [key]
 
-    def combine_cons(self, nt : Context, key : str, keys : list[str]) -> list[str]:
+    def combine_cons(self, contexts : list[Context], key : str, keys : list[str]) -> list[str]:
         return [key] + keys
 
 
 class ArgchainRule(Rule):
-    def distill_single_content(self, nt : Context) -> Context:
-        return nt
+    def distill_single_content(self, contexts : list[Context]) -> list[Context]:
+        return contexts
 
-    def distill_cons_head(self, nt : Context) -> Context:
-        return self.distill_single_content(nt)
+    def distill_cons_head(self, contexts : list[Context]) -> list[Context]:
+        return self.distill_single_content(contexts)
 
-    def combine_single(self, nt : Context, content_var : TVar) -> ArgchainAttr:
-        return ArgchainAttr(nt.worlds, [content_var])
+    def combine_single(self, contexts : list[Context], content_var : TVar) -> list[ArgchainAttr]:
+        return [ArgchainAttr(context.world, [content_var]) for context in contexts]
 
-    def combine_cons(self, nt : Context, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
-        return ArgchainAttr(nt.worlds, [head_var] + tail_vars)
+    def combine_cons(self, contexts : list[Context], head_var : TVar, tail_vars : list[TVar]) -> list[ArgchainAttr]:
+        return [ArgchainAttr(context.world, [head_var] + tail_vars) for context in contexts]
 
 ######
 
 class PipelineRule(Rule):
 
-    def distill_single_content(self, nt : Context) -> Context:
-        return nt
+    def distill_single_content(self, contexts : list[Context]) -> list[Context]:
+        return contexts
 
-    def distill_cons_head(self, nt : Context) -> Context:
-        return self.distill_single_content(nt)
+    def distill_cons_head(self, contexts : list[Context]) -> list[Context]:
+        return self.distill_single_content(contexts)
+    def distill_cons_tail(self, contexts : list[Context], head_var : TVar) -> list[Context]:
+        return contexts
 
-    def distill_cons_tail(self, nt : Context, head_var : TVar) -> Context:
-        return nt
+    def combine_single(self, contexts : list[Context], content_var : TVar) -> list[PipelineAttr]:
+        return [PipelineAttr(context.world, [content_var]) for context in contexts]
 
-    def combine_single(self, nt : Context, content_var : TVar) -> PipelineAttr:
-        return PipelineAttr(nt.worlds, [content_var])
-
-    def combine_cons(self, nt : Context, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
-        return PipelineAttr(nt.worlds, [head_var] + tail_var)
+    def combine_cons(self, contexts : list[Context], head_var : TVar, tail_var : list[TVar]) -> list[PipelineAttr]:
+        return [PipelineAttr(context.world, [head_var] + tail_var) for context in contexts]
 
 
 '''
@@ -3387,7 +3430,7 @@ start Pattern Rule
 '''
 
 class PatternRule(Rule):
-    # def distill_tuple_head(self, nt : Context) -> Context:
+    # def distill_tuple_head(self, contexts : list[Context]) -> list[Context]:
     #     typ_var = self.solver.fresh_type_var()
     #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -3402,7 +3445,7 @@ class PatternRule(Rule):
 
     #     return Context('pattern', nt.enviro, worlds, typ_var) 
 
-    # def distill_tuple_tail(self, nt : Context, head_typ : Typ) -> Context:
+    # def distill_tuple_tail(self, contexts : list[Context], head_typ : Typ) -> list[Context]:
     #     typ_var = self.solver.fresh_type_var()
     #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -3416,7 +3459,7 @@ class PatternRule(Rule):
     #     # ]
     #     return Context('pattern', nt.enviro, worlds, typ_var) 
 
-    def combine_tuple(self, nt : Context, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_tuple(self, contexts : list[Context], head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
         enviro = head_attr.enviro.update(tail_attr.enviro) 
         return PatternAttr(enviro, pattern)
@@ -3427,16 +3470,16 @@ end PatternRule
 
 class BasePatternRule(Rule):
 
-    def combine_var(self, nt : Context, id : str) -> PatternAttr:
+    def combine_var(self, contexts : list[Context], id : str) -> PatternAttr:
         pattern = self.solver.fresh_type_var()
         enviro : PMap[str, Typ] = pmap({id : pattern})
         return PatternAttr(enviro, pattern)
 
-    def combine_unit(self, nt : Context) -> PatternAttr:
+    def combine_unit(self, contexts : list[Context]) -> PatternAttr:
         pattern = TUnit()
         return PatternAttr(m(), pattern)
 
-    # def distill_tag_body(self, nt : Context, id : str) -> Context:
+    # def distill_tag_body(self, contexts : list[Context], id : str) -> list[Context]:
     #     body_var = self.solver.fresh_type_var()
     #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -3449,7 +3492,7 @@ class BasePatternRule(Rule):
     #     # ]
     #     return Context('pattern', nt.enviro, worlds, body_var)
 
-    def combine_tag(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_tag(self, contexts : list[Context], label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TTag(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 '''
@@ -3458,7 +3501,7 @@ end BasePatternRule
 
 class RecordPatternRule(Rule):
 
-    # def distill_single_body(self, nt : Context, id : str) -> Context:
+    # def distill_single_body(self, contexts : list[Context], id : str) -> list[Context]:
     #     body_var = self.solver.fresh_type_var()
     #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
@@ -3471,26 +3514,26 @@ class RecordPatternRule(Rule):
     #     # ]
     #     return Context('pattern_record', nt.enviro, worlds, body_var) 
 
-    def combine_single(self, nt : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_single(self, contexts : list[Context], label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TField(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 
-    # def distill_cons_body(self, nt : Context, id : str) -> Context:
+    # def distill_cons_body(self, contexts : list[Context], id : str) -> list[Context]:
     #     return self.distill_cons_body(nt, id)
 
-    # def distill_cons_tail(self, nt : Context, id : str, body_typ : Typ) -> Context:
+    # def distill_cons_tail(self, contexts : list[Context], id : str, body_typ : Typ) -> list[Context]:
     #     tail_var = self.solver.fresh_type_var()
     #     worlds = nt.worlds
     #     # TODO: add constraints in distill for type-guided program synthesis 
     #     # worlds = self.evolve_worlds(nt, Inter(TField(id, body_typ), tail_var))
     #     return Context('pattern_record', nt.enviro, worlds, tail_var) 
 
-    def combine_cons(self, nt : Context, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_cons(self, contexts : list[Context], label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
         enviro = body_attr.enviro.update(tail_attr.enviro)
         return PatternAttr(enviro, pattern)
 
 class TargetRule(Rule):
-    def combine_anno(self, nt : Context, anno_typ : Typ) -> Result: 
-        return Result(nt.worlds, anno_typ)
+    def combine_anno(self, contexts : list[Context], anno_typ : Typ) -> list[Result]: 
+        return [Result(context.world, anno_typ) for context in contexts]
 
