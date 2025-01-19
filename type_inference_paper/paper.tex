@@ -752,14 +752,11 @@ rather than merely a type variable to allow for relational constraints.
 \TODO{update tag syntax: \obj{cons;cons;e:cons//cons//T}\ \ \obj{nil;():nil//unit}}
 
 \section{Static Semantics}
-The static semantics is a system for proving that an expression satisfies a type.
-The type syntax is rich and allows free type variables along with universally and existentially quantified type variables. Thus,  
-One can think of the static semantics and either type checking or type inference, since 
-checking against free type variable or an existentially quantified type, requires constructing types to witness 
-the variables allowed by the type syntax.
-Furthermore, when verifying elimination forms of expressions, such as application, the static semantics 
-translates the eliminations into subtyping constraints and then learns constraints on type variables
-necessary for the subtyping constraint to hold. 
+The static semantics is a system for checking if the construction of an expression is viable.   
+The system leverages types, which allow expressing properties of expressions with varying levels of precisions. 
+\emph{Proof typing} lifts expressions into types and leverages \emph{proof subtyping} to check for viability 
+by comparing compatibility between types. By allowing type annotation in the syntax of expressions,
+proof typing is also able to check that expressions meet abstract specifications.
 
 
 \subsection{Types}
@@ -903,6 +900,12 @@ necessary for the subtyping constraint to hold.
     } {
       \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
       \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+    }
+
+    \inferrule {
+      \TODO{ANNOTATED}
+    } {
+      \TODO{LET}
     }
   \end{mathpar}
 \end{definition}
