@@ -579,73 +579,73 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{<$l$>$e$} \rightsquigarrow \obj{<$l$>$e'$}
+      \obj{<}l\obj{>}e \rightsquigarrow \obj{<}l\obj{>}e'
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{$R$\$$l$=>$e$} \rightsquigarrow \obj{$R$\$$l$=>$e'$}
+      \vec{r}\obj{\$}l\obj{=>}e \rightsquigarrow \vec{r}\obj{\$}l\obj{=>}e' 
     }
 
     \inferrule {
-      R \rightsquigarrow R'
+      \vec{r} \rightsquigarrow \vec{r}'
     } {
-      \obj{$R$\$$l$=>$v$} \rightsquigarrow \obj{$R'$\$$l$=>$v$}
+      \vec{r}\obj{\$}l\obj{=>}v \rightsquigarrow \vec{r}'\obj{\$}l\obj{=>}v
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{$e$.$l$} \rightsquigarrow \obj{$e'$.$l$}
+      e\obj{.}l \rightsquigarrow e'\obj{.}l
     }
 
     \inferrule {
-      \obj{\$$l$=>$v$} \in G 
+      \obj{\$}l\obj{=>}v \in \vec{g}
       \\
-      \forall\ e .\ \obj{\$$l$=>$e$} \in G \implies e = v
+      \forall\ e .\ \obj{\$}l\obj{=>}e \in \vec{g} \implies e = v
     } {
-      \obj{$G$.$l$} \rightsquigarrow v
+      \vec{g}\obj{.}l \rightsquigarrow v
+    }
+
+    \inferrule {
+      e_f \rightsquigarrow e_f'
+    } {
+      e_f\obj{(}e\obj{)} \rightsquigarrow e_f'\obj{(}e\obj{)}
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{($e$)($e_a$)} \rightsquigarrow \obj{($e'$)($e_a$)}
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \obj{($v$)($e$)} \rightsquigarrow \obj{($v$)($e'$)}
+      \vec{f}\obj{(}e\obj{)} \rightsquigarrow \vec{f}\obj{(}e'\obj{)}
     }
 
 
     \inferrule {
-      \obj{$F$($v$)} \rightsquigarrow e'
+      \vec{f}\obj{(}v\obj{)} \rightsquigarrow e'
       \\
       \text{FV}(e) \subseteq \text{FV}(p)
     } {
-      \obj{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e' 
+      \obj{(}\vec{f}\obj{\$}p\obj{=>}e\obj{)(}v\obj{)} \rightsquigarrow e' 
     }
 
     \inferrule {
-      p \equiv v \given \vec{\sigma} 
+      \exists e' .\ \vec{f}\obj{(}v\obj{)} \rightsquigarrow e'
       \\
-      \forall e'.\ \neg F\obj{($v$)} \rightsquigarrow e' 
+      p \equiv v \given \vec{\sigma} 
     } {
-      \obj{($F$\$$p$=>$e$)($v$)} \rightsquigarrow e[\vec{\sigma}]
+      \obj{(}\vec{f}\obj{\$}p\obj{=>}v\obj{)(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{loop(e)} \rightsquigarrow \obj{loop(e')}
+      \obj{loop(}e\obj{)} \rightsquigarrow \obj{loop(}e'\obj{)}
     }
 
     \inferrule {
     } {
-      \obj{loop(\$$x$=>$e$)} \rightsquigarrow e[x \slash \obj{loop(\$$x$=>$e$)}]
+      \obj{loop(\$}x\obj{=>}e\obj{)} \rightsquigarrow e[x \slash \obj{loop(\$}x\obj{=>}e\obj{)}]
     }
 
 
