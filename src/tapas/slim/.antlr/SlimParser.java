@@ -1218,14 +1218,13 @@ public class SlimParser extends Parser {
 				]
 
 				setState(227);
-				((ExprContext)_localctx).keychain = keychain(keychain_prompts);
+				((ExprContext)_localctx).keychain = keychain();
 
 				prompts = [
 				    replace(prompt, 
-				        args = prompt.args + [keychain]
+				        args = prompt.args + [((ExprContext)_localctx).keychain.keys]
 				    )
 				    for prompt in prompts
-				    for keychain in ((ExprContext)_localctx).keychain.keychains
 				]
 				_localctx.results = [
 				    self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
@@ -1818,7 +1817,7 @@ public class SlimParser extends Parser {
 
 
 				setState(314);
-				((FunctionContext)_localctx).pattern = pattern(prompt);
+				((FunctionContext)_localctx).pattern = pattern();
 
 				self.guide_symbol('=>')
 
@@ -1827,10 +1826,9 @@ public class SlimParser extends Parser {
 
 				prompts = [
 				    replace(prompt, 
-				        args = prompt.args + [pattern_attr]
+				        args = prompt.args + [((FunctionContext)_localctx).pattern.attr]
 				    )
 				    for prompt in prompts
-				    for pattern_attr in ((FunctionContext)_localctx).pattern.attrs
 				]
 				body_prompts = [
 				    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_single_body, prompt)
@@ -1862,7 +1860,7 @@ public class SlimParser extends Parser {
 
 
 				setState(323);
-				((FunctionContext)_localctx).pattern = pattern(nt);
+				((FunctionContext)_localctx).pattern = pattern();
 
 				self.guide_symbol('=>')
 
@@ -1871,10 +1869,9 @@ public class SlimParser extends Parser {
 
 				prompts = [
 				    replace(prompt, 
-				        args = prompt.args + [pattern_attr]
+				        args = prompt.args + [((FunctionContext)_localctx).pattern.attr]
 				    )
 				    for prompt in prompts
-				    for pattern_attr in ((FunctionContext)_localctx).pattern.attrs
 				]
 				body_prompts = [
 				    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_body, prompt)
@@ -1933,24 +1930,21 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class KeychainContext extends ParserRuleContext {
-		public list[Prompt] prompts;
-		public list[Keychain] keychains;
+		public Keychain keys;
 		public Token ID;
 		public KeychainContext tail;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
 		public KeychainContext keychain() {
 			return getRuleContext(KeychainContext.class,0);
 		}
-		public KeychainContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public KeychainContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
+		public KeychainContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_keychain; }
 	}
 
-	public final KeychainContext keychain(list[Prompt] prompts) throws RecognitionException {
-		KeychainContext _localctx = new KeychainContext(_ctx, getState(), prompts);
+	public final KeychainContext keychain() throws RecognitionException {
+		KeychainContext _localctx = new KeychainContext(_ctx, getState());
 		enterRule(_localctx, 24, RULE_keychain);
 		try {
 			setState(346);
@@ -1972,17 +1966,7 @@ public class SlimParser extends Parser {
 				setState(337);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [(((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				_localctx.keychains = [
-				    self.collect(KeychainRule(self._solver, self._light_mode).combine_single, prompt)
-				    for prompt in prompts 
-				]
+				_localctx.keys = KeychainRule(self._solver, self._light_mode).combine_single((((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
 				self.update_sr('keychain', [t('.'), ID])
 
 				}
@@ -1998,33 +1982,11 @@ public class SlimParser extends Parser {
 				setState(341);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [(((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts 
-				] 
 
 				setState(343);
-				((KeychainContext)_localctx).tail = keychain(sub_prompts);
+				((KeychainContext)_localctx).tail = keychain();
 
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [tail_kc]
-				    )
-				    for prompt in prompts
-				    for tail_kc in ((KeychainContext)_localctx).tail.keychains
-				]
-				_localctx.keychains = [
-				    self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, prompts)
-				    for prompt in prompts
-				]
+				_localctx.keys = KeychainRule(self._solver, self._light_mode).combine_cons((((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.keys)
 				self.update_sr('keychain', [t('.'), ID, n('keychain')])
 
 				}
@@ -2386,8 +2348,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PatternContext extends ParserRuleContext {
-		public list[Prompt] prompts;
-		public list[PatternAttr] attrs;
+		public PatternAttr attr;
 		public Base_patternContext base_pattern;
 		public Base_patternContext head;
 		public PatternContext tail;
@@ -2397,16 +2358,14 @@ public class SlimParser extends Parser {
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
 		}
-		public PatternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PatternContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
+		public PatternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern; }
 	}
 
-	public final PatternContext pattern(list[Prompt] prompts) throws RecognitionException {
-		PatternContext _localctx = new PatternContext(_ctx, getState(), prompts);
+	public final PatternContext pattern() throws RecognitionException {
+		PatternContext _localctx = new PatternContext(_ctx, getState());
 		enterRule(_localctx, 32, RULE_pattern);
 		try {
 			setState(409);
@@ -2421,9 +2380,9 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(398);
-				((PatternContext)_localctx).base_pattern = base_pattern(prompts);
+				((PatternContext)_localctx).base_pattern = base_pattern();
 
-				_localctx.attrs = ((PatternContext)_localctx).base_pattern.attrs
+				_localctx.attr = ((PatternContext)_localctx).base_pattern.attr
 				self.update_sr('pattern', [n('basepat')])
 
 				}
@@ -2434,39 +2393,18 @@ public class SlimParser extends Parser {
 
 
 				setState(402);
-				((PatternContext)_localctx).head = base_pattern(prompts);
+				((PatternContext)_localctx).head = base_pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [head_attr]
-				    )
-				    for prompt in prompts
-				    for head_attr in ((PatternContext)_localctx).head.attrs
-				]
 				self.guide_symbol(',')
 
 				setState(404);
 				match(T__12);
 
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts 
-				] 
 
 				setState(406);
-				((PatternContext)_localctx).tail = pattern(sub_prompts);
+				((PatternContext)_localctx).tail = pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [tail_attr]
-				    )
-				    for prompt in prompts
-				    for tail_attr in ((PatternContext)_localctx).tail.attrs
-				]
-				_localctx.attrs = [
-				    self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, prompts) 
-				    for prompt in prompts
-				]
+				_localctx.attr = PatternRule(self._solver, self._light_mode).combine_tuple(((PatternContext)_localctx).head.attr, ((PatternContext)_localctx).tail.attr)
 				self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
 
 				}
@@ -2486,8 +2424,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Base_patternContext extends ParserRuleContext {
-		public list[Prompt] prompts;
-		public list[PatternAttr] attrs;
+		public PatternAttr attr;
 		public Token ID;
 		public Base_patternContext body;
 		public Record_patternContext record_pattern;
@@ -2502,16 +2439,14 @@ public class SlimParser extends Parser {
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
 		}
-		public Base_patternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Base_patternContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
+		public Base_patternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_base_pattern; }
 	}
 
-	public final Base_patternContext base_pattern(list[Prompt] prompts) throws RecognitionException {
-		Base_patternContext _localctx = new Base_patternContext(_ctx, getState(), prompts);
+	public final Base_patternContext base_pattern() throws RecognitionException {
+		Base_patternContext _localctx = new Base_patternContext(_ctx, getState());
 		enterRule(_localctx, 34, RULE_base_pattern);
 		try {
 			setState(431);
@@ -2528,16 +2463,7 @@ public class SlimParser extends Parser {
 				setState(412);
 				((Base_patternContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				_localctx.attrs = [
-				    self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, prompt)
-				    for prompt in prompts
-				]
+				_localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_var((((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null))
 				self.update_sr('basepat', [ID])
 
 				}
@@ -2548,10 +2474,7 @@ public class SlimParser extends Parser {
 				setState(414);
 				match(T__4);
 
-				_localctx.attrs = [
-				    self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, prompt)
-				    for prompt in prompts
-				]
+				_localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_unit()
 				self.update_sr('basepat', [t('@')])
 
 				}
@@ -2567,32 +2490,11 @@ public class SlimParser extends Parser {
 				setState(418);
 				((Base_patternContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts 
-				] 
 
 				setState(420);
-				((Base_patternContext)_localctx).body = base_pattern(sub_prompts);
+				((Base_patternContext)_localctx).body = base_pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [body_attr]
-				    )
-				    for prompt in prompts
-				    for body_attr in ((Base_patternContext)_localctx).body.attrs
-				]
-				_localctx.attrs = [
-				    self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, prompts, (((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null))
-				    for prompt in prompts
-				]
+				_localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_tag((((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null), ((Base_patternContext)_localctx).body.attr)
 				self.update_sr('basepat', [t('~'), ID, n('basepat')])
 
 				}
@@ -2601,9 +2503,9 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(423);
-				((Base_patternContext)_localctx).record_pattern = record_pattern(prompts);
+				((Base_patternContext)_localctx).record_pattern = record_pattern();
 
-				_localctx.attrs = ((Base_patternContext)_localctx).record_pattern.attrs
+				_localctx.attr = ((Base_patternContext)_localctx).record_pattern.attr
 				self.update_sr('basepat', [n('recpat')])
 
 				}
@@ -2614,11 +2516,11 @@ public class SlimParser extends Parser {
 				setState(426);
 				match(T__7);
 				setState(427);
-				((Base_patternContext)_localctx).pattern = pattern(prompts);
+				((Base_patternContext)_localctx).pattern = pattern();
 				setState(428);
 				match(T__8);
 
-				_localctx.attrs = ((Base_patternContext)_localctx).pattern.attrs
+				_localctx.attr = ((Base_patternContext)_localctx).pattern.attr
 				self.update_sr('basepat', [t('('), n('pattern'), t(')')])
 
 				}
@@ -2638,8 +2540,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Record_patternContext extends ParserRuleContext {
-		public list[Prompt] prompt;
-		public list[PatternAttr] attrs;
+		public PatternAttr attr;
 		public Token ID;
 		public PatternContext body;
 		public Record_patternContext tail;
@@ -2650,16 +2551,14 @@ public class SlimParser extends Parser {
 		public Record_patternContext record_pattern() {
 			return getRuleContext(Record_patternContext.class,0);
 		}
-		public Record_patternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Record_patternContext(ParserRuleContext parent, int invokingState, list[Prompt] prompt) {
+		public Record_patternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.prompt = prompt;
 		}
 		@Override public int getRuleIndex() { return RULE_record_pattern; }
 	}
 
-	public final Record_patternContext record_pattern(list[Prompt] prompt) throws RecognitionException {
-		Record_patternContext _localctx = new Record_patternContext(_ctx, getState(), prompt);
+	public final Record_patternContext record_pattern() throws RecognitionException {
+		Record_patternContext _localctx = new Record_patternContext(_ctx, getState());
 		enterRule(_localctx, 36, RULE_record_pattern);
 		try {
 			setState(454);
@@ -2681,37 +2580,16 @@ public class SlimParser extends Parser {
 				setState(436);
 				((Record_patternContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
 				self.guide_symbol('=')
 
 				setState(438);
 				match(T__1);
 
 
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts 
-				] 
-
 				setState(440);
-				((Record_patternContext)_localctx).body = pattern(sub_prompts);
+				((Record_patternContext)_localctx).body = pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [body_attr]
-				    )
-				    for prompt in prompts
-				    for body_attr in ((Record_patternContext)_localctx).body.attrs
-				]
-				_localctx.attrs = [
-				    self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, prompt)
-				    for prompt in prompts
-				]
+				_localctx.attr = RecordPatternRule(self._solver, self._light_mode).combine_single((((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr)
 				self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
 
 				}
@@ -2727,51 +2605,19 @@ public class SlimParser extends Parser {
 				setState(445);
 				((Record_patternContext)_localctx).ID = match(ID);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				self.guide_symbol('=')
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts
-				]
 
 				setState(447);
 				match(T__1);
 
 
 				setState(449);
-				((Record_patternContext)_localctx).body = pattern(sub_prompts);
+				((Record_patternContext)_localctx).body = pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [body_attr]
-				    )
-				    for prompt in prompts
-				    for body_attr in ((Record_patternContext)_localctx).body.attrs
-				]
-				sub_prompts = [
-				    replace(prompt, args = [])
-				    for prompt in prompts
-				]
 
 				setState(451);
-				((Record_patternContext)_localctx).tail = record_pattern(sub_prompts);
+				((Record_patternContext)_localctx).tail = record_pattern();
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [tail_attr]
-				    )
-				    for prompt in prompts
-				    for tail_attr in ((Record_patternContext)_localctx).tail.attrs
-				]
-				_localctx.attrs = [
-				    self.collect(RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
-				    for prompt in prompts
-				]
+				_localctx.attr = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons((((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr, ((Record_patternContext)_localctx).tail.attr)
 				self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
 
 				}

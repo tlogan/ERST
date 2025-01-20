@@ -434,13 +434,12 @@ keychain_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_keychain, prompt)
     for prompt in prompts
 ]
-} keychain[keychain_prompts] {
+} keychain {
 prompts = [
     replace(prompt, 
-        args = prompt.args + [keychain]
+        args = prompt.args + [$keychain.keys]
     )
     for prompt in prompts
-    for keychain in $keychain.keychains
 ]
 $results = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
@@ -762,15 +761,14 @@ self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 function [list[Prompt] prompts] returns [list[Switch] switches] :
 
 | 'case' {
-} pattern[prompt] {
+} pattern {
 self.guide_symbol('=>')
 } '=>' {
 prompts = [
     replace(prompt, 
-        args = prompt.args + [pattern_attr]
+        args = prompt.args + [$pattern.attr]
     )
     for prompt in prompts
-    for pattern_attr in $pattern.attrs
 ]
 body_prompts = [
     self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_single_body, prompt)
@@ -791,15 +789,14 @@ self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
 | 'case' {
-} pattern[nt] {
+} pattern {
 self.guide_symbol('=>')
 } '=>' {
 prompts = [
     replace(prompt, 
-        args = prompt.args + [pattern_attr]
+        args = prompt.args + [$pattern.attr]
     )
     for prompt in prompts
-    for pattern_attr in $pattern.attrs
 ]
 body_prompts = [
     self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_body, prompt)
@@ -839,52 +836,20 @@ self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('func
 ;
 
 // NOTE: nt.expect represents the type of the rator applied to the next immediate argument  
-keychain [list[Prompt] prompts] returns [list[Keychain] keychains] :
+keychain returns [Keychain keys] :
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-$keychains = [
-    self.collect(KeychainRule(self._solver, self._light_mode).combine_single, prompt)
-    for prompt in prompts 
-]
+$keys = KeychainRule(self._solver, self._light_mode).combine_single($ID.text)
 self.update_sr('keychain', [t('.'), ID])
 }
 
 | '.' {
 self.guide_terminal('ID')
 } ID {
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts 
-] 
-} tail = keychain[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [tail_kc]
-    )
-    for prompt in prompts
-    for tail_kc in $tail.keychains
-]
-$keychains = [
-    self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, prompts)
-    for prompt in prompts
-]
+} tail = keychain {
+$keys = KeychainRule(self._solver, self._light_mode).combine_cons($ID.text, $tail.keys)
 self.update_sr('keychain', [t('.'), ID, n('keychain')])
 }
 
@@ -1038,183 +1003,76 @@ self.update_sr('target', [t(':'), TID, t('='), n('expr')])
 
 
 
-pattern [list[Prompt] prompts] returns [list[PatternAttr] attrs]:  
+pattern returns [PatternAttr attr]:  
 
-| base_pattern[prompts] {
-$attrs = $base_pattern.attrs
+| base_pattern {
+$attr = $base_pattern.attr
 self.update_sr('pattern', [n('basepat')])
 }
 
 | {
-} head = base_pattern[prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [head_attr]
-    )
-    for prompt in prompts
-    for head_attr in $head.attrs
-]
+} head = base_pattern {
 self.guide_symbol(',')
 } ',' {
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts 
-] 
-} tail = pattern[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [tail_attr]
-    )
-    for prompt in prompts
-    for tail_attr in $tail.attrs
-]
-$attrs = [
-    self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, prompts) 
-    for prompt in prompts
-]
+} tail = pattern {
+$attr = PatternRule(self._solver, self._light_mode).combine_tuple($head.attr, $tail.attr)
 self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
 }
 
 ;
 
-base_pattern [list[Prompt] prompts] returns [list[PatternAttr] attrs]:  
+base_pattern returns [PatternAttr attr]:  
 
 | ID {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-$attrs = [
-    self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, prompt)
-    for prompt in prompts
-]
+$attr = BasePatternRule(self._solver, self._light_mode).combine_var($ID.text)
 self.update_sr('basepat', [ID])
 } 
 
 | '@' {
-$attrs = [
-    self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, prompt)
-    for prompt in prompts
-]
+$attr = BasePatternRule(self._solver, self._light_mode).combine_unit()
 self.update_sr('basepat', [t('@')])
 } 
 
 | '~' {
 self.guide_terminal('ID')
 } ID {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts 
-] 
-} body = base_pattern[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [body_attr]
-    )
-    for prompt in prompts
-    for body_attr in $body.attrs
-]
-$attrs = [
-    self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, prompts, $ID.text)
-    for prompt in prompts
-]
+} body = base_pattern {
+$attr = BasePatternRule(self._solver, self._light_mode).combine_tag($ID.text, $body.attr)
 self.update_sr('basepat', [t('~'), ID, n('basepat')])
 }
 
-| record_pattern[prompts] {
-$attrs = $record_pattern.attrs
+| record_pattern {
+$attr = $record_pattern.attr
 self.update_sr('basepat', [n('recpat')])
 }
 
-| '(' pattern[prompts] ')' {
-$attrs = $pattern.attrs
+| '(' pattern ')' {
+$attr = $pattern.attr
 self.update_sr('basepat', [t('('), n('pattern'), t(')')])
 }
 
 
 ;
 
-record_pattern [list[Prompt] prompt] returns [list[PatternAttr] attrs] :
+record_pattern returns [PatternAttr attr] :
 
 | ';' {
 self.guide_terminal('ID')
 } ID {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
 self.guide_symbol('=')
 } '=' {
-
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts 
-] 
-} body = pattern[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [body_attr]
-    )
-    for prompt in prompts
-    for body_attr in $body.attrs
-]
-$attrs = [
-    self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, prompt)
-    for prompt in prompts
-]
+} body = pattern {
+$attr = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.text, $body.attr)
 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
 }
 
 | ';' {
 self.guide_terminal('ID')
 } ID {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-self.guide_symbol('=')
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts
-]
 } '=' {
-} body = pattern[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [body_attr]
-    )
-    for prompt in prompts
-    for body_attr in $body.attrs
-]
-sub_prompts = [
-    replace(prompt, args = [])
-    for prompt in prompts
-]
-} tail = record_pattern[sub_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [tail_attr]
-    )
-    for prompt in prompts
-    for tail_attr in $tail.attrs
-]
-$attrs = [
-    self.collect(RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
-    for prompt in prompts
-]
+} body = pattern {
+} tail = record_pattern {
+$attr = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons($ID.text, $body.attr, $tail.attr)
 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
 }
 

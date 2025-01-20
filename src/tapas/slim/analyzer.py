@@ -3398,10 +3398,10 @@ class FunctionRule(Rule):
 
 class KeychainRule(Rule):
 
-    def combine_single(self, context : Context, key : str) -> Keychain:
+    def combine_single(self, key : str) -> Keychain:
         return Keychain([key])
 
-    def combine_cons(self, context : Context, key : str, kc : Keychain) -> Keychain:
+    def combine_cons(self, key : str, kc : Keychain) -> Keychain:
         return Keychain([key] + kc.keys)
 
 
@@ -3443,36 +3443,7 @@ start Pattern Rule
 '''
 
 class PatternRule(Rule):
-    # def distill_tuple_head(self, context : list[Context]) -> list[Context]:
-    #     typ_var = self.solver.fresh_type_var()
-    #     worlds = nt.worlds
-    #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # worlds = [
-    #     #     m1
-    #     #     for m0 in nt.worlds
-    #     #     for m1 in self.solver.solve(m0, 
-    #     #         Inter(TField('head', typ_var), TField('tail', Bot())), 
-    #     #         nt.typ_var
-    #     #     )
-    #     # ]
-
-    #     return Context('pattern', nt.enviro, worlds, typ_var) 
-
-    # def distill_tuple_tail(self, context : list[Context], head_typ : Typ) -> list[Context]:
-    #     typ_var = self.solver.fresh_type_var()
-    #     worlds = nt.worlds
-    #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # worlds = [
-    #     #     m1
-    #     #     for m0 in nt.worlds
-    #     #     for m1 in self.solver.solve(m0, 
-    #     #         Inter(TField('head', head_typ), TField('tail', typ_var)), 
-    #     #         nt.typ_var,
-    #     #     )
-    #     # ]
-    #     return Context('pattern', nt.enviro, worlds, typ_var) 
-
-    def combine_tuple(self, context : Context, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_tuple(self, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
         enviro = head_attr.enviro.update(tail_attr.enviro) 
         return PatternAttr(enviro, pattern)
@@ -3483,29 +3454,17 @@ end PatternRule
 
 class BasePatternRule(Rule):
 
-    def combine_var(self, context : Context, id : str) -> PatternAttr:
+    def combine_var(self, id : str) -> PatternAttr:
         pattern = self.solver.fresh_type_var()
         enviro : PMap[str, Typ] = pmap({id : pattern})
         return PatternAttr(enviro, pattern)
 
-    def combine_unit(self, context : Context) -> PatternAttr:
+    def combine_unit(self) -> PatternAttr:
         pattern = TUnit()
         return PatternAttr(m(), pattern)
 
-    # def distill_tag_body(self, context : Context, id : str) -> list[Context]:
-    #     body_var = self.solver.fresh_type_var()
-    #     worlds = nt.worlds
-    #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # worlds = [
-    #     #     m1
-    #     #     for m0 in nt.worlds
-    #     #     for m1 in self.solver.solve(m0, 
-    #     #         TTag(id, body_var), nt.typ_var
-    #     #     )
-    #     # ]
-    #     return Context('pattern', nt.enviro, worlds, body_var)
 
-    def combine_tag(self, context : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_tag(self, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TTag(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 '''
@@ -3514,34 +3473,11 @@ end BasePatternRule
 
 class RecordPatternRule(Rule):
 
-    # def distill_single_body(self, context : list[Context], id : str) -> list[Context]:
-    #     body_var = self.solver.fresh_type_var()
-    #     worlds = nt.worlds
-    #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # worlds = [
-    #     #     m1
-    #     #     for m0 in nt.worlds
-    #     #     for m1 in self.solver.solve(m0, 
-    #     #         TField(id, typ_var), nt.typ_var
-    #     #     )
-    #     # ]
-    #     return Context('pattern_record', nt.enviro, worlds, body_var) 
-
-    def combine_single(self, context : Context, label : str, body_attr : PatternAttr) -> PatternAttr:
+    def combine_single(self, label : str, body_attr : PatternAttr) -> PatternAttr:
         pattern = TField(label, body_attr.typ)
         return PatternAttr(body_attr.enviro, pattern)
 
-    # def distill_cons_body(self, context : list[Context], id : str) -> list[Context]:
-    #     return self.distill_cons_body(nt, id)
-
-    # def distill_cons_tail(self, context : list[Context], id : str, body_typ : Typ) -> list[Context]:
-    #     tail_var = self.solver.fresh_type_var()
-    #     worlds = nt.worlds
-    #     # TODO: add constraints in distill for type-guided program synthesis 
-    #     # worlds = self.evolve_worlds(nt, Inter(TField(id, body_typ), tail_var))
-    #     return Context('pattern_record', nt.enviro, worlds, tail_var) 
-
-    def combine_cons(self, context : Context, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
+    def combine_cons(self, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
         pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
         enviro = body_attr.enviro.update(tail_attr.enviro)
         return PatternAttr(enviro, pattern)
