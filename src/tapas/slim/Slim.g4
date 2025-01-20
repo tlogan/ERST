@@ -617,10 +617,9 @@ self.update_sr('base', [t('~'), ID, n('base')])
 | record[prompts] {
 prompts = [
     replace(prompt, 
-        args = prompt.args + [record_switch]
+        args = prompt.args + [$record.switch]
     )
     for prompt in prompts
-    for record_switch in $record.switches
 ]
 $results = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
@@ -633,10 +632,9 @@ self.update_sr('base', [n('record')])
 } function[prompts] {
 prompts = [
     replace(prompt, 
-        args = prompt.args + [function_switch]
+        args = prompt.args + [$function.switch]
     )
     for prompt in prompts
-    for function_switch in $function.switches
 ]
 $results = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompts)
@@ -680,35 +678,14 @@ self.update_sr('base', [n('argchain')])
 ;
 
 
-record [list[Prompt] prompts] returns [list[RecordSwitch] switches] :
+record [list[Prompt] prompts] returns [RecordSwitch switch] :
 | ';' {
 self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-body_prompts = [
-    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_single_body, prompts)
-    for prompt in prompts
-]
-} body = expr[body_prompts] {
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [body_result.typ]
-    )
-    for prompt in prompts
-    for body_result in $body.results
-]
-$switches = [
-    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
-    for prompt in prompts 
-]
+} body = expr[prompts] {
+$switch = RecordRule(self._solver, self._light_mode).combine_single($ID.text, $body.results)
 self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 }
 
@@ -717,48 +694,16 @@ self.guide_terminal('ID')
 } ID {
 self.guide_symbol('=')
 } '=' {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$ID.text]
-    )
-    for prompt in prompts
-]
-body_prompts = [
-    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_body, prompt)
-    for prompt in prompts
-]
-} body = expr[body_prompts] {
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [body_result.typ]
-    )
-    for prompt in prompts
-    for body_result in $body.results
-]
-tail_prompts = [
-    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_tail, prompts, $ID.text, body_result.typ)
-    for prompt in prompts
-]
-} tail = record[tail_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [tail_switch]
-    )
-    for prompt in prompts
-    for tail_switch in $tail.switches
-]
-$switches = [
-    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt)
-    for prompt in prompts
-]
+} body = expr[prompts] {
+} tail = record[prompts] {
+$switch = RecordRule(self._solver, self._light_mode).combine_cons($ID.text, $body.results, $tail.switch)
 self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 }
 
 ;
 
 
-function [list[Prompt] prompts] returns [list[Switch] switches] :
+function [list[Prompt] prompts] returns [Switch switch] :
 
 | 'case' {
 } pattern {
@@ -775,16 +720,9 @@ body_prompts = [
     for prompt in prompts
 ]
 } body = expr[body_prompts] {
-prompts = [
-    replace(prompt, 
-        args = prompt.args + [$body.results]
-    )
-    for prompt in prompts
-]
-$switches = [
-    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
-    for prompt in prompts
-]
+// TODO: body should be a list of multiresults
+// we should not decide to flatten list or package a multi result until we pop out 
+$switch = FunctionRule(self._solver, self._light_mode).combine_single($pattern.attr, $body.results)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
@@ -817,19 +755,7 @@ tail_prompts = [
     for prompt in prompts
 ]
 } tail = function[tail_prompts] {
-
-prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [tail_switch]
-    )
-    for prompt in prompts
-    for tail_switch in $tail.switches
-]
-$switches = [
-    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
-    for prompt in prompt
-]
+$switch = FunctionRule(self._solver, self._light_mode).combine_cons($pattern.attr, $body.results, $tail.switch)
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 

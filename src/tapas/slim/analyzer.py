@@ -250,12 +250,6 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoin
 
 @dataclass(frozen=True, eq=True)
 class Branch:
-    worlds : list[World]
-    pattern : Typ 
-    body : Typ
-
-@dataclass(frozen=True, eq=True)
-class AugBranch:
     world : World
     pattern : Typ 
     body : Typ
@@ -270,7 +264,7 @@ class Keychain:
 
 @dataclass(frozen=True, eq=True)
 class RecordBranch:
-    worlds : list[World]
+    world : World
     label : str 
     body : Typ
 
@@ -517,7 +511,7 @@ class PatternAttr:
 @dataclass(frozen=True, eq=True)
 class ArgchainAttr:
     world : World
-    args : list[TVar]
+    args : list[Typ]
 
 @dataclass(frozen=True, eq=True)
 class PipelineAttr:
@@ -2211,7 +2205,7 @@ class Solver:
                 result = Diff(result, neg)
         return result
 
-    def augment_branches_with_diff(self, branches : list[Branch]) -> list[AugBranch]:
+    def augment_branches_with_diff(self, branches : list[Branch]) -> list[Branch]:
         '''
         nil -> zero
         cons X -> succ Y 
@@ -2224,8 +2218,7 @@ class Solver:
 
         for branch in branches:
             augmented_branches += [
-                AugBranch(world, self.make_diff(empty_world(), branch.pattern, negs), branch.body)
-                for world in branch.worlds
+                Branch(branch.world, self.make_diff(empty_world(), branch.pattern, negs), branch.body)
             ]
             neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
             neg = (
@@ -2990,26 +2983,20 @@ class BaseRule(Rule):
     def combine_record(self, context : Context, switch : RecordSwitch) -> list[Result]:
         result = Top() 
         for branch in reversed(switch.branches): 
-            for branch_world in reversed(branch.worlds):
-                new_world = branch_world
+            # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
+            body_typ = branch.body
+            # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.skolems, new_world.relids)
 
-                # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-                body_typ = branch.body
-                # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.skolems, new_world.relids)
-
-                field = TField(branch.label, body_typ)
-                ######## NOTE: no generalization since the negative position is merely a label #############
-                ######## NOTE: However; it can use universal type for its conditional constraints ##########
-                constraints = tuple(extract_reachable_constraints_from_typ(branch_world, field))
-                if constraints:
-                    constrained_field = All((), constraints, field)
-                else:
-                    constrained_field = field 
-                #############################################
-                result = Inter(constrained_field, result)
-            '''
-            end for 
-            '''
+            field = TField(branch.label, body_typ)
+            ######## NOTE: no generalization since the negative position is merely a label #############
+            ######## NOTE: However; it can use universal type for its conditional constraints ##########
+            constraints = tuple(extract_reachable_constraints_from_typ(branch.world, field))
+            if constraints:
+                constrained_field = All((), constraints, field)
+            else:
+                constrained_field = field 
+            #############################################
+            result = Inter(constrained_field, result)
         '''
         end for 
         '''
@@ -3097,10 +3084,10 @@ class ExprRule(Rule):
         false_body_results: list[Result] 
     ) -> list[Result]: 
         switch = Switch([
-            Branch([result.world], TTag('true', TUnit()), result.typ)
+            Branch(result.world, TTag('true', TUnit()), result.typ)
             for result in true_body_results
         ] + [
-            Branch([result.world], TTag('false', TUnit()), result.typ)
+            Branch(result.world, TTag('false', TUnit()), result.typ)
             for result in false_body_results
         ])
         # print(f"""
@@ -3351,20 +3338,11 @@ end ExprRule
 
 class RecordRule(Rule):
 
-    def distill_single_body(self, context : Context, id : str) -> Context:
-        return context
+    def combine_single(self, label : str, body_results : list[Result]) -> RecordSwitch:
+        return RecordSwitch([RecordBranch(result.world, label, result.typ) for result in body_results])
 
-    def combine_single(self, context : Context, label : str, body_worlds : list[World], body_var : TVar) -> RecordSwitch:
-        return RecordSwitch([RecordBranch(body_worlds, label, body_var)])
-
-    def distill_cons_body(self, context : Context, id : str) -> Context:
-        return self.distill_single_body(context, id)
-
-    def distill_cons_tail(self, context : Context, id : str, body_var : TVar) -> Context:
-        return context
-
-    def combine_cons(self, context : Context, label : str, body_worlds : list[World], body_var : TVar, tail : RecordSwitch) -> RecordSwitch:
-        switch = self.combine_single(context, label, body_worlds, body_var)
+    def combine_cons(self, label : str, body_results : list[Result], tail : RecordSwitch) -> RecordSwitch:
+        switch = self.combine_single(label, body_results)
         return  RecordSwitch(switch.branches + tail.branches)
 
 class FunctionRule(Rule):
@@ -3373,13 +3351,13 @@ class FunctionRule(Rule):
         enviro = pattern_attr.enviro
         return replace(context, enviro = context.enviro.update(enviro))
 
-    def combine_single(self, context : Context, pattern_typ : Typ, body_results : list[Result]) -> Switch:
+    def combine_single(self, pattern_typ : Typ, body_results : list[Result]) -> Switch:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return Switch([Branch([result.world], pattern_typ, result.typ) for result in body_results])
+        return Switch([Branch(result.world, pattern_typ, result.typ) for result in body_results])
 
     def distill_cons_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(context, pattern_attr)
@@ -3391,8 +3369,8 @@ class FunctionRule(Rule):
         '''
         return context
 
-    def combine_cons(self, context : Context, pattern_typ : Typ, body_results : list[Result], tail : Switch) -> Switch:
-        switch = self.combine_single(context, pattern_typ, body_results) 
+    def combine_cons(self, pattern_typ : Typ, body_results : list[Result], tail : Switch) -> Switch:
+        switch = self.combine_single(pattern_typ, body_results) 
         return Switch(switch.branches + tail.branches)
 
 
@@ -3412,11 +3390,11 @@ class ArgchainRule(Rule):
     def distill_cons_head(self, context : Context) -> Context:
         return self.distill_single_content(context)
 
-    def combine_single(self, context : Context, content_var : TVar) -> ArgchainAttr:
-        return ArgchainAttr(context.world, [content_var])
+    def combine_single(self, context : Context, content : Typ) -> ArgchainAttr:
+        return ArgchainAttr(context.world, [content])
 
-    def combine_cons(self, context : Context, head_var : TVar, tail_vars : list[TVar]) -> ArgchainAttr:
-        return ArgchainAttr(context.world, [head_var] + tail_vars)
+    def combine_cons(self, context : Context, head : Typ, tail : list[Typ]) -> ArgchainAttr:
+        return ArgchainAttr(context.world, [head] + tail)
 
 ######
 

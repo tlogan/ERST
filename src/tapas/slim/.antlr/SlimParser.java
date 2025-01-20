@@ -1528,10 +1528,9 @@ public class SlimParser extends Parser {
 
 				prompts = [
 				    replace(prompt, 
-				        args = prompt.args + [record_switch]
+				        args = prompt.args + [((BaseContext)_localctx).record.switch_]
 				    )
 				    for prompt in prompts
-				    for record_switch in ((BaseContext)_localctx).record.switches
 				]
 				_localctx.results = [
 				    self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
@@ -1551,10 +1550,9 @@ public class SlimParser extends Parser {
 
 				prompts = [
 				    replace(prompt, 
-				        args = prompt.args + [function_switch]
+				        args = prompt.args + [((BaseContext)_localctx).function.switch_]
 				    )
 				    for prompt in prompts
-				    for function_switch in ((BaseContext)_localctx).function.switches
 				]
 				_localctx.results = [
 				    self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompts)
@@ -1622,7 +1620,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class RecordContext extends ParserRuleContext {
 		public list[Prompt] prompts;
-		public list[RecordSwitch] switches;
+		public RecordSwitch switch_;
 		public Token ID;
 		public ExprContext body;
 		public RecordContext tail;
@@ -1669,32 +1667,11 @@ public class SlimParser extends Parser {
 				setState(293);
 				match(T__1);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				body_prompts = [
-				    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_single_body, prompts)
-				    for prompt in prompts
-				]
 
 				setState(295);
-				((RecordContext)_localctx).body = expr(body_prompts);
+				((RecordContext)_localctx).body = expr(prompts);
 
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [body_result.typ]
-				    )
-				    for prompt in prompts
-				    for body_result in ((RecordContext)_localctx).body.results
-				]
-				_localctx.switches = [
-				    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
-				    for prompt in prompts 
-				]
+				_localctx.switch_ = RecordRule(self._solver, self._light_mode).combine_single((((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.results)
 				self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 
 				}
@@ -1715,47 +1692,15 @@ public class SlimParser extends Parser {
 				setState(302);
 				match(T__1);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)]
-				    )
-				    for prompt in prompts
-				]
-				body_prompts = [
-				    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_body, prompt)
-				    for prompt in prompts
-				]
 
 				setState(304);
-				((RecordContext)_localctx).body = expr(body_prompts);
+				((RecordContext)_localctx).body = expr(prompts);
 
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [body_result.typ]
-				    )
-				    for prompt in prompts
-				    for body_result in ((RecordContext)_localctx).body.results
-				]
-				tail_prompts = [
-				    self.refine_prompt(RecordRule(self._solver, self._light_mode).distill_cons_tail, prompts, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_result.typ)
-				    for prompt in prompts
-				]
 
 				setState(306);
-				((RecordContext)_localctx).tail = record(tail_prompts);
+				((RecordContext)_localctx).tail = record(prompts);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [tail_switch]
-				    )
-				    for prompt in prompts
-				    for tail_switch in ((RecordContext)_localctx).tail.switches
-				]
-				_localctx.switches = [
-				    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt)
-				    for prompt in prompts
-				]
+				_localctx.switch_ = RecordRule(self._solver, self._light_mode).combine_cons((((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.results, ((RecordContext)_localctx).tail.switch_)
 				self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 
 				}
@@ -1776,7 +1721,7 @@ public class SlimParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
 		public list[Prompt] prompts;
-		public list[Switch] switches;
+		public Switch switch_;
 		public PatternContext pattern;
 		public ExprContext body;
 		public FunctionContext tail;
@@ -1838,16 +1783,9 @@ public class SlimParser extends Parser {
 				setState(318);
 				((FunctionContext)_localctx).body = expr(body_prompts);
 
-				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [((FunctionContext)_localctx).body.results]
-				    )
-				    for prompt in prompts
-				]
-				_localctx.switches = [
-				    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
-				    for prompt in prompts
-				]
+				// TODO: body should be a list of multiresults
+				// we should not decide to flatten list or package a multi result until we pop out 
+				_localctx.switch_ = FunctionRule(self._solver, self._light_mode).combine_single(((FunctionContext)_localctx).pattern.attr, ((FunctionContext)_localctx).body.results)
 				self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 
 				}
@@ -1898,19 +1836,7 @@ public class SlimParser extends Parser {
 				setState(329);
 				((FunctionContext)_localctx).tail = function(tail_prompts);
 
-
-				prompts = [
-				    replace(prompt, 
-				        world = body_result.world
-				        args = prompt.args + [tail_switch]
-				    )
-				    for prompt in prompts
-				    for tail_switch in ((FunctionContext)_localctx).tail.switches
-				]
-				_localctx.switches = [
-				    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
-				    for prompt in prompt
-				]
+				_localctx.switch_ = FunctionRule(self._solver, self._light_mode).combine_cons(((FunctionContext)_localctx).pattern.attr, ((FunctionContext)_localctx).body.results, ((FunctionContext)_localctx).tail.switch_)
 				self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 
 				}
