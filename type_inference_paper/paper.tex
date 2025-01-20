@@ -187,47 +187,44 @@ proposition subtyping.
 
 \section{Overview}
 
-\subsection{Language of types}
-
-\paragraph{Parametric types}
-Universal types. Existential type. System F-style. Parameterization of types indexed by types (i.e. second order).
 
 \TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
 Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
 }
 
-\paragraph{Combination types.}
-One of the advantages of untyped programs is that they may be written in a flexible manner.
-Subtyping is necessary safely reflect the flexibility of compositions in programs, without too many false failures.
-Another main advantage of untyped programs is that users don't have to provide type specifications.
-Thus, a general way of constructing types from compositions encountered in the the program is necessary.
-Some compositions indicate that a type should strengthen, and some compositions indicate that a type should weaken.
-To this end, the type language uses intersection and union combinators, 
-whose semantics are degenerate versions of those in set-theory.
+% \paragraph{Parametric types}
+% Universal types. Existential type. System F-style. Parameterization of types indexed by types (i.e. second order).
 
-For instance, when inferring the type of a function, 
-the system's goal is to infer the weakest valid parameter type and the strongest valid return type for a function definition.
-It strengthens the parameter type with intersection and weakens the return type with union according to the function body,
-to arrive at a valid type for the function.  
+% \paragraph{Combination types.}
+% One of the advantages of untyped programs is that they may be written in a flexible manner.
+% Subtyping is necessary safely reflect the flexibility of compositions in programs, without too many false failures.
+% Another main advantage of untyped programs is that users don't have to provide type specifications.
+% Thus, a general way of constructing types from compositions encountered in the the program is necessary.
+% Some compositions indicate that a type should strengthen, and some compositions indicate that a type should weaken.
+% To this end, the type language uses intersection and union combinators, 
+% whose semantics are degenerate versions of those in set-theory.
 
-By contrast, the liquid type language relies on the less flexible tagged unions of ML datatypes, 
-which is sufficient in its setting since those types are specified by the user. 
-Likewise, it does not rely on union to weaken to a valid return type. 
-Instead, it weakens to the strongest valid return type by dropping conjunctions from 
-the return type's qualifiers until a valid return type is found.
+% For instance, when inferring the type of a function, 
+% the system's goal is to infer the weakest valid parameter type and the strongest valid return type for a function definition.
+% It strengthens the parameter type with intersection and weakens the return type with union according to the function body,
+% to arrive at a valid type for the function.  
 
-\paragraph{Inductive types.} Similar to ML datatypes.
+% By contrast, the liquid type language relies on the less flexible tagged unions of ML datatypes, 
+% which is sufficient in its setting since those types are specified by the user. 
+% Likewise, it does not rely on union to weaken to a valid return type. 
+% Instead, it weakens to the strongest valid return type by dropping conjunctions from 
+% the return type's qualifiers until a valid return type is found.
 
-\paragraph{Constraint types.}
-In addition to expressing the shapes of terms, the system should be able express relations between terms,
-such as "a list has the length of some natural number".
-Rather than using a distinct syntax for relational predicates, 
-the type language treats relations as just another type thereby reusing machinery already 
-available for types, such as existential types, union types, and inductive types.
-Since parametric types are second order, constraining relations requires subtyping.
-Thus, parametric types are extended with constraints in the form of subtyping.
+% \paragraph{Inductive types.} Similar to ML datatypes.
 
-\subsection{Type Inference}
+% \paragraph{Constraint types.}
+% In addition to expressing the shapes of terms, the system should be able express relations between terms,
+% such as "a list has the length of some natural number".
+% Rather than using a distinct syntax for relational predicates, 
+% the type language treats relations as just another type thereby reusing machinery already 
+% available for types, such as existential types, union types, and inductive types.
+% Since parametric types are second order, constraining relations requires subtyping.
+% Thus, parametric types are extended with constraints in the form of subtyping.
 
 For a given program, type inference constructs a very precise type. Some programs are simple enough
 such that type inference generates singleton types. 
@@ -531,66 +528,35 @@ However, we have not included this rewriting in the semantics or implementation.
     & 
     \is 
     \begin{array}[t]{@{}l}
-      \obj{$x$} \sep 
+      x \sep 
       \obj{@} \sep
-      \obj{<$l$>$e$} \sep 
+      \obj{<}l\obj{>}e \sep 
       \vec{r} \sep
-      \obj{$e$,$e$} \sep
       \vec{f} \sep 
-      \obj{$e$.$l$} \sep
-      \obj{($e$)($e$)} \sep
-      \\
-      \obj{$e$ |> $e$} \sep
-      \obj{loop($e$)} \sep
-      \obj{let $x$:$\tau$ = $e$ in $e$} \sep
-      \obj{($e$)}
+      e\obj{.}l \sep
+      e\obj{(}e\obj{)} \sep
+      \obj{loop(}e\obj{)}
     \end{array}
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     \\
-    \nonterm{r} & \is \obj{\$$l$=>$e$}
+    \nonterm{r} & \is \obj{\$}l\obj{=>}e
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
     \\
-    \nonterm{f} & \is \obj{\$$p$=>$e$}
-    \\
+    \nonterm{f} & \is \obj{\$}p\obj{=>}e
     \\
     \nonterm{p} & \is 
-      \obj{$x$} \sep
+      x \sep
       \obj{@} \sep
-      \obj{<$l$>$p$} \sep
-      \vec{k} \sep
-      \obj{$p$,$p$} \sep
-      \obj{($p$)} 
+      \obj{<}l\obj{>}p \sep
+      \vec{k}
     \\
     \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     \\
-    \nonterm{k} & \is \obj{\$$l$=>$p$}
+    \nonterm{k} & \is \obj{\$}l\obj{=>}p
   \end{array}\]
 \end{definition}
-
-\begin{definition} Others
-  \label{definition:others}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{v} & \is 
-      \obj{@} \sep
-      \obj{<$l$> $v$} \sep
-      \vec{g} \sep
-      \obj{$v$,$v$} \sep
-      \obj{($v$)} \sep
-      \vec{f} 
-    \\
-    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
-    \\
-    \nonterm{g} & \is \obj{\$$l$=>$v$}
-    \\
-    \\
-    \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
-    \\
-    \nonterm{\sigma} & \is x \slash v
-  \end{array}\]
-\end{definition}
-
 
 
 
@@ -675,54 +641,6 @@ However, we have not included this rewriting in the semantics or implementation.
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{e \rightsquigarrow e}\ Progression sugar
-  \begin{mathpar}
-    \inferrule {
-      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
-    } {
-      e_a \obj{|>} e_b \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      e \rightsquigarrow e' 
-    } {
-      \obj{(} e \obj{)} \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
-    } {
-      e_l\obj{,}e_r \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \obj{(\$ <true> @=>}e_t \obj{\ \$ <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
-    } {
-      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
-    }
-
-
-    \inferrule {
-      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
-      \rightsquigarrow e'
-    } {
-      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
-    }
-
-    % \inferrule {
-    %   e \rightsquigarrow e'
-    % } {
-    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
-    % }
-
-    % \inferrule {
-    % } {
-    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
-    % }
-  \end{mathpar}
-\end{definition}
-
-
 
 
 
@@ -761,16 +679,6 @@ The system leverages types, which allow expressing properties of expressions wit
 by comparing compatibility between types. By allowing type annotation in the syntax of expressions,
 proof typing is also able to check that expressions meet abstract specifications.
 
-
-\subsection{Types}
-
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd   
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-
 \begin{definition} Types 
   \label{definition:types}
   \[\begin{array}[t]{r@{}l}
@@ -783,11 +691,17 @@ proof typing is also able to check that expressions meet abstract specifications
       \tau\obj{->}\tau \sep 
       \tau\obj{|}\tau \sep 
       \tau\obj{\&}\tau \sep 
-      \tau\obj{\textbackslash}\tau \sep 
+      \tau\obj{\textbackslash}\eta \sep 
       \\
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
       \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
       \obj{LFP[}\alpha\obj{]}\tau
+    \end{array}
+    \\
+    \nonterm{\eta} & \is 
+    \begin{array}[t]{@{}l}
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \phi \sep 
+      \phi
     \end{array}
     \\
     \nonterm{\phi} & \is 
@@ -802,40 +716,6 @@ proof typing is also able to check that expressions meet abstract specifications
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \obj{;} \tau \obj{<:} \tau
-  \end{array}\]
-\end{definition}
-
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd   
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-  ddddddd ddddd ddddddd dddddd dddddd dddddd dddddd dddddd ddddddddd 
-
-\begin{definition} Internals 
-  \label{definition:internals}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
-    \\
-    \\
-    \nonterm{\vec{\Omega}} & \is \epsilon \sep \vec{\Omega}\ \Omega
-    \\
-    \nonterm{\Omega} & \is \vec{\alpha}, \Delta
-    \\
-    \\
-    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
-    \\
-    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
-    \\
-    \\
-    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
-    \\
-    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \obj{->} \tau
-    \\
-    \\
-    \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
-    \\
-    \nonterm{\delta} & \alpha \slash \tau
   \end{array}\]
 \end{definition}
 
@@ -936,16 +816,6 @@ proof typing is also able to check that expressions meet abstract specifications
   \end{mathpar}
 \end{definition}
 
-\begin{definition} \boxed{\Omega \preceq \Omega}\ World Ordering 
-  \label{definition:world_ordering}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      (\vec{\alpha},\Delta)  \preceq (\vec{\alpha}\ \vec{\alpha}',\Delta\ \Delta') 
-    }
-  \end{mathpar}
-\end{definition}
-
 
 % \begin{definition} Proof Typing \I \boxed{\Gamma \entails e \hastype \tau \given Z}
 %   \label{definition:proof_typing}
@@ -1028,32 +898,6 @@ proof typing is also able to check that expressions meet abstract specifications
 
 %   \end{mathpar}
 % \end{definition}
-
-\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi}}\ Function Lifting
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \vec{\alpha}, \Delta, \Gamma \entails \epsilon \liftfun \epsilon, \epsilon 
-    }
-
-    \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi} 
-      \\
-      p \hastype \phi \given \Gamma'
-      \\
-      \text{neg}(\phi, \vec{\phi}) = \tau_l
-      \\\\
-      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
-      \implies
-      \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
-      \\\\
-      \exists \pi .\ \pi \in \vec{\pi}' 
-    } {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
-      \vec{\pi}\ \vec{\pi}', \vec{\phi}\ \phi
-    }
-  \end{mathpar}
-\end{definition}
 
 % \begin{definition} \boxed{Z, \Gamma \entails F \liftfun \vec{\pi}, T}
 %   \begin{mathpar}
@@ -1184,78 +1028,7 @@ We leave the remaining rules in an annex.
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
 as well as additional rules for increased precision.  
 
-\begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
-  \label{definition:decomposable}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
-      \Omega \entails \tau \circlearrowleft \tau
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
-  \label{definition:normal_constraint_congruence}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \tau \subtypes \tau \cong \tau \subtypes \tau
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
-  \label{definition:normal_constraint_entailment}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \Delta \entails \tau' \subtypes \tau \sim
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
-  \label{definition:modulo_type_solution}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}
-    }
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\entails \tau_l \subtypes \tau \consis}\ Constraint Consistency  
-  \label{definition:constraint_consistency}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
-    }
-  \end{mathpar}
-\end{definition}
-
-       
-
-\TODO{separate out syntactic sugar like pairs, pipe, and let, parens}
-
-\TODO{bifurcate proof subtyping into either duals or weakening vs strengthening rules}
-
-\TODO{separate out semantic sugar like combination of implication with union/intersection}
-
-\TODO{note that constraint types are insufficient to represent union, when union is on the rhs (or intersection on the left)}
-
-\TODO{add color to program and type syntax for readabilitiy}
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
-
-\TODO{double check LFP rules against code and try to improve syntax of helper fuctions and helper predicates}
-
   \label{definition:proof_subtyping}
   \begin{mathpar}
     \inferrule {
@@ -1419,183 +1192,6 @@ as well as additional rules for increased precision.
   \end{mathpar}
 \end{definition}
 
-
-
-dddd ddd ddd ddd 
-
-\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof subtyping annex 
-  \label{definition:proof_subtyping_annex}
-  \TODO{switch from extension predicate to using concat}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \obj{BOT} \subtypes \tau_r \given M, \Delta
-    }
-
-    \inferrule {
-    } {
-      \tau_l \subtypes \obj{TOP} \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_l
-      \subtypes
-      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-      \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_{rl}
-      \given M_0, \Delta_0
-      \\
-      M_0 \preceq M_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_{rr}
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-      \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-      \given M, \Delta
-    }
-
-    \inferrule {
-      Q \given M_0, \Delta_0
-      \\
-      A\ \#\ \tau_l
-      \\\\
-      M_0 \sqcup \Alpha \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \alpha \in M_0
-      \\
-      \Delta_0 \entails \Tau <: \alpha
-      \\\\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \obj{|}(\Tau)
-      \given M_1, \Delta_1
-    } {
-      \tau_l \subtypes \alpha
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      \alpha \notin M_0
-      \\
-      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
-      \\
-      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
-      \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
-      \\
-      \obj{|$(\Tau)$} <: \tau_r
-      \given M_1, \Delta_1
-    } {
-      \alpha \subtypes \tau_r
-      \given M_1, \Delta_1 \ \alpha <: \tau_r
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_r \given M_0, \Delta_0
-      \\\\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      Q
-      \given M_1, \Delta_1
-    } {
-      \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
-      \subtypes 
-      \tau_r
-      \given M_1, \Delta_1 
-    }
-
-
-    \inferrule {
-      \tau_{ll} \subtypes \tau_r
-      \given M, \Delta
-    } {
-      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given M, \Delta
-    }
-
-    \inferrule {
-      \tau_{lr} \subtypes \tau_r
-      \given M, \Delta
-    } {
-      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-      \given M, \Delta
-    }
-
-    \inferrule {
-      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
-    } {
-      M, \Delta \entails 
-      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
-    }
-
-
-    \inferrule {
-      \TODO{create a negation syntax}
-      \\
-      \TODO{prove subtyping is complete for negation syntax}
-      \\
-      \text{negsyn}(\obj{$\tau_r$\textbackslash$\tau_n$})
-      \\
-      \tau_l \subtypes \tau_r
-      \given M, \Delta
-      \\\\
-      \forall M'\ \Delta' .\ 
-      M \preceq M'
-      \implies
-      \Delta \preceq \Delta'
-      \implies
-      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
-    } {
-      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
-      \given M, \Delta
-    }
-
-  \end{mathpar}
-\end{definition}
 
 
 
@@ -1809,13 +1405,424 @@ Different: RLT isn't cartesian
 
 \section{Appendix}
 
-\begin{definition} \boxed{\Alpha\ \#\ \tau}\ Fresh variables 
+\begin{definition} Internals 
+  \label{definition:internals}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
+    \\
+    \\
+    \nonterm{\vec{\Omega}} & \is \epsilon \sep \vec{\Omega}\ \Omega
+    \\
+    \nonterm{\Omega} & \is \vec{\alpha}, \Delta
+    \\
+    \\
+    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
+    \\
+    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
+    \\
+    \\
+    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
+    \\
+    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \obj{->} \tau
+    \\
+    \\
+    \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
+    \\
+    \nonterm{\delta} & \alpha \slash \tau
+  \end{array}\]
+\end{definition}
+
+
+\begin{definition} Sugared Expressions 
+  \label{definition:sugared_expressions}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{e} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      e\obj{,}e \sep
+      e\obj{|>}e \sep
+      \obj{let}\ x\ z\ \obj{=}\ e\ \obj{in}\ e \sep
+      \obj{(}e\obj{)}
+    \end{array}
+    \\
+    \nonterm{z} & \is \epsilon \sep \obj{:}\tau 
+    \\
+    \nonterm{p} & \is 
+      ... \sep
+      p\obj{,}p \sep
+      \obj{(}p\obj{)} 
+  \end{array}\]
+\end{definition}
+
+\begin{definition} Values 
+  \label{definition:others}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{v} & \is 
+      \obj{@} \sep
+      \obj{<$l$> $v$} \sep
+      \vec{g} \sep
+      \obj{$v$,$v$} \sep
+      \obj{($v$)} \sep
+      \vec{f} 
+    \\
+    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
+    \\
+    \nonterm{g} & \is \obj{\$$l$=>$v$}
+    \\
+    \\
+    \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
+    \\
+    \nonterm{\sigma} & \is x \slash v
+  \end{array}\]
+\end{definition}
+
+
+\begin{definition}\boxed{e \rightsquigarrow e}\ Sugared Progression
+  \begin{mathpar}
+    \inferrule {
+      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
+    } {
+      e_a \obj{|>} e_b \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      e \rightsquigarrow e' 
+    } {
+      \obj{(} e \obj{)} \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
+    } {
+      e_l\obj{,}e_r \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \obj{(\$ <true> @=>}e_t \obj{\ \$ <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+    } {
+      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
+    }
+
+
+    \inferrule {
+      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
+      \rightsquigarrow e'
+    } {
+      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
+    }
+
+    % \inferrule {
+    %   e \rightsquigarrow e'
+    % } {
+    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
+    % }
+
+    % \inferrule {
+    % } {
+    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
+    % }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} Sugared Types 
+  \label{definition:sugared_types}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{\tau} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      \obj{TOP} \sep 
+      \obj{BOT} \sep
+      \obj{(}\tau\obj{)}
+
+    \end{array}
+    \\
+    \nonterm{\phi} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      \obj{(}\phi\obj{)}
+
+    \end{array}
+  \end{array}\]
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof Subtyping Annex 
+  \label{definition:proof_subtyping_annex}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \obj{BOT} \subtypes \tau_r \given M, \Delta
+    }
+
+    \inferrule {
+    } {
+      \tau_l \subtypes \obj{TOP} \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l
+      \subtypes
+      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes 
+      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_{rl}
+      \given M_0, \Delta_0
+      \\
+      M_0 \preceq M_1
+      \\\\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_{rr}
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \tau_l \subtypes
+      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes 
+      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_l \subtypes
+      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+      \given M, \Delta
+    } {
+      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+      \given M, \Delta
+    }
+
+    \inferrule {
+      Q \given M_0, \Delta_0
+      \\
+      A \notfree \tau_l
+      \\\\
+      M_0 \sqcup \Alpha \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \tau_r
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \alpha \in M_0
+      \\
+      \Delta_0 \entails \Tau <: \alpha
+      \\\\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      \tau_l \subtypes \obj{|}(\Tau)
+      \given M_1, \Delta_1
+    } {
+      \tau_l \subtypes \alpha
+      \given M_1, \Delta_1
+    }
+
+    \inferrule {
+      \alpha \notin M_0
+      \\
+      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
+      \\
+      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
+      \\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
+      \\
+      \obj{|$(\Tau)$} <: \tau_r
+      \given M_1, \Delta_1
+    } {
+      \alpha \subtypes \tau_r
+      \given M_1, \Delta_1 \ \alpha <: \tau_r
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given M_0, \Delta_0
+      \\\\
+      M_0 \preceq M_1
+      \\
+      \Delta_0 \preceq \Delta_1
+      \\
+      Q
+      \given M_1, \Delta_1
+    } {
+      \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
+      \subtypes 
+      \tau_r
+      \given M_1, \Delta_1 
+    }
+
+
+    \inferrule {
+      \tau_{ll} \subtypes \tau_r
+      \given M, \Delta
+    } {
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given M, \Delta
+    }
+
+    \inferrule {
+      \tau_{lr} \subtypes \tau_r
+      \given M, \Delta
+    } {
+      \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+      \given M, \Delta
+    }
+
+    \inferrule {
+      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
+    } {
+      M, \Delta \entails 
+      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
+    }
+
+
+    \inferrule {
+      \TODO{create a negation syntax}
+      \\
+      \TODO{prove subtyping is complete for negation syntax}
+      \\
+      \text{negsyn}(\obj{$\tau_r$\textbackslash$\tau_n$})
+      \\
+      \tau_l \subtypes \tau_r
+      \given M, \Delta
+      \\\\
+      \forall M'\ \Delta' .\ 
+      M \preceq M'
+      \implies
+      \Delta \preceq \Delta'
+      \implies
+      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
+    } {
+      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
+      \given M, \Delta
+    }
+
+  \end{mathpar}
+\end{definition}
+
+
+
+\begin{definition} \boxed{\Omega \preceq \Omega}\ World Ordering 
+  \label{definition:world_ordering}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (\vec{\alpha},\Delta)  \preceq (\vec{\alpha}\ \vec{\alpha}',\Delta\ \Delta') 
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi}}\ Function Lifting
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \vec{\alpha}, \Delta, \Gamma \entails \epsilon \liftfun \epsilon, \epsilon 
+    }
+
+    \inferrule {
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi} 
+      \\
+      p \hastype \phi \given \Gamma'
+      \\
+      \text{neg}(\phi, \vec{\phi}) = \tau_l
+      \\\\
+      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
+      \implies
+      \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \\\\
+      \exists \pi .\ \pi \in \vec{\pi}' 
+    } {
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
+      \vec{\pi}\ \vec{\pi}', \vec{\phi}\ \phi
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
+  \label{definition:decomposable}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
+      \Omega \entails \tau \circlearrowleft \tau
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
+  \label{definition:normal_constraint_congruence}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \tau \subtypes \tau \cong \tau \subtypes \tau
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
+  \label{definition:normal_constraint_entailment}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \Delta \entails \tau' \subtypes \tau \sim
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
+  \label{definition:modulo_type_solution}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\entails \tau_l \subtypes \tau \consis}\ Constraint Consistency  
+  \label{definition:constraint_consistency}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
+    }
+  \end{mathpar}
+\end{definition}
+
+
+
+\begin{definition} \boxed{\Alpha \notfree \tau}\ Fresh variables 
   \label{definition:fresh_variables}
   \begin{mathpar}
     \inferrule {
       \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FV}(\tau)
     } {
-      \Alpha\ \#\ \tau
+      \Alpha \notfree \tau
     }
   \end{mathpar}
 \end{definition}
@@ -3817,7 +3824,7 @@ Different: RLT isn't cartesian
     \item \Z $\contin
       Q \given M_0, \Delta_0
       \I
-      A\ \#\ \tau_r
+      A \notfree \tau_r
       \I
       M_0 \sqcup \Alpha \preceq M_1
       \I
@@ -3858,7 +3865,7 @@ Different: RLT isn't cartesian
     \item \Z $\contin
       Q \given M_0, \Delta_0
       \I
-      A\ \#\ \tau_l
+      A \notfree \tau_l
       \I
       M_0 \sqcup \Alpha \preceq M_1
       \I
@@ -4097,7 +4104,7 @@ Different: RLT isn't cartesian
       \\
       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
       \\
-      \Alpha\ \#\ \tau_r
+      \Alpha \notfree \tau_r
     } {
       \vec{\delta} \satisfies e \hastype \tau_r
     } 
@@ -4130,7 +4137,7 @@ Different: RLT isn't cartesian
       \\
       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
       \\
-      \Alpha\ \#\ \tau_l
+      \Alpha \notfree \tau_l
     } {
       \vec{\delta} \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau_r$}
     } 
