@@ -54,6 +54,9 @@
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
+\newcommand{\notfree}{\ \#\ }
+\newcommand{\consis}{\ \star}
+
 
 % \newcommand{\tl}{\textasciitilde{}}
 
@@ -1181,6 +1184,65 @@ We leave the remaining rules in an annex.
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
 as well as additional rules for increased precision.  
 
+\begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
+  \label{definition:decomposable}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
+      \Omega \entails \tau \circlearrowleft \tau
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
+  \label{definition:normal_constraint_congruence}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \tau \subtypes \tau \cong \tau \subtypes \tau
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
+  \label{definition:normal_constraint_entailment}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \Delta \entails \tau' \subtypes \tau \sim
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
+  \label{definition:modulo_type_solution}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\entails \tau_l \subtypes \tau \consis}\ Constraint Consistency  
+  \label{definition:constraint_consistency}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
+    }
+  \end{mathpar}
+\end{definition}
+
+       
+
 \TODO{separate out syntactic sugar like pairs, pipe, and let, parens}
 
 \TODO{bifurcate proof subtyping into either duals or weakening vs strengthening rules}
@@ -1190,7 +1252,7 @@ as well as additional rules for increased precision.
 \TODO{note that constraint types are insufficient to represent union, when union is on the rhs (or intersection on the left)}
 
 \TODO{add color to program and type syntax for readabilitiy}
-\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof Subtyping
+\begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
 
 \TODO{double check LFP rules against code and try to improve syntax of helper fuctions and helper predicates}
 
@@ -1198,197 +1260,161 @@ as well as additional rules for increased precision.
   \begin{mathpar}
     \inferrule {
     } {
-      \tau \subtypes \tau \given M, \Delta
+      \tau \subtypes \tau \given \Omega 
     }
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
-      \given M_0, \Delta_0
-      \\
-      M_0 \preceq M_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
+      \given \Omega 
       \\
       \tau_{lr} \subtypes \tau_r
-      \given M_1, \Delta_1
+      \given \Omega' 
+      \\
+      \Omega \preceq \Omega'
     } {
       \obj{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
-      \given M_1, \Delta_1
+      \given \Omega' 
     }
 
     \inferrule {
-      Q \given M_0, \Delta_0
+      \Delta \given \vec{\alpha}_w, \Delta_w
       \\
-      \Alpha\ \#\ \tau_r
+      \vec{\alpha} \notfree \tau_r
       \\\\
-      M_0 \sqcup \Alpha \preceq M_1
+      \tau_l \subtypes \tau_r \given \Omega 
       \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given M_1, \Delta_1
+      (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega 
     } {
-      \obj{EXI[}\Alpha\ Q \obj{]}\tau_l \subtypes \tau_r
-      \given M_1, \Delta_1
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
+      \given \Omega 
     }
 
     \inferrule {
-      \alpha \notin M_0
+      \alpha \notin \vec{\alpha}
       \\\\
-      M_0, \Delta_0 \entails \alpha \slash \tau_l <:^\star \Delta_m
-      % \\
-      % M_0, \Delta_0 \entails \alpha \star \Delta_{skol}
+      \vec{\alpha}, \Delta \entails \alpha \slash \tau_l \dagger \Delta^\dagger
       \\
-      M_0, \Delta_0 \entails \alpha <:^\dagger \Tau 
+      \vec{\alpha}, \Delta \entails \alpha <:^\dagger \vec{\tau} 
       \\
-      M_0, \Delta_0 \entails \alpha \slash \tau_l \dagger \Delta_{rel}
+      \vec{\alpha}, \Delta \entails \alpha \slash \tau_l <:^\sharp \Delta^\sharp
       \\\\
-      M_0 \preceq M_1
+      \Delta^\dagger\ \tau_l\obj{<:}\text{inter}(\vec{\tau}) \given \vec{\alpha}', \Delta'
       \\
-      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
-      \\
-      \Delta_{rel}\ \obj{$\tau_l$<:\&$(\Tau)$} 
-      % \sqcup \widebar{\obj{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
-      \given M_1, \Delta_1
+      (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
     } {
-      \tau_l \subtypes \alpha
-      \given M_1, \Delta_1
-      % \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} 
-      \ \tau_l<:\alpha 
+      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
     }
 
     \inferrule {
-      \alpha \in M_0
+      \alpha \in \vec{\alpha}
       \\
-      M_0, (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha)) \entails \alpha <: \Tau 
+      \text{factor}(\Delta, \alpha) = \Delta_f
+      \\
+      \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
       \\\\
-      M_0 \preceq M_1
+      \text{inter}(\vec{\tau}) \subtypes \tau_r \given \vec{\alpha}', \Delta'
       \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \obj{\&}(\tau) \subtypes \tau_r
-      \given M_1, \Delta_1
+      (\vec{\alpha}, \Delta\ \Delta_f) \preceq (\vec{\alpha}', \Delta')
     } {
       \alpha \subtypes \tau_r
-      \given M_1, \Delta_1
+      \given \vec{\alpha}', \Delta'
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_r
-      \given M_0, \Delta_0
-      \\\\
-      M_0 \preceq M_1
+      \tau_l \subtypes \tau_r \given \Omega
       \\
-      \Delta_0 \preceq \Delta_1
+      \Delta \given \Omega' 
       \\
-      Q \given M_1, \Delta_1
+      \Omega \preceq \Omega' 
     } {
       \tau_l
       \subtypes 
-      \obj{EXI[$\Alpha$ $Q$]$\tau_r$}
-      \given M_1, \Delta_1
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_r \given \Omega' 
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_{rl}
-      \given M, \Delta
+      \tau_l \subtypes \tau_{rl} \given \Omega 
     } {
-      \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
-      \given M, \Delta
+      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_{rr}
-      \given M, \Delta
+      \tau_l \subtypes \tau_{rr} \given \Omega 
     } {
-      \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
-      \given M, \Delta
+      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
     }
 
     \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r 
-      \given M, \Delta
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
     } {
-      \obj{LFP[$\alpha$]$\tau_l$} \subtypes \tau_r 
-      \given M, \Delta
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
     }
 
     \inferrule {
-      \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[$\alpha$]$\tau_r$})
+      \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
+      \\
+      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
+      \given \Omega'
+      \\
+      \Omega \preceq \Omega'
+    } {
+      \tau_l \subtypes \obj{LFP[} \alpha \obj{]} \given \Omega'
+    }
+
+    \inferrule {
+      \exists \alpha .\ \alpha \in \text{FTV}(\tau_l) \land \alpha \in \vec{\alpha} 
+      \\
+      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \cong \tau_l' \subtypes \obj{LFP[}\alpha \obj{]} \tau_r'
       \\\\
-      \Delta_0 \preceq \Delta_1
+      \Delta \entails \tau_l' \subtypes \tau_n \sim 
       \\
-      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[$\alpha$]$\tau_r$}]
-      \given M, \Delta_1
+      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau_r' \entails \Omega
+      \\
+      (\vec{\alpha}, \Delta) \preceq \Omega
     } {
-      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
-      \given M, \Delta_1
+      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
+      \given \Omega 
     }
 
     \inferrule {
-      m \in \text{FTV}(\tau_l) \\ m \in M_0
+      \vec{\alpha} \entails \Delta \wr \text{FTV}(\tau_l) \given \vec{\delta}
       \\
-      \text{norm}(\obj{$\tau_l$<:LFP[$\alpha$]$\tau_r$}) = \obj{$\tau_l'$<:LFP[$\alpha$]$\tau_r'$}
+      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
       \\\\
-      \obj{$\tau_l'$<:$\tau$} \in \text{norm}(\Delta_0)
+      \tau_l[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
+      \given \vec{\alpha}_1, \Delta_1
       \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau \subtypes \obj{LFP[$\alpha$]$\tau_r'$}
-      \given M_1, \Delta_1
+      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
     } {
-      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
-      \given M_1, \Delta_1
-    }
-
-    \inferrule {
-      M_0, \Delta_0, \text{FV}(\tau_l) 
-      \entails \vec{\delta}
-      \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l[\vec{\delta}] \subtypes \obj{LFP[$\alpha$]$\tau_r$}
-      \given M_1, \Delta_1
-      \\
-      \text{WF}(\tau_l\obj{<:}\obj{LFP[$\alpha$]$\tau_r$})
-    } {
-      \tau_l \subtypes \obj{LFP[$\alpha$]$\tau_r$}
-      \given M_1, \Delta_1 \ \tau_l<:\obj{LFP[$\alpha$]$\tau_r$}
+      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
+      \given \vec{\alpha}', \Delta'\ \obj{;} \tau_l \obj{<:} \obj{LFP[}\alpha\obj{]}\tau_r
     }
 
     \inferrule {
       \tau_l \subtypes \tau_r
-      \given M, \Delta 
+      \given \Omega 
     } {
-      \obj{<$l$>$\tau_l$} \subtypes \obj{<$l$>$\tau_r$}
-      \given M, \Delta 
+      \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
+      \given \Omega 
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_r
-      \given M, \Delta 
+      \tau_l \subtypes \tau_r \Omega 
     } {
-      \obj{$l$:$\tau_l$} \subtypes \obj{$l$:$\tau_r$}
-      \given M, \Delta 
+      l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
     }
 
     \inferrule {
-      \tau_{rl} \subtypes \tau_{ll}
-      \given M_0, \Delta_0
+      \tau_{rl} \subtypes \tau_{ll} \given \Omega
       \\
-      M_0 \preceq M_1
+      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
       \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_{lr} \subtypes \tau_{rr}
-      \given M_1, \Delta_1 
+      \Omega \preceq \Omega'
     } {
-      \obj{$\tau_{ll}$->$\tau_{lr}$} \subtypes \obj{$\tau_{rl}$->$\tau_{rr}$}
-      \given M_1, \Delta_1 
+      \tau_{ll} \obj{->} \tau_{lr} 
+      \subtypes 
+      \tau_{rl} \obj{->} \tau_{rr}
+      \given \Omega' 
     }
   \end{mathpar}
 \end{definition}
@@ -1491,7 +1517,7 @@ dddd ddd ddd ddd
     \inferrule {
       \alpha \notin M_0
       \\
-      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
+      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
       \\
       M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
       \\
@@ -1992,64 +2018,64 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails m <:^\star \alpha}\ Lower skolem subtyping 
+\begin{definition}\boxed{M, \Delta \entails m <:^\sharp \alpha}\ Lower skolem subtyping 
   \begin{mathpar}
     \inferrule {
       m \in M
       \\
       m <: \alpha \in \Delta
     } {
-      M, \Delta \entails  m <:^\star \alpha
+      M, \Delta \entails  m <:^\sharp \alpha
     }
 
     % \inferrule {
     %   m' \in M
     %   \\
-    %   M, \Delta \entails m <:^\star m' 
+    %   M, \Delta \entails m <:^\sharp m' 
     %   \\
     %   m' <: \alpha \in \Delta
     % } {
-    %   M, \Delta \entails  m <:^\star \alpha
+    %   M, \Delta \entails  m <:^\sharp \alpha
     % }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \Delta <:^\star \alpha \slash \tau}\ Universal lower skolem subtyping
+\begin{definition}\boxed{M, \Delta \entails \Delta <:^\sharp \alpha \slash \tau}\ Universal lower skolem subtyping
   \begin{mathpar}
     \inferrule {
       \forall m\ \tau .\ m <: \tau \in \Delta' \iff  M, \Delta \entails 
       m \in M
       \land
       m <: \alpha \in \Delta
-      % m <:^\star \alpha
+      % m <:^\sharp \alpha
     } {
-      M, \Delta \entails \Delta' <:^\star \alpha \slash \tau
+      M, \Delta \entails \Delta' <:^\sharp \alpha \slash \tau
     }
   \end{mathpar}
 \end{definition}
 
-% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\star m}\ Upper skolem subtyping 
+% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\sharp m}\ Upper skolem subtyping 
 %   \begin{mathpar}
 %     \inferrule {
 %       m \in M
 %       \\
 %       \alpha <: m \in \Delta
 %     } {
-%       M, \Delta \entails  \alpha <:^\star m 
+%       M, \Delta \entails  \alpha <:^\sharp m 
 %     }
 %   \end{mathpar}
 % \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\star \Delta}\ Universal upper skolem subtyping
+\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\sharp \Delta}\ Universal upper skolem subtyping
   \begin{mathpar}
     \inferrule {
       \forall \tau\ m .\ \tau <: m \in \Delta' \iff  
       m \in M
       \land
       \alpha <: m \in \Delta
-% M, \Delta \entails \alpha <:^\star m 
+% M, \Delta \entails \alpha <:^\sharp m 
     } {
-      M, \Delta \entails \alpha <:^\star \Delta' 
+      M, \Delta \entails \alpha <:^\sharp \Delta' 
     }
   \end{mathpar}
 \end{definition}
@@ -2264,7 +2290,7 @@ Different: RLT isn't cartesian
 %       \\
 %       \tau <: m \in \Delta
 %       \\
-%       M, \Delta \entails m <:^\star m' 
+%       M, \Delta \entails m <:^\sharp m' 
 %     } {
 %       M, \Delta \entails \alpha \star \tau <: m' 
 %     }
@@ -3875,7 +3901,7 @@ Different: RLT isn't cartesian
     \item \Z $\contin
       \alpha \notin M_0
       \I
-      M_0, \Delta_0 \entails \Delta_m <:^\star \alpha \slash \tau_r
+      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
       \I
       M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
       \I
@@ -4221,7 +4247,7 @@ Different: RLT isn't cartesian
     \inferrule { 
       \vec{\delta} \satisfies \Delta 
       \\
-      M, \Delta \entails \Tau \subtypes^\star \alpha  
+      M, \Delta \entails \Tau \subtypes^\sharp \alpha  
     } {
       \alpha\slash\obj{|$(\Tau)$} \in \vec{\delta}
     } 
