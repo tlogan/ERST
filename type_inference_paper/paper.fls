@@ -486,7 +486,6 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxsyc.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxsyc.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxexa.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxexa.tfm
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/libertine/LinLibertineT-tlf-ot1.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-ot1--base.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc
@@ -497,8 +496,6 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/nxlmi7.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathMI7.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/NewTXMI7.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmb8t.vf
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8r.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/libertine/LinLibertineT-tlf-ot1.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-ot1--base.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/ntxsyc.vf
@@ -549,6 +546,9 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/bera/fvmb8t.vf
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8r.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-sc-t1.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/libertine/LinLibertineT-tlf-sc-t1.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-sc-t1--base.tfm

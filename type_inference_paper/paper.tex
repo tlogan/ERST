@@ -520,6 +520,13 @@ However, we have not included this rewriting in the semantics or implementation.
 % \paragraph{Object oriented.}  
 
 \section{Dynamic Semantics}
+The programming language is pure and applicative. A program is an expression 
+of the form in Definition \ref{definition:expressions}. The forms of expressions
+enable function abstraction, function application, tagged constructions, record construction, record projection,
+and pattern matching. These forms enable us to express non-trivial programs. They also allow
+for compositions that have no reasonable semantics.  
+
+
 
 \begin{definition} Expressions
   \label{definition:expressions}
@@ -558,8 +565,13 @@ However, we have not included this rewriting in the semantics or implementation.
   \end{array}\]
 \end{definition}
 
-
-
+The dynamic semantics, defined in Definition \ref{definition:progression} is a small-step operational semantics.  
+It adheres to typical definitions of applicative languages for the most part. One 
+slight departure is that pattern matching is merely a special case of function application. 
+Likewise, a switch is merely a function abstraction.
+Records are similar to Functions, except that their entries are guarded by literal identifiers. 
+Additionally, records may be abstracted as patterns, but functions may not.
+The semantics enables recursion via the fixed point combinator \obj{loop}.
 
 \begin{definition}\boxed{e \rightsquigarrow e}\ Progression
   \label{definition:progression}
@@ -642,36 +654,6 @@ However, we have not included this rewriting in the semantics or implementation.
 \end{definition}
 
 
-
-
-
-The programming language is pure and functional. Its syntax and dynamic semantics 
-are fairly standard. The main departure from tradition is that its function
-and application rules subsume pattern matching. This departure enables a more direct  
-correspondence between the structures of programs and their types, but it is 
-not a necessary condition.
-The syntax is given in \FIG{fig:syntax}.
-It includes functions with pattern matching, records, a fixed point combinator, let binding, 
-tags for discriminating cases, and application.
-A function consists of a sequence of paths, where each path maps a pattern to an expression.
-A record consists of a sequence of fields, where each field maps a unique label to an expression. 
-The type language includes tag types, field types, implications, unions, intersections, 
-inductions, existentials, universals, top, and bottom. 
-The existential type consists of multiple bound variables, a payload containing the bound variables, 
-and a subtyping constraint over the bound variables. 
-If the bound variables aren't indicated, then all variables in the payload are
-assumed to be bound variables. If the subtyping constraint isn't indicated, then it is assumed to 
-be a tautology, such as (\obj{unit<:unit}).
-The universal type consists of a bound variable, the variable's upper bound, and a payload. If the upper
-bound is not indicated, it is assumed to be the top type (\obj{top}).
-The typing semantics rely on a typing environment for keeping track of typings of term variables.
-The subtyping semantics rely on subtyping environment for keeping track of and constraints on type variables. 
-Note that the syntax of the subtyping environment allows an upper bound constraint over a type
-rather than merely a type variable to allow for relational constraints. 
-
-
-\TODO{update tag syntax: \obj{cons;cons;e:cons//cons//T}\ \ \obj{nil;():nil//unit}}
-
 \section{Static Semantics}
 The static semantics is a system for checking if the construction of an expression is viable.   
 The system leverages types, which allow expressing properties of expressions with varying levels of precisions. 
@@ -719,8 +701,6 @@ proof typing is also able to check that expressions meet abstract specifications
   \end{array}\]
 \end{definition}
 
-
-\subsection{Proof Typing}
 
 \begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
   \label{definition:proof_typing}
@@ -1019,7 +999,8 @@ inductive relation by ensuring that the antecedent subtypes the inductively boun
 the resulting inductive type.
 Finally, the implication type is projected from the constructed relation and generalized with universal.
 
-\subsection{Proof Subtyping}
+% \hfill \break
+\hfill
 
 Due to the complexity of types along with two positions for types to occur in subtyping,
 there are many rules needed to define the proof system of subtyping. For clarity,
@@ -1313,6 +1294,214 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 \section{Correctness}
 
 \TODO{introduce model typing and soundness properties}
+
+\begin{definition}\boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}\ Model typing
+  \label{definition:model_typing}
+  \begin{mathpar}
+    \inferrule { 
+      \alpha \slash \tau \in \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+      \alpha \slash \tau \notin \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{TOP} 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$}
+    } 
+
+    \inferrule { 
+      \obj{\$$l$=>$v$} \in G 
+      \\
+      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
+      \\\\
+      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
+    } {
+      \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ORIGINAL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule { 
+    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    % } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ALTERNATIVE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \inferrule { 
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+      \\
+      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \\\\
+      \forall e .\ 
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+        \implies
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+        \land
+        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DERIVABLE??
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % \inferrule { 
+    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \\\\
+    %   \forall e .\ 
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+    %     \implies
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+    %     \lor
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    % } 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \\
+      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$})
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
+      \\
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
+      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \vec{\delta} \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
+    } 
+
+
+
+    \inferrule { 
+      x \hastype \tau \in \Gamma 
+    } {
+      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+      \\
+      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
+      \\
+      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
+      \\
+      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+    } 
+
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
+  \label{definition:model_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+      \forall e\ \Gamma .\ 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
+    } {
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } 
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
+  \label{definition:model_sequence_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \vec{\delta} \satisfies \epsilon 
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies Q
+      \\
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } {
+      \vec{\delta} \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
+    } 
+  \end{mathpar}
+\end{definition}
+
 
 \section{Experiments}
 
@@ -4930,180 +5119,6 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 % \end{theorem}
 
 
-\begin{definition}\boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}\ Model typing
-  \label{definition:model_typing}
-  \begin{mathpar}
-    \inferrule { 
-      \alpha \slash \tau \in \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \notin \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{TOP} 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$}
-    } 
-
-    \inferrule { 
-      \obj{\$$l$=>$v$} \in G 
-      \\
-      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
-      \\\\
-      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
-    } {
-      \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ORIGINAL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % \inferrule { 
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    % } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ALTERNATIVE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \inferrule { 
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-      \\
-      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-      \\\\
-      \forall e .\ 
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-        \implies
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-        \land
-        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DERIVABLE??
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    %   \\\\
-    %   \forall e .\ 
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-    %     \implies
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-    %     \lor
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    % } 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-      \\
-      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$})
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
-      \\
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
-      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \vec{\delta} \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
-    } 
-
-
-
-    \inferrule { 
-      x \hastype \tau \in \Gamma 
-    } {
-      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-      \\
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
-      \\
-      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
-      \\
-      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    } 
-
-  \end{mathpar}
-\end{definition}
-
 \begin{definition}\boxed{\vec{\delta}, \vec{\sigma} \satisfies \Gamma}
   \label{definition:model_typing_environment}
   \begin{mathpar}
@@ -5122,38 +5137,5 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
   \end{mathpar}
 \end{definition}
 
-
-
-\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}
-  \label{definition:model_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-      \forall e\ \Gamma .\ 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
-    } {
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } 
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\vec{\delta} \satisfies Q}
-  \label{definition:model_sequence_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \epsilon 
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies Q
-      \\
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } {
-      \vec{\delta} \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
-    } 
-  \end{mathpar}
-\end{definition}
 
 \end{document}
