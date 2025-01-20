@@ -145,17 +145,17 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 
 ;
 
-program [list[Prompts] prompts] returns [list[Result] results] :
+program [list[Prompts] prompts] returns [list[MultiResult] mrs] :
 
 | preamble {
 self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
 } expr[prompts] {
-$results = $expr.results
+$mrs = $expr.mrs
 }
 
 | expr[prompts] {
 self._solver = Solver(m())
-$results = $expr.results
+$mrs = $expr.mrs
 }
 
 ;
@@ -320,12 +320,12 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [list[Prompts] prompts] returns [list[Result] results] : 
+expr [list[Prompts] prompts] returns [list[MultiResult] mrs] : 
 
 // Base rules
 
 | base[prompts] {
-$results = $base.results
+$mrs = $base.mrs
 self.update_sr('expr', [n('base')])
 }
 
@@ -338,12 +338,12 @@ head_prompts = [
 self.guide_symbol(',')
 } ',' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = head_result.world,
-        args = prompt.args + [head_result.typ]
+        args = prompts[i].args + [head_result.typ]
     )
-    for prompt in prompts
-    for head_result in $head.results
+    for i in len(prompts) 
+    for head_result in $head.mrs[i]
 ] 
 tail_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_tuple_tail, prompt)
@@ -351,15 +351,15 @@ tail_prompts = [
 ]
 } tail = expr[tail_contexts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = tail_result.world,
-        args = prompt.args + [tail_result.typ]
+        args = prompts[i].args + [tail_result.typ]
     )
-    for prompt in prompts
-    for tail_result in $tail.results
+    for i in len(prompts)
+    for tail_result in $tail.mrs[i]
 ] 
 
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, prompt) 
     for prompt in prompts
 ]
@@ -375,12 +375,12 @@ condition_prompts = [
 self.guide_symbol('then')
 } 'then' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = condition_result.world,
-        args = prompt.args + [condition_result.typ]
+        args = prompts[i].args + [condition_result.typ]
     )
-    for prompt in prompts
-    for condition_result in $condition.results 
+    for i in len(prompts)
+    for condition_result in $condition.mrs[i] 
 ]
 true_branch_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, prompt)
@@ -390,11 +390,10 @@ true_branch_prompts = [
 self.guide_symbol('else')
 } 'else' {
 prompts = [
-    replace(prompt, 
-        world = condition_result.world,
-        args = prompt.args + [$true_branch.results]
+    replace(prompts[i], 
+        args = prompts[i].args + [$true_branch.mrs[i]]
     )
-    for prompt in prompts
+    for i in len(prompts)
 ]
 false_branch_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, prompt)
@@ -402,13 +401,12 @@ false_branch_prompts = [
 ]
 } false_branch = expr[false_branch_prompts] {
 prompts = [
-    replace(prompt, 
-        world = condition_result.world,
-        args = prompt.args + [$false_branch.results]
+    replace(prompts[i], 
+        args = prompts[i].args + [$false_branch.mrs[i]]
     )
-    for prompt in prompts
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompts, prompt)
     for prompt in prompts
 ]
@@ -423,12 +421,12 @@ rator_prompts = [
 ]
 } rator = base[rator_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = rator_result.world
-        args = prompt.args + [rator_result.typ]
+        args = prompts[i].args + [rator_result.typ]
     )
-    for prompt in prompts
-    for rator_result in $rator.results
+    for i in len(prompts)
+    for rator_result in $rator.mrs[i]
 ]
 keychain_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_keychain, prompt)
@@ -441,7 +439,7 @@ prompts = [
     )
     for prompt in prompts
 ]
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
     for prompt in prompts
 ]
@@ -455,12 +453,12 @@ cator_prompts = [
 ]
 } cator = base[cator_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = caotr_result.world
-        args = prompt.args + [cator_result.typ]
+        args = prompts[i].args + [cator_result.typ]
     )
-    for prompt in prompts
-    for cator_result in $cator.results
+    for i in len(prompts)
+    for cator_result in $cator.mrs[i] 
 ]
 argchain_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_argchain, prompt)
@@ -468,13 +466,13 @@ argchain_prompts = [
 ]
 } argchain[argchain_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = argchain_attr.world,
-        args = prompt.args + [argchain_attr.args]
+        args = prompts[i].args + [$argchain.attrs[i].args]
     )
-    for argchain_attr in $argchain.attrs
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_application, prompt)
     for prompt in prompts
 ]
@@ -488,11 +486,12 @@ arg_prompts = [
 ]
 } arg = base[arg_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = arg_result.worlds
-        args = prompt.args + [arg_result.typ]
+        args = prompts[i].args + [arg_result.typ]
     )
-    for arg_result in $arg.results
+    for i in len(prompts)
+    for arg_result in $arg.mrs[i]
 ]
 pipeline_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompts)
@@ -500,13 +499,13 @@ pipeline_prompts = [
 ]
 } pipeline[pipeline_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = pipeline_attr.worlds
-        args = prompt.args + [pipeline_attr.cators]
+        args = prompts[i].args + [$pipeline.attrs[i].cators]
     )
-    for pipeline_attr in $pipeline.attrs
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, prompts)
     for prompt in prompts
 ]
@@ -530,19 +529,19 @@ target_prompts = [
 self.guide_symbol('in')
 } 'in' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = target_result.world
-        args = prompt.args + [target_result.typ]
+        args = prompts[i].args + [target_result.typ]
     )
-    for prompt in prompts
-    for target_result in $target.results
+    for i in len(prompts)
+    for target_result in $target.mrs[i]
 ]
 contin_prompts = [
     self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_contin, prompt)
     for prompt in prompt
 ]
 } contin = expr[contin_prompts] {
-$results = $contin.results
+$mrs = $contin.mrs
 self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
 }
 
@@ -557,14 +556,14 @@ body_prompts = [
 self.guide_symbol(')')
 } ')' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = body_result.world
-        args = prompt.args + [body_result.typ]
+        args = prompts[i].args + [body_result.typ]
     )
-    for prompt in prompts
-    for body_result in $body.results
+    for i in len(prompts)
+    for body_result in $body.mrs[i]
 ]
-$results = [
+$mrs = [
     self.collect(ExprRule(self._solver, self._light_mode).combine_fix, prompt)
     for prompt in prompts
 ]
@@ -573,11 +572,11 @@ self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 
 ;
 
-base [list[Prompt] prompts] returns [list[Result] results] : 
+base [list[Prompt] prompts] returns [list[MultiResult] mrs] : 
 // Introduction rules
 
 | '@' {
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_unit, prompt)
     for prompt in prompts
 ]
@@ -600,14 +599,14 @@ body_prompts = [
 ]
 } body = base[body_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = body_result.world
-        args = prompt.args + [body_result.typ]
+        args = prompts[i].args + [body_result.typ]
     )
-    for prompt in prompts
-    for body_result in $body.results
+    for i in len(prompts)
+    for body_result in $body.mrs[i]
 ]
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_tag, prompts)
     for prompt in prompts
 ]
@@ -616,12 +615,12 @@ self.update_sr('base', [t('~'), ID, n('base')])
 
 | record[prompts] {
 prompts = [
-    replace(prompt, 
-        args = prompt.args + [$record.switch]
+    replace(prompts[i], 
+        args = prompts[i].args + [$record.switches[i]]
     )
-    for prompt in prompts
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
     for prompts in prompt
 ]
@@ -631,12 +630,12 @@ self.update_sr('base', [n('record')])
 | {
 } function[prompts] {
 prompts = [
-    replace(prompt, 
-        args = prompt.args + [$function.switch]
+    replace(prompts[i], 
+        args = prompts[i].args + [$function.switches[i]]
     )
-    for prompt in prompts
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompts)
     for prompt in prompts
 ]
@@ -652,7 +651,7 @@ prompts = [
     )
     for prompt in prompts
 ]
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_var, prompt)
     for prompt in prompts
 ]
@@ -661,14 +660,13 @@ self.update_sr('base', [ID])
 
 | argchain[prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = argchain_attr.worlds,
-        args = prompt.args + [argchain_attr.args]
+        args = prompts[i].args + [$argchain.attrs[i].args]
     )
-    for prompt in prompts
-    for argchain_attr in $argchain.attrs
+    for i in len(prompts)
 ]
-$results = [
+$mrs = [
     self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
     for prompt in prompts
 ]
@@ -678,32 +676,84 @@ self.update_sr('base', [n('argchain')])
 ;
 
 
-record [list[Prompt] prompts] returns [RecordSwitch switch] :
+record [list[Prompt] prompts] returns [list[RecordSwitch] switches] :
 | ';' {
 self.guide_terminal('ID')
 } ID {
+prompts = [
+    replace(prompts, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
 self.guide_symbol('=')
 } '=' {
-} body = expr[prompts] {
-$switch = RecordRule(self._solver, self._light_mode).combine_single($ID.text, $body.results)
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts
+]
+} body = expr[sub_prompts] {
+prompts = [
+    replace(prompts[i], 
+        args = prompts[i].args + [$body.mrs[i]]
+    )
+    for i in len(prompts)
+]
+
+$switches = [
+    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompt
+]
 self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 }
 
 | ';' {
 self.guide_terminal('ID')
 } ID {
+prompts = [
+    replace(prompts, 
+        args = prompt.args + [$ID.text]
+    )
+    for prompt in prompts
+]
 self.guide_symbol('=')
 } '=' {
-} body = expr[prompts] {
-} tail = record[prompts] {
-$switch = RecordRule(self._solver, self._light_mode).combine_cons($ID.text, $body.results, $tail.switch)
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts
+]
+} body = expr[sub_prompts] {
+
+prompts = [
+    replace(prompts[i], 
+        args = prompts[i].args + [$body.mrs[i]]
+    )
+    for i in len(prompts)
+]
+
+sub_prompts = [
+    replace(prompt, args = [])
+    for prompt in prompts
+]
+} tail = record[sub_prompts] {
+
+prompts = [
+    replace(prompts[i], 
+        args = prompts[i].args + [$tail.switches[i]]
+    )
+    for i in len(prompts)
+]
+$switches = [
+    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt) 
+    for prompt in prompts
+]
 self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 }
 
 ;
 
 
-function [list[Prompt] prompts] returns [Switch switch] :
+function [list[Prompt] prompts] returns [list[Switch] switches] :
 
 | 'case' {
 } pattern {
@@ -720,9 +770,16 @@ body_prompts = [
     for prompt in prompts
 ]
 } body = expr[body_prompts] {
-// TODO: body should be a list of multiresults
-// we should not decide to flatten list or package a multi result until we pop out 
-$switch = FunctionRule(self._solver, self._light_mode).combine_single($pattern.attr, $body.results)
+prompts = [
+    replace(prompts[i], 
+        args = prompts[i].args + [$body.mrs[i]]
+    )
+    for i in len(prompts)
+]
+$switches = [
+    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
+    for prompt in prompts
+]
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 }
 
@@ -743,19 +800,27 @@ body_prompts = [
 } body = expr[body_prompts] {
 
 prompts = [
-    replace(prompt, 
-        world = body_result.world
-        args = prompt.args + [body_result.typ]
+    replace(prompts[i], 
+        args = prompts[i].args + [$body.mrs[i]]
     )
-    for prompt in prompts
-    for body_result in $body.results
+    for i in len(prompts)
 ]
 tail_prompts = [
     self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_tail, prompt)
     for prompt in prompts
 ]
 } tail = function[tail_prompts] {
-$switch = FunctionRule(self._solver, self._light_mode).combine_cons($pattern.attr, $body.results, $tail.switch)
+
+prompts = [
+    replace(prompts[i], 
+        args = prompts[i].args + [$tail.switches[i]]
+    )
+    for i in len(prompts)
+]
+$switches = [
+    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
+    for prompt in prompts 
+]
 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 }
 
@@ -789,12 +854,12 @@ content_prompts = self.refine_prompt(ArgchainRule(self._solver, self._light_mode
 self.guide_symbol(')')
 } ')' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = content_result.world
-        args = prompt.args + [content_result.typ]
+        args = prompts[i].args + [content_result.typ]
     )
-    for prompt in prompts
-    for content_result in $content.results
+    for i in len(prompts)
+    for content_result in $content.mrs[i]
 ]
 $attrs = [
     self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompts)
@@ -813,12 +878,12 @@ head_prompts = [
 self.guide_symbol(')')
 } ')' {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         world = head_result.world
-        args = prompt.args + [head_result.typ]
+        args = prompts[i].args + [head_result.typ]
     )
-    for prompt in prompts
-    for head_result in $head.results
+    for i in len(prompts)
+    for head_result in $head.mrs[i]
 ]
 tail_prompts = [
     replace(prompt, args = [])
@@ -826,12 +891,11 @@ tail_prompts = [
 ] 
 } tail = argchain[tail_prompts] {
 prompts = [
-    replace(prompts, 
+    replace(prompts[i], 
         world = tail_attr.world
-        args = prompt.args + [tail_attr.args]
+        args = prompts[i].args + [$tail.attrs[i].args]
     )
-    for prompt in prompt
-    for tail_attr in $tail.attrs
+    for i in len(prompts)
 ]
 $attrs = [
     self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, prompt)
@@ -851,12 +915,12 @@ content_prompts = [
 ]
 } content = expr[content_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = content_result.world,
-        args = prompt.args + [content_result.typ]
+        args = prompts[i].args + [content_result.typ]
     )
-    for prompt in prompts
-    for content_result in $content.results
+    for i in len(prompts)
+    for content_result in $content.mrs[i]
 ]
 $attrs = [
     self.collect(PipelineRule(self._solver, self._light_mode).combine_single, prompt)
@@ -872,12 +936,12 @@ head_prompts = [
 ]
 } head = expr[head_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = head_result.world,
-        args = prompt.args + [head_result.typ]
+        args = prompts[i].args + [head_result.typ]
     )
-    for prompt in prompts
-    for head_result in $head.results
+    for i in len(prompts)
+    for head_result in $head.mrs[i]
 ]
 tail_prompts = [
     self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_cons_tail, prompt) 
@@ -885,12 +949,11 @@ tail_prompts = [
 ]
 } tail = pipeline[tail_prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = tail_attr.world,
-        args = prompt.args + [tail_attr.cators]
+        args = prompts[i].args + [$tail.attrs[i].cators]
     )
-    for prompt in prompts
-    for tail_attr in $tail.attrs
+    for i in len(prompts)
 ]
 $attrs = [
     self.collect(ArgchainRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
@@ -902,24 +965,25 @@ self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 ;
 
 
-target [list[Prompt] prompts] returns [list[Result] results]:
+target [list[Prompt] prompts] returns [list[MultiResult] mrs]:
 
 | '=' {
 } expr[prompts] {
-$results = $expr.results
+$mrs = $expr.mrs
 self.update_sr('target', [t('='), n('expr')])
 }
 
 | ':' typ '=' {
 } expr[prompts] {
 prompts = [
-    replace(prompt, 
+    replace(prompts[i], 
         worlds = expr_result.world,
-        args = prompt.args + [$typ.combo]
+        args = prompts[i].args + [$typ.combo]
     )
-    for prompt in prompts
+    for i in len(prompts)
+    for expr_result in $expr.mrs[i]
 ]
-$results = [
+$mrs = [
     self.collect(TargetRule(self._solver, self._light_mode).combine_anno, prompts) 
     for prompt in prompts
 ]

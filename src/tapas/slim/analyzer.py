@@ -2958,6 +2958,8 @@ class Result:
     world: World
     typ: Typ
 
+MulitResult = list[Result]
+
 class BaseRule(Rule):
 
     def combine_var(self, context : Context, id : str) -> list[Result]:
