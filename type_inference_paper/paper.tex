@@ -718,12 +718,12 @@ proof typing lifts expressions into types and leverages subtyping to
 check compatibility between types. 
 The proof typing predicate represents a typing that holds under the assumptions
 of a typing environment, and a world, 
-where a world consists of emph{skolem} type variables and subtyping constraints. 
+where a world consists of emph{closed} type variables and subtyping constraints. 
 
-Whether a variable is a skolem or not represents how a variable is quantified.
+Whether a variable is a closed or not represents how a variable is quantified.
 
-If proof typing holds, then its typing holds under every interpretation of its skolem type variables
-under some interpretation of its non-skolem variables.
+If proof typing holds, then its typing holds under every interpretation of its closed type variables
+under some interpretation of its open variables.
 We formalize ths soundness claim in Section \ref{section:correctness}. 
 
 
@@ -735,18 +735,6 @@ The input world is not explicitly represented in the predicate, so the algorithm
 interprets the input world as the smallest world that can satisfy the predicate. 
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
-
-depends on four parameters: an type variable set, a subtyping environment, 
-a typing environment, and an expression.
-The variable set indicates if a type variable's assigned type is allowed to be strengthened or weakened  
-during unification.
-The subtyping environment indicates the assumed constraints on types containing type variables,
-including relational constraints and constraints over single type variables, 
-which we also refer to as type assignments.
-The typing environment indicates the assumed constraints on term variables.
-The expression indicates the inhabitant of the type that is to be inferred.
-The procedure returns a set of triples, where each triple consists of a variable set, a subtyping environment,
-and a type.
 
 \paragraph{Rule \ref{definition:proof_typing}.1}
 The unit case simply returns a singleton set with the unit type and the environments unchanged. 
@@ -913,64 +901,64 @@ the constraints indicated by the subtyping environment.
 \end{definition}
 
 
-% \hfill \break
-\hfill
+
+\emph{Proof subtyping}, of definition \ref{definition:proof_subtyping},
+checks the viability of one type subtyping another type.
+
+\TODO{explain the overall predicate}
+
+\TODO{explain the algorithmic interpretation}
+The order of the rules 
+is critical to ensure that easier constraints are generated. To that end, cases that
+strengthen the left side or weaken the right side occur before rules that
+weaken the left side or strengthen the right side.
 
 Due to the complexity of types along with two positions for types to occur in subtyping,
 there are many rules needed to define the proof system of subtyping. For clarity,
 we show only a subset of the rules in this section in order to explain the essence of the system.
-We leave the remaining rules in an annex. 
+We leave the remaining rules in the appendix, section \ref{section:appendix}, definition \ref{definition:continued_proof_subtyping}. 
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
 as well as additional rules for increased precision.  
 
-\TODO{describe the essential rules}
 
-The subtyping is given in \FIG{fig:subtyping}.
-Some of the rules are fairly standard, including implication, the union rules, and intersection rules.
-Note that in addition to left and right rules, union and intersection each have rules for 
-interacting with implication's antecedent and consequent, respectively.
-The constraint rule checks that a subtyping relation exists as a constraint in the subtyping environment.
-The right induction rule is standard and simply unrolls the induction.
-The left induction rule relies on the induction principle to construct an 
-inductive constraint hypothesis.  
-The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
-The existential rules are quite special, as they involve a subtyping constraint as part of 
-a second-order comprehension. 
+\paragraph{Rule \ref{definition:proof_subtyping}.1}
+reflexivity up to alpha renaming.
 
+\paragraph{Rule \ref{definition:proof_subtyping}.2}
+left union.
 
-***
-It is analogous to how variables are used in predicate logic proofs. 
-For a universal assumption, or an existential conclusion, the prover is free to choose
-an interpretation for a variable. 
-For an existential assumption, or a universal conclusion, the prover is not free
-to choose a particular interpretation. 
-***
-
+\paragraph{Rule \ref{definition:proof_subtyping}.3}
+Left Existential.
 
 The left existential rule checks that subtyping holds for all variations of the payload 
 where the subtyping constraint holds. 
-The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
-The left universal rule checks that subtyping holds for some variation of the payload consistent with
-the variable's upper bound. 
-The right universal rule checks that subtyping holds for all variations of the payload consistent with
+
+The left existential case first tries to unify the constraint. It's possible that the
+constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
+simply updates the subtyping environment with the unsolved relational constraint. 
+With the updated environment, the procedure then unifies the existential type's payload with the right type.
+It must do a safety check to ensure that 
+the left existential's variables are merely assumed and not witnessed. 
+If the constraint is solved then the procedure 
+checks that the payload subtypes the right type for every constraint solution.
+
+dual of right universal. The right universal rule checks that subtyping holds for all variations of the payload consistent with
 the variable's upper bound.
 
-The subtype unification procedure is given in \FIG{fig:unify}.
-Unification depends on four parameters: a set of type variables, a subtyping environment, and two types.
-The set of type variables indicates the type of variables that may be adjusted 
-(triggered by the function and application cases of inference). 
-The subtyping environment indicates constraints on type variables.
-the left type indicates the stronger type, and the right type indicates the weaker type.
-Both types may contain type variables that are unsolved or partially solved.
-The procedure returns a set of subtyping environments.
+The right universal case updates the subtyping environment with the universal's variable constraint
+and unifies the left type with the payload. As with left existential, the procedure checks that
+the universal's type variable is merely assumed and not instantiated.
 
-The procedure begins by checking if the two types are syntactically equal.
-If equal then subtyping holds but there is nothing that can be unified 
-without circular references so the assumed subtyping environment is returned 
-unchanged in a singleton set. 
+This is analogous to declaring a variable from an existential statement,
+or generalizing from an arbitrary variable to a universal statement.
+to choose a particular interpretation. 
 
-The procedure then pattern matches on the left and right types. 
-The first two cases handle assigning variables to types.
+\paragraph{Rule \ref{definition:proof_subtyping}.4}
+left closed variable.
+
+\paragraph{Rule \ref{definition:proof_subtyping}.5}
+right open variable.
+
 The right-variable case first looks up a solution  
 for the variable. If a solution is found, then unification proceeds
 between the original left type and the solution for the right type.
@@ -984,30 +972,45 @@ where the left side contains the type variable.
 It checks that the left type is consistent with the relational constraints. 
 If there are no relational constraints, then the variable is assigned
 to the left type (if the constraint is well-formed).
+
 The left-variable rule is similar to the right-variable rule with
 one difference being that it uses intersection to strengthen the type variable 
 in the case of adjustment. In the case of checking relational constraints, it
 ensures that the right type is weaker than what the relational constraints would allow. 
 
-The subsequent cases decompose the types into subproblems. 
-The decomposition is given in \FIG{fig:unifyDecomp}. 
-The order of the rules 
-is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the left side or weaken the right side occur before rules that
-weaken the left side or strengthen the right side.
+\paragraph{Rule \ref{definition:proof_subtyping}.6}
+The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
 
-The left existential case first tries to unify the constraint. It's possible that the
-constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
-simply updates the subtyping environment with the unsolved relational constraint. 
-With the updated environment, the procedure then unifies the existential type's payload with the right type.
-It must do a safety check to ensure that 
-the left existential's variables are merely assumed and not witnessed. 
-If the constraint is solved then the procedure 
-checks that the payload subtypes the right type for every constraint solution.
+The right existential case simply unifies the left type with the existential's payload
+and then unifies the existential's constraint, such that unifying the payload
+may bear witness to a type that leads to verifying the constraint. 
 
-The right universal case updates the subtyping environment with the universal's variable constraint
-and unifies the left type with the payload. As with left existential, the procedure checks that
-the universal's type variable is merely assumed and not instantiated.
+The right existential case resembles the unification and backtracking approach in Prolog, 
+where unification of the payload corresponds to unification of a query with the head of a horn clause,
+and solving the existential's constraint after the payload unification corresponds to
+solving the horn clause's body after the head's unification.  
+
+dual of left universal rule checks that subtyping holds for some variation of the payload consistent with
+the variable's upper bound. 
+
+The left universal case also unifies in a backtracking fashion analogous to Prolog.
+The procedure unifies the universal's payload with the right type,
+possibly instantiating the universal's type variable,
+which may then be used to unify and check the universal's constraint.
+
+It is analogous to how variables are used in predicate logic proofs. 
+For a universal assumption, or an existential conclusion, the prover is free to choose
+an interpretation for a variable. 
+
+\paragraph{Rule \ref{definition:proof_subtyping}.7}
+right left union 
+
+\paragraph{Rule \ref{definition:proof_subtyping}.8}
+right right union 
+
+
+\paragraph{Rule \ref{definition:proof_subtyping}.9}
+left least fixed point.
 
 The left induction rule first tries to factor the inductive type and unify the weakened factored type
 with the right type. For example, a relational type between a natural number and a list, can be factored into
@@ -1018,26 +1021,9 @@ Note that factoring is employed for the special
 case where the right type has variables which cannot be unified 
 using induction due to our circularity restriction.  
 
-The cases for antecedent union, consequent intersection, left union, and right intersection
-decompose into sub-problems in the same way as the declarative subtyping semantics.
+\paragraph{Rule \ref{definition:proof_subtyping}.10}
 
-The remaining cases are continued in \FIG{fig:unifyContinue}.
-The right existential case simply unifies the left type with the existential's payload
-and then unifies the existential's constraint, such that unifying the payload
-may bear witness to a type that leads to verifying the constraint. 
-
-\TODO{consider using both forward and backtracking in unification and subtyping rules. 
-Since it is not certain which constraint is stronger (in contrast to prolog). Union solutions together}
-
-The right existential case resembles the unification and backtracking approach in Prolog, 
-where unification of the payload corresponds to unification of a query with the head of a horn clause,
-and solving the existential's constraint after the payload unification corresponds to
-solving the horn clause's body after the head's unification.  
-
-The left universal case also unifies in a backtracking fashion analogous to Prolog.
-The procedure unifies the universal's payload with the right type,
-possibly instantiating the universal's type variable,
-which may then be used to unify and check the universal's constraint.
+right decomposable least fixed point.
 
 The right induction case attempts to unroll the inductive type just enough
 to unify with the left type. To avoid potential infinite unrolling
@@ -1048,7 +1034,28 @@ then the procedure checks if it is well-formed, meaning it could be solved
 if more information were specified, and then the unsolved relational constraint
 is added to the subtyping environment. 
 
-The remaining cases closely mirror their counterparts in the declarative subtyping rules.
+\paragraph{Rule \ref{definition:proof_subtyping}.11}
+
+right fixed point hypothesis utilization.
+
+\paragraph{Rule \ref{definition:proof_subtyping}.12}
+
+right fixed point hypothesis learning.
+
+\paragraph{Rule \ref{definition:proof_subtyping}.13}
+tags
+
+\paragraph{Rule \ref{definition:proof_subtyping}.14}
+records
+
+\paragraph{Rule \ref{definition:proof_subtyping}.15}
+implications
+
+\paragraph{Rule \ref{definition:proof_subtyping}.16}
+left diff
+
+\paragraph{Rule \ref{definition:proof_subtyping}.17}
+right diff
 
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
@@ -1057,7 +1064,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     \inferrule {
     } {
       \tau \subtypes \tau \given \Omega 
-    }
+    }\lab{1}
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
@@ -1068,9 +1075,9 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       \\
       \Omega \preceq \Omega'
     } {
-      \obj{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r
+      \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
-    }
+    }\lab{2}
 
     \inferrule {
       \Delta \given \vec{\alpha}_w, \Delta_w
@@ -1083,7 +1090,22 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     } {
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
-    }
+    }\lab{3}
+
+    \inferrule {
+      \alpha \in \vec{\alpha}
+      \\
+      \text{factor}(\Delta, \alpha) = \Delta_f
+      \\
+      \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
+      \\\\
+      \text{inter}(\vec{\tau}) \subtypes \tau_r \given \vec{\alpha}', \Delta'
+      \\
+      (\vec{\alpha}, \Delta\ \Delta_f) \preceq (\vec{\alpha}', \Delta')
+    } {
+      \alpha \subtypes \tau_r
+      \given \vec{\alpha}', \Delta'
+    }\lab{4}
 
     \inferrule {
       \alpha \notin \vec{\alpha}
@@ -1099,22 +1121,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
     } {
       \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
-    }
-
-    \inferrule {
-      \alpha \in \vec{\alpha}
-      \\
-      \text{factor}(\Delta, \alpha) = \Delta_f
-      \\
-      \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
-      \\\\
-      \text{inter}(\vec{\tau}) \subtypes \tau_r \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta\ \Delta_f) \preceq (\vec{\alpha}', \Delta')
-    } {
-      \alpha \subtypes \tau_r
-      \given \vec{\alpha}', \Delta'
-    }
+    }\lab{5}
 
     \inferrule {
       \tau_l \subtypes \tau_r \given \Omega
@@ -1126,25 +1133,25 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       \tau_l
       \subtypes 
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_r \given \Omega' 
-    }
+    }\lab{6}
 
     \inferrule {
       \tau_l \subtypes \tau_{rl} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }
+    }\lab{7}
 
     \inferrule {
       \tau_l \subtypes \tau_{rr} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }
+    }\lab{8}
 
     \inferrule {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
     } {
       \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }
+    }\lab{9}
 
     \inferrule {
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
@@ -1155,7 +1162,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       \Omega \preceq \Omega'
     } {
       \tau_l \subtypes \obj{LFP[} \alpha \obj{]} \given \Omega'
-    }
+    }\lab{10}
 
     \inferrule {
       \exists \alpha .\ \alpha \in \text{FTV}(\tau_l) \land \alpha \in \vec{\alpha} 
@@ -1170,7 +1177,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     } {
       \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
       \given \Omega 
-    }
+    }\lab{11}
 
     \inferrule {
       \vec{\alpha} \entails \Delta \wr \text{FTV}(\tau_l) \given \vec{\delta}
@@ -1184,7 +1191,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     } {
       \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
       \given \vec{\alpha}', \Delta'\ \obj{;} \tau_l \obj{<:} \obj{LFP[}\alpha\obj{]}\tau_r
-    }
+    }\lab{12}
 
     \inferrule {
       \tau_l \subtypes \tau_r
@@ -1192,13 +1199,13 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     } {
       \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
       \given \Omega 
-    }
+    }\lab{13}
 
     \inferrule {
       \tau_l \subtypes \tau_r \Omega 
     } {
       l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
-    }
+    }\lab{14}
 
     \inferrule {
       \tau_{rl} \subtypes \tau_{ll} \given \Omega
@@ -1211,13 +1218,13 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       \subtypes 
       \tau_{rl} \obj{->} \tau_{rr}
       \given \Omega' 
-    }
+    }\lab{15}
 
     \inferrule {
       \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
     } {
       \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
-    }
+    }\lab{16}
 
     \inferrule {
       \TODO{prove that subtyping of diff is complete}
@@ -1235,7 +1242,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
     } {
       \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
       \given \Omega 
-    }
+    }\lab{17}
   \end{mathpar}
 \end{definition}
 
@@ -1546,7 +1553,7 @@ Different: RLT isn't cartesian
 
 
 \section{Appendix}
-
+\label{section:appendix}
 \begin{definition} Internals 
   \label{definition:internals}
   \[\begin{array}[t]{r@{}l}
@@ -1687,8 +1694,8 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Proof Subtyping Annex 
-  \label{definition:proof_subtyping_annex}
+\begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Continued Proof Subtyping 
+  \label{definition:continued_proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2140,7 +2147,7 @@ Different: RLT isn't cartesian
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails m <:^\sharp \alpha}\ Lower skolem subtyping 
+\begin{definition}\boxed{M, \Delta \entails m <:^\sharp \alpha}\ Lower closed subtyping 
   \begin{mathpar}
     \inferrule {
       m \in M
@@ -2162,7 +2169,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \Delta <:^\sharp \alpha \slash \tau}\ Universal lower skolem subtyping
+\begin{definition}\boxed{M, \Delta \entails \Delta <:^\sharp \alpha \slash \tau}\ Universal lower closed subtyping
   \begin{mathpar}
     \inferrule {
       \forall m\ \tau .\ m <: \tau \in \Delta' \iff  M, \Delta \entails 
@@ -2176,7 +2183,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\sharp m}\ Upper skolem subtyping 
+% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\sharp m}\ Upper closed subtyping 
 %   \begin{mathpar}
 %     \inferrule {
 %       m \in M
@@ -2188,7 +2195,7 @@ Different: RLT isn't cartesian
 %   \end{mathpar}
 % \end{definition}
 
-\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\sharp \Delta}\ Universal upper skolem subtyping
+\begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\sharp \Delta}\ Universal upper closed subtyping
   \begin{mathpar}
     \inferrule {
       \forall \tau\ m .\ \tau <: m \in \Delta' \iff  
@@ -2395,7 +2402,7 @@ Different: RLT isn't cartesian
 %   \end{mathpar}
 % \end{definition}
 
-% \begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive skolem subtyping 
+% \begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive closed subtyping 
 %   \begin{mathpar}
 %     \inferrule {
 %       \alpha \in \text{FTV}(\tau_l) 
@@ -2419,7 +2426,7 @@ Different: RLT isn't cartesian
 %   \end{mathpar}
 % \end{definition}
 
-% \begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive skolem subtyping
+% \begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive closed subtyping
 %   \begin{mathpar}
 %     \inferrule {
 %       \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \star \tau_l <: \tau_r
@@ -2588,7 +2595,7 @@ Different: RLT isn't cartesian
 \boxed{\vec{\alpha} \entails \nu \alpha.Z.\alpha \rightarrow \alpha \fallingdotseq \mu \alpha.\vec{\tau}}
 \ Fixpoint Duality
 
-\TODO{Note the reason for excluding rigids and skolems from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
+\TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
   % - forall x y, (LFP[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
   \begin{mathpar}
@@ -2619,7 +2626,7 @@ Different: RLT isn't cartesian
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\\\
       \vec{\alpha}_f\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau
-      % TODO: should skolems be included using universal constraint? 
+      % TODO: should closeds be included using universal constraint? 
     } {
       \vec{\alpha}_f \entails 
       \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \obj{$\alpha_l$->$\alpha_r$} 
@@ -3749,7 +3756,7 @@ Different: RLT isn't cartesian
     } 
   \end{mathpar}
 
-\TODO{skolems simply remove variables from soundness consideration}
+\TODO{closed variabless simply remove variables from soundness consideration}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % (EXI[X . 1 <: X, X <: 3] X) <: 2  -| 1 <: X, X <: 3, ..., X <: 2  
 % FAILS, not considered for soundness
