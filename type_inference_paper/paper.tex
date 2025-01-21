@@ -49,6 +49,7 @@
 
 % \newcommand{\obj}[1]{\texttt{\small #1}}
 \newcommand{\obj}[1]{\texttt{\color{RoyalBlue} #1}}
+\newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
 % \newcommand{\obj}[1]{\texttt{#1}}
 % \newcommand{\obj}[1]{\textbf{\texttt{#1}}}
 \newcommand{\entails}{\vdash}
@@ -709,14 +710,29 @@ proof typing is also able to check that expressions meet abstract specifications
 In order to check the viability of constructions and specifications, 
 proof typing lifts expressions into types and leverages subtyping to 
 check compatibility between types. 
+The proof typing predicate represents a typing that holds under the assumptions
+of a typing environment, and a world, 
+where a world consists of emph{skolem} type variables and subtyping constraints. 
 
-Most of the rules are fairly standard. 
-The rule for function typing is a bit special in that
-it treats a function as a sequence of paths whose type is an intersection of implications,
-rather than having a separate pattern matching rule. 
-Likewise, the type of a record is an intersection of field types.
+Whether a variable is a skolem or not represents how a variable is quantified.
+If proof typing holds, then its typing holds under every interpretation of its skolem type variables
+under some interpretation of its non-skolem variables.
+\TODO{show symbolic soundness property}
 
-The procedure depends on four parameters: an type variable set, a subtyping environment, 
+
+The proof typing predicate $(\Gamma \entails e \hastype \tau \given \Omega')$ can 
+be interpreted as an algorithm that takes a typing environment $\Gamma$, an expression $e$,
+and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
+such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
+The input world is not explicitly represented in the predicate, so the algorithm
+interprets the input world as the smallest world that can satisfy the predicate. 
+Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
+enumerates all possible outputs.
+
+
+A world is a pair of variables and a constraint environment $(\vec{\alpha},\Delta)$
+
+depends on four parameters: an type variable set, a subtyping environment, 
 a typing environment, and an expression.
 The variable set indicates if a type variable's assigned type is allowed to be strengthened or weakened  
 during unification.
@@ -727,12 +743,24 @@ The typing environment indicates the assumed constraints on term variables.
 The expression indicates the inhabitant of the type that is to be inferred.
 The procedure returns a set of triples, where each triple consists of a variable set, a subtyping environment,
 and a type.
+
+\paragraph{Rule \ref{definition:proof_typing}.1}
 The unit case simply returns a singleton set with the unit type and the environments unchanged. 
+
+\paragraph{Rule \ref{definition:proof_typing}.2}
 The variable case uses the variable as a key to find its type in the typing environment. 
 It returns a singleton set containing the found type along with the adjustment set and subtyping environment.
+
+\paragraph{Rule \ref{definition:proof_typing}.3}
 The tag case infers the type of its constituent type and uses its label to construct a tag type.
+
+\paragraph{Rule \ref{definition:proof_typing}.4}
 The record case infers the type of its fields and intersects the constructed field types together.
 
+\paragraph{Rule \ref{definition:proof_typing}.5}
+The rule for function typing is a bit special in that
+it treats a function as a sequence of paths whose type is an intersection of implications,
+rather than having a separate pattern matching rule. 
 The function case is of particular importance to type inference in an untyped setting.
 For each path in the function, it extracts the term variables of the pattern and associates 
 the term variables with fresh type variables. It infers the body of each path 
@@ -747,10 +775,15 @@ the the pattern's type variables from the adjustment variable set, ensuring
 that those type variables cannot be strengthened or weakened from the outside. 
 As with the record case, the inferred implications are intersected together.
 
+\paragraph{Rule \ref{definition:proof_typing}.6}
 The projection case infers the type of the record expression. 
 It then calls unify to solve for the projected type by finding
 a single field type that is subtyped by the record type. 
 
+
+The type of a record is an intersection of field types.
+
+\paragraph{Rule \ref{definition:proof_typing}.7}
 The application case also plays an important role in type inference of untyped programs.
 It creates a fresh type variable as a placeholder for the inferred type of the application result.
 It infers the type of the function and the argument, and then solves for the result type
@@ -764,18 +797,8 @@ the application must type check for all function types and all argument types.
 If even one combination cannot be unified then the inference of application fails,
 indicated by breaking the for-loop, which then implicitly returns an empty set.  
 
-\TODO{update application to merely require some function cases to type check}
-
-the let-binding case infers the type of the argument and checks that
-all possible types subtype the annotation and result in a well-typed body. 
-It generalizes type variables in the inferred argument type while maintaining
-the constraints indicated by the subtyping environment. 
-
-\TODO{update let-binding to generalize only if something is a function-type: e.g. intersection, univeral, implication }
-
-\TODO{update let-binding to merely require some bodies to type check}
-
-The fix case infers inductive types for the parameters and bodies of its
+\paragraph{Rule \ref{definition:proof_typing}.8}
+The recursive case infers inductive types for the parameters and bodies of its
 target expression. Moreover, it inductively relates the parameter and body types to each other.
 First, it infers the type of the target and calls unify to deconstruct it into the antecedent
 and consequent of an implication type. According to the semantics of fix, the antecedent
@@ -785,6 +808,11 @@ inductive relation by ensuring that the antecedent subtypes the inductively boun
 the resulting inductive type.
 Finally, the implication type is projected from the constructed relation and generalized with universal.
 
+\paragraph{Rule \ref{definition:proof_typing}.9}
+the let-binding case infers the type of the argument and checks that
+all possible types subtype the annotation and result in a well-typed body. 
+It generalizes type variables in the inferred argument type while maintaining
+the constraints indicated by the subtyping environment. 
 
 \begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
   \label{definition:proof_typing}
@@ -792,19 +820,19 @@ Finally, the implication type is projected from the constructed relation and gen
     \inferrule {
     } {
       \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
-    }
+    }\lab{1}
 
     \inferrule {
       x:\tau \in \Gamma
     } {
       \Gamma \entails x \hastype \tau \given \Omega 
-    }
+    }\lab{2}
 
     \inferrule {
       \Gamma \entails e \hastype \tau \given \Omega 
     } {
       \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
-    }
+    }\lab{3}
 
     \inferrule {
       \Gamma \entails R \hastype \tau_0 \given \Omega 
@@ -814,7 +842,7 @@ Finally, the implication type is projected from the constructed relation and gen
       \Omega \preceq \Omega'
     } {
       \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given \Omega' 
-    }
+    }\lab{4}
 
     \inferrule {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
@@ -822,7 +850,7 @@ Finally, the implication type is projected from the constructed relation and gen
       \Gamma \entails \vec{\pi} \cong \vec{\tau} 
     } {
       \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
-    }
+    }\lab{5}
 
     \inferrule {
       \Gamma \entails e \hastype \tau_0 \given \Omega 
@@ -832,7 +860,7 @@ Finally, the implication type is projected from the constructed relation and gen
       \Omega \preceq \Omega'
     } {
       \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
-    }
+    }\lab{6}
 
     \inferrule {
       \Gamma \entails e_0 \hastype \tau_0 \given \Omega 
@@ -846,7 +874,7 @@ Finally, the implication type is projected from the constructed relation and gen
       \Omega' \preceq \Omega''
     } {
       \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given \Omega''
-    }
+    }\lab{7}
 
     \inferrule {
       \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
@@ -862,7 +890,7 @@ Finally, the implication type is projected from the constructed relation and gen
     } {
       \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
       \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    }
+    }\lab{8}
 
     \inferrule {
       \Gamma \entails e \hastype \tau \given \Omega 
@@ -876,7 +904,7 @@ Finally, the implication type is projected from the constructed relation and gen
       \Omega' \preceq \Omega''
     } {
       \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
-    }
+    }\lab{9}
   \end{mathpar}
 \end{definition}
 
@@ -904,6 +932,17 @@ inductive constraint hypothesis.
 The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
 The existential rules are quite special, as they involve a subtyping constraint as part of 
 a second-order comprehension. 
+
+
+***
+It is analogous to how variables are used in predicate logic proofs. 
+For a universal assumption, or an existential conclusion, the prover is free to choose
+an interpretation for a variable. 
+For an existential assumption, or a universal conclusion, the prover is not free
+to choose a particular interpretation. 
+***
+
+
 The left existential rule checks that subtyping holds for all variations of the payload 
 where the subtyping constraint holds. 
 The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
