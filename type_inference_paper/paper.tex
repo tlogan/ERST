@@ -76,6 +76,7 @@
 \newcommand{\bigand}{\bigwedge\nolimits}
 \newcommand{\bigor}{\bigvee\nolimits}
 \newcommand{\C}[1]{\color{teal} \rhd\ \emph{#1}}
+\newcommand{\com}[1]{\color{Gray} \rhd\ \emph{#1}}
 \newcommand{\D}[1]{\small \textsc{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
@@ -665,7 +666,7 @@ which allow expressing properties of expressions with varying levels of precisio
 
 \begin{definition} Types 
   \label{definition:types}
-  \[\begin{array}[t]{r@{}l}
+  \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
@@ -681,12 +682,14 @@ which allow expressing properties of expressions with varying levels of precisio
       \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
       \obj{LFP[}\alpha\obj{]}\tau
     \end{array}
+    & \com{type}
     \\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \phi \sep 
       \phi
     \end{array}
+    & \com{negative type}
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
@@ -696,10 +699,13 @@ which allow expressing properties of expressions with varying levels of precisio
       l\obj{->}\phi \sep 
       \phi\obj{\&}\phi \sep 
     \end{array}
+    & \com{pattern type}
     \\
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
+    & \com{type sequence}
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \obj{;} \tau \obj{<:} \tau
+    & \com{subtyping environment}
   \end{array}\]
 \end{definition}
 
@@ -715,9 +721,10 @@ of a typing environment, and a world,
 where a world consists of emph{skolem} type variables and subtyping constraints. 
 
 Whether a variable is a skolem or not represents how a variable is quantified.
+
 If proof typing holds, then its typing holds under every interpretation of its skolem type variables
 under some interpretation of its non-skolem variables.
-\TODO{show symbolic soundness property}
+We formalize ths soundness claim in Section \ref{section:correctness}. 
 
 
 The proof typing predicate $(\Gamma \entails e \hastype \tau \given \Omega')$ can 
@@ -728,9 +735,6 @@ The input world is not explicitly represented in the predicate, so the algorithm
 interprets the input world as the smallest world that can satisfy the predicate. 
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
-
-
-A world is a pair of variables and a constraint environment $(\vec{\alpha},\Delta)$
 
 depends on four parameters: an type variable set, a subtyping environment, 
 a typing environment, and an expression.
@@ -1226,6 +1230,8 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
       \tau_l \subtypes \eta \given \Omega'
       \land
       \Omega \preceq \Omega'
+      \\
+      \text{FTV}(\eta) \subseteq \epsilon
     } {
       \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
       \given \Omega 
@@ -1238,6 +1244,7 @@ The remaining cases closely mirror their counterparts in the declarative subtypi
 
 
 \section{Correctness}
+\label{section:correctness}
 
 \TODO{introduce model typing and soundness properties}
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  21 JAN 2025 13:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  21 JAN 2025 14:07
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -922,130 +922,130 @@ Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count346
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 14.4pt on input line 96.
-LaTeX Font Info:    Trying to load font information for T1+LinuxBiolinumT-TLF on input line 96.
+(Font)              scaled to size 14.4pt on input line 97.
+LaTeX Font Info:    Trying to load font information for T1+LinuxBiolinumT-TLF on input line 97.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/libertine/T1LinuxBiolinumT-TLF.fd
 File: T1LinuxBiolinumT-TLF.fd 2017/03/20 (autoinst) Font definitions for T1/LinuxBiolinumT-TLF.
 )
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 14.4pt on input line 96.
+(Font)              scaled to size 14.4pt on input line 97.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxBiolinumT-TLF' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/b/n' will be
-(Font)              scaled to size 14.4pt on input line 96.
-LaTeX Font Info:    Trying to load font information for TS1+LinuxLibertineT-TLF on input line 96.
+(Font)              scaled to size 14.4pt on input line 97.
+LaTeX Font Info:    Trying to load font information for TS1+LinuxLibertineT-TLF on input line 97.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/libertine/TS1LinuxLibertineT-TLF.fd
 File: TS1LinuxLibertineT-TLF.fd 2017/03/20 (autoinst) Font definitions for TS1/LinuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `TS1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 96.
+(Font)              scaled to size 8.0pt on input line 97.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxLibertineT-TLF' (encoding: TS1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 96.
+(Font)              scaled to size 9.0pt on input line 97.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 9.0pt on input line 96.
+(Font)              scaled to size 9.0pt on input line 97.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 9.0pt on input line 96.
+(Font)              scaled to size 9.0pt on input line 97.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 96.
+(Font)              scaled to size 9.0pt on input line 97.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxLibertineT-TLF' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 7.3pt on input line 96.
+(Font)              scaled to size 7.3pt on input line 97.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 10.0pt on input line 99.
+(Font)              scaled to size 10.0pt on input line 100.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 99.
+(Font)              scaled to size 10.0pt on input line 100.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 10.0pt on input line 104.
+(Font)              scaled to size 10.0pt on input line 105.
  [1.1{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_nh77jq.enc}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.enc}]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 167.
+(Font)              scaled to size 10.0pt on input line 168.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 237.
+(Font)              scaled to size 8.0pt on input line 238.
  [2.2]
 
-LaTeX Warning: Reference `fig:program' on page 3 undefined on input line 241.
+LaTeX Warning: Reference `fig:program' on page 3 undefined on input line 242.
 
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.0pt on input line 244.
-LaTeX Font Info:    Trying to load font information for T1+fvm on input line 244.
+(Font)              scaled to size 10.0pt on input line 245.
+LaTeX Font Info:    Trying to load font information for T1+fvm on input line 245.
 (/usr/local/texlive/2024/texmf-dist/tex/latex/bera/t1fvm.fd
 File: t1fvm.fd 2004/09/07 scalable font definitions for T1/fvm.
 )
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 8.99994pt on input line 244.
+(Font)              scaled to size 8.99994pt on input line 245.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `fvm' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 7.3pt on input line 244.
+(Font)              scaled to size 7.3pt on input line 245.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 244.
+(Font)              scaled to size 5.5pt on input line 245.
 
-Overfull \hbox (25.88966pt too wide) in paragraph at lines 277--286
+Overfull \hbox (25.88966pt too wide) in paragraph at lines 278--287
  []\T1/LinuxLibertineT-TLF/m/it/10 (-20) Output broad-en-ing.[] \T1/LinuxLibertineT-TLF/m/n/10 (-20) Con-sider the ap-pli-ca-tion []\T1/fvm/m/n/10 talky(x)[] \T1/LinuxLibertineT-TLF/m/n/10 (-20) where []\T1/fvm/m/n/10 x[] \T1/LinuxLibertineT-TLF/m/n/10 (-20) has the type []\T1/fvm/m/n/10 (<hello> @)|(<thank>
  []
 
 [3.3{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc}] [4.4] [5.5] [6.6{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}] [7.7]
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 823.
+LaTeX Font Warning: Command \small invalid in math mode on input line 827.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 829.
+LaTeX Font Warning: Command \small invalid in math mode on input line 833.
 
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 8.09995pt on input line 835.
+(Font)              scaled to size 8.09995pt on input line 839.
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 835.
-
-
-LaTeX Font Warning: Command \small invalid in math mode on input line 845.
+LaTeX Font Warning: Command \small invalid in math mode on input line 839.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 853.
+LaTeX Font Warning: Command \small invalid in math mode on input line 849.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 863.
+LaTeX Font Warning: Command \small invalid in math mode on input line 857.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 877.
+LaTeX Font Warning: Command \small invalid in math mode on input line 867.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 893.
+LaTeX Font Warning: Command \small invalid in math mode on input line 881.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 907.
+LaTeX Font Warning: Command \small invalid in math mode on input line 897.
+
+
+LaTeX Font Warning: Command \small invalid in math mode on input line 911.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [8.8]
 
-LaTeX Warning: Reference `fig:subtyping' on page 9 undefined on input line 924.
+LaTeX Warning: Reference `fig:subtyping' on page 9 undefined on input line 928.
 
 
-LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 954.
+LaTeX Warning: Reference `fig:unify' on page 9 undefined on input line 958.
 
 [9.9]
 
-LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 989.
+LaTeX Warning: Reference `fig:unifyDecomp' on page 10 undefined on input line 993.
 
 
-LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1020.
+LaTeX Warning: Reference `fig:unifyContinue' on page 10 undefined on input line 1024.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1064,57 +1064,57 @@ Underfull \vbox (badness 3068) has occurred while \output is active []
 
  [15.15] [16.16] [17.17] [18.18] [19.19]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 2828.
+(Font)              scaled to size 9.0pt on input line 2835.
  [20.20{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [21.21] [22.22] [23.23] [24.24] [25.25]
 
-LaTeX Warning: Reference `...' on page 26 undefined on input line 3640.
+LaTeX Warning: Reference `...' on page 26 undefined on input line 3647.
 
 [26.26] [27.27]
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 3853.
+LaTeX Warning: Reference `...' on page 28 undefined on input line 3860.
 
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 3888.
+LaTeX Warning: Reference `...' on page 28 undefined on input line 3895.
 
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 3949.
+LaTeX Warning: Reference `...' on page 28 undefined on input line 3956.
 
 
 Underfull \vbox (badness 3679) has occurred while \output is active []
 
  [28.28]
 
-LaTeX Warning: Reference `...' on page 29 undefined on input line 3990.
+LaTeX Warning: Reference `...' on page 29 undefined on input line 3997.
 
 
 Underfull \vbox (badness 3000) has occurred while \output is active []
 
  [29.29] [30.30] [31.31] [32.32]
 
-LaTeX Warning: Reference `...' on page 33 undefined on input line 4482.
+LaTeX Warning: Reference `...' on page 33 undefined on input line 4489.
 
 
-LaTeX Warning: Reference `...' on page 33 undefined on input line 4536.
+LaTeX Warning: Reference `...' on page 33 undefined on input line 4543.
 
 
-LaTeX Warning: Reference `...' on page 33 undefined on input line 4537.
+LaTeX Warning: Reference `...' on page 33 undefined on input line 4544.
 
 
-LaTeX Warning: Reference `...' on page 33 undefined on input line 4540.
+LaTeX Warning: Reference `...' on page 33 undefined on input line 4547.
 
 [33.33]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 34 undefined on input line 4674.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 34 undefined on input line 4681.
 
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 8.99994pt on input line 4685.
+(Font)              scaled to size 8.99994pt on input line 4692.
 [34.34]
 
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 35 undefined on input line 4707.
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 35 undefined on input line 4714.
 
 [35.35]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 4815.
+(Font)              scaled to size 10.0pt on input line 4822.
  [36.36] [37.37]
 
 Class acmart Warning: ACM keywords are mandatory for papers over two pages.
@@ -1143,18 +1143,18 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: E219747DA6C098DBA47C8A1039071027;932.
  ) 
 Here is how much of TeX's memory you used:
- 24250 strings out of 474116
- 391503 string characters out of 5743682
- 1961187 words of memory out of 5000000
- 45382 multiletter control sequences out of 15000+600000
+ 24252 strings out of 474116
+ 391527 string characters out of 5743682
+ 1962187 words of memory out of 5000000
+ 45384 multiletter control sequences out of 15000+600000
  765190 words of font info for 461 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,21n,131p,1060b,670s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (38 pages, 566744 bytes).
+Output written on paper.pdf (38 pages, 567093 bytes).
 PDF statistics:
- 547 PDF objects out of 1000 (max. 8388607)
- 459 compressed objects within 5 object streams
+ 548 PDF objects out of 1000 (max. 8388607)
+ 460 compressed objects within 5 object streams
  182 named destinations out of 1000 (max. 500000)
  99921 words of extra memory for PDF output out of 106986 (max. 10000000)
 
