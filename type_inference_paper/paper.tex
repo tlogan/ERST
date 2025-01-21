@@ -542,7 +542,8 @@ for compositions that have no reasonable semantics.
       \vec{f} \sep 
       e\obj{.}l \sep
       e\obj{(}e\obj{)} \sep
-      \obj{loop(}e\obj{)}
+      \obj{loop(}e\obj{)} \sep
+      ...
     \end{array}
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
@@ -565,7 +566,8 @@ for compositions that have no reasonable semantics.
   \end{array}\]
 \end{definition}
 
-The dynamic semantics, defined in Definition \ref{definition:progression} is a small-step operational semantics.  
+\emph{Progression} of an expression, in Definition \ref{definition:progression},
+is a small-step operational semantics. 
 It adheres to typical definitions of applicative languages for the most part. One 
 slight departure is that pattern matching is merely a special case of function application. 
 Likewise, a switch is merely a function abstraction.
@@ -626,7 +628,7 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
       \\
       \text{FV}(e) \subseteq \text{FV}(p)
     } {
-      \obj{(}\vec{f}\obj{\$}p\obj{=>}e\obj{)(}v\obj{)} \rightsquigarrow e' 
+      (\vec{f}\obj{\$}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e' 
     }
 
     \inferrule {
@@ -634,7 +636,7 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
       \\
       p \equiv v \given \vec{\sigma} 
     } {
-      \obj{(}\vec{f}\obj{\$}p\obj{=>}v\obj{)(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
+      (\vec{f}\obj{\$}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
     }
 
     \inferrule {
@@ -656,10 +658,9 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
 
 \section{Static Semantics}
 The static semantics is a system for checking if the construction of an expression is viable.   
-The system leverages types, which allow expressing properties of expressions with varying levels of precisions. 
-\emph{Proof typing} lifts expressions into types and leverages \emph{proof subtyping} to check for viability 
-by comparing compatibility between types. By allowing type annotation in the syntax of expressions,
-proof typing is also able to check that expressions meet abstract specifications.
+The system leverages types of the forms in Definition \ref{definition:types}, 
+which allow expressing properties of expressions with varying levels of precisions. 
+
 
 \begin{definition} Types 
   \label{definition:types}
@@ -701,235 +702,20 @@ proof typing is also able to check that expressions meet abstract specifications
   \end{array}\]
 \end{definition}
 
+\emph{Proof typing}, in Definition \ref{definition:proof_typing}, checks the viability of an expression's
+form. Additionally, by extending the forms of expressions with type annotations, 
+as in Definition \ref{definition:sugared_expressions},
+proof typing is also able to check that expressions meet abstract specifications.
+In order to check the viability of constructions and specifications, 
+proof typing lifts expressions into types and leverages subtyping to 
+check compatibility between types. 
 
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
-  \label{definition:proof_typing}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
-    }
-
-    \inferrule {
-      x:\tau \in \Gamma
-    } {
-      \Gamma \entails x \hastype \tau \given \Omega 
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-    } {
-      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
-    }
-
-    \inferrule {
-      \Gamma \entails R \hastype \tau_0 \given \Omega 
-      \\
-      \Gamma \entails e \hastype \tau_1 \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-    } {
-      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given \Omega' 
-    }
-
-    \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi} 
-      \\
-      \Gamma \entails \vec{\pi} \cong \vec{\tau} 
-    } {
-      \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \left< \vec{\alpha}, \Delta \right>
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau_0 \given \Omega 
-      \\
-      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-    } {
-      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
-    }
-
-    \inferrule {
-      \Gamma \entails e_0 \hastype \tau_0 \given \Omega 
-      \\
-      \Gamma \entails e_1 \hastype \tau_1 \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-      \\\\
-      \tau_0 \subtypes \tau_1\obj{->}\alpha \given \Omega'' 
-      \\
-      \Omega' \preceq \Omega''
-    } {
-      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given \Omega''
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
-      \\\\
-      \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta') \in \vec{\Omega}
-      \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
-      \\\\
-      \exists \Omega.\ \Omega \in \vec{\Omega}
-      \\
-      \text{FTV}(\Gamma) \entails \nu\alpha^+.\vec{\Omega}.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
-    } {
-      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-      \\
-      \tau \subtypes \tau_a \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-      \\\\
-      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
-      \\
-      \Omega' \preceq \Omega''
-    } {
-      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
-    }
-  \end{mathpar}
-\end{definition}
-
-
-% \begin{definition} Proof Typing \I \boxed{\Gamma \entails e \hastype \tau \given Z}
-%   \label{definition:proof_typing}
-%   \begin{mathpar}
-%     \inferrule {
-%       \left< M, \Delta \right> \in Z
-%     } {
-%       \Gamma \entails \obj{@} \hastype \obj{@} \given Z 
-%     }
-
-%     \inferrule {
-%       \left< M, \Delta \right> \in Z
-%       \\
-%       \obj{$x$:$\tau$} \in \Gamma
-%     } {
-%       \Gamma \entails x \hastype \tau \given Z 
-%     }
-
-%     \inferrule {
-%       \Gamma \entails e \hastype \tau \given Z 
-%     } {
-%       \Gamma \entails \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$} \given Z 
-%     }
-
-%     \inferrule {
-%       \Gamma \entails R \hastype \tau_0 \given Z_0
-%       \\
-%       Z_0 \looparrowright Z_1
-%       \\
-%       \Gamma \entails e \hastype \tau_1 \given Z_1
-%     } {
-%       \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
-%     }
-
-%     \inferrule {
-%       \TODO{simplifiy with one world as input; construction of multiple branches from one world}
-%       \\\\
-%       Z, \Gamma \entails F \liftfun \vec{\pi}, \Tau_n 
-%       \\
-%       \Gamma \entails \vec{\pi} \equiv \Tau 
-%     } {
-%       \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
-%     }
-
-%     \inferrule {
-%       \Gamma \entails e \hastype \tau_0 \given Z_0
-%       \\
-%       Z_0 \looparrowright Z_1
-%       \\
-%       \tau_0 \subtypes \obj{$l$:$\alpha$} \given Z_1
-%     } {
-%       \Gamma \entails \obj{$e$.$l$} \hastype \alpha \given Z_1
-%     }
-
-%     \inferrule {
-%       \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-%       \\
-%       Z_0 \looparrowright Z_1
-%       \\
-%       \Gamma \entails e_1 \hastype \tau_1 \given Z_1
-%       \\
-%       Z_1 \looparrowright Z_2
-%       \\
-%       \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
-%     } {
-%       \Gamma \entails \obj{$e_0$($e_1$)} \hastype \alpha \given Z_2
-%     }
-
-%     \inferrule {
-%       \Gamma \entails e \hastype \obj{$\alpha_{h^+}$->$\tau$} \given Z_0
-%       \\
-%       Z_0 \looparrowright Z_1
-%       \\
-%       \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
-%       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-%     } {
-%       \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$;$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]]$\alpha_r'$} \given Z_0
-%     }
-
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition} \boxed{Z, \Gamma \entails F \liftfun \vec{\pi}, T}
-%   \begin{mathpar}
-
-%     \inferrule {
-%       Z_0, \Gamma_0 \entails f \liftfun \vec{\pi}, T 
-%       \\
-%       p \hastype \tau_l \given \Gamma_1
-%       \\
-%       \text{neg}(\tau_l, T) = \tau_l'
-%       \\\\
-%       Z_0 \looparrowright Z_1
-%       \\
-%       \Gamma_0 \sqcup \Gamma_1 \entails e \hastype \tau_r \given Z_1
-%     } {
-%       Z_0, \Gamma_0 \entails F\ \obj{\$$p$=>$e$} \liftfun 
-%       \vec{\pi} \sqcup \widebar{\left< M, \Delta, \tau_l' \obj{->} \tau_r \right>}^{\left<M, \Delta\right> \in Z_1}, T\ \tau_0
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-
-% \begin{definition} \boxed{Z \looparrowright Z}\ (Universe ordering)
-%   \label{definition:universe_ordering}
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall M_1\ \Delta_1.\ \left<M_1,\Delta_1\right> \in Z_1 \implies 
-%       \exists M_0\ \Delta_0.\ \left<M_0,\Delta_0\right> \in Z_0 \land 
-%       M_0 \preceq M_1 \land \Delta_0 \preceq \Delta_1
-%     } {
-%       Z_0 \looparrowright Z_1
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-
-
-
-
-
-
-
-
-The typing is given in \FIG{fig:typing}.
 Most of the rules are fairly standard. 
 The rule for function typing is a bit special in that
 it treats a function as a sequence of paths whose type is an intersection of implications,
 rather than having a separate pattern matching rule. 
 Likewise, the type of a record is an intersection of field types.
-The let-binding rule allows for prenex polymorphism by generalizing via subtyping. 
 
-The type inference procedure is given in \FIG{fig:infer}.
 The procedure depends on four parameters: an type variable set, a subtyping environment, 
 a typing environment, and an expression.
 The variable set indicates if a type variable's assigned type is allowed to be strengthened or weakened  
@@ -999,6 +785,102 @@ inductive relation by ensuring that the antecedent subtypes the inductively boun
 the resulting inductive type.
 Finally, the implication type is projected from the constructed relation and generalized with universal.
 
+
+\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
+  \label{definition:proof_typing}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
+    }
+
+    \inferrule {
+      x:\tau \in \Gamma
+    } {
+      \Gamma \entails x \hastype \tau \given \Omega 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+    } {
+      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
+    }
+
+    \inferrule {
+      \Gamma \entails R \hastype \tau_0 \given \Omega 
+      \\
+      \Gamma \entails e \hastype \tau_1 \given \Omega' 
+      \\
+      \Omega \preceq \Omega'
+    } {
+      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given \Omega' 
+    }
+
+    \inferrule {
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
+      \\
+      \Gamma \entails \vec{\pi} \cong \vec{\tau} 
+    } {
+      \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau_0 \given \Omega 
+      \\
+      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
+      \\
+      \Omega \preceq \Omega'
+    } {
+      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
+    }
+
+    \inferrule {
+      \Gamma \entails e_0 \hastype \tau_0 \given \Omega 
+      \\
+      \Gamma \entails e_1 \hastype \tau_1 \given \Omega' 
+      \\
+      \Omega \preceq \Omega'
+      \\\\
+      \tau_0 \subtypes \tau_1\obj{->}\alpha \given \Omega'' 
+      \\
+      \Omega' \preceq \Omega''
+    } {
+      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given \Omega''
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \\\\
+      \forall \vec{\alpha}'\ \Delta' .\ 
+       (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta') \in \vec{\Omega}
+      \implies
+      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \\\\
+      \exists \Omega.\ \Omega \in \vec{\Omega}
+      \\
+      \text{FTV}(\Gamma) \entails \nu\alpha^+.\vec{\Omega}.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
+    } {
+      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+      \\
+      \tau \subtypes \tau_a \given \Omega' 
+      \\
+      \Omega \preceq \Omega'
+      \\\\
+      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
+      \\
+      \Omega' \preceq \Omega''
+    } {
+      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
+    }
+  \end{mathpar}
+\end{definition}
+
+
 % \hfill \break
 \hfill
 
@@ -1008,6 +890,123 @@ we show only a subset of the rules in this section in order to explain the essen
 We leave the remaining rules in an annex. 
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
 as well as additional rules for increased precision.  
+
+\TODO{describe the essential rules}
+
+The subtyping is given in \FIG{fig:subtyping}.
+Some of the rules are fairly standard, including implication, the union rules, and intersection rules.
+Note that in addition to left and right rules, union and intersection each have rules for 
+interacting with implication's antecedent and consequent, respectively.
+The constraint rule checks that a subtyping relation exists as a constraint in the subtyping environment.
+The right induction rule is standard and simply unrolls the induction.
+The left induction rule relies on the induction principle to construct an 
+inductive constraint hypothesis.  
+The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
+The existential rules are quite special, as they involve a subtyping constraint as part of 
+a second-order comprehension. 
+The left existential rule checks that subtyping holds for all variations of the payload 
+where the subtyping constraint holds. 
+The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
+The left universal rule checks that subtyping holds for some variation of the payload consistent with
+the variable's upper bound. 
+The right universal rule checks that subtyping holds for all variations of the payload consistent with
+the variable's upper bound.
+
+The subtype unification procedure is given in \FIG{fig:unify}.
+Unification depends on four parameters: a set of type variables, a subtyping environment, and two types.
+The set of type variables indicates the type of variables that may be adjusted 
+(triggered by the function and application cases of inference). 
+The subtyping environment indicates constraints on type variables.
+the left type indicates the stronger type, and the right type indicates the weaker type.
+Both types may contain type variables that are unsolved or partially solved.
+The procedure returns a set of subtyping environments.
+
+The procedure begins by checking if the two types are syntactically equal.
+If equal then subtyping holds but there is nothing that can be unified 
+without circular references so the assumed subtyping environment is returned 
+unchanged in a singleton set. 
+
+The procedure then pattern matches on the left and right types. 
+The first two cases handle assigning variables to types.
+The right-variable case first looks up a solution  
+for the variable. If a solution is found, then unification proceeds
+between the original left type and the solution for the right type.
+In the case where unification fails, but the type variable is adjustable,
+the procedure updates the type variable with the union of the left type
+and the found right type (assuming the constraint is well-formed, 
+which includes avoiding circular references). 
+If no solution is found for the right variable, then 
+the procedure looks for any relational constraints in the subtyping environment
+where the left side contains the type variable.
+It checks that the left type is consistent with the relational constraints. 
+If there are no relational constraints, then the variable is assigned
+to the left type (if the constraint is well-formed).
+The left-variable rule is similar to the right-variable rule with
+one difference being that it uses intersection to strengthen the type variable 
+in the case of adjustment. In the case of checking relational constraints, it
+ensures that the right type is weaker than what the relational constraints would allow. 
+
+The subsequent cases decompose the types into subproblems. 
+The decomposition is given in \FIG{fig:unifyDecomp}. 
+The order of the rules 
+is critical to ensure that easier constraints are generated. To that end, cases that
+strengthen the left side or weaken the right side occur before rules that
+weaken the left side or strengthen the right side.
+
+The left existential case first tries to unify the constraint. It's possible that the
+constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
+simply updates the subtyping environment with the unsolved relational constraint. 
+With the updated environment, the procedure then unifies the existential type's payload with the right type.
+It must do a safety check to ensure that 
+the left existential's variables are merely assumed and not witnessed. 
+If the constraint is solved then the procedure 
+checks that the payload subtypes the right type for every constraint solution.
+
+The right universal case updates the subtyping environment with the universal's variable constraint
+and unifies the left type with the payload. As with left existential, the procedure checks that
+the universal's type variable is merely assumed and not instantiated.
+
+The left induction rule first tries to factor the inductive type and unify the weakened factored type
+with the right type. For example, a relational type between a natural number and a list, can be factored into
+a cross product of a natural number type and a list type. 
+If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
+in for the inductive variable of the left type and unifies the new left type with the right type.    
+Note that factoring is employed for the special
+case where the right type has variables which cannot be unified 
+using induction due to our circularity restriction.  
+
+The cases for antecedent union, consequent intersection, left union, and right intersection
+decompose into sub-problems in the same way as the declarative subtyping semantics.
+
+The remaining cases are continued in \FIG{fig:unifyContinue}.
+The right existential case simply unifies the left type with the existential's payload
+and then unifies the existential's constraint, such that unifying the payload
+may bear witness to a type that leads to verifying the constraint. 
+
+\TODO{consider using both forward and backtracking in unification and subtyping rules. 
+Since it is not certain which constraint is stronger (in contrast to prolog). Union solutions together}
+
+The right existential case resembles the unification and backtracking approach in Prolog, 
+where unification of the payload corresponds to unification of a query with the head of a horn clause,
+and solving the existential's constraint after the payload unification corresponds to
+solving the horn clause's body after the head's unification.  
+
+The left universal case also unifies in a backtracking fashion analogous to Prolog.
+The procedure unifies the universal's payload with the right type,
+possibly instantiating the universal's type variable,
+which may then be used to unify and check the universal's constraint.
+
+The right induction case attempts to unroll the inductive type just enough
+to unify with the left type. To avoid potential infinite unrolling
+the procedure relies on a heuristic to see if the left type's pattern
+lines up with parts of the the inductive type that are guaranteed to be well-founded. 
+If the left type is a pattern with variables that prevents it from being reduced,
+then the procedure checks if it is well-formed, meaning it could be solved 
+if more information were specified, and then the unsolved relational constraint
+is added to the subtyping environment. 
+
+The remaining cases closely mirror their counterparts in the declarative subtyping rules.
+
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
   \label{definition:proof_subtyping}
@@ -1170,125 +1169,33 @@ as well as additional rules for increased precision.
       \tau_{rl} \obj{->} \tau_{rr}
       \given \Omega' 
     }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
+    } {
+      \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+    }
+
+    \inferrule {
+      \TODO{prove that subtyping of diff is complete}
+      \\\\
+      \TODO{which implies that its negation is sound}
+      \\\\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      \nexists \Omega' .\  
+      \tau_l \subtypes \eta \given \Omega'
+      \land
+      \Omega \preceq \Omega'
+    } {
+      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \given \Omega 
+    }
   \end{mathpar}
 \end{definition}
 
 
 
-
-The subtyping is given in \FIG{fig:subtyping}.
-Some of the rules are fairly standard, including implication, the union rules, and intersection rules.
-Note that in addition to left and right rules, union and intersection each have rules for 
-interacting with implication's antecedent and consequent, respectively.
-The constraint rule checks that a subtyping relation exists as a constraint in the subtyping environment.
-The right induction rule is standard and simply unrolls the induction.
-The left induction rule relies on the induction principle to construct an 
-inductive constraint hypothesis.  
-The field and tag rules simply check that the labels match and subtyping holds for their constituent types.
-The existential rules are quite special, as they involve a subtyping constraint as part of 
-a second-order comprehension. 
-The left existential rule checks that subtyping holds for all variations of the payload 
-where the subtyping constraint holds. 
-The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
-The left universal rule checks that subtyping holds for some variation of the payload consistent with
-the variable's upper bound. 
-The right universal rule checks that subtyping holds for all variations of the payload consistent with
-the variable's upper bound.
-
-The subtype unification procedure is given in \FIG{fig:unify}.
-Unification depends on four parameters: a set of type variables, a subtyping environment, and two types.
-The set of type variables indicates the type of variables that may be adjusted 
-(triggered by the function and application cases of inference). 
-The subtyping environment indicates constraints on type variables.
-the left type indicates the stronger type, and the right type indicates the weaker type.
-Both types may contain type variables that are unsolved or partially solved.
-The procedure returns a set of subtyping environments.
-
-The procedure begins by checking if the two types are syntactically equal.
-If equal then subtyping holds but there is nothing that can be unified 
-without circular references so the assumed subtyping environment is returned 
-unchanged in a singleton set. 
-
-The procedure then pattern matches on the left and right types. 
-The first two cases handle assigning variables to types.
-The right-variable case first looks up a solution  
-for the variable. If a solution is found, then unification proceeds
-between the original left type and the solution for the right type.
-In the case where unification fails, but the type variable is adjustable,
-the procedure updates the type variable with the union of the left type
-and the found right type (assuming the constraint is well-formed, 
-which includes avoiding circular references). 
-If no solution is found for the right variable, then 
-the procedure looks for any relational constraints in the subtyping environment
-where the left side contains the type variable.
-It checks that the left type is consistent with the relational constraints. 
-If there are no relational constraints, then the variable is assigned
-to the left type (if the constraint is well-formed).
-The left-variable rule is similar to the right-variable rule with
-one difference being that it uses intersection to strengthen the type variable 
-in the case of adjustment. In the case of checking relational constraints, it
-ensures that the right type is weaker than what the relational constraints would allow. 
-
-The subsequent cases decompose the types into subproblems. 
-The decomposition is given in \FIG{fig:unifyDecomp}. 
-The order of the rules 
-is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the left side or weaken the right side occur before rules that
-weaken the left side or strengthen the right side.
-
-The left existential case first tries to unify the constraint. It's possible that the
-constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
-simply updates the subtyping environment with the unsolved relational constraint. 
-With the updated environment, the procedure then unifies the existential type's payload with the right type.
-It must do a safety check to ensure that 
-the left existential's variables are merely assumed and not witnessed. 
-If the constraint is solved then the procedure 
-checks that the payload subtypes the right type for every constraint solution.
-
-The right universal case updates the subtyping environment with the universal's variable constraint
-and unifies the left type with the payload. As with left existential, the procedure checks that
-the universal's type variable is merely assumed and not instantiated.
-
-The left induction rule first tries to factor the inductive type and unify the weakened factored type
-with the right type. For example, a relational type between a natural number and a list, can be factored into
-a cross product of a natural number type and a list type. 
-If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
-in for the inductive variable of the left type and unifies the new left type with the right type.    
-Note that factoring is employed for the special
-case where the right type has variables which cannot be unified 
-using induction due to our circularity restriction.  
-
-The cases for antecedent union, consequent intersection, left union, and right intersection
-decompose into sub-problems in the same way as the declarative subtyping semantics.
-
-The remaining cases are continued in \FIG{fig:unifyContinue}.
-The right existential case simply unifies the left type with the existential's payload
-and then unifies the existential's constraint, such that unifying the payload
-may bear witness to a type that leads to verifying the constraint. 
-
-\TODO{consider using both forward and backtracking in unification and subtyping rules. 
-Since it is not certain which constraint is stronger (in contrast to prolog). Union solutions together}
-
-The right existential case resembles the unification and backtracking approach in Prolog, 
-where unification of the payload corresponds to unification of a query with the head of a horn clause,
-and solving the existential's constraint after the payload unification corresponds to
-solving the horn clause's body after the head's unification.  
-
-The left universal case also unifies in a backtracking fashion analogous to Prolog.
-The procedure unifies the universal's payload with the right type,
-possibly instantiating the universal's type variable,
-which may then be used to unify and check the universal's constraint.
-
-The right induction case attempts to unroll the inductive type just enough
-to unify with the left type. To avoid potential infinite unrolling
-the procedure relies on a heuristic to see if the left type's pattern
-lines up with parts of the the inductive type that are guaranteed to be well-founded. 
-If the left type is a pattern with variables that prevents it from being reduced,
-then the procedure checks if it is well-formed, meaning it could be solved 
-if more information were specified, and then the unsolved relational constraint
-is added to the subtyping environment. 
-
-The remaining cases closely mirror their counterparts in the declarative subtyping rules.
 
 
 \section{Correctness}
@@ -1875,35 +1782,6 @@ Different: RLT isn't cartesian
       \given M, \Delta
     }
 
-    \inferrule {
-      M, \Delta \entails \tau_l \subtypes \obj{$\tau_r$|$\tau_n$}
-    } {
-      M, \Delta \entails 
-      \obj{$\tau_l$\textbackslash$\tau_n$} \subtypes \tau_r
-    }
-
-
-    \inferrule {
-      \TODO{create a negation syntax}
-      \\
-      \TODO{prove subtyping is complete for negation syntax}
-      \\
-      \text{negsyn}(\obj{$\tau_r$\textbackslash$\tau_n$})
-      \\
-      \tau_l \subtypes \tau_r
-      \given M, \Delta
-      \\\\
-      \forall M'\ \Delta' .\ 
-      M \preceq M'
-      \implies
-      \Delta \preceq \Delta'
-      \implies
-      \neg(\tau_l \subtypes \tau_n \given M', \Delta')
-    } {
-      \tau_l \subtypes \obj{$\tau_r$\textbackslash$\tau_n$}
-      \given M, \Delta
-    }
-
   \end{mathpar}
 \end{definition}
 
@@ -1919,7 +1797,7 @@ Different: RLT isn't cartesian
   \end{mathpar}
 \end{definition}
 
-\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi}}\ Function Lifting
+\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
   \begin{mathpar}
     \inferrule {
     } {
@@ -1927,20 +1805,22 @@ Different: RLT isn't cartesian
     }
 
     \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\phi} 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
       \\
       p \hastype \phi \given \Gamma'
       \\
-      \text{neg}(\phi, \vec{\phi}) = \tau_l
+      \text{diff}(\phi, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi .\ \pi \in \vec{\pi}' 
+      \\
+      \text{close}(\phi) = \eta
     } {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
-      \vec{\pi}\ \vec{\pi}', \vec{\phi}\ \phi
+      \vec{\pi}\ \vec{\pi}', \vec{\eta}\ \eta
     }
   \end{mathpar}
 \end{definition}
