@@ -1036,11 +1036,10 @@ if more information were specified, and then the unsolved relational constraint
 is added to the subtyping environment. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.11}
-closed relational constraint
+right learned least fixed point.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.12}
-open relational constraint
-
+right consistent least fixed point. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.13}
 tags
@@ -1180,8 +1179,6 @@ right diff
     }\lab{11}
 
     \inferrule {
-      \TODO{ensure that all free type variables are open}
-      \\\\
       \vec{\alpha} \entails \Delta \wr \text{FTV}(\tau_l) \given \vec{\delta}
       \\
       \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
