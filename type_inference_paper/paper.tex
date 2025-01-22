@@ -689,7 +689,7 @@ which allow expressing properties of expressions with varying levels of precisio
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \phi \sep 
       \phi
     \end{array}
-    & \com{negative type}
+    & \com{subtracted type}
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
@@ -928,109 +928,112 @@ as well as additional rules for increased precision.
 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.1}
-reflexivity up to alpha renaming.
+For reflexive subtyping, up to alpha renaming, proof subtyping simply holds
+without any updates to the world.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.2}
-left least fixed point.
-
-The left induction rule first tries to factor the inductive type and unify the weakened factored type
-with the right type. For example, a relational type between a natural number and a list, can be factored into
-a cross product of a natural number type and a list type. 
-If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
-in for the inductive variable of the left type and unifies the new left type with the right type.    
-Note that factoring is employed for the special
-case where the right type has variables which cannot be unified 
-using induction due to our circularity restriction.  
+For a lower bound least fixed point type, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+attempts a proof by induction, by unrolling the least fixed point
+and replacing its self referencing variable with the upper bound.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.3}
-right diff
+For an upper bound difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+checks that the lower bound subtypes the positive type $\tau_r$
+and does not subtype the subtracted type $\eta$.
+When relying on negation, one must be careful to preserve soundness.
+We ensure that proof subtyping is complete for an upper bound of limited
+form $\eta$ with no free type variables, which
+means its negation is sound. We will make the limited notion
+of completeness precise in section \ref{section:correctness}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.4}
-left union.
+For a lower bound union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+ensures that both parts of the lower bound subtype the upper bound.
+
+The dual of this rule is the one for an upper bound intersection type, in
+the continued definition \ref{definition:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.5}
-Left Existential.
+for a lower bound existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+first searches subtyping constraints that satisfy
+the existential qualifiers $\Delta$, and then
+checks the body of the existential against the upper bound,
+under the previously learned subtyping constraints,
+with the restriction that the existentially quantified variables  
+are closed.
 
-The left existential rule checks that subtyping holds for all variations of the payload 
-where the subtyping constraint holds. 
+This is analogous to a proof in predicate logic, where
+the prover declares a variable from an existential statement
+and cannot see its particular value. 
 
-The left existential case first tries to unify the constraint. It's possible that the
-constraint cannot be solved, but also isn't invalid, in which case unifying the existential type's constraint 
-simply updates the subtyping environment with the unsolved relational constraint. 
-With the updated environment, the procedure then unifies the existential type's payload with the right type.
-It must do a safety check to ensure that 
-the left existential's variables are merely assumed and not witnessed. 
-If the constraint is solved then the procedure 
-checks that the payload subtypes the right type for every constraint solution.
+The dual of this rule is the one for an upper bound universal type, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
 
-dual of right universal. The right universal rule checks that subtyping holds for all variations of the payload consistent with
-the variable's upper bound.
-
-The right universal case updates the subtyping environment with the universal's variable constraint
-and unifies the left type with the payload. As with left existential, the procedure checks that
-the universal's type variable is merely assumed and not instantiated.
-
-This is analogous to declaring a variable from an existential statement,
-or generalizing from an arbitrary variable to a universal statement.
-to choose a particular interpretation. 
+The universal dual is analogous to a proof in predicate logic, where
+the prover generalized from an arbitrary variable to a universal statement. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.6}
-left closed variable.
+For a lower bound closed variable $\alpha$, proof subtyping
+finds a strict interpretation of the variable
+and checks it against the upper bound. Since the subtyping constraints
+may contain relational constraints, it factors the relational constraints
+to find constraints over single variables, which it used to construct the strict
+interpretation $\text{inter}(\vec{\tau})$.  
+
+The dual of this rule is the one for an upper bound closed variable, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.7}
-right open variable.
+For a upper bound open variable $\alpha$, proof subtyping
+finds a lenient interpretation of the variable and checks it against the lower bound.
+If safe, it updates the worlds with the subtyping.
+To find a lenient interpretation in simple constraints, it searches the world for 
+the first upper bounds that are not closed variables. It also looks for relational
+upper bounds of pattern type containing the open variable $\alpha$.
+Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
+that are transitive upper bounds of the open variable $\alpha$.  
 
-The right-variable case first looks up a solution  
-for the variable. If a solution is found, then unification proceeds
-between the original left type and the solution for the right type.
-In the case where unification fails, but the type variable is adjustable,
-the procedure updates the type variable with the union of the left type
-and the found right type (assuming the constraint is well-formed, 
-which includes avoiding circular references). 
-If no solution is found for the right variable, then 
-the procedure looks for any relational constraints in the subtyping environment
-where the left side contains the type variable.
-It checks that the left type is consistent with the relational constraints. 
-If there are no relational constraints, then the variable is assigned
-to the left type (if the constraint is well-formed).
-
-The left-variable rule is similar to the right-variable rule with
-one difference being that it uses intersection to strengthen the type variable 
-in the case of adjustment. In the case of checking relational constraints, it
-ensures that the right type is weaker than what the relational constraints would allow. 
+The dual of this rule is the one for a lower bound open variable, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.8}
-The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
+For an upper bound existential type, proof subtyping
+solves the existential's target $\tau_r$ against the lower bound,
+in order to learn necessary constraints on the bound variables 
+for solving the qualifiers. 
+It then uses the world generated from that to solve
+the existential's qualifiers $\Delta$.
 
-The right existential case simply unifies the left type with the existential's payload
-and then unifies the existential's constraint, such that unifying the payload
-may bear witness to a type that leads to verifying the constraint. 
+It is analogous to the proof method in predicate logic, 
+in which the prover may choose an expression to be a witness for an existential statement. 
 
-The right existential case resembles the unification and backtracking approach in Prolog, 
-where unification of the payload corresponds to unification of a query with the head of a horn clause,
-and solving the existential's constraint after the payload unification corresponds to
-solving the horn clause's body after the head's unification.  
 
-dual of left universal rule checks that subtyping holds for some variation of the payload consistent with
-the variable's upper bound. 
-
-The left universal case also unifies in a backtracking fashion analogous to Prolog.
-The procedure unifies the universal's payload with the right type,
-possibly instantiating the universal's type variable,
-which may then be used to unify and check the universal's constraint.
-
-It is analogous to how variables are used in predicate logic proofs. 
-For a universal assumption, or an existential conclusion, the prover is free to choose
-an interpretation for a variable. 
+The dual of this rule is the one for a lower bound universal, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
+The universal dual is analogous to the proof method in predicate logic,
+in which the prover instantiates a universal statement with an expression
+of their choice.  
 
 \paragraph{Rule \ref{definition:proof_subtyping}.9}
-right left union 
+For an upper bound union type, proof subtyping
+checks that the left part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.10}
-right right union 
+For an upper bound union type, proof subtyping
+also checks that the right part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{definition:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.11}
-left diff
+For a lower bound difference type, proof subtyping
+simply checks that the positive type subtypes
+the upper bound union with the subtracted type. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.12}
 
