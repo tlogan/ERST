@@ -1036,32 +1036,47 @@ simply checks that the positive type subtypes
 the upper bound union with the subtracted type. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.12}
-
-right decomposable least fixed point.
-
-The right induction case attempts to unroll the inductive type just enough
-to unify with the left type. To avoid potential infinite unrolling
-the procedure relies on a heuristic to see if the left type's pattern
-lines up with parts of the the inductive type that are guaranteed to be well-founded. 
-If the left type is a pattern with variables that prevents it from being reduced,
-then the procedure checks if it is well-formed, meaning it could be solved 
-if more information were specified, and then the unsolved relational constraint
-is added to the subtyping environment. 
+For an upper bound least fixed point type,
+where subtyping is decomposable, proof subtyping   
+unrolls the least fixed point and checks it against the lower bound. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.13}
-right assumed least fixed point.
+For an upper bound least fixed point type,
+where the lower bound is a pattern type containing at least one closed variable,
+proof typing searches the world for a constraint with a matching pattern type,
+which provides a strict interpretation of the pattern type,
+in the form of found constraint's upper bound.
+It then checks that the strict interpretation of the pattern type holds.
+For increased coverage, the system rewrites relational constraints
+into equivalent normal forms.
+
+This rule is the relational analog of the closed variable rules.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.14}
-right consistent least fixed point. 
+For an upper bound least fixed point type,
+where the lower bound is a pattern type whose variables are all open,
+proof subtyping checks that the subtyping is consistent
+and checks that a lenient interpretation of the pattern type's open variables
+holds. If the subtyping is safe, then world is updated
+with the subtyping constraint. 
+
+This rule is the relational analog of the open variable rules.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.15}
-tags
+For subtyping tag types, proof subtyping
+simply checks that the labels match and subtyping holds
+for their contents.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.16}
-records
+For subtyping record types, proof subtyping
+simply checks that the labels match and subtyping holds
+for their contents.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.17}
-implications
+For subtyping implication types, proof subtyping
+simply checks that the space between types of the upper bound
+contains the space between types of the lower bound.
+
 
 
 
@@ -1238,7 +1253,7 @@ implications
     }\lab{15}
 
     \inferrule {
-      \tau_l \subtypes \tau_r \Omega 
+      \tau_l \subtypes \tau_r \given \Omega 
     } {
       l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
     }\lab{16}

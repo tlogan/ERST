@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  22 JAN 2025 14:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  22 JAN 2025 16:39
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1035,55 +1035,55 @@ LaTeX Font Warning: Command \small invalid in math mode on input line 905.
 
 [8.8] [9.9]
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1074.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1089.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1080.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1095.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1099.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1114.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1112.
-
-
-LaTeX Font Warning: Command \small invalid in math mode on input line 1126.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1127.
 
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 1141.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1157.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1156.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1169.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1172.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1175.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1184.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1181.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1190.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1187.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1196.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1198.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1202.
 
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 1213.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1229.
-
-
-LaTeX Font Warning: Command \small invalid in math mode on input line 1238.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1228.
 
 
 LaTeX Font Warning: Command \small invalid in math mode on input line 1244.
 
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 1257.
+LaTeX Font Warning: Command \small invalid in math mode on input line 1253.
+
+
+LaTeX Font Warning: Command \small invalid in math mode on input line 1259.
+
+
+LaTeX Font Warning: Command \small invalid in math mode on input line 1272.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -1099,57 +1099,57 @@ Underfull \vbox (badness 3068) has occurred while \output is active []
 
  [14.14] [15.15] [16.16] [17.17] [18.18]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 2857.
+(Font)              scaled to size 9.0pt on input line 2872.
  [19.19{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}] [20.20] [21.21] [22.22] [23.23] [24.24]
 
-LaTeX Warning: Reference `...' on page 25 undefined on input line 3669.
+LaTeX Warning: Reference `...' on page 25 undefined on input line 3684.
 
 [25.25] [26.26]
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 3882.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 3897.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 3917.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 3932.
 
 
-LaTeX Warning: Reference `...' on page 27 undefined on input line 3978.
+LaTeX Warning: Reference `...' on page 27 undefined on input line 3993.
 
 
 Underfull \vbox (badness 3679) has occurred while \output is active []
 
  [27.27]
 
-LaTeX Warning: Reference `...' on page 28 undefined on input line 4019.
+LaTeX Warning: Reference `...' on page 28 undefined on input line 4034.
 
 
 Underfull \vbox (badness 3000) has occurred while \output is active []
 
  [28.28] [29.29] [30.30] [31.31]
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 4511.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 4526.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 4565.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 4580.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 4566.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 4581.
 
 
-LaTeX Warning: Reference `...' on page 32 undefined on input line 4569.
+LaTeX Warning: Reference `...' on page 32 undefined on input line 4584.
 
 [32.32]
 
-LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 33 undefined on input line 4703.
+LaTeX Warning: Reference `theorem:model_typing_unwrapping' on page 33 undefined on input line 4718.
 
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 8.99994pt on input line 4714.
+(Font)              scaled to size 8.99994pt on input line 4729.
 [33.33]
 
-LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 34 undefined on input line 4736.
+LaTeX Warning: Reference `theorem:model_typing_function_progress' on page 34 undefined on input line 4751.
 
 [34.34]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 10.0pt on input line 4844.
+(Font)              scaled to size 10.0pt on input line 4859.
  [35.35] [36.36]
 
 Class acmart Warning: ACM keywords are mandatory for papers over two pages.
@@ -1178,15 +1178,15 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: E219747DA6C098DBA47C8A1039071027;932.
  ) 
 Here is how much of TeX's memory you used:
- 24275 strings out of 474116
- 391948 string characters out of 5743682
+ 24278 strings out of 474116
+ 392023 string characters out of 5743682
  1962187 words of memory out of 5000000
  45384 multiletter control sequences out of 15000+600000
- 766234 words of font info for 465 fonts, out of 8000000 for 9000
+ 766605 words of font info for 467 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,21n,131p,1060b,670s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on paper.pdf (37 pages, 566196 bytes).
+Output written on paper.pdf (37 pages, 566637 bytes).
 PDF statistics:
  598 PDF objects out of 1000 (max. 8388607)
  510 compressed objects within 6 object streams
