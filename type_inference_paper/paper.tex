@@ -523,7 +523,7 @@ However, we have not included this rewriting in the semantics or implementation.
 
 \section{Dynamic Semantics}
 The programming language is pure and applicative. A program is an expression 
-of the form in Definition \ref{definition:expressions}. The forms of expressions
+of the form in definition \ref{definition:expressions}. The forms of expressions
 enable function abstraction, function application, tagged constructions, record construction, record projection,
 and pattern matching. These forms enable us to express non-trivial programs. They also allow
 for compositions that have no reasonable semantics.  
@@ -568,7 +568,7 @@ for compositions that have no reasonable semantics.
   \end{array}\]
 \end{definition}
 
-\emph{Progression} of an expression, in Definition \ref{definition:progression},
+\emph{Progression} of an expression, as in definition \ref{definition:progression},
 is a small-step operational semantics. 
 It adheres to typical definitions of applicative languages for the most part. One 
 slight departure is that pattern matching is merely a special case of function application. 
@@ -737,74 +737,74 @@ Additionally, the outputs of the predicate are not deterministic. Therefore, the
 enumerates all possible outputs.
 
 \paragraph{Rule \ref{definition:proof_typing}.1}
-The unit case simply returns a singleton set with the unit type and the environments unchanged. 
+For the unit expression \obj{@}, proof typing simply returns the singleton type of the same
+form. 
 
 \paragraph{Rule \ref{definition:proof_typing}.2}
-The variable case uses the variable as a key to find its type in the typing environment. 
-It returns a singleton set containing the found type along with the adjustment set and subtyping environment.
+For a variable type expression $\alpha$, proof typing looks
+for a corresponding typing in the environment, and returns the 
+corresponding type if found.
 
 \paragraph{Rule \ref{definition:proof_typing}.3}
-The tag case infers the type of its constituent type and uses its label to construct a tag type.
+For a tag expression $\obj{<}l\obj{>}e$, proof typing recursively constructs the type of the tag's body,
+and returns the corresponding tag type.
 
 \paragraph{Rule \ref{definition:proof_typing}.4}
-The record case infers the type of its fields and intersects the constructed field types together.
+For an empty expression, proof typing constructs the top type \obj{TOP},
+which is merely syntactic sugar for $\obj{EXI[}\alpha\obj{]}\alpha$.
 
 \paragraph{Rule \ref{definition:proof_typing}.5}
-The rule for function typing is a bit special in that
-it treats a function as a sequence of paths whose type is an intersection of implications,
-rather than having a separate pattern matching rule. 
-The function case is of particular importance to type inference in an untyped setting.
-For each path in the function, it extracts the term variables of the pattern and associates 
-the term variables with fresh type variables. It infers the body of each path 
-with an updated variable set and an updated typing environment containing the fresh
-type variables of the pattern. By adding the pattern's type variables to the adjustment variable set,
-it implies that the parameter type of the path can be strengthened by applications
-occurring in the body of the path. This enables adjusting a parameter type to reflect all of its 
-occurrences in the body, 
-rather than reflecting just its first occurrence and failing on subsequent occurrences. 
-Before returning the inferred implication type for the path, the case removes
-the the pattern's type variables from the adjustment variable set, ensuring
-that those type variables cannot be strengthened or weakened from the outside. 
-As with the record case, the inferred implications are intersected together.
+For a non empty record expression $\vec{r}\obj{\$}l\obj{=>}e$, proof typing 
+recursively constructs the type for each entry, and
+refines their types against each other via intersection.
 
 \paragraph{Rule \ref{definition:proof_typing}.6}
-The projection case infers the type of the record expression. 
-It then calls unify to solve for the projected type by finding
-a single field type that is subtyped by the record type. 
-
-
-The type of a record is an intersection of field types.
+For a function expression $\vec{f}$, proof typing 
+delegates the work to two helper predicates: \emph{function lifting}, as in definition \ref{definition:function_lifting}, and
+\emph{constrained implication congruence}, as in definition \ref{definition:constrained_implication_congruence}.
+Function lifting constructs a sequence of implication types, where each associated with a world, represented by $\vec{\pi}$.
+Constrained implication congruence, constructs a sequence of types congruent with each implication,
+such that each world is packaged with its corresponding type, resulting in a universally constrained type 
+(if there are type variables in the original implication). 
+During an application, each path of a function is tried in order, which means values matching subsequent
+patterns, will not be matched by earlier patterns. Thus, function lifting generates types from patterns,
+and for each pattern, it subtracts the types of previous patterns,
+represented by prefixes of $\vec{eta}$
 
 \paragraph{Rule \ref{definition:proof_typing}.7}
-The application case also plays an important role in type inference of untyped programs.
-It creates a fresh type variable as a placeholder for the inferred type of the application result.
-It infers the type of the function and the argument, and then solves for the result type
-by unifying the function's type with an implication from the argument type to the result type.
-It adds the result type variable to the adjustment variable set when unifying to allow inferring 
-types accounting for all the paths that the function might take.
-After unifying, it removes the result type variable from the adjustment variable set to ensure
-that the type cannot be modified from the outside.
-Additionally, since inference and unification actually return sets of solutions,
-the application must type check for all function types and all argument types.
-If even one combination cannot be unified then the inference of application fails,
-indicated by breaking the for-loop, which then implicitly returns an empty set.  
+For a projection expression $e\obj{.}l$, proof typing
+leverages subtyping to check that there is an entry with label $l$ 
+in the supposed record $e$, and it learns a lower bound 
+on the type of the body $\alpha$ associated with that label.
+
 
 \paragraph{Rule \ref{definition:proof_typing}.8}
-The recursive case infers inductive types for the parameters and bodies of its
-target expression. Moreover, it inductively relates the parameter and body types to each other.
-First, it infers the type of the target and calls unify to deconstruct it into the antecedent
-and consequent of an implication type. According to the semantics of fix, the antecedent
-represents and inductive hypothesis, while the consequent represents and inductive conclusion.
-Thus, it uses the inferred structures of the antecedent and consequent to construct an 
-inductive relation by ensuring that the antecedent subtypes the inductively bound variable of 
-the resulting inductive type.
-Finally, the implication type is projected from the constructed relation and generalized with universal.
+For an application expression$e_f\obj{(}e_a\obj{)}$, proof  typing
+leverages subtyping to check that that the function $e_f$ can actually
+map the argument $e_a$ to a result. It learns a lower bound 
+on the type of the result $\alpha$ associated with that argument.
+
 
 \paragraph{Rule \ref{definition:proof_typing}.9}
-the let-binding case infers the type of the argument and checks that
-all possible types subtype the annotation and result in a well-typed body. 
-It generalizes type variables in the inferred argument type while maintaining
-the constraints indicated by the subtyping environment. 
+For a recursive expression $\obj{loop(}e{)}$, proof typing
+constructionsa complex type containing an implication constrained
+by a least fixed point type.  
+First, it ensures that argument of the fixpoint combinator $e$ is indeed a 
+singe path function. Then, by leveraging subtyping, 
+it finds a lower bound for every path in the body of $e$,
+represented by a sequence of worlds $\vec{\Omega}$, 
+all associated with a variable implication, $\alpha_l\obj{->}\alpha_r$.
+Using all these worlds, it delegates to \emph{fixpoint duality}, as in definition \ref{definition:fixpoint_duality},
+it order to construct the cases of a relational least fixpoint type, 
+representing the dual of the greatest fixpoint of implication under intersected over its worlds.
+Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
+and wrapping a generalized implication around that. 
+
+\paragraph{Rule \ref{definition:proof_typing}.10}
+For an annotated definition expression $\obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e'$, 
+proof typing checks the definition's source $e$ against the annotation $\tau_a$,
+and adds the annotation to the typing environment when checking the contintuation $e'$.
+
 
 \begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
   \label{definition:proof_typing}
@@ -827,14 +827,20 @@ the constraints indicated by the subtyping environment.
     }\lab{3}
 
     \inferrule {
-      \Gamma \entails R \hastype \tau_0 \given \Omega 
+      \vec{r} = \epsilon
+    } {
+      \Gamma \entails \vec{r} \hastype \obj{TOP} \given \Omega
+    }\lab{4}
+
+    \inferrule {
+      \Gamma \entails \vec{r} \hastype \tau \given \Omega 
       \\
-      \Gamma \entails e \hastype \tau_1 \given \Omega' 
+      \Gamma \entails e \hastype \tau' \given \Omega' 
       \\
       \Omega \preceq \Omega'
     } {
-      \Gamma \entails R\ \obj{\$}l\obj{=>}e \hastype \tau_0\ \obj{\&}\ l\obj{->}\tau_1 \given \Omega' 
-    }\lab{4}
+      \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \given \Omega' 
+    }\lab{5}
 
     \inferrule {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
@@ -842,7 +848,7 @@ the constraints indicated by the subtyping environment.
       \Gamma \entails \vec{\pi} \cong \vec{\tau} 
     } {
       \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
-    }\lab{5}
+    }\lab{6}
 
     \inferrule {
       \Gamma \entails e \hastype \tau_0 \given \Omega 
@@ -852,21 +858,21 @@ the constraints indicated by the subtyping environment.
       \Omega \preceq \Omega'
     } {
       \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
-    }\lab{6}
+    }\lab{7}
 
     \inferrule {
-      \Gamma \entails e_0 \hastype \tau_0 \given \Omega 
+      \Gamma \entails e_f \hastype \tau_f \given \Omega 
       \\
-      \Gamma \entails e_1 \hastype \tau_1 \given \Omega' 
+      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
       \\
       \Omega \preceq \Omega'
       \\\\
-      \tau_0 \subtypes \tau_1\obj{->}\alpha \given \Omega'' 
+      \tau_f \subtypes \tau_a\obj{->}\alpha \given \Omega'' 
       \\
       \Omega' \preceq \Omega''
     } {
-      \Gamma \entails e_0\obj{(}e_1 \obj{)} \hastype \alpha \given \Omega''
-    }\lab{7}
+      \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
+    }\lab{8}
 
     \inferrule {
       \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
@@ -880,9 +886,9 @@ the constraints indicated by the subtyping environment.
       \\
       \text{FTV}(\Gamma) \entails \nu\alpha^+.\vec{\Omega}.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
     } {
-      \Gamma \entails \obj{loop($e$)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+      \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
       \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    }\lab{8}
+    }\lab{9}
 
     \inferrule {
       \Gamma \entails e \hastype \tau \given \Omega 
@@ -896,13 +902,13 @@ the constraints indicated by the subtyping environment.
       \Omega' \preceq \Omega''
     } {
       \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
-    }\lab{9}
+    }\lab{10}
   \end{mathpar}
 \end{definition}
 
 
 
-\emph{Proof subtyping}, of definition \ref{definition:proof_subtyping},
+\emph{Proof subtyping}, as in definition \ref{definition:proof_subtyping},
 checks the viability of one type subtyping another type.
 
 \TODO{explain the overall predicate}
@@ -924,7 +930,7 @@ as well as additional rules for increased precision.
 \paragraph{Rule \ref{definition:proof_subtyping}.1}
 reflexivity up to alpha renaming.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.9}
+\paragraph{Rule \ref{definition:proof_subtyping}.2}
 left least fixed point.
 
 The left induction rule first tries to factor the inductive type and unify the weakened factored type
@@ -936,11 +942,13 @@ Note that factoring is employed for the special
 case where the right type has variables which cannot be unified 
 using induction due to our circularity restriction.  
 
+\paragraph{Rule \ref{definition:proof_subtyping}.3}
+right diff
 
-\paragraph{Rule \ref{definition:proof_subtyping}.2}
+\paragraph{Rule \ref{definition:proof_subtyping}.4}
 left union.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.3}
+\paragraph{Rule \ref{definition:proof_subtyping}.5}
 Left Existential.
 
 The left existential rule checks that subtyping holds for all variations of the payload 
@@ -966,10 +974,10 @@ This is analogous to declaring a variable from an existential statement,
 or generalizing from an arbitrary variable to a universal statement.
 to choose a particular interpretation. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.4}
+\paragraph{Rule \ref{definition:proof_subtyping}.6}
 left closed variable.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.5}
+\paragraph{Rule \ref{definition:proof_subtyping}.7}
 right open variable.
 
 The right-variable case first looks up a solution  
@@ -991,7 +999,7 @@ one difference being that it uses intersection to strengthen the type variable
 in the case of adjustment. In the case of checking relational constraints, it
 ensures that the right type is weaker than what the relational constraints would allow. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.6}
+\paragraph{Rule \ref{definition:proof_subtyping}.8}
 The right existential rule checks that subtyping holds for some variation of the payload where the constraint holds.
 
 The right existential case simply unifies the left type with the existential's payload
@@ -1015,14 +1023,16 @@ It is analogous to how variables are used in predicate logic proofs.
 For a universal assumption, or an existential conclusion, the prover is free to choose
 an interpretation for a variable. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.7}
+\paragraph{Rule \ref{definition:proof_subtyping}.9}
 right left union 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.8}
+\paragraph{Rule \ref{definition:proof_subtyping}.10}
 right right union 
 
+\paragraph{Rule \ref{definition:proof_subtyping}.11}
+left diff
 
-\paragraph{Rule \ref{definition:proof_subtyping}.10}
+\paragraph{Rule \ref{definition:proof_subtyping}.12}
 
 right decomposable least fixed point.
 
@@ -1035,26 +1045,21 @@ then the procedure checks if it is well-formed, meaning it could be solved
 if more information were specified, and then the unsolved relational constraint
 is added to the subtyping environment. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.11}
+\paragraph{Rule \ref{definition:proof_subtyping}.13}
 right assumed least fixed point.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.12}
+\paragraph{Rule \ref{definition:proof_subtyping}.14}
 right consistent least fixed point. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.13}
+\paragraph{Rule \ref{definition:proof_subtyping}.15}
 tags
 
-\paragraph{Rule \ref{definition:proof_subtyping}.14}
+\paragraph{Rule \ref{definition:proof_subtyping}.16}
 records
 
-\paragraph{Rule \ref{definition:proof_subtyping}.15}
+\paragraph{Rule \ref{definition:proof_subtyping}.17}
 implications
 
-\paragraph{Rule \ref{definition:proof_subtyping}.16}
-left diff
-
-\paragraph{Rule \ref{definition:proof_subtyping}.17}
-right diff
 
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
@@ -1069,7 +1074,7 @@ right diff
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
     } {
       \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }\lab{9}
+    }\lab{2}
     \\
 
     \inferrule {
@@ -1088,7 +1093,7 @@ right diff
     } {
       \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
       \given \Omega 
-    }\lab{17}
+    }\lab{3}
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
@@ -1101,7 +1106,7 @@ right diff
     } {
       \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
-    }\lab{2}
+    }\lab{4}
     \\
 
     \inferrule {
@@ -1115,7 +1120,7 @@ right diff
     } {
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
-    }\lab{3}
+    }\lab{5}
 
     \inferrule {
       \alpha \in \vec{\alpha}
@@ -1130,7 +1135,7 @@ right diff
     } {
       \alpha \subtypes \tau_r
       \given \vec{\alpha}', \Delta'
-    }\lab{4}
+    }\lab{6}
 
     \inferrule {
       \alpha \notin \vec{\alpha}
@@ -1146,7 +1151,7 @@ right diff
       (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
     } {
       \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
-    }\lab{5}
+    }\lab{7}
 
     \inferrule {
       \tau_l \subtypes \tau_r \given \Omega
@@ -1158,25 +1163,25 @@ right diff
       \tau_l
       \subtypes 
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_r \given \Omega' 
-    }\lab{6}
+    }\lab{8}
 
     \inferrule {
       \tau_l \subtypes \tau_{rl} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }\lab{7}
+    }\lab{9}
 
     \inferrule {
       \tau_l \subtypes \tau_{rr} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }\lab{8}
+    }\lab{10}
 
     \inferrule {
       \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
     } {
       \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
-    }\lab{16}
+    }\lab{11}
 
     \inferrule {
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
@@ -1187,7 +1192,7 @@ right diff
       \Omega \preceq \Omega'
     } {
       \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
-    }\lab{10}
+    }\lab{12}
 
     \inferrule {
       \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
@@ -1202,7 +1207,7 @@ right diff
     } {
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \Omega 
-    }\lab{11}
+    }\lab{13}
 
     \inferrule {
       \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
@@ -1218,7 +1223,7 @@ right diff
     } {
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
-    }\lab{12}
+    }\lab{14}
     \\
 
     \inferrule {
@@ -1227,13 +1232,13 @@ right diff
     } {
       \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
       \given \Omega 
-    }\lab{13}
+    }\lab{15}
 
     \inferrule {
       \tau_l \subtypes \tau_r \Omega 
     } {
       l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
-    }\lab{14}
+    }\lab{16}
 
     \inferrule {
       \tau_{rl} \subtypes \tau_{ll} \given \Omega
@@ -1246,7 +1251,7 @@ right diff
       \subtypes 
       \tau_{rl} \obj{->} \tau_{rr}
       \given \Omega' 
-    }\lab{15}
+    }\lab{17}
   \end{mathpar}
 \end{definition}
 
@@ -1855,6 +1860,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
+  \label{definition:function_lifting}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2573,6 +2579,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\vec{\alpha}, \vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
+  \label{definition:constrained_implication_congruence}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2598,6 +2605,7 @@ Different: RLT isn't cartesian
 \begin{definition}
 \boxed{\vec{\alpha} \entails \nu \alpha.Z.\alpha \rightarrow \alpha \fallingdotseq \mu \alpha.\vec{\tau}}
 \ Fixpoint Duality
+\label{definition:fixpoint_duality}
 
 \TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
