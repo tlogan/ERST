@@ -924,6 +924,19 @@ as well as additional rules for increased precision.
 \paragraph{Rule \ref{definition:proof_subtyping}.1}
 reflexivity up to alpha renaming.
 
+\paragraph{Rule \ref{definition:proof_subtyping}.9}
+left least fixed point.
+
+The left induction rule first tries to factor the inductive type and unify the weakened factored type
+with the right type. For example, a relational type between a natural number and a list, can be factored into
+a cross product of a natural number type and a list type. 
+If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
+in for the inductive variable of the left type and unifies the new left type with the right type.    
+Note that factoring is employed for the special
+case where the right type has variables which cannot be unified 
+using induction due to our circularity restriction.  
+
+
 \paragraph{Rule \ref{definition:proof_subtyping}.2}
 left union.
 
@@ -1009,18 +1022,6 @@ right left union
 right right union 
 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.9}
-left least fixed point.
-
-The left induction rule first tries to factor the inductive type and unify the weakened factored type
-with the right type. For example, a relational type between a natural number and a list, can be factored into
-a cross product of a natural number type and a list type. 
-If factoring fails, then the procedure leverages the induction principle and substitutes the right type 
-in for the inductive variable of the left type and unifies the new left type with the right type.    
-Note that factoring is employed for the special
-case where the right type has variables which cannot be unified 
-using induction due to our circularity restriction.  
-
 \paragraph{Rule \ref{definition:proof_subtyping}.10}
 
 right decomposable least fixed point.
@@ -1035,12 +1036,11 @@ if more information were specified, and then the unsolved relational constraint
 is added to the subtyping environment. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.11}
-
-right fixed point hypothesis utilization.
+closed relational constraint
 
 \paragraph{Rule \ref{definition:proof_subtyping}.12}
+open relational constraint
 
-right fixed point hypothesis learning.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.13}
 tags
@@ -1065,6 +1065,12 @@ right diff
     } {
       \tau \subtypes \tau \given \Omega 
     }\lab{1}
+
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+    } {
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+    }\lab{9}
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
@@ -1148,12 +1154,6 @@ right diff
     }\lab{8}
 
     \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
-    } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }\lab{9}
-
-    \inferrule {
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
       \\
       \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
@@ -1180,6 +1180,8 @@ right diff
     }\lab{11}
 
     \inferrule {
+      \TODO{ensure that all free type variables are open}
+      \\\\
       \vec{\alpha} \entails \Delta \wr \text{FTV}(\tau_l) \given \vec{\delta}
       \\
       \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
