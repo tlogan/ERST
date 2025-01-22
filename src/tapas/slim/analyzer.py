@@ -909,7 +909,7 @@ def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, lis
         return [(key, choices)]
     #end-if 
 
-def is_decidable(key : Typ, rel : Fixpoint) -> bool:
+def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG is_decidable
@@ -2354,7 +2354,7 @@ class Solver:
         )
         return result
 
-    def is_fixpoint_constraint_wellformed(self, lower : Typ, upper : Fixpoint) -> bool: 
+    def is_relational_constraint_consistent(self, lower : Typ, upper : Fixpoint) -> bool: 
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
         upper_body = sub_typ(renaming, upper.body)
         # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
@@ -2783,7 +2783,7 @@ class Solver:
 
         elif isinstance(upper, Fixpoint): 
 
-            if is_decidable(lower, upper): # TODO: make is_deciable more strict
+            if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 if not self._checking: print("~~~~~~ UNROLLING")
                 '''
                 unroll
@@ -2808,7 +2808,7 @@ class Solver:
                     else:
                         return []
                 else:
-                    if self.is_fixpoint_constraint_wellformed(lower, upper):
+                    if self.is_relational_constraint_consistent(lower, upper):
                         # print("~~~~~~ FIX B")
                         lower_fvs = extract_free_vars_from_typ(s(), lower)  
                         # assert self._checking or all((fv not in world.skolems) for fv in lower_fvs)

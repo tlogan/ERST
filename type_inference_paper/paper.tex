@@ -1036,7 +1036,7 @@ if more information were specified, and then the unsolved relational constraint
 is added to the subtyping environment. 
 
 \paragraph{Rule \ref{definition:proof_subtyping}.11}
-right learned least fixed point.
+right assumed least fixed point.
 
 \paragraph{Rule \ref{definition:proof_subtyping}.12}
 right consistent least fixed point. 
@@ -1070,6 +1070,25 @@ right diff
     } {
       \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
     }\lab{9}
+    \\
+
+    \inferrule {
+      % \TODO{prove that subtyping of diff is complete}
+      % \\\\
+      % \TODO{which implies that its negation is sound}
+      % \\\\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      \text{FTV}(\eta) \subseteq \epsilon
+      \\\\
+      \nexists \Omega' .\  
+      \tau_l \subtypes \eta \given \Omega'
+      \land
+      \Omega \preceq \Omega'
+    } {
+      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \given \Omega 
+    }\lab{17}
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
@@ -1083,6 +1102,7 @@ right diff
       \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
     }\lab{2}
+    \\
 
     \inferrule {
       \Delta \given \vec{\alpha}_w, \Delta_w
@@ -1153,6 +1173,12 @@ right diff
     }\lab{8}
 
     \inferrule {
+      \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
+    } {
+      \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+    }\lab{16}
+
+    \inferrule {
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
       \\
       \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
@@ -1160,37 +1186,40 @@ right diff
       \\
       \Omega \preceq \Omega'
     } {
-      \tau_l \subtypes \obj{LFP[} \alpha \obj{]} \given \Omega'
+      \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
     }\lab{10}
 
     \inferrule {
-      \exists \alpha .\ \alpha \in \text{FTV}(\tau_l) \land \alpha \in \vec{\alpha} 
+      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
       \\
-      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \cong \tau_l' \subtypes \obj{LFP[}\alpha \obj{]} \tau_r'
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \phi' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
       \\\\
-      \Delta \entails \tau_l' \subtypes \tau_n \sim 
+      \Delta \entails \phi' \subtypes \tau_n \sim 
       \\
-      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau_r' \entails \Omega
+      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
       \\
       (\vec{\alpha}, \Delta) \preceq \Omega
     } {
-      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \Omega 
     }\lab{11}
 
     \inferrule {
-      \vec{\alpha} \entails \Delta \wr \text{FTV}(\tau_l) \given \vec{\delta}
+      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
       \\
-      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
+      \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
       \\\\
-      \tau_l[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
-      \given \vec{\alpha}_1, \Delta_1
+      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
+      \\
+      \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \vec{\alpha}', \Delta'
       \\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
     } {
-      \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r
-      \given \vec{\alpha}', \Delta'\ \obj{;} \tau_l \obj{<:} \obj{LFP[}\alpha\obj{]}\tau_r
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
     }\lab{12}
+    \\
 
     \inferrule {
       \tau_l \subtypes \tau_r
@@ -1218,30 +1247,6 @@ right diff
       \tau_{rl} \obj{->} \tau_{rr}
       \given \Omega' 
     }\lab{15}
-
-    \inferrule {
-      \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
-    } {
-      \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
-    }\lab{16}
-
-    \inferrule {
-      \TODO{prove that subtyping of diff is complete}
-      \\\\
-      \TODO{which implies that its negation is sound}
-      \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\
-      \nexists \Omega' .\  
-      \tau_l \subtypes \eta \given \Omega'
-      \land
-      \Omega \preceq \Omega'
-      \\
-      \text{FTV}(\eta) \subseteq \epsilon
-    } {
-      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
-      \given \Omega 
-    }\lab{17}
   \end{mathpar}
 \end{definition}
 
