@@ -523,7 +523,7 @@ However, we have not included this rewriting in the semantics or implementation.
 
 \section{Dynamic Semantics}
 The programming language is pure and applicative. A program is an expression 
-of the form in definition \ref{definition:expressions}. The forms of expressions
+of the form in definition \ref{def:expressions}. The forms of expressions
 enable function abstraction, function application, tagged constructions, record construction, record projection,
 and pattern matching. These forms enable us to express non-trivial programs. They also allow
 for compositions that have no reasonable semantics.  
@@ -531,7 +531,7 @@ for compositions that have no reasonable semantics.
 
 
 \begin{definition} Expressions
-  \label{definition:expressions}
+  \label{def:expressions}
   \[\begin{array}[t]{r@{}l}
     \nonterm{e} 
     & 
@@ -568,7 +568,7 @@ for compositions that have no reasonable semantics.
   \end{array}\]
 \end{definition}
 
-\emph{Progression} of an expression, as in definition \ref{definition:progression},
+\emph{Progression} of an expression, as in definition \ref{def:progression},
 is a small-step operational semantics. 
 It adheres to typical definitions of applicative languages for the most part. One 
 slight departure is that pattern matching is merely a special case of function application. 
@@ -578,7 +578,7 @@ Additionally, records may be abstracted as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \obj{loop}.
 
 \begin{definition}\boxed{e \rightsquigarrow e}\ Progression
-  \label{definition:progression}
+  \label{def:progression}
   \begin{mathpar}
     \inferrule {
       e \rightsquigarrow e'
@@ -660,12 +660,12 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
 
 \section{Static Semantics}
 The static semantics is a system for checking if the construction of an expression is viable.   
-The system leverages types of the forms in Definition \ref{definition:types}, 
+The system leverages types of the forms in Definition \ref{def:types}, 
 which allow expressing properties of expressions with varying levels of precisions. 
 
 
 \begin{definition} Types 
-  \label{definition:types}
+  \label{def:types}
   \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
@@ -709,25 +709,24 @@ which allow expressing properties of expressions with varying levels of precisio
   \end{array}\]
 \end{definition}
 
-\emph{Proof typing}, in Definition \ref{definition:proof_typing}, checks the viability of an expression's
+\emph{Proof typing}, def. \ref{def:proof_typing}, checks the viability of an expression's
 form. Additionally, by extending the forms of expressions with type annotations, 
-as in Definition \ref{definition:sugared_expressions},
+as in Definition \ref{def:sugared_expressions},
 proof typing is also able to check that expressions meet abstract specifications.
 In order to check the viability of constructions and specifications, 
 proof typing lifts expressions into types and leverages subtyping to 
 check compatibility between types. 
 The proof typing predicate represents a typing that holds under the assumptions
 of a typing environment, and a world, 
-where a world consists of emph{closed} type variables and subtyping constraints. 
+which consists of emph{closed} type variables and subtyping constraints. 
 
 Whether a variable is a closed or not represents how a variable is quantified.
 
 If proof typing holds, then its typing holds under every interpretation of its closed type variables
 under some interpretation of its open variables.
-We formalize ths soundness claim in Section \ref{section:correctness}. 
+We formalize ths soundness claim in Section \ref{sect:correctness}. 
 
-
-The proof typing predicate $(\Gamma \entails e \hastype \tau \given \Omega')$ can 
+The proof typing predicate, $\Gamma \entails e \hastype \tau \given \Omega'$, can 
 be interpreted as an algorithm that takes a typing environment $\Gamma$, an expression $e$,
 and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
 such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
@@ -736,32 +735,33 @@ interprets the input world as the smallest world that can satisfy the predicate.
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
 
-\paragraph{Rule \ref{definition:proof_typing}.1}
-For the unit expression \obj{@}, proof typing simply returns the singleton type of the same
+\paragraph{Rule \ref{def:proof_typing}.1}
+For unit, \obj{@}, proof typing simply returns the singleton type of the same
 form. 
 
-\paragraph{Rule \ref{definition:proof_typing}.2}
-For a variable type expression $\alpha$, proof typing looks
+\paragraph{Rule \ref{def:proof_typing}.2}
+For a variable, $x$, proof typing looks
 for a corresponding typing in the environment, and returns the 
 corresponding type if found.
 
-\paragraph{Rule \ref{definition:proof_typing}.3}
-For a tag expression $\obj{<}l\obj{>}e$, proof typing recursively constructs the type of the tag's body,
+\paragraph{Rule \ref{def:proof_typing}.3}
+For a tagged expression, $\obj{<}l\obj{>}e$, proof typing recursively 
+constructs the type of the tag's body,
 and returns the corresponding tag type.
 
-\paragraph{Rule \ref{definition:proof_typing}.4}
-For an empty expression, proof typing constructs the top type \obj{TOP},
+\paragraph{Rule \ref{def:proof_typing}.4}
+For an empty record, proof typing constructs the top type \obj{TOP},
 which is merely syntactic sugar for $\obj{EXI[}\alpha\obj{]}\alpha$.
 
-\paragraph{Rule \ref{definition:proof_typing}.5}
-For a non empty record expression $\vec{r}\obj{\$}l\obj{=>}e$, proof typing 
+\paragraph{Rule \ref{def:proof_typing}.5}
+For a non empty record, $\vec{r}\obj{\$}l\obj{=>}e$, proof typing 
 recursively constructs the type for each entry, and
 refines their types against each other via intersection.
 
-\paragraph{Rule \ref{definition:proof_typing}.6}
-For a function expression $\vec{f}$, proof typing 
-delegates the work to two helper predicates: \emph{function lifting}, as in definition \ref{definition:function_lifting}, and
-\emph{constrained implication congruence}, as in definition \ref{definition:constrained_implication_congruence}.
+\paragraph{Rule \ref{def:proof_typing}.6}
+For a function, $\vec{f}$, proof typing 
+delegates the work to two helper predicates: \emph{function lifting}, as in definition \ref{def:function_lifting}, and
+\emph{constrained implication congruence}, as in definition \ref{def:constrained_implication_congruence}.
 Function lifting constructs a sequence of implication types, where each associated with a world, represented by $\vec{\pi}$.
 Constrained implication congruence, constructs a sequence of types congruent with each implication,
 such that each world is packaged with its corresponding type, resulting in a universally constrained type 
@@ -771,22 +771,22 @@ patterns, will not be matched by earlier patterns. Thus, function lifting genera
 and for each pattern, it subtracts the types of previous patterns,
 represented by prefixes of $\vec{eta}$
 
-\paragraph{Rule \ref{definition:proof_typing}.7}
-For a projection expression $e\obj{.}l$, proof typing
+\paragraph{Rule \ref{def:proof_typing}.7}
+For a projection, $e\obj{.}l$, proof typing
 leverages subtyping to check that there is an entry with label $l$ 
 in the supposed record $e$, and it learns a lower bound 
 on the type of the body $\alpha$ associated with that label.
 
 
-\paragraph{Rule \ref{definition:proof_typing}.8}
-For an application expression$e_f\obj{(}e_a\obj{)}$, proof  typing
+\paragraph{Rule \ref{def:proof_typing}.8}
+For an application, $e_f\obj{(}e_a\obj{)}$, proof typing
 leverages subtyping to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$ associated with that argument.
 
 
-\paragraph{Rule \ref{definition:proof_typing}.9}
-For a recursive expression $\obj{loop(}e{)}$, proof typing
+\paragraph{Rule \ref{def:proof_typing}.9}
+For a recursive expression, $\obj{loop(}e{)}$, proof typing
 constructionsa complex type containing an implication constrained
 by a least fixed point type.  
 First, it ensures that argument of the fixpoint combinator $e$ is indeed a 
@@ -794,20 +794,20 @@ singe path function. Then, by leveraging subtyping,
 it finds a lower bound for every path in the body of $e$,
 represented by a sequence of worlds $\vec{\Omega}$, 
 all associated with a variable implication, $\alpha_l\obj{->}\alpha_r$.
-Using all these worlds, it delegates to \emph{fixpoint duality}, as in definition \ref{definition:fixpoint_duality},
+Using all these worlds, it delegates to \emph{fixpoint duality}, as in definition \ref{def:fixpoint_duality},
 it order to construct the cases of a relational least fixpoint type, 
 representing the dual of the greatest fixpoint of implication under intersected over its worlds.
 Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
 and wrapping a generalized implication around that. 
 
-\paragraph{Rule \ref{definition:proof_typing}.10}
-For an annotated definition expression $\obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e'$, 
+\paragraph{Rule \ref{def:proof_typing}.10}
+For an annotated definition, $\obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e'$, 
 proof typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the contintuation $e'$.
 
 
 \begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
-  \label{definition:proof_typing}
+  \label{def:proof_typing}
   \begin{mathpar}
     \inferrule {
     } {
@@ -908,53 +908,56 @@ and adds the annotation to the typing environment when checking the contintuatio
 
 
 
-\emph{Proof subtyping}, as in definition \ref{definition:proof_subtyping},
-checks the viability of one type subtyping another type.
+\emph{Proof subtyping}, as in definition \ref{def:proof_subtyping},
+checks the viability of one type subtyping another type, under the assumption
+of subtyping constraints.
 
-\TODO{explain the overall predicate}
+The predicate, $\tau_l \subtypes \tau_r \given \Omega'$, can be interpreted as an algorithm
+that takes the types and an implicit world $\Omega$ as inputs and return
+a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$
+and the input world is the smallest world necessary for the proposition to hold.  
 
-\TODO{explain the algorithmic interpretation}
 The order of the rules 
 is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the left side or weaken the right side occur before rules that
-weaken the left side or strengthen the right side.
+strengthen the lower bound or weaken the upper bound occur before rules that
+weaken the lower bound or strengthen the upper bound.
 
 Due to the complexity of types along with two positions for types to occur in subtyping,
 there are many rules needed to define the proof system of subtyping. For clarity,
 we show only a subset of the rules in this section in order to explain the essence of the system.
-We leave the remaining rules in the appendix, section \ref{section:appendix}, definition \ref{definition:continued_proof_subtyping}. 
+We leave the remaining rules in the appendix, section \ref{sect:appendix}, definition \ref{def:continued_proof_subtyping}. 
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
 as well as additional rules for increased precision.  
 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.1}
-For reflexive subtyping, up to alpha renaming, proof subtyping simply holds
-without any updates to the world.
+\paragraph{Rule \ref{def:proof_subtyping}.1}
+For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
+proof subtyping simply holds without any updates to the world.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.2}
-For a lower bound least fixed point type, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+\paragraph{Rule \ref{def:proof_subtyping}.2}
+For a lower bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
 attempts a proof by induction, by unrolling the least fixed point
 and replacing its self referencing variable with the upper bound.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.3}
-For an upper bound difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+\paragraph{Rule \ref{def:proof_subtyping}.3}
+For an upper bound difference, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
 checks that the lower bound subtypes the positive type $\tau_r$
 and does not subtype the subtracted type $\eta$.
 When relying on negation, one must be careful to preserve soundness.
 We ensure that proof subtyping is complete for an upper bound of limited
 form $\eta$ with no free type variables, which
 means its negation is sound. We will make the limited notion
-of completeness precise in section \ref{section:correctness}.
+of completeness precise in section \ref{sect:correctness}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.4}
-For a lower bound union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+\paragraph{Rule \ref{def:proof_subtyping}.4}
+For a lower bound union, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
 ensures that both parts of the lower bound subtype the upper bound.
 
 The dual of this rule is the one for an upper bound intersection type, in
-the continued definition \ref{definition:continued_proof_subtyping}.
+the continued definition \ref{def:continued_proof_subtyping}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.5}
-for a lower bound existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+\paragraph{Rule \ref{def:proof_subtyping}.5}
+For a lower bound existential, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
 first searches subtyping constraints that satisfy
 the existential qualifiers $\Delta$, and then
 checks the body of the existential against the upper bound,
@@ -967,12 +970,12 @@ the prover declares a variable from an existential statement
 and cannot see its particular value. 
 
 The dual of this rule is the one for an upper bound universal type, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 
 The universal dual is analogous to a proof in predicate logic, where
 the prover generalized from an arbitrary variable to a universal statement. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.6}
+\paragraph{Rule \ref{def:proof_subtyping}.6}
 For a lower bound closed variable $\alpha$, proof subtyping
 finds a strict interpretation of the variable
 and checks it against the upper bound. Since the subtyping constraints
@@ -981,10 +984,10 @@ to find constraints over single variables, which it used to construct the strict
 interpretation $\text{inter}(\vec{\tau})$.  
 
 The dual of this rule is the one for an upper bound closed variable, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.7}
-For a upper bound open variable $\alpha$, proof subtyping
+\paragraph{Rule \ref{def:proof_subtyping}.7}
+For an upper bound open variable $\alpha$, proof subtyping
 finds a lenient interpretation of the variable and checks it against the lower bound.
 If safe, it updates the worlds with the subtyping.
 To find a lenient interpretation in simple constraints, it searches the world for 
@@ -994,10 +997,10 @@ Additionally, it learns constraints on closed variables $\Delta^\dagger$
 that are transitive upper bounds of the open variable $\alpha$.  
 
 The dual of this rule is the one for a lower bound open variable, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.8}
-For an upper bound existential type, proof subtyping
+\paragraph{Rule \ref{def:proof_subtyping}.8}
+For an upper bound existential, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$ ,proof subtyping
 solves the existential's target $\tau_r$ against the lower bound,
 in order to learn necessary constraints on the bound variables 
 for solving the qualifiers. 
@@ -1009,39 +1012,39 @@ in which the prover may choose an expression to be a witness for an existential 
 
 
 The dual of this rule is the one for a lower bound universal, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 The universal dual is analogous to the proof method in predicate logic,
 in which the prover instantiates a universal statement with an expression
 of their choice.  
 
-\paragraph{Rule \ref{definition:proof_subtyping}.9}
-For an upper bound union type, proof subtyping
-checks that the left part of the union holds against
+\paragraph{Rule \ref{def:proof_subtyping}.9}
+For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping checks that the left part of the union holds against
 the lower bound. 
 
 The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.10}
-For an upper bound union type, proof subtyping
-also checks that the right part of the union holds against
+\paragraph{Rule \ref{def:proof_subtyping}.10}
+For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping also checks that the right part of the union holds against
 the lower bound. 
 
 The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{definition:continued_proof_subtyping}.
+in the continued definition \ref{def:continued_proof_subtyping}.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.11}
-For a lower bound difference type, proof subtyping
+\paragraph{Rule \ref{def:proof_subtyping}.11}
+For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
 simply checks that the positive type subtypes
 the upper bound union with the subtracted type. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.12}
-For an upper bound least fixed point type,
+\paragraph{Rule \ref{def:proof_subtyping}.12}
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
 where subtyping is decomposable, proof subtyping   
 unrolls the least fixed point and checks it against the lower bound. 
 
-\paragraph{Rule \ref{definition:proof_subtyping}.13}
-For an upper bound least fixed point type,
+\paragraph{Rule \ref{def:proof_subtyping}.13}
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
 where the lower bound is a pattern type containing at least one closed variable,
 proof typing searches the world for a constraint with a matching pattern type,
 which provides a strict interpretation of the pattern type,
@@ -1052,8 +1055,8 @@ into equivalent normal forms.
 
 This rule is the relational analog of the closed variable rules.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.14}
-For an upper bound least fixed point type,
+\paragraph{Rule \ref{def:proof_subtyping}.14}
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
 where the lower bound is a pattern type whose variables are all open,
 proof subtyping checks that the subtyping is consistent
 and checks that a lenient interpretation of the pattern type's open variables
@@ -1062,26 +1065,27 @@ with the subtyping constraint.
 
 This rule is the relational analog of the open variable rules.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.15}
-For subtyping tag types, proof subtyping
-simply checks that the labels match and subtyping holds
+\paragraph{Rule \ref{def:proof_subtyping}.15}
+For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
+proof subtyping simply checks that the labels match and subtyping holds
 for their contents.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.16}
-For subtyping record types, proof subtyping
-simply checks that the labels match and subtyping holds
+
+\paragraph{Rule \ref{def:proof_subtyping}.16}
+For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
+proof subtyping simply checks that the labels match and subtyping holds
 for their contents.
 
-\paragraph{Rule \ref{definition:proof_subtyping}.17}
-For subtyping implication types, proof subtyping
-simply checks that the space between types of the upper bound
+\paragraph{Rule \ref{def:proof_subtyping}.17}
+For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
+proof subtyping simply checks that the space between types of the upper bound
 contains the space between types of the lower bound.
 
 
 
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
-  \label{definition:proof_subtyping}
+  \label{def:proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1278,12 +1282,12 @@ contains the space between types of the lower bound.
 
 
 \section{Correctness}
-\label{section:correctness}
+\label{sect:correctness}
 
 \TODO{introduce model typing and soundness properties}
 
 \begin{definition}\boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}\ Model typing
-  \label{definition:model_typing}
+  \label{def:model_typing}
   \begin{mathpar}
     \inferrule { 
       \alpha \slash \tau \in \vec{\delta}
@@ -1458,7 +1462,7 @@ contains the space between types of the lower bound.
 
 
 \begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
-  \label{definition:model_subtyping}
+  \label{def:model_subtyping}
   \begin{mathpar}
     \inferrule { 
       \forall e\ \Gamma .\ 
@@ -1472,7 +1476,7 @@ contains the space between types of the lower bound.
 
 
 \begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
-  \label{definition:model_sequence_subtyping}
+  \label{def:model_sequence_subtyping}
   \begin{mathpar}
     \inferrule { 
     } {
@@ -1580,9 +1584,9 @@ Different: RLT isn't cartesian
 
 
 \section{Appendix}
-\label{section:appendix}
+\label{sect:appendix}
 \begin{definition} Internals 
-  \label{definition:internals}
+  \label{def:internals}
   \[\begin{array}[t]{r@{}l}
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
     \\
@@ -1610,7 +1614,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition} Sugared Expressions 
-  \label{definition:sugared_expressions}
+  \label{def:sugared_expressions}
   \[\begin{array}[t]{r@{}l}
     \nonterm{e} & \is 
     \begin{array}[t]{@{}l}
@@ -1631,7 +1635,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition} Values 
-  \label{definition:others}
+  \label{def:others}
   \[\begin{array}[t]{r@{}l}
     \nonterm{v} & \is 
       \obj{@} \sep
@@ -1701,7 +1705,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition} Sugared Types 
-  \label{definition:sugared_types}
+  \label{def:sugared_types}
   \[\begin{array}[t]{r@{}l}
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
@@ -1722,7 +1726,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition}\boxed{\tau \subtypes \tau \given M, \Delta}\ Continued Proof Subtyping 
-  \label{definition:continued_proof_subtyping}
+  \label{def:continued_proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1868,7 +1872,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition} \boxed{\Omega \preceq \Omega}\ World Ordering 
-  \label{definition:world_ordering}
+  \label{def:world_ordering}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1878,7 +1882,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
-  \label{definition:function_lifting}
+  \label{def:function_lifting}
   \begin{mathpar}
     \inferrule {
     } {
@@ -1908,7 +1912,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
-  \label{definition:decomposable}
+  \label{def:decomposable}
   \begin{mathpar}
     \inferrule {
       \TODO{...}
@@ -1920,7 +1924,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
-  \label{definition:normal_constraint_congruence}
+  \label{def:normal_constraint_congruence}
   \begin{mathpar}
     \inferrule {
       \TODO{...}
@@ -1931,7 +1935,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
-  \label{definition:normal_constraint_entailment}
+  \label{def:normal_constraint_entailment}
   \begin{mathpar}
     \inferrule {
       \TODO{...}
@@ -1942,7 +1946,7 @@ Different: RLT isn't cartesian
 \end{definition}
 
 \begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
-  \label{definition:modulo_type_solution}
+  \label{def:modulo_type_solution}
   \begin{mathpar}
     \inferrule {
       \TODO{...}
@@ -1954,7 +1958,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\entails \tau_l \subtypes \tau \consis}\ Constraint Consistency  
-  \label{definition:constraint_consistency}
+  \label{def:constraint_consistency}
   \begin{mathpar}
     \inferrule {
       \TODO{...}
@@ -1967,7 +1971,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition} \boxed{\Alpha \notfree \tau}\ Fresh variables 
-  \label{definition:fresh_variables}
+  \label{def:fresh_variables}
   \begin{mathpar}
     \inferrule {
       \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FV}(\tau)
@@ -1979,7 +1983,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\tau \subtypes \tau \given Z}\ (Proof universe subtyping)
-  \label{definition:proof_universe_subtyping}
+  \label{def:proof_universe_subtyping}
   \begin{mathpar}
     \inferrule {
       \left< M, \Delta \right> \in Z 
@@ -2597,7 +2601,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\vec{\alpha}, \vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
-  \label{definition:constrained_implication_congruence}
+  \label{def:constrained_implication_congruence}
   \begin{mathpar}
     \inferrule {
     } {
@@ -2623,7 +2627,7 @@ Different: RLT isn't cartesian
 \begin{definition}
 \boxed{\vec{\alpha} \entails \nu \alpha.Z.\alpha \rightarrow \alpha \fallingdotseq \mu \alpha.\vec{\tau}}
 \ Fixpoint Duality
-\label{definition:fixpoint_duality}
+\label{def:fixpoint_duality}
 
 \TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
@@ -2840,7 +2844,7 @@ Different: RLT isn't cartesian
 
 
 \begin{definition}\boxed{\VDash e}
-  \label{definition:expression_good_formation}
+  \label{def:expression_good_formation}
   \begin{mathpar}
     \inferrule {
       e = v
@@ -5083,7 +5087,7 @@ further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by i
 
 
 \begin{definition}\boxed{\vec{\delta}, \vec{\sigma} \satisfies \Gamma}
-  \label{definition:model_typing_environment}
+  \label{def:model_typing_environment}
   \begin{mathpar}
     \inferrule { 
     } {
