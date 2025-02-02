@@ -727,12 +727,10 @@ If proof typing holds, then its typing holds under every interpretation of its c
 under some interpretation of its open variables.
 We formalize ths soundness claim in Section \ref{sect:correctness}. 
 
-The proof typing predicate, $\Gamma \entails e \hastype \tau \given \Omega'$, can 
-be interpreted as an algorithm that takes a typing environment $\Gamma$, an expression $e$,
-and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
+The proof typing predicate, $\Omega, \Gamma \entails e \hastype \tau \with \Omega'$, can 
+be interpreted as an algorithm that takes a world $\Omega$, a typing environment $\Gamma$, and an expression $e$,
+as inputs and returns a type $\tau$ and a world $\Omega'$ as outputs,
 such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
-The input world is not explicitly represented in the predicate, so the algorithm
-interprets the input world as the smallest world that can satisfy the predicate. 
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
 
@@ -905,10 +903,9 @@ and adds the annotation to the typing environment when checking the contintuatio
 checks the viability of one type subtyping another type, under the assumption
 of subtyping constraints.
 
-The predicate, $\tau_l \subtypes \tau_r \given \Omega'$, can be interpreted as an algorithm
-that takes the types and an implicit world $\Omega$ as inputs and return
-a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$
-and the input world is the smallest world necessary for the proposition to hold.  
+The predicate, $\Omega \entails \tau_l \subtypes \tau_r \with \Omega'$, can be interpreted as an algorithm
+that takes the world $\Omega$, and two types as inputs, and returns
+a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$.
 
 The order of the rules 
 is critical to ensure that easier constraints are generated. To that end, cases that
