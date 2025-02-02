@@ -55,6 +55,7 @@
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
+\newcommand{\with}{\ \diamond\ }
 \newcommand{\notfree}{\ \#\ }
 \newcommand{\consis}{\ \star}
 
@@ -806,40 +807,38 @@ proof typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the contintuation $e'$.
 
 
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
+\begin{definition} \boxed{\Omega, \Gamma \entails e \hastype \tau \with \Omega}\ Proof Typing
   \label{def:proof_typing}
   \begin{mathpar}
     \inferrule {
     } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
+      \Omega, \Gamma \entails \obj{@} \hastype \obj{@} \with \Omega 
     }\lab{1}
 
     \inferrule {
       x:\tau \in \Gamma
     } {
-      \Gamma \entails x \hastype \tau \given \Omega 
+      \Omega, \Gamma \entails x \hastype \tau \with \Omega 
     }\lab{2}
 
     \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
+      \Omega, \Gamma \entails e \hastype \tau \with \Omega' 
     } {
-      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
+      \Omega, \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \with \Omega'
     }\lab{3}
 
     \inferrule {
       \vec{r} = \epsilon
     } {
-      \Gamma \entails \vec{r} \hastype \obj{TOP} \given \Omega
+      \Omega, \Gamma \entails \vec{r} \hastype \obj{TOP} \with \Omega
     }\lab{4}
 
     \inferrule {
-      \Gamma \entails \vec{r} \hastype \tau \given \Omega 
+      \Omega, \Gamma \entails \vec{r} \hastype \tau \with \Omega'
       \\
-      \Gamma \entails e \hastype \tau' \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega', \Gamma \entails e \hastype \tau' \with \Omega'' 
     } {
-      \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \given \Omega' 
+      \Omega, \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \with \Omega'' 
     }\lab{5}
 
     \inferrule {
@@ -847,61 +846,55 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\
       \Gamma \entails \vec{\pi} \cong \vec{\tau} 
     } {
-      \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
+      (\vec{\alpha}, \Delta), \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \with \vec{\alpha}, \Delta
     }\lab{6}
 
     \inferrule {
-      \Gamma \entails e \hastype \tau_0 \given \Omega 
+      \Omega, \Gamma \entails e \hastype \tau_0 \with \Omega'
       \\
-      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega' \entails \tau_0 \subtypes l\obj{->}\alpha \with \Omega'' 
     } {
-      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
+      \Omega, \Gamma \entails e\obj{.}l \hastype \alpha \with \Omega''
     }\lab{7}
 
     \inferrule {
-      \Gamma \entails e_f \hastype \tau_f \given \Omega 
+      \Omega, \Gamma \entails e_f \hastype \tau_f \with \Omega' 
       \\
-      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega', \Gamma \entails e_a \hastype \tau_a \with \Omega''
       \\\\
-      \tau_f \subtypes \tau_a\obj{->}\alpha \given \Omega'' 
-      \\
-      \Omega' \preceq \Omega''
+      \Omega'' \entails \tau_f \subtypes \tau_a\obj{->}\alpha \with \Omega''' 
     } {
-      \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
+      \Omega, \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \with \Omega'''
     }\lab{8}
 
     \inferrule {
-      \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      (\vec{\alpha}, \Delta), \Gamma \entails e \hastype \alpha^+\obj{->}\tau \with \vec{\alpha}', \Delta' 
       \\\\
-      \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta') \in \vec{\Omega}
+      \forall \vec{\alpha}''\ \Delta'' .\ 
+       (\vec{\alpha}'', \Delta'') \in \vec{\Omega}
       \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      (\vec{\alpha}', \Delta') \entails \tau \subtypes \alpha_l\obj{->}\alpha_r 
+      \with \vec{\alpha}'', \Delta'' 
       \\\\
       \exists \Omega.\ \Omega \in \vec{\Omega}
       \\
       \text{FTV}(\Gamma) \entails \nu\alpha^+.\vec{\Omega}.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
     } {
-      \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+      (\vec{\alpha}, \Delta), \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y 
+      \with \vec{\alpha}', \Delta '
     }\lab{9}
 
     \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
+      \Omega, \Gamma \entails e \hastype \tau \with \Omega' 
       \\
-      \tau \subtypes \tau_a \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega' \entails \tau \subtypes \tau_a \with \Omega'' 
       \\\\
-      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
-      \\
-      \Omega' \preceq \Omega''
+      \Omega'', \Gamma\ x:\tau_x \entails e' \hastype \tau' \with \Omega'''
     } {
-      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
+      \Omega \entails
+      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' 
+      \with \Omega'''
     }\lab{10}
   \end{mathpar}
 \end{definition}
@@ -919,8 +912,8 @@ and the input world is the smallest world necessary for the proposition to hold.
 
 The order of the rules 
 is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the lower bound or weaken the upper bound occur before rules that
-weaken the lower bound or strengthen the upper bound.
+strengthen the assumed type (left of subtyping) or weaken the guaranteed type (right of subtyping) occur before rules that
+weaken the assumed type or strengthen the guaranteed type.
 
 Due to the complexity of types along with two positions for types to occur in subtyping,
 there are many rules needed to define the proof system of subtyping. For clarity,
@@ -935,14 +928,14 @@ For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$,
 proof subtyping simply holds without any updates to the world.
 
 \paragraph{Rule \ref{def:proof_subtyping}.2}
-For a lower bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
 attempts a proof by induction, by unrolling the least fixed point
 and replacing its self referencing variable with the upper bound.
 
 \paragraph{Rule \ref{def:proof_subtyping}.3}
-For an upper bound difference, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
-checks that the lower bound subtypes the positive type $\tau_r$
-and does not subtype the subtracted type $\eta$.
+For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
+and does not subtype the subtracted portion $\eta$.
 When relying on negation, one must be careful to preserve soundness.
 We ensure that proof subtyping is complete for an upper bound of limited
 form $\eta$ with no free type variables, which
@@ -950,30 +943,31 @@ means its negation is sound. We will make the limited notion
 of completeness precise in section \ref{sect:correctness}.
 
 \paragraph{Rule \ref{def:proof_subtyping}.4}
-For a lower bound union, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
-ensures that both parts of the lower bound subtype the upper bound.
+For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+ensures that both parts of the assumed type subtype the guaranteed type.
 
-The dual of this rule is the one for an upper bound intersection type, in
-the continued definition \ref{def:continued_proof_subtyping}.
+The introduction counterpart of this rule is the introduction of an intersection type (\ref{def:continued_proof_subtyping}).
 
 \paragraph{Rule \ref{def:proof_subtyping}.5}
-For a lower bound existential, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
-first searches subtyping constraints that satisfy
-the existential qualifiers $\Delta$, and then
-checks the body of the existential against the upper bound,
-under the previously learned subtyping constraints,
-with the restriction that the existentially quantified variables  
-are closed.
+For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
+which it leverages to prove the guaranteed type. 
 
-This is analogous to a proof in predicate logic, where
-the prover declares a variable from an existential statement
-and cannot see its particular value. 
+% subtyping constraints that satisfy
+% the existential qualifiers $\Delta$, and then
+% checks the body of the existential against the upper bound,
+% under the previously learned subtyping constraints,
+% with the restriction that the existentially quantified variables  
+% are closed.
 
-The dual of this rule is the one for an upper bound universal type, 
-in the continued definition \ref{def:continued_proof_subtyping}.
+% This is analogous to a proof in predicate logic, where
+% the prover declares a variable from an existential statement
+% and cannot see its particular value. 
 
-The universal dual is analogous to a proof in predicate logic, where
-the prover generalized from an arbitrary variable to a universal statement. 
+The introduction counterpart of this rule is the introduction of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
+
+% The universal dual is analogous to a proof in predicate logic, where
+% the prover generalized from an arbitrary variable to a universal statement. 
 
 \paragraph{Rule \ref{def:proof_subtyping}.6}
 For a lower bound closed variable $\alpha$, proof subtyping
@@ -1000,22 +994,21 @@ The dual of this rule is the one for a lower bound open variable,
 in the continued definition \ref{def:continued_proof_subtyping}.
 
 \paragraph{Rule \ref{def:proof_subtyping}.8}
-For an upper bound existential, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$ ,proof subtyping
-solves the existential's target $\tau_r$ against the lower bound,
-in order to learn necessary constraints on the bound variables 
-for solving the qualifiers. 
-It then uses the world generated from that to solve
-the existential's qualifiers $\Delta$.
+For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
+infers constraints to witness the guaranteed existential type. 
 
-It is analogous to the proof method in predicate logic, 
-in which the prover may choose an expression to be a witness for an existential statement. 
+% solves the existential's target $\tau_r$ against the lower bound,
+% in order to learn necessary constraints on the bound variables 
+% for solving the qualifiers. 
+% It then uses the world generated from that to solve
+% the existential's qualifiers $\Delta$.
+
+% It is analogous to the proof method in predicate logic, 
+% in which the prover may choose an expression to be a witness for an existential statement. 
 
 
-The dual of this rule is the one for a lower bound universal, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-The universal dual is analogous to the proof method in predicate logic,
-in which the prover instantiates a universal statement with an expression
-of their choice.  
+The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
+in which proof subtyping infers constraints to instantiate assumed the universal type.
 
 \paragraph{Rule \ref{def:proof_subtyping}.9}
 For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
@@ -1084,18 +1077,18 @@ contains the space between types of the lower bound.
 
 
 
-\begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
+\begin{definition}\boxed{\Omega \entails \tau \subtypes \tau \with \Omega}\ Proof Subtyping
   \label{def:proof_subtyping}
   \begin{mathpar}
     \inferrule {
     } {
-      \tau \subtypes \tau \given \Omega 
+      \Omega \entails \tau \subtypes \tau \with \Omega 
     }\lab{1}
 
     \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+      \Omega \entails \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \with \Omega' 
     } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+      \Omega \entails \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \with \Omega'
     }\lab{2}
     \\
 
@@ -1104,44 +1097,37 @@ contains the space between types of the lower bound.
       % \\\\
       % \TODO{which implies that its negation is sound}
       % \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_r \with \Omega' 
       \\
       \text{FTV}(\eta) \subseteq \epsilon
       \\\\
-      \nexists \Omega' .\  
-      \tau_l \subtypes \eta \given \Omega'
-      \land
-      \Omega \preceq \Omega'
+      \nexists \Omega'' .\ \Omega' \entails \tau_l \subtypes \eta \with \Omega''
     } {
-      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
-      \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \with \Omega' 
     }\lab{3}
 
     \inferrule {
-      \tau_{ll} \subtypes \tau_r
-      \given \Omega 
+      \Omega \entails \tau_{ll} \subtypes \tau_r
+      \with \Omega'
       \\
-      \tau_{lr} \subtypes \tau_r
-      \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega' \entails \tau_{lr} \subtypes \tau_r
+      \with \Omega'' 
     } {
-      \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
-      \given \Omega' 
+      \Omega \entails \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
+      \with \Omega'' 
     }\lab{4}
     \\
 
     \inferrule {
-      \Delta \given \vec{\alpha}_w, \Delta_w
+      \Omega \entails \Delta \with \vec{\alpha}_w, \Delta_w
       \\
       \vec{\alpha} \notfree \tau_r
       \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\
-      (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega 
+      (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \entails \tau_l \subtypes \tau_r \with \Omega'
     } {
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
-      \given \Omega 
+      \Omega \entails \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
+      \with \Omega' 
     }\lab{5}
 
     \inferrule {
@@ -1151,12 +1137,11 @@ contains the space between types of the lower bound.
       \\
       \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
       \\\\
-      \text{inter}(\vec{\tau}) \subtypes \tau_r \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta\ \Delta_f) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}, \Delta\ \Delta_f) \entails \text{inter}(\vec{\tau}) \subtypes \tau_r 
+      \with \vec{\alpha}', \Delta'
     } {
-      \alpha \subtypes \tau_r
-      \given \vec{\alpha}', \Delta'
+      \vec{\alpha}, \Delta \entails \alpha \subtypes \tau_r
+      \with \vec{\alpha}', \Delta'
     }\lab{6}
 
     \inferrule {
@@ -1168,52 +1153,48 @@ contains the space between types of the lower bound.
       \\
       \vec{\alpha}, \Delta \entails \alpha \slash \tau_l <:^\sharp \Delta^\sharp
       \\\\
-      \Delta^\dagger\ \tau_l\obj{<:}\text{inter}(\vec{\tau}) \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}, \Delta\ \Delta^\sharp) \entails \Delta^\dagger\ \tau_l\obj{<:}\text{inter}(\vec{\tau}) 
+      \with \vec{\alpha}', \Delta'
     } {
-      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
+      \vec{\alpha}, \Delta \entails \tau_l \subtypes \alpha 
+      \with (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
     }\lab{7}
 
     \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega
+      \Omega \entails \tau_l \subtypes \tau_r \with \Omega'
       \\
-      \Delta \given \Omega' 
-      \\
-      \Omega \preceq \Omega' 
+      \Omega' \entails \Delta \with \Omega'' 
     } {
-      \tau_l
-      \subtypes 
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_r \given \Omega' 
+      \Omega \tau_l \subtypes 
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_r 
+      \with \Omega''
     }\lab{8}
 
     \inferrule {
-      \tau_l \subtypes \tau_{rl} \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_{rl} \with \Omega' 
     } {
-      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \with \Omega'
     }\lab{9}
 
     \inferrule {
-      \tau_l \subtypes \tau_{rr} \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_{rr} \with \Omega' 
     } {
-      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \with \Omega'
     }\lab{10}
 
     \inferrule {
-      \tau_l \subtypes \tau_r\obj{|}\eta \given \Omega
+      \Omega \entails \tau_l \subtypes \tau_r\obj{|}\eta \with \Omega'
     } {
-      \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+      \Omega \entails \tau_l\obj{\textbackslash}\eta \subtypes \tau_r \with \Omega'
     }\lab{11}
 
     \inferrule {
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
       \\
-      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
-      \given \Omega'
-      \\
-      \Omega \preceq \Omega'
+      \Omega \entails \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
+      \with \Omega'
     } {
-      \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
+      \Omega \entails \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \with \Omega'
     }\lab{12}
 
     \inferrule {
@@ -1223,12 +1204,11 @@ contains the space between types of the lower bound.
       \\\\
       \Delta \entails \phi' \subtypes \tau_n \sim 
       \\
-      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
-      \\
-      (\vec{\alpha}, \Delta) \preceq \Omega
+      (\vec{\alpha}, \Delta) \entails \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
     } {
+      (\vec{\alpha}, \Delta) \entails
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \Omega 
+      \with \Omega
     }\lab{13}
 
     \inferrule {
@@ -1236,43 +1216,42 @@ contains the space between types of the lower bound.
       \\
       \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
       \\\\
-      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
+      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \entails \vec{\delta}
       \\
+      (\vec{\alpha}, \Delta) \entails
       \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
+      \with \vec{\alpha}', \Delta'
     } {
+      (\vec{\alpha}, \Delta) \entails
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+      \with \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
     }\lab{14}
     \\
 
     \inferrule {
+      \Omega \entails
       \tau_l \subtypes \tau_r
-      \given \Omega 
+      \with \Omega' 
     } {
+      \Omega \entails 
       \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
-      \given \Omega 
+      \with \Omega' 
     }\lab{15}
 
     \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Omega \entails \tau_l \subtypes \tau_r \with \Omega' 
     } {
-      l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
+      \Omega \entails l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \with \Omega' 
     }\lab{16}
 
     \inferrule {
-      \tau_{rl} \subtypes \tau_{ll} \given \Omega
+      \Omega \entails \tau_{rl} \subtypes \tau_{ll} \entails \Omega'
       \\
-      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
+      \Omega' \entails \tau_{lr} \subtypes \tau_{rr} \entails \Omega'' 
     } {
-      \tau_{ll} \obj{->} \tau_{lr} 
-      \subtypes 
-      \tau_{rl} \obj{->} \tau_{rr}
-      \given \Omega' 
+      \Omega \entails
+      \tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}
+      \with \Omega''
     }\lab{17}
   \end{mathpar}
 \end{definition}
