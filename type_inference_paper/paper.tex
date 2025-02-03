@@ -1149,8 +1149,10 @@ contains the space between types of the lower bound.
       \Delta \given \vec{\alpha}_w, \Delta_w
       \\
       \vec{\alpha} \notfree \tau_r
-      \\\\
+      \\
       \tau_l \subtypes \tau_r \given \Omega 
+      \\\\
+      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
       \\
       (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega 
     } {
@@ -1202,12 +1204,16 @@ contains the space between types of the lower bound.
     }\lab{8}
 
     \inferrule {
+      \tau_l \neq \alpha
+      \\
       \tau_l \subtypes \tau_{rl} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
     }\lab{9}
 
     \inferrule {
+      \tau_l \neq \alpha
+      \\
       \tau_l \subtypes \tau_{rr} \given \Omega 
     } {
       \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
