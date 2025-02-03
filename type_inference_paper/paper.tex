@@ -1151,10 +1151,10 @@ contains the space between types of the lower bound.
       \vec{\alpha} \notfree \tau_r
       \\
       \tau_l \subtypes \tau_r \given \Omega 
-      \\\\
-      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
       \\
       (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega 
+      \\\\
+      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega' \implies \Omega' = \Omega
     } {
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
