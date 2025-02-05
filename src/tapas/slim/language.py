@@ -59,13 +59,13 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
         parser.reset()
 
         try:
-            ctx = parser.expr(analyzer.default_context)
+            ctx = parser.expr([analyzer.default_prompt])
 
             num_syn_err = parser.getNumberOfSyntaxErrors()
 
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
-            elif ctx.result: 
+            elif ctx.mrs: 
                 await output.put(Done())
                 break
             else:
@@ -154,11 +154,13 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.Typ, str, analyz
         token_stream : Any = CommonTokenStream(lexer)
         parser = SlimParser(token_stream)
         parser.init()
-        tc = parser.program(analyzer.default_context)
-        if tc.result == None:
+        tc = parser.program([analyzer.default_prompt])
+        if tc.mrs == None:
             raise Exception("Parsing Error")
         else:
-            return (tc.result.worlds, tc.result.typ, tc.toStringTree(recog=parser), parser._solver)
+            assert len(tc.mrs) == 1
+            mr = tc.mrs[0]
+            return (mr.result.worlds, mr.result.typ, tc.toStringTree(recog=parser), parser._solver)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
@@ -173,12 +175,14 @@ def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init(light_mode = True)
-    tc = parser.program(analyzer.default_context)
-    if tc.result == None:
+    tc = parser.program([analyzer.default_prompt])
+    if tc.mrs == None:
         raise Exception("Parsing Error")
     else:
-        assert len(tc.result.worlds) == 1
-        world = tc.result.worlds[0]
+        assert len(tc.mrs) == 1 
+        mr = tc.mrs[0]
+        assert len(mr.result.worlds) == 1
+        world = mr.result.worlds[0]
         assert not world.freezer
         assert not world.relids
         return world.constraints 
@@ -189,7 +193,7 @@ def refine_grammar(code : str) -> analyzer.Grammar:
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init()
-    tc = parser.program(analyzer.default_context)
+    tc = parser.program([analyzer.default_prompt])
     rs = parser.get_syntax_rules()
     g = analyzer.from_rules_to_grammar(rs)
     return g

@@ -540,7 +540,7 @@ class Context:
 class Prompt:
     enviro : PMap[str, Typ] 
     world : World
-    args : Any 
+    args : list[Any] 
 
 
 
@@ -1209,6 +1209,13 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
 
     def make_plate_entry(control_pair : tuple[PSet[str], Typ]):
 
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG control_pair type:
+{control_pair[1]}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+
         bound_vars = control_pair[0]
         typ : Typ = control_pair[1]
 
@@ -1665,7 +1672,7 @@ def make_constraint_typ(positive : bool):
 # end def
 
 
-default_context = Context(m(), World(s(), s(), s()))
+default_prompt = Prompt(m(), World(s(), s(), s()), [])
 
 
 class Solver:
@@ -3069,15 +3076,12 @@ class ExprRule(Rule):
     def distill_ite_condition(self, context : Context) -> Context:
         return context
 
-    def distill_ite_true_branch(self, context : Context, 
-        true_body_results: list[Result], 
-        false_body_results: list[Result] 
+    def distill_ite_true_branch(self, context : Context, condition_typ: Typ
     ) -> Context:
         return context
 
-    def distill_ite_false_branch(self, context : Context, 
+    def distill_ite_false_branch(self, context : Context, condition_typ: Typ,
         true_body_results: list[Result], 
-        false_body_results: list[Result] 
     ) -> Context:
         return context
 
@@ -3353,26 +3357,26 @@ class FunctionRule(Rule):
         enviro = pattern_attr.enviro
         return replace(context, enviro = context.enviro.update(enviro))
 
-    def combine_single(self, pattern_typ : Typ, body_results : list[Result]) -> Switch:
+    def combine_single(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result]) -> Switch:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return Switch([Branch(result.world, pattern_typ, result.typ) for result in body_results])
+        return Switch([Branch(result.world, pattern_attr.typ, result.typ) for result in body_results])
 
     def distill_cons_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(context, pattern_attr)
 
-    def distill_cons_tail(self, context : Context, pattern_typ : Typ, body_var : TVar) -> Context:
+    def distill_cons_tail(self, context : Context, pattern_attr : PatternAttr, body_var : TVar) -> Context:
         '''
         - the previous pattern should not influence what pattern occurs next
         - patterns may overlap
         '''
         return context
 
-    def combine_cons(self, pattern_typ : Typ, body_results : list[Result], tail : Switch) -> Switch:
-        switch = self.combine_single(pattern_typ, body_results) 
+    def combine_cons(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result], tail : Switch) -> Switch:
+        switch = self.combine_single(context, pattern_attr, body_results) 
         return Switch(switch.branches + tail.branches)
 
 

@@ -291,12 +291,12 @@ class SlimParser ( Parser ):
 
     def init(self, light_mode = False): 
         self._cache = {}
-        self._guidance = default_context
+        self._guidance = [default_prompt]
         self._overflow = False  
         self._light_mode = light_mode  
 
     def reset(self): 
-        self._guidance = default_context 
+        self._guidance = [default_prompt]
         self._overflow = False
         # self.getCurrentToken()
         # self.getTokenStream()
@@ -318,21 +318,24 @@ class SlimParser ( Parser ):
     def tokenIndex(self):
         return self.getCurrentToken().tokenIndex
 
-    def guide_nonterm(self, f : Callable, *args) -> Optional[Context]:
+    def refine_prompt(self, f : Callable, prompt : Prompt) -> Optional[Prompt]:
+        args = [Context(prompt.enviro, prompt.world)] + prompt.args
         for arg in args:
             if arg == None:
                 self._overflow = True
 
-        result_nt = None
+        result_context = None
         if not self._overflow:
-            result_nt = f(*args)
-            self._guidance = result_nt
+            result_context = f(*args)
+            prompt = Prompt(result_context.enviro, result_context.world, [])
+            self._guidance = prompt 
 
             tok = self.getCurrentToken()
             if tok.type == self.EOF :
                 self._overflow = True 
 
-        return result_nt 
+        return prompt
+
 
 
 
@@ -353,7 +356,8 @@ class SlimParser ( Parser ):
 
 
 
-    def collect(self, f : Callable, *args):
+    def collect(self, f : Callable, prompt : Prompt):
+        args = [Context(prompt.enviro, prompt.world)] + prompt.args
 
         if self._overflow:
             return None
@@ -551,14 +555,14 @@ class SlimParser ( Parser ):
     class ProgramContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, context:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.context = None
-            self.result = None
+            self.prompts = None
+            self.mrs = None
             self._preamble = None # PreambleContext
             self._expr = None # ExprContext
-            self.context = context
+            self.prompts = prompts
 
         def preamble(self):
             return self.getTypedRuleContext(SlimParser.PreambleContext,0)
@@ -582,9 +586,9 @@ class SlimParser ( Parser ):
 
 
 
-    def program(self, context:Context):
+    def program(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.ProgramContext(self, self._ctx, self.state, context)
+        localctx = SlimParser.ProgramContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 4, self.RULE_program)
         try:
             self.state = 72
@@ -603,19 +607,19 @@ class SlimParser ( Parser ):
                 self._solver = Solver(localctx._preamble.aliasing if localctx._preamble.aliasing else m())
 
                 self.state = 66
-                localctx._expr = self.expr(context)
+                localctx._expr = self.expr(prompts)
 
-                localctx.result = localctx._expr.result
+                localctx.mrs = localctx._expr.mrs
 
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 69
-                localctx._expr = self.expr(context)
+                localctx._expr = self.expr(prompts)
 
                 self._solver = Solver(m())
-                localctx.result = localctx._expr.result
+                localctx.mrs = localctx._expr.mrs
 
                 pass
 
@@ -1230,11 +1234,11 @@ class SlimParser ( Parser ):
     class ExprContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.result = None
+            self.prompts = None
+            self.mrs = None
             self._base = None # BaseContext
             self.head = None # BaseContext
             self.tail = None # ExprContext
@@ -1251,7 +1255,7 @@ class SlimParser ( Parser ):
             self._target = None # TargetContext
             self.contin = None # ExprContext
             self.body = None # ExprContext
-            self.nt = nt
+            self.prompts = prompts
 
         def base(self):
             return self.getTypedRuleContext(SlimParser.BaseContext,0)
@@ -1297,9 +1301,9 @@ class SlimParser ( Parser ):
 
 
 
-    def expr(self, nt:Context):
+    def expr(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.ExprContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.ExprContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 16, self.RULE_expr)
         try:
             self.state = 262
@@ -1313,9 +1317,9 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 200
-                localctx._base = self.base(nt)
+                localctx._base = self.base(prompts)
 
-                localctx.result = localctx._base.result
+                localctx.mrs = localctx._base.mrs
                 self.update_sr('expr', [n('base')])
 
                 pass
@@ -1323,24 +1327,50 @@ class SlimParser ( Parser ):
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
 
-                head_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_head, nt)
+                head_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_tuple_head, prompt)
+                    for prompt in prompts 
+                ]
 
                 self.state = 204
-                localctx.head = self.base(head_nt)
+                localctx.head = self.base(head_prompts)
 
                 self.guide_symbol(',')
 
                 self.state = 206
                 self.match(SlimParser.T__12)
 
-                nt = replace(nt, worlds = localctx.head.result.worlds)
-                tail_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_tail, nt, localctx.head.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = head_result.world,
+                        args = prompt.args + [head_result.typ]
+                    )
+                    for i, prompt in enumerate(prompts) 
+                    for head_result in localctx.head.mrs[i]
+                ] 
+                tail_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_tuple_tail, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 208
-                localctx.tail = self.expr(tail_nt)
+                localctx.tail = self.expr(tail_prompts)
 
-                nt = replace(nt, worlds = localctx.tail.result.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, nt, localctx.head.result.typ, localctx.tail.result.typ) 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = tail_result.world,
+                        args = prompt.args + [tail_result.typ]
+                    )
+                    for i, prompt in enumerate(prompts)
+                    for tail_result in localctx.tail.mrs[i]
+                ] 
+
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, prompt) 
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [n('base'), t(','), n('expr')])
 
                 pass
@@ -1350,36 +1380,69 @@ class SlimParser ( Parser ):
                 self.state = 211
                 self.match(SlimParser.T__21)
 
-                condition_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_condition, nt)
+                condition_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_condition, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 213
-                localctx.condition = self.expr(condition_nt)
+                localctx.condition = self.expr(condition_prompts)
 
                 self.guide_symbol('then')
 
                 self.state = 215
                 self.match(SlimParser.T__22)
 
-                true_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, nt, localctx.condition.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = condition_result.world,
+                        args = prompt.args + [condition_result.typ]
+                    )
+                    for i, prompt in enumerate(prompts)
+                    for condition_result in localctx.condition.mrs[i] 
+                ]
+                true_branch_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 217
-                localctx.true_branch = self.expr(true_branch_nt)
+                localctx.true_branch = self.expr(true_branch_prompts)
 
                 self.guide_symbol('else')
 
                 self.state = 219
                 self.match(SlimParser.T__23)
 
-                false_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, nt, localctx.condition.result.typ, localctx.true_branch.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.true_branch.mrs[i]]
+                    )
+                    for i, prompt in enumerate(prompts)
+                ]
+                false_branch_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 221
-                localctx.false_branch = self.expr(false_branch_nt)
+                localctx.false_branch = self.expr(false_branch_prompts)
 
-                nt = replace(nt, worlds = localctx.condition.result.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_ite, nt, localctx.condition.result.typ, 
-                    localctx.true_branch.result.worlds, localctx.true_branch.result.typ, 
-                    localctx.false_branch.result.worlds, localctx.false_branch.result.typ
-                ) 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.false_branch.mrs[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 
                 pass
@@ -1387,19 +1450,43 @@ class SlimParser ( Parser ):
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
 
-                rator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_rator, nt)
+                rator_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_rator, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 225
-                localctx.rator = self.base(rator_nt)
+                localctx.rator = self.base(rator_prompts)
 
-                nt = replace(nt, worlds = localctx.rator.result.worlds)
-                keychain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_keychain, nt, localctx.rator.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = rator_result.world,
+                        args = prompt.args + [rator_result.typ]
+                    )
+                    for i, prompt in enumerate(prompts)
+                    for rator_result in localctx.rator.mrs[i]
+                ]
+                keychain_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_keychain, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 227
-                localctx._keychain = self.keychain(keychain_nt)
+                localctx._keychain = self.keychain()
 
-                nt = replace(nt, worlds = keychain_nt.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_projection, nt, localctx.rator.result.typ, localctx._keychain.keys) 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world,
+                        args = prompt.args + [localctx._keychain.keys]
+                    )
+                    for prompt in prompts
+                ]
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [n('base'), n('keychain')])
 
                 pass
@@ -1407,19 +1494,43 @@ class SlimParser ( Parser ):
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
 
-                cator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_cator, nt)
+                cator_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_cator, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 231
-                localctx.cator = self.base(cator_nt)
+                localctx.cator = self.base(cator_prompts)
 
-                nt = replace(nt, worlds = localctx.cator.result.worlds)
-                argchain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_argchain, nt, localctx.cator.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = cator_result.world,
+                        args = prompt.args + [cator_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for cator_result in localctx.cator.mrs[i] 
+                ]
+                argchain_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_argchain, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 233
-                localctx._argchain = self.argchain(argchain_nt)
+                localctx._argchain = self.argchain(argchain_prompts)
 
-                nt = replace(nt, worlds = localctx._argchain.attr.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_application, nt, localctx.cator.result.typ, localctx._argchain.attr.args)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = localctx._argchain.attrs[i].world,
+                        args = prompt.args + [localctx._argchain.attrs[i].args]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_application, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [n('base'), n('argchain')])
 
                 pass
@@ -1427,19 +1538,43 @@ class SlimParser ( Parser ):
             elif la_ == 7:
                 self.enterOuterAlt(localctx, 7)
 
-                arg_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_arg, nt)
+                arg_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_arg, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 237
-                localctx.arg = self.base(arg_nt)
+                localctx.arg = self.base(arg_prompts)
 
-                nt = replace(nt, worlds = localctx.arg.result.worlds)
-                pipeline_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, nt, localctx.arg.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = arg_result.worlds,
+                        args = prompt.args + [arg_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for arg_result in localctx.arg.mrs[i]
+                ]
+                pipeline_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 239
-                localctx._pipeline = self.pipeline(pipeline_nt)
+                localctx._pipeline = self.pipeline(pipeline_prompts)
 
-                nt = replace(nt, worlds = localctx._pipeline.attr.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, nt, localctx.arg.result.typ, localctx._pipeline.attr.cators)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = pipeline_attr.worlds,
+                        args = prompt.args + [localctx._pipeline.attrs[i].cators]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, prompts)
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [n('base'), n('pipeline')])
 
                 pass
@@ -1454,23 +1589,45 @@ class SlimParser ( Parser ):
                 self.state = 244
                 localctx._ID = self.match(SlimParser.ID)
 
-                target_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_target, nt, (None if localctx._ID is None else localctx._ID.text))
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [(None if localctx._ID is None else localctx._ID.text)]
+                    )
+                    for prompt in prompts
+                ]
+                target_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_target, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 246
-                localctx._target = self.target(target_nt)
+                localctx._target = self.target(target_prompts)
 
                 self.guide_symbol('in')
 
                 self.state = 248
                 self.match(SlimParser.T__25)
 
-                nt = replace(nt, worlds = localctx._target.result.worlds)
-                contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, (None if localctx._ID is None else localctx._ID.text), localctx._target.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = target_result.world,
+                        args = prompt.args + [target_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for target_result in localctx._target.mrs[i]
+                ]
+                contin_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_contin, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 250
-                localctx.contin = self.expr(contin_nt)
+                localctx.contin = self.expr(contin_prompts)
 
-                localctx.result = localctx.contin.result
+                localctx.mrs = localctx.contin.mrs
                 self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
 
                 pass
@@ -1485,18 +1642,32 @@ class SlimParser ( Parser ):
                 self.state = 255
                 self.match(SlimParser.T__7)
 
-                body_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_fix_body, nt)
+                body_prompts = [
+                    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_fix_body, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 257
-                localctx.body = self.expr(body_nt)
+                localctx.body = self.expr(body_prompts)
 
                 self.guide_symbol(')')
 
                 self.state = 259
                 self.match(SlimParser.T__8)
 
-                nt = replace(nt, worlds = localctx.body.result.worlds)
-                localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_fix, nt, localctx.body.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = body_result.world,
+                        args = prompt.args + [body_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for body_result in localctx.body.mrs[i]
+                ]
+                localctx.mrs = [
+                    self.collect(ExprRule(self._solver, self._light_mode).combine_fix, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 
                 pass
@@ -1514,17 +1685,17 @@ class SlimParser ( Parser ):
     class BaseContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.result = None
+            self.prompts = None
+            self.mrs = None
             self._ID = None # Token
             self.body = None # BaseContext
             self._record = None # RecordContext
             self._function = None # FunctionContext
             self._argchain = None # ArgchainContext
-            self.nt = nt
+            self.prompts = prompts
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1559,9 +1730,9 @@ class SlimParser ( Parser ):
 
 
 
-    def base(self, nt:Context):
+    def base(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.BaseContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.BaseContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 18, self.RULE_base)
         try:
             self.state = 286
@@ -1577,7 +1748,10 @@ class SlimParser ( Parser ):
                 self.state = 265
                 self.match(SlimParser.T__4)
 
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_unit, nt)
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_unit, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('base', [t('@')])
 
                 pass
@@ -1592,13 +1766,35 @@ class SlimParser ( Parser ):
                 self.state = 269
                 localctx._ID = self.match(SlimParser.ID)
 
-                body_nt = self.guide_nonterm(BaseRule(self._solver, self._light_mode).distill_tag_body, nt, (None if localctx._ID is None else localctx._ID.text))
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [(None if localctx._ID is None else localctx._ID.text)]
+                    )
+                    for prompt in prompts
+                ]
+                body_prompts = [
+                    self.refine_prompt(BaseRule(self._solver, self._light_mode).distill_tag_body, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 271
-                localctx.body = self.base(body_nt)
+                localctx.body = self.base(body_prompts)
 
-                nt = replace(nt, worlds = localctx.body.result.worlds)
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_tag, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = body_result.world,
+                        args = prompt.args + [body_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for body_result in localctx.body.mrs[i]
+                ]
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_tag, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('base', [t('~'), ID, n('base')])
 
                 pass
@@ -1606,10 +1802,20 @@ class SlimParser ( Parser ):
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 274
-                localctx._record = self.record(nt)
+                localctx._record = self.record(prompts)
 
-                branches = localctx._record.branches
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_record, nt, branches)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx._record.switches[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
+                    for prompts in prompt
+                ]
                 self.update_sr('base', [n('record')])
 
                 pass
@@ -1619,10 +1825,20 @@ class SlimParser ( Parser ):
 
 
                 self.state = 278
-                localctx._function = self.function(nt)
+                localctx._function = self.function(prompts)
 
-                branches = localctx._function.branches
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_function, nt, branches)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx._function.switches[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('base', [n('function')])
 
                 pass
@@ -1632,7 +1848,18 @@ class SlimParser ( Parser ):
                 self.state = 281
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_var, nt, (None if localctx._ID is None else localctx._ID.text))
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [(None if localctx._ID is None else localctx._ID.text)]
+                    )
+                    for prompt in prompts
+                ]
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_var, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('base', [ID])
 
                 pass
@@ -1640,10 +1867,20 @@ class SlimParser ( Parser ):
             elif la_ == 7:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 283
-                localctx._argchain = self.argchain(nt)
+                localctx._argchain = self.argchain(prompts)
 
-                nt = replace(nt, worlds = localctx._argchain.attr.worlds)
-                localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, nt, localctx._argchain.attr.args)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = localctx._argchain.attrs[i].world,
+                        args = prompt.args + [localctx._argchain.attrs[i].args]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.mrs = [
+                    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('base', [n('argchain')])
 
                 pass
@@ -1661,15 +1898,15 @@ class SlimParser ( Parser ):
     class RecordContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.branches = None
+            self.prompts = None
+            self.switches = None
             self._ID = None # Token
             self.body = None # ExprContext
             self.tail = None # RecordContext
-            self.nt = nt
+            self.prompts = prompts
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1696,9 +1933,9 @@ class SlimParser ( Parser ):
 
 
 
-    def record(self, nt:Context):
+    def record(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.RecordContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.RecordContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 20, self.RULE_record)
         try:
             self.state = 309
@@ -1719,17 +1956,44 @@ class SlimParser ( Parser ):
                 self.state = 291
                 localctx._ID = self.match(SlimParser.ID)
 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [(None if localctx._ID is None else localctx._ID.text)]
+                    )
+                    for prompt in prompts
+                ]
                 self.guide_symbol('=')
 
                 self.state = 293
                 self.match(SlimParser.T__1)
 
-                body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_single_body, nt, (None if localctx._ID is None else localctx._ID.text))
+                sub_prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = []
+                    )
+                    for prompt in prompts
+                ]
 
                 self.state = 295
-                localctx.body = self.expr(body_nt)
+                localctx.body = self.expr(sub_prompts)
 
-                localctx.branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.result.worlds, localctx.body.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.body.mrs[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+
+                localctx.switches = [
+                    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 
                 pass
@@ -1744,23 +2008,66 @@ class SlimParser ( Parser ):
                 self.state = 300
                 localctx._ID = self.match(SlimParser.ID)
 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [(None if localctx._ID is None else localctx._ID.text)]
+                    )
+                    for prompt in prompts
+                ]
                 self.guide_symbol('=')
 
                 self.state = 302
                 self.match(SlimParser.T__1)
 
-                body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_body, nt, (None if localctx._ID is None else localctx._ID.text))
+                sub_prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = []
+                    )
+                    for prompt in prompts
+                ]
 
                 self.state = 304
-                localctx.body = self.expr(body_nt)
+                localctx.body = self.expr(sub_prompts)
 
-                tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_tail, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.result.typ)
+
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.body.mrs[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+
+                sub_prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = []
+                    )
+                    for prompt in prompts
+                ]
 
                 self.state = 306
-                localctx.tail = self.record(tail_nt)
+                localctx.tail = self.record(sub_prompts)
 
-                tail_branches = localctx.tail.branches
-                localctx.branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.result.worlds, localctx.body.result.typ, tail_branches)
+
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.tail.switches[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.switches = [
+                    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt) 
+                    for prompt in prompts
+                ]
                 self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
 
                 pass
@@ -1778,15 +2085,15 @@ class SlimParser ( Parser ):
     class FunctionContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.branches = None
+            self.prompts = None
+            self.switches = None
             self._pattern = None # PatternContext
             self.body = None # ExprContext
             self.tail = None # FunctionContext
-            self.nt = nt
+            self.prompts = prompts
 
         def pattern(self):
             return self.getTypedRuleContext(SlimParser.PatternContext,0)
@@ -1814,9 +2121,9 @@ class SlimParser ( Parser ):
 
 
 
-    def function(self, nt:Context):
+    def function(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.FunctionContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.FunctionContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 22, self.RULE_function)
         try:
             self.state = 332
@@ -1834,19 +2141,41 @@ class SlimParser ( Parser ):
 
 
                 self.state = 314
-                localctx._pattern = self.pattern(nt)
+                localctx._pattern = self.pattern()
 
                 self.guide_symbol('=>')
 
                 self.state = 316
                 self.match(SlimParser.T__28)
 
-                body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_single_body, nt, localctx._pattern.attr)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = [localctx._pattern.attr]
+                    )
+                    for prompt in prompts
+                ]
+                body_prompts = [
+                    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_single_body, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 318
-                localctx.body = self.expr(body_nt)
+                localctx.body = self.expr(body_prompts)
 
-                localctx.branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_single, nt, localctx._pattern.attr.typ, localctx.body.result.worlds, localctx.body.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.body.mrs[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.switches = [
+                    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
 
                 pass
@@ -1858,25 +2187,59 @@ class SlimParser ( Parser ):
 
 
                 self.state = 323
-                localctx._pattern = self.pattern(nt)
+                localctx._pattern = self.pattern()
 
                 self.guide_symbol('=>')
 
                 self.state = 325
                 self.match(SlimParser.T__28)
 
-                body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_body, nt, localctx._pattern.attr)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx._pattern.attr]
+                    )
+                    for prompt in prompts
+                ]
+                body_prompts = [
+                    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_body, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 327
-                localctx.body = self.expr(body_nt)
+                localctx.body = self.expr(body_prompts)
 
-                tail_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_tail, nt, localctx._pattern.attr.typ, localctx.body.result.typ)
+
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.body.mrs[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                tail_prompts = [
+                    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_tail, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 329
-                localctx.tail = self.function(tail_nt)
+                localctx.tail = self.function(tail_prompts)
 
-                tail_branches = localctx.tail.branches
-                localctx.branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, nt, localctx._pattern.attr.typ, localctx.body.result.worlds, localctx.body.result.typ, tail_branches)
+
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = prompt.args + [localctx.tail.switches[i]]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.switches = [
+                    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
+                    for prompt in prompts 
+                ]
                 self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
 
                 pass
@@ -1894,14 +2257,12 @@ class SlimParser ( Parser ):
     class KeychainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
             self.keys = None
             self._ID = None # Token
             self.tail = None # KeychainContext
-            self.nt = nt
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -1924,9 +2285,9 @@ class SlimParser ( Parser ):
 
 
 
-    def keychain(self, nt:Context):
+    def keychain(self):
 
-        localctx = SlimParser.KeychainContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.KeychainContext(self, self._ctx, self.state)
         self.enterRule(localctx, 24, self.RULE_keychain)
         try:
             self.state = 346
@@ -1947,7 +2308,7 @@ class SlimParser ( Parser ):
                 self.state = 337
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_single, nt, (None if localctx._ID is None else localctx._ID.text))
+                localctx.keys = KeychainRule(self._solver, self._light_mode).combine_single((None if localctx._ID is None else localctx._ID.text))
                 self.update_sr('keychain', [t('.'), ID])
 
                 pass
@@ -1964,9 +2325,9 @@ class SlimParser ( Parser ):
 
 
                 self.state = 343
-                localctx.tail = self.keychain(nt)
+                localctx.tail = self.keychain()
 
-                localctx.keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), localctx.tail.keys)
+                localctx.keys = KeychainRule(self._solver, self._light_mode).combine_cons((None if localctx._ID is None else localctx._ID.text), localctx.tail.keys)
                 self.update_sr('keychain', [t('.'), ID, n('keychain')])
 
                 pass
@@ -1984,15 +2345,15 @@ class SlimParser ( Parser ):
     class ArgchainContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.attr = None
+            self.prompts = None
+            self.attrs = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # ArgchainContext
-            self.nt = nt
+            self.prompts = prompts
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -2016,9 +2377,9 @@ class SlimParser ( Parser ):
 
 
 
-    def argchain(self, nt:Context):
+    def argchain(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 26, self.RULE_argchain)
         try:
             self.state = 365
@@ -2034,18 +2395,32 @@ class SlimParser ( Parser ):
                 self.state = 349
                 self.match(SlimParser.T__7)
 
-                content_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_single_content, nt) 
+                content_prompts = [
+                    self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_single_content, prompt) 
+                    for prompt in prompts
+                ]   
 
                 self.state = 351
-                localctx.content = self.expr(content_nt)
+                localctx.content = self.expr(content_prompts)
 
                 self.guide_symbol(')')
 
                 self.state = 353
                 self.match(SlimParser.T__8)
 
-                nt = replace(nt, worlds = localctx.content.result.worlds)
-                localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, nt, localctx.content.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = content_result.world,
+                        args = prompt.args + [content_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for content_result in localctx.content.mrs[i]
+                ]
+                localctx.attrs = [
+                    self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('argchain', [t('('), n('expr'), t(')')])
 
                 pass
@@ -2055,23 +2430,52 @@ class SlimParser ( Parser ):
                 self.state = 356
                 self.match(SlimParser.T__7)
 
-                head_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_cons_head, nt) 
+                head_prompts = [
+                    self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_cons_head, prompt) 
+                    for prompt in prompts
+                ]
 
                 self.state = 358
-                localctx.head = self.expr(head_nt)
+                localctx.head = self.expr(head_prompts)
 
                 self.guide_symbol(')')
 
                 self.state = 360
                 self.match(SlimParser.T__8)
 
-                nt = replace(nt, worlds = localctx.head.result.worlds)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = head_result.world,
+                        args = prompt.args + [head_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for head_result in localctx.head.mrs[i]
+                ]
+                tail_prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = prompt.world, 
+                        args = []
+                    )
+                    for prompt in prompts
+                ] 
 
                 self.state = 362
-                localctx.tail = self.argchain(nt)
+                localctx.tail = self.argchain(tail_prompts)
 
-                nt = replace(nt, worlds = localctx.tail.attr.worlds)
-                localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, nt, localctx.head.result.typ, localctx.tail.attr.args)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = localctx.tail.attrs[i].world,
+                        args = prompt.args + [localctx.tail.attrs[i].args]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.attrs = [
+                    self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 
                 pass
@@ -2089,15 +2493,15 @@ class SlimParser ( Parser ):
     class PipelineContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.attr = None
+            self.prompts = None
+            self.attrs = None
             self.content = None # ExprContext
             self.head = None # ExprContext
             self.tail = None # PipelineContext
-            self.nt = nt
+            self.prompts = prompts
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -2121,9 +2525,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pipeline(self, nt:Context):
+    def pipeline(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.PipelineContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.PipelineContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 28, self.RULE_pipeline)
         try:
             self.state = 380
@@ -2139,13 +2543,27 @@ class SlimParser ( Parser ):
                 self.state = 368
                 self.match(SlimParser.T__30)
 
-                content_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_single_content, nt) 
+                content_prompts = [
+                    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_single_content, prompt)
+                    for prompt in prompts
+                ]
 
                 self.state = 370
-                localctx.content = self.expr(content_nt)
+                localctx.content = self.expr(content_prompts)
 
-                nt = replace(nt, worlds = localctx.content.result.worlds)
-                localctx.attr = self.collect(PipelineRule(self._solver, self._light_mode).combine_single, nt, localctx.content.result.typ)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = content_result.world,
+                        args = prompt.args + [content_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for content_result in localctx.content.mrs[i]
+                ]
+                localctx.attrs = [
+                    self.collect(PipelineRule(self._solver, self._light_mode).combine_single, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('pipeline', [t('|>'), n('expr')])
 
                 pass
@@ -2155,19 +2573,43 @@ class SlimParser ( Parser ):
                 self.state = 373
                 self.match(SlimParser.T__30)
 
-                head_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_head, nt) 
+                head_prompts = [
+                    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_cons_head, prompt) 
+                    for prompt in prompts
+                ]
 
                 self.state = 375
-                localctx.head = self.expr(head_nt)
+                localctx.head = self.expr(head_prompts)
 
-                nt = replace(nt, worlds = localctx.head.result.worlds)
-                tail_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_tail, nt, localctx.head.result.typ) 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = head_result.world,
+                        args = prompt.args + [head_result.typ]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for head_result in localctx.head.mrs[i]
+                ]
+                tail_prompts = [
+                    self.refine_prompt(PipelineRule(self._solver, self._light_mode).distill_cons_tail, prompt) 
+                    for prompt in prompts
+                ]
 
                 self.state = 377
-                localctx.tail = self.pipeline(tail_nt)
+                localctx.tail = self.pipeline(tail_prompts)
 
-                nt = replace(nt, worlds = localctx.tail.attr.worlds)
-                localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode, nt).combine_cons, nt, localctx.head.result.typ, localctx.tail.attr.cators)
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = localctx.tail.attrs[i].world,
+                        args = prompt.args + [localctx.tail.attrs[i].cators]
+                    )
+                    for i,prompt in enumerate(prompts)
+                ]
+                localctx.attrs = [
+                    self.collect(ArgchainRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
+                    for prompt in prompts
+                ]
                 self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 
                 pass
@@ -2185,14 +2627,14 @@ class SlimParser ( Parser ):
     class TargetContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, prompts:list[Prompt]=None):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
-            self.result = None
+            self.prompts = None
+            self.mrs = None
             self._expr = None # ExprContext
             self._typ = None # TypContext
-            self.nt = nt
+            self.prompts = prompts
 
         def expr(self):
             return self.getTypedRuleContext(SlimParser.ExprContext,0)
@@ -2216,9 +2658,9 @@ class SlimParser ( Parser ):
 
 
 
-    def target(self, nt:Context):
+    def target(self, prompts:list[Prompt]):
 
-        localctx = SlimParser.TargetContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.TargetContext(self, self._ctx, self.state, prompts)
         self.enterRule(localctx, 30, self.RULE_target)
         try:
             self.state = 395
@@ -2233,12 +2675,11 @@ class SlimParser ( Parser ):
                 self.state = 383
                 self.match(SlimParser.T__1)
 
-                expr_nt = self.guide_nonterm(lambda: nt)
 
                 self.state = 385
-                localctx._expr = self.expr(expr_nt)
+                localctx._expr = self.expr(prompts)
 
-                localctx.result = localctx._expr.result
+                localctx.mrs = localctx._expr.mrs
                 self.update_sr('target', [t('='), n('expr')])
 
                 pass
@@ -2251,13 +2692,23 @@ class SlimParser ( Parser ):
                 self.state = 390
                 self.match(SlimParser.T__1)
 
-                expr_nt = self.guide_nonterm(lambda: nt)
 
                 self.state = 392
-                localctx._expr = self.expr(expr_nt)
+                localctx._expr = self.expr(prompts)
 
-                nt = replace(nt, worlds = localctx._expr.result.worlds)
-                localctx.result = self.collect(TargetRule(self._solver, self._light_mode).combine_anno, nt, localctx._typ.combo) 
+                prompts = [
+                    Prompt(
+                        enviro = prompt.enviro, 
+                        world = expr_result.world,
+                        args = prompt.args + [localctx._typ.combo]
+                    )
+                    for i,prompt in enumerate(prompts)
+                    for expr_result in localctx._expr.mrs[i]
+                ]
+                localctx.mrs = [
+                    self.collect(TargetRule(self._solver, self._light_mode).combine_anno, prompt) 
+                    for prompt in prompts
+                ]
                 self.update_sr('target', [t(':'), TID, t('='), n('expr')])
 
                 pass
@@ -2276,15 +2727,13 @@ class SlimParser ( Parser ):
     class PatternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
             self.attr = None
             self._base_pattern = None # Base_patternContext
             self.head = None # Base_patternContext
             self.tail = None # PatternContext
-            self.nt = nt
 
         def base_pattern(self):
             return self.getTypedRuleContext(SlimParser.Base_patternContext,0)
@@ -2308,9 +2757,9 @@ class SlimParser ( Parser ):
 
 
 
-    def pattern(self, nt:Context):
+    def pattern(self):
 
-        localctx = SlimParser.PatternContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.PatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 32, self.RULE_pattern)
         try:
             self.state = 409
@@ -2324,7 +2773,7 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 398
-                localctx._base_pattern = self.base_pattern(nt)
+                localctx._base_pattern = self.base_pattern()
 
                 localctx.attr = localctx._base_pattern.attr
                 self.update_sr('pattern', [n('basepat')])
@@ -2336,7 +2785,7 @@ class SlimParser ( Parser ):
 
 
                 self.state = 402
-                localctx.head = self.base_pattern(nt)
+                localctx.head = self.base_pattern()
 
                 self.guide_symbol(',')
 
@@ -2345,9 +2794,9 @@ class SlimParser ( Parser ):
 
 
                 self.state = 406
-                localctx.tail = self.pattern(nt)
+                localctx.tail = self.pattern()
 
-                localctx.attr = self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, nt, localctx.head.attr, localctx.tail.attr) 
+                localctx.attr = PatternRule(self._solver, self._light_mode).combine_tuple(localctx.head.attr, localctx.tail.attr)
                 self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
 
                 pass
@@ -2365,16 +2814,14 @@ class SlimParser ( Parser ):
     class Base_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
             self.attr = None
             self._ID = None # Token
             self.body = None # Base_patternContext
             self._record_pattern = None # Record_patternContext
             self._pattern = None # PatternContext
-            self.nt = nt
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -2405,9 +2852,9 @@ class SlimParser ( Parser ):
 
 
 
-    def base_pattern(self, nt:Context):
+    def base_pattern(self):
 
-        localctx = SlimParser.Base_patternContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.Base_patternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 34, self.RULE_base_pattern)
         try:
             self.state = 431
@@ -2423,7 +2870,7 @@ class SlimParser ( Parser ):
                 self.state = 412
                 localctx._ID = self.match(SlimParser.ID)
 
-                localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, nt, (None if localctx._ID is None else localctx._ID.text))
+                localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_var((None if localctx._ID is None else localctx._ID.text))
                 self.update_sr('basepat', [ID])
 
                 pass
@@ -2433,7 +2880,7 @@ class SlimParser ( Parser ):
                 self.state = 414
                 self.match(SlimParser.T__4)
 
-                localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, nt)
+                localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_unit()
                 self.update_sr('basepat', [t('@')])
 
                 pass
@@ -2450,9 +2897,9 @@ class SlimParser ( Parser ):
 
 
                 self.state = 420
-                localctx.body = self.base_pattern(nt)
+                localctx.body = self.base_pattern()
 
-                localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr)
+                localctx.attr = BasePatternRule(self._solver, self._light_mode).combine_tag((None if localctx._ID is None else localctx._ID.text), localctx.body.attr)
                 self.update_sr('basepat', [t('~'), ID, n('basepat')])
 
                 pass
@@ -2460,7 +2907,7 @@ class SlimParser ( Parser ):
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 423
-                localctx._record_pattern = self.record_pattern(nt)
+                localctx._record_pattern = self.record_pattern()
 
                 localctx.attr = localctx._record_pattern.attr
                 self.update_sr('basepat', [n('recpat')])
@@ -2472,7 +2919,7 @@ class SlimParser ( Parser ):
                 self.state = 426
                 self.match(SlimParser.T__7)
                 self.state = 427
-                localctx._pattern = self.pattern(nt)
+                localctx._pattern = self.pattern()
                 self.state = 428
                 self.match(SlimParser.T__8)
 
@@ -2494,15 +2941,13 @@ class SlimParser ( Parser ):
     class Record_patternContext(ParserRuleContext):
         __slots__ = 'parser'
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1, nt:Context=None):
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.nt = None
             self.attr = None
             self._ID = None # Token
             self.body = None # PatternContext
             self.tail = None # Record_patternContext
-            self.nt = nt
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
@@ -2529,9 +2974,9 @@ class SlimParser ( Parser ):
 
 
 
-    def record_pattern(self, nt:Context):
+    def record_pattern(self):
 
-        localctx = SlimParser.Record_patternContext(self, self._ctx, self.state, nt)
+        localctx = SlimParser.Record_patternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_record_pattern)
         try:
             self.state = 454
@@ -2559,9 +3004,9 @@ class SlimParser ( Parser ):
 
 
                 self.state = 440
-                localctx.body = self.pattern(nt)
+                localctx.body = self.pattern()
 
-                localctx.attr = self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr)
+                localctx.attr = RecordPatternRule(self._solver, self._light_mode).combine_single((None if localctx._ID is None else localctx._ID.text), localctx.body.attr)
                 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
 
                 pass
@@ -2576,20 +3021,19 @@ class SlimParser ( Parser ):
                 self.state = 445
                 localctx._ID = self.match(SlimParser.ID)
 
-                self.guide_symbol('=')
 
                 self.state = 447
                 self.match(SlimParser.T__1)
 
 
                 self.state = 449
-                localctx.body = self.pattern(nt)
+                localctx.body = self.pattern()
 
 
                 self.state = 451
-                localctx.tail = self.record_pattern(nt)
+                localctx.tail = self.record_pattern()
 
-                localctx.attr = self.collect(RecordPatternRule(self._solver, self._light_mode, nt).combine_cons, nt, (None if localctx._ID is None else localctx._ID.text), localctx.body.attr, localctx.tail.attr)
+                localctx.attr = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons((None if localctx._ID is None else localctx._ID.text), localctx.body.attr, localctx.tail.attr)
                 self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
 
                 pass

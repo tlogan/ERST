@@ -123,12 +123,12 @@ public class SlimParser extends Parser {
 
 	def init(self, light_mode = False): 
 	    self._cache = {}
-	    self._guidance = [Prompt(default_context, [])]
+	    self._guidance = [default_prompt]
 	    self._overflow = False  
 	    self._light_mode = light_mode  
 
 	def reset(self): 
-	    self._guidance = [Instane(default_context, [])]
+	    self._guidance = [default_prompt]
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
@@ -151,7 +151,7 @@ public class SlimParser extends Parser {
 	    return self.getCurrentToken().tokenIndex
 
 	def refine_prompt(self, f : Callable, prompt : Prompt) -> Optional[Prompt]:
-	    args = [Context(prompt.world, prompt.enviro)] + prompt.args
+	    args = [Context(prompt.enviro, prompt.world)] + prompt.args
 	    for arg in args:
 	        if arg == None:
 	            self._overflow = True
@@ -159,13 +159,15 @@ public class SlimParser extends Parser {
 	    result_context = None
 	    if not self._overflow:
 	        result_context = f(*args)
-	        self._guidance = result_nt
+	        prompt = Prompt(result_context.enviro, result_context.world, [])
+	        self._guidance = prompt 
 
 	        tok = self.getCurrentToken()
 	        if tok.type == self.EOF :
 	            self._overflow = True 
 
-	    return Prompt(result_context.world, result_context.enviro, [])
+	    return prompt
+
 
 
 
@@ -187,7 +189,7 @@ public class SlimParser extends Parser {
 
 
 	def collect(self, f : Callable, prompt : Prompt):
-	    args = [Context(prompt.world, prompt.enviro)] + prompt.args
+	    args = [Context(prompt.enviro, prompt.world)] + prompt.args
 
 	    if self._overflow:
 	        return None
@@ -362,7 +364,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ProgramContext extends ParserRuleContext {
-		public list[Prompts] prompts;
+		public list[Prompt] prompts;
 		public list[MultiResult] mrs;
 		public PreambleContext preamble;
 		public ExprContext expr;
@@ -373,14 +375,14 @@ public class SlimParser extends Parser {
 			return getRuleContext(ExprContext.class,0);
 		}
 		public ProgramContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ProgramContext(ParserRuleContext parent, int invokingState, list[Prompts] prompts) {
+		public ProgramContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
 			super(parent, invokingState);
 			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
 	}
 
-	public final ProgramContext program(list[Prompts] prompts) throws RecognitionException {
+	public final ProgramContext program(list[Prompt] prompts) throws RecognitionException {
 		ProgramContext _localctx = new ProgramContext(_ctx, getState(), prompts);
 		enterRule(_localctx, 4, RULE_program);
 		try {
@@ -1001,7 +1003,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
-		public list[Prompts] prompts;
+		public list[Prompt] prompts;
 		public list[MultiResult] mrs;
 		public BaseContext base;
 		public BaseContext head;
@@ -1042,14 +1044,14 @@ public class SlimParser extends Parser {
 			return getRuleContext(TargetContext.class,0);
 		}
 		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ExprContext(ParserRuleContext parent, int invokingState, list[Prompts] prompts) {
+		public ExprContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
 			super(parent, invokingState);
 			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 	}
 
-	public final ExprContext expr(list[Prompts] prompts) throws RecognitionException {
+	public final ExprContext expr(list[Prompt] prompts) throws RecognitionException {
 		ExprContext _localctx = new ExprContext(_ctx, getState(), prompts);
 		enterRule(_localctx, 16, RULE_expr);
 		try {
@@ -1090,11 +1092,12 @@ public class SlimParser extends Parser {
 				match(T__12);
 
 				prompts = [
-				    replace(prompts[i], 
+				    Prompt(
+				        enviro = prompt.enviro, 
 				        world = head_result.world,
-				        args = prompts[i].args + [head_result.typ]
+				        args = prompt.args + [head_result.typ]
 				    )
-				    for i in len(prompts) 
+				    for i, prompt in enumerate(prompts) 
 				    for head_result in ((ExprContext)_localctx).head.mrs[i]
 				] 
 				tail_prompts = [
@@ -1103,14 +1106,15 @@ public class SlimParser extends Parser {
 				]
 
 				setState(208);
-				((ExprContext)_localctx).tail = expr(tail_contexts);
+				((ExprContext)_localctx).tail = expr(tail_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
+				    Prompt(
+				        enviro = prompt.enviro, 
 				        world = tail_result.world,
-				        args = prompts[i].args + [tail_result.typ]
+				        args = prompt.args + [tail_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i, prompt in enumerate(prompts)
 				    for tail_result in ((ExprContext)_localctx).tail.mrs[i]
 				] 
 
@@ -1130,7 +1134,7 @@ public class SlimParser extends Parser {
 
 				condition_prompts = [
 				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_condition, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 
 				setState(213);
@@ -1142,20 +1146,21 @@ public class SlimParser extends Parser {
 				match(T__22);
 
 				prompts = [
-				    replace(prompts[i], 
+				    Prompt(
+				        enviro = prompt.enviro, 
 				        world = condition_result.world,
-				        args = prompts[i].args + [condition_result.typ]
+				        args = prompt.args + [condition_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i, prompt in enumerate(prompts)
 				    for condition_result in ((ExprContext)_localctx).condition.mrs[i] 
 				]
 				true_branch_prompts = [
 				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 
 				setState(217);
-				((ExprContext)_localctx).true_branch = expr(true_branch_prompt);
+				((ExprContext)_localctx).true_branch = expr(true_branch_prompts);
 
 				self.guide_symbol('else')
 
@@ -1163,10 +1168,12 @@ public class SlimParser extends Parser {
 				match(T__23);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((ExprContext)_localctx).true_branch.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((ExprContext)_localctx).true_branch.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i, prompt in enumerate(prompts)
 				]
 				false_branch_prompts = [
 				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, prompt)
@@ -1177,13 +1184,15 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).false_branch = expr(false_branch_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((ExprContext)_localctx).false_branch.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((ExprContext)_localctx).false_branch.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
-				    self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompts, prompt)
+				    self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompt)
 				    for prompt in prompts
 				]
 				self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
@@ -1203,11 +1212,12 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).rator = base(rator_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = rator_result.world
-				        args = prompts[i].args + [rator_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = rator_result.world,
+				        args = prompt.args + [rator_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i, prompt in enumerate(prompts)
 				    for rator_result in ((ExprContext)_localctx).rator.mrs[i]
 				]
 				keychain_prompts = [
@@ -1219,7 +1229,9 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).keychain = keychain();
 
 				prompts = [
-				    replace(prompt, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world,
 				        args = prompt.args + [((ExprContext)_localctx).keychain.keys]
 				    )
 				    for prompt in prompts
@@ -1245,27 +1257,29 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).cator = base(cator_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = caotr_result.world
-				        args = prompts[i].args + [cator_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = cator_result.world,
+				        args = prompt.args + [cator_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for cator_result in ((ExprContext)_localctx).cator.mrs[i] 
 				]
 				argchain_prompts = [
 				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_argchain, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 
 				setState(233);
 				((ExprContext)_localctx).argchain = argchain(argchain_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = argchain_attr.world,
-				        args = prompts[i].args + [((ExprContext)_localctx).argchain.attrs[i].args]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = ((ExprContext)_localctx).argchain.attrs[i].world,
+				        args = prompt.args + [((ExprContext)_localctx).argchain.attrs[i].args]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
 				    self.collect(ExprRule(self._solver, self._light_mode).combine_application, prompt)
@@ -1288,15 +1302,16 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).arg = base(arg_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = arg_result.worlds
-				        args = prompts[i].args + [arg_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = arg_result.worlds,
+				        args = prompt.args + [arg_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for arg_result in ((ExprContext)_localctx).arg.mrs[i]
 				]
 				pipeline_prompts = [
-				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompts)
+				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompt)
 				    for prompt in prompts
 				]
 
@@ -1304,11 +1319,12 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).pipeline = pipeline(pipeline_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = pipeline_attr.worlds
-				        args = prompts[i].args + [((ExprContext)_localctx).pipeline.attrs[i].cators]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = pipeline_attr.worlds,
+				        args = prompt.args + [((ExprContext)_localctx).pipeline.attrs[i].cators]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
 				    self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, prompts)
@@ -1330,13 +1346,15 @@ public class SlimParser extends Parser {
 				((ExprContext)_localctx).ID = match(ID);
 
 				prompts = [
-				    replace(prompt, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [(((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null)]
 				    )
 				    for prompt in prompts
 				]
 				target_prompts = [
-				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_target, prompts)
+				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_target, prompt)
 				    for prompt in prompts
 				]
 
@@ -1349,16 +1367,17 @@ public class SlimParser extends Parser {
 				match(T__25);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = target_result.world
-				        args = prompts[i].args + [target_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = target_result.world,
+				        args = prompt.args + [target_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for target_result in ((ExprContext)_localctx).target.mrs[i]
 				]
 				contin_prompts = [
 				    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_let_contin, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 
 				setState(250);
@@ -1394,11 +1413,12 @@ public class SlimParser extends Parser {
 				match(T__8);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = body_result.world
-				        args = prompts[i].args + [body_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = body_result.world,
+				        args = prompt.args + [body_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for body_result in ((ExprContext)_localctx).body.mrs[i]
 				]
 				_localctx.mrs = [
@@ -1490,7 +1510,9 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).ID = match(ID);
 
 				prompts = [
-				    replace(prompt, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [(((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null)]
 				    )
 				    for prompt in prompts
@@ -1504,15 +1526,16 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).body = base(body_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = body_result.world
-				        args = prompts[i].args + [body_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = body_result.world,
+				        args = prompt.args + [body_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for body_result in ((BaseContext)_localctx).body.mrs[i]
 				]
 				_localctx.mrs = [
-				    self.collect(BaseRule(self._solver, self._light_mode).combine_tag, prompts)
+				    self.collect(BaseRule(self._solver, self._light_mode).combine_tag, prompt)
 				    for prompt in prompts
 				]
 				self.update_sr('base', [t('~'), ID, n('base')])
@@ -1526,10 +1549,12 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).record = record(prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((BaseContext)_localctx).record.switches[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((BaseContext)_localctx).record.switches[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
 				    self.collect(BaseRule(self._solver, self._light_mode).combine_record, prompts)
@@ -1548,13 +1573,15 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).function = function(prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((BaseContext)_localctx).function.switches[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((BaseContext)_localctx).function.switches[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
-				    self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompts)
+				    self.collect(BaseRule(self._solver, self._light_mode).combine_function, prompt)
 				    for prompt in prompts
 				]
 				self.update_sr('base', [n('function')])
@@ -1568,7 +1595,9 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).ID = match(ID);
 
 				prompts = [
-				    replace(prompt, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [(((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null)]
 				    )
 				    for prompt in prompts
@@ -1588,11 +1617,12 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).argchain = argchain(prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = argchain_attr.worlds,
-				        args = prompts[i].args + [((BaseContext)_localctx).argchain.attrs[i].args]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = ((BaseContext)_localctx).argchain.attrs[i].world,
+				        args = prompt.args + [((BaseContext)_localctx).argchain.attrs[i].args]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.mrs = [
 				    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
@@ -1661,7 +1691,9 @@ public class SlimParser extends Parser {
 				((RecordContext)_localctx).ID = match(ID);
 
 				prompts = [
-				    replace(prompts, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)]
 				    )
 				    for prompt in prompts
@@ -1672,7 +1704,11 @@ public class SlimParser extends Parser {
 				match(T__1);
 
 				sub_prompts = [
-				    replace(prompt, args = [])
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = []
+				    )
 				    for prompt in prompts
 				]
 
@@ -1680,15 +1716,17 @@ public class SlimParser extends Parser {
 				((RecordContext)_localctx).body = expr(sub_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((RecordContext)_localctx).body.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((RecordContext)_localctx).body.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 
 				_localctx.switches = [
 				    self.collect(RecordRule(self._solver, self._light_mode).combine_single, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 				self.update_sr('record', [SEMI, ID, t('='), n('expr')])
 
@@ -1706,7 +1744,9 @@ public class SlimParser extends Parser {
 				((RecordContext)_localctx).ID = match(ID);
 
 				prompts = [
-				    replace(prompts, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [(((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null)]
 				    )
 				    for prompt in prompts
@@ -1717,7 +1757,11 @@ public class SlimParser extends Parser {
 				match(T__1);
 
 				sub_prompts = [
-				    replace(prompt, args = [])
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = []
+				    )
 				    for prompt in prompts
 				]
 
@@ -1726,14 +1770,20 @@ public class SlimParser extends Parser {
 
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((RecordContext)_localctx).body.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((RecordContext)_localctx).body.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 
 				sub_prompts = [
-				    replace(prompt, args = [])
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = []
+				    )
 				    for prompt in prompts
 				]
 
@@ -1742,10 +1792,12 @@ public class SlimParser extends Parser {
 
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((RecordContext)_localctx).tail.switches[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((RecordContext)_localctx).tail.switches[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.switches = [
 				    self.collect(RecordRule(self._solver, self._light_mode).combine_cons, prompt) 
@@ -1820,8 +1872,10 @@ public class SlimParser extends Parser {
 				match(T__28);
 
 				prompts = [
-				    replace(prompt, 
-				        args = prompt.args + [((FunctionContext)_localctx).pattern.attr]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = [((FunctionContext)_localctx).pattern.attr]
 				    )
 				    for prompt in prompts
 				]
@@ -1834,10 +1888,12 @@ public class SlimParser extends Parser {
 				((FunctionContext)_localctx).body = expr(body_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((FunctionContext)_localctx).body.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((FunctionContext)_localctx).body.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.switches = [
 				    self.collect(FunctionRule(self._solver, self._light_mode).combine_single, prompt)
@@ -1863,7 +1919,9 @@ public class SlimParser extends Parser {
 				match(T__28);
 
 				prompts = [
-				    replace(prompt, 
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
 				        args = prompt.args + [((FunctionContext)_localctx).pattern.attr]
 				    )
 				    for prompt in prompts
@@ -1878,10 +1936,12 @@ public class SlimParser extends Parser {
 
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((FunctionContext)_localctx).body.mrs[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((FunctionContext)_localctx).body.mrs[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				tail_prompts = [
 				    self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_cons_tail, prompt)
@@ -1893,10 +1953,12 @@ public class SlimParser extends Parser {
 
 
 				prompts = [
-				    replace(prompts[i], 
-				        args = prompts[i].args + [((FunctionContext)_localctx).tail.switches[i]]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = prompt.args + [((FunctionContext)_localctx).tail.switches[i]]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.switches = [
 				    self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, prompt)
@@ -2034,7 +2096,10 @@ public class SlimParser extends Parser {
 				setState(349);
 				match(T__7);
 
-				content_prompts = self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_single_content, prompts) 
+				content_prompts = [
+				    self.refine_prompt(ArgchainRule(self._solver, self._light_mode).distill_single_content, prompt) 
+				    for prompt in prompts
+				]   
 
 				setState(351);
 				((ArgchainContext)_localctx).content = expr(content_prompts);
@@ -2045,15 +2110,16 @@ public class SlimParser extends Parser {
 				match(T__8);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = content_result.world
-				        args = prompts[i].args + [content_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = content_result.world,
+				        args = prompt.args + [content_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for content_result in ((ArgchainContext)_localctx).content.mrs[i]
 				]
 				_localctx.attrs = [
-				    self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompts)
+				    self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompt)
 				    for prompt in prompts
 				]
 				self.update_sr('argchain', [t('('), n('expr'), t(')')])
@@ -2080,27 +2146,33 @@ public class SlimParser extends Parser {
 				match(T__8);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = head_result.world
-				        args = prompts[i].args + [head_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = head_result.world,
+				        args = prompt.args + [head_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for head_result in ((ArgchainContext)_localctx).head.mrs[i]
 				]
 				tail_prompts = [
-				    replace(prompt, args = [])
-				    prompt in prompts
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = prompt.world, 
+				        args = []
+				    )
+				    for prompt in prompts
 				] 
 
 				setState(362);
 				((ArgchainContext)_localctx).tail = argchain(tail_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        world = tail_attr.world
-				        args = prompts[i].args + [((ArgchainContext)_localctx).tail.attrs[i].args]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = ((ArgchainContext)_localctx).tail.attrs[i].world,
+				        args = prompt.args + [((ArgchainContext)_localctx).tail.attrs[i].args]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.attrs = [
 				    self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, prompt)
@@ -2125,7 +2197,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PipelineContext extends ParserRuleContext {
-		public list[Prompts] prompts;
+		public list[Prompt] prompts;
 		public list[PipelineAttr] attrs;
 		public ExprContext content;
 		public ExprContext head;
@@ -2137,14 +2209,14 @@ public class SlimParser extends Parser {
 			return getRuleContext(PipelineContext.class,0);
 		}
 		public PipelineContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PipelineContext(ParserRuleContext parent, int invokingState, list[Prompts] prompts) {
+		public PipelineContext(ParserRuleContext parent, int invokingState, list[Prompt] prompts) {
 			super(parent, invokingState);
 			this.prompts = prompts;
 		}
 		@Override public int getRuleIndex() { return RULE_pipeline; }
 	}
 
-	public final PipelineContext pipeline(list[Prompts] prompts) throws RecognitionException {
+	public final PipelineContext pipeline(list[Prompt] prompts) throws RecognitionException {
 		PipelineContext _localctx = new PipelineContext(_ctx, getState(), prompts);
 		enterRule(_localctx, 28, RULE_pipeline);
 		try {
@@ -2171,11 +2243,12 @@ public class SlimParser extends Parser {
 				((PipelineContext)_localctx).content = expr(content_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = content_result.world,
-				        args = prompts[i].args + [content_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = content_result.world,
+				        args = prompt.args + [content_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for content_result in ((PipelineContext)_localctx).content.mrs[i]
 				]
 				_localctx.attrs = [
@@ -2201,11 +2274,12 @@ public class SlimParser extends Parser {
 				((PipelineContext)_localctx).head = expr(head_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = head_result.world,
-				        args = prompts[i].args + [head_result.typ]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = head_result.world,
+				        args = prompt.args + [head_result.typ]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for head_result in ((PipelineContext)_localctx).head.mrs[i]
 				]
 				tail_prompts = [
@@ -2217,15 +2291,16 @@ public class SlimParser extends Parser {
 				((PipelineContext)_localctx).tail = pipeline(tail_prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = tail_attr.world,
-				        args = prompts[i].args + [((PipelineContext)_localctx).tail.attrs[i].cators]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = ((PipelineContext)_localctx).tail.attrs[i].world,
+				        args = prompt.args + [((PipelineContext)_localctx).tail.attrs[i].cators]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				]
 				_localctx.attrs = [
 				    self.collect(ArgchainRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
-				    for prompt in prompt
+				    for prompt in prompts
 				]
 				self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 
@@ -2306,15 +2381,16 @@ public class SlimParser extends Parser {
 				((TargetContext)_localctx).expr = expr(prompts);
 
 				prompts = [
-				    replace(prompts[i], 
-				        worlds = expr_result.world,
-				        args = prompts[i].args + [((TargetContext)_localctx).typ.combo]
+				    Prompt(
+				        enviro = prompt.enviro, 
+				        world = expr_result.world,
+				        args = prompt.args + [((TargetContext)_localctx).typ.combo]
 				    )
-				    for i in len(prompts)
+				    for i,prompt in enumerate(prompts)
 				    for expr_result in ((TargetContext)_localctx).expr.mrs[i]
 				]
 				_localctx.mrs = [
-				    self.collect(TargetRule(self._solver, self._light_mode).combine_anno, prompts) 
+				    self.collect(TargetRule(self._solver, self._light_mode).combine_anno, prompt) 
 				    for prompt in prompts
 				]
 				self.update_sr('target', [t(':'), TID, t('='), n('expr')])
