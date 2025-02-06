@@ -249,14 +249,19 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoin
 
 
 @dataclass(frozen=True, eq=True)
-class Branch:
+class NDBranch:
+    pattern : Typ 
+    results : list[Result]
+
+@dataclass(frozen=True, eq=True)
+class DBranch:
     world : World
     pattern : Typ 
     body : Typ
 
 @dataclass(frozen=True, eq=True)
 class Switch:
-    branches : list[Branch]
+    branches : list[NDBranch]
 
 @dataclass(frozen=True, eq=True)
 class Keychain:
@@ -1208,14 +1213,6 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
         ]
 
     def make_plate_entry(control_pair : tuple[PSet[str], Typ]):
-
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG control_pair type:
-{control_pair[1]}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
-
         bound_vars = control_pair[0]
         typ : Typ = control_pair[1]
 
@@ -1652,13 +1649,48 @@ def make_constraint_typ(positive : bool):
         outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(skolems)
         inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(skolems).difference(free_vars)
 
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG make_constraint polarity: {positive} 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+
         if outer_ids and inner_ids:
+
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG both quantifiers 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             return outer_con(
                 tuple(outer_ids), tuple(outer_constraints),
                 inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
             )
         elif outer_ids:
-            assert not inner_constraints
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG inner_constraints should be empty
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+free_vars: {free_vars}
+
+skolems: {skolems}
+
+outer_ids: {outer_ids}
+
+outer_constraints: {concretize_constraints(outer_constraints)}
+
+inner_ids: {inner_ids}
+
+inner_constraints: {concretize_constraints(inner_constraints)}
+
+payload: {concretize_typ(payload)}
+
+
+result: {concretize_typ(outer_con(tuple(outer_ids), tuple(outer_constraints), payload))}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+#             outer_constraints = outer_constraints.union(inner_constraints)
+            # assert not inner_constraints
             return outer_con(tuple(outer_ids), tuple(outer_constraints), payload)
         elif inner_ids:
             assert not outer_constraints
@@ -1888,11 +1920,11 @@ class Solver:
 
         return lower_result or upper_result 
 
-    def decode_negative_typ(self, worlds : list[World], t : Typ) -> Typ:
-        return self.decode_polarity_typ(worlds, False, t)
+    def decode_negative_typ(self, results : list[Result]) -> Typ:
+        return self.decode_polarity_typ(results, False)
 
-    def decode_positive_typ(self, worlds : list[World], t : Typ) -> Typ:
-        return self.decode_polarity_typ(worlds, True, t)
+    def decode_positive_typ(self, results : list[Result]) -> Typ:
+        return self.decode_polarity_typ(results, True)
 
 
     def resolve_polarity_id(self, world : World, rigids : PSet[str], polarity : bool, id : str) -> Typ:
@@ -1988,11 +2020,11 @@ class Solver:
         )
 
 
-    def decode_polarity_typ(self, worlds : list[World], polarity : bool, t : Typ) -> Typ:
+    def decode_polarity_typ(self, results : list[Result], polarity : bool) -> Typ:
         resolved_typs = [
             # TODO: switch to using package_typ, (to be implemented).
-            self.resolve_polarity_typ(world, s(), polarity, t)
-            for world in worlds
+            self.resolve_polarity_typ(result.world, s(), polarity, result.typ)
+            for result in results 
         ] 
         return self.simplify_typ(make_unio(resolved_typs))
 
@@ -2212,7 +2244,7 @@ class Solver:
                 result = Diff(result, neg)
         return result
 
-    def augment_branches_with_diff(self, branches : list[Branch]) -> list[Branch]:
+    def augment_branches_with_diff(self, ndbranches : list[NDBranch]) -> list[DBranch]:
         '''
         nil -> zero
         cons X -> succ Y 
@@ -2223,15 +2255,16 @@ class Solver:
         augmented_branches = []
         negs = []
 
-        for branch in branches:
+        for ndbranch in ndbranches:
             augmented_branches += [
-                Branch(branch.world, self.make_diff(empty_world(), branch.pattern, negs), branch.body)
+                DBranch(result.world, self.make_diff(empty_world(), ndbranch.pattern, negs), result.typ)
+                for result in ndbranch.results
             ]
-            neg_fvs = extract_free_vars_from_typ(s(), branch.pattern)  
+            neg_fvs = extract_free_vars_from_typ(s(), ndbranch.pattern)  
             neg = (
-                Exi(tuple(sorted(neg_fvs)), (), branch.pattern)
+                Exi(tuple(sorted(neg_fvs)), (), ndbranch.pattern)
                 if neg_fvs else
-                branch.pattern 
+                ndbranch.pattern 
             )
             negs += [neg]
         return augmented_branches 
@@ -3031,6 +3064,11 @@ class BaseRule(Rule):
             for t in context.enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rigids: {rigids}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         # TODO: move augmentation outside
         augmented_branches = self.solver.augment_branches_with_diff(switch.branches)
         generalized_branches = []
@@ -3090,12 +3128,9 @@ class ExprRule(Rule):
         false_body_results: list[Result] 
     ) -> list[Result]: 
         switch = Switch([
-            Branch(result.world, TTag('true', TUnit()), result.typ)
-            for result in true_body_results
-        ] + [
-            Branch(result.world, TTag('false', TUnit()), result.typ)
-            for result in false_body_results
-        ])
+            NDBranch(TTag('true', TUnit()), true_body_results),
+            NDBranch(TTag('false', TUnit()), false_body_results)
+        ] )
         # print(f"""
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~
         # DEBUG ite len(function_worlds): {len(function_worlds)}
@@ -3363,7 +3398,7 @@ class FunctionRule(Rule):
         which could separate params into case patterns.
         should package the 
         """
-        return Switch([Branch(result.world, pattern_attr.typ, result.typ) for result in body_results])
+        return Switch([NDBranch(pattern_attr.typ, body_results)])
 
     def distill_cons_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
         return self.distill_single_body(context, pattern_attr)

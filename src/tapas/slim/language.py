@@ -147,7 +147,7 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     tc = parser.typ()
     return tc.combo
 
-def analyze(code : str) -> tuple[list[analyzer.World], analyzer.Typ, str, analyzer.Solver]:
+def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
     try:
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
@@ -160,14 +160,17 @@ def analyze(code : str) -> tuple[list[analyzer.World], analyzer.Typ, str, analyz
         else:
             assert len(tc.mrs) == 1
             mr = tc.mrs[0]
-            return (mr.result.worlds, mr.result.typ, tc.toStringTree(recog=parser), parser._solver)
+            if len(mr) == 1:
+                return (mr[0].typ, tc.toStringTree(recog=parser), parser._solver)
+            else:
+                return (analyzer.Bot(), tc.toStringTree(recog=parser), parser._solver)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
-        return ([], analyzer.Bot(), "", parser._solver)
+        return (analyzer.Bot(), "", parser._solver)
     except analyzer.InhabitableError:
-        return ([], analyzer.Bot(), "", parser._solver)
+        return (analyzer.Bot(), "", parser._solver)
 
 def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
     input_stream = InputStream(code)
