@@ -27,6 +27,9 @@ Op = Optional
 class InhabitableError(Exception):
     pass
 
+class Fail(Exception):
+    pass
+
 @dataclass(frozen=True, eq=True)
 class Nonterm: 
     id : str 
@@ -423,6 +426,25 @@ def indent(block: str) -> str:
     return "\n".join([
         dent + line
         for line in lines
+    ])
+
+def concretize_ndbranch(nd : NDBranch) -> str:
+    return "NDBRANCH(" + concretize_typ(nd.pattern) + "->\n" + "".join([ 
+        "---\n" + 
+        str(result.world.skolems) + "\n" +
+        "<<<\n" + 
+        concretize_constraints(result.world.constraints) + 
+        "\n>>>" + "\n" +
+        "** " + concretize_typ(result.typ) + " **"
+        for result in nd.results
+    ]) + ")"
+
+
+
+def concretize_switch(sw : Switch) -> str:
+    return "".join([
+        concretize_ndbranch(ndbranch) + "\n"
+        for ndbranch in sw.branches
     ])
 
 def concretize_typ(typ : Typ) -> str:
@@ -1195,7 +1217,7 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
 end sub_type
 '''
 
-def sub_constraints(assignment_map : PMap[str, Typ], constraints : tuple[Subtyping, ...]) -> tuple[Subtyping, ...]:
+def sub_constraints(assignment_map : PMap[str, Typ], constraints : Iterable[Subtyping]) -> tuple[Subtyping, ...]:
     return tuple(
         Subtyping(sub_typ(assignment_map, st.lower), sub_typ(assignment_map, st.upper))
         for st in constraints
@@ -1633,76 +1655,6 @@ def get_polarity_from_targets(positive : bool, targets : Iterable[Typ], id : str
 #     resolved_payload = sub_typ(resolution_map, payload)
 
 
-def make_constraint_typ(positive : bool):
-    (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
-    def make(free_vars : PSet[str], skolems : PSet[str], constraints : PSet[Subtyping], payload : Typ):
-        payload_vars = extract_free_vars_from_typ(s(), payload)
-        assert not bool(free_vars.intersection(skolems))
-        outer_constraints = pset(
-            st
-            for st in constraints
-            for fvs in [extract_free_vars_from_constraints(s(), [st])]
-            if not bool (fvs.difference(skolems)) # every fvs is a skolem
-        )
-        inner_constraints = constraints.difference(outer_constraints)
-
-        outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(skolems)
-        inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(skolems).difference(free_vars)
-
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG make_constraint polarity: {positive} 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-
-        if outer_ids and inner_ids:
-
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG both quantifiers 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-            return outer_con(
-                tuple(outer_ids), tuple(outer_constraints),
-                inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
-            )
-        elif outer_ids:
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG inner_constraints should be empty
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-free_vars: {free_vars}
-
-skolems: {skolems}
-
-outer_ids: {outer_ids}
-
-outer_constraints: {concretize_constraints(outer_constraints)}
-
-inner_ids: {inner_ids}
-
-inner_constraints: {concretize_constraints(inner_constraints)}
-
-payload: {concretize_typ(payload)}
-
-
-result: {concretize_typ(outer_con(tuple(outer_ids), tuple(outer_constraints), payload))}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
-#             outer_constraints = outer_constraints.union(inner_constraints)
-            # assert not inner_constraints
-            return outer_con(tuple(outer_ids), tuple(outer_constraints), payload)
-        elif inner_ids:
-            assert not outer_constraints
-            return inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
-        else:
-            assert not inner_constraints and not outer_constraints
-            return payload
-        # end if/else
-    # end def
-    return make
-# end def
-
 
 default_prompt = Prompt(m(), World(s(), s(), s()), [])
 
@@ -2112,6 +2064,68 @@ class Solver:
     def make_renaming(self, old_ids) -> PMap[str, Typ]:
         return self.make_submap_from_renaming(self.make_renaming_ids(old_ids))
 
+    def make_constraint_typ(self, positive : bool):
+        (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
+        def extrude(renaming : PMap[str, str]):
+            return pset(
+                Subtyping(TVar(b), TVar(a))
+                if positive else
+                Subtyping(TVar(a), TVar(b))
+                for a, b in renaming.items()
+            )
+
+
+        def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], pre_payload : Typ):
+            # TODO: need to consider adding extrusion of free_vars (rigids). 
+            # TODO: how does extrusion compare to simply avoiding inner quantification 
+            # TODO: how do both of these relate to learning constraints on closed variables (skolems)
+            # TODO: that is, should closed variables constrain what is learnable about open variables?
+            # TODO: or should open variables transitively open closed variables?
+            # TODO: I think it should constrain, which means I've implemented it wrong.
+            # EXI x . ALL y . P(x,y) 
+            # ALL x . EXI y . P(x,y) 
+            # ALL y . EXI x . All y' <: y. P(x,y') 
+            payload_vars = extract_free_vars_from_typ(s(), pre_payload)
+            assert not bool(foreignids.intersection(closedids))
+            outer_constraints = pset(
+                st
+                for st in constraints
+                for fvs in [extract_free_vars_from_constraints(s(), [st])]
+                if not bool (fvs.difference(closedids)) # every fvs is a skolem
+            )
+            pre_inner_constraints = constraints.difference(outer_constraints)
+
+            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(closedids)
+            local_inner_ids = extract_free_vars_from_constraints(s(), pre_inner_constraints).union(payload_vars).difference(closedids).difference(foreignids)
+            foreign_inner_ids = extract_free_vars_from_constraints(s(), pre_inner_constraints).union(payload_vars).intersection(foreignids)
+
+
+            renaming = self.make_renaming_ids(foreign_inner_ids)
+            submap = self.make_submap_from_renaming(renaming)
+            payload = sub_typ(submap, pre_payload)
+            inner_constraints = extrude(renaming).union(sub_constraints(submap, pre_inner_constraints))
+            inner_ids = local_inner_ids.union(renaming.values())
+
+            if outer_ids and inner_ids:
+                return outer_con(
+                    tuple(outer_ids), tuple(outer_constraints),
+                    inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
+                )
+            elif outer_ids:
+                assert not pre_inner_constraints
+                return outer_con(tuple(outer_ids), tuple(outer_constraints), payload)
+            elif inner_ids:
+                assert not outer_constraints
+                return inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
+            else:
+                assert not inner_constraints and not outer_constraints
+                return payload
+            # end if/else
+        # end def
+        return make
+    # end def
+
+
 #     def solve_or_cache(self, world : World, lower : Typ, upper : Typ) -> list[World]:
 #         # TODO: consider if other checks are necessary to soundly cache constraint as assumption 
 #         # - e.g. should we ensure that variables constrained by relation are constrained alone?
@@ -2507,7 +2521,7 @@ class Solver:
 
         elif isinstance(lower, Fixpoint) and not isinstance(upper, Fixpoint):
             # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
-            # to avoid infinitue substiting back into the original problem, causing non-termination
+            # to avoid infinitue  back into the original problem, causing non-termination
             '''
             NOTE: rewrite into existential making shape of relation visible
             - allows matching shapes even if unrolling is undecidable
@@ -3089,12 +3103,20 @@ rigids: {rigids}
             )
             # TODO: switch to using package_typ, which will resolve targets if possible
             # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
-            generalized_case = make_constraint_typ(True)(rigids, branch.world.skolems, influential_constraints, imp)
+            generalized_case = self.solver.make_constraint_typ(True)(rigids, branch.world.skolems, influential_constraints, imp)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
         end for 
         '''
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG FUNCTION TYPE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(make_inter(generalized_branches))}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         return [Result(context.world, make_inter(generalized_branches))]
     '''
     end def
@@ -3223,10 +3245,13 @@ class ExprRule(Rule):
             ###########################
             cator_typ = result_var
 
-        return [
-            Result(world, result_var)
-            for world in worlds
-        ]
+        if len(worlds) > 0:
+            return [
+                Result(world, result_var)
+                for world in worlds
+            ]
+        else:
+            raise Fail()
 
     #########
     def distill_funnel_arg(self, context : Context) -> Context: 
@@ -3350,7 +3375,7 @@ class ExprRule(Rule):
             )
             rel_constraints = IH_rel_constraints.union(influential_constraints)
             # TODO: switch to using package_typ, which will resolve targets if possible
-            constrained_rel = make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
+            constrained_rel = self.solver.make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.skolems, rel_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
             # NOTE: parameter constraint isn't actually necessary; sound without it.
             # param_body = Unio(constrained_left, param_body)

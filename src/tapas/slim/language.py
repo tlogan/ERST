@@ -164,6 +164,8 @@ def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
                 return (mr[0].typ, tc.toStringTree(recog=parser), parser._solver)
             else:
                 return (analyzer.Bot(), tc.toStringTree(recog=parser), parser._solver)
+    except analyzer.Fail:
+        return (analyzer.Bot(), "", parser._solver)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")

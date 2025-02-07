@@ -688,6 +688,22 @@ self.update_sr('base', [ID])
 } 
 
 | argchain[prompts] {
+
+print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG prompts 
+~~~~~~~~~~~~~~~~~~~~~
+{prompts}
+~~~~~~~~~~~~~~~~~~~~~
+""")
+
+print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG argchain
+~~~~~~~~~~~~~~~~~~~~~
+{$argchain.attrs}
+~~~~~~~~~~~~~~~~~~~~~
+""")
 prompts = [
     Prompt(
         enviro = prompt.enviro, 
