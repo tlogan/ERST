@@ -1869,22 +1869,6 @@ class SlimParser ( Parser ):
                 self.state = 283
                 localctx._argchain = self.argchain(prompts)
 
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG prompts 
-                ~~~~~~~~~~~~~~~~~~~~~
-                {prompts}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG argchain
-                ~~~~~~~~~~~~~~~~~~~~~
-                {localctx._argchain.attrs}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
                 prompts = [
                     Prompt(
                         enviro = prompt.enviro, 
@@ -2424,22 +2408,6 @@ class SlimParser ( Parser ):
                 self.state = 353
                 self.match(SlimParser.T__8)
 
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG prompts C 
-                ~~~~~~~~~~~~~~~~~~~~~
-                {prompts}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG MRS C 
-                ~~~~~~~~~~~~~~~~~~~~~
-                {localctx.content.mrs}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
                 prompts = [
                     Prompt(
                         enviro = prompt.enviro, 
@@ -2453,16 +2421,6 @@ class SlimParser ( Parser ):
                     self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, prompt)
                     for prompt in prompts
                 ]
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG argchain C 
-                ~~~~~~~~~~~~~~~~~~~~~
-                {localctx.attrs}
-                ~~~~~~~~~~~~~~~~~~~~~
-                prompts: {prompts}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
                 self.update_sr('argchain', [t('('), n('expr'), t(')')])
 
                 pass
@@ -2518,14 +2476,6 @@ class SlimParser ( Parser ):
                     self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, prompt)
                     for prompt in prompts
                 ]
-
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG argchain A
-                ~~~~~~~~~~~~~~~~~~~~~
-                {localctx.attrs}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
                 self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
 
                 pass
@@ -2660,13 +2610,6 @@ class SlimParser ( Parser ):
                     self.collect(ArgchainRule(self._solver, self._light_mode, prompts).combine_cons, prompt)
                     for prompt in prompts
                 ]
-                print(f"""
-                ~~~~~~~~~~~~~~~~~~~~~
-                DEBUG argchain B 
-                ~~~~~~~~~~~~~~~~~~~~~
-                {localctx.attrs}
-                ~~~~~~~~~~~~~~~~~~~~~
-                """)
                 self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
 
                 pass

@@ -72,7 +72,7 @@ def print_worlds(worlds : Iterable[analyzer.World]):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DEBUG WORLD {i}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-world.freezer: {world.skolems}
+world.freezer: {world.closedids}
 
 world.constraints: 
 {constraints_str}

@@ -1616,22 +1616,6 @@ public class SlimParser extends Parser {
 				setState(283);
 				((BaseContext)_localctx).argchain = argchain(prompts);
 
-
-				print(f"""
-				~~~~~~~~~~~~~~~~~~~~~
-				DEBUG prompts 
-				~~~~~~~~~~~~~~~~~~~~~
-				{prompts}
-				~~~~~~~~~~~~~~~~~~~~~
-				""")
-
-				print(f"""
-				~~~~~~~~~~~~~~~~~~~~~
-				DEBUG argchain
-				~~~~~~~~~~~~~~~~~~~~~
-				{((BaseContext)_localctx).argchain.attrs}
-				~~~~~~~~~~~~~~~~~~~~~
-				""")
 				prompts = [
 				    Prompt(
 				        enviro = prompt.enviro, 

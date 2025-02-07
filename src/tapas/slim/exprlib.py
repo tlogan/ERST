@@ -40,6 +40,35 @@ case (x, y) => (
     )(lted(x, y))
 )
 ''')
+# x : X 
+# y : Y 
+# lted(x, y) : CLOSED Z 
+# TRUE -> Y  where (X, Y, Z) <: R 
+# FALSE -> X  where (X, Y, Z) <: R
+#
+# EXI Z . ALL X Y . if (X, Y, Z) <: R  then f : TRUE -> Y
+# ALL X Y . arg : TRUE -> f(arg) : EXI Z . [(X, Y, Z) <: R] Y 
+# ---skolemization---
+# EXI Z . [(X, Y, Z) <: R] ALL Y' [Y' <: Y] TRUE -> Y'
+# VS
+# EXI Z [(X, Y, Z) <: R], TRUE ->  Y -- this is correct; no need for extrusion
+#---------------------------------------------
+# EXI Z . (X, Y, Z) <: R,  (ALL Y' . (Y' <: Y,  arg : TRUE) ->  f(arg) : Y')
+# VS
+# EXI Z . (X, Y, Z) <: R,  (arg : TRUE ->  f(arg) : Y) -- this is correct; no need for extrusion
+#
+# outer constraints: all variables are either foreign or closed 
+# and there is at least one closed variable
+#
+# inner constraints: there is a variable that is open and local
+# 
+
+# TODO: need to update safety subproblems when learning constraints on variables
+# need to consider variables contained in other type forms.
+
+# IMPORTANT NOTE: closed variables can be influenced by open variables
+# as new information on X and Y arrives, the constraint on Z is specialized.
+# as opposed to Z being strict and preventing learning constraints on X and Y.
 
 
 
