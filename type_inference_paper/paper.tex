@@ -1256,6 +1256,8 @@ contains the space between types of the lower bound.
     }\lab{13}
 
     \inferrule {
+      \TODO{require that for all previous constraints $\alpha$ is alone in intro position}
+      \\\\
       \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
       \\
       \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 

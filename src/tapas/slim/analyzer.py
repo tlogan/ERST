@@ -2856,6 +2856,14 @@ class Solver:
 
         elif isinstance(upper, Fixpoint): 
 
+            # for relational constraints: 
+            #  P <: A |- ((A,U) <: R) ... (P, U) <: R 
+
+            #  B <: Tag(A,U) |- ((A,U) <: R) ... fails 
+
+            # require that for all previous constraints A is alone in intro position 
+
+
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 if not self._checking: print("~~~~~~ UNROLLING")
                 '''
