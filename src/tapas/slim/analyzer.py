@@ -2561,13 +2561,6 @@ class Solver:
 
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids: 
-
-            # TODO: generalize interpretation to produce subproblems
-            # that is, interpret previous constraints in terms of pending constraint
-            # rather than interpreting new constraint in terms of previous constraints 
-            #  P <: A |- (A <: T) ... P <: T
-            #  B <: Tag(A,U) |- (A <: T) ... B <: (Tag(T,U)) 
-
             trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
             skolem_constraints = pset(
                 Subtyping(st.lower, upper)
@@ -2855,15 +2848,6 @@ class Solver:
                 return []
 
         elif isinstance(upper, Fixpoint): 
-
-            # for relational constraints: 
-            #  P <: A |- ((A,U) <: R) ... (P, U) <: R 
-
-            #  B <: Tag(A,U) |- ((A,U) <: R) ... fails 
-
-            # require that for all previous constraints A is alone in intro position 
-
-
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 if not self._checking: print("~~~~~~ UNROLLING")
                 '''

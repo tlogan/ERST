@@ -63,9 +63,6 @@ case (x, y) => (
 # inner constraints: there is a variable that is open and local
 # 
 
-# TODO: need to update safety subproblems when learning constraints on variables
-# need to consider variables contained in other type forms.
-
 # IMPORTANT NOTE: closed variables can be influenced by open variables
 # as new information on X and Y arrives, the constraint on Z is specialized.
 # as opposed to Z being strict and preventing learning constraints on X and Y.
