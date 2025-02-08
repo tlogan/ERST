@@ -688,17 +688,25 @@ self.update_sr('base', [ID])
 } 
 
 | argchain[prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = $argchain.attrs[i].world,
-        args = prompt.args + [$argchain.attrs[i].args]
-    )
-    for i,prompt in enumerate(prompts)
-]
+
+print(f"""
+~~~~~~~~~~~~~~~~~~~
+DEBUG call argchain: {$argchain.text}
+len(prompts): {len(prompts)}
+len($argchain.attrs): {len($argchain.attrs)}
+~~~~~~~~~~~~~~~~~~~
+""")
 $mrs = [
-    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
-    for prompt in prompts
+    [
+        r
+        for attr in $argchain.attrs
+        for r in self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, Prompt(
+            enviro = outer_prompt.enviro, 
+            world = attr.world,
+            args = [attr.args]
+        ))
+    ]
+    for outer_prompt in prompts
 ]
 self.update_sr('base', [n('argchain')])
 } 
@@ -823,7 +831,23 @@ body_prompts = [
     self.refine_prompt(FunctionRule(self._solver, self._light_mode).distill_single_body, prompt)
     for prompt in prompts
 ]
+
+print(f"""
+%%%%%%%%%%%%%%%%%
+DEBUG BEFORE function body: {$pattern.text}
+-------------------
+len(body_prompts): {len(body_prompts)}
+%%%%%%%%%%%%%%%%%
+""")
 } body = expr[body_prompts] {
+print(f"""
+%%%%%%%%%%%%%%%%%
+DEBUG function body
+%%%%%%%%%%%%%%%%%
+- len($body.mrs):{len($body.mrs)}
+- len($body.mrs[0]):{len($body.mrs[0])}
+%%%%%%%%%%%%%%%%%
+""")
 prompts = [
     Prompt(
         enviro = prompt.enviro, 

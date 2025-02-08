@@ -1616,17 +1616,25 @@ public class SlimParser extends Parser {
 				setState(283);
 				((BaseContext)_localctx).argchain = argchain(prompts);
 
-				prompts = [
-				    Prompt(
-				        enviro = prompt.enviro, 
-				        world = ((BaseContext)_localctx).argchain.attrs[i].world,
-				        args = prompt.args + [((BaseContext)_localctx).argchain.attrs[i].args]
-				    )
-				    for i,prompt in enumerate(prompts)
-				]
+
+				print(f"""
+				~~~~~~~~~~~~~~~~~~~
+				DEBUG call argchain: {(((BaseContext)_localctx).argchain!=null?_input.getText(((BaseContext)_localctx).argchain.start,((BaseContext)_localctx).argchain.stop):null)}
+				len(prompts): {len(prompts)}
+				len(((BaseContext)_localctx).argchain.attrs): {len(((BaseContext)_localctx).argchain.attrs)}
+				~~~~~~~~~~~~~~~~~~~
+				""")
 				_localctx.mrs = [
-				    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
-				    for prompt in prompts
+				    [
+				        r
+				        for attr in ((BaseContext)_localctx).argchain.attrs
+				        for r in self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, Prompt(
+				            enviro = outer_prompt.enviro, 
+				            world = attr.world,
+				            args = [attr.args]
+				        ))
+				    ]
+				    for outer_prompt in prompts
 				]
 				self.update_sr('base', [n('argchain')])
 
@@ -1884,9 +1892,25 @@ public class SlimParser extends Parser {
 				    for prompt in prompts
 				]
 
+				print(f"""
+				%%%%%%%%%%%%%%%%%
+				DEBUG BEFORE function body: {(((FunctionContext)_localctx).pattern!=null?_input.getText(((FunctionContext)_localctx).pattern.start,((FunctionContext)_localctx).pattern.stop):null)}
+				-------------------
+				len(body_prompts): {len(body_prompts)}
+				%%%%%%%%%%%%%%%%%
+				""")
+
 				setState(318);
 				((FunctionContext)_localctx).body = expr(body_prompts);
 
+				print(f"""
+				%%%%%%%%%%%%%%%%%
+				DEBUG function body
+				%%%%%%%%%%%%%%%%%
+				- len(((FunctionContext)_localctx).body.mrs):{len(((FunctionContext)_localctx).body.mrs)}
+				- len(((FunctionContext)_localctx).body.mrs[0]):{len(((FunctionContext)_localctx).body.mrs[0])}
+				%%%%%%%%%%%%%%%%%
+				""")
 				prompts = [
 				    Prompt(
 				        enviro = prompt.enviro, 

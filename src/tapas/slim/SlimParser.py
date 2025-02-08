@@ -1869,17 +1869,25 @@ class SlimParser ( Parser ):
                 self.state = 283
                 localctx._argchain = self.argchain(prompts)
 
-                prompts = [
-                    Prompt(
-                        enviro = prompt.enviro, 
-                        world = localctx._argchain.attrs[i].world,
-                        args = prompt.args + [localctx._argchain.attrs[i].args]
-                    )
-                    for i,prompt in enumerate(prompts)
-                ]
+
+                print(f"""
+                ~~~~~~~~~~~~~~~~~~~
+                DEBUG call argchain: {(None if localctx._argchain is None else self._input.getText(localctx._argchain.start,localctx._argchain.stop))}
+                len(prompts): {len(prompts)}
+                len(localctx._argchain.attrs): {len(localctx._argchain.attrs)}
+                ~~~~~~~~~~~~~~~~~~~
+                """)
                 localctx.mrs = [
-                    self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, prompt)
-                    for prompt in prompts
+                    [
+                        r
+                        for attr in localctx._argchain.attrs
+                        for r in self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, Prompt(
+                            enviro = outer_prompt.enviro, 
+                            world = attr.world,
+                            args = [attr.args]
+                        ))
+                    ]
+                    for outer_prompt in prompts
                 ]
                 self.update_sr('base', [n('argchain')])
 
@@ -2161,9 +2169,25 @@ class SlimParser ( Parser ):
                     for prompt in prompts
                 ]
 
+                print(f"""
+                %%%%%%%%%%%%%%%%%
+                DEBUG BEFORE function body: {(None if localctx._pattern is None else self._input.getText(localctx._pattern.start,localctx._pattern.stop))}
+                -------------------
+                len(body_prompts): {len(body_prompts)}
+                %%%%%%%%%%%%%%%%%
+                """)
+
                 self.state = 318
                 localctx.body = self.expr(body_prompts)
 
+                print(f"""
+                %%%%%%%%%%%%%%%%%
+                DEBUG function body
+                %%%%%%%%%%%%%%%%%
+                - len(localctx.body.mrs):{len(localctx.body.mrs)}
+                - len(localctx.body.mrs[0]):{len(localctx.body.mrs[0])}
+                %%%%%%%%%%%%%%%%%
+                """)
                 prompts = [
                     Prompt(
                         enviro = prompt.enviro, 

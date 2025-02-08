@@ -1448,6 +1448,10 @@ def test_max():
     (result, parsetree, solver) = analyze(el.max)
     print("answer:\n" + analyzer.concretize_typ(result))
 
+def test_simple():
+    (result, parsetree, solver) = analyze(el.simple)
+    print("answer:\n" + analyzer.concretize_typ(result))
+
 def test_relationally_constrained_existential_subtyping_fail():
     solver = analyzer.Solver(m())
     strong = (f'''
@@ -2088,6 +2092,7 @@ if __name__ == '__main__':
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
     test_max()
+    # test_simple()
     # test_fix()
     # test_max_annotated()
     # test_max_subtyping()

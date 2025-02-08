@@ -2604,7 +2604,7 @@ class Solver:
             return [
                 m2
                 for m0 in worlds
-                for m1 in [replace(m0, skolems = m0.closedids.union(renamed_ids))]
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
                 for m2 in self.solve(m1, lower_body, upper)
             ]
 
@@ -2627,7 +2627,7 @@ class Solver:
             return [
                 m2
                 for m0 in worlds
-                for m1 in [replace(m0, skolems = m0.closedids.union(renamed_ids))]
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
                 for m2 in self.solve(m1, lower, weak_body)
             ]
 
@@ -3032,11 +3032,22 @@ class BaseRule(Rule):
 
     def combine_assoc(self, context : Context, argchain : list[Typ]) -> list[Result]:
         if len(argchain) == 1:
+            print(f"""
+-----------------
+DEBUG combine_assoc: {1}
+-----------------
+            """)
             return [Result(context.world, argchain[0])]
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
-            return ExprRule(self.solver, self.light_mode).combine_application(context, applicator, arguments) 
+            results = ExprRule(self.solver, self.light_mode).combine_application(context, applicator, arguments) 
+            print(f"""
+-----------------
+DEBUG combine_assoc: {len(results)}
+-----------------
+            """)
+            return results
 
     def combine_unit(self, context : Context) -> list[Result]:
         return [Result(context.world, TUnit())]
@@ -3073,6 +3084,12 @@ class BaseRule(Rule):
 
     # TODO: redo Context such that it only has a single world as input
     def combine_function(self, context : Context, switch : Switch) -> list[Result]:
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG switch: {len(switch.branches[0].results)}
+~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         '''
         Example
         ==============
@@ -3089,11 +3106,6 @@ class BaseRule(Rule):
             for t in context.enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rigids: {rigids}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         # TODO: move augmentation outside
         augmented_branches = self.solver.augment_branches_with_diff(switch.branches)
         generalized_branches = []
@@ -3120,14 +3132,6 @@ rigids: {rigids}
         '''
         end for 
         '''
-
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG FUNCTION TYPE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{concretize_typ(make_inter(generalized_branches))}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         return [Result(context.world, make_inter(generalized_branches))]
     '''
     end def
@@ -3164,11 +3168,6 @@ class ExprRule(Rule):
             NDBranch(TTag('true', TUnit()), true_body_results),
             NDBranch(TTag('false', TUnit()), false_body_results)
         ] )
-        # print(f"""
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # DEBUG ite len(function_worlds): {len(function_worlds)}
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # """)
         return [
             result
             for function_result in BaseRule(self.solver, self.light_mode).combine_function(context, switch)
@@ -3255,6 +3254,26 @@ class ExprRule(Rule):
             # ] 
             ###########################
             cator_typ = result_var
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG application result
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+len(worlds): {len(worlds)}
+...
+        """)
+
+        for i, world in enumerate(worlds):
+            print(f"""
+DEBUG each world: 
+i: {i}
+
+closed: {world.closedids}
+
+constraints: 
+{concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         if len(worlds) > 0:
             return [
@@ -3429,6 +3448,11 @@ class FunctionRule(Rule):
         return replace(context, enviro = context.enviro.update(enviro))
 
     def combine_single(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result]) -> Switch:
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG FuctionRule len(results): {len(body_results)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.

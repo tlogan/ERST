@@ -21,23 +21,24 @@ fix(case self => (
 """.strip())
 
 
-# max = (f'''
-# let lted = {lted} in
-# case (x, y) => (
-#     if lted(x, y) then
-#         y
-#     else
-#         x
-# )
-# ''')
 
 max = (f'''
 let lted = {lted} in
 case (x, y) => (
+    if lted(x, y) then
+        y
+    else
+        x
+)
+''')
+
+
+simple = (f'''
+case x => (
     (
-    case ~true @ => y
-    case ~false @ => x
-    )(lted(x, y))
+    case ~true @ => ~true @
+    case ~false @ => ~false @ 
+    )(x)
 )
 ''')
 # x : X 
