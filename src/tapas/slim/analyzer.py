@@ -266,7 +266,7 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoin
 @dataclass(frozen=True, eq=True)
 class NDBranch:
     pattern : Typ 
-    results : list[WorldTyp]
+    results : list[Result]
 
 @dataclass(frozen=True, eq=True)
 class DBranch:
@@ -277,13 +277,13 @@ class DBranch:
 Enviro = PMap[str, Typ]
 
 @dataclass(frozen=True, eq=True)
-class Switch:
-    enviro : PMap[str, Typ] 
+class FunctionResult:
+    pid : int
     world : World
     branches : list[NDBranch]
 
 @dataclass(frozen=True, eq=True)
-class Keychain:
+class KeychainResult:
     keys : list[str]
 
 @dataclass(frozen=True, eq=True)
@@ -294,7 +294,7 @@ class RecordBranch:
 
 
 @dataclass(frozen=True, eq=True)
-class RecordSwitch:
+class RecordResult:
     branches : list[RecordBranch]
 
 '''
@@ -457,7 +457,7 @@ def concretize_ndbranch(nd : NDBranch) -> str:
 
 
 
-def concretize_switch(sw : Switch) -> str:
+def concretize_switch(sw : FunctionResult) -> str:
     return "".join([
         concretize_ndbranch(ndbranch) + "\n"
         for ndbranch in sw.branches
@@ -545,21 +545,16 @@ def concretize_reversed_aliasing(rev_aliasing : PMap[Typ, str]):
 # Expr = Union[PVar, PUnit]
 
 @dataclass(frozen=True, eq=True)
-class PatternAttr:
+class PatternResult:
     enviro : PMap[str, Typ]
-    # worlds : list[World]
     typ : Typ    
 
 
 @dataclass(frozen=True, eq=True)
-class ArgchainAttr:
+class ChainResult:
+    pid : int
     world : World
-    args : list[Typ]
-
-@dataclass(frozen=True, eq=True)
-class PipelineAttr:
-    world : World
-    cators : list[TVar]
+    typs : list[Typ]
 
 """
 Guidance
@@ -2091,7 +2086,7 @@ class Solver:
             )
 
 
-        def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], payload : Typ):
+        def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], raw_payload : Typ):
             # TODO: need to consider adding extrusion of free_vars (rigids). 
             # TODO: how does extrusion compare to simply avoiding inner quantification 
             # TODO: how do both of these relate to learning constraints on closed variables (skolems)
@@ -2101,7 +2096,7 @@ class Solver:
             # EXI x . ALL y . P(x,y) 
             # ALL x . EXI y . P(x,y) 
             # ALL y . EXI x . All y' <: y. P(x,y') 
-            payload_vars = extract_free_vars_from_typ(s(), payload)
+            payload_vars = extract_free_vars_from_typ(s(), raw_payload)
             assert not bool(foreignids.intersection(closedids))
 
             outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(closedids)
@@ -2109,19 +2104,15 @@ class Solver:
                 st
                 for st in constraints
                 for fvs in [extract_free_vars_from_constraints(s(), [st])]
-                if not bool (fvs.difference(closedids.union(foreignids))) # every fvs is closed or foreign 
-                if bool(outer_ids.intersection(fvs)) # there is an outer id in fvs
+                if not bool (fvs.difference(closedids)) # every fvs is closed 
             )
-            inner_constraints = constraints.difference(outer_constraints)
-            inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(foreignids).difference(closedids)
+            raw_inner_constraints = constraints.difference(outer_constraints)
 
-            #TODO: NEED To add back extrusion, in order to not lose constraints on foreignids 
-
-            # renaming = self.make_renaming_ids(foreign_inner_ids)
-            # submap = self.make_submap_from_renaming(renaming)
-            # payload = sub_typ(submap, pre_payload)
-            # inner_constraints = extrude(renaming).union(sub_constraints(submap, pre_inner_constraints))
-            # inner_ids = local_inner_ids.union(renaming.values())
+            renaming = self.make_renaming_ids(foreignids)
+            submap = self.make_submap_from_renaming(renaming)
+            payload = sub_typ(submap, raw_payload)
+            inner_constraints = extrude(renaming).union(sub_constraints(submap, raw_inner_constraints))
+            inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(closedids).difference(foreignids)
 
             if outer_ids and inner_ids:
                 return outer_con(
@@ -3030,7 +3021,7 @@ class WorldTyp:
 
 @dataclass(frozen=True, eq=True)
 class Result:
-    pid : int #parent id
+    pid : int #problem id
     world: World
     typ: Typ
 
@@ -3039,50 +3030,50 @@ MulitResult = list[Result]
 
 class BaseRule(Rule):
 
-    def combine_var(self, pid : int, context : Context, id : str) -> list[Result]:
-        return [Result(pid, context.world, context.enviro[id])]
+    def combine_var(self, pid : int, enviro : Enviro, world : World, id : str) -> Result:
+        return Result(pid, world, enviro[id])
 
-    def combine_assoc(self, context : Context, argchain : list[Typ]) -> list[Result]:
-        if len(argchain) == 1:
-            return [Result(context.enviro, context.world, argchain[0])]
+    def combine_assoc(self, pid : int, world : World, typs : list[Typ]) -> list[Result]:
+        if len(typs) == 1:
+            return [Result(pid, world, typs[0])]
         else:
-            applicator = argchain[0]
-            arguments = argchain[1:]
-            results = ExprRule(self.solver, self.light_mode).combine_application(context, applicator, arguments) 
+            applicator = typs[0]
+            arguments = typs[1:]
+            results = ExprRule(self.solver).combine_application(pid, world, applicator, arguments) 
             return results
 
-    def combine_unit(self, context : Context) -> list[Result]:
-        return [Result(context.enviro, context.world, TUnit())]
+    def combine_unit(self, pid : int, world : World) -> Result:
+        return Result(pid, world, TUnit())
 
-    def combine_tag(self, context : Context, label : str, body : TVar) -> list[Result]:
-        return [Result(context.enviro, context.world, TTag(label, body))]
+    def combine_tag(self, pid : int, world : World, label : str, body : TVar) -> Result:
+        return Result(pid, world, TTag(label, body))
 
-    def combine_record(self, context : Context, switch : RecordSwitch) -> list[Result]:
-        result = Top() 
-        for branch in reversed(switch.branches): 
-            # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
-            body_typ = branch.body
-            # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.skolems, new_world.relids)
+    # def combine_record(self, context : Context, record_result : RecordResult) -> list[Result]:
+    #     result = Top() 
+    #     for branch in reversed(record_result.branches): 
+    #         # (body_typ, body_used_constraints) = self.solver.interpret_with_polarity(True, new_world, branch.body, s())
+    #         body_typ = branch.body
+    #         # new_world = World(new_world.constraints.difference(body_used_constraints), new_world.skolems, new_world.relids)
 
-            field = TField(branch.label, body_typ)
-            ######## NOTE: no generalization since the negative position is merely a label #############
-            ######## NOTE: However; it can use universal type for its conditional constraints ##########
-            constraints = tuple(extract_reachable_constraints_from_typ(branch.world, field))
-            if constraints:
-                constrained_field = All((), constraints, field)
-            else:
-                constrained_field = field 
-            #############################################
-            result = Inter(constrained_field, result)
-        '''
-        end for 
-        '''
+    #         field = TField(branch.label, body_typ)
+    #         ######## NOTE: no generalization since the negative position is merely a label #############
+    #         ######## NOTE: However; it can use universal type for its conditional constraints ##########
+    #         constraints = tuple(extract_reachable_constraints_from_typ(branch.world, field))
+    #         if constraints:
+    #             constrained_field = All((), constraints, field)
+    #         else:
+    #             constrained_field = field 
+    #         #############################################
+    #         result = Inter(constrained_field, result)
+    #     '''
+    #     end for 
+    #     '''
 
-        # return TypingResult(nt.worlds, simplify_typ(result))
-        return [Result(context.enviro, context.world, result)]
+    #     # return TypingResult(nt.worlds, simplify_typ(result))
+    #     return [Result(context.enviro, context.world, result)]
 
     # TODO: redo Context such that it only has a single world as input
-    def combine_function(self, context : Context, switch : Switch) -> list[Result]:
+    def combine_function(self, pid : int, enviro : Enviro, world : World, function_branches : list[NDBranch]) -> Result:
         '''
         Example
         ==============
@@ -3096,12 +3087,12 @@ class BaseRule(Rule):
 
         rigids = pset( 
             id
-            for t in context.enviro.values()
+            for t in enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
         # NOTE: worlds are intersected
         # TODO: need to extrude to not lose constraints on foreign variables
-        augmented_branches = self.solver.augment_branches_with_diff(switch.branches)
+        augmented_branches = self.solver.augment_branches_with_diff(function_branches)
         generalized_branches = []
         for branch in augmented_branches: 
             body_typ = branch.body
@@ -3126,39 +3117,30 @@ class BaseRule(Rule):
         '''
         end for 
         '''
-        return [Result(context.enviro, context.world, make_inter(generalized_branches))]
+        return Result(pid, world, make_inter(generalized_branches))
     '''
     end def
     '''
 
 class ExprRule(Rule):
 
-    def combine_tuple(self, index, enviro : Enviro, world : World, head_typ : Typ, tail_typ : Typ) -> list[Result]:
-        return [
-            Result(index,  world, Inter(TField('head', head_typ), TField('tail', tail_typ)))
-        ]
+    def combine_tuple(self, pid : int, world : World, head_typ : Typ, tail_typ : Typ) -> Result:
+        return Result(pid,  world, Inter(TField('head', head_typ), TField('tail', tail_typ)))
 
-    def combine_ite(self, context : Context, condition_typ : Typ, 
+    def combine_ite(self, pid : int, enviro : Enviro, world : World, condition_typ : Typ, 
         true_body_results: list[Result], 
         false_body_results: list[Result] 
     ) -> list[Result]: 
-        switch = Switch([
+        ndbranches = [
             NDBranch(TTag('true', TUnit()), true_body_results),
             NDBranch(TTag('false', TUnit()), false_body_results)
-        ] )
-        return [
-            result
-            for function_result in BaseRule(self.solver, self.light_mode).combine_function(context, switch)
-            for result in self.combine_application(
-                replace(context, world = function_result.world), 
-                function_result.typ, [condition_typ]
-            ) 
         ]
 
+        function_result = BaseRule(self.solver).combine_function(pid, enviro, world, ndbranches)
+        return self.combine_application(pid, function_result.world, function_result.typ, [condition_typ])
 
-
-    def combine_projection(self, context : Context, record_typ : Typ, keys : list[str]) -> list[Result]: 
-        worlds = [context.world] 
+    def combine_projection(self, pid : int, world : World, record_typ : Typ, keys : list[str]) -> list[Result]: 
+        worlds = [world] 
         for key in keys:
             result_var = self.solver.fresh_type_var()
             worlds = [
@@ -3168,7 +3150,7 @@ class ExprRule(Rule):
             ]
             record_typ = result_var
         return [
-            Result(world, result_var)
+            Result(pid, world, result_var)
             for world in worlds
         ]
 
@@ -3176,8 +3158,8 @@ class ExprRule(Rule):
 
 
 
-    def combine_application(self, context : Context, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
-        worlds = [context.world] 
+    def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
+        worlds = [world] 
         for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
             new_worlds = []
@@ -3227,7 +3209,7 @@ class ExprRule(Rule):
 
         if len(worlds) > 0:
             return [
-                Result(world, result_var)
+                Result(pid, world, result_var)
                 for world in worlds
             ]
         else:
@@ -3235,17 +3217,14 @@ class ExprRule(Rule):
 
     #########
 
-    def combine_funnel(self, context : Context, arg_typ : Typ, cator_typs : list[Typ]) -> list[Result]: 
+    def combine_funnel(self, pid : int, world : World, arg_typ : Typ, cator_typs : list[Typ]) -> list[Result]: 
 
-        results = [Result(context.world, arg_typ)]
+        results = [Result(pid, world, arg_typ)]
         for cator_typ in cator_typs: 
             results = [
                 result1
                 for result0 in results
-                for result1 in self.combine_application(
-                    replace(context, world = result0.world), 
-                    cator_typ, [arg_typ]
-                )
+                for result1 in self.combine_application(pid, result0.world, cator_typ, [arg_typ])
             ]
         return results
 
@@ -3263,7 +3242,7 @@ class ExprRule(Rule):
         #     for world in worlds
         # ]
 
-    def combine_fix(self, context : Context, body_typ : Typ) -> list[Result]:
+    def combine_fix(self, pid : int, enviro : Enviro, world : World, body_typ : Typ) -> Result:
         """
         from: 
         SELF -> (nil -> zero) & (cons A\\nil -> succ B) ;  SELF <: A -> B SELF(A) <: B
@@ -3282,11 +3261,11 @@ class ExprRule(Rule):
 
         induc_body = Bot()
 
-        outer_world = context.world
+        outer_world = world
 
         rigids = pset( 
             id
-            for t in context.enviro.values()
+            for t in enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
         inner_worlds = [
@@ -3358,7 +3337,7 @@ class ExprRule(Rule):
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        return [Result(context.enviro, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))]
+        return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
 
         ##################################
 
@@ -3370,54 +3349,54 @@ end ExprRule
 
 class RecordRule(Rule):
 
-    def combine_single(self, label : str, body_results : list[Result]) -> RecordSwitch:
-        return RecordSwitch([RecordBranch(result.world, label, result.typ) for result in body_results])
+    def combine_single(self, pid : int, world : World, label : str, body_typ : Typ) -> Result:
+        return Result(pid, world, TField(label, body_typ))
 
-    def combine_cons(self, label : str, body_results : list[Result], tail : RecordSwitch) -> RecordSwitch:
-        switch = self.combine_single(label, body_results)
-        return  RecordSwitch(switch.branches + tail.branches)
+    def combine_cons(self, pid : int, world : World, label : str, body_typ : Typ, tail_typ : Typ) -> Result:
+        return Result(pid, world, Inter(TField(label, body_typ), tail_typ))
+
 
 class FunctionRule(Rule):
 
-    def combine_single(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result]) -> Switch:
+    def combine_single(self, pid : int, world : World, pattern_attr : PatternResult, body_results : list[Result]) -> FunctionResult:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return Switch([NDBranch(pattern_attr.typ, body_results)])
+        return FunctionResult(pid, world, [NDBranch(pattern_attr.typ, body_results)])
 
-    def combine_cons(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result], tail : Switch) -> Switch:
-        switch = self.combine_single(context, pattern_attr, body_results) 
-        return Switch(switch.branches + tail.branches)
+    def combine_cons(self, pid : int, world : World, pattern_attr : PatternResult, body_results : list[Result], tail : FunctionResult) -> FunctionResult:
+        switch = self.combine_single(pid, world, pattern_attr, body_results) 
+        return FunctionResult(pid, world, switch.branches + tail.branches)
 
 
 class KeychainRule(Rule):
 
-    def combine_single(self, key : str) -> Keychain:
-        return Keychain([key])
+    def combine_single(self, key : str) -> KeychainResult:
+        return KeychainResult([key])
 
-    def combine_cons(self, key : str, kc : Keychain) -> Keychain:
-        return Keychain([key] + kc.keys)
+    def combine_cons(self, key : str, kc : KeychainResult) -> KeychainResult:
+        return KeychainResult([key] + kc.keys)
 
 
 class ArgchainRule(Rule):
 
-    def combine_single(self, context : Context, content : Typ) -> ArgchainAttr:
-        return ArgchainAttr(context.world, [content])
+    def combine_single(self, pid : int, world : World, content : Typ) -> ChainResult:
+        return ChainResult(pid, world, [content])
 
-    def combine_cons(self, context : Context, head : Typ, tail : list[Typ]) -> ArgchainAttr:
-        return ArgchainAttr(context.world, [head] + tail)
+    def combine_cons(self, pid : int, world : World, head : Typ, tail : list[Typ]) -> ChainResult:
+        return ChainResult(pid, world, [head] + tail)
 
 ######
 
 class PipelineRule(Rule):
 
-    def combine_single(self, context : Context, content_var : TVar) -> PipelineAttr:
-        return PipelineAttr(context.world, [content_var])
+    def combine_single(self, pid : int, world : World, content_typ : Typ) -> ChainResult:
+        return ChainResult(pid, world, [content_typ])
 
-    def combine_cons(self, context : Context, head_var : TVar, tail_var : list[TVar]) -> PipelineAttr:
-        return PipelineAttr(context.world, [head_var] + tail_var)
+    def combine_cons(self, pid : int, world : World, head_typ: Typ, tail_typ : list[Typ]) -> ChainResult:
+        return ChainResult(pid, world, [head_typ] + tail_typ)
 
 
 '''
@@ -3425,10 +3404,10 @@ start Pattern Rule
 '''
 
 class PatternRule(Rule):
-    def combine_tuple(self, head_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
-        pattern = Inter(TField('head', head_attr.typ), TField('tail', tail_attr.typ))
-        enviro = head_attr.enviro.update(tail_attr.enviro) 
-        return PatternAttr(enviro, pattern)
+    def combine_tuple(self, head_result : PatternResult, tail_result : PatternResult) -> PatternResult:
+        pattern = Inter(TField('head', head_result.typ), TField('tail', tail_result.typ))
+        enviro = head_result.enviro.update(tail_result.enviro) 
+        return PatternResult(enviro, pattern)
 
 '''
 end PatternRule
@@ -3436,35 +3415,31 @@ end PatternRule
 
 class BasePatternRule(Rule):
 
-    def combine_var(self, id : str) -> PatternAttr:
+    def combine_var(self, id : str) -> PatternResult:
         pattern = self.solver.fresh_type_var()
         enviro : PMap[str, Typ] = pmap({id : pattern})
-        return PatternAttr(enviro, pattern)
+        return PatternResult(enviro, pattern)
 
-    def combine_unit(self) -> PatternAttr:
+    def combine_unit(self) -> PatternResult:
         pattern = TUnit()
-        return PatternAttr(m(), pattern)
+        return PatternResult(m(), pattern)
 
 
-    def combine_tag(self, label : str, body_attr : PatternAttr) -> PatternAttr:
-        pattern = TTag(label, body_attr.typ)
-        return PatternAttr(body_attr.enviro, pattern)
+    def combine_tag(self, label : str, body_result : PatternResult) -> PatternResult:
+        pattern = TTag(label, body_result.typ)
+        return PatternResult(body_result.enviro, pattern)
 '''
 end BasePatternRule
 '''
 
 class RecordPatternRule(Rule):
 
-    def combine_single(self, label : str, body_attr : PatternAttr) -> PatternAttr:
-        pattern = TField(label, body_attr.typ)
-        return PatternAttr(body_attr.enviro, pattern)
+    def combine_single(self, label : str, body_result : PatternResult) -> PatternResult:
+        pattern = TField(label, body_result.typ)
+        return PatternResult(body_result.enviro, pattern)
 
-    def combine_cons(self, label : str, body_attr : PatternAttr, tail_attr : PatternAttr) -> PatternAttr:
-        pattern = Inter(TField(label, body_attr.typ), tail_attr.typ)
-        enviro = body_attr.enviro.update(tail_attr.enviro)
-        return PatternAttr(enviro, pattern)
-
-class TargetRule(Rule):
-    def combine_anno(self, context : Context, anno_typ : Typ) -> list[Result]: 
-        return [Result(context.enviro, context.world, anno_typ)]
+    def combine_cons(self, label : str, body_result : PatternResult, tail_result : PatternResult) -> PatternResult:
+        pattern = Inter(TField(label, body_result.typ), tail_result.typ)
+        enviro = body_result.enviro.update(tail_result.enviro)
+        return PatternResult(enviro, pattern)
 

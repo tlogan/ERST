@@ -161,17 +161,17 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 
 ;
 
-program [list[Prompt] prompts] returns [list[MultiResult] mrs] :
+program [list[Prompt] prompts] returns [list[Result] results] :
 
 | preamble {
 self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
 } expr[prompts] {
-$mrs = $expr.mrs
+$results = $expr.results
 }
 
 | expr[prompts] {
 self._solver = Solver(m())
-$mrs = $expr.mrs
+$results = $expr.results
 }
 
 ;
@@ -352,24 +352,22 @@ tail_contexts = [
 }
 tail = expr[tail_contexts] {
 $results = [
-    r
-    for tail_result in $tail.results 
-    for head_result in [$head.results[tail_result.pid]]
-    for pid in [head_result.pid]
-    for r in ExprRule(self._solver).combine_tuple(
+    ExprRule(self._solver).combine_tuple(
         pid, 
-        contexts[pid].enviro, 
         tail_result.world, 
         head_result.typ, 
         tail_result.typ
     ) 
+    for tail_result in $tail.results 
+    for head_result in [$head.results[tail_result.pid]]
+    for pid in [head_result.pid]
 ]
 }
 
 | 'if' condition = expr[contexts] 'then' {
 branch_contexts = [
     Context(contexts[conditionr.pid].enviro, conditionr.world)
-    for conditionr in $condition.rs
+    for conditionr in $condition.results
 ]
 } 
 true_branch = expr[branch_contexts]
@@ -377,9 +375,9 @@ true_branch = expr[branch_contexts]
 false_branch = expr[branch_contexts] {
 $results = [
     result
-    for i, condition_result in enumerate($condition.results)
-    for true_branch_results = [filter(i,$true_branch.results)]
-    for false_branch_results = [filter(i,$false_branch.results)]
+    for condition_id, condition_result in enumerate($condition.results)
+    for true_branch_results = [filter(condition_id, $true_branch.results)]
+    for false_branch_results = [filter(condition_id, $false_branch.results)]
     for pid in [condition_result.pid]
     for result in ExprRule(self._solver).combine_ite(
         pid,  
@@ -397,8 +395,9 @@ $results = [
 $results = [
     result
     for rator_result in $rator.results
+    for pid in [rator_result.pid]
     for result in ExprRule(self._solver).combine_projection(
-        contexts[rator_result.pid].enviro,
+        pid
         rator_result.world,
         rator_result.typ,
         $keychain.keys
@@ -413,16 +412,17 @@ argchain_contexts = [
 ]
 } argchain[argchain_contexts] {
 $results = [
-    ExprRule(self._solver).combine_application(
+    result 
+    for argchain_result in $argchain.results
+    for cator_result in [cator_result[argchain_result.pid]]
+    for pid in [cator_result.pid]
+    for result in ExprRule(self._solver).combine_application(
         pid,
         contexts[pid].enviro,
         argchain_result.world,
         cator_result.typ,
         argchain_result.typs,
     )
-    for argchain_result in $argchain.results
-    for cator_result  in [cator_result[argchain_result.pid]]
-    for pid in [cator_result.pid]
 ]
 }
 
@@ -439,8 +439,7 @@ $results = [
     for pid in [arg_result.pid]
     for result in ExprRule(self._solver).combine_funnel(
         pid,
-        contexts[pid].enviro,
-        pipeline_result.word,
+        pipeline_result.world,
         arg_result.typ,
         pipeline_result.typs
     )
@@ -463,147 +462,132 @@ $results = [
 ]
 }
 
-| 'fix' {
-self.guide_symbol('(')
-} '(' {
-body_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_fix_body, prompt)
-    for prompt in prompts
-]
-} body = expr[body_prompts] {
-self.guide_symbol(')')
-} ')' {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = body_result.world,
-        args = prompt.args + [body_result.typ]
+| 'fix' '(' body = expr[contexts] ')' {
+$results = [
+    ExprRule(self._solver).combine_fix(
+        pid,
+        contexts[pid].enviro,
+        body_result.world,
+        body_reuslt.typ
     )
-    for i,prompt in enumerate(prompts)
-    for body_result in $body.mrs[i]
+    for body_result in $body.results 
+    for pid in [body_result.pid]
 ]
-$mrs = [
-    self.collect(ExprRule(self._solver, self._light_mode).combine_fix, prompt)
-    for prompt in prompts
-]
-self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
 }
 
 ;
 
-base [list[Context] contexts] returns [list[MultiEnviroTyp] mets] : 
+base [list[Context] contexts] returns [list[Result] results] : 
 // Introduction rules
 
 | '@' {
-$mets = [
-    BaseRule(self._solver).combine_unit(context)
-    for context in contexts 
+$results = [
+    BaseRule(self._solver).combine_unit(pid, context.world)
+    for pid, context in enumerate(contexts)
 ]
-self.update_sr('base', [t('@')])
 } 
 
 //tag
-| '~' {
-self.guide_terminal('ID')
-} ID {
-} body = base[contexts] {
-$mets = [
-    BaseRule(self._solver).combine_tag, prompt(Context(body_et.enviro, body_et.world), $ID.text, body_et.typ)
-    for body_met in $body.mets 
-    for body_et in body_met 
+| '~' ID body = base[contexts] {
+$results = [
+    BaseRule(self._solver).combine_tag(pid, body_result.world, $ID.text, body_result.typ)
+    for body_result in $body.results
+    for pid in [body_result.pid]
 ]
-self.update_sr('base', [t('~'), ID, n('base')])
 }
 
 | record[contexts] {
-$mets = [
-    BaseRule(self._solver).combine_record(Context(switch.enviro, switch.world), switch.branches)
-    for switch in $record.switches 
-]
-self.update_sr('base', [n('record')])
+$results = $record.results 
 }
 
 | {
-} function[prompts] {
-$mets = [
-    BaseRule(self._solver).combine_function(Context(switch.enviro, switch.world), switch.branches)
-    for switch in $function.switches 
+} function[contexts] {
+$results = [
+    BaseRule(self._solver).combine_function(pid, contexts[pid].enviro, function_result.world, function_result.branches)
+    for function_result in $function.results
+    for pid in [function_result.pid]
 ]
-self.update_sr('base', [n('function')])
 }
 
 // Elimination rules
 
 | ID {
-$mets = [
-    BaseRule(self._solver).combine_var(context, $ID.text)
-    for context in contexts 
+$results = [
+    BaseRule(self._solver).combine_var(pid, context.enviro, context.world, $ID.text)
+    for pid, context in enumerate(contexts)
 ]
-self.update_sr('base', [ID])
 } 
 
 | argchain[contexts] {
-
-$mets = [
-    BaseRule(self._solver).combine_assoc(Context(attr.enviro,  attr.world), attr.args)
-    for attr in $argchain.attrs
+$results = [
+    result i
+    for argchain_result in $argchain.results
+    for pid in [argchain_result.pid]
+    for result in BaseRule(self._solver).combine_assoc(pid, argchain_result.world, argchain_result.typs)
 ]
-self.update_sr('base', [n('argchain')])
 } 
 
 ;
 
 
-record [list[Context] contexts] returns [list[RecordSwitch] switches] :
+record [list[Context] contexts] returns [list[Result] results] :
 | ';'  ID '=' 
 body = expr[contexts] {
-$switches = [
-    RecordRule(self._solver).combine_single($ID.text, met)
-    for met in $body.mets 
+$results = [
+    RecordRule(self._solver).combine_single(pid, contexts[pid].enviro, body_result.world, $ID.text, body_result.typ)
+    for body_result in $body.results
+    for pid in [body_result.pid]
 ]
 }
 
 | ';' ID '=' 
-body = expr[sub_prompts] 
-tail = record[sub_prompts] {
-$switches = [
-    RecordRule(self._solver).combine_cons($ID.text, met, switch) 
-    for met in $body.mets 
-    for switch in $tail.switches
+body = expr[contexts] {
+tail_contexts = [
+    Context(contexts[body_result.pid].enviro, body_result.world)
+    for body_result in $body.results
+]
+} 
+tail = record[tail_contexts] {
+$results = [
+    RecordRule(self._solver).combine_cons(pid, contexts[pid].enviro, tail_result.world, $ID.text, body_result.typ, tail_result.branches) 
+    for tail_result in $tail.results
+    for body_result in [$body.results[tail_result.pid]]
+    for pid in [body_result.pid]
 ]
 }
 
 ;
 
 
-function [list[Context] contexts] returns [list[Switch] switches] :
+function [list[Context] contexts] returns [list[Switch] results] :
 
 | 'case' pattern '=>' {
 body_contexts = [
-    Context(context.enviro.update($pattern.attr.enviro), prompt.world)
+    Context(context.enviro.update($pattern.result.enviro), context.world)
     for context in contexts 
 ]
 } body = expr[body_contexts] {
-$switches = [
-    FunctionRule(self._solver).combine_single(met)
-    for met in $body.mets 
+$results = [
+    FunctionRule(self._solver).combine_single(pid, context.world, body_results)
+    for pid, context in enumerate(contexts)
+    for body_results in [filter(pid, $body.results)]
 ]
 }
 
 | 'case' pattern  '=>' {
 body_contexts = [
-    Context(context.enviro.update($pattern.attr.enviro), prompt.world)
+    Context(context.enviro.update($pattern.result.enviro), context.world)
     for context in contexts 
 ]
 } 
-body = expr[body_prompts]
-tail = function[tail_prompts] 
+body = expr[body_contexts]
+tail = function[contexts] 
 {
-
-$switches = [
-    FunctionRule(self._solver).combine_cons($pattern, met, switch)
-    for met in $body.mets 
-    for switch in $tail.switches
+$results = [
+    FunctionRule(self._solver).combine_cons(pid, context.world, body_results, tail_result)
+    for pid, context in enumerate(contexts)
+    for body_results in [filter(pid, $body.results)]
+    for tail_result in [$tail.results[pid]]
 ]
 }
 
@@ -623,123 +607,130 @@ $keys = KeychainRule(self._solver).combine_cons($ID.text, $tail.keys)
 
 ;
 
-argchain [list[Context] contexts] returns [list[ArgchainAttr] attrs] :
+argchain [list[Context] contexts] returns [list[ArgchainResult] results] :
 
 | '(' content = expr[contexts] ')' {
-$attrs = [
-    ArgchainRule(self._solver).combine_single(et.enviro, et.world, et.typ)
-    for met in $content.mets 
-    for et in met 
+$results = [
+    ArgchainRule(self._solver).combine_single(pid, content_result.world, content_reuslt.typ)
+    for content_result in $content.results 
+    for pid in [content_result.pid]
 ]
 }
 
 
-| '(' head = expr[contexts] ')'  
-tail = argchain[tail_prompts] {
-$attrs = [
-    ArgchainRule(self._solver).combine_cons(et, attr)
-    for met in $content.mets 
-    for et in met 
-    for attr in $tail.attrs
+| '(' head = expr[contexts] ')' {
+tail_contexts = [
+    Context(contexts[head_result.pid].enviro, head_result.world)
+    for head_result in $head.results
+]
+} tail = argchain[tail_contexts] {
+$results = [
+    ArgchainRule(self._solver).combine_cons(pid, tail_result.world, head_result.typ, tail_result.typs)
+    for tail_result in $tail.results 
+    for head_result in [$head.results[tail_result.pid]]
+    for pid in [head_result.pid]
 ]
 }
 
 ;
 
-pipeline [list[Context] contexts] returns [list[PipelineAttr] attrs] :
+pipeline [list[Context] contexts] returns [list[PipelineResult] results] :
 
 | '|>' content = expr[contexts] {
-$attrs = [
-    PipelineRule(self._solver).combine_single(et)
-    for met in $content.mets
-    for et in met 
+$results = [
+    PipelineRule(self._solver).combine_single(pid, content_result.world, content_result.typ)
+    for content_result in $content.results 
+    for pid in [content_result.pid]
 ]
 }
 
 | '|>' {
 } 
-head = expr[head_prompts]
-tail = pipeline[tail_prompts] 
+head = expr[head_prompts] {
+tail_contexts = [
+    Context(contexts[head_result.pid].enviro, head_result.world)
+    for head_result in $head.results
+]
+} tail = pipeline[tail_contexts] 
 {
-$attrs = [
-    PipelineRule(self._solver).combine_cons(et, attr)
-    for met in $content.mets
-    for et in met 
-    for attr in $tail.attrs
+$results = [
+    PipelineRule(self._solver).combine_cons(pid, tail_result.world, head_result.typ, tail_result.typs)
+    for tail_result in $tail.results 
+    for head_result in [$head.results[tail_result.pid]]
+    for pid in [head_result.pid]
 ]
 }
 
 ;
 
 
-target [list[Context] contexts] returns [list[MultiEnviroTyp] mets]:
+target [list[Context] contexts] returns [list[Result] results]:
 
 | '=' expr[contexts] {
-$mets = $expr.mets
+$results = $expr.results
 }
 
 | ':' typ '=' expr[contexts] {
-$mets = [
-    TargetRule(self._solver).combine_anno(et) 
-    for met in $expr.mets 
-    for et in met
+$results = [
+    Result(expr_result.pid, expr_result.world, expr_result.typ)
+    for expr_result in $expr.results 
 ]
 }
 ;
 
 
 
-pattern returns [PatternAttr attr]:  
+pattern returns [PatternResult result]:  
 
 | base_pattern {
-$attr = $base_pattern.attr
+$result = $base_pattern.result
 }
 
 | {
 } 
 head = base_pattern  ',' 
 tail = pattern {
-$attr = PatternRule(self._solver).combine_tuple($head.attr, $tail.attr)
+$result = PatternRule(self._solver).combine_tuple($head.result, $tail.result)
 }
 
 ;
 
-base_pattern returns [PatternAttr attr]:  
+base_pattern returns [PatternResult result]:  
 
 | ID {
-$attr = BasePatternRule(self._solver).combine_var($ID.text)
+$result = BasePatternRule(self._solver).combine_var($ID.text)
 } 
 
 | '@' {
-$attr = BasePatternRule(self._solver).combine_unit()
+$result = BasePatternRule(self._solver).combine_unit()
 } 
 
 | '~' ID
 body = base_pattern {
-$attr = BasePatternRule(self._solver).combine_tag($ID.text, $body.attr)
+$result = BasePatternRule(self._solver).combine_tag($ID.text, $body.result)
 }
 
 | record_pattern {
-$attr = $record_pattern.attr
+$result = $record_pattern.result
 }
 
 | '(' pattern ')' {
-$attr = $pattern.attr
+$result = $pattern.result
 }
 
 
 ;
 
-record_pattern returns [PatternAttr attr] :
+record_pattern returns [PatternResult result] :
 
 | ';' ID '=' body = pattern {
-$attr = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.text, $body.attr)
+$result = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.text, $body.result)
 }
 
 | ';' ID '=' 
 body = pattern
 tail = record_pattern {
-$attr = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons($ID.text, $body.attr, $tail.attr)
+$result = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons($ID.text, $body.result, $tail.result)
 }
 
 ;
@@ -760,14 +751,14 @@ WS : [ \t\n\r]+ -> skip ;
 // @parser::members {
 // @property
 // def memory(self):
-//     if not hasattr(self, '_map'):
-//         setattr(self, '_map', {})
+//     if not hasresult(self, '_map'):
+//         setresult(self, '_map', {})
 //     return self._map
     
 // @memory.setter
 // def memory_setter(self, value):
-//     if not hasattr(self, '_map'):
-//         setattr(self, '_map', {})
+//     if not hasresult(self, '_map'):
+//         setresult(self, '_map', {})
 //     self._map = value
     
 // def eval(self, left, op, right):
