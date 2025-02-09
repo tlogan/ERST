@@ -37,6 +37,13 @@ def reset(self):
     # self.getCurrentToken()
     # self.getTokenStream()
 
+def flatten(rss):
+    return [
+        r 
+        for rs in rss 
+        for r in rs 
+    ]
+
 
 def get_syntax_rules(self):
     return self._syntax_rules
@@ -330,25 +337,20 @@ expr [list[Contexts] contexts] returns [list[MultiResult] rss] :
 $rss = $base.rss
 }
 
-|  
-head = base[contexts] ',' {
-headrs = [
-    headr
-    for headrs in $head.rss 
-    for headr in headrs 
-]
+| head = base[contexts] ',' {
+headrs = flatten($head.rss)
 tail_contexts = [
     Context(contexts[headr.index].enviro, headr.world)
-    for headrs in $head.rss 
     for headr in headrs 
 ] 
 }
 tail = expr[tail_contexts] {
 $rss = [
-    ExprRule(self._solver).combine_tuple(i, 
-        contexts[headers[i].index].enviro, 
+    ExprRule(self._solver).combine_tuple(
+        headers[i].index, 
+        contexts[headrs[i].index].enviro, 
         tailr.world, 
-        headers[i].typ, 
+        headrs[i].typ, 
         tailr.typ
     ) 
     for i, tailrs in enumerate($tail.rss)

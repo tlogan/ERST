@@ -3132,11 +3132,9 @@ class BaseRule(Rule):
 
 class ExprRule(Rule):
 
-    def combine_tuple(self, enviro : Enviro, world : World, head_typ : Typ, tail_typ : Typ) -> list[Result]:
+    def combine_tuple(self, index, enviro : Enviro, world : World, head_typ : Typ, tail_typ : Typ) -> list[Result]:
         return [
-            Result(enviro, world, [head_typ, tail_typ], 
-                Inter(TField('head', head_typ), TField('tail', tail_typ))
-            )
+            Result(index,  world, Inter(TField('head', head_typ), TField('tail', tail_typ)))
         ]
 
     def combine_ite(self, context : Context, condition_typ : Typ, 
