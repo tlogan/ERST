@@ -2115,6 +2115,7 @@ class Solver:
             inner_constraints = constraints.difference(outer_constraints)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(foreignids).difference(closedids)
 
+            #TODO: NEED To add back extrusion, in order to not lose constraints on foreignids 
 
             # renaming = self.make_renaming_ids(foreign_inner_ids)
             # submap = self.make_submap_from_renaming(renaming)
@@ -3029,7 +3030,7 @@ class WorldTyp:
 
 @dataclass(frozen=True, eq=True)
 class Result:
-    index : int
+    pid : int #parent id
     world: World
     typ: Typ
 
@@ -3038,8 +3039,8 @@ MulitResult = list[Result]
 
 class BaseRule(Rule):
 
-    def combine_var(self, index : int, context : Context, id : str) -> list[Result]:
-        return [Result(index, context.world, context.enviro[id])]
+    def combine_var(self, pid : int, context : Context, id : str) -> list[Result]:
+        return [Result(pid, context.world, context.enviro[id])]
 
     def combine_assoc(self, context : Context, argchain : list[Typ]) -> list[Result]:
         if len(argchain) == 1:
@@ -3098,8 +3099,8 @@ class BaseRule(Rule):
             for t in context.enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
-        # NOTE: foreign variable worlds remain nondeterministic 
-        # NOTE: local variable worlds are intersected
+        # NOTE: worlds are intersected
+        # TODO: need to extrude to not lose constraints on foreign variables
         augmented_branches = self.solver.augment_branches_with_diff(switch.branches)
         generalized_branches = []
         for branch in augmented_branches: 

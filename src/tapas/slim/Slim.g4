@@ -44,6 +44,13 @@ def flatten(rss):
         for r in rs 
     ]
 
+def filter(i, rs):
+    return [
+        r
+        for r in rs  
+        if r.pid == i
+    ]
+
 
 def get_syntax_rules(self):
     return self._syntax_rules
@@ -329,205 +336,131 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [list[Contexts] contexts] returns [list[MultiResult] rss] : 
+expr [list[Contexts] contexts] returns [list[Result] results] : 
 
 // Base rules
 
 | base[contexts] {
-$rss = $base.rss
+$results = $base.results
 }
 
 | head = base[contexts] ',' {
-headrs = flatten($head.rss)
 tail_contexts = [
-    Context(contexts[headr.index].enviro, headr.world)
-    for headr in headrs 
+    Context(contexts[head_result.pid].enviro, head_result.world)
+    for head_result in $head.results 
 ] 
 }
 tail = expr[tail_contexts] {
-$rss = [
-    ExprRule(self._solver).combine_tuple(
-        headers[i].index, 
-        contexts[headrs[i].index].enviro, 
-        tailr.world, 
-        headrs[i].typ, 
-        tailr.typ
+$results = [
+    r
+    for tail_result in $tail.results 
+    for head_result in [$head.results[tail_result.pid]]
+    for pid in [head_result.pid]
+    for r in ExprRule(self._solver).combine_tuple(
+        pid, 
+        contexts[pid].enviro, 
+        tail_result.world, 
+        head_result.typ, 
+        tail_result.typ
     ) 
-    for i, tailrs in enumerate($tail.rss)
-    for tailr in tailrs 
 ]
 }
 
-| 'if' {
-condition_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_condition, prompt)
-    for prompt in prompts
+| 'if' condition = expr[contexts] 'then' {
+branch_contexts = [
+    Context(contexts[conditionr.pid].enviro, conditionr.world)
+    for conditionr in $condition.rs
 ]
-} condition = expr[condition_prompts] {
-self.guide_symbol('then')
-} 'then' {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = condition_result.world,
-        args = prompt.args + [condition_result.typ]
+} 
+true_branch = expr[branch_contexts]
+'else'
+false_branch = expr[branch_contexts] {
+$results = [
+    result
+    for i, condition_result in enumerate($condition.results)
+    for true_branch_results = [filter(i,$true_branch.results)]
+    for false_branch_results = [filter(i,$false_branch.results)]
+    for pid in [condition_result.pid]
+    for result in ExprRule(self._solver).combine_ite(
+        pid,  
+        contexts[pid].enviro,
+        condition_result.world,
+        condition_result.typ,
+        true_branch_results,
+        false_branch_results,
     )
-    for i, prompt in enumerate(prompts)
-    for condition_result in $condition.mrs[i] 
 ]
-true_branch_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, prompt)
-    for prompt in prompts
-]
-} true_branch = expr[true_branch_prompts] {
-self.guide_symbol('else')
-} 'else' {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = prompt.world, 
-        args = prompt.args + [$true_branch.mrs[i]]
-    )
-    for i, prompt in enumerate(prompts)
-]
-false_branch_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, prompt)
-    for prompt in prompts
-]
-} false_branch = expr[false_branch_prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = prompt.world, 
-        args = prompt.args + [$false_branch.mrs[i]]
-    )
-    for i,prompt in enumerate(prompts)
-]
-$mrs = [
-    self.collect(ExprRule(self._solver, self._light_mode).combine_ite, prompt)
-    for prompt in prompts
-]
-self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
 } 
 
 // the rator below refers to the record being projected from
-| {
-rator_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_rator, prompt)
-    for prompt in prompts
+| rator = base[contexts] keychain {
+$results = [
+    result
+    for rator_result in $rator.results
+    for result in ExprRule(self._solver).combine_projection(
+        contexts[rator_result.pid].enviro,
+        rator_result.world,
+        rator_result.typ,
+        $keychain.keys
+    ) 
 ]
-} rator = base[rator_prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = rator_result.world,
-        args = prompt.args + [rator_result.typ]
-    )
-    for i, prompt in enumerate(prompts)
-    for rator_result in $rator.mrs[i]
-]
-keychain_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_projection_keychain, prompt)
-    for prompt in prompts
-]
-} keychain {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = prompt.world,
-        args = prompt.args + [$keychain.keys]
-    )
-    for prompt in prompts
-]
-$mrs = [
-    self.collect(ExprRule(self._solver, self._light_mode).combine_projection, prompt) 
-    for prompt in prompts
-]
-self.update_sr('expr', [n('base'), n('keychain')])
 }
 
-| {
-cator_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_cator, prompt)
-    for prompt in prompts
+| cator = base[contexts] {
+argchain_contexts = [
+    Context(contexts[cator_result.pid].enviro, cator_result.world)
+    for cator_result in $cator.results 
 ]
-} cator = base[cator_prompts] {
-# THIS DOESN'T MAKE SENSE
-argchain_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_application_argchain, Prompt(
-        enviro = prompt.enviro, 
-        world = cator_result.world,
-        args = prompt.args + [cator_result.typ]
-    ))
-    for i,prompt in enumerate(prompts)
-    for cator_result in $cator.mrs[i] 
-]
-} argchain[argchain_prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = $argchain.attrs[i].world,
-        args = prompt.args + [$argchain.attrs[i].args]
+} argchain[argchain_contexts] {
+$results = [
+    ExprRule(self._solver).combine_application(
+        pid,
+        contexts[pid].enviro,
+        argchain_result.world,
+        cator_result.typ,
+        argchain_result.typs,
     )
-    for i,prompt in enumerate(prompts)
+    for argchain_result in $argchain.results
+    for cator_result  in [cator_result[argchain_result.pid]]
+    for pid in [cator_result.pid]
 ]
-$mrs = [
-    self.collect(ExprRule(self._solver, self._light_mode).combine_application, prompt)
-    for prompt in prompts
-]
-self.update_sr('expr', [n('base'), n('argchain')])
 }
 
-| {
-arg_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_arg, prompt)
-    for prompt in prompts
+| arg = base[contexts] {
+pipeline_contexts = [
+    Context(contexts[arg_result.pid].enviro, arg_result.world)
+    for arg_result in $arg.results 
 ]
-} arg = base[arg_prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = arg_result.worlds,
-        args = prompt.args + [arg_result.typ]
+} pipeline[pipeline_contexts] {
+$results = [
+    result
+    for pipeline_result in $pipeline.results 
+    for arg_result in [$arg.results[pipeline_result.pid]]
+    for pid in [arg_result.pid]
+    for result in ExprRule(self._solver).combine_funnel(
+        pid,
+        contexts[pid].enviro,
+        pipeline_result.word,
+        arg_result.typ,
+        pipeline_result.typs
     )
-    for i,prompt in enumerate(prompts)
-    for arg_result in $arg.mrs[i]
 ]
-pipeline_prompts = [
-    self.refine_prompt(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, prompt)
-    for prompt in prompts
-]
-} pipeline[pipeline_prompts] {
-prompts = [
-    Prompt(
-        enviro = prompt.enviro, 
-        world = pipeline_attr.worlds,
-        args = prompt.args + [$pipeline.attrs[i].cators]
-    )
-    for i,prompt in enumerate(prompts)
-]
-$mrs = [
-    self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, prompts)
-    for prompt in prompts
-]
-self.update_sr('expr', [n('base'), n('pipeline')])
 }
 
-| 'let' {
-self.guide_terminal('ID')
-} ID {
-target_prompts = prompts
-} target[target_prompts] {
-self.guide_symbol('in')
-} 'in' {
-contin_prompts = [
-    Prompt(enviro = result.enviro.set($ID.text, result.typ), world = result.world, args=[])
-    for results in $target.mrs
-    for result in results 
+| 'let' ID target[contexts] 'in' {
+contin_contexts = [
+    Context(enviro, world)
+    for target_result in $target.results
+    for enviro in [contexts[target_result.pid].enviro.set($ID.text, target_result.typ)]
+    for world in [target_result.world]
 ]
-} contin = expr[contin_prompts] {
-$mrs = $contin.mrs
-self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
+} contin = expr[contin_contexts] {
+$results = [
+    Result(pid, continr.world, continr.typ)
+    for contin_result in $contin.results
+    for target_result in [$target.results[contin_result.pid]]
+    for pid in [target_result.pid]
+]
 }
 
 | 'fix' {

@@ -51,10 +51,14 @@ in
 case x => id(f(x))
 ''')
 
+# $ @ -> Y,  [X <: A, A <: Y], [X <: B, B <: Y]
+#... ((@ -> A) ALL X[X <: A])& ((@ -> B) ALL X[X <: B])
+#... (@ -> A) [X <: A] | (@ -> B) [X <: B]
+# both are true, but the intersection version is more precise
 
 # uno -> X [A <: X] [B <: X]
 # uno -> A | uno -> B if (X is foreign)    
-# uno -> A & B if (X is local) X is always foreign for records
+# uno -> A & uno -> B if (X is local) X is always foreign for records
 ##########################
 # uno -> A | B <: uno -> A | B | C
 # uno -> A /\ uno -> B <: uno -> A <: uno -> A | B 
