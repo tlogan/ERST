@@ -334,7 +334,7 @@ def test_two_single_subs_nat_list():
 def solve_decode(solver, a, b, t, polarity):
     worlds = solve(solver, a, b)
     results = [
-        analyzer.Result(world, t)
+        analyzer.WorldTyp(world, t)
         for world in worlds
     ]
     answer = decode_polarity(solver, results, polarity) 
@@ -2091,8 +2091,9 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    test_max()
-    # test_simple()
+    # test_max()
+
+    test_simple()
     # test_fix()
     # test_max_annotated()
     # test_max_subtyping()

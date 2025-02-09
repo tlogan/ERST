@@ -266,7 +266,7 @@ Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoin
 @dataclass(frozen=True, eq=True)
 class NDBranch:
     pattern : Typ 
-    results : list[Result]
+    results : list[WorldTyp]
 
 @dataclass(frozen=True, eq=True)
 class DBranch:
@@ -274,8 +274,12 @@ class DBranch:
     pattern : Typ 
     body : Typ
 
+Enviro = PMap[str, Typ]
+
 @dataclass(frozen=True, eq=True)
 class Switch:
+    enviro : PMap[str, Typ] 
+    world : World
     branches : list[NDBranch]
 
 @dataclass(frozen=True, eq=True)
@@ -1884,10 +1888,10 @@ class Solver:
 
         return lower_result or upper_result 
 
-    def decode_negative_typ(self, results : list[Result]) -> Typ:
+    def decode_negative_typ(self, results : list[WorldTyp]) -> Typ:
         return self.decode_polarity_typ(results, False)
 
-    def decode_positive_typ(self, results : list[Result]) -> Typ:
+    def decode_positive_typ(self, results : list[WorldTyp]) -> Typ:
         return self.decode_polarity_typ(results, True)
 
 
@@ -1984,7 +1988,7 @@ class Solver:
         )
 
 
-    def decode_polarity_typ(self, results : list[Result], polarity : bool) -> Typ:
+    def decode_polarity_typ(self, results : list[WorldTyp], polarity : bool) -> Typ:
         resolved_typs = [
             # TODO: switch to using package_typ, (to be implemented).
             self.resolve_polarity_typ(result.world, s(), polarity, result.typ)
@@ -2996,7 +3000,7 @@ end Solver
 
 
 class Rule:
-    def __init__(self, solver : Solver, light_mode : bool):
+    def __init__(self, solver : Solver, light_mode : bool = False):
         self.solver = solver
         # TODO: split all rules into two modes
         self.light_mode = light_mode
@@ -3019,44 +3023,38 @@ class Rule:
 #         ]
 
 @dataclass(frozen=True, eq=True)
+class WorldTyp:
+    world: World
+    typ: Typ
+
+@dataclass(frozen=True, eq=True)
 class Result:
+    index : int
     world: World
     typ: Typ
 
 MulitResult = list[Result]
 
+
 class BaseRule(Rule):
 
-    def combine_var(self, context : Context, id : str) -> list[Result]:
-        return [Result(context.world, context.enviro[id])]
+    def combine_var(self, index : int, context : Context, id : str) -> list[Result]:
+        return [Result(index, context.world, context.enviro[id])]
 
     def combine_assoc(self, context : Context, argchain : list[Typ]) -> list[Result]:
         if len(argchain) == 1:
-            print(f"""
------------------
-DEBUG combine_assoc: {1}
------------------
-            """)
-            return [Result(context.world, argchain[0])]
+            return [Result(context.enviro, context.world, argchain[0])]
         else:
             applicator = argchain[0]
             arguments = argchain[1:]
             results = ExprRule(self.solver, self.light_mode).combine_application(context, applicator, arguments) 
-            print(f"""
------------------
-DEBUG combine_assoc: {len(results)}
------------------
-            """)
             return results
 
     def combine_unit(self, context : Context) -> list[Result]:
-        return [Result(context.world, TUnit())]
-
-    def distill_tag_body(self, context : Context, label : str) -> Context:
-        return context
+        return [Result(context.enviro, context.world, TUnit())]
 
     def combine_tag(self, context : Context, label : str, body : TVar) -> list[Result]:
-        return [Result(context.world, TTag(label, body))]
+        return [Result(context.enviro, context.world, TTag(label, body))]
 
     def combine_record(self, context : Context, switch : RecordSwitch) -> list[Result]:
         result = Top() 
@@ -3079,17 +3077,11 @@ DEBUG combine_assoc: {len(results)}
         end for 
         '''
 
-        # return Result(nt.worlds, simplify_typ(result))
-        return [Result(context.world, result)]
+        # return TypingResult(nt.worlds, simplify_typ(result))
+        return [Result(context.enviro, context.world, result)]
 
     # TODO: redo Context such that it only has a single world as input
     def combine_function(self, context : Context, switch : Switch) -> list[Result]:
-
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG switch: {len(switch.branches[0].results)}
-~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         '''
         Example
         ==============
@@ -3106,7 +3098,8 @@ DEBUG switch: {len(switch.branches[0].results)}
             for t in context.enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
         )
-        # TODO: move augmentation outside
+        # NOTE: foreign variable worlds remain nondeterministic 
+        # NOTE: local variable worlds are intersected
         augmented_branches = self.solver.augment_branches_with_diff(switch.branches)
         generalized_branches = []
         for branch in augmented_branches: 
@@ -3132,33 +3125,19 @@ DEBUG switch: {len(switch.branches[0].results)}
         '''
         end for 
         '''
-        return [Result(context.world, make_inter(generalized_branches))]
+        return [Result(context.enviro, context.world, make_inter(generalized_branches))]
     '''
     end def
     '''
 
 class ExprRule(Rule):
 
-    def distill_tuple_head(self, context : Context) -> Context:
-        return context
-
-    def distill_tuple_tail(self, context : Context, head_typ : Typ) -> Context:
-        return context
-
-    def combine_tuple(self, context : Context, head_var : TVar, tail_var : TVar) -> list[Result]:
-        return [Result(context.world, Inter(TField('head', head_var), TField('tail', tail_var)))]
-
-    def distill_ite_condition(self, context : Context) -> Context:
-        return context
-
-    def distill_ite_true_branch(self, context : Context, condition_typ: Typ
-    ) -> Context:
-        return context
-
-    def distill_ite_false_branch(self, context : Context, condition_typ: Typ,
-        true_body_results: list[Result], 
-    ) -> Context:
-        return context
+    def combine_tuple(self, enviro : Enviro, world : World, head_typ : Typ, tail_typ : Typ) -> list[Result]:
+        return [
+            Result(enviro, world, [head_typ, tail_typ], 
+                Inter(TField('head', head_typ), TField('tail', tail_typ))
+            )
+        ]
 
     def combine_ite(self, context : Context, condition_typ : Typ, 
         true_body_results: list[Result], 
@@ -3177,11 +3156,7 @@ class ExprRule(Rule):
             ) 
         ]
 
-    def distill_projection_rator(self, context : Context) -> Context:
-        return context
 
-    def distill_projection_keychain(self, context : Context, rator_typ : Typ) -> Context: 
-        return context
 
     def combine_projection(self, context : Context, record_typ : Typ, keys : list[str]) -> list[Result]: 
         worlds = [context.world] 
@@ -3200,11 +3175,7 @@ class ExprRule(Rule):
 
     #########
 
-    def distill_application_cator(self, context : Context) -> Context: 
-        return context
 
-    def distill_application_argchain(self, context : Context, cator_typ : Typ) -> Context: 
-        return context
 
     def combine_application(self, context : Context, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
         worlds = [context.world] 
@@ -3255,26 +3226,6 @@ class ExprRule(Rule):
             ###########################
             cator_typ = result_var
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG application result
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-len(worlds): {len(worlds)}
-...
-        """)
-
-        for i, world in enumerate(worlds):
-            print(f"""
-DEBUG each world: 
-i: {i}
-
-closed: {world.closedids}
-
-constraints: 
-{concretize_constraints(world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
-
         if len(worlds) > 0:
             return [
                 Result(world, result_var)
@@ -3284,11 +3235,6 @@ constraints:
             raise Fail()
 
     #########
-    def distill_funnel_arg(self, context : Context) -> Context: 
-        return context
-
-    def distill_funnel_pipeline(self, context : Context, arg_typ : TVar) -> Context: 
-        return context
 
     def combine_funnel(self, context : Context, arg_typ : Typ, cator_typs : list[Typ]) -> list[Result]: 
 
@@ -3314,12 +3260,9 @@ constraints:
 
         # # NOTE: add final constraint to connect to expected type var: the result_typ <: nt.typ_var
         # return [
-        #     Result(world, result_typ)
+        #     TypingResult(world, result_typ)
         #     for world in worlds
         # ]
-
-    def distill_fix_body(self, context : Context) -> Context:
-        return context
 
     def combine_fix(self, context : Context, body_typ : Typ) -> list[Result]:
         """
@@ -3416,17 +3359,11 @@ constraints:
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        return [Result(outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))]
+        return [Result(context.enviro, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))]
 
         ##################################
 
     
-    def distill_let_target(self, context : Context, id : str) -> Context:
-        return context
-
-    def distill_let_contin(self, context : Context, id : str, target : Typ) -> Context:
-        return replace(context, enviro = context.enviro.set(id, target))
-
 '''
 end ExprRule
 '''
@@ -3443,32 +3380,13 @@ class RecordRule(Rule):
 
 class FunctionRule(Rule):
 
-    def distill_single_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
-        enviro = pattern_attr.enviro
-        return replace(context, enviro = context.enviro.update(enviro))
-
     def combine_single(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result]) -> Switch:
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG FuctionRule len(results): {len(body_results)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
         return Switch([NDBranch(pattern_attr.typ, body_results)])
-
-    def distill_cons_body(self, context : Context, pattern_attr : PatternAttr) -> Context:
-        return self.distill_single_body(context, pattern_attr)
-
-    def distill_cons_tail(self, context : Context, pattern_attr : PatternAttr, body_var : TVar) -> Context:
-        '''
-        - the previous pattern should not influence what pattern occurs next
-        - patterns may overlap
-        '''
-        return context
 
     def combine_cons(self, context : Context, pattern_attr : PatternAttr, body_results : list[Result], tail : Switch) -> Switch:
         switch = self.combine_single(context, pattern_attr, body_results) 
@@ -3485,11 +3403,6 @@ class KeychainRule(Rule):
 
 
 class ArgchainRule(Rule):
-    def distill_single_content(self, context : Context) -> Context:
-        return context
-
-    def distill_cons_head(self, context : Context) -> Context:
-        return self.distill_single_content(context)
 
     def combine_single(self, context : Context, content : Typ) -> ArgchainAttr:
         return ArgchainAttr(context.world, [content])
@@ -3500,15 +3413,6 @@ class ArgchainRule(Rule):
 ######
 
 class PipelineRule(Rule):
-
-    def distill_single_content(self, context : Context) -> Context:
-        return context
-
-    def distill_cons_head(self, context : Context) -> Context:
-        return self.distill_single_content(context)
-
-    def distill_cons_tail(self, context : Context, head_var : TVar) -> Context:
-        return context
 
     def combine_single(self, context : Context, content_var : TVar) -> PipelineAttr:
         return PipelineAttr(context.world, [content_var])
@@ -3563,5 +3467,5 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
     def combine_anno(self, context : Context, anno_typ : Typ) -> list[Result]: 
-        return [Result(context.world, anno_typ)]
+        return [Result(context.enviro, context.world, anno_typ)]
 

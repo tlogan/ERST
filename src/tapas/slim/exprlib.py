@@ -41,6 +41,43 @@ case x => (
     )(x)
 )
 ''')
+
+simple = (f'''
+let id = case x => x in
+let f =
+    case ~true @ => ~true @
+    case ~false @ => ~false @ 
+in
+case x => id(f(x))
+''')
+
+
+# uno -> X [A <: X] [B <: X]
+# uno -> A | uno -> B if (X is foreign)    
+# uno -> A & B if (X is local) X is always foreign for records
+##########################
+# uno -> A | B <: uno -> A | B | C
+# uno -> A /\ uno -> B <: uno -> A <: uno -> A | B 
+# uno -> A /\ uno -> B <: uno -> B <: uno -> A | B
+#####################################
+# uno -> A /\ uno -> B /\ dos -> TOP <: (uno -> A, dos -> TOP) | (uno -> B, dos -> TOP)
+#####################################
+# uno -> A | B .. uno -> A /\ uno -> B 
+# uno -> X where [X <: A] or [X <: B]
+# uno -> A or uno -> B
+# uno -> X,  dos -> Y where X <: A | B, Y <: C | D
+# uno -> X,  dos -> Y where [X <: A, Y <: C],..., [X <: B, Y <: D]
+# (A + B) * (C + D) == (A * C) + .... + (B * D)
+# uno -> A /\ uno -> B  /\ dos -> C /\ dos -> D <: (uno -> A /\ dos -> C) ... (uno -> B /\ dos -> D)
+
+
+# (A + B) * (T) == (A * T) + (B * T)
+# uno -> A | B, dos -> T == (uno -> A, dos -> T) + (uno -> B, dos -> T)
+# uno -> A /\ uno -> B /\ dos -> T == (uno -> A, dos -> T) + (uno -> B, dos -> T)
+
+# TODO: need to think carefully about how results are flattened
+# the number of multiresults returned should equal the number of prompts inputted 
+
 # x : X 
 # y : Y 
 # lted(x, y) : CLOSED Z 
