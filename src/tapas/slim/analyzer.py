@@ -574,14 +574,6 @@ class Context:
     world : World
 
 
-@dataclass(frozen=True, eq=True)
-class Prompt:
-    enviro : PMap[str, Typ] 
-    world : World
-    args : list[Any] 
-
-
-
 '''
 NOTE: 
 Freezer dictates when the strongest solution for a variable is found.
@@ -1667,7 +1659,7 @@ def get_polarity_from_targets(positive : bool, targets : Iterable[Typ], id : str
 
 
 
-default_prompt = Prompt(m(), World(s(), s(), s()), [])
+default_context = Context(m(), World(s(), s(), s()))
 
 
 class Solver:
@@ -2259,8 +2251,8 @@ class Solver:
             # TODO: decompose into parts and check subparts are inhabitable
             return True
 
-    def make_diff(self, world : World, context : Typ, negs : list[Typ]) -> Typ:
-        result = context 
+    def make_diff(self, world : World, pos : Typ, negs : list[Typ]) -> Typ:
+        result = pos 
         for neg in negs:
             if not self.is_disjoint(world, result, neg):
                 result = Diff(result, neg)
@@ -2276,10 +2268,12 @@ class Solver:
 
         augmented_branches = []
         negs = []
-
         for ndbranch in ndbranches:
             augmented_branches += [
-                DBranch(result.world, self.make_diff(empty_world(), ndbranch.pattern, negs), result.typ)
+                DBranch(
+                        result.world, 
+                        self.make_diff(empty_world(), ndbranch.pattern, negs), 
+                        result.typ)
                 for result in ndbranch.results
             ]
             neg_fvs = extract_free_vars_from_typ(s(), ndbranch.pattern)  
@@ -3358,16 +3352,16 @@ class RecordRule(Rule):
 
 class FunctionRule(Rule):
 
-    def combine_single(self, pid : int, world : World, pattern_attr : PatternResult, body_results : list[Result]) -> FunctionResult:
+    def combine_single(self, pid : int, world : World, pattern_typ : Typ, body_results : list[Result]) -> FunctionResult:
         """
         NOTE: this could learn constraints on the param variables,
         which could separate params into case patterns.
         should package the 
         """
-        return FunctionResult(pid, world, [NDBranch(pattern_attr.typ, body_results)])
+        return FunctionResult(pid, world, [NDBranch(pattern_typ, body_results)])
 
-    def combine_cons(self, pid : int, world : World, pattern_attr : PatternResult, body_results : list[Result], tail : FunctionResult) -> FunctionResult:
-        switch = self.combine_single(pid, world, pattern_attr, body_results) 
+    def combine_cons(self, pid : int, world : World, pattern_typ : Typ, body_results : list[Result], tail : FunctionResult) -> FunctionResult:
+        switch = self.combine_single(pid, world, pattern_typ, body_results) 
         return FunctionResult(pid, world, switch.branches + tail.branches)
 
 

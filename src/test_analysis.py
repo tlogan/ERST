@@ -48,7 +48,7 @@ def analyze_stream(code : list[str], debug = False):
 
 
         ctx = await connection.mk_getter()
-        return (ctx.mrs if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None, connection.get_solver())
+        return (ctx.results if ctx else None, guides, connection.to_string_tree(ctx) if ctx else None, connection.get_solver())
 
     (result, guides, parsetree, solver) = asyncio.run(_mk_task())
     if debug:

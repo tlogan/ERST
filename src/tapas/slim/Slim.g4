@@ -27,24 +27,17 @@ _syntax_rules : PSet[SyntaxRule] = s()
 
 def init(self, light_mode = False): 
     self._cache = {}
-    self._guidance = [default_prompt]
+    self._guidance = [default_context]
     self._overflow = False  
     self._light_mode = light_mode  
 
 def reset(self): 
-    self._guidance = [default_prompt]
+    self._guidance = [default_context]
     self._overflow = False
     # self.getCurrentToken()
     # self.getTokenStream()
 
-def flatten(rss):
-    return [
-        r 
-        for rs in rss 
-        for r in rs 
-    ]
-
-def filter(i, rs):
+def filter(self, i, rs):
     return [
         r
         for r in rs  
@@ -68,71 +61,6 @@ def getSolver(self):
 def tokenIndex(self):
     return self.getCurrentToken().tokenIndex
 
-def refine_prompt(self, f : Callable, prompt : Prompt) -> Optional[Prompt]:
-    args = [Context(prompt.enviro, prompt.world)] + prompt.args
-    for arg in args:
-        if arg == None:
-            self._overflow = True
-
-    result_context = None
-    if not self._overflow:
-        result_context = f(*args)
-        prompt = Prompt(result_context.enviro, result_context.world, [])
-        self._guidance = prompt 
-
-        tok = self.getCurrentToken()
-        if tok.type == self.EOF :
-            self._overflow = True 
-
-    return prompt
-
-
-
-
-def guide_lex(self, guidance : Union[Symbol, Terminal]):   
-    if not self._overflow:
-        self._guidance = guidance 
-
-        tok = self.getCurrentToken()
-        if tok.type == self.EOF :
-            self._overflow = True 
-
-
-def guide_symbol(self, text : str):
-    self.guide_lex(Symbol(text))
-
-def guide_terminal(self, text : str):
-    self.guide_lex(Terminal(text))
-
-
-
-def collect(self, f : Callable, prompt : Prompt):
-    args = [Context(prompt.enviro, prompt.world)] + prompt.args
-
-    if self._overflow:
-        return None
-    else:
-
-        clean = next((
-            False
-            for arg in args
-            if arg == None
-        ), True)
-
-        if clean:
-            return f(*args)
-        else:
-            return None
-        # TODO: caching is broken; tokenIndex does not change 
-        # index = self.tokenIndex() 
-        # cache_result = self._cache.get(index)
-        # print(f"CACHE: {self._cache}")
-        # if False: # cache_result:
-        #     return cache_result
-        # else:
-        #     result = f(*args)
-        #     self._cache[index] = result
-        #     return result
 
 }
 
@@ -161,15 +89,15 @@ $aliasing = $preamble.aliasing.set($ID.text, $typ.combo)
 
 ;
 
-program [list[Prompt] prompts] returns [list[Result] results] :
+program [list[Context] contexts] returns [list[Result] results] :
 
 | preamble {
 self._solver = Solver($preamble.aliasing if $preamble.aliasing else m())
-} expr[prompts] {
+} expr[contexts] {
 $results = $expr.results
 }
 
-| expr[prompts] {
+| expr[contexts] {
 self._solver = Solver(m())
 $results = $expr.results
 }
@@ -336,7 +264,7 @@ $combo = Subtyping($strong.combo, $weak.combo)
 
 ;
 
-expr [list[Contexts] contexts] returns [list[Result] results] : 
+expr [list[Context] contexts] returns [list[Result] results] : 
 
 // Base rules
 
@@ -376,8 +304,8 @@ false_branch = expr[branch_contexts] {
 $results = [
     result
     for condition_id, condition_result in enumerate($condition.results)
-    for true_branch_results = [filter(condition_id, $true_branch.results)]
-    for false_branch_results = [filter(condition_id, $false_branch.results)]
+    for true_branch_results in [self.filter(condition_id, $true_branch.results)]
+    for false_branch_results in [self.filter(condition_id, $false_branch.results)]
     for pid in [condition_result.pid]
     for result in ExprRule(self._solver).combine_ite(
         pid,  
@@ -397,7 +325,7 @@ $results = [
     for rator_result in $rator.results
     for pid in [rator_result.pid]
     for result in ExprRule(self._solver).combine_projection(
-        pid
+        pid,
         rator_result.world,
         rator_result.typ,
         $keychain.keys
@@ -414,11 +342,10 @@ argchain_contexts = [
 $results = [
     result 
     for argchain_result in $argchain.results
-    for cator_result in [cator_result[argchain_result.pid]]
+    for cator_result in [$cator.results[argchain_result.pid]]
     for pid in [cator_result.pid]
     for result in ExprRule(self._solver).combine_application(
         pid,
-        contexts[pid].enviro,
         argchain_result.world,
         cator_result.typ,
         argchain_result.typs,
@@ -455,7 +382,7 @@ contin_contexts = [
 ]
 } contin = expr[contin_contexts] {
 $results = [
-    Result(pid, continr.world, continr.typ)
+    Result(pid, contin_result.world, contin_result.typ)
     for contin_result in $contin.results
     for target_result in [$target.results[contin_result.pid]]
     for pid in [target_result.pid]
@@ -520,7 +447,7 @@ $results = [
 
 | argchain[contexts] {
 $results = [
-    result i
+    result
     for argchain_result in $argchain.results
     for pid in [argchain_result.pid]
     for result in BaseRule(self._solver).combine_assoc(pid, argchain_result.world, argchain_result.typs)
@@ -568,9 +495,9 @@ body_contexts = [
 ]
 } body = expr[body_contexts] {
 $results = [
-    FunctionRule(self._solver).combine_single(pid, context.world, body_results)
+    FunctionRule(self._solver).combine_single(pid, context.world, $pattern.result.typ, body_results)
     for pid, context in enumerate(contexts)
-    for body_results in [filter(pid, $body.results)]
+    for body_results in [self.filter(pid, $body.results)]
 ]
 }
 
@@ -584,9 +511,9 @@ body = expr[body_contexts]
 tail = function[contexts] 
 {
 $results = [
-    FunctionRule(self._solver).combine_cons(pid, context.world, body_results, tail_result)
+    FunctionRule(self._solver).combine_cons(pid, context.world, $pattern.result.typ, body_results, tail_result)
     for pid, context in enumerate(contexts)
-    for body_results in [filter(pid, $body.results)]
+    for body_results in [self.filter(pid, $body.results)]
     for tail_result in [$tail.results[pid]]
 ]
 }
@@ -611,7 +538,7 @@ argchain [list[Context] contexts] returns [list[ArgchainResult] results] :
 
 | '(' content = expr[contexts] ')' {
 $results = [
-    ArgchainRule(self._solver).combine_single(pid, content_result.world, content_reuslt.typ)
+    ArgchainRule(self._solver).combine_single(pid, content_result.world, content_result.typ)
     for content_result in $content.results 
     for pid in [content_result.pid]
 ]
@@ -644,9 +571,7 @@ $results = [
 ]
 }
 
-| '|>' {
-} 
-head = expr[head_prompts] {
+| '|>' head = expr[contexts] {
 tail_contexts = [
     Context(contexts[head_result.pid].enviro, head_result.world)
     for head_result in $head.results
@@ -730,7 +655,7 @@ $result = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.t
 | ';' ID '=' 
 body = pattern
 tail = record_pattern {
-$result = RecordPatternRule(self._solver, self._light_mode, prompts).combine_cons($ID.text, $body.result, $tail.result)
+$result = RecordPatternRule(self._solver).combine_cons($ID.text, $body.result, $tail.result)
 }
 
 ;

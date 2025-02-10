@@ -59,13 +59,13 @@ async def _mk_task(parser : SlimParser, input : Queue[I], output : Queue[O]) -> 
         parser.reset()
 
         try:
-            ctx = parser.expr([analyzer.default_prompt])
+            ctx = parser.expr([analyzer.default_context])
 
             num_syn_err = parser.getNumberOfSyntaxErrors()
 
             if num_syn_err > 0:
                 raise(Exception(f"Syntax Errors: {num_syn_err}"))
-            elif ctx.mrs: 
+            elif ctx.results: 
                 await output.put(Done())
                 break
             else:
@@ -154,16 +154,14 @@ def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
         token_stream : Any = CommonTokenStream(lexer)
         parser = SlimParser(token_stream)
         parser.init()
-        tc = parser.program([analyzer.default_prompt])
-        if tc.mrs == None:
+        tc = parser.program([analyzer.default_context])
+        if tc.results == None:
             raise Exception("Parsing Error")
-        else:
-            assert len(tc.mrs) == 1
-            mr = tc.mrs[0]
-            if len(mr) == 1:
-                return (mr[0].typ, tc.toStringTree(recog=parser), parser._solver)
-            else:
-                return (analyzer.Bot(), tc.toStringTree(recog=parser), parser._solver)
+        elif len(tc.results) == 1:
+            result = tc.results[0]
+            return (result.typ, tc.toStringTree(recog=parser), parser._solver)
+        else: 
+            return (analyzer.Bot(), tc.toStringTree(recog=parser), parser._solver)
     except analyzer.Fail:
         return (analyzer.Bot(), "", parser._solver)
     except RecursionError:
@@ -174,31 +172,13 @@ def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
     except analyzer.InhabitableError:
         return (analyzer.Bot(), "", parser._solver)
 
-def analyze_light(code : str) -> Iterable[analyzer.Subtyping]:
-    input_stream = InputStream(code)
-    lexer = SlimLexer(input_stream)
-    token_stream : Any = CommonTokenStream(lexer)
-    parser = SlimParser(token_stream)
-    parser.init(light_mode = True)
-    tc = parser.program([analyzer.default_prompt])
-    if tc.mrs == None:
-        raise Exception("Parsing Error")
-    else:
-        assert len(tc.mrs) == 1 
-        mr = tc.mrs[0]
-        assert len(mr.result.worlds) == 1
-        world = mr.result.worlds[0]
-        assert not world.freezer
-        assert not world.relids
-        return world.constraints 
-
 def refine_grammar(code : str) -> analyzer.Grammar:
     input_stream = InputStream(code)
     lexer = SlimLexer(input_stream)
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     parser.init()
-    tc = parser.program([analyzer.default_prompt])
+    tc = parser.program([analyzer.default_context])
     rs = parser.get_syntax_rules()
     g = analyzer.from_rules_to_grammar(rs)
     return g
