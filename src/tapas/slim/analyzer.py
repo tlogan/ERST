@@ -27,12 +27,6 @@ Op = Optional
 class InhabitableError(Exception):
     pass
 
-class Fail(Exception):
-    pass
-
-
-
-
 class Elim:
     # elim <: intro
     pass
@@ -2071,9 +2065,9 @@ class Solver:
         (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
         def extrude(renaming : PMap[str, str]):
             return pset(
-                Subtyping(TVar(b), TVar(a))
-                if positive else
                 Subtyping(TVar(a), TVar(b))
+                if positive else
+                Subtyping(TVar(b), TVar(a))
                 for a, b in renaming.items()
             )
 
@@ -2088,10 +2082,10 @@ class Solver:
             # EXI x . ALL y . P(x,y) 
             # ALL x . EXI y . P(x,y) 
             # ALL y . EXI x . All y' <: y. P(x,y') 
-            payload_vars = extract_free_vars_from_typ(s(), raw_payload)
+            raw_payload_vars = extract_free_vars_from_typ(s(), raw_payload)
             assert not bool(foreignids.intersection(closedids))
 
-            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_vars).intersection(closedids)
+            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(raw_payload_vars).intersection(closedids)
             outer_constraints = pset(
                 st
                 for st in constraints
@@ -2099,12 +2093,19 @@ class Solver:
                 if not bool (fvs.difference(closedids)) # every fvs is closed 
             )
             raw_inner_constraints = constraints.difference(outer_constraints)
+            raw_inner_ids = extract_free_vars_from_constraints(s(), raw_inner_constraints).union(raw_payload_vars).difference(closedids)
 
-            renaming = self.make_renaming_ids(foreignids)
-            submap = self.make_submap_from_renaming(renaming)
-            payload = sub_typ(submap, raw_payload)
-            inner_constraints = extrude(renaming).union(sub_constraints(submap, raw_inner_constraints))
-            inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_vars).difference(closedids).difference(foreignids)
+            foreign_inner_ids = raw_inner_ids.intersection(foreignids)
+
+            foreign_renaming = self.make_renaming_ids(foreign_inner_ids)
+            foreign_submap = self.make_submap_from_renaming(foreign_renaming)
+
+            local_inner_ids = raw_inner_ids.difference(foreignids)
+            inner_ids = local_inner_ids.union(foreign_renaming.values())
+            inner_constraints = extrude(foreign_renaming).union(sub_constraints(foreign_submap, raw_inner_constraints))
+            payload = sub_typ(foreign_submap, raw_payload)
+
+
 
             if outer_ids and inner_ids:
                 return outer_con(
@@ -2452,6 +2453,29 @@ class Solver:
                 for w1 in self.solve(w0, st.lower, st.upper)
             ]
         return worlds
+
+
+    def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+        trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
+        simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
+        rel_constraints = pset(
+            Subtyping(sub_typ(pmap({upper.id : lower}), st.lower), st.upper) 
+            for st in world.constraints
+            if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
+        )
+
+        closed_constraints = pset(
+            Subtyping(lower, st.upper)
+            for st in world.constraints  
+            if st.lower == upper
+            if isinstance(st.upper, TVar) and st.upper.id in world.closedids
+        )
+
+        new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(new_world, list(rel_constraints.add(simple_constraint)))
+        ]
             
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
@@ -2550,7 +2574,7 @@ class Solver:
             return self.solve(world, exi, upper)
 
 
-        elif isinstance(lower, TVar) and lower.id not in world.closedids: 
+        elif isinstance(lower, TVar) and lower.id not in world.closedids:
             trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
             skolem_constraints = pset(
                 Subtyping(st.lower, upper)
@@ -2559,10 +2583,21 @@ class Solver:
                 if isinstance(st.lower, TVar) and st.lower.id in world.closedids
             )
             new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
-            return [
+            worlds = [
                 replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
                 for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
             ]
+            if isinstance(upper, TVar) and upper.id not in world.closedids: 
+                worlds = [
+                    w1
+                    for w0 in worlds 
+                    for w1 in self.solve_open_variable_introduction(w0, lower, upper) 
+                ]
+            return worlds 
+
+
+        elif isinstance(upper, TVar) and upper.id not in world.closedids: 
+            return self.solve_open_variable_introduction(world, lower, upper)
 
 
         elif isinstance(lower, Exi):
@@ -2623,28 +2658,6 @@ class Solver:
 
         #######################################
 
-        elif isinstance(upper, TVar) and upper.id not in world.closedids: 
-
-            trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
-            simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
-            rel_constraints = pset(
-                Subtyping(sub_typ(pmap({upper.id : lower}), st.lower), st.upper) 
-                for st in world.constraints
-                if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
-            )
-
-            skolem_constraints = pset(
-                Subtyping(lower, st.upper)
-                for st in world.constraints  
-                if st.lower == upper
-                if isinstance(st.upper, TVar) and st.upper.id in world.closedids
-            )
-
-            new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
-            return [
-                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve_multi(new_world, list(rel_constraints.add(simple_constraint)))
-            ]
 
         #######################################
 
@@ -3079,7 +3092,7 @@ class BaseRule(Rule):
         [X . X <: nil | cons A] X -> {Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)} Y
         '''
 
-        rigids = pset( 
+        foreignids = pset( 
             id
             for t in enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
@@ -3092,7 +3105,7 @@ class BaseRule(Rule):
             body_typ = branch.body
             param_typ = branch.pattern
             imp = Imp(param_typ, body_typ)
-            influential_vars = rigids.union(
+            influential_vars = foreignids.union(
                 branch.world.closedids
             ).union(
                 extract_free_vars_from_typ(s(), imp)
@@ -3105,12 +3118,21 @@ class BaseRule(Rule):
             )
             # TODO: switch to using package_typ, which will resolve targets if possible
             # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
-            generalized_case = self.solver.make_constraint_typ(True)(rigids, branch.world.closedids, influential_constraints, imp)
+            generalized_case = self.solver.make_constraint_typ(True)(foreignids, branch.world.closedids, influential_constraints, imp)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
         end for 
         '''
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~
+DEBUG function type:
+
+{concretize_typ(make_inter(generalized_branches))}
+
+-- foreign ids: {foreignids}
+~~~~~~~~~~~~~~~~~~~~~
+        """)
         return Result(pid, world, make_inter(generalized_branches))
     '''
     end def
@@ -3154,60 +3176,44 @@ class ExprRule(Rule):
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
         worlds = [world] 
+        current_cator_typ = cator_typ
         for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
             new_worlds = []
             for world in worlds:
-                # NOTE: interpretation to keep types and constraints compact 
-                # cator_typ, cator_used_constraints = self.solver.interpret_with_polarity(True, world, cator_var, s())
-                # ignored_ids = get_skolems_adjacent_learnable_ids(world)
-                # arg_typ, arg_used_constraints = self.solver.interpret_with_polarity(True, world, arg_typ, ignored_ids)
-                # arg_typ, arg_used_constraints = (arg_var, s())
-
-#                 print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG application
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# world.skolems: {tuple(world.skolems)}
-
-# world.constraints: 
-# {concretize_constraints(world.constraints)}
-
-
-# cator_typ: {concretize_typ(cator_typ)}
-# cator_var: {concretize_typ(cator_var)}
-# cator_used_constraints:
-# {concretize_constraints(cator_used_constraints)}
-
-# arg_typ: {concretize_typ(arg_typ)}
-# arg_var: {arg_var.id}
-# arg_used_constraints:
-# {concretize_constraints(arg_used_constraints)}
-
-# result_var: {result_var.id}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
-
-                # world = World(world.constraints.difference(cator_used_constraints).difference(arg_used_constraints), world.skolems, world.relids)
-                new_worlds.extend(self.solver.solve(world, cator_typ, Imp(arg_typ, result_var)))
+                new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var)))
             worlds = new_worlds
+            current_cator_typ = result_var
 
-            # TODO: remove version without interpretation
-            # worlds = [
-            #     m1
-            #     for m0 in worlds
-            #     for m1 in self.solver.solve(m0, cator_var, Imp(arg_var, result_var))
-            # ] 
-            ###########################
-            cator_typ = result_var
 
-        if len(worlds) > 0:
-            return [
-                Result(pid, world, result_var)
-                for world in worlds
-            ]
-        else:
-            raise Fail()
+        for ow in worlds:
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_application 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<<input>>
+
+cator_typ: {concretize_typ(cator_typ)}
+arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
+
+closedids: {world.closedids}
+constraints: 
+{concretize_constraints(world.constraints)}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<<output>>
+
+closedids: {ow.closedids}
+constraints: 
+{concretize_constraints(ow.constraints)}
+
+result_var: {concretize_typ(result_var)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+        return [
+            Result(pid, world, result_var)
+            for world in worlds
+        ]
 
     #########
 

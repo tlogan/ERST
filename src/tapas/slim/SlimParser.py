@@ -1439,7 +1439,7 @@ class SlimParser ( Parser ):
                         pid,
                         contexts[pid].enviro,
                         body_result.world,
-                        body_reuslt.typ
+                        body_result.typ
                     )
                     for body_result in localctx.body.results 
                     for pid in [body_result.pid]

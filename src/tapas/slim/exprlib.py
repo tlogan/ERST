@@ -36,20 +36,19 @@ case (x, y) => (
 simple = (f'''
 case x => (
     (
-    case ~true @ => ~true @
-    case ~false @ => ~false @ 
+    case ~true @ => x 
     )(x)
 )
 ''')
 
-simple = (f'''
-let id = case x => x in
-let f =
-    case ~true @ => ~true @
-    case ~false @ => ~false @ 
-in
-case x => id(f(x))
-''')
+# simple = (f'''
+# let id = case x => x in
+# let f =
+#     case ~true @ => ~true @
+#     case ~false @ => ~false @ 
+# in
+# case x => id(f(x))
+# ''')
 
 # $ @ -> Y,  [X <: A, A <: Y], [X <: B, B <: Y]
 #... ((@ -> A) ALL X[X <: A])& ((@ -> B) ALL X[X <: B])
