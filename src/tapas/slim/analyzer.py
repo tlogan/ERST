@@ -936,7 +936,7 @@ def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, lis
 def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
 #     print(f"""
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG is_decidable
+# DEBUG is_decomposable
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # key:
 # {concretize_typ(key)}
@@ -1669,7 +1669,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 100000000
+        self._limit = 78 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2072,38 +2072,43 @@ class Solver:
             )
 
 
-        def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], raw_payload : Typ):
-            # TODO: need to consider adding extrusion of free_vars (rigids). 
-            # TODO: how does extrusion compare to simply avoiding inner quantification 
-            # TODO: how do both of these relate to learning constraints on closed variables (skolems)
-            # TODO: that is, should closed variables constrain what is learnable about open variables?
-            # TODO: or should open variables transitively open closed variables?
-            # TODO: I think it should constrain, which means I've implemented it wrong.
-            # EXI x . ALL y . P(x,y) 
-            # ALL x . EXI y . P(x,y) 
-            # ALL y . EXI x . All y' <: y. P(x,y') 
-            raw_payload_vars = extract_free_vars_from_typ(s(), raw_payload)
+        def make(foreignids : PSet[str], closedids : PSet[str], raw_constraints : PSet[Subtyping], payload : Typ):
+            payload_ids = extract_free_vars_from_typ(s(), payload)
             assert not bool(foreignids.intersection(closedids))
 
-            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(raw_payload_vars).intersection(closedids)
+            influential_ids = foreignids.union(closedids).union(payload_ids)
+            constraints = pset(
+                st
+                for st in raw_constraints
+                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+                # if all fids are influential
+            )
+
+            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             outer_constraints = pset(
                 st
                 for st in constraints
-                for fvs in [extract_free_vars_from_constraints(s(), [st])]
-                if not bool (fvs.difference(closedids)) # every fvs is closed 
+                for fids in [extract_free_vars_from_constraints(s(), [st])]
+                if not bool (fids.difference(closedids).union(foreignids)) # every free id is closed or foreign
+                if bool(fids.intersection(closedids)) # there's at least one closed id
             )
-            raw_inner_constraints = constraints.difference(outer_constraints)
-            raw_inner_ids = extract_free_vars_from_constraints(s(), raw_inner_constraints).union(raw_payload_vars).difference(closedids)
+            inner_constraints = constraints.difference(outer_constraints)
+            inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
+            ######### invariant: for each constraint in raw_inner_constraints, there is at least one open and inner id in fids(constraint) 
+            for st in inner_constraints:
+                fids = extract_free_vars_from_constraints(s(), [st]) 
+                assert bool(inner_ids.intersection(fids))
+            ######################
 
-            foreign_inner_ids = raw_inner_ids.intersection(foreignids)
+            # foreign_inner_ids = raw_inner_ids.intersection(foreignids)
 
-            foreign_renaming = self.make_renaming_ids(foreign_inner_ids)
-            foreign_submap = self.make_submap_from_renaming(foreign_renaming)
+            # foreign_renaming = self.make_renaming_ids(foreign_inner_ids)
+            # foreign_submap = self.make_submap_from_renaming(foreign_renaming)
 
-            local_inner_ids = raw_inner_ids.difference(foreignids)
-            inner_ids = local_inner_ids.union(foreign_renaming.values())
-            inner_constraints = extrude(foreign_renaming).union(sub_constraints(foreign_submap, raw_inner_constraints))
-            payload = sub_typ(foreign_submap, raw_payload)
+            # local_inner_ids = raw_inner_ids.difference(foreignids)
+            # inner_ids = local_inner_ids.union(foreign_renaming.values())
+            # inner_constraints = extrude(foreign_renaming).union(sub_constraints(foreign_submap, raw_inner_constraints))
+            # payload = sub_typ(foreign_submap, raw_payload)
 
 
 
@@ -2491,8 +2496,8 @@ class Solver:
 # self.aliasing :::
 # :::::::: {self.aliasing}
 
-# world.skolems::: 
-# :::::::: {world.skolems}
+# world.closedids::: 
+# :::::::: {world.closedids}
 
 # world.constraints::: 
 # {concretize_constraints(world.constraints)}
@@ -2861,7 +2866,6 @@ class Solver:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-
                 lower_fvs = extract_free_vars_from_typ(s(), lower)  
                 if any((fv in world.closedids) for fv in lower_fvs):
                     assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
@@ -3037,8 +3041,11 @@ MulitResult = list[Result]
 
 class BaseRule(Rule):
 
-    def combine_var(self, pid : int, enviro : Enviro, world : World, id : str) -> Result:
-        return Result(pid, world, enviro[id])
+    def combine_var(self, pid : int, enviro : Enviro, world : World, id : str) -> list[Result]:
+        if id in enviro:
+            return [Result(pid, world, enviro[id])]
+        else:
+            return []
 
     def combine_assoc(self, pid : int, world : World, typs : list[Typ]) -> list[Result]:
         if len(typs) == 1:
@@ -3102,37 +3109,32 @@ class BaseRule(Rule):
         augmented_branches = self.solver.augment_branches_with_diff(function_branches)
         generalized_branches = []
         for branch in augmented_branches: 
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_function branch:
+
+branch.constraints:
+{concretize_constraints(branch.world.constraints)}
+.........
+            """)
             body_typ = branch.body
             param_typ = branch.pattern
             imp = Imp(param_typ, body_typ)
-            influential_vars = foreignids.union(
-                branch.world.closedids
-            ).union(
-                extract_free_vars_from_typ(s(), imp)
-            )
+            generalized_case = self.solver.make_constraint_typ(True)(foreignids, branch.world.closedids, branch.world.constraints, imp)
 
-            influential_constraints = pset(
-                st
-                for st in branch.world.constraints
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
-            )
-            # TODO: switch to using package_typ, which will resolve targets if possible
-            # generalized_case = package_typ(True, rigids, branch.world.skolems, influential_constraints, imp)
-            generalized_case = self.solver.make_constraint_typ(True)(foreignids, branch.world.closedids, influential_constraints, imp)
+            print(f"""
+......
+DEBUG combine_function results:
+
+generalized_case: {concretize_typ(generalized_case)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
         end for 
         '''
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~
-DEBUG function type:
-
-{concretize_typ(make_inter(generalized_branches))}
-
--- foreign ids: {foreignids}
-~~~~~~~~~~~~~~~~~~~~~
-        """)
         return Result(pid, world, make_inter(generalized_branches))
     '''
     end def
@@ -3185,31 +3187,6 @@ class ExprRule(Rule):
             worlds = new_worlds
             current_cator_typ = result_var
 
-
-        for ow in worlds:
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_application 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<<input>>
-
-cator_typ: {concretize_typ(cator_typ)}
-arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
-
-closedids: {world.closedids}
-constraints: 
-{concretize_constraints(world.constraints)}
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<<output>>
-
-closedids: {ow.closedids}
-constraints: 
-{concretize_constraints(ow.constraints)}
-
-result_var: {concretize_typ(result_var)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
         return [
             Result(pid, world, result_var)
             for world in worlds
@@ -3263,7 +3240,7 @@ result_var: {concretize_typ(result_var)}
 
         outer_world = world
 
-        rigids = pset( 
+        foreignids = pset( 
             id
             for t in enviro.values()
             for id in extract_free_vars_from_typ(s(), t)
@@ -3306,7 +3283,7 @@ result_var: {concretize_typ(result_var)}
             # NOTE: only keep constraints on vars that continue to have influence
             # - all other vars influence has been fully realized and captured by remaining constraints
 
-            influential_vars = rigids.union(
+            influential_vars = foreignids.union(
                 inner_world.closedids
             ).union(
                 extract_free_vars_from_typ(s(), rel_pattern)
@@ -3314,19 +3291,9 @@ result_var: {concretize_typ(result_var)}
                 [IH_typ.id] 
             ) 
 
-            influential_constraints = pset(
-                st
-                # for st in extract_reachable_constraints_from_typ(inner_world, rel_pattern)
-                for st in inner_world.constraints
-                # NOTE: contains at least one influential variable
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_vars))
-                # if not bool(pset([self_typ.id, in_typ.id, out_typ.id])
-                #     .intersection(extract_free_vars_from_typ(s(), st.lower).union(extract_free_vars_from_typ(s(), st.upper)))
-                # )
-            )
-            rel_constraints = IH_rel_constraints.union(influential_constraints)
+            rel_constraints = IH_rel_constraints.union(inner_world.constraints)
             # TODO: switch to using package_typ, which will resolve targets if possible
-            constrained_rel = self.solver.make_constraint_typ(False)(rigids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
+            constrained_rel = self.solver.make_constraint_typ(False)(foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
             # NOTE: parameter constraint isn't actually necessary; sound without it.
             # param_body = Unio(constrained_left, param_body)
@@ -3337,6 +3304,13 @@ result_var: {concretize_typ(result_var)}
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix
+
+{concretize_typ(All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
 
         ##################################

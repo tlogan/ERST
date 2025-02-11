@@ -20,8 +20,6 @@ fix(case self => (
 ))
 """.strip())
 
-
-
 max = (f'''
 let lted = {lted} in
 case (x, y) => (
@@ -34,12 +32,35 @@ case (x, y) => (
 
 
 simple = (f'''
-case x => (
-    (
-    case ~true @ => x 
-    )(x)
+let lted = {lted} in
+case (x,y) => (
+    lted(x,y)
 )
 ''')
+
+simple = (f'''
+{lted}
+''')
+
+# simple = (f'''
+# (case self => (
+#     case (~succ m, ~succ n) => self(m,n) 
+# ))
+# ''')
+
+# simple = (f'''
+# {lted}
+# ''')
+
+# simple = (f'''
+# let lted = {lted} in
+# case x => (
+#     (
+#     case ~true @ => x 
+#     case ~false @ => x 
+#     )(x)
+# )
+# ''')
 
 # simple = (f'''
 # let id = case x => x in

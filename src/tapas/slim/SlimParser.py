@@ -1577,8 +1577,9 @@ class SlimParser ( Parser ):
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.results = [
-                    BaseRule(self._solver).combine_var(pid, context.enviro, context.world, (None if localctx._ID is None else localctx._ID.text))
+                    result
                     for pid, context in enumerate(contexts)
+                    for result in BaseRule(self._solver).combine_var(pid, context.enviro, context.world, (None if localctx._ID is None else localctx._ID.text))
                 ]
 
                 pass

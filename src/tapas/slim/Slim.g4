@@ -440,8 +440,9 @@ $results = [
 
 | ID {
 $results = [
-    BaseRule(self._solver).combine_var(pid, context.enviro, context.world, $ID.text)
+    result
     for pid, context in enumerate(contexts)
+    for result in BaseRule(self._solver).combine_var(pid, context.enviro, context.world, $ID.text)
 ]
 } 
 

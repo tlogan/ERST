@@ -1340,8 +1340,9 @@ public class SlimParser extends Parser {
 				((BaseContext)_localctx).ID = match(ID);
 
 				_localctx.results = [
-				    BaseRule(self._solver).combine_var(pid, context.enviro, context.world, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
+				    result
 				    for pid, context in enumerate(contexts)
+				    for result in BaseRule(self._solver).combine_var(pid, context.enviro, context.world, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
 				]
 
 				}
