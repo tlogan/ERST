@@ -2461,6 +2461,20 @@ class Solver:
 
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG solve_open_variable_introduction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closedids: {world.closedids}
+constraints:
+{concretize_constraints(world.constraints)}
+              
+
+lower: {concretize_typ(lower)}
+upper: {concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
         simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
         rel_constraints = pset(
@@ -2579,6 +2593,44 @@ class Solver:
             return self.solve(world, exi, upper)
 
 
+        elif isinstance(lower, Exi):
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG lower, Exi 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closedids: {world.closedids}
+constraints:
+{concretize_constraints(world.constraints)}
+              
+
+lower: {concretize_typ(lower)}
+upper: {concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+            renaming = self.make_renaming(lower.ids)
+            strong_constraints = sub_constraints(renaming, lower.constraints)
+            lower_body = sub_typ(renaming, lower.body)
+            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
+
+            worlds = [world]
+            for constraint in strong_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]  
+
+            return [
+                m2
+                for m0 in worlds
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
+                for m2 in self.solve(m1, lower_body, upper)
+            ]
+
+        #######################################
+
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
             trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
             skolem_constraints = pset(
@@ -2605,40 +2657,6 @@ class Solver:
             return self.solve_open_variable_introduction(world, lower, upper)
 
 
-        elif isinstance(lower, Exi):
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG: strong, Exi
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# strong:
-# {concretize_typ(strong)}
-
-# weak:
-# {concretize_typ(weak)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-            renaming = self.make_renaming(lower.ids)
-            strong_constraints = sub_constraints(renaming, lower.constraints)
-            lower_body = sub_typ(renaming, lower.body)
-            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
-
-            worlds = [world]
-            for constraint in strong_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]  
-
-            return [
-                m2
-                for m0 in worlds
-                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
-                for m2 in self.solve(m1, lower_body, upper)
-            ]
-
-        #######################################
 
         elif isinstance(upper, All):
             renaming = self.make_renaming(upper.ids)
@@ -2856,6 +2874,22 @@ class Solver:
                 return []
 
         elif isinstance(upper, Fixpoint): 
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG upper, Fixpoint 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closedids: {world.closedids}
+constraints:
+{concretize_constraints(world.constraints)}
+
+lower: {concretize_typ(lower)}
+upper: {concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
+
+
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 if not self._checking: print("~~~~~~ UNROLLING")
                 '''

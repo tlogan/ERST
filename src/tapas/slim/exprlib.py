@@ -38,9 +38,9 @@ case (x,y) => (
 )
 ''')
 
-simple = (f'''
-{lted}
-''')
+# simple = (f'''
+# {lted}
+# ''')
 
 # simple = (f'''
 # (case self => (
