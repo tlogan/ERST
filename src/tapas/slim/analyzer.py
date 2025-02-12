@@ -2063,14 +2063,13 @@ class Solver:
 
     def make_constraint_typ(self, positive : bool):
         (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
-        def extrude(renaming : PMap[str, str]):
-            return pset(
-                Subtyping(TVar(a), TVar(b))
-                if positive else
-                Subtyping(TVar(b), TVar(a))
-                for a, b in renaming.items()
-            )
-
+        # def extrude(renaming : PMap[str, str]):
+        #     return pset(
+        #         Subtyping(TVar(a), TVar(b))
+        #         if positive else
+        #         Subtyping(TVar(b), TVar(a))
+        #         for a, b in renaming.items()
+        #     )
 
         def make(foreignids : PSet[str], closedids : PSet[str], raw_constraints : PSet[Subtyping], payload : Typ):
             payload_ids = extract_free_vars_from_typ(s(), payload)
@@ -2094,7 +2093,7 @@ class Solver:
             )
             inner_constraints = constraints.difference(outer_constraints)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
-            ######### invariant: for each constraint in raw_inner_constraints, there is at least one open and inner id in fids(constraint) 
+            ######### invariant: for each constraint in inner_constraints, there is at least one open and inner id in fids(constraint) 
             for st in inner_constraints:
                 fids = extract_free_vars_from_constraints(s(), [st]) 
                 assert bool(inner_ids.intersection(fids))
@@ -2462,19 +2461,19 @@ class Solver:
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG solve_open_variable_introduction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closedids: {world.closedids}
-constraints:
-{concretize_constraints(world.constraints)}
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG solve_open_variable_introduction
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closedids: {world.closedids}
+# constraints:
+# {concretize_constraints(world.constraints)}
               
 
-lower: {concretize_typ(lower)}
-upper: {concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# lower: {concretize_typ(lower)}
+# upper: {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
         trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
         simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
         rel_constraints = pset(
@@ -2594,20 +2593,6 @@ upper: {concretize_typ(upper)}
 
 
         elif isinstance(lower, Exi):
-
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG lower, Exi 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closedids: {world.closedids}
-constraints:
-{concretize_constraints(world.constraints)}
-              
-
-lower: {concretize_typ(lower)}
-upper: {concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
             renaming = self.make_renaming(lower.ids)
             strong_constraints = sub_constraints(renaming, lower.constraints)
             lower_body = sub_typ(renaming, lower.body)
@@ -2875,21 +2860,6 @@ upper: {concretize_typ(upper)}
 
         elif isinstance(upper, Fixpoint): 
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG upper, Fixpoint 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closedids: {world.closedids}
-constraints:
-{concretize_constraints(world.constraints)}
-
-lower: {concretize_typ(lower)}
-upper: {concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
-
-
-
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 if not self._checking: print("~~~~~~ UNROLLING")
                 '''
@@ -3142,28 +3112,19 @@ class BaseRule(Rule):
         # TODO: need to extrude to not lose constraints on foreign variables
         augmented_branches = self.solver.augment_branches_with_diff(function_branches)
         generalized_branches = []
+
         for branch in augmented_branches: 
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_function branch:
-
-branch.constraints:
-{concretize_constraints(branch.world.constraints)}
-.........
-            """)
             body_typ = branch.body
             param_typ = branch.pattern
             imp = Imp(param_typ, body_typ)
-            generalized_case = self.solver.make_constraint_typ(True)(foreignids, branch.world.closedids, branch.world.constraints, imp)
+            generalized_case = self.solver.make_constraint_typ(True)( 
+                foreignids, 
+                branch.world.closedids, 
+                branch.world.constraints.difference(world.constraints), 
+                imp
+            )
 
-            print(f"""
-......
-DEBUG combine_function results:
-
-generalized_case: {concretize_typ(generalized_case)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
             #############################################
             generalized_branches = generalized_branches + [generalized_case]
         '''
@@ -3317,17 +3278,11 @@ class ExprRule(Rule):
             # NOTE: only keep constraints on vars that continue to have influence
             # - all other vars influence has been fully realized and captured by remaining constraints
 
-            influential_vars = foreignids.union(
-                inner_world.closedids
-            ).union(
-                extract_free_vars_from_typ(s(), rel_pattern)
-            ).union(
-                [IH_typ.id] 
-            ) 
 
-            rel_constraints = IH_rel_constraints.union(inner_world.constraints)
+            rel_constraints = IH_rel_constraints.union(inner_world.constraints.difference(world.constraints))
             # TODO: switch to using package_typ, which will resolve targets if possible
-            constrained_rel = self.solver.make_constraint_typ(False)(foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
+            constrained_rel = self.solver.make_constraint_typ(False)(
+                foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
             # NOTE: parameter constraint isn't actually necessary; sound without it.
             # param_body = Unio(constrained_left, param_body)
@@ -3338,13 +3293,6 @@ class ExprRule(Rule):
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix
-
-{concretize_typ(All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
 
         ##################################
