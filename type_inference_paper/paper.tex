@@ -887,7 +887,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta') \in \vec{\Omega}
+       (\vec{\alpha}', \Delta') \in \vec{\Omega}
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -1919,7 +1919,7 @@ contains the space between types of the lower bound.
       \\
       \text{diff}(\phi, \vec{\eta}) = \tau_l
       \\\\
-      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
+      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}', \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -2623,26 +2623,24 @@ contains the space between types of the lower bound.
 \end{definition}
 
 
-\begin{definition}\boxed{\vec{\alpha}, \vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
+\begin{definition}\boxed{\vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
   \label{def:constrained_implication_congruence}
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f, \vec{\alpha}_m \entails \epsilon \cong \epsilon 
+      \vec{\alpha}_f \entails \epsilon \cong \epsilon 
     }
 
     \inferrule {
-      \vec{\alpha}_f, \vec{\alpha}_m \entails \vec{\pi} \cong \vec{\tau} 
+      \vec{\alpha}_f \entails \vec{\pi} \cong \vec{\tau} 
       \\
       \text{FTV}(\tau_l) = \vec{\alpha}_l
       \\
       \text{FTV}(\tau_r) = \vec{\alpha}_r
       \\\\
-      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_m\ \vec{\alpha}_l\ \vec{\alpha}_r \pitchfork \Delta' 
-      \\
-      \vec{\alpha}_f, \vec{\alpha}_m, \Delta' \entails \tau_l\obj{->}\tau_r \cong^{+} \tau
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau_l\obj{->}\tau_r \cong^{+} \tau
     } {
-      \vec{\alpha}_f, \vec{\alpha}_m \entails \vec{\pi}\ \left<M, \Delta, \tau_l \obj{->} \tau_r \right> \cong \vec{\tau}\ \tau 
+      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau_l \obj{->} \tau_r \right> \cong \vec{\tau}\ \tau 
     }
   \end{mathpar}
 \end{definition}
@@ -2679,10 +2677,8 @@ contains the space between types of the lower bound.
       \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
       \\\\
       \vec{\alpha}_f \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
-      \\
-      \Delta \entails \Alpha \pitchfork \Delta_i  
       \\\\
-      \vec{\alpha}_f\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau
+      \vec{\alpha}_f\ \alpha_{h^-}, M, \Delta \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau
       % TODO: should closeds be included using universal constraint? 
     } {
       \vec{\alpha}_f \entails 
@@ -2820,18 +2816,22 @@ contains the space between types of the lower bound.
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\Alpha, \Alpha, \Delta \entails \tau \cong^{+|-} \tau}
+\begin{definition}\boxed{\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau \cong^{+|-} \tau} Constraint 
   \begin{mathpar}
     \inferrule {
-      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
-      \\\\
-      (\text{FTV}(\Delta)\ \text{FTV}(\tau))\ \diamond\ \Alpha_z = \Alpha_o
+      \text{FTV}(\tau) = \vec{\alpha}_p
       \\
-      (\text{FTV}(\Delta_i)\ \text{FTV}(\tau))\ \backslash\ \Alpha_z \ \backslash\ \Alpha_r = \Alpha_i
+      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_c\ \vec{\alpha}_p \pitchfork \Delta' 
       \\\\
-      \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) = \tau'
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta' \entails \Delta_o \wr \Delta_i 
+      \\\\
+      (\text{FTV}(\Delta)\ \vec{\alpha}_p)\ \diamond\ \vec{\alpha}_c = \vec{\alpha}_o 
+      \\
+      (\text{FTV}(\Delta_i)\ \vec{\alpha}_p)\ \backslash\ \vec{\alpha}_c \ \backslash\ \vec{\alpha}_f = \vec{\alpha}_i 
+      \\\\
+      \text{quantify}^{+|-}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
     } {
-      \Alpha_r, \Alpha_z, \Delta \entails \tau \cong^{+|-} \tau'
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{+|-} \tau'
     }
   \end{mathpar}
 \end{definition}

@@ -2083,7 +2083,6 @@ class Solver:
                 # if all fids are influential
             )
 
-            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             outer_constraints = pset(
                 st
                 for st in constraints
@@ -2092,6 +2091,8 @@ class Solver:
                 if bool(fids.intersection(closedids)) # there's at least one closed id
             )
             inner_constraints = constraints.difference(outer_constraints)
+
+            outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
             ######### invariant: for each constraint in inner_constraints, there is at least one open and inner id in fids(constraint) 
             for st in inner_constraints:
