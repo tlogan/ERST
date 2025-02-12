@@ -14,9 +14,10 @@ res/typeshed_object
 res/stub_cache
 res/python_grammar.json
 .DS_Store
-paper/*.aux
-paper/*.fdb_latexmk
-paper/*.fls
-paper/*.log
-paper/*.out
-paper/*.synctex.gz
+**/paper.aux
+**/paper.pdf
+**/paper.fdb_latexmk
+**/paper.fls
+**/paper.log
+**/paper.out
+**/paper.synctex.gz

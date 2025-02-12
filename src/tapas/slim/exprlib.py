@@ -20,7 +20,6 @@ fix(case self => (
 ))
 """.strip())
 
-
 max = (f'''
 let lted = {lted} in
 case (x, y) => (
@@ -30,8 +29,6 @@ case (x, y) => (
         x
 )
 ''')
-
-
 
 length = (f"""
 fix(case self => (

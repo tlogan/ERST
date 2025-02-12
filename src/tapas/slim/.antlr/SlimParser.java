@@ -123,15 +123,22 @@ public class SlimParser extends Parser {
 
 	def init(self, light_mode = False): 
 	    self._cache = {}
-	    self._guidance = default_context
+	    self._guidance = [default_context]
 	    self._overflow = False  
 	    self._light_mode = light_mode  
 
 	def reset(self): 
-	    self._guidance = default_context 
+	    self._guidance = [default_context]
 	    self._overflow = False
 	    # self.getCurrentToken()
 	    # self.getTokenStream()
+
+	def filter(self, i, rs):
+	    return [
+	        r
+	        for r in rs  
+	        if r.pid == i
+	    ]
 
 
 	def get_syntax_rules(self):
@@ -150,67 +157,6 @@ public class SlimParser extends Parser {
 	def tokenIndex(self):
 	    return self.getCurrentToken().tokenIndex
 
-	def guide_nonterm(self, f : Callable, *args) -> Optional[Context]:
-	    for arg in args:
-	        if arg == None:
-	            self._overflow = True
-
-	    result_nt = None
-	    if not self._overflow:
-	        result_nt = f(*args)
-	        self._guidance = result_nt
-
-	        tok = self.getCurrentToken()
-	        if tok.type == self.EOF :
-	            self._overflow = True 
-
-	    return result_nt 
-
-
-
-	def guide_lex(self, guidance : Union[Symbol, Terminal]):   
-	    if not self._overflow:
-	        self._guidance = guidance 
-
-	        tok = self.getCurrentToken()
-	        if tok.type == self.EOF :
-	            self._overflow = True 
-
-
-	def guide_symbol(self, text : str):
-	    self.guide_lex(Symbol(text))
-
-	def guide_terminal(self, text : str):
-	    self.guide_lex(Terminal(text))
-
-
-
-	def collect(self, f : Callable, *args):
-
-	    if self._overflow:
-	        return None
-	    else:
-
-	        clean = next((
-	            False
-	            for arg in args
-	            if arg == None
-	        ), True)
-
-	        if clean:
-	            return f(*args)
-	        else:
-	            return None
-	        # TODO: caching is broken; tokenIndex does not change 
-	        # index = self.tokenIndex() 
-	        # cache_result = self._cache.get(index)
-	        # print(f"CACHE: {self._cache}")
-	        # if False: # cache_result:
-	        #     return cache_result
-	        # else:
-	        #     result = f(*args)
-	        #     self._cache[index] = result
-	        #     return result
 
 
 	public SlimParser(TokenStream input) {
@@ -360,8 +306,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ProgramContext extends ParserRuleContext {
-		public Context context;
-		public Result result;
+		public list[Context] contexts;
+		public list[Result] results;
 		public PreambleContext preamble;
 		public ExprContext expr;
 		public PreambleContext preamble() {
@@ -371,15 +317,15 @@ public class SlimParser extends Parser {
 			return getRuleContext(ExprContext.class,0);
 		}
 		public ProgramContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ProgramContext(ParserRuleContext parent, int invokingState, Context context) {
+		public ProgramContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.context = context;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
 	}
 
-	public final ProgramContext program(Context context) throws RecognitionException {
-		ProgramContext _localctx = new ProgramContext(_ctx, getState(), context);
+	public final ProgramContext program(list[Context] contexts) throws RecognitionException {
+		ProgramContext _localctx = new ProgramContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 4, RULE_program);
 		try {
 			setState(72);
@@ -399,9 +345,9 @@ public class SlimParser extends Parser {
 				self._solver = Solver(((ProgramContext)_localctx).preamble.aliasing if ((ProgramContext)_localctx).preamble.aliasing else m())
 
 				setState(66);
-				((ProgramContext)_localctx).expr = expr(context);
+				((ProgramContext)_localctx).expr = expr(contexts);
 
-				_localctx.result = ((ProgramContext)_localctx).expr.result
+				_localctx.results = ((ProgramContext)_localctx).expr.results
 
 				}
 				break;
@@ -409,10 +355,10 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(69);
-				((ProgramContext)_localctx).expr = expr(context);
+				((ProgramContext)_localctx).expr = expr(contexts);
 
 				self._solver = Solver(m())
-				_localctx.result = ((ProgramContext)_localctx).expr.result
+				_localctx.results = ((ProgramContext)_localctx).expr.results
 
 				}
 				break;
@@ -999,8 +945,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
-		public Context nt;
-		public Result result;
+		public list[Context] contexts;
+		public list[Result] results;
 		public BaseContext base;
 		public BaseContext head;
 		public ExprContext tail;
@@ -1040,18 +986,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(TargetContext.class,0);
 		}
 		public ExprContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ExprContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public ExprContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 	}
 
-	public final ExprContext expr(Context nt) throws RecognitionException {
-		ExprContext _localctx = new ExprContext(_ctx, getState(), nt);
+	public final ExprContext expr(list[Context] contexts) throws RecognitionException {
+		ExprContext _localctx = new ExprContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 16, RULE_expr);
 		try {
-			setState(262);
+			setState(246);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
@@ -1063,198 +1009,215 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(200);
-				((ExprContext)_localctx).base = base(nt);
+				((ExprContext)_localctx).base = base(contexts);
 
-				_localctx.result = ((ExprContext)_localctx).base.result
-				self.update_sr('expr', [n('base')])
+				_localctx.results = ((ExprContext)_localctx).base.results
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-
-				head_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_head, nt)
-
+				setState(203);
+				((ExprContext)_localctx).head = base(contexts);
 				setState(204);
-				((ExprContext)_localctx).head = base(head_nt);
-
-				self.guide_symbol(',')
-
-				setState(206);
 				match(T__12);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).head.result.worlds)
-				tail_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_tuple_tail, nt, ((ExprContext)_localctx).head.result.typ)
+				tail_contexts = [
+				    Context(contexts[head_result.pid].enviro, head_result.world)
+				    for head_result in ((ExprContext)_localctx).head.results 
+				] 
 
-				setState(208);
-				((ExprContext)_localctx).tail = expr(tail_nt);
+				setState(206);
+				((ExprContext)_localctx).tail = expr(tail_contexts);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).tail.result.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_tuple, nt, ((ExprContext)_localctx).head.result.typ, ((ExprContext)_localctx).tail.result.typ) 
-				self.update_sr('expr', [n('base'), t(','), n('expr')])
+				_localctx.results = [
+				    ExprRule(self._solver).combine_tuple(
+				        pid, 
+				        tail_result.world, 
+				        head_result.typ, 
+				        tail_result.typ
+				    ) 
+				    for tail_result in ((ExprContext)_localctx).tail.results 
+				    for head_result in [((ExprContext)_localctx).head.results[tail_result.pid]]
+				    for pid in [head_result.pid]
+				]
 
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(211);
+				setState(209);
 				match(T__21);
-
-				condition_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_condition, nt)
-
-				setState(213);
-				((ExprContext)_localctx).condition = expr(condition_nt);
-
-				self.guide_symbol('then')
-
-				setState(215);
+				setState(210);
+				((ExprContext)_localctx).condition = expr(contexts);
+				setState(211);
 				match(T__22);
 
-				true_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_true_branch, nt, ((ExprContext)_localctx).condition.result.typ)
+				branch_contexts = [
+				    Context(contexts[conditionr.pid].enviro, conditionr.world)
+				    for conditionr in ((ExprContext)_localctx).condition.results
+				]
 
-				setState(217);
-				((ExprContext)_localctx).true_branch = expr(true_branch_nt);
-
-				self.guide_symbol('else')
-
-				setState(219);
+				setState(213);
+				((ExprContext)_localctx).true_branch = expr(branch_contexts);
+				setState(214);
 				match(T__23);
+				setState(215);
+				((ExprContext)_localctx).false_branch = expr(branch_contexts);
 
-				false_branch_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_ite_false_branch, nt, ((ExprContext)_localctx).condition.result.typ, ((ExprContext)_localctx).true_branch.result.typ)
-
-				setState(221);
-				((ExprContext)_localctx).false_branch = expr(false_branch_nt);
-
-				nt = replace(nt, worlds = ((ExprContext)_localctx).condition.result.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_ite, nt, ((ExprContext)_localctx).condition.result.typ, 
-				    ((ExprContext)_localctx).true_branch.result.worlds, ((ExprContext)_localctx).true_branch.result.typ, 
-				    ((ExprContext)_localctx).false_branch.result.worlds, ((ExprContext)_localctx).false_branch.result.typ
-				) 
-				self.update_sr('expr', [t('if'), n('expr'), t('then'), n('expr'), t('else'), n('expr')])
+				_localctx.results = [
+				    result
+				    for condition_id, condition_result in enumerate(((ExprContext)_localctx).condition.results)
+				    for true_branch_results in [self.filter(condition_id, ((ExprContext)_localctx).true_branch.results)]
+				    for false_branch_results in [self.filter(condition_id, ((ExprContext)_localctx).false_branch.results)]
+				    for pid in [condition_result.pid]
+				    for result in ExprRule(self._solver).combine_ite(
+				        pid,  
+				        contexts[pid].enviro,
+				        condition_result.world,
+				        condition_result.typ,
+				        true_branch_results,
+				        false_branch_results,
+				    )
+				]
 
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
+				setState(218);
+				((ExprContext)_localctx).rator = base(contexts);
+				setState(219);
+				((ExprContext)_localctx).keychain = keychain();
 
-				rator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_rator, nt)
-
-				setState(225);
-				((ExprContext)_localctx).rator = base(rator_nt);
-
-				nt = replace(nt, worlds = ((ExprContext)_localctx).rator.result.worlds)
-				keychain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_projection_keychain, nt, ((ExprContext)_localctx).rator.result.typ)
-
-				setState(227);
-				((ExprContext)_localctx).keychain = keychain(keychain_nt);
-
-				nt = replace(nt, worlds = keychain_nt.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_projection, nt, ((ExprContext)_localctx).rator.result.typ, ((ExprContext)_localctx).keychain.keys) 
-				self.update_sr('expr', [n('base'), n('keychain')])
+				_localctx.results = [
+				    result
+				    for rator_result in ((ExprContext)_localctx).rator.results
+				    for pid in [rator_result.pid]
+				    for result in ExprRule(self._solver).combine_projection(
+				        pid,
+				        rator_result.world,
+				        rator_result.typ,
+				        ((ExprContext)_localctx).keychain.keys
+				    ) 
+				]
 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
+				setState(222);
+				((ExprContext)_localctx).cator = base(contexts);
 
-				cator_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_cator, nt)
+				argchain_contexts = [
+				    Context(contexts[cator_result.pid].enviro, cator_result.world)
+				    for cator_result in ((ExprContext)_localctx).cator.results 
+				]
 
-				setState(231);
-				((ExprContext)_localctx).cator = base(cator_nt);
+				setState(224);
+				((ExprContext)_localctx).argchain = argchain(argchain_contexts);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).cator.result.worlds)
-				argchain_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_application_argchain, nt, ((ExprContext)_localctx).cator.result.typ)
-
-				setState(233);
-				((ExprContext)_localctx).argchain = argchain(argchain_nt);
-
-				nt = replace(nt, worlds = ((ExprContext)_localctx).argchain.attr.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_application, nt, ((ExprContext)_localctx).cator.result.typ, ((ExprContext)_localctx).argchain.attr.args)
-				self.update_sr('expr', [n('base'), n('argchain')])
+				_localctx.results = [
+				    result 
+				    for argchain_result in ((ExprContext)_localctx).argchain.results
+				    for cator_result in [((ExprContext)_localctx).cator.results[argchain_result.pid]]
+				    for pid in [cator_result.pid]
+				    for result in ExprRule(self._solver).combine_application(
+				        pid,
+				        argchain_result.world,
+				        cator_result.typ,
+				        argchain_result.typs,
+				    )
+				]
 
 				}
 				break;
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
+				setState(227);
+				((ExprContext)_localctx).arg = base(contexts);
 
-				arg_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_arg, nt)
+				pipeline_contexts = [
+				    Context(contexts[arg_result.pid].enviro, arg_result.world)
+				    for arg_result in ((ExprContext)_localctx).arg.results 
+				]
 
-				setState(237);
-				((ExprContext)_localctx).arg = base(arg_nt);
+				setState(229);
+				((ExprContext)_localctx).pipeline = pipeline(pipeline_contexts);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).arg.result.worlds)
-				pipeline_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_funnel_pipeline, nt, ((ExprContext)_localctx).arg.result.typ)
-
-				setState(239);
-				((ExprContext)_localctx).pipeline = pipeline(pipeline_nt);
-
-				nt = replace(nt, worlds = ((ExprContext)_localctx).pipeline.attr.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_funnel, nt, ((ExprContext)_localctx).arg.result.typ, ((ExprContext)_localctx).pipeline.attr.cators)
-				self.update_sr('expr', [n('base'), n('pipeline')])
+				_localctx.results = [
+				    result
+				    for pipeline_result in ((ExprContext)_localctx).pipeline.results 
+				    for arg_result in [((ExprContext)_localctx).arg.results[pipeline_result.pid]]
+				    for pid in [arg_result.pid]
+				    for result in ExprRule(self._solver).combine_funnel(
+				        pid,
+				        pipeline_result.world,
+				        arg_result.typ,
+				        pipeline_result.typs
+				    )
+				]
 
 				}
 				break;
 			case 8:
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(242);
+				setState(232);
 				match(T__24);
-
-				self.guide_terminal('ID')
-
-				setState(244);
+				setState(233);
 				((ExprContext)_localctx).ID = match(ID);
-
-				target_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_target, nt, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null))
-
-				setState(246);
-				((ExprContext)_localctx).target = target(target_nt);
-
-				self.guide_symbol('in')
-
-				setState(248);
+				setState(234);
+				((ExprContext)_localctx).target = target(contexts);
+				setState(235);
 				match(T__25);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).target.result.worlds)
-				contin_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_let_contin, nt, (((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), ((ExprContext)_localctx).target.result.typ)
+				contin_contexts = [
+				    Context(enviro, world)
+				    for target_result in ((ExprContext)_localctx).target.results
+				    for enviro in [contexts[target_result.pid].enviro.set((((ExprContext)_localctx).ID!=null?((ExprContext)_localctx).ID.getText():null), target_result.typ)]
+				    for world in [target_result.world]
+				]
 
-				setState(250);
-				((ExprContext)_localctx).contin = expr(contin_nt);
+				setState(237);
+				((ExprContext)_localctx).contin = expr(contin_contexts);
 
-				_localctx.result = ((ExprContext)_localctx).contin.result
-				self.update_sr('expr', [t('let'), ID, n('target'), t('in'), n('expr')])
+				_localctx.results = [
+				    Result(pid, contin_result.world, contin_result.typ)
+				    for contin_result in ((ExprContext)_localctx).contin.results
+				    for target_result in [((ExprContext)_localctx).target.results[contin_result.pid]]
+				    for pid in [target_result.pid]
+				]
 
 				}
 				break;
 			case 9:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(253);
+				setState(240);
 				match(T__26);
-
-				self.guide_symbol('(')
-
-				setState(255);
+				setState(241);
 				match(T__7);
-
-				body_nt = self.guide_nonterm(ExprRule(self._solver, self._light_mode).distill_fix_body, nt)
-
-				setState(257);
-				((ExprContext)_localctx).body = expr(body_nt);
-
-				self.guide_symbol(')')
-
-				setState(259);
+				setState(242);
+				((ExprContext)_localctx).body = expr(contexts);
+				setState(243);
 				match(T__8);
 
-				nt = replace(nt, worlds = ((ExprContext)_localctx).body.result.worlds)
-				_localctx.result = self.collect(ExprRule(self._solver, self._light_mode).combine_fix, nt, ((ExprContext)_localctx).body.result.typ)
-				self.update_sr('expr', [t('fix'), t('('), n('expr'), t(')')])
+				_localctx.results = [
+				    ExprRule(self._solver).combine_fix(
+				        pid,
+				        contexts[pid].enviro,
+				        body_result.world,
+				        body_result.typ
+				    )
+				    for body_result in ((ExprContext)_localctx).body.results 
+				    for pid in [body_result.pid]
+				]
 
 				}
 				break;
@@ -1273,8 +1236,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class BaseContext extends ParserRuleContext {
-		public Context nt;
-		public Result result;
+		public list[Context] contexts;
+		public list[Result] results;
 		public Token ID;
 		public BaseContext body;
 		public RecordContext record;
@@ -1294,18 +1257,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(ArgchainContext.class,0);
 		}
 		public BaseContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public BaseContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public BaseContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_base; }
 	}
 
-	public final BaseContext base(Context nt) throws RecognitionException {
-		BaseContext _localctx = new BaseContext(_ctx, getState(), nt);
+	public final BaseContext base(list[Context] contexts) throws RecognitionException {
+		BaseContext _localctx = new BaseContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 18, RULE_base);
 		try {
-			setState(286);
+			setState(268);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
 			case 1:
@@ -1316,45 +1279,41 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(265);
+				setState(249);
 				match(T__4);
 
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_unit, nt)
-				self.update_sr('base', [t('@')])
+				_localctx.results = [
+				    BaseRule(self._solver).combine_unit(pid, context.world)
+				    for pid, context in enumerate(contexts)
+				]
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(267);
+				setState(251);
 				match(T__5);
-
-				self.guide_terminal('ID')
-
-				setState(269);
+				setState(252);
 				((BaseContext)_localctx).ID = match(ID);
+				setState(253);
+				((BaseContext)_localctx).body = base(contexts);
 
-				body_nt = self.guide_nonterm(BaseRule(self._solver, self._light_mode).distill_tag_body, nt, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
-
-				setState(271);
-				((BaseContext)_localctx).body = base(body_nt);
-
-				nt = replace(nt, worlds = ((BaseContext)_localctx).body.result.worlds)
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_tag, nt, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null), ((BaseContext)_localctx).body.result.typ)
-				self.update_sr('base', [t('~'), ID, n('base')])
+				_localctx.results = [
+				    BaseRule(self._solver).combine_tag(pid, body_result.world, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null), body_result.typ)
+				    for body_result in ((BaseContext)_localctx).body.results
+				    for pid in [body_result.pid]
+				]
 
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(274);
-				((BaseContext)_localctx).record = record(nt);
+				setState(256);
+				((BaseContext)_localctx).record = record(contexts);
 
-				branches = ((BaseContext)_localctx).record.branches
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_record, nt, branches)
-				self.update_sr('base', [n('record')])
+				_localctx.results = ((BaseContext)_localctx).record.results 
 
 				}
 				break;
@@ -1363,35 +1322,43 @@ public class SlimParser extends Parser {
 				{
 
 
-				setState(278);
-				((BaseContext)_localctx).function = function(nt);
+				setState(260);
+				((BaseContext)_localctx).function = function(contexts);
 
-				branches = ((BaseContext)_localctx).function.branches
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_function, nt, branches)
-				self.update_sr('base', [n('function')])
+				_localctx.results = [
+				    BaseRule(self._solver).combine_function(pid, contexts[pid].enviro, function_result.world, function_result.branches)
+				    for function_result in ((BaseContext)_localctx).function.results
+				    for pid in [function_result.pid]
+				]
 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(281);
+				setState(263);
 				((BaseContext)_localctx).ID = match(ID);
 
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_var, nt, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
-				self.update_sr('base', [ID])
+				_localctx.results = [
+				    result
+				    for pid, context in enumerate(contexts)
+				    for result in BaseRule(self._solver).combine_var(pid, context.enviro, context.world, (((BaseContext)_localctx).ID!=null?((BaseContext)_localctx).ID.getText():null))
+				]
 
 				}
 				break;
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(283);
-				((BaseContext)_localctx).argchain = argchain(nt);
+				setState(265);
+				((BaseContext)_localctx).argchain = argchain(contexts);
 
-				nt = replace(nt, worlds = ((BaseContext)_localctx).argchain.attr.worlds)
-				_localctx.result = self.collect(BaseRule(self._solver, self._light_mode).combine_assoc, nt, ((BaseContext)_localctx).argchain.attr.args)
-				self.update_sr('base', [n('argchain')])
+				_localctx.results = [
+				    result
+				    for argchain_result in ((BaseContext)_localctx).argchain.results
+				    for pid in [argchain_result.pid]
+				    for result in BaseRule(self._solver).combine_assoc(pid, argchain_result.world, argchain_result.typs)
+				]
 
 				}
 				break;
@@ -1410,8 +1377,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class RecordContext extends ParserRuleContext {
-		public Context nt;
-		public list[RecordBranch] branches;
+		public list[Context] contexts;
+		public list[Result] results;
 		public Token ID;
 		public ExprContext body;
 		public RecordContext tail;
@@ -1423,18 +1390,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(RecordContext.class,0);
 		}
 		public RecordContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public RecordContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public RecordContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_record; }
 	}
 
-	public final RecordContext record(Context nt) throws RecognitionException {
-		RecordContext _localctx = new RecordContext(_ctx, getState(), nt);
+	public final RecordContext record(list[Context] contexts) throws RecognitionException {
+		RecordContext _localctx = new RecordContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 20, RULE_record);
 		try {
-			setState(309);
+			setState(285);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
 			case 1:
@@ -1445,58 +1412,49 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(289);
+				setState(271);
 				match(T__19);
-
-				self.guide_terminal('ID')
-
-				setState(291);
+				setState(272);
 				((RecordContext)_localctx).ID = match(ID);
-
-				self.guide_symbol('=')
-
-				setState(293);
+				setState(273);
 				match(T__1);
+				setState(274);
+				((RecordContext)_localctx).body = expr(contexts);
 
-				body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_single_body, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
-
-				setState(295);
-				((RecordContext)_localctx).body = expr(body_nt);
-
-				_localctx.branches = self.collect(RecordRule(self._solver, self._light_mode).combine_single, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.result.worlds, ((RecordContext)_localctx).body.result.typ)
-				self.update_sr('record', [SEMI, ID, t('='), n('expr')])
+				_localctx.results = [
+				    RecordRule(self._solver).combine_single(pid, contexts[pid].enviro, body_result.world, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_result.typ)
+				    for body_result in ((RecordContext)_localctx).body.results
+				    for pid in [body_result.pid]
+				]
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(298);
+				setState(277);
 				match(T__19);
-
-				self.guide_terminal('ID')
-
-				setState(300);
+				setState(278);
 				((RecordContext)_localctx).ID = match(ID);
-
-				self.guide_symbol('=')
-
-				setState(302);
+				setState(279);
 				match(T__1);
+				setState(280);
+				((RecordContext)_localctx).body = expr(contexts);
 
-				body_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_body, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null))
+				tail_contexts = [
+				    Context(contexts[body_result.pid].enviro, body_result.world)
+				    for body_result in ((RecordContext)_localctx).body.results
+				]
 
-				setState(304);
-				((RecordContext)_localctx).body = expr(body_nt);
+				setState(282);
+				((RecordContext)_localctx).tail = record(tail_contexts);
 
-				tail_nt = self.guide_nonterm(RecordRule(self._solver, self._light_mode).distill_cons_tail, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.result.typ)
-
-				setState(306);
-				((RecordContext)_localctx).tail = record(tail_nt);
-
-				tail_branches = ((RecordContext)_localctx).tail.branches
-				_localctx.branches = self.collect(RecordRule(self._solver, self._light_mode).combine_cons, nt, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), ((RecordContext)_localctx).body.result.worlds, ((RecordContext)_localctx).body.result.typ, tail_branches)
-				self.update_sr('record', [SEMI, ID, t('='), n('expr'), n('record')])
+				_localctx.results = [
+				    RecordRule(self._solver).combine_cons(pid, contexts[pid].enviro, tail_result.world, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_result.typ, tail_result.branches) 
+				    for tail_result in ((RecordContext)_localctx).tail.results
+				    for body_result in [((RecordContext)_localctx).body.results[tail_result.pid]]
+				    for pid in [body_result.pid]
+				]
 
 				}
 				break;
@@ -1515,8 +1473,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionContext extends ParserRuleContext {
-		public Context nt;
-		public list[Branch] branches;
+		public list[Context] contexts;
+		public list[Switch] results;
 		public PatternContext pattern;
 		public ExprContext body;
 		public FunctionContext tail;
@@ -1530,18 +1488,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(FunctionContext.class,0);
 		}
 		public FunctionContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public FunctionContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public FunctionContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_function; }
 	}
 
-	public final FunctionContext function(Context nt) throws RecognitionException {
-		FunctionContext _localctx = new FunctionContext(_ctx, getState(), nt);
+	public final FunctionContext function(list[Context] contexts) throws RecognitionException {
+		FunctionContext _localctx = new FunctionContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 22, RULE_function);
 		try {
-			setState(332);
+			setState(303);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
 			case 1:
@@ -1552,56 +1510,55 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(312);
+				setState(288);
 				match(T__27);
-
-
-				setState(314);
-				((FunctionContext)_localctx).pattern = pattern(nt);
-
-				self.guide_symbol('=>')
-
-				setState(316);
+				setState(289);
+				((FunctionContext)_localctx).pattern = pattern();
+				setState(290);
 				match(T__28);
 
-				body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_single_body, nt, ((FunctionContext)_localctx).pattern.attr)
+				body_contexts = [
+				    Context(context.enviro.update(((FunctionContext)_localctx).pattern.result.enviro), context.world)
+				    for context in contexts 
+				]
 
-				setState(318);
-				((FunctionContext)_localctx).body = expr(body_nt);
+				setState(292);
+				((FunctionContext)_localctx).body = expr(body_contexts);
 
-				_localctx.branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_single, nt, ((FunctionContext)_localctx).pattern.attr.typ, ((FunctionContext)_localctx).body.result.worlds, ((FunctionContext)_localctx).body.result.typ)
-				self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr')])
+				_localctx.results = [
+				    FunctionRule(self._solver).combine_single(pid, context.world, ((FunctionContext)_localctx).pattern.result.typ, body_results)
+				    for pid, context in enumerate(contexts)
+				    for body_results in [self.filter(pid, ((FunctionContext)_localctx).body.results)]
+				]
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(321);
+				setState(295);
 				match(T__27);
-
-
-				setState(323);
-				((FunctionContext)_localctx).pattern = pattern(nt);
-
-				self.guide_symbol('=>')
-
-				setState(325);
+				setState(296);
+				((FunctionContext)_localctx).pattern = pattern();
+				setState(297);
 				match(T__28);
 
-				body_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_body, nt, ((FunctionContext)_localctx).pattern.attr)
+				body_contexts = [
+				    Context(context.enviro.update(((FunctionContext)_localctx).pattern.result.enviro), context.world)
+				    for context in contexts 
+				]
 
-				setState(327);
-				((FunctionContext)_localctx).body = expr(body_nt);
+				setState(299);
+				((FunctionContext)_localctx).body = expr(body_contexts);
+				setState(300);
+				((FunctionContext)_localctx).tail = function(contexts);
 
-				tail_nt = self.guide_nonterm(FunctionRule(self._solver, self._light_mode).distill_cons_tail, nt, ((FunctionContext)_localctx).pattern.attr.typ, ((FunctionContext)_localctx).body.result.typ)
-
-				setState(329);
-				((FunctionContext)_localctx).tail = function(tail_nt);
-
-				tail_branches = ((FunctionContext)_localctx).tail.branches
-				_localctx.branches = self.collect(FunctionRule(self._solver, self._light_mode).combine_cons, nt, ((FunctionContext)_localctx).pattern.attr.typ, ((FunctionContext)_localctx).body.result.worlds, ((FunctionContext)_localctx).body.result.typ, tail_branches)
-				self.update_sr('function', [t('case'), n('pattern'), t('=>'), n('expr'), n('function')])
+				_localctx.results = [
+				    FunctionRule(self._solver).combine_cons(pid, context.world, ((FunctionContext)_localctx).pattern.result.typ, body_results, tail_result)
+				    for pid, context in enumerate(contexts)
+				    for body_results in [self.filter(pid, ((FunctionContext)_localctx).body.results)]
+				    for tail_result in [((FunctionContext)_localctx).tail.results[pid]]
+				]
 
 				}
 				break;
@@ -1620,27 +1577,24 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class KeychainContext extends ParserRuleContext {
-		public Context nt;
-		public list[str] keys;
+		public Keychain keys;
 		public Token ID;
 		public KeychainContext tail;
 		public TerminalNode ID() { return getToken(SlimParser.ID, 0); }
 		public KeychainContext keychain() {
 			return getRuleContext(KeychainContext.class,0);
 		}
-		public KeychainContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public KeychainContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public KeychainContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_keychain; }
 	}
 
-	public final KeychainContext keychain(Context nt) throws RecognitionException {
-		KeychainContext _localctx = new KeychainContext(_ctx, getState(), nt);
+	public final KeychainContext keychain() throws RecognitionException {
+		KeychainContext _localctx = new KeychainContext(_ctx, getState());
 		enterRule(_localctx, 24, RULE_keychain);
 		try {
-			setState(346);
+			setState(315);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,12,_ctx) ) {
 			case 1:
@@ -1651,36 +1605,28 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(335);
+				setState(306);
 				match(T__29);
-
-				self.guide_terminal('ID')
-
-				setState(337);
+				setState(307);
 				((KeychainContext)_localctx).ID = match(ID);
 
-				_localctx.keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_single, nt, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
-				self.update_sr('keychain', [t('.'), ID])
+				_localctx.keys = KeychainRule(self._solver).combine_single((((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null))
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(339);
+				setState(309);
 				match(T__29);
-
-				self.guide_terminal('ID')
-
-				setState(341);
+				setState(310);
 				((KeychainContext)_localctx).ID = match(ID);
 
 
-				setState(343);
-				((KeychainContext)_localctx).tail = keychain(nt);
+				setState(312);
+				((KeychainContext)_localctx).tail = keychain();
 
-				_localctx.keys = self.collect(KeychainRule(self._solver, self._light_mode).combine_cons, nt, (((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.keys)
-				self.update_sr('keychain', [t('.'), ID, n('keychain')])
+				_localctx.keys = KeychainRule(self._solver).combine_cons((((KeychainContext)_localctx).ID!=null?((KeychainContext)_localctx).ID.getText():null), ((KeychainContext)_localctx).tail.keys)
 
 				}
 				break;
@@ -1699,8 +1645,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ArgchainContext extends ParserRuleContext {
-		public Context nt;
-		public ArgchainAttr attr;
+		public list[Context] contexts;
+		public list[ArgchainResult] results;
 		public ExprContext content;
 		public ExprContext head;
 		public ArgchainContext tail;
@@ -1711,18 +1657,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(ArgchainContext.class,0);
 		}
 		public ArgchainContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public ArgchainContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public ArgchainContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_argchain; }
 	}
 
-	public final ArgchainContext argchain(Context nt) throws RecognitionException {
-		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), nt);
+	public final ArgchainContext argchain(list[Context] contexts) throws RecognitionException {
+		ArgchainContext _localctx = new ArgchainContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 26, RULE_argchain);
 		try {
-			setState(365);
+			setState(330);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
@@ -1733,49 +1679,45 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(349);
+				setState(318);
 				match(T__7);
-
-				content_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_single_content, nt) 
-
-				setState(351);
-				((ArgchainContext)_localctx).content = expr(content_nt);
-
-				self.guide_symbol(')')
-
-				setState(353);
+				setState(319);
+				((ArgchainContext)_localctx).content = expr(contexts);
+				setState(320);
 				match(T__8);
 
-				nt = replace(nt, worlds = ((ArgchainContext)_localctx).content.result.worlds)
-				_localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_single, nt, ((ArgchainContext)_localctx).content.result.typ)
-				self.update_sr('argchain', [t('('), n('expr'), t(')')])
+				_localctx.results = [
+				    ArgchainRule(self._solver).combine_single(pid, content_result.world, content_result.typ)
+				    for content_result in ((ArgchainContext)_localctx).content.results 
+				    for pid in [content_result.pid]
+				]
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(356);
+				setState(323);
 				match(T__7);
-
-				head_nt = self.guide_nonterm(ArgchainRule(self._solver, self._light_mode).distill_cons_head, nt) 
-
-				setState(358);
-				((ArgchainContext)_localctx).head = expr(head_nt);
-
-				self.guide_symbol(')')
-
-				setState(360);
+				setState(324);
+				((ArgchainContext)_localctx).head = expr(contexts);
+				setState(325);
 				match(T__8);
 
-				nt = replace(nt, worlds = ((ArgchainContext)_localctx).head.result.worlds)
+				tail_contexts = [
+				    Context(contexts[head_result.pid].enviro, head_result.world)
+				    for head_result in ((ArgchainContext)_localctx).head.results
+				]
 
-				setState(362);
-				((ArgchainContext)_localctx).tail = argchain(nt);
+				setState(327);
+				((ArgchainContext)_localctx).tail = argchain(tail_contexts);
 
-				nt = replace(nt, worlds = ((ArgchainContext)_localctx).tail.attr.worlds)
-				_localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode).combine_cons, nt, ((ArgchainContext)_localctx).head.result.typ, ((ArgchainContext)_localctx).tail.attr.args)
-				self.update_sr('argchain', [t('('), n('expr'), t(')'), n('argchain')])
+				_localctx.results = [
+				    ArgchainRule(self._solver).combine_cons(pid, tail_result.world, head_result.typ, tail_result.typs)
+				    for tail_result in ((ArgchainContext)_localctx).tail.results 
+				    for head_result in [((ArgchainContext)_localctx).head.results[tail_result.pid]]
+				    for pid in [head_result.pid]
+				]
 
 				}
 				break;
@@ -1794,8 +1736,8 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PipelineContext extends ParserRuleContext {
-		public Context nt;
-		public PipelineAttr attr;
+		public list[Context] contexts;
+		public list[PipelineResult] results;
 		public ExprContext content;
 		public ExprContext head;
 		public PipelineContext tail;
@@ -1806,18 +1748,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(PipelineContext.class,0);
 		}
 		public PipelineContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PipelineContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public PipelineContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_pipeline; }
 	}
 
-	public final PipelineContext pipeline(Context nt) throws RecognitionException {
-		PipelineContext _localctx = new PipelineContext(_ctx, getState(), nt);
+	public final PipelineContext pipeline(list[Context] contexts) throws RecognitionException {
+		PipelineContext _localctx = new PipelineContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 28, RULE_pipeline);
 		try {
-			setState(380);
+			setState(343);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
 			case 1:
@@ -1828,40 +1770,41 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(368);
+				setState(333);
 				match(T__30);
+				setState(334);
+				((PipelineContext)_localctx).content = expr(contexts);
 
-				content_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_single_content, nt) 
-
-				setState(370);
-				((PipelineContext)_localctx).content = expr(content_nt);
-
-				nt = replace(nt, worlds = ((PipelineContext)_localctx).content.result.worlds)
-				_localctx.attr = self.collect(PipelineRule(self._solver, self._light_mode).combine_single, nt, ((PipelineContext)_localctx).content.result.typ)
-				self.update_sr('pipeline', [t('|>'), n('expr')])
+				_localctx.results = [
+				    PipelineRule(self._solver).combine_single(pid, content_result.world, content_result.typ)
+				    for content_result in ((PipelineContext)_localctx).content.results 
+				    for pid in [content_result.pid]
+				]
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(373);
+				setState(337);
 				match(T__30);
+				setState(338);
+				((PipelineContext)_localctx).head = expr(contexts);
 
-				head_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_head, nt) 
+				tail_contexts = [
+				    Context(contexts[head_result.pid].enviro, head_result.world)
+				    for head_result in ((PipelineContext)_localctx).head.results
+				]
 
-				setState(375);
-				((PipelineContext)_localctx).head = expr(head_nt);
+				setState(340);
+				((PipelineContext)_localctx).tail = pipeline(tail_contexts);
 
-				nt = replace(nt, worlds = ((PipelineContext)_localctx).head.result.worlds)
-				tail_nt = self.guide_nonterm(PipelineRule(self._solver, self._light_mode).distill_cons_tail, nt, ((PipelineContext)_localctx).head.result.typ) 
-
-				setState(377);
-				((PipelineContext)_localctx).tail = pipeline(tail_nt);
-
-				nt = replace(nt, worlds = ((PipelineContext)_localctx).tail.attr.worlds)
-				_localctx.attr = self.collect(ArgchainRule(self._solver, self._light_mode, nt).combine_cons, nt, ((PipelineContext)_localctx).head.result.typ, ((PipelineContext)_localctx).tail.attr.cators)
-				self.update_sr('pipeline', [t('|>'), n('expr'), n('pipeline')])
+				_localctx.results = [
+				    PipelineRule(self._solver).combine_cons(pid, tail_result.world, head_result.typ, tail_result.typs)
+				    for tail_result in ((PipelineContext)_localctx).tail.results 
+				    for head_result in [((PipelineContext)_localctx).head.results[tail_result.pid]]
+				    for pid in [head_result.pid]
+				]
 
 				}
 				break;
@@ -1880,10 +1823,9 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class TargetContext extends ParserRuleContext {
-		public Context nt;
-		public Result result;
+		public list[Context] contexts;
+		public list[Result] results;
 		public ExprContext expr;
-		public TypContext typ;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
@@ -1891,18 +1833,18 @@ public class SlimParser extends Parser {
 			return getRuleContext(TypContext.class,0);
 		}
 		public TargetContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public TargetContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public TargetContext(ParserRuleContext parent, int invokingState, list[Context] contexts) {
 			super(parent, invokingState);
-			this.nt = nt;
+			this.contexts = contexts;
 		}
 		@Override public int getRuleIndex() { return RULE_target; }
 	}
 
-	public final TargetContext target(Context nt) throws RecognitionException {
-		TargetContext _localctx = new TargetContext(_ctx, getState(), nt);
+	public final TargetContext target(list[Context] contexts) throws RecognitionException {
+		TargetContext _localctx = new TargetContext(_ctx, getState(), contexts);
 		enterRule(_localctx, 30, RULE_target);
 		try {
-			setState(395);
+			setState(356);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__25:
@@ -1913,37 +1855,31 @@ public class SlimParser extends Parser {
 			case T__1:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(383);
+				setState(346);
 				match(T__1);
+				setState(347);
+				((TargetContext)_localctx).expr = expr(contexts);
 
-				expr_nt = self.guide_nonterm(lambda: nt)
-
-				setState(385);
-				((TargetContext)_localctx).expr = expr(expr_nt);
-
-				_localctx.result = ((TargetContext)_localctx).expr.result
-				self.update_sr('target', [t('='), n('expr')])
+				_localctx.results = ((TargetContext)_localctx).expr.results
 
 				}
 				break;
 			case T__6:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(388);
+				setState(350);
 				match(T__6);
-				setState(389);
-				((TargetContext)_localctx).typ = typ();
-				setState(390);
+				setState(351);
+				typ();
+				setState(352);
 				match(T__1);
+				setState(353);
+				((TargetContext)_localctx).expr = expr(contexts);
 
-				expr_nt = self.guide_nonterm(lambda: nt)
-
-				setState(392);
-				((TargetContext)_localctx).expr = expr(expr_nt);
-
-				nt = replace(nt, worlds = ((TargetContext)_localctx).expr.result.worlds)
-				_localctx.result = self.collect(TargetRule(self._solver, self._light_mode).combine_anno, nt, ((TargetContext)_localctx).typ.combo) 
-				self.update_sr('target', [t(':'), TID, t('='), n('expr')])
+				_localctx.results = [
+				    Result(expr_result.pid, expr_result.world, expr_result.typ)
+				    for expr_result in ((TargetContext)_localctx).expr.results 
+				]
 
 				}
 				break;
@@ -1964,8 +1900,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PatternContext extends ParserRuleContext {
-		public Context nt;
-		public PatternAttr attr;
+		public PatternResult result;
 		public Base_patternContext base_pattern;
 		public Base_patternContext head;
 		public PatternContext tail;
@@ -1975,19 +1910,17 @@ public class SlimParser extends Parser {
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
 		}
-		public PatternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public PatternContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public PatternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_pattern; }
 	}
 
-	public final PatternContext pattern(Context nt) throws RecognitionException {
-		PatternContext _localctx = new PatternContext(_ctx, getState(), nt);
+	public final PatternContext pattern() throws RecognitionException {
+		PatternContext _localctx = new PatternContext(_ctx, getState());
 		enterRule(_localctx, 32, RULE_pattern);
 		try {
-			setState(409);
+			setState(368);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
@@ -1998,11 +1931,10 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(398);
-				((PatternContext)_localctx).base_pattern = base_pattern(nt);
+				setState(359);
+				((PatternContext)_localctx).base_pattern = base_pattern();
 
-				_localctx.attr = ((PatternContext)_localctx).base_pattern.attr
-				self.update_sr('pattern', [n('basepat')])
+				_localctx.result = ((PatternContext)_localctx).base_pattern.result
 
 				}
 				break;
@@ -2011,20 +1943,14 @@ public class SlimParser extends Parser {
 				{
 
 
-				setState(402);
-				((PatternContext)_localctx).head = base_pattern(nt);
-
-				self.guide_symbol(',')
-
-				setState(404);
+				setState(363);
+				((PatternContext)_localctx).head = base_pattern();
+				setState(364);
 				match(T__12);
+				setState(365);
+				((PatternContext)_localctx).tail = pattern();
 
-
-				setState(406);
-				((PatternContext)_localctx).tail = pattern(nt);
-
-				_localctx.attr = self.collect(PatternRule(self._solver, self._light_mode).combine_tuple, nt, ((PatternContext)_localctx).head.attr, ((PatternContext)_localctx).tail.attr) 
-				self.update_sr('pattern', [n('basepat'), t(','), n('pattern')])
+				_localctx.result = PatternRule(self._solver).combine_tuple(((PatternContext)_localctx).head.result, ((PatternContext)_localctx).tail.result)
 
 				}
 				break;
@@ -2043,8 +1969,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Base_patternContext extends ParserRuleContext {
-		public Context nt;
-		public PatternAttr attr;
+		public PatternResult result;
 		public Token ID;
 		public Base_patternContext body;
 		public Record_patternContext record_pattern;
@@ -2059,19 +1984,17 @@ public class SlimParser extends Parser {
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
 		}
-		public Base_patternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Base_patternContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public Base_patternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_base_pattern; }
 	}
 
-	public final Base_patternContext base_pattern(Context nt) throws RecognitionException {
-		Base_patternContext _localctx = new Base_patternContext(_ctx, getState(), nt);
+	public final Base_patternContext base_pattern() throws RecognitionException {
+		Base_patternContext _localctx = new Base_patternContext(_ctx, getState());
 		enterRule(_localctx, 34, RULE_base_pattern);
 		try {
-			setState(431);
+			setState(388);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 			case 1:
@@ -2082,68 +2005,58 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(412);
+				setState(371);
 				((Base_patternContext)_localctx).ID = match(ID);
 
-				_localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_var, nt, (((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null))
-				self.update_sr('basepat', [ID])
+				_localctx.result = BasePatternRule(self._solver).combine_var((((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null))
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(414);
+				setState(373);
 				match(T__4);
 
-				_localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_unit, nt)
-				self.update_sr('basepat', [t('@')])
+				_localctx.result = BasePatternRule(self._solver).combine_unit()
 
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(416);
+				setState(375);
 				match(T__5);
-
-				self.guide_terminal('ID')
-
-				setState(418);
+				setState(376);
 				((Base_patternContext)_localctx).ID = match(ID);
+				setState(377);
+				((Base_patternContext)_localctx).body = base_pattern();
 
-
-				setState(420);
-				((Base_patternContext)_localctx).body = base_pattern(nt);
-
-				_localctx.attr = self.collect(BasePatternRule(self._solver, self._light_mode).combine_tag, nt, (((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null), ((Base_patternContext)_localctx).body.attr)
-				self.update_sr('basepat', [t('~'), ID, n('basepat')])
+				_localctx.result = BasePatternRule(self._solver).combine_tag((((Base_patternContext)_localctx).ID!=null?((Base_patternContext)_localctx).ID.getText():null), ((Base_patternContext)_localctx).body.result)
 
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(423);
-				((Base_patternContext)_localctx).record_pattern = record_pattern(nt);
+				setState(380);
+				((Base_patternContext)_localctx).record_pattern = record_pattern();
 
-				_localctx.attr = ((Base_patternContext)_localctx).record_pattern.attr
-				self.update_sr('basepat', [n('recpat')])
+				_localctx.result = ((Base_patternContext)_localctx).record_pattern.result
 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(426);
+				setState(383);
 				match(T__7);
-				setState(427);
-				((Base_patternContext)_localctx).pattern = pattern(nt);
-				setState(428);
+				setState(384);
+				((Base_patternContext)_localctx).pattern = pattern();
+				setState(385);
 				match(T__8);
 
-				_localctx.attr = ((Base_patternContext)_localctx).pattern.attr
-				self.update_sr('basepat', [t('('), n('pattern'), t(')')])
+				_localctx.result = ((Base_patternContext)_localctx).pattern.result
 
 				}
 				break;
@@ -2162,8 +2075,7 @@ public class SlimParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Record_patternContext extends ParserRuleContext {
-		public Context nt;
-		public PatternAttr attr;
+		public PatternResult result;
 		public Token ID;
 		public PatternContext body;
 		public Record_patternContext tail;
@@ -2174,19 +2086,17 @@ public class SlimParser extends Parser {
 		public Record_patternContext record_pattern() {
 			return getRuleContext(Record_patternContext.class,0);
 		}
-		public Record_patternContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
-		public Record_patternContext(ParserRuleContext parent, int invokingState, Context nt) {
+		public Record_patternContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
-			this.nt = nt;
 		}
 		@Override public int getRuleIndex() { return RULE_record_pattern; }
 	}
 
-	public final Record_patternContext record_pattern(Context nt) throws RecognitionException {
-		Record_patternContext _localctx = new Record_patternContext(_ctx, getState(), nt);
+	public final Record_patternContext record_pattern() throws RecognitionException {
+		Record_patternContext _localctx = new Record_patternContext(_ctx, getState());
 		enterRule(_localctx, 36, RULE_record_pattern);
 		try {
-			setState(454);
+			setState(404);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,18,_ctx) ) {
 			case 1:
@@ -2197,54 +2107,34 @@ public class SlimParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(434);
+				setState(391);
 				match(T__19);
-
-				self.guide_terminal('ID')
-
-				setState(436);
+				setState(392);
 				((Record_patternContext)_localctx).ID = match(ID);
-
-				self.guide_symbol('=')
-
-				setState(438);
+				setState(393);
 				match(T__1);
+				setState(394);
+				((Record_patternContext)_localctx).body = pattern();
 
-
-				setState(440);
-				((Record_patternContext)_localctx).body = pattern(nt);
-
-				_localctx.attr = self.collect(RecordPatternRule(self._solver, self._light_mode).combine_single, nt, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr)
-				self.update_sr('recpat', [SEMI, ID, t('='), n('pattern')])
+				_localctx.result = RecordPatternRule(self._solver, self._light_mode).combine_single((((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.result)
 
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(443);
+				setState(397);
 				match(T__19);
-
-				self.guide_terminal('ID')
-
-				setState(445);
+				setState(398);
 				((Record_patternContext)_localctx).ID = match(ID);
-
-				self.guide_symbol('=')
-
-				setState(447);
+				setState(399);
 				match(T__1);
+				setState(400);
+				((Record_patternContext)_localctx).body = pattern();
+				setState(401);
+				((Record_patternContext)_localctx).tail = record_pattern();
 
-
-				setState(449);
-				((Record_patternContext)_localctx).body = pattern(nt);
-
-
-				setState(451);
-				((Record_patternContext)_localctx).tail = record_pattern(nt);
-
-				_localctx.attr = self.collect(RecordPatternRule(self._solver, self._light_mode, nt).combine_cons, nt, (((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.attr, ((Record_patternContext)_localctx).tail.attr)
-				self.update_sr('recpat', [SEMI, ID, t('='), n('pattern'), n('recpat')])
+				_localctx.result = RecordPatternRule(self._solver).combine_cons((((Record_patternContext)_localctx).ID!=null?((Record_patternContext)_localctx).ID.getText():null), ((Record_patternContext)_localctx).body.result, ((Record_patternContext)_localctx).tail.result)
 
 				}
 				break;
@@ -2262,7 +2152,7 @@ public class SlimParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\"\u01c9\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001\"\u0197\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -2300,277 +2190,243 @@ public class SlimParser extends Parser {
 		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
 		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
 		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
-		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
-		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0003"+
-		"\b\u0107\b\b\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001"+
+		"\b\u0001\b\u0003\b\u00f7\b\b\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001"+
 		"\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001"+
-		"\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0003\t\u011f\b\t\u0001\n\u0001"+
+		"\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0003\t\u010d\b\t\u0001\n\u0001"+
 		"\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001"+
-		"\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001"+
-		"\n\u0001\n\u0003\n\u0136\b\n\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
+		"\n\u0001\n\u0001\n\u0001\n\u0001\n\u0003\n\u011e\b\n\u0001\u000b\u0001"+
 		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
 		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
-		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0003"+
-		"\u000b\u014d\b\u000b\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001"+
-		"\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0003\f\u015b\b\f\u0001\r\u0001"+
-		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
-		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u016e\b\r\u0001"+
-		"\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001"+
-		"\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001"+
-		"\u000e\u0003\u000e\u017d\b\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001"+
-		"\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001"+
-		"\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0003\u000f\u018c\b\u000f\u0001"+
-		"\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001"+
-		"\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0003"+
-		"\u0010\u019a\b\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001"+
-		"\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001"+
-		"\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001"+
-		"\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0003\u0011\u01b0\b\u0011\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0003\u0012\u01c7\b\u0012\u0001\u0012\u0000"+
-		"\u0000\u0013\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016"+
-		"\u0018\u001a\u001c\u001e \"$\u0000\u0000\u01f5\u0000-\u0001\u0000\u0000"+
-		"\u0000\u0002=\u0001\u0000\u0000\u0000\u0004H\u0001\u0000\u0000\u0000\u0006"+
-		"b\u0001\u0000\u0000\u0000\b\u00a4\u0001\u0000\u0000\u0000\n\u00b1\u0001"+
-		"\u0000\u0000\u0000\f\u00bd\u0001\u0000\u0000\u0000\u000e\u00c5\u0001\u0000"+
-		"\u0000\u0000\u0010\u0106\u0001\u0000\u0000\u0000\u0012\u011e\u0001\u0000"+
-		"\u0000\u0000\u0014\u0135\u0001\u0000\u0000\u0000\u0016\u014c\u0001\u0000"+
-		"\u0000\u0000\u0018\u015a\u0001\u0000\u0000\u0000\u001a\u016d\u0001\u0000"+
-		"\u0000\u0000\u001c\u017c\u0001\u0000\u0000\u0000\u001e\u018b\u0001\u0000"+
-		"\u0000\u0000 \u0199\u0001\u0000\u0000\u0000\"\u01af\u0001\u0000\u0000"+
-		"\u0000$\u01c6\u0001\u0000\u0000\u0000&.\u0001\u0000\u0000\u0000\'(\u0005"+
-		" \u0000\u0000(.\u0006\u0000\uffff\uffff\u0000)*\u0005 \u0000\u0000*+\u0003"+
-		"\u0000\u0000\u0000+,\u0006\u0000\uffff\uffff\u0000,.\u0001\u0000\u0000"+
-		"\u0000-&\u0001\u0000\u0000\u0000-\'\u0001\u0000\u0000\u0000-)\u0001\u0000"+
-		"\u0000\u0000.\u0001\u0001\u0000\u0000\u0000/>\u0001\u0000\u0000\u0000"+
-		"01\u0005\u0001\u0000\u000012\u0005 \u0000\u000023\u0005\u0002\u0000\u0000"+
-		"34\u0003\b\u0004\u000045\u0006\u0001\uffff\uffff\u00005>\u0001\u0000\u0000"+
-		"\u000067\u0005\u0001\u0000\u000078\u0005 \u0000\u000089\u0005\u0002\u0000"+
-		"\u00009:\u0003\b\u0004\u0000:;\u0003\u0002\u0001\u0000;<\u0006\u0001\uffff"+
-		"\uffff\u0000<>\u0001\u0000\u0000\u0000=/\u0001\u0000\u0000\u0000=0\u0001"+
-		"\u0000\u0000\u0000=6\u0001\u0000\u0000\u0000>\u0003\u0001\u0000\u0000"+
-		"\u0000?I\u0001\u0000\u0000\u0000@A\u0003\u0002\u0001\u0000AB\u0006\u0002"+
-		"\uffff\uffff\u0000BC\u0003\u0010\b\u0000CD\u0006\u0002\uffff\uffff\u0000"+
-		"DI\u0001\u0000\u0000\u0000EF\u0003\u0010\b\u0000FG\u0006\u0002\uffff\uffff"+
-		"\u0000GI\u0001\u0000\u0000\u0000H?\u0001\u0000\u0000\u0000H@\u0001\u0000"+
-		"\u0000\u0000HE\u0001\u0000\u0000\u0000I\u0005\u0001\u0000\u0000\u0000"+
-		"Jc\u0001\u0000\u0000\u0000KL\u0005\u0003\u0000\u0000Lc\u0006\u0003\uffff"+
-		"\uffff\u0000MN\u0005\u0004\u0000\u0000Nc\u0006\u0003\uffff\uffff\u0000"+
-		"OP\u0005 \u0000\u0000Pc\u0006\u0003\uffff\uffff\u0000QR\u0005\u0005\u0000"+
-		"\u0000Rc\u0006\u0003\uffff\uffff\u0000ST\u0005\u0006\u0000\u0000TU\u0005"+
-		" \u0000\u0000UV\u0003\u0006\u0003\u0000VW\u0006\u0003\uffff\uffff\u0000"+
-		"Wc\u0001\u0000\u0000\u0000XY\u0005 \u0000\u0000YZ\u0005\u0007\u0000\u0000"+
-		"Z[\u0003\u0006\u0003\u0000[\\\u0006\u0003\uffff\uffff\u0000\\c\u0001\u0000"+
-		"\u0000\u0000]^\u0005\b\u0000\u0000^_\u0003\b\u0004\u0000_`\u0005\t\u0000"+
-		"\u0000`a\u0006\u0003\uffff\uffff\u0000ac\u0001\u0000\u0000\u0000bJ\u0001"+
-		"\u0000\u0000\u0000bK\u0001\u0000\u0000\u0000bM\u0001\u0000\u0000\u0000"+
-		"bO\u0001\u0000\u0000\u0000bQ\u0001\u0000\u0000\u0000bS\u0001\u0000\u0000"+
-		"\u0000bX\u0001\u0000\u0000\u0000b]\u0001\u0000\u0000\u0000c\u0007\u0001"+
-		"\u0000\u0000\u0000d\u00a5\u0001\u0000\u0000\u0000ef\u0003\u0006\u0003"+
-		"\u0000fg\u0006\u0004\uffff\uffff\u0000g\u00a5\u0001\u0000\u0000\u0000"+
-		"hi\u0003\u0006\u0003\u0000ij\u0005\n\u0000\u0000jk\u0003\b\u0004\u0000"+
-		"kl\u0006\u0004\uffff\uffff\u0000l\u00a5\u0001\u0000\u0000\u0000mn\u0003"+
-		"\u0006\u0003\u0000no\u0005\u000b\u0000\u0000op\u0003\b\u0004\u0000pq\u0006"+
-		"\u0004\uffff\uffff\u0000q\u00a5\u0001\u0000\u0000\u0000rs\u0003\u0006"+
-		"\u0003\u0000st\u0003\n\u0005\u0000tu\u0006\u0004\uffff\uffff\u0000u\u00a5"+
-		"\u0001\u0000\u0000\u0000vw\u0003\u0006\u0003\u0000wx\u0005\f\u0000\u0000"+
-		"xy\u0003\b\u0004\u0000yz\u0006\u0004\uffff\uffff\u0000z\u00a5\u0001\u0000"+
-		"\u0000\u0000{|\u0003\u0006\u0003\u0000|}\u0005\r\u0000\u0000}~\u0003\b"+
-		"\u0004\u0000~\u007f\u0006\u0004\uffff\uffff\u0000\u007f\u00a5\u0001\u0000"+
-		"\u0000\u0000\u0080\u0081\u0005\u000e\u0000\u0000\u0081\u0082\u0005\u000f"+
-		"\u0000\u0000\u0082\u0083\u0003\u0000\u0000\u0000\u0083\u0084\u0005\u0010"+
-		"\u0000\u0000\u0084\u0085\u0003\b\u0004\u0000\u0085\u0086\u0006\u0004\uffff"+
-		"\uffff\u0000\u0086\u00a5\u0001\u0000\u0000\u0000\u0087\u0088\u0005\u000e"+
-		"\u0000\u0000\u0088\u0089\u0005\u000f\u0000\u0000\u0089\u008a\u0003\u0000"+
-		"\u0000\u0000\u008a\u008b\u0003\f\u0006\u0000\u008b\u008c\u0005\u0010\u0000"+
-		"\u0000\u008c\u008d\u0003\b\u0004\u0000\u008d\u008e\u0006\u0004\uffff\uffff"+
-		"\u0000\u008e\u00a5\u0001\u0000\u0000\u0000\u008f\u0090\u0005\u0011\u0000"+
-		"\u0000\u0090\u0091\u0005\u000f\u0000\u0000\u0091\u0092\u0003\u0000\u0000"+
-		"\u0000\u0092\u0093\u0005\u0010\u0000\u0000\u0093\u0094\u0003\b\u0004\u0000"+
-		"\u0094\u0095\u0006\u0004\uffff\uffff\u0000\u0095\u00a5\u0001\u0000\u0000"+
-		"\u0000\u0096\u0097\u0005\u0011\u0000\u0000\u0097\u0098\u0005\u000f\u0000"+
-		"\u0000\u0098\u0099\u0003\u0000\u0000\u0000\u0099\u009a\u0003\f\u0006\u0000"+
-		"\u009a\u009b\u0005\u0010\u0000\u0000\u009b\u009c\u0003\b\u0004\u0000\u009c"+
-		"\u009d\u0006\u0004\uffff\uffff\u0000\u009d\u00a5\u0001\u0000\u0000\u0000"+
-		"\u009e\u009f\u0005\u0012\u0000\u0000\u009f\u00a0\u0005 \u0000\u0000\u00a0"+
-		"\u00a1\u0005\n\u0000\u0000\u00a1\u00a2\u0003\b\u0004\u0000\u00a2\u00a3"+
-		"\u0006\u0004\uffff\uffff\u0000\u00a3\u00a5\u0001\u0000\u0000\u0000\u00a4"+
-		"d\u0001\u0000\u0000\u0000\u00a4e\u0001\u0000\u0000\u0000\u00a4h\u0001"+
-		"\u0000\u0000\u0000\u00a4m\u0001\u0000\u0000\u0000\u00a4r\u0001\u0000\u0000"+
-		"\u0000\u00a4v\u0001\u0000\u0000\u0000\u00a4{\u0001\u0000\u0000\u0000\u00a4"+
-		"\u0080\u0001\u0000\u0000\u0000\u00a4\u0087\u0001\u0000\u0000\u0000\u00a4"+
-		"\u008f\u0001\u0000\u0000\u0000\u00a4\u0096\u0001\u0000\u0000\u0000\u00a4"+
-		"\u009e\u0001\u0000\u0000\u0000\u00a5\t\u0001\u0000\u0000\u0000\u00a6\u00b2"+
-		"\u0001\u0000\u0000\u0000\u00a7\u00a8\u0005\u0013\u0000\u0000\u00a8\u00a9"+
-		"\u0003\b\u0004\u0000\u00a9\u00aa\u0006\u0005\uffff\uffff\u0000\u00aa\u00b2"+
-		"\u0001\u0000\u0000\u0000\u00ab\u00ac\u0005\u0013\u0000\u0000\u00ac\u00ad"+
-		"\u0003\b\u0004\u0000\u00ad\u00ae\u0006\u0005\uffff\uffff\u0000\u00ae\u00af"+
-		"\u0003\n\u0005\u0000\u00af\u00b0\u0006\u0005\uffff\uffff\u0000\u00b0\u00b2"+
-		"\u0001\u0000\u0000\u0000\u00b1\u00a6\u0001\u0000\u0000\u0000\u00b1\u00a7"+
-		"\u0001\u0000\u0000\u0000\u00b1\u00ab\u0001\u0000\u0000\u0000\u00b2\u000b"+
-		"\u0001\u0000\u0000\u0000\u00b3\u00be\u0001\u0000\u0000\u0000\u00b4\u00b5"+
-		"\u0005\u0014\u0000\u0000\u00b5\u00b6\u0003\u000e\u0007\u0000\u00b6\u00b7"+
-		"\u0006\u0006\uffff\uffff\u0000\u00b7\u00be\u0001\u0000\u0000\u0000\u00b8"+
-		"\u00b9\u0005\u0014\u0000\u0000\u00b9\u00ba\u0003\u000e\u0007\u0000\u00ba"+
-		"\u00bb\u0003\f\u0006\u0000\u00bb\u00bc\u0006\u0006\uffff\uffff\u0000\u00bc"+
-		"\u00be\u0001\u0000\u0000\u0000\u00bd\u00b3\u0001\u0000\u0000\u0000\u00bd"+
-		"\u00b4\u0001\u0000\u0000\u0000\u00bd\u00b8\u0001\u0000\u0000\u0000\u00be"+
-		"\r\u0001\u0000\u0000\u0000\u00bf\u00c6\u0001\u0000\u0000\u0000\u00c0\u00c1"+
-		"\u0003\b\u0004\u0000\u00c1\u00c2\u0005\u0015\u0000\u0000\u00c2\u00c3\u0003"+
-		"\b\u0004\u0000\u00c3\u00c4\u0006\u0007\uffff\uffff\u0000\u00c4\u00c6\u0001"+
-		"\u0000\u0000\u0000\u00c5\u00bf\u0001\u0000\u0000\u0000\u00c5\u00c0\u0001"+
-		"\u0000\u0000\u0000\u00c6\u000f\u0001\u0000\u0000\u0000\u00c7\u0107\u0001"+
-		"\u0000\u0000\u0000\u00c8\u00c9\u0003\u0012\t\u0000\u00c9\u00ca\u0006\b"+
-		"\uffff\uffff\u0000\u00ca\u0107\u0001\u0000\u0000\u0000\u00cb\u00cc\u0006"+
-		"\b\uffff\uffff\u0000\u00cc\u00cd\u0003\u0012\t\u0000\u00cd\u00ce\u0006"+
-		"\b\uffff\uffff\u0000\u00ce\u00cf\u0005\r\u0000\u0000\u00cf\u00d0\u0006"+
-		"\b\uffff\uffff\u0000\u00d0\u00d1\u0003\u0010\b\u0000\u00d1\u00d2\u0006"+
-		"\b\uffff\uffff\u0000\u00d2\u0107\u0001\u0000\u0000\u0000\u00d3\u00d4\u0005"+
-		"\u0016\u0000\u0000\u00d4\u00d5\u0006\b\uffff\uffff\u0000\u00d5\u00d6\u0003"+
-		"\u0010\b\u0000\u00d6\u00d7\u0006\b\uffff\uffff\u0000\u00d7\u00d8\u0005"+
-		"\u0017\u0000\u0000\u00d8\u00d9\u0006\b\uffff\uffff\u0000\u00d9\u00da\u0003"+
-		"\u0010\b\u0000\u00da\u00db\u0006\b\uffff\uffff\u0000\u00db\u00dc\u0005"+
-		"\u0018\u0000\u0000\u00dc\u00dd\u0006\b\uffff\uffff\u0000\u00dd\u00de\u0003"+
-		"\u0010\b\u0000\u00de\u00df\u0006\b\uffff\uffff\u0000\u00df\u0107\u0001"+
-		"\u0000\u0000\u0000\u00e0\u00e1\u0006\b\uffff\uffff\u0000\u00e1\u00e2\u0003"+
-		"\u0012\t\u0000\u00e2\u00e3\u0006\b\uffff\uffff\u0000\u00e3\u00e4\u0003"+
-		"\u0018\f\u0000\u00e4\u00e5\u0006\b\uffff\uffff\u0000\u00e5\u0107\u0001"+
-		"\u0000\u0000\u0000\u00e6\u00e7\u0006\b\uffff\uffff\u0000\u00e7\u00e8\u0003"+
-		"\u0012\t\u0000\u00e8\u00e9\u0006\b\uffff\uffff\u0000\u00e9\u00ea\u0003"+
-		"\u001a\r\u0000\u00ea\u00eb\u0006\b\uffff\uffff\u0000\u00eb\u0107\u0001"+
-		"\u0000\u0000\u0000\u00ec\u00ed\u0006\b\uffff\uffff\u0000\u00ed\u00ee\u0003"+
-		"\u0012\t\u0000\u00ee\u00ef\u0006\b\uffff\uffff\u0000\u00ef\u00f0\u0003"+
-		"\u001c\u000e\u0000\u00f0\u00f1\u0006\b\uffff\uffff\u0000\u00f1\u0107\u0001"+
-		"\u0000\u0000\u0000\u00f2\u00f3\u0005\u0019\u0000\u0000\u00f3\u00f4\u0006"+
-		"\b\uffff\uffff\u0000\u00f4\u00f5\u0005 \u0000\u0000\u00f5\u00f6\u0006"+
-		"\b\uffff\uffff\u0000\u00f6\u00f7\u0003\u001e\u000f\u0000\u00f7\u00f8\u0006"+
-		"\b\uffff\uffff\u0000\u00f8\u00f9\u0005\u001a\u0000\u0000\u00f9\u00fa\u0006"+
-		"\b\uffff\uffff\u0000\u00fa\u00fb\u0003\u0010\b\u0000\u00fb\u00fc\u0006"+
-		"\b\uffff\uffff\u0000\u00fc\u0107\u0001\u0000\u0000\u0000\u00fd\u00fe\u0005"+
-		"\u001b\u0000\u0000\u00fe\u00ff\u0006\b\uffff\uffff\u0000\u00ff\u0100\u0005"+
-		"\b\u0000\u0000\u0100\u0101\u0006\b\uffff\uffff\u0000\u0101\u0102\u0003"+
-		"\u0010\b\u0000\u0102\u0103\u0006\b\uffff\uffff\u0000\u0103\u0104\u0005"+
-		"\t\u0000\u0000\u0104\u0105\u0006\b\uffff\uffff\u0000\u0105\u0107\u0001"+
-		"\u0000\u0000\u0000\u0106\u00c7\u0001\u0000\u0000\u0000\u0106\u00c8\u0001"+
-		"\u0000\u0000\u0000\u0106\u00cb\u0001\u0000\u0000\u0000\u0106\u00d3\u0001"+
-		"\u0000\u0000\u0000\u0106\u00e0\u0001\u0000\u0000\u0000\u0106\u00e6\u0001"+
-		"\u0000\u0000\u0000\u0106\u00ec\u0001\u0000\u0000\u0000\u0106\u00f2\u0001"+
-		"\u0000\u0000\u0000\u0106\u00fd\u0001\u0000\u0000\u0000\u0107\u0011\u0001"+
-		"\u0000\u0000\u0000\u0108\u011f\u0001\u0000\u0000\u0000\u0109\u010a\u0005"+
-		"\u0005\u0000\u0000\u010a\u011f\u0006\t\uffff\uffff\u0000\u010b\u010c\u0005"+
-		"\u0006\u0000\u0000\u010c\u010d\u0006\t\uffff\uffff\u0000\u010d\u010e\u0005"+
-		" \u0000\u0000\u010e\u010f\u0006\t\uffff\uffff\u0000\u010f\u0110\u0003"+
-		"\u0012\t\u0000\u0110\u0111\u0006\t\uffff\uffff\u0000\u0111\u011f\u0001"+
-		"\u0000\u0000\u0000\u0112\u0113\u0003\u0014\n\u0000\u0113\u0114\u0006\t"+
-		"\uffff\uffff\u0000\u0114\u011f\u0001\u0000\u0000\u0000\u0115\u0116\u0006"+
-		"\t\uffff\uffff\u0000\u0116\u0117\u0003\u0016\u000b\u0000\u0117\u0118\u0006"+
-		"\t\uffff\uffff\u0000\u0118\u011f\u0001\u0000\u0000\u0000\u0119\u011a\u0005"+
-		" \u0000\u0000\u011a\u011f\u0006\t\uffff\uffff\u0000\u011b\u011c\u0003"+
-		"\u001a\r\u0000\u011c\u011d\u0006\t\uffff\uffff\u0000\u011d\u011f\u0001"+
-		"\u0000\u0000\u0000\u011e\u0108\u0001\u0000\u0000\u0000\u011e\u0109\u0001"+
-		"\u0000\u0000\u0000\u011e\u010b\u0001\u0000\u0000\u0000\u011e\u0112\u0001"+
-		"\u0000\u0000\u0000\u011e\u0115\u0001\u0000\u0000\u0000\u011e\u0119\u0001"+
-		"\u0000\u0000\u0000\u011e\u011b\u0001\u0000\u0000\u0000\u011f\u0013\u0001"+
-		"\u0000\u0000\u0000\u0120\u0136\u0001\u0000\u0000\u0000\u0121\u0122\u0005"+
-		"\u0014\u0000\u0000\u0122\u0123\u0006\n\uffff\uffff\u0000\u0123\u0124\u0005"+
-		" \u0000\u0000\u0124\u0125\u0006\n\uffff\uffff\u0000\u0125\u0126\u0005"+
-		"\u0002\u0000\u0000\u0126\u0127\u0006\n\uffff\uffff\u0000\u0127\u0128\u0003"+
-		"\u0010\b\u0000\u0128\u0129\u0006\n\uffff\uffff\u0000\u0129\u0136\u0001"+
-		"\u0000\u0000\u0000\u012a\u012b\u0005\u0014\u0000\u0000\u012b\u012c\u0006"+
-		"\n\uffff\uffff\u0000\u012c\u012d\u0005 \u0000\u0000\u012d\u012e\u0006"+
-		"\n\uffff\uffff\u0000\u012e\u012f\u0005\u0002\u0000\u0000\u012f\u0130\u0006"+
-		"\n\uffff\uffff\u0000\u0130\u0131\u0003\u0010\b\u0000\u0131\u0132\u0006"+
-		"\n\uffff\uffff\u0000\u0132\u0133\u0003\u0014\n\u0000\u0133\u0134\u0006"+
-		"\n\uffff\uffff\u0000\u0134\u0136\u0001\u0000\u0000\u0000\u0135\u0120\u0001"+
-		"\u0000\u0000\u0000\u0135\u0121\u0001\u0000\u0000\u0000\u0135\u012a\u0001"+
-		"\u0000\u0000\u0000\u0136\u0015\u0001\u0000\u0000\u0000\u0137\u014d\u0001"+
-		"\u0000\u0000\u0000\u0138\u0139\u0005\u001c\u0000\u0000\u0139\u013a\u0006"+
-		"\u000b\uffff\uffff\u0000\u013a\u013b\u0003 \u0010\u0000\u013b\u013c\u0006"+
-		"\u000b\uffff\uffff\u0000\u013c\u013d\u0005\u001d\u0000\u0000\u013d\u013e"+
-		"\u0006\u000b\uffff\uffff\u0000\u013e\u013f\u0003\u0010\b\u0000\u013f\u0140"+
-		"\u0006\u000b\uffff\uffff\u0000\u0140\u014d\u0001\u0000\u0000\u0000\u0141"+
-		"\u0142\u0005\u001c\u0000\u0000\u0142\u0143\u0006\u000b\uffff\uffff\u0000"+
-		"\u0143\u0144\u0003 \u0010\u0000\u0144\u0145\u0006\u000b\uffff\uffff\u0000"+
-		"\u0145\u0146\u0005\u001d\u0000\u0000\u0146\u0147\u0006\u000b\uffff\uffff"+
-		"\u0000\u0147\u0148\u0003\u0010\b\u0000\u0148\u0149\u0006\u000b\uffff\uffff"+
-		"\u0000\u0149\u014a\u0003\u0016\u000b\u0000\u014a\u014b\u0006\u000b\uffff"+
-		"\uffff\u0000\u014b\u014d\u0001\u0000\u0000\u0000\u014c\u0137\u0001\u0000"+
-		"\u0000\u0000\u014c\u0138\u0001\u0000\u0000\u0000\u014c\u0141\u0001\u0000"+
-		"\u0000\u0000\u014d\u0017\u0001\u0000\u0000\u0000\u014e\u015b\u0001\u0000"+
-		"\u0000\u0000\u014f\u0150\u0005\u001e\u0000\u0000\u0150\u0151\u0006\f\uffff"+
-		"\uffff\u0000\u0151\u0152\u0005 \u0000\u0000\u0152\u015b\u0006\f\uffff"+
-		"\uffff\u0000\u0153\u0154\u0005\u001e\u0000\u0000\u0154\u0155\u0006\f\uffff"+
-		"\uffff\u0000\u0155\u0156\u0005 \u0000\u0000\u0156\u0157\u0006\f\uffff"+
-		"\uffff\u0000\u0157\u0158\u0003\u0018\f\u0000\u0158\u0159\u0006\f\uffff"+
-		"\uffff\u0000\u0159\u015b\u0001\u0000\u0000\u0000\u015a\u014e\u0001\u0000"+
-		"\u0000\u0000\u015a\u014f\u0001\u0000\u0000\u0000\u015a\u0153\u0001\u0000"+
-		"\u0000\u0000\u015b\u0019\u0001\u0000\u0000\u0000\u015c\u016e\u0001\u0000"+
-		"\u0000\u0000\u015d\u015e\u0005\b\u0000\u0000\u015e\u015f\u0006\r\uffff"+
-		"\uffff\u0000\u015f\u0160\u0003\u0010\b\u0000\u0160\u0161\u0006\r\uffff"+
-		"\uffff\u0000\u0161\u0162\u0005\t\u0000\u0000\u0162\u0163\u0006\r\uffff"+
-		"\uffff\u0000\u0163\u016e\u0001\u0000\u0000\u0000\u0164\u0165\u0005\b\u0000"+
-		"\u0000\u0165\u0166\u0006\r\uffff\uffff\u0000\u0166\u0167\u0003\u0010\b"+
-		"\u0000\u0167\u0168\u0006\r\uffff\uffff\u0000\u0168\u0169\u0005\t\u0000"+
-		"\u0000\u0169\u016a\u0006\r\uffff\uffff\u0000\u016a\u016b\u0003\u001a\r"+
-		"\u0000\u016b\u016c\u0006\r\uffff\uffff\u0000\u016c\u016e\u0001\u0000\u0000"+
-		"\u0000\u016d\u015c\u0001\u0000\u0000\u0000\u016d\u015d\u0001\u0000\u0000"+
-		"\u0000\u016d\u0164\u0001\u0000\u0000\u0000\u016e\u001b\u0001\u0000\u0000"+
-		"\u0000\u016f\u017d\u0001\u0000\u0000\u0000\u0170\u0171\u0005\u001f\u0000"+
-		"\u0000\u0171\u0172\u0006\u000e\uffff\uffff\u0000\u0172\u0173\u0003\u0010"+
-		"\b\u0000\u0173\u0174\u0006\u000e\uffff\uffff\u0000\u0174\u017d\u0001\u0000"+
-		"\u0000\u0000\u0175\u0176\u0005\u001f\u0000\u0000\u0176\u0177\u0006\u000e"+
-		"\uffff\uffff\u0000\u0177\u0178\u0003\u0010\b\u0000\u0178\u0179\u0006\u000e"+
-		"\uffff\uffff\u0000\u0179\u017a\u0003\u001c\u000e\u0000\u017a\u017b\u0006"+
-		"\u000e\uffff\uffff\u0000\u017b\u017d\u0001\u0000\u0000\u0000\u017c\u016f"+
-		"\u0001\u0000\u0000\u0000\u017c\u0170\u0001\u0000\u0000\u0000\u017c\u0175"+
-		"\u0001\u0000\u0000\u0000\u017d\u001d\u0001\u0000\u0000\u0000\u017e\u018c"+
-		"\u0001\u0000\u0000\u0000\u017f\u0180\u0005\u0002\u0000\u0000\u0180\u0181"+
-		"\u0006\u000f\uffff\uffff\u0000\u0181\u0182\u0003\u0010\b\u0000\u0182\u0183"+
-		"\u0006\u000f\uffff\uffff\u0000\u0183\u018c\u0001\u0000\u0000\u0000\u0184"+
-		"\u0185\u0005\u0007\u0000\u0000\u0185\u0186\u0003\b\u0004\u0000\u0186\u0187"+
-		"\u0005\u0002\u0000\u0000\u0187\u0188\u0006\u000f\uffff\uffff\u0000\u0188"+
-		"\u0189\u0003\u0010\b\u0000\u0189\u018a\u0006\u000f\uffff\uffff\u0000\u018a"+
-		"\u018c\u0001\u0000\u0000\u0000\u018b\u017e\u0001\u0000\u0000\u0000\u018b"+
-		"\u017f\u0001\u0000\u0000\u0000\u018b\u0184\u0001\u0000\u0000\u0000\u018c"+
-		"\u001f\u0001\u0000\u0000\u0000\u018d\u019a\u0001\u0000\u0000\u0000\u018e"+
-		"\u018f\u0003\"\u0011\u0000\u018f\u0190\u0006\u0010\uffff\uffff\u0000\u0190"+
-		"\u019a\u0001\u0000\u0000\u0000\u0191\u0192\u0006\u0010\uffff\uffff\u0000"+
-		"\u0192\u0193\u0003\"\u0011\u0000\u0193\u0194\u0006\u0010\uffff\uffff\u0000"+
-		"\u0194\u0195\u0005\r\u0000\u0000\u0195\u0196\u0006\u0010\uffff\uffff\u0000"+
-		"\u0196\u0197\u0003 \u0010\u0000\u0197\u0198\u0006\u0010\uffff\uffff\u0000"+
-		"\u0198\u019a\u0001\u0000\u0000\u0000\u0199\u018d\u0001\u0000\u0000\u0000"+
-		"\u0199\u018e\u0001\u0000\u0000\u0000\u0199\u0191\u0001\u0000\u0000\u0000"+
-		"\u019a!\u0001\u0000\u0000\u0000\u019b\u01b0\u0001\u0000\u0000\u0000\u019c"+
-		"\u019d\u0005 \u0000\u0000\u019d\u01b0\u0006\u0011\uffff\uffff\u0000\u019e"+
-		"\u019f\u0005\u0005\u0000\u0000\u019f\u01b0\u0006\u0011\uffff\uffff\u0000"+
-		"\u01a0\u01a1\u0005\u0006\u0000\u0000\u01a1\u01a2\u0006\u0011\uffff\uffff"+
-		"\u0000\u01a2\u01a3\u0005 \u0000\u0000\u01a3\u01a4\u0006\u0011\uffff\uffff"+
-		"\u0000\u01a4\u01a5\u0003\"\u0011\u0000\u01a5\u01a6\u0006\u0011\uffff\uffff"+
-		"\u0000\u01a6\u01b0\u0001\u0000\u0000\u0000\u01a7\u01a8\u0003$\u0012\u0000"+
-		"\u01a8\u01a9\u0006\u0011\uffff\uffff\u0000\u01a9\u01b0\u0001\u0000\u0000"+
-		"\u0000\u01aa\u01ab\u0005\b\u0000\u0000\u01ab\u01ac\u0003 \u0010\u0000"+
-		"\u01ac\u01ad\u0005\t\u0000\u0000\u01ad\u01ae\u0006\u0011\uffff\uffff\u0000"+
-		"\u01ae\u01b0\u0001\u0000\u0000\u0000\u01af\u019b\u0001\u0000\u0000\u0000"+
-		"\u01af\u019c\u0001\u0000\u0000\u0000\u01af\u019e\u0001\u0000\u0000\u0000"+
-		"\u01af\u01a0\u0001\u0000\u0000\u0000\u01af\u01a7\u0001\u0000\u0000\u0000"+
-		"\u01af\u01aa\u0001\u0000\u0000\u0000\u01b0#\u0001\u0000\u0000\u0000\u01b1"+
-		"\u01c7\u0001\u0000\u0000\u0000\u01b2\u01b3\u0005\u0014\u0000\u0000\u01b3"+
-		"\u01b4\u0006\u0012\uffff\uffff\u0000\u01b4\u01b5\u0005 \u0000\u0000\u01b5"+
-		"\u01b6\u0006\u0012\uffff\uffff\u0000\u01b6\u01b7\u0005\u0002\u0000\u0000"+
-		"\u01b7\u01b8\u0006\u0012\uffff\uffff\u0000\u01b8\u01b9\u0003 \u0010\u0000"+
-		"\u01b9\u01ba\u0006\u0012\uffff\uffff\u0000\u01ba\u01c7\u0001\u0000\u0000"+
-		"\u0000\u01bb\u01bc\u0005\u0014\u0000\u0000\u01bc\u01bd\u0006\u0012\uffff"+
-		"\uffff\u0000\u01bd\u01be\u0005 \u0000\u0000\u01be\u01bf\u0006\u0012\uffff"+
-		"\uffff\u0000\u01bf\u01c0\u0005\u0002\u0000\u0000\u01c0\u01c1\u0006\u0012"+
-		"\uffff\uffff\u0000\u01c1\u01c2\u0003 \u0010\u0000\u01c2\u01c3\u0006\u0012"+
-		"\uffff\uffff\u0000\u01c3\u01c4\u0003$\u0012\u0000\u01c4\u01c5\u0006\u0012"+
-		"\uffff\uffff\u0000\u01c5\u01c7\u0001\u0000\u0000\u0000\u01c6\u01b1\u0001"+
-		"\u0000\u0000\u0000\u01c6\u01b2\u0001\u0000\u0000\u0000\u01c6\u01bb\u0001"+
-		"\u0000\u0000\u0000\u01c7%\u0001\u0000\u0000\u0000\u0013-=Hb\u00a4\u00b1"+
-		"\u00bd\u00c5\u0106\u011e\u0135\u014c\u015a\u016d\u017c\u018b\u0199\u01af"+
-		"\u01c6";
+		"\u000b\u0001\u000b\u0001\u000b\u0003\u000b\u0130\b\u000b\u0001\f\u0001"+
+		"\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0003"+
+		"\f\u013c\b\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
+		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u014b\b\r\u0001\u000e"+
+		"\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e"+
+		"\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0003\u000e\u0158\b\u000e"+
+		"\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f"+
+		"\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0003\u000f"+
+		"\u0165\b\u000f\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010"+
+		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0003\u0010"+
+		"\u0171\b\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011"+
+		"\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011"+
+		"\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011"+
+		"\u0001\u0011\u0003\u0011\u0185\b\u0011\u0001\u0012\u0001\u0012\u0001\u0012"+
+		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012"+
+		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003\u0012"+
+		"\u0195\b\u0012\u0001\u0012\u0000\u0000\u0013\u0000\u0002\u0004\u0006\b"+
+		"\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \"$\u0000\u0000"+
+		"\u01c3\u0000-\u0001\u0000\u0000\u0000\u0002=\u0001\u0000\u0000\u0000\u0004"+
+		"H\u0001\u0000\u0000\u0000\u0006b\u0001\u0000\u0000\u0000\b\u00a4\u0001"+
+		"\u0000\u0000\u0000\n\u00b1\u0001\u0000\u0000\u0000\f\u00bd\u0001\u0000"+
+		"\u0000\u0000\u000e\u00c5\u0001\u0000\u0000\u0000\u0010\u00f6\u0001\u0000"+
+		"\u0000\u0000\u0012\u010c\u0001\u0000\u0000\u0000\u0014\u011d\u0001\u0000"+
+		"\u0000\u0000\u0016\u012f\u0001\u0000\u0000\u0000\u0018\u013b\u0001\u0000"+
+		"\u0000\u0000\u001a\u014a\u0001\u0000\u0000\u0000\u001c\u0157\u0001\u0000"+
+		"\u0000\u0000\u001e\u0164\u0001\u0000\u0000\u0000 \u0170\u0001\u0000\u0000"+
+		"\u0000\"\u0184\u0001\u0000\u0000\u0000$\u0194\u0001\u0000\u0000\u0000"+
+		"&.\u0001\u0000\u0000\u0000\'(\u0005 \u0000\u0000(.\u0006\u0000\uffff\uffff"+
+		"\u0000)*\u0005 \u0000\u0000*+\u0003\u0000\u0000\u0000+,\u0006\u0000\uffff"+
+		"\uffff\u0000,.\u0001\u0000\u0000\u0000-&\u0001\u0000\u0000\u0000-\'\u0001"+
+		"\u0000\u0000\u0000-)\u0001\u0000\u0000\u0000.\u0001\u0001\u0000\u0000"+
+		"\u0000/>\u0001\u0000\u0000\u000001\u0005\u0001\u0000\u000012\u0005 \u0000"+
+		"\u000023\u0005\u0002\u0000\u000034\u0003\b\u0004\u000045\u0006\u0001\uffff"+
+		"\uffff\u00005>\u0001\u0000\u0000\u000067\u0005\u0001\u0000\u000078\u0005"+
+		" \u0000\u000089\u0005\u0002\u0000\u00009:\u0003\b\u0004\u0000:;\u0003"+
+		"\u0002\u0001\u0000;<\u0006\u0001\uffff\uffff\u0000<>\u0001\u0000\u0000"+
+		"\u0000=/\u0001\u0000\u0000\u0000=0\u0001\u0000\u0000\u0000=6\u0001\u0000"+
+		"\u0000\u0000>\u0003\u0001\u0000\u0000\u0000?I\u0001\u0000\u0000\u0000"+
+		"@A\u0003\u0002\u0001\u0000AB\u0006\u0002\uffff\uffff\u0000BC\u0003\u0010"+
+		"\b\u0000CD\u0006\u0002\uffff\uffff\u0000DI\u0001\u0000\u0000\u0000EF\u0003"+
+		"\u0010\b\u0000FG\u0006\u0002\uffff\uffff\u0000GI\u0001\u0000\u0000\u0000"+
+		"H?\u0001\u0000\u0000\u0000H@\u0001\u0000\u0000\u0000HE\u0001\u0000\u0000"+
+		"\u0000I\u0005\u0001\u0000\u0000\u0000Jc\u0001\u0000\u0000\u0000KL\u0005"+
+		"\u0003\u0000\u0000Lc\u0006\u0003\uffff\uffff\u0000MN\u0005\u0004\u0000"+
+		"\u0000Nc\u0006\u0003\uffff\uffff\u0000OP\u0005 \u0000\u0000Pc\u0006\u0003"+
+		"\uffff\uffff\u0000QR\u0005\u0005\u0000\u0000Rc\u0006\u0003\uffff\uffff"+
+		"\u0000ST\u0005\u0006\u0000\u0000TU\u0005 \u0000\u0000UV\u0003\u0006\u0003"+
+		"\u0000VW\u0006\u0003\uffff\uffff\u0000Wc\u0001\u0000\u0000\u0000XY\u0005"+
+		" \u0000\u0000YZ\u0005\u0007\u0000\u0000Z[\u0003\u0006\u0003\u0000[\\\u0006"+
+		"\u0003\uffff\uffff\u0000\\c\u0001\u0000\u0000\u0000]^\u0005\b\u0000\u0000"+
+		"^_\u0003\b\u0004\u0000_`\u0005\t\u0000\u0000`a\u0006\u0003\uffff\uffff"+
+		"\u0000ac\u0001\u0000\u0000\u0000bJ\u0001\u0000\u0000\u0000bK\u0001\u0000"+
+		"\u0000\u0000bM\u0001\u0000\u0000\u0000bO\u0001\u0000\u0000\u0000bQ\u0001"+
+		"\u0000\u0000\u0000bS\u0001\u0000\u0000\u0000bX\u0001\u0000\u0000\u0000"+
+		"b]\u0001\u0000\u0000\u0000c\u0007\u0001\u0000\u0000\u0000d\u00a5\u0001"+
+		"\u0000\u0000\u0000ef\u0003\u0006\u0003\u0000fg\u0006\u0004\uffff\uffff"+
+		"\u0000g\u00a5\u0001\u0000\u0000\u0000hi\u0003\u0006\u0003\u0000ij\u0005"+
+		"\n\u0000\u0000jk\u0003\b\u0004\u0000kl\u0006\u0004\uffff\uffff\u0000l"+
+		"\u00a5\u0001\u0000\u0000\u0000mn\u0003\u0006\u0003\u0000no\u0005\u000b"+
+		"\u0000\u0000op\u0003\b\u0004\u0000pq\u0006\u0004\uffff\uffff\u0000q\u00a5"+
+		"\u0001\u0000\u0000\u0000rs\u0003\u0006\u0003\u0000st\u0003\n\u0005\u0000"+
+		"tu\u0006\u0004\uffff\uffff\u0000u\u00a5\u0001\u0000\u0000\u0000vw\u0003"+
+		"\u0006\u0003\u0000wx\u0005\f\u0000\u0000xy\u0003\b\u0004\u0000yz\u0006"+
+		"\u0004\uffff\uffff\u0000z\u00a5\u0001\u0000\u0000\u0000{|\u0003\u0006"+
+		"\u0003\u0000|}\u0005\r\u0000\u0000}~\u0003\b\u0004\u0000~\u007f\u0006"+
+		"\u0004\uffff\uffff\u0000\u007f\u00a5\u0001\u0000\u0000\u0000\u0080\u0081"+
+		"\u0005\u000e\u0000\u0000\u0081\u0082\u0005\u000f\u0000\u0000\u0082\u0083"+
+		"\u0003\u0000\u0000\u0000\u0083\u0084\u0005\u0010\u0000\u0000\u0084\u0085"+
+		"\u0003\b\u0004\u0000\u0085\u0086\u0006\u0004\uffff\uffff\u0000\u0086\u00a5"+
+		"\u0001\u0000\u0000\u0000\u0087\u0088\u0005\u000e\u0000\u0000\u0088\u0089"+
+		"\u0005\u000f\u0000\u0000\u0089\u008a\u0003\u0000\u0000\u0000\u008a\u008b"+
+		"\u0003\f\u0006\u0000\u008b\u008c\u0005\u0010\u0000\u0000\u008c\u008d\u0003"+
+		"\b\u0004\u0000\u008d\u008e\u0006\u0004\uffff\uffff\u0000\u008e\u00a5\u0001"+
+		"\u0000\u0000\u0000\u008f\u0090\u0005\u0011\u0000\u0000\u0090\u0091\u0005"+
+		"\u000f\u0000\u0000\u0091\u0092\u0003\u0000\u0000\u0000\u0092\u0093\u0005"+
+		"\u0010\u0000\u0000\u0093\u0094\u0003\b\u0004\u0000\u0094\u0095\u0006\u0004"+
+		"\uffff\uffff\u0000\u0095\u00a5\u0001\u0000\u0000\u0000\u0096\u0097\u0005"+
+		"\u0011\u0000\u0000\u0097\u0098\u0005\u000f\u0000\u0000\u0098\u0099\u0003"+
+		"\u0000\u0000\u0000\u0099\u009a\u0003\f\u0006\u0000\u009a\u009b\u0005\u0010"+
+		"\u0000\u0000\u009b\u009c\u0003\b\u0004\u0000\u009c\u009d\u0006\u0004\uffff"+
+		"\uffff\u0000\u009d\u00a5\u0001\u0000\u0000\u0000\u009e\u009f\u0005\u0012"+
+		"\u0000\u0000\u009f\u00a0\u0005 \u0000\u0000\u00a0\u00a1\u0005\n\u0000"+
+		"\u0000\u00a1\u00a2\u0003\b\u0004\u0000\u00a2\u00a3\u0006\u0004\uffff\uffff"+
+		"\u0000\u00a3\u00a5\u0001\u0000\u0000\u0000\u00a4d\u0001\u0000\u0000\u0000"+
+		"\u00a4e\u0001\u0000\u0000\u0000\u00a4h\u0001\u0000\u0000\u0000\u00a4m"+
+		"\u0001\u0000\u0000\u0000\u00a4r\u0001\u0000\u0000\u0000\u00a4v\u0001\u0000"+
+		"\u0000\u0000\u00a4{\u0001\u0000\u0000\u0000\u00a4\u0080\u0001\u0000\u0000"+
+		"\u0000\u00a4\u0087\u0001\u0000\u0000\u0000\u00a4\u008f\u0001\u0000\u0000"+
+		"\u0000\u00a4\u0096\u0001\u0000\u0000\u0000\u00a4\u009e\u0001\u0000\u0000"+
+		"\u0000\u00a5\t\u0001\u0000\u0000\u0000\u00a6\u00b2\u0001\u0000\u0000\u0000"+
+		"\u00a7\u00a8\u0005\u0013\u0000\u0000\u00a8\u00a9\u0003\b\u0004\u0000\u00a9"+
+		"\u00aa\u0006\u0005\uffff\uffff\u0000\u00aa\u00b2\u0001\u0000\u0000\u0000"+
+		"\u00ab\u00ac\u0005\u0013\u0000\u0000\u00ac\u00ad\u0003\b\u0004\u0000\u00ad"+
+		"\u00ae\u0006\u0005\uffff\uffff\u0000\u00ae\u00af\u0003\n\u0005\u0000\u00af"+
+		"\u00b0\u0006\u0005\uffff\uffff\u0000\u00b0\u00b2\u0001\u0000\u0000\u0000"+
+		"\u00b1\u00a6\u0001\u0000\u0000\u0000\u00b1\u00a7\u0001\u0000\u0000\u0000"+
+		"\u00b1\u00ab\u0001\u0000\u0000\u0000\u00b2\u000b\u0001\u0000\u0000\u0000"+
+		"\u00b3\u00be\u0001\u0000\u0000\u0000\u00b4\u00b5\u0005\u0014\u0000\u0000"+
+		"\u00b5\u00b6\u0003\u000e\u0007\u0000\u00b6\u00b7\u0006\u0006\uffff\uffff"+
+		"\u0000\u00b7\u00be\u0001\u0000\u0000\u0000\u00b8\u00b9\u0005\u0014\u0000"+
+		"\u0000\u00b9\u00ba\u0003\u000e\u0007\u0000\u00ba\u00bb\u0003\f\u0006\u0000"+
+		"\u00bb\u00bc\u0006\u0006\uffff\uffff\u0000\u00bc\u00be\u0001\u0000\u0000"+
+		"\u0000\u00bd\u00b3\u0001\u0000\u0000\u0000\u00bd\u00b4\u0001\u0000\u0000"+
+		"\u0000\u00bd\u00b8\u0001\u0000\u0000\u0000\u00be\r\u0001\u0000\u0000\u0000"+
+		"\u00bf\u00c6\u0001\u0000\u0000\u0000\u00c0\u00c1\u0003\b\u0004\u0000\u00c1"+
+		"\u00c2\u0005\u0015\u0000\u0000\u00c2\u00c3\u0003\b\u0004\u0000\u00c3\u00c4"+
+		"\u0006\u0007\uffff\uffff\u0000\u00c4\u00c6\u0001\u0000\u0000\u0000\u00c5"+
+		"\u00bf\u0001\u0000\u0000\u0000\u00c5\u00c0\u0001\u0000\u0000\u0000\u00c6"+
+		"\u000f\u0001\u0000\u0000\u0000\u00c7\u00f7\u0001\u0000\u0000\u0000\u00c8"+
+		"\u00c9\u0003\u0012\t\u0000\u00c9\u00ca\u0006\b\uffff\uffff\u0000\u00ca"+
+		"\u00f7\u0001\u0000\u0000\u0000\u00cb\u00cc\u0003\u0012\t\u0000\u00cc\u00cd"+
+		"\u0005\r\u0000\u0000\u00cd\u00ce\u0006\b\uffff\uffff\u0000\u00ce\u00cf"+
+		"\u0003\u0010\b\u0000\u00cf\u00d0\u0006\b\uffff\uffff\u0000\u00d0\u00f7"+
+		"\u0001\u0000\u0000\u0000\u00d1\u00d2\u0005\u0016\u0000\u0000\u00d2\u00d3"+
+		"\u0003\u0010\b\u0000\u00d3\u00d4\u0005\u0017\u0000\u0000\u00d4\u00d5\u0006"+
+		"\b\uffff\uffff\u0000\u00d5\u00d6\u0003\u0010\b\u0000\u00d6\u00d7\u0005"+
+		"\u0018\u0000\u0000\u00d7\u00d8\u0003\u0010\b\u0000\u00d8\u00d9\u0006\b"+
+		"\uffff\uffff\u0000\u00d9\u00f7\u0001\u0000\u0000\u0000\u00da\u00db\u0003"+
+		"\u0012\t\u0000\u00db\u00dc\u0003\u0018\f\u0000\u00dc\u00dd\u0006\b\uffff"+
+		"\uffff\u0000\u00dd\u00f7\u0001\u0000\u0000\u0000\u00de\u00df\u0003\u0012"+
+		"\t\u0000\u00df\u00e0\u0006\b\uffff\uffff\u0000\u00e0\u00e1\u0003\u001a"+
+		"\r\u0000\u00e1\u00e2\u0006\b\uffff\uffff\u0000\u00e2\u00f7\u0001\u0000"+
+		"\u0000\u0000\u00e3\u00e4\u0003\u0012\t\u0000\u00e4\u00e5\u0006\b\uffff"+
+		"\uffff\u0000\u00e5\u00e6\u0003\u001c\u000e\u0000\u00e6\u00e7\u0006\b\uffff"+
+		"\uffff\u0000\u00e7\u00f7\u0001\u0000\u0000\u0000\u00e8\u00e9\u0005\u0019"+
+		"\u0000\u0000\u00e9\u00ea\u0005 \u0000\u0000\u00ea\u00eb\u0003\u001e\u000f"+
+		"\u0000\u00eb\u00ec\u0005\u001a\u0000\u0000\u00ec\u00ed\u0006\b\uffff\uffff"+
+		"\u0000\u00ed\u00ee\u0003\u0010\b\u0000\u00ee\u00ef\u0006\b\uffff\uffff"+
+		"\u0000\u00ef\u00f7\u0001\u0000\u0000\u0000\u00f0\u00f1\u0005\u001b\u0000"+
+		"\u0000\u00f1\u00f2\u0005\b\u0000\u0000\u00f2\u00f3\u0003\u0010\b\u0000"+
+		"\u00f3\u00f4\u0005\t\u0000\u0000\u00f4\u00f5\u0006\b\uffff\uffff\u0000"+
+		"\u00f5\u00f7\u0001\u0000\u0000\u0000\u00f6\u00c7\u0001\u0000\u0000\u0000"+
+		"\u00f6\u00c8\u0001\u0000\u0000\u0000\u00f6\u00cb\u0001\u0000\u0000\u0000"+
+		"\u00f6\u00d1\u0001\u0000\u0000\u0000\u00f6\u00da\u0001\u0000\u0000\u0000"+
+		"\u00f6\u00de\u0001\u0000\u0000\u0000\u00f6\u00e3\u0001\u0000\u0000\u0000"+
+		"\u00f6\u00e8\u0001\u0000\u0000\u0000\u00f6\u00f0\u0001\u0000\u0000\u0000"+
+		"\u00f7\u0011\u0001\u0000\u0000\u0000\u00f8\u010d\u0001\u0000\u0000\u0000"+
+		"\u00f9\u00fa\u0005\u0005\u0000\u0000\u00fa\u010d\u0006\t\uffff\uffff\u0000"+
+		"\u00fb\u00fc\u0005\u0006\u0000\u0000\u00fc\u00fd\u0005 \u0000\u0000\u00fd"+
+		"\u00fe\u0003\u0012\t\u0000\u00fe\u00ff\u0006\t\uffff\uffff\u0000\u00ff"+
+		"\u010d\u0001\u0000\u0000\u0000\u0100\u0101\u0003\u0014\n\u0000\u0101\u0102"+
+		"\u0006\t\uffff\uffff\u0000\u0102\u010d\u0001\u0000\u0000\u0000\u0103\u0104"+
+		"\u0006\t\uffff\uffff\u0000\u0104\u0105\u0003\u0016\u000b\u0000\u0105\u0106"+
+		"\u0006\t\uffff\uffff\u0000\u0106\u010d\u0001\u0000\u0000\u0000\u0107\u0108"+
+		"\u0005 \u0000\u0000\u0108\u010d\u0006\t\uffff\uffff\u0000\u0109\u010a"+
+		"\u0003\u001a\r\u0000\u010a\u010b\u0006\t\uffff\uffff\u0000\u010b\u010d"+
+		"\u0001\u0000\u0000\u0000\u010c\u00f8\u0001\u0000\u0000\u0000\u010c\u00f9"+
+		"\u0001\u0000\u0000\u0000\u010c\u00fb\u0001\u0000\u0000\u0000\u010c\u0100"+
+		"\u0001\u0000\u0000\u0000\u010c\u0103\u0001\u0000\u0000\u0000\u010c\u0107"+
+		"\u0001\u0000\u0000\u0000\u010c\u0109\u0001\u0000\u0000\u0000\u010d\u0013"+
+		"\u0001\u0000\u0000\u0000\u010e\u011e\u0001\u0000\u0000\u0000\u010f\u0110"+
+		"\u0005\u0014\u0000\u0000\u0110\u0111\u0005 \u0000\u0000\u0111\u0112\u0005"+
+		"\u0002\u0000\u0000\u0112\u0113\u0003\u0010\b\u0000\u0113\u0114\u0006\n"+
+		"\uffff\uffff\u0000\u0114\u011e\u0001\u0000\u0000\u0000\u0115\u0116\u0005"+
+		"\u0014\u0000\u0000\u0116\u0117\u0005 \u0000\u0000\u0117\u0118\u0005\u0002"+
+		"\u0000\u0000\u0118\u0119\u0003\u0010\b\u0000\u0119\u011a\u0006\n\uffff"+
+		"\uffff\u0000\u011a\u011b\u0003\u0014\n\u0000\u011b\u011c\u0006\n\uffff"+
+		"\uffff\u0000\u011c\u011e\u0001\u0000\u0000\u0000\u011d\u010e\u0001\u0000"+
+		"\u0000\u0000\u011d\u010f\u0001\u0000\u0000\u0000\u011d\u0115\u0001\u0000"+
+		"\u0000\u0000\u011e\u0015\u0001\u0000\u0000\u0000\u011f\u0130\u0001\u0000"+
+		"\u0000\u0000\u0120\u0121\u0005\u001c\u0000\u0000\u0121\u0122\u0003 \u0010"+
+		"\u0000\u0122\u0123\u0005\u001d\u0000\u0000\u0123\u0124\u0006\u000b\uffff"+
+		"\uffff\u0000\u0124\u0125\u0003\u0010\b\u0000\u0125\u0126\u0006\u000b\uffff"+
+		"\uffff\u0000\u0126\u0130\u0001\u0000\u0000\u0000\u0127\u0128\u0005\u001c"+
+		"\u0000\u0000\u0128\u0129\u0003 \u0010\u0000\u0129\u012a\u0005\u001d\u0000"+
+		"\u0000\u012a\u012b\u0006\u000b\uffff\uffff\u0000\u012b\u012c\u0003\u0010"+
+		"\b\u0000\u012c\u012d\u0003\u0016\u000b\u0000\u012d\u012e\u0006\u000b\uffff"+
+		"\uffff\u0000\u012e\u0130\u0001\u0000\u0000\u0000\u012f\u011f\u0001\u0000"+
+		"\u0000\u0000\u012f\u0120\u0001\u0000\u0000\u0000\u012f\u0127\u0001\u0000"+
+		"\u0000\u0000\u0130\u0017\u0001\u0000\u0000\u0000\u0131\u013c\u0001\u0000"+
+		"\u0000\u0000\u0132\u0133\u0005\u001e\u0000\u0000\u0133\u0134\u0005 \u0000"+
+		"\u0000\u0134\u013c\u0006\f\uffff\uffff\u0000\u0135\u0136\u0005\u001e\u0000"+
+		"\u0000\u0136\u0137\u0005 \u0000\u0000\u0137\u0138\u0006\f\uffff\uffff"+
+		"\u0000\u0138\u0139\u0003\u0018\f\u0000\u0139\u013a\u0006\f\uffff\uffff"+
+		"\u0000\u013a\u013c\u0001\u0000\u0000\u0000\u013b\u0131\u0001\u0000\u0000"+
+		"\u0000\u013b\u0132\u0001\u0000\u0000\u0000\u013b\u0135\u0001\u0000\u0000"+
+		"\u0000\u013c\u0019\u0001\u0000\u0000\u0000\u013d\u014b\u0001\u0000\u0000"+
+		"\u0000\u013e\u013f\u0005\b\u0000\u0000\u013f\u0140\u0003\u0010\b\u0000"+
+		"\u0140\u0141\u0005\t\u0000\u0000\u0141\u0142\u0006\r\uffff\uffff\u0000"+
+		"\u0142\u014b\u0001\u0000\u0000\u0000\u0143\u0144\u0005\b\u0000\u0000\u0144"+
+		"\u0145\u0003\u0010\b\u0000\u0145\u0146\u0005\t\u0000\u0000\u0146\u0147"+
+		"\u0006\r\uffff\uffff\u0000\u0147\u0148\u0003\u001a\r\u0000\u0148\u0149"+
+		"\u0006\r\uffff\uffff\u0000\u0149\u014b\u0001\u0000\u0000\u0000\u014a\u013d"+
+		"\u0001\u0000\u0000\u0000\u014a\u013e\u0001\u0000\u0000\u0000\u014a\u0143"+
+		"\u0001\u0000\u0000\u0000\u014b\u001b\u0001\u0000\u0000\u0000\u014c\u0158"+
+		"\u0001\u0000\u0000\u0000\u014d\u014e\u0005\u001f\u0000\u0000\u014e\u014f"+
+		"\u0003\u0010\b\u0000\u014f\u0150\u0006\u000e\uffff\uffff\u0000\u0150\u0158"+
+		"\u0001\u0000\u0000\u0000\u0151\u0152\u0005\u001f\u0000\u0000\u0152\u0153"+
+		"\u0003\u0010\b\u0000\u0153\u0154\u0006\u000e\uffff\uffff\u0000\u0154\u0155"+
+		"\u0003\u001c\u000e\u0000\u0155\u0156\u0006\u000e\uffff\uffff\u0000\u0156"+
+		"\u0158\u0001\u0000\u0000\u0000\u0157\u014c\u0001\u0000\u0000\u0000\u0157"+
+		"\u014d\u0001\u0000\u0000\u0000\u0157\u0151\u0001\u0000\u0000\u0000\u0158"+
+		"\u001d\u0001\u0000\u0000\u0000\u0159\u0165\u0001\u0000\u0000\u0000\u015a"+
+		"\u015b\u0005\u0002\u0000\u0000\u015b\u015c\u0003\u0010\b\u0000\u015c\u015d"+
+		"\u0006\u000f\uffff\uffff\u0000\u015d\u0165\u0001\u0000\u0000\u0000\u015e"+
+		"\u015f\u0005\u0007\u0000\u0000\u015f\u0160\u0003\b\u0004\u0000\u0160\u0161"+
+		"\u0005\u0002\u0000\u0000\u0161\u0162\u0003\u0010\b\u0000\u0162\u0163\u0006"+
+		"\u000f\uffff\uffff\u0000\u0163\u0165\u0001\u0000\u0000\u0000\u0164\u0159"+
+		"\u0001\u0000\u0000\u0000\u0164\u015a\u0001\u0000\u0000\u0000\u0164\u015e"+
+		"\u0001\u0000\u0000\u0000\u0165\u001f\u0001\u0000\u0000\u0000\u0166\u0171"+
+		"\u0001\u0000\u0000\u0000\u0167\u0168\u0003\"\u0011\u0000\u0168\u0169\u0006"+
+		"\u0010\uffff\uffff\u0000\u0169\u0171\u0001\u0000\u0000\u0000\u016a\u016b"+
+		"\u0006\u0010\uffff\uffff\u0000\u016b\u016c\u0003\"\u0011\u0000\u016c\u016d"+
+		"\u0005\r\u0000\u0000\u016d\u016e\u0003 \u0010\u0000\u016e\u016f\u0006"+
+		"\u0010\uffff\uffff\u0000\u016f\u0171\u0001\u0000\u0000\u0000\u0170\u0166"+
+		"\u0001\u0000\u0000\u0000\u0170\u0167\u0001\u0000\u0000\u0000\u0170\u016a"+
+		"\u0001\u0000\u0000\u0000\u0171!\u0001\u0000\u0000\u0000\u0172\u0185\u0001"+
+		"\u0000\u0000\u0000\u0173\u0174\u0005 \u0000\u0000\u0174\u0185\u0006\u0011"+
+		"\uffff\uffff\u0000\u0175\u0176\u0005\u0005\u0000\u0000\u0176\u0185\u0006"+
+		"\u0011\uffff\uffff\u0000\u0177\u0178\u0005\u0006\u0000\u0000\u0178\u0179"+
+		"\u0005 \u0000\u0000\u0179\u017a\u0003\"\u0011\u0000\u017a\u017b\u0006"+
+		"\u0011\uffff\uffff\u0000\u017b\u0185\u0001\u0000\u0000\u0000\u017c\u017d"+
+		"\u0003$\u0012\u0000\u017d\u017e\u0006\u0011\uffff\uffff\u0000\u017e\u0185"+
+		"\u0001\u0000\u0000\u0000\u017f\u0180\u0005\b\u0000\u0000\u0180\u0181\u0003"+
+		" \u0010\u0000\u0181\u0182\u0005\t\u0000\u0000\u0182\u0183\u0006\u0011"+
+		"\uffff\uffff\u0000\u0183\u0185\u0001\u0000\u0000\u0000\u0184\u0172\u0001"+
+		"\u0000\u0000\u0000\u0184\u0173\u0001\u0000\u0000\u0000\u0184\u0175\u0001"+
+		"\u0000\u0000\u0000\u0184\u0177\u0001\u0000\u0000\u0000\u0184\u017c\u0001"+
+		"\u0000\u0000\u0000\u0184\u017f\u0001\u0000\u0000\u0000\u0185#\u0001\u0000"+
+		"\u0000\u0000\u0186\u0195\u0001\u0000\u0000\u0000\u0187\u0188\u0005\u0014"+
+		"\u0000\u0000\u0188\u0189\u0005 \u0000\u0000\u0189\u018a\u0005\u0002\u0000"+
+		"\u0000\u018a\u018b\u0003 \u0010\u0000\u018b\u018c\u0006\u0012\uffff\uffff"+
+		"\u0000\u018c\u0195\u0001\u0000\u0000\u0000\u018d\u018e\u0005\u0014\u0000"+
+		"\u0000\u018e\u018f\u0005 \u0000\u0000\u018f\u0190\u0005\u0002\u0000\u0000"+
+		"\u0190\u0191\u0003 \u0010\u0000\u0191\u0192\u0003$\u0012\u0000\u0192\u0193"+
+		"\u0006\u0012\uffff\uffff\u0000\u0193\u0195\u0001\u0000\u0000\u0000\u0194"+
+		"\u0186\u0001\u0000\u0000\u0000\u0194\u0187\u0001\u0000\u0000\u0000\u0194"+
+		"\u018d\u0001\u0000\u0000\u0000\u0195%\u0001\u0000\u0000\u0000\u0013-="+
+		"Hb\u00a4\u00b1\u00bd\u00c5\u00f6\u010c\u011d\u012f\u013b\u014a\u0157\u0164"+
+		"\u0170\u0184\u0194";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
