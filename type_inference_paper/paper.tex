@@ -671,20 +671,35 @@ which allow expressing properties of expressions with varying levels of precisio
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
-      \obj{@} \sep
-      \obj{<}l\obj{>}\tau \sep 
-      l\obj{->}\tau \sep 
-      \tau\obj{->}\tau \sep 
-      \tau\obj{|}\tau \sep 
-      \tau\obj{\&}\tau \sep 
-      \tau\obj{\textbackslash}\eta \sep 
-      \\
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
-      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
-      \obj{LFP[}\alpha\obj{]}\tau
+      \kappa \sep \nu \sep \mu
     \end{array}
     & \com{type}
     \\
+    \nonterm{\kappa} & \is 
+    \begin{array}[t]{@{}l}
+      \obj{@} \sep
+      \obj{<}l\obj{>}\tau \sep 
+      l\obj{->}\tau \sep 
+      \tau\obj{->}\tau
+    \end{array}
+    & \com{base type}
+    \\
+    \nonterm{\nu} & \is 
+    \begin{array}[t]{@{}l}
+      \tau\obj{\&}\tau \sep 
+      \tau\obj{\textbackslash}\eta \sep 
+      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
+    \end{array}
+    & \com{refinement type}
+    \\
+    \nonterm{\mu} & \is 
+    \begin{array}[t]{@{}l}
+      \tau\obj{|}\tau \sep 
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
+      \obj{LFP[}\alpha\obj{]}\tau
+    \end{array}
+    & \com{abstraction type}
+    \\\\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \phi \sep 
@@ -698,7 +713,7 @@ which allow expressing properties of expressions with varying levels of precisio
       \obj{@} \sep
       \obj{<}l\obj{>}\phi \sep 
       l\obj{->}\phi \sep 
-      \phi\obj{\&}\phi \sep 
+      \phi\obj{\&}\phi
     \end{array}
     & \com{pattern type}
     \\
@@ -854,7 +869,7 @@ and adds the annotation to the typing environment when checking the contintuatio
     \inferrule {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
       \\
-      \Gamma \entails \vec{\pi} \cong \vec{\tau} 
+      \text{FTV}(\Gamma) \entails \vec{\pi} \cong \vec{\tau} 
     } {
       \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
     }\lab{6}
@@ -1096,6 +1111,57 @@ proof subtyping simply checks that the space between types of the upper bound
 contains the space between types of the lower bound.
 
 
+
+\begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping (Reflection)
+  \label{def:proof_subtyping_reflection}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\mu \subtypes \tau \given \Omega}\ Proof Subtyping (Abstraction Elimination)
+  \label{def:proof_subtyping_abstraction_elimination}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \nu \given \Omega}\ Proof Subtyping (Refinement Introduction)
+  \label{def:proof_subtyping_refinement_introduction}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\alpha \subtypes \tau \given \Omega}\ Proof Subtyping (Variable Elimination)
+  \label{def:proof_subtyping_variable_elimination}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \alpha \given \Omega}\ Proof Subtyping (Variable Introduction)
+  \label{def:proof_subtyping_variable_introduction}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\nu \subtypes \tau \given \Omega}\ Proof Subtyping (Refinement Elimination)
+  \label{def:proof_subtyping_refinement_elimination}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\tau \subtypes \mu \given \Omega}\ Proof Subtyping (Abstraction Introduction)
+  \label{def:proof_subtyping_abstraction_introduction}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\kappa \subtypes \kappa \given \Omega}\ Proof Subtyping (Basic Preservation)
+  \label{def:proof_subtyping_refinement_introduction}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
 
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping
