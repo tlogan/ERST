@@ -2225,6 +2225,7 @@ class Solver:
                 result_constraints = result_constraints.union([st])
         return  (result_constraints, result_typ)
 
+
     def interpret_positive(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
         result_typ = Bot() 
         result_constraints : PSet[Subtyping] = pset()
@@ -2321,6 +2322,83 @@ class Solver:
                 [t0]
             )
         )
+
+    def sub_polar_constraints(self, greenlight : bool, constraints : Iterable[Subtyping], id : str, payload : Typ) -> list[Subtyping]:
+        return [
+            Subtyping(lower, upper)
+            for st in constraints
+            for lower in [self.sub_polar_typ(not greenlight, st.lower, id, payload)]
+            for upper in [self.sub_polar_typ(greenlight, st.upper, id, payload)]
+            for lower_changed in [lower != st.lower]
+            for upper_changed in [upper != st.upper]
+            if lower_changed or upper_changed
+        ]
+
+    def sub_polar_typ(self, greenlight : bool, src : Typ, id : str, payload : Typ) -> Typ:
+        if False:
+            assert False
+        elif isinstance(src, TVar) and src.id == id and greenlight:  
+            return payload
+        elif isinstance(src, TUnit):  
+            return TUnit()
+        elif isinstance(src, TTag):  
+            return TTag(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
+        elif isinstance(src, TField):  
+            return TField(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
+        elif isinstance(src, Unio):  
+            return Unio(
+                self.sub_polar_typ(greenlight, src.left, id, payload),
+                self.sub_polar_typ(greenlight, src.right, id, payload),
+            )
+        elif isinstance(src, Inter):  
+            return Inter(
+                self.sub_polar_typ(greenlight, src.left, id, payload),
+                self.sub_polar_typ(greenlight, src.right, id, payload),
+            )
+        elif isinstance(src, Diff):  
+            return Diff(
+                self.sub_polar_typ(greenlight, src.context, id, payload),
+                self.sub_polar_typ(not greenlight, src.negation, id, payload),
+            )
+        elif isinstance(src, Imp):  
+            return Imp(
+                self.sub_polar_typ(not greenlight, src.antec, id, payload),
+                self.sub_polar_typ(greenlight, src.consq, id, payload),
+            )
+
+        elif isinstance(src, Exi):  
+            if id in src.ids:
+                return src
+            else:
+                return Exi(
+                    src.ids,
+                    tuple(self.sub_polar_constraints(greenlight, src.constraints, id, payload)),
+                    self.sub_polar_typ(greenlight, src.body, id, payload),
+                )
+
+        elif isinstance(src, All):  
+            if id in src.ids:
+                return src
+            else:
+                return All(
+                    src.ids,
+                    tuple(self.sub_polar_constraints(greenlight, src.constraints, id, payload)),
+                    self.sub_polar_typ(greenlight, src.body, id, payload),
+                )
+        elif isinstance(src, Fixpoint):  
+            if id == src.id:
+                return src
+            else:
+                return Fixpoint(
+                    src.id,
+                    self.sub_polar_typ(greenlight, src.body, id, payload)
+                )
+        elif isinstance(src, Top):  
+            return src
+        elif isinstance(src, Bot):  
+            return src
+        else:
+            return src
 
 
 
@@ -2574,13 +2652,6 @@ class Solver:
 # upper: {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
-        trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
-        simple_constraint = Subtyping(lower, make_inter(trans_upper_bounds))  
-        rel_constraints = pset(
-            Subtyping(sub_typ(pmap({upper.id : lower}), st.lower), st.upper) 
-            for st in world.constraints
-            if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
-        )
 
         closed_constraints = pset(
             Subtyping(lower, st.upper)
@@ -2590,10 +2661,30 @@ class Solver:
         )
 
         new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+
+        # trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
+        # simple_constraints = [Subtyping(lower, make_inter(trans_upper_bounds))]
+        # rel_constraints = pset(
+        #     Subtyping(sub_typ(pmap({upper.id : lower}), st.lower), st.upper) 
+        #     for st in world.constraints
+        #     if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
+        # )
+
+        new_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
         return [
             replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            for w0 in self.solve_multi(new_world, list(rel_constraints.add(simple_constraint)))
+            # for w0 in self.solve_multi(new_world, list(rel_constraints.union(simple_constraints)))
+            for w0 in self.solve_multi(new_world, new_constraints)
         ]
+
+        # new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+
+        # new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
+        # worlds = [
+        #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+        #     # for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
+        #     for w0 in self.solve_multi(new_world, new_constraints)
+        # ]
             
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
@@ -2769,18 +2860,26 @@ B <: CONS T
             '''
 # find all positive instances of X and replace with T, and ignore if if upper bound is T and lower is closed.
 
-            trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
+
             skolem_constraints = pset(
                 Subtyping(st.lower, upper)
                 for st in world.constraints
                 if st.upper == lower 
                 if isinstance(st.lower, TVar) and st.lower.id in world.closedids
             )
+
+            # trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
+            new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+
             new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
             worlds = [
                 replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
+                # for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
+                for w0 in self.solve_multi(new_world, new_constraints)
             ]
+
+            ######################################################
+            ######################################################
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2791,6 +2890,9 @@ DEBUG two variables:
                       
 constraints:
 {concretize_constraints(world.constraints)}
+
+new_constraints:
+{concretize_constraints(new_constraints)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 """)
                 worlds = [
@@ -3407,6 +3509,7 @@ class ExprRule(Rule):
             lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
             left_typ = make_inter(list(lefts))
             ### TODO: remove intermediates before interpretation
+            ### TODO: ignore itermediate variables when interpreting
             new_constraints, left_typ = self.solver.interpret_negative(inner_world.constraints, in_typ.id)
             ###########################
             rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
