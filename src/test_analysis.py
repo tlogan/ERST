@@ -874,6 +874,8 @@ def test_fix_body():
     print("answer:\n" + analyzer.concretize_typ(result))
 
 def test_fix():
+
+    # TODO: update negative and positive interpretation to remove constraints
     code = '''
 fix(case self => (
     case ~nil @ => ~zero @ 
@@ -882,14 +884,16 @@ fix(case self => (
 ))
     '''
 
-    code = '''
-let f = (case ~cons x => x case ~hans x => x) in
-fix(case self => (
-    case ~nil @ => ~zero @ 
-    case y => 
-        ~succ (self(f(y)))
-))
-    '''
+    # TODO: update interpretation to get transitive interpretations 
+
+#     code = '''
+# let f = (case ~cons x => x) in
+# fix(case self => (
+#     case ~nil @ => ~zero @ 
+#     case y => 
+#         ~succ (self(f(y)))
+# ))
+#     '''
 
 #     code = '''
 # let f = (case a => a) in

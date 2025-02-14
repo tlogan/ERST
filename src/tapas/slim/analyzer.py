@@ -2087,7 +2087,7 @@ class Solver:
                 # if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
 
                 # if at least one fid is influential
-                if bool(extract_free_vars_from_constraints(s(), [st]).intersection(influential_ids))
+                # if bool(extract_free_vars_from_constraints(s(), [st]).intersection(influential_ids))
             )
 
             outer_constraints = pset(
@@ -2212,12 +2212,104 @@ class Solver:
             if st.upper == TVar(id) 
         )
 
+    def interpret_negative(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
+        result_typ = Top() 
+        result_constraints : PSet[Subtyping] = pset()
+        for st in constraints:
+            if st.lower == TVar(id): 
+                if result_typ == Top():
+                    result_typ = st.upper
+                else:
+                    result_typ = Inter(result_typ, st.upper)
+            else:
+                result_constraints = result_constraints.union([st])
+        return  (result_constraints, result_typ)
+
+    def interpret_positive(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
+        result_typ = Bot() 
+        result_constraints : PSet[Subtyping] = pset()
+        for st in constraints:
+            if st.upper == TVar(id): 
+                if result_typ == Bot():
+                    result_typ = st.lower
+                else:
+                    result_typ = Unio(result_typ, st.lower)
+            else:
+                result_constraints = result_constraints.union([st])
+        return  (result_constraints, result_typ)
+
+
     def extract_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset(
             st.upper 
             for st in world.constraints
             if st.lower == TVar(id) 
         )
+
+    def interpret_negative_as_set(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], PSet[Typ]]:
+
+        result_typs : PSet[Typ] = pset() 
+        result_constraints : PSet[Subtyping] = pset()
+        for st in constraints:
+            if st.lower == TVar(id): 
+                result_typs = result_typs.union([st.upper])
+            else:
+                result_constraints = result_constraints.union([st])
+        return  (result_constraints, result_typs)
+
+
+
+    def get_intermediates(self, id : str, constraints : PSet[Subtyping]) -> PSet[str]:
+        base_is : PSet[str] = pset()
+        for st in constraints:
+            if st.lower == TVar(id) and isinstance(st.upper, TVar):
+                    base_is = base_is.add(st.upper.id)
+
+        all_is : PSet[str] = base_is 
+        for i in base_is: 
+            all_is = all_is.union(self.get_intermediates(i, constraints))
+        return all_is
+
+    def remove_intermediates(self, constraints : PSet[Subtyping], intermediates : PSet[str]) -> PSet[Subtyping]:
+        result_constraints : PSet[Subtyping] = pset()
+        for st in constraints:
+            if not (
+                (isinstance(st.lower, TVar) and st.lower.id in intermediates) or
+                (isinstance(st.upper, TVar) and st.upper.id in intermediates) 
+            ):
+                result_constraints = result_constraints.add(st)
+        return result_constraints
+
+    def flip_constraints(self, old_id : str, constraints : PSet[Subtyping], new_id : str) -> PSet[Subtyping]:
+        result_constraints : PSet[Subtyping] = pset()
+        for st in constraints:
+            if st.lower == TVar(old_id): 
+                if isinstance(st.upper, Imp):
+                    left = st.upper.antec
+                    right = st.upper.consq
+                    result_constraints = result_constraints.add(Subtyping(make_pair_typ(left, right), TVar(new_id)))
+                else:
+                    result_constraints = result_constraints.add(st)
+            else:
+                result_constraints = result_constraints.add(st)
+        return result_constraints
+
+            # for fixpoint_interp in fixpoint_interps:
+            #     if isinstance(fixpoint_interp, Imp):
+            #         fixpoint_left = fixpoint_interp.antec
+            #         fixpoint_right = fixpoint_interp.consq
+            #         IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
+            #         IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
+            #     else:
+            #         # NOTE: anything else is an intermediate linking via a type var
+            #         assert isinstance(fixpoint_interp, TVar)
+            #         intermediate_constraints = intermediate_constraints.union(pset(
+            #             Subtyping(fixpoint_interp, t)
+            #             for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
+            #         ))
+            #     #end if
+            # #end for
+
 
     def extract_transitive_lower_bounds(self, world : World, id : str) -> PSet[Typ]:
         return pset( 
@@ -2600,6 +2692,35 @@ class Solver:
             return self.solve(world, exi, upper)
 
 
+        elif isinstance(upper, Diff): 
+
+            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
+            if True:
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_worlds = self.solve(world, lower, upper.context)
+                return [
+                    m
+                    for m in context_worlds 
+                    # if (
+                    #     # not self.is_inhabitable(world, lower) or 
+                    #     # Fail (incompletely) if lower is empty
+                    #     self.solve(m, lower, upper.negation) == []
+                    # )
+                ]   
+            else:
+                return []
+        
+        #######################################
+
+
         elif isinstance(lower, Exi):
             renaming = self.make_renaming(lower.ids)
             strong_constraints = sub_constraints(renaming, lower.constraints)
@@ -2625,6 +2746,29 @@ class Solver:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
+            '''
+ B <: CONS X |- X <: T
+...
+then B <: CONS T 
+            '''
+
+            '''
+            TODO:
+            DON'T do any transitive searches internally
+            conjecture:  if a constraint on closed id exists, then constraints on the closed ids transitives also exist, 
+            due to the overall search procedure.
+            '''
+
+            '''
+B <: CONS Y, Y <: X |- X <: T
+...
+B <: CONS Z |-  Z <: Y, Y <: X |- X <: T ... Z <: T
+B <: CONS Z, Z <: Y, Y <: X |- X <: T ... Z <: T
+...
+B <: CONS T
+            '''
+# find all positive instances of X and replace with T, and ignore if if upper bound is T and lower is closed.
+
             trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
             skolem_constraints = pset(
                 Subtyping(st.lower, upper)
@@ -2638,6 +2782,17 @@ class Solver:
                 for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
             ]
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG two variables:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{lower.id} <: {upper.id}
+
+                      
+constraints:
+{concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """)
                 worlds = [
                     w1
                     for w0 in worlds 
@@ -2697,33 +2852,6 @@ class Solver:
             ]
 
 
-        #######################################
-
-        elif isinstance(upper, Diff): 
-
-            if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
-                '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
-                '''
-                context_worlds = self.solve(world, lower, upper.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    if (
-                        # not self.is_inhabitable(world, lower) or 
-                        # Fail (incompletely) if lower is empty
-                        self.solve(m, lower, upper.negation) == []
-                    )
-                ]   
-            else:
-                return []
-        
         #######################################
         #######################################
 
@@ -3278,50 +3406,71 @@ class ExprRule(Rule):
             assert in_typ.id not in inner_world.relids
             lefts = self.solver.extract_upper_bounds(inner_world, in_typ.id)
             left_typ = make_inter(list(lefts))
+            ### TODO: remove intermediates before interpretation
+            new_constraints, left_typ = self.solver.interpret_negative(inner_world.constraints, in_typ.id)
             ###########################
             rights = self.solver.extract_lower_bounds(inner_world, out_typ.id)
             right_typ = make_unio(list(rights))
+            ### TODO: remove intermediates before interpretation
+            new_constraints, right_typ = self.solver.interpret_positive(new_constraints, out_typ.id)
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
-            fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
-            IH_rel_constraints = s()
-            IH_left_constraints = s()
-            intermediate_constraints = s() 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG combine_fix inner_world {i}:
 
-in_typ.id: {in_typ.id}
-out_typ.id: {out_typ.id}
+            # fixpoint_interps = self.solver.extract_upper_bounds(inner_world, self_typ.id)
+            ### TODO
+            # new_constraints, fixpoint_interps = self.solver.interpret_negative_as_set(new_constraints, self_typ.id)
 
-closed ids: {inner_world.closedids} 
+            intermediates = self.solver.get_intermediates(self_typ.id, new_constraints)
+            new_constraints = self.solver.remove_intermediates(new_constraints, intermediates)
 
-constraints:
-{concretize_constraints(inner_world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+            # influential_ids = foreignids.union([self_typ.id]).union(inner_world.closedids).union(extract_free_vars_from_typ(s(), rel_pattern))
+            # new_constraints = pset( 
+            #     st
+            #     for st in inner_world.constraints 
+            #     # if all fids are influential
+            #     if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+            # )
 
-            for fixpoint_interp in fixpoint_interps:
-                if isinstance(fixpoint_interp, Imp):
-                    fixpoint_left = fixpoint_interp.antec
-                    fixpoint_right = fixpoint_interp.consq
-                    IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
-                    IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
-                else:
-                    # NOTE: anything else is an intermediate linking via a type var
-                    assert isinstance(fixpoint_interp, TVar)
-                    intermediate_constraints = intermediate_constraints.union(pset(
-                        Subtyping(fixpoint_interp, t)
-                        for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
-                    ))
-                #end if
-            #end for
+            new_constraints = self.solver.flip_constraints(self_typ.id, new_constraints, IH_typ.id)
+#             IH_rel_constraints = s()
+#             IH_left_constraints = s()
+#             intermediate_constraints = s() 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_fix inner_world {i}:
+
+# in_typ.id: {in_typ.id}
+# out_typ.id: {out_typ.id}
+
+# closed ids: {inner_world.closedids} 
+
+# constraints:
+# {concretize_constraints(inner_world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+
+#             for fixpoint_interp in fixpoint_interps:
+#                 if isinstance(fixpoint_interp, Imp):
+#                     fixpoint_left = fixpoint_interp.antec
+#                     fixpoint_right = fixpoint_interp.consq
+#                     IH_rel_constraints = IH_rel_constraints.add(Subtyping(make_pair_typ(fixpoint_left, fixpoint_right), IH_typ))
+#                     IH_left_constraints = IH_left_constraints.add(Subtyping(fixpoint_left, IH_typ))
+#                 else:
+#                     # NOTE: anything else is an intermediate linking via a type var
+#                     assert isinstance(fixpoint_interp, TVar)
+#                     intermediate_constraints = intermediate_constraints.union(pset(
+#                         Subtyping(fixpoint_interp, t)
+#                         for t in self.solver.extract_upper_bounds(inner_world, fixpoint_interp.id)
+#                     ))
+#                 #end if
+#             #end for
 
             # NOTE: only keep constraints on vars that continue to have influence
             # - all other vars influence has been fully realized and captured by remaining constraints
 
 
-            rel_constraints = IH_rel_constraints.union(inner_world.constraints.difference(world.constraints))
+            # rel_constraints = IH_rel_constraints.union(new_constraints.difference(world.constraints))
+            rel_constraints = new_constraints.difference(world.constraints)
             # TODO: switch to using package_typ, which will resolve targets if possible
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
