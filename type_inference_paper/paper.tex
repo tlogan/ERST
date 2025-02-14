@@ -684,14 +684,6 @@ which allow expressing properties of expressions with varying levels of precisio
     \end{array}
     & \com{base type}
     \\
-    \nonterm{\nu} & \is 
-    \begin{array}[t]{@{}l}
-      \tau\obj{\&}\tau \sep 
-      \tau\obj{\textbackslash}\eta \sep 
-      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
-    \end{array}
-    & \com{refinement type}
-    \\
     \nonterm{\mu} & \is 
     \begin{array}[t]{@{}l}
       \tau\obj{|}\tau \sep 
@@ -699,6 +691,14 @@ which allow expressing properties of expressions with varying levels of precisio
       \obj{LFP[}\alpha\obj{]}\tau
     \end{array}
     & \com{abstraction type}
+    \\
+    \nonterm{\nu} & \is 
+    \begin{array}[t]{@{}l}
+      \tau\obj{\&}\tau \sep 
+      \tau\obj{\textbackslash}\eta \sep 
+      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
+    \end{array}
+    & \com{refinement type}
     \\\\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
@@ -902,16 +902,21 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}', \Delta') \in \vec{\Omega}
+       (\vec{\alpha}', \Delta') \in \vec{\Omega}_\nu
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
-      \exists \Omega.\ \Omega \in \vec{\Omega}
-      \\
-      \text{FTV}(\Gamma) \entails \nu\alpha^+.\vec{\Omega}.\alpha_l\rightarrow\alpha_r \fallingdotseq \mu\alpha^-.\vec{\tau}
+      \exists \Omega.\ \Omega \in \vec{\Omega}_\nu
+      \\\\
+      \text{FTV}(\Gamma) \entails 
+      \text{GFP}[\alpha_\nu]\vec{\Omega}_\nu \Rightarrow \alpha_l\rightarrow\alpha_r 
+      \fallingdotseq 
+      \text{LFP}[\alpha_\mu]\vec{\Omega}_\mu \times \alpha_l * \alpha_r
+      \\\\
+      \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\Omega}_\mu \times \alpha_l * \alpha_r \cong \vec{\tau}
     } {
       \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-      \obj{<:LFP[} \alpha^- \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+      \obj{<:LFP[} \alpha_\mu \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
     }\lab{9}
 
     \inferrule {
@@ -2711,49 +2716,158 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 
+% \begin{definition}
+% \boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\Omega} \Rightarrow \alpha \rightarrow \alpha \fallingdotseq \text{LFP}[\alpha]\vec{\tau}}
+% \ Fixpoint Duality
+% \label{def:fixpoint_duality}
+
+%   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
+%   % - forall x y, (LFP[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       \vec{\alpha}_f \entails 
+%       \text{GFP}[\alpha_{h^+}] \epsilon \Rightarrow \alpha_l \rightarrow \alpha_r 
+%       \fallingdotseq 
+%       \text{LFP}[\alpha_{h^-}]\epsilon 
+%     }
+
+%     \inferrule {
+%       \vec{\alpha}_f \entails 
+%       \text{GFP}[\alpha_{\nu}] \vec{\Omega} \Rightarrow \alpha_l \rightarrow \alpha_r
+%       \fallingdotseq 
+%       \text{LFP}[\alpha_{\mu}]\vec{\tau}
+%       \\\\
+%       \Delta_\nu \entails \alpha_{\nu} \subtypes \vec{\tau}_\nu
+%       \\
+%       \Delta_\nu \entails \alpha_l \subtypes \vec{\tau}_l 
+%       \\
+%       \Delta_\nu \entails \vec{\tau}_r \subtypes \alpha_r
+%       \\\\
+%       \vec{\tau}_\nu \fallingdotseq \vec{\tau}_\mu
+%       \\
+%       \text{union}(\vec{\tau}_\mu) \subtypes \alpha_\mu \given \Delta_\mu
+%       \\\\
+%       \vec{\alpha}_f\ \alpha_{\mu}, \vec{\alpha}_c, \Delta_\nu\ \Delta_\mu \entails \obj{\&$(\vec{\tau}_l)$*|$(\vec{\tau}_r)$} \cong^{-} \tau
+%       % TODO: should closeds be included using universal constraint? 
+%     } {
+%       \vec{\alpha}_f \entails 
+%       \text{GFP}[\alpha_{\nu}]\vec{\Omega}\ \left< \vec{\alpha}_c,\Delta_\nu \right> \Rightarrow \alpha_l \rightarrow \alpha_r 
+%       \fallingdotseq 
+%       \text{LFP}[\alpha_{\mu}] \vec{\tau}\ \tau
+%     }
+%   \end{mathpar}
+% \end{definition}
+
 \begin{definition}
-\boxed{\vec{\alpha} \entails \nu \alpha.Z.\alpha \rightarrow \alpha \fallingdotseq \mu \alpha.\vec{\tau}}
-\ Fixpoint Duality
+\boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\Omega} \Rightarrow \alpha \rightarrow \alpha \fallingdotseq \text{LFP}[\alpha]\vec{\Omega} \times \alpha * \alpha}
+\ Fixpoint Duality 
 \label{def:fixpoint_duality}
 
 \TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
-  % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
-  % - forall x y, (LFP[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
+
+\TODO{soundness idea: $ 
+\\ \forall f\ e_l\ e_r\ \alpha_l\ \alpha_r\ \vec{\alpha}\ \Delta\ \vec{\alpha}'\ \Delta'\ \vec{\Omega},  
+\\ ... \implies
+\\ f(e_1) = e_2 \implies \left< \vec{\alpha}', \Delta' \right> \in \vec{\Omega} \implies 
+\\ (
+\Gamma, ... \satisfies f : \alpha_l \obj{->} \alpha_r 
+\iff 
+\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \obj{*} \alpha_r
+)$ 
+}
+
   \begin{mathpar}
     \inferrule {
     } {
       \vec{\alpha}_f \entails 
-      \alpha_{h^+} \cdot \epsilon \cdot \obj{$\alpha_l$->$\alpha_r$} 
+      \text{GFP}[\alpha_{\nu}] \epsilon \Rightarrow \alpha_l \rightarrow \alpha_r 
       \fallingdotseq 
-      \alpha_{h^-} \cdot \epsilon 
+      \text{LFP}[\alpha_{\mu}]\epsilon \times \alpha_l * \alpha_r 
     }
 
     \inferrule {
       \vec{\alpha}_f \entails 
-      \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
+      \text{GFP}[\alpha_{\nu}] \vec{\Omega}_\nu \Rightarrow \alpha_l \rightarrow \alpha_r
       \fallingdotseq 
-      \alpha_{h^-} \cdot \Tau
+      \text{LFP}[\alpha_{\mu}] \vec{\Omega}_\mu \times \alpha_l * \alpha_r
       \\\\
-      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+      \Delta_\nu \entails \alpha_{\nu} \subtypes \vec{\tau}_\nu
       \\
-      \Delta \entails \alpha_l \subtypes \Tau_l 
-      \\
-      \Delta \entails \Tau_r \subtypes \alpha_r
-      \\\\
-      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
-      \\\\
-      \vec{\alpha}_f \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
-      \\\\
-      \vec{\alpha}_f\ \alpha_{h^-}, M, \Delta \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau
-      % TODO: should closeds be included using universal constraint? 
+      [\alpha_\nu]\Delta \fallingdotseq [\alpha_\mu]\Delta
     } {
       \vec{\alpha}_f \entails 
-      \alpha_{h^+} \cdot Z \ \left< M,\Delta \right> \cdot \obj{$\alpha_l$->$\alpha_r$} 
+      \text{GFP}[\alpha_{\nu}]\vec{\Omega}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu \right> \Rightarrow \alpha_l \rightarrow \alpha_r 
       \fallingdotseq 
-      \alpha_{h^-} \cdot \Tau\ \tau
+      \text{LFP}[\alpha_{\mu}] \vec{\Omega}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu \right> \times \alpha_l * \alpha_r 
     }
   \end{mathpar}
 \end{definition}
+
+\hfill
+
+\begin{definition}\boxed{\vec{\alpha} \entails \vec{\Omega} \times \alpha_l * \alpha_r \cong \vec{\tau}}\ Pair Type Congruence 
+\label{def:fixpoint_congruence}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \vec{\alpha}_f \entails \epsilon \times \alpha_l * \alpha_r \cong \epsilon 
+    }
+
+    \inferrule {
+      \vec{\alpha}_f \entails \vec{\Omega} \times \alpha_l * \alpha_r \cong \vec{\tau}
+      \\
+      \Delta_\nu \entails \alpha_l \subtypes \vec{\tau}_l 
+      \\
+      \Delta_\nu \entails \vec{\tau}_r \subtypes \alpha_r
+      \\\\
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \text{inter}(\vec{\tau}_l)\obj{*}\text{union}(\vec{\tau}_r) \cong^{-} \tau
+    } {
+      \vec{\alpha}_f \entails \vec{\Omega}\ \left<\vec{\alpha}_c, \Delta \right> \times \alpha_l * \alpha_r \cong \vec{\tau}\ \tau
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{[\alpha]\Delta \fallingdotseq [\alpha]\Delta}\ Fixpoint Constraint Duality 
+\label{def:pair_duality}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \epsilon \fallingdotseq \epsilon 
+    }
+
+    \inferrule {
+      \alpha_\nu \notin \text{FTV}(\tau_l)
+      \\
+      \alpha_\nu \notin \text{FTV}(\tau_r)
+      \\
+      [\alpha_\nu] \Delta_\nu \fallingdotseq [\alpha_\mu]\Delta_\mu
+    } {
+      [\alpha_\nu] \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq [\alpha_\mu]\Delta_\mu\ (\tau_l <: \tau_r)
+    }
+
+    \inferrule {
+    } {
+      [\alpha_\nu] \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq [\alpha_\mu]\Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
+    }
+  \end{mathpar}
+\end{definition}
+
+% \begin{definition}\boxed{\vec{\tau} \fallingdotseq \vec{\tau} }\ Pair Duality 
+% \label{def:pair_duality}
+%   \begin{mathpar}
+
+%     \inferrule {
+%     } {
+%       \epsilon \fallingdotseq \epsilon 
+%     }
+
+%     \inferrule {
+%     } {
+%       \vec{\tau}_\nu\ (\tau_l \obj{->} \tau_r) \fallingdotseq \vec{\tau}_\mu\ (\tau_l \obj{*} \tau_r)
+%     }
+%   \end{mathpar}
+% \end{definition}
 
 \begin{definition}\boxed{\Delta \entails \Alpha \pitchfork \Delta}\ Influential Filter 
   \begin{mathpar}
