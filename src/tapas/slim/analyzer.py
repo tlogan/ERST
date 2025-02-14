@@ -2076,11 +2076,18 @@ class Solver:
             assert not bool(foreignids.intersection(closedids))
 
             influential_ids = foreignids.union(closedids).union(payload_ids)
+#             print(f"""
+# ~~~~~~~ DEBUG influential_ids: {influential_ids} ~~~~~~~~~~~~~~~
+#             """)
             constraints = pset(
                 st
                 for st in raw_constraints
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+
                 # if all fids are influential
+                # if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+
+                # if at least one fid is influential
+                if bool(extract_free_vars_from_constraints(s(), [st]).intersection(influential_ids))
             )
 
             outer_constraints = pset(
@@ -3093,6 +3100,27 @@ class BaseRule(Rule):
 
     # TODO: redo Context such that it only has a single world as input
     def combine_function(self, pid : int, enviro : Enviro, world : World, function_branches : list[NDBranch]) -> Result:
+        # for i, branch in enumerate(function_branches): 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_function NDBranch
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# pattern {i}: {concretize_typ(branch.pattern)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+#             for j, result in enumerate(branch.results):
+#                 print(f"""
+#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     result {i},{j}: 
+
+#     closedids: {result.world.closedids}
+    
+#     constraints:
+#     {concretize_constraints(result.world.constraints)}
+
+#     typ: {concretize_typ(result.typ)}
+#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 """)
         '''
         Example
         ==============
@@ -3259,6 +3287,19 @@ class ExprRule(Rule):
             IH_rel_constraints = s()
             IH_left_constraints = s()
             intermediate_constraints = s() 
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix inner_world {i}:
+
+in_typ.id: {in_typ.id}
+out_typ.id: {out_typ.id}
+
+closed ids: {inner_world.closedids} 
+
+constraints:
+{concretize_constraints(inner_world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             for fixpoint_interp in fixpoint_interps:
                 if isinstance(fixpoint_interp, Imp):
@@ -3284,6 +3325,15 @@ class ExprRule(Rule):
             # TODO: switch to using package_typ, which will resolve targets if possible
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
+
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG combine_fix constrained_rel {i}:
+
+{concretize_typ(constrained_rel)} 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             induc_body = Unio(constrained_rel, induc_body) 
             # NOTE: parameter constraint isn't actually necessary; sound without it.
             # param_body = Unio(constrained_left, param_body)

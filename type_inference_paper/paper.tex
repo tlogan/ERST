@@ -68,6 +68,7 @@
 \newcommand{\liftfun}{\ \blacktriangle\ }
  
 \newcommand{\subtypes}{<:}
+\newcommand{\supertypes}{:>}
 \newcommand{\I}{\hspace{4mm}}
 \newcommand{\Z}{.\hspace{4mm}}
 \newcommand{\Alpha}{\mathrm{A}}
@@ -869,7 +870,7 @@ and adds the annotation to the typing environment when checking the contintuatio
     \inferrule {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
       \\
-      \text{FTV}(\Gamma) \entails \vec{\pi} \cong \vec{\tau} 
+      \text{FTV}(\Gamma) \entails \vec{\pi} \cong^+ \vec{\tau} 
     } {
       \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
     }\lab{6}
@@ -898,22 +899,45 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
     }\lab{8}
 
+    % \inferrule {
+    %   \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
+    %   \\\\
+    %   \forall \vec{\alpha}'\ \Delta' .\ 
+    %    (\vec{\alpha}', \Delta') \in \vec{\Omega}_\nu
+    %   \implies
+    %   \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+    %   \\\\
+    %   \exists \Omega.\ \Omega \in \vec{\Omega}_\nu
+    %   \\\\
+    %   \text{FTV}(\Gamma) \entails 
+    %   \text{GFP}[\alpha_\nu]\vec{\Omega}_\nu \Rightarrow \alpha_l\rightarrow\alpha_r 
+    %   \fallingdotseq 
+    %   \text{LFP}[\alpha_\mu]\vec{\Omega}_\mu \times \alpha_l * \alpha_r
+    %   \\\\
+    %   \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\Omega}_\mu \times \alpha_l * \alpha_r \cong \vec{\tau}
+    % } {
+    %   \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+    %   \obj{<:LFP[} \alpha_\mu \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+    % }\lab{9}
+
     \inferrule {
-      \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \TODO{new version}
+      \\\\
+      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}', \Delta') \in \vec{\Omega}_\nu
+       (\vec{\alpha}', \Delta', \alpha_l \obj{->} \alpha_r) \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
-      \exists \Omega.\ \Omega \in \vec{\Omega}_\nu
+      \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\\\
       \text{FTV}(\Gamma) \entails 
-      \text{GFP}[\alpha_\nu]\vec{\Omega}_\nu \Rightarrow \alpha_l\rightarrow\alpha_r 
+      \text{GFP}[\alpha_\nu]\vec{\pi}_\nu
       \fallingdotseq 
-      \text{LFP}[\alpha_\mu]\vec{\Omega}_\mu \times \alpha_l * \alpha_r
-      \\\\
-      \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\Omega}_\mu \times \alpha_l * \alpha_r \cong \vec{\tau}
+      \text{LFP}[\alpha_\mu]\vec{\pi}_\mu
+      \\
+      \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\pi}_\mu \cong^- \vec{\tau}
     } {
       \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
       \obj{<:LFP[} \alpha_\mu \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
@@ -2694,24 +2718,20 @@ contains the space between types of the lower bound.
 \end{definition}
 
 
-\begin{definition}\boxed{\vec{\alpha} \entails \vec{\pi} \cong \vec{\tau}}\ Constrained Implication Congruence 
+\begin{definition}\boxed{\vec{\alpha} \entails \vec{\pi} \cong^{+|-} \vec{\tau}}\ Multiple Constraint Congruence 
   \label{def:constrained_implication_congruence}
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f \entails \epsilon \cong \epsilon 
+      \vec{\alpha}_f \entails \epsilon \cong^{+|-} \epsilon 
     }
 
     \inferrule {
-      \vec{\alpha}_f \entails \vec{\pi} \cong \vec{\tau} 
+      \vec{\alpha}_f \entails \vec{\pi} \cong^{+|-} \vec{\tau} 
       \\
-      \text{FTV}(\tau_l) = \vec{\alpha}_l
-      \\
-      \text{FTV}(\tau_r) = \vec{\alpha}_r
-      \\\\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau_l\obj{->}\tau_r \cong^{+} \tau
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{+|-} \tau'
     } {
-      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau_l \obj{->} \tau_r \right> \cong \vec{\tau}\ \tau 
+      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^{+|-} \vec{\tau}\ \tau' 
     }
   \end{mathpar}
 \end{definition}
@@ -2760,9 +2780,9 @@ contains the space between types of the lower bound.
 % \end{definition}
 
 \begin{definition}
-\boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\Omega} \Rightarrow \alpha \rightarrow \alpha \fallingdotseq \text{LFP}[\alpha]\vec{\Omega} \times \alpha * \alpha}
-\ Fixpoint Duality 
-\label{def:fixpoint_duality}
+\boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\pi} \fallingdotseq \text{LFP}[\alpha]\vec{\pi}}
+\ Fixed Point Duality 
+\label{def:fixed_point_duality}
 
 \TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
 
@@ -2781,49 +2801,81 @@ contains the space between types of the lower bound.
     \inferrule {
     } {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}] \epsilon \Rightarrow \alpha_l \rightarrow \alpha_r 
+      \text{GFP}[\alpha_{\nu}] \epsilon
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}]\epsilon \times \alpha_l * \alpha_r 
+      \text{LFP}[\alpha_{\mu}] \epsilon 
     }
 
     \inferrule {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}] \vec{\Omega}_\nu \Rightarrow \alpha_l \rightarrow \alpha_r
+      \text{GFP}[\alpha_{\nu}] \vec{\pi}_\nu
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}] \vec{\Omega}_\mu \times \alpha_l * \alpha_r
+      \text{LFP}[\alpha_{\mu}] \vec{\pi}_\mu
       \\\\
-      \Delta_\nu \entails \alpha_{\nu} \subtypes \vec{\tau}_\nu
+      \vec{\alpha_c} \entails \Delta_\nu \entails \alpha_l \subtypes (\Delta', \tau_l)
       \\
-      [\alpha_\nu]\Delta \fallingdotseq [\alpha_\mu]\Delta
+      \vec{\alpha_c} \entails \Delta' \entails \alpha_r \supertypes (\Delta'', \tau_r)
+      \\
+      [\alpha_\nu]\Delta'' \fallingdotseq [\alpha_\mu]\Delta_\mu
     } {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}]\vec{\Omega}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu \right> \Rightarrow \alpha_l \rightarrow \alpha_r 
+      \text{GFP}[\alpha_{\nu}]\vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \alpha_l \obj{->} \alpha_r \right> 
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}] \vec{\Omega}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu \right> \times \alpha_l * \alpha_r 
+      \text{LFP}[\alpha_{\mu}] \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l \obj{*} \tau_r \right>
     }
   \end{mathpar}
 \end{definition}
 
 \hfill
 
-\begin{definition}\boxed{\vec{\alpha} \entails \vec{\Omega} \times \alpha_l * \alpha_r \cong \vec{\tau}}\ Pair Type Congruence 
-\label{def:fixpoint_congruence}
+\begin{definition}\boxed{
+      \vec{\alpha} \entails (\Delta, \alpha) \subtypes (\Delta, \tau)
+}\ Negative Interpretation 
+\label{def:negative_interpretation}
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f \entails \epsilon \times \alpha_l * \alpha_r \cong \epsilon 
+      \vec{\alpha} \entails (\epsilon, \alpha) \subtypes (\epsilon, \obj{TOP})
     }
 
     \inferrule {
-      \vec{\alpha}_f \entails \vec{\Omega} \times \alpha_l * \alpha_r \cong \vec{\tau}
-      \\
-      \Delta_\nu \entails \alpha_l \subtypes \vec{\tau}_l 
-      \\
-      \Delta_\nu \entails \vec{\tau}_r \subtypes \alpha_r
-      \\\\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \text{inter}(\vec{\tau}_l)\obj{*}\text{union}(\vec{\tau}_r) \cong^{-} \tau
+      (\Delta, \alpha) \subtypes (\Delta', \tau)
     } {
-      \vec{\alpha}_f \entails \vec{\Omega}\ \left<\vec{\alpha}_c, \Delta \right> \times \alpha_l * \alpha_r \cong \vec{\tau}\ \tau
+      \vec{\alpha} \entails (\Delta\ \obj{;}\alpha \obj{<:} \tau', \alpha) \subtypes (\Delta', \tau \obj{\&} \tau')
+    }
+
+    \inferrule {
+      \alpha \neq \tau_l
+      \\
+      (\Delta, \alpha_l) \subtypes (\Delta', \tau)
+    } {
+      \vec{\alpha} \entails (\Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha_l) \subtypes (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{
+  \vec{\alpha} \entails (\Delta, \alpha) \supertypes (\Delta, \tau)
+}\ Positive Interpretation 
+\label{def:positive_interpretation}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \vec{\alpha} \entails (\epsilon, \alpha) \supertypes (\epsilon, \obj{BOT})
+    }
+
+    \inferrule {
+      (\Delta, \alpha) \supertypes (\Delta', \tau)
+    } {
+      \vec{\alpha} \entails (\Delta\ \obj{;}\tau' \obj{<:} \alpha, \alpha) \supertypes (\Delta', \tau \obj{|} \tau')
+    }
+
+    \inferrule {
+      \alpha \neq \tau_r
+      \\
+      (\Delta, \alpha) \supertypes (\Delta', \tau)
+    } {
+      \vec{\alpha} \entails (\Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha) \supertypes (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
     }
   \end{mathpar}
 \end{definition}

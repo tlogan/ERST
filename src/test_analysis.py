@@ -877,9 +877,35 @@ def test_fix():
     code = '''
 fix(case self => (
     case ~nil @ => ~zero @ 
-    case ~cons x => (~succ (self(x))) 
+    case ~cons x => 
+        ~succ (self(x))
 ))
     '''
+
+    code = '''
+let f = (case ~cons x => x case ~hans x => x) in
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case y => 
+        ~succ (self(f(y)))
+))
+    '''
+
+#     code = '''
+# let f = (case a => a) in
+# (case self => (
+#     case ~cons x => 
+#         f(~succ (self(x))) 
+# ))
+#     '''
+
+#     code = '''
+# let f = (case a => a) in
+# (case self => (
+#     case ~cons x => 
+#         (~succ (f(self(x)))) 
+# ))
+#     '''
     (result, parsetree, solver) = analyze(code)
     # assert analyzer.concretize_typ(result) == expected 
     print("answer:\n" + analyzer.concretize_typ(result))
@@ -2087,9 +2113,9 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    test_max()
+    # test_max()
 
-    # test_fix()
+    test_fix()
     # test_max_annotated()
     # test_max_subtyping()
     # test_max_subtyping_fail()
