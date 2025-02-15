@@ -2072,6 +2072,15 @@ class Solver:
         #     )
 
         def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], payload : Typ):
+
+            influential_ids = foreignids.union(closedids).union(extract_free_vars_from_typ(s(), payload))
+            constraints = pset( 
+                st
+                for st in constraints 
+                # if all free type variabls in st constraint are influential
+                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+            )
+
             payload_ids = extract_free_vars_from_typ(s(), payload)
             assert not bool(foreignids.intersection(closedids))
 
@@ -2237,11 +2246,20 @@ class Solver:
 
     def interpret_negative(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
 
-        result_typ : Typ = Top() 
+        relational_ids = pset(
+            id
+            for st in constraints
+            if isinstance(st.upper, Fixpoint)
+            for id in extract_free_vars_from_typ(s(), st.lower) 
+        )
+        if id in relational_ids:
+            return constraints, TVar(id) 
+
+        result_typ : Typ = TVar(id) 
         result_constraints : PSet[Subtyping] = pset()
         for st in constraints:
             if st.lower == TVar(id): 
-                if result_typ == Top():
+                if result_typ == TVar(id):
                     result_typ = st.upper
                 else:
                     result_typ = Inter(result_typ, st.upper)
@@ -2249,13 +2267,32 @@ class Solver:
                 result_constraints = result_constraints.union([st])
         return  (result_constraints, result_typ)
 
+    def prune_interpret_positive(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
+        constraints = constraints.difference(self.get_positive_extra_constraints(constraints, id))
+        return self.interpret_positive(constraints, id)
+
+    def prune_interpret_negative(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
+        constraints = constraints.difference(self.get_negative_extra_constraints(constraints, id))
+        return self.interpret_negative(constraints, id)
+
+    def prune_interpret_pattern(self, constraints : PSet[Subtyping], pattern : Typ) -> tuple[PSet[Subtyping], Typ]:
+        ids = extract_free_vars_from_typ(s(), pattern)
+
+        m = {}
+        for id in ids:
+            constraints, ty = self.prune_interpret_negative(constraints, id) 
+            m[id] = ty
+        return constraints, sub_typ(pmap(m), pattern)
+
+
+
     def interpret_positive(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
 
-        result_typ : Typ = Bot() 
+        result_typ : Typ = TVar(id) 
         result_constraints : PSet[Subtyping] = pset()
         for st in constraints:
             if st.upper == TVar(id): 
-                if result_typ == Bot():
+                if result_typ == TVar(id):
                     result_typ = st.lower
                 else:
                     result_typ = Unio(result_typ, st.lower)
@@ -2263,6 +2300,10 @@ class Solver:
                 result_constraints = result_constraints.union([st])
         return  (result_constraints, result_typ)
 
+
+    def prune_flip_constraints(self, old_id : str, constraints : PSet[Subtyping], new_id : str) -> PSet[Subtyping]:
+        constraints = constraints.difference(self.get_negative_extra_constraints(constraints, old_id))
+        return self.flip_constraints(old_id, constraints, new_id)
 
     def flip_constraints(self, old_id : str, constraints : PSet[Subtyping], new_id : str) -> PSet[Subtyping]:
         result_constraints : PSet[Subtyping] = pset()
@@ -2843,21 +2884,6 @@ class Solver:
             ######################################################
 
             new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG sub_polar_constraints True
-
-closed_ids: {world.closedids}
-
-{concretize_typ(lower)} <: {concretize_typ(upper)}
-
-world.constraints:
-{concretize_constraints(world.constraints)}
-
-new_constraints {lower.id}:
-{concretize_constraints(new_constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
 
             closed_constraints = pset(
                 st
@@ -3320,27 +3346,6 @@ class BaseRule(Rule):
 
     # TODO: redo Context such that it only has a single world as input
     def combine_function(self, pid : int, enviro : Enviro, world : World, function_branches : list[NDBranch]) -> Result:
-        # for i, branch in enumerate(function_branches): 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_function NDBranch
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# pattern {i}: {concretize_typ(branch.pattern)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-#             for j, result in enumerate(branch.results):
-#                 print(f"""
-#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     result {i},{j}: 
-
-#     closedids: {result.world.closedids}
-    
-#     constraints:
-#     {concretize_constraints(result.world.constraints)}
-
-#     typ: {concretize_typ(result.typ)}
-#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                 """)
         '''
         Example
         ==============
@@ -3363,14 +3368,14 @@ class BaseRule(Rule):
         generalized_branches = []
 
         for branch in augmented_branches: 
-
+            new_constraints = branch.world.constraints.difference(world.constraints)
             body_typ = branch.body
-            param_typ = branch.pattern
+            new_constraints, param_typ = self.solver.prune_interpret_pattern(new_constraints, branch.pattern)
             imp = Imp(param_typ, body_typ)
             generalized_case = self.solver.make_constraint_typ(True)( 
                 foreignids, 
                 branch.world.closedids, 
-                branch.world.constraints.difference(world.constraints), 
+                new_constraints, 
                 imp
             )
 
@@ -3498,24 +3503,13 @@ class ExprRule(Rule):
             assert in_typ.id not in inner_world.relids
             new_constraints = inner_world.constraints
 
-            new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, in_typ.id))
-            new_constraints, left_typ = self.solver.interpret_negative(new_constraints, in_typ.id) 
+            new_constraints, left_typ = self.solver.prune_interpret_negative(new_constraints, in_typ.id) 
 
-            new_constraints = new_constraints.difference(self.solver.get_positive_extra_constraints(new_constraints, out_typ.id))
-            new_constraints, right_typ = self.solver.interpret_positive(new_constraints, out_typ.id) 
+            new_constraints, right_typ = self.solver.prune_interpret_positive(new_constraints, out_typ.id) 
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
-            influential_ids = foreignids.union([self_typ.id]).union(inner_world.closedids).union(extract_free_vars_from_typ(s(), rel_pattern))
-            new_constraints = pset( 
-                st
-                for st in inner_world.constraints 
-                # if all fids are influential
-                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
-            )
-
-            new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, self_typ.id))
-            new_constraints = self.solver.flip_constraints(self_typ.id, new_constraints, IH_typ.id)
+            new_constraints = self.solver.prune_flip_constraints(self_typ.id, new_constraints, IH_typ.id)
 
             new_constraints = new_constraints.difference(world.constraints)
             constrained_rel = self.solver.make_constraint_typ(False)(

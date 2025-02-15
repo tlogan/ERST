@@ -30,6 +30,21 @@ case (x, y) => (
 )
 ''')
 
+# max = (f'''
+# let lted = {lted} in
+# case (x, y) => (
+#     lted(x, y)
+# )
+# ''')
+# max = (f'''
+# let f = case (~uno y) => y in 
+# case x => f(x)
+# ''')
+
+# max = (f'''
+# {lted}
+# ''')
+
 length = (f"""
 fix(case self => (
     case ~nil @ => ~zero @ 
@@ -194,15 +209,15 @@ fix (case self => (
 """.strip())
 
 
-max = (f"""
-let lted = {lted} in
-case (x, y) => (
-    if (lted)(x, y) then
-        y
-    else
-        x
-)
-""".strip())
+# max = (f"""
+# let lted = {lted} in
+# case (x, y) => (
+#     if (lted)(x, y) then
+#         y
+#     else
+#         x
+# )
+# """.strip())
 
 # NOTE: an example demonstrating refinement abilities
 refiner : Callable[[str, str], str] = (lambda f, g : (f"""
