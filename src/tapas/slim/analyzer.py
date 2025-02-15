@@ -2284,6 +2284,15 @@ class Solver:
             m[id] = ty
         return constraints, sub_typ(pmap(m), pattern)
 
+    def prune_interpret_body(self, constraints : PSet[Subtyping], body : Typ) -> tuple[PSet[Subtyping], Typ]:
+        ids = extract_free_vars_from_typ(s(), body)
+
+        m = {}
+        for id in ids:
+            constraints, ty = self.prune_interpret_positive(constraints, id) 
+            m[id] = ty
+        return constraints, sub_typ(pmap(m), body)
+
 
 
     def interpret_positive(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
@@ -3369,7 +3378,7 @@ class BaseRule(Rule):
 
         for branch in augmented_branches: 
             new_constraints = branch.world.constraints.difference(world.constraints)
-            body_typ = branch.body
+            new_constraints, body_typ = self.solver.prune_interpret_body(new_constraints, branch.body)
             new_constraints, param_typ = self.solver.prune_interpret_pattern(new_constraints, branch.pattern)
             imp = Imp(param_typ, body_typ)
             generalized_case = self.solver.make_constraint_typ(True)( 
