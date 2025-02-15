@@ -827,7 +827,7 @@ def to_record_typ(rnode : RNode) -> Typ:
         if isinstance(v, RLeaf):
             field = TField(key, v.content)
         else:
-            assert (v, RNode)
+            assert isinstance(v, RNode)
             t = to_record_typ(v)
             field = TField(key, t)
         result = Inter(field, result)
@@ -1669,7 +1669,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 78 
+        self._limit = 1000 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2306,16 +2306,13 @@ class Solver:
             )
         )
 
-    def sub_polar_constraints(self, greenlight : bool, constraints : Iterable[Subtyping], id : str, payload : Typ) -> list[Subtyping]:
-        return [
+    def sub_polar_constraints(self, greenlight : bool, constraints : Iterable[Subtyping], id : str, payload : Typ) -> PSet[Subtyping]:
+        return pset(
             Subtyping(lower, upper)
             for st in constraints
             for lower in [self.sub_polar_typ(not greenlight, st.lower, id, payload)]
             for upper in [self.sub_polar_typ(greenlight, st.upper, id, payload)]
-            for lower_changed in [lower != st.lower]
-            for upper_changed in [upper != st.upper]
-            if lower_changed or upper_changed
-        ]
+        )
 
     def sub_polar_typ(self, greenlight : bool, src : Typ, id : str, payload : Typ) -> Typ:
         if False:
@@ -2609,7 +2606,7 @@ class Solver:
 #             """)
             return False
 
-    def solve_multi(self, world : World, constraints : Sequence[Subtyping]) -> list[World]:
+    def solve_multi(self, world : World, constraints : Iterable[Subtyping]) -> list[World]:
         worlds = [world]
         for st in constraints:
             worlds = [
@@ -2636,14 +2633,14 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #         """)
 
-        closed_constraints = pset(
-            Subtyping(lower, st.upper)
-            for st in world.constraints  
-            if st.lower == upper
-            if isinstance(st.upper, TVar) and st.upper.id in world.closedids
-        )
+        # closed_constraints = pset(
+        #     Subtyping(lower, st.upper)
+        #     for st in world.constraints  
+        #     if st.lower == upper
+        #     if isinstance(st.upper, TVar) and st.upper.id in world.closedids
+        # )
 
-        new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+        # new_world = replace(world, constraints = world.constraints.union(closed_constraints))
 
         # trans_upper_bounds = list(self.extract_transitive_upper_bounds(world, upper.id))
         # simple_constraints = [Subtyping(lower, make_inter(trans_upper_bounds))]
@@ -2653,21 +2650,30 @@ class Solver:
         #     if not isinstance(st.lower, TVar) and id in extract_free_vars_from_typ(s(), st.lower)
         # )
 
-        new_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+        # return [
+        #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+        #     for w0 in self.solve_multi(new_world, list(rel_constraints.union(simple_constraints)))
+        # ]
+
+        new_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower).difference(world.constraints)
+
+        closed_constraints = pset(
+            st
+            for st in new_constraints 
+            if isinstance(st.upper, TVar) and st.upper.id in world.closedids
+        )
+
+        unsolved_constraints = pset(
+            st
+            for st in new_constraints 
+            if not isinstance(st.upper, TVar) or st.upper.id not in world.closedids
+        )
+
+        new_world = replace(world, constraints = world.constraints.union(closed_constraints))
         return [
             replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            # for w0 in self.solve_multi(new_world, list(rel_constraints.union(simple_constraints)))
-            for w0 in self.solve_multi(new_world, new_constraints)
+            for w0 in self.solve_multi(new_world, unsolved_constraints)
         ]
-
-        # new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-
-        # new_world = replace(world, constraints = world.constraints.union(skolem_constraints))
-        # worlds = [
-        #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-        #     # for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
-        #     for w0 in self.solve_multi(new_world, new_constraints)
-        # ]
             
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
@@ -2820,23 +2826,57 @@ class Solver:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
+            # trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
+            # closed_constraints = pset(
+            #     Subtyping(st.lower, upper)
+            #     for st in world.constraints
+            #     if st.upper == lower 
+            #     if isinstance(st.lower, TVar) and st.lower.id in world.closedids
+            # )
+
+            # new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+            # worlds = [
+            #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            #     for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
+            # ]
+
+            ######################################################
+
+            new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG sub_polar_constraints True
+
+closed_ids: {world.closedids}
+
+{concretize_typ(lower)} <: {concretize_typ(upper)}
+
+world.constraints:
+{concretize_constraints(world.constraints)}
+
+new_constraints {lower.id}:
+{concretize_constraints(new_constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
+
             closed_constraints = pset(
-                Subtyping(st.lower, upper)
-                for st in world.constraints
-                if st.upper == lower 
+                st
+                for st in new_constraints 
                 if isinstance(st.lower, TVar) and st.lower.id in world.closedids
             )
-            # trans_lower_bounds = list(self.extract_transitive_lower_bounds(world, lower.id))
-            new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+
+            unsolved_constraints = pset(
+                st
+                for st in new_constraints 
+                if not isinstance(st.lower, TVar) or st.lower.id not in world.closedids
+            )
 
             new_world = replace(world, constraints = world.constraints.union(closed_constraints))
             worlds = [
                 replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                # for w0 in self.solve(new_world, make_unio(trans_lower_bounds), upper)
-                for w0 in self.solve_multi(new_world, new_constraints)
+                for w0 in self.solve_multi(new_world, unsolved_constraints)
             ]
 
-            ######################################################
             ######################################################
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 worlds = [
@@ -3043,7 +3083,13 @@ class Solver:
         elif isinstance(upper, Fixpoint): 
 
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
-                if not self._checking: print("~~~~~~ UNROLLING")
+                if not self._checking: 
+                    print("~~~~~~ UNROLLING")
+                    print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(lower)} <: {concretize_typ(upper)} 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    """)
                 '''
                 unroll
                 '''
@@ -3450,7 +3496,7 @@ class ExprRule(Rule):
         for i, inner_world in enumerate(reversed(inner_worlds)):
             ###### TODO: ensure that the assertion is invariant
             assert in_typ.id not in inner_world.relids
-            new_constraints = inner_world.constraints.difference(world.constraints)
+            new_constraints = inner_world.constraints
 
             new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, in_typ.id))
             new_constraints, left_typ = self.solver.interpret_negative(new_constraints, in_typ.id) 
@@ -3470,6 +3516,8 @@ class ExprRule(Rule):
 
             new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, self_typ.id))
             new_constraints = self.solver.flip_constraints(self_typ.id, new_constraints, IH_typ.id)
+
+            new_constraints = new_constraints.difference(world.constraints)
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union([IH_typ.id]), inner_world.closedids, new_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
