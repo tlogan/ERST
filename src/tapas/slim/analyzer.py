@@ -3450,7 +3450,7 @@ class ExprRule(Rule):
         for i, inner_world in enumerate(reversed(inner_worlds)):
             ###### TODO: ensure that the assertion is invariant
             assert in_typ.id not in inner_world.relids
-            new_constraints = inner_world.constraints
+            new_constraints = inner_world.constraints.difference(world.constraints)
 
             new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, in_typ.id))
             new_constraints, left_typ = self.solver.interpret_negative(new_constraints, in_typ.id) 
@@ -3470,9 +3470,8 @@ class ExprRule(Rule):
 
             new_constraints = new_constraints.difference(self.solver.get_negative_extra_constraints(new_constraints, self_typ.id))
             new_constraints = self.solver.flip_constraints(self_typ.id, new_constraints, IH_typ.id)
-            rel_constraints = new_constraints.difference(world.constraints)
             constrained_rel = self.solver.make_constraint_typ(False)(
-                foreignids.union([IH_typ.id]), inner_world.closedids, rel_constraints, rel_pattern)
+                foreignids.union([IH_typ.id]), inner_world.closedids, new_constraints, rel_pattern)
             induc_body = Unio(constrained_rel, induc_body) 
         #end for
 

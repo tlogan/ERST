@@ -886,14 +886,14 @@ fix(case self => (
 
     # TODO: update interpretation to get transitive interpretations 
 
-#     code = '''
-# let f = (case ~cons x => x) in
-# fix(case self => (
-#     case ~nil @ => ~zero @ 
-#     case y => 
-#         ~succ (self(f(y)))
-# ))
-#     '''
+    code = '''
+let f = (case ~cons x => x) in
+fix(case self => (
+    case ~nil @ => ~zero @ 
+    case y => 
+        ~succ (self(f(y)))
+))
+    '''
 
 #     code = '''
 # let f = (case a => a) in
