@@ -926,16 +926,16 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-       (\vec{\alpha}', \Delta', \alpha_l \obj{->} \alpha_r) \in \vec{\pi}_\nu
+        \llbracket \vec{\alpha}\ \vec{\alpha}', \Delta', \alpha_l \obj{->} \alpha_r \rrbracket \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\\\
       \text{FTV}(\Gamma) \entails 
-      \text{GFP}[\alpha_\nu]\vec{\pi}_\nu
+      \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
-      \text{LFP}[\alpha_\mu]\vec{\pi}_\mu
+      \alpha_\mu \uparrow \vec{\pi}_\mu
       \\
       \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\pi}_\mu \cong^- \vec{\tau}
     } {
@@ -1256,36 +1256,43 @@ contains the space between types of the lower bound.
     }\lab{5}
 
     \inferrule {
-      \alpha \in \vec{\alpha}
+      \alpha \notin \vec{\alpha}
+      \\\\
+      % \vec{\alpha}, \Delta \entails \alpha \slash \tau_l \dagger \Delta^\dagger
+      % \\
+      % \vec{\alpha}, \Delta \entails \alpha <:^\dagger \vec{\tau} 
+      \Delta[\alpha\slash\tau_l]^{-} \backslash \Delta = \Delta^\dagger
+      \\
+      \text{skolem}^+(\Delta^\dagger) = (\Delta^\flat, \Delta^\sharp)
+      % \\
+      % \vec{\alpha}, \Delta \entails \alpha \slash \tau_l <:^\sharp \Delta^\sharp
+      \\\\
+      \Delta^\flat \given \vec{\alpha}', \Delta'
+      \\
+      (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
+    } {
+      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
+    }\lab{6}
+
+    \inferrule {
+      \alpha \in \vec{\alpha} 
+      \\
+      \nexists \alpha . \tau_r = \alpha \land \alpha \notin \vec{\alpha}
       \\
       \text{factor}(\Delta, \alpha) = \Delta_f
       \\
       \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
       \\\\
-      \text{inter}(\vec{\tau}) \subtypes \tau_r \given \vec{\alpha}', \Delta'
+      \llbracket \Delta\ \Delta_f, \alpha \rrbracket^- = (\Delta', \tau_l)
       \\
-      (\vec{\alpha}, \Delta\ \Delta_f) \preceq (\vec{\alpha}', \Delta')
+      \tau_l \subtypes \tau_r \given \vec{\alpha}', \Delta''
+      \\
+      (\vec{\alpha}, \Delta') \preceq (\vec{\alpha}', \Delta'')
+      \\\\
+      \TODO{confirm that it's safe to remove constraints}
     } {
       \alpha \subtypes \tau_r
       \given \vec{\alpha}', \Delta'
-    }\lab{6}
-
-    \inferrule {
-      \TODO{update to sub the new constraint into previous constraints, matching polarity}
-      \\\\
-      \alpha \notin \vec{\alpha}
-      \\\\
-      \vec{\alpha}, \Delta \entails \alpha \slash \tau_l \dagger \Delta^\dagger
-      \\
-      \vec{\alpha}, \Delta \entails \alpha <:^\dagger \vec{\tau} 
-      \\
-      \vec{\alpha}, \Delta \entails \alpha \slash \tau_l <:^\sharp \Delta^\sharp
-      \\\\
-      \Delta^\dagger\ \tau_l\obj{<:}\text{inter}(\vec{\tau}) \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
-    } {
-      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
     }\lab{7}
 
     \inferrule {
@@ -1391,6 +1398,30 @@ contains the space between types of the lower bound.
       \tau_{rl} \obj{->} \tau_{rr}
       \given \Omega' 
     }\lab{17}
+  \end{mathpar}
+\end{definition}
+
+
+
+\begin{definition}\boxed{\Delta[\alpha\slash\tau]^{-|+} = \Delta}\ Polar Subtyping Environment Substitution 
+  \label{def:polar_subtyping_environment_substitution}
+  \TODO{...}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\tau[\alpha\slash\tau]^{-|+} = \tau}\ Polar Type Substitution 
+  \label{def:polar_type_substitution}
+  \TODO{...}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\text{skolem}^{-|+}(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
+  \label{def:skolem}
+  \TODO{...}
+  \begin{mathpar}
   \end{mathpar}
 \end{definition}
 
@@ -2016,7 +2047,8 @@ contains the space between types of the lower bound.
       \\
       \text{diff}(\phi, \vec{\eta}) = \tau_l
       \\\\
-      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ (\vec{\alpha}', \Delta', \tau_l \obj{->} \tau_r) \in \vec{\pi}' 
+      \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
+      \llbracket \vec{\alpha}\ \vec{\alpha}', \Delta', \tau_l \obj{->} \tau_r \rrbracket \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -2029,7 +2061,6 @@ contains the space between types of the lower bound.
     }
   \end{mathpar}
 \end{definition}
-
 
 \begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
   \label{def:decomposable}
@@ -2782,7 +2813,7 @@ contains the space between types of the lower bound.
 % \end{definition}
 
 \begin{definition}
-\boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\pi} \fallingdotseq \text{LFP}[\alpha]\vec{\pi}}
+\boxed{\vec{\alpha} \entails \alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
 \ Fixed Point Duality 
 \label{def:fixed_point_duality}
 
@@ -2803,29 +2834,27 @@ contains the space between types of the lower bound.
     \inferrule {
     } {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}] \epsilon
+      \alpha_{\nu} \downarrow \epsilon
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}] \epsilon 
+      \alpha_{\mu} \uparrow \epsilon 
     }
 
     \inferrule {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}] \vec{\pi}_\nu
+      \alpha_{\nu} \downarrow \vec{\pi}_\nu
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}] \vec{\pi}_\mu
-      \\\\
-      \vec{\alpha_c} \entails \Delta_\nu \entails \alpha_l \subtypes (\Delta', \tau_l)
+      \alpha_{\mu} \uparrow \vec{\pi}_\mu
+      % \\\\
+      % \llbracket \Delta_\nu, \alpha_l \rrbracket^- = (\Delta', \tau_l)
+      % \\
+      % \llbracket \Delta', \alpha_r \rrbracket^+ = (\Delta'', \tau_r)
       \\
-      \vec{\alpha_c} \entails \Delta' \entails \alpha_r \supertypes (\Delta'', \tau_r)
-      \\
-      [\alpha_\nu]\Delta'' \fallingdotseq [\alpha_\mu]\Delta_\mu
-      \\\\
-      \TODO{add removal of intermediates to match implementation}
+      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
       \vec{\alpha}_f \entails 
-      \text{GFP}[\alpha_{\nu}]\vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \alpha_l \obj{->} \alpha_r \right> 
+      \alpha_{\nu} \downarrow \vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \tau_l \obj{->} \tau_r \right> 
       \fallingdotseq 
-      \text{LFP}[\alpha_{\mu}] \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l \obj{*} \tau_r \right>
+      \alpha_{\mu} \uparrow \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l' \obj{*} \tau_r' \right>
     }
   \end{mathpar}
 \end{definition}
@@ -2833,9 +2862,32 @@ contains the space between types of the lower bound.
 \hfill
 
 \begin{definition}\boxed{
-      \vec{\alpha} \entails (\Delta, \alpha) \subtypes (\Delta, \tau)
+  \llbracket \vec{\alpha}, \Delta, \tau \rrbracket^- = (\vec{\alpha}, \Delta, \tau)
+}\ Negative Type Interpretation 
+\label{def:negative_type_interpretation}
+
+\TODO{...}
+
+\end{definition}
+
+\begin{definition}\boxed{
+  \llbracket \vec{\alpha}, \Delta, \tau \rrbracket^+ = (\vec{\alpha}, \Delta, \tau)
+}\ Positive Type Interpretation 
+\label{def:positive_type_interpretation}
+
+\TODO{...}
+
+\end{definition}
+
+\begin{definition}\boxed{
+  \llbracket \Delta, \alpha \rrbracket^- = (\Delta, \tau)
 }\ Negative Interpretation 
 \label{def:negative_interpretation}
+
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
+
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
+
   \begin{mathpar}
     \inferrule {
     } {
@@ -2859,9 +2911,14 @@ contains the space between types of the lower bound.
 \end{definition}
 
 \begin{definition}\boxed{
-  \vec{\alpha} \entails (\Delta, \alpha) \supertypes (\Delta, \tau)
+  \llbracket \Delta, \alpha \rrbracket^+ = (\Delta, \tau)
 }\ Positive Interpretation 
 \label{def:positive_interpretation}
+
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau) \implies \Delta' \satisfies \tau <: \alpha$}
+
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
+
   \begin{mathpar}
     \inferrule {
     } {
