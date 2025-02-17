@@ -926,7 +926,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -2859,7 +2859,7 @@ contains the space between types of the lower bound.
 \hfill
 
 \begin{definition}\boxed{
-  \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
+  \llbracket \vec{\alpha}, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
 }\ Polar Type Interpretation 
 \label{def:polar_type_interpretation}
 
@@ -2869,7 +2869,7 @@ contains the space between types of the lower bound.
 
 
 \begin{definition}\boxed{
-  \llbracket \Delta, \alpha \rrbracket^- = (\Delta, \tau)
+  \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^- = (\Delta, \tau)
 }\ Negative Interpretation 
 \label{def:negative_interpretation}
 
@@ -2900,7 +2900,7 @@ contains the space between types of the lower bound.
 \end{definition}
 
 \begin{definition}\boxed{
-  \llbracket \Delta, \alpha \rrbracket^+ = (\Delta, \tau)
+  \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta, \tau)
 }\ Positive Interpretation 
 \label{def:positive_interpretation}
 
@@ -2930,12 +2930,12 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{[\alpha]\Delta \fallingdotseq [\alpha]\Delta}\ Fixpoint Constraint Duality 
+\begin{definition}\boxed{\alpha \downarrow \Delta \fallingdotseq \alpha \uparrow \Delta}\ Fixpoint Constraint Duality 
 \label{def:pair_duality}
   \begin{mathpar}
     \inferrule {
     } {
-      \epsilon \fallingdotseq \epsilon 
+      \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
     }
 
     \inferrule {
@@ -2943,14 +2943,14 @@ contains the space between types of the lower bound.
       \\
       \alpha_\nu \notin \text{FTV}(\tau_r)
       \\
-      [\alpha_\nu] \Delta_\nu \fallingdotseq [\alpha_\mu]\Delta_\mu
+      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
-      [\alpha_\nu] \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq [\alpha_\mu]\Delta_\mu\ (\tau_l <: \tau_r)
+      \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\tau_l <: \tau_r)
     }
 
     \inferrule {
     } {
-      [\alpha_\nu] \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq [\alpha_\mu]\Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
+      \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
     }
   \end{mathpar}
 \end{definition}
