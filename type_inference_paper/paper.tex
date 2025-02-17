@@ -65,7 +65,7 @@
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
 \newcommand{\pattype}{\ \lozenge\ }
-\newcommand{\liftfun}{\ \blacktriangle\ }
+\newcommand{\liftfun}{:}
  
 \newcommand{\subtypes}{<:}
 \newcommand{\supertypes}{:>}
@@ -868,9 +868,9 @@ and adds the annotation to the typing environment when checking the contintuatio
     }\lab{5}
 
     \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
       \\
-      \text{FTV}(\Gamma) \entails \vec{\pi} \cong^+ \vec{\tau} 
+      \text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi} \cong^+ \vec{\tau} 
     } {
       \Gamma \entails \vec{f} \hastype \text{inter}(\vec{\tau}) \given \vec{\alpha}, \Delta
     }\lab{6}
@@ -926,18 +926,17 @@ and adds the annotation to the typing environment when checking the contintuatio
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \llbracket \vec{\alpha}\ \vec{\alpha}', \Delta', \alpha_l \obj{->} \alpha_r \rrbracket \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\\\
-      \text{FTV}(\Gamma) \entails 
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
       \\
-      \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\pi}_\mu \cong^- \vec{\tau}
+      \text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu \cong^- \vec{\tau}
     } {
       \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
       \obj{<:LFP[} \alpha_\mu \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
@@ -1289,10 +1288,10 @@ contains the space between types of the lower bound.
       \\
       (\vec{\alpha}, \Delta') \preceq (\vec{\alpha}', \Delta'')
       \\\\
-      \TODO{confirm that it's safe to remove constraints}
+      \TODO{confirm that it's safe to remove constraints. update implementation to match}
     } {
       \alpha \subtypes \tau_r
-      \given \vec{\alpha}', \Delta'
+      \given \vec{\alpha}', \Delta
     }\lab{7}
 
     \inferrule {
@@ -2032,23 +2031,23 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 
-\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta}}\ Function Lifting
+\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}}\ Function Lifting
   \label{def:function_lifting}
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}, \Delta, \Gamma \entails \epsilon \liftfun \epsilon, \epsilon 
+      \vec{\alpha}, \Delta, \Gamma \entails \epsilon \liftfun \epsilon \sim \epsilon 
     }
 
     \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi}, \vec{\eta} 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
       \\
       p \hastype \phi \given \Gamma'
       \\
       \text{diff}(\phi, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \llbracket \vec{\alpha}\ \vec{\alpha}', \Delta', \tau_l \obj{->} \tau_r \rrbracket \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -2057,7 +2056,7 @@ contains the space between types of the lower bound.
       \text{close}(\phi) = \eta
     } {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
-      \vec{\pi}\ \vec{\pi}', \vec{\eta}\ \eta
+      \vec{\pi}\ \vec{\pi}' \sim \vec{\eta}\ \eta
     }
   \end{mathpar}
 \end{definition}
@@ -2751,20 +2750,20 @@ contains the space between types of the lower bound.
 \end{definition}
 
 
-\begin{definition}\boxed{\vec{\alpha} \entails \vec{\pi} \cong^{+|-} \vec{\tau}}\ Multiple Constraint Congruence 
+\begin{definition}\boxed{\vec{\alpha} \entails \vec{\pi} \cong^\pm \vec{\tau}}\ Multiple Constraint Congruence 
   \label{def:constrained_implication_congruence}
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f \entails \epsilon \cong^{+|-} \epsilon 
+      \vec{\alpha}_f \entails \epsilon \cong^\pm \epsilon 
     }
 
     \inferrule {
-      \vec{\alpha}_f \entails \vec{\pi} \cong^{+|-} \vec{\tau} 
+      \vec{\alpha}_f \entails \vec{\pi} \cong^\pm \vec{\tau} 
       \\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{+|-} \tau'
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^\pm \tau'
     } {
-      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^{+|-} \vec{\tau}\ \tau' 
+      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^\pm \vec{\tau}\ \tau' 
     }
   \end{mathpar}
 \end{definition}
@@ -2813,7 +2812,7 @@ contains the space between types of the lower bound.
 % \end{definition}
 
 \begin{definition}
-\boxed{\vec{\alpha} \entails \alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
+\boxed{\alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
 \ Fixed Point Duality 
 \label{def:fixed_point_duality}
 
@@ -2833,14 +2832,12 @@ contains the space between types of the lower bound.
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f \entails 
       \alpha_{\nu} \downarrow \epsilon
       \fallingdotseq 
       \alpha_{\mu} \uparrow \epsilon 
     }
 
     \inferrule {
-      \vec{\alpha}_f \entails 
       \alpha_{\nu} \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_{\mu} \uparrow \vec{\pi}_\mu
@@ -2862,22 +2859,14 @@ contains the space between types of the lower bound.
 \hfill
 
 \begin{definition}\boxed{
-  \llbracket \vec{\alpha}, \Delta, \tau \rrbracket^- = (\vec{\alpha}, \Delta, \tau)
-}\ Negative Type Interpretation 
-\label{def:negative_type_interpretation}
+  \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
+}\ Polar Type Interpretation 
+\label{def:polar_type_interpretation}
 
 \TODO{...}
 
 \end{definition}
 
-\begin{definition}\boxed{
-  \llbracket \vec{\alpha}, \Delta, \tau \rrbracket^+ = (\vec{\alpha}, \Delta, \tau)
-}\ Positive Type Interpretation 
-\label{def:positive_type_interpretation}
-
-\TODO{...}
-
-\end{definition}
 
 \begin{definition}\boxed{
   \llbracket \Delta, \alpha \rrbracket^- = (\Delta, \tau)
@@ -3057,7 +3046,7 @@ contains the space between types of the lower bound.
 
 
 
-\begin{definition}\boxed{\text{outer}(+|-) = \obj{ALL}|\obj{EXI}}
+\begin{definition}\boxed{\text{outer}(\pm) = \obj{ALL}|\obj{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{outer}(+) 
@@ -3072,7 +3061,7 @@ contains the space between types of the lower bound.
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{inner}(+|-) = \obj{ALL}|\obj{EXI}}
+\begin{definition}\boxed{\text{inner}(\pm) = \obj{ALL}|\obj{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{inner}(+) 
@@ -3087,29 +3076,29 @@ contains the space between types of the lower bound.
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{quantify}^{+|-}(\Alpha, \Delta, \Alpha, \Delta, \tau) = \tau}
+\begin{definition}\boxed{\text{quantify}^{\pm}(\Alpha, \Delta, \Alpha, \Delta, \tau) = \tau}
   \[\begin{array}{rclr}
-    \text{quantify}^{+|-}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
+    \text{quantify}^{\pm}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
     &=& 
     \tau
     \\
-    \text{quantify}^{+|-}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
+    \text{quantify}^{\pm}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{inner}(+|-)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}\tau
+    \text{inner}(\pm)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}\tau
     \\
-    \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
+    \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
-    \text{outer}(+|-)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}\tau
+    \text{outer}(\pm)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}\tau
     \\
-    \text{quantify}^{+|-}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
+    \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{outer}(+|-)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}
-    \text{inner}(+|-)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}
+    \text{outer}(\pm)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}
+    \text{inner}(\pm)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}
     \tau
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau \cong^{+|-} \tau} Constraint 
+\begin{definition}\boxed{\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau \cong^{\pm} \tau} Type Packaging 
   \begin{mathpar}
     \inferrule {
       \text{FTV}(\tau) = \vec{\alpha}_p
@@ -3122,9 +3111,9 @@ contains the space between types of the lower bound.
       \\
       (\text{FTV}(\Delta_i)\ \vec{\alpha}_p)\ \backslash\ \vec{\alpha}_c \ \backslash\ \vec{\alpha}_f = \vec{\alpha}_i 
       \\\\
-      \text{quantify}^{+|-}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
+      \text{quantify}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
     } {
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{+|-} \tau'
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{\pm} \tau'
     }
   \end{mathpar}
 \end{definition}
