@@ -120,15 +120,15 @@ def decode_polarity(solver : analyzer.Solver, results, polarity):
         solver.decode_polarity_typ(results, polarity)
     )
 
-def decode_negative(solver : analyzer.Solver, results):
-    return analyzer.concretize_typ(
-        solver.decode_negative_typ(results)
-    )
+# def decode_negative(solver : analyzer.Solver, results):
+#     return analyzer.concretize_typ(
+#         solver.decode_negative_typ(results)
+#     )
 
-def decode_positive(solver : analyzer.Solver, results):
-    return analyzer.concretize_typ(solver.to_aliasing_typ(
-        solver.decode_positive_typ(results)
-    ))
+# def decode_positive(solver : analyzer.Solver, results):
+#     return analyzer.concretize_typ(solver.to_aliasing_typ(
+#         solver.decode_positive_typ(results)
+#     ))
 
 # def roundtrip(ss : list[str]) -> str:
 #     return analyzer.concretize_typ(analyzer.simplify_typ(analyzer.make_unio([
