@@ -1419,9 +1419,9 @@ contains the space between types of the lower bound.
     \inferrule {
       \tau_{rl} \subtypes \tau_{ll} \given \Omega
       \\
-      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
-      \\
       \Omega \preceq \Omega'
+      \\
+      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
     } {
       \tau_{ll} \obj{->} \tau_{lr} 
       \subtypes 
@@ -1486,10 +1486,10 @@ contains the space between types of the lower bound.
       \tau_{ll} \subtypes \tau_r
       \given \Omega 
       \\
+      \Omega \preceq \Omega'
+      \\
       \tau_{lr} \subtypes \tau_r
       \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
     } {
       \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
@@ -1502,21 +1502,22 @@ contains the space between types of the lower bound.
     }
 
     \inferrule {
-      \Delta_l \given \vec{\alpha}, \Delta
-      \\
       \vec{\alpha}_l \notfree \tau_r
       \\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Delta_l \given \vec{\alpha}, \Delta
       \\
       (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
       \\\\
-      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \Omega' = \Omega
+      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
       \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
     }
   \end{mathpar}
 \end{definition}
+\hfill
 
 \begin{definition} Proof Subtyping (Refinement Introduction)
   \\
@@ -1530,17 +1531,15 @@ contains the space between types of the lower bound.
     }
 
     \inferrule {
-      \tau_{l} \subtypes \tau_{rl}
-      \given \Omega 
-      \\
-      \tau_{l} \subtypes \tau_{rr}
-      \given \Omega' 
+      \tau_{l} \subtypes \tau_{rl} \given \Omega 
       \\
       \Omega \preceq \Omega'
+      \\
+      \tau_{l} \subtypes \tau_{rr} \given \Omega' 
     } {
-      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega 
+      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega '
     }
-
+    \\
     \inferrule {
       % \TODO{prove that subtyping of diff is complete}
       % \\\\
@@ -1551,24 +1550,24 @@ contains the space between types of the lower bound.
       \text{FTV}(\eta) \subseteq \epsilon
       \\\\
       \nexists \Omega' .\  
-      \tau_l \subtypes \eta \given \Omega'
-      \land
       \Omega \preceq \Omega'
+      \land
+      \tau_l \subtypes \eta \given \Omega'
     } {
       \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
       \given \Omega 
-    }\lab{3}
+    }
 
     \inferrule {
-      \Delta_r \given \vec{\alpha}, \Delta
-      \\
       \vec{\alpha}_r \notfree \tau_l
       \\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Delta_r \given \vec{\alpha}, \Delta
       \\
       (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
       \\\\
-      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \Omega' = \Omega
+      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
       \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
     }
@@ -1601,7 +1600,7 @@ contains the space between types of the lower bound.
       \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
       \\\\
       \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta\ \text{factor}(\Delta, \alpha), \alpha \rrbracket^- = (\Delta', \tau_l)
-      \\
+      \\\\
       \exists \Omega .\ 
       (\vec{\alpha}, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
@@ -1638,7 +1637,7 @@ contains the space between types of the lower bound.
       \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
       \\\\
       \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta', \tau_r)
-      \\
+      \\\\
       \exists \Omega .\ 
       (\vec{\alpha}, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
     } {
@@ -1720,42 +1719,42 @@ contains the space between types of the lower bound.
     }
 
     \inferrule {
+      \Omega \preceq \Omega'
+      \\
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
       \\
       \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
       \given \Omega'
-      \\
-      \Omega \preceq \Omega'
     } {
       \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
     }
 
     \inferrule {
-      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
-      \\
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \phi' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \\\\
+      (\vec{\alpha}, \Delta) \preceq \Omega
+      \\
+      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
       \\\\
       \Delta \entails \phi' \subtypes \tau_n \sim 
       \\
       \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
-      \\
-      (\vec{\alpha}, \Delta) \preceq \Omega
     } {
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \Omega 
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
-      \\
       \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \\\\
+      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
+      \\
+      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
       \\\\
       \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
       \\
       \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'
-      \\
-      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
     } {
       \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
