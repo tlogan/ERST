@@ -934,8 +934,6 @@ and adds the annotation to the typing environment when checking the contintuatio
     % }\lab{9}
 
     \inferrule {
-      \TODO{new version}
-      \\\\
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
@@ -1397,39 +1395,37 @@ contains the space between types of the lower bound.
 
 \begin{definition}\boxed{\tau \subtypes \tau \given \Omega}\ Proof Subtyping (Rewriting)
   \label{def:proof_subtyping_rewriting}
-
   \TODO{these should be subsumed by other rules; double check necessity in implementation}
-
   \begin{mathpar}
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-      \given M, \Delta
-    }
+  %   \inferrule {
+  %     \tau_l \subtypes
+  %     \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes 
+  %     \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+  %     \given M, \Delta
+  %   }
 
-    \inferrule {
-      \tau_l
-      \subtypes
-      \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes 
-      \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-      \given M, \Delta
-    }
+  %   \inferrule {
+  %     \tau_l
+  %     \subtypes
+  %     \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes 
+  %     \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+  %     \given M, \Delta
+  %   }
 
-    \inferrule {
-      \tau_l \subtypes
-      \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-      \given M, \Delta
-    } {
-      \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-      \given M, \Delta
-    }
+  %   \inferrule {
+  %     \tau_l \subtypes
+  %     \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+  %     \given M, \Delta
+  %   }
   \end{mathpar}
 \end{definition}
 
@@ -1438,14 +1434,8 @@ contains the space between types of the lower bound.
   \begin{mathpar}
     \inferrule {
     } {
-      \obj{BOT} \subtypes \tau_r \given M, \Delta
+      \obj{BOT} \subtypes \tau_r \given \Omega 
     }
-
-    \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
-    } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }\lab{2}
 
     \inferrule {
       \tau_{ll} \subtypes \tau_r
@@ -1458,22 +1448,28 @@ contains the space between types of the lower bound.
     } {
       \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
-    }\lab{4}
+    }
+    \\
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+    } {
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+    }
 
     \inferrule {
-      \Delta \given \vec{\alpha}_w, \Delta_w
+      \Delta_l \given \vec{\alpha}, \Delta
       \\
-      \vec{\alpha} \notfree \tau_r
+      \vec{\alpha}_l \notfree \tau_r
       \\
       \tau_l \subtypes \tau_r \given \Omega 
       \\
-      (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega 
+      (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
       \\\\
-      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}_w\ \vec{\alpha}, \Delta_w) \preceq \Omega' \implies \Omega' = \Omega
+      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \Omega' = \Omega
     } {
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]}\tau_l \subtypes \tau_r
+      \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
-    }\lab{5}
+    }
   \end{mathpar}
 \end{definition}
 
@@ -1482,22 +1478,19 @@ contains the space between types of the lower bound.
   \begin{mathpar}
     \inferrule {
     } {
-      \tau_l \subtypes \obj{TOP} \given M, \Delta
+      \tau_l \subtypes \obj{TOP} \given \Omega 
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_{rl}
-      \given M_0, \Delta_0
+      \tau_{l} \subtypes \tau_{rl}
+      \given \Omega 
       \\
-      M_0 \preceq M_1
-      \\\\
-      \Delta_0 \preceq \Delta_1
+      \tau_{l} \subtypes \tau_{rr}
+      \given \Omega' 
       \\
-      \tau_l \subtypes \tau_{rr}
-      \given M_1, \Delta_1
+      \Omega \preceq \Omega'
     } {
-      \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$} 
-      \given M_1, \Delta_1
+      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega 
     }
 
     \inferrule {
@@ -1519,19 +1512,17 @@ contains the space between types of the lower bound.
     }\lab{3}
 
     \inferrule {
-      Q \given M_0, \Delta_0
+      \Delta_r \given \vec{\alpha}, \Delta
       \\
-      A \notfree \tau_l
+      \vec{\alpha}_r \notfree \tau_l
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
       \\\\
-      M_0 \sqcup \Alpha \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r
-      \given M_1, \Delta_1
+      \forall \Omega' .\ \tau_l \subtypes \tau_r \given \Omega' \implies (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \Omega' = \Omega
     } {
-      \tau_l \subtypes \obj{ALL[}\Alpha\ Q \obj{]}\tau_r
-      \given M_1, \Delta_1
+      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
     }
 
   \end{mathpar}
@@ -1542,42 +1533,34 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_variable_elimination}
   \begin{mathpar}
     \inferrule {
+      (\vec{\alpha}, \Delta\ \Delta_\sharp) \preceq (\vec{\alpha}', \Delta')
+      \\ 
       \alpha \notin \vec{\alpha}
-      \\\\
-      % \vec{\alpha}, \Delta \entails \alpha \slash \tau_l \dagger \Delta^\dagger
-      % \\
-      % \vec{\alpha}, \Delta \entails \alpha <:^\dagger \vec{\tau} 
-      \Delta[\alpha\slash\tau_l]^{-} \backslash \Delta = \Delta^\dagger
       \\
-      \text{skolem}^+(\Delta^\dagger) = (\Delta^\flat, \Delta^\sharp)
-      % \\
-      % \vec{\alpha}, \Delta \entails \alpha \slash \tau_l <:^\sharp \Delta^\sharp
+      \nexists \nu.\ \tau_r = \nu 
       \\\\
-      \Delta^\flat \given \vec{\alpha}', \Delta'
+      \text{split}^-(\Delta[\alpha\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\sharp, \Delta_\flat)
       \\
-      (\vec{\alpha}, \Delta\ \Delta^\sharp) \preceq (\vec{\alpha}', \Delta')
+      \Delta_\flat \given \vec{\alpha}', \Delta'
     } {
-      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \tau_l\obj{<:}\alpha) 
-    }\lab{6}
+      \alpha \subtypes \tau \given (\vec{\alpha}', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
+    }
 
     \inferrule {
       \alpha \in \vec{\alpha} 
       \\
-      \nexists \alpha . \tau_r = \alpha \land \alpha \notin \vec{\alpha}
-      \\
-      \text{factor}(\Delta, \alpha) = \Delta_f
-      \\
-      \vec{\alpha}, (\Delta\ \Delta_f) \entails \alpha <: \vec{\tau} 
+      \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta\ \text{factor}(\Delta, \alpha), \alpha \rrbracket^- = (\Delta', \tau_l)
       \\\\
-      \llbracket \Delta\ \Delta_f, \alpha \rrbracket^- = (\Delta', \tau_l)
+      \nexists \alpha.\ \tau_r = \alpha
       \\
-      \tau_l \subtypes \tau_r \given \vec{\alpha}', \Delta''
-      \\
-      (\vec{\alpha}, \Delta') \preceq (\vec{\alpha}', \Delta'')
+      \exists \Omega .\ 
+      (\vec{\alpha}, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
     } {
       \alpha \subtypes \tau_r
-      \given \vec{\alpha}', \Delta
-    }\lab{7}
+      \given (\vec{\alpha}, \Delta)
+      \\
+    }
   \end{mathpar}
 \end{definition}
 
@@ -1585,37 +1568,30 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_variable_introduction}
   \begin{mathpar}
     \inferrule {
-      \alpha \notin M_0
+      (\vec{\alpha}, \Delta\ \Delta_\sharp) \preceq (\vec{\alpha}', \Delta')
+      \\ 
+      \alpha \notin \vec{\alpha}
       \\
-      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
+      \nexists \mu.\ \tau_l = \mu 
+      \\\\
+      \text{split}^+(\Delta[\alpha\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\sharp, \Delta_\flat)
       \\
-      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
-      \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
-      \\
-      \obj{|$(\Tau)$} <: \tau_r
-      \given M_1, \Delta_1
+      \Delta_\flat \given \vec{\alpha}', \Delta'
     } {
-      \alpha \subtypes \tau_r
-      \given M_1, \Delta_1 \ \alpha <: \tau_r
+      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha) 
     }
 
     \inferrule {
-      \alpha \in M_0
+      \alpha \in \vec{\alpha} 
       \\
-      \Delta_0 \entails \Tau <: \alpha
+      \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta', \tau_r)
       \\\\
-      M_0 \preceq M_1
+      \nexists \alpha .\ \tau_l = \alpha
       \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \obj{|}(\Tau)
-      \given M_1, \Delta_1
+      \exists \Omega .\ 
+      (\vec{\alpha}, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
     } {
-      \tau_l \subtypes \alpha
-      \given M_1, \Delta_1
+      \tau_l \subtypes \alpha \given (\vec{\alpha}, \Delta) 
     }
   \end{mathpar}
 \end{definition}
@@ -1834,7 +1810,7 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\text{skolem}^\pm(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
+\begin{definition}\boxed{\text{skolem}(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
   \label{def:skolem}
   \TODO{...}
   \begin{mathpar}

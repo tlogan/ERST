@@ -459,8 +459,6 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathMI7
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/NewTXMI7.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmr8t.tfm
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineTB-tlf-t1.tfm
-INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineTB-tlf-t1.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/nxlmi.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/LibertineMathMI.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/newtx/NewTXMI.tfm
@@ -479,7 +477,9 @@ INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmr8r.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/libertine/LinLibertineT-tlf-ot1.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineT-tlf-ot1--base.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineTB-tlf-t1.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
+INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/libertine/LinLibertineTB-tlf-t1.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/bera/fvmb8t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/public/newtx/ntxsyc.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/txfonts/txsyc.tfm

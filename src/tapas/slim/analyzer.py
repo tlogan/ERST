@@ -2392,8 +2392,8 @@ class Solver:
             #     self.extract_factored_upper_bounds(world, lower.id)
             # )
             # return self.solve(world, make_inter(list(bounds)), upper)
-            new_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
-            if self.solve(World(new_constraints, world.closedids, world.relids), lower_interp, upper):
+            ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
+            if bool(self.solve(world, lower_interp, upper)):
                 return [world]
             else:
                 return []
@@ -2454,8 +2454,8 @@ class Solver:
             return worlds
 
         elif isinstance(upper, TVar) and upper.id in world.closedids: 
-            new_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
-            if self.solve(World(new_constraints, world.closedids, world.relids), upper_interp, upper):
+            ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
+            if self.solve(world, upper_interp, upper):
                 return [world]
             else:
                 return []
