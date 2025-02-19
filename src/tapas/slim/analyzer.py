@@ -2137,6 +2137,42 @@ class Solver:
             replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
             for w0 in self.solve_multi(new_world, unsolved_constraints)
         ]
+
+    def is_pattern_typ(self, t : Typ) -> bool:
+        if isinstance(t, TVar):
+            return True
+        elif isinstance(t, TTag):
+            return self.is_pattern_typ(t.body)
+        elif isinstance(t, TField):
+            return self.is_pattern_typ(t.body)
+        elif isinstance(t, Inter):
+            return self.is_pattern_typ(t.left) and self.is_pattern_typ(t.right)
+        else:
+            return False
+
+
+    def is_base_typ(self, t : Typ) -> bool:
+        return (
+            isinstance(t, TTag) or
+            isinstance(t, TField) or
+            isinstance(t, Imp)
+        )
+
+    def is_refinement_typ(self, t : Typ) -> bool:
+        return (
+            isinstance(t, Top) or
+            isinstance(t, Inter) or
+            isinstance(t, Diff) or
+            isinstance(t, All)
+        )
+
+    def is_abstraction_typ(self, t : Typ) -> bool:
+        return (
+            isinstance(t, Bot) or
+            isinstance(t, Unio) or
+            isinstance(t, Fixpoint) or
+            isinstance(t, Exi)
+        )
             
 
     def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
@@ -2144,37 +2180,74 @@ class Solver:
         if self.count > self._limit:
             return []
 
-#         if not self._checking:
-#             print(f'''
-# =================
-# DEBUG SOLVE
-# =================
-# self.aliasing :::
-# :::::::: {self.aliasing}
-
-# world.closedids::: 
-# :::::::: {world.closedids}
-
-# world.constraints::: 
-# {concretize_constraints(world.constraints)}
-
-# lower:
-# {concretize_typ(lower)} 
-
-# upper:
-# {concretize_typ(upper)}
-
-# count: {self.count}
-# =================
-#             ''')
-        # end if
+        #######################################
+        #### Reflection ####
+        #######################################
 
         if alpha_equiv(lower, upper): 
             return [world] 
 
-        if False:
-            return [] 
         #######################################
+        #### Dealiasing ####
+        #######################################
+        elif isinstance(upper, TVar) and upper.id in self.aliasing: 
+            return self.solve(world, lower, self.aliasing[upper.id])
+
+        elif isinstance(lower, TVar) and lower.id in self.aliasing: 
+            return self.solve(world, self.aliasing[lower.id], upper)
+
+        #######################################
+        #######################################
+
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec.left, upper.consq), 
+                Imp(upper.antec.right, upper.consq)
+            ))
+
+        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec, upper.consq.left), 
+                Imp(upper.antec, upper.consq.right)
+            ))
+
+        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
+            return [
+                m1
+                for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
+                for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
+            ]
+
+
+
+        #######################################
+        #######################################
+
+        elif isinstance(lower, TUnit) and isinstance(upper, TUnit): 
+            return [world] 
+
+        elif isinstance(lower, TTag) and isinstance(upper, TTag): 
+            if lower.label == upper.label:
+                return self.solve(world, lower.body, upper.body) 
+            else:
+                return [] 
+
+        elif isinstance(lower, TField) and isinstance(upper, TField): 
+            if lower.label == upper.label:
+                return self.solve(world, lower.body, upper.body) 
+            else:
+                return [] 
+
+        elif isinstance(lower, Imp) and isinstance(upper, Imp): 
+            worlds = [
+                m1
+                for m0 in self.solve(world, upper.antec, lower.antec) 
+                for m1 in self.solve(m0, lower.consq, upper.consq) 
+            ]
+            return worlds
+
+        #######################################
+        ####  ####
         #######################################
 
         elif isinstance(lower, Bot): 
@@ -2190,22 +2263,83 @@ class Solver:
                 for m1 in self.solve(m0, lower.right, upper)
             ]
 
+        elif isinstance(lower, Exi):
+            renaming = self.make_renaming(lower.ids)
+            strong_constraints = sub_constraints(renaming, lower.constraints)
+            lower_body = sub_typ(renaming, lower.body)
+            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
+
+            worlds = [world]
+            for constraint in strong_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]  
+
+            return [
+                m2
+                for m0 in worlds
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
+                for m2 in self.solve(m1, lower_body, upper)
+            ]
+
+
         elif isinstance(upper, Inter):
             return [
                 m1 
                 for m0 in self.solve(world, lower, upper.left)
                 for m1 in self.solve(m0, lower, upper.right)
             ]
-        #######################################
-        #### Dealiasing ####
-        #######################################
-        elif isinstance(upper, TVar) and upper.id in self.aliasing: 
-            return self.solve(world, lower, self.aliasing[upper.id])
 
-        elif isinstance(lower, TVar) and lower.id in self.aliasing: 
-            return self.solve(world, self.aliasing[lower.id], upper)
-        #######################################
+        elif isinstance(upper, Diff): 
 
+            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
+            if True:
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_worlds = self.solve(world, lower, upper.context)
+                return [
+                    m
+                    for m in context_worlds 
+                    # if (
+                    #     # not self.is_inhabitable(world, lower) or 
+                    #     # Fail (incompletely) if lower is empty
+                    #     self.solve(m, lower, upper.negation) == []
+                    # )
+                ]   
+            else:
+                return []
+
+        elif isinstance(upper, All):
+            renaming = self.make_renaming(upper.ids)
+            weak_constraints = sub_constraints(renaming, upper.constraints)
+            weak_body = sub_typ(renaming, upper.body)
+            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
+
+            worlds = [world]
+            for constraint in weak_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]  
+
+            return [
+                m2
+                for m0 in worlds
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
+                for m2 in self.solve(m1, lower, weak_body)
+            ]
+        
         elif isinstance(lower, Fixpoint) and not isinstance(upper, Fixpoint):
             # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
             # to avoid infinitue  back into the original problem, causing non-termination
@@ -2234,58 +2368,24 @@ class Solver:
 
             return self.solve(world, exi, upper)
 
-
-        elif isinstance(upper, Diff): 
-
-            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
-            if True:
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
+        elif isinstance(lower, Fixpoint):
+            if is_typ_structured(lower.body):
                 '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                NOTE: k-induction / bi-simulation
+                use the pattern on LHS to dictate number of unrollings needed on RHS 
+                simply need to sub RHS into LHS's self-referencing variable
                 '''
-                context_worlds = self.solve(world, lower, upper.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    # if (
-                    #     # not self.is_inhabitable(world, lower) or 
-                    #     # Fail (incompletely) if lower is empty
-                    #     self.solve(m, lower, upper.negation) == []
-                    # )
-                ]   
+                '''
+                sub in induction hypothesis to world:
+                '''
+                renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                lower_body = sub_typ(renaming, lower.body)
+
+                return self.solve(world, lower_body, upper)
             else:
                 return []
-        
+
         #######################################
-
-
-        elif isinstance(lower, Exi):
-            renaming = self.make_renaming(lower.ids)
-            strong_constraints = sub_constraints(renaming, lower.constraints)
-            lower_body = sub_typ(renaming, lower.body)
-            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
-
-            worlds = [world]
-            for constraint in strong_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]  
-
-            return [
-                m2
-                for m0 in worlds
-                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
-                for m2 in self.solve(m1, lower_body, upper)
-            ]
-
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
@@ -2309,7 +2409,6 @@ class Solver:
                 for w0 in self.solve_multi(new_world, unsolved_constraints)
             ]
 
-            ######################################################
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 worlds = [
                     w1
@@ -2322,110 +2421,30 @@ class Solver:
         elif isinstance(upper, TVar) and upper.id not in world.closedids: 
             return self.solve_open_variable_introduction(world, lower, upper)
 
-
-
-        elif isinstance(upper, All):
-            renaming = self.make_renaming(upper.ids)
-            weak_constraints = sub_constraints(renaming, upper.constraints)
-            weak_body = sub_typ(renaming, upper.body)
-            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
-
-            worlds = [world]
-            for constraint in weak_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]  
-
-            return [
-                m2
-                for m0 in worlds
-                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
-                for m2 in self.solve(m1, lower, weak_body)
-            ]
-
-        #######################################
-
-
-        #######################################
-
-        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec.left, upper.consq), 
-                Imp(upper.antec.right, upper.consq)
-            ))
-
-        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec, upper.consq.left), 
-                Imp(upper.antec, upper.consq.right)
-            ))
-
-        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
-            return [
-                m1
-                for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
-                for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
-            ]
-
-
-        #######################################
-        #######################################
-
-
-
         elif isinstance(lower, TVar) and lower.id in world.closedids: 
-
-            # strict_constraints = tuple( 
-            #     Subtyping(t, upper)
-            #     for t in self.extract_upper_bounds(world, lower.id).union(
-            #         self.extract_factored_upper_bounds(world, lower.id)
-            #     )
-            # )
-            # if strict_constraints:
-            #     return self.solve_multi(world, strict_constraints)
-            # else:
-            #     return self.solve(world, Top(), upper)
-
-            # bounds =  self.extract_upper_bounds(world.constraints, lower.id).union(
-            #     self.extract_factored_upper_bounds(world, lower.id)
-            # )
-            # return self.solve(world, make_inter(list(bounds)), upper)
             ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
             if bool(self.solve(world, lower_interp, upper)):
                 return [world]
             else:
                 return []
 
+        elif isinstance(upper, TVar) and upper.id in world.closedids: 
+            ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
+            if self.solve(world, upper_interp, upper):
+                return [world]
+            else:
+                return []
 
-            ####################### OLD ###########################
-            # if lower.id in world.relids and isinstance(upper, TVar) and upper.id not in world.skolems:
-            #     # TODO: this case seems odd, should be handled by flex rule
-            #     # - there is non-termination if this rule is missing
-            #     # NOTE: No interpretation means the variable is relationally constrained;
-            #     return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            # else:
-            #     interp = self.intersect_upper_bounds(world, lower.id)
-            #     weakest_strong = interp
-            #     return self.solve(world, weakest_strong, upper)
-            # #end if-else
-            #########################################################
-        #end if-else
+        #######################################
+        #######################################
 
+        elif isinstance(upper, Unio) and (self.is_base_typ(lower) or self.is_pattern_typ(lower)): 
+            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
+
+        elif isinstance(lower, Inter) and self.is_base_typ(upper): 
+            return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
 
         elif isinstance(upper, Exi): 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG: upper, Exi 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# strong:
-# {concretize_typ(lower)}
-
-# weak:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
             renaming = self.make_renaming(upper.ids)
             weak_constraints = sub_constraints(renaming, upper.constraints)
             weak_body = sub_typ(renaming, upper.body)
@@ -2437,6 +2456,7 @@ class Solver:
                     for m1 in self.solve(m0, constraint.lower, constraint.upper)
                 ]
             return worlds
+
 
         elif isinstance(lower, All): 
             renaming = self.make_renaming(lower.ids)
@@ -2453,38 +2473,6 @@ class Solver:
 
             return worlds
 
-        elif isinstance(upper, TVar) and upper.id in world.closedids: 
-            ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
-            if self.solve(world, upper_interp, upper):
-                return [world]
-            else:
-                return []
-
-        elif isinstance(upper, Top): 
-            return [world] 
-
-        elif isinstance(lower, Top): 
-            return [] 
-
-        elif isinstance(upper, Bot): 
-            return [] 
-
-        elif isinstance(lower, Fixpoint):
-            if is_typ_structured(lower.body):
-                '''
-                NOTE: k-induction / bi-simulation
-                use the pattern on LHS to dictate number of unrollings needed on RHS 
-                simply need to sub RHS into LHS's self-referencing variable
-                '''
-                '''
-                sub in induction hypothesis to world:
-                '''
-                renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                lower_body = sub_typ(renaming, lower.body)
-
-                return self.solve(world, lower_body, upper)
-            else:
-                return []
 
         elif isinstance(upper, Fixpoint): 
 
@@ -2535,6 +2523,7 @@ class Solver:
                     #end if
                 #end if
 
+
         elif isinstance(lower, Diff):
             if diff_well_formed(lower):
                 '''
@@ -2544,41 +2533,13 @@ class Solver:
             else:
                 return []
 
-        #######################################
-        elif isinstance(upper, Unio): 
-            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
-        elif isinstance(lower, Inter): 
-            return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
+
 
         #######################################
-        #### Unification rules: ####
         #######################################
-
-        elif isinstance(lower, TUnit) and isinstance(upper, TUnit): 
-            return [world] 
-
-        elif isinstance(lower, TTag) and isinstance(upper, TTag): 
-            if lower.label == upper.label:
-                return self.solve(world, lower.body, upper.body) 
-            else:
-                return [] 
-
-        elif isinstance(lower, TField) and isinstance(upper, TField): 
-            if lower.label == upper.label:
-                return self.solve(world, lower.body, upper.body) 
-            else:
-                return [] 
-
-        elif isinstance(lower, Imp) and isinstance(upper, Imp): 
-            worlds = [
-                m1
-                for m0 in self.solve(world, upper.antec, lower.antec) 
-                for m1 in self.solve(m0, lower.consq, upper.consq) 
-            ]
-            return worlds
-
-        return []
+        else:
+            return []
 
 
 
