@@ -1430,15 +1430,15 @@ contains the space between types of the lower bound.
     }
   \end{mathpar}
 \end{definition}
+\hfill
 
+% \begin{definition} Proof Subtyping (Implication Rewriting)
+%   \\
+%   \boxed{\tau \subtypes \tau \given \Omega}
 
-\begin{definition} Proof Subtyping (Rewriting)
-  \\
-  \boxed{\tau \subtypes \tau \given \Omega}
-
-  \label{def:proof_subtyping_rewriting}
-  \TODO{these should be subsumed by other rules; double check necessity in implementation}
-  \begin{mathpar}
+%   \label{def:proof_subtyping_rewriting}
+%   \TODO{these should be subsumed by other rules; double check necessity in implementation}
+%   \begin{mathpar}
   %   \inferrule {
   %     \tau_l \subtypes
   %     \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
@@ -1468,8 +1468,8 @@ contains the space between types of the lower bound.
   %     \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
   %     \given M, \Delta
   %   }
-  \end{mathpar}
-\end{definition}
+%   \end{mathpar}
+% \end{definition}
 
 \begin{definition} Proof Subtyping (Abstraction Elimination)
   \\
@@ -1596,8 +1596,10 @@ contains the space between types of the lower bound.
 
     \inferrule {
       \alpha \in \vec{\alpha} 
+      % \\
+      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
       \\
-      \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
+      \nexists \alpha.\ \tau_r = \alpha 
       \\\\
       \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta\ \text{factor}(\Delta, \alpha), \alpha \rrbracket^- = (\Delta', \tau_l)
       \\\\
@@ -1633,8 +1635,10 @@ contains the space between types of the lower bound.
 
     \inferrule {
       \alpha \in \vec{\alpha} 
+      % \\
+      % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
       \\
-      \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
+      \nexists \alpha.\ \tau_l = \alpha 
       \\\\
       \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta', \tau_r)
       \\\\
@@ -1655,6 +1659,18 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_refinement_elimination}
   \begin{mathpar}
     \inferrule {
+      \tau_{l} \subtypes \kappa \given \Omega
+    } {
+      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{l} \subtypes \kappa \given \Omega 
+    } {
+      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+    }
+
+    \inferrule {
       \tau_l \subtypes \tau_r \given \Omega 
       \\
       \Omega \preceq \Omega' 
@@ -1665,18 +1681,6 @@ contains the space between types of the lower bound.
       \subtypes 
       \tau_r
       \given \Omega' 
-    }
-
-    \inferrule {
-      \tau_{ll} \subtypes \tau_r \given \Omega
-    } {
-      \tau_{ll}\obj{\&}\tau_{lr}  \subtypes \tau_r \given \Omega 
-    }
-
-    \inferrule {
-      \tau_{lr} \subtypes \tau_r \given \Omega 
-    } {
-      \tau_{ll}\obj{\&}\tau_{lr}  \subtypes \tau_r \given \Omega 
     }
 
     \inferrule {
@@ -1695,6 +1699,30 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_abstraction_introduction}
   \begin{mathpar}
     \inferrule {
+      \kappa \subtypes \tau_{l} \given \Omega 
+    } {
+      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \kappa \subtypes \tau_{r} \given \Omega 
+    } {
+      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \phi \subtypes \tau_{l} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \phi \subtypes \tau_{r} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
       \tau_l \subtypes \tau_r \given \Omega
       \\
       \Omega \preceq \Omega' 
@@ -1707,22 +1735,10 @@ contains the space between types of the lower bound.
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_{rl} \given \Omega 
-    } {
-      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_{rr} \given \Omega 
-    } {
-      \tau_l \subtypes \tau_{rl}\obj{|}\tau_{rr} \given \Omega 
-    }
-
-    \inferrule {
       \Omega \preceq \Omega'
       \\
       \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
-      \\
+      \\\\
       \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
       \given \Omega'
     } {

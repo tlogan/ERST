@@ -2197,30 +2197,29 @@ class Solver:
             return self.solve(world, self.aliasing[lower.id], upper)
 
         #######################################
+        #### Implication Rewriting ############
         #######################################
+        # elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+        #     return self.solve(world, lower, Inter(
+        #         Imp(upper.antec.left, upper.consq), 
+        #         Imp(upper.antec.right, upper.consq)
+        #     ))
 
-        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec.left, upper.consq), 
-                Imp(upper.antec.right, upper.consq)
-            ))
+        # elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+        #     return self.solve(world, lower, Inter(
+        #         Imp(upper.antec, upper.consq.left), 
+        #         Imp(upper.antec, upper.consq.right)
+        #     ))
 
-        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec, upper.consq.left), 
-                Imp(upper.antec, upper.consq.right)
-            ))
-
-        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
-            return [
-                m1
-                for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
-                for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
-            ]
-
-
+        # elif isinstance(upper, TField) and isinstance(upper.body, Inter):
+        #     return [
+        #         m1
+        #         for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
+        #         for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
+        #     ]
 
         #######################################
+        #### Base Preservation ################
         #######################################
 
         elif isinstance(lower, TUnit) and isinstance(upper, TUnit): 
@@ -2247,14 +2246,12 @@ class Solver:
             return worlds
 
         #######################################
-        ####  ####
+        ####  Abstraction Elimination #########
         #######################################
 
         elif isinstance(lower, Bot): 
             return [world] 
 
-        elif isinstance(upper, Top): 
-            return [world] 
 
         elif isinstance(lower, Unio):
             return [
@@ -2285,12 +2282,84 @@ class Solver:
                 for m2 in self.solve(m1, lower_body, upper)
             ]
 
+        # elif isinstance(lower, Fixpoint) and not isinstance(upper, Fixpoint):
+        #     # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
+        #     # to avoid infinitue  back into the original problem, causing non-termination
+        #     '''
+        #     NOTE: rewrite into existential making shape of relation visible
+        #     - allows matching shapes even if unrolling is undecidable
+        #     '''
+        #     paths = extract_relational_paths(lower)
+        #     if bool(paths):
+        #         rnode = RNode(m()) 
+        #         tvars = []
+        #         for path in paths:
+        #             tvar = self.fresh_type_var()
+        #             assert isinstance(rnode, RNode)
+        #             rnode = insert_at_path(rnode, path, tvar)
+        #             tvars.append(tvar)
+        #         # end for
+
+        #         key = to_record_typ(rnode) 
+        #     else:
+        #         tvar = self.fresh_type_var()
+        #         tvars = [tvar]
+        #         key = tvar
+
+        #     exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
+
+        #     return self.solve(world, exi, upper)
+
+        elif isinstance(lower, Fixpoint):
+            if is_typ_structured(lower.body):
+                '''
+                NOTE: k-induction / bi-simulation
+                use the pattern on LHS to dictate number of unrollings needed on RHS 
+                simply need to sub RHS into LHS's self-referencing variable
+                '''
+                '''
+                sub in induction hypothesis to world:
+                '''
+                renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                lower_body = sub_typ(renaming, lower.body)
+
+                return self.solve(world, lower_body, upper)
+            else:
+                return []
+
+        #######################################
+        #### Refinement Introduction ##########
+        #######################################
+
+        elif isinstance(upper, Top): 
+            return [world] 
 
         elif isinstance(upper, Inter):
             return [
                 m1 
                 for m0 in self.solve(world, lower, upper.left)
                 for m1 in self.solve(m0, lower, upper.right)
+            ]
+
+        elif isinstance(upper, All):
+            renaming = self.make_renaming(upper.ids)
+            weak_constraints = sub_constraints(renaming, upper.constraints)
+            weak_body = sub_typ(renaming, upper.body)
+            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
+
+            worlds = [world]
+            for constraint in weak_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]  
+
+            return [
+                m2
+                for m0 in worlds
+                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
+                for m2 in self.solve(m1, lower, weak_body)
             ]
 
         elif isinstance(upper, Diff): 
@@ -2319,73 +2388,8 @@ class Solver:
             else:
                 return []
 
-        elif isinstance(upper, All):
-            renaming = self.make_renaming(upper.ids)
-            weak_constraints = sub_constraints(renaming, upper.constraints)
-            weak_body = sub_typ(renaming, upper.body)
-            renamed_ids = (t.id for t in renaming.values() if isinstance(t, TVar))
-
-            worlds = [world]
-            for constraint in weak_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]  
-
-            return [
-                m2
-                for m0 in worlds
-                for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
-                for m2 in self.solve(m1, lower, weak_body)
-            ]
-        
-        elif isinstance(lower, Fixpoint) and not isinstance(upper, Fixpoint):
-            # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
-            # to avoid infinitue  back into the original problem, causing non-termination
-            '''
-            NOTE: rewrite into existential making shape of relation visible
-            - allows matching shapes even if unrolling is undecidable
-            '''
-            paths = extract_relational_paths(lower)
-            if bool(paths):
-                rnode = RNode(m()) 
-                tvars = []
-                for path in paths:
-                    tvar = self.fresh_type_var()
-                    assert isinstance(rnode, RNode)
-                    rnode = insert_at_path(rnode, path, tvar)
-                    tvars.append(tvar)
-                # end for
-
-                key = to_record_typ(rnode) 
-            else:
-                tvar = self.fresh_type_var()
-                tvars = [tvar]
-                key = tvar
-
-            exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
-
-            return self.solve(world, exi, upper)
-
-        elif isinstance(lower, Fixpoint):
-            if is_typ_structured(lower.body):
-                '''
-                NOTE: k-induction / bi-simulation
-                use the pattern on LHS to dictate number of unrollings needed on RHS 
-                simply need to sub RHS into LHS's self-referencing variable
-                '''
-                '''
-                sub in induction hypothesis to world:
-                '''
-                renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                lower_body = sub_typ(renaming, lower.body)
-
-                return self.solve(world, lower_body, upper)
-            else:
-                return []
-
         #######################################
+        #### Variable Elimination #############
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
@@ -2417,18 +2421,24 @@ class Solver:
                 ]
             return worlds 
 
-
-        elif isinstance(upper, TVar) and upper.id not in world.closedids: 
-            return self.solve_open_variable_introduction(world, lower, upper)
-
-        elif isinstance(lower, TVar) and lower.id in world.closedids: 
+        # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
+        elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
             ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
             if bool(self.solve(world, lower_interp, upper)):
                 return [world]
             else:
                 return []
 
-        elif isinstance(upper, TVar) and upper.id in world.closedids: 
+
+        #######################################
+        #### Variable Introduction #############
+        #######################################
+
+        elif isinstance(upper, TVar) and upper.id not in world.closedids: 
+            return self.solve_open_variable_introduction(world, lower, upper)
+
+        # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
+        elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
             ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
             if self.solve(world, upper_interp, upper):
                 return [world]
@@ -2436,27 +2446,12 @@ class Solver:
                 return []
 
         #######################################
+        #### Refinement Elimination ###########
         #######################################
 
-        elif isinstance(upper, Unio) and (self.is_base_typ(lower) or self.is_pattern_typ(lower)): 
-            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
         elif isinstance(lower, Inter) and self.is_base_typ(upper): 
             return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
-
-        elif isinstance(upper, Exi): 
-            renaming = self.make_renaming(upper.ids)
-            weak_constraints = sub_constraints(renaming, upper.constraints)
-            weak_body = sub_typ(renaming, upper.body)
-            worlds = self.solve(world, lower, weak_body) 
-            for constraint in weak_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]
-            return worlds
-
 
         elif isinstance(lower, All): 
             renaming = self.make_renaming(lower.ids)
@@ -2473,6 +2468,34 @@ class Solver:
 
             return worlds
 
+        elif isinstance(lower, Diff):
+            if diff_well_formed(lower):
+                '''
+                A \\ B <: T === A <: T | B  
+                '''
+                return self.solve(world, lower.context, Unio(upper, lower.negation))
+            else:
+                return []
+
+        #######################################
+        #### Abstraction Introduction #########
+        #######################################
+
+        elif isinstance(upper, Unio) and (self.is_base_typ(lower) or self.is_pattern_typ(lower)): 
+            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
+
+        elif isinstance(upper, Exi): 
+            renaming = self.make_renaming(upper.ids)
+            weak_constraints = sub_constraints(renaming, upper.constraints)
+            weak_body = sub_typ(renaming, upper.body)
+            worlds = self.solve(world, lower, weak_body) 
+            for constraint in weak_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]
+            return worlds
 
         elif isinstance(upper, Fixpoint): 
 
@@ -2523,20 +2546,8 @@ class Solver:
                     #end if
                 #end if
 
-
-        elif isinstance(lower, Diff):
-            if diff_well_formed(lower):
-                '''
-                A \\ B <: T === A <: T | B  
-                '''
-                return self.solve(world, lower.context, Unio(upper, lower.negation))
-            else:
-                return []
-
-
-
-
         #######################################
+        #### Otherwise Failure ################
         #######################################
         else:
             return []
