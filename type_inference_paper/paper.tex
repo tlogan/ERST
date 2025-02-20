@@ -523,13 +523,8 @@ However, we have not included this rewriting in the semantics or implementation.
 % \paragraph{Generalization.} This is motivated by applying the same function to multiple arguments of varying types.
 % \paragraph{Object oriented.}  
 
-\section{Dynamic Semantics}
-The programming language is pure and applicative. A program is an expression 
-of the form in definition \ref{def:expressions}. The forms of expressions
-enable function abstraction, function application, tagged constructions, record construction, record projection,
-and pattern matching. These forms enable us to express non-trivial programs. They also allow
-for compositions that have no reasonable semantics.  
-
+\section{Expression System}
+The programming language is pure and applicative. 
 
 
 \begin{definition} Expressions
@@ -570,14 +565,11 @@ for compositions that have no reasonable semantics.
   \end{array}\]
 \end{definition}
 
-\emph{Progression} of an expression, as in definition \ref{def:progression},
-is a small-step operational semantics. 
-It adheres to typical definitions of applicative languages for the most part. One 
-slight departure is that pattern matching is merely a special case of function application. 
-Likewise, a switch is merely a function abstraction.
-Records are similar to Functions, except that their entries are guarded by literal identifiers. 
-Additionally, records may be abstracted as patterns, but functions may not.
-The semantics enables recursion via the fixed point combinator \obj{loop}.
+A program is an expression 
+of the form in definition \ref{def:expressions}. The forms of expressions
+enable function abstraction, function application, tagged constructions, record construction, record projection,
+and pattern matching. These forms enable us to express non-trivial programs. They also allow
+for compositions that have no reasonable semantics.  
 
 \begin{definition}\boxed{e \rightsquigarrow e}\ Progression
   \label{def:progression}
@@ -626,7 +618,6 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
       \vec{f}\obj{(}e\obj{)} \rightsquigarrow \vec{f}\obj{(}e'\obj{)}
     }
 
-
     \inferrule {
       \vec{f}\obj{(}v\obj{)} \rightsquigarrow e'
       \\
@@ -653,19 +644,23 @@ The semantics enables recursion via the fixed point combinator \obj{loop}.
     } {
       \obj{loop(\$}x\obj{=>}e\obj{)} \rightsquigarrow e[x \slash \obj{loop(\$}x\obj{=>}e\obj{)}]
     }
-
-
-
   \end{mathpar}
 \end{definition}
 
+\emph{Progression} of an expression, as in definition \ref{def:progression},
+is a small-step operational semantics. 
+It adheres to typical definitions of applicative languages for the most part. One 
+slight departure is that pattern matching is merely a special case of function application. 
+Likewise, a switch is merely a function abstraction.
+Records are similar to Functions, except that their entries are guarded by literal identifiers. 
+Additionally, records may be abstracted as patterns, but functions may not.
+The semantics enables recursion via the fixed point combinator \obj{loop}.
 
-\section{Static Semantics}
+
+\section{Type System}
 The static semantics is a system for checking if the construction of an expression is viable.   
-The system leverages types of the forms in Definition \ref{def:types}, 
-which allow expressing properties of expressions with varying levels of precisions. 
 
-
+\hfill
 \begin{definition} Types 
   \label{def:types}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -738,6 +733,120 @@ which allow expressing properties of expressions with varying levels of precisio
     & \com{subtyping environment}
   \end{array}\]
 \end{definition}
+\hfill
+
+The system leverages types of the forms in Definition \ref{def:types}, 
+which allow expressing properties of expressions with varying levels of precisions. 
+
+
+
+\begin{definition} Proof Typing
+  \\
+  \boxed{\Gamma \entails e \hastype \tau \given \Omega}
+
+  \label{def:proof_typing}
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
+    }
+
+    \inferrule {
+      x:\tau \in \Gamma
+    } {
+      \Gamma \entails x \hastype \tau \given \Omega 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+    } {
+      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
+    }
+
+    \inferrule {
+      \vec{r} = \epsilon
+    } {
+      \Gamma \entails \vec{r} \hastype \obj{TOP} \given \Omega
+    }
+
+    \inferrule {
+      \Gamma \entails \vec{r} \hastype \tau \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \Gamma \entails e \hastype \tau' \given \Omega' 
+    } {
+      \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \given \Omega' 
+    }
+
+    \inferrule {
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
+      \\
+      \text{pack}^+(\text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi}) = \tau 
+    } {
+      \Gamma \entails \vec{f} \hastype \tau \given \vec{\alpha}, \Delta
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau_0 \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
+    } {
+      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
+    }
+
+    \inferrule {
+      \Gamma \entails e_f \hastype \tau_f \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
+      \\\\
+      \Omega' \preceq \Omega''
+      \\
+      \tau_f \subtypes \tau_a\obj{->}\alpha \given \Omega'' 
+    } {
+      \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \\\\
+      \forall \vec{\alpha}'\ \Delta' .\ 
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+      \implies
+      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \\\\
+      \exists \pi.\ \pi \in \vec{\pi}_\nu
+      \\\\
+      \alpha_\nu \downarrow \vec{\pi}_\nu
+      \fallingdotseq 
+      \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau'
+    } {
+      \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+      \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau \subtypes \tau_a \given \Omega' 
+      \\\\
+      \Omega' \preceq \Omega''
+      \\
+      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
+    } {
+      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
 
 \emph{Proof typing}, def. \ref{def:proof_typing}, checks the viability of an expression's
 form. Additionally, by extending the forms of expressions with type annotations, 
@@ -838,137 +947,11 @@ representing the dual of the greatest fixpoint of implication under intersected 
 Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
 and wrapping a generalized implication around that. 
 
-\paragraph{Rule \ref{def:proof_typing}.10}
 For an annotated definition, $\obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e'$, 
 proof typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the contintuation $e'$.
 
-
-\begin{definition} \boxed{\Gamma \entails e \hastype \tau \given \Omega}\ Proof Typing
-  \label{def:proof_typing}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
-    }\lab{1}
-
-    \inferrule {
-      x:\tau \in \Gamma
-    } {
-      \Gamma \entails x \hastype \tau \given \Omega 
-    }\lab{2}
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-    } {
-      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
-    }\lab{3}
-
-    \inferrule {
-      \vec{r} = \epsilon
-    } {
-      \Gamma \entails \vec{r} \hastype \obj{TOP} \given \Omega
-    }\lab{4}
-
-    \inferrule {
-      \Gamma \entails \vec{r} \hastype \tau \given \Omega 
-      \\
-      \Gamma \entails e \hastype \tau' \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-    } {
-      \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \given \Omega' 
-    }\lab{5}
-
-    \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
-      \\
-      \text{pack}^+(\text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi}) = \tau 
-    } {
-      \Gamma \entails \vec{f} \hastype \tau \given \vec{\alpha}, \Delta
-    }\lab{6}
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau_0 \given \Omega 
-      \\
-      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-    } {
-      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
-    }\lab{7}
-
-    \inferrule {
-      \Gamma \entails e_f \hastype \tau_f \given \Omega 
-      \\
-      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-      \\\\
-      \tau_f \subtypes \tau_a\obj{->}\alpha \given \Omega'' 
-      \\
-      \Omega' \preceq \Omega''
-    } {
-      \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
-    }\lab{8}
-
-    % \inferrule {
-    %   \Gamma \entails e \hastype \alpha^+\obj{->}\tau \given  \vec{\alpha}, \Delta 
-    %   \\\\
-    %   \forall \vec{\alpha}'\ \Delta' .\ 
-    %    (\vec{\alpha}', \Delta') \in \vec{\Omega}_\nu
-    %   \implies
-    %   \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
-    %   \\\\
-    %   \exists \Omega.\ \Omega \in \vec{\Omega}_\nu
-    %   \\\\
-    %   \text{FTV}(\Gamma) \entails 
-    %   \text{GFP}[\alpha_\nu]\vec{\Omega}_\nu \Rightarrow \alpha_l\rightarrow\alpha_r 
-    %   \fallingdotseq 
-    %   \text{LFP}[\alpha_\mu]\vec{\Omega}_\mu \times \alpha_l * \alpha_r
-    %   \\\\
-    %   \text{FTV}(\Gamma)\ \alpha_\mu \entails \vec{\Omega}_\mu \times \alpha_l * \alpha_r \cong \vec{\tau}
-    % } {
-    %   \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-    %   \obj{<:LFP[} \alpha_\mu \obj{]}\text{union}(\vec{\tau})\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    % }\lab{9}
-
-    \inferrule {
-      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
-      \\\\
-      \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
-      \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
-      \\\\
-      \exists \pi.\ \pi \in \vec{\pi}_\nu
-      \\\\
-      \alpha_\nu \downarrow \vec{\pi}_\nu
-      \fallingdotseq 
-      \alpha_\mu \uparrow \vec{\pi}_\mu
-      \\
-      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau'
-    } {
-      \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-      \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    }\lab{9}
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-      \\
-      \tau \subtypes \tau_a \given \Omega' 
-      \\
-      \Omega \preceq \Omega'
-      \\\\
-      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
-      \\
-      \Omega' \preceq \Omega''
-    } {
-      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
-    }\lab{10}
-  \end{mathpar}
-\end{definition}
-
+\hfill
 \begin{definition} \boxed{\Omega \preceq \Omega}\ World Ordering 
   \label{def:world_ordering}
   \begin{mathpar}
@@ -1230,159 +1213,7 @@ The remaining rules include duals and other forms that adhere to similar proof s
 as well as additional rules for increased precision.  
 
 
-\paragraph{Rule \ref{def:proof_subtyping}.1}
-For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
-proof subtyping simply holds without any updates to the world.
-
-\paragraph{Rule \ref{def:proof_subtyping}.2}
-For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
-attempts a proof by induction, by unrolling the least fixed point
-and replacing its self referencing variable with the upper bound.
-
-\paragraph{Rule \ref{def:proof_subtyping}.3}
-For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
-checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
-and does not subtype the subtracted portion $\eta$.
-When relying on negation, one must be careful to preserve soundness.
-We ensure that proof subtyping is complete for an upper bound of limited
-form $\eta$ with no free type variables, which
-means its negation is sound. We will make the limited notion
-of completeness precise in section \ref{sect:correctness}.
-
-\paragraph{Rule \ref{def:proof_subtyping}.4}
-For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
-ensures that both parts of the assumed type subtype the guaranteed type.
-
-The introduction counterpart of this rule is the introduction of an intersection type (\ref{def:continued_proof_subtyping}).
-
-\paragraph{Rule \ref{def:proof_subtyping}.5}
-For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
-infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
-which it leverages to prove the guaranteed type. 
-
-% subtyping constraints that satisfy
-% the existential qualifiers $\Delta$, and then
-% checks the body of the existential against the upper bound,
-% under the previously learned subtyping constraints,
-% with the restriction that the existentially quantified variables  
-% are closed.
-
-% This is analogous to a proof in predicate logic, where
-% the prover declares a variable from an existential statement
-% and cannot see its particular value. 
-
-The introduction counterpart of this rule is the introduction of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
-
-% The universal dual is analogous to a proof in predicate logic, where
-% the prover generalized from an arbitrary variable to a universal statement. 
-
-\paragraph{Rule \ref{def:proof_subtyping}.6}
-For a lower bound closed variable $\alpha$, proof subtyping
-finds a strict interpretation of the variable
-and checks it against the upper bound. Since the subtyping constraints
-may contain relational constraints, it factors the relational constraints
-to find constraints over single variables, which it used to construct the strict
-interpretation $\text{inter}(\vec{\tau})$.  
-
-The dual of this rule is the one for an upper bound closed variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-\paragraph{Rule \ref{def:proof_subtyping}.7}
-For an upper bound open variable $\alpha$, proof subtyping
-finds a lenient interpretation of the variable and checks it against the lower bound.
-If safe, it updates the worlds with the subtyping.
-To find a lenient interpretation in simple constraints, it searches the world for 
-the first upper bounds that are not closed variables. It also looks for relational
-upper bounds of pattern type containing the open variable $\alpha$.
-Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
-that are transitive upper bounds of the open variable $\alpha$.  
-
-The dual of this rule is the one for a lower bound open variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-\paragraph{Rule \ref{def:proof_subtyping}.8}
-For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
-infers constraints to witness the guaranteed existential type. 
-
-% solves the existential's target $\tau_r$ against the lower bound,
-% in order to learn necessary constraints on the bound variables 
-% for solving the qualifiers. 
-% It then uses the world generated from that to solve
-% the existential's qualifiers $\Delta$.
-
-% It is analogous to the proof method in predicate logic, 
-% in which the prover may choose an expression to be a witness for an existential statement. 
-
-
-The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
-in which proof subtyping infers constraints to instantiate assumed the universal type.
-
-\paragraph{Rule \ref{def:proof_subtyping}.9}
-For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
-proof subtyping checks that the left part of the union holds against
-the lower bound. 
-
-The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-\paragraph{Rule \ref{def:proof_subtyping}.10}
-For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
-proof subtyping also checks that the right part of the union holds against
-the lower bound. 
-
-The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-\paragraph{Rule \ref{def:proof_subtyping}.11}
-For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
-simply checks that the positive type subtypes
-the upper bound union with the subtracted type. 
-
-\paragraph{Rule \ref{def:proof_subtyping}.12}
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
-where subtyping is decomposable, proof subtyping   
-unrolls the least fixed point and checks it against the lower bound. 
-
-\paragraph{Rule \ref{def:proof_subtyping}.13}
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
-where the lower bound is a pattern type containing at least one closed variable,
-proof typing searches the world for a constraint with a matching pattern type,
-which provides a strict interpretation of the pattern type,
-in the form of found constraint's upper bound.
-It then checks that the strict interpretation of the pattern type holds.
-For increased coverage, the system rewrites relational constraints
-into equivalent normal forms.
-
-This rule is the relational analog of the closed variable rules.
-
-\paragraph{Rule \ref{def:proof_subtyping}.14}
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
-where the lower bound is a pattern type whose variables are all open,
-proof subtyping checks that the subtyping is consistent
-and checks that a lenient interpretation of the pattern type's open variables
-holds. If the subtyping is safe, then world is updated
-with the subtyping constraint. 
-
-This rule is the relational analog of the open variable rules.
-
-\paragraph{Rule \ref{def:proof_subtyping}.15}
-For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-
-\paragraph{Rule \ref{def:proof_subtyping}.16}
-For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-\paragraph{Rule \ref{def:proof_subtyping}.17}
-For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
-proof subtyping simply checks that the space between types of the upper bound
-contains the space between types of the lower bound.
-
-
-
+\hfill
 \begin{definition} Proof Subtyping (Reflection)
   \\
   \boxed{\tau_l \subtypes \tau_r \given \Omega}
@@ -1396,7 +1227,12 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 
-\begin{definition} Proof Subtyping (Basic Preservation)
+For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
+proof subtyping simply holds without any updates to the world.
+
+
+\hfill
+\begin{definition} Proof Subtyping (Base Preservation)
   \\
   \boxed{\kappa_l \subtypes \kappa_r \given \Omega}
 
@@ -1432,6 +1268,21 @@ contains the space between types of the lower bound.
 \end{definition}
 \hfill
 
+For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
+proof subtyping simply checks that the labels match and subtyping holds
+for their contents.
+
+
+For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
+proof subtyping simply checks that the labels match and subtyping holds
+for their contents.
+
+For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
+proof subtyping simply checks that the space between types of the upper bound
+contains the space between types of the lower bound.
+
+
+% \hfill
 % \begin{definition} Proof Subtyping (Implication Rewriting)
 %   \\
 %   \boxed{\tau \subtypes \tau \given \Omega}
@@ -1470,7 +1321,9 @@ contains the space between types of the lower bound.
   %   }
 %   \end{mathpar}
 % \end{definition}
+% \hfill
 
+\hfill
 \begin{definition} Proof Subtyping (Abstraction Elimination)
   \\
   \boxed{\mu \subtypes \tau \given \Omega}
@@ -1496,12 +1349,6 @@ contains the space between types of the lower bound.
     }
     \\
     \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
-    } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }
-
-    \inferrule {
       \vec{\alpha}_l \notfree \tau_r
       \\
       \Delta_l \given \vec{\alpha}, \Delta
@@ -1515,10 +1362,28 @@ contains the space between types of the lower bound.
       \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
     }
+
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+    } {
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+    }
   \end{mathpar}
 \end{definition}
 \hfill
 
+For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+ensures that both parts of the assumed type subtype the guaranteed type.
+
+For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
+which it leverages to prove the guaranteed type. 
+
+For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+attempts a proof by induction, by unrolling the least fixed point
+and replacing its self referencing variable with the upper bound.
+
+\hfill
 \begin{definition} Proof Subtyping (Refinement Introduction)
   \\
   \boxed{\tau \subtypes \nu \given \Omega}
@@ -1541,6 +1406,20 @@ contains the space between types of the lower bound.
     }
     \\
     \inferrule {
+      \vec{\alpha}_r \notfree \tau_l
+      \\
+      \Delta_r \given \vec{\alpha}, \Delta
+      \\
+      (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\\\
+      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
+    } {
+      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
+    }
+
+    \inferrule {
       % \TODO{prove that subtyping of diff is complete}
       % \\\\
       % \TODO{which implies that its negation is sound}
@@ -1557,25 +1436,20 @@ contains the space between types of the lower bound.
       \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
       \given \Omega 
     }
-
-    \inferrule {
-      \vec{\alpha}_r \notfree \tau_l
-      \\
-      \Delta_r \given \vec{\alpha}, \Delta
-      \\
-      (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
-      \\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\\\
-      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
-    } {
-      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
-    }
-
   \end{mathpar}
 \end{definition}
 \hfill
 
+For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
+and does not subtype the subtracted portion $\eta$.
+When relying on negation, one must be careful to preserve soundness.
+We ensure that proof subtyping is complete for an upper bound of limited
+form $\eta$ with no free type variables, which
+means its negation is sound. We will make the limited notion
+of completeness precise in section \ref{sect:correctness}.
+
+\hfill
 \begin{definition} Proof Subtyping (Variable Elimination)
   \\
   \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
@@ -1615,6 +1489,18 @@ contains the space between types of the lower bound.
 \end{definition}
 \hfill
 
+For a lower bound closed variable $\alpha$, proof subtyping
+finds a strict interpretation of the variable
+and checks it against the upper bound. Since the subtyping constraints
+may contain relational constraints, it factors the relational constraints
+to find constraints over single variables, which it used to construct the strict
+interpretation $\text{inter}(\vec{\tau})$.  
+
+The dual of this rule is the one for an upper bound closed variable, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+\hfill
 \begin{definition} Proof Subtyping (Variable Introduction)
   \\
   \boxed{\tau \subtypes \alpha \given \Omega}\ \textbf{where}\ $\nexists \mu.\ \tau = \mu$
@@ -1651,7 +1537,20 @@ contains the space between types of the lower bound.
 \end{definition}
 \hfill
 
+For an upper bound open variable $\alpha$, proof subtyping
+finds a lenient interpretation of the variable and checks it against the lower bound.
+If safe, it updates the worlds with the subtyping.
+To find a lenient interpretation in simple constraints, it searches the world for 
+the first upper bounds that are not closed variables. It also looks for relational
+upper bounds of pattern type containing the open variable $\alpha$.
+Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
+that are transitive upper bounds of the open variable $\alpha$.  
 
+The dual of this rule is the one for a lower bound open variable, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+\hfill
 \begin{definition} Proof Subtyping (Refinement Elimination)
   \\
   \boxed{\nu \subtypes \tau \given \Omega}\ \textbf{where}\ $\exists \kappa\ \mu .\ \tau = \kappa \lor \tau = \mu$
@@ -1692,6 +1591,11 @@ contains the space between types of the lower bound.
 \end{definition}
 \hfill
 
+For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
+simply checks that the positive type subtypes
+the upper bound union with the subtracted type. 
+
+\hfill
 \begin{definition} Proof Subtyping (Abstraction Introduction)
   \\
   \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
@@ -1778,6 +1682,54 @@ contains the space between types of the lower bound.
   \end{mathpar}
 \end{definition}
 \hfill
+
+
+For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
+infers constraints to witness the guaranteed existential type. 
+
+The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
+in which proof subtyping infers constraints to instantiate assumed the universal type.
+
+For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping checks that the left part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping also checks that the right part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
+where subtyping is decomposable, proof subtyping   
+unrolls the least fixed point and checks it against the lower bound. 
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+where the lower bound is a pattern type containing at least one closed variable,
+proof typing searches the world for a constraint with a matching pattern type,
+which provides a strict interpretation of the pattern type,
+in the form of found constraint's upper bound.
+It then checks that the strict interpretation of the pattern type holds.
+For increased coverage, the system rewrites relational constraints
+into equivalent normal forms.
+
+This rule is the relational analog of the closed variable rules.
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+where the lower bound is a pattern type whose variables are all open,
+proof subtyping checks that the subtyping is consistent
+and checks that a lenient interpretation of the pattern type's open variables
+holds. If the subtyping is safe, then world is updated
+with the subtyping constraint. 
+
+This rule is the relational analog of the open variable rules.
+
+
 
 \begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
   \label{def:decomposable}
