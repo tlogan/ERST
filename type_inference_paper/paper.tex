@@ -1103,11 +1103,13 @@ and adds the annotation to the typing environment when checking the contintuatio
 
 \begin{definition}\boxed{
   \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
-}\ Negative Prune Interpretation 
-\label{def:negative_prune_interpretation}
+}\ Pruning Interpretation (Negative)
+\label{def:pruning_interpretation_negative}
   \begin{mathpar}
     \inferrule {
-      \llbracket \text{extract}(\vec{\alpha}_\closed, \alpha \entails \Delta)^-\backslash\Delta, \alpha \rrbracket^- = (\Delta', \tau)
+      \forall \delta .\ \delta \in \Delta' \iff \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \delta
+      \\
+      \llbracket \Delta\backslash\Delta', \alpha \rrbracket^- = (\Delta', \tau)
     } {
       \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     }
@@ -1115,17 +1117,29 @@ and adds the annotation to the typing environment when checking the contintuatio
 \end{definition}
 
 \begin{definition}\boxed{
-  \text{indirect}(\vec{\alpha}_\bullet, \alpha \entails \Delta)^- = \Delta'
-}\ Negative Indirect Extraction 
-\label{def:negative_indirect_extraction}
+  \vec{\alpha}_\bullet, \Delta, \alpha \entails \delta \looparrowright 
+}\ Indirection (Negative)  
+\label{def:indirection_negative}
   \begin{mathpar}
+    \inferrule {
+      \obj{;}\alpha\obj{<:}\tau \in \Delta 
+      \\
+      \alpha' \in \text{FTV}(\tau)
+      \\
+      \obj{;}\alpha'\obj{<:}\tau' \in \Delta 
+      \\
+      (\obj{;}\alpha\obj{<:}\tau = \delta) \lor (\obj{;}\alpha'\obj{<:}\tau' = \delta)
+    } {
+      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \delta
+    }
   \end{mathpar}
 \end{definition}
 
+
 \begin{definition}\boxed{
   \llbracket\Delta, \alpha \rrbracket^- = (\Delta, \tau)
-}\ Negative Interpretation 
-\label{def:negative_interpretation}
+}\ Interpretation (Negative) 
+\label{def:interpretation_negative}
 
   \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
 
