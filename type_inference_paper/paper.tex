@@ -60,6 +60,12 @@
 \newcommand{\consis}{\ \star}
 
 
+
+\newcommand{\foreign}{\varnothing}
+\newcommand{\closed}{\bullet}
+\newcommand{\open}{\circ}
+
+
 % \newcommand{\tl}{\textasciitilde{}}
 
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
@@ -1086,7 +1092,7 @@ and adds the annotation to the typing environment when checking the contintuatio
 \hfill
 
 \begin{definition}\boxed{
-  \llbracket \vec{\alpha}, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
+  \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
 }\ Polar Type Interpretation 
 \label{def:polar_type_interpretation}
 
@@ -1096,7 +1102,28 @@ and adds the annotation to the typing environment when checking the contintuatio
 
 
 \begin{definition}\boxed{
-  \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^- = (\Delta, \tau)
+  \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+}\ Negative Prune Interpretation 
+\label{def:negative_prune_interpretation}
+  \begin{mathpar}
+    \inferrule {
+      \llbracket \text{extract}(\vec{\alpha}_\closed, \alpha \entails \Delta)^-\backslash\Delta, \alpha \rrbracket^- = (\Delta', \tau)
+    } {
+      \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{
+  \text{indirect}(\vec{\alpha}_\bullet, \alpha \entails \Delta)^- = \Delta'
+}\ Negative Indirect Extraction 
+\label{def:negative_indirect_extraction}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{
+  \llbracket\Delta, \alpha \rrbracket^- = (\Delta, \tau)
 }\ Negative Interpretation 
 \label{def:negative_interpretation}
 
@@ -1107,55 +1134,26 @@ and adds the annotation to the typing environment when checking the contintuatio
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha} \entails (\epsilon, \alpha) \subtypes (\epsilon, \obj{TOP})
+      \llbracket \epsilon, \alpha \rrbracket \subtypes (\epsilon, \obj{TOP})
     }
 
     \inferrule {
-      (\Delta, \alpha) \subtypes (\Delta', \tau)
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \vec{\alpha} \entails (\Delta\ \obj{;}\alpha \obj{<:} \tau', \alpha) \subtypes (\Delta', \tau \obj{\&} \tau')
+      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket = (\Delta', \tau' \obj{\&} \tau)
     }
 
     \inferrule {
       \alpha \neq \tau_l
       \\
-      (\Delta, \alpha_l) \subtypes (\Delta', \tau)
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \vec{\alpha} \entails (\Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha_l) \subtypes (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
     }
   \end{mathpar}
 \end{definition}
+\hfill
 
-\begin{definition}\boxed{
-  \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta, \tau)
-}\ Positive Interpretation 
-\label{def:positive_interpretation}
-
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau) \implies \Delta' \satisfies \tau <: \alpha$}
-
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
-
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \vec{\alpha} \entails (\epsilon, \alpha) \supertypes (\epsilon, \obj{BOT})
-    }
-
-    \inferrule {
-      (\Delta, \alpha) \supertypes (\Delta', \tau)
-    } {
-      \vec{\alpha} \entails (\Delta\ \obj{;}\tau' \obj{<:} \alpha, \alpha) \supertypes (\Delta', \tau \obj{|} \tau')
-    }
-
-    \inferrule {
-      \alpha \neq \tau_r
-      \\
-      (\Delta, \alpha) \supertypes (\Delta', \tau)
-    } {
-      \vec{\alpha} \entails (\Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha) \supertypes (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
-    }
-  \end{mathpar}
-\end{definition}
 
 \begin{definition}\boxed{\alpha \downarrow \Delta \fallingdotseq \alpha \uparrow \Delta}\ Fixpoint Constraint Duality 
 \label{def:pair_duality}
@@ -1457,32 +1455,32 @@ of completeness precise in section \ref{sect:correctness}.
   \label{def:proof_subtyping_variable_elimination}
   \begin{mathpar}
     \inferrule {
-      (\vec{\alpha}, \Delta\ \Delta_\sharp) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
       \\ 
-      \alpha \notin \vec{\alpha}
+      \alpha_\open \notin \vec{\alpha}_\closed
       \\\\
-      \text{split}^-(\Delta[\alpha\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\sharp, \Delta_\flat)
+      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\
-      \Delta_\flat \given \vec{\alpha}', \Delta'
+      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \alpha \subtypes \tau \given (\vec{\alpha}', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
     }
 
     \inferrule {
-      \alpha \in \vec{\alpha} 
+      \alpha_\closed \in \vec{\alpha}_\closed 
       % \\
       % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
       \\
       \nexists \alpha.\ \tau_r = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta\ \text{factor}(\Delta, \alpha), \alpha \rrbracket^- = (\Delta', \tau_l)
+      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta\ \text{factor}(\Delta, \alpha_\closed), \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}, \Delta) \preceq \Omega \land
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      \alpha \subtypes \tau_r
-      \given (\vec{\alpha}, \Delta)
+      \alpha_\closed \subtypes \tau_r
+      \given (\vec{\alpha}_\closed, \Delta)
       \\
     }
   \end{mathpar}
@@ -1508,30 +1506,30 @@ in the continued definition \ref{def:continued_proof_subtyping}.
   \label{def:proof_subtyping_variable_introduction}
   \begin{mathpar}
     \inferrule {
-      (\vec{\alpha}, \Delta\ \Delta_\sharp) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
       \\ 
-      \alpha \notin \vec{\alpha}
+      \alpha_\open \notin \vec{\alpha}_\closed
       \\\\
-      \text{split}^+(\Delta[\alpha\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\sharp, \Delta_\flat)
+      \text{split}^+(\Delta[\alpha_\open\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\
-      \Delta_\flat \given \vec{\alpha}', \Delta'
+      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \tau_l \subtypes \alpha \given (\vec{\alpha}', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha) 
+      \tau_l \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha_\open) 
     }
 
     \inferrule {
-      \alpha \in \vec{\alpha} 
+      \alpha_\closed \in \vec{\alpha}_\closed 
       % \\
       % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
       \\
       \nexists \alpha.\ \tau_l = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^+ = (\Delta', \tau_r)
+      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
     } {
-      \tau_l \subtypes \alpha \given (\vec{\alpha}, \Delta) 
+      \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
     }
   \end{mathpar}
 \end{definition}
