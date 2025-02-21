@@ -1842,39 +1842,38 @@ class Solver:
         elif isinstance(src, TUnit):  
             return constraints, TUnit()
         elif isinstance(src, TTag):  
-            constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
-            return constraints, TTag(src.label, body)
+            body_constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
+            return body_constraints, TTag(src.label, body)
         elif isinstance(src, TField):  
-            constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
-            return constraints, TField(src.label, body)
+            body_constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
+            return body_constraints, TField(src.label, body)
         elif isinstance(src, Unio):  
-            constraints, left = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.left)
-            constraints, right = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.right)
-            return constraints, Unio(left, right)
+            left_constraints, left = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.left)
+            right_constraints, right = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.right)
+            return (left_constraints).intersection(right_constraints), Unio(left, right)
         elif isinstance(src, Inter):  
-            constraints, left = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.left)
-            constraints, right = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.right)
-            return constraints, Inter(left, right)
+            left_constraints, left = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.left)
+            right_constraints, right = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.right)
+            return (left_constraints).intersection(right_constraints), Inter(left, right)
         elif isinstance(src, Diff):  
-            constraints, context = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.context)
-            constraints, negation = self.prune_interpret_polar_typ(ignore, not positive, closedids, constraints, src.negation)
-            return constraints, Diff(context, negation)
+            context_constraints, context = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.context)
+            return (context_constraints), Diff(context, src.negation)
         elif isinstance(src, Imp):  
-            constraints, consq = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.consq)
-            constraints, antec = self.prune_interpret_polar_typ(ignore, not positive, closedids, constraints, src.antec)
-            return constraints, Imp(antec, consq)
+            consq_constraints, consq = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.consq)
+            antec_constraints, antec = self.prune_interpret_polar_typ(ignore, not positive, closedids, constraints, src.antec)
+            return (consq_constraints).intersection(antec_constraints), Imp(antec, consq)
         elif isinstance(src, Exi):  
-            constraints, inner_constraints = self.prune_interpret_polar_constraints(ignore.union(src.ids), positive, closedids, constraints, src.constraints)
-            constraints, body = self.prune_interpret_polar_typ(ignore.union(src.ids), positive, closedids, constraints, src.body)
-            return constraints, Exi(src.ids, tuple(inner_constraints), body)
+            outer_constraints, inner_constraints = self.prune_interpret_polar_constraints(ignore.union(src.ids), positive, closedids, constraints, src.constraints)
+            body_constraints, body = self.prune_interpret_polar_typ(ignore.union(src.ids), positive, closedids, constraints, src.body)
+            return (outer_constraints).intersection(body_constraints), Exi(src.ids, tuple(inner_constraints), body)
         elif isinstance(src, All):  
-            constraints, inner_constraints = self.prune_interpret_polar_constraints(ignore.union(src.ids), positive, closedids, constraints, src.constraints)
-            constraints, body = self.prune_interpret_polar_typ(ignore.union(src.ids), positive, closedids, constraints, src.body)
-            return constraints, All(src.ids, tuple(inner_constraints), body)
+            outer_constraints, inner_constraints = self.prune_interpret_polar_constraints(ignore.union(src.ids), positive, closedids, constraints, src.constraints)
+            body_constraints, body = self.prune_interpret_polar_typ(ignore.union(src.ids), positive, closedids, constraints, src.body)
+            return (outer_constraints).intersection(body_constraints), All(src.ids, tuple(inner_constraints), body)
 
         elif isinstance(src, Fixpoint):  
-            constraints, body = self.prune_interpret_polar_typ(ignore.add(src.id), positive, closedids, constraints, src.body)
-            return constraints, Fixpoint(src.id, src.body)
+            body_constraints, body = self.prune_interpret_polar_typ(ignore.add(src.id), positive, closedids, constraints, src.body)
+            return body_constraints, Fixpoint(src.id, src.body)
         elif isinstance(src, Top):  
             return constraints, src
         elif isinstance(src, Bot):  
@@ -1884,18 +1883,18 @@ class Solver:
 
     def prune_interpret_polar_constraints(self, ignore : PSet[str], positive : bool, 
             closedids : PSet[str],
-            constraints : PSet[Subtyping], 
+            outer_constraints : PSet[Subtyping], 
             inner_constraints : Iterable[Subtyping]
     ) -> tuple[PSet[Subtyping], PSet[Subtyping]]:
-        result_constraints : PSet[Subtyping] = s()
+        result_outer_constraints : PSet[Subtyping] = outer_constraints 
+        result_inner_constraints : PSet[Subtyping] = s()
         for inner in inner_constraints:
-            constraints, upper = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, inner.upper)
-            constraints, lower = self.prune_interpret_polar_typ(ignore, not positive, closedids, constraints, inner.lower)
-            result_constraints = result_constraints.add(Subtyping(lower, upper))
-        return (constraints, result_constraints)
+            upper_constraints, upper = self.prune_interpret_polar_typ(ignore, positive, closedids, outer_constraints, inner.upper)
+            lower_constraints, lower = self.prune_interpret_polar_typ(ignore, not positive, closedids, outer_constraints, inner.lower)
 
-
-
+            result_inner_constraints = result_inner_constraints.add(Subtyping(lower, upper))
+            result_outer_constraints = result_outer_constraints.intersection(upper_constraints).intersection(lower_constraints)
+        return (result_outer_constraints, result_inner_constraints)
 
 
     def interpret_positive_id(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:

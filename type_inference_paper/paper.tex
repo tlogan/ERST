@@ -746,11 +746,12 @@ which allow expressing properties of expressions with varying levels of precisio
 
 
 
-\begin{definition} Proof Typing
-  \\
-  \boxed{\Gamma \entails e \hastype \tau \given \Omega}
-
+\begin{definition} 
   \label{def:proof_typing}
+  Proof Typing
+  \\\\
+  \boxed{\Gamma \entails e \hastype \tau \given \Omega}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
@@ -1091,35 +1092,158 @@ and adds the annotation to the typing environment when checking the contintuatio
 
 \hfill
 
-\begin{definition}\boxed{
-  \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta, \tau)
-}\ Polar Type Interpretation 
-\label{def:polar_type_interpretation}
-
-\TODO{...}
-
-\end{definition}
-
-
-\begin{definition}\boxed{
-  \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
-}\ Pruning Interpretation (Negative)
-\label{def:pruning_interpretation_negative}
+\begin{definition} 
+  \label{def:type_interpretation}
+  Type Interpretation 
+  \\\\
+  \boxed{
+    \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau)
+  }
+  \\
   \begin{mathpar}
     \inferrule {
-      \forall \delta .\ \delta \in \Delta' \iff \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \delta
-      \\
-      \llbracket \Delta\backslash\Delta', \alpha \rrbracket^- = (\Delta', \tau)
+      \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
     } {
-      \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+    }
+
+    \inferrule {
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{@} \rrbracket^\pm = (\Delta, \obj{@})
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{<}l\obj{>}\tau \rrbracket^\pm = (\Delta', \obj{<}l\obj{>}\tau')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, l\obj{->}\tau \rrbracket^\pm = (\Delta', l\obj{->}\tau')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{->}\tau_r')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{|}\tau_r')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{EXI[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      = 
+      (\Delta' \cap \Delta'', \obj{EXI[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{LFP[}\alpha \obj{]} \tau \rrbracket^\pm 
+      = 
+      (\Delta', \obj{LFP[}\alpha \obj{]}\tau')
+    }
+
+    \\
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{\&}\tau_r')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{ALL[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      = 
+      (\Delta' \cap \Delta'', \obj{ALL[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau\obj{\textbackslash}\eta \rrbracket^\pm = (\Delta', \tau'\obj{\textbackslash}\eta)
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{
-  \vec{\alpha}_\bullet, \Delta, \alpha \entails \delta \looparrowright 
-}\ Indirection (Negative)  
-\label{def:indirection_negative}
+\begin{definition} 
+  \label{def:Qualification_interpretation}
+  Qualification Interpretation 
+  \\\\
+  \boxed{
+    \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+  }
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm = (\Delta', \epsilon')
+    }
+
+    \inferrule {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
+      \\\\
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
+    } {
+      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \obj{;} \tau_l \obj{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \obj{;} \tau_l' \obj{<:} \tau_r')
+    }
+
+  \end{mathpar}
+\end{definition} 
+
+
+\hfill
+\begin{definition} 
+  \label{def:pruning_interpretation}
+  Pruning Interpretation 
+  \\\\
+  \boxed{
+    \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+  }
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall \tau_l\ \tau_r .\ \obj{;} \tau_l \obj{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+      \\
+      \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
+    } {
+      \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:indirection}
+  Indirection  
+  \\\\
+  \boxed{
+    \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+  }
+  \\
   \begin{mathpar}
     \inferrule {
       \obj{;}\alpha\obj{<:}\tau \in \Delta 
@@ -1127,34 +1251,63 @@ and adds the annotation to the typing environment when checking the contintuatio
       \alpha' \in \text{FTV}(\tau)
       \\
       \obj{;}\alpha'\obj{<:}\tau' \in \Delta 
-      \\
-      (\obj{;}\alpha\obj{<:}\tau = \delta) \lor (\obj{;}\alpha'\obj{<:}\tau' = \delta)
     } {
-      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \delta
+      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
+    }
+
+    \inferrule {
+      \obj{;}\alpha\obj{<:}\tau \in \Delta 
+      \\
+      \alpha' \in \text{FTV}(\tau)
+      \\
+      \obj{;}\alpha'\obj{<:}\tau' \in \Delta 
+    } {
+      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
+    }
+    \\
+    \inferrule {
+      \obj{;}\tau \obj{<:} \alpha\in \Delta 
+      \\
+      \alpha' \in \text{FTV}(\tau)
+      \\
+      \obj{;}\tau'\obj{<:} \alpha' \in \Delta 
+    } {
+      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
+    }
+
+    \inferrule {
+      \obj{;}\tau \obj{<:} \alpha\in \Delta 
+      \\
+      \alpha' \in \text{FTV}(\tau)
+      \\
+      \obj{;}\tau'\obj{<:} \alpha' \in \Delta 
+    } {
+      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
     }
   \end{mathpar}
 \end{definition}
+\hfill
 
 
-\begin{definition}\boxed{
-  \llbracket\Delta, \alpha \rrbracket^- = (\Delta, \tau)
-}\ Interpretation (Negative) 
-\label{def:interpretation_negative}
-
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
-
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
-
+\hfill
+\begin{definition} 
+  \label{def:interpretation}
+  Interpretation
+  \\\\
+  \boxed{
+    \llbracket\Delta, \alpha \rrbracket^\pm = (\Delta, \tau)
+  }
+  \\
   \begin{mathpar}
     \inferrule {
     } {
-      \llbracket \epsilon, \alpha \rrbracket \subtypes (\epsilon, \obj{TOP})
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \obj{TOP})
     }
 
     \inferrule {
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket = (\Delta', \tau' \obj{\&} \tau)
+      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \obj{\&} \tau)
     }
 
     \inferrule {
@@ -1164,9 +1317,32 @@ and adds the annotation to the typing environment when checking the contintuatio
     } {
       \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
     }
+    \\
+    \inferrule {
+    } {
+      \llbracket \epsilon, \alpha \rrbracket^+ = (\epsilon, \obj{BOT})
+    }
+
+    \inferrule {
+      \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau')
+    } {
+      \llbracket \Delta\ \obj{;} \tau \obj{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \obj{|} \tau)
+    }
+
+    \inferrule {
+      \alpha \neq \tau_r
+      \\
+      \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
+    } {
+      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^+ = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+    }
   \end{mathpar}
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
+
+  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
 \end{definition}
 \hfill
+
 
 
 \begin{definition}\boxed{\alpha \downarrow \Delta \fallingdotseq \alpha \uparrow \Delta}\ Fixpoint Constraint Duality 
