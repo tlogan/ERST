@@ -577,8 +577,12 @@ enable function abstraction, function application, tagged constructions, record 
 and pattern matching. These forms enable us to express non-trivial programs. They also allow
 for compositions that have no reasonable semantics.  
 
-\begin{definition}\boxed{e \rightsquigarrow e}\ Progression
+\begin{definition}
   \label{def:progression}
+  Progression
+  \hfill 
+  \boxed{e \rightsquigarrow e}
+  \\
   \begin{mathpar}
     \inferrule {
       e \rightsquigarrow e'
@@ -746,10 +750,11 @@ which allow expressing properties of expressions with varying levels of precisio
 
 
 
+\hfill
 \begin{definition} 
   \label{def:proof_typing}
   Proof Typing
-  \\\\
+  \hfill 
   \boxed{\Gamma \entails e \hastype \tau \given \Omega}
   \\
   \begin{mathpar}
@@ -819,6 +824,20 @@ which allow expressing properties of expressions with varying levels of precisio
     }
 
     \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau \subtypes \tau_a \given \Omega' 
+      \\\\
+      \Omega' \preceq \Omega''
+      \\
+      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
+    } {
+      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
+    }
+
+    \inferrule {
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
@@ -838,19 +857,6 @@ which allow expressing properties of expressions with varying levels of precisio
       \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
     }
 
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-      \\
-      \Omega \preceq \Omega'
-      \\
-      \tau \subtypes \tau_a \given \Omega' 
-      \\\\
-      \Omega' \preceq \Omega''
-      \\
-      \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
-    } {
-      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
-    }
   \end{mathpar}
 \end{definition}
 \hfill
@@ -959,8 +965,12 @@ proof typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the contintuation $e'$.
 
 \hfill
-\begin{definition} \boxed{\Omega \preceq \Omega}\ World Ordering 
-  \label{def:world_ordering}
+\begin{definition} 
+  \label{def:world_containment}
+  World Containment 
+  \hfill
+  \boxed{\Omega \preceq \Omega}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
@@ -968,55 +978,16 @@ and adds the annotation to the typing environment when checking the contintuatio
     }
   \end{mathpar}
 \end{definition}
-
-\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau) = \tau} Type Packaging 
-
-  \TODO{update}
-
-  \begin{mathpar}
-    \inferrule {
-      \text{FTV}(\tau) = \vec{\alpha}_p
-      \\
-      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_c\ \vec{\alpha}_p \pitchfork \Delta' 
-      \\\\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta' \entails \Delta_o \wr \Delta_i 
-      \\\\
-      (\text{FTV}(\Delta)\ \vec{\alpha}_p)\ \diamond\ \vec{\alpha}_c = \vec{\alpha}_o 
-      \\
-      (\text{FTV}(\Delta_i)\ \vec{\alpha}_p)\ \backslash\ \vec{\alpha}_c \ \backslash\ \vec{\alpha}_f = \vec{\alpha}_i 
-      \\\\
-      \text{quantify}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
-    } {
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{\pm} \tau'
-    }
-  \end{mathpar}
-\end{definition}
+\hfill
 
 
-\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha} \entails \vec{\pi}) = \vec{\tau}}\ Multiple Type Packaging 
-  \label{def:multiple_type_packaging}
-
-  \TODO{update}
-
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \vec{\alpha}_f \entails \epsilon \cong^\pm \epsilon 
-    }
-
-    \inferrule {
-      \vec{\alpha}_f \entails \vec{\pi} \cong^\pm \vec{\tau} 
-      \\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^\pm \tau'
-    } {
-      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^\pm \vec{\tau}\ \tau' 
-    }
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition} \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}}\ Function Lifting
+\hfill
+\begin{definition} 
   \label{def:function_lifting}
+  Function Lifting
+  \hfill
+  \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
@@ -1031,7 +1002,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \text{diff}(\phi, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -1045,24 +1016,12 @@ and adds the annotation to the typing environment when checking the contintuatio
   \end{mathpar}
 \end{definition}
 
-\begin{definition}
-\boxed{\alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
-\ Fixed Point Duality 
-\label{def:fixed_point_duality}
-
-\TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
-
-\TODO{soundness idea: $ 
-\\ \forall f\ e_l\ e_r\ \alpha_l\ \alpha_r\ \vec{\alpha}\ \Delta\ \vec{\alpha}'\ \Delta'\ \vec{\Omega},  
-\\ ... \implies
-\\ f(e_1) = e_2 \implies \left< \vec{\alpha}', \Delta' \right> \in \vec{\Omega} \implies 
-\\ (
-\Gamma, ... \satisfies f : \alpha_l \obj{->} \alpha_r 
-\iff 
-\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \obj{*} \alpha_r
-)$ 
-}
-
+\begin{definition} 
+  \label{def:fixed_point_duality}
+  Fixed Point Duality 
+  \hfill
+  \boxed{\alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
@@ -1089,8 +1048,1197 @@ and adds the annotation to the typing environment when checking the contintuatio
     }
   \end{mathpar}
 \end{definition}
+\hfill
+
+\TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
+
+\TODO{soundness idea: $ 
+\\ \forall f\ e_l\ e_r\ \alpha_l\ \alpha_r\ \vec{\alpha}\ \Delta\ \vec{\alpha}'\ \Delta'\ \vec{\Omega},  
+\\ ... \implies
+\\ f(e_1) = e_2 \implies \left< \vec{\alpha}', \Delta' \right> \in \vec{\Omega} \implies 
+\\ (
+\Gamma, ... \satisfies f : \alpha_l \obj{->} \alpha_r 
+\iff 
+\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \obj{*} \alpha_r
+)$ 
+}
+
 
 \hfill
+\begin{definition}
+  \label{def:pair_duality}
+  Fixed Point Constraint Duality 
+  \hfill
+  \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
+    }
+
+    \inferrule {
+      \alpha_\nu \notin \text{FTV}(\tau_l)
+      \\
+      \alpha_\nu \notin \text{FTV}(\tau_r)
+      \\
+      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
+    } {
+      \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\tau_l <: \tau_r)
+    }
+
+    \inferrule {
+    } {
+      \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+% \hfill
+% \begin{definition}\boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_l, \Delta_r}\ Fixed Point Constraint Extraction 
+% \label{def:pair_duality}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon, \epsilon
+%     }
+
+%     \inferrule {
+%       \alpha_\nu \notin \text{FTV}(\tau_l)
+%       \\
+%       \alpha_\nu \notin \text{FTV}(\tau_r)
+%       \\
+%       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_l, \Delta_r
+%     } {
+%       \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_l\ (\tau_l <: \tau_r), \Delta_r\ (\tau_l <: \tau_r)
+%     }
+
+%     \inferrule {
+%     } {
+%       \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow 
+%       \Delta_l\ (\alpha_l <: \alpha_\mu)
+%       , 
+%       \Delta_r\ (\alpha_r <: \alpha_\mu)
+%     }
+%   \end{mathpar}
+% \end{definition}
+% \hfill
+
+
+
+
+
+
+
+
+
+\emph{Proof subtyping}, as in definition \ref{def:proof_subtyping},
+checks the viability of one type subtyping another type, under the assumption
+of subtyping constraints.
+
+The predicate, $\tau_l \subtypes \tau_r \given \Omega'$, can be interpreted as an algorithm
+that takes the types and an implicit world $\Omega$ as inputs and return
+a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$
+and the input world is the smallest world necessary for the proposition to hold.  
+
+% The predicate, $\Omega \entails \tau_l \subtypes \tau_r \with \Omega'$, can be interpreted as an algorithm
+% that takes the world $\Omega$, and two types as inputs, and returns
+% a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$.
+
+The order of the rules 
+is critical to ensure that easier constraints are generated. To that end, cases that
+strengthen the assumed type (left of subtyping) or weaken the guaranteed type (right of subtyping) occur before rules that
+weaken the assumed type or strengthen the guaranteed type.
+
+Due to the complexity of types along with two positions for types to occur in subtyping,
+there are many rules needed to define the proof system of subtyping. For clarity,
+we show only a subset of the rules in this section in order to explain the essence of the system.
+We leave the remaining rules in the appendix, section \ref{sect:appendix}, definition \ref{def:continued_proof_subtyping}. 
+The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
+as well as additional rules for increased precision.  
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_reflection}
+  Proof Subtyping (Reflection)
+  \hfill
+  \boxed{\tau_l \subtypes \tau_r \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \tau \subtypes \tau \given \Omega 
+    }\lab{1}
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
+proof subtyping simply holds without any updates to the world.
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_basic_preservation}
+  Proof Subtyping (Base Preservation)
+  \hfill
+  \boxed{\kappa_l \subtypes \kappa_r \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes \tau_r
+      \given \Omega 
+    } {
+      \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
+      \given \Omega 
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{rl} \subtypes \tau_{ll} \given \Omega
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
+    } {
+      \tau_{ll} \obj{->} \tau_{lr} 
+      \subtypes 
+      \tau_{rl} \obj{->} \tau_{rr}
+      \given \Omega' 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
+proof subtyping simply checks that the labels match and subtyping holds
+for their contents.
+
+
+For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
+proof subtyping simply checks that the labels match and subtyping holds
+for their contents.
+
+For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
+proof subtyping simply checks that the space between types of the upper bound
+contains the space between types of the lower bound.
+
+
+% \hfill
+% \begin{definition} Proof Subtyping (Implication Rewriting)
+%   \\
+%   \boxed{\tau \subtypes \tau \given \Omega}
+
+%   \label{def:proof_subtyping_rewriting}
+%   \TODO{these should be subsumed by other rules; double check necessity in implementation}
+%   \begin{mathpar}
+  %   \inferrule {
+  %     \tau_l \subtypes
+  %     \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes 
+  %     \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+  %     \given M, \Delta
+  %   }
+
+  %   \inferrule {
+  %     \tau_l
+  %     \subtypes
+  %     \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes 
+  %     \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
+  %     \given M, \Delta
+  %   }
+
+  %   \inferrule {
+  %     \tau_l \subtypes
+  %     \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+  %     \given M, \Delta
+  %   } {
+  %     \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+  %     \given M, \Delta
+  %   }
+%   \end{mathpar}
+% \end{definition}
+% \hfill
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_elimination}
+  Proof Subtyping (Abstraction Elim)
+  \hfill
+  \boxed{\mu \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \obj{BOT} \subtypes \tau_r \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{ll} \subtypes \tau_r
+      \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau_{lr} \subtypes \tau_r
+      \given \Omega' 
+    } {
+      \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
+      \given \Omega' 
+    }
+    \\
+    \inferrule {
+      \vec{\alpha}_l \notfree \tau_r
+      \\
+      \Delta_l \given \vec{\alpha}, \Delta
+      \\
+      (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\\\
+      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
+    } {
+      \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
+      \given \Omega 
+    }
+
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+    } {
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+ensures that both parts of the assumed type subtype the guaranteed type.
+
+For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
+which it leverages to prove the guaranteed type. 
+
+For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+attempts a proof by induction, by unrolling the least fixed point
+and replacing its self referencing variable with the upper bound.
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_refinement_introduction}
+  Proof Subtyping (Refinement Intro)
+  \hfill
+  \boxed{\tau \subtypes \nu \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \tau_l \subtypes \obj{TOP} \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{l} \subtypes \tau_{rl} \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau_{l} \subtypes \tau_{rr} \given \Omega' 
+    } {
+      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega '
+    }
+    \\
+    \inferrule {
+      \vec{\alpha}_r \notfree \tau_l
+      \\
+      \Delta_r \given \vec{\alpha}, \Delta
+      \\
+      (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
+      \\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\\\
+      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
+    } {
+      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
+    }
+
+    \inferrule {
+      % \TODO{prove that subtyping of diff is complete}
+      % \\\\
+      % \TODO{which implies that its negation is sound}
+      % \\\\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      \text{FTV}(\eta) \subseteq \epsilon
+      \\\\
+      \nexists \Omega' .\  
+      \Omega \preceq \Omega'
+      \land
+      \tau_l \subtypes \eta \given \Omega'
+    } {
+      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
+and does not subtype the subtracted portion $\eta$.
+When relying on negation, one must be careful to preserve soundness.
+We ensure that proof subtyping is complete for an upper bound of limited
+form $\eta$ with no free type variables, which
+means its negation is sound. We will make the limited notion
+of completeness precise in section \ref{sect:correctness}.
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_variable_elimination}
+  Proof Subtyping (Variable Elim)
+  \hfill
+  \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
+      \\ 
+      \alpha_\open \notin \vec{\alpha}_\closed
+      \\\\
+      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \\
+      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
+    } {
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
+    }
+
+    \inferrule {
+      \alpha_\closed \in \vec{\alpha}_\closed 
+      % \\
+      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
+      \\
+      \nexists \alpha.\ \tau_r = \alpha 
+      \\\\
+      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
+      \\\\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      \alpha_\closed \subtypes \tau_r
+      \given (\vec{\alpha}_\closed, \Delta)
+      \\
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For a lower bound closed variable $\alpha$, proof subtyping
+finds a strict interpretation of the variable
+and checks it against the upper bound. Since the subtyping constraints
+may contain relational constraints, it factors the relational constraints
+to find constraints over single variables, which it used to construct the strict
+interpretation $\text{inter}(\vec{\tau})$.  
+
+The dual of this rule is the one for an upper bound closed variable, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_variable_introduction}
+  Proof Subtyping (Variable Intro)
+  \hfill
+  \boxed{\tau \subtypes \alpha \given \Omega}\ \textbf{where}\ $\nexists \mu.\ \tau = \mu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
+      \\ 
+      \alpha_\open \notin \vec{\alpha}_\closed
+      \\\\
+      \text{split}^+(\Delta[\alpha_\open\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \\
+      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
+    } {
+      \tau_l \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha_\open) 
+    }
+
+    \inferrule {
+      \alpha_\closed \in \vec{\alpha}_\closed 
+      % \\
+      % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
+      \\
+      \nexists \alpha.\ \tau_l = \alpha 
+      \\\\
+      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
+      \\\\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For an upper bound open variable $\alpha$, proof subtyping
+finds a lenient interpretation of the variable and checks it against the lower bound.
+If safe, it updates the worlds with the subtyping.
+To find a lenient interpretation in simple constraints, it searches the world for 
+the first upper bounds that are not closed variables. It also looks for relational
+upper bounds of pattern type containing the open variable $\alpha$.
+Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
+that are transitive upper bounds of the open variable $\alpha$.  
+
+The dual of this rule is the one for a lower bound open variable, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_refinement_elimination}
+  Proof Subtyping (Refinement Elim)
+  \hfill
+  \boxed{\nu \subtypes \tau \given \Omega}\ \textbf{where}\ $\exists \kappa\ \mu .\ \tau = \kappa \lor \tau = \mu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_{l} \subtypes \kappa \given \Omega
+    } {
+      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{l} \subtypes \kappa \given \Omega 
+    } {
+      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      \Omega \preceq \Omega' 
+      \\
+      \Delta_l \given \Omega' 
+    } {
+      \obj{ALL[}\vec{\alpha}_l\ \vec{\Delta}_l\obj{]}\tau_l
+      \subtypes 
+      \tau_r
+      \given \Omega' 
+    }
+
+    \inferrule {
+      \tau_{l} \subtypes \tau_r \obj{|} \eta \given \Omega
+    } {
+      \tau_{l}\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
+simply checks that the positive type subtypes
+the upper bound union with the subtracted type. 
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Proof Subtyping (Abstraction Intro)
+  \hfill
+  \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \kappa \subtypes \tau_{l} \given \Omega 
+    } {
+      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \kappa \subtypes \tau_{r} \given \Omega 
+    } {
+      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \phi \subtypes \tau_{l} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \phi \subtypes \tau_{r} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given \Omega
+      \\
+      \Omega \preceq \Omega' 
+      \\
+      \Delta_r \given \Omega' 
+    } {
+      \tau_l
+      \subtypes 
+      \obj{EXI[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega' 
+    }
+
+    \inferrule {
+      \Omega \preceq \Omega'
+      \\
+      \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
+      \\\\
+      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
+      \given \Omega'
+    } {
+      \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
+infers constraints to witness the guaranteed existential type. 
+
+The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
+in which proof subtyping infers constraints to instantiate assumed the universal type.
+
+For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping checks that the left part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
+proof subtyping also checks that the right part of the union holds against
+the lower bound. 
+
+The dual of this rule is one for an upper bound intersection, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
+where subtyping is decomposable, proof subtyping   
+unrolls the least fixed point and checks it against the lower bound. 
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+where the lower bound is a pattern type containing at least one closed variable,
+proof typing searches the world for a constraint with a matching pattern type,
+which provides a strict interpretation of the pattern type,
+in the form of found constraint's upper bound.
+It then checks that the strict interpretation of the pattern type holds.
+For increased coverage, the system rewrites relational constraints
+into equivalent normal forms.
+
+This rule is the relational analog of the closed variable rules.
+
+For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+where the lower bound is a pattern type whose variables are all open,
+proof subtyping checks that the subtyping is consistent
+and checks that a lenient interpretation of the pattern type's open variables
+holds. If the subtyping is safe, then world is updated
+with the subtyping constraint. 
+
+This rule is the relational analog of the open variable rules.
+
+
+
+
+
+
+
+
+
+
+\section{Correctness}
+\label{sect:correctness}
+
+\TODO{introduce model typing and soundness properties}
+
+\hfill
+\begin{definition}
+  \label{def:model_typing}
+  Model Typing
+  \hfill
+  \boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \alpha \slash \tau \in \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+      \alpha \slash \tau \notin \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{TOP} 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$}
+    } 
+
+    \inferrule { 
+      \obj{\$$l$=>$v$} \in G 
+      \\
+      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
+      \\\\
+      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
+    } {
+      \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ORIGINAL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule { 
+    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    % } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ALTERNATIVE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \inferrule { 
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+      \\
+      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \\\\
+      \forall e .\ 
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+        \implies
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+        \land
+        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DERIVABLE??
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % \inferrule { 
+    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \\\\
+    %   \forall e .\ 
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+    %     \implies
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+    %     \lor
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    % } 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \\
+      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$})
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
+      \\
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
+      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \vec{\delta} \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
+    } 
+
+
+
+    \inferrule { 
+      x \hastype \tau \in \Gamma 
+    } {
+      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+      \\
+      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
+      \\
+      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
+      \\
+      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+    } 
+
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
+  \label{def:model_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+      \forall e\ \Gamma .\ 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
+    } {
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } 
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
+  \label{def:model_sequence_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \vec{\delta} \satisfies \epsilon 
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies Q
+      \\
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } {
+      \vec{\delta} \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
+    } 
+  \end{mathpar}
+\end{definition}
+
+
+\section{Experiments}
+
+\TODO{develop 12 tree/list experiments}
+
+\section{Related work}
+
+\TODO{...}
+
+
+% \paragraph{Tree interpolation}
+% Exemplified by CHC duality solver.
+
+% \paragraph{Hindley-Milner type inference}
+% Exemplified by ML.
+
+% \paragraph{Logic programming.}
+% Exemplified by Prolog. 
+
+
+% Similar: both have backchaining. 
+
+% Different: RLT is fully declarative, lacks negations, but has implication. 
+
+% Different: RLT allows comparing inductive relations via subtyping. 
+
+% \paragraph{Semantic subtyping.} 
+% Exemplified by XDuce and CDuce. complete subtyping.
+
+% Similar: set-like combinators: union and intersection.
+
+% Different: RLT uses rigid syntactic rules; incomplete subtyping.
+
+% % set theoretic notes: https://pnwamk.github.io/sst-tutorial/#%28part._sec~3asemantic-subtyping%29
+% % semantic subtyping: https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
+% The terminology "semantic subtyping" vs "syntactic subtyping" are confusing terms. 
+% "semantics subtyping" means the semantics of types is determined indirectly by the semantics of another structure.
+% "syntactic subtyping" means the semantics of types is determined directly by the type structure
+
+% \paragraph{Extrinsic typing.}
+% Exemplified by Typescript, which is unsound. Maybe not as lenient?  
+% The static behavior of a program is not necessarily specified/prescribed; 
+% it may be over-approximated from the program composition. 
+% Intrinsic vs extrinsic is orthogonal to static vs dynamic, although static and dynamic are often used to mean the former.
+% All modern languages use a combination of static and dynamic type checking.
+% The term "dynamically typed" some times refers to a language that doesn't prescribe static meaning,
+% even if it uses both static and dynamic type checking. The term "extrinsic typing" is less ambiguous.
+
+% \paragraph{Refinement Types.}
+% Exemplified by Refinement ML. Base types with intersections and subtyping.
+
+% \paragraph{Predicate Subtyping.}
+% Exemplified by Liquid Types. An extension of refinement types.
+
+% Similar: both use type inference to infer expressive relational properties. 
+
+% Different: RLT starts with an invalid post-condition, then weakens return type to a valid post-condition from outside in by expanding unions.
+
+% Different: RLT starts with an invalid pre-condition, then strengthens parameter type to a valid pre-condition from inside out by adding intersections.
+
+% Different: Liquid types starts with an invalid post-condition, then uses iterative weakening by dropping conjunctions until a valid post-condition is reached.
+
+
+% \paragraph{Abstraction Refinement.} 
+% Similar: type unification over subtyping resembles abstraction refinement  
+% where solving for variables and failing on different sides of the subtyping relation corresponds to
+% solving with the abstractor vs solving with the refiner.
+
+% \paragraph{Craig interpolation.} 
+% Similar: extracting an inductive type with unions and intersections 
+% from a recursive program without needing to specify a predicate universe might be similar to
+% craig interpolation.
+
+% \paragraph{PDR.}
+% exemplified by IC3. 
+
+% Similar: RLT infers abstract type for return type, 
+% then safely constrains the variables in previous step (fix's antecedent) 
+% to subtype the least fixed point.
+% This lazily propagates the type for the last step to the previous steps.
+% This is safe as antecedent is stronger than consequent at any step.
+% Seems similar to the notion in PDR of propagating negation of loss points to previous steps. 
+
+% Different: RLT isn't cartesian
+
+\section{Future Work}
+\label{sect:future_work}
+
+Relational reasoning.
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Relational Proof Subtyping (Pattern Intro)
+  \hfill 
+  \boxed{\phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \phi' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \\\\
+      (\vec{\alpha}, \Delta) \preceq \Omega
+      \\
+      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
+      \\\\
+      \Delta \entails \phi' \subtypes \tau_n \sim 
+      \\
+      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
+    } {
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \Omega 
+    }
+
+    \inferrule {
+      \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \\\\
+      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
+      \\
+      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
+      \\\\
+      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
+      \\
+      \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \vec{\alpha}', \Delta'
+    } {
+      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_variable_elimination}
+  Relational Proof Subtyping (Variable Elim)
+  \hfill
+  \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
+      \\ 
+      \alpha_\open \notin \vec{\alpha}_\closed
+      \\\\
+      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \\
+      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
+    } {
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
+    }
+
+    \inferrule {
+      \alpha_\closed \in \vec{\alpha}_\closed 
+      % \\
+      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
+      \\
+      \nexists \alpha.\ \tau_r = \alpha 
+      \\\\
+      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta\ \text{factor}(\Delta, \alpha_\closed), \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
+      \\\\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      \alpha_\closed \subtypes \tau_r
+      \given (\vec{\alpha}_\closed, \Delta)
+      \\
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}
+  \label{def:decomposable}
+  Decomposable 
+  \\\\
+  \boxed{\Omega \entails \tau \circlearrowleft \tau}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
+      \Omega \entails \tau \circlearrowleft \tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
+  \label{def:normal_constraint_congruence}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \tau \subtypes \tau \cong \tau \subtypes \tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
+  \label{def:normal_constraint_entailment}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \Delta \entails \tau' \subtypes \tau \sim
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\section{Appendix}
+\label{sect:appendix}
+\begin{definition} Internals 
+  \label{def:internals}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
+    \\
+    \\
+    \nonterm{\vec{\Omega}} & \is \epsilon \sep \vec{\Omega}\ \Omega
+    \\
+    \nonterm{\Omega} & \is \vec{\alpha}, \Delta
+    \\
+    \\
+    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
+    \\
+    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
+    \\
+    \\
+    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
+    \\
+    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \obj{->} \tau
+    \\
+    \\
+    \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
+    \\
+    \nonterm{\delta} & \alpha \slash \tau
+  \end{array}\]
+\end{definition}
+
+
+\begin{definition} Sugared Expressions 
+  \label{def:sugared_expressions}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{e} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      e\obj{,}e \sep
+      e\obj{|>}e \sep
+      \obj{let}\ x\ z\ \obj{=}\ e\ \obj{in}\ e \sep
+      \obj{(}e\obj{)}
+    \end{array}
+    \\
+    \nonterm{z} & \is \epsilon \sep \obj{:}\tau 
+    \\
+    \nonterm{p} & \is 
+      ... \sep
+      p\obj{,}p \sep
+      \obj{(}p\obj{)} 
+  \end{array}\]
+\end{definition}
+
+\begin{definition} Values 
+  \label{def:others}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{v} & \is 
+      \obj{@} \sep
+      \obj{<$l$> $v$} \sep
+      \vec{g} \sep
+      \obj{$v$,$v$} \sep
+      \obj{($v$)} \sep
+      \vec{f} 
+    \\
+    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
+    \\
+    \nonterm{g} & \is \obj{\$$l$=>$v$}
+    \\
+    \\
+    \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
+    \\
+    \nonterm{\sigma} & \is x \slash v
+  \end{array}\]
+\end{definition}
+
+
+\begin{definition}\boxed{e \rightsquigarrow e}\ Sugared Progression
+  \begin{mathpar}
+    \inferrule {
+      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
+    } {
+      e_a \obj{|>} e_b \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      e \rightsquigarrow e' 
+    } {
+      \obj{(} e \obj{)} \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
+    } {
+      e_l\obj{,}e_r \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \obj{(\$ <true> @=>}e_t \obj{\ \$ <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+    } {
+      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
+    }
+
+
+    \inferrule {
+      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
+      \rightsquigarrow e'
+    } {
+      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
+    }
+
+    % \inferrule {
+    %   e \rightsquigarrow e'
+    % } {
+    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
+    % }
+
+    % \inferrule {
+    % } {
+    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
+    % }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} Sugared Types 
+  \label{def:sugared_types}
+  \[\begin{array}[t]{r@{}l}
+    \nonterm{\tau} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      \obj{TOP} \sep 
+      \obj{BOT} \sep
+      \obj{(}\tau\obj{)}
+
+    \end{array}
+    \\
+    \nonterm{\phi} & \is 
+    \begin{array}[t]{@{}l}
+      ... \sep
+      \obj{(}\phi\obj{)}
+
+    \end{array}
+  \end{array}\]
+\end{definition}
 
 \begin{definition} 
   \label{def:type_interpretation}
@@ -1344,1089 +2492,51 @@ and adds the annotation to the typing environment when checking the contintuatio
 \hfill
 
 
+\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau) = \tau} Type Packaging 
 
-\begin{definition}\boxed{\alpha \downarrow \Delta \fallingdotseq \alpha \uparrow \Delta}\ Fixpoint Constraint Duality 
-\label{def:pair_duality}
+  \TODO{update}
+
   \begin{mathpar}
     \inferrule {
-    } {
-      \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
-    }
-
-    \inferrule {
-      \alpha_\nu \notin \text{FTV}(\tau_l)
+      \text{FTV}(\tau) = \vec{\alpha}_p
       \\
-      \alpha_\nu \notin \text{FTV}(\tau_r)
-      \\
-      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
-    } {
-      \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\tau_l <: \tau_r)
-    }
-
-    \inferrule {
-    } {
-      \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
-    }
-  \end{mathpar}
-\end{definition}
-
-
-
-
-
-
-\emph{Proof subtyping}, as in definition \ref{def:proof_subtyping},
-checks the viability of one type subtyping another type, under the assumption
-of subtyping constraints.
-
-The predicate, $\tau_l \subtypes \tau_r \given \Omega'$, can be interpreted as an algorithm
-that takes the types and an implicit world $\Omega$ as inputs and return
-a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$
-and the input world is the smallest world necessary for the proposition to hold.  
-
-% The predicate, $\Omega \entails \tau_l \subtypes \tau_r \with \Omega'$, can be interpreted as an algorithm
-% that takes the world $\Omega$, and two types as inputs, and returns
-% a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$.
-
-The order of the rules 
-is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the assumed type (left of subtyping) or weaken the guaranteed type (right of subtyping) occur before rules that
-weaken the assumed type or strengthen the guaranteed type.
-
-Due to the complexity of types along with two positions for types to occur in subtyping,
-there are many rules needed to define the proof system of subtyping. For clarity,
-we show only a subset of the rules in this section in order to explain the essence of the system.
-We leave the remaining rules in the appendix, section \ref{sect:appendix}, definition \ref{def:continued_proof_subtyping}. 
-The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
-as well as additional rules for increased precision.  
-
-
-\hfill
-\begin{definition} Proof Subtyping (Reflection)
-  \\
-  \boxed{\tau_l \subtypes \tau_r \given \Omega}
-  
-  \label{def:proof_subtyping_reflection}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \tau \subtypes \tau \given \Omega 
-    }\lab{1}
-  \end{mathpar}
-\end{definition}
-
-For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
-proof subtyping simply holds without any updates to the world.
-
-
-\hfill
-\begin{definition} Proof Subtyping (Base Preservation)
-  \\
-  \boxed{\kappa_l \subtypes \kappa_r \given \Omega}
-
-  \label{def:proof_subtyping_basic_preservation}
-  \begin{mathpar}
-    \inferrule {
-      \tau_l \subtypes \tau_r
-      \given \Omega 
-    } {
-      \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
-      \given \Omega 
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega 
-    } {
-      l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
-    }
-
-    \inferrule {
-      \tau_{rl} \subtypes \tau_{ll} \given \Omega
-      \\
-      \Omega \preceq \Omega'
-      \\
-      \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
-    } {
-      \tau_{ll} \obj{->} \tau_{lr} 
-      \subtypes 
-      \tau_{rl} \obj{->} \tau_{rr}
-      \given \Omega' 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-
-For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
-proof subtyping simply checks that the space between types of the upper bound
-contains the space between types of the lower bound.
-
-
-% \hfill
-% \begin{definition} Proof Subtyping (Implication Rewriting)
-%   \\
-%   \boxed{\tau \subtypes \tau \given \Omega}
-
-%   \label{def:proof_subtyping_rewriting}
-%   \TODO{these should be subsumed by other rules; double check necessity in implementation}
-%   \begin{mathpar}
-  %   \inferrule {
-  %     \tau_l \subtypes
-  %     \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes 
-  %     \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-  %     \given M, \Delta
-  %   }
-
-  %   \inferrule {
-  %     \tau_l
-  %     \subtypes
-  %     \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes 
-  %     \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-  %     \given M, \Delta
-  %   }
-
-  %   \inferrule {
-  %     \tau_l \subtypes
-  %     \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-  %     \given M, \Delta
-  %   }
-%   \end{mathpar}
-% \end{definition}
-% \hfill
-
-\hfill
-\begin{definition} Proof Subtyping (Abstraction Elimination)
-  \\
-  \boxed{\mu \subtypes \tau \given \Omega}
-
-  \label{def:proof_subtyping_abstraction_elimination}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \obj{BOT} \subtypes \tau_r \given \Omega 
-    }
-
-    \inferrule {
-      \tau_{ll} \subtypes \tau_r
-      \given \Omega 
-      \\
-      \Omega \preceq \Omega'
-      \\
-      \tau_{lr} \subtypes \tau_r
-      \given \Omega' 
-    } {
-      \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
-      \given \Omega' 
-    }
-    \\
-    \inferrule {
-      \vec{\alpha}_l \notfree \tau_r
-      \\
-      \Delta_l \given \vec{\alpha}, \Delta
-      \\
-      (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
-      \\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_c\ \vec{\alpha}_p \pitchfork \Delta' 
       \\\\
-      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta' \entails \Delta_o \wr \Delta_i 
+      \\\\
+      (\text{FTV}(\Delta)\ \vec{\alpha}_p)\ \diamond\ \vec{\alpha}_c = \vec{\alpha}_o 
+      \\
+      (\text{FTV}(\Delta_i)\ \vec{\alpha}_p)\ \backslash\ \vec{\alpha}_c \ \backslash\ \vec{\alpha}_f = \vec{\alpha}_i 
+      \\\\
+      \text{quantify}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
     } {
-      \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
-      \given \Omega 
-    }
-
-    \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
-    } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{\pm} \tau'
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
-For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
-ensures that both parts of the assumed type subtype the guaranteed type.
 
-For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
-infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
-which it leverages to prove the guaranteed type. 
+\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha} \entails \vec{\pi}) = \vec{\tau}}\ Multiple Type Packaging 
+  \label{def:multiple_type_packaging}
 
-For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
-attempts a proof by induction, by unrolling the least fixed point
-and replacing its self referencing variable with the upper bound.
+  \TODO{update}
 
-\hfill
-\begin{definition} Proof Subtyping (Refinement Introduction)
-  \\
-  \boxed{\tau \subtypes \nu \given \Omega}
-
-  \label{def:proof_subtyping_refinement_introduction}
   \begin{mathpar}
     \inferrule {
     } {
-      \tau_l \subtypes \obj{TOP} \given \Omega 
+      \vec{\alpha}_f \entails \epsilon \cong^\pm \epsilon 
     }
 
     \inferrule {
-      \tau_{l} \subtypes \tau_{rl} \given \Omega 
+      \vec{\alpha}_f \entails \vec{\pi} \cong^\pm \vec{\tau} 
       \\
-      \Omega \preceq \Omega'
-      \\
-      \tau_{l} \subtypes \tau_{rr} \given \Omega' 
+      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^\pm \tau'
     } {
-      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega '
-    }
-    \\
-    \inferrule {
-      \vec{\alpha}_r \notfree \tau_l
-      \\
-      \Delta_r \given \vec{\alpha}, \Delta
-      \\
-      (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
-      \\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\\\
-      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
-    } {
-      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
-    }
-
-    \inferrule {
-      % \TODO{prove that subtyping of diff is complete}
-      % \\\\
-      % \TODO{which implies that its negation is sound}
-      % \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\
-      \text{FTV}(\eta) \subseteq \epsilon
-      \\\\
-      \nexists \Omega' .\  
-      \Omega \preceq \Omega'
-      \land
-      \tau_l \subtypes \eta \given \Omega'
-    } {
-      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
-      \given \Omega 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
-checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
-and does not subtype the subtracted portion $\eta$.
-When relying on negation, one must be careful to preserve soundness.
-We ensure that proof subtyping is complete for an upper bound of limited
-form $\eta$ with no free type variables, which
-means its negation is sound. We will make the limited notion
-of completeness precise in section \ref{sect:correctness}.
-
-\hfill
-\begin{definition} Proof Subtyping (Variable Elimination)
-  \\
-  \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
-
-  \label{def:proof_subtyping_variable_elimination}
-  \begin{mathpar}
-    \inferrule {
-      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
-      \\ 
-      \alpha_\open \notin \vec{\alpha}_\closed
-      \\\\
-      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
-      \\
-      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
-    } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
-    }
-
-    \inferrule {
-      \alpha_\closed \in \vec{\alpha}_\closed 
-      % \\
-      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
-      \\
-      \nexists \alpha.\ \tau_r = \alpha 
-      \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta\ \text{factor}(\Delta, \alpha_\closed), \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
-      \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
-      \tau_l \subtypes \tau_r \given \Omega 
-    } {
-      \alpha_\closed \subtypes \tau_r
-      \given (\vec{\alpha}_\closed, \Delta)
-      \\
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-For a lower bound closed variable $\alpha$, proof subtyping
-finds a strict interpretation of the variable
-and checks it against the upper bound. Since the subtyping constraints
-may contain relational constraints, it factors the relational constraints
-to find constraints over single variables, which it used to construct the strict
-interpretation $\text{inter}(\vec{\tau})$.  
-
-The dual of this rule is the one for an upper bound closed variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-
-\hfill
-\begin{definition} Proof Subtyping (Variable Introduction)
-  \\
-  \boxed{\tau \subtypes \alpha \given \Omega}\ \textbf{where}\ $\nexists \mu.\ \tau = \mu$
-
-  \label{def:proof_subtyping_variable_introduction}
-  \begin{mathpar}
-    \inferrule {
-      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
-      \\ 
-      \alpha_\open \notin \vec{\alpha}_\closed
-      \\\\
-      \text{split}^+(\Delta[\alpha_\open\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
-      \\
-      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
-    } {
-      \tau_l \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha_\open) 
-    }
-
-    \inferrule {
-      \alpha_\closed \in \vec{\alpha}_\closed 
-      % \\
-      % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
-      \\
-      \nexists \alpha.\ \tau_l = \alpha 
-      \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
-      \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
-    } {
-      \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-For an upper bound open variable $\alpha$, proof subtyping
-finds a lenient interpretation of the variable and checks it against the lower bound.
-If safe, it updates the worlds with the subtyping.
-To find a lenient interpretation in simple constraints, it searches the world for 
-the first upper bounds that are not closed variables. It also looks for relational
-upper bounds of pattern type containing the open variable $\alpha$.
-Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
-that are transitive upper bounds of the open variable $\alpha$.  
-
-The dual of this rule is the one for a lower bound open variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-
-\hfill
-\begin{definition} Proof Subtyping (Refinement Elimination)
-  \\
-  \boxed{\nu \subtypes \tau \given \Omega}\ \textbf{where}\ $\exists \kappa\ \mu .\ \tau = \kappa \lor \tau = \mu$
-
-  \label{def:proof_subtyping_refinement_elimination}
-  \begin{mathpar}
-    \inferrule {
-      \tau_{l} \subtypes \kappa \given \Omega
-    } {
-      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
-    }
-
-    \inferrule {
-      \tau_{l} \subtypes \kappa \given \Omega 
-    } {
-      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\
-      \Omega \preceq \Omega' 
-      \\
-      \Delta_l \given \Omega' 
-    } {
-      \obj{ALL[}\vec{\alpha}_l\ \vec{\Delta}_l\obj{]}\tau_l
-      \subtypes 
-      \tau_r
-      \given \Omega' 
-    }
-
-    \inferrule {
-      \tau_{l} \subtypes \tau_r \obj{|} \eta \given \Omega
-    } {
-      \tau_{l}\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
-simply checks that the positive type subtypes
-the upper bound union with the subtracted type. 
-
-\hfill
-\begin{definition} Proof Subtyping (Abstraction Introduction)
-  \\
-  \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
-
-  \label{def:proof_subtyping_abstraction_introduction}
-  \begin{mathpar}
-    \inferrule {
-      \kappa \subtypes \tau_{l} \given \Omega 
-    } {
-      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \kappa \subtypes \tau_{r} \given \Omega 
-    } {
-      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \phi \subtypes \tau_{l} \given \Omega 
-    } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \phi \subtypes \tau_{r} \given \Omega 
-    } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega
-      \\
-      \Omega \preceq \Omega' 
-      \\
-      \Delta_r \given \Omega' 
-    } {
-      \tau_l
-      \subtypes 
-      \obj{EXI[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega' 
-    }
-
-    \inferrule {
-      \Omega \preceq \Omega'
-      \\
-      \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
-      \\\\
-      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
-      \given \Omega'
-    } {
-      \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
-    }
-
-    \inferrule {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \phi' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
-      \\\\
-      (\vec{\alpha}, \Delta) \preceq \Omega
-      \\
-      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
-      \\\\
-      \Delta \entails \phi' \subtypes \tau_n \sim 
-      \\
-      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
-    } {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \Omega 
-    }
-
-    \inferrule {
-      \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
-      \\\\
-      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
-      \\
-      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
-      \\\\
-      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
-      \\
-      \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'
-    } {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-
-For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
-infers constraints to witness the guaranteed existential type. 
-
-The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
-in which proof subtyping infers constraints to instantiate assumed the universal type.
-
-For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
-proof subtyping checks that the left part of the union holds against
-the lower bound. 
-
-The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
-proof subtyping also checks that the right part of the union holds against
-the lower bound. 
-
-The dual of this rule is one for an upper bound intersection, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
-where subtyping is decomposable, proof subtyping   
-unrolls the least fixed point and checks it against the lower bound. 
-
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
-where the lower bound is a pattern type containing at least one closed variable,
-proof typing searches the world for a constraint with a matching pattern type,
-which provides a strict interpretation of the pattern type,
-in the form of found constraint's upper bound.
-It then checks that the strict interpretation of the pattern type holds.
-For increased coverage, the system rewrites relational constraints
-into equivalent normal forms.
-
-This rule is the relational analog of the closed variable rules.
-
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
-where the lower bound is a pattern type whose variables are all open,
-proof subtyping checks that the subtyping is consistent
-and checks that a lenient interpretation of the pattern type's open variables
-holds. If the subtyping is safe, then world is updated
-with the subtyping constraint. 
-
-This rule is the relational analog of the open variable rules.
-
-
-
-\begin{definition}\boxed{\Omega \entails \tau \circlearrowleft \tau}\ Decomposable 
-  \label{def:decomposable}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
-      \Omega \entails \tau \circlearrowleft \tau
+      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^\pm \vec{\tau}\ \tau' 
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
-  \label{def:normal_constraint_congruence}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \tau \subtypes \tau \cong \tau \subtypes \tau
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
-  \label{def:normal_constraint_entailment}
-  \begin{mathpar}
-    \inferrule {
-      \TODO{...}
-    } {
-      \Delta \entails \tau' \subtypes \tau \sim
-    }
-  \end{mathpar}
-\end{definition}
-
-
-
-\begin{definition}\boxed{\Delta[\alpha\slash\tau]^\pm = \Delta}\ Polar Subtyping Environment Substitution 
-  \label{def:polar_subtyping_environment_substitution}
-  \TODO{...}
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\tau[\alpha\slash\tau]^\pm = \tau}\ Polar Type Substitution 
-  \label{def:polar_type_substitution}
-  \TODO{...}
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\text{skolem}(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
-  \label{def:skolem}
-  \TODO{...}
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
-
-
-
-
-
-
-\section{Correctness}
-\label{sect:correctness}
-
-\TODO{introduce model typing and soundness properties}
-
-\begin{definition}\boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}\ Model typing
-  \label{def:model_typing}
-  \begin{mathpar}
-    \inferrule { 
-      \alpha \slash \tau \in \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \notin \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{TOP} 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$}
-    } 
-
-    \inferrule { 
-      \obj{\$$l$=>$v$} \in G 
-      \\
-      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
-      \\\\
-      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
-    } {
-      \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ORIGINAL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % \inferrule { 
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    % } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ALTERNATIVE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \inferrule { 
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-      \\
-      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-      \\\\
-      \forall e .\ 
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-        \implies
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-        \land
-        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DERIVABLE??
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    %   \\\\
-    %   \forall e .\ 
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-    %     \implies
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-    %     \lor
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
-    % } 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
-      \\
-      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$})
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
-      \\
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
-      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \vec{\delta} \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
-    } 
-
-
-
-    \inferrule { 
-      x \hastype \tau \in \Gamma 
-    } {
-      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-      \\
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
-      \\
-      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
-      \\
-      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    } 
-
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
-  \label{def:model_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-      \forall e\ \Gamma .\ 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
-    } {
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } 
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
-  \label{def:model_sequence_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \epsilon 
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies Q
-      \\
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } {
-      \vec{\delta} \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
-    } 
-  \end{mathpar}
-\end{definition}
-
-
-\section{Experiments}
-
-\TODO{develop 12 tree/list experiments}
-
-\section{Related work}
-
-\TODO{...}
-
-
-% \paragraph{Tree interpolation}
-% Exemplified by CHC duality solver.
-
-% \paragraph{Hindley-Milner type inference}
-% Exemplified by ML.
-
-% \paragraph{Logic programming.}
-% Exemplified by Prolog. 
-
-
-% Similar: both have backchaining. 
-
-% Different: RLT is fully declarative, lacks negations, but has implication. 
-
-% Different: RLT allows comparing inductive relations via subtyping. 
-
-% \paragraph{Semantic subtyping.} 
-% Exemplified by XDuce and CDuce. complete subtyping.
-
-% Similar: set-like combinators: union and intersection.
-
-% Different: RLT uses rigid syntactic rules; incomplete subtyping.
-
-% % set theoretic notes: https://pnwamk.github.io/sst-tutorial/#%28part._sec~3asemantic-subtyping%29
-% % semantic subtyping: https://www.irif.fr/~gc/papers/semantic_subtyping.pdf
-% The terminology "semantic subtyping" vs "syntactic subtyping" are confusing terms. 
-% "semantics subtyping" means the semantics of types is determined indirectly by the semantics of another structure.
-% "syntactic subtyping" means the semantics of types is determined directly by the type structure
-
-% \paragraph{Extrinsic typing.}
-% Exemplified by Typescript, which is unsound. Maybe not as lenient?  
-% The static behavior of a program is not necessarily specified/prescribed; 
-% it may be over-approximated from the program composition. 
-% Intrinsic vs extrinsic is orthogonal to static vs dynamic, although static and dynamic are often used to mean the former.
-% All modern languages use a combination of static and dynamic type checking.
-% The term "dynamically typed" some times refers to a language that doesn't prescribe static meaning,
-% even if it uses both static and dynamic type checking. The term "extrinsic typing" is less ambiguous.
-
-% \paragraph{Refinement Types.}
-% Exemplified by Refinement ML. Base types with intersections and subtyping.
-
-% \paragraph{Predicate Subtyping.}
-% Exemplified by Liquid Types. An extension of refinement types.
-
-% Similar: both use type inference to infer expressive relational properties. 
-
-% Different: RLT starts with an invalid post-condition, then weakens return type to a valid post-condition from outside in by expanding unions.
-
-% Different: RLT starts with an invalid pre-condition, then strengthens parameter type to a valid pre-condition from inside out by adding intersections.
-
-% Different: Liquid types starts with an invalid post-condition, then uses iterative weakening by dropping conjunctions until a valid post-condition is reached.
-
-
-% \paragraph{Abstraction Refinement.} 
-% Similar: type unification over subtyping resembles abstraction refinement  
-% where solving for variables and failing on different sides of the subtyping relation corresponds to
-% solving with the abstractor vs solving with the refiner.
-
-% \paragraph{Craig interpolation.} 
-% Similar: extracting an inductive type with unions and intersections 
-% from a recursive program without needing to specify a predicate universe might be similar to
-% craig interpolation.
-
-% \paragraph{PDR.}
-% exemplified by IC3. 
-
-% Similar: RLT infers abstract type for return type, 
-% then safely constrains the variables in previous step (fix's antecedent) 
-% to subtype the least fixed point.
-% This lazily propagates the type for the last step to the previous steps.
-% This is safe as antecedent is stronger than consequent at any step.
-% Seems similar to the notion in PDR of propagating negation of loss points to previous steps. 
-
-% Different: RLT isn't cartesian
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Syntax %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-\section{Appendix}
-\label{sect:appendix}
-\begin{definition} Internals 
-  \label{def:internals}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
-    \\
-    \\
-    \nonterm{\vec{\Omega}} & \is \epsilon \sep \vec{\Omega}\ \Omega
-    \\
-    \nonterm{\Omega} & \is \vec{\alpha}, \Delta
-    \\
-    \\
-    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
-    \\
-    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
-    \\
-    \\
-    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
-    \\
-    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \obj{->} \tau
-    \\
-    \\
-    \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
-    \\
-    \nonterm{\delta} & \alpha \slash \tau
-  \end{array}\]
-\end{definition}
-
-
-\begin{definition} Sugared Expressions 
-  \label{def:sugared_expressions}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{e} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      e\obj{,}e \sep
-      e\obj{|>}e \sep
-      \obj{let}\ x\ z\ \obj{=}\ e\ \obj{in}\ e \sep
-      \obj{(}e\obj{)}
-    \end{array}
-    \\
-    \nonterm{z} & \is \epsilon \sep \obj{:}\tau 
-    \\
-    \nonterm{p} & \is 
-      ... \sep
-      p\obj{,}p \sep
-      \obj{(}p\obj{)} 
-  \end{array}\]
-\end{definition}
-
-\begin{definition} Values 
-  \label{def:others}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{v} & \is 
-      \obj{@} \sep
-      \obj{<$l$> $v$} \sep
-      \vec{g} \sep
-      \obj{$v$,$v$} \sep
-      \obj{($v$)} \sep
-      \vec{f} 
-    \\
-    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
-    \\
-    \nonterm{g} & \is \obj{\$$l$=>$v$}
-    \\
-    \\
-    \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
-    \\
-    \nonterm{\sigma} & \is x \slash v
-  \end{array}\]
-\end{definition}
-
-
-\begin{definition}\boxed{e \rightsquigarrow e}\ Sugared Progression
-  \begin{mathpar}
-    \inferrule {
-      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
-    } {
-      e_a \obj{|>} e_b \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      e \rightsquigarrow e' 
-    } {
-      \obj{(} e \obj{)} \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
-    } {
-      e_l\obj{,}e_r \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \obj{(\$ <true> @=>}e_t \obj{\ \$ <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
-    } {
-      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
-    }
-
-
-    \inferrule {
-      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
-      \rightsquigarrow e'
-    } {
-      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
-    }
-
-    % \inferrule {
-    %   e \rightsquigarrow e'
-    % } {
-    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
-    % }
-
-    % \inferrule {
-    % } {
-    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
-    % }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition} Sugared Types 
-  \label{def:sugared_types}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{\tau} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      \obj{TOP} \sep 
-      \obj{BOT} \sep
-      \obj{(}\tau\obj{)}
-
-    \end{array}
-    \\
-    \nonterm{\phi} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      \obj{(}\phi\obj{)}
-
-    \end{array}
-  \end{array}\]
-\end{definition}
 
 
 \begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
@@ -2451,6 +2561,29 @@ This rule is the relational analog of the open variable rules.
     }
   \end{mathpar}
 \end{definition}
+
+\begin{definition}\boxed{\Delta[\alpha\slash\tau]^\pm = \Delta}\ Polar Subtyping Environment Substitution 
+  \label{def:polar_subtyping_environment_substitution}
+  \TODO{...}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\tau[\alpha\slash\tau]^\pm = \tau}\ Polar Type Substitution 
+  \label{def:polar_type_substitution}
+  \TODO{...}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}\boxed{\text{skolem}(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
+  \label{def:skolem}
+  \TODO{...}
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
 
 
 
