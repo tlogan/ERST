@@ -2179,6 +2179,17 @@ class Solver:
         if self.count > self._limit:
             return []
 
+        print(f"""
+DEBUG SOLVE:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(lower)}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+              
+
+        """)
+
         #######################################
         #### Reflection ####
         #######################################
@@ -2239,8 +2250,14 @@ class Solver:
         elif isinstance(lower, Imp) and isinstance(upper, Imp): 
             worlds = [
                 m1
+                # TODO: consider switching order
+                # NOTE: to add relational constraint in consequent before checking antecedent
+
                 for m0 in self.solve(world, upper.antec, lower.antec) 
                 for m1 in self.solve(m0, lower.consq, upper.consq) 
+
+                # for m0 in self.solve(world, lower.consq, upper.consq) 
+                # for m1 in self.solve(m0, upper.antec, lower.antec) 
             ]
             return worlds
 

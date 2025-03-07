@@ -846,17 +846,20 @@ which allow expressing properties of expressions with varying levels of precisio
       \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
-      \\\\
+      \\
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\\\
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\
-      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau'
+      \text{factorPair}(\obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu) = (\tau_l, \tau_r)
     } {
-      \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-      \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+      \Gamma \entails \obj{loop(}e\obj{)} 
+      \hastype 
+      \tau_l \obj{->} \tau_r
+      \given \vec{\alpha}, \Delta 
     }
-
   \end{mathpar}
 \end{definition}
 \hfill
@@ -1973,8 +1976,72 @@ Relational reasoning.
 
 \hfill
 \begin{definition} 
+  \label{def:relational_proof_typing}
+  Rel Proof Typing (Loop)
+  \hfill 
+  \boxed{\Gamma \entails e \hastype \tau \given \Omega}
+  \\
+  \begin{mathpar}
+
+    % \inferrule {
+    %   \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+    %   \\\\
+    %   \forall \vec{\alpha}'\ \Delta' .\ 
+    %     \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+    %   \implies
+    %   \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+    %   \\\\
+    %   \exists \pi.\ \pi \in \vec{\pi}_\nu
+    %   \\\\
+    %   \alpha_\nu \downarrow \vec{\pi}_\nu
+    %   \fallingdotseq 
+    %   \alpha_\mu \uparrow \vec{\pi}_\mu
+    %   \\
+    %   \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau'
+    % } {
+    %   \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
+    %   \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
+    % }
+
+    \inferrule {
+      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \\\\
+      \forall \vec{\alpha}'\ \Delta' .\ 
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+      \implies
+      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \\\\
+      \exists \pi.\ \pi \in \vec{\pi}_\nu
+      \\
+      \alpha_\nu \downarrow \vec{\pi}_\nu
+      \fallingdotseq 
+      \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\\\
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
+      \\
+      \exists \tau_r .\ \text{factorPair}(\obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu) = (\tau_l, \tau_r)
+    } {
+      \Gamma \entails \obj{loop(}e\obj{)} 
+      \hastype 
+      \obj{ALL[}\alpha_x \obj{;} \alpha_x \obj{<:} \tau_l \obj{]}
+      \alpha_x
+      \obj{->} 
+      \obj{EXI[}\alpha_i\ \alpha_y 
+          \obj{;} \alpha_i \obj{<:} \alpha_x 
+          \obj{;} \alpha_i \obj{*} \alpha_y 
+      \obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu
+      \obj{]}\alpha_y
+      \given \vec{\alpha}, \Delta 
+    }
+
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
   \label{def:proof_subtyping_abstraction_introduction}
-  Relational Proof Subtyping (Pattern Intro)
+  Rel Proof Subtyping (Pattern Intro)
   \hfill 
   \boxed{\phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
   \\
@@ -2016,23 +2083,11 @@ Relational reasoning.
 \hfill
 \begin{definition} 
   \label{def:proof_subtyping_variable_elimination}
-  Relational Proof Subtyping (Variable Elim)
+  Rel Proof Subtyping (Closed Variable Elim)
   \hfill
   \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
   \\
   \begin{mathpar}
-    \inferrule {
-      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
-      \\ 
-      \alpha_\open \notin \vec{\alpha}_\closed
-      \\\\
-      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
-      \\
-      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
-    } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
-    }
-
     \inferrule {
       \alpha_\closed \in \vec{\alpha}_\closed 
       % \\

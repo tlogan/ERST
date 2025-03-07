@@ -860,6 +860,23 @@ constraints:
 ~~~~~~~~~~~~~~~~~~~~~~~~
         """)
 
+def test_relational_implication_subtyping():
+    f = ('''
+    ALL[X] X -> EXI[Y ; (X, Y) <: (FX R 
+        | (~zero @, ~nil @)
+        | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
+    )] Y
+    ''')
+    io = ('''
+        (FX N | ~zero @ | ~succ N) -> Z
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, f, io)
+    print(f"""
+DEBUG test_relational_implication_subtyping
+len(worlds): {len(worlds)}
+    """)
+
 
 def test_fix_body():
     code = '''
@@ -2117,7 +2134,7 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    test_max()
+    # test_max()
 
     # test_fix()
     # test_max_annotated()
@@ -2167,6 +2184,8 @@ if __name__ == '__main__':
     # test_fixpoint_subs_false()
     # test_pair_subs_relational_constraint_false()
     # test_top_subs_relational_constraint_false()
+    #####################################
+    test_relational_implication_subtyping()
     pass
 
 #######################################################################
