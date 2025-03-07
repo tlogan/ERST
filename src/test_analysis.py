@@ -860,9 +860,10 @@ constraints:
 ~~~~~~~~~~~~~~~~~~~~~~~~
         """)
 
-def test_relational_implication_subtyping():
+def test_relational_implication_subtyping_pass_A():
     f = ('''
-    ALL[X] X -> EXI[Y ; (X, Y) <: (FX R 
+    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
+    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
         | (~zero @, ~nil @)
         | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
     )] Y
@@ -876,6 +877,45 @@ def test_relational_implication_subtyping():
 DEBUG test_relational_implication_subtyping
 len(worlds): {len(worlds)}
     """)
+    assert worlds
+
+def test_relational_implication_subtyping_pass_B():
+    f = ('''
+    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
+    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
+        | (~zero @, ~nil @)
+        | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
+    )] Y
+    ''')
+    io = ('''
+        (FX N | ~zero @ | ~succ ~succ N) -> Z
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, f, io)
+    print(f"""
+DEBUG test_relational_implication_subtyping
+len(worlds): {len(worlds)}
+    """)
+    assert worlds
+
+def test_relational_implication_subtyping_fail():
+    f = ('''
+    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
+    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
+        | (~zero @, ~nil @)
+        | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
+    )] Y
+    ''')
+    io = ('''
+        (FX N | ~zero @ | ~err N) -> Z
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, f, io)
+    print(f"""
+DEBUG test_relational_implication_subtyping
+len(worlds): {len(worlds)}
+    """)
+    assert not worlds
 
 
 def test_fix_body():
@@ -2185,7 +2225,9 @@ if __name__ == '__main__':
     # test_pair_subs_relational_constraint_false()
     # test_top_subs_relational_constraint_false()
     #####################################
-    test_relational_implication_subtyping()
+    # test_relational_implication_subtyping_pass_A()
+    # test_relational_implication_subtyping_pass_B()
+    # test_relational_implication_subtyping_fail()
     pass
 
 #######################################################################

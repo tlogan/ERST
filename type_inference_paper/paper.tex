@@ -677,7 +677,10 @@ The static semantics is a system for checking if the construction of an expressi
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
-      \kappa \sep \nu \sep \mu
+      \kappa \sep 
+      \phi \sep 
+      \psi \sep 
+      \theta 
     \end{array}
     & \com{type}
     \\
@@ -690,21 +693,28 @@ The static semantics is a system for checking if the construction of an expressi
     \end{array}
     & \com{base type}
     \\
-    \nonterm{\mu} & \is 
+    \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
       \tau\obj{|}\tau \sep 
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
-      \obj{LFP[}\alpha\obj{]}\tau
+      \obj{TOP}
     \end{array}
     & \com{abstraction type}
     \\
-    \nonterm{\nu} & \is 
+    \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
       \tau\obj{\&}\tau \sep 
-      \tau\obj{\textbackslash}\eta \sep 
-      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
+      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep
+      \obj{BOT}
     \end{array}
     & \com{refinement type}
+    \\
+    \nonterm{\theta} & \is 
+    \begin{array}[t]{@{}l}
+      \obj{LFP[}\alpha\obj{]}\tau \sep
+      \tau\obj{\textbackslash}\eta
+    \end{array}
+    & \com{special type}
     % \\
     % \nonterm{r} & \is 
     % \begin{array}[t]{@{}l}
@@ -721,18 +731,18 @@ The static semantics is a system for checking if the construction of an expressi
     \\\\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \phi \sep 
-      \phi
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \rho \sep 
+      \rho
     \end{array}
     & \com{subtracted type}
     \\
-    \nonterm{\phi} & \is 
+    \nonterm{\rho} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
       \obj{@} \sep
-      \obj{<}l\obj{>}\phi \sep 
-      l\obj{->}\phi \sep 
-      \phi\obj{\&}\phi
+      \obj{<}l\obj{>}\rho \sep 
+      l\obj{->}\rho \sep 
+      \rho\obj{\&}\rho
     \end{array}
     & \com{pattern type}
     \\
@@ -1315,26 +1325,9 @@ contains the space between types of the lower bound.
       \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
       \given \Omega 
     }
-
-    \inferrule {
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
-    } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
-    }
   \end{mathpar}
 \end{definition}
 \hfill
-
-For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
-ensures that both parts of the assumed type subtype the guaranteed type.
-
-For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
-infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
-which it leverages to prove the guaranteed type. 
-
-For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
-attempts a proof by induction, by unrolling the least fixed point
-and replacing its self referencing variable with the upper bound.
 
 \hfill
 \begin{definition} 
@@ -1372,36 +1365,9 @@ and replacing its self referencing variable with the upper bound.
     } {
       \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
     }
-
-    \inferrule {
-      % \TODO{prove that subtyping of diff is complete}
-      % \\\\
-      % \TODO{which implies that its negation is sound}
-      % \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
-      \\
-      \text{FTV}(\eta) \subseteq \epsilon
-      \\\\
-      \nexists \Omega' .\  
-      \Omega \preceq \Omega'
-      \land
-      \tau_l \subtypes \eta \given \Omega'
-    } {
-      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
-      \given \Omega 
-    }
   \end{mathpar}
 \end{definition}
 \hfill
-
-For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
-checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
-and does not subtype the subtracted portion $\eta$.
-When relying on negation, one must be careful to preserve soundness.
-We ensure that proof subtyping is complete for an upper bound of limited
-form $\eta$ with no free type variables, which
-means its negation is sound. We will make the limited notion
-of completeness precise in section \ref{sect:correctness}.
 
 \hfill
 \begin{definition} 
@@ -1443,16 +1409,6 @@ of completeness precise in section \ref{sect:correctness}.
   \end{mathpar}
 \end{definition}
 \hfill
-
-For a lower bound closed variable $\alpha$, proof subtyping
-finds a strict interpretation of the variable
-and checks it against the upper bound. Since the subtyping constraints
-may contain relational constraints, it factors the relational constraints
-to find constraints over single variables, which it used to construct the strict
-interpretation $\text{inter}(\vec{\tau})$.  
-
-The dual of this rule is the one for an upper bound closed variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
 
 
 \hfill
@@ -1505,6 +1461,37 @@ that are transitive upper bounds of the open variable $\alpha$.
 The dual of this rule is the one for a lower bound open variable, 
 in the continued definition \ref{def:continued_proof_subtyping}.
 
+For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+ensures that both parts of the assumed type subtype the guaranteed type.
+
+For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
+which it leverages to prove the guaranteed type. 
+
+For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+attempts a proof by induction, by unrolling the least fixed point
+and replacing its self referencing variable with the upper bound.
+
+For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
+and does not subtype the subtracted portion $\eta$.
+When relying on negation, one must be careful to preserve soundness.
+We ensure that proof subtyping is complete for an upper bound of limited
+form $\eta$ with no free type variables, which
+means its negation is sound. We will make the limited notion
+of completeness precise in section \ref{sect:correctness}.
+
+For a lower bound closed variable $\alpha$, proof subtyping
+finds a strict interpretation of the variable
+and checks it against the upper bound. Since the subtyping constraints
+may contain relational constraints, it factors the relational constraints
+to find constraints over single variables, which it used to construct the strict
+interpretation $\text{inter}(\vec{\tau})$.  
+
+The dual of this rule is the one for an upper bound closed variable, 
+in the continued definition \ref{def:continued_proof_subtyping}.
+
+
 
 \hfill
 \begin{definition} 
@@ -1538,12 +1525,6 @@ in the continued definition \ref{def:continued_proof_subtyping}.
       \tau_r
       \given \Omega' 
     }
-
-    \inferrule {
-      \tau_{l} \subtypes \tau_r \obj{|} \eta \given \Omega
-    } {
-      \tau_{l}\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
-    }
   \end{mathpar}
 \end{definition}
 \hfill
@@ -1573,18 +1554,6 @@ the upper bound union with the subtracted type.
     }
 
     \inferrule {
-      \phi \subtypes \tau_{l} \given \Omega 
-    } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \phi \subtypes \tau_{r} \given \Omega 
-    } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
       \tau_l \subtypes \tau_r \given \Omega
       \\
       \Omega \preceq \Omega' 
@@ -1595,7 +1564,43 @@ the upper bound union with the subtracted type.
       \subtypes 
       \obj{EXI[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega' 
     }
+  \end{mathpar}
+\end{definition}
+\hfill
 
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_special_elimination}
+  Proof Subtyping (Special Elim)
+  \hfill
+  \boxed{\mu \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+    } {
+      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+    }
+
+    \inferrule {
+      \tau_{l} \subtypes \tau_r \obj{|} \eta \given \Omega
+    } {
+      \tau_{l}\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_special_intro}
+  Proof Subtyping (Special Intro)
+  \hfill
+  \boxed{\tau \subtypes \nu \given \Omega}
+  \\
+  \begin{mathpar}
     \inferrule {
       \Omega \preceq \Omega'
       \\
@@ -1606,9 +1611,28 @@ the upper bound union with the subtracted type.
     } {
       \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
     }
+
+    \inferrule {
+      % \TODO{prove that subtyping of diff is complete}
+      % \\\\
+      % \TODO{which implies that its negation is sound}
+      % \\\\
+      \tau_l \subtypes \tau_r \given \Omega 
+      \\
+      \text{FTV}(\eta) \subseteq \epsilon
+      \\\\
+      \nexists \Omega' .\  
+      \Omega \preceq \Omega'
+      \land
+      \tau_l \subtypes \eta \given \Omega'
+    } {
+      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \given \Omega 
+    }
   \end{mathpar}
 \end{definition}
 \hfill
+
 
 
 For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
@@ -1983,26 +2007,6 @@ Relational reasoning.
   \\
   \begin{mathpar}
 
-    % \inferrule {
-    %   \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
-    %   \\\\
-    %   \forall \vec{\alpha}'\ \Delta' .\ 
-    %     \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
-    %   \implies
-    %   \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
-    %   \\\\
-    %   \exists \pi.\ \pi \in \vec{\pi}_\nu
-    %   \\\\
-    %   \alpha_\nu \downarrow \vec{\pi}_\nu
-    %   \fallingdotseq 
-    %   \alpha_\mu \uparrow \vec{\pi}_\mu
-    %   \\
-    %   \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau'
-    % } {
-    %   \Gamma \entails \obj{loop(}e\obj{)} \hastype \obj{ALL[}\alpha_x \obj{]}\alpha_x\obj{->EXI[}\alpha_y \obj{;} \alpha_x \obj{*} \alpha_y
-    %   \obj{<:LFP[} \alpha_\mu \obj{]}\tau'\obj{]}\alpha_y \given \vec{\alpha}, \Delta 
-    % }
-
     \inferrule {
       \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
@@ -2019,7 +2023,7 @@ Relational reasoning.
       \\\\
       \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\
-      \exists \tau_r .\ \text{factorPair}(\obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu) = (\tau_l, \tau_r)
+      \text{factorLeft}(\obj{LFP[} \alpha_\mu \obj{]}\tau_\mu) = \tau_l
     } {
       \Gamma \entails \obj{loop(}e\obj{)} 
       \hastype 
@@ -2104,6 +2108,29 @@ Relational reasoning.
       \alpha_\closed \subtypes \tau_r
       \given (\vec{\alpha}_\closed, \Delta)
       \\
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Rel Proof Subtyping (Abstraction Intro)
+  \hfill
+  \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \phi \subtypes \tau_{l} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \phi \subtypes \tau_{r} \given \Omega 
+    } {
+      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
     }
   \end{mathpar}
 \end{definition}

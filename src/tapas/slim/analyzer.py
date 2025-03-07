@@ -2326,23 +2326,6 @@ DEBUG SOLVE:
 
         #     return self.solve(world, exi, upper)
 
-        elif isinstance(lower, Fixpoint):
-            if is_typ_structured(lower.body):
-                '''
-                NOTE: k-induction / bi-simulation
-                use the pattern on LHS to dictate number of unrollings needed on RHS 
-                simply need to sub RHS into LHS's self-referencing variable
-                '''
-                '''
-                sub in induction hypothesis to world:
-                '''
-                renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                lower_body = sub_typ(renaming, lower.body)
-
-                return self.solve(world, lower_body, upper)
-            else:
-                return []
-
         #######################################
         #### Refinement Introduction ##########
         #######################################
@@ -2377,32 +2360,6 @@ DEBUG SOLVE:
                 for m1 in [replace(m0, closedids = m0.closedids.union(renamed_ids))]
                 for m2 in self.solve(m1, lower, weak_body)
             ]
-
-        elif isinstance(upper, Diff): 
-
-            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
-            if True:
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
-                '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
-                '''
-                context_worlds = self.solve(world, lower, upper.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    # if (
-                    #     # not self.is_inhabitable(world, lower) or 
-                    #     # Fail (incompletely) if lower is empty
-                    #     self.solve(m, lower, upper.negation) == []
-                    # )
-                ]   
-            else:
-                return []
 
         #######################################
         #### Variable Elimination #############
@@ -2445,7 +2402,6 @@ DEBUG SOLVE:
             else:
                 return []
 
-
         #######################################
         #### Variable Introduction #############
         #######################################
@@ -2460,6 +2416,8 @@ DEBUG SOLVE:
                 return [world]
             else:
                 return []
+
+
 
         #######################################
         #### Refinement Elimination ###########
@@ -2484,15 +2442,6 @@ DEBUG SOLVE:
 
             return worlds
 
-        elif isinstance(lower, Diff):
-            if diff_well_formed(lower):
-                '''
-                A \\ B <: T === A <: T | B  
-                '''
-                return self.solve(world, lower.context, Unio(upper, lower.negation))
-            else:
-                return []
-
         #######################################
         #### Abstraction Introduction #########
         #######################################
@@ -2512,6 +2461,40 @@ DEBUG SOLVE:
                     for m1 in self.solve(m0, constraint.lower, constraint.upper)
                 ]
             return worlds
+
+        #######################################
+        #### Special Elim #####################
+        #######################################
+
+        elif isinstance(lower, Fixpoint):
+            if is_typ_structured(lower.body):
+                '''
+                NOTE: k-induction / bi-simulation
+                use the pattern on LHS to dictate number of unrollings needed on RHS 
+                simply need to sub RHS into LHS's self-referencing variable
+                '''
+                '''
+                sub in induction hypothesis to world:
+                '''
+                renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                lower_body = sub_typ(renaming, lower.body)
+
+                return self.solve(world, lower_body, upper)
+            else:
+                return []
+
+        elif isinstance(lower, Diff):
+            if diff_well_formed(lower):
+                '''
+                A \\ B <: T === A <: T | B  
+                '''
+                return self.solve(world, lower.context, Unio(upper, lower.negation))
+            else:
+                return []
+
+        #######################################
+        #### Special Introduction #############
+        #######################################
 
         elif isinstance(upper, Fixpoint): 
 
@@ -2561,6 +2544,35 @@ DEBUG SOLVE:
                         return []
                     #end if
                 #end if
+
+
+        elif isinstance(upper, Diff): 
+
+            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
+            if True:
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_worlds = self.solve(world, lower, upper.context)
+                return [
+                    m
+                    for m in context_worlds 
+                    # if (
+                    #     # not self.is_inhabitable(world, lower) or 
+                    #     # Fail (incompletely) if lower is empty
+                    #     self.solve(m, lower, upper.negation) == []
+                    # )
+                ]   
+            else:
+                return []
+
+
 
         #######################################
         #### Otherwise Failure ################
