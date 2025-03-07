@@ -2209,24 +2209,24 @@ DEBUG SOLVE:
         #######################################
         #### Implication Rewriting ############
         #######################################
-        # elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-        #     return self.solve(world, lower, Inter(
-        #         Imp(upper.antec.left, upper.consq), 
-        #         Imp(upper.antec.right, upper.consq)
-        #     ))
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec.left, upper.consq), 
+                Imp(upper.antec.right, upper.consq)
+            ))
 
-        # elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-        #     return self.solve(world, lower, Inter(
-        #         Imp(upper.antec, upper.consq.left), 
-        #         Imp(upper.antec, upper.consq.right)
-        #     ))
+        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec, upper.consq.left), 
+                Imp(upper.antec, upper.consq.right)
+            ))
 
-        # elif isinstance(upper, TField) and isinstance(upper.body, Inter):
-        #     return [
-        #         m1
-        #         for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
-        #         for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
-        #     ]
+        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
+            return [
+                m1
+                for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
+                for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
+            ]
 
         #######################################
         #### Base Preservation ################

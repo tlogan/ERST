@@ -917,6 +917,49 @@ len(worlds): {len(worlds)}
     """)
     assert not worlds
 
+def test_inter_subtypes_union_antec_pass():
+    l = ('''
+        (~A @ -> @) & (~B @ -> @)
+    ''')
+    r = ('''
+        (~A @ | ~B @) -> @
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, l, r) 
+    print(f"""
+len(worlds): {len(worlds)}
+    """)
+    assert worlds
+
+def test_inter_subtypes_inter_consq_pass():
+    l = ('''
+        (@ -> ~A @) & (@ -> ~B @)
+    ''')
+    r = ('''
+        @ -> (~A @ & ~B @)
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, l, r) 
+    print(f"""
+len(worlds): {len(worlds)}
+    """)
+    assert worlds
+
+def test_inter_subtypes_inter_record_pass():
+    l = ('''
+        (foo : ~A @) & (foo : ~B @)
+    ''')
+    r = ('''
+        foo : (~A @ & ~B @)
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, l, r) 
+    print(f"""
+len(worlds): {len(worlds)}
+    """)
+    assert worlds
+
+
 
 def test_fix_body():
     code = '''
@@ -2228,6 +2271,9 @@ if __name__ == '__main__':
     # test_relational_implication_subtyping_pass_A()
     # test_relational_implication_subtyping_pass_B()
     # test_relational_implication_subtyping_fail()
+    # test_inter_subtypes_union_antec_pass()
+    # test_inter_subtypes_inter_consq_pass()
+    test_inter_subtypes_inter_record_pass()
     pass
 
 #######################################################################

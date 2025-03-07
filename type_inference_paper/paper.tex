@@ -874,6 +874,13 @@ which allow expressing properties of expressions with varying levels of precisio
 \end{definition}
 \hfill
 
+\TODO{explain the advantage of using the least fixed point type over the greatest fixed point type.
+By rewriting a function type in terms of the least fixed point type,
+instead of the greatest fixed point type around the implication type,
+the subtyping solver can avoid infinitely unrolling the GFP in an attempt to construct
+the least fixed point return type. 
+}
+
 \emph{Proof typing}, def. \ref{def:proof_typing}, checks the viability of an expression's
 form. Additionally, by extending the forms of expressions with type annotations, 
 as in Definition \ref{def:sugared_expressions},
@@ -1244,46 +1251,60 @@ proof subtyping simply checks that the space between types of the upper bound
 contains the space between types of the lower bound.
 
 
-% \hfill
-% \begin{definition} Proof Subtyping (Implication Rewriting)
-%   \\
-%   \boxed{\tau \subtypes \tau \given \Omega}
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_implication_rewriting}
+  Proof Subtyping (Implication Rewriting)
+  \hfill
+  \boxed{\tau \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes
+      (\tau_a\obj{->}\tau_r)\obj{\&}(\tau_b\obj{->}\tau_r)
+      \given \Omega
+    } {
+      \tau_l \subtypes 
+      (\tau_a\obj{|}\tau_b)\obj{->}\tau_r
+      \given \Omega 
+    }
 
-%   \label{def:proof_subtyping_rewriting}
-%   \TODO{these should be subsumed by other rules; double check necessity in implementation}
-%   \begin{mathpar}
-  %   \inferrule {
-  %     \tau_l \subtypes
-  %     \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes 
-  %     \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-  %     \given M, \Delta
-  %   }
 
-  %   \inferrule {
-  %     \tau_l
-  %     \subtypes
-  %     \obj{($l$:$\tau_{rl}$)\&($l$:$\tau_{rr}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes 
-  %     \obj{$l$:($\tau_{rl}$\&$\tau_{rr}$)}
-  %     \given M, \Delta
-  %   }
+    \inferrule {
+      \tau_l
+      \subtypes
+      (\tau_r\obj{->}\tau_a)
+      \obj{\&}
+      (\tau_r\obj{->}\tau_b)
+      \given \Omega 
+    } {
+      \tau_l \subtypes 
+      \tau_r\obj{->}(\tau_{a}\obj{\&}\tau_{b})
+      \given \Omega
+    }
 
-  %   \inferrule {
-  %     \tau_l \subtypes
-  %     \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-  %     \given M, \Delta
-  %   } {
-  %     \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-  %     \given M, \Delta
-  %   }
-%   \end{mathpar}
-% \end{definition}
-% \hfill
+    \inferrule {
+      \tau
+      \subtypes
+      (l\obj{->}\tau_a)
+      \obj{\&}
+      (l\obj{->}\tau_b)
+      \given \Omega 
+    } {
+      \tau \subtypes 
+      l\obj{->}(\tau_{a}\obj{\&}\tau_{b})
+      \given \Omega
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\TODO{NOTE how this rewriting turns the type inside out; going from implication on the outside to refinement/abstraction on the outside}
+
+\TODO{Note how this is the opposite direction from the loop type consturction, which puts the implication on the outside and the fixed point on the inside,
+in order to prevent infinite unrolling in the subtyping solver}
+
+\TODO{Note how these correspond to disjunction elimination and conjunction introduction in traditional proofs}
 
 \hfill
 \begin{definition} 
