@@ -695,17 +695,17 @@ The static semantics is a system for checking if the construction of an expressi
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
+      \obj{BOT} \sep
       \tau\obj{|}\tau \sep 
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau \sep 
-      \obj{TOP}
+      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau
     \end{array}
     & \com{abstraction type}
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
+      \obj{TOP} \sep
       \tau\obj{\&}\tau \sep 
-      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau \sep
-      \obj{BOT}
+      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
     \end{array}
     & \com{refinement type}
     \\
@@ -1010,9 +1010,9 @@ and adds the annotation to the typing environment when checking the contintuatio
     \inferrule {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
       \\
-      p \hastype \phi \given \Gamma'
+      p \hastype \rho \given \Gamma'
       \\
-      \text{diff}(\phi, \vec{\eta}) = \tau_l
+      \text{diff}(\rho, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
       \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket^+ \in \vec{\pi}'
@@ -1021,7 +1021,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\\\
       \exists \pi .\ \pi \in \vec{\pi}' 
       \\
-      \text{close}(\phi) = \eta
+      \text{close}(\rho) = \eta
     } {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
       \vec{\pi}\ \vec{\pi}' \sim \vec{\eta}\ \eta
@@ -1290,7 +1290,7 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_abstraction_elimination}
   Proof Subtyping (Abstraction Elim)
   \hfill
-  \boxed{\mu \subtypes \tau \given \Omega}
+  \boxed{\phi \subtypes \tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1334,7 +1334,7 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Intro)
   \hfill
-  \boxed{\tau \subtypes \nu \given \Omega}
+  \boxed{\tau \subtypes \psi \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1374,22 +1374,26 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_variable_elimination}
   Proof Subtyping (Variable Elim)
   \hfill
-  \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
+  \boxed{\alpha \subtypes \tau \given \Omega} 
   \\
   \begin{mathpar}
     \inferrule {
+      \nexists \psi.\ \tau = \psi
+      \\
       (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
       \\ 
       \alpha_\open \notin \vec{\alpha}_\closed
       \\\\
-      \text{split}^-(\Delta[\alpha_\open\slash\tau_r]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \text{split}^-(\Delta[\alpha_\open\slash\tau]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau_r) 
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau) 
     }
 
     \inferrule {
+      \nexists \psi.\ \tau_r = \psi
+      \\
       \alpha_\closed \in \vec{\alpha}_\closed 
       % \\
       % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
@@ -1416,22 +1420,26 @@ contains the space between types of the lower bound.
   \label{def:proof_subtyping_variable_introduction}
   Proof Subtyping (Variable Intro)
   \hfill
-  \boxed{\tau \subtypes \alpha \given \Omega}\ \textbf{where}\ $\nexists \mu.\ \tau = \mu$
+  \boxed{\tau \subtypes \alpha \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
+      \nexists \phi.\ \tau = \phi
+      \\
       (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
       \\ 
       \alpha_\open \notin \vec{\alpha}_\closed
       \\\\
-      \text{split}^+(\Delta[\alpha_\open\slash\tau_l]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \text{split}^+(\Delta[\alpha_\open\slash\tau]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \tau_l \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau_l\obj{<:}\alpha_\open) 
+      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau\obj{<:}\alpha_\open) 
     }
 
     \inferrule {
+      \nexists \phi.\ \tau_l = \phi
+      \\
       \alpha_\closed \in \vec{\alpha}_\closed 
       % \\
       % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
@@ -1498,7 +1506,7 @@ in the continued definition \ref{def:continued_proof_subtyping}.
   \label{def:proof_subtyping_refinement_elimination}
   Proof Subtyping (Refinement Elim)
   \hfill
-  \boxed{\nu \subtypes \tau \given \Omega}\ \textbf{where}\ $\exists \kappa\ \mu .\ \tau = \kappa \lor \tau = \mu$
+  \boxed{\psi \subtypes \tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1514,6 +1522,10 @@ in the continued definition \ref{def:continued_proof_subtyping}.
     }
 
     \inferrule {
+      \nexists \alpha .\ \tau_r = \alpha 
+      \\
+      \nexists \psi .\ \tau_r = \psi 
+      \\\\
       \tau_l \subtypes \tau_r \given \Omega 
       \\
       \Omega \preceq \Omega' 
@@ -1538,7 +1550,7 @@ the upper bound union with the subtracted type.
   \label{def:proof_subtyping_abstraction_introduction}
   Proof Subtyping (Abstraction Intro)
   \hfill
-  \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
+  \boxed{\tau \subtypes \phi \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1554,6 +1566,10 @@ the upper bound union with the subtracted type.
     }
 
     \inferrule {
+      \nexists \alpha .\ \tau_l = \alpha 
+      \\
+      \nexists \phi .\ \tau_l = \phi 
+      \\\\
       \tau_l \subtypes \tau_r \given \Omega
       \\
       \Omega \preceq \Omega' 
@@ -1574,7 +1590,7 @@ the upper bound union with the subtracted type.
   \label{def:proof_subtyping_special_elimination}
   Proof Subtyping (Special Elim)
   \hfill
-  \boxed{\mu \subtypes \tau \given \Omega}
+  \boxed{\theta \subtypes \tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1584,9 +1600,9 @@ the upper bound union with the subtracted type.
     }
 
     \inferrule {
-      \tau_{l} \subtypes \tau_r \obj{|} \eta \given \Omega
+      \rho \subtypes \tau \obj{|} \eta \given \Omega
     } {
-      \tau_{l}\obj{\textbackslash}\eta \subtypes \tau_r \given \Omega
+      \rho\obj{\textbackslash}\eta \subtypes \tau \given \Omega
     }
   \end{mathpar}
 \end{definition}
@@ -1598,7 +1614,7 @@ the upper bound union with the subtracted type.
   \label{def:proof_subtyping_special_intro}
   Proof Subtyping (Special Intro)
   \hfill
-  \boxed{\tau \subtypes \nu \given \Omega}
+  \boxed{\tau \subtypes \theta \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1617,16 +1633,16 @@ the upper bound union with the subtracted type.
       % \\\\
       % \TODO{which implies that its negation is sound}
       % \\\\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \tau \subtypes \rho \given \Omega 
       \\
       \text{FTV}(\eta) \subseteq \epsilon
       \\\\
       \nexists \Omega' .\  
       \Omega \preceq \Omega'
       \land
-      \tau_l \subtypes \eta \given \Omega'
+      \tau \subtypes \eta \given \Omega'
     } {
-      \tau_l \subtypes \tau_r\obj{\textbackslash}\eta
+      \tau \subtypes \rho\obj{\textbackslash}\eta
       \given \Omega 
     }
   \end{mathpar}
@@ -2047,38 +2063,38 @@ Relational reasoning.
   \label{def:proof_subtyping_abstraction_introduction}
   Rel Proof Subtyping (Pattern Intro)
   \hfill 
-  \boxed{\phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
+  \boxed{\rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \phi' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \rho' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
       \\\\
       (\vec{\alpha}, \Delta) \preceq \Omega
       \\
-      \exists \alpha .\ \alpha \in \text{FTV}(\phi) \land \alpha \in \vec{\alpha} 
+      \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
       \\\\
-      \Delta \entails \phi' \subtypes \tau_n \sim 
+      \Delta \entails \rho' \subtypes \tau_n \sim 
       \\
       \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
     } {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \Omega 
     }
 
     \inferrule {
-      \entails \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \entails \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
       \\\\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
       \\
-      \forall \alpha .\ \alpha \in \text{FTV}(\phi) \implies \alpha \notin \vec{\alpha} 
+      \forall \alpha .\ \alpha \in \text{FTV}(\rho) \implies \alpha \notin \vec{\alpha} 
       \\\\
-      \vec{\alpha} \entails \Delta \wr \text{FTV}(\phi) \given \vec{\delta}
+      \vec{\alpha} \entails \Delta \wr \text{FTV}(\rho) \given \vec{\delta}
       \\
-      \phi[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'
     } {
-      \phi \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'\ \obj{;} \phi \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \given \vec{\alpha}', \Delta'\ \obj{;} \rho \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
     }
   \end{mathpar}
 \end{definition}
@@ -2089,10 +2105,12 @@ Relational reasoning.
   \label{def:proof_subtyping_variable_elimination}
   Rel Proof Subtyping (Closed Variable Elim)
   \hfill
-  \boxed{\alpha \subtypes \tau \given \Omega} \ \textbf{where}\ $\nexists \nu.\ \tau = \nu$
+  \boxed{\alpha \subtypes \tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
+      \nexists \psi.\ \tau_r = \psi
+      \\
       \alpha_\closed \in \vec{\alpha}_\closed 
       % \\
       % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
@@ -2118,19 +2136,19 @@ Relational reasoning.
   \label{def:proof_subtyping_abstraction_introduction}
   Rel Proof Subtyping (Abstraction Intro)
   \hfill
-  \boxed{\tau \subtypes \mu \given \Omega}\ \textbf{where}\ $\exists \kappa\ \nu .\ \tau = \kappa \lor \tau = \nu$
+  \boxed{\tau \subtypes \phi \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
-      \phi \subtypes \tau_{l} \given \Omega 
+      \rho \subtypes \tau_{l} \given \Omega 
     } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
     }
 
     \inferrule {
-      \phi \subtypes \tau_{r} \given \Omega 
+      \rho \subtypes \tau_{r} \given \Omega 
     } {
-      \phi \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
     }
   \end{mathpar}
 \end{definition}
