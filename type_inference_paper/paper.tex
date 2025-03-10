@@ -1295,6 +1295,7 @@ contains the space between types of the lower bound.
       l\obj{->}(\tau_{a}\obj{\&}\tau_{b})
       \given \Omega
     }
+
   \end{mathpar}
 \end{definition}
 \hfill
@@ -1413,6 +1414,8 @@ in order to prevent infinite unrolling in the subtyping solver}
     }
 
     \inferrule {
+      \TODO{make sure interpretation doesn't unsafely strengthen the closed variable}
+      \\\\
       \nexists \psi.\ \tau_r = \psi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
@@ -1459,6 +1462,8 @@ in order to prevent infinite unrolling in the subtyping solver}
     }
 
     \inferrule {
+      \TODO{make sure interpretation doesn't unsafely weaken the closed variable}
+      \\\\
       \nexists \phi.\ \tau_l = \phi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
@@ -2078,6 +2083,29 @@ Relational reasoning.
 
 \hfill
 \begin{definition} 
+  \label{def:proof_subtyping_implication_rewriting}
+  Rel Proof Subtyping (Implication Rewriting)
+  \hfill
+  \boxed{\tau \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes
+      \obj{ALL[}\alpha\obj{;} \alpha \obj{<:} \tau_\mu \obj{]} \alpha \obj{->} \tau_r
+      \given \Omega
+    } {
+      \tau_l
+      \subtypes 
+      \obj{LFP[}\alpha_\mu\obj{]}\tau_\mu\obj{->}\tau_r
+      \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
   \label{def:proof_subtyping_abstraction_introduction}
   Rel Proof Subtyping (Pattern Intro)
   \hfill 
@@ -2085,6 +2113,8 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
+      \TODO{update to match implementation}
+      \\\\
       \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \rho' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
       \\\\
       (\vec{\alpha}, \Delta) \preceq \Omega
@@ -2100,6 +2130,8 @@ Relational reasoning.
     }
 
     \inferrule {
+      \TODO{update to match implementation}
+      \\\\
       \entails \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
       \\\\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')

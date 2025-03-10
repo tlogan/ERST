@@ -1027,6 +1027,14 @@ def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...
             return k
     return None
 
+def find_paths(assumed_key : Typ, search_target : Typ) -> PSet[tuple[str, ...]]:
+    results : PSet[tuple[str, ...]] = s()
+    ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
+    for (k,v) in ordered_path_target_pairs:
+        if v == search_target:
+            results = results.add(k)
+    return results 
+
 def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Typ:
     if isinstance(choice, Exi):
 
@@ -1064,6 +1072,16 @@ def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
             if isinstance(constraint.upper, Fixpoint):
                 result = factorize_least_fp(constraint.upper, path)
                 results = results.add(result)
+    return results
+
+def find_factors_from_constraint(constraint : Subtyping, search_target : Typ) -> PSet[Typ]:
+    results = s()
+    paths = find_paths(constraint.lower, search_target)
+    # paths = [find_path(constraint.lower, search_target)]
+    for path in paths:
+        if isinstance(constraint.upper, Fixpoint) and path != None:
+            result = factorize_least_fp(constraint.upper, path)
+            results = results.add(result)
     return results
 
 
@@ -2140,6 +2158,8 @@ class Solver:
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
             return True
+        if isinstance(t, TUnit):
+            return True
         elif isinstance(t, TTag):
             return self.is_pattern_typ(t.body)
         elif isinstance(t, TField):
@@ -2179,16 +2199,14 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        print(f"""
-DEBUG SOLVE:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{concretize_typ(lower)}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              
-
-        """)
+#         print(f"""
+# DEBUG SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         #######################################
         #### Reflection ####
@@ -2227,6 +2245,16 @@ DEBUG SOLVE:
                 for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
                 for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
             ]
+
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Fixpoint):
+            param_typ = self.fresh_type_var()
+            universal_typ = All(
+                tuple([param_typ.id]), 
+                tuple([Subtyping(param_typ, upper.antec)]), 
+                Imp(param_typ, upper.consq)
+            )
+            return self.solve(world, lower, universal_typ)
+
 
         #######################################
         #### Base Preservation ################
@@ -2507,21 +2535,55 @@ DEBUG SOLVE:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-                lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                if any((fv in world.closedids) for fv in lower_fvs):
-                    assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
-                    if assumed_relational_typ != None:
 
-                        # print("~~~~~~ FIX A")
-                        # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                        ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
-                        normalized_upper = normalize_least_fp(upper, ordered_paths)
-                        worlds = self.solve(world, assumed_relational_typ, normalized_upper)
-                        return worlds
-                    else:
-                        return []
+
+                # READ
+                assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
+                if assumed_relational_typ != None:
+
+                    # print("~~~~~~ FIX A")
+                    # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
+                    ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
+                    normalized_upper = normalize_least_fp(upper, ordered_paths)
+                    worlds = self.solve(world, assumed_relational_typ, normalized_upper)
+                    return worlds
                 else:
-                    if self.is_relational_constraint_consistent(lower, upper):
+                    lower_fvs = extract_free_vars_from_typ(s(), lower)  
+                    closed_constraints_consistent = True 
+                    for fv in lower_fvs:
+                        if fv in world.closedids: 
+                            closed_parts = pset(
+                                st.upper
+                                for st in world.constraints
+                                if st.lower == TVar(fv) 
+                            ).union(self.extract_factored_upper_bounds(world, fv))
+
+
+                            for closed_part in closed_parts:
+                                # print(f"--closed_part: {concretize_typ(closed_part)}")
+                                # print(f"--constraint: {concretize_typ(lower)} <: {concretize_typ(upper)}")
+                                # print(f"--target: {fv}")
+                                factors = find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
+                                for factor in factors:
+                                    # print(f"---factor: {concretize_typ(factor)}")
+                                    closed_constraints_consistent = closed_constraints_consistent and bool(self.solve(world, closed_part, factor))
+#                     print(f"""
+# DEBUG upper, Fixpoint:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closedids: {world.closedids}
+# constraints: 
+# {concretize_constraints(world.constraints)}
+
+# closed_constraints_consistent: {closed_constraints_consistent} 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                     """)
+
+                    if closed_constraints_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
+                        # WRITE 
                         new_constraints, new_lower = self.prune_interpret_polar_typ(world.closedids, True, world.closedids, world.constraints, lower)
                         if new_lower != lower:
                             lower_fvs = extract_free_vars_from_typ(s(), lower)  

@@ -862,57 +862,79 @@ constraints:
 
 def test_relational_implication_subtyping_pass_A():
     f = ('''
-    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
-    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
+    ALL[X] X -> 
+    EXI[Y ; (X, Y) <: (FX R 
         | (~zero @, ~nil @)
         | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
     )] Y
     ''')
+    # io = ('''
+    #     ALL [X; X <: (FX N | ~zero @ | ~succ N)] X -> Z 
+    # ''')
     io = ('''
-        (FX N | ~zero @ | ~succ N) -> Z
+        (FX N | ~zero @ | ~succ N) -> Z 
     ''')
+    # TODO: handle LFP consequent
+    # consistent
+    # X <: ~zero @ |-  (X, Y) <: (FX R ...)
+
+    # consistent
+    # X <: (FX N | ~zero @ | ~succ N) |-  (X, Y) <: (FX R ...)
+
+    # inconsistent
+    # X <: ~err @ |-  (X, Y) <: (FX R ...)
+
+    # inconsistent
+    # X <: (FX N | ~zero @ | ~succ N | ~err @) |-  (X, Y) <: (FX R ...)
+
     solver = analyzer.Solver(m())
     worlds = solve(solver, f, io)
     print(f"""
-DEBUG test_relational_implication_subtyping
+DEBUG test_relational_implication_subtyping_pass_A
 len(worlds): {len(worlds)}
     """)
     assert worlds
 
 def test_relational_implication_subtyping_pass_B():
     f = ('''
-    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
-    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
+    ALL[X] X -> 
+    EXI[Y ; (X, Y) <: (FX R 
         | (~zero @, ~nil @)
         | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
     )] Y
     ''')
+    # io = ('''
+    #     ALL [X; X <: (FX N | ~zero @ | ~succ ~succ N)] X -> Z 
+    # ''')
     io = ('''
-        (FX N | ~zero @ | ~succ ~succ N) -> Z
+        (FX N | ~zero @ | ~succ ~succ N) -> Z 
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, f, io)
     print(f"""
-DEBUG test_relational_implication_subtyping
+DEBUG test_relational_implication_subtyping_pass_B
 len(worlds): {len(worlds)}
     """)
     assert worlds
 
 def test_relational_implication_subtyping_fail():
     f = ('''
-    ALL[X ; X <: (FX N | ~zero @ | ~succ N)] X -> 
-    EXI[I Y ; I <: X ; (I, Y) <: (FX R 
+    ALL[X] X -> 
+    EXI[Y ; (X, Y) <: (FX R 
         | (~zero @, ~nil @)
         | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
     )] Y
     ''')
+    # io = ('''
+    #     ALL [X ; X <: (FX N | ~zero @ | ~succ N | ~err N)] -> Z
+    # ''')
     io = ('''
-        (FX N | ~zero @ | ~err N) -> Z
+        (FX N | ~zero @ | ~succ N | ~err N) -> Z
     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, f, io)
     print(f"""
-DEBUG test_relational_implication_subtyping
+DEBUG test_relational_implication_subtyping_fail
 len(worlds): {len(worlds)}
     """)
     assert not worlds
@@ -2271,6 +2293,7 @@ if __name__ == '__main__':
     # test_relational_implication_subtyping_pass_A()
     # test_relational_implication_subtyping_pass_B()
     # test_relational_implication_subtyping_fail()
+    #####################################
     # test_inter_subtypes_union_antec_pass()
     # test_inter_subtypes_inter_consq_pass()
     # test_inter_subtypes_inter_record_pass()
