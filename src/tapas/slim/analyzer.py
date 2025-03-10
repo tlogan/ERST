@@ -1645,6 +1645,7 @@ class Solver:
 
         big_typ = base
         for result in results:
+
             new_constraints, t = self.prune_interpret_polar_typ(result.world.closedids, polarity, result.world.closedids, result.world.constraints, result.typ)
             ctyp = self.make_constraint_typ(polarity)(s(), result.world.closedids, new_constraints, t)
             big_typ = operator(big_typ, ctyp)
@@ -1818,16 +1819,19 @@ class Solver:
                     extra_constraints = extra_constraints.union(intermediates).add(st)
         return extra_constraints
 
-    def interpret_negative_id(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
 
-        relational_ids = pset(
+    def relational_ids(self, constraints : PSet[Subtyping]) -> PSet[str]:
+        return pset(
             id
             for st in constraints
             if isinstance(st.upper, Fixpoint)
             for id in extract_free_vars_from_typ(s(), st.lower) 
         )
-        if id in relational_ids:
-            return constraints, TVar(id) 
+
+    def interpret_negative_id(self, constraints : PSet[Subtyping], id : str) -> tuple[PSet[Subtyping], Typ]:
+
+        if id in self.relational_ids(constraints):
+            return (constraints, TVar(id))
 
         result_typ : Typ = TVar(id) 
         result_constraints : PSet[Subtyping] = pset()
@@ -2169,13 +2173,20 @@ class Solver:
         else:
             return False
 
-
     def is_base_typ(self, t : Typ) -> bool:
         return (
             isinstance(t, TTag) or
             isinstance(t, TField) or
             isinstance(t, Imp)
         )
+
+    def is_relational_key(self, t : Typ) -> bool:
+        if isinstance(t, TField):
+            return True
+        elif isinstance(t, Inter):
+            return self.is_relational_key(t.left) and self.is_relational_key(t.right)
+        else:
+            return False
 
     def is_refinement_typ(self, t : Typ) -> bool:
         return (
@@ -2452,7 +2463,7 @@ class Solver:
         #######################################
 
 
-        elif isinstance(lower, Inter) and self.is_base_typ(upper): 
+        elif isinstance(lower, Inter) and self.is_base_typ(upper) : 
             return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
 
         elif isinstance(lower, All): 
@@ -2549,40 +2560,44 @@ class Solver:
                     return worlds
                 else:
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                    closed_constraints_consistent = True 
+                    closed_var_consistent = True 
                     for fv in lower_fvs:
                         if fv in world.closedids: 
                             closed_parts = pset(
                                 st.upper
                                 for st in world.constraints
-                                if st.lower == TVar(fv) 
+                                if st.lower == TVar(fv)
                             ).union(self.extract_factored_upper_bounds(world, fv))
 
+                            one_part_consistent = any(
+                                all(
+                                    bool(self.solve(world, closed_part, factor))
+                                    for factor in find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
+                                )
+                                for closed_part in closed_parts
+                                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
+                            )
 
-                            for closed_part in closed_parts:
-                                # print(f"--closed_part: {concretize_typ(closed_part)}")
-                                # print(f"--constraint: {concretize_typ(lower)} <: {concretize_typ(upper)}")
-                                # print(f"--target: {fv}")
-                                factors = find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
-                                for factor in factors:
-                                    # print(f"---factor: {concretize_typ(factor)}")
-                                    closed_constraints_consistent = closed_constraints_consistent and bool(self.solve(world, closed_part, factor))
-#                     print(f"""
-# DEBUG upper, Fixpoint:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closedids: {world.closedids}
-# constraints: 
-# {concretize_constraints(world.constraints)}
+                            closed_var_consistent = closed_var_consistent and one_part_consistent
 
-# closed_constraints_consistent: {closed_constraints_consistent} 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                     """)
+                        print(f"""
+DEBUG upper, Fixpoint:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(lower)}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closedids: {world.closedids}
+constraints: 
+{concretize_constraints(world.constraints)}
 
-                    if closed_constraints_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
+closed_constraints_consistent: {closed_var_consistent} 
+bool(lower_fvs.difference(world.closedids)): {bool(lower_fvs.difference(world.closedids))}
+self.is_relational_constraint_consistent(lower, upper): {self.is_relational_constraint_consistent(lower, upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        """)
+
+                    if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
                         # WRITE 
                         new_constraints, new_lower = self.prune_interpret_polar_typ(world.closedids, True, world.closedids, world.constraints, lower)
                         if new_lower != lower:
@@ -2781,6 +2796,7 @@ class BaseRule(Rule):
             # new_constraints, param_typ = self.solver.prune_interpret_negative_typ(world.closedids, new_constraints, branch.pattern)
 
             # imp = Imp(param_typ, body_typ)
+
 
             new_constraints, imp = self.solver.prune_interpret_polar_typ(world.closedids, True, world.closedids, new_constraints, Imp(branch.pattern, branch.body))
 

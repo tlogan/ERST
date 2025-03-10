@@ -1414,8 +1414,6 @@ in order to prevent infinite unrolling in the subtyping solver}
     }
 
     \inferrule {
-      \TODO{make sure interpretation doesn't unsafely strengthen the closed variable}
-      \\\\
       \nexists \psi.\ \tau_r = \psi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
@@ -1424,15 +1422,14 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \nexists \alpha.\ \tau_r = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
+      \exists \Delta' .\ \llbracket \Delta, \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      (\vec{\alpha}_\closed \cup \text{FTV}(\tau_l), \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
       \alpha_\closed \subtypes \tau_r
       \given (\vec{\alpha}_\closed, \Delta)
-      \\
     }
   \end{mathpar}
 \end{definition}
@@ -1462,8 +1459,6 @@ in order to prevent infinite unrolling in the subtyping solver}
     }
 
     \inferrule {
-      \TODO{make sure interpretation doesn't unsafely weaken the closed variable}
-      \\\\
       \nexists \phi.\ \tau_l = \phi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
@@ -1472,16 +1467,18 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \nexists \alpha.\ \tau_l = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
+      \exists \Delta' .\ \llbracket \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
+      (\vec{\alpha}_\closed \cup \text{FTV}(\tau_l), \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
     } {
       \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
     }
   \end{mathpar}
 \end{definition}
 \hfill
+
+\TODO{Note how free variables in interpreted type are marked as closed, to ensure a strict consistency check}
 
 For an upper bound open variable $\alpha$, proof subtyping
 finds a lenient interpretation of the variable and checks it against the lower bound.
