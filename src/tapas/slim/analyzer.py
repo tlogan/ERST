@@ -720,7 +720,7 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
         return pset()
 
 
-def project_typ_recurse(t : Typ, path : Sequence[str]) -> Optional[Typ]:
+def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
     if not path:
         return None
     elif isinstance(t, Diff):
@@ -760,7 +760,7 @@ def project_typ_recurse(t : Typ, path : Sequence[str]) -> Optional[Typ]:
             return None
 
 
-def project_typ(t : Typ, path : Sequence[str]) -> Typ:
+def project_typ(t : Typ, path : tuple[str, ...]) -> Typ:
     result = project_typ_recurse(t, path)
     if result:
         return result
@@ -1027,7 +1027,7 @@ def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...
             return k
     return None
 
-def factorize_choice(induc_id : str, choice : Typ, path : Sequence[str]) -> Typ:
+def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Typ:
     if isinstance(choice, Exi):
 
         new_constraints = tuple(
@@ -1046,7 +1046,7 @@ def factorize_choice(induc_id : str, choice : Typ, path : Sequence[str]) -> Typ:
     else:
         return project_typ(choice, path)
 
-def factorize_least_fp(t : Fixpoint, path : Sequence[str]) -> Fixpoint:
+def factorize_least_fp(t : Fixpoint, path : tuple[str, ...]) -> Fixpoint:
 
     factorized_body = Bot() 
     choices = linearize_unions(t.body)
@@ -1717,7 +1717,6 @@ class Solver:
 
     def make_constraint_typ(self, positive : bool):
         (outer_con, inner_con) = ((Exi, All) if positive else (All, Exi))
-        # (outer_con, inner_con) = ((All, Exi) if positive else (Exi, All))
 
         def make(foreignids : PSet[str], closedids : PSet[str], constraints : PSet[Subtyping], payload : Typ):
 
@@ -1726,7 +1725,7 @@ class Solver:
                 st
                 for st in constraints 
                 # if all free type variabls in st constraint are influential
-                # if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
+                if not bool(extract_free_vars_from_constraints(s(), [st]).difference(influential_ids))
             )
 
             payload_ids = extract_free_vars_from_typ(s(), payload)
@@ -1736,39 +1735,14 @@ class Solver:
                 st
                 for st in constraints
                 for fids in [extract_free_vars_from_constraints(s(), [st])]
-
-                # every free id is closed or foreign
-                # if not bool (fids.difference(closedids).union(foreignids)) 
-                if not bool (fids.difference(closedids).difference(foreignids)) 
-
-                # there's at least one closed id
-                if bool(fids.intersection(closedids)) 
+                if not bool (fids.difference(closedids).union(foreignids)) # every free id is closed or foreign
+                if bool(fids.intersection(closedids)) # there's at least one closed id
             )
             inner_constraints = constraints.difference(outer_constraints)
 
             outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
-
-            #####################################
-            # outer_constraints = pset(
-            #     st
-            #     for st in constraints
-            #     for fids in [extract_free_vars_from_constraints(s(), [st])]
-
-            #     # every free id is open or foreign
-            #     if not bool (fids.difference(foreignids).intersection(closedids)) 
-
-            #     # there's at least one open id
-            #     if bool(fids.difference(closedids).difference(foreignids)) 
-            # )
-            # inner_constraints = constraints.difference(outer_constraints)
-
-            # outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).difference(closedids).difference(foreignids)
-
-            # inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).intersection(closedids)
-            #####################################
-
-            ######### invariant: for each constraint in inner_constraints, there is at least one inner id in fids(constraint) 
+            ######### invariant: for each constraint in inner_constraints, there is at least one open and inner id in fids(constraint) 
             for st in inner_constraints:
                 fids = extract_free_vars_from_constraints(s(), [st]) 
                 assert bool(inner_ids.intersection(fids))
@@ -2896,26 +2870,11 @@ class ExprRule(Rule):
         #end for
 
         rel_typ = Fixpoint(IH_typ.id, induc_body)
-
-        param_bound = factorize_least_fp(rel_typ, ["head"])
-
         param_typ = self.solver.fresh_type_var()
-
-        universal_constaints = tuple([
-            Subtyping(param_typ, param_bound)
-        ])
         return_typ = self.solver.fresh_type_var()
-
-        weakest_sub_typ = self.solver.fresh_type_var()
-        existential_constaints = tuple([
-            Subtyping(weakest_sub_typ, param_typ),
-            Subtyping(make_pair_typ(weakest_sub_typ, return_typ), rel_typ)
-        ])
-        consq_typ = Exi(tuple([weakest_sub_typ.id, return_typ.id]), existential_constaints, return_typ)  
-        return Result(pid, outer_world, All(
-            tuple([param_typ.id]), universal_constaints, 
-            Imp(param_typ, consq_typ))
-        )
+        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+        consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
 
         ##################################
 
