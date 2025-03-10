@@ -58,6 +58,7 @@
 \newcommand{\with}{\ \diamond\ }
 \newcommand{\notfree}{\ \#\ }
 \newcommand{\consis}{\ \star}
+\newcommand{\safe}{\ \checkmark}
 
 
 
@@ -1417,16 +1418,10 @@ in order to prevent infinite unrolling in the subtyping solver}
       \nexists \psi.\ \tau_r = \psi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
-      % \\
-      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
       \\
       \nexists \alpha.\ \tau_r = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \Delta, \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
-      \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}_\closed \cup \text{FTV}(\tau_l), \Delta) \preceq \Omega \land
-      \tau_l \subtypes \tau_r \given \Omega 
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau_r \safe
     } {
       \alpha_\closed \subtypes \tau_r
       \given (\vec{\alpha}_\closed, \Delta)
@@ -1467,10 +1462,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \nexists \alpha.\ \tau_l = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \Delta, \alpha_\closed \rrbracket^+ = (\Delta', \tau_r)
-      \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}_\closed \cup \text{FTV}(\tau_l), \Delta) \preceq \Omega \land \tau_l \subtypes \tau_r \given \Omega 
+      (\vec{\alpha}_\closed, \Delta) \entails \tau_l \subtypes \alpha_\closed \safe
     } {
       \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
     }
@@ -1718,6 +1710,66 @@ holds. If the subtyping is safe, then world is updated
 with the subtyping constraint. 
 
 This rule is the relational analog of the open variable rules.
+
+
+\hfill
+\begin{definition} 
+  \label{def:closed_variable_safety_negative}
+  Closed Variable Safety (Negative)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe}
+  \\
+  \begin{mathpar}
+
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\\\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:closed_variable_safety_positive}
+  Closed Variable Safety (Positive)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe}
+  \\
+  \begin{mathpar}
+
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \nexists \alpha .\ \tau_r = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\\\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;}  \tau_r \obj{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+
 
 
 
@@ -2159,20 +2211,13 @@ Relational reasoning.
       \nexists \psi.\ \tau_r = \psi
       \\
       \alpha_\closed \in \vec{\alpha}_\closed 
-      % \\
-      % \forall \alpha.\ \tau_r = \alpha \implies \alpha \in \vec{\alpha} 
       \\
       \nexists \alpha.\ \tau_r = \alpha 
       \\\\
-      \exists \Delta' .\ \llbracket \vec{\alpha}_\closed \entails \Delta\ \text{factor}(\Delta, \alpha_\closed), \alpha_\closed \rrbracket^- = (\Delta', \tau_l)
-      \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
-      \tau_l \subtypes \tau_r \given \Omega 
+      (\vec{\alpha}_\closed, \Delta \cup \text{factor}(\Delta, \alpha_\closed)) \entails \alpha_\closed \subtypes \tau_r \safe
     } {
       \alpha_\closed \subtypes \tau_r
       \given (\vec{\alpha}_\closed, \Delta)
-      \\
     }
   \end{mathpar}
 \end{definition}
@@ -2200,6 +2245,7 @@ Relational reasoning.
   \end{mathpar}
 \end{definition}
 \hfill
+
 
 \hfill
 \begin{definition}

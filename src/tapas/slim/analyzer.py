@@ -2435,8 +2435,25 @@ class Solver:
 
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
-            ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
-            if bool(self.solve(world, lower_interp, upper)):
+            # ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
+            # if bool(self.solve(world, lower_interp, upper)):
+            #     return [world]
+            # else:
+            #     return []
+
+            closed_parts = pset(
+                st.upper
+                for st in world.constraints
+                if st.lower == lower 
+            ).union(self.extract_factored_upper_bounds(world, lower.id))
+
+            one_part_consistent = any(
+                bool(self.solve(world, closed_part, upper))
+                for closed_part in closed_parts
+                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
+            )
+
+            if one_part_consistent: 
                 return [world]
             else:
                 return []
@@ -2450,8 +2467,25 @@ class Solver:
 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
-            ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
-            if self.solve(world, upper_interp, upper):
+            # ignore_constraints, upper_interp = self.prune_interpret_positive_id(world.closedids, world.constraints, upper.id)
+            # if self.solve(world, upper_interp, upper):
+            #     return [world]
+            # else:
+            #     return []
+
+            closed_parts = pset(
+                st.lower
+                for st in world.constraints
+                if st.upper == upper 
+            )
+
+            one_part_consistent = any(
+                bool(self.solve(world, upper, closed_part))
+                for closed_part in closed_parts
+                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
+            )
+
+            if one_part_consistent: 
                 return [world]
             else:
                 return []

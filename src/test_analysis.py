@@ -2239,7 +2239,7 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    # test_max()
+    test_max()
 
     # test_fix()
     # test_max_annotated()
@@ -2290,7 +2290,7 @@ if __name__ == '__main__':
     # test_pair_subs_relational_constraint_false()
     # test_top_subs_relational_constraint_false()
     #####################################
-    test_relational_implication_subtyping_pass_A()
+    # test_relational_implication_subtyping_pass_A()
     # test_relational_implication_subtyping_pass_B()
     # test_relational_implication_subtyping_fail()
     #####################################
