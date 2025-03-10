@@ -2057,19 +2057,16 @@ Relational reasoning.
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
-      \\\\
-      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\
-      \text{factorLeft}(\obj{LFP[} \alpha_\mu \obj{]}\tau_\mu) = \tau_l
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
     } {
       \Gamma \entails \obj{loop(}e\obj{)} 
       \hastype 
-      \obj{ALL[}\alpha_x \obj{;} \alpha_x \obj{<:} \tau_l \obj{]}
+      \obj{ALL[}\alpha_x \obj{]}
       \alpha_x
       \obj{->} 
-      \obj{EXI[}\alpha_i\ \alpha_y 
-          \obj{;} \alpha_i \obj{<:} \alpha_x 
-          \obj{;} \alpha_i \obj{*} \alpha_y 
+      \obj{EXI[}\alpha_y 
+          \obj{;} \alpha_x \obj{*} \alpha_y 
       \obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu
       \obj{]}\alpha_y
       \given \vec{\alpha}, \Delta 
