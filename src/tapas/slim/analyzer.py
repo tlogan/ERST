@@ -1646,7 +1646,7 @@ class Solver:
         big_typ = base
         for result in results:
 
-            new_constraints, t = self.prune_interpret_polar_typ(result.world.closedids, polarity, result.world.closedids, result.world.constraints, result.typ)
+            new_constraints, t = self.prune_interpret_polar_typ(s(), polarity, result.world.closedids, result.world.constraints, result.typ)
             ctyp = self.make_constraint_typ(polarity)(s(), result.world.closedids, new_constraints, t)
             big_typ = operator(big_typ, ctyp)
         return big_typ
@@ -1824,6 +1824,7 @@ class Solver:
         return pset(
             id
             for st in constraints
+            if self.is_relational_key(st.lower)
             if isinstance(st.upper, Fixpoint)
             for id in extract_free_vars_from_typ(s(), st.lower) 
         )
@@ -1854,9 +1855,11 @@ class Solver:
         return self.interpret_negative_id(constraints, id)
 
     def prune_interpret_polar_typ(self, ignore : PSet[str], positive : bool, closedids : PSet[str], constraints : PSet[Subtyping], src : Typ) -> tuple[PSet[Subtyping], Typ]:
+        # TODO: simplify to always ignore closedids
+        # only open variables should be interpreted
         if False:
             assert False
-        elif isinstance(src, TVar) and src.id not in ignore and src.id:  
+        elif isinstance(src, TVar) and src.id not in ignore and src.id not in closedids:  
             if positive:
                 return self.prune_interpret_positive_id(closedids, constraints, src.id)
             else:
@@ -2633,7 +2636,7 @@ self.is_relational_constraint_consistent(lower, upper): {self.is_relational_cons
 
                     if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
                         # WRITE 
-                        new_constraints, new_lower = self.prune_interpret_polar_typ(world.closedids, True, world.closedids, world.constraints, lower)
+                        new_constraints, new_lower = self.prune_interpret_polar_typ(s(), True, world.closedids, world.constraints, lower)
                         if new_lower != lower:
                             lower_fvs = extract_free_vars_from_typ(s(), lower)  
                             return [
@@ -2832,7 +2835,7 @@ class BaseRule(Rule):
             # imp = Imp(param_typ, body_typ)
 
 
-            new_constraints, imp = self.solver.prune_interpret_polar_typ(world.closedids, True, world.closedids, new_constraints, Imp(branch.pattern, branch.body))
+            new_constraints, imp = self.solver.prune_interpret_polar_typ(s(), True, world.closedids, new_constraints, Imp(branch.pattern, branch.body))
 
             generalized_case = self.solver.make_constraint_typ(True)( 
                 foreignids.union(world.closedids), 

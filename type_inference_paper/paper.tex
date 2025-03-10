@@ -59,11 +59,13 @@
 \newcommand{\notfree}{\ \#\ }
 \newcommand{\consis}{\ \star}
 \newcommand{\safe}{\ \checkmark}
+\newcommand{\relational}{\ \Re}
 
 
 
 \newcommand{\foreign}{\varnothing}
 \newcommand{\closed}{\bullet}
+\newcommand{\local}{\blacktriangle}
 \newcommand{\open}{\circ}
 
 
@@ -1023,7 +1025,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \text{diff}(\rho, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \vec{\alpha}', \llbracket \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket^+ \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -2246,6 +2248,67 @@ Relational reasoning.
 \end{definition}
 \hfill
 
+\hfill
+\begin{definition}
+  \label{def:rel_interpretation}
+  Rel Interpretation  (Negative)
+  \hfill
+  \boxed{\llbracket \Delta, \alpha \rrbracket^- = (\Delta, \tau)}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \neg(\Delta \entails \alpha \relational)
+      \\
+    } {
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \obj{TOP})
+    }
+
+    \inferrule {
+      \neg(\Delta \entails \alpha \relational)
+      \\
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
+    } {
+      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \obj{\&} \tau)
+    }
+
+    \inferrule {
+      \alpha \neq \tau_l
+      \\
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+    } {
+      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+    }
+
+    \inferrule {
+      \Delta \entails \alpha \relational
+    } {
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta, \alpha)
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}
+  \label{def:relational_constraint_key}
+  Relational Constraint Key
+  \hfill
+  \boxed{\Delta \entails \alpha \relational}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \obj{;} \tau_l \obj{<:} \tau_r \in \Delta 
+      \\
+      \nexists \alpha' .\ \tau_l = \alpha'
+      \\
+      \alpha \in \text{FTV}(\tau_l)
+    } {
+      \Delta \entails \alpha \relational
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
 
 \hfill
 \begin{definition}
@@ -2438,63 +2501,67 @@ Relational reasoning.
   Type Interpretation 
   \\\\
   \boxed{
-    \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau)
+    \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau)
   }
   \\
   \begin{mathpar}
     \inferrule {
+      \alpha \notin \vec{\alpha}_\local
+      \\
+      \alpha \notin \vec{\alpha}_\closed
+      \\
       \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
     }
 
     \inferrule {
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{@} \rrbracket^\pm = (\Delta, \obj{@})
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{@} \rrbracket^\pm = (\Delta, \obj{@})
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{<}l\obj{>}\tau \rrbracket^\pm = (\Delta', \obj{<}l\obj{>}\tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{<}l\obj{>}\tau \rrbracket^\pm = (\Delta', \obj{<}l\obj{>}\tau')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, l\obj{->}\tau \rrbracket^\pm = (\Delta', l\obj{->}\tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, l\obj{->}\tau \rrbracket^\pm = (\Delta', l\obj{->}\tau')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
       \\\\
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{->}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{->}\tau_r')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
       \\\\
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{|}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{|}\tau_r')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+      \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
       \\\\
-      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+      \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{EXI[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{EXI[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
       = 
       (\Delta' \cap \Delta'', \obj{EXI[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{LFP[}\alpha \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{LFP[}\alpha \obj{]} \tau \rrbracket^\pm 
       = 
       (\Delta', \obj{LFP[}\alpha \obj{]}\tau')
     }
@@ -2502,27 +2569,27 @@ Relational reasoning.
     \\
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
       \\\\
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{\&}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{\&}\tau_r')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+      \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
       \\\\
-      \llbracket \vec{\alpha}_\foreign \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+      \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \obj{ALL[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{ALL[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
       = 
       (\Delta' \cap \Delta'', \obj{ALL[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau\obj{\textbackslash}\eta \rrbracket^\pm = (\Delta', \tau'\obj{\textbackslash}\eta)
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau\obj{\textbackslash}\eta \rrbracket^\pm = (\Delta', \tau'\obj{\textbackslash}\eta)
     }
   \end{mathpar}
 \end{definition}
@@ -2532,23 +2599,23 @@ Relational reasoning.
   Qualification Interpretation 
   \\\\
   \boxed{
-    \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+    \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
   }
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm = (\Delta', \epsilon')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm = (\Delta', \epsilon')
     }
 
     \inferrule {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
       \\\\
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
       \\\\
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
     } {
-      \llbracket \vec{\alpha}_\foreign, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \obj{;} \tau_l \obj{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \obj{;} \tau_l' \obj{<:} \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \obj{;} \tau_l \obj{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \obj{;} \tau_l' \obj{<:} \tau_r')
     }
 
   \end{mathpar}
