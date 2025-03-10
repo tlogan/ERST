@@ -2583,8 +2583,6 @@ class Solver:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
-
-
                 # READ
                 assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
@@ -2617,26 +2615,26 @@ class Solver:
 
                             closed_var_consistent = closed_var_consistent and one_part_consistent
 
-                        print(f"""
-DEBUG upper, Fixpoint:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{concretize_typ(lower)}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closedids: {world.closedids}
-constraints: 
-{concretize_constraints(world.constraints)}
+#                         print(f"""
+# DEBUG upper, Fixpoint:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closedids: {world.closedids}
+# constraints: 
+# {concretize_constraints(world.constraints)}
 
-closed_constraints_consistent: {closed_var_consistent} 
-bool(lower_fvs.difference(world.closedids)): {bool(lower_fvs.difference(world.closedids))}
-self.is_relational_constraint_consistent(lower, upper): {self.is_relational_constraint_consistent(lower, upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        """)
+# closed_constraints_consistent: {closed_var_consistent} 
+# bool(lower_fvs.difference(world.closedids)): {bool(lower_fvs.difference(world.closedids))}
+# self.is_relational_constraint_consistent(lower, upper): {self.is_relational_constraint_consistent(lower, upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         """)
 
                     if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
                         # WRITE 
-                        new_constraints, new_lower = self.prune_interpret_polar_typ(s(), True, world.closedids, world.constraints, lower)
+                        ignore, new_lower = self.prune_interpret_polar_typ(s(), True, world.closedids, world.constraints, lower)
                         if new_lower != lower:
                             lower_fvs = extract_free_vars_from_typ(s(), lower)  
                             return [

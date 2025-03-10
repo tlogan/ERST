@@ -62,6 +62,9 @@
 \newcommand{\relational}{\ \Re}
 
 
+\newcommand{\allsafe}{\ \Re\checkmark}
+
+
 
 \newcommand{\foreign}{\varnothing}
 \newcommand{\closed}{\bullet}
@@ -2164,15 +2167,13 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
-      \TODO{update to match implementation}
-      \\\\
       \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \rho' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \\
+      \Delta \entails \rho' \subtypes \tau_n \sim 
       \\\\
       (\vec{\alpha}, \Delta) \preceq \Omega
-      \\
-      \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
-      \\\\
-      \Delta \entails \rho' \subtypes \tau_n \sim 
+      % \\
+      % \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
       \\
       \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
     } {
@@ -2181,21 +2182,58 @@ Relational reasoning.
     }
 
     \inferrule {
-      \TODO{update to match implementation}
-      \\\\
       \entails \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \\
+      \forall \alpha_\closed .\ 
+      \alpha_\closed \in \text{FTV}(\rho) \land \alpha_\closed \in \vec{\alpha}_\closed
+      \implies
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \safe
       \\\\
+      \exists \Delta_i .\ \llbracket \epsilon, \vec{\alpha} \entails \Delta, \rho\rrbracket^+ = \Delta_i, \rho'
+      \\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
       \\
-      \forall \alpha .\ \alpha \in \text{FTV}(\rho) \implies \alpha \notin \vec{\alpha} 
-      \\\\
-      \vec{\alpha} \entails \Delta \wr \text{FTV}(\rho) \given \vec{\delta}
-      \\
-      \rho[\vec{\delta}] \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho' \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'
     } {
       \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
       \given \vec{\alpha}', \Delta'\ \obj{;} \rho \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:relational_key_safety_negative}
+  Relational Key Safety (Negative)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) 
+      \entails
+      \alpha_\closed  \wr \rho \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \TODO{possibly tweak factor notation to improve readability}
+      \\\\
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\\\
+      \forall \tau_r .\
+      (\obj{;} \alpha_\closed \obj{<:} \tau_r) \in \text{factor}(\obj{;} \rho \obj{<:} \tau, \alpha_\closed) 
+      \implies
+      \exists \Omega .\  
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) 
+      \entails 
+      \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
   \end{mathpar}
 \end{definition}
