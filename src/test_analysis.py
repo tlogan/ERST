@@ -917,6 +917,7 @@ len(worlds): {len(worlds)}
     """)
     assert worlds
 
+
 def test_relational_implication_subtyping_fail():
     f = ('''
     ALL[X] X -> 
@@ -938,6 +939,28 @@ DEBUG test_relational_implication_subtyping_fail
 len(worlds): {len(worlds)}
     """)
     assert not worlds
+
+def test_relational_implication_subtyping_pass_C():
+    f = ('''
+    ALL[X] X -> 
+    EXI[Y ; (X, Y) <: (FX R 
+        | (~zero @, ~nil @)
+        | (EXI [N L ; (N,L)<:R] (~succ N, ~cons L))
+    )] Y
+    ''')
+    # io = ('''
+    #     ALL [X; X <: (FX N | ~zero @ | ~succ N)] X -> (FX L | ~nil @ | ~cons L) 
+    # ''')
+    io = ('''
+        (FX N | ~zero @ | ~succ N) -> (FX L | ~nil @ | ~cons L) 
+    ''')
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, f, io)
+    print(f"""
+DEBUG test_relational_implication_subtyping_pass_C
+len(worlds): {len(worlds)}
+    """)
+    assert worlds
 
 def test_inter_subtypes_union_antec_pass():
     l = ('''
@@ -2292,6 +2315,7 @@ if __name__ == '__main__':
     #####################################
     # test_relational_implication_subtyping_pass_A()
     # test_relational_implication_subtyping_pass_B()
+    test_relational_implication_subtyping_pass_C()
     # test_relational_implication_subtyping_fail()
     #####################################
     # test_inter_subtypes_union_antec_pass()
