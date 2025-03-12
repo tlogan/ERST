@@ -2205,6 +2205,43 @@ Relational reasoning.
 
 \hfill
 \begin{definition} 
+  \label{def:rel_closed_variable_safety_negative}
+  Rel Closed Variable Safety (Negative)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+    }
+
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \alpha_\closed \in \text{FTV}(\rho)
+      \\
+      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau' 
+      \\
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
   \label{def:relational_key_safety_negative}
   Relational Key Safety (Negative)
   \hfill
@@ -2212,20 +2249,10 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
-      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
-    } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) 
-      \entails
-      \alpha_\closed  \wr \rho \subtypes \tau \safe
-    }
-
-    \inferrule {
-      \TODO{possibly tweak factor notation to improve readability}
-      \\\\
       \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
-      \\\\
+      \\
       \forall \tau_r .\
-      (\obj{;} \alpha_\closed \obj{<:} \tau_r) \in \text{factor}(\obj{;} \rho \obj{<:} \tau, \alpha_\closed) 
+      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau_r
       \implies
       \exists \Omega .\  
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
@@ -2235,33 +2262,46 @@ Relational reasoning.
       \entails 
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
-  \end{mathpar}
-\end{definition}
-\hfill
 
-\hfill
-\begin{definition} 
-  \label{def:proof_subtyping_variable_elimination}
-  Rel Proof Subtyping (Closed Variable Elim)
-  \hfill
-  \boxed{\alpha \subtypes \tau \given \Omega}
-  \\
-  \begin{mathpar}
     \inferrule {
-      \nexists \psi.\ \tau_r = \psi
-      \\
-      \alpha_\closed \in \vec{\alpha}_\closed 
-      \\
-      \nexists \alpha.\ \tau_r = \alpha 
-      \\\\
-      (\vec{\alpha}_\closed, \Delta \cup \text{factor}(\Delta, \alpha_\closed)) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
     } {
-      \alpha_\closed \subtypes \tau_r
-      \given (\vec{\alpha}_\closed, \Delta)
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) 
+      \entails
+      \alpha_\closed  \wr \rho \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \alpha_\closed \in \text{FTV}(\rho)
+      \\
+      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau' 
+      \\\\
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
 \hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:relational_constraint_factorization}
+  Relational Constraint Factorization 
+  \hfill
+  \boxed{\rho \subtypes \tau \rightarrowtail \alpha \subtypes \tau'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \rho \subtypes \tau \rightarrowtail \alpha \subtypes \tau' 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
 
 \hfill
 \begin{definition} 
