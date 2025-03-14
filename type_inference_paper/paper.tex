@@ -61,6 +61,8 @@
 \newcommand{\safe}{\ \checkmark}
 \newcommand{\relational}{\ \Re}
 
+\newcommand{\factorsinto}{\Vvdash}
+
 
 \newcommand{\allsafe}{\ \Re\checkmark}
 
@@ -106,6 +108,9 @@
 % \newcommand{\for}{\B{for }}
      
 
+
+\newcommand{\tl}{\textasciitilde{}}
+\newcommand{\fieldmap}{\obj{\tl>}}
 
 
 \maketitle
@@ -686,7 +691,8 @@ The static semantics is a system for checking if the construction of an expressi
       \kappa \sep 
       \phi \sep 
       \psi \sep 
-      \theta 
+      \theta \sep
+      \gamma
     \end{array}
     & \com{type}
     \\
@@ -694,7 +700,7 @@ The static semantics is a system for checking if the construction of an expressi
     \begin{array}[t]{@{}l}
       \obj{@} \sep
       \obj{<}l\obj{>}\tau \sep 
-      l\obj{->}\tau \sep 
+      l \fieldmap \tau \sep 
       \tau\obj{->}\tau
     \end{array}
     & \com{base type}
@@ -718,9 +724,15 @@ The static semantics is a system for checking if the construction of an expressi
     \nonterm{\theta} & \is 
     \begin{array}[t]{@{}l}
       \obj{LFP[}\alpha\obj{]}\tau \sep
-      \tau\obj{\textbackslash}\eta
+      \tau\obj{\textbackslash}\eta \sep
     \end{array}
     & \com{special type}
+    \\
+    \nonterm{\gamma} & \is 
+    \begin{array}[t]{@{}l}
+      \tau \obj{*} \tau
+    \end{array}
+    & \com{sugar type}
     % \\
     % \nonterm{r} & \is 
     % \begin{array}[t]{@{}l}
@@ -747,13 +759,13 @@ The static semantics is a system for checking if the construction of an expressi
       \alpha \sep
       \obj{@} \sep
       \obj{<}l\obj{>}\rho \sep 
-      l\obj{->}\rho \sep 
+      l \fieldmap \rho \sep 
       \rho\obj{\&}\rho
     \end{array}
     & \com{pattern type}
     \\
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
-    & \com{type sequence}
+    & \com{type variable sequence}
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \obj{;} \tau \obj{<:} \tau
     & \com{subtyping environment}
@@ -764,7 +776,23 @@ The static semantics is a system for checking if the construction of an expressi
 The system leverages types of the forms in Definition \ref{def:types}, 
 which allow expressing properties of expressions with varying levels of precisions. 
 
+\hfill
+\begin{definition} 
+  \label{def:type_desugaring}
+  Type Desugaring 
+  \hfill 
+  \boxed{\text{desugar}(\gamma) = \tau}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \text{desugar}(\tau_l \obj{*} \tau_r) = (\obj{left} \fieldmap \tau_l)  \obj{*} (\obj{right} \fieldmap \tau_r)
+    }
+  \end{mathpar}
+\end{definition} 
+\hfill
 
+For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implicitly replaced with $\text{desugar}(\gamma)$.
 
 \hfill
 \begin{definition} 
@@ -799,17 +827,17 @@ which allow expressing properties of expressions with varying levels of precisio
 
     \inferrule {
       \Gamma \entails \vec{r} \hastype \tau \given \Omega 
-      \\
+      \\\\
       \Omega \preceq \Omega'
       \\
       \Gamma \entails e \hastype \tau' \given \Omega' 
     } {
-      \Gamma \entails \vec{r}\ \obj{\$}l\obj{=>}e \hastype \tau\ \obj{\&}\ l\obj{->}\tau' \given \Omega' 
+      \Gamma \entails \vec{r}\ \obj{\$}l \fieldmap e \hastype \tau\ \obj{\&}\ l \fieldmap \tau' \given \Omega' 
     }
 
     \inferrule {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
-      \\
+      \exists \vec{\eta}.\ \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
+      \\\\
       \text{pack}^+(\text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi}) = \tau 
     } {
       \Gamma \entails \vec{f} \hastype \tau \given \vec{\alpha}, \Delta
@@ -817,10 +845,10 @@ which allow expressing properties of expressions with varying levels of precisio
 
     \inferrule {
       \Gamma \entails e \hastype \tau_0 \given \Omega 
-      \\
+      \\\\
       \Omega \preceq \Omega'
       \\
-      \tau_0 \subtypes l\obj{->}\alpha \given \Omega' 
+      \tau_0 \subtypes l \fieldmap \alpha \given \Omega' 
     } {
       \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
     }
@@ -866,10 +894,12 @@ which allow expressing properties of expressions with varying levels of precisio
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
-      \\\\
-      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\
-      \text{factorPair}(\obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu) = (\tau_l, \tau_r)
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
+      \\\\
+      \exists \alpha .\ \alpha \obj{*} \obj{BOT} \subtypes \obj{LFP[} \alpha_\mu \obj{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \\
+      \exists \alpha .\ \obj{BOT} \obj{*} \alpha  \subtypes \obj{LFP[} \alpha_\mu \obj{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
     } {
       \Gamma \entails \obj{loop(}e\obj{)} 
       \hastype 
@@ -2230,7 +2260,7 @@ Relational reasoning.
     \inferrule {
       \alpha_\closed \in \text{FTV}(\rho)
       \\
-      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau' 
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\
       (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
     } {
@@ -2252,7 +2282,7 @@ Relational reasoning.
       \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
       \\
       \forall \tau_r .\
-      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau_r
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau_r
       \implies
       \exists \Omega .\  
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
@@ -2274,7 +2304,7 @@ Relational reasoning.
     \inferrule {
       \alpha_\closed \in \text{FTV}(\rho)
       \\
-      \rho \subtypes \tau \rightarrowtail \alpha_\closed \subtypes \tau' 
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\\\
       (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     } {
@@ -2290,13 +2320,13 @@ Relational reasoning.
   \label{def:relational_constraint_factorization}
   Relational Constraint Factorization 
   \hfill
-  \boxed{\rho \subtypes \tau \rightarrowtail \alpha \subtypes \tau'}
+  \boxed{\rho \subtypes \tau \factorsinto \alpha \subtypes \tau'}
   \\
   \begin{mathpar}
     \inferrule {
       \TODO{...}
     } {
-      \rho \subtypes \tau \rightarrowtail \alpha \subtypes \tau' 
+      \rho \subtypes \tau \factorsinto \alpha \subtypes \tau' 
     }
   \end{mathpar}
 \end{definition}
