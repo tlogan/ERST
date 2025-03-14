@@ -92,7 +92,7 @@
 \newcommand{\bigand}{\bigwedge\nolimits}
 \newcommand{\bigor}{\bigvee\nolimits}
 \newcommand{\C}[1]{\color{teal} \rhd\ \emph{#1}}
-\newcommand{\com}[1]{\color{Gray} \rhd\ \emph{#1}}
+\newcommand{\com}[1]{\color{Gray} \emph{#1}}
 \newcommand{\D}[1]{\small \textsc{#1}}
 % \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
 \newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
@@ -111,7 +111,7 @@
 
 \newcommand{\tl}{\textasciitilde{}}
 \newcommand{\fieldmap}{\obj{\tl>}}
-
+\newcommand{\typdiff}{\obj{\textbackslash}}
 
 \maketitle
 
@@ -724,7 +724,7 @@ The static semantics is a system for checking if the construction of an expressi
     \nonterm{\theta} & \is 
     \begin{array}[t]{@{}l}
       \obj{LFP[}\alpha\obj{]}\tau \sep
-      \tau\obj{\textbackslash}\eta \sep
+      \tau \typdiff \eta \sep
     \end{array}
     & \com{special type}
     \\
@@ -1530,7 +1530,7 @@ For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proo
 attempts a proof by induction, by unrolling the least fixed point
 and replacing its self referencing variable with the upper bound.
 
-For introduction of a difference type, $\tau_r\obj{\textbackslash}\eta$, proof subtyping,
+For introduction of a difference type, $\tau_r \typdiff \eta$, proof subtyping,
 checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
 and does not subtype the subtracted portion $\eta$.
 When relying on negation, one must be careful to preserve soundness.
@@ -1591,7 +1591,7 @@ in the continued definition \ref{def:continued_proof_subtyping}.
 \end{definition}
 \hfill
 
-For a lower bound difference, $\tau_l\obj{\textbackslash}\eta$, proof subtyping
+For a lower bound difference, $\tau_l \typdiff \eta$, proof subtyping
 simply checks that the positive type subtypes
 the upper bound union with the subtracted type. 
 
@@ -1652,7 +1652,7 @@ the upper bound union with the subtracted type.
     \inferrule {
       \rho \subtypes \tau \obj{|} \eta \given \Omega
     } {
-      \rho\obj{\textbackslash}\eta \subtypes \tau \given \Omega
+      \rho \typdiff \eta \subtypes \tau \given \Omega
     }
   \end{mathpar}
 \end{definition}
@@ -1692,7 +1692,7 @@ the upper bound union with the subtracted type.
       \land
       \tau \subtypes \eta \given \Omega'
     } {
-      \tau \subtypes \rho\obj{\textbackslash}\eta
+      \tau \subtypes \rho \typdiff \eta
       \given \Omega 
     }
   \end{mathpar}
@@ -1948,11 +1948,11 @@ This rule is the relational analog of the open variable rules.
     } 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l
       \\
-      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$})
+      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \tau_r)
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\textbackslash$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \typdiff \tau_r
     } 
 
     \inferrule { 
@@ -2697,7 +2697,8 @@ Relational reasoning.
     \inferrule {
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau\obj{\textbackslash}\eta \rrbracket^\pm = (\Delta', \tau'\obj{\textbackslash}\eta)
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \typdiff \eta \rrbracket^\pm 
+      = (\Delta', \tau' \typdiff \eta)
     }
   \end{mathpar}
 \end{definition}
