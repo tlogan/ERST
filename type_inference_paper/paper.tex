@@ -205,6 +205,15 @@ mathematics, allowing for greater proof automation by allowing reuse of proofs a
 proposition subtyping.
 
 
+\TODO{Describe the difference between extrinsic and intrinsic, in terms of descriptive and prescriptive}
+
+\TODO{Describe the gap between refinement types (Pfenning) and full extrinsic types (using abstraction types)}
+
+\TODO{Mention the gap between SuperF and its principal types and full extrinsic type inference}
+
+\TODO{mention how future work handles inductive relations represented as types}
+
+\TODO{mention how inductive relational extrinsic type inference is an extrinsic alternative to CHC solving or liquid types}
 
 \section{Overview}
 
@@ -267,11 +276,11 @@ Consider the function $\obj{talky}$, which completes a simple English phrase:
   \begin{array}[t]{@{} l}
     \obj{let talky = (}
       \\
-      \I \obj{\$ <hello> @ => <world> @}
+      \I \obj{? <hello> @ => <world> @}
       \\
-      \I \obj{\$ <good> @ => <morning> @} 
+      \I \obj{? <good> @ => <morning> @} 
       \\
-      \I \obj{\$ <thank> @ => <you> @} 
+      \I \obj{? <thank> @ => <you> @} 
       \\
     \obj{)}
   \end{array}
@@ -309,11 +318,11 @@ Consider the function \obj{repeat} that takes a natural number and returns a lis
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{let repeat = \$ x => loop(\$ self =>}
+      \obj{let repeat = ? x => loop(? self =>}
       \\
-      \I \obj{\$ <zero> @ => <nil> @}
+      \I \obj{? <zero> @ => <nil> @}
       \\
-      \I \obj{\$ <succ> n => <cons>(x,self(n))}
+      \I \obj{? <succ> n => <cons>(x,self(n))}
       \\
       \obj{)}
   \end{array}
@@ -459,17 +468,17 @@ of the functions' input types: \obj{U\&D}.
 
 \[
   \begin{array}[t]{@{} l}
-      \obj{let lessOrEq = loop(\$ self =>}
+      \obj{let lessOrEq = loop(? self =>}
       \\
-      \I \obj{\$ (<zero> @),y => <true> @}
+      \I \obj{? (<zero> @),y => <true> @}
       \\
-      \I \obj{\$ (<succ> x),(<succ> y) => self(x,y)}
+      \I \obj{? (<succ> x),(<succ> y) => self(x,y)}
       \\
-      \I \obj{\$ (<succ> x),(<zero> @) => <false> @}
+      \I \obj{? (<succ> x),(<zero> @) => <false> @}
       \\
       \obj{) in}
       \\
-      \obj{let max = \$ (x,y) => }
+      \obj{let max = ? (x,y) => }
       \\
       \I \obj{if lessOrEq(x,y) then y else x}
   \end{array}
@@ -564,11 +573,11 @@ The programming language is pure and applicative.
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     \\
-    \nonterm{r} & \is \obj{\$}l\obj{=>}e
+    \nonterm{r} & \is \obj{?}l\obj{=>}e
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
     \\
-    \nonterm{f} & \is \obj{\$}p\obj{=>}e
+    \nonterm{f} & \is \obj{?}p\obj{=>}e
     \\
     \nonterm{p} & \is 
       x \sep
@@ -578,7 +587,7 @@ The programming language is pure and applicative.
     \\
     \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     \\
-    \nonterm{k} & \is \obj{\$}l\obj{=>}p
+    \nonterm{k} & \is \obj{?}l\obj{=>}p
   \end{array}\]
 \end{definition}
 
@@ -604,13 +613,13 @@ for compositions that have no reasonable semantics.
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \vec{r}\obj{\$}l\obj{=>}e \rightsquigarrow \vec{r}\obj{\$}l\obj{=>}e' 
+      \vec{r}\obj{?}l\obj{=>}e \rightsquigarrow \vec{r}\obj{?}l\obj{=>}e' 
     }
 
     \inferrule {
       \vec{r} \rightsquigarrow \vec{r}'
     } {
-      \vec{r}\obj{\$}l\obj{=>}v \rightsquigarrow \vec{r}'\obj{\$}l\obj{=>}v
+      \vec{r}\obj{?}l\obj{=>}v \rightsquigarrow \vec{r}'\obj{?}l\obj{=>}v
     }
 
     \inferrule {
@@ -620,9 +629,9 @@ for compositions that have no reasonable semantics.
     }
 
     \inferrule {
-      \obj{\$}l\obj{=>}v \in \vec{g}
+      \obj{?}l\obj{=>}v \in \vec{g}
       \\
-      \forall\ e .\ \obj{\$}l\obj{=>}e \in \vec{g} \implies e = v
+      \forall\ e .\ \obj{?}l\obj{=>}e \in \vec{g} \implies e = v
     } {
       \vec{g}\obj{.}l \rightsquigarrow v
     }
@@ -644,7 +653,7 @@ for compositions that have no reasonable semantics.
       \\
       \text{FV}(e) \subseteq \text{FV}(p)
     } {
-      (\vec{f}\obj{\$}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e' 
+      (\vec{f}\obj{?}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e' 
     }
 
     \inferrule {
@@ -652,7 +661,7 @@ for compositions that have no reasonable semantics.
       \\
       p \equiv v \given \vec{\sigma} 
     } {
-      (\vec{f}\obj{\$}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
+      (\vec{f}\obj{?}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
     }
 
     \inferrule {
@@ -663,7 +672,7 @@ for compositions that have no reasonable semantics.
 
     \inferrule {
     } {
-      \obj{loop(\$}x\obj{=>}e\obj{)} \rightsquigarrow e[x \slash \obj{loop(\$}x\obj{=>}e\obj{)}]
+      \obj{loop(?}x\obj{=>}e\obj{)} \rightsquigarrow e[x \slash \obj{loop(?}x\obj{=>}e\obj{)}]
     }
   \end{mathpar}
 \end{definition}
@@ -707,7 +716,6 @@ The static semantics is a system for checking if the construction of an expressi
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
-      \obj{BOT} \sep
       \tau\obj{|}\tau \sep 
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau
     \end{array}
@@ -715,7 +723,6 @@ The static semantics is a system for checking if the construction of an expressi
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
-      \obj{TOP} \sep
       \tau\obj{\&}\tau \sep 
       \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
     \end{array}
@@ -724,13 +731,14 @@ The static semantics is a system for checking if the construction of an expressi
     \nonterm{\theta} & \is 
     \begin{array}[t]{@{}l}
       \obj{LFP[}\alpha\obj{]}\tau \sep
-      \tau \typdiff \eta \sep
+      \tau \typdiff \eta
     \end{array}
     & \com{special type}
     \\
     \nonterm{\gamma} & \is 
     \begin{array}[t]{@{}l}
-      \tau \obj{*} \tau
+      \obj{TOP} \sep \obj{BOT} \sep 
+      \tau \obj{*} \tau 
     \end{array}
     & \com{sugar type}
     % \\
@@ -786,6 +794,16 @@ which allow expressing properties of expressions with varying levels of precisio
   \begin{mathpar}
     \inferrule {
     } {
+      \text{desugar}(\obj{TOP}) = \obj{EXI[} \alpha \obj{]} \alpha
+    }
+
+    \inferrule {
+    } {
+      \text{desugar}(\obj{BOT}) = \obj{ALL[} \alpha \obj{]} \alpha
+    }
+
+    \inferrule {
+    } {
       \text{desugar}(\tau_l \obj{*} \tau_r) = (\obj{left} \fieldmap \tau_l)  \obj{*} (\obj{right} \fieldmap \tau_r)
     }
   \end{mathpar}
@@ -832,7 +850,7 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\
       \Gamma \entails e \hastype \tau' \given \Omega' 
     } {
-      \Gamma \entails \vec{r}\ \obj{\$}l \fieldmap e \hastype \tau\ \obj{\&}\ l \fieldmap \tau' \given \Omega' 
+      \Gamma \entails \vec{r}\ \obj{?}l \fieldmap e \hastype \tau\ \obj{\&}\ l \fieldmap \tau' \given \Omega' 
     }
 
     \inferrule {
@@ -970,7 +988,7 @@ For an empty record, proof typing constructs the top type \obj{TOP},
 which is merely syntactic sugar for $\obj{EXI[}\alpha\obj{]}\alpha$.
 
 \paragraph{Rule \ref{def:proof_typing}.5}
-For a non empty record, $\vec{r}\obj{\$}l\obj{=>}e$, proof typing 
+For a non empty record, $\vec{r}\obj{?}l\obj{=>}e$, proof typing 
 recursively constructs the type for each entry, and
 refines their types against each other via intersection.
 
@@ -1066,7 +1084,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\
       \text{close}(\rho) = \eta
     } {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{\$}p\obj{=>}e \liftfun 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{?}p\obj{=>}e \liftfun 
       \vec{\pi}\ \vec{\pi}' \sim \vec{\eta}\ \eta
     }
   \end{mathpar}
@@ -1352,11 +1370,6 @@ in order to prevent infinite unrolling in the subtyping solver}
   \\
   \begin{mathpar}
     \inferrule {
-    } {
-      \obj{BOT} \subtypes \tau_r \given \Omega 
-    }
-
-    \inferrule {
       \tau_{ll} \subtypes \tau_r
       \given \Omega 
       \\
@@ -1395,11 +1408,6 @@ in order to prevent infinite unrolling in the subtyping solver}
   \boxed{\tau \subtypes \psi \given \Omega}
   \\
   \begin{mathpar}
-    \inferrule {
-    } {
-      \tau_l \subtypes \obj{TOP} \given \Omega 
-    }
-
     \inferrule {
       \tau_{l} \subtypes \tau_{rl} \given \Omega 
       \\
@@ -1856,11 +1864,11 @@ This rule is the relational analog of the open variable rules.
     } 
 
     \inferrule { 
-      \obj{\$$l$=>$v$} \in G 
+      \obj{?$l$=>$v$} \in G 
       \\
       \vec{\delta}, \Gamma \satisfies v \hastype \tau 
       \\\\
-      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v
+      \forall v' .\ \obj{?$l$=>$v'$} \in G \implies v' = v
     } {
       \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
     } 
@@ -2526,7 +2534,7 @@ Relational reasoning.
     \\
     \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
     \\
-    \nonterm{g} & \is \obj{\$$l$=>$v$}
+    \nonterm{g} & \is \obj{?$l$=>$v$}
     \\
     \\
     \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
@@ -2551,20 +2559,20 @@ Relational reasoning.
     }
 
     \inferrule {
-      \obj{\$left=>} e_l\ \obj{\$right=>} e_r \rightsquigarrow e' 
+      \obj{?left=>} e_l\ \obj{?right=>} e_r \rightsquigarrow e' 
     } {
       e_l\obj{,}e_r \rightsquigarrow e' 
     }
 
     \inferrule {
-      \obj{(\$ <true> @=>}e_t \obj{\ \$ <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+      \obj{(? <true> @=>}e_t \obj{\ ? <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
     } {
       \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
     }
 
 
     \inferrule {
-      \obj{(\$} x \obj{=>} e_k \obj{)(} e \obj{)}
+      \obj{(?} x \obj{=>} e_k \obj{)(} e \obj{)}
       \rightsquigarrow e'
     } {
       \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
@@ -4624,11 +4632,11 @@ Relational reasoning.
     \item \Z $\B{case }
       e = G
       \I
-      \obj{\$$l$=>$v$} \in G
+      \obj{?$l$=>$v$} \in G
       \I
       \vec{\delta}, \Gamma \satisfies v \hastype \tau
       \I
-      \forall v' .\ \obj{\$$l$=>$v'$} \in G \implies v' = v 
+      \forall v' .\ \obj{?$l$=>$v'$} \in G \implies v' = v 
     $ 
     \item \Z $\B{wrt }
       G\ v 
@@ -5514,7 +5522,7 @@ Relational reasoning.
     %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
     % } 
     \item \Z $\B{case }
-      e_0 = \obj{$F$\$$p$=>$e_2$}
+      e_0 = \obj{$F$?$p$=>$e_2$}
       \I
       \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
     $ 
@@ -5547,15 +5555,15 @@ Relational reasoning.
         by theorem \ref{...} \TODO{...}
 
         \item \Z\Z\Z $\obj{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
-        \item \Z\Z\Z $\obj{($F'$\$$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
-        \item \Z\Z\Z $(\obj{$F[\vec{\sigma}]$\$$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\obj{($F'$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
+        \item \Z\Z\Z $(\obj{$F[\vec{\sigma}]$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $(\obj{($F$\$$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \obj{($F[\vec{\sigma}]$\$$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
+        \item \Z\Z\Z $(\obj{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
         $ by definition
-        \item \Z\Z\Z $(\obj{($F$\$$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $(\obj{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+        \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% OLD 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5568,7 +5576,7 @@ Relational reasoning.
     %   \contin
     %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r
     %   \I
-    %   e_0 = \obj{($F$\$$p$=>$e$)} 
+    %   e_0 = \obj{($F$?$p$=>$e$)} 
     % $
     % \item \Z $
     %   \B{hypo} \  \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r \implies \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
@@ -5577,8 +5585,8 @@ Relational reasoning.
     %   \B{wrt} \ F \ p \ e \ \Gamma' \  
     % $
     %   \item \Z\Z $F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ by application
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r$ by substitution 
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r$ by substitution 
+    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
     %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ by substitution 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -5612,13 +5620,13 @@ Relational reasoning.
   \label{theorem:model_typing_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
       \\
       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
       \\
       F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r
     } 
   \end{mathpar}
 
@@ -5631,25 +5639,25 @@ Relational reasoning.
 
     \item \Z $\B{case } e_1[\vec{\sigma}] = v_1 $
     \item \Z $\B{wrt } v_1$  
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
 
     \item \Z $\B{case}\ e_1[\vec{\sigma}] \rightsquigarrow e_1' \I \VDash e_1'$
-    \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$
+    \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
     \item \Z $\B{wrt}\ e_1' $
 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
       \item \Z\Z $e_1' = e_1'[\vec{\sigma}]$ by by theorem \ref{theorem:closed_substitution} 
-      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
-      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$\$$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
+      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
+      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
       \item \Z\Z $\vec{\sigma} \sqcup \epsilon = \vec{\sigma}$ by definition 
-      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$\$$p$=>$e$)($e_1'$)})[\vec{\sigma} \sqcup \epsilon]$ by substitution 
+      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \sqcup \epsilon]$ by substitution 
       \item \Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
       \item \Z\Z $\vec{\delta}, \epsilon \satisfies \epsilon$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \sqcup \epsilon \satisfies \obj{($F$\$$p$=>$e$)($e_1'$)}$ by substitution 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
+      \item \Z\Z $\vec{\delta}, \Gamma \sqcup \epsilon \satisfies \obj{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by definition
+    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
   \item $\square$ by implication 
 \end{theorem}
 
@@ -5657,7 +5665,7 @@ Relational reasoning.
   \label{theorem:model_typing_fully_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
       \\
       F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
       \\
@@ -5668,7 +5676,7 @@ Relational reasoning.
       e_1[\vec{\sigma}] = v_1
       \\
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof:
@@ -5678,8 +5686,8 @@ Relational reasoning.
     \item \Z $\vec{\delta} \satisfies v_1 \hastype \tau_l$ by substitution 
     \item \Z $\B{invert on}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r$
     \item \Z $\B{case } F = \epsilon$ 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$F$\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by substitution 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$F$?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by substitution 
 
       \item \Z\Z $\B{let}\ \vec{\sigma}' \B{ s.t. } p \equiv v_1 \given \vec{\sigma}'$ 
       by theorem \ref{theorem:model_typing_pattern_matching} 
@@ -5689,7 +5697,7 @@ Relational reasoning.
         \item \Z\Z\Z $\neg F[\vec{\sigma}]\obj{($v_1$)} \rightsquigarrow e'$ by substitution 
       \item \Z\Z $\forall e' .\ \neg F[\vec{\sigma}]\obj{($v_1$)} \rightsquigarrow e'$ by generalization 
 
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$\$$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
+      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
 
       \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma}')$ 
       by theorem \ref{theorem:pattern_matching_consistency}
@@ -5698,23 +5706,23 @@ Relational reasoning.
       \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
       by theorem \ref{theorem:concatenation_substitution}
 
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$\$$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
+      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
         by substitution
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$\$$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
+      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
         by substitution 
-      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by definition 
-      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by definition 
+      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
 
-      \item \Z\Z $\obj{($F$\$$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\obj{($F$\$$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
-      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
+      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
     \item \Z $\B{case } \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ 
       \item \Z\Z $\B{let } e' \B{ s.t. } (\obj{$F$($e_1$}))[\vec{\sigma}] \rightsquigarrow e' \land \vec{\delta}, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-      \item \Z\Z $(\obj{($F$\$$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$\$$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
   \item $\square$ by implication
 \end{theorem}
 
@@ -5790,7 +5798,7 @@ Relational reasoning.
   \label{theorem:model_typing_pattern_matching}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
       \\
       \vec{\delta} \satisfies v \hastype \tau_l 
     } {
@@ -5799,7 +5807,7 @@ Relational reasoning.
   \end{mathpar}
   Proof:
   \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies \obj{\$$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
+    \vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
     \I
     \vec{\delta} \satisfies v \hastype \tau_l 
   $
