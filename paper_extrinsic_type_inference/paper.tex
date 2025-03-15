@@ -41,7 +41,7 @@
 % \newtheorem{proof}{Proof}[section]
 
 
-\title{Extrinsic Relational Subtyping}
+\title{Extrinsic Type Inference}
 % \author{}
 % \date{}
 
@@ -207,7 +207,7 @@ proposition subtyping.
 
 \TODO{Describe the difference between extrinsic and intrinsic, in terms of descriptive and prescriptive}
 
-\TODO{Describe the gap between refinement types (Pfenning) and full extrinsic types (using abstraction types)}
+\TODO{Describe the gap between refinement types (Pfenning) and full extrinsic types (using expansion types)}
 
 \TODO{Mention the gap between SuperF and its principal types and full extrinsic type inference}
 
@@ -269,7 +269,7 @@ such that type inference generates singleton types.
 
 We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
-\paragraph{Path typing.}
+\paragraph{Finite Paths Preservation.}
 Consider the function $\obj{talky}$, which completes a simple English phrase:
 
 \[
@@ -302,7 +302,7 @@ The system infers the type to be an intersection of implication types:
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
 
-\paragraph{Output broadening.}
+\paragraph{Finite Paths Separation.}
 Consider the application \obj{talky(x)} where \obj{x} has the type \obj{(<hello> @)|(<thank> @)}. 
 Type inference breaks apart the function type's intersection into paths and 
 constructs the strongest output type possible by expanding the output type
@@ -313,7 +313,49 @@ Broadening from the bottom up contrasts with refinement type systems, which star
 the weakest type intrinsic to the constructors and refines down to a stronger type
 through intersections of types or conjunctions of qualifiers.
 
-\paragraph{Relational typing.} 
+
+
+\paragraph{Scalar Induction.} 
+Now consider a function \obj{boo} whose input type is the natural numbers. 
+Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
+\[
+  \begin{array}[t]{@{} l}
+      \obj{LFP[R]( BOT} 
+      \\
+      \I \obj{| <zero> @}
+      \\
+      \I \obj{| <succ> <succ> R}
+      \\
+      \obj{)} 
+  \end{array}
+\]
+The application requires that type inference check that the nat type is weaker than the even type. 
+Type inference sees that if both types were to unroll into an infinite sequence of values
+every value in nat would also be in even, therefore the application type checks. 
+In particular, type inference leverages the inductive hypothesis, by learning that weaker 
+types hold for all the recursive constraints of the stronger type. 
+In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
+on a single variable.
+In the case of comparing two relations such as \text{natList}(\obj{T}) and a corresponding even version, 
+the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
+constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
+
+
+\paragraph{Finite Paths Integration.}
+Consider two functions: \obj{uno} of type \obj{U->V} and \obj{dos} of type \obj{D->E}. 
+Now suppose these two functions are called on the same variable, e.g. \obj{(uno(x),dos(x))}.
+Type inference learns that the type of \obj{x} can be no weaker than the intersection
+of the functions' input types: \obj{U\&D}. 
+
+\TODO{note the connection to principal type}
+
+\TODO{consinder using functional example from SuperF: \obj{foo f = (f 123, f True)}}
+
+
+
+\TODO{Move following to inductive relational types paper}
+
+\paragraph{Infinite Path Preservation} 
 Consider the function \obj{repeat} that takes a natural number and returns a list of whose length is that number. 
 
 \[
@@ -378,14 +420,14 @@ to reason in a number ways: it can reason forward from inputs to outputs (just l
 reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
 
 
-\paragraph{Fixed point forward broadening.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
+\paragraph{Infinite Path Separation.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
 has type \obj{T}. Type inference
 constructs a singleton type, mirroring the results achieved by simply running the program.  
 \[
   \obj{<cons> T * <cons> T * <nil> @}
 \]
 
-\paragraph{Fixed point backwards broadening.} Now suppose we have a function \obj{foo} whose input
+Now suppose we have a function \obj{foo} whose input
 type is inferred to be an empty list or a singleton list, \obj{<nil> @ |  <cons> T * <nil> @}.
 Given the application \obj{foo(repeat(n)(x))} where \obj{x} has type \obj{T}, type inference can reason backwards to learn
 that the type of \obj{n} must be either zero or one. 
@@ -395,7 +437,7 @@ that the type of \obj{n} must be either zero or one.
 
 
 
-\paragraph{Vertical weakening (Factoring).} 
+\paragraph{Infinite Path Factorization.} 
 Now suppose we have a function \obj{woo} whose input
 type is inferred to be a list over elements of type \obj{T}.
 \[
@@ -429,40 +471,10 @@ of \obj{woo} and the type of \obj{n} must be the natural numbers.
 \]
 
 
-\paragraph{Horizontol weakening (infilling).} 
-Now consider a function \obj{boo} whose input type is the natural numbers. 
-Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
-\[
-  \begin{array}[t]{@{} l}
-      \obj{LFP[R]( BOT} 
-      \\
-      \I \obj{| <zero> @}
-      \\
-      \I \obj{| <succ> <succ> R}
-      \\
-      \obj{)} 
-  \end{array}
-\]
-The application requires that type inference check that the nat type is weaker than the even type. 
-Type inference sees that if both types were to unroll into an infinite sequence of values
-every value in nat would also be in even, therefore the application type checks. 
-In particular, type inference leverages the inductive hypothesis, by learning that weaker 
-types hold for all the recursive constraints of the stronger type. 
-In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
-on a single variable.
-In the case of comparing two relations such as \text{natList}(\obj{T}) and a corresponding even version, 
-the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
-constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
-
-\paragraph{Input refinement.}
-Consider two functions: \obj{uno} of type \obj{U->V} and \obj{dos} of type \obj{D->E}. 
-Now suppose these two functions are called on the same variable, e.g. \obj{(uno(x),dos(x))}.
-Type inference learns that the type of \obj{x} can be no weaker than the intersection
-of the functions' input types: \obj{U\&D}. 
-
-
-\paragraph{Path sensitivity.} Consider the function \obj{max} that chooses the maximum of two natural numbers. 
+\paragraph{Relational Induction.} 
+\TODO{...}
+\paragraph{Path Sensitivity.} Consider the function \obj{max} that chooses the maximum of two natural numbers. 
 
 
 
@@ -719,7 +731,7 @@ The static semantics is a system for checking if the construction of an expressi
       \tau\obj{|}\tau \sep 
       \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau
     \end{array}
-    & \com{abstraction type}
+    & \com{expansion type}
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
