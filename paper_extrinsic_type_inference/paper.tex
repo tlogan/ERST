@@ -47,11 +47,8 @@
 
 \begin{document}
 
-% \newcommand{\obj}[1]{\texttt{\small #1}}
-\newcommand{\obj}[1]{\texttt{\color{RoyalBlue} #1}}
+\newcommand{\J}[1]{\texttt{\color{RoyalBlue} #1}}
 \newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
-% \newcommand{\obj}[1]{\texttt{#1}}
-% \newcommand{\obj}[1]{\textbf{\texttt{#1}}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
@@ -110,8 +107,8 @@
 
 
 \newcommand{\tl}{\textasciitilde{}}
-\newcommand{\fieldmap}{\obj{\tl>}}
-\newcommand{\typdiff}{\obj{\textbackslash}}
+\newcommand{\fieldmap}{\J{\tl>}}
+\newcommand{\typdiff}{\J{\textbackslash}}
 
 \maketitle
 
@@ -270,19 +267,19 @@ such that type inference generates singleton types.
 We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
 \paragraph{Finite Paths Preservation.}
-Consider the function $\obj{talky}$, which completes a simple English phrase:
+Consider the function $\J{talky}$, which completes a simple English phrase:
 
 \[
   \begin{array}[t]{@{} l}
-    \obj{let talky = (}
+    \J{let talky = (}
       \\
-      \I \obj{? <hello> @ => <world> @}
+      \I \J{? <hello> @ => <world> @}
       \\
-      \I \obj{? <good> @ => <morning> @} 
+      \I \J{? <good> @ => <morning> @} 
       \\
-      \I \obj{? <thank> @ => <you> @} 
+      \I \J{? <thank> @ => <you> @} 
       \\
-    \obj{)}
+    \J{)}
   \end{array}
 \]
 
@@ -290,25 +287,25 @@ This program is defined by paths over hardcoded tags.
 The system infers the type to be an intersection of implication types:
 \[
   \begin{array}[t]{@{} l}
-    \obj{TOP}
+    \J{TOP}
     \\
-    \obj{\& (<hello> @ -> <world> @)}
+    \J{\& (<hello> @ -> <world> @)}
     \\
-    \obj{\& (<good> @ -> <morning> @)} 
+    \J{\& (<good> @ -> <morning> @)} 
     \\
-    \obj{\& (<thank> @ -> <you> @)}
+    \J{\& (<thank> @ -> <you> @)}
   \end{array}
 \]
 
 Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
 
-\paragraph{Finite Paths Separation.}
-Consider the application \obj{talky(x)} where \obj{x} has the type \obj{(<hello> @)|(<thank> @)}. 
+\paragraph{Finite Paths Selection.}
+Consider the application \J{talky(x)} where \J{x} has the type \J{(<hello> @)|(<thank> @)}. 
 Type inference breaks apart the function type's intersection into paths and 
 constructs the strongest output type possible by expanding the output type
 for each viable path. Since only two of the three paths 
 match the type of the argument, type inference determines the type of the application to be the type 
-\obj{(<world> @)|(<you> @)}.
+\J{(<world> @)|(<you> @)}.
 Broadening from the bottom up contrasts with refinement type systems, which start from
 the weakest type intrinsic to the constructors and refines down to a stronger type
 through intersections of types or conjunctions of qualifiers.
@@ -316,17 +313,17 @@ through intersections of types or conjunctions of qualifiers.
 
 
 \paragraph{Scalar Induction.} 
-Now consider a function \obj{boo} whose input type is the natural numbers. 
-Suppose we have the application \obj{boo(n)} where n guaranteed to be an even number.
+Now consider a function \J{boo} whose input type is the natural numbers. 
+Suppose we have the application \J{boo(n)} where n guaranteed to be an even number.
 \[
   \begin{array}[t]{@{} l}
-      \obj{LFP[R]( BOT} 
+      \J{LFP[R]( BOT} 
       \\
-      \I \obj{| <zero> @}
+      \I \J{| <zero> @}
       \\
-      \I \obj{| <succ> <succ> R}
+      \I \J{| <succ> <succ> R}
       \\
-      \obj{)} 
+      \J{)} 
   \end{array}
 \]
 The application requires that type inference check that the nat type is weaker than the even type. 
@@ -336,221 +333,33 @@ In particular, type inference leverages the inductive hypothesis, by learning th
 types hold for all the recursive constraints of the stronger type. 
 In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
 on a single variable.
-In the case of comparing two relations such as \text{natList}(\obj{T}) and a corresponding even version, 
+In the case of comparing two relations such as \text{natList}(\J{T}) and a corresponding even version, 
 the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
 constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
 \paragraph{Finite Paths Integration.}
-Consider two functions: \obj{uno} of type \obj{U->V} and \obj{dos} of type \obj{D->E}. 
-Now suppose these two functions are called on the same variable, e.g. \obj{(uno(x),dos(x))}.
-Type inference learns that the type of \obj{x} can be no weaker than the intersection
-of the functions' input types: \obj{U\&D}. 
+Consider two functions: \J{uno} of type \J{U->V} and \J{dos} of type \J{D->E}. 
+Now suppose these two functions are called on the same variable, e.g. \J{(uno(x),dos(x))}.
+Type inference learns that the type of \J{x} can be no weaker than the intersection
+of the functions' input types: \J{U\&D}. 
 
 \TODO{note the connection to principal type}
 
-\TODO{consinder using functional example from SuperF: \obj{foo f = (f 123, f True)}}
+\TODO{consinder using functional example from SuperF: \J{foo f = (f 123, f True)}}
 
 
 
-\TODO{Move following to inductive relational types paper}
+\paragraph{Infinite Path Factorization} 
 
-\paragraph{Infinite Path Preservation} 
-Consider the function \obj{repeat} that takes a natural number and returns a list of whose length is that number. 
-
-\[
-  \begin{array}[t]{@{} l}
-      \obj{let repeat = ? x => loop(? self =>}
-      \\
-      \I \obj{? <zero> @ => <nil> @}
-      \\
-      \I \obj{? <succ> n => <cons>(x,self(n))}
-      \\
-      \obj{)}
-  \end{array}
-\]
-
-
-Without specifying any requirements besides the function definition, type inference lifts 
-the function into the definitional property as a type. 
-To construct the type, type inference constructs a relation between nats and lists.
-The type of \obj{repeat} depends on a least fixed point relation between nats and lists 
-(parametrically named here for readability).
-
-\[
-  \text{natList}(\alpha) = \begin{array}[t]{@{} l}
-      \obj{LFP[R]( BOT} 
-      \\
-      \I \obj{| (<zero> @)*(<nil> @)}
-      \\
-      \I \obj{| (EXI[N L ; N*L <: R](<succ> N)*(<cons> (}\alpha\obj{*L))}
-      \\
-      \obj{)} 
-  \end{array}
-\]
-
-Using the \text{natList} relation, type inference then lifts the function repeat into its precise type form.
-
-\[
-  \obj{ALL[T] T -> ALL[X] X -> EXI[Y ; X*Y <: }\text{natList}(\obj{T}) \obj{] Y}
-\]
-
-It may be worth noting that there could be semantically equivalent recursive type in terms of intersections instead of unions. 
-
-\TODO{forward reference to correctness/model semantics}
-
-\[
-  \begin{array}[t]{@{} l}
-      \obj{ALL[T] GFP[R]( TOP} 
-      \\
-      \I \obj{\& (<zero> @)->(<nil> @)}
-      \\
-      \I \obj{\& (ALL[N L ; R <: N->L](<succ> N)->(<cons> T*L)}
-      \\
-      \obj{)} 
-  \end{array}
-\]
-
-
-Type inference reasons in terms least fixed points, but the greatest fixed point form could
-be handled with syntactic sugar and rewriting.  
-
-Using the precise type form, type inference can leverage solving and checking subtyping constraints 
-to reason in a number ways: it can reason forward from inputs to outputs (just like the runtime semantics), 
-reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
-
-
-\paragraph{Infinite Path Separation.} Consider the application \obj{repeat(<succ> <succ> <zero> @)(x)} where \obj{x}
-has type \obj{T}. Type inference
-constructs a singleton type, mirroring the results achieved by simply running the program.  
-\[
-  \obj{<cons> T * <cons> T * <nil> @}
-\]
-
-Now suppose we have a function \obj{foo} whose input
-type is inferred to be an empty list or a singleton list, \obj{<nil> @ |  <cons> T * <nil> @}.
-Given the application \obj{foo(repeat(n)(x))} where \obj{x} has type \obj{T}, type inference can reason backwards to learn
-that the type of \obj{n} must be either zero or one. 
-\[
-  \obj{<zero> @ | <succ> <zero> @}
-\]
+\TODO{Note how we separate immediately on intrudction of paths, rather than delyaing until elimination rule}
+\TODO{this limitation will be rectified in the follow up paper by leveraging reasoning over inductive relational types}
+\TODO{In this work, the inductive relational type is syntactically valid but not semantically valid}
 
 
 
-\paragraph{Infinite Path Factorization.} 
-Now suppose we have a function \obj{woo} whose input
-type is inferred to be a list over elements of type \obj{T}.
-\[
-  \begin{array}[t]{@{} l}
-      \obj{LFP[R]( BOT}
-      \\
-      \I \obj{| <nil> @ }
-      \\
-      \I \obj{| <cons> T*R}
-      \\
-      \obj{)}
-  \end{array}
-\]
-
-Given the application \obj{woo(repeat(n)(x))} where \obj{x} has type \obj{T}, type 
-inference discovers that the argument type depends on the relation \text{natList}(\obj{T}), 
-and the relation can be factored into a weaker cross product of nats and lists. 
-Therefore, the argument meets the requirements
-of \obj{woo} and the type of \obj{n} must be the natural numbers.
-
-\[
-  \begin{array}[t]{@{} l}
-      \obj{LFP[R]( BOT} 
-      \\
-      \I \obj{| <zero> @}
-      \\
-      \I \obj{| <succ> R}
-      \\
-      \obj{)} 
-  \end{array}
-\]
 
 
-
-\paragraph{Relational Induction.} 
-\TODO{...}
-\paragraph{Path Sensitivity.} Consider the function \obj{max} that chooses the maximum of two natural numbers. 
-
-
-
-\[
-  \begin{array}[t]{@{} l}
-      \obj{let lessOrEq = loop(? self =>}
-      \\
-      \I \obj{? (<zero> @),y => <true> @}
-      \\
-      \I \obj{? (<succ> x),(<succ> y) => self(x,y)}
-      \\
-      \I \obj{? (<succ> x),(<zero> @) => <false> @}
-      \\
-      \obj{) in}
-      \\
-      \obj{let max = ? (x,y) => }
-      \\
-      \I \obj{if lessOrEq(x,y) then y else x}
-  \end{array}
-\]
-
-
-The function \obj{max} must satisfy the property that the result is greater or equal to each of the inputs. 
-Type inference must learn constraints on the inputs to \obj{max}: \obj{x} and \obj{y}, which 
-depends on the output of \obj{lessOrEq(x,y)}. The application \obj{lessOrEq(x,y)} can evaluate to either \obj{<true>@}
-or \obj{<false>@}, which result from different paths taken in \obj{lessOrEq}. 
-Type inference considers both cases and maintains the learned constraints
-exist in different possible worlds, since they are learned from different paths. Finally, type inference
-connects the inputs to the outputs by considering the two possible paths of the \obj{if-then-else}.
-It first lifts the function \obj{lessOrEq} into a relational type. For readability, we name the relational type \text{LED} (as in "less than or equal decision"). 
-
-\[
-  \text{LED} = 
-  \begin{array}[t]{@{} l}
-      \obj{LFP[R] ( BOT}
-      \\
-      \I \obj{| (EXI [Y] ((<zero> @)*Y)*(<true> @))}
-      \\
-      \I \obj{| (EXI [X Y D ; ((X*Y)*Z) <: R] ((<succ> X)*(<succ> Y))*D)}
-      \\
-      \I \obj{| (EXI [X] ((<succ> X)*(<zero> @))*(<false> @))}
-      \\
-      \obj{)}
-  \end{array}
-\]
-
-using the \text{LED} relation, type inference combines the constraints learned
-for each possible world and combines them into a function type with multiple paths. 
-
-\[
-  \begin{array}[t]{@{} l}
-    \obj{TOP}
-    \\
-    \obj{\& (EXI [D ; D <: (<true> @)]}
-    \\
-    \I \obj{(ALL [X Y Z ; Y <: Z ; ((X*Y)*D) <:}\text{LED}\obj{] (X,Y) -> Z))}
-    \\
-    \obj{\& (EXI [D ; D <: (<false> @)]}
-    \\
-    \I \obj{(ALL [X Y Z ; X <: Z ; ((X*Y)*D) <: }\text{LED}\obj{] (X,Y) -> Z))}
-  \end{array}
-\]
-
-We could simplify the type by eliminating simple constraints without loss of safety or precision:
-
-\[
-  \begin{array}[t]{@{} l}
-    \obj{TOP}
-    \\
-    \obj{\& (ALL [X Y ; ((X*Y)*(<true> @)) <: }\text{LED}\obj{] (X,Y) -> Y)}
-    \\
-    \obj{\& (ALL [X Y ; ((X*Y)*(<false> @)) <: }\text{LED}\obj{] (X,Y) -> X)}
-  \end{array}
-\]
-
-However, we have not included this rewriting in the semantics or implementation. 
 
 
 \TODO{show type generated from code}
@@ -573,33 +382,33 @@ The programming language is pure and applicative.
     \is 
     \begin{array}[t]{@{}l}
       x \sep 
-      \obj{@} \sep
-      \obj{<}l\obj{>}e \sep 
+      \J{@} \sep
+      \J{<}l\J{>}e \sep 
       \vec{r} \sep
       \vec{f} \sep 
-      e\obj{.}l \sep
-      e\obj{(}e\obj{)} \sep
-      \obj{loop(}e\obj{)} \sep
+      e\J{.}l \sep
+      e\J{(}e\J{)} \sep
+      \J{loop(}e\J{)} \sep
       ...
     \end{array}
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     \\
-    \nonterm{r} & \is \obj{?}l\obj{=>}e
+    \nonterm{r} & \is \J{?}l\J{=>}e
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
     \\
-    \nonterm{f} & \is \obj{?}p\obj{=>}e
+    \nonterm{f} & \is \J{?}p\J{=>}e
     \\
     \nonterm{p} & \is 
       x \sep
-      \obj{@} \sep
-      \obj{<}l\obj{>}p \sep
+      \J{@} \sep
+      \J{<}l\J{>}p \sep
       \vec{k}
     \\
     \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     \\
-    \nonterm{k} & \is \obj{?}l\obj{=>}p
+    \nonterm{k} & \is \J{?}l\J{=>}p
   \end{array}\]
 \end{definition}
 
@@ -619,72 +428,72 @@ for compositions that have no reasonable semantics.
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{<}l\obj{>}e \rightsquigarrow \obj{<}l\obj{>}e'
+      \J{<}l\J{>}e \rightsquigarrow \J{<}l\J{>}e'
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \vec{r}\obj{?}l\obj{=>}e \rightsquigarrow \vec{r}\obj{?}l\obj{=>}e' 
+      \vec{r}\J{?}l\J{=>}e \rightsquigarrow \vec{r}\J{?}l\J{=>}e' 
     }
 
     \inferrule {
       \vec{r} \rightsquigarrow \vec{r}'
     } {
-      \vec{r}\obj{?}l\obj{=>}v \rightsquigarrow \vec{r}'\obj{?}l\obj{=>}v
+      \vec{r}\J{?}l\J{=>}v \rightsquigarrow \vec{r}'\J{?}l\J{=>}v
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      e\obj{.}l \rightsquigarrow e'\obj{.}l
+      e\J{.}l \rightsquigarrow e'\J{.}l
     }
 
     \inferrule {
-      \obj{?}l\obj{=>}v \in \vec{g}
+      \J{?}l\J{=>}v \in \vec{g}
       \\
-      \forall\ e .\ \obj{?}l\obj{=>}e \in \vec{g} \implies e = v
+      \forall\ e .\ \J{?}l\J{=>}e \in \vec{g} \implies e = v
     } {
-      \vec{g}\obj{.}l \rightsquigarrow v
+      \vec{g}\J{.}l \rightsquigarrow v
     }
 
     \inferrule {
       e_f \rightsquigarrow e_f'
     } {
-      e_f\obj{(}e\obj{)} \rightsquigarrow e_f'\obj{(}e\obj{)}
+      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \vec{f}\obj{(}e\obj{)} \rightsquigarrow \vec{f}\obj{(}e'\obj{)}
+      \vec{f}\J{(}e\J{)} \rightsquigarrow \vec{f}\J{(}e'\J{)}
     }
 
     \inferrule {
-      \vec{f}\obj{(}v\obj{)} \rightsquigarrow e'
+      \vec{f}\J{(}v\J{)} \rightsquigarrow e'
       \\
       \text{FV}(e) \subseteq \text{FV}(p)
     } {
-      (\vec{f}\obj{?}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e' 
+      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e' 
     }
 
     \inferrule {
-      \exists e' .\ \vec{f}\obj{(}v\obj{)} \rightsquigarrow e'
+      \exists e' .\ \vec{f}\J{(}v\J{)} \rightsquigarrow e'
       \\
       p \equiv v \given \vec{\sigma} 
     } {
-      (\vec{f}\obj{?}p\obj{=>}e)\obj{(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]
+      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]
     }
 
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \obj{loop(}e\obj{)} \rightsquigarrow \obj{loop(}e'\obj{)}
+      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
     }
 
     \inferrule {
     } {
-      \obj{loop(?}x\obj{=>}e\obj{)} \rightsquigarrow e[x \slash \obj{loop(?}x\obj{=>}e\obj{)}]
+      \J{loop(?}x\J{=>}e\J{)} \rightsquigarrow e[x \slash \J{loop(?}x\J{=>}e\J{)}]
     }
   \end{mathpar}
 \end{definition}
@@ -696,7 +505,7 @@ slight departure is that pattern matching is merely a special case of function a
 Likewise, a switch is merely a function abstraction.
 Records are similar to Functions, except that their entries are guarded by literal identifiers. 
 Additionally, records may be abstracted as patterns, but functions may not.
-The semantics enables recursion via the fixed point combinator \obj{loop}.
+The semantics enables recursion via the fixed point combinator \J{loop}.
 
 
 \section{Type System}
@@ -719,46 +528,46 @@ The static semantics is a system for checking if the construction of an expressi
     \\
     \nonterm{\kappa} & \is 
     \begin{array}[t]{@{}l}
-      \obj{@} \sep
-      \obj{<}l\obj{>}\tau \sep 
+      \J{@} \sep
+      \J{<}l\J{>}\tau \sep 
       l \fieldmap \tau \sep 
-      \tau\obj{->}\tau
+      \tau\J{->}\tau
     \end{array}
     & \com{base type}
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
-      \tau\obj{|}\tau \sep 
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \tau
+      \tau\J{|}\tau \sep 
+      \J{EXI[}\vec{\alpha}\ \Delta \J{]} \tau
     \end{array}
     & \com{expansion type}
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
-      \tau\obj{\&}\tau \sep 
-      \obj{ALL[}\vec{\alpha}\ \Delta \obj{]} \tau
+      \tau\J{\&}\tau \sep 
+      \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
     \end{array}
     & \com{refinement type}
     \\
     \nonterm{\theta} & \is 
     \begin{array}[t]{@{}l}
-      \obj{LFP[}\alpha\obj{]}\tau \sep
+      \J{LFP[}\alpha\J{]}\tau \sep
       \tau \typdiff \eta
     \end{array}
     & \com{special type}
     \\
     \nonterm{\gamma} & \is 
     \begin{array}[t]{@{}l}
-      \obj{TOP} \sep \obj{BOT} \sep 
-      \tau \obj{*} \tau 
+      \J{TOP} \sep \J{BOT} \sep 
+      \tau \J{*} \tau 
     \end{array}
     & \com{sugar type}
     % \\
     % \nonterm{r} & \is 
     % \begin{array}[t]{@{}l}
-    %   \tau \obj{|} \tau \obj{->} \tau \sep
-    %   \tau \obj{->} \tau \obj{\&} \tau \sep
-    %   l \obj{->} \tau \obj{\&} \tau
+    %   \tau \J{|} \tau \J{->} \tau \sep
+    %   \tau \J{->} \tau \J{\&} \tau \sep
+    %   l \J{->} \tau \J{\&} \tau
     % \end{array}
     % & \com{rewritable type}
     % A | B -> C <: P -> Q ... (A -> C) & (B -> C) <: P -> Q ... (A -> C) <: P -> Q OR  (B -> C) <: P -> Q ..  P <: A, C <: Q OR  P <: B OR C <: Q 
@@ -769,7 +578,7 @@ The static semantics is a system for checking if the construction of an expressi
     \\\\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \obj{EXI[}\vec{\alpha}\ \Delta \obj{]} \rho \sep 
+      \J{EXI[}\vec{\alpha}\ \Delta \J{]} \rho \sep 
       \rho
     \end{array}
     & \com{subtracted type}
@@ -777,17 +586,17 @@ The static semantics is a system for checking if the construction of an expressi
     \nonterm{\rho} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
-      \obj{@} \sep
-      \obj{<}l\obj{>}\rho \sep 
+      \J{@} \sep
+      \J{<}l\J{>}\rho \sep 
       l \fieldmap \rho \sep 
-      \rho\obj{\&}\rho
+      \rho\J{\&}\rho
     \end{array}
     & \com{pattern type}
     \\
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
     & \com{type variable sequence}
     \\
-    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \obj{;} \tau \obj{<:} \tau
+    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \J{;} \tau \J{<:} \tau
     & \com{subtyping environment}
   \end{array}\]
 \end{definition}
@@ -806,17 +615,17 @@ which allow expressing properties of expressions with varying levels of precisio
   \begin{mathpar}
     \inferrule {
     } {
-      \text{desugar}(\obj{TOP}) = \obj{EXI[} \alpha \obj{]} \alpha
+      \text{desugar}(\J{TOP}) = \J{EXI[} \alpha \J{]} \alpha
     }
 
     \inferrule {
     } {
-      \text{desugar}(\obj{BOT}) = \obj{ALL[} \alpha \obj{]} \alpha
+      \text{desugar}(\J{BOT}) = \J{ALL[} \alpha \J{]} \alpha
     }
 
     \inferrule {
     } {
-      \text{desugar}(\tau_l \obj{*} \tau_r) = (\obj{left} \fieldmap \tau_l)  \obj{*} (\obj{right} \fieldmap \tau_r)
+      \text{desugar}(\tau_l \J{*} \tau_r) = (\J{left} \fieldmap \tau_l)  \J{*} (\J{right} \fieldmap \tau_r)
     }
   \end{mathpar}
 \end{definition} 
@@ -834,7 +643,7 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
   \begin{mathpar}
     \inferrule {
     } {
-      \Gamma \entails \obj{@} \hastype \obj{@} \given \Omega 
+      \Gamma \entails \J{@} \hastype \J{@} \given \Omega 
     }
 
     \inferrule {
@@ -846,13 +655,13 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
     \inferrule {
       \Gamma \entails e \hastype \tau \given \Omega 
     } {
-      \Gamma \entails \obj{<}l\obj{>}e \hastype \obj{<}l\obj{>}\tau \given \Omega 
+      \Gamma \entails \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau \given \Omega 
     }
 
     \inferrule {
       \vec{r} = \epsilon
     } {
-      \Gamma \entails \vec{r} \hastype \obj{TOP} \given \Omega
+      \Gamma \entails \vec{r} \hastype \J{TOP} \given \Omega
     }
 
     \inferrule {
@@ -862,7 +671,7 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\
       \Gamma \entails e \hastype \tau' \given \Omega' 
     } {
-      \Gamma \entails \vec{r}\ \obj{?}l \fieldmap e \hastype \tau\ \obj{\&}\ l \fieldmap \tau' \given \Omega' 
+      \Gamma \entails \vec{r}\ \J{?}l \fieldmap e \hastype \tau\ \J{\&}\ l \fieldmap \tau' \given \Omega' 
     }
 
     \inferrule {
@@ -880,7 +689,7 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\
       \tau_0 \subtypes l \fieldmap \alpha \given \Omega' 
     } {
-      \Gamma \entails e\obj{.}l \hastype \alpha \given \Omega'
+      \Gamma \entails e\J{.}l \hastype \alpha \given \Omega'
     }
 
     \inferrule {
@@ -892,9 +701,9 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\\\
       \Omega' \preceq \Omega''
       \\
-      \tau_f \subtypes \tau_a\obj{->}\alpha \given \Omega'' 
+      \tau_f \subtypes \tau_a\J{->}\alpha \given \Omega'' 
     } {
-      \Gamma \entails e_f\obj{(}e_a \obj{)} \hastype \alpha \given \Omega''
+      \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Omega''
     }
 
     \inferrule {
@@ -908,16 +717,16 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\
       \Gamma\ x:\tau_x \entails e' \hastype \tau' \given \Omega''
     } {
-      \Gamma \entails \obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e' \hastype \tau' \given \Omega'' 
+      \Gamma \entails \J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e' \hastype \tau' \given \Omega'' 
     }
 
     \inferrule {
-      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\
@@ -927,13 +736,13 @@ For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implic
       \\
       \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\\\
-      \exists \alpha .\ \alpha \obj{*} \obj{BOT} \subtypes \obj{LFP[} \alpha_\mu \obj{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
-      \exists \alpha .\ \obj{BOT} \obj{*} \alpha  \subtypes \obj{LFP[} \alpha_\mu \obj{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \exists \alpha .\ \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
     } {
-      \Gamma \entails \obj{loop(}e\obj{)} 
+      \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
-      \tau_l \obj{->} \tau_r
+      \tau_l \J{->} \tau_r
       \given \vec{\alpha}, \Delta 
     }
   \end{mathpar}
@@ -982,7 +791,7 @@ enumerates all possible outputs.
 % enumerates all possible outputs.
 
 \paragraph{Rule \ref{def:proof_typing}.1}
-For unit, \obj{@}, proof typing simply returns the singleton type of the same
+For unit, \J{@}, proof typing simply returns the singleton type of the same
 form. 
 
 \paragraph{Rule \ref{def:proof_typing}.2}
@@ -991,16 +800,16 @@ for a corresponding typing in the environment, and returns the
 corresponding type if found.
 
 \paragraph{Rule \ref{def:proof_typing}.3}
-For a tagged expression, $\obj{<}l\obj{>}e$, proof typing recursively 
+For a tagged expression, $\J{<}l\J{>}e$, proof typing recursively 
 constructs the type of the tag's body,
 and returns the corresponding tag type.
 
 \paragraph{Rule \ref{def:proof_typing}.4}
-For an empty record, proof typing constructs the top type \obj{TOP},
-which is merely syntactic sugar for $\obj{EXI[}\alpha\obj{]}\alpha$.
+For an empty record, proof typing constructs the top type \J{TOP},
+which is merely syntactic sugar for $\J{EXI[}\alpha\J{]}\alpha$.
 
 \paragraph{Rule \ref{def:proof_typing}.5}
-For a non empty record, $\vec{r}\obj{?}l\obj{=>}e$, proof typing 
+For a non empty record, $\vec{r}\J{?}l\J{=>}e$, proof typing 
 recursively constructs the type for each entry, and
 refines their types against each other via intersection.
 
@@ -1018,35 +827,35 @@ and for each pattern, it subtracts the types of previous patterns,
 represented by prefixes of $\vec{eta}$
 
 \paragraph{Rule \ref{def:proof_typing}.7}
-For a projection, $e\obj{.}l$, proof typing
+For a projection, $e\J{.}l$, proof typing
 leverages subtyping to check that there is an entry with label $l$ 
 in the supposed record $e$, and it learns a lower bound 
 on the type of the body $\alpha$ associated with that label.
 
 
 \paragraph{Rule \ref{def:proof_typing}.8}
-For an application, $e_f\obj{(}e_a\obj{)}$, proof typing
+For an application, $e_f\J{(}e_a\J{)}$, proof typing
 leverages subtyping to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$ associated with that argument.
 
 
 \paragraph{Rule \ref{def:proof_typing}.9}
-For a recursive expression, $\obj{loop(}e{)}$, proof typing
+For a recursive expression, $\J{loop(}e{)}$, proof typing
 constructionsa complex type containing an implication constrained
 by a least fixed point type.  
 First, it ensures that argument of the fixpoint combinator $e$ is indeed a 
 singe path function. Then, by leveraging subtyping, 
 it finds a lower bound for every path in the body of $e$,
 represented by a sequence of worlds $\vec{\Omega}$, 
-all associated with a variable implication, $\alpha_l\obj{->}\alpha_r$.
+all associated with a variable implication, $\alpha_l\J{->}\alpha_r$.
 Using all these worlds, it delegates to \emph{fixpoint duality}, as in definition \ref{def:fixpoint_duality},
 it order to construct the cases of a relational least fixpoint type, 
 representing the dual of the greatest fixpoint of implication under intersected over its worlds.
 Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
 and wrapping a generalized implication around that. 
 
-For an annotated definition, $\obj{let}\ x \obj{:} \tau_a\ \obj{=}\ e\ \obj{in}\ e'$, 
+For an annotated definition, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
 proof typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the contintuation $e'$.
 
@@ -1088,7 +897,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \text{diff}(\rho, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \obj{->} \tau_r \rrbracket^+ \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -1096,7 +905,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\
       \text{close}(\rho) = \eta
     } {
-      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \obj{?}p\obj{=>}e \liftfun 
+      \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \J{?}p\J{=>}e \liftfun 
       \vec{\pi}\ \vec{\pi}' \sim \vec{\eta}\ \eta
     }
   \end{mathpar}
@@ -1128,9 +937,9 @@ and adds the annotation to the typing environment when checking the contintuatio
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
       \vec{\alpha}_f \entails 
-      \alpha_{\nu} \downarrow \vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \tau_l \obj{->} \tau_r \right> 
+      \alpha_{\nu} \downarrow \vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r \right> 
       \fallingdotseq 
-      \alpha_{\mu} \uparrow \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l' \obj{*} \tau_r' \right>
+      \alpha_{\mu} \uparrow \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l' \J{*} \tau_r' \right>
     }
   \end{mathpar}
 \end{definition}
@@ -1143,9 +952,9 @@ and adds the annotation to the typing environment when checking the contintuatio
 \\ ... \implies
 \\ f(e_1) = e_2 \implies \left< \vec{\alpha}', \Delta' \right> \in \vec{\Omega} \implies 
 \\ (
-\Gamma, ... \satisfies f : \alpha_l \obj{->} \alpha_r 
+\Gamma, ... \satisfies f : \alpha_l \J{->} \alpha_r 
 \iff 
-\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \obj{*} \alpha_r
+\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \J{*} \alpha_r
 )$ 
 }
 
@@ -1170,12 +979,16 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
-      \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\tau_l <: \tau_r)
+      \alpha_\nu \downarrow \Delta_\nu\ \J{;} \tau_l \J{<:} \tau_r 
+      \fallingdotseq 
+      \alpha_\mu \uparrow \Delta_\mu\ \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
     } {
-      \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow \Delta_\mu\ (\alpha_l \obj{*} \alpha_r <: \alpha_\mu)
+      \alpha_\nu \downarrow \Delta_\nu\ \J{;} \alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r
+      \fallingdotseq 
+      \alpha_\mu \uparrow \Delta_\mu\ \J{;} \alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu 
     }
   \end{mathpar}
 \end{definition}
@@ -1202,7 +1015,7 @@ and adds the annotation to the typing environment when checking the contintuatio
 
 %     \inferrule {
 %     } {
-%       \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \obj{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow 
+%       \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \J{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow 
 %       \Delta_l\ (\alpha_l <: \alpha_\mu)
 %       , 
 %       \Delta_r\ (\alpha_r <: \alpha_\mu)
@@ -1277,14 +1090,14 @@ proof subtyping simply holds without any updates to the world.
       \tau_l \subtypes \tau_r
       \given \Omega 
     } {
-      \obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r
+      \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r
       \given \Omega 
     }
 
     \inferrule {
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega 
+      l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega 
     }
 
     \inferrule {
@@ -1294,25 +1107,25 @@ proof subtyping simply holds without any updates to the world.
       \\
       \tau_{lr} \subtypes \tau_{rr} \given \Omega' 
     } {
-      \tau_{ll} \obj{->} \tau_{lr} 
+      \tau_{ll} \J{->} \tau_{lr} 
       \subtypes 
-      \tau_{rl} \obj{->} \tau_{rr}
+      \tau_{rl} \J{->} \tau_{rr}
       \given \Omega' 
     }
   \end{mathpar}
 \end{definition}
 \hfill
 
-For subtyping tagged types, $\obj{<}l \obj{>} \tau_l \subtypes \obj{<} l \obj{>} \tau_r$, 
+For subtyping tagged types, $\J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r$, 
 proof subtyping simply checks that the labels match and subtyping holds
 for their contents.
 
 
-For subtyping record types, $l \obj{->} \tau_l \subtypes l \obj{->} \tau_r \given \Omega$
+For subtyping record types, $l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega$
 proof subtyping simply checks that the labels match and subtyping holds
 for their contents.
 
-For subtyping implication types, $\tau_{ll} \obj{->} \tau_{lr} \subtypes \tau_{rl} \obj{->} \tau_{rr}$
+For subtyping implication types, $\tau_{ll} \J{->} \tau_{lr} \subtypes \tau_{rl} \J{->} \tau_{rr}$
 proof subtyping simply checks that the space between types of the upper bound
 contains the space between types of the lower bound.
 
@@ -1327,11 +1140,11 @@ contains the space between types of the lower bound.
   \begin{mathpar}
     \inferrule {
       \tau_l \subtypes
-      (\tau_a\obj{->}\tau_r)\obj{\&}(\tau_b\obj{->}\tau_r)
+      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
       \given \Omega
     } {
       \tau_l \subtypes 
-      (\tau_a\obj{|}\tau_b)\obj{->}\tau_r
+      (\tau_a\J{|}\tau_b)\J{->}\tau_r
       \given \Omega 
     }
 
@@ -1339,26 +1152,26 @@ contains the space between types of the lower bound.
     \inferrule {
       \tau_l
       \subtypes
-      (\tau_r\obj{->}\tau_a)
-      \obj{\&}
-      (\tau_r\obj{->}\tau_b)
+      (\tau_r\J{->}\tau_a)
+      \J{\&}
+      (\tau_r\J{->}\tau_b)
       \given \Omega 
     } {
       \tau_l \subtypes 
-      \tau_r\obj{->}(\tau_{a}\obj{\&}\tau_{b})
+      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
       \given \Omega
     }
 
     \inferrule {
       \tau
       \subtypes
-      (l\obj{->}\tau_a)
-      \obj{\&}
-      (l\obj{->}\tau_b)
+      (l\J{->}\tau_a)
+      \J{\&}
+      (l\J{->}\tau_b)
       \given \Omega 
     } {
       \tau \subtypes 
-      l\obj{->}(\tau_{a}\obj{\&}\tau_{b})
+      l\J{->}(\tau_{a}\J{\&}\tau_{b})
       \given \Omega
     }
 
@@ -1390,7 +1203,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \tau_{lr} \subtypes \tau_r
       \given \Omega' 
     } {
-      \tau_{ll}\obj{|}\tau_{lr} \subtypes \tau_r
+      \tau_{ll}\J{|}\tau_{lr} \subtypes \tau_r
       \given \Omega' 
     }
     \\
@@ -1405,7 +1218,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\\\
       \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
-      \obj{EXI[}\vec{\alpha}_l\ \Delta_l \obj{]}\tau_l \subtypes \tau_r
+      \J{EXI[}\vec{\alpha}_l\ \Delta_l \J{]}\tau_l \subtypes \tau_r
       \given \Omega 
     }
   \end{mathpar}
@@ -1427,7 +1240,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \tau_{l} \subtypes \tau_{rr} \given \Omega' 
     } {
-      \tau_l \subtypes \tau_{rl}\obj{\&}\tau_{rr} \given \Omega '
+      \tau_l \subtypes \tau_{rl}\J{\&}\tau_{rr} \given \Omega '
     }
     \\
     \inferrule {
@@ -1441,7 +1254,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\\\
       \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
-      \tau_l \subtypes \obj{ALL[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega 
+      \tau_l \subtypes \J{ALL[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega 
     }
   \end{mathpar}
 \end{definition}
@@ -1466,7 +1279,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \alpha\obj{<:}\tau) 
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \J{;} \alpha\J{<:}\tau) 
     }
 
     \inferrule {
@@ -1505,7 +1318,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \obj{;} \tau\obj{<:}\alpha_\open) 
+      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \J{;} \tau\J{<:}\alpha_\open) 
     }
 
     \inferrule {
@@ -1539,14 +1352,14 @@ that are transitive upper bounds of the open variable $\alpha$.
 The dual of this rule is the one for a lower bound open variable, 
 in the continued definition \ref{def:continued_proof_subtyping}.
 
-For elimination of a union type, $\tau_{ll}\obj{|}\tau_{lr}$, proof subtyping
+For elimination of a union type, $\tau_{ll}\J{|}\tau_{lr}$, proof subtyping
 ensures that both parts of the assumed type subtype the guaranteed type.
 
-For elimination of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_l$, proof subtyping 
+For elimination of an existential type, $\J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau_l$, proof subtyping 
 infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
 which it leverages to prove the guaranteed type. 
 
-For elimination of a least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_l$, proof subtyping  
+For elimination of a least fixed point, $\J{LFP[} \alpha \J{]} \tau_l$, proof subtyping  
 attempts a proof by induction, by unrolling the least fixed point
 and replacing its self referencing variable with the upper bound.
 
@@ -1582,13 +1395,13 @@ in the continued definition \ref{def:continued_proof_subtyping}.
     \inferrule {
       \tau_{l} \subtypes \kappa \given \Omega
     } {
-      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+      \tau_{l}\J{\&}\tau_{r}  \subtypes \kappa \given \Omega 
     }
 
     \inferrule {
       \tau_{l} \subtypes \kappa \given \Omega 
     } {
-      \tau_{l}\obj{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+      \tau_{l}\J{\&}\tau_{r}  \subtypes \kappa \given \Omega 
     }
 
     \inferrule {
@@ -1602,7 +1415,7 @@ in the continued definition \ref{def:continued_proof_subtyping}.
       \\
       \Delta_l \given \Omega' 
     } {
-      \obj{ALL[}\vec{\alpha}_l\ \vec{\Delta}_l\obj{]}\tau_l
+      \J{ALL[}\vec{\alpha}_l\ \vec{\Delta}_l\J{]}\tau_l
       \subtypes 
       \tau_r
       \given \Omega' 
@@ -1626,13 +1439,13 @@ the upper bound union with the subtracted type.
     \inferrule {
       \kappa \subtypes \tau_{l} \given \Omega 
     } {
-      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \kappa \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
 
     \inferrule {
       \kappa \subtypes \tau_{r} \given \Omega 
     } {
-      \kappa \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \kappa \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
 
     \inferrule {
@@ -1648,7 +1461,7 @@ the upper bound union with the subtracted type.
     } {
       \tau_l
       \subtypes 
-      \obj{EXI[}\vec{\alpha}_r\ \Delta_r \obj{]}\tau_r \given \Omega' 
+      \J{EXI[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega' 
     }
   \end{mathpar}
 \end{definition}
@@ -1666,11 +1479,11 @@ the upper bound union with the subtracted type.
     \inferrule {
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
     } {
-      \obj{LFP[}\alpha\obj{]}\tau_l \subtypes \tau_r \given \Omega 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
     }
 
     \inferrule {
-      \rho \subtypes \tau \obj{|} \eta \given \Omega
+      \rho \subtypes \tau \J{|} \eta \given \Omega
     } {
       \rho \typdiff \eta \subtypes \tau \given \Omega
     }
@@ -1690,12 +1503,12 @@ the upper bound union with the subtracted type.
     \inferrule {
       \Omega \preceq \Omega'
       \\
-      \Omega \entails \tau_l \circlearrowleft \obj{LFP[} \alpha \obj{]} \tau_r
+      \Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
       \\\\
-      \tau_l \subtypes \tau_r[\alpha \slash \obj{LFP[} \alpha \obj{]} \tau_r]
+      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
       \given \Omega'
     } {
-      \tau_l \subtypes \obj{LFP[} \alpha \obj{]}\tau_r \given \Omega'
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega'
     }
 
     \inferrule {
@@ -1721,20 +1534,20 @@ the upper bound union with the subtracted type.
 
 
 
-For introduction of an existential type, $\obj{EXI[}\vec{\alpha}\ \Delta\obj{]}\tau_r$, proof subtyping
+For introduction of an existential type, $\J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau_r$, proof subtyping
 infers constraints to witness the guaranteed existential type. 
 
 The elimination counterpart of this rule is the elimination of a universal type (Rule \ref{def:continued_proof_subtyping}.?), 
 in which proof subtyping infers constraints to instantiate assumed the universal type.
 
-For an upper bound union, $\tau_{rl}\obj{|}\tau_{rr}$, 
+For an upper bound union, $\tau_{rl}\J{|}\tau_{rr}$, 
 proof subtyping checks that the left part of the union holds against
 the lower bound. 
 
 The dual of this rule is one for an upper bound intersection, 
 in the continued definition \ref{def:continued_proof_subtyping}.
 
-For an upper bound union type, $\tau_{rl}\obj{|}\tau_{rr}$, 
+For an upper bound union type, $\tau_{rl}\J{|}\tau_{rr}$, 
 proof subtyping also checks that the right part of the union holds against
 the lower bound. 
 
@@ -1742,11 +1555,11 @@ The dual of this rule is one for an upper bound intersection,
 in the continued definition \ref{def:continued_proof_subtyping}.
 
 
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau_r$, 
+For an upper bound least fixed point, $\J{LFP[} \alpha \J{]} \tau_r$, 
 where subtyping is decomposable, proof subtyping   
 unrolls the least fixed point and checks it against the lower bound. 
 
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+For an upper bound least fixed point, $\J{LFP[} \alpha \J{]} \tau$, 
 where the lower bound is a pattern type containing at least one closed variable,
 proof typing searches the world for a constraint with a matching pattern type,
 which provides a strict interpretation of the pattern type,
@@ -1757,7 +1570,7 @@ into equivalent normal forms.
 
 This rule is the relational analog of the closed variable rules.
 
-For an upper bound least fixed point, $\obj{LFP[} \alpha \obj{]} \tau$, 
+For an upper bound least fixed point, $\J{LFP[} \alpha \J{]} \tau$, 
 where the lower bound is a pattern type whose variables are all open,
 proof subtyping checks that the subtyping is consistent
 and checks that a lenient interpretation of the pattern type's open variables
@@ -1779,7 +1592,7 @@ This rule is the relational analog of the open variable rules.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -1789,7 +1602,7 @@ This rule is the relational analog of the open variable rules.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
     }
   \end{mathpar}
 \end{definition}
@@ -1807,7 +1620,7 @@ This rule is the relational analog of the open variable rules.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -1817,7 +1630,7 @@ This rule is the relational analog of the open variable rules.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;}  \tau_r \obj{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;}  \tau_r \J{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
     }
   \end{mathpar}
 \end{definition}
@@ -1859,30 +1672,30 @@ This rule is the relational analog of the open variable rules.
     \inferrule { 
       \alpha \slash \tau \notin \vec{\delta}
       \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{TOP} 
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{TOP} 
     } {
       \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}
+      \vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}
     } 
 
     \inferrule { 
       \vec{\delta}, \Gamma \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e$} \hastype \obj{<$l$>$\tau$}
+      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e$} \hastype \J{<$l$>$\tau$}
     } 
 
     \inferrule { 
-      \obj{?$l$=>$v$} \in G 
+      \J{?$l$=>$v$} \in G 
       \\
       \vec{\delta}, \Gamma \satisfies v \hastype \tau 
       \\\\
-      \forall v' .\ \obj{?$l$=>$v'$} \in G \implies v' = v
+      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v
     } {
-      \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
+      \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
     } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1890,13 +1703,13 @@ This rule is the relational analog of the open variable rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % \inferrule { 
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
     %   \\
     %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
     %   \\
     %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
     % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     % } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1912,24 +1725,24 @@ This rule is the relational analog of the open variable rules.
         \implies
         \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
         \land
-        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     } 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DERIVABLE??
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau_r$}
     %   \\
     %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
     %   \\
@@ -1942,29 +1755,29 @@ This rule is the relational analog of the open variable rules.
     %     \lor
     %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
     % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     % } 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$|$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
     } 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
       \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$\&$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$\&$\tau_r$}
     } 
 
     \inferrule { 
@@ -1980,20 +1793,20 @@ This rule is the relational analog of the open variable rules.
       \\
       \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
     } {
-      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau$}
+      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
       \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
       \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau$}
     } 
 
     \inferrule { 
-      \vec{\delta} \ \alpha \slash \obj{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
+      \vec{\delta} \ \alpha \slash \J{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{LFP[$\alpha$]$\tau$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{LFP[$\alpha$]$\tau$}
     } 
 
 
@@ -2049,7 +1862,7 @@ This rule is the relational analog of the open variable rules.
       \\
       \vec{\delta} \satisfies \tau_l <: \tau_r
     } {
-      \vec{\delta} \satisfies Q\ \obj{.$\tau_l$<:$\tau_r$}
+      \vec{\delta} \satisfies Q\ \J{.$\tau_l$<:$\tau_r$}
     } 
   \end{mathpar}
 \end{definition}
@@ -2154,12 +1967,12 @@ Relational reasoning.
   \begin{mathpar}
 
     \inferrule {
-      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\
@@ -2169,15 +1982,15 @@ Relational reasoning.
       \\
       \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
     } {
-      \Gamma \entails \obj{loop(}e\obj{)} 
+      \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
-      \obj{ALL[}\alpha_x \obj{]}
+      \J{ALL[}\alpha_x \J{]}
       \alpha_x
-      \obj{->} 
-      \obj{EXI[}\alpha_y 
-          \obj{;} \alpha_x \obj{*} \alpha_y 
-      \obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu
-      \obj{]}\alpha_y
+      \J{->} 
+      \J{EXI[}\alpha_y 
+          \J{;} \alpha_x \J{*} \alpha_y 
+      \J{<:LFP[} \alpha_\mu \J{]}\tau_\mu
+      \J{]}\alpha_y
       \given \vec{\alpha}, \Delta 
     }
 
@@ -2195,12 +2008,12 @@ Relational reasoning.
   \begin{mathpar}
     \inferrule {
       \tau_l \subtypes
-      \obj{ALL[}\alpha\obj{;} \alpha \obj{<:} \tau_\mu \obj{]} \alpha \obj{->} \tau_r
+      \J{ALL[}\alpha\J{;} \alpha \J{<:} \tau_\mu \J{]} \alpha \J{->} \tau_r
       \given \Omega
     } {
       \tau_l
       \subtypes 
-      \obj{LFP[}\alpha_\mu\obj{]}\tau_\mu\obj{->}\tau_r
+      \J{LFP[}\alpha_\mu\J{]}\tau_\mu\J{->}\tau_r
       \given \Omega 
     }
   \end{mathpar}
@@ -2213,11 +2026,11 @@ Relational reasoning.
   \label{def:proof_subtyping_abstraction_introduction}
   Rel Proof Subtyping (Pattern Intro)
   \hfill 
-  \boxed{\rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
+  \boxed{\rho \subtypes \J{LFP[}\alpha\J{]}\tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \rho' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau \cong \rho' \subtypes \J{LFP[}\alpha \J{]} \tau'
       \\
       \Delta \entails \rho' \subtypes \tau_n \sim 
       \\\\
@@ -2225,29 +2038,29 @@ Relational reasoning.
       % \\
       % \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
       \\
-      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
+      \tau_n \subtypes \J{LFP[}\alpha \J{]} \tau' \entails \Omega
     } {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
       \given \Omega 
     }
 
     \inferrule {
-      \entails \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \entails \rho \subtypes \J{LFP[}\alpha\J{]}\tau \consis 
       \\
       \forall \alpha_\closed .\ 
       \alpha_\closed \in \text{FTV}(\rho) \land \alpha_\closed \in \vec{\alpha}_\closed
       \implies
-      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \safe
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \J{LFP[}\alpha\J{]}\tau \safe
       \\\\
       \exists \Delta_i .\ \llbracket \epsilon, \vec{\alpha} \entails \Delta, \rho\rrbracket^+ = \Delta_i, \rho'
       \\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
       \\
-      \rho' \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho' \subtypes \J{LFP[}\alpha\J{]}\tau
       \given \vec{\alpha}', \Delta'
     } {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'\ \obj{;} \rho \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
+      \given \vec{\alpha}', \Delta'\ \J{;} \rho \J{<:} \J{LFP[}\alpha\J{]}\tau
     }
   \end{mathpar}
 \end{definition}
@@ -2268,13 +2081,13 @@ Relational reasoning.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
     }
 
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -2282,9 +2095,9 @@ Relational reasoning.
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2308,7 +2121,7 @@ Relational reasoning.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) 
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) 
       \entails 
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -2316,7 +2129,7 @@ Relational reasoning.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) 
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) 
       \entails
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -2326,9 +2139,9 @@ Relational reasoning.
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\\\
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2364,13 +2177,13 @@ Relational reasoning.
     \inferrule {
       \rho \subtypes \tau_{l} \given \Omega 
     } {
-      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
 
     \inferrule {
       \rho \subtypes \tau_{r} \given \Omega 
     } {
-      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
   \end{mathpar}
 \end{definition}
@@ -2388,7 +2201,7 @@ Relational reasoning.
       \neg(\Delta \entails \alpha \relational)
       \\
     } {
-      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \obj{TOP})
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \J{TOP})
     }
 
     \inferrule {
@@ -2396,7 +2209,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \obj{\&} \tau)
+      \llbracket \Delta\ \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
     }
 
     \inferrule {
@@ -2404,7 +2217,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
 
     \inferrule {
@@ -2425,7 +2238,7 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
-      \obj{;} \tau_l \obj{<:} \tau_r \in \Delta 
+      \J{;} \tau_l \J{<:} \tau_r \in \Delta 
       \\
       \nexists \alpha' .\ \tau_l = \alpha'
       \\
@@ -2448,7 +2261,7 @@ Relational reasoning.
     \inferrule {
       \TODO{...}
     } {
-      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
+      % \text{decomposable}(\Delta_0, \tau_l, \J{LFP[} \alpha \J{]} \tau_r)
       \Omega \entails \tau \circlearrowleft \tau
     }
   \end{mathpar}
@@ -2502,7 +2315,7 @@ Relational reasoning.
     \\
     \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
     \\
-    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \obj{->} \tau
+    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \J{->} \tau
     \\
     \\
     \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
@@ -2518,18 +2331,18 @@ Relational reasoning.
     \nonterm{e} & \is 
     \begin{array}[t]{@{}l}
       ... \sep
-      e\obj{,}e \sep
-      e\obj{|>}e \sep
-      \obj{let}\ x\ z\ \obj{=}\ e\ \obj{in}\ e \sep
-      \obj{(}e\obj{)}
+      e\J{,}e \sep
+      e\J{|>}e \sep
+      \J{let}\ x\ z\ \J{=}\ e\ \J{in}\ e \sep
+      \J{(}e\J{)}
     \end{array}
     \\
-    \nonterm{z} & \is \epsilon \sep \obj{:}\tau 
+    \nonterm{z} & \is \epsilon \sep \J{:}\tau 
     \\
     \nonterm{p} & \is 
       ... \sep
-      p\obj{,}p \sep
-      \obj{(}p\obj{)} 
+      p\J{,}p \sep
+      \J{(}p\J{)} 
   \end{array}\]
 \end{definition}
 
@@ -2537,16 +2350,16 @@ Relational reasoning.
   \label{def:others}
   \[\begin{array}[t]{r@{}l}
     \nonterm{v} & \is 
-      \obj{@} \sep
-      \obj{<$l$> $v$} \sep
+      \J{@} \sep
+      \J{<$l$> $v$} \sep
       \vec{g} \sep
-      \obj{$v$,$v$} \sep
-      \obj{($v$)} \sep
+      \J{$v$,$v$} \sep
+      \J{($v$)} \sep
       \vec{f} 
     \\
     \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
     \\
-    \nonterm{g} & \is \obj{?$l$=>$v$}
+    \nonterm{g} & \is \J{?$l$=>$v$}
     \\
     \\
     \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
@@ -2559,46 +2372,46 @@ Relational reasoning.
 \begin{definition}\boxed{e \rightsquigarrow e}\ Sugared Progression
   \begin{mathpar}
     \inferrule {
-      e_b \obj{(} e_a \obj{)} \rightsquigarrow e' 
+      e_b \J{(} e_a \J{)} \rightsquigarrow e' 
     } {
-      e_a \obj{|>} e_b \rightsquigarrow e' 
+      e_a \J{|>} e_b \rightsquigarrow e' 
     }
 
     \inferrule {
       e \rightsquigarrow e' 
     } {
-      \obj{(} e \obj{)} \rightsquigarrow e' 
+      \J{(} e \J{)} \rightsquigarrow e' 
     }
 
     \inferrule {
-      \obj{?left=>} e_l\ \obj{?right=>} e_r \rightsquigarrow e' 
+      \J{?left=>} e_l\ \J{?right=>} e_r \rightsquigarrow e' 
     } {
-      e_l\obj{,}e_r \rightsquigarrow e' 
+      e_l\J{,}e_r \rightsquigarrow e' 
     }
 
     \inferrule {
-      \obj{(? <true> @=>}e_t \obj{\ ? <false> @=>}e_f \obj{)(}e_c\obj{)} \rightsquigarrow e'
+      \J{(? <true> @=>}e_t \J{\ ? <false> @=>}e_f \J{)(}e_c\J{)} \rightsquigarrow e'
     } {
-      \obj{if}\ e_c\ \obj{then}\ e_t\ \obj{else}\ e_f \rightsquigarrow e' 
+      \J{if}\ e_c\ \J{then}\ e_t\ \J{else}\ e_f \rightsquigarrow e' 
     }
 
 
     \inferrule {
-      \obj{(?} x \obj{=>} e_k \obj{)(} e \obj{)}
+      \J{(?} x \J{=>} e_k \J{)(} e \J{)}
       \rightsquigarrow e'
     } {
-      \obj{let}\ x \obj{:} \tau\ \obj{=}\ e\ \obj{in}\ e_k \rightsquigarrow e'
+      \J{let}\ x \J{:} \tau\ \J{=}\ e\ \J{in}\ e_k \rightsquigarrow e'
     }
 
     % \inferrule {
     %   e \rightsquigarrow e'
     % } {
-    %   \obj{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \obj{let $x$:$\tau$ = $e'$ in $e_k$}
+    %   \J{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \J{let $x$:$\tau$ = $e'$ in $e_k$}
     % }
 
     % \inferrule {
     % } {
-    %   \obj{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
+    %   \J{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
     % }
   \end{mathpar}
 \end{definition}
@@ -2609,16 +2422,16 @@ Relational reasoning.
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       ... \sep
-      \obj{TOP} \sep 
-      \obj{BOT} \sep
-      \obj{(}\tau\obj{)}
+      \J{TOP} \sep 
+      \J{BOT} \sep
+      \J{(}\tau\J{)}
 
     \end{array}
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
       ... \sep
-      \obj{(}\phi\obj{)}
+      \J{(}\phi\J{)}
 
     \end{array}
   \end{array}\]
@@ -2645,19 +2458,19 @@ Relational reasoning.
 
     \inferrule {
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{@} \rrbracket^\pm = (\Delta, \obj{@})
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \J{@} \rrbracket^\pm = (\Delta, \J{@})
     }
 
     \inferrule {
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{<}l\obj{>}\tau \rrbracket^\pm = (\Delta', \obj{<}l\obj{>}\tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm = (\Delta', \J{<}l\J{>}\tau')
     }
 
     \inferrule {
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, l\obj{->}\tau \rrbracket^\pm = (\Delta', l\obj{->}\tau')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, l\J{->}\tau \rrbracket^\pm = (\Delta', l\J{->}\tau')
     }
 
     \inferrule {
@@ -2665,7 +2478,7 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{->}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{->}\tau_r')
     }
 
     \inferrule {
@@ -2673,7 +2486,7 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{|}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{|}\tau_r')
     }
 
     \inferrule {
@@ -2681,17 +2494,17 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{EXI[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \J{EXI[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
       = 
-      (\Delta' \cap \Delta'', \obj{EXI[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
+      (\Delta' \cap \Delta'', \J{EXI[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
     }
 
     \inferrule {
       \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{LFP[}\alpha \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
       = 
-      (\Delta', \obj{LFP[}\alpha \obj{]}\tau')
+      (\Delta', \J{LFP[}\alpha \J{]}\tau')
     }
 
     \\
@@ -2701,7 +2514,7 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\obj{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\obj{\&}\tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{\&}\tau_r')
     }
 
     \inferrule {
@@ -2709,9 +2522,9 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \obj{ALL[}\vec{\alpha}\ \Delta_q \obj{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \J{ALL[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
       = 
-      (\Delta' \cap \Delta'', \obj{ALL[}\vec{\alpha}\ \Delta_q' \obj{]}\tau')
+      (\Delta' \cap \Delta'', \J{ALL[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
     }
 
     \inferrule {
@@ -2744,7 +2557,7 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \obj{;} \tau_l \obj{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \obj{;} \tau_l' \obj{<:} \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \J{;} \tau_l' \J{<:} \tau_r')
     }
 
   \end{mathpar}
@@ -2762,7 +2575,7 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
-      \forall \tau_l\ \tau_r .\ \obj{;} \tau_l \obj{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+      \forall \tau_l\ \tau_r .\ \J{;} \tau_l \J{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
       \\
       \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
     } {
@@ -2783,41 +2596,41 @@ Relational reasoning.
   \\
   \begin{mathpar}
     \inferrule {
-      \obj{;}\alpha\obj{<:}\tau \in \Delta 
+      \J{;}\alpha\J{<:}\tau \in \Delta 
       \\
       \alpha' \in \text{FTV}(\tau)
       \\
-      \obj{;}\alpha'\obj{<:}\tau' \in \Delta 
+      \J{;}\alpha'\J{<:}\tau' \in \Delta 
     } {
       \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
     }
 
     \inferrule {
-      \obj{;}\alpha\obj{<:}\tau \in \Delta 
+      \J{;}\alpha\J{<:}\tau \in \Delta 
       \\
       \alpha' \in \text{FTV}(\tau)
       \\
-      \obj{;}\alpha'\obj{<:}\tau' \in \Delta 
+      \J{;}\alpha'\J{<:}\tau' \in \Delta 
     } {
       \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
     }
     \\
     \inferrule {
-      \obj{;}\tau \obj{<:} \alpha\in \Delta 
+      \J{;}\tau \J{<:} \alpha\in \Delta 
       \\
       \alpha' \in \text{FTV}(\tau)
       \\
-      \obj{;}\tau'\obj{<:} \alpha' \in \Delta 
+      \J{;}\tau'\J{<:} \alpha' \in \Delta 
     } {
       \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
     }
 
     \inferrule {
-      \obj{;}\tau \obj{<:} \alpha\in \Delta 
+      \J{;}\tau \J{<:} \alpha\in \Delta 
       \\
       \alpha' \in \text{FTV}(\tau)
       \\
-      \obj{;}\tau'\obj{<:} \alpha' \in \Delta 
+      \J{;}\tau'\J{<:} \alpha' \in \Delta 
     } {
       \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
     }
@@ -2838,13 +2651,13 @@ Relational reasoning.
   \begin{mathpar}
     \inferrule {
     } {
-      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \obj{TOP})
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \J{TOP})
     }
 
     \inferrule {
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \obj{\&} \tau)
+      \llbracket \Delta\ \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
     }
 
     \inferrule {
@@ -2852,18 +2665,18 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
     \\
     \inferrule {
     } {
-      \llbracket \epsilon, \alpha \rrbracket^+ = (\epsilon, \obj{BOT})
+      \llbracket \epsilon, \alpha \rrbracket^+ = (\epsilon, \J{BOT})
     }
 
     \inferrule {
       \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \obj{;} \tau \obj{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \obj{|} \tau)
+      \llbracket \Delta\ \J{;} \tau \J{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \J{|} \tau)
     }
 
     \inferrule {
@@ -2871,7 +2684,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^+ = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
   \end{mathpar}
   \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
@@ -2946,7 +2759,7 @@ Relational reasoning.
     \inferrule {
       \TODO{...}
     } {
-      \entails \tau_l \subtypes \obj{LFP[}\alpha\obj{]}\tau_r \consis 
+      \entails \tau_l \subtypes \J{LFP[}\alpha\J{]}\tau_r \consis 
     }
   \end{mathpar}
 \end{definition}
@@ -3016,7 +2829,7 @@ Relational reasoning.
       \\
       \tau_l \subtypes \tau_r \given M_1, \Delta_1
     } {
-      Q \obj{.$\tau_l$<:$\tau_r$}
+      Q \J{.$\tau_l$<:$\tau_r$}
       \given
       M_1, \Delta_1
     }
@@ -3157,13 +2970,13 @@ Relational reasoning.
 %   \[\begin{array}{rclr}
 %     \text{union}(\epsilon)
 %     &=& 
-%     \obj{BOT}
+%     \J{BOT}
 %     & \C{empty} 
 %     \\
 
 %     \text{union}(\Tau\ \tau)
 %     &=& 
-%     \text{union}(\Tau) \obj{|} \tau
+%     \text{union}(\Tau) \J{|} \tau
 %     & \C{step} 
 %     \\
 %   \end{array}\]
@@ -3173,13 +2986,13 @@ Relational reasoning.
 %   \[\begin{array}{rclr}
 %     \text{inter}(\epsilon)
 %     &=& 
-%     \obj{TOP}
+%     \J{TOP}
 %     & \C{empty} 
 %     \\
 
 %     \text{inter}(\Tau\ \tau)
 %     &=& 
-%     \text{inter}(\Tau) \obj{\&} \tau
+%     \text{inter}(\Tau) \J{\&} \tau
 %     & \C{step} 
 %     \\
 %   \end{array}\]
@@ -3600,7 +3413,7 @@ Relational reasoning.
     } {
       M, \Delta, \Alpha\ \alpha 
       \entails 
-      \vec{\delta}\ \alpha \slash \obj{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
+      \vec{\delta}\ \alpha \slash \J{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
     }
   \end{mathpar}
 \end{definition}
@@ -3637,7 +3450,7 @@ Relational reasoning.
 %       \\
 %       \text{union}(\vec{\tau}_\mu) \subtypes \alpha_\mu \given \Delta_\mu
 %       \\\\
-%       \vec{\alpha}_f\ \alpha_{\mu}, \vec{\alpha}_c, \Delta_\nu\ \Delta_\mu \entails \obj{\&$(\vec{\tau}_l)$*|$(\vec{\tau}_r)$} \cong^{-} \tau
+%       \vec{\alpha}_f\ \alpha_{\mu}, \vec{\alpha}_c, \Delta_\nu\ \Delta_\mu \entails \J{\&$(\vec{\tau}_l)$*|$(\vec{\tau}_r)$} \cong^{-} \tau
 %       % TODO: should closeds be included using universal constraint? 
 %     } {
 %       \vec{\alpha}_f \entails 
@@ -3659,7 +3472,7 @@ Relational reasoning.
 
 %     \inferrule {
 %     } {
-%       \vec{\tau}_\nu\ (\tau_l \obj{->} \tau_r) \fallingdotseq \vec{\tau}_\mu\ (\tau_l \obj{*} \tau_r)
+%       \vec{\tau}_\nu\ (\tau_l \J{->} \tau_r) \fallingdotseq \vec{\tau}_\mu\ (\tau_l \J{*} \tau_r)
 %     }
 %   \end{mathpar}
 % \end{definition}
@@ -3739,32 +3552,32 @@ Relational reasoning.
 
 
 
-\begin{definition}\boxed{\text{outer}(\pm) = \obj{ALL}|\obj{EXI}}
+\begin{definition}\boxed{\text{outer}(\pm) = \J{ALL}|\J{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{outer}(+) 
     &=& 
-    \obj{EXI} 
+    \J{EXI} 
     & \C{positive} 
     \\
     \text{outer}(-) 
     &=& 
-    \obj{ALL} 
+    \J{ALL} 
     & \C{negative} 
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{inner}(\pm) = \obj{ALL}|\obj{EXI}}
+\begin{definition}\boxed{\text{inner}(\pm) = \J{ALL}|\J{EXI}}
   \[\begin{array}{rclr}
     \\
     \text{inner}(+) 
     &=& 
-    \obj{ALL} 
+    \J{ALL} 
     & \C{positive} 
     \\
     \text{inner}(-) 
     &=& 
-    \obj{EXI} 
+    \J{EXI} 
     & \C{negative} 
   \end{array}\]
 \end{definition}
@@ -3777,16 +3590,16 @@ Relational reasoning.
     \\
     \text{quantify}^{\pm}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{inner}(\pm)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}\tau
+    \text{inner}(\pm)\J{[}\Alpha_i\J{ }\Delta_i\J{]}\tau
     \\
     \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
-    \text{outer}(\pm)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}\tau
+    \text{outer}(\pm)\J{[}\Alpha_o\J{ }\Delta_o\J{]}\tau
     \\
     \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
     &=& 
-    \text{outer}(\pm)\obj{[}\Alpha_o\obj{ }\Delta_o\obj{]}
-    \text{inner}(\pm)\obj{[}\Alpha_i\obj{ }\Delta_i\obj{]}
+    \text{outer}(\pm)\J{[}\Alpha_o\J{ }\Delta_o\J{]}
+    \text{inner}(\pm)\J{[}\Alpha_i\J{ }\Delta_i\J{]}
     \tau
   \end{array}\]
 \end{definition}
@@ -3906,13 +3719,13 @@ Relational reasoning.
   $ 
     \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
 
-    \item \Z $\B{case } e = \obj{@} \I \tau = \obj{@}$ 
+    \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
       \item \Z\Z $\B{let } \vec{\delta}$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{@} \hastype \obj{@}$ by definition
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}$ by definition
       \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by substitution
       \item \Z\Z $\exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau$ by witness 
 
-    \item \Z $\B{case } e = x \I \obj{$x$:$\tau$} \in \Gamma$ 
+    \item \Z $\B{case } e = x \I \J{$x$:$\tau$} \in \Gamma$ 
     \item \Z $\B{wrt } x$ 
       \item \Z\Z $\B{let } \vec{\delta}$ by definition
       \item \Z\Z $\vec{\delta}, \Gamma \satisfies x \hastype \tau$  by definition
@@ -3922,9 +3735,9 @@ Relational reasoning.
   \item \Z $\B{case } 
     \Gamma \entails e' \hastype \tau' \given Z
     \I
-    \tau = \obj{<$l$>$\tau'$}
+    \tau = \J{<$l$>$\tau'$}
     \I
-    e = \obj{<$l$>$e'$} 
+    e = \J{<$l$>$e'$} 
   $ 
   \item \Z $\B{hypo } 
       \Gamma \entails e' \hastype \tau' \given Z  
@@ -3937,7 +3750,7 @@ Relational reasoning.
       \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
     $ by application
     \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \obj{<$l$>$e'$} \hastype \obj{<$l$>$\tau'$}
+      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e'$} \hastype \J{<$l$>$\tau'$}
     $ by definition
     \item \Z\Z $
       \vec{\delta}, \Gamma \satisfies e \hastype \tau 
@@ -3962,7 +3775,7 @@ Relational reasoning.
   %     \\
   %     \Gamma \entails e \hastype \tau_1 \given Z_1
   %   } {
-  %     \Gamma \entails R\ \obj{*$l$=$e$} \hastype \tau_0\ \obj{\&}\ \obj{$l$:$\tau_1$} \given Z_1
+  %     \Gamma \entails R\ \J{*$l$=$e$} \hastype \tau_0\ \J{\&}\ \J{$l$:$\tau_1$} \given Z_1
   %   }
 
   %   \inferrule {
@@ -3970,7 +3783,7 @@ Relational reasoning.
   %     \\
   %     \Gamma \entails \vec{\pi} \equiv \Tau 
   %   } {
-  %     \Gamma \entails F \hastype \obj{\&}(\Tau) \given Z
+  %     \Gamma \entails F \hastype \J{\&}(\Tau) \given Z
   %   }
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3980,9 +3793,9 @@ Relational reasoning.
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau_0 \subtypes \obj{$l$->$\alpha$} \given Z_1
+    \tau_0 \subtypes \J{$l$->$\alpha$} \given Z_1
     \I
-    e = \obj{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
+    e = \J{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
   $
    
   \item \Z $\B{hypo } 
@@ -4000,18 +3813,18 @@ Relational reasoning.
       \B{let }
       M\ \Delta
       \B{ s.t. }
-      \tau_0 \subtypes \obj{$l$->$\alpha$} \given M, \Delta
+      \tau_0 \subtypes \J{$l$->$\alpha$} \given M, \Delta
     $ by theorem \ref{theorem:proof_subtyping_choice}
 
 
     \item \Z\Z $
-      \vec{\delta} \satisfies \tau_0  \subtypes \obj{$l$->$\alpha$}
+      \vec{\delta} \satisfies \tau_0  \subtypes \J{$l$->$\alpha$}
     $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
     \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \obj{$l$->$\alpha$}
+      \vec{\delta}, \Gamma \satisfies e_0 \hastype \J{$l$->$\alpha$}
     $ by theorem \ref{theorem:model_subtyping_elimination} 
     \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \obj{$e_0$.$l$} \hastype \alpha 
+      \vec{\delta}, \Gamma \satisfies \J{$e_0$.$l$} \hastype \alpha 
     $ by theorem \ref{theorem:model_subtyping_record_elimination} 
     \item \Z\Z $
       \vec{\delta}, \Gamma \satisfies e \hastype \tau
@@ -4028,7 +3841,7 @@ Relational reasoning.
     \I
     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
     \I
-    e = \obj{$e_0$($e_1$)} 
+    e = \J{$e_0$($e_1$)} 
     \I 
     \tau = \alpha 
     \I
@@ -4037,7 +3850,7 @@ Relational reasoning.
   \item \Z $ 
     Z_1 \looparrowright Z_2
     \I
-    \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given Z_2
+    \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given Z_2
   $ 
   \item \Z $\B{hypo } 
     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
@@ -4059,16 +3872,16 @@ Relational reasoning.
     \item \Z\Z $
       \B{let } M\ \Delta
       \B{ s.t. }
-      \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
+      \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
     $ by theorem \ref{theorem:proof_subtyping_choice} 
     \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \tau_0 \subtypes \obj{$\tau_1$->$\alpha$} 
+      \vec{\delta}, \Gamma \satisfies \tau_0 \subtypes \J{$\tau_1$->$\alpha$} 
     $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
     \item \Z\Z $
-      \vec{\delta} \satisfies e_0 \hastype \obj{$\tau_1$->$\alpha$} 
+      \vec{\delta} \satisfies e_0 \hastype \J{$\tau_1$->$\alpha$} 
     $ by theorem \ref{theorem:model_subtyping_elimination} 
     \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \obj{$e_0$($e_1$)} \hastype \alpha
+      \vec{\delta}, \Gamma \satisfies \J{$e_0$($e_1$)} \hastype \alpha
     $ by theorem \ref{theorem:model_typing_implication_elimination} 
     \item \Z\Z $
       \vec{\delta}, \Gamma \satisfies e \hastype \tau
@@ -4078,37 +3891,37 @@ Relational reasoning.
     $ by substitution 
 
   \item \Z $\B{case } 
-    e = \obj{loop($e'$)} 
+    e = \J{loop($e'$)} 
   $ 
   \item \Z $\contin  
-    \tau = \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFLFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
+    \tau = \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFLFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
   $
   \item \Z $\contin 
     Z = Z_0 
   $
   \item \Z $\contin  
-    \Gamma \entails e' \hastype \obj{$\alpha_{h^+}$->$\tau'$} \given Z_0
+    \Gamma \entails e' \hastype \J{$\alpha_{h^+}$->$\tau'$} \given Z_0
     \I
     Z_0 \looparrowright Z_1
     \I
-    \tau' \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+    \tau' \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
   \item \Z $\contin  
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $
   \item \Z $\B{hypo } 
     \forall \vec{\delta} .\ \vec{\delta} \satisfies Z_0 \implies
-    \vec{\delta}, \Gamma \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau'$}
+    \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
   $ 
   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
     \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies Z$
       \item \Z\Z\Z $\vec{\delta} \satisfies Z_0$ by substitution
       \item \Z\Z\Z $
-        \vec{\delta}, \Gamma \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau'$}
+        \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
       $ by instantiation and application
       \item \Z\Z\Z $
         \vec{\delta} \satisfies \tau' \subtypes 
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
+        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
       $ by theorem \ref{theorem:fixpoint_duality_soundness}
 
       \item \Z\Z\Z $
@@ -4116,11 +3929,11 @@ Relational reasoning.
       $ by substitution  
 
       \item \Z\Z\Z $
-        \vec{\delta} \satisfies e' \hastype \obj{$\alpha_{h^+}$->$\tau$}
+        \vec{\delta} \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau$}
       $ by theorem \ref{theorem:model_subtyping_elimination} 
 
       \item \Z\Z\Z $
-        \vec{\delta} \satisfies \obj{loop($e'$)} \hastype \tau 
+        \vec{\delta} \satisfies \J{loop($e'$)} \hastype \tau 
       $ by theorem \ref{theorem:model_typing_implication_independence}
 
       \item \Z\Z\Z $
@@ -4140,7 +3953,7 @@ Relational reasoning.
   \label{theorem:fixpoint_duality_soundness}
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       \\
       \text{FTV}(\tau) \subseteq N
       \\
@@ -4148,12 +3961,12 @@ Relational reasoning.
       \\
       \alpha_r \notin N
       \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \vec{\delta} \satisfies 
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
     } 
   \end{mathpar}
   \TODO{...}
@@ -4169,14 +3982,14 @@ Relational reasoning.
     \inferrule { 
       Z_0 \looparrowright Z_1
       \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+      N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
     } {
       \forall \tau .\ 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     } 
   \end{mathpar}
@@ -4184,20 +3997,20 @@ Relational reasoning.
   \item $\B{assume }
     Z_0 \looparrowright Z_1
     \I
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $ 
   \item \Z $\B{induct on }
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \obj{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $
   \item \Z $\B{case }
     Z_1 = \epsilon \I \Tau = \epsilon
   $
     \item \Z\Z $\B{for } \tau$
       \item \Z\Z\Z $\B{assume }
-        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       $
         \item \Z\Z\Z\Z $
-          \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given \epsilon 
+          \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given \epsilon 
         $ by substitution
 
         \item \Z\Z\Z\Z $
@@ -4206,20 +4019,20 @@ Relational reasoning.
 
         \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
       \item \Z\Z\Z $
-        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
         \implies
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
         \given Z_0
       $ by implication
     \item \Z\Z $
       \forall \tau .\ 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     $ by generalization 
   \item \Z $\B{case }
@@ -4227,7 +4040,7 @@ Relational reasoning.
   $
   \item \Z $\contin
     N \entails 
-    \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
+    \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
     \fallingdotseq 
     \alpha_{h^-} \cdot \Tau_i
   $
@@ -4239,7 +4052,7 @@ Relational reasoning.
     M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
   $
   \item \Z $\contin
-    \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
+    \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
   $
   \item \Z $\contin
     N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
@@ -4247,21 +4060,21 @@ Relational reasoning.
     \Delta \entails \Alpha \pitchfork \Delta_i  
   $
   \item \Z $\contin
-    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
   $
   \item \Z $\B{hypo }
     N \entails 
-    \alpha_{h^+} \cdot Z \cdot \obj{$\alpha_l$->$\alpha_r$} 
+    \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
     \fallingdotseq 
     \alpha_{h^-} \cdot \Tau_i
     \implies
     \\
     \forall \tau .\ 
-    \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z
+    \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z
     \implies
     \tau
     \subtypes
-    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+    \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
     \given Z_0
   $
   \item \Z $\B{wrt }
@@ -4269,46 +4082,46 @@ Relational reasoning.
   $
 
     \item \Z\Z $\B{for } \tau \B{ assume }
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
     $
       \item \Z\Z\Z $
-        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
       $ by substitution
 
       \item \Z\Z\Z $
-        \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       $ by theorem \ref{theorem:proof_subtyping_decomposition}
 
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
         \given Z_0
       $ by instantiation and application 
       \item \Z\Z\Z $
         \tau
         \subtypes
-        \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
+        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
         \given Z_0
       $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
     \item \Z\Z $
       \forall \tau .\ 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       \implies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
       \given Z_0
     $ by implication and generalization 
 
 
   \item \Z $
     \forall \tau .\ 
-    \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given Z_1
+    \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
     \implies
     \tau
     \subtypes
-    \obj{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+    \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
     \given Z_0
   $ by induction
   \item $\square$ by implication
@@ -4321,9 +4134,9 @@ Relational reasoning.
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
       \\\\
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\\\
       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
@@ -4331,18 +4144,18 @@ Relational reasoning.
       \\
       \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -4354,7 +4167,7 @@ Relational reasoning.
   \label{theorem:universe_proof_typing_case_soundnes}
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
       \\\\
       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
       \\
@@ -4362,18 +4175,18 @@ Relational reasoning.
       \\
       \Delta \entails \Tau_r \subtypes \alpha_r
       \\\\
-      \widebar{\obj{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\obj{->}\tau_r \in \Tau_h} = \Delta_h
+      \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
       N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -4388,17 +4201,17 @@ Relational reasoning.
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
       \\
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
     } {
       \vec{\delta} \satisfies
       \tau
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
     } 
   \end{mathpar}
   Proof: 
@@ -4413,7 +4226,7 @@ Relational reasoning.
 
   \begin{mathpar}
     \inferrule { 
-      \tau \subtypes \obj{$\alpha_l$->$\alpha_r$} \given M, \Delta
+      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given M, \Delta
       \\
       \Delta \entails \alpha_l \subtypes \Tau_l 
       \\
@@ -4423,9 +4236,9 @@ Relational reasoning.
       \\
       \text{FTV}(\tau) \subseteq \Alpha
       \\\\
-      N, M, \Delta \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
+      N, M, \Delta \sqcup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
       \\
-      N, M, \Delta_i \sqcup \Delta' \given \obj{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
+      N, M, \Delta_i \sqcup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
     } {
       \vec{\delta} \satisfies \tau \subtypes \tau_i 
       \land
@@ -4446,9 +4259,9 @@ Relational reasoning.
 %       M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
 %       \\
 %     } {
-%       \obj{\&$(\Tau_l)$->|$(\Tau_r)$}
+%       \J{\&$(\Tau_l)$->|$(\Tau_r)$}
 %       \subtypes
-%       \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
 %       \given M, \Delta
 %     } 
 %   \end{mathpar}
@@ -4462,9 +4275,9 @@ Relational reasoning.
   \begin{mathpar}
     \inferrule { 
     } {
-      \obj{$\tau_l$->$\tau_r$}
+      \J{$\tau_l$->$\tau_r$}
       \subtypes
-      \obj{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
+      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
       \given M, \Delta
     } 
   \end{mathpar}
@@ -4481,7 +4294,7 @@ Relational reasoning.
     \inferrule { 
       M, \Delta, \Delta \entails \alpha \subtypes \Tau 
     } {
-     \alpha \subtypes \obj{\&$(\Tau)$} \given \left<M, \Delta\right>
+     \alpha \subtypes \J{\&$(\Tau)$} \given \left<M, \Delta\right>
     } 
   \end{mathpar}
   Proof: 
@@ -4496,7 +4309,7 @@ Relational reasoning.
       M, \Delta, \Delta \entails \Tau \subtypes \alpha
       \\
     } {
-     \obj{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
+     \J{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
     } 
   \end{mathpar}
   Proof: 
@@ -4538,11 +4351,11 @@ Relational reasoning.
   \label{theorem:model_typing_implication_independence}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$\tau_l$->$\tau_r$} 
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$->$\tau_r$} 
       \\
       \vec{\delta} \satisfies \tau_r
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{loop($e$)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{loop($e$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof: 
@@ -4555,13 +4368,13 @@ Relational reasoning.
 %   \label{theorem:fix_duality}
 %   \begin{mathpar}
 %     \inferrule { 
-%       \tau \subtypes \obj{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+%       \tau \subtypes \J{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
 %       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \obj{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \J{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
 %     } {
-%       \obj{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+%       \J{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
 %       \subtypes
-%       \obj{$\alpha_1$->$\alpha_2$}
+%       \J{$\alpha_1$->$\alpha_2$}
 %       \given Z_1
 %     } 
 %   \end{mathpar}
@@ -4629,50 +4442,50 @@ Relational reasoning.
   \label{theorem:model_subtyping_record_elimination}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
+      \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
     } 
   \end{mathpar}
   Proof: 
   \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
+    \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
   $ 
     \item \Z $\B{induct on } 
-      \vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->$\tau$}
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
     $ 
     \item \Z $\B{case }
       e = G
       \I
-      \obj{?$l$=>$v$} \in G
+      \J{?$l$=>$v$} \in G
       \I
       \vec{\delta}, \Gamma \satisfies v \hastype \tau
       \I
-      \forall v' .\ \obj{?$l$=>$v'$} \in G \implies v' = v 
+      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v 
     $ 
     \item \Z $\B{wrt }
       G\ v 
     $
   
       \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies G \hastype \obj{$l$->$\tau$}
+        \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
       $ by substitution
 
       \item \Z\Z $
-        \obj{$G$.$l$} \rightsquigarrow v
+        \J{$G$.$l$} \rightsquigarrow v
       $ by definition 
 
       \item \Z\Z $
         \B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \Gamma \satisfies \vec{\sigma} 
       $ by theorem \ref{...} 
       \item \Z\Z $
-        \obj{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v
+        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v
       $ by definition 
       \item \Z\Z $
         v = v[\vec{\sigma} \sqcup \epsilon] 
       $ by definition 
       \item \Z\Z $
-        \obj{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \sqcup \epsilon] 
+        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \sqcup \epsilon] 
       $ by substitution 
       \item \Z\Z $
         \vec{\delta}, \epsilon \satisfies \epsilon 
@@ -4682,10 +4495,10 @@ Relational reasoning.
         \vec{\delta}, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
       $ by definition 
       \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \obj{$G$.$l$} \hastype \tau 
+        \vec{\delta}, \Gamma \satisfies \J{$G$.$l$} \hastype \tau 
       $ by definition 
       \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
+        \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
       $ by substitution
 
 
@@ -4696,37 +4509,37 @@ Relational reasoning.
       \I
       \vec{\delta}, \vec{\sigma}' \satisfies \Gamma'
       \I
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \obj{$l$->$\tau$}
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
     $
     \item \Z $\B{hypo }
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \obj{$l$->$\tau$}
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
       \implies
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \obj{$e'$.$l$} \hastype \tau
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
     $
     \item \Z $\B{wrt }
       \vec{\sigma}\ e'\ \vec{\sigma}'\ \Gamma'
     $
       \item \Z\Z $
-        \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \obj{$e'$.$l$} \hastype \tau
+        \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
       $ by application
       \item \Z\Z $
-        \obj{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \obj{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$}
+        \J{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \J{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$}
       $ by definition 
       \item \Z\Z $
-        \obj{$e[\vec{\sigma}]$.$l$} = \obj{$e$.$l$}[\vec{\sigma}]
+        \J{$e[\vec{\sigma}]$.$l$} = \J{$e$.$l$}[\vec{\sigma}]
       $ by definition 
       \item \Z\Z $
-        \obj{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$} = \obj{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
+        \J{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$} = \J{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
       $ by definition 
       \item \Z\Z $
-        \obj{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \obj{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
+        \J{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \J{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
       $ by substitution 
       \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
+        \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
       $ by definition 
 
     \item \Z $
-      \vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau 
+      \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
     $ by induction 
   \item $\square$
 \end{theorem}
@@ -4797,47 +4610,47 @@ Relational reasoning.
       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
-    \item \Z $\B{case } \tau_l = \obj{BOT}$
+    \item \Z $\B{case } \tau_l = \J{BOT}$
       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \obj{BOT} \subtypes \tau_r$ by definition
+        \item \Z\Z\Z $\vec{\delta} \satisfies \J{BOT} \subtypes \tau_r$ by definition
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
-    \item \Z $\B{case } \tau_r = \obj{TOP}$
+    \item \Z $\B{case } \tau_r = \J{TOP}$
       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \obj{TOP}$ by definition
+        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{TOP}$ by definition
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization 
 
     \item \Z $\B{case } 
-      \tau_r = \obj{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
+      \tau_r = \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
       \I
       \tau_l
       \subtypes
-      \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
       \given M, \Delta
     $
     \item \Z $\B{hypo }
       \forall \vec{\delta} .\ 
       \vec{\delta} \satisfies \Delta
       \implies
-      \vec{\delta} \satisfies \tau_l \subtypes \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+      \vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
     $ 
     \item \Z $\B{wrt } l\ \tau_{rl}\ \tau_{rr}$ 
       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
         by application
         \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \obj{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
           by theorem \ref{theorem:model_typing_subsumption} 
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$e$.$l$} \hastype \obj{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \obj{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
+          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by substitution 
         \item \Z\Z\Z $\forall e\ \Gamma .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
           \vec{\delta}, \Gamma \satisfies e \hastype \tau_r
@@ -4849,7 +4662,7 @@ Relational reasoning.
 
 
     \item \Z $\B{case } 
-      \tau_l = \obj{$\tau_{ll}$|$\tau_{lr}$}
+      \tau_l = \J{$\tau_{ll}$|$\tau_{lr}$}
       \I
       M = M_1
       \I
@@ -4879,7 +4692,7 @@ Relational reasoning.
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{lr} \subtypes \tau_r$ by application 
         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{ll} \subtypes \tau_r$ by application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \obj{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
+        \item \Z\Z\Z $\vec{\delta} \satisfies \J{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
         by definition
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
         by substitution 
@@ -4888,7 +4701,7 @@ Relational reasoning.
       by implication and generalization
 
     \item \Z $\B{case } 
-      \tau_r = \obj{$\tau_{rl}$\&$\tau_{rr}$}
+      \tau_r = \J{$\tau_{rl}$\&$\tau_{rr}$}
       \I
       M = M_1
       \I
@@ -4914,7 +4727,7 @@ Relational reasoning.
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rr}$ by instantiation and application 
         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{...} \TODO{...} 
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rl}$ by instantiation and application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \obj{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
+        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution
       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
       by implication and generalization
@@ -4925,11 +4738,11 @@ Relational reasoning.
     \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
-    %   \obj{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+    %   \J{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
     %   \given M, \Delta
     % } {
     %   \tau_l \subtypes 
-    %   \obj{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+    %   \J{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -4940,17 +4753,17 @@ Relational reasoning.
     \item \Z $\B{wrt } $
     % \inferrule {
     %   \tau_l \subtypes
-    %   \obj{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+    %   \J{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \obj{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+    %   \tau_l \subtypes \J{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
 
     %%% TEMPLATE
     \item \Z $\B{case } 
-      \tau_l = \obj{EXI[$\Alpha$ $Q$]$\tau_b$}
+      \tau_l = \J{EXI[$\Alpha$ $Q$]$\tau_b$}
       \I
       M = M_1
       \I
@@ -4981,7 +4794,7 @@ Relational reasoning.
         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
         \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application
         \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
+          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
         \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
           \implies \vec{\delta} \satisfies e \hastype \tau_r
@@ -4991,7 +4804,7 @@ Relational reasoning.
       by implication and generalization
 
     \item \Z $\B{case } 
-      \tau_r = \obj{ALL[$\Alpha$ $Q$]$\tau_b$}
+      \tau_r = \J{ALL[$\Alpha$ $Q$]$\tau_b$}
       \I
       M = M_1
       \I
@@ -5022,7 +4835,7 @@ Relational reasoning.
         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
         \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application 
         \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
+          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by substitution 
         \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
           \implies \vec{\delta} \satisfies e \hastype \tau_r
@@ -5052,14 +4865,14 @@ Relational reasoning.
     \item \Z $\contin
       \Delta_0 \sqcup \Delta_m \preceq \Delta_1
       \I
-      \obj{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
+      \J{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
     $
     \item \Z $\B{hypo } \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies
-      \vec{\delta} \satisfies \obj{|$(\Tau)$} <: \tau_r
+      \vec{\delta} \satisfies \J{|$(\Tau)$} <: \tau_r
     $
     \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 \obj{($\alpha$<:$\tau_r$)}$ by substitution
+        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 \J{($\alpha$<:$\tau_r$)}$ by substitution
         \item \Z\Z\Z $\vec{\delta} \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l <: \tau_r$ by substitution 
       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
@@ -5084,7 +4897,7 @@ Relational reasoning.
     %   \\
     %   \Delta_0 \preceq \Delta_1
     %   \\
-    %   \widebar{\obj{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\obj{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+    %   \widebar{\J{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\J{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
     %   \given M_1, \Delta_1
     % } {
     %   \tau_l \subtypes \alpha
@@ -5147,7 +4960,7 @@ Relational reasoning.
     %   Q
     %   \given M_1, \Delta_1
     % } {
-    %   \obj{ALL[$\Alpha$ $Q$]$\tau_l$}
+    %   \J{ALL[$\Alpha$ $Q$]$\tau_l$}
     %   \subtypes 
     %   \tau_r
     %   \given M_1, \Delta_1 
@@ -5170,7 +4983,7 @@ Relational reasoning.
     % } {
     %   \tau_l
     %   \subtypes 
-    %   \obj{EXI[$\Alpha$ $Q$]$\tau_r$}
+    %   \J{EXI[$\Alpha$ $Q$]$\tau_r$}
     %   \given M_1, \Delta_1
     % }
       \item \Z\Z \TODO{...} 
@@ -5182,7 +4995,7 @@ Relational reasoning.
     %   \tau_{ll} \subtypes \tau_r
     %   \given M, \Delta
     % } {
-    %   \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -5194,7 +5007,7 @@ Relational reasoning.
     %   \tau_{lr} \subtypes \tau_r
     %   \given M, \Delta
     % } {
-    %   \obj{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+    %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -5206,7 +5019,7 @@ Relational reasoning.
     %   \tau_l \subtypes \tau_{rl}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
+    %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
     %   \given M, \Delta
     % }
 
@@ -5219,7 +5032,7 @@ Relational reasoning.
     %   \tau_l \subtypes \tau_{rr}
     %   \given M, \Delta
     % } {
-    %   \tau_l \subtypes \obj{$\tau_{rl}$|$\tau_{rr}$}
+    %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
     %   \given M, \Delta
     % }
       \item \Z\Z \TODO{...} 
@@ -5233,7 +5046,7 @@ Relational reasoning.
   \label{theorem:model_typing_existential_elimination}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta} \satisfies e \hastype \obj{EXI[$\Alpha$ $Q$]$\tau_l$}
+      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_l$}
       \\
       \vec{\delta} \satisfies Q
       \\
@@ -5274,7 +5087,7 @@ Relational reasoning.
       \\
       \Alpha \notfree \tau_l
     } {
-      \vec{\delta} \satisfies e \hastype \obj{ALL[$\Alpha$ $Q$]$\tau_r$}
+      \vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_r$}
     } 
   \end{mathpar}
   Proof:
@@ -5289,7 +5102,7 @@ Relational reasoning.
   \label{theorem:model_subtyping_sequence_last}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta} \satisfies \Delta\ \obj{($\tau_l$<:$\tau_r$)}
+      \vec{\delta} \satisfies \Delta\ \J{($\tau_l$<:$\tau_r$)}
     } {
       \vec{\delta} \satisfies \tau_l \subtypes \tau_r 
     } 
@@ -5391,7 +5204,7 @@ Relational reasoning.
       \\
       M, \Delta \entails \Tau \subtypes^\sharp \alpha  
     } {
-      \alpha\slash\obj{|$(\Tau)$} \in \vec{\delta}
+      \alpha\slash\J{|$(\Tau)$} \in \vec{\delta}
     } 
   \end{mathpar}
   Proof:
@@ -5403,9 +5216,9 @@ Relational reasoning.
   \label{theorem:model_typing_record_introduction}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta} \satisfies \obj{$e$.$l$} \hastype \tau
+      \vec{\delta} \satisfies \J{$e$.$l$} \hastype \tau
     } {
-      \vec{\delta} \satisfies e \hastype \obj{$l$->$\tau$}
+      \vec{\delta} \satisfies e \hastype \J{$l$->$\tau$}
     } 
   \end{mathpar}
   Proof:
@@ -5417,13 +5230,13 @@ Relational reasoning.
   \TODO{this is really messed up}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta} \satisfies \obj{$e_0$($e_1$)} \hastype \tau_r
+      \vec{\delta} \satisfies \J{$e_0$($e_1$)} \hastype \tau_r
       \\
       \vec{\delta} \satisfies e_1 \hastype \tau_l
       \\
       \forall \tau .\ \vec{\delta} \satisfies e_1 \hastype \tau \implies \tau_l \subtypes \tau
     } {
-      \vec{\delta} \satisfies e_0 \hastype \obj{$\tau_l$->$\tau_r$}
+      \vec{\delta} \satisfies e_0 \hastype \J{$\tau_l$->$\tau_r$}
     } 
   \end{mathpar}
   Proof:
@@ -5492,22 +5305,22 @@ Relational reasoning.
   \label{theorem:model_typing_implication_elimination}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
       \\
       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
     } {
-      \vec{\delta}, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r
     } 
   \end{mathpar}
 
   \item $\B{assume }
-    \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r
+    \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
     \I 
     \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
   $ 
 
     \item \Z $\B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \vec{\sigma} \satisfies \Gamma$ by theorem \ref{...}
-    \item \Z $\B{induct on } \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \obj{->} \tau_r$
+    \item \Z $\B{induct on } \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r$
 
     \item \Z $\B{case }$ \TODO{...}
 
@@ -5521,44 +5334,44 @@ Relational reasoning.
     %     \implies
     %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
     %     \land
-    %     (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+    %     (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
     % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     % }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
     % } {
-    %   \vec{\delta}, \Gamma \satisfies \obj{$F$*$p$=>$e$} \hastype \obj{$\tau_l$->$\tau_r$}
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
     % } 
     \item \Z $\B{case }
-      e_0 = \obj{$F$?$p$=>$e_2$}
+      e_0 = \J{$F$?$p$=>$e_2$}
       \I
-      \vec{\delta}, \Gamma \satisfies F \hastype \obj{$\tau_l$->$\tau_r$}
+      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
     $ 
     \item \Z $\B{hypo }
-      \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
     $
     \item \Z $\B{wrt }
       F\ p\ e_2 
     $
-      \item \Z\Z $\VDash \obj{$F$($e_1$)}[\vec{\sigma}] $
+      \item \Z\Z $\VDash \J{$F$($e_1$)}[\vec{\sigma}] $
       by theorem \ref{theorem:model_typing_soundness}
-      \item \Z\Z $\B{invert on } \VDash \obj{$F$($e_1$)}[\vec{\sigma}]$
-      \item \Z\Z $\B{case } \obj{$F$($e_1$)}[\vec{\sigma}] = v$
+      \item \Z\Z $\B{invert on } \VDash \J{$F$($e_1$)}[\vec{\sigma}]$
+      \item \Z\Z $\B{case } \J{$F$($e_1$)}[\vec{\sigma}] = v$
       \item \Z\Z $\B{wrt } v$
-        \item \Z\Z\Z $\obj{$F$($e_1$)}[\vec{\sigma}] \neq v$ by definition 
+        \item \Z\Z\Z $\J{$F$($e_1$)}[\vec{\sigma}] \neq v$ by definition 
         \item \Z\Z\Z $\bot$ by application
       \item \Z\Z $\B{case } 
-        (\obj{$F$($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3
+        (\J{$F$($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3
         \I
         \vec{\delta}, \Gamma \satisfies e_3 \hastype \tau_r
       $
       \item \Z\Z $\B{wrt } e_3$
-        \item \Z\Z\Z $(\obj{$F$($e_1$)})[\vec{\sigma}] = \obj{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)}$ by definition
-        \item \Z\Z\Z $\obj{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $(\J{$F$($e_1$)})[\vec{\sigma}] = \J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)}$ by definition
+        \item \Z\Z\Z $\J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
 
         \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\vec{\sigma}] = F'$ by theorem \ref{...} \TODO{...}
         \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\vec{\sigma}] = e_1'$ by theorem \ref{...} \TODO{...}
@@ -5566,16 +5379,16 @@ Relational reasoning.
         \item \Z\Z\Z $\text{FV}(e_2[\vec{\sigma}\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
         by theorem \ref{...} \TODO{...}
 
-        \item \Z\Z\Z $\obj{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
-        \item \Z\Z\Z $\obj{($F'$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
-        \item \Z\Z\Z $(\obj{$F[\vec{\sigma}]$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\J{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $\J{($F'$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
+        \item \Z\Z\Z $(\J{$F[\vec{\sigma}]$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $(\obj{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
+        \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
         $ by definition
-        \item \Z\Z\Z $(\obj{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
+        \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
 
-        \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+        \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% OLD 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5586,20 +5399,20 @@ Relational reasoning.
     % $
     % \item \Z $ 
     %   \contin
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r
+    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r
     %   \I
-    %   e_0 = \obj{($F$?$p$=>$e$)} 
+    %   e_0 = \J{($F$?$p$=>$e$)} 
     % $
     % \item \Z $
-    %   \B{hypo} \  \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r \implies \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
+    %   \B{hypo} \  \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r \implies \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
     % $
     % \item \Z $
     %   \B{wrt} \ F \ p \ e \ \Gamma' \  
     % $
-    %   \item \Z\Z $F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ by application
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r$ by substitution 
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ by substitution 
+    %   \item \Z\Z $F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ by application
+    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r$ by substitution 
+    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by substitution 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -5608,22 +5421,22 @@ Relational reasoning.
       \I
       e_0[\vec{\sigma}] \rightsquigarrow e_0'
       \I
-      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
     $
     \item \Z $\B{hypo}\ 
-      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
       \implies
-      \vec{\delta}, \Gamma \satisfies \obj{$e_0'$($e_1$)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{$e_0'$($e_1$)} \hastype \tau_r
     $
     \item \Z $ 
     \B{wrt}\ \vec{\sigma}\ e_0' 
     $
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0'\obj{(}e_1\obj{)} \hastype \tau_r$ by application 
-      \item \Z\Z $e_0[\vec{\sigma}]\obj{(}e_1\obj{)} \rightsquigarrow e_0'\obj{(}e_1\obj{)}$
-      \item \Z\Z ($e_0\obj{(}e_1\obj{)})[\vec{\sigma}] \rightsquigarrow e_0'\obj{(}e_1\obj{)}$
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0'\J{(}e_1\J{)} \hastype \tau_r$ by application 
+      \item \Z\Z $e_0[\vec{\sigma}]\J{(}e_1\J{)} \rightsquigarrow e_0'\J{(}e_1\J{)}$
+      \item \Z\Z ($e_0\J{(}e_1\J{)})[\vec{\sigma}] \rightsquigarrow e_0'\J{(}e_1\J{)}$
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ 
 
-    \item \Z $\vec{\delta}, \Gamma \satisfies e_0\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
+    \item \Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by induction
   \item $\square$
 \end{theorem}
 
@@ -5632,13 +5445,13 @@ Relational reasoning.
   \label{theorem:model_typing_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
       \\
       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
       \\
-      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
+      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r
     } 
   \end{mathpar}
 
@@ -5651,25 +5464,25 @@ Relational reasoning.
 
     \item \Z $\B{case } e_1[\vec{\sigma}] = v_1 $
     \item \Z $\B{wrt } v_1$  
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
 
     \item \Z $\B{case}\ e_1[\vec{\sigma}] \rightsquigarrow e_1' \I \VDash e_1'$
-    \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
+    \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
     \item \Z $\B{wrt}\ e_1' $
 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
       \item \Z\Z $e_1' = e_1'[\vec{\sigma}]$ by by theorem \ref{theorem:closed_substitution} 
-      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
-      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
       \item \Z\Z $\vec{\sigma} \sqcup \epsilon = \vec{\sigma}$ by definition 
-      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\obj{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \sqcup \epsilon]$ by substitution 
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \sqcup \epsilon]$ by substitution 
       \item \Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
       \item \Z\Z $\vec{\delta}, \epsilon \satisfies \epsilon$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \sqcup \epsilon \satisfies \obj{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)}\obj{(}e_1\obj{)} \hastype \tau_r$ by induction
+      \item \Z\Z $\vec{\delta}, \Gamma \sqcup \epsilon \satisfies \J{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by definition
+    \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by induction
   \item $\square$ by implication 
 \end{theorem}
 
@@ -5677,9 +5490,9 @@ Relational reasoning.
   \label{theorem:model_typing_fully_reduced_implication_elimination}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
       \\
-      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r
+      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
       \\
       \vec{\delta} \satisfies e_1 \hastype \tau_l
       \\
@@ -5688,28 +5501,28 @@ Relational reasoning.
       e_1[\vec{\sigma}] = v_1
       \\
     } {
-      \vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r
     } 
   \end{mathpar}
   Proof:
-  \item $\B{assume}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r$
+  \item $\B{assume}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
     \TODO{add more assumptions}
     \item \Z $\vec{\delta} \satisfies e_1[\vec{\sigma}] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
     \item \Z $\vec{\delta} \satisfies v_1 \hastype \tau_l$ by substitution 
-    \item \Z $\B{invert on}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \obj{->} \tau_r$
+    \item \Z $\B{invert on}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
     \item \Z $\B{case } F = \epsilon$ 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{$F$?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r$ by substitution 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by substitution 
 
       \item \Z\Z $\B{let}\ \vec{\sigma}' \B{ s.t. } p \equiv v_1 \given \vec{\sigma}'$ 
       by theorem \ref{theorem:model_typing_pattern_matching} 
 
       \item \Z\Z $\B{for } e'$ 
-        \item \Z\Z\Z $\neg \epsilon[\vec{\sigma}]\obj{($v_1$)} \rightsquigarrow e'$ by definition
-        \item \Z\Z\Z $\neg F[\vec{\sigma}]\obj{($v_1$)} \rightsquigarrow e'$ by substitution 
-      \item \Z\Z $\forall e' .\ \neg F[\vec{\sigma}]\obj{($v_1$)} \rightsquigarrow e'$ by generalization 
+        \item \Z\Z\Z $\neg \epsilon[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by definition
+        \item \Z\Z\Z $\neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by substitution 
+      \item \Z\Z $\forall e' .\ \neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by generalization 
 
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
+      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
 
       \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma}')$ 
       by theorem \ref{theorem:pattern_matching_consistency}
@@ -5718,23 +5531,23 @@ Relational reasoning.
       \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
       by theorem \ref{theorem:concatenation_substitution}
 
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
+      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
         by substitution
-      \item \Z\Z $\obj{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
+      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
         by substitution 
-      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by definition 
-      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by definition 
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
 
-      \item \Z\Z $\obj{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
-      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
-    \item \Z $\B{case } \vec{\delta}, \Gamma \satisfies \obj{$F$($e_1$)} \hastype \tau_r$ 
-      \item \Z\Z $\B{let } e' \B{ s.t. } (\obj{$F$($e_1$}))[\vec{\sigma}] \rightsquigarrow e' \land \vec{\delta}, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-      \item \Z\Z $(\obj{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \obj{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+    \item \Z $\B{case } \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ 
+      \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\vec{\sigma}] \rightsquigarrow e' \land \vec{\delta}, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
+      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+    \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
   \item $\square$ by implication
 \end{theorem}
 
@@ -5810,7 +5623,7 @@ Relational reasoning.
   \label{theorem:model_typing_pattern_matching}
   \begin{mathpar}
     \inferrule {
-      \vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
+      \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
       \\
       \vec{\delta} \satisfies v \hastype \tau_l 
     } {
@@ -5819,7 +5632,7 @@ Relational reasoning.
   \end{mathpar}
   Proof:
   \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies \obj{?$p$=>$e$} \hastype \tau_l \obj{->} \tau_r
+    \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
     \I
     \vec{\delta} \satisfies v \hastype \tau_l 
   $
@@ -5892,50 +5705,50 @@ Relational reasoning.
 %   \label{theorem:pattern_matching_progress}
 %   \begin{mathpar}
 %     \inferrule {
-%       \obj{*$p$=>$e$} \in F 
+%       \J{*$p$=>$e$} \in F 
 %       \\
 %       p \equiv v \given \vec{\sigma} 
 %       \\
-%       \forall e' .\ \obj{*$p$=>$e'$} \in F \implies e' = e 
+%       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
 %     } {
-%       \exists e' .\ F\obj{(}v\obj{)} \rightsquigarrow e'
+%       \exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'
 %     } 
 %   \end{mathpar}
 %   Proof:
 %   \item $\B{for } p\ e\ F\ v\ \vec{\sigma}\ \B{assume }
-%       \obj{*$p$=>$e$} \in F 
+%       \J{*$p$=>$e$} \in F 
 %       \I
 %       p \equiv v \given \vec{\sigma} 
 %       \I
-%       \forall e' .\ \obj{*$p$=>$e'$} \in F \implies e' = e 
+%       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
 %   $
 
 %   \item \Z $\B{case }
-%     F = F'\ \obj{*$p$=>$e$} 
+%     F = F'\ \J{*$p$=>$e$} 
 %     \I
-%     \obj{*$p$=>$e$} \notin F'
+%     \J{*$p$=>$e$} \notin F'
 %   $
 
 %   \item \Z\Z $\B{for } e'$
-%   \item \Z\Z\Z $\B{case}\ F'\obj{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\obj{(}F'\ \obj{*}p\obj{=>}e\obj{)(} v \obj{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z\Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e'$ by substitution 
-%   \item \Z\Z\Z $\B{case}\ \neg F'\obj{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\obj{(}F'\ \obj{*}p\obj{=>}e\obj{)(} v \obj{)} \rightsquigarrow e[\vec{\sigma}]$ by definition
-%   \item \Z\Z\Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e[\vec{\sigma}]$ by substitution 
-%   \item \Z\Z\Z $\exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by decidability of $F'\obj{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by summarization
-%   \item \Z\Z $\exists e'' .\ F\obj{(}v\obj{)} \rightsquigarrow e''$ by independence 
+%   \item \Z\Z\Z $\B{case}\ F'\J{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by substitution 
+%   \item \Z\Z\Z $\B{case}\ \neg F'\J{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e[\vec{\sigma}]$ by definition
+%   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]$ by substitution 
+%   \item \Z\Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by decidability of $F'\J{($v$)} \rightsquigarrow e'$
+%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by summarization
+%   \item \Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by independence 
 
 %   \item \Z $\B{case }
 %     F = F'\ f 
 %     \I
-%     \obj{*$p$=>$e$} \in F' 
+%     \J{*$p$=>$e$} \in F' 
 %   $
-%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\obj{(}v\obj{)} \rightsquigarrow e'$ by induction hypothesis
-%   \item \Z\Z $F'\ f\obj{(}v\obj{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z $F\obj{(}v\obj{)} \rightsquigarrow e'$ by definition
-%   \item \Z $\exists e' .\ F\obj{(}v\obj{)} \rightsquigarrow e'$ by induction on $\obj{*$p$=>$e$} \in F$
+%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\J{(}v\J{)} \rightsquigarrow e'$ by induction hypothesis
+%   \item \Z\Z $F'\ f\J{(}v\J{)} \rightsquigarrow e'$ by definition
+%   \item \Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by definition
+%   \item \Z $\exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'$ by induction on $\J{*$p$=>$e$} \in F$
 %   \item $\square$
 % \end{theorem}
 
@@ -5971,8 +5784,8 @@ Relational reasoning.
         \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
         \I \vec{\delta}, \Gamma \satisfies e \hastype \tau
   $
-    \item \Z $\B{case } e = \obj{@}$
-      \item \Z\Z $\B{let } v \B{ s.t. } \obj{@} = v$
+    \item \Z $\B{case } e = \J{@}$
+      \item \Z\Z $\B{let } v \B{ s.t. } \J{@} = v$
       \item \Z\Z $e[\vec{\sigma}] = v$
       \item \Z\Z $ \VDash e[\vec{\sigma}]$
 
@@ -5980,23 +5793,23 @@ Relational reasoning.
     \item \Z $\B{case } 
       \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
       \I 
-      e = \obj{<}l\obj{>}e' 
+      e = \J{<}l\J{>}e' 
       \I 
-      \tau = \obj{<}l\obj{>}\tau'
+      \tau = \J{<}l\J{>}\tau'
     $
       \item \Z\Z $\Vdash e'$ by induction hypothesis
       \item \Z\Z $\B{case } e'[\vec{\sigma}] = v$
-        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \obj{<}l\obj{>}v = v'$
-        \item \Z\Z\Z $\obj{<}l\obj{>}e'[\vec{\sigma}] = v'$
-        \item \Z\Z\Z $(\obj{<}l\obj{>}e')[\vec{\sigma}] = v'$
+        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \J{<}l\J{>}v = v'$
+        \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] = v'$
+        \item \Z\Z\Z $(\J{<}l\J{>}e')[\vec{\sigma}] = v'$
         \item \Z\Z\Z $e[\vec{\sigma}] = v'$
         \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
 
       \item \Z\Z $\B{case } e'[\vec{\sigma}] \rightsquigarrow e'' \I \VDash e''$
-        \item \Z\Z\Z $\obj{<}l\obj{>}e'[\vec{\sigma}] \rightsquigarrow \obj{<}l\obj{>} e''$
-        \item \Z\Z\Z $\VDash \obj{<}l\obj{>}e'' $
-        \item \Z\Z\Z $\VDash \obj{<}l\obj{>}e'[\vec{\sigma}] $
-        \item \Z\Z\Z $\VDash (\obj{<}l\obj{>}e')[\vec{\sigma}] $
+        \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] \rightsquigarrow \J{<}l\J{>} e''$
+        \item \Z\Z\Z $\VDash \J{<}l\J{>}e'' $
+        \item \Z\Z\Z $\VDash \J{<}l\J{>}e'[\vec{\sigma}] $
+        \item \Z\Z\Z $\VDash (\J{<}l\J{>}e')[\vec{\sigma}] $
         \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
 
       \item \Z\Z $\VDash e[\vec{\sigma}] $ by cases on $\VDash e' $

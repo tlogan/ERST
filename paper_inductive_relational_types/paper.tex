@@ -47,11 +47,9 @@
 
 \begin{document}
 
-% \newcommand{\obj}[1]{\texttt{\small #1}}
-\newcommand{\obj}[1]{\texttt{\color{RoyalBlue} #1}}
+\newcommand{\J}[1]{\texttt{\color{RoyalBlue} #1}}
+
 \newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
-% \newcommand{\obj}[1]{\texttt{#1}}
-% \newcommand{\obj}[1]{\textbf{\texttt{#1}}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
@@ -110,8 +108,8 @@
 
 
 \newcommand{\tl}{\textasciitilde{}}
-\newcommand{\fieldmap}{\obj{\tl>}}
-\newcommand{\typdiff}{\obj{\textbackslash}}
+\newcommand{\fieldmap}{\J{\tl>}}
+\newcommand{\typdiff}{\J{\textbackslash}}
 
 \maketitle
 
@@ -119,6 +117,204 @@
 \section{Introduction}
 
 \section{Overview}
+
+\paragraph{Infinite Path Preservation} 
+Consider the function \J{repeat} that takes a natural number and returns a list of whose length is that number. 
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{let repeat = ? x => loop(? self =>}
+      \\
+      \I \J{? <zero> @ => <nil> @}
+      \\
+      \I \J{? <succ> n => <cons>(x,self(n))}
+      \\
+      \J{)}
+  \end{array}
+\]
+
+
+Without specifying any requirements besides the function definition, type inference lifts 
+the function into the definitional property as a type. 
+To construct the type, type inference constructs a relation between nats and lists.
+The type of \J{repeat} depends on a least fixed point relation between nats and lists 
+(parametrically named here for readability).
+
+\[
+  \text{natList}(\alpha) = \begin{array}[t]{@{} l}
+      \J{LFP[R]( BOT} 
+      \\
+      \I \J{| (<zero> @)*(<nil> @)}
+      \\
+      \I \J{| (EXI[N L ; N*L <: R](<succ> N)*(<cons> (}\alpha\J{*L))}
+      \\
+      \J{)} 
+  \end{array}
+\]
+
+Using the \text{natList} relation, type inference then lifts the function repeat into its precise type form.
+
+\[
+  \J{ALL[T] T -> ALL[X] X -> EXI[Y ; X*Y <: }\text{natList}(\J{T}) \J{] Y}
+\]
+
+It may be worth noting that there could be semantically equivalent recursive type in terms of intersections instead of unions. 
+
+\TODO{forward reference to correctness/model semantics}
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{ALL[T] GFP[R]( TOP} 
+      \\
+      \I \J{\& (<zero> @)->(<nil> @)}
+      \\
+      \I \J{\& (ALL[N L ; R <: N->L](<succ> N)->(<cons> T*L)}
+      \\
+      \J{)} 
+  \end{array}
+\]
+
+
+Type inference reasons in terms least fixed points, but the greatest fixed point form could
+be handled with syntactic sugar and rewriting.  
+
+Using the precise type form, type inference can leverage solving and checking subtyping constraints 
+to reason in a number ways: it can reason forward from inputs to outputs (just like the runtime semantics), 
+reason backwards from outputs to inputs (like Prolog), and check against weaker specifications. 
+
+
+\paragraph{Infinite Paths Selection.} Consider the application \J{repeat(<succ> <succ> <zero> @)(x)} where \J{x}
+has type \J{T}. Type inference
+constructs a singleton type, mirroring the results achieved by simply running the program.  
+\[
+  \J{<cons> T * <cons> T * <nil> @}
+\]
+
+Now suppose we have a function \J{foo} whose input
+type is inferred to be an empty list or a singleton list, \J{<nil> @ |  <cons> T * <nil> @}.
+Given the application \J{foo(repeat(n)(x))} where \J{x} has type \J{T}, type inference can reason backwards to learn
+that the type of \J{n} must be either zero or one. 
+\[
+  \J{<zero> @ | <succ> <zero> @}
+\]
+
+
+
+\paragraph{Infinite Path Factorization.} 
+Now suppose we have a function \J{woo} whose input
+type is inferred to be a list over elements of type \J{T}.
+\[
+  \begin{array}[t]{@{} l}
+      \J{LFP[R]( BOT}
+      \\
+      \I \J{| <nil> @ }
+      \\
+      \I \J{| <cons> T*R}
+      \\
+      \J{)}
+  \end{array}
+\]
+
+Given the application \J{woo(repeat(n)(x))} where \J{x} has type \J{T}, type 
+inference discovers that the argument type depends on the relation \text{natList}(\J{T}), 
+and the relation can be factored into a weaker cross product of nats and lists. 
+Therefore, the argument meets the requirements
+of \J{woo} and the type of \J{n} must be the natural numbers.
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{LFP[R]( BOT} 
+      \\
+      \I \J{| <zero> @}
+      \\
+      \I \J{| <succ> R}
+      \\
+      \J{)} 
+  \end{array}
+\]
+
+
+
+\paragraph{Relational Induction.} 
+\TODO{...}
+\paragraph{Path Sensitivity.} Consider the function \J{max} that chooses the maximum of two natural numbers. 
+
+
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{let lessOrEq = loop(? self =>}
+      \\
+      \I \J{? (<zero> @),y => <true> @}
+      \\
+      \I \J{? (<succ> x),(<succ> y) => self(x,y)}
+      \\
+      \I \J{? (<succ> x),(<zero> @) => <false> @}
+      \\
+      \J{) in}
+      \\
+      \J{let max = ? (x,y) => }
+      \\
+      \I \J{if lessOrEq(x,y) then y else x}
+  \end{array}
+\]
+
+
+The function \J{max} must satisfy the property that the result is greater or equal to each of the inputs. 
+Type inference must learn constraints on the inputs to \J{max}: \J{x} and \J{y}, which 
+depends on the output of \J{lessOrEq(x,y)}. The application \J{lessOrEq(x,y)} can evaluate to either \J{<true>@}
+or \J{<false>@}, which result from different paths taken in \J{lessOrEq}. 
+Type inference considers both cases and maintains the learned constraints
+exist in different possible worlds, since they are learned from different paths. Finally, type inference
+connects the inputs to the outputs by considering the two possible paths of the \J{if-then-else}.
+It first lifts the function \J{lessOrEq} into a relational type. For readability, we name the relational type \text{LED} (as in "less than or equal decision"). 
+
+\[
+  \text{LED} = 
+  \begin{array}[t]{@{} l}
+      \J{LFP[R] ( BOT}
+      \\
+      \I \J{| (EXI [Y] ((<zero> @)*Y)*(<true> @))}
+      \\
+      \I \J{| (EXI [X Y D ; ((X*Y)*Z) <: R] ((<succ> X)*(<succ> Y))*D)}
+      \\
+      \I \J{| (EXI [X] ((<succ> X)*(<zero> @))*(<false> @))}
+      \\
+      \J{)}
+  \end{array}
+\]
+
+using the \text{LED} relation, type inference combines the constraints learned
+for each possible world and combines them into a function type with multiple paths. 
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{TOP}
+    \\
+    \J{\& (EXI [D ; D <: (<true> @)]}
+    \\
+    \I \J{(ALL [X Y Z ; Y <: Z ; ((X*Y)*D) <:}\text{LED}\J{] (X,Y) -> Z))}
+    \\
+    \J{\& (EXI [D ; D <: (<false> @)]}
+    \\
+    \I \J{(ALL [X Y Z ; X <: Z ; ((X*Y)*D) <: }\text{LED}\J{] (X,Y) -> Z))}
+  \end{array}
+\]
+
+We could simplify the type by eliminating simple constraints without loss of safety or precision:
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{TOP}
+    \\
+    \J{\& (ALL [X Y ; ((X*Y)*(<true> @)) <: }\text{LED}\J{] (X,Y) -> Y)}
+    \\
+    \J{\& (ALL [X Y ; ((X*Y)*(<false> @)) <: }\text{LED}\J{] (X,Y) -> X)}
+  \end{array}
+\]
+
+However, we have not included this rewriting in the semantics or implementation. 
+
 
 \section{Expression System}
 
@@ -134,12 +330,12 @@
   \begin{mathpar}
 
     \inferrule {
-      \Gamma \entails e \hastype \alpha_\nu\obj{->}\tau \given  \vec{\alpha}, \Delta 
+      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \obj{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
-      \tau \subtypes \alpha_l\obj{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\
@@ -149,15 +345,15 @@
       \\
       \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
     } {
-      \Gamma \entails \obj{loop(}e\obj{)} 
+      \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
-      \obj{ALL[}\alpha_x \obj{]}
+      \J{ALL[}\alpha_x \J{]}
       \alpha_x
-      \obj{->} 
-      \obj{EXI[}\alpha_y 
-          \obj{;} \alpha_x \obj{*} \alpha_y 
-      \obj{<:LFP[} \alpha_\mu \obj{]}\tau_\mu
-      \obj{]}\alpha_y
+      \J{->} 
+      \J{EXI[}\alpha_y 
+          \J{;} \alpha_x \J{*} \alpha_y 
+      \J{<:LFP[} \alpha_\mu \J{]}\tau_\mu
+      \J{]}\alpha_y
       \given \vec{\alpha}, \Delta 
     }
 
@@ -175,12 +371,12 @@
   \begin{mathpar}
     \inferrule {
       \tau_l \subtypes
-      \obj{ALL[}\alpha\obj{;} \alpha \obj{<:} \tau_\mu \obj{]} \alpha \obj{->} \tau_r
+      \J{ALL[}\alpha\J{;} \alpha \J{<:} \tau_\mu \J{]} \alpha \J{->} \tau_r
       \given \Omega
     } {
       \tau_l
       \subtypes 
-      \obj{LFP[}\alpha_\mu\obj{]}\tau_\mu\obj{->}\tau_r
+      \J{LFP[}\alpha_\mu\J{]}\tau_\mu\J{->}\tau_r
       \given \Omega 
     }
   \end{mathpar}
@@ -193,11 +389,11 @@
   \label{def:proof_subtyping_abstraction_introduction}
   Rel Proof Subtyping (Pattern Intro)
   \hfill 
-  \boxed{\rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \given \Omega}
+  \boxed{\rho \subtypes \J{LFP[}\alpha\J{]}\tau \given \Omega}
   \\
   \begin{mathpar}
     \inferrule {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \cong \rho' \subtypes \obj{LFP[}\alpha \obj{]} \tau'
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau \cong \rho' \subtypes \J{LFP[}\alpha \J{]} \tau'
       \\
       \Delta \entails \rho' \subtypes \tau_n \sim 
       \\\\
@@ -205,29 +401,29 @@
       % \\
       % \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
       \\
-      \tau_n \subtypes \obj{LFP[}\alpha \obj{]} \tau' \entails \Omega
+      \tau_n \subtypes \J{LFP[}\alpha \J{]} \tau' \entails \Omega
     } {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
       \given \Omega 
     }
 
     \inferrule {
-      \entails \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \consis 
+      \entails \rho \subtypes \J{LFP[}\alpha\J{]}\tau \consis 
       \\
       \forall \alpha_\closed .\ 
       \alpha_\closed \in \text{FTV}(\rho) \land \alpha_\closed \in \vec{\alpha}_\closed
       \implies
-      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau \safe
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \J{LFP[}\alpha\J{]}\tau \safe
       \\\\
       \exists \Delta_i .\ \llbracket \epsilon, \vec{\alpha} \entails \Delta, \rho\rrbracket^+ = \Delta_i, \rho'
       \\
       (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
       \\
-      \rho' \subtypes \obj{LFP[}\alpha\obj{]}\tau
+      \rho' \subtypes \J{LFP[}\alpha\J{]}\tau
       \given \vec{\alpha}', \Delta'
     } {
-      \rho \subtypes \obj{LFP[}\alpha\obj{]}\tau
-      \given \vec{\alpha}', \Delta'\ \obj{;} \rho \obj{<:} \obj{LFP[}\alpha\obj{]}\tau
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
+      \given \vec{\alpha}', \Delta'\ \J{;} \rho \J{<:} \J{LFP[}\alpha\J{]}\tau
     }
   \end{mathpar}
 \end{definition}
@@ -248,13 +444,13 @@
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
     }
 
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -262,9 +458,9 @@
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -288,7 +484,7 @@
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau_l) 
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) 
       \entails 
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -296,7 +492,7 @@
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \tau_l \obj{<:} \tau_r) 
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) 
       \entails
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -306,9 +502,9 @@
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\\\
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \alpha_\closed \obj{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \obj{;} \rho \obj{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -344,13 +540,13 @@
     \inferrule {
       \rho \subtypes \tau_{l} \given \Omega 
     } {
-      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
 
     \inferrule {
       \rho \subtypes \tau_{r} \given \Omega 
     } {
-      \rho \subtypes \tau_{l}\obj{|}\tau_{r} \given \Omega 
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
     }
   \end{mathpar}
 \end{definition}
@@ -368,7 +564,7 @@
       \neg(\Delta \entails \alpha \relational)
       \\
     } {
-      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \obj{TOP})
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \J{TOP})
     }
 
     \inferrule {
@@ -376,7 +572,7 @@
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \obj{;}\alpha  \obj{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \obj{\&} \tau)
+      \llbracket \Delta\ \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
     }
 
     \inferrule {
@@ -384,7 +580,7 @@
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \obj{;}\tau_l \obj{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \obj{;}\tau_l \obj{<:} \tau_r, \tau)
+      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
 
     \inferrule {
@@ -405,7 +601,7 @@
   \\
   \begin{mathpar}
     \inferrule {
-      \obj{;} \tau_l \obj{<:} \tau_r \in \Delta 
+      \J{;} \tau_l \J{<:} \tau_r \in \Delta 
       \\
       \nexists \alpha' .\ \tau_l = \alpha'
       \\
@@ -428,7 +624,7 @@
     \inferrule {
       \TODO{...}
     } {
-      % \text{decomposable}(\Delta_0, \tau_l, \obj{LFP[} \alpha \obj{]} \tau_r)
+      % \text{decomposable}(\Delta_0, \tau_l, \J{LFP[} \alpha \J{]} \tau_r)
       \Omega \entails \tau \circlearrowleft \tau
     }
   \end{mathpar}
