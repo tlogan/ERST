@@ -370,9 +370,8 @@ of the functions' input types: \J{U\&D}.
 % \paragraph{Generalization.} This is motivated by applying the same function to multiple arguments of varying types.
 % \paragraph{Object oriented.}  
 
-\section{Expression System}
-The programming language is pure and applicative. 
 
+\section{Structural System}
 
 \begin{definition} Expressions
   \label{def:expressions}
@@ -417,99 +416,6 @@ of the form in definition \ref{def:expressions}. The forms of expressions
 enable function abstraction, function application, tagged constructions, record construction, record projection,
 and pattern matching. These forms enable us to express non-trivial programs. They also allow
 for compositions that have no reasonable semantics.  
-
-\begin{definition}
-  \label{def:progression}
-  Progression
-  \hfill 
-  \boxed{e \rightsquigarrow e}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \J{<}l\J{>}e \rightsquigarrow \J{<}l\J{>}e'
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \vec{r}\J{?}l\J{=>}e \rightsquigarrow \vec{r}\J{?}l\J{=>}e' 
-    }
-
-    \inferrule {
-      \vec{r} \rightsquigarrow \vec{r}'
-    } {
-      \vec{r}\J{?}l\J{=>}v \rightsquigarrow \vec{r}'\J{?}l\J{=>}v
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      e\J{.}l \rightsquigarrow e'\J{.}l
-    }
-
-    \inferrule {
-      \J{?}l\J{=>}v \in \vec{g}
-      \\
-      \forall\ e .\ \J{?}l\J{=>}e \in \vec{g} \implies e = v
-    } {
-      \vec{g}\J{.}l \rightsquigarrow v
-    }
-
-    \inferrule {
-      e_f \rightsquigarrow e_f'
-    } {
-      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \vec{f}\J{(}e\J{)} \rightsquigarrow \vec{f}\J{(}e'\J{)}
-    }
-
-    \inferrule {
-      \vec{f}\J{(}v\J{)} \rightsquigarrow e'
-      \\
-      \text{FV}(e) \subseteq \text{FV}(p)
-    } {
-      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \exists e' .\ \vec{f}\J{(}v\J{)} \rightsquigarrow e'
-      \\
-      p \equiv v \given \vec{\sigma} 
-    } {
-      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
-    }
-
-    \inferrule {
-    } {
-      \J{loop(?}x\J{=>}e\J{)} \rightsquigarrow e[x \slash \J{loop(?}x\J{=>}e\J{)}]
-    }
-  \end{mathpar}
-\end{definition}
-
-\emph{Progression} of an expression, as in definition \ref{def:progression},
-is a small-step operational semantics. 
-It adheres to typical definitions of applicative languages for the most part. One 
-slight departure is that pattern matching is merely a special case of function application. 
-Likewise, a switch is merely a function abstraction.
-Records are similar to Functions, except that their entries are guarded by literal identifiers. 
-Additionally, records may be abstracted as patterns, but functions may not.
-The semantics enables recursion via the fixed point combinator \J{loop}.
-
-
-\section{Type System}
-The static semantics is a system for checking if the construction of an expression is viable.   
 
 \hfill
 \begin{definition} Types 
@@ -604,6 +510,329 @@ The static semantics is a system for checking if the construction of an expressi
 
 The system leverages types of the forms in Definition \ref{def:types}, 
 which allow expressing properties of expressions with varying levels of precisions. 
+
+
+\section{Dynamic System}
+
+The programming language is pure and applicative. 
+
+
+\begin{definition}
+  \label{def:progression}
+  Progression
+  \hfill 
+  \boxed{e \rightsquigarrow e}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \J{<}l\J{>}e \rightsquigarrow \J{<}l\J{>}e'
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \vec{r}\J{?}l\J{=>}e \rightsquigarrow \vec{r}\J{?}l\J{=>}e' 
+    }
+
+    \inferrule {
+      \vec{r} \rightsquigarrow \vec{r}'
+    } {
+      \vec{r}\J{?}l\J{=>}v \rightsquigarrow \vec{r}'\J{?}l\J{=>}v
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      e\J{.}l \rightsquigarrow e'\J{.}l
+    }
+
+    \inferrule {
+      \J{?}l\J{=>}v \in \vec{g}
+      \\
+      \forall\ e .\ \J{?}l\J{=>}e \in \vec{g} \implies e = v
+    } {
+      \vec{g}\J{.}l \rightsquigarrow v
+    }
+
+    \inferrule {
+      e_f \rightsquigarrow e_f'
+    } {
+      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \vec{f}\J{(}e\J{)} \rightsquigarrow \vec{f}\J{(}e'\J{)}
+    }
+
+    \inferrule {
+      \vec{f}\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      \text{FV}(e) \subseteq \text{FV}(p)
+    } {
+      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \exists e' .\ \vec{f}\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      p \equiv v \given \vec{\sigma} 
+    } {
+      (\vec{f}\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
+    }
+
+    \inferrule {
+    } {
+      \J{loop(?}x\J{=>}e\J{)} \rightsquigarrow e[x \slash \J{loop(?}x\J{=>}e\J{)}]
+    }
+  \end{mathpar}
+\end{definition}
+
+\emph{Progression} of an expression, as in definition \ref{def:progression},
+is a small-step operational semantics. 
+It adheres to typical definitions of applicative languages for the most part. One 
+slight departure is that pattern matching is merely a special case of function application. 
+Likewise, a switch is merely a function abstraction.
+Records are similar to Functions, except that their entries are guarded by literal identifiers. 
+Additionally, records may be abstracted as patterns, but functions may not.
+The semantics enables recursion via the fixed point combinator \J{loop}.
+
+
+\hfill
+\begin{definition}
+  \label{def:model_typing}
+  Model Typing
+  \hfill
+  \boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \alpha \slash \tau \in \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+      \alpha \slash \tau \notin \vec{\delta}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{TOP} 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
+    } {
+      \vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e$} \hastype \J{<$l$>$\tau$}
+    } 
+
+    \inferrule { 
+      \J{?$l$=>$v$} \in G 
+      \\
+      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
+      \\\\
+      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v
+    } {
+      \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ORIGINAL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % \inferrule { 
+    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+    % } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ALTERNATIVE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \inferrule { 
+      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+      \\
+      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \\\\
+      \forall e .\ 
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+        \implies
+        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+        \land
+        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+    } {
+      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+    }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+    } 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DERIVABLE??
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % \inferrule { 
+    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau_r$}
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \\
+    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \\\\
+    %   \forall e .\ 
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+    %     \implies
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+    %     \lor
+    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
+    % } {
+    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+    % } 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
+      \\
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$\&$\tau_r$}
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l
+      \\
+      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \tau_r)
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \typdiff \tau_r
+    } 
+
+    \inferrule { 
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
+      \\
+      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
+      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau$}
+    } 
+
+    \inferrule { 
+      \vec{\delta} \ \alpha \slash \J{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \J{LFP[$\alpha$]$\tau$}
+    } 
+
+
+
+    \inferrule { 
+      x \hastype \tau \in \Gamma 
+    } {
+      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
+    } 
+
+    \inferrule { 
+      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+      \\
+      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
+      \\
+      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
+      \\
+      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
+    } {
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+    } 
+
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\TODO{introduce model typing and soundness properties}
+Model typing describes how the various forms of types are introduced based
+on the various forms of expressions. There are no rules for elimination 
+type forms. Rather, the progression of expressions is leveraged to eliminate
+expression forms, from which further type forms may be introduced.
+The indirection into progression is not practical, but it guides the construction
+of a sound type proof system that can directly eliminate type forms. 
+
+
+\hfill
+\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
+  \label{def:model_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+      \forall e\ \Gamma .\ 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
+      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
+    } {
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } 
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
+  \label{def:model_sequence_subtyping}
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \vec{\delta} \satisfies \epsilon 
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies Q
+      \\
+      \vec{\delta} \satisfies \tau_l <: \tau_r
+    } {
+      \vec{\delta} \satisfies Q\ \J{.$\tau_l$<:$\tau_r$}
+    } 
+  \end{mathpar}
+\end{definition}
+
+
+
+\section{Static System}
+The static semantics is a system for checking if the construction of an expression is viable.   
 
 \hfill
 \begin{definition} 
@@ -1647,225 +1876,6 @@ This rule is the relational analog of the open variable rules.
 
 
 
-
-\section{Correctness}
-\label{sect:correctness}
-
-\TODO{introduce model typing and soundness properties}
-
-\hfill
-\begin{definition}
-  \label{def:model_typing}
-  Model Typing
-  \hfill
-  \boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}
-  \\
-  \begin{mathpar}
-    \inferrule { 
-      \alpha \slash \tau \in \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \notin \vec{\delta}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{TOP} 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e$} \hastype \J{<$l$>$\tau$}
-    } 
-
-    \inferrule { 
-      \J{?$l$=>$v$} \in G 
-      \\
-      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
-      \\\\
-      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v
-    } {
-      \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ORIGINAL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % \inferrule { 
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ALTERNATIVE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \inferrule { 
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-      \\
-      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-      \\\\
-      \forall e .\ 
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-        \implies
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-        \land
-        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DERIVABLE??
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    %   \\\\
-    %   \forall e .\ 
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-    %     \implies
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-    %     \lor
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % } 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$\&$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l
-      \\
-      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \tau_r)
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \typdiff \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
-      \\
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
-      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau$}
-    } 
-
-    \inferrule { 
-      \vec{\delta} \ \alpha \slash \J{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{LFP[$\alpha$]$\tau$}
-    } 
-
-
-
-    \inferrule { 
-      x \hastype \tau \in \Gamma 
-    } {
-      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-      \\
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
-      \\
-      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
-      \\
-      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    } 
-
-  \end{mathpar}
-\end{definition}
-\hfill
-
-
-\hfill
-\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
-  \label{def:model_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-      \forall e\ \Gamma .\ 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
-    } {
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } 
-  \end{mathpar}
-\end{definition}
-
-
-\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
-  \label{def:model_sequence_subtyping}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \epsilon 
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies Q
-      \\
-      \vec{\delta} \satisfies \tau_l <: \tau_r
-    } {
-      \vec{\delta} \satisfies Q\ \J{.$\tau_l$<:$\tau_r$}
-    } 
-  \end{mathpar}
-\end{definition}
 
 
 \section{Experiments}
