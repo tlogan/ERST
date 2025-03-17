@@ -612,7 +612,7 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
   \label{def:model_typing}
   Model Typing
   \hfill
-  \boxed{\vec{\delta}, \vec{\sigma} \satisfies e \hastype \tau}
+  \boxed{\vec{\delta} \satisfies e \hastype \tau}
   \\
   \begin{mathpar}
     \inferrule { 
@@ -745,13 +745,17 @@ of a sound type proof system that can directly eliminate type forms.
 
 
 \hfill
-\begin{definition}\boxed{\vec{\delta} \satisfies \tau <: \tau}\ Model Subtyping
+\begin{definition}
   \label{def:model_subtyping}
+  Model Subtyping
+  \hfill
+  \boxed{\vec{\delta} \satisfies \tau <: \tau}
+  \\
   \begin{mathpar}
     \inferrule { 
-      \forall e\ \Gamma .\ 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
+      \forall e .\ 
+      \vec{\delta} \satisfies e \hastype \tau_l \implies 
+      \vec{\delta} \satisfies e \hastype \tau_r 
     } {
       \vec{\delta} \satisfies \tau_l <: \tau_r
     } 
@@ -759,8 +763,12 @@ of a sound type proof system that can directly eliminate type forms.
 \end{definition}
 
 
-\begin{definition}\boxed{\vec{\delta} \satisfies Q}\ Model Sequence Subtyping
+\begin{definition}
   \label{def:model_sequence_subtyping}
+  Model Sequence Subtyping
+  \hfill
+  \boxed{\vec{\delta} \satisfies \Delta}
+  \\
   \begin{mathpar}
     \inferrule { 
     } {
@@ -768,11 +776,11 @@ of a sound type proof system that can directly eliminate type forms.
     } 
 
     \inferrule { 
-      \vec{\delta} \satisfies Q
+      \vec{\delta} \satisfies \Delta 
       \\
-      \vec{\delta} \satisfies \tau_l <: \tau_r
+      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
     } {
-      \vec{\delta} \satisfies Q\ \J{.$\tau_l$<:$\tau_r$}
+      \vec{\delta} \satisfies \Delta \J{;} \tau_l \J{<:} \tau_r
     } 
   \end{mathpar}
 \end{definition}
