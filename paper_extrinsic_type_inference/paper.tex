@@ -393,7 +393,7 @@ of the functions' input types: \J{U\&D}.
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     \\
-    \nonterm{r} & \is \J{?}l\J{=>}e
+    \nonterm{r} & \is \J{?}l \fieldmap e
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
     \\
@@ -407,7 +407,7 @@ of the functions' input types: \J{U\&D}.
     \\
     \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     \\
-    \nonterm{k} & \is \J{?}l\J{=>}p
+    \nonterm{k} & \is \J{?}l \fieldmap p
   \end{array}\]
 \end{definition}
 
@@ -533,13 +533,13 @@ The programming language is pure and applicative.
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \vec{r}\J{?}l\J{=>}e \rightsquigarrow \vec{r}\J{?}l\J{=>}e' 
+      \vec{r}\J{?}l \fieldmap e \rightsquigarrow \vec{r}\J{?}l \fieldmap e' 
     }
 
     \inferrule {
       \vec{r} \rightsquigarrow \vec{r}'
     } {
-      \vec{r}\J{?}l\J{=>}v \rightsquigarrow \vec{r}'\J{?}l\J{=>}v
+      \vec{r} \J{?}l \fieldmap v \rightsquigarrow \vec{r}'\J{?} l \fieldmap v
     }
 
     \inferrule {
@@ -612,175 +612,123 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
   \label{def:model_typing}
   Model Typing
   \hfill
-  \boxed{\vec{\delta}, \Gamma \satisfies e \hastype \tau}
+  \boxed{\vec{\delta}, \vec{\sigma} \satisfies e \hastype \tau}
   \\
   \begin{mathpar}
     \inferrule { 
       \alpha \slash \tau \in \vec{\delta}
       \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+      \vec{\delta} \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+      \vec{\delta} \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
       \alpha \slash \tau \notin \vec{\delta}
       \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{TOP} 
+      \vec{\delta} \satisfies e \hastype \J{TOP} 
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \alpha 
+      \vec{\delta} \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
     } {
-      \vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}
+      \vec{\delta} \satisfies \J{@} \hastype \J{@}
     } 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
+      \vec{\delta} \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e$} \hastype \J{<$l$>$\tau$}
+      \vec{\delta} \satisfies \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau
     } 
 
     \inferrule { 
-      \J{?$l$=>$v$} \in G 
+      \J{?}l \fieldmap v \in \vec{g}
       \\
-      \vec{\delta}, \Gamma \satisfies v \hastype \tau 
-      \\\\
-      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v
+      \vec{\delta} \satisfies v \hastype \tau 
+      \\
+      \forall v' .\ \J{?} l \fieldmap v' \in \vec{g} \implies v' = v
     } {
-      \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
+      \vec{\delta} \satisfies \vec{g} \hastype l \fieldmap \tau
     } 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ORIGINAL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % \inferrule { 
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_l
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ALTERNATIVE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \inferrule { 
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-      \\
-      \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+      \vec{\delta} \satisfies \vec{f} \hastype \tau_l \J{->} \tau_r
+    } {
+      \vec{\delta} \satisfies \vec{f} \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
+    } 
+
+    \inferrule { 
+      \forall \vec{\sigma}.\ 
+      \vec{\delta} \satisfies p[\vec{\sigma}] \hastype \tau_l
+      \implies
+      \vec{\delta}  \satisfies e[\vec{\sigma}] \hastype \tau_r
       \\\\
-      \forall e .\ 
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+      \forall e_l.\ 
+        \vec{\delta} \satisfies e_l \hastype \tau_l 
         \implies
-        \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-        \land
-        (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+        (\forall \tau_l'\ \tau_r' .\ \vec{\delta} \satisfies \vec{f} \hastype \tau_l' \J{->} \tau_r'
+        \implies \neg (\vec{\delta} \satisfies e_l \hastype \tau_l'))
     } {
-      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+      \vec{\delta} \satisfies \vec{f} \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
     }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    } 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DERIVABLE??
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau_r$}
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
-    %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
-    %   \\\\
-    %   \forall e .\ 
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-    %     \implies
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-    %     \lor
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_n 
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % } 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$|$\tau_r$}
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$}
+      \vec{\delta} \satisfies e \hastype \tau_l
       \\
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_r$}
+      \vec{\delta} \satisfies e \hastype \tau_r
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$\&$\tau_r$}
+      \vec{\delta} \satisfies e \hastype \tau_l \J{\&} \tau_r
     } 
 
     \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l
+      \vec{\delta} \satisfies e \hastype \tau_l
+    } {
+      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau_r
+    } {
+      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau_l
       \\
-      \neg\ (\vec{\delta}, \Gamma \satisfies e \hastype \tau_r)
+      \neg\ (\vec{\delta} \satisfies e \hastype \tau_r)
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \typdiff \tau_r
+      \vec{\delta} \satisfies e \hastype \tau_l \typdiff \tau_r
     } 
 
     \inferrule { 
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies Q
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
       \\
-      \vec{\delta} \sqcup \vec{\delta}' \satisfies e \hastype \tau
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
     } {
-      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau$}
+      \vec{\delta} \satisfies e \hastype \J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau
     } 
 
     \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \sqcup \vec{\delta}' \satisfies Q \implies 
-      \vec{\delta} \sqcup \vec{\delta}', \Gamma \satisfies e \hastype \tau
+      \forall \vec{\delta}' .\ \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies 
+      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau$}
+      \vec{\delta}, \vec{\sigma} \satisfies e \hastype \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
     } 
 
     \inferrule { 
-      \vec{\delta} \ \alpha \slash \J{LFP[$\alpha$]$\tau$} \satisfies e \hastype \tau
+      \vec{\delta} \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{LFP[$\alpha$]$\tau$}
+      \vec{\delta} \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
     } 
 
 
-
     \inferrule { 
-      x \hastype \tau \in \Gamma 
-    } {
-      \vec{\delta}, \Gamma \satisfies x \hastype \tau 
-    } 
-
-    \inferrule { 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+      e \rightsquigarrow e'
       \\
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma}']
-      \\
-      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma' 
-      \\
-      \vec{\delta}, \Gamma' \satisfies e' \hastype \tau 
+      \vec{\delta} \satisfies e' \hastype \tau 
     } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+      \vec{\delta} \satisfies e \hastype \tau 
     } 
 
   \end{mathpar}
@@ -2911,7 +2859,7 @@ Relational reasoning.
 
 %     \text{map}(C\ c, t)
 %     &=& 
-%     \text{map}(C, t) \sqcup t(c)
+%     \text{map}(C, t) \cup t(c)
 %     & \C{step} 
 %     \\
 %   \end{array}\]
@@ -3086,7 +3034,7 @@ Relational reasoning.
 %       M_0, \Delta_0, \Delta_0 \entails M_2 \lessdot m 
 %     } {
 %       M_0, \Delta_0, \Delta_1 \ m<:\alpha 
-%       \entails M_1 \sqcup M_2 \ m \lessdot \alpha
+%       \entails M_1 \cup M_2 \ m \lessdot \alpha
 %     }
 
 %     \inferrule {
@@ -3188,7 +3136,7 @@ Relational reasoning.
 %       \\
 %       M, \Delta_0, \Delta_0 \entails \Tau_1 \ll z 
 %     } {
-%       M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \sqcup \Tau_1 \ll \alpha
+%       M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \cup \Tau_1 \ll \alpha
 %     }
 
 %     \inferrule {
@@ -3215,7 +3163,7 @@ Relational reasoning.
 %       \\\\
 %       M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
 %     } {
-%       M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \sqcup M_2\ m 
+%       M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \cup M_2\ m 
 %     }
 
 %     \inferrule {
@@ -3250,7 +3198,7 @@ Relational reasoning.
 %       \\
 %       M, \Delta_0, \Delta_0 \entails m \ll \Tau_1
 %     } {
-%       M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \sqcup \Tau_1
+%       M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \cup \Tau_1
 %     }
 
 %     \inferrule {
@@ -3319,7 +3267,7 @@ Relational reasoning.
 %       \entails
 %       \alpha 
 %       \lessdot 
-%       \Delta_2 \sqcup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
+%       \Delta_2 \cup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
 %     }
 
 %     \inferrule {
@@ -3380,7 +3328,7 @@ Relational reasoning.
 %       \\\\
 %       M, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
 %     } {
-%       M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \sqcup \Delta_3
+%       M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \cup \Delta_3
 %     }
 
 %     \inferrule {
@@ -3497,7 +3445,7 @@ Relational reasoning.
     \inferrule {
       \alpha \in \Alpha  
       \\
-      \alpha \in \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
+      \alpha \in \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
       \\
       \Delta \entails \Alpha \pitchfork \Delta'
     } {
@@ -3505,7 +3453,7 @@ Relational reasoning.
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FTV}(\tau_l) \sqcup \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
       \\
       \Delta \entails \Alpha \pitchfork \Delta'
     } {
@@ -4065,12 +4013,12 @@ Relational reasoning.
     \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
   $
   \item \Z $\contin
-    N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+    N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
     \I
     \Delta \entails \Alpha \pitchfork \Delta_i  
   $
   \item \Z $\contin
-    N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+    N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
   $
   \item \Z $\B{hypo }
     N \entails 
@@ -4156,11 +4104,11 @@ Relational reasoning.
       \\\\
       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
-      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \vec{\delta} \satisfies
       \tau
@@ -4187,11 +4135,11 @@ Relational reasoning.
       \\\\
       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
-      N \sqcup M \sqcup \text{FTV}(\Tau_l) \sqcup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      N\ \alpha_{h^-}, M, \Delta_i \sqcup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+      N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
     } {
       \vec{\delta} \satisfies
       \tau
@@ -4246,9 +4194,9 @@ Relational reasoning.
       \\
       \text{FTV}(\tau) \subseteq \Alpha
       \\\\
-      N, M, \Delta \sqcup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
+      N, M, \Delta \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
       \\
-      N, M, \Delta_i \sqcup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
+      N, M, \Delta_i \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
     } {
       \vec{\delta} \satisfies \tau \subtypes \tau_i 
       \land
@@ -4492,17 +4440,17 @@ Relational reasoning.
         \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v
       $ by definition 
       \item \Z\Z $
-        v = v[\vec{\sigma} \sqcup \epsilon] 
+        v = v[\vec{\sigma} \cup \epsilon] 
       $ by definition 
       \item \Z\Z $
-        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \sqcup \epsilon] 
+        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \cup \epsilon] 
       $ by substitution 
       \item \Z\Z $
         \vec{\delta}, \epsilon \satisfies \epsilon 
       $ by definition 
 
       \item \Z\Z $
-        \vec{\delta}, \Gamma \sqcup \epsilon \satisfies v \hastype \tau
+        \vec{\delta}, \Gamma \cup \epsilon \satisfies v \hastype \tau
       $ by definition 
       \item \Z\Z $
         \vec{\delta}, \Gamma \satisfies \J{$G$.$l$} \hastype \tau 
@@ -4515,34 +4463,34 @@ Relational reasoning.
     \item \Z $\B{case }
       \vec{\delta}, \vec{\sigma} \satisfies \Gamma
       \I
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma} \sqcup \vec{\sigma}']
+      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma} \cup \vec{\sigma}']
       \I
       \vec{\delta}, \vec{\sigma}' \satisfies \Gamma'
       \I
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
+      \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
     $
     \item \Z $\B{hypo }
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
+      \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
       \implies
-      \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
+      \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
     $
     \item \Z $\B{wrt }
       \vec{\sigma}\ e'\ \vec{\sigma}'\ \Gamma'
     $
       \item \Z\Z $
-        \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
+        \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
       $ by application
       \item \Z\Z $
-        \J{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \J{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$}
+        \J{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$}
       $ by definition 
       \item \Z\Z $
         \J{$e[\vec{\sigma}]$.$l$} = \J{$e$.$l$}[\vec{\sigma}]
       $ by definition 
       \item \Z\Z $
-        \J{$e'[\vec{\sigma} \sqcup \vec{\sigma}']$.$l$} = \J{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
+        \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$} = \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
       $ by definition 
       \item \Z\Z $
-        \J{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \J{$e'$.$l$}[\vec{\sigma} \sqcup \vec{\sigma}']
+        \J{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
       $ by substitution 
       \item \Z\Z $
         \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
@@ -4784,7 +4732,7 @@ Relational reasoning.
       \I
       A \notfree \tau_r
       \I
-      M_0 \sqcup \Alpha \preceq M_1
+      M_0 \cup \Alpha \preceq M_1
       \I
       \Delta_0 \preceq \Delta_1
       \I
@@ -4825,7 +4773,7 @@ Relational reasoning.
       \I
       A \notfree \tau_l
       \I
-      M_0 \sqcup \Alpha \preceq M_1
+      M_0 \cup \Alpha \preceq M_1
       \I
       \Delta_0 \preceq \Delta_1
       \I
@@ -4873,7 +4821,7 @@ Relational reasoning.
       M_0 \preceq M_1
     $
     \item \Z $\contin
-      \Delta_0 \sqcup \Delta_m \preceq \Delta_1
+      \Delta_0 \cup \Delta_m \preceq \Delta_1
       \I
       \J{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
     $
@@ -4907,13 +4855,13 @@ Relational reasoning.
     %   \\
     %   \Delta_0 \preceq \Delta_1
     %   \\
-    %   \widebar{\J{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \sqcup \widebar{\J{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+    %   \widebar{\J{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \cup \widebar{\J{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
     %   \given M_1, \Delta_1
     % } {
     %   \tau_l \subtypes \alpha
     %   \given M_1, \Delta_1
-    %   \sqcup \widebar{\tau_l<:z}^{z \in M}
-    %   \sqcup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
+    %   \cup \widebar{\tau_l<:z}^{z \in M}
+    %   \cup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
     % }
       \item \Z\Z \TODO{...} 
 
@@ -4923,7 +4871,7 @@ Relational reasoning.
     % \inferrule {
     %   \alpha \in M_0
     %   \\
-    %   \alpha <: \tau \in (\Delta_0 \sqcup \text{factor}(\Delta_0, \alpha))
+    %   \alpha <: \tau \in (\Delta_0 \cup \text{factor}(\Delta_0, \alpha))
     %   \\\\
     %   M_0 \preceq M_1
     %   \\
@@ -5153,7 +5101,7 @@ Relational reasoning.
   \label{theorem:model_subtyping_sequence_uncat}
   \begin{mathpar}
     \inferrule { 
-      \vec{\delta} \satisfies \Delta \sqcup \Delta'
+      \vec{\delta} \satisfies \Delta \cup \Delta'
     } {
       \vec{\delta} \satisfies \Delta
     } 
@@ -5167,7 +5115,7 @@ Relational reasoning.
   \begin{mathpar}
     \inferrule { 
     } {
-      \Delta \preceq \Delta \sqcup \Delta'
+      \Delta \preceq \Delta \cup \Delta'
     } 
   \end{mathpar}
   Proof:
@@ -5335,9 +5283,9 @@ Relational reasoning.
     \item \Z $\B{case }$ \TODO{...}
 
     % \inferrule { 
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \pattype \tau_p
+    %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \pattype \tau_p
     %   \\
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
     %   \\\\
     %   \forall e .\ 
     %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
@@ -5403,9 +5351,9 @@ Relational reasoning.
     %%% OLD 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % \item \Z $\B{case }
-    %   \vec{\delta}, \Gamma \sqcup \Gamma' \satisfies p \hastype \tau_l
+    %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \hastype \tau_l
     %   \I
-    %   \vec{\delta}, \Gamma \sqcup \Gamma'  \satisfies e \hastype \tau_r
+    %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
     % $
     % \item \Z $ 
     %   \contin
@@ -5486,11 +5434,11 @@ Relational reasoning.
       \item \Z\Z $e_1' = e_1'[\vec{\sigma}]$ by by theorem \ref{theorem:closed_substitution} 
       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
-      \item \Z\Z $\vec{\sigma} \sqcup \epsilon = \vec{\sigma}$ by definition 
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \sqcup \epsilon]$ by substitution 
-      \item \Z\Z $\Gamma \sqcup \epsilon = \Gamma$ by definition
+      \item \Z\Z $\vec{\sigma} \cup \epsilon = \vec{\sigma}$ by definition 
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \cup \epsilon]$ by substitution 
+      \item \Z\Z $\Gamma \cup \epsilon = \Gamma$ by definition
       \item \Z\Z $\vec{\delta}, \epsilon \satisfies \epsilon$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \sqcup \epsilon \satisfies \J{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
+      \item \Z\Z $\vec{\delta}, \Gamma \cup \epsilon \satisfies \J{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by definition
     \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by induction
   \item $\square$ by implication 
@@ -5538,18 +5486,18 @@ Relational reasoning.
       by theorem \ref{theorem:pattern_matching_consistency}
       \item \Z\Z $\vec{\sigma}\backslash\B{FV}(p) = \vec{\sigma}\backslash\B{dom}(\vec{\sigma}')$ 
       by theorem \ref{theorem:consistency_diffing}
-      \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
+      \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']$ 
       by theorem \ref{theorem:concatenation_substitution}
 
       \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
         by substitution
-      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ 
+      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ 
         by substitution 
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by definition 
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by definition 
+      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
 
       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \sqcup \vec{\sigma}']$ by substitution  
+      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
 
       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
@@ -5597,7 +5545,7 @@ Relational reasoning.
   \begin{mathpar}
     \inferrule {
     } {
-      e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \sqcup \vec{\sigma}']
+      e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']
     } 
   \end{mathpar}
   Proof:
