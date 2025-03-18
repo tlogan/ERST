@@ -114,10 +114,8 @@
 
 
 \section{Introduction}
+\label{sec:introduction}
 
-\paragraph{Context.} 
-
-%%%%%%%%%%%%%
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit that space of correctness.
 
@@ -148,7 +146,6 @@ However, the automatic detection of errors is still important. Python and Javasc
 evolved over the years to include extrinsic types, whereby the programmer annotates particular uses of
 their data constructors with types, rather than the declarations of data constructors.
  
-\paragraph{Gap.} 
 Because extrinsically typed languages do not require users to specify the weakest space each data constructor belongs to,
 extrinsically typed languages lack the type inference capabilities of intrinsically typed languages, such as ML. 
 A lack of type inference is a significant drawback, since it results in code cluttered with annotations in order
@@ -159,7 +156,6 @@ Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger 
 inferring refinement types for particular uses.
 Unfortunately, refinements aren't sufficient to handle the full range of data constructor reusability allowed by untyped languages.
 
-\paragraph{Innovation.} 
 In order to achieve a language with a high degree of both code reusability and type inference, 
 we introduce a novel type system with extrinsic type inference. 
 The type inference an reconstruct types based on how data constructors are used, such that the
@@ -182,7 +178,15 @@ reasoning to the extrinsic type system, one effectively gets an extrinsic altern
 or liquid types \cite{}.
 
 
+In section \ref{sec:overview}, we give examples of the expressions and types that the system reasons with,
+demonstrate a few of the ways the system can reason. 
+In section \ref{sec:forms}, we define the forms of expressions, types, and other key objects. 
+In section \ref{sec:dynamic_system}, we define the ground truth.
+In section \ref{sec:static_system}, we describe the verification and type inference mechanisms.
+
+
 \section{Overview}
+\label{sec:overview}
 
 
 \TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
@@ -308,7 +312,8 @@ of the functions' input types: \J{U\&D}.
 % \paragraph{Object oriented.}  
 
 
-\section{Structural System}
+\section{Forms}
+\label{sec:forms}
 
 \begin{definition} Expressions
   \label{def:expressions}
@@ -487,6 +492,7 @@ which allow expressing properties of expressions with varying levels of precisio
 
 
 \section{Dynamic System}
+\label{sec:dynamic_system}
 
 The programming language is pure and applicative. 
 
@@ -761,6 +767,7 @@ of a sound type proof system that can directly eliminate type forms.
 
 
 \section{Static System}
+\label{sec:static_system}
 The static semantics is a system for checking if the construction of an expression is viable.   
 
 \hfill
