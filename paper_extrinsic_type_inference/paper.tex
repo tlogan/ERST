@@ -120,97 +120,67 @@
 %%%%%%%%%%%%%
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit that space of correctness.
-Languages, such as Java and ML, are \textit{intrinsically typed}, 
-requiring nearly all terms to be associated with some type specified by the user. 
+
+In languages suchas as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
+That is, the data constructors are intrinsically typed.
+
 The clever design of ML allows annotations to be fairly sparse by 
-having types specified at constructor definitions and relying on type inference elsewhere.
+having types specified at constructor declarations and relying on type inference elsewhere.
 However, one of the drawbacks of intrinsically typed languages is that they prevent reusing of
-constructors in contexts that are less precise than their intrinsic specifications. For instance,
-a \emph{cons} constructor belonging to a list datatype could not be considered amongst a \emph{leaf} constructor
-defined as belong to a tree datatype. The user would have to define a new datatype that includes both isomorphs of both \emph{cons}
-and \emph{leaf} and also write functions that translate between the isomorphs and the list and tree constructors. 
-This not only bloats the codebase, but hurts either the runtime or compiler performance.
+constructors in contexts that are weaker than or incomparable to their declared spaces. 
+For instance, if a programmer declares data constructors \emph{cons} and \emph{nil} to belong to type list,
+and \emph{node} and \emph{empty} to belong to type tree, then it is impossible to construct function
+that accepts either a list or a tree, or returns either a list or a tree. The only option would be to define
+a new datatype that contains isomorphs of all of the above the data constructors, which would 
+likely add overhead to development, compilation, and execution.
 
-For various reasons that may include the reusability drawbacks, intrinsically typed languages have lost favor,
-and untyped or \textit{extrinsically typed} languages, 
+
+For various reasons, which may include the reusability drawbacks just mentioned, 
+intrinsically typed languages have lost favor,
+and untyped languages, 
 such as Javascript and Python, have increased in popularity. 
-Untyped languages place less initial burden on the programmer to define the upper bounds
-on specific combinations of constructors.
-The flexibility and reusability of writing code that doesn't have to fit some predefined restriction 
-may be seen as one of the benefits of these extrinsically typed languages over the well-studied intrinsically-typed languages.
-Unfortunately, this freedom makes static analysis or type inference much more challenging. 
 
-Despite the ever increasing use of untyped languages in production systems, 
-the need to automatically verify precise and expressive properties of systems has never been greater.
-To this end, researchers have extended the simple types (such as those found in ML) into 
-\textit{refinement types}, \textit{predicate subtyping}, and \textit{dependent types}. 
+Untyped languages remove the burden on the programmer to prescribe the weakest space each data constructor belongs to, 
+which in turn allows programmers to mix and match data constructors in
+various contexts, with the potential for enhancing the reusability and clarity of code.
 
-Refinement types offer greater precision than simple types, but still rely on intrinsic type specifications.
-Dependent types can express detailed relations, but may require users to provide proofs along with detailed annotations.
-Predicate subtyping offers some of the expressivity of dependent types, but with the automatic subtyping of refinement types.
-All of these techniques are based on intrinsic typing and therefore require users to provide additional annotations
-beyond the runtime behavior of their programs.
-
-The challenge with extrinsically typed languages is that they allow using constructors
-in any possible combination, rather than prescribing the upper bound of combinations as in
-the datatype mechanism of ML languages. Thus, the crux of typing extrinsically typed programs is
-to determine a precise type based on how constructors are used. 
-Since the way constructors are use may overlap is various ways, this form of reasoning about types
-requires a notion of subtyping.
-Type systems for extrinsically typed languages have relied on unions and intersections between types to 
-represent precise types based on how expressions are used in combination. 
-
+However, the automatic detection of errors is still important. Python and Javascript have 
+evolved over the years to include extrinsic types, whereby the programmer annotates particular uses of
+their data constructors with types, rather than the declarations of data constructors.
+ 
 \paragraph{Gap.} 
-Because extrinsically typed languages do not require users to specify the upper bounds of program expressions,
-there are many untyped programs that cannot benefit from the typing techniques of 
-intrinsically typed languages. Furthermore, extrinsically typed languages do not require users to provide proofs,
-that have no runtime behavior, as is sometimes necessary in dependently typed systems to verify more expressive types.   
-For instance, the liquid type system \cite{} can verify and infer some relational properties, 
-but it requires users to specify ML-style base types and a set of logical qualifiers to draw from.
-On the other hand, existing extrinsically typed techniques can not represent richer notions of relations 
-beyond the mere shapes of expressions.
-Thus, the challenge is to bring rich expressive types to extrinsically typed languages.
+Because extrinsically typed languages do not require users to specify the weakest space each data constructor belongs to,
+extrinsically typed languages lack the type inference capabilities of intrinsically typed languages, such as ML. 
+A lack of type inference is a significant drawback, since it results in code cluttered with annotations in order
+to achieve any safety assurance.
+
+There have some relaxations of intrinsic type systems, allowing for sightly more code reusability.
+Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger spaces than their intrinsic types, by
+inferring refinement types for particular uses.
+Unfortunately, refinements aren't sufficient to handle the full range of data constructor reusability allowed by untyped languages.
 
 \paragraph{Innovation.} 
-To overcome the limitations of intrinsic type systems and expand the kinds of programs and types that can be type checked, we introduce \textit{extrinsic relational type inference}: 
-a novel system that automatically infers expressive properties from untyped functional programs. 
+In order to achieve a language with a high degree of both code reusability and type inference, 
+we introduce a novel type system with extrinsic type inference. 
+The type inference an reconstruct types based on how data constructors are used, such that the
+type of a data constructor in one context, may be stronger, weaker, or incomparable to the type of 
+the same data constructor in a different context. 
 
-The main idea behind relational typing is to leverage subtyping as a means to express relations
-between objects. This completely obviates the need for the two-level type language
-used in liquid types or predicate subtyping. There is no special first-order predicate language. 
-In relational typing, a relation is just a type in a subtyping lattice, just as a shape is just  
-a type in a subtyping lattice. A subtyping judgment can degenerate into a typing judgment
-when the left side or strong side of subtyping is a singleton type (type with a single inhabitant).
-\TODO{insert example of (succ zero, cons nil) subs nat list}
-Additionally, two separate relations may be compared via subtyping to say that one relation may hold true for a superset of inhabitants 
-of another.
-\TODO{insert example of even list subs nat list}
-By embedding the notion of relations into subtyping the system can reuse techniques for inferring unions and
-intersections over simple types, which are necessary in an extrinsic setting. 
+Due to the fact that a data constructor can belong to variety of types of varying strengths,
+the system leverages subtyping to check, reconstruct, and even define types.
 
-In addition to checking that subtyping holds, the system is able to infer weak 
-parameter types and strong return types of functions, which then serve as constraints
-to be checked according to the applications of functions.
+As a byproduct of inferring extrinsic types using subtyping, the system also happens to infer the principal types for 
+certain kinds of higher-order functions, which was first solved by SuperF \cite{}. 
+However, SuperF's type system and language is purposefully 
+restricted and isn't sufficient for the high-degree of code reusability allowed by untyped languages.
 
-For comparison, the meaning of subtyping relations in relational types corresponds 
-to the meaning of implication between qualifiers in liquid types.
+The system relies on intersection, union, and type-indexed universal and existential types, and inductive types, in order 
+to construct strong types from the observed programs. 
+To keep things simple, we restrict the reasoning of infinite types to scalars. In future work, 
+but we will extend the system to include inductive relational reasoning. By adding inductive relational
+reasoning to the extrinsic type system, one effectively gets an extrinsic alternative to CHC solving \cite{} 
+or liquid types \cite{}.
 
-While the purely functional setting presented in this work is not suitable for practical programming,
-future work could extend it to incorporate side-effects to make it practical.
-Alternatively, the purely functional setting could be viewed as an alternative formal foundation more
-mathematics, allowing for greater proof automation by allowing reuse of proofs across the transitive closure of 
-proposition subtyping.
-
-
-\TODO{Describe the difference between extrinsic and intrinsic, in terms of descriptive and prescriptive}
-
-\TODO{Describe the gap between refinement types (Pfenning) and full extrinsic types (using expansion types)}
-
-\TODO{Mention the gap between SuperF and its principal types and full extrinsic type inference}
-
-\TODO{mention how future work handles inductive relations represented as types}
-
-\TODO{mention how inductive relational extrinsic type inference is an extrinsic alternative to CHC solving or liquid types}
 
 \section{Overview}
 
@@ -219,39 +189,6 @@ proposition subtyping.
 Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
 }
 
-% \paragraph{Parametric types}
-% Universal types. Existential type. System F-style. Parameterization of types indexed by types (i.e. second order).
-
-% \paragraph{Combination types.}
-% One of the advantages of untyped programs is that they may be written in a flexible manner.
-% Subtyping is necessary safely reflect the flexibility of compositions in programs, without too many false failures.
-% Another main advantage of untyped programs is that users don't have to provide type specifications.
-% Thus, a general way of constructing types from compositions encountered in the the program is necessary.
-% Some compositions indicate that a type should strengthen, and some compositions indicate that a type should weaken.
-% To this end, the type language uses intersection and union combinators, 
-% whose semantics are degenerate versions of those in set-theory.
-
-% For instance, when inferring the type of a function, 
-% the system's goal is to infer the weakest valid parameter type and the strongest valid return type for a function definition.
-% It strengthens the parameter type with intersection and weakens the return type with union according to the function body,
-% to arrive at a valid type for the function.  
-
-% By contrast, the liquid type language relies on the less flexible tagged unions of ML datatypes, 
-% which is sufficient in its setting since those types are specified by the user. 
-% Likewise, it does not rely on union to weaken to a valid return type. 
-% Instead, it weakens to the strongest valid return type by dropping conjunctions from 
-% the return type's qualifiers until a valid return type is found.
-
-% \paragraph{Inductive types.} Similar to ML datatypes.
-
-% \paragraph{Constraint types.}
-% In addition to expressing the shapes of terms, the system should be able express relations between terms,
-% such as "a list has the length of some natural number".
-% Rather than using a distinct syntax for relational predicates, 
-% the type language treats relations as just another type thereby reusing machinery already 
-% available for types, such as existential types, union types, and inductive types.
-% Since parametric types are second order, constraining relations requires subtyping.
-% Thus, parametric types are extended with constraints in the form of subtyping.
 
 For a given program, type inference constructs a very precise type. Some programs are simple enough
 such that type inference generates singleton types. 

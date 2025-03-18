@@ -116,7 +116,57 @@
 
 \section{Introduction}
 
+\paragraph{Context.} 
+Despite the ever increasing use of untyped languages in production systems, 
+the need to automatically verify precise and expressive properties of systems has never been greater.
+To this end, researchers have extended the simple types (such as those found in ML) into 
+\textit{refinement types}, \textit{predicate subtyping}, and \textit{dependent types}. 
+
+Refinement types offer greater precision than simple types, but still rely on intrinsic type specifications.
+Dependent types can express detailed relations, but may require users to provide proofs along with detailed annotations.
+Predicate subtyping offers some of the expressivity of dependent types, but with the automatic subtyping of refinement types.
+All of these techniques are based on intrinsic typing and therefore require users to provide additional annotations
+beyond the runtime behavior of their programs.
+
+\paragraph{Gap.} 
+Furthermore, extrinsically typed languages do not require users to provide proofs,
+that have no runtime behavior, as is sometimes necessary in dependently typed systems to verify more expressive types.   
+For instance, the liquid type system \cite{} can verify and infer some relational properties, 
+but it requires users to specify ML-style base types and a set of logical qualifiers to draw from.
+On the other hand, existing extrinsically typed techniques can not represent richer notions of relations 
+beyond the mere shapes of expressions.
+Thus, the challenge is to bring rich expressive types to extrinsically typed languages.
+
+\paragraph{Innovation.} 
+
+The main idea behind relational typing is to leverage subtyping as a means to express relations
+between objects. This completely obviates the need for the two-level type language
+used in liquid types or predicate subtyping. There is no special first-order predicate language. 
+In relational typing, a relation is just a type in a subtyping lattice, just as a shape is just  
+a type in a subtyping lattice. A subtyping judgment can degenerate into a typing judgment
+when the left side or strong side of subtyping is a singleton type (type with a single inhabitant).
+Additionally, two separate relations may be compared via subtyping to say that one relation may hold true for a superset of inhabitants 
+of another.
+
+By embedding the notion of relations into subtyping the system can reuse techniques for inferring unions and
+intersections over simple types, which are necessary in an extrinsic setting. 
+
+In addition to checking that subtyping holds, the system is able to infer weak 
+parameter types and strong return types of functions, which then serve as constraints
+to be checked according to the applications of functions.
+
+For comparison, the meaning of subtyping relations in relational types corresponds 
+to the meaning of implication between qualifiers in liquid types.
+
+While the purely functional setting presented in this work is not suitable for practical programming,
+future work could extend it to incorporate side-effects to make it practical.
+Alternatively, the purely functional setting could be viewed as an alternative formal foundation more
+mathematics, allowing for greater proof automation by allowing reuse of proofs across the transitive closure of 
+proposition subtyping.
+
+
 \section{Overview}
+
 
 \paragraph{Infinite Path Preservation} 
 Consider the function \J{repeat} that takes a natural number and returns a list of whose length is that number. 
