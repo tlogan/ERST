@@ -375,7 +375,7 @@ of the functions' input types: \J{U\&D}.
 
 \begin{definition} Expressions
   \label{def:expressions}
-  \[\begin{array}[t]{r@{}l}
+  \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{e} 
     & 
     \is 
@@ -387,27 +387,24 @@ of the functions' input types: \J{U\&D}.
       \vec{f} \sep 
       e\J{.}l \sep
       e\J{(}e\J{)} \sep
+      \\
       \J{loop(}e\J{)} \sep
-      ...
+      \J{let}\ x\ \J{=}\ e\ \J{in}\ e \sep
+      e \J{,} e
     \end{array}
+    & \com{expression}
     \\
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
+    & \com{record expr}
     \\
     \nonterm{r} & \is \J{?}l \fieldmap e
+    & \com{entry expr}
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
+    & \com{function expr}
     \\
     \nonterm{f} & \is \J{?}p\J{=>}e
-    \\
-    \nonterm{p} & \is 
-      x \sep
-      \J{@} \sep
-      \J{<}l\J{>}p \sep
-      \vec{k}
-    \\
-    \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
-    \\
-    \nonterm{k} & \is \J{?}l \fieldmap p
+    & \com{path expr}
   \end{array}\]
 \end{definition}
 
@@ -416,6 +413,41 @@ of the form in definition \ref{def:expressions}. The forms of expressions
 enable function abstraction, function application, tagged constructions, record construction, record projection,
 and pattern matching. These forms enable us to express non-trivial programs. They also allow
 for compositions that have no reasonable semantics.  
+
+\begin{definition} Patterns 
+  \label{def:patterns}
+  \[\begin{array}[t]{r@{}l@{}r}
+    \nonterm{p} & \is 
+      x \sep
+      \J{@} \sep
+      \J{<}l\J{>}p \sep
+      \vec{k}
+    & \com{pattern}
+    \\
+    \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
+    & \com{record pat}
+    \\
+    \nonterm{k} & \is \J{?}l \fieldmap p
+    & \com{entry pat}
+  \end{array}\]
+\end{definition}
+
+\begin{definition} Values 
+  \label{def:values}
+  \[\begin{array}[t]{r@{}l@{}r}
+    \nonterm{v} & \is 
+      \J{@} \sep
+      \J{<}l\J{>}v \sep
+      \vec{g}
+    & \com{value}
+    \\
+    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
+    & \com{record val}
+    \\
+    \nonterm{g} & \is \J{?}l \fieldmap v
+    & \com{entry val}
+  \end{array}\]
+\end{definition}
 
 \hfill
 \begin{definition} Types 
@@ -481,7 +513,16 @@ for compositions that have no reasonable semantics.
     %%%%
     % P -> Q <: A | B -> C  ...  P -> Q <: (A -> C) & (B -> C) ...  P -> Q <: (A -> C), P -> Q <: (B -> C) .. A <: P, Q <: C, B <: P 
     %  P -> Q <: A | B -> C  ... A | B <: P, Q <: C ... A <: P, B <: P, Q <: C
-    \\\\
+  \end{array}\]
+\end{definition}
+\hfill
+
+The system leverages types of the forms in Definition \ref{def:types}, 
+which allow expressing properties of expressions with varying levels of precisions. 
+
+\begin{definition} Type Ancillaries 
+  \label{def:type_ancillaries}
+  \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
       \J{EXI[}\vec{\alpha}\ \Delta \J{]} \rho \sep 
@@ -500,16 +541,12 @@ for compositions that have no reasonable semantics.
     & \com{pattern type}
     \\
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
-    & \com{type variable sequence}
+    & \com{type var seq}
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta\ \J{;} \tau \J{<:} \tau
-    & \com{subtyping environment}
+    & \com{subtyping environ}
   \end{array}\]
 \end{definition}
-\hfill
-
-The system leverages types of the forms in Definition \ref{def:types}, 
-which allow expressing properties of expressions with varying levels of precisions. 
 
 
 \section{Dynamic System}
