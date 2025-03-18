@@ -47,7 +47,7 @@
 
 \begin{document}
 
-\newcommand{\J}[1]{\texttt{\color{RoyalBlue} #1}}
+\newcommand{\J}[1]{\small \texttt{\color{RoyalBlue} #1}}
 \newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
@@ -543,7 +543,7 @@ which allow expressing properties of expressions with varying levels of precisio
     \nonterm{\vec{\alpha}} & \is \epsilon \sep \vec{\alpha}\ \alpha 
     & \com{type var seq}
     \\
-    \nonterm{\Delta} & \is \epsilon \sep \Delta\ \J{;} \tau \J{<:} \tau
+    \nonterm{\Delta} & \is \epsilon \sep \Delta \J{;} \tau \J{<:} \tau
     & \com{subtyping environ}
   \end{array}\]
 \end{definition}
@@ -846,7 +846,7 @@ The static semantics is a system for checking if the construction of an expressi
 
     \inferrule {
     } {
-      \text{desugar}(\tau_l \J{*} \tau_r) = (\J{left} \fieldmap \tau_l)  \J{*} (\J{right} \fieldmap \tau_r)
+      \text{desugar}(\tau_l \J{*} \tau_r) = (\J{left} \fieldmap \tau_l)  \J{\&} (\J{right} \fieldmap \tau_r)
     }
   \end{mathpar}
 \end{definition} 
@@ -1200,16 +1200,16 @@ and adds the annotation to the typing environment when checking the contintuatio
       \\
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
-      \alpha_\nu \downarrow \Delta_\nu\ \J{;} \tau_l \J{<:} \tau_r 
+      \alpha_\nu \downarrow \Delta_\nu \J{;} \tau_l \J{<:} \tau_r 
       \fallingdotseq 
-      \alpha_\mu \uparrow \Delta_\mu\ \J{;} \tau_l \J{<:} \tau_r
+      \alpha_\mu \uparrow \Delta_\mu \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
     } {
-      \alpha_\nu \downarrow \Delta_\nu\ \J{;} \alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r
+      \alpha_\nu \downarrow \Delta_\nu \J{;} \alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r
       \fallingdotseq 
-      \alpha_\mu \uparrow \Delta_\mu\ \J{;} \alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu 
+      \alpha_\mu \uparrow \Delta_\mu \J{;} \alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu 
     }
   \end{mathpar}
 \end{definition}
@@ -1290,7 +1290,7 @@ as well as additional rules for increased precision.
     \inferrule {
     } {
       \tau \subtypes \tau \given \Omega 
-    }\lab{1}
+    }
   \end{mathpar}
 \end{definition}
 \hfill
@@ -1318,7 +1318,7 @@ proof subtyping simply holds without any updates to the world.
     \inferrule {
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega 
+      l \fieldmap \tau_l \subtypes l \fieldmap \tau_r \given \Omega 
     }
 
     \inferrule {
@@ -1386,13 +1386,13 @@ contains the space between types of the lower bound.
     \inferrule {
       \tau
       \subtypes
-      (l\J{->}\tau_a)
+      (l \fieldmap \tau_a)
       \J{\&}
-      (l\J{->}\tau_b)
+      (l \fieldmap \tau_b)
       \given \Omega 
     } {
       \tau \subtypes 
-      l\J{->}(\tau_{a}\J{\&}\tau_{b})
+      l \fieldmap (\tau_{a}\J{\&}\tau_{b})
       \given \Omega
     }
 
@@ -1500,7 +1500,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta'\ \J{;} \alpha\J{<:}\tau) 
+      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta' \J{;} \alpha\J{<:}\tau) 
     }
 
     \inferrule {
@@ -1539,7 +1539,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\
       \Delta_\open \given \vec{\alpha}_\closed', \Delta'
     } {
-      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta'\ \J{;} \tau\J{<:}\alpha_\open) 
+      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta' \J{;} \tau\J{<:}\alpha_\open) 
     }
 
     \inferrule {
@@ -1813,7 +1813,7 @@ This rule is the relational analog of the open variable rules.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -1823,7 +1823,7 @@ This rule is the relational analog of the open variable rules.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
     }
   \end{mathpar}
 \end{definition}
@@ -1841,7 +1841,7 @@ This rule is the relational analog of the open variable rules.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -1851,7 +1851,7 @@ This rule is the relational analog of the open variable rules.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;}  \tau_r \J{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
+      (\vec{\alpha}_\closed, \Delta \J{;}  \tau_r \J{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2062,7 +2062,7 @@ Relational reasoning.
       \given \vec{\alpha}', \Delta'
     } {
       \rho \subtypes \J{LFP[}\alpha\J{]}\tau
-      \given \vec{\alpha}', \Delta'\ \J{;} \rho \J{<:} \J{LFP[}\alpha\J{]}\tau
+      \given \vec{\alpha}', \Delta' \J{;} \rho \J{<:} \J{LFP[}\alpha\J{]}\tau
     }
   \end{mathpar}
 \end{definition}
@@ -2083,13 +2083,13 @@ Relational reasoning.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
     }
 
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
     }
 
     \inferrule {
@@ -2097,9 +2097,9 @@ Relational reasoning.
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2123,7 +2123,7 @@ Relational reasoning.
       (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau_l) 
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) 
       \entails 
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -2131,7 +2131,7 @@ Relational reasoning.
     \inferrule {
       (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \tau_l \J{<:} \tau_r) 
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) 
       \entails
       \alpha_\closed  \wr \rho \subtypes \tau \safe
     }
@@ -2141,9 +2141,9 @@ Relational reasoning.
       \\
       \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
       \\\\
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     } {
-      (\vec{\alpha}_\closed, \Delta\ \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+      (\vec{\alpha}_\closed, \Delta \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2211,7 +2211,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
+      \llbracket \Delta \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
     }
 
     \inferrule {
@@ -2219,7 +2219,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
 
     \inferrule {
@@ -2559,7 +2559,7 @@ Relational reasoning.
       \\\\
       \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
     } {
-      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q\ \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q'\ \J{;} \tau_l' \J{<:} \tau_r')
+      \llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \Delta_q \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q' \J{;} \tau_l' \J{<:} \tau_r')
     }
 
   \end{mathpar}
@@ -2659,7 +2659,7 @@ Relational reasoning.
     \inferrule {
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
+      \llbracket \Delta \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
     }
 
     \inferrule {
@@ -2667,7 +2667,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
     \\
     \inferrule {
@@ -2678,7 +2678,7 @@ Relational reasoning.
     \inferrule {
       \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau')
     } {
-      \llbracket \Delta\ \J{;} \tau \J{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \J{|} \tau)
+      \llbracket \Delta \J{;} \tau \J{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \J{|} \tau)
     }
 
     \inferrule {
@@ -2686,7 +2686,7 @@ Relational reasoning.
       \\
       \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
     } {
-      \llbracket \Delta\ \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ = (\Delta'\ \J{;}\tau_l \J{<:} \tau_r, \tau)
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
   \end{mathpar}
   \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
