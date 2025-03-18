@@ -664,34 +664,15 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
       \implies
       \vec{\delta}  \satisfies e[\vec{\sigma}] \hastype \tau_r
       \\\\
-      \forall e_l.\ 
-        \vec{\delta} \satisfies e_l \hastype \tau_l 
-        \implies
-        (\forall \tau_l'\ \tau_r' .\ \vec{\delta} \satisfies \vec{f} \hastype \tau_l' \J{->} \tau_r'
-        \implies \neg (\vec{\delta} \satisfies e_l \hastype \tau_l'))
+      \forall \tau_l'\ \tau_r'.\ 
+      \vec{\delta} \satisfies \vec{f} \hastype \tau_l' \J{->} \tau_r'
+      \implies
+      \vec{\delta} \satisfies \tau_l \subtypes \tau_l'
+      \implies
+      \vec{\delta} \satisfies \tau_r' \subtypes \tau_r
     } {
       \vec{\delta} \satisfies \vec{f} \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
     }
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-      \\
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{\&} \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
 
     \inferrule { 
       \vec{\delta} \satisfies e \hastype \tau_l
@@ -702,11 +683,11 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
     } 
 
     \inferrule { 
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
+      \vec{\delta} \satisfies e \hastype \tau_l
       \\
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
+      \vec{\delta} \satisfies e \hastype \tau_r
     } {
-      \vec{\delta} \satisfies e \hastype \J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau
+      \vec{\delta} \satisfies e \hastype \tau_l \J{\&} \tau_r
     } 
 
     \inferrule { 
@@ -722,6 +703,25 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
       \vec{\delta} \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
     } 
 
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau_l
+    } {
+      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
+    } 
+
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau_r
+    } {
+      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
+    } 
+
+    \inferrule { 
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
+      \\
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau
+    } 
 
     \inferrule { 
       e \rightsquigarrow e'
@@ -730,7 +730,6 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
     } {
       \vec{\delta} \satisfies e \hastype \tau 
     } 
-
   \end{mathpar}
 \end{definition}
 \hfill
