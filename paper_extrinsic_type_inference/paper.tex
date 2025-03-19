@@ -47,7 +47,7 @@
 
 \begin{document}
 
-\newcommand{\J}[1]{\small \texttt{\color{RoyalBlue} #1}}
+\newcommand{\J}[1]{\texttt{\small \color{RoyalBlue} #1}}
 \newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
@@ -187,15 +187,15 @@ In section \ref{sec:static_system}, we describe the verification and type infere
 
 \section{Overview}
 \label{sec:overview}
+We designed the type system around a simple applicative language with pattern matching,
+since such a language is syntactically related to predicate logic. Likewise,
+we designed the language of types to share many similarities with predicate logic. 
+To get a feel for the languages and reasoning capabilities, it's best to start by
+looking at a few examples.
 
-
-
-For a given program, type inference constructs a very precise type. Some programs are simple enough
-such that type inference generates singleton types. 
-
-We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
 \paragraph{Finite Paths Preservation.}
+A function can be constructed from multiple paths. 
 Consider the function $\J{talky}$, which completes a simple English phrase:
 
 \[
@@ -212,38 +212,49 @@ Consider the function $\J{talky}$, which completes a simple English phrase:
   \end{array}
 \]
 
-This program is defined by paths over hardcoded tags.
-The system infers the type to be an intersection of implication types:
+Since there is no recursion, the number of paths is finite.
+For these simple finite functions, the type system constructs
+an isomorphic type without any weakening in precision. 
+
+\[
+  \J{(<hello> @ -> <world> @) \& (<good> @ -> <morning> @) \& (<thank> @ -> <you> @)}
+\]
+
+Each path is represented using the implication type,
+and the paths are joined together using the intersection type.
+
+
+\paragraph{Finite Paths Selection.}
+Although the type of function $\J{talky}$ is no weaker than the actual function,
+the type syntax avails it to approximate reasoning at application.
+Consider an application of the function to a variable argument. 
+
 \[
   \begin{array}[t]{@{} l}
-    \J{TOP}
+    \J{let x : <hello> @ | <thank> @ = ... in}
     \\
-    \J{\& (<hello> @ -> <world> @)}
+    \J{...}
     \\
-    \J{\& (<good> @ -> <morning> @)} 
+    \J{talky(x)} 
     \\
-    \J{\& (<thank> @ -> <you> @)}
+    \J{...}
   \end{array}
 \]
 
-Essentially, the program is so simple, that its type has the exact same meaning merely dressed in a different syntax.
+If the type system affirms the type annotation,
+then it goes on to infer the type of the application. 
+\[
+  \J{<world> @ | <you> @}
+\]
 
-\paragraph{Finite Paths Selection.}
-Consider the application \J{talky(x)} where \J{x} has the type \J{(<hello> @)|(<thank> @)}. 
-Type inference breaks apart the function type's intersection into paths and 
-constructs the strongest output type possible by expanding the output type
-for each viable path. Since only two of the three paths 
-match the type of the argument, type inference determines the type of the application to be the type 
-\J{(<world> @)|(<you> @)}.
-Broadening from the bottom up contrasts with refinement type systems, which start from
-the weakest type intrinsic to the constructors and refines down to a stronger type
-through intersections of types or conjunctions of qualifiers.
-
+The type system effectively applies application to all possible arguments
+and unions the results derived from only the paths of those a arguments. 
 
 
 \paragraph{Scalar Induction.} 
-Now consider a function \J{boo} whose input type is the natural numbers. 
-Suppose we have the application \J{boo(n)} where n guaranteed to be an even number.
+\TODO{...}
+Now consider a function $\J{boo}$ whose input type is the natural numbers. 
+Suppose we have the application $\J{boo(n)}$ where n guaranteed to be an even number.
 \[
   \J{LFP[R] <zero> @ | <succ> <succ> R}
 \]
@@ -254,20 +265,20 @@ In particular, type inference leverages the inductive hypothesis, by learning th
 types hold for all the recursive constraints of the stronger type. 
 In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
 on a single variable.
-In the case of comparing two relations such as \text{natList}(\J{T}) and a corresponding even version, 
+In the case of comparing two relations such as $\text{natList}(\J{T})$ and a corresponding even version, 
 the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
 constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
 \paragraph{Finite Paths Integration.}
-Consider two functions: \J{uno} of type \J{U->V} and \J{dos} of type \J{D->E}. 
-Now suppose these two functions are called on the same variable, e.g. \J{(uno(x),dos(x))}.
-Type inference learns that the type of \J{x} can be no weaker than the intersection
-of the functions' input types: \J{U\&D}. 
+Consider two functions: $\J{uno}$ of type $\J{U->V}$ and $\J{dos}$ of type $\J{D->E}$. 
+Now suppose these two functions are called on the same variable, e.g. $\J{(uno(x),dos(x))}$.
+Type inference learns that the type of $\J{x}$ can be no weaker than the intersection
+of the functions' input types: $\J{U\&D}$. 
 
 \TODO{note the connection to principal type}
 
-\TODO{consinder using functional example from SuperF: \J{foo f = (f 123, f True)}}
+\TODO{consinder using functional example from SuperF: $\J{foo f = (f 123, f True)}$}
 
 
 
