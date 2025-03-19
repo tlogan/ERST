@@ -47,7 +47,9 @@
 
 \begin{document}
 
-\newcommand{\J}[1]{\texttt{\small \color{RoyalBlue} #1}}
+\newcommand{\Par}[1]{\paragraph{\textbf{#1}}}
+\newcommand*{\code}{\fontfamily{pcr}\selectfont}
+\newcommand{\J}[1]{\texttt{\small \code #1}}
 \newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
@@ -69,6 +71,7 @@
 \newcommand{\closed}{\bullet}
 \newcommand{\local}{\blacktriangle}
 \newcommand{\open}{\circ}
+
 
 
 % \newcommand{\tl}{\textasciitilde{}}
@@ -194,9 +197,9 @@ To get a feel for the languages and reasoning capabilities, it's best to start b
 looking at a few examples.
 
 
-\paragraph{Finite Paths Preservation.}
+\Par{Finite Paths Preservation.}
 A function can be constructed from multiple paths. 
-Consider the function $\J{talky}$, which completes a simple English phrase:
+Consider the function $\J{talky}$, which completes a simple English phrase.
 
 \[
   \begin{array}[t]{@{} l}
@@ -217,14 +220,21 @@ For these simple finite functions, the type system constructs
 an isomorphic type without any weakening in precision. 
 
 \[
-  \J{(<hello> @ -> <world> @) \& (<good> @ -> <morning> @) \& (<thank> @ -> <you> @)}
+  \begin{array}[t]{@{} l}
+    \J{TOP}
+      \\
+      \J{\& <hello> @ -> <world> @}
+      \\
+      \J{\& <good> @ -> <morning> @} 
+      \\
+      \J{\& <thank> @ -> <you> @} 
+  \end{array}
 \]
 
 Each path is represented using the implication type,
 and the paths are joined together using the intersection type.
 
-
-\paragraph{Finite Paths Selection.}
+\Par{Finite Paths Selection.}
 Although the type of function $\J{talky}$ is no weaker than the actual function,
 the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
@@ -250,8 +260,80 @@ then it goes on to infer the type of the application.
 The type system effectively applies application to all possible arguments
 and unions the results derived from only the paths of those a arguments. 
 
+\Par{Finite Paths Integration.}
+Consider two functions: $\J{uno}$ of type $\J{U->V}$ and $\J{dos}$ of type $\J{D->E}$. 
+Now suppose these two functions are called on the same variable, e.g. $\J{(uno(x),dos(x))}$.
+Type inference learns that the type of $\J{x}$ can be no weaker than the intersection
+of the functions' input types: $\J{U\&D}$. 
 
-\paragraph{Scalar Induction.} 
+\TODO{note the connection to principal type}
+
+\TODO{consinder using functional example from SuperF: $\J{foo f = (f 123, f True)}$}
+
+\Par{Infinite Paths Factorization.}
+A function can represent infinite paths by using recursion.
+Consider the function $\J{repeat}$, which takes an item and a natural number
+as inputs and returns a list of that item repeated the input number of times.
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{let repeat = ? x => loop(? self =>}
+      \\
+      \I \J{? <zero> @ => <nil> @}
+      \\
+      \I \J{? <succ> n => <cons>(x,self(n))}
+      \\
+      \J{)}
+  \end{array}
+\]
+
+One possibility for constructing the type of the recursive function would
+be to follow the idea from finite paths and construct a type 
+that preserves all the paths. If our type system had a greatest fixed point
+type constructor, then we could concisely represent such a type with minimal
+rewriting.
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{ALL[T] T -> GFP[R]( TOP} 
+      \\
+      \I \J{\& <zero> @ -> <nil> @}
+      \\
+      \I \J{\& (ALL[N L ; R <: N->L] <succ> N -> <cons> T*L)}
+      \\
+      \J{)} 
+  \end{array}
+\]
+
+Although the strength of precision of this type would be very beneficial,
+reasoning with such a type would be complicated. To keep the type system as
+simple as possible for the purpose of extrinsic type inference with a high-degree
+of code reusability, we leave such reasoning of inductive and co-inductive types out of
+the type system. 
+
+The type system avoids constructing a relational type, and instead, it
+constructs a type that is significantly weaker than the actual behavior of the function,
+by factoring the paths into an inductive space of inputs and an inductive space of outputs. 
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{ALL[T] T ->} 
+      \\
+      \I \J{(LFP[R] <zero> @ | <succ> R)}
+      \\
+      \I \J{->}
+      \\
+      \I \J{(LFP[R] <nil> @ | <cons> T*R)}
+  \end{array}
+\]
+
+This eager approximation enables the type system
+to simply reason with inductive scalars and avoids the need for complicated
+relational reasoning. In a follow up paper,
+we will show how to rectify this limitation by augmenting the type system with
+mechanisms for inductive relational reasoning.
+
+\Par{Scalar Induction.} 
 \TODO{...}
 Now consider a function $\J{boo}$ whose input type is the natural numbers. 
 Suppose we have the application $\J{boo(n)}$ where n guaranteed to be an even number.
@@ -270,25 +352,6 @@ the inductive hypothesis would be a subtyping constraint on a pair of variables,
 constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
-\paragraph{Finite Paths Integration.}
-Consider two functions: $\J{uno}$ of type $\J{U->V}$ and $\J{dos}$ of type $\J{D->E}$. 
-Now suppose these two functions are called on the same variable, e.g. $\J{(uno(x),dos(x))}$.
-Type inference learns that the type of $\J{x}$ can be no weaker than the intersection
-of the functions' input types: $\J{U\&D}$. 
-
-\TODO{note the connection to principal type}
-
-\TODO{consinder using functional example from SuperF: $\J{foo f = (f 123, f True)}$}
-
-
-
-\paragraph{Infinite Path Factorization} 
-
-\TODO{Note how we separate immediately on intrudction of paths, rather than delyaing until elimination rule}
-
-\TODO{this limitation will be rectified in the follow up paper by leveraging reasoning over inductive relational types}
-
-\TODO{In this work, the inductive relational type is syntactically valid but not semantically valid}
 
 
 
