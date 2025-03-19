@@ -260,16 +260,6 @@ then it goes on to infer the type of the application.
 The type system effectively applies application to all possible arguments
 and unions the results derived from only the paths of those a arguments. 
 
-\Par{Finite Paths Integration.}
-Consider two functions: $\J{uno}$ of type $\J{U->V}$ and $\J{dos}$ of type $\J{D->E}$. 
-Now suppose these two functions are called on the same variable, e.g. $\J{(uno(x),dos(x))}$.
-Type inference learns that the type of $\J{x}$ can be no weaker than the intersection
-of the functions' input types: $\J{U\&D}$. 
-
-\TODO{note the connection to principal type}
-
-\TODO{consinder using functional example from SuperF: $\J{foo f = (f 123, f True)}$}
-
 \Par{Infinite Paths Factorization.}
 A function can represent infinite paths by using recursion.
 Consider the function $\J{repeat}$, which takes an item and a natural number
@@ -352,11 +342,46 @@ the inductive hypothesis would be a subtyping constraint on a pair of variables,
 constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
 
 
+\Par{Paths Learning.}
+The paths of a function are not always syntactically apparent. 
+If a variable is applied to arguments, the variable should implicitly behave 
+like a function, or else the program is erroneous. 
+Consider the higher order function $\J{foo}$ which takes a function as input
+and applies it to the number two and the boolean true.
 
+\[
+  \J{let foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
+\]
 
+Type systems for System F have traditionally struggled to find the best
+type for such programs. If restricted to parametric types alone, there are many choices,
+without there being a clear best or principal type. 
+That is because it's not possible to find a weakest type for the parameter
+$\J{f}$ with parametric types alone.
+One possibility is that the type system requires that f is a function that wraps its
+input in an option. 
 
+\[
+  \J{f : ALL[X] X -> <some> X}
+\]
 
+One possibility is that the type system requires that f is a function that wraps its
+input in an list. 
 
+\[
+  \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
+\]
+
+Both are valid, but neither is weaker than the other. The problem is that parametric
+types are insufficient for describing the weakest safe input type.
+It was not until SuperF introduced a technique using for solving subtyping constraints
+that a principal type could be automatically constructed for functions like $\J{foo}$
+The extrinsic type system relies on similar principles of solving subtyping constraints,
+and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
+
+\[
+  \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
+\]
 
 
 \section{Forms}
