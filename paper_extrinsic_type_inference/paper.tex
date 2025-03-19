@@ -158,17 +158,17 @@ Unfortunately, refinements aren't sufficient to handle the full range of data co
 
 In order to achieve a language with a high degree of both code reusability and type inference, 
 we introduce a novel type system with extrinsic type inference. 
-The type inference an reconstruct types based on how data constructors are used, such that the
-type of a data constructor in one context, may be stronger, weaker, or incomparable to the type of 
+To avoid hindering the reusability allowed in untyped programming, 
+the type system must allow the type of a given data constructor in one context
+to be stronger, weaker, or incomparable to the type of 
 the same data constructor in a different context. 
-
-Due to the fact that a data constructor can belong to variety of types of varying strengths,
-the system leverages subtyping to check, reconstruct, and even define types.
+Due to the fact that a data constructor can belong to variety of types of varying precision,
+the system leverages subtyping to check, construct, and notate types.
 
 As a byproduct of inferring extrinsic types using subtyping, the system also happens to infer the principal types for 
 certain kinds of higher-order functions, which was first solved by SuperF \cite{}. 
-However, SuperF's type system and language is purposefully 
-restricted and isn't sufficient for the high-degree of code reusability allowed by untyped languages.
+However, SuperF's programming language and type system is purposefully 
+restricted, and it isn't sufficient for the high-degree of code reusability allowed by untyped languages.
 
 The system relies on intersection, union, and type-indexed universal and existential types, and inductive types, in order 
 to construct strong types from the observed programs. 
@@ -189,21 +189,9 @@ In section \ref{sec:static_system}, we describe the verification and type infere
 \label{sec:overview}
 
 
-\TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
-Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
-}
-
 
 For a given program, type inference constructs a very precise type. Some programs are simple enough
 such that type inference generates singleton types. 
-
-\TODO{example of a inference of intersection of function param applied to multiple arguments (not novel)}
-
-\TODO{example of a inference of intersection of param with multiple functions applied to it (not novel)}
-
-\TODO{example of a inference of union type of branching (not novel)}
-
-\TODO{break example program into parts; inline instead of using figure}
 
 We illustrate the syntax and semantics of programs and types with the example program shown in \FIG{fig:program}.
 
@@ -257,15 +245,7 @@ through intersections of types or conjunctions of qualifiers.
 Now consider a function \J{boo} whose input type is the natural numbers. 
 Suppose we have the application \J{boo(n)} where n guaranteed to be an even number.
 \[
-  \begin{array}[t]{@{} l}
-      \J{LFP[R]( BOT} 
-      \\
-      \I \J{| <zero> @}
-      \\
-      \I \J{| <succ> <succ> R}
-      \\
-      \J{)} 
-  \end{array}
+  \J{LFP[R] <zero> @ | <succ> <succ> R}
 \]
 The application requires that type inference check that the nat type is weaker than the even type. 
 Type inference sees that if both types were to unroll into an infinite sequence of values
@@ -294,7 +274,9 @@ of the functions' input types: \J{U\&D}.
 \paragraph{Infinite Path Factorization} 
 
 \TODO{Note how we separate immediately on intrudction of paths, rather than delyaing until elimination rule}
+
 \TODO{this limitation will be rectified in the follow up paper by leveraging reasoning over inductive relational types}
+
 \TODO{In this work, the inductive relational type is syntactically valid but not semantically valid}
 
 
@@ -303,17 +285,12 @@ of the functions' input types: \J{U\&D}.
 
 
 
-\TODO{show type generated from code}
-
-
-\TODO{more motivating and elucidating examples}
-% \paragraph{List bounds.}
-% \paragraph{Generalization.} This is motivated by applying the same function to multiple arguments of varying types.
-% \paragraph{Object oriented.}  
-
-
 \section{Forms}
 \label{sec:forms}
+
+\TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
+Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
+}
 
 \begin{definition} Expressions
   \label{def:expressions}
