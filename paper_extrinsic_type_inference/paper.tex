@@ -183,7 +183,7 @@ or liquid types \cite{}.
 
 In section \ref{sec:overview}, we give examples of the expressions and types that the system reasons with,
 demonstrate a few of the ways the system can reason. 
-In section \ref{sec:forms}, we define the forms of expressions, types, and other key objects. 
+In section \ref{sec:structure}, we define the forms of expressions, types, and other key objects. 
 In section \ref{sec:dynamic_system}, we define the ground truth.
 In section \ref{sec:static_system}, we describe the verification and type inference mechanisms.
 
@@ -197,7 +197,7 @@ To get a feel for the languages and reasoning capabilities, it's best to start b
 looking at a few examples.
 
 
-\Par{Finite Paths Preservation.}
+\Par{Finite Isomorphism.}
 A function can be constructed from multiple paths. 
 Consider the function $\J{talky}$, which completes a simple English phrase.
 
@@ -234,7 +234,7 @@ an isomorphic type without any weakening in precision.
 Each path is represented using the implication type,
 and the paths are joined together using the intersection type.
 
-\Par{Finite Paths Selection.}
+\Par{Selection.}
 Although the type of function $\J{talky}$ is no weaker than the actual function,
 the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
@@ -260,7 +260,7 @@ then it goes on to infer the type of the application.
 The type system effectively applies application to all possible arguments
 and unions the results derived from only the paths of those a arguments. 
 
-\Par{Infinite Paths Factorization.}
+\Par{Factorization.}
 A function can represent infinite paths by using recursion.
 Consider the function $\J{repeat}$, which takes an item and a natural number
 as inputs and returns a list of that item repeated the input number of times.
@@ -323,23 +323,70 @@ relational reasoning. In a follow up paper,
 we will show how to rectify this limitation by augmenting the type system with
 mechanisms for inductive relational reasoning.
 
-\Par{Scalar Induction.} 
-\TODO{...}
-Now consider a function $\J{boo}$ whose input type is the natural numbers. 
-Suppose we have the application $\J{boo(n)}$ where n guaranteed to be an even number.
+\Par{Scalar Unrolling.} 
+Since the inputs to functions may have inductive types, the type 
+system must be able to check for error at function application by unrolling
+inductive types.
+Consider applying the $\J{repeat}$ function to some item and the number two, 
+which results in the type system checking that two is in fact an instance of the natural numbers.
+
 \[
-  \J{LFP[R] <zero> @ | <succ> <succ> R}
+  \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
 \]
-The application requires that type inference check that the nat type is weaker than the even type. 
-Type inference sees that if both types were to unroll into an infinite sequence of values
-every value in nat would also be in even, therefore the application type checks. 
-In particular, type inference leverages the inductive hypothesis, by learning that weaker 
-types hold for all the recursive constraints of the stronger type. 
-In the case simple recursive types as shown above, the inductive hypothesis is merely a subtyping constraint
-on a single variable.
-In the case of comparing two relations such as $\text{natList}(\J{T})$ and a corresponding even version, 
-the inductive hypothesis would be a subtyping constraint on a pair of variables, which may not be decomposable into
-constraints on single variables, so type inference must learn relational constraints, in addition to simple constraints. 
+
+The type system confirms that two is a valid input by unrolling the inductive type three times.
+Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
+is unable to infer a stronger type than the original list type. This deficiency will
+be rectified in the follow up paper, in which we augment the type system with relational reasoning.
+
+
+\Par{Scalar Induction.} 
+Another scenario that may arise is one in which the input to a function has an inductive type.
+Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{let x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
+    \\
+    \J{...}
+    \\
+    \J{repeat(...)(x)} 
+    \\
+    \J{...}
+  \end{array}
+\]
+
+The application results in the type system checking that natural numbers are weaker than even numbers. 
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{LFP[R] <zero> @ | <succ> <succ> R}
+    \\
+    \subtypes
+    \\
+    \J{LFP[R] <zero> @ | <succ> R}
+  \end{array}
+\]
+
+
+Since even numbers are represented inductively, the type system performs mathematical induction
+by assuming the subtyping relation holds for the self reference of the even numbers. 
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+    \\
+    \entails
+    \\
+    \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+  \end{array}
+\]
+
+
+In effect, by using mathematical induction, the type system ensures that 
+every type contained within the type of even natural numbers is also
+contained within the type of natural numbers.
+In follow up work, we will extend this inductive reasoning to handle inductive relations. 
 
 
 \Par{Paths Learning.}
@@ -384,8 +431,8 @@ and likewise, can construct the weakest safe type for $\J{f}$, and thus the prin
 \]
 
 
-\section{Forms}
-\label{sec:forms}
+\section{Structure}
+\label{sec:structure}
 
 \TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
 Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
@@ -1718,6 +1765,10 @@ the upper bound union with the subtracted type.
   \\
   \begin{mathpar}
     \inferrule {
+      \TODO{modify by adding subtyping constraint to assumptions}
+      \\\\
+      \TODO{subbing is safe iff $\alpha$ is in a positive position relative to $\tau_l$}
+      \\\\
       \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
     } {
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
