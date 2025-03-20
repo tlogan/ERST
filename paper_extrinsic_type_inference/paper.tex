@@ -382,6 +382,19 @@ by assuming the subtyping relation holds for the self reference of the even numb
   \end{array}
 \]
 
+In practice, the type system actually substitutes the supertype into
+the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
+    \\
+    \subtypes 
+    \\
+    \J{(LFP[R] <zero> @ | <succ> R)}
+  \end{array}
+\]
+
 
 In effect, by using mathematical induction, the type system ensures that 
 every type contained within the type of even natural numbers is also
@@ -1765,11 +1778,11 @@ the upper bound union with the subtracted type.
   \\
   \begin{mathpar}
     \inferrule {
-      \TODO{modify by adding subtyping constraint to assumptions}
-      \\\\
-      \TODO{subbing is safe iff $\alpha$ is in a positive position relative to $\tau_l$}
-      \\\\
-      \tau_l[\alpha\slash\tau_r] \subtypes \tau_r \given \Omega 
+      \tau_l[\alpha\slash\tau_r]^+ = \tau_l'
+      \\
+      \alpha \not\in \text{FTV}(\tau_l')
+      \\
+      \tau_l' \subtypes \tau_r \given \Omega 
     } {
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
     }

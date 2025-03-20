@@ -2216,6 +2216,13 @@ class Solver:
 #         print(f"""
 # DEBUG SOLVE:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closed:
+# {world.closedids}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+              
+# |-
 # {concretize_typ(lower)}
 # <:
 # {concretize_typ(upper)}
@@ -2544,18 +2551,35 @@ class Solver:
 
         elif isinstance(lower, Fixpoint):
             if is_typ_structured(lower.body):
-                '''
-                NOTE: k-induction / bi-simulation
-                use the pattern on LHS to dictate number of unrollings needed on RHS 
-                simply need to sub RHS into LHS's self-referencing variable
-                '''
-                '''
-                sub in induction hypothesis to world:
-                '''
+                # renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                # lower_body = sub_typ(renaming, lower.body)
+
+                # return self.solve(world, lower_body, upper)
+                ####################
+
                 renaming : PMap[str, Typ] = pmap({lower.id : upper})
+                lower_body = self.sub_polar_typ(True, lower.body, lower.id, upper)
+                if (lower.id in extract_free_vars_from_typ(s(), lower_body)):
+                    return []
+                else:
+                    return self.solve(world, lower_body, upper)
+                # end-if
+
+                ####################
+                fresh_id = self.fresh_type_id()
+                renaming : PMap[str, Typ] = pmap({lower.id : TVar(fresh_id)})
                 lower_body = sub_typ(renaming, lower.body)
 
-                return self.solve(world, lower_body, upper)
+                new_world = World(
+                    world.constraints.add(Subtyping(TVar(fresh_id), upper)),
+                    # world.constraints,
+                    # world.closedids,
+                    world.closedids.add(fresh_id),
+                    world.relids
+                )
+                return self.solve(new_world, lower_body, upper)
+                ####################
+                # return []
             else:
                 return []
 

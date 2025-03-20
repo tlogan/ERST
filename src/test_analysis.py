@@ -381,13 +381,27 @@ RESULT
     """)
     assert answer == "~cons ~nil @"
 
-def test_even_list_subs_nat_list():
+
+def test_even_subs_nat_pass():
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, tl.even, tl.nat)
+    print(f"len(worlds): {len(worlds)}")
+    assert bool(worlds)
+
+def test_nat_subs_even_fail():
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, tl.nat, tl.even)
+    print(f"len(worlds): {len(worlds)}")
+    assert not worlds
+
+
+def test_even_list_subs_nat_list_pass():
     solver = analyzer.Solver(m())
     worlds = solve(solver, tl.even_list, tl.nat_list)
     print(f"len(worlds): {len(worlds)}")
     assert bool(worlds)
 
-def test_nat_list_subs_even_list():
+def test_nat_list_subs_even_list_fail():
     solver = analyzer.Solver(m())
     worlds = solve(solver, tl.nat_list, tl.even_list)
     print(f"len(worlds): {len(worlds)}")
@@ -2253,7 +2267,11 @@ if __name__ == '__main__':
     # test_two_cons_query_subs_nat_list()
     # test_plus_equals_two_query()
     #####################################
-    # test_even_list_subs_nat_list()
+    test_even_list_subs_nat_list_pass()
+    test_nat_list_subs_even_list_fail()
+    #####################################
+    test_even_subs_nat_pass()
+    test_nat_subs_even_fail()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################
@@ -2262,7 +2280,7 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    test_max()
+    # test_max()
 
     # test_fix()
     # test_max_annotated()
@@ -2315,7 +2333,7 @@ if __name__ == '__main__':
     #####################################
     # test_relational_implication_subtyping_pass_A()
     # test_relational_implication_subtyping_pass_B()
-    test_relational_implication_subtyping_pass_C()
+    # test_relational_implication_subtyping_pass_C()
     # test_relational_implication_subtyping_fail()
     #####################################
     # test_inter_subtypes_union_antec_pass()
