@@ -2280,7 +2280,7 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    # test_max()
+    test_max()
 
     # test_fix()
     # test_max_annotated()

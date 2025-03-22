@@ -749,13 +749,23 @@ def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
             return Inter(left, right)
         else:
             return left or right
+    # elif isinstance(t, TField):
+    #     label = path[0]
+    #     if t.label == label:
+    #         if len(path) == 1:
+    #             return t.body
+    #         else:
+    #             return project_typ_recurse(t.body, path[1:])
+    #     else:
+    #         return None
     elif isinstance(t, TField):
         label = path[0]
         if t.label == label:
-            if len(path) == 1:
-                return t.body
+            deeper = None if len(path) == 1 else project_typ_recurse(t.body, path[1:])
+            if bool(deeper):
+                return deeper
             else:
-                return project_typ_recurse(t.body, path[1:])
+                return t.body
         else:
             return None
 
