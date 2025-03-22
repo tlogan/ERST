@@ -898,19 +898,19 @@ def find_common_prefix(a : tuple[str, ...], b : tuple[str, ...]) -> tuple[str, .
     return tuple(prefix) 
 
 def find_longest_common_prefix(path : tuple[str, ...], choices : list[Typ]) -> tuple[str, ...]:
-    common_prefix = path
+    outer_prefix = path
     for choice in choices:
         other_paths = extract_paths(choice)
-        possible_prefix = tuple([]) 
+        inner_prefix = tuple([]) 
         for other_path in other_paths:
-            prefix = find_common_prefix(common_prefix, other_path)
-            if len(prefix) > len(possible_prefix):
-                possible_prefix = prefix
+            prefix = find_common_prefix(outer_prefix, other_path)
+            if len(prefix) > len(inner_prefix):
+                inner_prefix = prefix
             #end
         #end
-        common_prefix = find_common_prefix(common_prefix, possible_prefix)
+        outer_prefix = find_common_prefix(outer_prefix, inner_prefix)
     #end
-    return common_prefix
+    return outer_prefix
 
 
 def find_longest_common_prefixes(src : Typ, choices : list[Typ]) -> PSet[tuple[str, ...]]:
