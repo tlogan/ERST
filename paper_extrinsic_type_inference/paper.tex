@@ -122,7 +122,7 @@
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit that space of correctness.
 
-In languages suchas as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
+In languages such as as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
 That is, the data constructors are intrinsically typed.
 
 The clever design of ML allows annotations to be fairly sparse by 
@@ -500,8 +500,8 @@ system.
     & \com{sugar}
   \end{array}\]
 \end{definition}
-A program is an expression, which may be composed of variables $x$, units $\J{@}$,
-data constructors (i.e. tags) $\J{<}l\J{>} e$,
+A program is an expression, which may be composed of variables $x$, unit $\J{@}$,
+constructors $\J{<}l\J{>} e$,
 records, $...\J{?}l \fieldmap e ...$, functions $...\J{?}p \J{=>} e ...$, record
 projection $e\J{.}l$, function application, $e\J{(}e\J{)}$, recursion $\J{loop(}e\J{)}$,
 or bindings with type annotations, $\J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$.
@@ -558,8 +558,9 @@ unannotated bindings \hfill \break
 $\J{let}\ x\ \J{=}\ e\ \J{in}\ e$,
 flowing $e\ \J{|>}\ e$,
 and conditional branching $\J{if}\ e\ \J{then}\ e\ \J{else}\ e$.
-For any statement or term containing sugar $s$, we assume that $s$ is implicitly replaced with $\llbracket s \rrbracket^\square$.
+For any metalanguage statement or term containing sugar $s$, we assume that $s$ is implicitly replaced with $\llbracket s \rrbracket^\square$.
 
+\hfill
 \begin{definition} Patterns 
   \label{def:patterns}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -577,14 +578,19 @@ For any statement or term containing sugar $s$, we assume that $s$ is implicitly
     & \com{entry}
   \end{array}\]
 \end{definition}
+\hfill
 
+A pattern may be composed of variables, unit, constructors, or records. 
+
+\hfill
 \begin{definition} Values 
   \label{def:values}
   \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{v} & \is 
       \J{@} \sep
       \J{<}l\J{>}v \sep
-      \vec{g}
+      \vec{g} \sep
+      \vec{f}
     & \com{value}
     \\
     \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
@@ -594,6 +600,9 @@ For any statement or term containing sugar $s$, we assume that $s$ is implicitly
     & \com{entry}
   \end{array}\]
 \end{definition}
+\hfill
+
+A value may be composed of unit, constructors, records, or functions. 
 
 \hfill
 \begin{definition} Types 
@@ -663,22 +672,41 @@ For any statement or term containing sugar $s$, we assume that $s$ is implicitly
       \tau \J{*} \tau 
     \end{array}
     & \com{sugar}
-    % \\
-    % \nonterm{r} & \is 
-    % \begin{array}[t]{@{}l}
-    %   \tau \J{|} \tau \J{->} \tau \sep
-    %   \tau \J{->} \tau \J{\&} \tau \sep
-    %   l \J{->} \tau \J{\&} \tau
-    % \end{array}
-    % & \com{rewritable type}
-    % A | B -> C <: P -> Q ... (A -> C) & (B -> C) <: P -> Q ... (A -> C) <: P -> Q OR  (B -> C) <: P -> Q ..  P <: A, C <: Q OR  P <: B OR C <: Q 
-    % A | B -> C <: P -> Q ... P <: A | B, C <: Q  ... P <: A, C <: Q OR P <: B, C <: Q 
-    %%%%
-    % P -> Q <: A | B -> C  ...  P -> Q <: (A -> C) & (B -> C) ...  P -> Q <: (A -> C), P -> Q <: (B -> C) .. A <: P, Q <: C, B <: P 
-    %  P -> Q <: A | B -> C  ... A | B <: P, Q <: C ... A <: P, B <: P, Q <: C
   \end{array}\]
 \end{definition}
 \hfill
+
+Types provide the representation for approximate specification.
+To accommodate a high degree of data constructor reusability,
+it is important that the form of types accommodates a wide range of precision.
+To manage the complexity of the various forms, we subdivide the type forms
+according to some themes.
+There is a variable type $\alpha$, whose internal structure is not important.
+A base type reflects the structure of its inhabitants and may be composed of unit $\J{@}$, constructors $\J{<}l\J{>}\tau$,
+entries $l \fieldmap \tau$, and paths $\tau \J{->} \tau$.
+
+\TODO{expansion type}
+
+
+\hfill
+\begin{definition} 
+  \label{def:type_desugaring}
+  Type Desugaring 
+  \hfill 
+  \boxed{\llbracket \gamma \rrbracket^\square = \tau}
+  \\
+  \begin{align*}
+    \llbracket \J{TOP} \rrbracket^\square &= \J{EXI[} \alpha \J{]} \alpha
+    \\
+    \llbracket \J{BOT} \rrbracket^\square &= \J{ALL[} \alpha \J{]} \alpha
+    \\
+    \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{left} \fieldmap \tau_l)  \J{\&} (\J{right} \fieldmap \tau_r)
+  \end{align*}
+\end{definition} 
+\hfill
+
+For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implicitly replaced with $\text{desugar}(\gamma)$.
+
 
 \TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
 Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
@@ -931,10 +959,11 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
 \TODO{introduce model typing and soundness properties}
 Model typing describes how the various forms of types are introduced based
 on the various forms of expressions. There are no rules for elimination 
-type forms. Rather, the progression of expressions is leveraged to eliminate
+of type forms. Rather, the progression of expressions is leveraged to eliminate
 expression forms, from which further type forms may be introduced.
 The indirection into progression is not practical, but it guides the construction
-of a sound type proof system that can directly eliminate type forms. 
+of a sound type system that can directly prove the validity of typings and subtypings 
+by eliminating type forms.
 
 
 \hfill
@@ -983,25 +1012,6 @@ of a sound type proof system that can directly eliminate type forms.
 \section{Static System}
 \label{sec:static_system}
 The static semantics is a system for checking if the construction of an expression is viable.   
-
-\hfill
-\begin{definition} 
-  \label{def:type_desugaring}
-  Type Desugaring 
-  \hfill 
-  \boxed{\llbracket \gamma \rrbracket^\square = \tau}
-  \\
-  \begin{align*}
-    \llbracket \J{TOP} \rrbracket^\square &= \J{EXI[} \alpha \J{]} \alpha
-    \\
-    \llbracket \J{BOT} \rrbracket^\square &= \J{ALL[} \alpha \J{]} \alpha
-    \\
-    \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{left} \fieldmap \tau_l)  \J{\&} (\J{right} \fieldmap \tau_r)
-  \end{align*}
-\end{definition} 
-\hfill
-
-For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implicitly replaced with $\text{desugar}(\gamma)$.
 
 \hfill
 \begin{definition} 
