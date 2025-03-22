@@ -32,25 +32,48 @@ from tapas.slim.language import *
 import random
 from tapas.util_system import *
 
+# nat = (f"""
+# (FX N | ~zero @  | ~succ N )
+# """.strip())
+
+# even = (f"""
+# (FX E | ~zero @ | ~succ ~succ E)
+# """.strip())
+
+
 nat = (f"""
-(FX N | ~zero @  | ~succ N )
+(FX N | zero : @  | succ : N )
 """.strip())
 
 even = (f"""
-(FX E | ~zero @ | ~succ ~succ E)
+(FX E | zero : @ | succ : succ : E)
 """.strip())
+
+# nat_list = (f"""
+# (FX NL 
+#     | (~zero @, ~nil @) 
+#     | (EXI [N L ; (N, L) <: NL] (~succ N, ~cons L))
+# )
+# """.strip())
+
+# even_list = (f"""
+# (FX NL 
+#     | (~zero @, ~nil @) 
+#     | EXI [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
+# )
+# """.strip())
 
 nat_list = (f"""
 (FX NL 
-    | (~zero @, ~nil @) 
-    | (EXI [N L ; (N, L) <: NL] (~succ N, ~cons L))
+    | (zero : @, nil : @) 
+    | (EXI [N L ; (N, L) <: NL] (succ : N, cons : L))
 )
 """.strip())
 
 even_list = (f"""
 (FX NL 
-    | (~zero @, ~nil @) 
-    | EXI [N L ; (N, L) <: NL] (~succ ~succ N, ~cons ~cons L)  
+    | (zero : @, nil : @) 
+    | EXI [N L ; (N, L) <: NL] (succ : succ : N, cons : cons : L)  
 )
 """.strip())
 

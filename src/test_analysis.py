@@ -98,8 +98,8 @@ def solve(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
         return []
-    except:
-        return []
+    # except:
+    #     return []
 
 def check(a : str, b : str) -> bool:
     solver = analyzer.Solver(m()) 

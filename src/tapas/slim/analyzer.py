@@ -852,6 +852,8 @@ def is_decidable_shape(t : Typ) -> bool:
         return True
     elif isinstance(t, TTag):
         return True
+    elif isinstance(t, TField):
+        return True
     elif isinstance(t, Unio):
         return is_decidable_shape(t.left) and is_decidable_shape(t.right)
     elif isinstance(t, Inter):
@@ -866,15 +868,9 @@ def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, lis
         if choice != Bot()
     ]
 
-    if is_record_typ(key):
-        paths = list(extract_paths(key))
-        # TODO: double check that it is sound or not too incomplete to do this
-        # paths = [
-        #     path
-        #     for choice in choices
-        #     for path in list(extract_paths(choice))
-        # ]
+    paths = list(find_longest_common_prefixes(key, choices))
 
+    if bool(paths):
         result = []
         for path in pset(paths):
             column_key = project_typ(key, path)
@@ -889,6 +885,44 @@ def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, lis
         return [(key, choices)]
     #end-if 
 
+
+def find_common_prefix(a : tuple[str, ...], b : tuple[str, ...]) -> tuple[str, ...]:
+    prefix = []
+    for i in range(min(len(a), len(b))):
+        if a[i] == b[i]:
+            prefix.append(a[i])
+        else:
+            break 
+    return tuple(prefix) 
+
+def find_longest_common_prefix(path : tuple[str, ...], choices : list[Typ]) -> tuple[str, ...]:
+    common_prefix = path
+    for choice in choices:
+        other_paths = extract_paths(choice)
+        possible_prefix = tuple([]) 
+        for other_path in other_paths:
+            prefix = find_common_prefix(common_prefix, other_path)
+            if len(prefix) > len(possible_prefix):
+                possible_prefix = prefix
+            #end
+        #end
+        common_prefix = find_common_prefix(common_prefix, possible_prefix)
+    #end
+    return common_prefix
+
+
+def find_longest_common_prefixes(src : Typ, choices : list[Typ]) -> PSet[tuple[str, ...]]:
+    assert bool(choices)
+    src_paths = extract_paths(src)
+    prefixes = s()
+    for path in src_paths:
+        lcp = find_longest_common_prefix(path, choices)
+        if bool(lcp):
+            prefixes = prefixes.add(lcp)
+    return prefixes 
+    
+    
+
 def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
     comparisons = extract_column_comparisons(key, rel)
 
@@ -896,7 +930,7 @@ def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
     for column_key, column_choices in comparisons:
         key_is_decidable = is_decidable_shape(column_key)
         there_are_decidable_shapes_in_choices = any(
-            isinstance(cc, TTag) or
+            isinstance(cc, TField) or
             (isinstance(cc, Exi) and is_decidable_shape(cc.body))
             for cc in column_choices
         )
@@ -2590,6 +2624,24 @@ class Solver:
         #######################################
 
         elif isinstance(upper, Fixpoint): 
+
+#             print(f"""
+# DEBUG upper, Fixpoint SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closed:
+# {world.closedids}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+              
+# |-
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# decomp: {is_decomposable(lower, upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             if is_decomposable(lower, upper): # TODO: make is_deciable more strict
                 '''
