@@ -110,7 +110,7 @@
 
 
 \newcommand{\tl}{\textasciitilde{}}
-\newcommand{\fieldmap}{\J{\tl>}}
+\newcommand{\entrymap}{\J{\tl>}}
 \newcommand{\typdiff}{\J{\textbackslash}}
 
 \maketitle
@@ -479,7 +479,7 @@ system.
     \nonterm{\vec{r}} & \is \epsilon \sep \vec{r}\ r 
     & \com{record}
     \\
-    \nonterm{r} & \is \J{?}l \fieldmap e
+    \nonterm{r} & \is \J{?}l \entrymap e
     & \com{entry}
     \\
     \nonterm{\vec{f}} & \is \epsilon \sep \vec{f}\ f
@@ -502,7 +502,7 @@ system.
 \end{definition}
 A program is an expression, which may be composed of variables $x$, unit $\J{@}$,
 constructors $\J{<}l\J{>} e$,
-records, $...\J{?}l \fieldmap e ...$, functions $...\J{?}p \J{=>} e ...$, record
+records, $...\J{?}l \entrymap e ...$, functions $...\J{?}p \J{=>} e ...$, record
 projection $e\J{.}l$, function application, $e\J{(}e\J{)}$, recursion $\J{loop(}e\J{)}$,
 or bindings with type annotations, $\J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$.
 Tags and record entries are distinguished by labels $l$.
@@ -532,7 +532,7 @@ although possibly weaker than the inferred type, is sufficient for the continuin
   \boxed{\llbracket s \rrbracket^\square = e}
   \\
   \begin{align*}
-      \llbracket e_l \J{,} e_r \rrbracket^\square &= \J{?left}\fieldmap e_l \ \J{?right}\fieldmap e_r
+      \llbracket e_l \J{,} e_r \rrbracket^\square &= \J{?left}\entrymap e_l \ \J{?right}\entrymap e_r
       \\
       \llbracket e_l\ \J{|>}\ e_r \rrbracket^\square &= e_r\J{(}e_l\J{)}
       \\
@@ -574,7 +574,7 @@ For any metalanguage statement or term containing sugar $s$, we assume that $s$ 
     \nonterm{\vec{k}} & \is \epsilon \sep \vec{k}\ k
     & \com{record}
     \\
-    \nonterm{k} & \is \J{?}l \fieldmap p
+    \nonterm{k} & \is \J{?}l \entrymap p
     & \com{entry}
   \end{array}\]
 \end{definition}
@@ -596,7 +596,7 @@ A pattern may be composed of variables, unit, constructors, or records.
     \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
     & \com{record}
     \\
-    \nonterm{g} & \is \J{?}l \fieldmap v
+    \nonterm{g} & \is \J{?}l \entrymap v
     & \com{entry}
   \end{array}\]
 \end{definition}
@@ -623,7 +623,7 @@ A value may be composed of unit, constructors, records, or functions.
     \begin{array}[t]{@{}l}
       \J{@} \sep
       \J{<}l\J{>}\tau \sep 
-      l \fieldmap \tau \sep 
+      l \entrymap \tau \sep 
       \tau\J{->}\tau
     \end{array}
     & \com{base}
@@ -661,7 +661,7 @@ A value may be composed of unit, constructors, records, or functions.
       \alpha \sep
       \J{@} \sep
       \J{<}l\J{>}\rho \sep 
-      l \fieldmap \rho \sep 
+      l \entrymap \rho \sep 
       \rho\J{\&}\rho
     \end{array}
     & \com{pattern}
@@ -683,7 +683,9 @@ To manage the complexity of the various forms, we subdivide the type forms
 according to some themes.
 There is a variable type $\alpha$, whose internal structure is not important.
 A base type reflects the structure of its inhabitants and may be composed of unit $\J{@}$, constructors $\J{<}l\J{>}\tau$,
-entries $l \fieldmap \tau$, and paths $\tau \J{->} \tau$.
+entries $l \entrymap \tau$, and paths $\tau \J{->} \tau$.
+
+\TODO{maybe test out treating constructors as syntactic sugar}
 
 \TODO{expansion type}
 
@@ -700,7 +702,7 @@ entries $l \fieldmap \tau$, and paths $\tau \J{->} \tau$.
     \\
     \llbracket \J{BOT} \rrbracket^\square &= \J{ALL[} \alpha \J{]} \alpha
     \\
-    \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{left} \fieldmap \tau_l)  \J{\&} (\J{right} \fieldmap \tau_r)
+    \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{left} \entrymap \tau_l)  \J{\&} (\J{right} \entrymap \tau_r)
   \end{align*}
 \end{definition} 
 \hfill
@@ -755,13 +757,13 @@ The programming language is pure and applicative.
     \inferrule {
       e \rightsquigarrow e'
     } {
-      \vec{r}\J{?}l \fieldmap e \rightsquigarrow \vec{r}\J{?}l \fieldmap e' 
+      \vec{r}\J{?}l \entrymap e \rightsquigarrow \vec{r}\J{?}l \entrymap e' 
     }
 
     \inferrule {
       \vec{r} \rightsquigarrow \vec{r}'
     } {
-      \vec{r} \J{?}l \fieldmap v \rightsquigarrow \vec{r}'\J{?} l \fieldmap v
+      \vec{r} \J{?}l \entrymap v \rightsquigarrow \vec{r}'\J{?} l \entrymap v
     }
 
     \inferrule {
@@ -865,13 +867,13 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
     } 
 
     \inferrule { 
-      \J{?}l \fieldmap v \in \vec{g}
+      \J{?}l \entrymap v \in \vec{g}
       \\
       \vec{\delta} \satisfies v \hastype \tau 
       \\
-      \forall v' .\ \J{?} l \fieldmap v' \in \vec{g} \implies v' = v
+      \forall v' .\ \J{?} l \entrymap v' \in \vec{g} \implies v' = v
     } {
-      \vec{\delta} \satisfies \vec{g} \hastype l \fieldmap \tau
+      \vec{\delta} \satisfies \vec{g} \hastype l \entrymap \tau
     } 
 
     \inferrule { 
@@ -1051,7 +1053,7 @@ The static semantics is a system for checking if the construction of an expressi
       \\
       \Gamma \entails e \hastype \tau' \given \Omega' 
     } {
-      \Gamma \entails \vec{r}\ \J{?}l \fieldmap e \hastype \tau\ \J{\&}\ l \fieldmap \tau' \given \Omega' 
+      \Gamma \entails \vec{r}\ \J{?}l \entrymap e \hastype \tau\ \J{\&}\ l \entrymap \tau' \given \Omega' 
     }
 
     \inferrule {
@@ -1067,7 +1069,7 @@ The static semantics is a system for checking if the construction of an expressi
       \\\\
       \Omega \preceq \Omega'
       \\
-      \tau_0 \subtypes l \fieldmap \alpha \given \Omega' 
+      \tau_0 \subtypes l \entrymap \alpha \given \Omega' 
     } {
       \Gamma \entails e\J{.}l \hastype \alpha \given \Omega'
     }
@@ -1477,7 +1479,7 @@ proof subtyping simply holds without any updates to the world.
     \inferrule {
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      l \fieldmap \tau_l \subtypes l \fieldmap \tau_r \given \Omega 
+      l \entrymap \tau_l \subtypes l \entrymap \tau_r \given \Omega 
     }
 
     \inferrule {
@@ -1545,13 +1547,13 @@ contains the space between types of the lower bound.
     \inferrule {
       \tau
       \subtypes
-      (l \fieldmap \tau_a)
+      (l \entrymap \tau_a)
       \J{\&}
-      (l \fieldmap \tau_b)
+      (l \entrymap \tau_b)
       \given \Omega 
     } {
       \tau \subtypes 
-      l \fieldmap (\tau_{a}\J{\&}\tau_{b})
+      l \entrymap (\tau_{a}\J{\&}\tau_{b})
       \given \Omega
     }
 
