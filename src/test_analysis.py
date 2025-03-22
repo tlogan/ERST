@@ -421,11 +421,14 @@ EXI [X Y Z ; (X,Z) <: {tl.lte}] (x : X & y : Y & z : Z)
     print(f'len(worlds): {len(worlds)}')
     assert len(worlds) == 1
 
-
 def test_one_plus_one_equals_two():
     one_plus_one_equals_two = ('''
 (x : ~succ ~zero @ & y : ~succ ~zero @ & z : ~succ ~succ ~zero @)
     ''')
+
+#     one_plus_one_equals_two = ('''
+# (<x> <succ> <zero> @ & <y> <succ> <zero> @ & <z> <succ> <succ> <zero> @)
+#     ''')
     solver = analyzer.Solver(m())
     worlds = solve(solver, one_plus_one_equals_two, tl.addition)
     print(f'len(worlds): {len(worlds)}')

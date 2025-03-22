@@ -456,7 +456,7 @@ public class SlimParser extends Parser {
 				setState(85);
 				((Typ_baseContext)_localctx).typ_base = typ_base();
 
-				_localctx.combo = TTag((((Typ_baseContext)_localctx).ID!=null?((Typ_baseContext)_localctx).ID.getText():null), ((Typ_baseContext)_localctx).typ_base.combo) 
+				_localctx.combo = TEntry((((Typ_baseContext)_localctx).ID!=null?((Typ_baseContext)_localctx).ID.getText():null), ((Typ_baseContext)_localctx).typ_base.combo) 
 
 				}
 				break;
@@ -470,7 +470,7 @@ public class SlimParser extends Parser {
 				setState(90);
 				((Typ_baseContext)_localctx).typ_base = typ_base();
 
-				_localctx.combo = TField((((Typ_baseContext)_localctx).ID!=null?((Typ_baseContext)_localctx).ID.getText():null), ((Typ_baseContext)_localctx).typ_base.combo) 
+				_localctx.combo = TEntry((((Typ_baseContext)_localctx).ID!=null?((Typ_baseContext)_localctx).ID.getText():null), ((Typ_baseContext)_localctx).typ_base.combo) 
 
 				}
 				break;
@@ -619,7 +619,7 @@ public class SlimParser extends Parser {
 				setState(125);
 				((TypContext)_localctx).typ = typ();
 
-				_localctx.combo = Inter(TField('head', ((TypContext)_localctx).typ_base.combo), TField('tail', ((TypContext)_localctx).typ.combo)) 
+				_localctx.combo = Inter(TEntry('head', ((TypContext)_localctx).typ_base.combo), TEntry('tail', ((TypContext)_localctx).typ.combo)) 
 
 				}
 				break;

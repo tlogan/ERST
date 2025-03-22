@@ -652,7 +652,7 @@ class SlimParser ( Parser ):
                 self.state = 85
                 localctx._typ_base = self.typ_base()
 
-                localctx.combo = TTag((None if localctx._ID is None else localctx._ID.text), localctx._typ_base.combo) 
+                localctx.combo = TEntry((None if localctx._ID is None else localctx._ID.text), localctx._typ_base.combo) 
 
                 pass
 
@@ -665,7 +665,7 @@ class SlimParser ( Parser ):
                 self.state = 90
                 localctx._typ_base = self.typ_base()
 
-                localctx.combo = TField((None if localctx._ID is None else localctx._ID.text), localctx._typ_base.combo) 
+                localctx.combo = TEntry((None if localctx._ID is None else localctx._ID.text), localctx._typ_base.combo) 
 
                 pass
 
@@ -825,7 +825,7 @@ class SlimParser ( Parser ):
                 self.state = 125
                 localctx._typ = self.typ()
 
-                localctx.combo = Inter(TField('head', localctx._typ_base.combo), TField('tail', localctx._typ.combo)) 
+                localctx.combo = Inter(TEntry('head', localctx._typ_base.combo), TEntry('tail', localctx._typ.combo)) 
 
                 pass
 

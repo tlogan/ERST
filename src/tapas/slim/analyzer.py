@@ -199,13 +199,13 @@ class TVar:
 class TUnit:
     pass
 
-@dataclass(frozen=True, eq=True)
-class TTag:
-    label : str
-    body : Typ 
+# @dataclass(frozen=True, eq=True)
+# class TTag:
+#     label : str
+#     body : Typ 
 
 @dataclass(frozen=True, eq=True)
-class TField:
+class TEntry:
     label : str
     body : Typ 
 
@@ -254,7 +254,8 @@ class Top:
 class Bot:
     pass
 
-Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoint, Top, Bot]
+# Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoint, Top, Bot]
+Typ = Union[TVar, TUnit, TEntry, Unio, Inter, Diff, Imp, Exi, All, Fixpoint, Top, Bot]
 
 
 @dataclass(frozen=True, eq=True)
@@ -298,10 +299,10 @@ Nameless Type
 class BVar:
     id : int 
 
-@dataclass(frozen=True, eq=True)
-class TTagNL:
-    label : str
-    body : NL 
+# @dataclass(frozen=True, eq=True)
+# class TTagNL:
+#     label : str
+#     body : NL 
 
 @dataclass(frozen=True, eq=True)
 class TFieldNL:
@@ -349,7 +350,8 @@ class SubtypingNL:
     strong : NL 
     weak : NL 
 
-NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, ExiNL, AllNL, LeastFPNL, Top, Bot]
+# NL = Union[TVar, BVar, TUnit, TTagNL, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, ExiNL, AllNL, LeastFPNL, Top, Bot]
+NL = Union[TVar, BVar, TUnit, TFieldNL, UnioNL, InterNL, DiffNL, ImpNL, ExiNL, AllNL, LeastFPNL, Top, Bot]
 
 def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
     assert isinstance(bound_ids, tuple)
@@ -363,9 +365,9 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
             return typ
     elif isinstance(typ, TUnit):
         return typ
-    elif isinstance(typ, TTag):
-        return TTagNL(typ.label, to_nameless(bound_ids, typ.body))
-    elif isinstance(typ, TField):
+    # elif isinstance(typ, TTag):
+    #     return TTagNL(typ.label, to_nameless(bound_ids, typ.body))
+    elif isinstance(typ, TEntry):
         return TFieldNL(typ.label, to_nameless(bound_ids, typ.body))
     elif isinstance(typ, Unio):
         return UnioNL(to_nameless(bound_ids, typ.left), to_nameless(bound_ids, typ.right))
@@ -465,23 +467,23 @@ def concretize_typ(typ : Typ) -> str:
             plate_entry = ([], lambda: control.id)  
         elif isinstance(control, TUnit):
             plate_entry = ([], lambda: "@")  
-        elif isinstance(control, TTag):
-            plate_entry = ([control.body], lambda body : f"~{control.label} {body}")  
-        elif isinstance(control, TField):
-            plate_entry = ([control.body], lambda body : f"{control.label} : {body}")  
+        # elif isinstance(control, TTag):
+        #     plate_entry = ([control.body], lambda body : f"~{control.label} {body}")  
+        elif isinstance(control, TEntry):
+            plate_entry = ([control.body], lambda body : f"<{control.label}> {body}")  
         elif isinstance(control, Imp):
             plate_entry = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})")  
         elif isinstance(control, Unio):
             plate_entry = ([control.left,control.right], lambda left, right : f"({left}\n{indent('| ' + right)})")  
         elif isinstance(control, Inter):
             if (
-                isinstance(control.left, TField) and control.left.label == "head" and 
-                isinstance(control.right, TField) and control.right.label == "tail" 
+                isinstance(control.left, TEntry) and control.left.label == "head" and 
+                isinstance(control.right, TEntry) and control.right.label == "tail" 
             ):
                 plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({left}, {right})")  
             elif (
-                isinstance(control.right, TField) and control.right.label == "head" and 
-                isinstance(control.left, TField) and control.left.label == "tail" 
+                isinstance(control.right, TEntry) and control.right.label == "head" and 
+                isinstance(control.left, TEntry) and control.left.label == "tail" 
             ):
                 plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({right}, {left})")  
             else:
@@ -630,8 +632,8 @@ def pattern_type(t : Typ) -> bool:
     return (
         isinstance(t, TVar) or
         isinstance(t, TUnit) or
-        (isinstance(t, TTag) and pattern_type(t.body)) or 
-        (isinstance(t, TField) and pattern_type(t.body)) or 
+        # (isinstance(t, TTag) and pattern_type(t.body)) or 
+        (isinstance(t, TEntry) and pattern_type(t.body)) or 
         False
     )
 
@@ -652,9 +654,9 @@ def negation_well_formed(neg : Typ) -> bool:
         return True
     elif isinstance(neg, TUnit):
         return True
-    elif isinstance(neg, TTag):
-        return negation_well_formed(neg.body)
-    elif isinstance(neg, TField):
+    # elif isinstance(neg, TTag):
+    #     return negation_well_formed(neg.body)
+    elif isinstance(neg, TEntry):
         return negation_well_formed(neg.body)
     elif isinstance(neg, Inter):
         return (
@@ -673,7 +675,7 @@ def diff_well_formed(diff : Diff) -> bool:
 
 
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
-    return Inter(TField("head", left), TField("tail", right))
+    return Inter(TEntry("head", left), TEntry("tail", right))
 
 def linearize_unions(t : Typ) -> list[Typ]:
     if isinstance(t, Bot):
@@ -700,7 +702,7 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
         left = extract_paths(t.left) 
         right = extract_paths(t.right)
         return left.union(right)
-    elif isinstance(t, TField):
+    elif isinstance(t, TEntry):
         body = t.body
         if isinstance(body, TVar) and (not tvar or tvar.id == body.id):
             path = tuple([t.label])
@@ -758,7 +760,7 @@ def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
     #             return project_typ_recurse(t.body, path[1:])
     #     else:
     #         return None
-    elif isinstance(t, TField):
+    elif isinstance(t, TEntry):
         label = path[0]
         if t.label == label:
             deeper = None if len(path) == 1 else project_typ_recurse(t.body, path[1:])
@@ -819,11 +821,11 @@ def to_record_typ(rnode : RNode) -> Typ:
     for key in rnode.content:
         v = rnode.content[key]
         if isinstance(v, RLeaf):
-            field = TField(key, v.content)
+            field = TEntry(key, v.content)
         else:
             assert isinstance(v, RNode)
             t = to_record_typ(v)
-            field = TField(key, t)
+            field = TEntry(key, t)
         result = Inter(field, result)
     # return simplify_typ(result)
     return result
@@ -835,7 +837,7 @@ def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
     return result
 
 def is_record_typ(t : Typ) -> bool:
-    if isinstance(t, TField):
+    if isinstance(t, TEntry):
         return True
     elif isinstance(t, Inter):
         return is_record_typ(t.left) and is_record_typ(t.right)
@@ -850,9 +852,9 @@ def is_decidable_shape(t : Typ) -> bool:
         return True
     elif isinstance(t, Bot):
         return True
-    elif isinstance(t, TTag):
-        return True
-    elif isinstance(t, TField):
+    # elif isinstance(t, TTag):
+    #     return True
+    elif isinstance(t, TEntry):
         return True
     elif isinstance(t, Unio):
         return is_decidable_shape(t.left) and is_decidable_shape(t.right)
@@ -930,7 +932,7 @@ def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
     for column_key, column_choices in comparisons:
         key_is_decidable = is_decidable_shape(column_key)
         there_are_decidable_shapes_in_choices = any(
-            isinstance(cc, TField) or
+            isinstance(cc, TEntry) or
             (isinstance(cc, Exi) and is_decidable_shape(cc.body))
             for cc in column_choices
         )
@@ -960,7 +962,7 @@ def extract_kv_pairs(t : Typ) -> PSet[tuple[tuple[str, ...], Typ]]:
         left = extract_kv_pairs(t.left) 
         right = extract_kv_pairs(t.right)
         return left.union(right)
-    elif isinstance(t, TField):
+    elif isinstance(t, TEntry):
         sub_kv_pairs = extract_kv_pairs(t.body)
         result = (
             pset(
@@ -1161,10 +1163,10 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
             return typ
     elif isinstance(typ, TUnit):  
         return typ
-    elif isinstance(typ, TTag):  
-        return TTag(typ.label, sub_typ(assignment_map, typ.body))
-    elif isinstance(typ, TField):  
-        return TField(typ.label, sub_typ(assignment_map, typ.body))
+    # elif isinstance(typ, TTag):  
+    #     return TTag(typ.label, sub_typ(assignment_map, typ.body))
+    elif isinstance(typ, TEntry):  
+        return TEntry(typ.label, sub_typ(assignment_map, typ.body))
     elif isinstance(typ, Unio):  
         return Unio(sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right))
     elif isinstance(typ, Inter):  
@@ -1221,9 +1223,9 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             plate_entry = ([], lambda : s())
         elif isinstance(typ, TUnit):
             plate_entry = ([], lambda : s())
-        elif isinstance(typ, TTag):
-            plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_bodyA: set_bodyA)
-        elif isinstance(typ, TField):
+        # elif isinstance(typ, TTag):
+        #     plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_bodyA: set_bodyA)
+        elif isinstance(typ, TEntry):
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
         elif isinstance(typ, Unio):
             plate_entry = (pair_up(bound_vars, [typ.left, typ.right]), lambda set_left, set_right: set_left.union(set_right))
@@ -1353,9 +1355,9 @@ def is_typ_structured(t : Typ) -> bool:
         return True
     elif isinstance(t, Bot):
         return True
-    elif isinstance(t, TTag):
-        return True
-    elif isinstance(t, TField):
+    # elif isinstance(t, TTag):
+    #     return True
+    elif isinstance(t, TEntry):
         return True
     elif isinstance(t, Unio):
         return is_typ_structured(t.left) and is_typ_structured(t.right)
@@ -1421,11 +1423,11 @@ def get_polarity_from_target(positive : bool, target : Typ, id : str) -> Optiona
     elif isinstance(target, TUnit):
         return None 
 
-    elif isinstance(target, TTag):
-        body = target.body
-        return get_polarity_from_target(positive, body, id)
+    # elif isinstance(target, TTag):
+    #     body = target.body
+    #     return get_polarity_from_target(positive, body, id)
 
-    elif isinstance(target, TField):
+    elif isinstance(target, TEntry):
         body = target.body
         return get_polarity_from_target(positive, body, id)
 
@@ -1540,10 +1542,10 @@ class Solver:
     def simplify_typ(self, typ : Typ) -> Typ:
         if False:
             assert False
-        elif isinstance(typ, TTag):
-            return TTag(typ.label, self.simplify_typ(typ.body))
-        elif isinstance(typ, TField):
-            return TField(typ.label, self.simplify_typ(typ.body))
+        # elif isinstance(typ, TTag):
+        #     return TTag(typ.label, self.simplify_typ(typ.body))
+        elif isinstance(typ, TEntry):
+            return TEntry(typ.label, self.simplify_typ(typ.body))
         elif isinstance(typ, Inter): 
             new_left = self.simplify_typ(typ.left)
             new_right = self.simplify_typ(typ.right)
@@ -1618,12 +1620,12 @@ class Solver:
 
         if False: 
             pass
-        elif isinstance(t, TTag):
+        # elif isinstance(t, TTag):
+        #     body_typ = self.to_aliasing_typ(t.body)
+        #     return TTag(t.label, body_typ)
+        elif isinstance(t, TEntry):
             body_typ = self.to_aliasing_typ(t.body)
-            return TTag(t.label, body_typ)
-        elif isinstance(t, TField):
-            body_typ = self.to_aliasing_typ(t.body)
-            return TField(t.label, body_typ)
+            return TEntry(t.label, body_typ)
         elif isinstance(t, Imp):
             antec_typ = self.to_aliasing_typ(t.antec)
             consq_typ = self.to_aliasing_typ(t.consq)
@@ -1702,12 +1704,12 @@ class Solver:
             return ((), (), t)
         elif isinstance(t, TUnit):
             return ((), (), t)
-        elif isinstance(t, TTag):
+        # elif isinstance(t, TTag):
+        #     (body_ids, body_constraints, body_typ) = self.flatten_index_unios(t.body)
+        #     return (body_ids, body_constraints, TTag(t.label, body_typ))
+        elif isinstance(t, TEntry):
             (body_ids, body_constraints, body_typ) = self.flatten_index_unios(t.body)
-            return (body_ids, body_constraints, TTag(t.label, body_typ))
-        elif isinstance(t, TField):
-            (body_ids, body_constraints, body_typ) = self.flatten_index_unios(t.body)
-            return (body_ids, body_constraints, TField(t.label, body_typ))
+            return (body_ids, body_constraints, TEntry(t.label, body_typ))
         elif isinstance(t, Unio):
             (left_ids, left_constraints, left_typ) = self.flatten_index_unios(t.left)
             (right_ids, right_constraints, right_typ) = self.flatten_index_unios(t.right)
@@ -1910,12 +1912,12 @@ class Solver:
                 return self.prune_interpret_negative_id(closedids, constraints, src.id)
         elif isinstance(src, TUnit):  
             return constraints, TUnit()
-        elif isinstance(src, TTag):  
+        # elif isinstance(src, TTag):  
+        #     body_constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
+        #     return body_constraints, TTag(src.label, body)
+        elif isinstance(src, TEntry):  
             body_constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
-            return body_constraints, TTag(src.label, body)
-        elif isinstance(src, TField):  
-            body_constraints, body = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.body)
-            return body_constraints, TField(src.label, body)
+            return body_constraints, TEntry(src.label, body)
         elif isinstance(src, Unio):  
             left_constraints, left = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.left)
             right_constraints, right = self.prune_interpret_polar_typ(ignore, positive, closedids, constraints, src.right)
@@ -2014,10 +2016,10 @@ class Solver:
             return payload
         elif isinstance(src, TUnit):  
             return TUnit()
-        elif isinstance(src, TTag):  
-            return TTag(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
-        elif isinstance(src, TField):  
-            return TField(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
+        # elif isinstance(src, TTag):  
+        #     return TTag(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
+        elif isinstance(src, TEntry):  
+            return TEntry(src.label, self.sub_polar_typ(greenlight, src.body, id, payload))
         elif isinstance(src, Unio):  
             return Unio(
                 self.sub_polar_typ(greenlight, src.left, id, payload),
@@ -2125,12 +2127,16 @@ class Solver:
             return self.check(world, t2, t1.negation)
         elif isinstance(t2, Diff):
             return self.check(world, t1, t2.negation)
-        elif isinstance(t1, TTag) and isinstance(t2, TTag):
+        # elif isinstance(t1, TTag) and isinstance(t2, TTag):
+        #     return t1.label != t2.label or (
+        #         self.is_disjoint(world, t1.body, t2.body)
+        #     ) 
+        # elif isinstance(t1, TField) and isinstance(t2, TField) and t1.label == t2.label:
+        #     return self.is_disjoint(world, t1.body, t2.body) 
+        elif isinstance(t1, TEntry) and isinstance(t2, TEntry):
             return t1.label != t2.label or (
                 self.is_disjoint(world, t1.body, t2.body)
             ) 
-        elif isinstance(t1, TField) and isinstance(t2, TField) and t1.label == t2.label:
-            return self.is_disjoint(world, t1.body, t2.body) 
 
         elif isinstance(t2, Exi):
             renaming = self.make_renaming(t2.ids)
@@ -2211,9 +2217,9 @@ class Solver:
             return True
         if isinstance(t, TUnit):
             return True
-        elif isinstance(t, TTag):
-            return self.is_pattern_typ(t.body)
-        elif isinstance(t, TField):
+        # elif isinstance(t, TTag):
+        #     return self.is_pattern_typ(t.body)
+        elif isinstance(t, TEntry):
             return self.is_pattern_typ(t.body)
         elif isinstance(t, Inter):
             return self.is_pattern_typ(t.left) and self.is_pattern_typ(t.right)
@@ -2222,13 +2228,13 @@ class Solver:
 
     def is_base_typ(self, t : Typ) -> bool:
         return (
-            isinstance(t, TTag) or
-            isinstance(t, TField) or
+            # isinstance(t, TTag) or
+            isinstance(t, TEntry) or
             isinstance(t, Imp)
         )
 
     def is_relational_key(self, t : Typ) -> bool:
-        if isinstance(t, TField):
+        if isinstance(t, TEntry):
             return True
         elif isinstance(t, Inter):
             return self.is_relational_key(t.left) and self.is_relational_key(t.right)
@@ -2314,11 +2320,11 @@ class Solver:
                 Imp(upper.antec, upper.consq.right)
             ))
 
-        elif isinstance(upper, TField) and isinstance(upper.body, Inter):
+        elif isinstance(upper, TEntry) and isinstance(upper.body, Inter):
             return [
                 m1
-                for m0 in self.solve(world, lower, TField(upper.label, upper.body.left))
-                for m1 in self.solve(m0, lower, TField(upper.label, upper.body.right))
+                for m0 in self.solve(world, lower, TEntry(upper.label, upper.body.left))
+                for m1 in self.solve(m0, lower, TEntry(upper.label, upper.body.right))
             ]
 
         elif isinstance(upper, Imp) and isinstance(upper.antec, Fixpoint):
@@ -2338,13 +2344,13 @@ class Solver:
         elif isinstance(lower, TUnit) and isinstance(upper, TUnit): 
             return [world] 
 
-        elif isinstance(lower, TTag) and isinstance(upper, TTag): 
-            if lower.label == upper.label:
-                return self.solve(world, lower.body, upper.body) 
-            else:
-                return [] 
+        # elif isinstance(lower, TTag) and isinstance(upper, TTag): 
+        #     if lower.label == upper.label:
+        #         return self.solve(world, lower.body, upper.body) 
+        #     else:
+        #         return [] 
 
-        elif isinstance(lower, TField) and isinstance(upper, TField): 
+        elif isinstance(lower, TEntry) and isinstance(upper, TEntry): 
             if lower.label == upper.label:
                 return self.solve(world, lower.body, upper.body) 
             else:
@@ -2881,7 +2887,8 @@ class BaseRule(Rule):
         return Result(pid, world, TUnit())
 
     def combine_tag(self, pid : int, world : World, label : str, body : TVar) -> Result:
-        return Result(pid, world, TTag(label, body))
+        # return Result(pid, world, TTag(label, body))
+        return Result(pid, world, TEntry(label, body))
 
     # def combine_record(self, context : Context, record_result : RecordResult) -> list[Result]:
     #     result = Top() 
@@ -2960,15 +2967,19 @@ class BaseRule(Rule):
 class ExprRule(Rule):
 
     def combine_tuple(self, pid : int, world : World, head_typ : Typ, tail_typ : Typ) -> Result:
-        return Result(pid,  world, Inter(TField('head', head_typ), TField('tail', tail_typ)))
+        return Result(pid,  world, Inter(TEntry('head', head_typ), TEntry('tail', tail_typ)))
 
     def combine_ite(self, pid : int, enviro : Enviro, world : World, condition_typ : Typ, 
         true_body_results: list[Result], 
         false_body_results: list[Result] 
     ) -> list[Result]: 
+        # ndbranches = [
+        #     NDBranch(TTag('true', TUnit()), true_body_results),
+        #     NDBranch(TTag('false', TUnit()), false_body_results)
+        # ]
         ndbranches = [
-            NDBranch(TTag('true', TUnit()), true_body_results),
-            NDBranch(TTag('false', TUnit()), false_body_results)
+            NDBranch(TEntry('true', TUnit()), true_body_results),
+            NDBranch(TEntry('false', TUnit()), false_body_results)
         ]
 
         function_result = BaseRule(self.solver).combine_function(pid, enviro, world, ndbranches)
@@ -2981,7 +2992,7 @@ class ExprRule(Rule):
             worlds = [
                 m1
                 for m0 in worlds
-                for m1 in self.solver.solve(m0, record_typ, TField(key, result_var))
+                for m1 in self.solver.solve(m0, record_typ, TEntry(key, result_var))
             ]
             record_typ = result_var
         return [
@@ -3105,10 +3116,10 @@ end ExprRule
 class RecordRule(Rule):
 
     def combine_single(self, pid : int, world : World, label : str, body_typ : Typ) -> Result:
-        return Result(pid, world, TField(label, body_typ))
+        return Result(pid, world, TEntry(label, body_typ))
 
     def combine_cons(self, pid : int, world : World, label : str, body_typ : Typ, tail_typ : Typ) -> Result:
-        return Result(pid, world, Inter(TField(label, body_typ), tail_typ))
+        return Result(pid, world, Inter(TEntry(label, body_typ), tail_typ))
 
 
 class FunctionRule(Rule):
@@ -3160,7 +3171,7 @@ start Pattern Rule
 
 class PatternRule(Rule):
     def combine_tuple(self, head_result : PatternResult, tail_result : PatternResult) -> PatternResult:
-        pattern = Inter(TField('head', head_result.typ), TField('tail', tail_result.typ))
+        pattern = Inter(TEntry('head', head_result.typ), TEntry('tail', tail_result.typ))
         enviro = head_result.enviro.update(tail_result.enviro) 
         return PatternResult(enviro, pattern)
 
@@ -3181,7 +3192,8 @@ class BasePatternRule(Rule):
 
 
     def combine_tag(self, label : str, body_result : PatternResult) -> PatternResult:
-        pattern = TTag(label, body_result.typ)
+        # pattern = TTag(label, body_result.typ)
+        pattern = TEntry(label, body_result.typ)
         return PatternResult(body_result.enviro, pattern)
 '''
 end BasePatternRule
@@ -3190,11 +3202,11 @@ end BasePatternRule
 class RecordPatternRule(Rule):
 
     def combine_single(self, label : str, body_result : PatternResult) -> PatternResult:
-        pattern = TField(label, body_result.typ)
+        pattern = TEntry(label, body_result.typ)
         return PatternResult(body_result.enviro, pattern)
 
     def combine_cons(self, label : str, body_result : PatternResult, tail_result : PatternResult) -> PatternResult:
-        pattern = Inter(TField(label, body_result.typ), tail_result.typ)
+        pattern = Inter(TEntry(label, body_result.typ), tail_result.typ)
         enviro = body_result.enviro.update(tail_result.enviro)
         return PatternResult(enviro, pattern)
 

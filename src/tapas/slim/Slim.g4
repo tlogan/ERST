@@ -125,13 +125,16 @@ $combo = TUnit()
 }
 
 // TTag 
+// | '~' ID typ_base {
+// $combo = TTag($ID.text, $typ_base.combo) 
+// }
 | '~' ID typ_base {
-$combo = TTag($ID.text, $typ_base.combo) 
+$combo = TEntry($ID.text, $typ_base.combo) 
 }
 
-// TField 
+// TEntry 
 | ID ':' typ_base {
-$combo = TField($ID.text, $typ_base.combo) 
+$combo = TEntry($ID.text, $typ_base.combo) 
 }
 
 
@@ -167,7 +170,7 @@ $combo = Imp($typ_base.combo, $typ.combo)
 
 // Tuple 
 | typ_base ',' typ {
-$combo = Inter(TField('head', $typ_base.combo), TField('tail', $typ.combo)) 
+$combo = Inter(TEntry('head', $typ_base.combo), TEntry('tail', $typ.combo)) 
 }
 
 // Existential unconstrained 
