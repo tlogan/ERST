@@ -2247,6 +2247,16 @@ class Solver:
             return [world] 
 
         #######################################
+        #### Reflection ####
+        #######################################
+
+        elif isinstance(lower, Bot): 
+            return [world] 
+
+        elif isinstance(upper, Top): 
+            return [world] 
+
+        #######################################
         #### Dealiasing ####
         #######################################
         elif isinstance(upper, TVar) and upper.id in self.aliasing: 
@@ -2324,9 +2334,6 @@ class Solver:
         ####  Abstraction Elimination #########
         #######################################
 
-        elif isinstance(lower, Bot): 
-            return [world] 
-
 
         elif isinstance(lower, Unio):
             return [
@@ -2388,9 +2395,6 @@ class Solver:
         #######################################
         #### Refinement Introduction ##########
         #######################################
-
-        elif isinstance(upper, Top): 
-            return [world] 
 
         elif isinstance(upper, Inter):
             return [
@@ -2510,54 +2514,41 @@ class Solver:
             else:
                 return []
 
+        #######################################
+        #### Diff Introduction #############
+        #######################################
+
+        elif isinstance(upper, Diff): 
+
+            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
+            if True:
+                # TODO: need a sound/safe/conservative inhabitable check
+                # only works if we assume T is not empty
+                '''
+                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
+                ----
+                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
+                ----
+                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                '''
+                context_worlds = self.solve(world, lower, upper.context)
+                return [
+                    m
+                    for m in context_worlds 
+                    # if (
+                    #     # not self.is_inhabitable(world, lower) or 
+                    #     # Fail (incompletely) if lower is empty
+                    #     self.solve(m, lower, upper.negation) == []
+                    # )
+                ]   
+            else:
+                return []
 
 
         #######################################
-        #### Refinement Elimination ###########
+        #### Fixpoint Elimination #############
         #######################################
 
-
-        elif isinstance(lower, Inter) and self.is_base_typ(upper) : 
-            return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
-
-        elif isinstance(lower, All): 
-            renaming = self.make_renaming(lower.ids)
-            strong_constraints = sub_constraints(renaming, lower.constraints)
-            lower_body = sub_typ(renaming, lower.body)
-            worlds = self.solve(world, lower_body, upper) 
-            for constraint in strong_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]
-
-            return worlds
-
-        #######################################
-        #### Abstraction Introduction #########
-        #######################################
-
-        elif isinstance(upper, Unio) and (self.is_base_typ(lower) or self.is_pattern_typ(lower)): 
-            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
-
-        elif isinstance(upper, Exi): 
-            renaming = self.make_renaming(upper.ids)
-            weak_constraints = sub_constraints(renaming, upper.constraints)
-            weak_body = sub_typ(renaming, upper.body)
-            worlds = self.solve(world, lower, weak_body) 
-            for constraint in weak_constraints:
-                worlds = [
-                    m1
-                    for m0 in worlds
-                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
-                ]
-            return worlds
-
-        #######################################
-        #### Special Elim #####################
-        #######################################
 
         elif isinstance(lower, Fixpoint):
             if is_typ_structured(lower.body):
@@ -2593,17 +2584,9 @@ class Solver:
             else:
                 return []
 
-        elif isinstance(lower, Diff):
-            if diff_well_formed(lower):
-                '''
-                A \\ B <: T === A <: T | B  
-                '''
-                return self.solve(world, lower.context, Unio(upper, lower.negation))
-            else:
-                return []
 
         #######################################
-        #### Special Introduction #############
+        #### Fixpoint Introduction #############
         #######################################
 
         elif isinstance(upper, Fixpoint): 
@@ -2692,31 +2675,67 @@ class Solver:
                 #end if
 
 
-        elif isinstance(upper, Diff): 
+        #######################################
+        #### Abstraction Introduction #########
+        #######################################
 
-            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
-            if True:
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
+        # elif isinstance(upper, Unio) and (self.is_base_typ(lower) or self.is_pattern_typ(lower)): 
+        elif isinstance(upper, Unio): 
+            return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
+
+        elif isinstance(upper, Exi): 
+            renaming = self.make_renaming(upper.ids)
+            weak_constraints = sub_constraints(renaming, upper.constraints)
+            weak_body = sub_typ(renaming, upper.body)
+            worlds = self.solve(world, lower, weak_body) 
+            for constraint in weak_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]
+            return worlds
+
+        #######################################
+        #### Refinement Elimination ###########
+        #######################################
+
+        # elif isinstance(lower, Inter) and self.is_base_typ(upper) : 
+        # elif isinstance(lower, Inter) and (not isinstance(upper, Fixpoint)
+        #     # and not isinstance(upper, Unio)
+        #     # and not isinstance(upper, Exi)
+        # ) : 
+        elif isinstance(lower, Inter):
+            return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
+
+        elif isinstance(lower, All): 
+            renaming = self.make_renaming(lower.ids)
+            strong_constraints = sub_constraints(renaming, lower.constraints)
+            lower_body = sub_typ(renaming, lower.body)
+            worlds = self.solve(world, lower_body, upper) 
+            for constraint in strong_constraints:
+                worlds = [
+                    m1
+                    for m0 in worlds
+                    # for m1 in self.solve_or_cache(m0, constraint.lower, constraint.upper)
+                    for m1 in self.solve(m0, constraint.lower, constraint.upper)
+                ]
+
+            return worlds
+
+        #######################################
+        #### Diff Elimination #############
+        #######################################
+
+        elif isinstance(lower, Diff):
+            if diff_well_formed(lower):
                 '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
+                A \\ B <: T === A <: T | B  
                 '''
-                context_worlds = self.solve(world, lower, upper.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    # if (
-                    #     # not self.is_inhabitable(world, lower) or 
-                    #     # Fail (incompletely) if lower is empty
-                    #     self.solve(m, lower, upper.negation) == []
-                    # )
-                ]   
+                return self.solve(world, lower.context, Unio(upper, lower.negation))
             else:
                 return []
+
 
 
 

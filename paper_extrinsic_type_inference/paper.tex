@@ -614,7 +614,8 @@ A value may be composed of unit, constructors, records, or functions.
       \kappa \sep 
       \phi \sep 
       \psi \sep 
-      \theta \sep
+      \J{LFP[}\alpha\J{]}\tau \sep
+      \tau \typdiff \eta \sep
       \gamma
     \end{array}
     & \com{type}
@@ -641,13 +642,6 @@ A value may be composed of unit, constructors, records, or functions.
       \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
     \end{array}
     & \com{refinement}
-    \\
-    \nonterm{\theta} & \is 
-    \begin{array}[t]{@{}l}
-      \J{LFP[}\alpha\J{]}\tau \sep
-      \tau \typdiff \eta
-    \end{array}
-    & \com{special}
     \\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
@@ -681,6 +675,10 @@ To accommodate a high degree of data constructor reusability,
 it is important that the form of types accommodates a wide range of precision.
 To manage the complexity of the various forms, we subdivide the type forms
 according to some themes.
+A type may composed of variables $\alpha$, 
+bases $\kappa$, expansions $\phi$, refinements $\psi$,
+least fixed point $\J{LFP[}\alpha \J{]} \tau$,
+differences $\tau \typdiff \eta$, and sugar $\gamma$ 
 There is a variable type $\alpha$, whose internal structure is not important.
 A base type reflects the structure of its inhabitants and may be composed of unit $\J{@}$, constructors $\J{<}l\J{>}\tau$,
 entries $l \entrymap \tau$, and paths $\tau \J{->} \tau$.
@@ -1571,7 +1569,7 @@ in order to prevent infinite unrolling in the subtyping solver}
 \hfill
 \begin{definition} 
   \label{def:proof_subtyping_abstraction_elimination}
-  Proof Subtyping (Abstraction Elim)
+  Proof Subtyping (Expansion Elim)
   \hfill
   \boxed{\phi \subtypes \tau \given \Omega}
   \\
@@ -1765,6 +1763,136 @@ The dual of this rule is the one for an upper bound closed variable,
 in the continued definition \ref{def:continued_proof_subtyping}.
 
 
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_lfp_elimination}
+  Proof Subtyping (Least Fixed Point Elim)
+  \hfill
+  \boxed{\J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l[\alpha\slash\tau_r]^+ = \tau_l'
+      \\
+      \alpha \not\in \text{FTV}(\tau_l')
+      \\
+      \tau_l' \subtypes \tau_r \given \Omega 
+    } {
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_difference_intro}
+  Proof Subtyping (Difference Intro)
+  \hfill
+  \boxed{\tau \subtypes \rho \typdiff \eta \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      % \TODO{prove that subtyping of diff is complete}
+      % \\\\
+      % \TODO{which implies that its negation is sound}
+      % \\\\
+      \tau \subtypes \rho \given \Omega 
+      \\
+      \text{FTV}(\eta) \subseteq \epsilon
+      \\
+      \nexists \Omega' .\  
+      \Omega \preceq \Omega'
+      \land
+      \tau \subtypes \eta \given \Omega'
+    } {
+      \tau \subtypes \rho \typdiff \eta
+      \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_lfp_intro}
+  Proof Subtyping (Least Fixed Point Intro)
+  \hfill
+  \boxed{\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Omega \preceq \Omega'
+      \\
+      \Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+      \\
+      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
+      \given \Omega'
+    } {
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega'
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_diff_elimination}
+  Proof Subtyping (Difference Elim)
+  \hfill
+  \boxed{\rho \typdiff \eta \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \rho \subtypes \tau \J{|} \eta \given \Omega
+    } {
+      \rho \typdiff \eta \subtypes \tau \given \Omega
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Proof Subtyping (Expansion Intro)
+  \hfill
+  \boxed{\tau \subtypes \phi \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau \subtypes \tau_{l} \given \Omega 
+    } {
+      \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \tau \subtypes \tau_{r} \given \Omega 
+    } {
+      \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \tau_l \subtypes \tau_r \given \Omega
+      \\
+      \Omega \preceq \Omega' 
+      \\
+      \Delta_r \given \Omega' 
+    } {
+      \tau_l
+      \subtypes 
+      \J{EXI[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega' 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
 
 \hfill
 \begin{definition} 
@@ -1775,22 +1903,18 @@ in the continued definition \ref{def:continued_proof_subtyping}.
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_{l} \subtypes \kappa \given \Omega
+      \tau_{l} \subtypes \tau \given \Omega
     } {
-      \tau_{l}\J{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+      \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Omega 
     }
 
     \inferrule {
-      \tau_{l} \subtypes \kappa \given \Omega 
+      \tau_{l} \subtypes \tau \given \Omega 
     } {
-      \tau_{l}\J{\&}\tau_{r}  \subtypes \kappa \given \Omega 
+      \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Omega 
     }
 
     \inferrule {
-      \nexists \alpha .\ \tau_r = \alpha 
-      \\
-      \nexists \psi .\ \tau_r = \psi 
-      \\\\
       \tau_l \subtypes \tau_r \given \Omega 
       \\
       \Omega \preceq \Omega' 
@@ -1810,113 +1934,6 @@ For a lower bound difference, $\tau_l \typdiff \eta$, proof subtyping
 simply checks that the positive type subtypes
 the upper bound union with the subtracted type. 
 
-\hfill
-\begin{definition} 
-  \label{def:proof_subtyping_abstraction_introduction}
-  Proof Subtyping (Abstraction Intro)
-  \hfill
-  \boxed{\tau \subtypes \phi \given \Omega}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \kappa \subtypes \tau_{l} \given \Omega 
-    } {
-      \kappa \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \kappa \subtypes \tau_{r} \given \Omega 
-    } {
-      \kappa \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
-    }
-
-    \inferrule {
-      \nexists \alpha .\ \tau_l = \alpha 
-      \\
-      \nexists \phi .\ \tau_l = \phi 
-      \\\\
-      \tau_l \subtypes \tau_r \given \Omega
-      \\
-      \Omega \preceq \Omega' 
-      \\
-      \Delta_r \given \Omega' 
-    } {
-      \tau_l
-      \subtypes 
-      \J{EXI[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega' 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-
-\hfill
-\begin{definition} 
-  \label{def:proof_subtyping_special_elimination}
-  Proof Subtyping (Special Elim)
-  \hfill
-  \boxed{\theta \subtypes \tau \given \Omega}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \tau_l[\alpha\slash\tau_r]^+ = \tau_l'
-      \\
-      \alpha \not\in \text{FTV}(\tau_l')
-      \\
-      \tau_l' \subtypes \tau_r \given \Omega 
-    } {
-      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
-    }
-
-    \inferrule {
-      \rho \subtypes \tau \J{|} \eta \given \Omega
-    } {
-      \rho \typdiff \eta \subtypes \tau \given \Omega
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
-
-\hfill
-\begin{definition} 
-  \label{def:proof_subtyping_special_intro}
-  Proof Subtyping (Special Intro)
-  \hfill
-  \boxed{\tau \subtypes \theta \given \Omega}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \Omega \preceq \Omega'
-      \\
-      \Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
-      \\\\
-      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
-      \given \Omega'
-    } {
-      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega'
-    }
-
-    \inferrule {
-      % \TODO{prove that subtyping of diff is complete}
-      % \\\\
-      % \TODO{which implies that its negation is sound}
-      % \\\\
-      \tau \subtypes \rho \given \Omega 
-      \\
-      \text{FTV}(\eta) \subseteq \epsilon
-      \\\\
-      \nexists \Omega' .\  
-      \Omega \preceq \Omega'
-      \land
-      \tau \subtypes \eta \given \Omega'
-    } {
-      \tau \subtypes \rho \typdiff \eta
-      \given \Omega 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
 
 
 
