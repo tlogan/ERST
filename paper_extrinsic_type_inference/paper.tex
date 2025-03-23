@@ -38,6 +38,7 @@
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{definition}{Definition}[section]
+\newtheorem{property}{Property}[section]
 % \newtheorem{proof}{Proof}[section]
 
 
@@ -413,10 +414,11 @@ and applies it to the number two and the boolean true.
 \]
 
 Type systems for System F have traditionally struggled to find the best
-type for such programs. If restricted to parametric types alone, there are many choices,
-without there being a clear best or principal type. 
-That is because it's not possible to find a weakest type for the parameter
-$\J{f}$ with parametric types alone.
+type for such programs. If restricted to unqualified parametric types alone, there are many choices,
+without there being a clear best or principal type, 
+which is because it's not possible to find the weakest type for the function parameter
+$\J{f}$.
+
 One possibility is that the type system requires that f is a function that wraps its
 input in an option. 
 
@@ -424,7 +426,7 @@ input in an option.
   \J{f : ALL[X] X -> <some> X}
 \]
 
-One possibility is that the type system requires that f is a function that wraps its
+Another possibility is that the type system requires that f is a function that wraps its
 input in an list. 
 
 \[
@@ -669,7 +671,7 @@ To accommodate a high degree of data constructor reusability,
 it is important that the form of types accommodates a wide range of precision.
 To manage the complexity of the various forms, we subdivide the type forms
 according to some themes.
-A type may composed of variables $\alpha$, 
+A type $\tau$ may be composed of variables $\alpha$, 
 bases $\kappa$, expansions $\phi$, refinements $\psi$,
 least fixed point $\J{LFP[}\alpha \J{]} \tau$,
 differences $\tau \typdiff \eta$, and sugar $\gamma$.
@@ -679,17 +681,23 @@ entries $\J{<}l\J{>}\tau$, or paths $\tau \J{->} \tau$.
 
 An expansion type is either a binary union $\tau \J{|} \tau$ or 
 an indexed union $\J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau$.
-An expansion type is weakened relative to its constituent types. 
-For an indexed union, the bound variables (or indexes) $\vec{\alpha}$ 
-and subtyping constraints (or qualifiers) $\Delta$
-provide an upper bound on the weakening. 
+An expansion type is weaker than its constituent types. 
+An indexed union is parametrized by type variables $\vec{\alpha}$ 
+and qualified by subtyping constraints $\Delta$.
+It represents the compounded union of all instantiations of its constituent type 
+consistent with its subtyping constraints.
+In effect, the qualification by subtyping constraints provides an upper bound, in which
+the weaker the qualification, the weaker the indexed union.
 
 A refinement type is either a binary intersection $\tau \J{\&} \tau$ or 
 an indexed intersection $\J{ALL[} \vec{\alpha}\ \Delta \J{]}\tau$.
 A refinement type is strengthened relative to its constituent types. 
-For an indexed intersection, the bound variables (or indexes) $\vec{\alpha}$ 
-and subtyping constraints (or qualifiers) $\Delta$
-provide a lower bound on the strengthening. 
+An indexed intersection is parametrized by type variables $\vec{\alpha}$ 
+and qualified by subtyping constraints $\Delta$.
+It represents the compounded intersection of all instantiations of its constituent type 
+consistent with its subtyping constraints.
+In effect, the qualification by subtyping constraints provides a lower bound, in which
+the weaker the qualification, the stronger the indexed intersection.
 
 A least fixed point type enables the representation of an infinite space of data,
 e.g. natural numbers or lists. 
@@ -730,10 +738,6 @@ bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
 For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
 
 
-\TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
-Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
-}
-
 \begin{definition} Ancillaries 
   \label{def:type_ancillaries}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -751,6 +755,21 @@ Relational types is able to leverage second-order quantification for refinement,
   \end{array}\]
 \end{definition}
 
+
+There are a few ancillary structures, upon which both the representation of types and the reasoning with types depend.
+A type variable sequence $\vec{\alpha}$ is either empty $\epsilon$ or a smaller sequence extended by a single variable $\vec{\alpha}\ \alpha$
+A subtyping environment $\Delta$ is either empty $\epsilon$ or a smaller environment extended by a single
+subtyping constraint $\Delta \J{;} \tau \J{<:} \tau$.
+A typing environment $\Gamma$ is either empty $\epsilon$ or a smaller environment extended by a single
+typing constraint over a variable $\Gamma\ x \subtypes \tau$.
+a World $\Omega$ is simply a pair of a type variables sequence and a subtyping environment $\vec{\alpha}, \Delta$.
+A world represents the context for judging a typing or a subtyping relation.
+
+
+For clarity, we omit writing $\epsilon$ explicitly when describing semantics or instances of the forms.
+That is, for any structure, if there is a malformed structure due to a missing piece, 
+we assume it is replaced by a well-formed structure, 
+where $\epsilon$ is inserted wherever necessary to make it well-formed.
 
 \section{Dynamic System}
 \label{sec:dynamic_system}
@@ -1020,6 +1039,39 @@ by eliminating type forms.
 \label{sec:static_system}
 The static semantics is a system for checking if the construction of an expression is viable.   
 
+
+\begin{property}
+  \label{def:proof_typing_soundness}
+  Proof Typing Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
+    } {
+      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
+      \vec{\sigma} \satisfies \Gamma \implies
+      \\\\
+      \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
+    }
+  \end{mathpar}
+\end{property}
+
+The system for proving typing $\Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta$ 
+must be sound with respect to model typing assuming 
+interpretations of typing and subtyping environments.
+The typing environment $\Gamma$ and the subtyping environment $\Delta$
+represent assumptions that enable the typing $e \hastype \tau$ to be proved. 
+the type variables $\vec{\alpha}$ are closed, meaning that the proof typing
+holds only if the typing holds under every interpretation of every type variable in $\vec{\alpha}$.
+Type variables not in $\vec{\alpha}$ are considered open, meaning the proof typing
+holds only if the typing holds for some interpretation variables not in $\vec{\alpha}$.
+Additionally, the proof typing holds only if the typing holds for every interpretation of
+the typing environment $\Gamma$.
+
+
+
 \hfill
 \begin{definition} 
   \label{def:proof_typing}
@@ -1135,6 +1187,13 @@ The static semantics is a system for checking if the construction of an expressi
   \end{mathpar}
 \end{definition}
 \hfill
+
+
+
+
+
+the typing or subtyping are valid if and only if they are valid for all interpretations of the variables $\vec{\alpha}$.
+If a variable is not in $\vec{\alpha}$  
 
 \TODO{explain the advantage of using the least fixed point type over the greatest fixed point type.
 By rewriting a function type in terms of the least fixed point type,
