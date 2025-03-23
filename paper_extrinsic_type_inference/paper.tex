@@ -550,7 +550,7 @@ although possibly weaker than the inferred type, is sufficient for the continuin
 \end{definition} 
 \hfill
 
-For convenience, expressions include syntactic sugar for tuples $e\J{,}e$, 
+For convenience and clarity, expressions include syntactic sugar for tuples $e\J{,}e$, 
 unannotated bindings \hfill \break
 $\J{let}\ x\ \J{=}\ e\ \J{in}\ e$,
 flowing $e\ \J{|>}\ e$,
@@ -639,7 +639,7 @@ A value may be composed of unit, records, or functions.
     \\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \J{EXI[}\vec{\alpha}\ \Delta \J{]} \rho \sep 
+      \J{EXI[}\vec{\alpha} \J{]} \rho \sep 
       \rho
     \end{array}
     & \com{subtracted}
@@ -649,7 +649,8 @@ A value may be composed of unit, records, or functions.
       \alpha \sep
       \J{@} \sep
       \J{<}l\J{>}\rho \sep 
-      \rho\J{\&}\rho
+      \rho\J{\&}\rho \sep
+      \rho\J{*}\rho
     \end{array}
     & \com{pattern}
     \\
@@ -671,12 +672,40 @@ according to some themes.
 A type may composed of variables $\alpha$, 
 bases $\kappa$, expansions $\phi$, refinements $\psi$,
 least fixed point $\J{LFP[}\alpha \J{]} \tau$,
-differences $\tau \typdiff \eta$, and sugar $\gamma$ 
-There is a variable type $\alpha$, whose internal structure is not important.
-A base type reflects the structure of its inhabitants and may be composed of unit $\J{@}$, 
-entries $\J{<}l\J{>}\tau$, and paths $\tau \J{->} \tau$.
+differences $\tau \typdiff \eta$, and sugar $\gamma$.
 
-\TODO{expansion type}
+A base type reflects the structure of its inhabitants and has the form of unit $\J{@}$, 
+entries $\J{<}l\J{>}\tau$, or paths $\tau \J{->} \tau$.
+
+An expansion type is either a binary union $\tau \J{|} \tau$ or 
+an indexed union $\J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau$.
+An expansion type is weakened relative to its constituent types. 
+For an indexed union, the bound variables (or indexes) $\vec{\alpha}$ 
+and subtyping constraints (or qualifiers) $\Delta$
+provide an upper bound on the weakening. 
+
+A refinement type is either a binary intersection $\tau \J{\&} \tau$ or 
+an indexed intersection $\J{ALL[} \vec{\alpha}\ \Delta \J{]}\tau$.
+A refinement type is strengthened relative to its constituent types. 
+For an indexed intersection, the bound variables (or indexes) $\vec{\alpha}$ 
+and subtyping constraints (or qualifiers) $\Delta$
+provide a lower bound on the strengthening. 
+
+A least fixed point type enables the representation of an infinite space of data,
+e.g. natural numbers or lists. 
+
+A difference type represents subtracting one space from another.
+Its subtracted type $\eta$ has a restricted form of either
+a pattern type $\rho$ or an unqualified indexed union 
+over a pattern $\J{EXI[}\vec{\alpha} \J{]} \rho$, for which the type system
+is complete, thus making its negation sound.  
+The restricted form is of no hindrance to type inference, since the 
+subtracted types arise only from patterns, whose forms are sufficiently
+limited.
+
+A pattern type reflects the forms of pattern expressions, consisting of 
+variables $\alpha$, unit $@$, entries $\J{<} l \J{l} \rho$, intersections $\rho \J{\&} \rho$,
+and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
 
 
 \hfill
@@ -696,15 +725,14 @@ entries $\J{<}l\J{>}\tau$, and paths $\tau \J{->} \tau$.
 \end{definition} 
 \hfill
 
-For each statement over a sugar type $\gamma$, we assume that $\gamma$ is implicitly replaced with $\text{desugar}(\gamma)$.
+For convenience and clarity, types include syntactic sugar for top $\J{TOP}$, 
+bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
+For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
 
 
 \TODO{mention somwhere that the second order quantification serves two distinct purposes; 1. polymorphism as in System-F. 2. refinement as in first-order quantification of liquid types.
 Relational types is able to leverage second-order quantification for refinement, eschewing the first-order quantification used in other systems.
 }
-
-The system leverages types of the forms in Definition \ref{def:types}, 
-which allow expressing properties of expressions with varying levels of precisions. 
 
 \begin{definition} Ancillaries 
   \label{def:type_ancillaries}
