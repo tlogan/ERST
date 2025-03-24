@@ -189,6 +189,9 @@ In section \ref{sec:static_system}, we describe the verification and type infere
 
 When possible we will guide the design of definitions by soundness and/or completeness properties,
 which in effect constrain the space of correct designs with upper and/or lower bounds, respectively. 
+The derivations of these properties are hinted at by the inductive nature of definitions 
+along with other properties mentioned throughout.
+Proofs \TODO{...} of these properties are in the appendix, section \ref{sect:appendix}.
 
 \section{Overview}
 \label{sec:overview}
@@ -853,8 +856,7 @@ The programming language is pure and applicative.
   \end{mathpar}
 \end{definition}
 
-\emph{Progression} of an expression, as in definition \ref{def:progression},
-is a small-step operational semantics. 
+Progression of an expression is a small-step operational semantics. 
 It adheres to typical definitions of applicative languages for the most part. One 
 slight departure is that pattern matching is merely a special case of function application. 
 Likewise, a switch is merely a function abstraction.
@@ -862,15 +864,51 @@ Records are similar to Functions, except that their entries are guarded by liter
 Additionally, records may be abstracted as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
-\TODO{Model Typing Soundness}
+\begin{definition}
+  \label{def:stability}
+  Stability 
+  \hfill
+  \boxed{\VDash e}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      e = v
+    } {
+      \VDash e
+    } 
 
-To characterize the meaning of types, model typing describes how the various forms of types are introduced
-based on the various forms of values. There are no rules for elimination 
-of type forms. Rather, the progression of expressions is leveraged to eliminate
-expression forms, from which further type forms may be introduced.
-The indirection into progression is not practical, but it guides the design 
-of a sound type system that can directly prove the validity of typings and subtypings 
-by eliminating type forms.
+    \inferrule { 
+      e \rightsquigarrow e' 
+      \\
+      \VDash e'
+    } {
+      \VDash e
+    } 
+  \end{mathpar}
+\end{definition}
+
+A expression is stable if and only if it is a value or it can take a step to a stable expression.
+In other words, if an expression is not a value then its behavior is defined by progression.
+
+
+\hfill
+\begin{property}
+  \label{def:model_typing_soundness}
+  Model Typing Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau
+    } {
+      \VDash e 
+    } 
+  \end{mathpar}
+\end{property}
+\hfill
+
+
+Model typing $\vec{\delta} \satisfies e \hastype \tau$ attempts to imbue types
+with meaning.  At the very least, types should inform us that an expression is stable.  
 
 \hfill
 \begin{definition}
@@ -880,14 +918,6 @@ by eliminating type forms.
   \boxed{\vec{\delta} \satisfies e \hastype \tau}
   \\
   \begin{mathpar}
-    \inferrule { 
-      \alpha \slash \tau \in \vec{\delta}
-      \\
-      \vec{\delta} \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \alpha 
-    } 
-
     \inferrule { 
     } {
       \vec{\delta} \satisfies \J{@} \hastype \J{@}
@@ -981,10 +1011,29 @@ by eliminating type forms.
     } {
       \vec{\delta} \satisfies e \hastype \tau 
     } 
+
+    \inferrule { 
+      \alpha \slash \tau \in \vec{\delta}
+      \\
+      \vec{\delta} \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \alpha 
+    } 
   \end{mathpar}
 \end{definition}
 \hfill
 
+
+Model typing describes how the various forms of 
+types are introduced based on the various forms of values. 
+There are no rules for elimination 
+of type forms. Rather, the progression of expressions is leveraged to eliminate
+expression forms, from which further type forms may be introduced.
+The indirection into progression is not practical, but it guides the design 
+of a sound type system that can directly prove the validity of typings and subtypings 
+by eliminating type forms.
+
+\TODO{describe the various rules of model typing}
 
 
 \hfill
@@ -1300,10 +1349,10 @@ of a single path type.
       \\\\
       \exists \pi .\ \pi \in \vec{\pi}' 
       \\
-      \text{close}(\rho) = \eta
+      \text{capture}(\rho) = \eta
     } {
       \vec{\alpha}, \Delta, \Gamma \entails \vec{f}\ \J{?}p\J{=>}e \liftfun 
-      \vec{\pi}\ \vec{\pi}' \sim \vec{\eta}\ \eta
+      \vec{\pi} \cup \vec{\pi}' \sim \vec{\eta}\ \eta
     }
   \end{mathpar}
 \end{definition}
@@ -2498,145 +2547,6 @@ Relational reasoning.
 
 \section{Appendix}
 \label{sect:appendix}
-\begin{definition} Internals 
-  \label{def:internals}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x : \tau
-    \\
-    \\
-    \nonterm{\vec{\Omega}} & \is \epsilon \sep \vec{\Omega}\ \Omega
-    \\
-    \nonterm{\Omega} & \is \vec{\alpha}, \Delta
-    \\
-    \\
-    \nonterm{\vec{\tau}} & \is \epsilon \sep \vec{\tau}\ \tau
-    \\
-    \nonterm{\vec{\phi}} & \is \epsilon \sep \vec{\phi}\ \phi
-    \\
-    \\
-    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi
-    \\
-    \nonterm{\pi} & \is \vec{\alpha}, \Delta, \tau \J{->} \tau
-    \\
-    \\
-    \nonterm{\vec{\delta}} & \is \epsilon \sep \vec{\delta}\ \delta
-    \\
-    \nonterm{\delta} & \alpha \slash \tau
-  \end{array}\]
-\end{definition}
-
-
-\begin{definition} Sugared Expressions 
-  \label{def:sugared_expressions}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{e} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      e\J{,}e \sep
-      e\J{|>}e \sep
-      \J{let}\ x\ z\ \J{=}\ e\ \J{in}\ e \sep
-      \J{(}e\J{)}
-    \end{array}
-    \\
-    \nonterm{z} & \is \epsilon \sep \J{:}\tau 
-    \\
-    \nonterm{p} & \is 
-      ... \sep
-      p\J{,}p \sep
-      \J{(}p\J{)} 
-  \end{array}\]
-\end{definition}
-
-\begin{definition} Values 
-  \label{def:others}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{v} & \is 
-      \J{@} \sep
-      \J{<$l$> $v$} \sep
-      \vec{g} \sep
-      \J{$v$,$v$} \sep
-      \J{($v$)} \sep
-      \vec{f} 
-    \\
-    \nonterm{\vec{g}} & \is \epsilon \sep \vec{g}\ g
-    \\
-    \nonterm{g} & \is \J{?$l$=>$v$}
-    \\
-    \\
-    \nonterm{\vec{\sigma}} & \is \epsilon \sep \vec{\sigma}\ \sigma
-    \\
-    \nonterm{\sigma} & \is x \slash v
-  \end{array}\]
-\end{definition}
-
-
-\begin{definition}\boxed{e \rightsquigarrow e}\ Sugared Progression
-  \begin{mathpar}
-    \inferrule {
-      e_b \J{(} e_a \J{)} \rightsquigarrow e' 
-    } {
-      e_a \J{|>} e_b \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      e \rightsquigarrow e' 
-    } {
-      \J{(} e \J{)} \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \J{?left=>} e_l\ \J{?right=>} e_r \rightsquigarrow e' 
-    } {
-      e_l\J{,}e_r \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \J{(? <true> @=>}e_t \J{\ ? <false> @=>}e_f \J{)(}e_c\J{)} \rightsquigarrow e'
-    } {
-      \J{if}\ e_c\ \J{then}\ e_t\ \J{else}\ e_f \rightsquigarrow e' 
-    }
-
-
-    \inferrule {
-      \J{(?} x \J{=>} e_k \J{)(} e \J{)}
-      \rightsquigarrow e'
-    } {
-      \J{let}\ x \J{:} \tau\ \J{=}\ e\ \J{in}\ e_k \rightsquigarrow e'
-    }
-
-    % \inferrule {
-    %   e \rightsquigarrow e'
-    % } {
-    %   \J{let $x$:$\tau$ = $e$ in $e_k$} \rightsquigarrow \J{let $x$:$\tau$ = $e'$ in $e_k$}
-    % }
-
-    % \inferrule {
-    % } {
-    %   \J{let $x$:$\tau$ = $v$ in $e$} \rightsquigarrow e[x \slash v]
-    % }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition} Sugared Types 
-  \label{def:sugared_types}
-  \[\begin{array}[t]{r@{}l}
-    \nonterm{\tau} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      \J{TOP} \sep 
-      \J{BOT} \sep
-      \J{(}\tau\J{)}
-
-    \end{array}
-    \\
-    \nonterm{\phi} & \is 
-    \begin{array}[t]{@{}l}
-      ... \sep
-      \J{(}\phi\J{)}
-
-    \end{array}
-  \end{array}\]
-\end{definition}
 
 \begin{definition} 
   \label{def:type_interpretation}
