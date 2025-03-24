@@ -1087,12 +1087,6 @@ the typing environment $\Gamma$.
       \Gamma \entails x \hastype \tau \given \Omega 
     }
 
-    % \inferrule {
-    %   \Gamma \entails e \hastype \tau \given \Omega 
-    % } {
-    %   \Gamma \entails \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau \given \Omega 
-    % }
-
     \inferrule {
     } {
       \Gamma \entails \epsilon \hastype \J{TOP} \given \Omega
@@ -1158,7 +1152,7 @@ the typing environment $\Gamma$.
       \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha} \cup \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
       \\\\
@@ -1172,7 +1166,7 @@ the typing environment $\Gamma$.
       \\\\
       \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
-      \exists \alpha .\ \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \exists \alpha .\ \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r 
     } {
       \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -1223,35 +1217,42 @@ leverages proof subtyping $\tau_l \subtypes \tau_r \given \Omega$
 to check that there is an entry with the label $l$ 
 in the supposed record $e$, and it learns a lower bound 
 on the type of the body $\alpha$ associated with that label.
-
-
 For application $e_f\J{(}e_a\J{)}$, proof typing
 leverages proof subtyping $\tau_l \subtypes \tau_r \given \Omega$
 to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$ associated with that argument.
-
-
-\TODO{wordsmith below}
-
-For an annotated definition, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
+For an annotated binding, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
 proof typing checks the definition's source $e$ against the annotation $\tau_a$,
-and adds the annotation to the typing environment when checking the contintuation $e'$.
+and adds the annotation to the typing environment when checking the continuation $e'$.
 
 For a recursive expression, $\J{loop(}e{)}$, proof typing
 eagerly factors the paths of the recursive function 
 to construct a single path type with an inductive type as its input and an inductive type as its output. 
-First, it ensures that argument of the fixpoint combinator $e$ is indeed a 
-singe path function. Then, by leveraging subtyping, 
-it finds a lower bound for every path in the body of $e$,
-represented by a sequence of worlds $\vec{\Omega}$, 
-all associated with a variable implication, $\alpha_l\J{->}\alpha_r$.
-Using all these worlds, it delegates to \emph{fixpoint duality}, as in definition \ref{def:fixpoint_duality},
-it order to construct the cases of a relational least fixpoint type, 
-representing the dual of the greatest fixpoint of implication under intersected over its worlds.
-Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
-and wrapping a generalized implication around that. 
+First, it ensures that argument of the fixed point combinator $e$ is indeed a 
+single path function. 
+Then, by leveraging subtyping, 
+it gathers all the path types that approximate the body of $e$
+into a sequence $\vec{\pi}$, which pairs each parametric path type with a world to qualify its meaning.
+As it collects the path type-world pairs, it leverages positive type interpretation 
+$\llbracket\vec{\alpha} \entails \Delta, \tau \rrbracket^+$ 
+to instantiate the parametric path type with interpretations consistent with its corresponding world. 
+This makes both the path type more readable and the subtyping environment more compact.
 
+Using all compacted collection of path type-world pairs $\vec{\pi}$, 
+it delegates to fixed point duality $
+      \alpha_\nu \downarrow \vec{\pi}_\nu
+      \fallingdotseq 
+      \alpha_\mu \uparrow \vec{\pi}_\mu
+$, which rewrites the implicitly co-inductive path type-world pairs into
+implicitly inductive pair type-world pairs. 
+Rewriting the co-inductive paths into inductive pairs is the first
+step towards factoring the infinite paths of the recursive function into weaker single path.
+By leveraging the $\text{pack}^-(\vec{\alpha} \entails \vec{\pi}) = \tau$,
+The implicit inductive nature becomes explicit in the form of an inductive relational type $\tau_mu$. 
+Finally, it leverages the factorization predicate $\tau_l \subtypes \tau_r \Vvdash \alpha \subtypes \tau$
+to factor the inductive relational type into an inductive antecedent and an inductive consequent
+of a single path type.
 
 \hfill
 \begin{definition} 
