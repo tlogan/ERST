@@ -1094,9 +1094,8 @@ the typing environment $\Gamma$.
     % }
 
     \inferrule {
-      \vec{r} = \epsilon
     } {
-      \Gamma \entails \vec{r} \hastype \J{TOP} \given \Omega
+      \Gamma \entails \epsilon \hastype \J{TOP} \given \Omega
     }
 
     \inferrule {
@@ -1161,7 +1160,7 @@ the typing environment $\Gamma$.
       \forall \vec{\alpha}'\ \Delta' .\ 
         \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
-      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
       \\\\
       \exists \pi.\ \pi \in \vec{\pi}_\nu
       \\
@@ -1169,7 +1168,7 @@ the typing environment $\Gamma$.
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
       \\
-      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
+      \text{pack}^-(\text{FTV}(\Gamma) \cup \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
       \\\\
       \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
@@ -1185,38 +1184,9 @@ the typing environment $\Gamma$.
 \hfill
 
 
-
-
-
-the typing or subtyping are valid if and only if they are valid for all interpretations of the variables $\vec{\alpha}$.
-If a variable is not in $\vec{\alpha}$  
-
-\TODO{explain the advantage of using the least fixed point type over the greatest fixed point type.
-By rewriting a function type in terms of the least fixed point type,
-instead of the greatest fixed point type around the implication type,
-the subtyping solver can avoid infinitely unrolling the GFP in an attempt to construct
-the least fixed point return type. 
-}
-
-\emph{Proof typing}, def. \ref{def:proof_typing}, checks the viability of an expression's
-form. Additionally, by extending the forms of expressions with type annotations, 
-as in Definition \ref{def:sugared_expressions},
-proof typing is also able to check that expressions meet abstract specifications.
-In order to check the viability of constructions and specifications, 
-proof typing lifts expressions into types and leverages subtyping to 
-check compatibility between types. 
-The proof typing predicate represents a typing that holds under the assumptions
-of a typing environment, and a world, 
-which consists of emph{closed} type variables and subtyping constraints. 
-
-Whether a variable is a closed or not represents how a variable is quantified.
-
-If proof typing holds, then its typing holds under every interpretation of its closed type variables
-under some interpretation of its open variables.
-We formalize ths soundness claim in Section \ref{sect:correctness}. 
-
-The proof typing predicate, $\Gamma \entails e \hastype \tau \given \Omega'$, can 
-be interpreted as an algorithm that takes a typing environment $\Gamma$, an expression $e$,
+The proof typing predicate $\Gamma \entails e \hastype \tau \given \Omega'$
+implies an algorithmic interpretation, 
+which takes a typing environment $\Gamma$, an expression $e$,
 and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
 such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
 The input world is not explicitly represented in the predicate, so the algorithm
@@ -1224,68 +1194,53 @@ interprets the input world as the smallest world that can satisfy the predicate.
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
 
-
-% The proof typing predicate, $\Omega, \Gamma \entails e \hastype \tau \with \Omega'$, can 
-% be interpreted as an algorithm that takes a world $\Omega$, a typing environment $\Gamma$, and an expression $e$,
-% as inputs and returns a type $\tau$ and a world $\Omega'$ as outputs,
-% such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
-% Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
-% enumerates all possible outputs.
-
-\paragraph{Rule \ref{def:proof_typing}.1}
-For unit, \J{@}, proof typing simply returns the singleton type of the same
-form. 
-
-\paragraph{Rule \ref{def:proof_typing}.2}
-For a variable, $x$, proof typing looks
-for a corresponding typing in the environment, and returns the 
-corresponding type if found.
-
-\paragraph{Rule \ref{def:proof_typing}.3}
-For a tagged expression, $\J{<}l\J{>}e$, proof typing recursively 
-constructs the type of the tag's body,
-and returns the corresponding tag type.
-
-\paragraph{Rule \ref{def:proof_typing}.4}
-For an empty record, proof typing constructs the top type \J{TOP},
-which is merely syntactic sugar for $\J{EXI[}\alpha\J{]}\alpha$.
-
-\paragraph{Rule \ref{def:proof_typing}.5}
-For a non empty record, $\vec{r}\J{?}l\J{=>}e$, proof typing 
+For the unit expression \J{@}, proof typing simply returns the unit type \J{@}. 
+For a variable expression, $x$, proof typing looks for a corresponding typing in the environment, 
+and returns the type it found.
+For an empty expression $\epsilon$, proof typing returns the top type \J{TOP},
+which provides a basis for constructing types for record expressions. 
+For a non-empty record expression $\vec{r}\J{?}l\J{=>}e$, proof typing 
 recursively constructs the type for each entry, and
-refines their types against each other via intersection.
+refines their types against each other via compounded intersection.
 
-\paragraph{Rule \ref{def:proof_typing}.6}
-For a function, $\vec{f}$, proof typing 
-delegates the work to two helper predicates: \emph{function lifting}, as in definition \ref{def:function_lifting}, and
-\emph{constrained implication congruence}, as in definition \ref{def:constrained_implication_congruence}.
-Function lifting constructs a sequence of implication types, where each associated with a world, represented by $\vec{\pi}$.
-Constrained implication congruence, constructs a sequence of types congruent with each implication,
-such that each world is packaged with its corresponding type, resulting in a universally constrained type 
-(if there are type variables in the original implication). 
-During an application, each path of a function is tried in order, which means values matching subsequent
-patterns, will not be matched by earlier patterns. Thus, function lifting generates types from patterns,
-and for each pattern, it subtracts the types of previous patterns,
-represented by prefixes of $\vec{eta}$
+For a function expression $\vec{f}$, proof typing 
+delegates the work to two helpers: 
+the predicate function lifting $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
+and the meta-function $\text{pack}^+(\vec{\alpha} \entails \vec{\pi}) = \tau$.
+Function lifting constructs a sequence of path types, 
+with each path type associated with a world, represented by $\vec{\pi}$.
+Pack then takes the path-world pairs and for each path-world pair,
+it rewrites the pair into a type by wrapping the path type in indexed unions
+and indexed intersections qualified by the constraints in the world's subtyping environment. 
+The positive $+$ annotation on pack indicates that generated type 
+is to approximate an expression used in a positive position,
+which determines how closed and open variables are mapped to
+bindings in indexed unions versus indexed intersections.
 
-\paragraph{Rule \ref{def:proof_typing}.7}
-For a projection, $e\J{.}l$, proof typing
-leverages subtyping to check that there is an entry with label $l$ 
+
+For projection $e\J{.}l$, proof typing
+leverages proof subtyping $\tau_l \subtypes \tau_r \given \Omega$ 
+to check that there is an entry with the label $l$ 
 in the supposed record $e$, and it learns a lower bound 
 on the type of the body $\alpha$ associated with that label.
 
 
-\paragraph{Rule \ref{def:proof_typing}.8}
-For an application, $e_f\J{(}e_a\J{)}$, proof typing
-leverages subtyping to check that that the function $e_f$ can actually
+For application $e_f\J{(}e_a\J{)}$, proof typing
+leverages proof subtyping $\tau_l \subtypes \tau_r \given \Omega$
+to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$ associated with that argument.
 
 
-\paragraph{Rule \ref{def:proof_typing}.9}
+\TODO{wordsmith below}
+
+For an annotated definition, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
+proof typing checks the definition's source $e$ against the annotation $\tau_a$,
+and adds the annotation to the typing environment when checking the contintuation $e'$.
+
 For a recursive expression, $\J{loop(}e{)}$, proof typing
-constructionsa complex type containing an implication constrained
-by a least fixed point type.  
+eagerly factors the paths of the recursive function 
+to construct a single path type with an inductive type as its input and an inductive type as its output. 
 First, it ensures that argument of the fixpoint combinator $e$ is indeed a 
 singe path function. Then, by leveraging subtyping, 
 it finds a lower bound for every path in the body of $e$,
@@ -1297,9 +1252,6 @@ representing the dual of the greatest fixpoint of implication under intersected 
 Finally, it reconstructs a type for a function, by wrapping the relational type in an existential constraint,
 and wrapping a generalized implication around that. 
 
-For an annotated definition, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
-proof typing checks the definition's source $e$ against the annotation $\tau_a$,
-and adds the annotation to the typing environment when checking the contintuation $e'$.
 
 \hfill
 \begin{definition} 
@@ -1339,7 +1291,7 @@ and adds the annotation to the typing environment when checking the contintuatio
       \text{diff}(\rho, \vec{\eta}) = \tau_l
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \epsilon, \vec{\alpha} \cup \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
       \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
       \\\\
@@ -1352,6 +1304,12 @@ and adds the annotation to the typing environment when checking the contintuatio
     }
   \end{mathpar}
 \end{definition}
+
+During an application, each path of a function is tried in order, which means values matching subsequent
+patterns, will not be matched by earlier patterns. 
+Thus, function lifting generates types from patterns,
+and for each pattern, it subtracts the types of previous patterns,
+represented by prefixes of $\vec{eta}$
 
 \begin{definition} 
   \label{def:fixed_point_duality}
