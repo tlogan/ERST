@@ -860,6 +860,15 @@ Records are similar to Functions, except that their entries are guarded by liter
 Additionally, records may be abstracted as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
+\TODO{Model Typing Soundness}
+
+To characterize the meaning of types, model typing describes how the various forms of types are introduced
+based on the various forms of values. There are no rules for elimination 
+of type forms. Rather, the progression of expressions is leveraged to eliminate
+expression forms, from which further type forms may be introduced.
+The indirection into progression is not practical, but it guides the design 
+of a sound type system that can directly prove the validity of typings and subtypings 
+by eliminating type forms.
 
 \hfill
 \begin{definition}
@@ -873,14 +882,6 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
       \alpha \slash \tau \in \vec{\delta}
       \\
       \vec{\delta} \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \alpha 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \notin \vec{\delta}
-      \\
-      \vec{\delta} \satisfies e \hastype \J{TOP} 
     } {
       \vec{\delta} \satisfies e \hastype \alpha 
     } 
@@ -940,7 +941,7 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
 
     \inferrule { 
       \forall \vec{\delta}' .\ \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies 
-      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies e \hastype \tau
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
     } {
       \vec{\delta}, \vec{\sigma} \satisfies e \hastype \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
     } 
@@ -982,14 +983,6 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
 \end{definition}
 \hfill
 
-\TODO{introduce model typing and soundness properties}
-Model typing describes how the various forms of types are introduced based
-on the various forms of expressions. There are no rules for elimination 
-of type forms. Rather, the progression of expressions is leveraged to eliminate
-expression forms, from which further type forms may be introduced.
-The indirection into progression is not practical, but it guides the construction
-of a sound type system that can directly prove the validity of typings and subtypings 
-by eliminating type forms.
 
 
 \hfill
@@ -1037,7 +1030,11 @@ by eliminating type forms.
 
 \section{Static System}
 \label{sec:static_system}
-The static semantics is a system for checking if the construction of an expression is viable.   
+The static system is a strengthening of the dynamic system, designed to
+ensure that expressions can make progress and satisfy approximate specifications
+represented by types. 
+The entry point into the static system is proof typing, which
+aims to prove the validity of typing directly by including elimination rules.  
 
 
 \begin{property}
@@ -1052,7 +1049,6 @@ The static semantics is a system for checking if the construction of an expressi
       \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
       \vec{\sigma} \satisfies \Gamma \implies
-      \\\\
       \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
     }
   \end{mathpar}
