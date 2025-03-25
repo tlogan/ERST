@@ -120,11 +120,9 @@
 \label{sec:introduction}
 
 Automatically catching errors in programs is a hard enough problem
-that many languages require users to provide simple specifications to limit that space of correctness.
-
+that many languages require users to provide simple specifications to limit the space of correctness.
 In languages such as as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
 That is, the data constructors are intrinsically typed.
-
 The clever design of ML allows annotations to be fairly sparse by 
 having types specified at constructor declarations and relying on type inference elsewhere.
 However, one of the drawbacks of intrinsically typed languages is that they prevent reusing of
@@ -1035,6 +1033,26 @@ by eliminating type forms.
 
 \TODO{describe the various rules of model typing}
 
+\hfill
+\begin{definition}
+  \label{def:model_type_inhabitation}
+  Model Type Inhabitation 
+  \hfill
+  \boxed{\vec{\delta} \satisfies \tau}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \vec{\delta} \satisfies e \hastype \tau 
+    } {
+      \vec{\delta} \satisfies \tau 
+    } 
+  \end{mathpar}
+\end{definition}
+\hfill
+
+As a matter of convenience, a type is inhabited if and only if there is 
+an expression for which model typing holds. 
+
 
 \hfill
 \begin{definition}
@@ -1361,13 +1379,38 @@ During an application, each path of a function is tried in order, which means va
 patterns, will not be matched by earlier patterns. 
 Thus, function lifting generates types from patterns,
 and for each pattern, it subtracts the types of previous patterns,
-represented by prefixes of $\vec{eta}$
+represented by prefixes of $\vec{\eta}$
+
+
+\begin{property} 
+  \label{prop:fixed_point_duality_soundness}
+  Fixed Point Duality Soudness
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\\\
+      (\vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r) \in \vec{\pi}_\nu
+      \\
+      \vec{\delta}_\nu \satisfies \Delta_\nu
+      \\
+      (\vec{\alpha}_c,\Delta_\mu, \tau_l \J{*} \tau_r) \in \vec{\pi}_\mu
+      \\
+      \vec{\delta}_\mu \satisfies \Delta_\mu
+    } {
+      \vec{\delta}_\nu \satisfies \tau_l \J{->} \tau_r
+      \iff
+      \vec{\delta}_\nu \satisfies \tau_l \J{*} \tau_r
+    }
+  \end{mathpar} 
+\end{property} 
+
 
 \begin{definition} 
   \label{def:fixed_point_duality}
   Fixed Point Duality 
   \hfill
-  \boxed{\alpha \downarrow \vec{\pi} \fallingdotseq \alpha \uparrow \vec{\pi}}
+  \boxed{\alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1381,34 +1424,16 @@ represented by prefixes of $\vec{eta}$
       \alpha_{\nu} \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_{\mu} \uparrow \vec{\pi}_\mu
-      % \\\\
-      % \llbracket \Delta_\nu, \alpha_l \rrbracket^- = (\Delta', \tau_l)
-      % \\
-      % \llbracket \Delta', \alpha_r \rrbracket^+ = (\Delta'', \tau_r)
       \\
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
-      \vec{\alpha}_f \entails 
-      \alpha_{\nu} \downarrow \vec{\pi}_\nu\ \left< \vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r \right> 
+      \alpha_{\nu} \downarrow \vec{\pi}_\nu\ (\vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r)
       \fallingdotseq 
-      \alpha_{\mu} \uparrow \vec{\pi}_\mu\ \left< \vec{\alpha}_c,\Delta_\mu, \tau_l' \J{*} \tau_r' \right>
+      \alpha_{\mu} \uparrow \vec{\pi}_\mu\ (\vec{\alpha}_c,\Delta_\mu, \tau_l \J{*} \tau_r)
     }
   \end{mathpar}
 \end{definition}
 \hfill
-
-\TODO{Note the reason for excluding rigids and closeds from quantification is a way to improve precision, but not necessary for soundness. (Right?). Need to conjure up an example to support this idea.}
-
-\TODO{soundness idea: $ 
-\\ \forall f\ e_l\ e_r\ \alpha_l\ \alpha_r\ \vec{\alpha}\ \Delta\ \vec{\alpha}'\ \Delta'\ \vec{\Omega},  
-\\ ... \implies
-\\ f(e_1) = e_2 \implies \left< \vec{\alpha}', \Delta' \right> \in \vec{\Omega} \implies 
-\\ (
-\Gamma, ... \satisfies f : \alpha_l \J{->} \alpha_r 
-\iff 
-\Gamma, ... \satisfies (e_l,e_r) : \alpha_l \J{*} \alpha_r
-)$ 
-}
 
 
 \hfill
