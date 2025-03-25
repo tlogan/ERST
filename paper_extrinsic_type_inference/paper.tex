@@ -1268,9 +1268,9 @@ refines their types against each other via compounded intersection.
 
 For a function expression $\vec{f}$, proof typing 
 delegates the work to two helpers: 
-the predicate function lifting $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
+the predicate path sequence typing $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
 and the meta-function $\text{pack}^+(\vec{\alpha} \entails \vec{\pi}) = \tau$.
-Function lifting constructs a sequence of path types, 
+Path sequence typing constructs a sequence of path types, 
 with each path type associated with a world, represented by $\vec{\pi}$.
 Pack then takes the path-world pairs and for each path-world pair,
 it rewrites the pair into a type by wrapping the path type in indexed unions
@@ -1342,8 +1342,8 @@ of a single path type.
 
 \hfill
 \begin{definition} 
-  \label{def:function_lifting}
-  Function Lifting
+  \label{def:path_sequence_typing}
+  Path Sequence Typing 
   \hfill
   \boxed{\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}}
   \\
@@ -1363,7 +1363,7 @@ of a single path type.
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
       \vec{\alpha}', \llbracket \epsilon, \vec{\alpha} \cup \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
-      \Gamma\ \Gamma' \entails e \hastype \tau_r \given \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
       \\\\
       \exists \pi .\ \pi \in \vec{\pi}' 
       \\
@@ -1375,11 +1375,20 @@ of a single path type.
   \end{mathpar}
 \end{definition}
 
-During an application, each path of a function is tried in order, which means values matching subsequent
-patterns, will not be matched by earlier patterns. 
-Thus, function lifting generates types from patterns,
-and for each pattern, it subtracts the types of previous patterns,
-represented by prefixes of $\vec{\eta}$
+Path sequence typing $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
+handles the details of constructing types for each path of a function.
+Progression of application tries each path of the applied function is in order.
+That is, the application will progress along the first path whose pattern
+matches the argument.
+To account for this ordering and short-circuiting of pattern matching,
+the types for each path of the function must subtract the types of patterns
+from earlier paths $\vec{\eta}$ when constructing antecedents of path types.  
+Each path of the function could branch out, so each function path
+can produce multiple path types, which are collected in $\pi'$.
+The meta-function for positive type interpretation 
+$\llbracket \vec{\alpha}_\local, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^+ = \tau$ 
+keeps things tidy by compacting the subtyping environments and making the path
+types for readable.
 
 
 \begin{property} 
