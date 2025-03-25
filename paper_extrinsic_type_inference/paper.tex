@@ -1135,7 +1135,15 @@ holds only if the typing holds for some interpretation variables not in $\vec{\a
 Additionally, the proof typing holds only if the typing holds for every interpretation of
 the typing environment $\Gamma$.
 
-
+The proof typing predicate $\Gamma \entails e \hastype \tau \given \Omega'$
+implies an algorithmic interpretation, 
+which takes a typing environment $\Gamma$, an expression $e$,
+and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
+such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
+The input world is not explicitly represented in the predicate, so the algorithm
+interprets the input world as the smallest world that can satisfy the predicate. 
+Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
+enumerates all possible outputs.
 
 \hfill
 \begin{definition} 
@@ -1247,15 +1255,6 @@ the typing environment $\Gamma$.
 \hfill
 
 
-The proof typing predicate $\Gamma \entails e \hastype \tau \given \Omega'$
-implies an algorithmic interpretation, 
-which takes a typing environment $\Gamma$, an expression $e$,
-and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
-such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
-The input world is not explicitly represented in the predicate, so the algorithm
-interprets the input world as the smallest world that can satisfy the predicate. 
-Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
-enumerates all possible outputs.
 
 For the unit expression \J{@}, proof typing simply returns the unit type \J{@}. 
 For a variable expression, $x$, proof typing looks for a corresponding typing in the environment, 
@@ -1515,31 +1514,53 @@ types for readable.
 
 
 
+\hfill
+\begin{property} 
+  \label{def:proof_subtyping_soundness}
+  Proof Subtyping Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes \tau_r \given \vec{\alpha}, \Delta 
+    } {
+      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies \tau_l \subtypes \tau_r
+    }
+  \end{mathpar}
+\end{property}
+\hfill
 
+The system for proving subtyping $\tau_l \subtypes \tau_r \given \vec{\alpha}, \Delta$ 
+must be sound with respect to model typing under
+interpretation of the subtyping environment.
+The subtyping environment $\Delta$
+represent assumptions that enable the subtyping $\tau_l \subtypes \tau_r$ to be proved. 
+The type variables $\vec{\alpha}$ are closed, meaning that the proof subtyping
+holds only if the model subtyping holds under every interpretation of every type variable in $\vec{\alpha}$.
+Type variables not in $\vec{\alpha}$ are considered open, meaning the proof subtyping
+holds only if the model subtyping holds for some interpretation variables not in $\vec{\alpha}$.
 
+The proof subtyping predicate $\tau_l \subtypes \tau_r \given \Omega'$
+implies an algorithmic interpretation, 
+which takes a subtype $\tau_l$, a supertype $\tau_r$,
+and a world $\Omega$ as inputs and returns a world $\Omega'$ as output,
+such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
+The input world is not explicitly represented in the predicate, so the algorithm
+interprets the input world as the smallest world that can satisfy the predicate. 
+Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
+enumerates all possible outputs.
 
+The order of the rules is critical to ensure that easier sub-problems are generated 
+when possible. 
+The best algorithmic interpretation we have found tries the rules in the order
+presented in the paper.
+Due to the complexity of types there being two input types,
+proof subtyping relies on many rules. 
+For clarity, we subdivide the proof subtyping rules 
+according to some themes.
 
-
-\emph{Proof subtyping}, as in definition \ref{def:proof_subtyping},
-checks the viability of one type subtyping another type, under the assumption
-of subtyping constraints.
-
-The predicate, $\tau_l \subtypes \tau_r \given \Omega'$, can be interpreted as an algorithm
-that takes the types and an implicit world $\Omega$ as inputs and return
-a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$
-and the input world is the smallest world necessary for the proposition to hold.  
-
-% The predicate, $\Omega \entails \tau_l \subtypes \tau_r \with \Omega'$, can be interpreted as an algorithm
-% that takes the world $\Omega$, and two types as inputs, and returns
-% a world $\Omega'$, where the output world extends the input world $(\Omega \preceq \Omega')$.
-
-The order of the rules 
-is critical to ensure that easier constraints are generated. To that end, cases that
-strengthen the assumed type (left of subtyping) or weaken the guaranteed type (right of subtyping) occur before rules that
-weaken the assumed type or strengthen the guaranteed type.
-
-Due to the complexity of types along with two positions for types to occur in subtyping,
-there are many rules needed to define the proof system of subtyping. For clarity,
 we show only a subset of the rules in this section in order to explain the essence of the system.
 We leave the remaining rules in the appendix, section \ref{sect:appendix}, definition \ref{def:continued_proof_subtyping}. 
 The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
