@@ -1389,18 +1389,20 @@ represented by prefixes of $\vec{\eta}$
   \begin{mathpar}
     \inferrule {
       \alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu
-      \\\\
-      (\vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r) \in \vec{\pi}_\nu
-      \\
-      \vec{\delta}_\nu \satisfies \Delta_\nu
-      \\
-      (\vec{\alpha}_c,\Delta_\mu, \tau_l \J{*} \tau_r) \in \vec{\pi}_\mu
-      \\
-      \vec{\delta}_\mu \satisfies \Delta_\mu
     } {
-      \vec{\delta}_\nu \satisfies \tau_l \J{->} \tau_r
+      \forall \vec{\alpha}_\nu\ \Delta_\nu\ \tau_\nu\ \delta_\nu.\ 
+      (\vec{\alpha}_\nu,\Delta_\nu, \tau_\nu) \in \vec{\pi}_\nu \implies
+      \text{dom}(\vec{\delta}_\nu) \cong \vec{\alpha}_\nu \implies
+      \vec{\delta} \cup \vec{\delta}_\nu \satisfies \Delta_\nu \implies
+      \vec{\delta}_\nu \satisfies e_f \hastype \tau_\nu
+      \\\\
       \iff
-      \vec{\delta}_\nu \satisfies \tau_l \J{*} \tau_r
+      \\\\
+      \exists \vec{\alpha}_\mu\ \Delta_\mu\ \tau_\mu\ \delta_\mu\ e_a.\ 
+      (\vec{\alpha}_\mu,\Delta_\mu, \tau_\mu) \in \vec{\pi}_\mu \land
+      \text{dom}(\vec{\delta}_\mu) \cong \vec{\alpha}_\mu \land
+      \vec{\delta} \cup \vec{\delta}_\mu \satisfies \Delta_\mu \land
+      \vec{\delta}_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
     }
   \end{mathpar} 
 \end{property} 
