@@ -2498,7 +2498,8 @@ class Solver:
             return worlds 
 
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
-        elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
+        # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
+        elif isinstance(lower, TVar) and lower.id in world.closedids: 
             # ignore_constraints, lower_interp = self.prune_interpret_negative_id(world.closedids, world.constraints, lower.id)
             # if bool(self.solve(world, lower_interp, upper)):
             #     return [world]

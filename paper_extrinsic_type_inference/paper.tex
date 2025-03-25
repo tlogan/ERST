@@ -1772,30 +1772,24 @@ in order to prevent infinite unrolling in the subtyping solver}
   \\
   \begin{mathpar}
     \inferrule {
-      \nexists \psi.\ \tau = \psi
-      \\
-      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
+      \alpha \notin \vec{\alpha}
       \\ 
-      \alpha_\open \notin \vec{\alpha}_\closed
+      \text{split}^-(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\\\
-      \text{split}^-(\Delta[\alpha_\open\slash\tau]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      (\vec{\alpha}, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
-      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
+      \Delta_\open \given \vec{\alpha}', \Delta'
     } {
-      \alpha_\open \subtypes \tau \given (\vec{\alpha}_\closed', \Delta' \J{;} \alpha\J{<:}\tau) 
+      \alpha \subtypes \tau \given (\vec{\alpha}', \Delta' \J{;} \alpha\J{<:}\tau) 
     }
 
     \inferrule {
-      \nexists \psi.\ \tau_r = \psi
+      \alpha \in \vec{\alpha} 
       \\
-      \alpha_\closed \in \vec{\alpha}_\closed 
-      \\
-      \nexists \alpha.\ \tau_r = \alpha 
-      \\\\
-      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau_r \safe
     } {
-      \alpha_\closed \subtypes \tau_r
-      \given (\vec{\alpha}_\closed, \Delta)
+      \alpha \subtypes \tau_r
+      \given (\vec{\alpha}, \Delta)
     }
   \end{mathpar}
 \end{definition}
@@ -1811,31 +1805,23 @@ in order to prevent infinite unrolling in the subtyping solver}
   \\
   \begin{mathpar}
     \inferrule {
-      \nexists \phi.\ \tau = \phi
-      \\
-      (\vec{\alpha}_\closed, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}_\closed', \Delta')
+      \alpha \notin \vec{\alpha}
       \\ 
-      \alpha_\open \notin \vec{\alpha}_\closed
+      \text{split}^+(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\\\
-      \text{split}^+(\Delta[\alpha_\open\slash\tau]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      (\vec{\alpha}, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
-      \Delta_\open \given \vec{\alpha}_\closed', \Delta'
+      \Delta_\open \given \vec{\alpha}', \Delta'
     } {
-      \tau \subtypes \alpha_\open \given (\vec{\alpha}_\closed', \Delta' \J{;} \tau\J{<:}\alpha_\open) 
+      \tau \subtypes \alpha \given (\vec{\alpha}', \Delta' \J{;} \tau\J{<:}\alpha) 
     }
 
     \inferrule {
-      \nexists \phi.\ \tau_l = \phi
+      \alpha \in \vec{\alpha} 
       \\
-      \alpha_\closed \in \vec{\alpha}_\closed 
-      % \\
-      % \forall \alpha.\ \tau_l = \alpha \implies \alpha \in \vec{\alpha} 
-      \\
-      \nexists \alpha.\ \tau_l = \alpha 
-      \\\\
-      (\vec{\alpha}_\closed, \Delta) \entails \tau_l \subtypes \alpha_\closed \safe
+      (\vec{\alpha}, \Delta) \entails \tau_l \subtypes \alpha \safe
     } {
-      \tau_l \subtypes \alpha_\closed \given (\vec{\alpha}_\closed, \Delta) 
+      \tau_l \subtypes \alpha \given (\vec{\alpha}, \Delta) 
     }
   \end{mathpar}
 \end{definition}
