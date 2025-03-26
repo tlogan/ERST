@@ -1696,6 +1696,28 @@ The subtyping logic needs an union antecedent rule, corresponding
 to disjunction elimination, and intersection consequent rules,
 corresponding to conjunction introduction. 
 
+For a path type with a union antecedent in supertype position 
+$
+  \tau_l \subtypes 
+  (\tau_a\J{|}\tau_b)\J{->}\tau_r
+$, proof subtyping breaks apart the union and checks
+that the subtype holds against two paths 
+whose antecedents are the union's constituent parts. 
+For a path type with a intersection consequent in supertype position 
+$
+  \tau_l \subtypes 
+  \tau_r \J{->}(\tau_a\J{\&}\tau_b)
+$, proof subtyping breaks apart the intersection and checks
+that the subtype holds against two paths 
+whose consequents are the intersection's constituent parts. 
+For an entry type with a intersection consequent in supertype position 
+$
+  \tau \subtypes 
+  \J{<}l\J{>} (\tau_a\J{\&}\tau_b)
+$, proof subtyping breaks apart the intersection and checks
+that the subtype holds against two entries 
+whose consequents are the intersection's constituent parts. 
+
 
 \TODO{NOTE how this rewriting turns the type inside out; going from implication on the outside to refinement/abstraction on the outside}
 
