@@ -611,6 +611,7 @@ A value may be composed of unit, records, or functions.
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
+      \J{@} \sep
       \kappa \sep 
       \phi \sep 
       \psi \sep 
@@ -622,11 +623,10 @@ A value may be composed of unit, records, or functions.
     \\
     \nonterm{\kappa} & \is 
     \begin{array}[t]{@{}l}
-      \J{@} \sep
       \J{<} l \J{>} \tau \sep 
       \tau\J{->}\tau
     \end{array}
-    & \com{base}
+    & \com{implication}
     \\
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
@@ -1592,8 +1592,8 @@ such as de Bruijin indexes \cite{} before comparing type forms.
 
 \hfill
 \begin{definition} 
-  \label{def:proof_subtyping_basic_preservation}
-  Proof Subtyping (Base Preservation)
+  \label{def:proof_subtyping_implication_preservation}
+  Proof Subtyping (Implication Preservation)
   \hfill
   \boxed{\kappa_l \subtypes \kappa_r \given \Omega}
   \\
@@ -1622,10 +1622,12 @@ such as de Bruijin indexes \cite{} before comparing type forms.
 \end{definition}
 \hfill
 
-There are three type forms that imply the structures of the values contained in them.
-For unit, reflexivity already preserves the type form.
-For the other two forms, entries and paths,
-proof subtyping preserves the form if the type's constituent parts meet certain criteria. 
+
+Both entry types and path types may be viewed as analogs of propositional implication. 
+However, unlike the typical separate rules for introduction and elimination in propositional implication,
+The proof subtyping for each implication types combines the semantics for introduction
+and elimination into a single preservation rule.
+For entries and paths, proof subtyping preserves the form if the type's constituent parts meet certain criteria. 
 For entries, $l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega$
 proof subtyping simply checks that the entries' labels match and that 
 subtyping holds for their contents.
@@ -1683,6 +1685,17 @@ of the subtype is stronger than the consequent of the supertype.
   \end{mathpar}
 \end{definition}
 \hfill
+
+Just as entries and paths are analogous to propositional implication,
+the analogy extends to union and intersection.
+Union is analogous to propositional disjunction,
+and intersection is analogous to propositional conjunction. 
+However, since the proof subtyping rules simply preserve implication types,
+rather than introducing and eliminating them,
+The subtyping logic needs an union antecedent rule, corresponding
+to disjunction elimination, and intersection consequent rules,
+corresponding to conjunction introduction. 
+
 
 \TODO{NOTE how this rewriting turns the type inside out; going from implication on the outside to refinement/abstraction on the outside}
 
