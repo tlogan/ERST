@@ -1583,9 +1583,12 @@ as well as additional rules for increased precision.
 \end{definition}
 \hfill
 
-For reflexive subtyping, up to alpha renaming, $\tau \subtypes \tau$, 
-proof subtyping simply holds without any updates to the world.
-
+Proof subtyping is reflexive. In other words, a type
+is considered both weaker than and stronger than itself. 
+We implicitly assume alpha conversion for types variables
+bound in indexed unions and indexed intersections.
+An algorithmic interpretation could convert to a nameless representation,
+such as de Bruijin indexes \cite{} before comparing type forms.
 
 \hfill
 \begin{definition} 
@@ -1619,18 +1622,17 @@ proof subtyping simply holds without any updates to the world.
 \end{definition}
 \hfill
 
-For subtyping tagged types, $\J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r$, 
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-
-For subtyping record types, $l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega$
-proof subtyping simply checks that the labels match and subtyping holds
-for their contents.
-
-For subtyping implication types, $\tau_{ll} \J{->} \tau_{lr} \subtypes \tau_{rl} \J{->} \tau_{rr}$
-proof subtyping simply checks that the space between types of the upper bound
-contains the space between types of the lower bound.
+There are three type forms that imply the structures of the values contained in them.
+For unit, reflexivity already preserves the type form.
+For the other two forms, entries and paths,
+proof subtyping preserves the form if the type's constituent parts meet certain criteria. 
+For entries, $l \J{->} \tau_l \subtypes l \J{->} \tau_r \given \Omega$
+proof subtyping simply checks that the entries' labels match and that 
+subtyping holds for their contents.
+For paths, $\tau_{ll} \J{->} \tau_{lr} \subtypes \tau_{rl} \J{->} \tau_{rr}$
+proof subtyping simply checks that the antecedent of the subtype
+is weaker than the antecedent of the supertype, and the consequent
+of the subtype is stronger than the consequent of the supertype. 
 
 
 \hfill
@@ -1776,7 +1778,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\ 
       \text{split}^-(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\\\
-      (\vec{\alpha}, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
       \Delta_\open \given \vec{\alpha}', \Delta'
     } {
@@ -1809,7 +1811,7 @@ in order to prevent infinite unrolling in the subtyping solver}
       \\ 
       \text{split}^+(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
       \\\\
-      (\vec{\alpha}, \Delta\ \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
+      (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
       \Delta_\open \given \vec{\alpha}', \Delta'
     } {
@@ -2097,24 +2099,24 @@ This rule is the relational analog of the open variable rules.
   \label{def:closed_variable_safety_negative}
   Closed Variable Safety (Negative)
   \hfill
-  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe}
+  \boxed{(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe}
   \\
   \begin{mathpar}
 
     \inferrule {
-      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe
     } {
-      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha \subtypes \tau \safe
     }
 
     \inferrule {
-      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      (\vec{\alpha}, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+      (\vec{\alpha}, \Delta \J{;} \alpha \J{<:} \tau_l) \entails \alpha \subtypes \tau_r \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2125,24 +2127,24 @@ This rule is the relational analog of the open variable rules.
   \label{def:closed_variable_safety_positive}
   Closed Variable Safety (Positive)
   \hfill
-  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe}
+  \boxed{(\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe}
   \\
   \begin{mathpar}
 
     \inferrule {
-      (\vec{\alpha}_\closed, \Delta) \entails \tau \subtypes \alpha_\closed \safe
+      (\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe
     } {
-      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+      (\vec{\alpha}, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha \subtypes \tau \safe
     }
 
     \inferrule {
-      \nexists \alpha .\ \tau_r = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \nexists \alpha .\ \tau_r = \alpha \land \alpha \notin \vec{\alpha}
       \\\\
       \exists \Omega .\ 
-      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      (\vec{\alpha}, \Delta) \preceq \Omega \land
       \tau_l \subtypes \tau_r \given \Omega 
     } {
-      (\vec{\alpha}_\closed, \Delta \J{;}  \tau_r \J{<:} \alpha_\closed) \entails \tau_l \subtypes \alpha_\closed \safe
+      (\vec{\alpha}, \Delta \J{;}  \tau_r \J{<:} \alpha) \entails \tau_l \subtypes \alpha \safe
     }
   \end{mathpar}
 \end{definition}
