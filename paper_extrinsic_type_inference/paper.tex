@@ -1749,6 +1749,8 @@ proof subtyping is able to make further progress than it would without the rewri
       \\
       \Delta_l \given \vec{\alpha}, \Delta
       \\
+      \forall \Omega .\ \Delta_l \given \Omega \implies \Omega = \vec{\alpha}, \Delta
+      \\\\
       (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
       \\
       \tau_l \subtypes \tau_r \given \Omega 
@@ -1778,7 +1780,12 @@ the strongest information that can safely be assumed when eliminating the body $
 Marking $\vec{\alpha}_l$ as closed ensures that proof subtyping
 does not erroneously learn stronger information on those variables 
 in order to prove the elimination of $\tau_l$.
-Second, the solution to eliminating the indexed union's body must be unique. 
+Another requirement for safety is that 
+eliminating of $\tau_l$ must hold under all solutions of the qualifiers $\Delta_l$.
+Proof subtyping ensures this with the even stronger restriction that the solution
+to $\Delta_l$ is unique. That is, instead of letting the proof split into
+different worlds and then recombining when necessary, proof subtyping simply prevents
+splitting the worlds too eagerly. 
 
 \hfill
 \begin{definition} 
@@ -1803,11 +1810,11 @@ Second, the solution to eliminating the indexed union's body must be unique.
       \\
       \Delta_r \given \vec{\alpha}, \Delta
       \\
+      \forall \Omega .\ \Delta_r \given \Omega \implies \Omega = \vec{\alpha}, \Delta
+      \\\\
       (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
       \\
       \tau_l \subtypes \tau_r \given \Omega 
-      % \\\\
-      % \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
       \tau_l \subtypes \J{ALL[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega 
     }

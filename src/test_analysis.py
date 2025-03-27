@@ -408,6 +408,36 @@ def test_nat_list_subs_even_list_fail():
     assert not worlds
 
 
+def test_existential_elimination_fail():
+
+    lower = (f"""
+(EXI [X ; X <: (~uno @) | (~dos @)] X)
+    """.strip())
+
+    upper = (f"""
+(~uno @)
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    print(f"len(worlds): {len(worlds)}")
+    assert not worlds
+
+
+def test_existential_elimination_pass():
+
+    lower = (f"""
+(EXI [X ; X <: (~uno @) | (~dos @)] X)
+    """.strip())
+
+    upper = (f"""
+(~uno @) | (~dos @)
+    """.strip())
+    solver = analyzer.Solver(m())
+    worlds = solve(solver, lower, upper)
+    print(f"len(worlds): {len(worlds)}")
+    assert worlds
+
+
 
 def test_addition_subs_lte():
 
@@ -2270,11 +2300,11 @@ if __name__ == '__main__':
     # test_two_cons_query_subs_nat_list()
     # test_plus_equals_two_query()
     #####################################
-    test_even_list_subs_nat_list_pass()
-    test_nat_list_subs_even_list_fail()
-    #####################################
-    test_even_subs_nat_pass()
-    test_nat_subs_even_fail()
+    # test_even_list_subs_nat_list_pass()
+    # test_nat_list_subs_even_list_fail()
+    # #####################################
+    # test_even_subs_nat_pass()
+    # test_nat_subs_even_fail()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################
@@ -2283,7 +2313,7 @@ if __name__ == '__main__':
     # test_lted_wrapper()
     # test_max_parts_disjoint()
     ######## TODO: update type construction to replace skolems and variables in payload and in relational constraints. 
-    test_max()
+    # test_max()
 
     # test_fix()
     # test_max_annotated()
@@ -2342,6 +2372,10 @@ if __name__ == '__main__':
     # test_inter_subtypes_union_antec_pass()
     # test_inter_subtypes_inter_consq_pass()
     # test_inter_subtypes_inter_record_pass()
+    #####################################
+    # test_existential_elimination_pass()
+    # test_existential_elimination_fail()
+    #####################################
     pass
 
 #######################################################################
