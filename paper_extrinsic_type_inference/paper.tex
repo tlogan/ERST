@@ -1552,19 +1552,20 @@ interprets the input world as the smallest world that can satisfy the predicate.
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
 
+The subtyping relation must consider the forms of both types in the subtyping relation.
+There are elimination rules, which make decisions based on the form of the subtype,
+and there are introduction rules, which make decisions based on the form of the supertype.
+Some rules handle both elimination and introduction of type forms.
+Due to the complexity of types and there being two input types,
+proof subtyping relies on many rules. 
+For clarity, we subdivide the proof subtyping rules 
+according to some themes.
 The order of the rules is critical to ensure that easier sub-problems are generated 
 when possible. 
 The best algorithmic interpretation we have found tries the rules in the order
 presented in the paper.
-Due to the complexity of types there being two input types,
-proof subtyping relies on many rules. 
-For clarity, we subdivide the proof subtyping rules 
-according to some themes.
 
-we show only a subset of the rules in this section in order to explain the essence of the system.
-We leave the remaining rules in the appendix, section \ref{sect:appendix}, definition \ref{def:continued_proof_subtyping}. 
-The remaining rules include duals and other forms that adhere to similar proof strategies as the rules shown here,
-as well as additional rules for increased precision.  
+
 
 
 \hfill
@@ -1696,21 +1697,21 @@ The subtyping logic needs an union antecedent rule, corresponding
 to disjunction elimination, and intersection consequent rules,
 corresponding to conjunction introduction. 
 
-For a path type with a union antecedent in supertype position 
+For elimination of a path with a union antecedent 
 $
   \tau_l \subtypes 
   (\tau_a\J{|}\tau_b)\J{->}\tau_r
 $, proof subtyping breaks apart the union and checks
 that the subtype holds against two paths 
 whose antecedents are the union's constituent parts. 
-For a path type with a intersection consequent in supertype position 
+For elimination of a path with an intersection consequent 
 $
   \tau_l \subtypes 
   \tau_r \J{->}(\tau_a\J{\&}\tau_b)
 $, proof subtyping breaks apart the intersection and checks
 that the subtype holds against two paths 
 whose consequents are the intersection's constituent parts. 
-For an entry type with a intersection consequent in supertype position 
+For elimination of an entry with an intersection consequent
 $
   \tau \subtypes 
   \J{<}l\J{>} (\tau_a\J{\&}\tau_b)
@@ -1718,13 +1719,9 @@ $, proof subtyping breaks apart the intersection and checks
 that the subtype holds against two entries 
 whose consequents are the intersection's constituent parts. 
 
+By rewriting an implication type into two weaker implication types,
+proof subtyping is able to make further progress than it would without the rewriting.
 
-\TODO{NOTE how this rewriting turns the type inside out; going from implication on the outside to refinement/abstraction on the outside}
-
-\TODO{Note how this is the opposite direction from the loop type consturction, which puts the implication on the outside and the fixed point on the inside,
-in order to prevent infinite unrolling in the subtyping solver}
-
-\TODO{Note how these correspond to disjunction elimination and conjunction introduction in traditional proofs}
 
 \hfill
 \begin{definition} 
@@ -1735,15 +1732,15 @@ in order to prevent infinite unrolling in the subtyping solver}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_{ll} \subtypes \tau_r
+      \tau_a \subtypes \tau
       \given \Omega 
       \\
       \Omega \preceq \Omega'
       \\
-      \tau_{lr} \subtypes \tau_r
+      \tau_b \subtypes \tau
       \given \Omega' 
     } {
-      \tau_{ll}\J{|}\tau_{lr} \subtypes \tau_r
+      \tau_a\J{|}\tau_b \subtypes \tau
       \given \Omega' 
     }
     \\
@@ -1755,8 +1752,6 @@ in order to prevent infinite unrolling in the subtyping solver}
       (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega 
       \\
       \tau_l \subtypes \tau_r \given \Omega 
-      \\\\
-      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_l, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
       \J{EXI[}\vec{\alpha}_l\ \Delta_l \J{]}\tau_l \subtypes \tau_r
       \given \Omega 
@@ -1764,6 +1759,26 @@ in order to prevent infinite unrolling in the subtyping solver}
   \end{mathpar}
 \end{definition}
 \hfill
+
+For elimination of a union $\tau_a\J{|}\tau_b$,
+proof subtyping solves the easier sub-problems
+on the union's constituents.
+For elimination of an indexed union $\J{EXI[}\vec{\alpha}_l\ \Delta_l \J{]}\tau_l$, 
+proof subtyping ensures that the indexed union's bound variables
+are not free in the super type $\tau_r$. 
+Then it finds a solution for the qualifiers $\Delta_l$.
+Finally it finds a solution for eliminating the indexed union's body $\tau_l$,
+assuming the solution to the qualifiers $\Delta$.
+
+When eliminating the indexed union's body,
+the the bound variables $\vec{\alpha}_l$ must be treated as closed variables.
+Since the indexed union is in the elimination position, 
+the qualifiers $\Delta_l$ and its solution $\Delta$ indicate 
+the strongest information that can safely be assumed when eliminating the body $\tau_l$.
+Marking $\vec{\alpha}_l$ as closed ensures that proof subtyping
+does not erroneously learn stronger information on those variables 
+in order to prove the elimination of $\tau_l$.
+Second, the solution to eliminating the indexed union's body must be unique. 
 
 \hfill
 \begin{definition} 
@@ -1791,14 +1806,17 @@ in order to prevent infinite unrolling in the subtyping solver}
       (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega 
       \\
       \tau_l \subtypes \tau_r \given \Omega 
-      \\\\
-      \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
+      % \\\\
+      % \forall \Omega' .\ (\vec{\alpha}\ \vec{\alpha}_r, \Delta) \preceq \Omega' \implies \tau_l \subtypes \tau_r \given \Omega' \implies \Omega' = \Omega
     } {
       \tau_l \subtypes \J{ALL[}\vec{\alpha}_r\ \Delta_r \J{]}\tau_r \given \Omega 
     }
   \end{mathpar}
 \end{definition}
 \hfill
+
+Refinement introduction is the double dual of expansion elimination, so its rules
+rely on analogous techniques.
 
 \hfill
 \begin{definition} 
