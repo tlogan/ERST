@@ -138,11 +138,9 @@ For various reasons, which may include the reusability drawbacks just mentioned,
 intrinsically typed languages have lost favor,
 and untyped languages, 
 such as Javascript and Python, have increased in popularity. 
-
 Untyped languages remove the burden on the programmer to prescribe the weakest space each data constructor belongs to, 
 which in turn allows programmers to mix and match data constructors in
 various contexts, with the potential for enhancing the reusability and clarity of code.
-
 However, the automatic detection of errors is still important. Python and Javascript have 
 evolved over the years to include extrinsic types, whereby the programmer annotates particular uses of
 their data constructors with types, rather than the declarations of data constructors.
@@ -152,7 +150,7 @@ extrinsically typed languages lack the type inference capabilities of intrinsica
 A lack of type inference is a significant drawback, since it results in code cluttered with annotations in order
 to achieve any safety assurance.
 
-There have some relaxations of intrinsic type systems, allowing for sightly more code reusability.
+There have been some relaxations of intrinsic type systems, allowing for sightly more code reusability.
 Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger spaces than their intrinsic types, by
 inferring refinement types for particular uses.
 Unfortunately, refinements aren't sufficient to handle the full range of data constructor reusability allowed by untyped languages.
@@ -163,7 +161,7 @@ To avoid hindering the reusability allowed in untyped programming,
 the type system must allow the type of a given data constructor in one context
 to be stronger, weaker, or incomparable to the type of 
 the same data constructor in a different context. 
-Due to the fact that a data constructor can belong to variety of types of varying precision,
+Due to the fact that a data constructor can belong to infinitely many types of varying precision,
 the system leverages subtyping to check, construct, and notate types.
 
 As a byproduct of inferring extrinsic types using subtyping, the system also happens to infer the principal types for 
@@ -171,30 +169,30 @@ certain kinds of higher-order functions, which was first solved by SuperF \cite{
 However, SuperF's programming language and type system is purposefully 
 restricted, and it isn't sufficient for the high-degree of code reusability allowed by untyped languages.
 
-The system relies on intersection, union, and type-indexed universal and existential types, and inductive types, in order 
+Our extrinsic type system relies on intersection, union, along with their indexed version, and inductive types, in order 
 to construct strong types from the observed programs. 
-To keep things simple, we restrict the reasoning of infinite types to scalars. In future work, 
-but we will extend the system to include inductive relational reasoning. By adding inductive relational
+To keep things simple, we restrict the reasoning of inductive types to scalars. In future work, 
+we will extend the system to include inductive relational reasoning. By adding inductive relational
 reasoning to the extrinsic type system, one effectively gets an extrinsic alternative to CHC solving \cite{} 
 or liquid types \cite{}.
 
 
-In section \ref{sec:overview}, we give examples of the expressions and types that the system reasons with,
-demonstrate a few of the ways the system can reason. 
-In section \ref{sec:structure}, we define the forms of expressions, types, and ancillaries. 
+In section \ref{sec:overview}, we give examples of the expressions and types that the system reasons with
+and demonstrate a few of the ways the system can reason. 
+In section \ref{sec:structures}, we define the forms of expressions, types, and ancillaries. 
 In section \ref{sec:dynamic_system}, we define the ground truth.
 In section \ref{sec:static_system}, we describe the verification and type inference mechanisms.
 
 When possible we will guide the design of definitions by soundness and/or completeness properties,
-which in effect constrain the space of correct designs with upper and/or lower bounds, respectively. 
-The derivations of these properties are hinted at by the inductive nature of definitions 
+which, in effect, constrain the space of correct designs with upper and/or lower bounds, respectively. 
+The derivations of these properties are hinted at by the inductive nature of the definitions 
 along with other properties mentioned throughout.
-Proofs \TODO{...} of these properties are in the appendix, section \ref{sect:appendix}.
+Proofs of these properties are in the appendix \TODO{...}, section \ref{sect:appendix}.
 
 \section{Overview}
 \label{sec:overview}
 We designed the type system around a simple applicative language with pattern matching,
-since such a language is syntactically related to predicate logic. Likewise,
+since such a language is syntactically close to predicate logic. Likewise,
 we designed the language of types to share many similarities with predicate logic. 
 To get a feel for the languages and reasoning capabilities, it's best to start by
 looking at a few examples.
@@ -234,12 +232,12 @@ an isomorphic type without any weakening in precision.
   \end{array}
 \]
 
-Each path is represented using the implication type,
+Each path is represented using the path type,
 and the paths are joined together using the intersection type.
 
 \Par{Selection.}
 Although the type of function $\J{talky}$ is no weaker than the actual function,
-the type syntax avails it to approximate reasoning at application.
+lifting into the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
 
 \[
@@ -260,8 +258,8 @@ then it goes on to infer the type of the application.
   \J{<world> @ | <you> @}
 \]
 
-The type system effectively applies application to all possible arguments
-and unions the results derived from only the paths of those a arguments. 
+In effect, the type system applies application to all possible arguments
+and unions the results derived from only the paths of those arguments. 
 
 \Par{Factorization.}
 A function can represent infinite paths by using recursion.
@@ -281,7 +279,7 @@ as inputs and returns a list of that item repeated the input number of times.
 \]
 
 One possibility for constructing the type of the recursive function would
-be to follow the idea from finite paths and construct a type 
+be to follow the idea of finite isomorphism and construct a type 
 that preserves all the paths. If our type system had a greatest fixed point
 type constructor, then we could concisely represent such a type with minimal
 rewriting.
@@ -301,10 +299,9 @@ rewriting.
 Although the strength of precision of this type would be very beneficial,
 reasoning with such a type would be complicated. To keep the type system as
 simple as possible for the purpose of extrinsic type inference with a high-degree
-of code reusability, we leave such reasoning of inductive and co-inductive types out of
+of code reusability, we leave such relational reasoning of inductive and co-inductive types out of
 the type system. 
-
-The type system avoids constructing a relational type, and instead, it
+In this work, the type system actually avoids constructing a relational type, and instead, it
 constructs a type that is significantly weaker than the actual behavior of the function,
 by factoring the paths into an inductive space of inputs and an inductive space of outputs. 
 
@@ -320,17 +317,17 @@ by factoring the paths into an inductive space of inputs and an inductive space 
   \end{array}
 \]
 
-This eager approximation enables the type system
+This eager weakening approximation enables the type system
 to simply reason with inductive scalars and avoids the need for complicated
 relational reasoning. In a follow up paper,
-we will show how to rectify this limitation by augmenting the type system with
+we will show how to remedy this limitation by augmenting the type system with
 mechanisms for inductive relational reasoning.
 
 \Par{Scalar Unrolling.} 
 Since the inputs to functions may have inductive types, the type 
-system must be able to check for error at function application by unrolling
+system must be able to check for errors at function application by unrolling
 inductive types.
-Consider applying the $\J{repeat}$ function to some item and the number two, 
+Consider applying the function $\J{repeat}$ to some item and the number two, 
 which results in the type system checking that two is in fact an instance of the natural numbers.
 
 \[
@@ -339,8 +336,8 @@ which results in the type system checking that two is in fact an instance of the
 
 The type system confirms that two is a valid input by unrolling the inductive type three times.
 Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
-is unable to infer a stronger type than the original list type. This deficiency will
-be rectified in the follow up paper, in which we augment the type system with relational reasoning.
+is unable to infer a stronger type for the application than the original list type. 
+In the followup paper, inductive relational reasoning will remedy this limitation.
 
 
 \Par{Scalar Induction.} 
@@ -373,7 +370,7 @@ The application results in the type system checking that natural numbers are wea
 
 
 Since even numbers are represented inductively, the type system performs mathematical induction
-by assuming the subtyping relation holds for the self reference of the even numbers. 
+proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
 
 \[
   \begin{array}[t]{@{} l}
@@ -385,6 +382,7 @@ by assuming the subtyping relation holds for the self reference of the even numb
   \end{array}
 \]
 
+\noindent
 In practice, the type system actually substitutes the supertype into
 the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
 
@@ -402,7 +400,7 @@ the self reference of the subtype, if the self reference occurs in a positive po
 In effect, by using mathematical induction, the type system ensures that 
 every type contained within the type of even natural numbers is also
 contained within the type of natural numbers.
-In follow up work, we will extend this inductive reasoning to handle inductive relations. 
+In followup work, we will extend this inductive reasoning to handle inductive relations. 
 
 
 \Par{Learning.}
@@ -417,11 +415,11 @@ and applies it to the number two and the boolean true.
 \]
 
 Type systems for System F have traditionally struggled to find the best
-type for such programs. If restricted to unqualified parametric types alone, there are many choices,
+type for such programs. If restricted to unqualified parametric types, there are many choices,
 without there being a clear best or principal type, 
 which is because it's not possible to find the weakest type for the function parameter
 $\J{f}$.
-One possibility is that the type system requires that f is a function that wraps its
+One possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an option. 
 
 \[
@@ -429,27 +427,42 @@ input in an option.
 \]
 
 \noindent
-Another possibility is that the type system requires that f is a function that wraps its
+Another possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an list. 
 
 \[
   \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
 \]
 
-Both are valid, but neither is weaker than the other. The problem is that parametric
+\noindent
+Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
 types are insufficient for describing the weakest safe input type.
-It was not until SuperF introduced a technique using for solving subtyping constraints
+It was not until SuperF introduced a technique for solving subtyping constraints
 that a principal type could be automatically constructed for functions like $\J{foo}$
-The extrinsic type system relies on similar principles of solving subtyping constraints,
+Our extrinsic type system relies on similar principles of solving subtyping constraints,
 and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
 
 \[
   \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
 \]
 
+Although the subtyping constraints are not present in the type's notation,
+the intersection of paths is chosen because it represents the weakest type
+consistent with the subtyping constraints on a variable representing the parameter's type. 
+Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
+Eventually, due to the applications of the parameter $\J{f}$, the type
+system will attempt to find a solution to two constraints on $\J{F}$
+\[
+  \begin{array}[t]{@{} l}
+    \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
+    \\
+    \J{F} \subtypes \J{(<true> @ -> Y)}
+  \end{array}
+\]
 
-\section{Structure}
-\label{sec:structure}
+
+\section{Structures}
+\label{sec:structures}
 To demonstrate the capabilities of the extrinsic type system, we rely on an applicative
 programming language with pattern matching, but without effects.
 The design attempts to keep the forms of expressions and types relatively 
@@ -854,8 +867,8 @@ Progression of an expression is a small-step operational semantics.
 It adheres to typical definitions of applicative languages for the most part. One 
 slight departure is that pattern matching is merely a special case of function application. 
 Likewise, a switch is merely a function abstraction.
-Records are similar to Functions, except that their entries are guarded by literal identifiers. 
-Additionally, records may be abstracted as patterns, but functions may not.
+Records are similar to functions, except that their entries are guarded by literal identifiers. 
+Additionally, records may act as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
 \begin{definition}
