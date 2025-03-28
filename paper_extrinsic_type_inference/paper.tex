@@ -1838,6 +1838,8 @@ rely on analogous techniques.
       \\ 
       \vec{\alpha} \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow (\Delta_\closed, \Delta_\open)
       \\\\
+      (\vec{\alpha}, \Delta) \entails \Delta_\closed \safe
+      \\
       (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
       \Delta_\open \given \vec{\alpha}', \Delta'
@@ -1876,10 +1878,14 @@ and splits them into two subtyping environments $(\Delta_\closed, \Delta_\open)$
 The first environment $\Delta_\closed$ contains only the constraints with a single
 closed variable in either the subtype or supertype position. The second
 environment $\Delta_\open$ contains all the remaining constraints.
-The constraints of $\Delta_\closed$ cannot are valid since the single variable on either side
-can't contradict the other side. Therefore, proof subtyping simply adds them
-to the input assumptions $(\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')$ 
-and solves the remaining constraints $\Delta_\open \given \vec{\alpha}', \Delta'$. 
+
+Proof subtyping leverages the closed environment safety predicate 
+$(\vec{\alpha}, \Delta) \entails \Delta_\closed \safe$, 
+to ensure that the updated constraints on closed variables are consistent and safe.
+If so, then proof subtyping takes the updated constraints on closed variables, influenced by their relation
+to open variables, and adds them to the input assumptions 
+$(\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')$ 
+and then solves the remaining constraints $\Delta_\open \given \vec{\alpha}', \Delta'$. 
 
 To eliminate an closed variable $\alpha \in \vec{\alpha}$,
 proof subtyping leverages the predicate for closed variable elimination safety
@@ -1900,6 +1906,8 @@ weaker than its constraints suggest, for which proof subtyping still holds.
       \\ 
       \vec{\alpha} \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow (\Delta_\closed, \Delta_\open)
       \\\\
+      (\vec{\alpha}, \Delta) \entails \Delta_\closed \safe
+      \\
       (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
       \Delta_\open \given \vec{\alpha}', \Delta'
@@ -2162,9 +2170,11 @@ This rule is the relational analog of the open variable rules.
 \hfill
 \begin{definition} 
   \label{def:closed_variable_elimination_safety}
-  Closed Variable Elimination Safety
+  Closed Variable Elimination Safety 
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe}
+  \\\\
+  \TODO{update to match code}
   \\
   \begin{mathpar}
 
@@ -2193,6 +2203,8 @@ This rule is the relational analog of the open variable rules.
   Closed Variable Introduction Safety
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe}
+  \\\\
+  \TODO{update to match code}
   \\
   \begin{mathpar}
 

@@ -2211,11 +2211,14 @@ class Solver:
             if not isinstance(st.upper, TVar) or st.upper.id not in world.closedids
         )
 
-        new_world = replace(world, constraints = world.constraints.union(closed_constraints))
-        return [
-            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            for w0 in self.solve_multi(new_world, unsolved_constraints)
-        ]
+        if self.closed_constraints_safe(world, closed_constraints):
+            new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+            return [
+                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                for w0 in self.solve_multi(new_world, unsolved_constraints)
+            ]
+        else:
+            return []
 
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
@@ -2260,6 +2263,65 @@ class Solver:
             isinstance(t, Unio) or
             isinstance(t, Fixpoint) or
             isinstance(t, Exi)
+        )
+
+
+    def closed_variable_elimination_safe(self, world : World, lower : TVar, upper : Typ) -> bool:
+        upper_parts = pset(
+            st.upper
+            for st in world.constraints
+            if st.lower == lower 
+        ).union(self.extract_factored_upper_bounds(world, lower.id))
+
+        some_parts_consistent = any(
+            (
+                (isinstance(upper_part, TVar) and upper_part.id not in world.closedids) 
+                or bool(self.solve(world, upper_part, upper))
+            )
+            for upper_part in upper_parts
+            # if not isinstance(upper_part, TVar) or upper_part.id in world.closedids  else
+        )
+
+        all_parts_consistent = all(
+            bool(self.solve(world, st.lower, upper))
+            for st in world.constraints
+            if st.upper == lower 
+        )
+
+        return some_parts_consistent and all_parts_consistent
+
+    def closed_variable_introduction_safe(self, world : World, lower : Typ, upper : TVar) -> bool:
+        some_parts_consistent = any(
+            (
+                (isinstance(st.lower, TVar) and st.lower.id not in world.closedids)
+                or bool(self.solve(world, lower, st.lower))
+            )
+            for st in world.constraints
+            if st.upper == upper 
+        )
+
+        all_parts_consistent = all(
+            bool(self.solve(world, lower, st.upper))
+            for st in world.constraints
+            if st.lower == upper 
+        )
+
+        return some_parts_consistent and all_parts_consistent
+
+
+    def closed_constraints_safe(self, world : World, constraints : PSet[Subtyping]) -> bool:
+        return all(
+            (False
+                or not isinstance(st.lower, TVar) 
+                or (st.lower.id not in world.closedids)
+                or self.closed_variable_elimination_safe(world, st.lower, st.upper)
+            ) and
+            (False
+                or not isinstance(st.upper, TVar) 
+                or (st.upper.id not in world.closedids)
+                or self.closed_variable_introduction_safe(world, st.lower, st.upper)
+            )
+            for st in constraints
         )
             
 
@@ -2493,24 +2555,27 @@ class Solver:
                 if not isinstance(st.upper, TVar) or st.upper.id not in world.closedids
             )
 
-            new_world = replace(world, constraints = world.constraints.union(closed_constraints))
-            worlds = [
-                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve_multi(new_world, unsolved_constraints)
-            ]
-
-            # worlds = [
-            #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            #     for w0 in self.solve_multi(world, new_constraints)
-            # ]
-
-            if isinstance(upper, TVar) and upper.id not in world.closedids: 
+            if self.closed_constraints_safe(world, closed_constraints):
+                new_world = replace(world, constraints = world.constraints.union(closed_constraints))
                 worlds = [
-                    w1
-                    for w0 in worlds 
-                    for w1 in self.solve_open_variable_introduction(w0, lower, upper) 
+                    replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                    for w0 in self.solve_multi(new_world, unsolved_constraints)
                 ]
-            return worlds 
+
+                # worlds = [
+                #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                #     for w0 in self.solve_multi(world, new_constraints)
+                # ]
+
+                if isinstance(upper, TVar) and upper.id not in world.closedids: 
+                    worlds = [
+                        w1
+                        for w0 in worlds 
+                        for w1 in self.solve_open_variable_introduction(w0, lower, upper) 
+                    ]
+                return worlds 
+            else:
+                return []
 
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
@@ -2521,19 +2586,8 @@ class Solver:
             # else:
             #     return []
 
-            closed_parts = pset(
-                st.upper
-                for st in world.constraints
-                if st.lower == lower 
-            ).union(self.extract_factored_upper_bounds(world, lower.id))
 
-            one_part_consistent = any(
-                bool(self.solve(world, closed_part, upper))
-                for closed_part in closed_parts
-                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
-            )
-
-            if one_part_consistent: 
+            if self.closed_variable_elimination_safe(world, lower, upper): 
                 return [world]
             else:
                 return []
@@ -2553,19 +2607,7 @@ class Solver:
             # else:
             #     return []
 
-            closed_parts = pset(
-                st.lower
-                for st in world.constraints
-                if st.upper == upper 
-            )
-
-            one_part_consistent = any(
-                bool(self.solve(world, upper, closed_part))
-                for closed_part in closed_parts
-                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
-            )
-
-            if one_part_consistent: 
+            if self.closed_variable_introduction_safe(world, lower, upper): 
                 return [world]
             else:
                 return []
@@ -2689,22 +2731,22 @@ class Solver:
                     closed_var_consistent = True 
                     for fv in lower_fvs:
                         if fv in world.closedids: 
-                            closed_parts = pset(
+                            upper_parts = pset(
                                 st.upper
                                 for st in world.constraints
                                 if st.lower == TVar(fv)
                             ).union(self.extract_factored_upper_bounds(world, fv))
 
-                            one_part_consistent = any(
+                            some_parts_consistent = any(
                                 all(
                                     bool(self.solve(world, closed_part, factor))
                                     for factor in find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
                                 )
-                                for closed_part in closed_parts
+                                for closed_part in upper_parts
                                 if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
                             )
 
-                            closed_var_consistent = closed_var_consistent and one_part_consistent
+                            closed_var_consistent = closed_var_consistent and some_parts_consistent
 
 #                         print(f"""
 # DEBUG upper, Fixpoint:
