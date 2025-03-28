@@ -707,14 +707,344 @@ However, we have not included this rewriting in the semantics or implementation.
 \end{definition}
 \hfill
 
-\section{Correctness}
 
-\section{Experiments}
+Relational reasoning.
 
-\section{Related work}
+\hfill
+\begin{definition} 
+  \label{def:relational_proof_typing}
+  Rel Proof Typing (Loop)
+  \hfill 
+  \boxed{\Gamma \entails e \hastype \tau \given \Omega}
+  \\
+  \begin{mathpar}
 
-\section{Future Work}
+    \inferrule {
+      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
+      \\\\
+      \forall \vec{\alpha}'\ \Delta' .\ 
+        \vec{\alpha}', \llbracket \epsilon, \vec{\alpha}\ \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+      \implies
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha}\ \vec{\alpha}', \Delta\ \Delta' 
+      \\\\
+      \exists \pi.\ \pi \in \vec{\pi}_\nu
+      \\
+      \alpha_\nu \downarrow \vec{\pi}_\nu
+      \fallingdotseq 
+      \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\
+      \text{pack}^-(\text{FTV}(\Gamma)\ \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
+    } {
+      \Gamma \entails \J{loop(}e\J{)} 
+      \hastype 
+      \J{ALL[}\alpha_x \J{]}
+      \alpha_x
+      \J{->} 
+      \J{EXI[}\alpha_y 
+          \J{;} \alpha_x \J{*} \alpha_y 
+      \J{<:LFP[} \alpha_\mu \J{]}\tau_\mu
+      \J{]}\alpha_y
+      \given \vec{\alpha}, \Delta 
+    }
 
-\section{Appendix}
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_implication_rewriting}
+  Rel Proof Subtyping (Implication Rewriting)
+  \hfill
+  \boxed{\tau \subtypes \tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes
+      \J{ALL[}\alpha\J{;} \alpha \J{<:} \tau_\mu \J{]} \alpha \J{->} \tau_r
+      \given \Omega
+    } {
+      \tau_l
+      \subtypes 
+      \J{LFP[}\alpha_\mu\J{]}\tau_\mu\J{->}\tau_r
+      \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Rel Proof Subtyping (Pattern Intro)
+  \hfill 
+  \boxed{\rho \subtypes \J{LFP[}\alpha\J{]}\tau \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau \cong \rho' \subtypes \J{LFP[}\alpha \J{]} \tau'
+      \\
+      \Delta \entails \rho' \subtypes \tau_n \sim 
+      \\\\
+      (\vec{\alpha}, \Delta) \preceq \Omega
+      % \\
+      % \exists \alpha .\ \alpha \in \text{FTV}(\rho) \land \alpha \in \vec{\alpha} 
+      \\
+      \tau_n \subtypes \J{LFP[}\alpha \J{]} \tau' \entails \Omega
+    } {
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
+      \given \Omega 
+    }
+
+    \inferrule {
+      \entails \rho \subtypes \J{LFP[}\alpha\J{]}\tau \consis 
+      \\
+      \forall \alpha_\closed .\ 
+      \alpha_\closed \in \text{FTV}(\rho) \land \alpha_\closed \in \vec{\alpha}_\closed
+      \implies
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \J{LFP[}\alpha\J{]}\tau \safe
+      \\\\
+      \exists \Delta_i .\ \llbracket \epsilon, \vec{\alpha} \entails \Delta, \rho\rrbracket^+ = \Delta_i, \rho'
+      \\
+      (\vec{\alpha}, \Delta) \preceq (\vec{\alpha}', \Delta')
+      \\
+      \rho' \subtypes \J{LFP[}\alpha\J{]}\tau
+      \given \vec{\alpha}', \Delta'
+    } {
+      \rho \subtypes \J{LFP[}\alpha\J{]}\tau
+      \given \vec{\alpha}', \Delta' \J{;} \rho \J{<:} \J{LFP[}\alpha\J{]}\tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:rel_closed_variable_safety_negative}
+  Rel Closed Variable Safety (Negative)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\
+      \exists \Omega .\ 
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) \entails \alpha_\closed \subtypes \tau_r \safe
+    }
+
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \subtypes \tau \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha_\closed \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \alpha_\closed \in \text{FTV}(\rho)
+      \\
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
+      \\
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \subtypes \tau'' \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \subtypes \tau'' \safe
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition} 
+  \label{def:relational_key_safety_negative}
+  Relational Key Safety (Negative)
+  \hfill
+  \boxed{(\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}_\closed
+      \\
+      \forall \tau_r .\
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau_r
+      \implies
+      \exists \Omega .\  
+      (\vec{\alpha}_\closed, \Delta) \preceq \Omega \land
+      \tau_l \subtypes \tau_r \given \Omega 
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau_l) 
+      \entails 
+      \alpha_\closed  \wr \rho \subtypes \tau \safe
+    }
+
+    \inferrule {
+      (\vec{\alpha}_\closed, \Delta) \entails \alpha_\closed \wr \rho \subtypes \tau \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \tau_l \J{<:} \tau_r) 
+      \entails
+      \alpha_\closed  \wr \rho \subtypes \tau \safe
+    }
+
+    \inferrule {
+      \alpha_\closed \in \text{FTV}(\rho)
+      \\
+      \rho \subtypes \tau \factorsinto \alpha_\closed \subtypes \tau' 
+      \\\\
+      (\vec{\alpha}_\closed, \Delta \J{;} \alpha_\closed \J{<:} \tau') \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+    } {
+      (\vec{\alpha}_\closed, \Delta \J{;} \rho \J{<:} \tau) \entails \alpha_\closed \wr \rho' \subtypes \tau'' \safe
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:relational_constraint_factorization}
+  Relational Constraint Factorization 
+  \hfill
+  \boxed{\rho \subtypes \tau \factorsinto \alpha \subtypes \tau'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \rho \subtypes \tau \factorsinto \alpha \subtypes \tau' 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition} 
+  \label{def:proof_subtyping_abstraction_introduction}
+  Rel Proof Subtyping (Abstraction Intro)
+  \hfill
+  \boxed{\tau \subtypes \phi \given \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \rho \subtypes \tau_{l} \given \Omega 
+    } {
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+    }
+
+    \inferrule {
+      \rho \subtypes \tau_{r} \given \Omega 
+    } {
+      \rho \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}
+  \label{def:rel_interpretation}
+  Rel Interpretation  (Negative)
+  \hfill
+  \boxed{\llbracket \Delta, \alpha \rrbracket^- = (\Delta, \tau)}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \neg(\Delta \entails \alpha \relational)
+      \\
+    } {
+      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \J{TOP})
+    }
+
+    \inferrule {
+      \neg(\Delta \entails \alpha \relational)
+      \\
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
+    } {
+      \llbracket \Delta \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
+    }
+
+    \inferrule {
+      \alpha \neq \tau_l
+      \\
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+    } {
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
+    }
+
+    \inferrule {
+      \Delta \entails \alpha \relational
+    } {
+      \llbracket \Delta, \alpha \rrbracket^- = (\Delta, \alpha)
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}
+  \label{def:relational_constraint_key}
+  Relational Constraint Key
+  \hfill
+  \boxed{\Delta \entails \alpha \relational}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \J{;} \tau_l \J{<:} \tau_r \in \Delta 
+      \\
+      \nexists \alpha' .\ \tau_l = \alpha'
+      \\
+      \alpha \in \text{FTV}(\tau_l)
+    } {
+      \Delta \entails \alpha \relational
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
+\hfill
+\begin{definition}
+  \label{def:decomposable}
+  Decomposable 
+  \\\\
+  \boxed{\Omega \entails \tau \circlearrowleft \tau}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      % \text{decomposable}(\Delta_0, \tau_l, \J{LFP[} \alpha \J{]} \tau_r)
+      \Omega \entails \tau \circlearrowleft \tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}\boxed{\tau \subtypes \tau \cong \tau \subtypes \tau}\ Normal Constraint Congruence 
+  \label{def:normal_constraint_congruence}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \tau \subtypes \tau \cong \tau \subtypes \tau
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\hfill
+\begin{definition}\boxed{\Delta \entails \tau' \subtypes \tau \sim}\ Normal Constraint Entailment  
+  \label{def:normal_constraint_entailment}
+  \begin{mathpar}
+    \inferrule {
+      \TODO{...}
+    } {
+      \Delta \entails \tau' \subtypes \tau \sim
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
 
 \end{document}
