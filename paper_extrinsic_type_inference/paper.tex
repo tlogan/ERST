@@ -1879,7 +1879,7 @@ The first environment $\Delta_\closed$ contains only the constraints with a sing
 closed variable in either the subtype or supertype position. The second
 environment $\Delta_\open$ contains all the remaining constraints.
 
-Proof subtyping leverages the closed environment safety predicate 
+Proof subtyping leverages the environment safety predicate 
 $(\vec{\alpha}, \Delta) \entails \Delta_\closed \safe$, 
 to ensure that the updated constraints on closed variables are consistent and safe.
 If so, then proof subtyping takes the updated constraints on closed variables, influenced by their relation
@@ -1888,10 +1888,10 @@ $(\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')$
 and then solves the remaining constraints $\Delta_\open \given \vec{\alpha}', \Delta'$. 
 
 To eliminate an closed variable $\alpha \in \vec{\alpha}$,
-proof subtyping leverages the predicate for closed variable elimination safety
+proof subtyping leverages the predicate for variable elimination safety
 $(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau_r \safe$,
-which finds an interpretation for $\alpha$ that is
-weaker than its constraints suggest, for which proof subtyping still holds.
+which guarantees that all possible interpretations for $\alpha$
+are stronger than $\tau_r$.
 
 \hfill
 \begin{definition} 
@@ -2169,84 +2169,77 @@ This rule is the relational analog of the open variable rules.
 
 \hfill
 \begin{definition} 
-  \label{def:closed_variable_elimination_safety}
-  Closed Variable Elimination Safety 
+  \label{def:variable_elimination_safety}
+  Variable Elimination Safety 
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe}
-  \\\\
-  \TODO{update to match code}
   \\
   \begin{mathpar}
-
     \inferrule {
-      (\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe
-    } {
-      (\vec{\alpha}, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha \subtypes \tau \safe
-    }
-
-    \inferrule {
-      \nexists \alpha .\ \tau_l = \alpha \land \alpha \notin \vec{\alpha}
+      \exists \tau' .\ \J{;} \alpha \J{<:} \tau' \in \Delta
+      \land 
+      (
+      (\exists \alpha' .\ \tau' = \alpha' \land \alpha' \notin \vec{\alpha}) 
+      \lor 
+      (\exists \Omega .\ (\vec{\alpha}, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega) 
+      )
       \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}, \Delta) \preceq \Omega \land
-      \tau_l \subtypes \tau_r \given \Omega 
+      \forall \tau' .\ \J{;} \tau' \J{<:} \alpha \in \Delta
+      \implies 
+      \exists \Omega .\ (\vec{\alpha}, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega 
+      \\
     } {
-      (\vec{\alpha}, \Delta \J{;} \alpha \J{<:} \tau_l) \entails \alpha \subtypes \tau_r \safe
+      (\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe
     }
   \end{mathpar}
 \end{definition}
 \hfill
+
+A variable may be eliminated if it meets two conditions.
+The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
+An upper bound of an open variable indicates that the variable being eliminated
+can be as strong as its lower bounds.
+The second condition is that all lower bounds of that variable can be eliminated. 
 
 \hfill
 \begin{definition} 
-  \label{def:closed_variable_introduction_safety}
-  Closed Variable Introduction Safety
+  \label{def:variable_introduction_safety}
+  Variable Introduction Safety
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe}
-  \\\\
-  \TODO{update to match code}
   \\
   \begin{mathpar}
-
     \inferrule {
-      (\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe
-    } {
-      (\vec{\alpha}, \Delta \J{;} \tau_l \J{<:} \tau_r) \entails \alpha \subtypes \tau \safe
-    }
-
-    \inferrule {
-      \nexists \alpha .\ \tau_r = \alpha \land \alpha \notin \vec{\alpha}
+      \exists \tau' .\ \J{;} \tau' \J{<:} \alpha \in \Delta
+      \land 
+      (
+      (\exists \alpha' .\ \tau' = \alpha' \land \alpha' \notin \vec{\alpha}) 
+      \lor 
+      (\exists \Omega .\ (\vec{\alpha}, \Delta) \preceq \Omega \land \tau \subtypes \tau' \given \Omega) 
+      )
       \\\\
-      \exists \Omega .\ 
-      (\vec{\alpha}, \Delta) \preceq \Omega \land
-      \tau_l \subtypes \tau_r \given \Omega 
+      \forall \tau' .\ \J{;} \alpha \J{<:} \tau' \in \Delta
+      \implies 
+      \exists \Omega .\ (\vec{\alpha}, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega 
+      \\
     } {
-      (\vec{\alpha}, \Delta \J{;}  \tau_r \J{<:} \alpha) \entails \tau_l \subtypes \alpha \safe
+      (\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe
     }
   \end{mathpar}
 \end{definition}
 \hfill
 
+Variable introduction safety is the dual of variable elimination safety, so its rules
+rely on analogous techniques.
 
 
+% \section{Experiments}
 
+% \TODO{develop 12 tree/list experiments}
 
+% \section{Related work}
 
-
-
-
-
-
-
-
-
-\section{Experiments}
-
-\TODO{develop 12 tree/list experiments}
-
-\section{Related work}
-
-\TODO{...}
+% \TODO{...}
 
 
 % \paragraph{Tree interpolation}
