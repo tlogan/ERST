@@ -1308,7 +1308,7 @@ to instantiate the parametric path type with interpretations consistent with its
 This makes both the path type more readable and the subtyping environment more compact.
 
 Using all compacted collection of path type-world pairs $\vec{\pi}$, 
-it delegates to fixed point duality $
+it delegates to duality correspondence $
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \vec{\pi}_\mu
@@ -1391,8 +1391,8 @@ types for readable.
 
 
 \begin{property} 
-  \label{prop:fixed_point_duality_soundness}
-  Fixed Point Duality Soudness
+  \label{prop:duality_correspondence_soundness}
+  Duality Correspondence Soudness
   \\
   \begin{mathpar}
     \inferrule {
@@ -1417,8 +1417,8 @@ types for readable.
 
 
 \begin{definition} 
-  \label{def:fixed_point_duality}
-  Fixed Point Duality 
+  \label{def:duality_correspondence}
+  Duality Correspondence 
   \hfill
   \boxed{\alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu}
   \\
@@ -1448,8 +1448,8 @@ types for readable.
 
 \hfill
 \begin{definition}
-  \label{def:pair_duality}
-  Fixed Point Constraint Duality 
+  \label{def:subtyping_duality_correspondence}
+  Subtyping Duality Correspondence 
   \hfill
   \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
   \\
@@ -1822,7 +1822,7 @@ splitting the worlds too eagerly.
 \end{definition}
 \hfill
 
-Refinement introduction is the double dual of expansion elimination, so its rules
+Refinement introduction is the dual of expansion elimination, so its rules
 rely on analogous techniques.
 
 \hfill
@@ -1836,7 +1836,7 @@ rely on analogous techniques.
     \inferrule {
       \alpha \notin \vec{\alpha}
       \\ 
-      \text{split}^-(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \vec{\alpha} \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow (\Delta_\closed, \Delta_\open)
       \\\\
       (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
@@ -1849,6 +1849,8 @@ rely on analogous techniques.
       \alpha \in \vec{\alpha} 
       \\
       (\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau_r \safe
+      \\
+      \nexists \alpha' .\ \tau_r = \alpha'
     } {
       \alpha \subtypes \tau_r
       \given (\vec{\alpha}, \Delta)
@@ -1857,6 +1859,33 @@ rely on analogous techniques.
 \end{definition}
 \hfill
 
+Variable elimination has two cases, 
+one for open variables $\alpha \not\in \vec{\alpha}$,
+and one for closed variables $\alpha \in \vec{\alpha}$.
+For open variable elimination, proof subtyping simply learns
+the subtyping constraint that it's proving.
+However, it must check that the constraint is consistent
+with the other assumptions of the world,
+to ensure that there is an interpretation under which the subtyping holds. 
+To check consistency of assumptions,  
+proof subtyping constructs constraints $\Delta[\alpha/\tau]^+$ that must hold by 
+substituting the supertype $\tau$ into all positive occurrences
+of $\alpha$ in the subtyping environment $\Delta$.
+It takes just the new constraints with successful substitutions
+and splits them into two subtyping environments $(\Delta_\closed, \Delta_\open)$. 
+The first environment $\Delta_\closed$ contains only the constraints with a single
+closed variable in either the subtype or supertype position. The second
+environment $\Delta_\open$ contains all the remaining constraints.
+The constraints of $\Delta_\closed$ cannot are valid since the single variable on either side
+can't contradict the other side. Therefore, proof subtyping simply adds them
+to the input assumptions $(\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')$ 
+and solves the remaining constraints $\Delta_\open \given \vec{\alpha}', \Delta'$. 
+
+To eliminate an closed variable $\alpha \in \vec{\alpha}$,
+proof subtyping leverages the predicate for closed variable elimination safety
+$(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau_r \safe$,
+which finds an interpretation for $\alpha$ that is
+weaker than its constraints suggest, for which proof subtyping still holds.
 
 \hfill
 \begin{definition} 
@@ -1869,7 +1898,7 @@ rely on analogous techniques.
     \inferrule {
       \alpha \notin \vec{\alpha}
       \\ 
-      \text{split}^+(\vec{\alpha} \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta) = (\Delta_\closed, \Delta_\open)
+      \vec{\alpha} \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow (\Delta_\closed, \Delta_\open)
       \\\\
       (\vec{\alpha}, \Delta \cup \Delta_\closed) \preceq (\vec{\alpha}', \Delta')
       \\
@@ -1882,6 +1911,8 @@ rely on analogous techniques.
       \alpha \in \vec{\alpha} 
       \\
       (\vec{\alpha}, \Delta) \entails \tau_l \subtypes \alpha \safe
+      \\
+      \nexists \alpha' .\ \tau_l = \alpha'
     } {
       \tau_l \subtypes \alpha \given (\vec{\alpha}, \Delta) 
     }
@@ -1889,49 +1920,8 @@ rely on analogous techniques.
 \end{definition}
 \hfill
 
-\TODO{Note how free variables in interpreted type are marked as closed, to ensure a strict consistency check}
-
-For an upper bound open variable $\alpha$, proof subtyping
-finds a lenient interpretation of the variable and checks it against the lower bound.
-If safe, it updates the worlds with the subtyping.
-To find a lenient interpretation in simple constraints, it searches the world for 
-the first upper bounds that are not closed variables. It also looks for relational
-upper bounds of pattern type containing the open variable $\alpha$.
-Additionally, it learns constraints on closed variables $\Delta^\dagger$ 
-that are transitive upper bounds of the open variable $\alpha$.  
-
-The dual of this rule is the one for a lower bound open variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
-
-For elimination of a union type, $\tau_{ll}\J{|}\tau_{lr}$, proof subtyping
-ensures that both parts of the assumed type subtype the guaranteed type.
-
-For elimination of an existential type, $\J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau_l$, proof subtyping 
-infers necessary constraints over closed variables from the qualifiers $\Delta$ of the assumed existential type, 
-which it leverages to prove the guaranteed type. 
-
-For elimination of a least fixed point, $\J{LFP[} \alpha \J{]} \tau_l$, proof subtyping  
-attempts a proof by induction, by unrolling the least fixed point
-and replacing its self referencing variable with the upper bound.
-
-For introduction of a difference type, $\tau_r \typdiff \eta$, proof subtyping,
-checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
-and does not subtype the subtracted portion $\eta$.
-When relying on negation, one must be careful to preserve soundness.
-We ensure that proof subtyping is complete for an upper bound of limited
-form $\eta$ with no free type variables, which
-means its negation is sound. We will make the limited notion
-of completeness precise in section \ref{sect:correctness}.
-
-For a lower bound closed variable $\alpha$, proof subtyping
-finds a strict interpretation of the variable
-and checks it against the upper bound. Since the subtyping constraints
-may contain relational constraints, it factors the relational constraints
-to find constraints over single variables, which it used to construct the strict
-interpretation $\text{inter}(\vec{\tau})$.  
-
-The dual of this rule is the one for an upper bound closed variable, 
-in the continued definition \ref{def:continued_proof_subtyping}.
+Variable introduction is the dual of variable elimination, so its rules
+rely on analogous techniques.
 
 
 \hfill
@@ -1954,6 +1944,11 @@ in the continued definition \ref{def:continued_proof_subtyping}.
   \end{mathpar}
 \end{definition}
 \hfill
+
+For elimination of a least fixed point, $\J{LFP[} \alpha \J{]} \tau_l$, proof subtyping  
+attempts a proof by induction, by unrolling the least fixed point
+and replacing its self referencing variable with the upper bound.
+
 
 
 \hfill
@@ -1984,6 +1979,16 @@ in the continued definition \ref{def:continued_proof_subtyping}.
   \end{mathpar}
 \end{definition}
 \hfill
+
+For introduction of a difference type, $\tau_r \typdiff \eta$, proof subtyping,
+checks that the assumed type subtypes the positive portion of the guaranteed type $\tau_r$
+and does not subtype the subtracted portion $\eta$.
+When relying on negation, one must be careful to preserve soundness.
+We ensure that proof subtyping is complete for an upper bound of limited
+form $\eta$ with no free type variables, which
+means its negation is sound. We will make the limited notion
+of completeness precise in section \ref{sect:correctness}.
+
 
 
 \hfill
@@ -2156,8 +2161,8 @@ This rule is the relational analog of the open variable rules.
 
 \hfill
 \begin{definition} 
-  \label{def:closed_variable_safety_negative}
-  Closed Variable Safety (Negative)
+  \label{def:closed_variable_elimination_safety}
+  Closed Variable Elimination Safety
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau \safe}
   \\
@@ -2184,8 +2189,8 @@ This rule is the relational analog of the open variable rules.
 
 \hfill
 \begin{definition} 
-  \label{def:closed_variable_safety_positive}
-  Closed Variable Safety (Positive)
+  \label{def:closed_variable_introduction_safety}
+  Closed Variable Introduction Safety
   \hfill
   \boxed{(\vec{\alpha}, \Delta) \entails \tau \subtypes \alpha \safe}
   \\
