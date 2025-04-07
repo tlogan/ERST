@@ -1276,8 +1276,6 @@ refines their types against each other via compounded intersection.
 
 For a function expression $\vec{f}$, proof typing 
 delegates the work to two helpers. 
-the predicate for path sequence typing 
-
 The predicate for path sequence typing 
 $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
 constructs a sequence of path types, 
@@ -1434,6 +1432,8 @@ types more readable.
 \end{property} 
 \hfill
 
+\TODO{explain}
+
 \hfill
 \begin{definition} 
   \label{def:duality_correspondence}
@@ -1464,6 +1464,35 @@ types more readable.
 \end{definition}
 \hfill
 
+
+\TODO{describe}
+
+\hfill
+\begin{property} 
+  \label{prop:subtyping_duality_correspondence_soundness}
+  Subtyping Duality Correspondence Soudness
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
+    } {
+      \forall \Delta_\nu\ \tau_\nu\ .\ 
+      \vec{\delta}\ \alpha_\nu \slash \tau_\nu \satisfies \Delta_\nu \implies
+      \vec{\delta}\ \alpha_\nu \slash \tau_\nu 
+      \satisfies e_f \hastype \tau_\nu
+      \\\\
+      \iff
+      \\\\
+      \exists \Delta_\mu\ \tau_\mu\ e_a.\ 
+      \vec{\delta}\ \alpha_\mu \slash \tau_\mu \satisfies \Delta_\mu \land
+      \vec{\delta}\ \alpha_\mu \slash \tau_\mu 
+      \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+    }
+  \end{mathpar} 
+\end{property} 
+\hfill
+
+\TODO{explain}
 
 \hfill
 \begin{definition}
@@ -1500,38 +1529,7 @@ types more readable.
 \end{definition}
 \hfill
 
-% \hfill
-% \begin{definition}\boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_l, \Delta_r}\ Fixed Point Constraint Extraction 
-% \label{def:pair_duality}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon, \epsilon
-%     }
-
-%     \inferrule {
-%       \alpha_\nu \notin \text{FTV}(\tau_l)
-%       \\
-%       \alpha_\nu \notin \text{FTV}(\tau_r)
-%       \\
-%       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_l, \Delta_r
-%     } {
-%       \alpha_\nu \downarrow \Delta_\nu\ (\tau_l <: \tau_r) \fallingdotseq \alpha_\mu \uparrow \Delta_l\ (\tau_l <: \tau_r), \Delta_r\ (\tau_l <: \tau_r)
-%     }
-
-%     \inferrule {
-%     } {
-%       \alpha_\nu \downarrow \Delta_\nu\ (\alpha_\nu <: \alpha_l \J{->} \alpha_r) \fallingdotseq \alpha_\mu \uparrow 
-%       \Delta_l\ (\alpha_l <: \alpha_\mu)
-%       , 
-%       \Delta_r\ (\alpha_r <: \alpha_\mu)
-%     }
-%   \end{mathpar}
-% \end{definition}
-% \hfill
-
-
-
+\TODO{describe}
 
 \hfill
 \begin{property} 
