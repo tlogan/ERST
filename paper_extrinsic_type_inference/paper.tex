@@ -764,6 +764,12 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \\
     \nonterm{\Omega} & \is \vec{\alpha},\Delta 
     & \com{world}
+    \\
+    \nonterm{\pi} & \is \vec{\alpha},\Delta,\tau
+    & \com{colony}
+    \\
+    \nonterm{\vec{\pi}} & \is \epsilon \sep \vec{\pi}\ \pi 
+    & \com{colony seq}
   \end{array}\]
 \end{definition}
 
@@ -1282,9 +1288,9 @@ constructs a sequence of path types,
 with each path type associated with a world, represented by $\vec{\pi}$.
 Then, the metalanguage function for positive packaging 
 $\text{pack}^+(\text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi})$
-takes the path-world pairs and for each path-world pair,
-it rewrites the pair into a type by wrapping the path type in indexed unions
-and indexed intersections qualified by the constraints in the world's subtyping environment. 
+takes the path colonies and for each path colony,
+it rewrites the colony into a type by wrapping the path type in indexed unions
+and indexed intersections qualified by the constraints in the colony's subtyping environment. 
 The positive $+$ annotation on pack indicates that the resulting type 
 is should approximate an expression used in a positive position,
 which determines whether closed and open variables are mapped to
@@ -1313,12 +1319,12 @@ single path function $\Gamma \entails e \hastype \alpha_\nu \J{->} \tau \given \
 Then, by leveraging subtyping $\tau \subtypes \alpha_l \J{->} \alpha_r \given ...$, 
 it gathers all the path types that approximate the body of $e$ (via its type $\tau$)
 into a sequence $\vec{\pi}$, which pairs each parametric path type with a world to qualify its meaning.
-As it collects the path type-world pairs, it leverages positive type interpretation 
+As it collects the path colonies, it leverages positive type interpretation 
 $\llbracket ... \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+$ 
 to instantiate the parametric path type with interpretations consistent with its corresponding world. 
 This interpretation makes the path type more readable and the subtyping environment more compact.
 
-Using the whole collection path type-world pairs $\vec{\pi}$, 
+Using the whole collection path colonies $\vec{\pi}$, 
 proof typing delegates to duality correspondence $
       \alpha_\nu \downarrow \vec{\pi}_\nu
       \fallingdotseq 
@@ -1334,23 +1340,6 @@ by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$,
 and it leverages the factorization predicate $... \subtypes \J{LFP[} \alpha_\mu \J{]} \tau_\mu \Vvdash \alpha \subtypes ...$
 to factor the inductive relational type into an inductive antecedent and an inductive consequent
 of a single path type.
-
-\hfill
-\begin{definition} 
-  \label{def:world_containment}
-  World Containment 
-  \hfill
-  \boxed{\Omega \preceq \Omega}
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      (\vec{\alpha},\Delta)  \preceq (\vec{\alpha}\ \vec{\alpha}',\Delta\ \Delta') 
-    }
-  \end{mathpar}
-\end{definition}
-\hfill
-
 
 \hfill
 \begin{definition} 
@@ -1432,7 +1421,12 @@ types more readable.
 \end{property} 
 \hfill
 
-\TODO{explain}
+Duality correspondence $\alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu$
+rewrites colonies with path types $\vec{\pi}_\nu$ into colonies with pair types $\vec{\pi}_\nu$
+such that a given function inhabits all interpretations of every path type colony
+if and only if 
+there's an argument paired with the function applied to it that inhabits an interpretation
+of at least one of the pair type colonies.
 
 \hfill
 \begin{definition} 
@@ -1464,8 +1458,26 @@ types more readable.
 \end{definition}
 \hfill
 
-
-\TODO{describe}
+The duality correspondence predicate unrolls the two sequences of colonies simultaneously.  
+In the case where both sequence are empty
+$
+\alpha_{\nu} \downarrow \epsilon
+\fallingdotseq 
+\alpha_{\mu} \uparrow \epsilon 
+$, duality correspondence simply holds.
+Otherwise, duality correspondence requires that the left sequence's last colony 
+has a path type  $(\vec{\alpha}_c,\Delta_\nu, \tau_l \J{->} \tau_r)$
+and the right sequence's last colony has a pair type 
+$(\vec{\alpha}_c,\Delta_\nu, \tau_l \J{*} \tau_r)$;
+the subtyping environments correspond 
+$\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu$;
+and the earlier sequences of colonies correspond
+$
+\alpha_{\nu} \downarrow \vec{\pi}_\nu
+\fallingdotseq 
+\alpha_{\mu} \uparrow \vec{\pi}_\mu
+$
+.
 
 \hfill
 \begin{property} 
@@ -1492,7 +1504,18 @@ types more readable.
 \end{property} 
 \hfill
 
-\TODO{explain}
+Subtyping duality correspondence $
+  \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
+$ rewrites a subtyping environment $\Delta_\nu$ containing path type upper bounds
+on variable $\alpha_\nu$ 
+into a subtyping environment $\Delta_\mu$ containing pair type lower bounds 
+on variable $\alpha_\mu$,
+such that 
+a given function inhabits all interpretations of 
+every type constrained by the environment's path type upper bounds
+if and only if 
+there's an argument paired with the function applied to it that inhabits an interpretation
+of at least one type constrained by the environment's pair type lower bounds.
 
 \hfill
 \begin{definition}
@@ -1520,6 +1543,7 @@ types more readable.
     }
 
     \inferrule {
+      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
       \alpha_\nu \downarrow \Delta_\nu \J{;} \alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r
       \fallingdotseq 
@@ -1529,7 +1553,23 @@ types more readable.
 \end{definition}
 \hfill
 
-\TODO{describe}
+The subtyping duality correspondence predicate unrolls the two subtyping environments simultaneously.
+In the case where both environments are empty 
+$
+  \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
+$, subtyping duality correspondence simply holds.
+In the case where the subtyping constraints are the same,
+the upper bounded variable $\alpha_\nu$ must not appear in the subtype $\tau_l$;
+the lower bounded variable $\alpha_\mu$ must not appear in the supertype $\tau_r$;
+and the correspondence must hold for the previous constraints in the environment
+$\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu$
+.
+Lastly, subtyping duality correspondence holds if
+the last subtyping constraint of each subtyping environment contains
+the path type upper bounds $\alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r$
+and pair type lower bounds $\alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu$ on the specified variables,
+and the the correspondence holds for the previous constraints in the environment
+
 
 \hfill
 \begin{property} 
@@ -2310,6 +2350,24 @@ rely on analogous techniques.
 
 \section{Appendix}
 \label{sect:appendix}
+
+\hfill
+\begin{definition} 
+  \label{def:world_containment}
+  World Containment 
+  \hfill
+  \boxed{\Omega \preceq \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (\vec{\alpha},\Delta)  \preceq (\vec{\alpha} \cup \vec{\alpha}',\Delta \cup \Delta') 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+
 
 \begin{definition} 
   \label{def:type_interpretation}
