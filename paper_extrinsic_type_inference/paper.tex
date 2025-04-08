@@ -216,6 +216,7 @@ Consider the function $\J{talky}$, which completes a simple English phrase.
   \end{array}
 \]
 
+\noindent
 Since there is no recursion, the number of paths is finite.
 For these simple finite functions, the type system constructs
 an isomorphic type without any weakening in precision. 
@@ -232,6 +233,7 @@ an isomorphic type without any weakening in precision.
   \end{array}
 \]
 
+\noindent
 Each path is represented using the path type,
 and the paths are joined together using the intersection type.
 
@@ -252,156 +254,16 @@ Consider an application of the function to a variable argument.
   \end{array}
 \]
 
+\noindent
 If the type system affirms the type annotation,
 then it goes on to infer the type of the application. 
 \[
   \J{<world> @ | <you> @}
 \]
 
+\noindent
 In effect, the type system applies application to all possible arguments
 and unions the results derived from only the paths of those arguments. 
-
-\Par{Factorization.}
-A function can represent infinite paths by using recursion.
-Consider the function $\J{repeat}$, which takes an item and a natural number
-as inputs and returns a list of that item repeated the input number of times.
-
-\[
-  \begin{array}[t]{@{} l}
-      \J{let repeat = ? x => loop(? self =>}
-      \\
-      \I \J{? <zero> @ => <nil> @}
-      \\
-      \I \J{? <succ> n => <cons>(x,self(n))}
-      \\
-      \J{)}
-  \end{array}
-\]
-
-One possibility for constructing the type of the recursive function would
-be to follow the idea of finite isomorphism and construct a type 
-that preserves all the paths. If our type system had a greatest fixed point
-type constructor, then we could concisely represent such a type with minimal
-rewriting.
-
-\[
-  \begin{array}[t]{@{} l}
-      \J{ALL[T] T -> GFP[R]( TOP} 
-      \\
-      \I \J{\& <zero> @ -> <nil> @}
-      \\
-      \I \J{\& (ALL[N L ; R <: N->L] <succ> N -> <cons> T*L)}
-      \\
-      \J{)} 
-  \end{array}
-\]
-
-Although the strength of precision of this type would be very beneficial,
-reasoning with such a type would be complicated. To keep the type system as
-simple as possible for the purpose of extrinsic type inference with a high-degree
-of code reusability, we leave such relational reasoning of inductive and co-inductive types out of
-the type system. 
-In this work, the type system actually avoids constructing a relational type, and instead, it
-constructs a type that is significantly weaker than the actual behavior of the function,
-by factoring the paths into an inductive space of inputs and an inductive space of outputs. 
-
-\[
-  \begin{array}[t]{@{} l}
-      \J{ALL[T] T ->} 
-      \\
-      \I \J{(LFP[R] <zero> @ | <succ> R)}
-      \\
-      \I \J{->}
-      \\
-      \I \J{(LFP[R] <nil> @ | <cons> T*R)}
-  \end{array}
-\]
-
-This eager weakening approximation enables the type system
-to simply reason with inductive scalars and avoids the need for complicated
-relational reasoning. In a follow up paper,
-we will show how to remedy this limitation by augmenting the type system with
-mechanisms for inductive relational reasoning.
-
-\Par{Scalar Unrolling.} 
-Since the inputs to functions may have inductive types, the type 
-system must be able to check for errors at function application by unrolling
-inductive types.
-Consider applying the function $\J{repeat}$ to some item and the number two, 
-which results in the type system checking that two is in fact an instance of the natural numbers.
-
-\[
-  \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-\]
-
-The type system confirms that two is a valid input by unrolling the inductive type three times.
-Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
-is unable to infer a stronger type for the application than the original list type. 
-In the followup paper, inductive relational reasoning will remedy this limitation.
-
-
-\Par{Scalar Induction.} 
-Another scenario that may arise is one in which the input to a function has an inductive type.
-Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
-
-\[
-  \begin{array}[t]{@{} l}
-    \J{let x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
-    \\
-    \J{...}
-    \\
-    \J{repeat(...)(x)} 
-    \\
-    \J{...}
-  \end{array}
-\]
-
-The application results in the type system checking that natural numbers are weaker than even numbers. 
-
-\[
-  \begin{array}[t]{@{} l}
-    \J{LFP[R] <zero> @ | <succ> <succ> R}
-    \\
-    \subtypes
-    \\
-    \J{LFP[R] <zero> @ | <succ> R}
-  \end{array}
-\]
-
-
-Since even numbers are represented inductively, the type system performs mathematical induction
-proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
-
-\[
-  \begin{array}[t]{@{} l}
-    \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-    \\
-    \entails
-    \\
-    \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-  \end{array}
-\]
-
-\noindent
-In practice, the type system actually substitutes the supertype into
-the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
-
-\[
-  \begin{array}[t]{@{} l}
-    \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
-    \\
-    \subtypes 
-    \\
-    \J{(LFP[R] <zero> @ | <succ> R)}
-  \end{array}
-\]
-
-
-In effect, by using mathematical induction, the type system ensures that 
-every type contained within the type of even natural numbers is also
-contained within the type of natural numbers.
-In followup work, we will extend this inductive reasoning to handle inductive relations. 
-
 
 \Par{Learning.}
 The paths of a function are not always syntactically apparent. 
@@ -414,6 +276,7 @@ and applies it to the number two and the boolean true.
   \J{let foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
 \]
 
+\noindent
 Type systems for System F have traditionally struggled to find the best
 type for such programs. If restricted to unqualified parametric types, there are many choices,
 without there being a clear best or principal type, 
@@ -446,6 +309,7 @@ and likewise, can construct the weakest safe type for $\J{f}$, and thus the prin
   \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
 \]
 
+\noindent
 Although the subtyping constraints are not present in the type's notation,
 the intersection of paths is chosen because it represents the weakest type
 consistent with the subtyping constraints on a variable representing the parameter's type. 
@@ -459,6 +323,154 @@ system will attempt to find a solution to two constraints on $\J{F}$
     \J{F} \subtypes \J{(<true> @ -> Y)}
   \end{array}
 \]
+
+
+\Par{Factorization.}
+A function can represent infinite paths by using recursion.
+Consider the function $\J{repeat}$, which takes an item and a natural number
+as inputs and returns a list of that item repeated the input number of times.
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{let repeat = ? x => loop(? self =>}
+      \\
+      \I \J{? <zero> @ => <nil> @}
+      \\
+      \I \J{? <succ> n => <cons>(x,self(n))}
+      \\
+      \J{)}
+  \end{array}
+\]
+
+\noindent
+One possibility for constructing the type of the recursive function would
+be to follow the idea of finite isomorphism and construct a type 
+that preserves all the paths. If our type system had a greatest fixed point
+type constructor, then we could concisely represent such a type with minimal
+rewriting.
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{ALL[T] T -> GFP[R]( TOP} 
+      \\
+      \I \J{\& <zero> @ -> <nil> @}
+      \\
+      \I \J{\& (ALL[N L ; R <: N->L] <succ> N -> <cons> T*L)}
+      \\
+      \J{)} 
+  \end{array}
+\]
+
+\noindent
+Although the strength of precision of this type would be very beneficial,
+reasoning with such a type would be complicated. To keep the type system as
+simple as possible for the purpose of extrinsic type inference with a high-degree
+of code reusability, we leave such relational reasoning of inductive and co-inductive types out of
+the type system. 
+In this work, the type system actually avoids constructing a relational type, and instead, it
+constructs a type that is significantly weaker than the actual behavior of the function,
+by factoring the paths into an inductive space of inputs and an inductive space of outputs. 
+
+\[
+  \begin{array}[t]{@{} l}
+      \J{ALL[T] T ->} 
+      \\
+      \I \J{(LFP[R] <zero> @ | <succ> R)}
+      \\
+      \I \J{->}
+      \\
+      \I \J{(LFP[R] <nil> @ | <cons> T*R)}
+  \end{array}
+\]
+
+\noindent
+This eager weakening approximation enables the type system
+to simply reason with inductive scalars and avoids the need for complicated
+relational reasoning. In a follow up paper,
+we will show how to remedy this limitation by augmenting the type system with
+mechanisms for inductive relational reasoning.
+
+\Par{Scalar Unrolling.} 
+Since the inputs to functions may have inductive types, the type 
+system must be able to check for errors at function application by unrolling
+inductive types.
+Consider applying the function $\J{repeat}$ to some item and the number two, 
+which results in the type system checking that two is in fact an instance of the natural numbers.
+
+\[
+  \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+\]
+
+\noindent
+The type system confirms that two is a valid input by unrolling the inductive type three times.
+Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
+is unable to infer a stronger type for the application than the original list type. 
+In the followup paper, inductive relational reasoning will remedy this limitation.
+
+
+\Par{Scalar Induction.} 
+Another scenario that may arise is one in which the input to a function has an inductive type.
+Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{let x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
+    \\
+    \J{...}
+    \\
+    \J{repeat(...)(x)} 
+    \\
+    \J{...}
+  \end{array}
+\]
+
+\noindent
+The application results in the type system checking that natural numbers are weaker than even numbers. 
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{LFP[R] <zero> @ | <succ> <succ> R}
+    \\
+    \subtypes
+    \\
+    \J{LFP[R] <zero> @ | <succ> R}
+  \end{array}
+\]
+
+\noindent
+Since even numbers are represented inductively, the type system performs mathematical induction
+proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+    \\
+    \entails
+    \\
+    \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+  \end{array}
+\]
+
+\noindent
+In practice, the type system actually substitutes the supertype into
+the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
+
+\[
+  \begin{array}[t]{@{} l}
+    \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
+    \\
+    \subtypes 
+    \\
+    \J{(LFP[R] <zero> @ | <succ> R)}
+  \end{array}
+\]
+
+\noindent
+In effect, by using mathematical induction, the type system ensures that 
+every type contained within the type of even natural numbers is also
+contained within the type of natural numbers.
+In followup work, we will extend this inductive reasoning to handle inductive relations. 
+
 
 
 \section{Structures}
@@ -516,6 +528,8 @@ significant modifications to the current system.
     & \com{sugar}
   \end{array}\]
 \end{definition}
+
+\noindent
 A program is an expression $e$, which may be composed of variables $x$, unit $\J{@}$,
 records $... \J{<}l\J{>} e ...$, functions $...\J{?}p \J{=>} e ...$, record
 projection $e\J{.}l$, function application, $e\J{(}e\J{)}$, recursion $\J{loop(}e\J{)}$,
@@ -537,7 +551,6 @@ The annotation is used in two ways. First, the type system checks that specifica
 of the expression bound to the variable. Second, the type system checks that the approximation,
 although possibly weaker than the inferred type, is sufficient for the continuing expression to be error-free. 
 
-\hfill
 \begin{definition} 
   \label{def:expression_desugaring}
   Expression Desugaring
@@ -564,14 +577,13 @@ although possibly weaker than the inferred type, is sufficient for the continuin
   \end{align*}
 
 \end{definition} 
-\hfill
 
+\noindent
 For convenience and clarity, expressions include syntactic sugar for tuples $e\J{,}e$, 
 unannotated bindings $\J{let}\ x\ \J{=}\ e\ \J{in}\ e$, data flow $e\ \J{|>}\ e$,
 and conditional branching $\J{if}\ e\ \J{then}\ e\ \J{else}\ e$.
 For any metalanguage statement or term containing sugar $s$, we assume that $s$ is implicitly replaced with $\llbracket s \rrbracket^\square$.
 
-\hfill
 \begin{definition} Patterns 
   \label{def:patterns}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -588,11 +600,10 @@ For any metalanguage statement or term containing sugar $s$, we assume that $s$ 
     & \com{entry}
   \end{array}\]
 \end{definition}
-\hfill
 
+\noindent
 A pattern $p$ may be composed of variables $x$, unit $\J{@}$, or records $\vec{k}$. 
 
-\hfill
 \begin{definition} Values 
   \label{def:values}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -609,11 +620,10 @@ A pattern $p$ may be composed of variables $x$, unit $\J{@}$, or records $\vec{k
     & \com{entry}
   \end{array}\]
 \end{definition}
-\hfill
 
+\noindent
 A value $v$ may be composed of unit $\J{@}$, records $\vec{g}$, or functions $\vec{f}$. 
 
-\hfill
 \begin{definition} Types 
   \label{def:types}
   \[\begin{array}[t]{r@{}l@{}r}
@@ -676,8 +686,8 @@ A value $v$ may be composed of unit $\J{@}$, records $\vec{g}$, or functions $\v
     & \com{sugar}
   \end{array}\]
 \end{definition}
-\hfill
 
+\noindent
 Types provide the representation for approximate specification.
 To accommodate a high degree of data constructor reusability,
 it is important that the forms of types accommodate a wide range of precision.
@@ -728,7 +738,6 @@ variables $\alpha$, unit $@$, entries $\J{<} l \J{l} \rho$, intersections $\rho 
 and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
 
 
-\hfill
 \begin{definition} 
   \label{def:type_desugaring}
   Type Desugaring 
@@ -743,8 +752,8 @@ and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
     \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{<left>}\ \tau_l)  \J{\&} (\J{<right>}\ \tau_r)
   \end{align*}
 \end{definition} 
-\hfill
 
+\noindent
 For convenience and clarity, types include syntactic sugar for top $\J{TOP}$, 
 bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
 For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
@@ -900,11 +909,10 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
   \end{mathpar}
 \end{definition}
 
+\noindent
 A expression is stable if and only if it is a value or it can take a step to a stable expression.
 In other words, if an expression is not a value then its behavior is defined by progression.
 
-
-\hfill
 \begin{property}
   \label{def:model_typing_soundness}
   Model Typing Soundness 
@@ -917,13 +925,11 @@ In other words, if an expression is not a value then its behavior is defined by 
     } 
   \end{mathpar}
 \end{property}
-\hfill
 
-
+\noindent
 Model typing $\vec{\delta} \satisfies e \hastype \tau$ attempts to imbue types
 with meaning.  At the very least, types should inform us that an expression is stable.  
 
-\hfill
 \begin{definition}
   \label{def:model_typing}
   Model Typing
@@ -1034,9 +1040,8 @@ with meaning.  At the very least, types should inform us that an expression is s
     } 
   \end{mathpar}
 \end{definition}
-\hfill
 
-
+\noindent
 Model typing describes how the various forms of 
 types are introduced based on the various forms of values. 
 There are no rules for elimination 
@@ -1069,7 +1074,6 @@ by eliminating type forms.
 % an expression for which model typing holds. 
 
 
-\hfill
 \begin{definition}
   \label{def:model_subtyping}
   Model Subtyping
@@ -1138,6 +1142,7 @@ aims to prove the validity of typing directly by including elimination rules.
   \end{mathpar}
 \end{property}
 
+\noindent
 The system for proving typing $\Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta$ 
 must be sound with respect to model typing assuming 
 interpretations of typing and subtyping environments.
@@ -1160,7 +1165,6 @@ interprets the input world as the smallest world that can satisfy the predicate.
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
 
-\hfill
 \begin{definition} 
   \label{def:proof_typing}
   Proof Typing
@@ -1269,10 +1273,8 @@ enumerates all possible outputs.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
-
-
+\noindent
 For the unit expression \J{@}, proof typing simply returns the unit type \J{@}. 
 For a variable expression, $x$, proof typing looks for a corresponding typing in the environment, 
 and it returns the type it found.
@@ -1343,7 +1345,6 @@ and it leverages the factorization predicate $... \subtypes \J{LFP[} \alpha_\mu 
 to factor the inductive relational type into an inductive antecedent and an inductive consequent
 of a single path type.
 
-\hfill
 \begin{definition} 
   \label{def:path_sequence_typing}
   Path Sequence Typing 
@@ -1380,6 +1381,7 @@ of a single path type.
   \end{mathpar}
 \end{definition}
 
+\noindent
 Path sequence typing $\vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta}$
 handles the details of constructing types for each path of a function.
 Progression of application tries each path of the applied function is in order.
@@ -1397,8 +1399,6 @@ $\llbracket ... \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+$
 keeps things tidy by compacting the subtyping environments and making the path
 types more readable.
 
-
-\hfill
 \begin{property} 
   \label{prop:duality_correspondence_soundness}
   Duality Correspondence Soudness
@@ -1425,8 +1425,8 @@ types more readable.
     }
   \end{mathpar} 
 \end{property} 
-\hfill
 
+\noindent
 Duality correspondence $\alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu$
 rewrites colonies with path types $\vec{\pi}_\nu$ into colonies with pair types $\vec{\pi}_\nu$
 such that for any interpretation $\delta$, a given function $e_f$ 
@@ -1435,7 +1435,6 @@ if and only if
 there's an argument $e_a$ paired with the function applied to it that inhabits 
 at least one of the pair type colonies.
 
-\hfill
 \begin{definition} 
   \label{def:duality_correspondence}
   Duality Correspondence 
@@ -1463,8 +1462,8 @@ at least one of the pair type colonies.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 The duality correspondence predicate unrolls the two sequences of colonies simultaneously.  
 In the case where both sequence are empty
 $
@@ -1486,7 +1485,6 @@ $
 $
 .
 
-\hfill
 \begin{property} 
   \label{prop:subtyping_duality_correspondence_soundness}
   Subtyping Duality Correspondence Soudness
@@ -1509,8 +1507,8 @@ $
     }
   \end{mathpar} 
 \end{property} 
-\hfill
 
+\noindent
 Subtyping duality correspondence $
   \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
 $ rewrites a subtyping environment $\Delta_\nu$ containing path type upper bounds
@@ -1524,7 +1522,6 @@ if and only if
 there's an argument $e_a$ paired with the function applied to it that inhabits 
 at least one type $\tau_\mu$ constrained by the environment's pair type lower bounds.
 
-\hfill
 \begin{definition}
   \label{def:subtyping_duality_correspondence}
   Subtyping Duality Correspondence 
@@ -1558,8 +1555,8 @@ at least one type $\tau_\mu$ constrained by the environment's pair type lower bo
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 The subtyping duality correspondence predicate unrolls the two subtyping environments simultaneously.
 In the case where both environments are empty 
 $
@@ -1580,8 +1577,6 @@ and the the correspondence holds for the previous constraints in the environment
 
 \TODO{Polar interpretation soundness}
 
-
-\hfill
 \begin{property} 
   \label{def:proof_subtyping_soundness}
   Proof Subtyping Soundness 
@@ -1597,8 +1592,8 @@ and the the correspondence holds for the previous constraints in the environment
     }
   \end{mathpar}
 \end{property}
-\hfill
 
+\noindent
 The system for proving subtyping $\tau_l \subtypes \tau_r \given \vec{\alpha}, \Delta$ 
 must be sound with respect to model typing under
 interpretation of the subtyping environment.
@@ -1633,9 +1628,6 @@ The best algorithmic interpretation we have found tries the rules in the order
 presented in the paper.
 
 
-
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_reflection}
   Proof Subtyping (Reflection)
@@ -1649,8 +1641,8 @@ presented in the paper.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Proof subtyping is reflexive. In other words, a type
 is considered both weaker than and stronger than itself. 
 We implicitly assume alpha conversion for variables
@@ -1658,7 +1650,6 @@ bound in indexed unions and indexed intersections.
 An algorithmic interpretation could convert to a nameless representation,
 such as de Bruijin indexes \cite{} before comparing type forms.
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_implication_preservation}
   Proof Subtyping (Implication Preservation)
@@ -1688,9 +1679,8 @@ such as de Bruijin indexes \cite{} before comparing type forms.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
-
+\noindent
 Both entry types and path types may be viewed as analogs of propositional implication. 
 However, unlike the typical separate rules for introduction and elimination in propositional implication,
 The proof subtyping for each implication types combines the semantics for introduction
@@ -1704,8 +1694,6 @@ proof subtyping simply checks that the antecedent of the subtype
 is weaker than the antecedent of the supertype, and the consequent
 of the subtype is stronger than the consequent of the supertype. 
 
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_implication_rewriting}
   Proof Subtyping (Implication Rewriting)
@@ -1752,8 +1740,8 @@ of the subtype is stronger than the consequent of the supertype.
 
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Just as entries and paths are analogous to propositional implication,
 the analogy extends to union and intersection.
 Union is analogous to propositional disjunction,
@@ -1786,8 +1774,6 @@ $, proof subtyping breaks apart the intersection and checks
 that the subtype holds against two entries 
 whose consequents are the intersection's constituent parts. 
 
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_abstraction_elimination}
   Proof Subtyping (Expansion Elimination)
@@ -1824,8 +1810,8 @@ whose consequents are the intersection's constituent parts.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 For elimination of a union $\tau_a\J{|}\tau_b$,
 proof subtyping solves the easier sub-problems
 on the union's constituents.
@@ -1851,7 +1837,6 @@ to $\Delta_l$ is unique. That is, instead of letting the proof split into
 different worlds and then recombining when necessary, proof subtyping simply prevents
 splitting the worlds too eagerly. 
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Introduction)
@@ -1884,12 +1869,11 @@ splitting the worlds too eagerly.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Refinement introduction is the dual of expansion elimination, so its rules
 rely on analogous techniques.
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_variable_elimination}
   Proof Subtyping (Variable Elimination)
@@ -1923,8 +1907,8 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Variable elimination has two cases, 
 one for open variables $\alpha \not\in \vec{\alpha}$,
 and one for closed variables $\alpha \in \vec{\alpha}$.
@@ -1957,7 +1941,6 @@ $(\vec{\alpha}, \Delta) \entails \alpha \subtypes \tau_r \safe$,
 which guarantees that all possible interpretations for $\alpha$
 are stronger than $\tau_r$.
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_variable_introduction}
   Proof Subtyping (Variable Introduction)
@@ -1990,13 +1973,12 @@ are stronger than $\tau_r$.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Variable introduction is the dual of variable elimination, so its rules
 rely on analogous techniques.
 
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_lfp_elimination}
   Proof Subtyping (Least Fixed Point Elimination)
@@ -2013,8 +1995,8 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 For least fixed point elimination, $\J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r$, 
 proof subtyping reasons by mathematical induction. 
 In practice, proof subtyping substitutes the super type $\tau_r$
@@ -2026,8 +2008,6 @@ which is that the body is stronger than the supertype $\tau_l \subtypes \tau_r$
 assuming the induction hypothesis that the self reference is stronger than the super type
 $\alpha \subtypes \tau_r$ 
 
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_difference_intro}
   Proof Subtyping (Difference Introduction)
@@ -2050,8 +2030,8 @@ $\alpha \subtypes \tau_r$
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 For difference introduction, $\tau \subtypes \tau_r \typdiff \eta$, 
 proof subtyping checks that subtyping holds for the positive part 
 $\tau \subtypes \rho \given \Omega$.
@@ -2067,8 +2047,6 @@ The restricted form of a subtracted type $\eta$ and its lack of free variables
 ensures that its introduction is complete,
 which in turn guarantees that is failure is sound.
 
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_lfp_intro}
   Proof Subtyping (Least Fixed Point Introduction)
@@ -2088,8 +2066,8 @@ which in turn guarantees that is failure is sound.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 For least fixed point introduction $\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r$,
 proof subtyping employs a heuristic $\Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r$ 
 to approximately judge whether or not the subtyping constraint is decidable. 
@@ -2097,9 +2075,6 @@ Once the syntactic forms of the types indicate that a decision can be made,
 then proof subtyping simply unrolls the least fixed point type 
 and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]$.
 
-
-
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_diff_elimination}
   Proof Subtyping (Difference Elimination)
@@ -2114,13 +2089,12 @@ and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \a
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 For difference elimination $\rho \typdiff \eta \subtypes \tau$,
 proof subtyping simply rewrites the problem in terms of union
 $\rho \subtypes \tau \J{|} \eta$.
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_abstraction_introduction}
   Proof Subtyping (Expansion Introduction)
@@ -2153,7 +2127,8 @@ $\rho \subtypes \tau \J{|} \eta$.
     }
   \end{mathpar}
 \end{definition}
-\hfill
+
+\noindent
 Expansion introduction provides a means for introducing
 generalized types from one of their instances.
 For union introduction $\tau \subtypes \tau_{l}\J{|}\tau_{r}$, 
@@ -2168,7 +2143,6 @@ It then confirms these are the potential witnesses are valid
 by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
 
 
-\hfill
 \begin{definition} 
   \label{def:proof_subtyping_refinement_elimination}
   Proof Subtyping (Refinement Elimination)
@@ -2202,12 +2176,11 @@ by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Refinement elimination is the dual of expansion introduction, so its rules
 rely on analogous techniques.
 
-\hfill
 \begin{definition} 
   \label{def:variable_elimination_safety}
   Variable Elimination Safety 
@@ -2233,15 +2206,14 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 A variable may be eliminated if it meets two conditions.
 The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
 An upper bound of an open variable indicates that the variable being eliminated
 can be as strong as its lower bounds.
 The second condition is that all lower bounds of that variable can be eliminated. 
 
-\hfill
 \begin{definition} 
   \label{def:variable_introduction_safety}
   Variable Introduction Safety
@@ -2267,8 +2239,8 @@ The second condition is that all lower bounds of that variable can be eliminated
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\noindent
 Variable introduction safety is the dual of variable elimination safety, so its rules
 rely on analogous techniques.
 
@@ -2361,7 +2333,6 @@ rely on analogous techniques.
 \section{Appendix}
 \label{sect:appendix}
 
-\hfill
 \begin{definition} 
   \label{def:world_containment}
   World Containment 
@@ -2375,10 +2346,8 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
-
-
+\noindent
 \begin{definition} 
   \label{def:type_interpretation}
   Type Interpretation 
@@ -2505,8 +2474,8 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition} 
 
+\TODO{...}
 
-\hfill
 \begin{definition} 
   \label{def:pruning_interpretation}
   Pruning Interpretation 
@@ -2525,9 +2494,9 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
-\hfill
+\TODO{...}
+
 \begin{definition} 
   \label{def:indirection}
   Indirection  
@@ -2578,10 +2547,9 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
-\hfill
 
+\TODO{...}
 
-\hfill
 \begin{definition} 
   \label{def:interpretation}
   Interpretation
@@ -2633,8 +2601,8 @@ rely on analogous techniques.
 
   \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
 \end{definition}
-\hfill
 
+\TODO{...}
 
 \begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau) = \tau} Type Packaging 
 
