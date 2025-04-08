@@ -1243,6 +1243,8 @@ enumerates all possible outputs.
     \inferrule {
       \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
       \\\\
+      \TODO{should we interpret with outer closed $\vec{\alpha}?$}
+      \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
         \vec{\alpha}', \llbracket \epsilon, \vec{\alpha} \cup \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
@@ -1361,6 +1363,8 @@ of a single path type.
       \\
       \text{diff}(\rho, \vec{\eta}) = \tau_l
       \\\\
+      \TODO{should we interpret with outer closed $\vec{\alpha}?$}
+      \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
       \vec{\alpha}', \llbracket \epsilon, \vec{\alpha} \cup \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
@@ -1403,19 +1407,21 @@ types more readable.
     \inferrule {
       \alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu
     } {
-      \forall \vec{\alpha}_\nu\ \Delta_\nu\ \tau_\nu\ \delta_\nu.\ 
-      (\vec{\alpha}_\nu,\Delta_\nu, \tau_\nu) \in \vec{\pi}_\nu \implies
+      \forall \tau_\nu\ \vec{\alpha}_\nu\ \Delta_\nu\ \tau_\nu'\ \delta_\nu.\ 
+      \\\\
+      (\vec{\alpha}_\nu,\Delta_\nu, \tau_\nu') \in \vec{\pi}_\nu \implies
       \text{dom}(\vec{\delta}_\nu) \cong \vec{\alpha}_\nu \implies
-      \vec{\delta} \cup \vec{\delta}_\nu \satisfies \Delta_\nu \implies
-      \vec{\delta}_\nu \satisfies e_f \hastype \tau_\nu
+      \vec{\delta}\ \alpha_\nu \slash \tau_\nu \cup \vec{\delta}_\nu \satisfies \Delta_\nu \implies
+      \vec{\delta}\ \alpha_\nu \slash \tau_\nu \cup \vec{\delta}_\nu \satisfies e_f \hastype \tau_\nu'
       \\\\
       \iff
       \\\\
-      \exists \vec{\alpha}_\mu\ \Delta_\mu\ \tau_\mu\ \delta_\mu\ e_a.\ 
-      (\vec{\alpha}_\mu,\Delta_\mu, \tau_\mu) \in \vec{\pi}_\mu \land
+      \exists e_a\ \tau_\mu\ \vec{\alpha}_\mu\ \Delta_\mu\ \tau_\mu'\ \delta_\mu.\ 
+      \\\\
+      (\vec{\alpha}_\mu,\Delta_\mu, \tau_\mu') \in \vec{\pi}_\mu \land
       \text{dom}(\vec{\delta}_\mu) \cong \vec{\alpha}_\mu \land
-      \vec{\delta} \cup \vec{\delta}_\mu \satisfies \Delta_\mu \land
-      \vec{\delta}_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      \vec{\delta}\ \alpha_\mu \slash \tau_\mu \cup \vec{\delta}_\mu \satisfies \Delta_\mu \land
+      \vec{\delta}\ \alpha_\mu \slash \tau_\mu \cup \vec{\delta}_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu'
     }
   \end{mathpar} 
 \end{property} 
@@ -1423,10 +1429,11 @@ types more readable.
 
 Duality correspondence $\alpha_\nu \downarrow \vec{\pi}_\nu \fallingdotseq \alpha_\mu \uparrow \vec{\pi}_\mu$
 rewrites colonies with path types $\vec{\pi}_\nu$ into colonies with pair types $\vec{\pi}_\nu$
-such that a given function inhabits all interpretations of every path type colony
+such that for any interpretation $\delta$, a given function $e_f$ 
+inhabits all interpretations of every path type colony
 if and only if 
-there's an argument paired with the function applied to it that inhabits an interpretation
-of at least one of the pair type colonies.
+there's an argument $e_a$ paired with the function applied to it that inhabits 
+at least one of the pair type colonies.
 
 \hfill
 \begin{definition} 
@@ -1488,14 +1495,14 @@ $
     \inferrule {
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
-      \forall \Delta_\nu\ \tau_\nu\ .\ 
+      \forall \tau_\nu\ \Delta_\nu\ .\ 
       \vec{\delta}\ \alpha_\nu \slash \tau_\nu \satisfies \Delta_\nu \implies
       \vec{\delta}\ \alpha_\nu \slash \tau_\nu 
       \satisfies e_f \hastype \tau_\nu
       \\\\
       \iff
       \\\\
-      \exists \Delta_\mu\ \tau_\mu\ e_a.\ 
+      \exists e_a\ \tau_\mu\ \Delta_\mu.\ 
       \vec{\delta}\ \alpha_\mu \slash \tau_\mu \satisfies \Delta_\mu \land
       \vec{\delta}\ \alpha_\mu \slash \tau_\mu 
       \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
@@ -1511,11 +1518,11 @@ on variable $\alpha_\nu$
 into a subtyping environment $\Delta_\mu$ containing pair type lower bounds 
 on variable $\alpha_\mu$,
 such that 
-a given function inhabits all interpretations of 
-every type constrained by the environment's path type upper bounds
+for any interpretation $\delta$, a given function $e_f$
+inhabits all types $\tau_\nu$ constrained by the environment's path type upper bounds
 if and only if 
-there's an argument paired with the function applied to it that inhabits an interpretation
-of at least one type constrained by the environment's pair type lower bounds.
+there's an argument $e_a$ paired with the function applied to it that inhabits 
+at least one type $\tau_\mu$ constrained by the environment's pair type lower bounds.
 
 \hfill
 \begin{definition}
@@ -1569,6 +1576,9 @@ the last subtyping constraint of each subtyping environment contains
 the path type upper bounds $\alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r$
 and pair type lower bounds $\alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu$ on the specified variables,
 and the the correspondence holds for the previous constraints in the environment
+
+
+\TODO{Polar interpretation soundness}
 
 
 \hfill
