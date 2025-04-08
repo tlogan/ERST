@@ -3500,747 +3500,527 @@ rely on analogous techniques.
 \end{definition}
 
 
-\begin{definition}\boxed{\VDash e}
-  \label{def:expression_good_formation}
-  \begin{mathpar}
-    \inferrule {
-      e = v
-    } {
-      \VDash e
-    } 
-
-    \inferrule { 
-      e \rightsquigarrow e' 
-      \\
-      \VDash e'
-    } {
-      \VDash e
-    } 
-  \end{mathpar}
-\end{definition}
-
-\begin{theorem}(Typing Soundness)
-  \label{theorem:typing_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \entails e \hastype \tau \given Z
-    } {
-      \VDash e
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } \entails e \hastype \tau \given Z$
-    \item \Z $\B{let } \vec{\delta}\ \Gamma' \ \tau' \B{ s.t. } \vec{\delta}, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
-    \item \Z $\vec{\delta}, \vec{\sigma} \satisfies \Gamma'$ by ...
-    \item \Z $\VDash e[\vec{\sigma}]$ by theorem \ref{theorem:model_typing_soundness}
-    \item \Z $e[\vec{\sigma}] = e$ by ...
-    \item \Z $\VDash e$ by substitution 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Proof typing consistency)
-  \label{theorem:proof_typing_consistency}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-    } {
-      \exists \vec{\delta} .\ \vec{\delta} \satisfies Z
-    } 
-  \end{mathpar}
-  \TODO{...}
-\end{theorem}
-
-\begin{theorem}(Proof typing soundness)
-  \label{theorem:proof_typing_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-    } {
-      \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } 
-  \end{mathpar}
-  \TODO{...}
-\end{theorem}
-
-
-\begin{theorem}(Proof typing weak soundness)
-  \label{theorem:proof_typing_weak_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-    } {
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies Z \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } 
-  \end{mathpar}
-
-  \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
-
-  \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
-
-  Proof: 
-  \item $
-    \B{assume } 
-    \Gamma \entails e \hastype \tau \given Z 
-  $ 
-    \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
-
-    \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
-      \item \Z\Z $\B{let } \vec{\delta}$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by substitution
-      \item \Z\Z $\exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau$ by witness 
-
-    \item \Z $\B{case } e = x \I \J{$x$:$\tau$} \in \Gamma$ 
-    \item \Z $\B{wrt } x$ 
-      \item \Z\Z $\B{let } \vec{\delta}$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies x \hastype \tau$  by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by substitution
-      \item \Z\Z $\exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau$ by witness 
-
-  \item \Z $\B{case } 
-    \Gamma \entails e' \hastype \tau' \given Z
-    \I
-    \tau = \J{<$l$>$\tau'$}
-    \I
-    e = \J{<$l$>$e'$} 
-  $ 
-  \item \Z $\B{hypo } 
-      \Gamma \entails e' \hastype \tau' \given Z  
-      \implies
-      \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
-  $ 
-  \item \Z $\B{wrt } e' \ \tau'$ 
-    \item \Z\Z $\B{let } \vec{\delta} $ by definition
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
-    $ by application
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \J{<$l$>$e'$} \hastype \J{<$l$>$\tau'$}
-    $ by definition
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    $ by substitution
-    \item \Z\Z $
-      \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    $ by witness 
-
-  \item \Z \TODO{remaining trivial introduction cases} 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \item \Z $\B{case } $ 
-  \item \Z $\B{hypo } $ 
-  \item \Z $\B{wrt } $ 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %   \inferrule {
-  %     \Gamma \entails R \hastype \tau_0 \given Z_0
-  %     \\
-  %     Z_0 \looparrowright Z_1
-  %     \\
-  %     \Gamma \entails e \hastype \tau_1 \given Z_1
-  %   } {
-  %     \Gamma \entails R\ \J{*$l$=$e$} \hastype \tau_0\ \J{\&}\ \J{$l$:$\tau_1$} \given Z_1
-  %   }
-
-  %   \inferrule {
-  %     Z, \Gamma \entails F \liftfun \vec{\pi}, \Tau_n 
-  %     \\
-  %     \Gamma \entails \vec{\pi} \equiv \Tau 
-  %   } {
-  %     \Gamma \entails F \hastype \J{\&}(\Tau) \given Z
-  %   }
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-  \item \Z $\B{case } 
-    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-    \I
-    Z_0 \looparrowright Z_1
-    \I
-    \tau_0 \subtypes \J{$l$->$\alpha$} \given Z_1
-    \I
-    e = \J{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
-  $
-   
-  \item \Z $\B{hypo } 
-    \Gamma \entails e_0 \hastype \tau_0 \given Z_0 
-    \implies 
-    \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
-  $ 
-  \item \Z $\B{wrt } \vec{\delta}\ e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
-
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
-    $ by application
-
-    \item \Z\Z $
-      \B{let }
-      M\ \Delta
-      \B{ s.t. }
-      \tau_0 \subtypes \J{$l$->$\alpha$} \given M, \Delta
-    $ by theorem \ref{theorem:proof_subtyping_choice}
-
-
-    \item \Z\Z $
-      \vec{\delta} \satisfies \tau_0  \subtypes \J{$l$->$\alpha$}
-    $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \J{$l$->$\alpha$}
-    $ by theorem \ref{theorem:model_subtyping_elimination} 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \J{$e_0$.$l$} \hastype \alpha 
-    $ by theorem \ref{theorem:model_subtyping_record_elimination} 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    $ by substitution 
-    \item \Z\Z $
-      \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    $ by witness 
-
-
-  \item \Z $\B{case } 
-    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-    \I
-    Z_0 \looparrowright Z_1
-    \I
-    \Gamma \entails e_1 \hastype \tau_1 \given Z_1
-    \I
-    e = \J{$e_0$($e_1$)} 
-    \I 
-    \tau = \alpha 
-    \I
-    Z = Z_2
-  $ 
-  \item \Z $ 
-    Z_1 \looparrowright Z_2
-    \I
-    \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given Z_2
-  $ 
-  \item \Z $\B{hypo } 
-    \Gamma \entails e_0 \hastype \tau_0 \given Z_0
-    \implies 
-    \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
-    \I
-    \Gamma \entails e_1 \hastype \tau_1 \given Z_1
-    \implies 
-    \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_1
-  $ 
-  \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_0\ \tau_1\ Z_0\ Z_1\ Z_2 $ 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
-    $ by application
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_1
-    $ by application
-
-    \item \Z\Z $
-      \B{let } M\ \Delta
-      \B{ s.t. }
-      \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
-    $ by theorem \ref{theorem:proof_subtyping_choice} 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \tau_0 \subtypes \J{$\tau_1$->$\alpha$} 
-    $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
-    \item \Z\Z $
-      \vec{\delta} \satisfies e_0 \hastype \J{$\tau_1$->$\alpha$} 
-    $ by theorem \ref{theorem:model_subtyping_elimination} 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies \J{$e_0$($e_1$)} \hastype \alpha
-    $ by theorem \ref{theorem:model_typing_implication_elimination} 
-    \item \Z\Z $
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    $ by substitution 
-    \item \Z\Z $
-      \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    $ by substitution 
-
-  \item \Z $\B{case } 
-    e = \J{loop($e'$)} 
-  $ 
-  \item \Z $\contin  
-    \tau = \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFLFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
-  $
-  \item \Z $\contin 
-    Z = Z_0 
-  $
-  \item \Z $\contin  
-    \Gamma \entails e' \hastype \J{$\alpha_{h^+}$->$\tau'$} \given Z_0
-    \I
-    Z_0 \looparrowright Z_1
-    \I
-    \tau' \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-  $ 
-  \item \Z $\contin  
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-  $
-  \item \Z $\B{hypo } 
-    \forall \vec{\delta} .\ \vec{\delta} \satisfies Z_0 \implies
-    \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
-  $ 
-  \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
-    \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies Z$
-      \item \Z\Z\Z $\vec{\delta} \satisfies Z_0$ by substitution
-      \item \Z\Z\Z $
-        \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
-      $ by instantiation and application
-      \item \Z\Z\Z $
-        \vec{\delta} \satisfies \tau' \subtypes 
-        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
-      $ by theorem \ref{theorem:fixpoint_duality_soundness}
-
-      \item \Z\Z\Z $
-        \vec{\delta} \satisfies \tau' \subtypes \tau
-      $ by substitution  
-
-      \item \Z\Z\Z $
-        \vec{\delta} \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau$}
-      $ by theorem \ref{theorem:model_subtyping_elimination} 
-
-      \item \Z\Z\Z $
-        \vec{\delta} \satisfies \J{loop($e'$)} \hastype \tau 
-      $ by theorem \ref{theorem:model_typing_implication_independence}
-
-      \item \Z\Z\Z $
-        \vec{\delta} \satisfies e \hastype \tau 
-      $ by substitution 
-
-    \item \Z\Z $
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies Z \implies \vec{\delta} \satisfies e \hastype \tau 
-    $ by implication and generalization 
-
-  \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$
-    by induction
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Fixpoint duality soundness (new))
-  \label{theorem:fixpoint_duality_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-      \\
-      \text{FTV}(\tau) \subseteq N
-      \\
-      \alpha_l \notin N
-      \\
-      \alpha_r \notin N
-      \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    } {
-      \vec{\delta} \satisfies 
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-    } 
-  \end{mathpar}
-  \TODO{...}
-\end{theorem}
-
-\TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
-
-\TODO{See how Cretin proves this without using subject reduction}
-
-\begin{theorem}(Fixpoint duality soundness old)
-  \label{theorem:fixpoint_duality_soundness_old}
-  \begin{mathpar}
-    \inferrule { 
-      Z_0 \looparrowright Z_1
-      \\
-      N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-    } {
-      \forall \tau .\ 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-      \implies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-      \given Z_0
-    } 
-  \end{mathpar}
-  Proof: 
-  \item $\B{assume }
-    Z_0 \looparrowright Z_1
-    \I
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-  $ 
-  \item \Z $\B{induct on }
-    N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
-  $
-  \item \Z $\B{case }
-    Z_1 = \epsilon \I \Tau = \epsilon
-  $
-    \item \Z\Z $\B{for } \tau$
-      \item \Z\Z\Z $\B{assume }
-        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-      $
-        \item \Z\Z\Z\Z $
-          \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given \epsilon 
-        $ by substitution
-
-        \item \Z\Z\Z\Z $
-          \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
-        $ by theorem \ref{theorem:universe_proof_typing_worldly}  
-
-        \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
-      \item \Z\Z\Z $
-        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-        \implies
-        \tau
-        \subtypes
-        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-        \given Z_0
-      $ by implication
-    \item \Z\Z $
-      \forall \tau .\ 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-      \implies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-      \given Z_0
-    $ by generalization 
-  \item \Z $\B{case }
-    Z_1 = Z\ \left<M, \Delta \right> \I \Tau = \Tau_i\ \tau_i
-  $
-  \item \Z $\contin
-    N \entails 
-    \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
-    \fallingdotseq 
-    \alpha_{h^-} \cdot \Tau_i
-  $
-  \item \Z $\contin
-    M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
-    \I
-    M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
-    \I
-    M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
-  $
-  \item \Z $\contin
-    \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
-  $
-  \item \Z $\contin
-    N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
-    \I
-    \Delta \entails \Alpha \pitchfork \Delta_i  
-  $
-  \item \Z $\contin
-    N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
-  $
-  \item \Z $\B{hypo }
-    N \entails 
-    \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
-    \fallingdotseq 
-    \alpha_{h^-} \cdot \Tau_i
-    \implies
-    \\
-    \forall \tau .\ 
-    \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z
-    \implies
-    \tau
-    \subtypes
-    \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
-    \given Z_0
-  $
-  \item \Z $\B{wrt }
-    Z\ M\ \Delta\ \Tau_i\ \tau_i
-  $
-
-    \item \Z\Z $\B{for } \tau \B{ assume }
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-    $
-      \item \Z\Z\Z $
-        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
-      $ by substitution
-
-      \item \Z\Z\Z $
-        \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-      $ by theorem \ref{theorem:proof_subtyping_decomposition}
-
-      \item \Z\Z\Z $
-        \tau
-        \subtypes
-        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
-        \given Z_0
-      $ by instantiation and application 
-      \item \Z\Z\Z $
-        \tau
-        \subtypes
-        \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
-        \given Z_0
-      $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
-    \item \Z\Z $
-      \forall \tau .\ 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-      \implies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-      \given Z_0
-    $ by implication and generalization 
-
-
-  \item \Z $
-    \forall \tau .\ 
-    \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
-    \implies
-    \tau
-    \subtypes
-    \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
-    \given Z_0
-  $ by induction
-  \item $\square$ by implication
-\end{theorem}
-
-\begin{theorem}(Universe proof typing fixpoint extension)
-  \label{theorem:universe_proof_typing_fixpoint_extension}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
-      \\\\
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-      \\\\
-      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
-      \\
-      \Delta \entails \alpha_l \subtypes \Tau_l 
-      \\
-      \Delta \entails \Tau_r \subtypes \alpha_r
-      \\\\
-      \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
-      \\
-      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
-      \\ 
-      \Delta \entails \Alpha \pitchfork \Delta_i  
-      \\
-      N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
-    } {
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Universe proof typing case soundness)
-  \label{theorem:universe_proof_typing_case_soundnes}
-  \begin{mathpar}
-    \inferrule { 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-      \\\\
-      \Delta \entails \alpha_{h^+} \subtypes \Tau_h
-      \\
-      \Delta \entails \alpha_l \subtypes \Tau_l 
-      \\
-      \Delta \entails \Tau_r \subtypes \alpha_r
-      \\\\
-      \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
-      \\
-      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
-      \\ 
-      \Delta \entails \Alpha \pitchfork \Delta_i  
-      \\
-      N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
-    } {
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Universe proof typing fixpoint union)
-  \label{theorem:universe_proof_typing_fixpoint_union}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
-      \\
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
-    } {
-      \vec{\delta} \satisfies
-      \tau
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}\ Influential soundness 
-  \label{theorem:influential_soundness}
-
-  \TODO{Prove that any constraints on non-influential variables with have been transitively applied to the influential variables}
-
-  \begin{mathpar}
-    \inferrule { 
-      \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given M, \Delta
-      \\
-      \Delta \entails \alpha_l \subtypes \Tau_l 
-      \\
-      \Delta \entails \Tau_r \subtypes \alpha_r
-      \\\\
-      \Delta \entails \Alpha \pitchfork \Delta_i  
-      \\
-      \text{FTV}(\tau) \subseteq \Alpha
-      \\\\
-      N, M, \Delta \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
-      \\
-      N, M, \Delta_i \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
-    } {
-      \vec{\delta} \satisfies \tau \subtypes \tau_i 
-      \land
-      \vec{\delta} \satisfies \tau_i \subtypes \tau
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-% \begin{theorem}(Universe proof typing implication expansion)
-%   \label{theorem:universe_proof_typing_implication}
+% \begin{definition}\boxed{\VDash e}
+%   \label{def:expression_good_formation}
 %   \begin{mathpar}
-%     \inferrule { 
-%       M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
-%       \\
-%       M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
-%       \\
+%     \inferrule {
+%       e = v
 %     } {
-%       \J{\&$(\Tau_l)$->|$(\Tau_r)$}
-%       \subtypes
-%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
-%       \given M, \Delta
+%       \VDash e
+%     } 
+
+%     \inferrule { 
+%       e \rightsquigarrow e' 
+%       \\
+%       \VDash e'
+%     } {
+%       \VDash e
 %     } 
 %   \end{mathpar}
-%   Proof: 
-%   \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
+% \end{definition}
+
+% \begin{theorem}(Typing Soundness)
+%   \label{theorem:typing_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \entails e \hastype \tau \given Z
+%     } {
+%       \VDash e
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{assume } \entails e \hastype \tau \given Z$
+%     \item \Z $\B{let } \vec{\delta}\ \Gamma' \ \tau' \B{ s.t. } \vec{\delta}, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
+%     \item \Z $\vec{\delta}, \vec{\sigma} \satisfies \Gamma'$ by ...
+%     \item \Z $\VDash e[\vec{\sigma}]$ by theorem \ref{theorem:model_typing_soundness}
+%     \item \Z $e[\vec{\sigma}] = e$ by ...
+%     \item \Z $\VDash e$ by substitution 
 %   \item $\square$
 % \end{theorem}
 
-\begin{theorem}(Universe proof typing implication expansion)
-  \label{theorem:universe_proof_typing_implication_expansion}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \J{$\tau_l$->$\tau_r$}
-      \subtypes
-      \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
-      \given M, \Delta
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
-  \item \TODO{$X \rightarrow Y$ is equivalent to $\forall x \in X .\ \exists y .\ (x,y) \in (X \times Y)$} 
-  \item \TODO{$X \rightarrow Y$ is equivalent to $\neg (\exists x \in X \land \nexists y \in Y)$} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Upper bound interpretation sound)
-  \label{theorem:upper_bound_interpretation_sound}
-  \begin{mathpar}
-    \inferrule { 
-      M, \Delta, \Delta \entails \alpha \subtypes \Tau 
-    } {
-     \alpha \subtypes \J{\&$(\Tau)$} \given \left<M, \Delta\right>
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Lower bound interpretation sound)
-  \label{theorem:lower_bound_interpretation_sound}
-  \begin{mathpar}
-    \inferrule { 
-      M, \Delta, \Delta \entails \Tau \subtypes \alpha
-      \\
-    } {
-     \J{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-
-\begin{theorem}(Universe proof typing worldly)
-  \label{theorem:universe_proof_typing_worldly}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given Z 
-    } {
-      \exists M\ \Delta\ .\ \left<M, \Delta\right> \in Z
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Empty containment absurd)
-  \label{theorem:empty_containment_absurd}
-  \begin{mathpar}
-    \inferrule { 
-      \left<M, \Delta\right> \in \epsilon 
-    } {
-      \bot
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-
-\begin{theorem}(Model typing implication independence)
-  \label{theorem:model_typing_implication_independence}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$->$\tau_r$} 
-      \\
-      \vec{\delta} \satisfies \tau_r
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{loop($e$)} \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-
-% \begin{theorem}(Proof typing fix interpolation weakest pre-condition)
-%   \label{theorem:fix_duality}
+% \begin{theorem}(Proof typing consistency)
+%   \label{theorem:proof_typing_consistency}
 %   \begin{mathpar}
 %     \inferrule { 
-%       \tau \subtypes \J{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
-%       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \J{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+%       \Gamma \entails e \hastype \tau \given Z  
 %     } {
-%       \J{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+%       \exists \vec{\delta} .\ \vec{\delta} \satisfies Z
+%     } 
+%   \end{mathpar}
+%   \TODO{...}
+% \end{theorem}
+
+% \begin{theorem}(Proof typing soundness)
+%   \label{theorem:proof_typing_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \Gamma \entails e \hastype \tau \given Z  
+%     } {
+%       \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     } 
+%   \end{mathpar}
+%   \TODO{...}
+% \end{theorem}
+
+
+% \begin{theorem}(Proof typing weak soundness)
+%   \label{theorem:proof_typing_weak_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \Gamma \entails e \hastype \tau \given Z  
+%     } {
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies Z \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     } 
+%   \end{mathpar}
+
+%   \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
+
+%   \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
+
+%   Proof: 
+%   \item $
+%     \B{assume } 
+%     \Gamma \entails e \hastype \tau \given Z 
+%   $ 
+%     \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+
+%     \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
+%       \item \Z\Z $\B{let } \vec{\delta}$ by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{@} \hastype \J{@}$ by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by substitution
+%       \item \Z\Z $\exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau$ by witness 
+
+%     \item \Z $\B{case } e = x \I \J{$x$:$\tau$} \in \Gamma$ 
+%     \item \Z $\B{wrt } x$ 
+%       \item \Z\Z $\B{let } \vec{\delta}$ by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies x \hastype \tau$  by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by substitution
+%       \item \Z\Z $\exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau$ by witness 
+
+%   \item \Z $\B{case } 
+%     \Gamma \entails e' \hastype \tau' \given Z
+%     \I
+%     \tau = \J{<$l$>$\tau'$}
+%     \I
+%     e = \J{<$l$>$e'$} 
+%   $ 
+%   \item \Z $\B{hypo } 
+%       \Gamma \entails e' \hastype \tau' \given Z  
+%       \implies
+%       \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
+%   $ 
+%   \item \Z $\B{wrt } e' \ \tau'$ 
+%     \item \Z\Z $\B{let } \vec{\delta} $ by definition
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
+%     $ by application
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies \J{<$l$>$e'$} \hastype \J{<$l$>$\tau'$}
+%     $ by definition
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+%     $ by substitution
+%     \item \Z\Z $
+%       \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+%     $ by witness 
+
+%   \item \Z \TODO{remaining trivial introduction cases} 
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   \item \Z $\B{case } $ 
+%   \item \Z $\B{hypo } $ 
+%   \item \Z $\B{wrt } $ 
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   %   \inferrule {
+%   %     \Gamma \entails R \hastype \tau_0 \given Z_0
+%   %     \\
+%   %     Z_0 \looparrowright Z_1
+%   %     \\
+%   %     \Gamma \entails e \hastype \tau_1 \given Z_1
+%   %   } {
+%   %     \Gamma \entails R\ \J{*$l$=$e$} \hastype \tau_0\ \J{\&}\ \J{$l$:$\tau_1$} \given Z_1
+%   %   }
+
+%   %   \inferrule {
+%   %     Z, \Gamma \entails F \liftfun \vec{\pi}, \Tau_n 
+%   %     \\
+%   %     \Gamma \entails \vec{\pi} \equiv \Tau 
+%   %   } {
+%   %     \Gamma \entails F \hastype \J{\&}(\Tau) \given Z
+%   %   }
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%   \item \Z $\B{case } 
+%     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+%     \I
+%     Z_0 \looparrowright Z_1
+%     \I
+%     \tau_0 \subtypes \J{$l$->$\alpha$} \given Z_1
+%     \I
+%     e = \J{$e_0$.$l$} \I \tau = \alpha \I Z = Z_1
+%   $
+   
+%   \item \Z $\B{hypo } 
+%     \Gamma \entails e_0 \hastype \tau_0 \given Z_0 
+%     \implies 
+%     \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
+%   $ 
+%   \item \Z $\B{wrt } \vec{\delta}\ e' \ l \ \alpha \ \tau_0 \ Z_0 \ Z_1$ 
+
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
+%     $ by application
+
+%     \item \Z\Z $
+%       \B{let }
+%       M\ \Delta
+%       \B{ s.t. }
+%       \tau_0 \subtypes \J{$l$->$\alpha$} \given M, \Delta
+%     $ by theorem \ref{theorem:proof_subtyping_choice}
+
+
+%     \item \Z\Z $
+%       \vec{\delta} \satisfies \tau_0  \subtypes \J{$l$->$\alpha$}
+%     $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e_0 \hastype \J{$l$->$\alpha$}
+%     $ by theorem \ref{theorem:model_subtyping_elimination} 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies \J{$e_0$.$l$} \hastype \alpha 
+%     $ by theorem \ref{theorem:model_subtyping_record_elimination} 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     $ by substitution 
+%     \item \Z\Z $
+%       \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     $ by witness 
+
+
+%   \item \Z $\B{case } 
+%     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+%     \I
+%     Z_0 \looparrowright Z_1
+%     \I
+%     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+%     \I
+%     e = \J{$e_0$($e_1$)} 
+%     \I 
+%     \tau = \alpha 
+%     \I
+%     Z = Z_2
+%   $ 
+%   \item \Z $ 
+%     Z_1 \looparrowright Z_2
+%     \I
+%     \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given Z_2
+%   $ 
+%   \item \Z $\B{hypo } 
+%     \Gamma \entails e_0 \hastype \tau_0 \given Z_0
+%     \implies 
+%     \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
+%     \I
+%     \Gamma \entails e_1 \hastype \tau_1 \given Z_1
+%     \implies 
+%     \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_1
+%   $ 
+%   \item \Z $\B{wrt } e_0\ e_1\ \alpha\ \tau_0\ \tau_1\ Z_0\ Z_1\ Z_2 $ 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_0
+%     $ by application
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_1
+%     $ by application
+
+%     \item \Z\Z $
+%       \B{let } M\ \Delta
+%       \B{ s.t. }
+%       \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
+%     $ by theorem \ref{theorem:proof_subtyping_choice} 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies \tau_0 \subtypes \J{$\tau_1$->$\alpha$} 
+%     $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
+%     \item \Z\Z $
+%       \vec{\delta} \satisfies e_0 \hastype \J{$\tau_1$->$\alpha$} 
+%     $ by theorem \ref{theorem:model_subtyping_elimination} 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies \J{$e_0$($e_1$)} \hastype \alpha
+%     $ by theorem \ref{theorem:model_typing_implication_elimination} 
+%     \item \Z\Z $
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     $ by substitution 
+%     \item \Z\Z $
+%       \exists \vec{\delta} .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     $ by substitution 
+
+%   \item \Z $\B{case } 
+%     e = \J{loop($e'$)} 
+%   $ 
+%   \item \Z $\contin  
+%     \tau = \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFLFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$} 
+%   $
+%   \item \Z $\contin 
+%     Z = Z_0 
+%   $
+%   \item \Z $\contin  
+%     \Gamma \entails e' \hastype \J{$\alpha_{h^+}$->$\tau'$} \given Z_0
+%     \I
+%     Z_0 \looparrowright Z_1
+%     \I
+%     \tau' \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%   $ 
+%   \item \Z $\contin  
+%     \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%   $
+%   \item \Z $\B{hypo } 
+%     \forall \vec{\delta} .\ \vec{\delta} \satisfies Z_0 \implies
+%     \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
+%   $ 
+%   \item \Z $\B{wrt } e'\ \tau'\ \alpha_{h^+}\ \alpha_l\ \alpha_r\ \alpha_{h^-}\ \alpha_l'\ \alpha_r'\ \Tau\ Z_0\ Z_1 $ 
+%     \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies Z$
+%       \item \Z\Z\Z $\vec{\delta} \satisfies Z_0$ by substitution
+%       \item \Z\Z\Z $
+%         \vec{\delta}, \Gamma \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau'$}
+%       $ by instantiation and application
+%       \item \Z\Z\Z $
+%         \vec{\delta} \satisfies \tau' \subtypes 
+%         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
+%       $ by theorem \ref{theorem:fixpoint_duality_soundness}
+
+%       \item \Z\Z\Z $
+%         \vec{\delta} \satisfies \tau' \subtypes \tau
+%       $ by substitution  
+
+%       \item \Z\Z\Z $
+%         \vec{\delta} \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau$}
+%       $ by theorem \ref{theorem:model_subtyping_elimination} 
+
+%       \item \Z\Z\Z $
+%         \vec{\delta} \satisfies \J{loop($e'$)} \hastype \tau 
+%       $ by theorem \ref{theorem:model_typing_implication_independence}
+
+%       \item \Z\Z\Z $
+%         \vec{\delta} \satisfies e \hastype \tau 
+%       $ by substitution 
+
+%     \item \Z\Z $
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies Z \implies \vec{\delta} \satisfies e \hastype \tau 
+%     $ by implication and generalization 
+
+%   \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$
+%     by induction
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Fixpoint duality soundness (new))
+%   \label{theorem:fixpoint_duality_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%       \\
+%       \text{FTV}(\tau) \subseteq N
+%       \\
+%       \alpha_l \notin N
+%       \\
+%       \alpha_r \notin N
+%       \\
+%       N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%     } {
+%       \vec{\delta} \satisfies 
+%       \tau
 %       \subtypes
-%       \J{$\alpha_1$->$\alpha_2$}
-%       \given Z_1
+%       \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%     } 
+%   \end{mathpar}
+%   \TODO{...}
+% \end{theorem}
+
+% \TODO{Cretin's corresponding theorem is Theorem 101 on p. 134}
+
+% \TODO{See how Cretin proves this without using subject reduction}
+
+% \begin{theorem}(Fixpoint duality soundness old)
+%   \label{theorem:fixpoint_duality_soundness_old}
+%   \begin{mathpar}
+%     \inferrule { 
+%       Z_0 \looparrowright Z_1
+%       \\
+%       N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%     } {
+%       \forall \tau .\ 
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%       \implies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%       \given Z_0
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item $\B{assume }
+%     Z_0 \looparrowright Z_1
+%     \I
+%     N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%   $ 
+%   \item \Z $\B{induct on }
+%     N \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+%   $
+%   \item \Z $\B{case }
+%     Z_1 = \epsilon \I \Tau = \epsilon
+%   $
+%     \item \Z\Z $\B{for } \tau$
+%       \item \Z\Z\Z $\B{assume }
+%         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%       $
+%         \item \Z\Z\Z\Z $
+%           \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given \epsilon 
+%         $ by substitution
+
+%         \item \Z\Z\Z\Z $
+%           \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
+%         $ by theorem \ref{theorem:universe_proof_typing_worldly}  
+
+%         \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
+%       \item \Z\Z\Z $
+%         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%         \implies
+%         \tau
+%         \subtypes
+%         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%         \given Z_0
+%       $ by implication
+%     \item \Z\Z $
+%       \forall \tau .\ 
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%       \implies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%       \given Z_0
+%     $ by generalization 
+%   \item \Z $\B{case }
+%     Z_1 = Z\ \left<M, \Delta \right> \I \Tau = \Tau_i\ \tau_i
+%   $
+%   \item \Z $\contin
+%     N \entails 
+%     \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
+%     \fallingdotseq 
+%     \alpha_{h^-} \cdot \Tau_i
+%   $
+%   \item \Z $\contin
+%     M, \Delta, \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+%     \I
+%     M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+%     \I
+%     M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+%   $
+%   \item \Z $\contin
+%     \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
+%   $
+%   \item \Z $\contin
+%     N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+%     \I
+%     \Delta \entails \Alpha \pitchfork \Delta_i  
+%   $
+%   \item \Z $\contin
+%     N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+%   $
+%   \item \Z $\B{hypo }
+%     N \entails 
+%     \alpha_{h^+} \cdot Z \cdot \J{$\alpha_l$->$\alpha_r$} 
+%     \fallingdotseq 
+%     \alpha_{h^-} \cdot \Tau_i
+%     \implies
+%     \\
+%     \forall \tau .\ 
+%     \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z
+%     \implies
+%     \tau
+%     \subtypes
+%     \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+%     \given Z_0
+%   $
+%   \item \Z $\B{wrt }
+%     Z\ M\ \Delta\ \Tau_i\ \tau_i
+%   $
+
+%     \item \Z\Z $\B{for } \tau \B{ assume }
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%     $
+%       \item \Z\Z\Z $
+%         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z\ \left<M, \Delta\right>
+%       $ by substitution
+
+%       \item \Z\Z\Z $
+%         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+%       $ by theorem \ref{theorem:proof_subtyping_decomposition}
+
+%       \item \Z\Z\Z $
+%         \tau
+%         \subtypes
+%         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r'$} 
+%         \given Z_0
+%       $ by instantiation and application 
+%       \item \Z\Z\Z $
+%         \tau
+%         \subtypes
+%         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
+%         \given Z_0
+%       $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
+%     \item \Z\Z $
+%       \forall \tau .\ 
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%       \implies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%       \given Z_0
+%     $ by implication and generalization 
+
+
+%   \item \Z $
+%     \forall \tau .\ 
+%     \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
+%     \implies
+%     \tau
+%     \subtypes
+%     \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r'$} 
+%     \given Z_0
+%   $ by induction
+%   \item $\square$ by implication
+% \end{theorem}
+
+% \begin{theorem}(Universe proof typing fixpoint extension)
+%   \label{theorem:universe_proof_typing_fixpoint_extension}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i)$]$\alpha_r$} 
+%       \\\\
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+%       \\\\
+%       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
+%       \\
+%       \Delta \entails \alpha_l \subtypes \Tau_l 
+%       \\
+%       \Delta \entails \Tau_r \subtypes \alpha_r
+%       \\\\
+%       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
+%       \\
+%       N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+%       \\ 
+%       \Delta \entails \Alpha \pitchfork \Delta_i  
+%       \\
+%       N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
+%     } {
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r$} 
 %     } 
 %   \end{mathpar}
 %   Proof: 
@@ -4248,1518 +4028,1738 @@ rely on analogous techniques.
 %   \item $\square$
 % \end{theorem}
 
-\begin{theorem}(Proof subtyping decomposition)
-  \label{theorem:proof_subtyping_decomposition}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given Z\ \left<M, \Delta\right>
-    } {
-      \tau_l \subtypes \tau_r \given \left<M, \Delta\right>
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-
-\begin{theorem}(Proof subtyping choice)
-  \label{theorem:proof_subtyping_choice}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given Z 
-    } {
-      \exists M\ \Delta .\ \tau_l \subtypes \tau_r \given M, \Delta
-    } 
-  \end{mathpar}
-  Proof: 
-  \item \TODO{...} 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Model subtyping elimination)
-  \label{theorem:model_subtyping_elimination}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-      \\
-      \vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
-    } 
-  \end{mathpar}
-  Proof: 
-  \item $\B{assume } 
-    \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-    \I
-    \vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  
-  $
-  \item \Z $\B{invert on } \vec{\delta} \satisfies \tau_l \subtypes \tau_r$
-  \item \Z $\B{case } \forall e'\ \Gamma' .\ \vec{\delta}, \Gamma' \satisfies e' \hastype  \tau_l  \implies \vec{\delta}, \Gamma' \satisfies e' \hastype \tau_r$
-  \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by instantiation
-  \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by application 
-  \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by inversion
-  \item $\square$ by implication
-\end{theorem}
-
-
-\begin{theorem}(Model typing record elimination)
-  \label{theorem:model_subtyping_record_elimination}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
-    } 
-  \end{mathpar}
-  Proof: 
-  \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
-  $ 
-    \item \Z $\B{induct on } 
-      \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
-    $ 
-    \item \Z $\B{case }
-      e = G
-      \I
-      \J{?$l$=>$v$} \in G
-      \I
-      \vec{\delta}, \Gamma \satisfies v \hastype \tau
-      \I
-      \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v 
-    $ 
-    \item \Z $\B{wrt }
-      G\ v 
-    $
-  
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
-      $ by substitution
-
-      \item \Z\Z $
-        \J{$G$.$l$} \rightsquigarrow v
-      $ by definition 
-
-      \item \Z\Z $
-        \B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \Gamma \satisfies \vec{\sigma} 
-      $ by theorem \ref{...} 
-      \item \Z\Z $
-        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v
-      $ by definition 
-      \item \Z\Z $
-        v = v[\vec{\sigma} \cup \epsilon] 
-      $ by definition 
-      \item \Z\Z $
-        \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \cup \epsilon] 
-      $ by substitution 
-      \item \Z\Z $
-        \vec{\delta}, \epsilon \satisfies \epsilon 
-      $ by definition 
-
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \cup \epsilon \satisfies v \hastype \tau
-      $ by definition 
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \J{$G$.$l$} \hastype \tau 
-      $ by definition 
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
-      $ by substitution
-
-
-    \item \Z $\B{case }
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma
-      \I
-      e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma} \cup \vec{\sigma}']
-      \I
-      \vec{\delta}, \vec{\sigma}' \satisfies \Gamma'
-      \I
-      \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
-    $
-    \item \Z $\B{hypo }
-      \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
-      \implies
-      \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
-    $
-    \item \Z $\B{wrt }
-      \vec{\sigma}\ e'\ \vec{\sigma}'\ \Gamma'
-    $
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
-      $ by application
-      \item \Z\Z $
-        \J{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$}
-      $ by definition 
-      \item \Z\Z $
-        \J{$e[\vec{\sigma}]$.$l$} = \J{$e$.$l$}[\vec{\sigma}]
-      $ by definition 
-      \item \Z\Z $
-        \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$} = \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
-      $ by definition 
-      \item \Z\Z $
-        \J{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
-      $ by substitution 
-      \item \Z\Z $
-        \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
-      $ by definition 
-
-    \item \Z $
-      \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
-    $ by induction 
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Proof subtyping consistency)
-  \label{theorem:proof_subtyping_consistency}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given M, \Delta 
-    } {
-      \exists \vec{\delta} .\ 
-      \vec{\delta} \satisfies \Delta
-    } 
-  \end{mathpar}
-\end{theorem}
-
-\begin{theorem}(Proof subtyping soundness)
-  \label{theorem:proof_subtyping_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given M, \Delta 
-    } {
-      \exists \vec{\delta} .\ 
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-    } 
-  \end{mathpar}
-\end{theorem}
-
-
-\begin{theorem}(Proof subtyping weak soundness)
-  \label{theorem:proof_subtyping_weak_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \tau_l \subtypes \tau_r \given M, \Delta 
-    } {
-      \forall \vec{\delta} .\ 
-      \vec{\delta} \satisfies \Delta
-      \implies
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-    } 
-  \end{mathpar}
-
-\TODO{closed variabless simply remove variables from soundness consideration}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% (EXI[X . 1 <: X, X <: 3] X) <: 2  -| 1 <: X, X <: 3, ..., X <: 2  
-% FAILS, not considered for soundness
-% (EXI[X . 1 <: X, X <: 2] X) <: 2  -| 1 <: X, X <: 2, ..., X <: 2  
-% PASSES, is considered for soundness
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2 <: (EXI[X . 1 <: X, X <: 3] X)  -| 2 <: X, ..., 1 <: X, X <: 3 
-% PASSES, is considered for soundness
-% 2 <: (EXI[X . X <: 1 ] X)  -| 2 <: X, ..., X <: 1
-% FAILS, not considered for soundness
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  Proof: 
-  \item \TODO{think about how to handle the mutually recursive definition} 
-  \item $\B{assume } 
-    \tau_l \subtypes \tau_r \given M, \Delta 
-  $
-    \item \Z $\B{induct on } \tau_l \subtypes \tau_r \given M, \Delta$
-
-    \item \Z $\B{case } \tau_l = \tau \I \tau_r = \tau$
-    \item \Z $\B{wrt } \tau $
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau \subtypes \tau$
-        by theorem \ref{theorem:model_typing_reflexivity}
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
-
-    \item \Z $\B{case } \tau_l = \J{BOT}$
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \J{BOT} \subtypes \tau_r$ by definition
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
-
-    \item \Z $\B{case } \tau_r = \J{TOP}$
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{TOP}$ by definition
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
-
-    \item \Z $\B{case } 
-      \tau_r = \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
-      \I
-      \tau_l
-      \subtypes
-      \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
-      \given M, \Delta
-    $
-    \item \Z $\B{hypo }
-      \forall \vec{\delta} .\ 
-      \vec{\delta} \satisfies \Delta
-      \implies
-      \vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
-    $ 
-    \item \Z $\B{wrt } l\ \tau_{rl}\ \tau_{rr}$ 
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
-        by application
-        \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
-          by theorem \ref{theorem:model_typing_subsumption} 
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
-          \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by substitution 
-        \item \Z\Z\Z $\forall e\ \Gamma .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
-          \vec{\delta}, \Gamma \satisfies e \hastype \tau_r
-        $ by implication and generalization
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$
-        by definition 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
-
-
-    \item \Z $\B{case } 
-      \tau_l = \J{$\tau_{ll}$|$\tau_{lr}$}
-      \I
-      M = M_1
-      \I
-      \Delta = \Delta_1
-    $
-    \item \Z $\contin
-      \tau_{ll} \subtypes \tau_r
-      \given M_0, \Delta_0
-      \I
-      M_0 \preceq M_1
-      \I
-      \Delta_0 \preceq \Delta_1
-      \I
-      \tau_{lr} \subtypes \tau_r
-      \given M_1, \Delta_1
-    $
-
-    \item \Z $\B{hypo } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies \tau_{ll} \subtypes \tau_r
-      \I
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_{lr} \subtypes \tau_r
-    $
-    \item \Z $\B{wrt } \tau_{ll}\ \tau_{lr}$
-
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } M, \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1$ by substitution 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{lr} \subtypes \tau_r$ by application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{ll} \subtypes \tau_r$ by application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \J{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
-        by definition
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-        by substitution 
-
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization
-
-    \item \Z $\B{case } 
-      \tau_r = \J{$\tau_{rl}$\&$\tau_{rr}$}
-      \I
-      M = M_1
-      \I
-      \Delta = \Delta_1
-    $
-    \item \Z $\contin 
-      \tau_l \subtypes \tau_{rl} \given M_0, \Delta_0
-      \I
-      M_0 \preceq M_1
-      \I
-      \Delta_0 \preceq \Delta_1
-      \I
-      \tau_l \subtypes \tau_{rr} \given M_1, \Delta_1
-    $
-    \item \Z $\B{hypo } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_{rl} 
-      \I
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_{rr} 
-    $
-    \item \Z $\B{wrt } $
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 $ by substitution
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rr}$ by instantiation and application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{...} \TODO{...} 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rl}$ by instantiation and application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization
-
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes
-    %   \J{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
-    %   \given M, \Delta
-    % } {
-    %   \tau_l \subtypes 
-    %   \J{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
-    %   \given M, \Delta
-    % }
-      \item \Z\Z \TODO{...} 
-
-    %%% TEMPLATE
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes
-    %   \J{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
-    %   \given M, \Delta
-    % } {
-    %   \tau_l \subtypes \J{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
-    %   \given M, \Delta
-    % }
-      \item \Z\Z \TODO{...} 
-
-    %%% TEMPLATE
-    \item \Z $\B{case } 
-      \tau_l = \J{EXI[$\Alpha$ $Q$]$\tau_b$}
-      \I
-      M = M_1
-      \I
-      \Delta = \Delta_1
-    $
-    \item \Z $\contin
-      Q \given M_0, \Delta_0
-      \I
-      A \notfree \tau_r
-      \I
-      M_0 \cup \Alpha \preceq M_1
-      \I
-      \Delta_0 \preceq \Delta_1
-      \I
-      \tau_b \subtypes \tau_r
-      \given M_1, \Delta_1
-    $
-    \item \Z $\B{hypo } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies M_1, \tau_b \subtypes \tau_r 
-    $
-    \item \Z $\B{mutu } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies Q 
-    $ by theorem \ref{...} \TODO{sequence soundness / mutual dependence}
-    \item \Z $\B{wrt } \Alpha\ Q\ \tau_b\ M_1\ \Delta_1\ M_0\ \Delta_0$
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 $ by substitution
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_b \subtypes \tau_r$ by application
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
-        \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application
-        \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
-        \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
-          \implies \vec{\delta} \satisfies e \hastype \tau_r
-        $ 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by definition 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization
-
-    \item \Z $\B{case } 
-      \tau_r = \J{ALL[$\Alpha$ $Q$]$\tau_b$}
-      \I
-      M = M_1
-      \I
-      \Delta = \Delta_1
-    $
-    \item \Z $\contin
-      Q \given M_0, \Delta_0
-      \I
-      A \notfree \tau_l
-      \I
-      M_0 \cup \Alpha \preceq M_1
-      \I
-      \Delta_0 \preceq \Delta_1
-      \I
-      \tau_l \subtypes \tau_b
-      \given M_1, \Delta_1
-    $
-    \item \Z $\B{hypo } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_b 
-    $
-    \item \Z $\B{mutu } 
-      \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies Q 
-    $ by theorem \ref{...} \TODO{sequence soundness / mutual dependence}
-    \item \Z $\B{wrt } \Alpha\ Q\ \tau_b\ M_1\ \Delta_1\ M_0\ \Delta_0$
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1$ by substitution 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_b$ by application 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
-        \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application 
-        \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
-          \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by substitution 
-        \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
-          \implies \vec{\delta} \satisfies e \hastype \tau_r
-        $ 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by definition 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization
-      \item \Z\Z \TODO{...} 
-
-% e :  ALL[a b . 3 <: a ] (a,b) \implies e : (a,b)
-    \item \Z $\B{case } 
-      \tau_l = \alpha
-      \I
-      M = M_1
-      \I
-      \Delta = \Delta_1\ \alpha <: \tau_r
-    $
-    \item \Z $\contin
-      \alpha \notin M_0
-      \I
-      M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
-      \I
-      M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
-      \I
-      M_0 \preceq M_1
-    $
-    \item \Z $\contin
-      \Delta_0 \cup \Delta_m \preceq \Delta_1
-      \I
-      \J{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
-    $
-    \item \Z $\B{hypo } \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies
-      \vec{\delta} \satisfies \J{|$(\Tau)$} <: \tau_r
-    $
-    \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
-      \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
-        \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 \J{($\alpha$<:$\tau_r$)}$ by substitution
-        \item \Z\Z\Z $\vec{\delta} \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
-        \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l <: \tau_r$ by substitution 
-      \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-      by implication and generalization 
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \alpha \notin M_0
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot M
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Tau 
-    %   \\
-    %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
-    %   \\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \widebar{\J{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \cup \widebar{\J{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
-    %   \given M_1, \Delta_1
-    % } {
-    %   \tau_l \subtypes \alpha
-    %   \given M_1, \Delta_1
-    %   \cup \widebar{\tau_l<:z}^{z \in M}
-    %   \cup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \alpha \in M_0
-    %   \\
-    %   \alpha <: \tau \in (\Delta_0 \cup \text{factor}(\Delta_0, \alpha))
-    %   \\\\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \tau \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % } {
-    %   \alpha \subtypes \tau_r
-    %   \given M_1, \Delta_1
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \alpha \in M_0
-    %   \\
-    %   \tau <: \alpha \in \Delta_0
-    %   \\\\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   \tau_l \subtypes \tau
-    %   \given M_1, \Delta_1
-    % } {
-    %   \tau_l \subtypes \alpha
-    %   \given M_1, \Delta_1
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes \tau_r \given M_0, \Delta_0
-    %   \\\\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   Q
-    %   \given M_1, \Delta_1
-    % } {
-    %   \J{ALL[$\Alpha$ $Q$]$\tau_l$}
-    %   \subtypes 
-    %   \tau_r
-    %   \given M_1, \Delta_1 
-    % }
-
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes \tau_r
-    %   \given M_0, \Delta_0
-    %   \\\\
-    %   M_0 \preceq M_1
-    %   \\
-    %   \Delta_0 \preceq \Delta_1
-    %   \\
-    %   Q \given M_1, \Delta_1
-    % } {
-    %   \tau_l
-    %   \subtypes 
-    %   \J{EXI[$\Alpha$ $Q$]$\tau_r$}
-    %   \given M_1, \Delta_1
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_{ll} \subtypes \tau_r
-    %   \given M, \Delta
-    % } {
-    %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-    %   \given M, \Delta
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_{lr} \subtypes \tau_r
-    %   \given M, \Delta
-    % } {
-    %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
-    %   \given M, \Delta
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes \tau_{rl}
-    %   \given M, \Delta
-    % } {
-    %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
-    %   \given M, \Delta
-    % }
-
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\B{case } $
-    \item \Z $\B{hypo } $
-    \item \Z $\B{wrt } $
-    % \inferrule {
-    %   \tau_l \subtypes \tau_{rr}
-    %   \given M, \Delta
-    % } {
-    %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
-    %   \given M, \Delta
-    % }
-      \item \Z\Z \TODO{...} 
-
-    \item \Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
-    by induction
-  \item $\square$ by implication
-\end{theorem}
-
-\begin{theorem} Model typing existential elimination 
-  \label{theorem:model_typing_existential_elimination}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_l$}
-      \\
-      \vec{\delta} \satisfies Q
-      \\
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-      \\
-      \Alpha \notfree \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: 
-% depends on proof subtyping 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ... |= 2 : (EXI[X . 1 <: X, X <: 3] X)
-% X/1 |= 1 <: X, X <: 3
-% -------------------------
-% X/1 |= 2 : 1 (FAIL) 
-% -------------------------
-% X/1 |= 2 : 4  (PASS)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% X <: 4  -| X, 1 <: X, X <: 3
-
-\end{theorem}
-
-\begin{theorem} Model typing universal introduction 
-  \label{theorem:model_typing_universal_introduction}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-      \\
-      \vec{\delta} \satisfies Q
-      \\
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-      \\
-      \Alpha \notfree \tau_l
-    } {
-      \vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_r$}
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
-\end{theorem}
-
-
-
-
-
-\begin{theorem} Model subtyping sequence last 
-  \label{theorem:model_subtyping_sequence_last}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \Delta\ \J{($\tau_l$<:$\tau_r$)}
-    } {
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r 
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model subtyping sequence reduction 
-  \label{theorem:model_subtyping_sequence_reduction}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \Delta\ \delta
-    } {
-      \vec{\delta} \satisfies \Delta
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model subtyping sequence prefix  
-  \label{theorem:model_subtyping_sequence_prefix}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \Delta'
-      \\
-      \Delta \preceq \Delta'
-    } {
-      \vec{\delta} \satisfies \Delta
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model subtyping sequence uncat 
-  \label{theorem:model_subtyping_sequence_uncat}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \Delta \cup \Delta'
-    } {
-      \vec{\delta} \satisfies \Delta
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} concatenation prefix 
-  \label{theorem:concatenation prefix}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \Delta \preceq \Delta \cup \Delta'
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-
-
-\begin{theorem} Model subtyping unsub left 
-  \label{theorem:Modle_subtyping_unsub_left}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-      \\
-      \alpha\slash\tau_l \in \vec{\delta}
-    } {
-      \vec{\delta} \satisfies \alpha \subtypes \tau_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model subtyping unsub right 
-  \label{theorem:Modle_subtyping_unsub_right}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_r
-      \\
-      \alpha\slash\tau_r \in \vec{\delta}
-    } {
-      \vec{\delta} \satisfies \tau_l \subtypes \alpha
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model subtyping something 
-  \label{theorem:Modle_subtyping_something}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \Delta 
-      \\
-      M, \Delta \entails \Tau \subtypes^\sharp \alpha  
-    } {
-      \alpha\slash\J{|$(\Tau)$} \in \vec{\delta}
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-
-\begin{theorem} Model typing record introduction 
-  \label{theorem:model_typing_record_introduction}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \J{$e$.$l$} \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{$l$->$\tau$}
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model typing implication introduction 
-  \label{theorem:model_typing_implication_introduction}
-  \TODO{this is really messed up}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies \J{$e_0$($e_1$)} \hastype \tau_r
-      \\
-      \vec{\delta} \satisfies e_1 \hastype \tau_l
-      \\
-      \forall \tau .\ \vec{\delta} \satisfies e_1 \hastype \tau \implies \tau_l \subtypes \tau
-    } {
-      \vec{\delta} \satisfies e_0 \hastype \J{$\tau_l$->$\tau_r$}
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-\begin{theorem} Model typing intersection elimination 
-  \label{theorem:model_typing_intersection_elimination}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l \& \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l 
-      \land
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-
-
-\begin{theorem} Model typing reflexivity
-  \label{theorem:model_typing_reflexivity}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \tau \subtypes \tau
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{for } e\ \Gamma \B{ assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau$
-    \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by identity
-  \item $\forall e\ \Gamma .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau$
-  by implication and generalization
-  \item $\square$ by definition
-\end{theorem}
-
-
-\begin{theorem}(Model typing subsumption)
-  \label{theorem:model_typing_subsumption}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-      \\
-      \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r
-    } {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof: 
-  \item $\B{assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-  \I \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r
-  $
-    \item \Z $\B{invert on}\ \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r$
-    \item \Z $\B{case}\ \forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$
-      \item \Z\Z $\forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$ by identity
-    \item \Z $\forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$ by inversion
-    \item \Z $\vec{\delta}, \Gamma \satisfies e : \tau_l \implies \vec{\delta}, \Gamma \satisfies e : \tau_r$ by instantiation 
-    \item \Z $\vec{\delta}, \Gamma \satisfies e : \tau_r$ by application
-  \item $\square$ by implication 
-\end{theorem}
-
-\begin{theorem}(Model typing implication elimination)
-  \label{theorem:model_typing_implication_elimination}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
-      \\
-      \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
-    } {
-      \vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r
-    } 
-  \end{mathpar}
-
-  \item $\B{assume }
-    \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
-    \I 
-    \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
-  $ 
-
-    \item \Z $\B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \vec{\sigma} \satisfies \Gamma$ by theorem \ref{...}
-    \item \Z $\B{induct on } \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r$
-
-    \item \Z $\B{case }$ \TODO{...}
-
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \pattype \tau_p
-    %   \\
-    %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
-    %   \\\\
-    %   \forall e .\ 
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
-    %     \implies
-    %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
-    %     \land
-    %     (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % \inferrule { 
-    %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    % } {
-    %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
-    % } 
-    \item \Z $\B{case }
-      e_0 = \J{$F$?$p$=>$e_2$}
-      \I
-      \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
-    $ 
-    \item \Z $\B{hypo }
-      \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
-    $
-    \item \Z $\B{wrt }
-      F\ p\ e_2 
-    $
-      \item \Z\Z $\VDash \J{$F$($e_1$)}[\vec{\sigma}] $
-      by theorem \ref{theorem:model_typing_soundness}
-      \item \Z\Z $\B{invert on } \VDash \J{$F$($e_1$)}[\vec{\sigma}]$
-      \item \Z\Z $\B{case } \J{$F$($e_1$)}[\vec{\sigma}] = v$
-      \item \Z\Z $\B{wrt } v$
-        \item \Z\Z\Z $\J{$F$($e_1$)}[\vec{\sigma}] \neq v$ by definition 
-        \item \Z\Z\Z $\bot$ by application
-      \item \Z\Z $\B{case } 
-        (\J{$F$($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3
-        \I
-        \vec{\delta}, \Gamma \satisfies e_3 \hastype \tau_r
-      $
-      \item \Z\Z $\B{wrt } e_3$
-        \item \Z\Z\Z $(\J{$F$($e_1$)})[\vec{\sigma}] = \J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)}$ by definition
-        \item \Z\Z\Z $\J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
-
-        \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\vec{\sigma}] = F'$ by theorem \ref{...} \TODO{...}
-        \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\vec{\sigma}] = e_1'$ by theorem \ref{...} \TODO{...}
-
-        \item \Z\Z\Z $\text{FV}(e_2[\vec{\sigma}\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
-        by theorem \ref{...} \TODO{...}
-
-        \item \Z\Z\Z $\J{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
-        \item \Z\Z\Z $\J{($F'$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
-        \item \Z\Z\Z $(\J{$F[\vec{\sigma}]$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
-
-        \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
-        $ by definition
-        \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
-
-        \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%% OLD 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % \item \Z $\B{case }
-    %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \hastype \tau_l
-    %   \I
-    %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
-    % $
-    % \item \Z $ 
-    %   \contin
-    %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r
-    %   \I
-    %   e_0 = \J{($F$?$p$=>$e$)} 
-    % $
-    % \item \Z $
-    %   \B{hypo} \  \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r \implies \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
-    % $
-    % \item \Z $
-    %   \B{wrt} \ F \ p \ e \ \Gamma' \  
-    % $
-    %   \item \Z\Z $F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ by application
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r$ by substitution 
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
-    %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by substitution 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    \item \Z $\B{case }
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma
-      \I
-      e_0[\vec{\sigma}] \rightsquigarrow e_0'
-      \I
-      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
-    $
-    \item \Z $\B{hypo}\ 
-      \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
-      \implies
-      \vec{\delta}, \Gamma \satisfies \J{$e_0'$($e_1$)} \hastype \tau_r
-    $
-    \item \Z $ 
-    \B{wrt}\ \vec{\sigma}\ e_0' 
-    $
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0'\J{(}e_1\J{)} \hastype \tau_r$ by application 
-      \item \Z\Z $e_0[\vec{\sigma}]\J{(}e_1\J{)} \rightsquigarrow e_0'\J{(}e_1\J{)}$
-      \item \Z\Z ($e_0\J{(}e_1\J{)})[\vec{\sigma}] \rightsquigarrow e_0'\J{(}e_1\J{)}$
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ 
-
-    \item \Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by induction
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}\ Model typing reduced implication elimination  
-
-  \label{theorem:model_typing_reduced_implication_elimination}
-  \begin{mathpar}
-    \inferrule {
-      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
-      \\
-      \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
-      \\
-      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r
-    } 
-  \end{mathpar}
-
-  \item $\B{assume } \VDash e_1[\vec{\sigma}]$
-
-
-    \item \Z $\B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \vec{\sigma} \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-    \item \Z $\VDash e_1[\vec{\sigma}]$ by theorem \ref{theorem:model_typing_soundness}
-    \item \Z $\B{induct on } \VDash e_1[\vec{\sigma}]$
-
-    \item \Z $\B{case } e_1[\vec{\sigma}] = v_1 $
-    \item \Z $\B{wrt } v_1$  
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
-
-    \item \Z $\B{case}\ e_1[\vec{\sigma}] \rightsquigarrow e_1' \I \VDash e_1'$
-    \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
-    \item \Z $\B{wrt}\ e_1' $
-
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
-      \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
-      \item \Z\Z $e_1' = e_1'[\vec{\sigma}]$ by by theorem \ref{theorem:closed_substitution} 
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
-      \item \Z\Z $\vec{\sigma} \cup \epsilon = \vec{\sigma}$ by definition 
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \cup \epsilon]$ by substitution 
-      \item \Z\Z $\Gamma \cup \epsilon = \Gamma$ by definition
-      \item \Z\Z $\vec{\delta}, \epsilon \satisfies \epsilon$ by definition
-      \item \Z\Z $\vec{\delta}, \Gamma \cup \epsilon \satisfies \J{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by induction
-  \item $\square$ by implication 
-\end{theorem}
-
-\begin{theorem}\ Model typing fully reduced implication elimination 
-  \label{theorem:model_typing_fully_reduced_implication_elimination}
-  \begin{mathpar}
-    \inferrule {
-      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
-      \\
-      F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
-      \\
-      \vec{\delta} \satisfies e_1 \hastype \tau_l
-      \\
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-      \\
-      e_1[\vec{\sigma}] = v_1
-      \\
-    } {
-      \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
-    \TODO{add more assumptions}
-    \item \Z $\vec{\delta} \satisfies e_1[\vec{\sigma}] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
-    \item \Z $\vec{\delta} \satisfies v_1 \hastype \tau_l$ by substitution 
-    \item \Z $\B{invert on}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
-    \item \Z $\B{case } F = \epsilon$ 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by substitution 
-
-      \item \Z\Z $\B{let}\ \vec{\sigma}' \B{ s.t. } p \equiv v_1 \given \vec{\sigma}'$ 
-      by theorem \ref{theorem:model_typing_pattern_matching} 
-
-      \item \Z\Z $\B{for } e'$ 
-        \item \Z\Z\Z $\neg \epsilon[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by definition
-        \item \Z\Z\Z $\neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by substitution 
-      \item \Z\Z $\forall e' .\ \neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by generalization 
-
-      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
-
-      \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma}')$ 
-      by theorem \ref{theorem:pattern_matching_consistency}
-      \item \Z\Z $\vec{\sigma}\backslash\B{FV}(p) = \vec{\sigma}\backslash\B{dom}(\vec{\sigma}')$ 
-      by theorem \ref{theorem:consistency_diffing}
-      \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']$ 
-      by theorem \ref{theorem:concatenation_substitution}
-
-      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
-        by substitution
-      \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ 
-        by substitution 
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by definition 
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
-
-      \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
-
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-
-    \item \Z $\B{case } \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ 
-      \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\vec{\sigma}] \rightsquigarrow e' \land \vec{\delta}, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
-      \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
-      \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
-    \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
-  \item $\square$ by implication
-\end{theorem}
-
-
-\begin{theorem}\ (Pattern matching consistency)
-  \label{theorem:pattern_matching_consistency}
-  \begin{mathpar}
-    \inferrule {
-      p \equiv v \given \vec{\sigma}
-    } {
-      \forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma})
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-
-
-\begin{theorem}\ (Consistency diffing)
-  \label{theorem:consistency_diffing}
-  \begin{mathpar}
-    \inferrule {
-      \forall x .\ x \in X_l \iff x \in X_r 
-    } {
-      \vec{\sigma}\backslash X_l = \vec{\sigma}\backslash X_r
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Concatenation Substitution )
-  \label{theorem:concatenation_substitution}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-
-
-\begin{theorem}(Model typing valuation)
-  \label{theorem:model_typing_valuation}
-  \begin{mathpar}
-    \inferrule {
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-      \\
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma
-    } {
-      \vec{\delta} \satisfies e[\vec{\sigma}] \hastype \tau 
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies e \hastype \tau 
-    \I
-    \vec{\delta}, \vec{\sigma} \satisfies \Gamma
-  $
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-
-\begin{theorem}(Model typing pattern matching)
-  \label{theorem:model_typing_pattern_matching}
-  \begin{mathpar}
-    \inferrule {
-      \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
-      \\
-      \vec{\delta} \satisfies v \hastype \tau_l 
-    } {
-      \exists \vec{\sigma} .\  p \equiv v \given \vec{\sigma}
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } 
-    \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
-    \I
-    \vec{\delta} \satisfies v \hastype \tau_l 
-  $
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-
-\begin{theorem}(Well-formed function valuation)
-  \label{theorem:wellformed_function_valuation}
-  \begin{mathpar}
-    \inferrule {
-      \VDash F
-    } {
-      \exists v .\ v = F 
-    } 
-  \end{mathpar}
-\end{theorem}
-\begin{proof}
-  \item $\B{assume } \VDash F$ 
-    \item \Z $\B{invert on } \VDash F$
-    \item \Z $\B{case } v = F$
-      \item \Z\Z $v = F$ by identity
-    \item \Z $\B{case } F \rightsquigarrow e$
-    \item \Z $\B{wrt } e$
-      \item \Z\Z $\neg F \rightsquigarrow e$ by definition
-      \item \Z\Z $\bot$ by application 
-    \item \Z $v = F$ by inversion 
-  \item $\square$
-\end{proof}
-
-
-\begin{theorem}(Reduction closed)
-  \label{theorem:reduction_closed}
-  \begin{mathpar}
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \forall x .\ x \notin \B{FV}(e')
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } 
-    e \rightsquigarrow e'
-  $
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-\begin{theorem}(Closed substitution)
-  \label{theorem:closed_substitution}
-  \begin{mathpar}
-    \inferrule {
-      \forall x .\ x \notin \B{FV}(e)
-    } {
-      e = e[\vec{\sigma}]
-    } 
-  \end{mathpar}
-  Proof:
-  \item $\B{assume } 
-    \forall x .\ x \notin \B{FV}(e)
-  $
-  \item \TODO{...}
-  \item $\square$
-\end{theorem}
-
-
-
-% \begin{theorem}(Progress of pattern matching)
-%   \label{theorem:pattern_matching_progress}
+% \begin{theorem}(Universe proof typing case soundness)
+%   \label{theorem:universe_proof_typing_case_soundnes}
 %   \begin{mathpar}
-%     \inferrule {
-%       \J{*$p$=>$e$} \in F 
+%     \inferrule { 
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
+%       \\\\
+%       \Delta \entails \alpha_{h^+} \subtypes \Tau_h
 %       \\
-%       p \equiv v \given \vec{\sigma} 
+%       \Delta \entails \alpha_l \subtypes \Tau_l 
 %       \\
-%       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
+%       \Delta \entails \Tau_r \subtypes \alpha_r
+%       \\\\
+%       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
+%       \\
+%       N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+%       \\ 
+%       \Delta \entails \Alpha \pitchfork \Delta_i  
+%       \\
+%       N\ \alpha_{h^-}, M, \Delta_i \cup \Delta_h \entails \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^{-} \tau_i
 %     } {
-%       \exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau_i$]$\alpha_r$} 
 %     } 
 %   \end{mathpar}
-%   Proof:
-%   \item $\B{for } p\ e\ F\ v\ \vec{\sigma}\ \B{assume }
-%       \J{*$p$=>$e$} \in F 
-%       \I
-%       p \equiv v \given \vec{\sigma} 
-%       \I
-%       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
-%   $
-
-%   \item \Z $\B{case }
-%     F = F'\ \J{*$p$=>$e$} 
-%     \I
-%     \J{*$p$=>$e$} \notin F'
-%   $
-
-%   \item \Z\Z $\B{for } e'$
-%   \item \Z\Z\Z $\B{case}\ F'\J{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by substitution 
-%   \item \Z\Z\Z $\B{case}\ \neg F'\J{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e[\vec{\sigma}]$ by definition
-%   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]$ by substitution 
-%   \item \Z\Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by decidability of $F'\J{($v$)} \rightsquigarrow e'$
-%   \item \Z\Z $\forall e' .\ \exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by summarization
-%   \item \Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by independence 
-
-%   \item \Z $\B{case }
-%     F = F'\ f 
-%     \I
-%     \J{*$p$=>$e$} \in F' 
-%   $
-%   \item \Z\Z $\B{let } e' \B{ s.t. } F'\J{(}v\J{)} \rightsquigarrow e'$ by induction hypothesis
-%   \item \Z\Z $F'\ f\J{(}v\J{)} \rightsquigarrow e'$ by definition
-%   \item \Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by definition
-%   \item \Z $\exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'$ by induction on $\J{*$p$=>$e$} \in F$
+%   Proof: 
+%   \item \TODO{...} 
 %   \item $\square$
 % \end{theorem}
 
-\begin{theorem}(Model typing assignability)
-  \label{theorem:model_typing_assignability}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \exists \vec{\sigma} .\ \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{...}
-\end{theorem}
-
-
-\begin{theorem}(Model typing soundness)
-  \label{theorem:model_typing_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \vec{\delta}, \Gamma \satisfies e \hastype \tau
-    } {
-      \forall \vec{\sigma} .\ 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma
-      \implies
-      \VDash e[\vec{\sigma}]
-    } 
-  \end{mathpar}
-  Proof:
-  \item \TODO{redo using universal/implication}
-  \item $\B{assume }
-        \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-        \I \vec{\delta}, \Gamma \satisfies e \hastype \tau
-  $
-    \item \Z $\B{case } e = \J{@}$
-      \item \Z\Z $\B{let } v \B{ s.t. } \J{@} = v$
-      \item \Z\Z $e[\vec{\sigma}] = v$
-      \item \Z\Z $ \VDash e[\vec{\sigma}]$
-
-
-    \item \Z $\B{case } 
-      \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
-      \I 
-      e = \J{<}l\J{>}e' 
-      \I 
-      \tau = \J{<}l\J{>}\tau'
-    $
-      \item \Z\Z $\Vdash e'$ by induction hypothesis
-      \item \Z\Z $\B{case } e'[\vec{\sigma}] = v$
-        \item \Z\Z\Z $\B{let } v' \B{ s.t. } \J{<}l\J{>}v = v'$
-        \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] = v'$
-        \item \Z\Z\Z $(\J{<}l\J{>}e')[\vec{\sigma}] = v'$
-        \item \Z\Z\Z $e[\vec{\sigma}] = v'$
-        \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
-
-      \item \Z\Z $\B{case } e'[\vec{\sigma}] \rightsquigarrow e'' \I \VDash e''$
-        \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] \rightsquigarrow \J{<}l\J{>} e''$
-        \item \Z\Z\Z $\VDash \J{<}l\J{>}e'' $
-        \item \Z\Z\Z $\VDash \J{<}l\J{>}e'[\vec{\sigma}] $
-        \item \Z\Z\Z $\VDash (\J{<}l\J{>}e')[\vec{\sigma}] $
-        \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
-
-      \item \Z\Z $\VDash e[\vec{\sigma}] $ by cases on $\VDash e' $
-
-    \item \Z \TODO{remaining introduction cases}
-
-    \item \Z $\B{case } 
-      x \hastype \tau \in \Gamma
-      \I 
-      x \slash v \in \vec{\sigma}
-      \I 
-      e = x
-    $
-      \item \Z\Z $x[\vec{\sigma}] = v$
-      \item \Z\Z $e[\vec{\sigma}] = v$
-      \item \Z\Z $\VDash e[\vec{\sigma}] $
-
-    \item \Z $\B{case } 
-      e[\vec{\sigma}] \rightsquigarrow e' 
-      \I 
-      \vec{\delta}, \Gamma \satisfies e' \hastype \tau
-    $ 
-      \item \Z\Z $\VDash e'[\vec{\sigma}] $ by induction hypothesis
-      \item \Z\Z $\VDash e[\vec{\sigma}] $
-
-    \item \Z $\VDash e[\vec{\sigma}] $ by induction on $\vec{\delta}, \Gamma \satisfies e \hastype \tau$
-  \item $\square$
-  \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
-\end{theorem}
-
-\noindent
-\B{NOTE: } The induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ (P(e') \implies P(e)), P(e') \implies Q(e')$ if inducting on predicate $P$
-
-\noindent
-\B{NOTE: } we induct on $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ instead of $e$, as the predicate acts as a guard/ordering in lieu of a decreasing e.
-This allows us to use the induction hypothesis on the reduction step result in the elimination case.
-
-\noindent
-\B{NOTE: } Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
-has been progress in observing the elements of the stream (guardedness) and there is no
-further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
-
-% \begin{theorem}(Progress of proof typing)
-%   \label{theorem:proof_typing_soundness}
+% \begin{theorem}(Universe proof typing fixpoint union)
+%   \label{theorem:universe_proof_typing_fixpoint_union}
 %   \begin{mathpar}
 %     \inferrule { 
-%       \Gamma \entails e \hastype \tau \given Z  
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau$)]$\alpha_r$} 
+%       \\
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] $\tau$]$\alpha_r$} 
 %     } {
-%       e \B{ progressive}
+%       \vec{\delta} \satisfies
+%       \tau
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.$\alpha_l$*$\alpha_r$<:LFP[$\alpha_{h^-}$] |($\Tau\ \tau$)]$\alpha_r$} 
 %     } 
 %   \end{mathpar}
-%   Proof ... 
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
 % \end{theorem}
 
-% \begin{theorem}(Preservation of proof typing)
+% \begin{theorem}\ Influential soundness 
+%   \label{theorem:influential_soundness}
+
+%   \TODO{Prove that any constraints on non-influential variables with have been transitively applied to the influential variables}
+
 %   \begin{mathpar}
 %     \inferrule { 
-%       \Gamma \entails e \hastype \tau \given Z  
+%       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given M, \Delta
 %       \\
+%       \Delta \entails \alpha_l \subtypes \Tau_l 
+%       \\
+%       \Delta \entails \Tau_r \subtypes \alpha_r
+%       \\\\
+%       \Delta \entails \Alpha \pitchfork \Delta_i  
+%       \\
+%       \text{FTV}(\tau) \subseteq \Alpha
+%       \\\\
+%       N, M, \Delta \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
+%       \\
+%       N, M, \Delta_i \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau_i
+%     } {
+%       \vec{\delta} \satisfies \tau \subtypes \tau_i 
+%       \land
+%       \vec{\delta} \satisfies \tau_i \subtypes \tau
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+% % \begin{theorem}(Universe proof typing implication expansion)
+% %   \label{theorem:universe_proof_typing_implication}
+% %   \begin{mathpar}
+% %     \inferrule { 
+% %       M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
+% %       \\
+% %       M, \Delta, \Delta \entails \Tau_r \subtypes \alpha_r
+% %       \\
+% %     } {
+% %       \J{\&$(\Tau_l)$->|$(\Tau_r)$}
+% %       \subtypes
+% %       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:(\&$(\Tau_l)$,|$(\Tau_r)$)]$\alpha_r$} 
+% %       \given M, \Delta
+% %     } 
+% %   \end{mathpar}
+% %   Proof: 
+% %   \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
+% %   \item $\square$
+% % \end{theorem}
+
+% \begin{theorem}(Universe proof typing implication expansion)
+%   \label{theorem:universe_proof_typing_implication_expansion}
+%   \begin{mathpar}
+%     \inferrule { 
+%     } {
+%       \J{$\tau_l$->$\tau_r$}
+%       \subtypes
+%       \J{ALL[$\alpha_l$]$\alpha_l$->EXI[$\alpha_r$.($\alpha_l$,$\alpha_r$)<:($\tau_l$,$\tau_r$)]$\alpha_r$} 
+%       \given M, \Delta
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{$P \implies Q$ is equivalent to $\neg (P \land \neg Q)$} 
+%   \item \TODO{$X \rightarrow Y$ is equivalent to $\forall x \in X .\ \exists y .\ (x,y) \in (X \times Y)$} 
+%   \item \TODO{$X \rightarrow Y$ is equivalent to $\neg (\exists x \in X \land \nexists y \in Y)$} 
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Upper bound interpretation sound)
+%   \label{theorem:upper_bound_interpretation_sound}
+%   \begin{mathpar}
+%     \inferrule { 
+%       M, \Delta, \Delta \entails \alpha \subtypes \Tau 
+%     } {
+%      \alpha \subtypes \J{\&$(\Tau)$} \given \left<M, \Delta\right>
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Lower bound interpretation sound)
+%   \label{theorem:lower_bound_interpretation_sound}
+%   \begin{mathpar}
+%     \inferrule { 
+%       M, \Delta, \Delta \entails \Tau \subtypes \alpha
+%       \\
+%     } {
+%      \J{|$(\Tau)$} \subtypes \alpha \given \left<M, \Delta\right>
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+
+% \begin{theorem}(Universe proof typing worldly)
+%   \label{theorem:universe_proof_typing_worldly}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given Z 
+%     } {
+%       \exists M\ \Delta\ .\ \left<M, \Delta\right> \in Z
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Empty containment absurd)
+%   \label{theorem:empty_containment_absurd}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \left<M, \Delta\right> \in \epsilon 
+%     } {
+%       \bot
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+
+% \begin{theorem}(Model typing implication independence)
+%   \label{theorem:model_typing_implication_independence}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \J{$\tau_l$->$\tau_r$} 
+%       \\
+%       \vec{\delta} \satisfies \tau_r
+%     } {
+%       \vec{\delta}, \Gamma \satisfies \J{loop($e$)} \hastype \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+
+% % \begin{theorem}(Proof typing fix interpolation weakest pre-condition)
+% %   \label{theorem:fix_duality}
+% %   \begin{mathpar}
+% %     \inferrule { 
+% %       \tau \subtypes \J{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
+% %       \\\\
+% %       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \J{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+% %     } {
+% %       \J{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
+% %       \subtypes
+% %       \J{$\alpha_1$->$\alpha_2$}
+% %       \given Z_1
+% %     } 
+% %   \end{mathpar}
+% %   Proof: 
+% %   \item \TODO{...} 
+% %   \item $\square$
+% % \end{theorem}
+
+% \begin{theorem}(Proof subtyping decomposition)
+%   \label{theorem:proof_subtyping_decomposition}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given Z\ \left<M, \Delta\right>
+%     } {
+%       \tau_l \subtypes \tau_r \given \left<M, \Delta\right>
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+
+% \begin{theorem}(Proof subtyping choice)
+%   \label{theorem:proof_subtyping_choice}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given Z 
+%     } {
+%       \exists M\ \Delta .\ \tau_l \subtypes \tau_r \given M, \Delta
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item \TODO{...} 
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Model subtyping elimination)
+%   \label{theorem:model_subtyping_elimination}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%       \\
+%       \vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  
+%     } {
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau_r 
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item $\B{assume } 
+%     \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%     \I
+%     \vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  
+%   $
+%   \item \Z $\B{invert on } \vec{\delta} \satisfies \tau_l \subtypes \tau_r$
+%   \item \Z $\B{case } \forall e'\ \Gamma' .\ \vec{\delta}, \Gamma' \satisfies e' \hastype  \tau_l  \implies \vec{\delta}, \Gamma' \satisfies e' \hastype \tau_r$
+%   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype  \tau_l  \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by instantiation
+%   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by application 
+%   \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by inversion
+%   \item $\square$ by implication
+% \end{theorem}
+
+
+% \begin{theorem}(Model typing record elimination)
+%   \label{theorem:model_subtyping_record_elimination}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
+%     } {
+%       \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item $\B{assume } 
+%     \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
+%   $ 
+%     \item \Z $\B{induct on } 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
+%     $ 
+%     \item \Z $\B{case }
+%       e = G
+%       \I
+%       \J{?$l$=>$v$} \in G
+%       \I
+%       \vec{\delta}, \Gamma \satisfies v \hastype \tau
+%       \I
+%       \forall v' .\ \J{?$l$=>$v'$} \in G \implies v' = v 
+%     $ 
+%     \item \Z $\B{wrt }
+%       G\ v 
+%     $
+  
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \satisfies G \hastype \J{$l$->$\tau$}
+%       $ by substitution
+
+%       \item \Z\Z $
+%         \J{$G$.$l$} \rightsquigarrow v
+%       $ by definition 
+
+%       \item \Z\Z $
+%         \B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \Gamma \satisfies \vec{\sigma} 
+%       $ by theorem \ref{...} 
+%       \item \Z\Z $
+%         \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v
+%       $ by definition 
+%       \item \Z\Z $
+%         v = v[\vec{\sigma} \cup \epsilon] 
+%       $ by definition 
+%       \item \Z\Z $
+%         \J{$G$.$l$}[\vec{\sigma}] \rightsquigarrow v[\vec{\sigma} \cup \epsilon] 
+%       $ by substitution 
+%       \item \Z\Z $
+%         \vec{\delta}, \epsilon \satisfies \epsilon 
+%       $ by definition 
+
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \cup \epsilon \satisfies v \hastype \tau
+%       $ by definition 
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \satisfies \J{$G$.$l$} \hastype \tau 
+%       $ by definition 
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
+%       $ by substitution
+
+
+%     \item \Z $\B{case }
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+%       \I
+%       e[\vec{\sigma}] \rightsquigarrow e'[\vec{\sigma} \cup \vec{\sigma}']
+%       \I
+%       \vec{\delta}, \vec{\sigma}' \satisfies \Gamma'
+%       \I
+%       \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
+%     $
+%     \item \Z $\B{hypo }
+%       \vec{\delta}, \Gamma \cup \Gamma' \satisfies e' \hastype \J{$l$->$\tau$}
+%       \implies
+%       \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
+%     $
+%     \item \Z $\B{wrt }
+%       \vec{\sigma}\ e'\ \vec{\sigma}'\ \Gamma'
+%     $
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \cup \Gamma' \satisfies \J{$e'$.$l$} \hastype \tau
+%       $ by application
+%       \item \Z\Z $
+%         \J{$e[\vec{\sigma}]$.$l$} \rightsquigarrow \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$}
+%       $ by definition 
+%       \item \Z\Z $
+%         \J{$e[\vec{\sigma}]$.$l$} = \J{$e$.$l$}[\vec{\sigma}]
+%       $ by definition 
+%       \item \Z\Z $
+%         \J{$e'[\vec{\sigma} \cup \vec{\sigma}']$.$l$} = \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
+%       $ by definition 
+%       \item \Z\Z $
+%         \J{$e$.$l$}[\vec{\sigma}] \rightsquigarrow \J{$e'$.$l$}[\vec{\sigma} \cup \vec{\sigma}']
+%       $ by substitution 
+%       \item \Z\Z $
+%         \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
+%       $ by definition 
+
+%     \item \Z $
+%       \vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau 
+%     $ by induction 
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Proof subtyping consistency)
+%   \label{theorem:proof_subtyping_consistency}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given M, \Delta 
+%     } {
+%       \exists \vec{\delta} .\ 
+%       \vec{\delta} \satisfies \Delta
+%     } 
+%   \end{mathpar}
+% \end{theorem}
+
+% \begin{theorem}(Proof subtyping soundness)
+%   \label{theorem:proof_subtyping_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given M, \Delta 
+%     } {
+%       \exists \vec{\delta} .\ 
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%     } 
+%   \end{mathpar}
+% \end{theorem}
+
+
+% \begin{theorem}(Proof subtyping weak soundness)
+%   \label{theorem:proof_subtyping_weak_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \tau_l \subtypes \tau_r \given M, \Delta 
+%     } {
+%       \forall \vec{\delta} .\ 
+%       \vec{\delta} \satisfies \Delta
+%       \implies
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%     } 
+%   \end{mathpar}
+
+% \TODO{closed variabless simply remove variables from soundness consideration}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % (EXI[X . 1 <: X, X <: 3] X) <: 2  -| 1 <: X, X <: 3, ..., X <: 2  
+% % FAILS, not considered for soundness
+% % (EXI[X . 1 <: X, X <: 2] X) <: 2  -| 1 <: X, X <: 2, ..., X <: 2  
+% % PASSES, is considered for soundness
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % 2 <: (EXI[X . 1 <: X, X <: 3] X)  -| 2 <: X, ..., 1 <: X, X <: 3 
+% % PASSES, is considered for soundness
+% % 2 <: (EXI[X . X <: 1 ] X)  -| 2 <: X, ..., X <: 1
+% % FAILS, not considered for soundness
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   Proof: 
+%   \item \TODO{think about how to handle the mutually recursive definition} 
+%   \item $\B{assume } 
+%     \tau_l \subtypes \tau_r \given M, \Delta 
+%   $
+%     \item \Z $\B{induct on } \tau_l \subtypes \tau_r \given M, \Delta$
+
+%     \item \Z $\B{case } \tau_l = \tau \I \tau_r = \tau$
+%     \item \Z $\B{wrt } \tau $
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau \subtypes \tau$
+%         by theorem \ref{theorem:model_typing_reflexivity}
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization 
+
+%     \item \Z $\B{case } \tau_l = \J{BOT}$
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \J{BOT} \subtypes \tau_r$ by definition
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization 
+
+%     \item \Z $\B{case } \tau_r = \J{TOP}$
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{TOP}$ by definition
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization 
+
+%     \item \Z $\B{case } 
+%       \tau_r = \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}
+%       \I
+%       \tau_l
+%       \subtypes
+%       \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+%       \given M, \Delta
+%     $
+%     \item \Z $\B{hypo }
+%       \forall \vec{\delta} .\ 
+%       \vec{\delta} \satisfies \Delta
+%       \implies
+%       \vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}
+%     $ 
+%     \item \Z $\B{wrt } l\ \tau_{rl}\ \tau_{rr}$ 
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+%         by application
+%         \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau_l$ 
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
+%           by theorem \ref{theorem:model_typing_subsumption} 
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{$e$.$l$} \hastype \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
+%           \item \Z\Z\Z\Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau_r$ by substitution 
+%         \item \Z\Z\Z $\forall e\ \Gamma .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau_l \implies 
+%           \vec{\delta}, \Gamma \satisfies e \hastype \tau_r
+%         $ by implication and generalization
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$
+%         by definition 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization 
+
+
+%     \item \Z $\B{case } 
+%       \tau_l = \J{$\tau_{ll}$|$\tau_{lr}$}
+%       \I
+%       M = M_1
+%       \I
+%       \Delta = \Delta_1
+%     $
+%     \item \Z $\contin
+%       \tau_{ll} \subtypes \tau_r
+%       \given M_0, \Delta_0
+%       \I
+%       M_0 \preceq M_1
+%       \I
+%       \Delta_0 \preceq \Delta_1
+%       \I
+%       \tau_{lr} \subtypes \tau_r
+%       \given M_1, \Delta_1
+%     $
+
+%     \item \Z $\B{hypo } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies \tau_{ll} \subtypes \tau_r
+%       \I
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_{lr} \subtypes \tau_r
+%     $
+%     \item \Z $\B{wrt } \tau_{ll}\ \tau_{lr}$
+
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } M, \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1$ by substitution 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{lr} \subtypes \tau_r$ by application 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{...} \TODO{...} 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_{ll} \subtypes \tau_r$ by application 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \J{$\tau_{ll}$|$\tau_{lr}$} \subtypes \tau_r$ 
+%         by definition
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%         by substitution 
+
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization
+
+%     \item \Z $\B{case } 
+%       \tau_r = \J{$\tau_{rl}$\&$\tau_{rr}$}
+%       \I
+%       M = M_1
+%       \I
+%       \Delta = \Delta_1
+%     $
+%     \item \Z $\contin 
+%       \tau_l \subtypes \tau_{rl} \given M_0, \Delta_0
+%       \I
+%       M_0 \preceq M_1
+%       \I
+%       \Delta_0 \preceq \Delta_1
+%       \I
+%       \tau_l \subtypes \tau_{rr} \given M_1, \Delta_1
+%     $
+%     \item \Z $\B{hypo } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_{rl} 
+%       \I
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_{rr} 
+%     $
+%     \item \Z $\B{wrt } $
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 $ by substitution
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rr}$ by instantiation and application 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{...} \TODO{...} 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_{rl}$ by instantiation and application 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by substitution
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization
+
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes
+%     %   \J{($\tau_{ra}$->$\tau_{rc}$)\&($\tau_{rb}$->$\tau_{rc}$)}
+%     %   \given M, \Delta
+%     % } {
+%     %   \tau_l \subtypes 
+%     %   \J{$\tau_{ra}$|$\tau_{rb}$->$\tau_{rc}$}
+%     %   \given M, \Delta
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     %%% TEMPLATE
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes
+%     %   \J{($\tau_{ra}$->$\tau_{rb}$)\&($\tau_{ra}$->$\tau_{rc}$)}
+%     %   \given M, \Delta
+%     % } {
+%     %   \tau_l \subtypes \J{$\tau_{ra}$->$\tau_{rb}$\&$\tau_{rc}$}
+%     %   \given M, \Delta
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     %%% TEMPLATE
+%     \item \Z $\B{case } 
+%       \tau_l = \J{EXI[$\Alpha$ $Q$]$\tau_b$}
+%       \I
+%       M = M_1
+%       \I
+%       \Delta = \Delta_1
+%     $
+%     \item \Z $\contin
+%       Q \given M_0, \Delta_0
+%       \I
+%       A \notfree \tau_r
+%       \I
+%       M_0 \cup \Alpha \preceq M_1
+%       \I
+%       \Delta_0 \preceq \Delta_1
+%       \I
+%       \tau_b \subtypes \tau_r
+%       \given M_1, \Delta_1
+%     $
+%     \item \Z $\B{hypo } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies M_1, \tau_b \subtypes \tau_r 
+%     $
+%     \item \Z $\B{mutu } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies Q 
+%     $ by theorem \ref{...} \TODO{sequence soundness / mutual dependence}
+%     \item \Z $\B{wrt } \Alpha\ Q\ \tau_b\ M_1\ \Delta_1\ M_0\ \Delta_0$
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 $ by substitution
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_b \subtypes \tau_r$ by application
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
+%         \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application
+%         \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
+%           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
+%           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
+%         \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
+%           \implies \vec{\delta} \satisfies e \hastype \tau_r
+%         $ 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by definition 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization
+
+%     \item \Z $\B{case } 
+%       \tau_r = \J{ALL[$\Alpha$ $Q$]$\tau_b$}
+%       \I
+%       M = M_1
+%       \I
+%       \Delta = \Delta_1
+%     $
+%     \item \Z $\contin
+%       Q \given M_0, \Delta_0
+%       \I
+%       A \notfree \tau_l
+%       \I
+%       M_0 \cup \Alpha \preceq M_1
+%       \I
+%       \Delta_0 \preceq \Delta_1
+%       \I
+%       \tau_l \subtypes \tau_b
+%       \given M_1, \Delta_1
+%     $
+%     \item \Z $\B{hypo } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_b 
+%     $
+%     \item \Z $\B{mutu } 
+%       \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_0 \implies \vec{\delta} \satisfies Q 
+%     $ by theorem \ref{...} \TODO{sequence soundness / mutual dependence}
+%     \item \Z $\B{wrt } \Alpha\ Q\ \tau_b\ M_1\ \Delta_1\ M_0\ \Delta_0$
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1$ by substitution 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_b$ by application 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies Q$ by application 
+%         \item \Z\Z\Z $\B{for } e \B{ assume } \vec{\delta} \satisfies e \hastype \tau_l$ 
+%           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
+%           \item \Z\Z\Z\Z $\vec{\delta} \satisfies e \hastype \tau_r$ by substitution 
+%         \item \Z\Z\Z $\forall e .\ \vec{\delta} \satisfies e \hastype \tau_l 
+%           \implies \vec{\delta} \satisfies e \hastype \tau_r
+%         $ 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l \subtypes \tau_r$ by definition 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization
+%       \item \Z\Z \TODO{...} 
+
+% % e :  ALL[a b . 3 <: a ] (a,b) \implies e : (a,b)
+%     \item \Z $\B{case } 
+%       \tau_l = \alpha
+%       \I
+%       M = M_1
+%       \I
+%       \Delta = \Delta_1\ \alpha <: \tau_r
+%     $
+%     \item \Z $\contin
+%       \alpha \notin M_0
+%       \I
+%       M_0, \Delta_0 \entails \Delta_m <:^\sharp \alpha \slash \tau_r
+%       \I
+%       M_0, \Delta_0 \entails \Tau <:^\dagger \alpha
+%       \I
+%       M_0 \preceq M_1
+%     $
+%     \item \Z $\contin
+%       \Delta_0 \cup \Delta_m \preceq \Delta_1
+%       \I
+%       \J{|$(\Tau)$} <: \tau_r \given M_1, \Delta_1
+%     $
+%     \item \Z $\B{hypo } \forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta_1 \implies
+%       \vec{\delta} \satisfies \J{|$(\Tau)$} <: \tau_r
+%     $
+%     \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
+%       \item \Z\Z $\B{for } \vec{\delta} \B{ assume } \vec{\delta} \satisfies \Delta$
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \Delta_1 \J{($\alpha$<:$\tau_r$)}$ by substitution
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
+%         \item \Z\Z\Z $\vec{\delta} \satisfies \tau_l <: \tau_r$ by substitution 
+%       \item \Z\Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%       by implication and generalization 
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \alpha \notin M_0
+%     %   \\
+%     %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot M
+%     %   \\
+%     %   M_0, \Delta_0, \Delta_0 \entails \alpha \lessdot \Delta_{skol}
+%     %   \\
+%     %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Tau 
+%     %   \\
+%     %   M_0, \Delta_0, \Delta_0 \entails \alpha \ll \Delta_{rel}
+%     %   \\
+%     %   M_0 \preceq M_1
+%     %   \\
+%     %   \Delta_0 \preceq \Delta_1
+%     %   \\
+%     %   \widebar{\J{.$\tau_0[\alpha\slash\tau_l]$<:$\tau_1$}}^{\tau_0<:\tau_1 \in \Delta_{rel}} \cup \widebar{\J{.$\tau_l$<:$\tau$}}^{\tau \in \Tau}
+%     %   \given M_1, \Delta_1
+%     % } {
+%     %   \tau_l \subtypes \alpha
+%     %   \given M_1, \Delta_1
+%     %   \cup \widebar{\tau_l<:z}^{z \in M}
+%     %   \cup \widebar{\tau[\alpha\slash\tau_l]<:z}^{\tau<:z \in \Delta_{skol}} \ \tau_l<:\alpha 
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \alpha \in M_0
+%     %   \\
+%     %   \alpha <: \tau \in (\Delta_0 \cup \text{factor}(\Delta_0, \alpha))
+%     %   \\\\
+%     %   M_0 \preceq M_1
+%     %   \\
+%     %   \Delta_0 \preceq \Delta_1
+%     %   \\
+%     %   \tau \subtypes \tau_r
+%     %   \given M_1, \Delta_1
+%     % } {
+%     %   \alpha \subtypes \tau_r
+%     %   \given M_1, \Delta_1
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \alpha \in M_0
+%     %   \\
+%     %   \tau <: \alpha \in \Delta_0
+%     %   \\\\
+%     %   M_0 \preceq M_1
+%     %   \\
+%     %   \Delta_0 \preceq \Delta_1
+%     %   \\
+%     %   \tau_l \subtypes \tau
+%     %   \given M_1, \Delta_1
+%     % } {
+%     %   \tau_l \subtypes \alpha
+%     %   \given M_1, \Delta_1
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes \tau_r \given M_0, \Delta_0
+%     %   \\\\
+%     %   M_0 \preceq M_1
+%     %   \\
+%     %   \Delta_0 \preceq \Delta_1
+%     %   \\
+%     %   Q
+%     %   \given M_1, \Delta_1
+%     % } {
+%     %   \J{ALL[$\Alpha$ $Q$]$\tau_l$}
+%     %   \subtypes 
+%     %   \tau_r
+%     %   \given M_1, \Delta_1 
+%     % }
+
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes \tau_r
+%     %   \given M_0, \Delta_0
+%     %   \\\\
+%     %   M_0 \preceq M_1
+%     %   \\
+%     %   \Delta_0 \preceq \Delta_1
+%     %   \\
+%     %   Q \given M_1, \Delta_1
+%     % } {
+%     %   \tau_l
+%     %   \subtypes 
+%     %   \J{EXI[$\Alpha$ $Q$]$\tau_r$}
+%     %   \given M_1, \Delta_1
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_{ll} \subtypes \tau_r
+%     %   \given M, \Delta
+%     % } {
+%     %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+%     %   \given M, \Delta
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_{lr} \subtypes \tau_r
+%     %   \given M, \Delta
+%     % } {
+%     %   \J{$\tau_{ll}$\&$\tau_{lr}$}  \subtypes \tau_r
+%     %   \given M, \Delta
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes \tau_{rl}
+%     %   \given M, \Delta
+%     % } {
+%     %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
+%     %   \given M, \Delta
+%     % }
+
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\B{case } $
+%     \item \Z $\B{hypo } $
+%     \item \Z $\B{wrt } $
+%     % \inferrule {
+%     %   \tau_l \subtypes \tau_{rr}
+%     %   \given M, \Delta
+%     % } {
+%     %   \tau_l \subtypes \J{$\tau_{rl}$|$\tau_{rr}$}
+%     %   \given M, \Delta
+%     % }
+%       \item \Z\Z \TODO{...} 
+
+%     \item \Z $\forall \vec{\delta} .\ \vec{\delta} \satisfies \Delta \implies \vec{\delta} \satisfies \tau_l \subtypes \tau_r$ 
+%     by induction
+%   \item $\square$ by implication
+% \end{theorem}
+
+% \begin{theorem} Model typing existential elimination 
+%   \label{theorem:model_typing_existential_elimination}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_l$}
+%       \\
+%       \vec{\delta} \satisfies Q
+%       \\
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%       \\
+%       \Alpha \notfree \tau_r
+%     } {
+%       \vec{\delta} \satisfies e \hastype \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % TODO: 
+% % depends on proof subtyping 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % ... |= 2 : (EXI[X . 1 <: X, X <: 3] X)
+% % X/1 |= 1 <: X, X <: 3
+% % -------------------------
+% % X/1 |= 2 : 1 (FAIL) 
+% % -------------------------
+% % X/1 |= 2 : 4  (PASS)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % X <: 4  -| X, 1 <: X, X <: 3
+
+% \end{theorem}
+
+% \begin{theorem} Model typing universal introduction 
+%   \label{theorem:model_typing_universal_introduction}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies e \hastype \tau_l
+%       \\
+%       \vec{\delta} \satisfies Q
+%       \\
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%       \\
+%       \Alpha \notfree \tau_l
+%     } {
+%       \vec{\delta} \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_r$}
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
+% \end{theorem}
+
+
+
+
+
+% \begin{theorem} Model subtyping sequence last 
+%   \label{theorem:model_subtyping_sequence_last}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \Delta\ \J{($\tau_l$<:$\tau_r$)}
+%     } {
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r 
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model subtyping sequence reduction 
+%   \label{theorem:model_subtyping_sequence_reduction}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \Delta\ \delta
+%     } {
+%       \vec{\delta} \satisfies \Delta
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model subtyping sequence prefix  
+%   \label{theorem:model_subtyping_sequence_prefix}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \Delta'
+%       \\
+%       \Delta \preceq \Delta'
+%     } {
+%       \vec{\delta} \satisfies \Delta
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model subtyping sequence uncat 
+%   \label{theorem:model_subtyping_sequence_uncat}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \Delta \cup \Delta'
+%     } {
+%       \vec{\delta} \satisfies \Delta
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} concatenation prefix 
+%   \label{theorem:concatenation prefix}
+%   \begin{mathpar}
+%     \inferrule { 
+%     } {
+%       \Delta \preceq \Delta \cup \Delta'
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+
+
+% \begin{theorem} Model subtyping unsub left 
+%   \label{theorem:Modle_subtyping_unsub_left}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%       \\
+%       \alpha\slash\tau_l \in \vec{\delta}
+%     } {
+%       \vec{\delta} \satisfies \alpha \subtypes \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model subtyping unsub right 
+%   \label{theorem:Modle_subtyping_unsub_right}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \tau_l \subtypes \tau_r
+%       \\
+%       \alpha\slash\tau_r \in \vec{\delta}
+%     } {
+%       \vec{\delta} \satisfies \tau_l \subtypes \alpha
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model subtyping something 
+%   \label{theorem:Modle_subtyping_something}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \Delta 
+%       \\
+%       M, \Delta \entails \Tau \subtypes^\sharp \alpha  
+%     } {
+%       \alpha\slash\J{|$(\Tau)$} \in \vec{\delta}
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+
+% \begin{theorem} Model typing record introduction 
+%   \label{theorem:model_typing_record_introduction}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \J{$e$.$l$} \hastype \tau
+%     } {
+%       \vec{\delta} \satisfies e \hastype \J{$l$->$\tau$}
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model typing implication introduction 
+%   \label{theorem:model_typing_implication_introduction}
+%   \TODO{this is really messed up}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies \J{$e_0$($e_1$)} \hastype \tau_r
+%       \\
+%       \vec{\delta} \satisfies e_1 \hastype \tau_l
+%       \\
+%       \forall \tau .\ \vec{\delta} \satisfies e_1 \hastype \tau \implies \tau_l \subtypes \tau
+%     } {
+%       \vec{\delta} \satisfies e_0 \hastype \J{$\tau_l$->$\tau_r$}
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+% \begin{theorem} Model typing intersection elimination 
+%   \label{theorem:model_typing_intersection_elimination}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta} \satisfies e \hastype \tau_l \& \tau_r
+%     } {
+%       \vec{\delta} \satisfies e \hastype \tau_l 
+%       \land
+%       \vec{\delta} \satisfies e \hastype \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+
+
+% \begin{theorem} Model typing reflexivity
+%   \label{theorem:model_typing_reflexivity}
+%   \begin{mathpar}
+%     \inferrule { 
+%     } {
+%       \vec{\delta} \satisfies \tau \subtypes \tau
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{for } e\ \Gamma \B{ assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau$
+%     \item \Z $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ by identity
+%   \item $\forall e\ \Gamma .\ \vec{\delta}, \Gamma \satisfies e \hastype \tau \implies \vec{\delta}, \Gamma \satisfies e \hastype \tau$
+%   by implication and generalization
+%   \item $\square$ by definition
+% \end{theorem}
+
+
+% \begin{theorem}(Model typing subsumption)
+%   \label{theorem:model_typing_subsumption}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+%       \\
+%       \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r
+%     } {
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof: 
+%   \item $\B{assume } \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+%   \I \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r
+%   $
+%     \item \Z $\B{invert on}\ \vec{\delta}, \Gamma \satisfies \tau_l <: \tau_r$
+%     \item \Z $\B{case}\ \forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$
+%       \item \Z\Z $\forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$ by identity
+%     \item \Z $\forall e' .\ \vec{\delta}, \Gamma \satisfies e' : \tau_l \implies \vec{\delta}, \Gamma \satisfies e' : \tau_r$ by inversion
+%     \item \Z $\vec{\delta}, \Gamma \satisfies e : \tau_l \implies \vec{\delta}, \Gamma \satisfies e : \tau_r$ by instantiation 
+%     \item \Z $\vec{\delta}, \Gamma \satisfies e : \tau_r$ by application
+%   \item $\square$ by implication 
+% \end{theorem}
+
+% \begin{theorem}(Model typing implication elimination)
+%   \label{theorem:model_typing_implication_elimination}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
+%       \\
+%       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
+%     } {
+%       \vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r
+%     } 
+%   \end{mathpar}
+
+%   \item $\B{assume }
+%     \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
+%     \I 
+%     \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
+%   $ 
+
+%     \item \Z $\B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \vec{\sigma} \satisfies \Gamma$ by theorem \ref{...}
+%     \item \Z $\B{induct on } \vec{\delta}, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r$
+
+%     \item \Z $\B{case }$ \TODO{...}
+
+%     % \inferrule { 
+%     %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \pattype \tau_p
+%     %   \\
+%     %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
+%     %   \\\\
+%     %   \forall e .\ 
+%     %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_l 
+%     %     \implies
+%     %     \vec{\delta}, \Gamma \satisfies e \hastype \tau_p 
+%     %     \land
+%     %     (\forall \tau_n\ \tau .\ \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_n$->$\tau$} \implies \neg (\vec{\delta}, \Gamma \satisfies e \hastype \tau_n))
+%     % } {
+%     %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+%     % }
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%     % \inferrule { 
+%     %   \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
+%     % } {
+%     %   \vec{\delta}, \Gamma \satisfies \J{$F$*$p$=>$e$} \hastype \J{$\tau_l$->$\tau_r$}
+%     % } 
+%     \item \Z $\B{case }
+%       e_0 = \J{$F$?$p$=>$e_2$}
+%       \I
+%       \vec{\delta}, \Gamma \satisfies F \hastype \J{$\tau_l$->$\tau_r$}
+%     $ 
+%     \item \Z $\B{hypo }
+%       \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
+%     $
+%     \item \Z $\B{wrt }
+%       F\ p\ e_2 
+%     $
+%       \item \Z\Z $\VDash \J{$F$($e_1$)}[\vec{\sigma}] $
+%       by theorem \ref{theorem:model_typing_soundness}
+%       \item \Z\Z $\B{invert on } \VDash \J{$F$($e_1$)}[\vec{\sigma}]$
+%       \item \Z\Z $\B{case } \J{$F$($e_1$)}[\vec{\sigma}] = v$
+%       \item \Z\Z $\B{wrt } v$
+%         \item \Z\Z\Z $\J{$F$($e_1$)}[\vec{\sigma}] \neq v$ by definition 
+%         \item \Z\Z\Z $\bot$ by application
+%       \item \Z\Z $\B{case } 
+%         (\J{$F$($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3
+%         \I
+%         \vec{\delta}, \Gamma \satisfies e_3 \hastype \tau_r
+%       $
+%       \item \Z\Z $\B{wrt } e_3$
+%         \item \Z\Z\Z $(\J{$F$($e_1$)})[\vec{\sigma}] = \J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)}$ by definition
+%         \item \Z\Z\Z $\J{$F[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
+
+%         \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\vec{\sigma}] = F'$ by theorem \ref{...} \TODO{...}
+%         \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\vec{\sigma}] = e_1'$ by theorem \ref{...} \TODO{...}
+
+%         \item \Z\Z\Z $\text{FV}(e_2[\vec{\sigma}\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
+%         by theorem \ref{...} \TODO{...}
+
+%         \item \Z\Z\Z $\J{$F'$($e_1'$)} \rightsquigarrow e_3$ by substitution 
+%         \item \Z\Z\Z $\J{($F'$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1'$)} \rightsquigarrow e_3$ by definition 
+%         \item \Z\Z\Z $(\J{$F[\vec{\sigma}]$?$p$=>$e_2[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)} \rightsquigarrow e_3$ by substitution 
+
+%         \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] = \J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\text{FV}(p)]$)($e_1[\vec{\sigma}]$)}
+%         $ by definition
+%         \item \Z\Z\Z $(\J{($F$?$p$=>$e_2$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e_3$ by substitution 
+
+%         \item \Z\Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     %%% OLD 
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     % \item \Z $\B{case }
+%     %   \vec{\delta}, \Gamma \cup \Gamma' \satisfies p \hastype \tau_l
+%     %   \I
+%     %   \vec{\delta}, \Gamma \cup \Gamma'  \satisfies e \hastype \tau_r
+%     % $
+%     % \item \Z $ 
+%     %   \contin
+%     %   F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r
+%     %   \I
+%     %   e_0 = \J{($F$?$p$=>$e$)} 
+%     % $
+%     % \item \Z $
+%     %   \B{hypo} \  \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r \implies \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
+%     % $
+%     % \item \Z $
+%     %   \B{wrt} \ F \ p \ e \ \Gamma' \  
+%     % $
+%     %   \item \Z\Z $F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ by application
+%     %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r$ by substitution 
+%     %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+%     %   \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by substitution 
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%     \item \Z $\B{case }
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+%       \I
+%       e_0[\vec{\sigma}] \rightsquigarrow e_0'
+%       \I
+%       \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
+%     $
+%     \item \Z $\B{hypo}\ 
+%       \vec{\delta}, \Gamma \satisfies e_0' \hastype \tau_l \J{->} \tau_r
+%       \implies
+%       \vec{\delta}, \Gamma \satisfies \J{$e_0'$($e_1$)} \hastype \tau_r
+%     $
+%     \item \Z $ 
+%     \B{wrt}\ \vec{\sigma}\ e_0' 
+%     $
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0'\J{(}e_1\J{)} \hastype \tau_r$ by application 
+%       \item \Z\Z $e_0[\vec{\sigma}]\J{(}e_1\J{)} \rightsquigarrow e_0'\J{(}e_1\J{)}$
+%       \item \Z\Z ($e_0\J{(}e_1\J{)})[\vec{\sigma}] \rightsquigarrow e_0'\J{(}e_1\J{)}$
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ 
+
+%     \item \Z $\vec{\delta}, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by induction
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}\ Model typing reduced implication elimination  
+
+%   \label{theorem:model_typing_reduced_implication_elimination}
+%   \begin{mathpar}
+%     \inferrule {
+%       \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
+%       \\
+%       \vec{\delta}, \Gamma \satisfies e_1 \hastype \tau_l
+%       \\
+%       F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
+%     } {
+%       \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r
+%     } 
+%   \end{mathpar}
+
+%   \item $\B{assume } \VDash e_1[\vec{\sigma}]$
+
+
+%     \item \Z $\B{let } \vec{\sigma} \B{ s.t. } \vec{\delta}, \vec{\sigma} \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
+%     \item \Z $\VDash e_1[\vec{\sigma}]$ by theorem \ref{theorem:model_typing_soundness}
+%     \item \Z $\B{induct on } \VDash e_1[\vec{\sigma}]$
+
+%     \item \Z $\B{case } e_1[\vec{\sigma}] = v_1 $
+%     \item \Z $\B{wrt } v_1$  
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+
+%     \item \Z $\B{case}\ e_1[\vec{\sigma}] \rightsquigarrow e_1' \I \VDash e_1'$
+%     \item \Z $\B{hypo}\ \VDash e_1' \implies \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
+%     \item \Z $\B{wrt}\ e_1' $
+
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
+%       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'$)}$ by definition 
+%       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
+%       \item \Z\Z $e_1' = e_1'[\vec{\sigma}]$ by by theorem \ref{theorem:closed_substitution} 
+%       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1'[\vec{\sigma}]$)}$ by substitution 
+%       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma}]$ by definition 
+%       \item \Z\Z $\vec{\sigma} \cup \epsilon = \vec{\sigma}$ by definition 
+%       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\vec{\sigma} \cup \epsilon]$ by substitution 
+%       \item \Z\Z $\Gamma \cup \epsilon = \Gamma$ by definition
+%       \item \Z\Z $\vec{\delta}, \epsilon \satisfies \epsilon$ by definition
+%       \item \Z\Z $\vec{\delta}, \Gamma \cup \epsilon \satisfies \J{($F$?$p$=>$e$)($e_1'$)}$ by substitution 
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by definition
+%     \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by induction
+%   \item $\square$ by implication 
+% \end{theorem}
+
+% \begin{theorem}\ Model typing fully reduced implication elimination 
+%   \label{theorem:model_typing_fully_reduced_implication_elimination}
+%   \begin{mathpar}
+%     \inferrule {
+%       \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
+%       \\
+%       F = \epsilon \lor \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r
+%       \\
+%       \vec{\delta} \satisfies e_1 \hastype \tau_l
+%       \\
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+%       \\
+%       e_1[\vec{\sigma}] = v_1
+%       \\
+%     } {
+%       \vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{assume}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
+%     \TODO{add more assumptions}
+%     \item \Z $\vec{\delta} \satisfies e_1[\vec{\sigma}] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
+%     \item \Z $\vec{\delta} \satisfies v_1 \hastype \tau_l$ by substitution 
+%     \item \Z $\B{invert on}\ F = \epsilon \lor \vec{\delta}, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
+%     \item \Z $\B{case } F = \epsilon$ 
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by substitution 
+
+%       \item \Z\Z $\B{let}\ \vec{\sigma}' \B{ s.t. } p \equiv v_1 \given \vec{\sigma}'$ 
+%       by theorem \ref{theorem:model_typing_pattern_matching} 
+
+%       \item \Z\Z $\B{for } e'$ 
+%         \item \Z\Z\Z $\neg \epsilon[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by definition
+%         \item \Z\Z\Z $\neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by substitution 
+%       \item \Z\Z $\forall e' .\ \neg F[\vec{\sigma}]\J{($v_1$)} \rightsquigarrow e'$ by generalization 
+
+%       \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{FV}(p)][\vec{\sigma}]$ by definition 
+
+%       \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma}')$ 
+%       by theorem \ref{theorem:pattern_matching_consistency}
+%       \item \Z\Z $\vec{\sigma}\backslash\B{FV}(p) = \vec{\sigma}\backslash\B{dom}(\vec{\sigma}')$ 
+%       by theorem \ref{theorem:consistency_diffing}
+%       \item \Z\Z $e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']$ 
+%       by theorem \ref{theorem:concatenation_substitution}
+
+%       \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}]$ 
+%         by substitution
+%       \item \Z\Z $\J{($F[\vec{\sigma}]$?$p$=>$e[\vec{\sigma}\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ 
+%         by substitution 
+%       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($v_1$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by definition 
+%       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
+
+%       \item \Z\Z $\J{($F$?$p$=>$e$)$[\vec{\sigma}]$($e_1[\vec{\sigma}]$)} = (\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}]$ by definition  
+%       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e[\vec{\sigma} \cup \vec{\sigma}']$ by substitution  
+
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+
+%     \item \Z $\B{case } \vec{\delta}, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ 
+%       \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\vec{\sigma}] \rightsquigarrow e' \land \vec{\delta}, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+%       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\vec{\sigma}] \rightsquigarrow e'$ by definition 
+%       \item \Z\Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
+%     \item \Z $\vec{\delta}, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
+%   \item $\square$ by implication
+% \end{theorem}
+
+
+% \begin{theorem}\ (Pattern matching consistency)
+%   \label{theorem:pattern_matching_consistency}
+%   \begin{mathpar}
+%     \inferrule {
+%       p \equiv v \given \vec{\sigma}
+%     } {
+%       \forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\vec{\sigma})
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+
+
+% \begin{theorem}\ (Consistency diffing)
+%   \label{theorem:consistency_diffing}
+%   \begin{mathpar}
+%     \inferrule {
+%       \forall x .\ x \in X_l \iff x \in X_r 
+%     } {
+%       \vec{\sigma}\backslash X_l = \vec{\sigma}\backslash X_r
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Concatenation Substitution )
+%   \label{theorem:concatenation_substitution}
+%   \begin{mathpar}
+%     \inferrule {
+%     } {
+%       e[\vec{\sigma}\backslash\B{dom}(\vec{\sigma}')][\vec{\sigma}'] = e[\vec{\sigma} \cup \vec{\sigma}']
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+
+
+% \begin{theorem}(Model typing valuation)
+%   \label{theorem:model_typing_valuation}
+%   \begin{mathpar}
+%     \inferrule {
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+%       \\
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+%     } {
+%       \vec{\delta} \satisfies e[\vec{\sigma}] \hastype \tau 
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{assume } 
+%     \vec{\delta}, \Gamma \satisfies e \hastype \tau 
+%     \I
+%     \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+%   $
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+
+% \begin{theorem}(Model typing pattern matching)
+%   \label{theorem:model_typing_pattern_matching}
+%   \begin{mathpar}
+%     \inferrule {
+%       \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
+%       \\
+%       \vec{\delta} \satisfies v \hastype \tau_l 
+%     } {
+%       \exists \vec{\sigma} .\  p \equiv v \given \vec{\sigma}
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{assume } 
+%     \vec{\delta}, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
+%     \I
+%     \vec{\delta} \satisfies v \hastype \tau_l 
+%   $
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+
+% \begin{theorem}(Well-formed function valuation)
+%   \label{theorem:wellformed_function_valuation}
+%   \begin{mathpar}
+%     \inferrule {
+%       \VDash F
+%     } {
+%       \exists v .\ v = F 
+%     } 
+%   \end{mathpar}
+% \end{theorem}
+% \begin{proof}
+%   \item $\B{assume } \VDash F$ 
+%     \item \Z $\B{invert on } \VDash F$
+%     \item \Z $\B{case } v = F$
+%       \item \Z\Z $v = F$ by identity
+%     \item \Z $\B{case } F \rightsquigarrow e$
+%     \item \Z $\B{wrt } e$
+%       \item \Z\Z $\neg F \rightsquigarrow e$ by definition
+%       \item \Z\Z $\bot$ by application 
+%     \item \Z $v = F$ by inversion 
+%   \item $\square$
+% \end{proof}
+
+
+% \begin{theorem}(Reduction closed)
+%   \label{theorem:reduction_closed}
+%   \begin{mathpar}
+%     \inferrule {
 %       e \rightsquigarrow e'
 %     } {
-%       \Gamma \entails e' \hastype \tau \given Z  
+%       \forall x .\ x \notin \B{FV}(e')
 %     } 
 %   \end{mathpar}
-%   Proof ... 
+%   Proof:
+%   \item $\B{assume } 
+%     e \rightsquigarrow e'
+%   $
+%   \item \TODO{...}
+%   \item $\square$
+% \end{theorem}
+
+% \begin{theorem}(Closed substitution)
+%   \label{theorem:closed_substitution}
+%   \begin{mathpar}
+%     \inferrule {
+%       \forall x .\ x \notin \B{FV}(e)
+%     } {
+%       e = e[\vec{\sigma}]
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item $\B{assume } 
+%     \forall x .\ x \notin \B{FV}(e)
+%   $
+%   \item \TODO{...}
+%   \item $\square$
 % \end{theorem}
 
 
-\begin{definition}\boxed{\vec{\delta}, \vec{\sigma} \satisfies \Gamma}
-  \label{def:model_typing_environment}
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta}, \vec{\sigma} \satisfies \epsilon  
-    } 
 
-    \inferrule { 
-      \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
-      \\
-      \vec{\delta} \satisfies v \hastype \tau 
-    } {
-      \vec{\delta}, \vec{\sigma} \ x \slash v \satisfies \Gamma \ x:\tau 
-    } 
-  \end{mathpar}
-\end{definition}
+% % \begin{theorem}(Progress of pattern matching)
+% %   \label{theorem:pattern_matching_progress}
+% %   \begin{mathpar}
+% %     \inferrule {
+% %       \J{*$p$=>$e$} \in F 
+% %       \\
+% %       p \equiv v \given \vec{\sigma} 
+% %       \\
+% %       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
+% %     } {
+% %       \exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'
+% %     } 
+% %   \end{mathpar}
+% %   Proof:
+% %   \item $\B{for } p\ e\ F\ v\ \vec{\sigma}\ \B{assume }
+% %       \J{*$p$=>$e$} \in F 
+% %       \I
+% %       p \equiv v \given \vec{\sigma} 
+% %       \I
+% %       \forall e' .\ \J{*$p$=>$e'$} \in F \implies e' = e 
+% %   $
+
+% %   \item \Z $\B{case }
+% %     F = F'\ \J{*$p$=>$e$} 
+% %     \I
+% %     \J{*$p$=>$e$} \notin F'
+% %   $
+
+% %   \item \Z\Z $\B{for } e'$
+% %   \item \Z\Z\Z $\B{case}\ F'\J{($v$)} \rightsquigarrow e'$
+% %   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e'$ by definition
+% %   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by substitution 
+% %   \item \Z\Z\Z $\B{case}\ \neg F'\J{($v$)} \rightsquigarrow e'$
+% %   \item \Z\Z\Z\Z $\J{(}F'\ \J{*}p\J{=>}e\J{)(} v \J{)} \rightsquigarrow e[\vec{\sigma}]$ by definition
+% %   \item \Z\Z\Z\Z $F\J{(}v\J{)} \rightsquigarrow e[\vec{\sigma}]$ by substitution 
+% %   \item \Z\Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by decidability of $F'\J{($v$)} \rightsquigarrow e'$
+% %   \item \Z\Z $\forall e' .\ \exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by summarization
+% %   \item \Z\Z $\exists e'' .\ F\J{(}v\J{)} \rightsquigarrow e''$ by independence 
+
+% %   \item \Z $\B{case }
+% %     F = F'\ f 
+% %     \I
+% %     \J{*$p$=>$e$} \in F' 
+% %   $
+% %   \item \Z\Z $\B{let } e' \B{ s.t. } F'\J{(}v\J{)} \rightsquigarrow e'$ by induction hypothesis
+% %   \item \Z\Z $F'\ f\J{(}v\J{)} \rightsquigarrow e'$ by definition
+% %   \item \Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by definition
+% %   \item \Z $\exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'$ by induction on $\J{*$p$=>$e$} \in F$
+% %   \item $\square$
+% % \end{theorem}
+
+% \begin{theorem}(Model typing assignability)
+%   \label{theorem:model_typing_assignability}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     } {
+%       \exists \vec{\sigma} .\ \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{...}
+% \end{theorem}
+
+
+% \begin{theorem}(Model typing soundness)
+%   \label{theorem:model_typing_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%     } {
+%       \forall \vec{\sigma} .\ 
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+%       \implies
+%       \VDash e[\vec{\sigma}]
+%     } 
+%   \end{mathpar}
+%   Proof:
+%   \item \TODO{redo using universal/implication}
+%   \item $\B{assume }
+%         \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+%         \I \vec{\delta}, \Gamma \satisfies e \hastype \tau
+%   $
+%     \item \Z $\B{case } e = \J{@}$
+%       \item \Z\Z $\B{let } v \B{ s.t. } \J{@} = v$
+%       \item \Z\Z $e[\vec{\sigma}] = v$
+%       \item \Z\Z $ \VDash e[\vec{\sigma}]$
+
+
+%     \item \Z $\B{case } 
+%       \vec{\delta}, \Gamma \satisfies e' \hastype \tau'
+%       \I 
+%       e = \J{<}l\J{>}e' 
+%       \I 
+%       \tau = \J{<}l\J{>}\tau'
+%     $
+%       \item \Z\Z $\Vdash e'$ by induction hypothesis
+%       \item \Z\Z $\B{case } e'[\vec{\sigma}] = v$
+%         \item \Z\Z\Z $\B{let } v' \B{ s.t. } \J{<}l\J{>}v = v'$
+%         \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] = v'$
+%         \item \Z\Z\Z $(\J{<}l\J{>}e')[\vec{\sigma}] = v'$
+%         \item \Z\Z\Z $e[\vec{\sigma}] = v'$
+%         \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
+
+%       \item \Z\Z $\B{case } e'[\vec{\sigma}] \rightsquigarrow e'' \I \VDash e''$
+%         \item \Z\Z\Z $\J{<}l\J{>}e'[\vec{\sigma}] \rightsquigarrow \J{<}l\J{>} e''$
+%         \item \Z\Z\Z $\VDash \J{<}l\J{>}e'' $
+%         \item \Z\Z\Z $\VDash \J{<}l\J{>}e'[\vec{\sigma}] $
+%         \item \Z\Z\Z $\VDash (\J{<}l\J{>}e')[\vec{\sigma}] $
+%         \item \Z\Z\Z $\VDash e[\vec{\sigma}] $
+
+%       \item \Z\Z $\VDash e[\vec{\sigma}] $ by cases on $\VDash e' $
+
+%     \item \Z \TODO{remaining introduction cases}
+
+%     \item \Z $\B{case } 
+%       x \hastype \tau \in \Gamma
+%       \I 
+%       x \slash v \in \vec{\sigma}
+%       \I 
+%       e = x
+%     $
+%       \item \Z\Z $x[\vec{\sigma}] = v$
+%       \item \Z\Z $e[\vec{\sigma}] = v$
+%       \item \Z\Z $\VDash e[\vec{\sigma}] $
+
+%     \item \Z $\B{case } 
+%       e[\vec{\sigma}] \rightsquigarrow e' 
+%       \I 
+%       \vec{\delta}, \Gamma \satisfies e' \hastype \tau
+%     $ 
+%       \item \Z\Z $\VDash e'[\vec{\sigma}] $ by induction hypothesis
+%       \item \Z\Z $\VDash e[\vec{\sigma}] $
+
+%     \item \Z $\VDash e[\vec{\sigma}] $ by induction on $\vec{\delta}, \Gamma \satisfies e \hastype \tau$
+%   \item $\square$
+%   \item \TODO{Cretin's corresponding theorem is by definition of pretypes on p. 125}
+% \end{theorem}
+
+% \noindent
+% \B{NOTE: } The induction hypothesis includes the generalized assumption, e.g. $\forall e' .\ e' < e \implies Q(e')$ if inducting on $e$ or $\forall e' .\ (P(e') \implies P(e)), P(e') \implies Q(e')$ if inducting on predicate $P$
+
+% \noindent
+% \B{NOTE: } we induct on $\vec{\delta}, \Gamma \satisfies e \hastype \tau$ instead of $e$, as the predicate acts as a guard/ordering in lieu of a decreasing e.
+% This allows us to use the induction hypothesis on the reduction step result in the elimination case.
+
+% \noindent
+% \B{NOTE: } Kozen says, "Intuitively, one can appeal to the coinductive hypothesis as long as there
+% has been progress in observing the elements of the stream (guardedness) and there is no
+% further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
+
+% % \begin{theorem}(Progress of proof typing)
+% %   \label{theorem:proof_typing_soundness}
+% %   \begin{mathpar}
+% %     \inferrule { 
+% %       \Gamma \entails e \hastype \tau \given Z  
+% %     } {
+% %       e \B{ progressive}
+% %     } 
+% %   \end{mathpar}
+% %   Proof ... 
+% % \end{theorem}
+
+% % \begin{theorem}(Preservation of proof typing)
+% %   \begin{mathpar}
+% %     \inferrule { 
+% %       \Gamma \entails e \hastype \tau \given Z  
+% %       \\
+% %       e \rightsquigarrow e'
+% %     } {
+% %       \Gamma \entails e' \hastype \tau \given Z  
+% %     } 
+% %   \end{mathpar}
+% %   Proof ... 
+% % \end{theorem}
+
+
+% \begin{definition}\boxed{\vec{\delta}, \vec{\sigma} \satisfies \Gamma}
+%   \label{def:model_typing_environment}
+%   \begin{mathpar}
+%     \inferrule { 
+%     } {
+%       \vec{\delta}, \vec{\sigma} \satisfies \epsilon  
+%     } 
+
+%     \inferrule { 
+%       \vec{\delta}, \vec{\sigma} \satisfies \Gamma 
+%       \\
+%       \vec{\delta} \satisfies v \hastype \tau 
+%     } {
+%       \vec{\delta}, \vec{\sigma} \ x \slash v \satisfies \Gamma \ x:\tau 
+%     } 
+%   \end{mathpar}
+% \end{definition}
 
 
 \end{document}
