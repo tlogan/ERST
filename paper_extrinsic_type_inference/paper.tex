@@ -1580,50 +1580,68 @@ and the the correspondence holds for the previous constraints in the environment
   \\
   \begin{mathpar}
     \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
-      \\
-      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
-      \\
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
-      \\
-      \vec{\delta}' \satisfies \Delta'
-    } {
-      \vec{\delta}' \satisfies e \hastype \tau' \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
-    } 
-
-    \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
-      \\
-      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
-      \\
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
-      \\
-      \vec{\delta}' \satisfies \Delta'
-    } {
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau \implies
-      \vec{\delta}' \satisfies e \hastype \tau'
-    } 
-
-    \inferrule { 
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
       \\
+      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
+      \\
       \vec{\delta}' \satisfies \Delta'
+      \\
+      \vec{\delta}' \satisfies e \hastype \tau'
     } {
       \exists \delta .\ 
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
+      \land
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
     } 
+    % \\\\
+    % \TODO{remove old below}
+    % \\\\
+    % \inferrule { 
+    %   \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
+    %   \\
+    %   \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
+    %   \\
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
+    %   \\
+    %   \vec{\delta}' \satisfies \Delta'
+    % } {
+    %   \vec{\delta}' \satisfies e \hastype \tau' \implies
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
+    % } 
+
+    % \inferrule { 
+    %   \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
+    %   \\
+    %   \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
+    %   \\
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
+    %   \\
+    %   \vec{\delta}' \satisfies \Delta'
+    % } {
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau \implies
+    %   \vec{\delta}' \satisfies e \hastype \tau'
+    % } 
+
+    % \inferrule { 
+    %   \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    %   \\
+    %   \vec{\delta}' \satisfies \Delta'
+    % } {
+    %   \exists \delta .\ 
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
+    % } 
   \end{mathpar}
 \end{property}
+
+% \TODO{need to rethink; we don't need the strongest; we just need the interpretation to be safe}
 
 \noindent
 Type interpretation $\llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')$
 looks for interpretations of type variables in the input type $\tau$ that satisfy the subtyping constraints $\Delta$,
-such that the positive interpretation $\llbracket ... \rrbracket^+$ constructs the strongest interpretation possible
-ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$
-and the negative interpretation $\llbracket ... \rrbracket^-$ constructs the weakest interpretation possible
-ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$
-.
+such that the positive interpretation $\llbracket ... \rrbracket^+$ tries to construct the strongest interpretation
+satisfying the constraints and ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$,
+and the negative interpretation $\llbracket ... \rrbracket^-$ tries to construct the weakest interpretation
+satisfying the constraints ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$.
 The ignored variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$ must not be replaced in the type or removed
 from the subtyping environment. 
 .
