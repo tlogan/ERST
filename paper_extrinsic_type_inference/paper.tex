@@ -1582,6 +1582,8 @@ and the the correspondence holds for the previous constraints in the environment
     \inferrule { 
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
       \\
+      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
+      \\
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
       \\
       \vec{\delta}' \satisfies \Delta'
@@ -1592,6 +1594,8 @@ and the the correspondence holds for the previous constraints in the environment
 
     \inferrule { 
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
+      \\
+      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
       \\
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
       \\
@@ -1608,12 +1612,6 @@ and the the correspondence holds for the previous constraints in the environment
     } {
       \exists \delta .\ 
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
-    } 
-
-    \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
-    } {
-      \TODO{preservation of ignored variables}
     } 
   \end{mathpar}
 \end{property}
@@ -1640,42 +1638,38 @@ in the appendix (Section \ref{sect:appendix}).
   Packaging Soundness 
   \\
   \begin{mathpar}
-    \inferrule { 
-      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
-    } {
-      \TODO{...}
-    } 
-    % \inferrule { 
-    %   \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
-    % } {
-    %   (
-    %   \forall \vec{\delta}'.\ 
-    %   (\vec{\alpha}, \Delta, \tau) \in \vec{\pi} \implies
-    %   \text{dom}(\vec{\delta}') = \vec{\alpha} \implies
-    %   \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
-    %   \vec{\delta} \cup \vec{\delta}'\satisfies e \hastype \tau
-    %   )
-    %   \\\\
-    %   \iff
-    %   \\\\
-    %   \vec{\delta} \satisfies e \hastype \tau'
-    % } 
+  %   \inferrule { 
+  %     \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
+  %     \\
+  %     \text{dom}(\vec{\delta}_\ignore) \cong \vec{\alpha}_\ignore
+  %     \\
+  %     \vec{\delta}_\ignore \satisfies e \hastype \tau'
+  %   } {
+  %     \exists \vec{\delta}.\ 
+  %     (
+  %     \forall \vec{\delta}'.\ 
+  %     (\vec{\alpha}, \Delta, \tau) \in \vec{\pi} \implies
+  %     \text{dom}(\vec{\delta}') = \vec{\alpha} \implies
+  %     \vec{\delta} \cup \vec{\delta}' \cup \vec{\delta}_\ignore \satisfies \Delta \implies
+  %     \vec{\delta} \cup \vec{\delta}' \cup \vec{\delta}_\ignore \satisfies e \hastype \tau
+  %     )
+  %   } 
 
-    % \inferrule { 
-    %   \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
-    %   \\
-    %   (\vec{\alpha}, \Delta, \tau) \in \vec{\pi}
-    %   \\
-    %   \vec{\delta} \satisfies \Delta
-    % } {
-    %   \vec{\delta} \satisfies \tau \subtypes \tau'
-    % } 
-
-    % \inferrule { 
-    %   \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
-    % } {
-    %   \TODO{preservation of ignored variables}
-    % } 
+  %   \inferrule { 
+  %     \text{pack}^+(\epsilon \entails (\J{X}, \epsilon, \J{X})) = \J{EXI[X]X} 
+  %     \\
+  %     \text{dom}(\vec{\delta}_\ignore) \cong \epsilon 
+  %     \\
+  %     \vec{\delta}_\ignore \satisfies \J{@} \hastype \J{EXI[X]X}
+  %   } {
+  %     \exists \vec{\delta}.\ 
+  %     (
+  %     \forall \vec{\delta}'.\ 
+  %     (\vec{\alpha}, \Delta, \tau) = (\J{X}, \epsilon, \J{X}) \implies
+  %     \text{dom}(\vec{\delta}') = (\J{X}) \implies
+  %     \vec{\delta} \cup \vec{\delta}' \satisfies \J{@} \hastype \J{X}
+  %     )
+  %   } 
   \end{mathpar}
 \end{property}
 
