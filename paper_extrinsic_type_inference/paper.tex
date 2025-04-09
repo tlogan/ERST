@@ -1574,8 +1574,54 @@ the path type upper bounds $\alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r$
 and pair type lower bounds $\alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu$ on the specified variables,
 and the the correspondence holds for the previous constraints in the environment
 
+\begin{property}
+  \label{prop:type_interpretation_soundness}
+  Type Interpretation Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \exists \delta .\ 
+      \delta \cup \delta' \satisfies \Delta 
+      \land
+      (
+      \delta' \satisfies e \hastype \tau'
+      \implies
+      \delta \cup \delta' \satisfies e \hastype \tau
+      )
+    } 
 
-\TODO{Polar interpretation soundness}
+    \inferrule { 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \exists \delta .\ 
+      \delta \cup \delta' \satisfies \Delta 
+      \land
+      (
+      \delta \cup \delta' \satisfies e \hastype \tau
+      \implies
+      \delta' \satisfies e \hastype \tau'
+      )
+    } 
+  \end{mathpar}
+\end{property}
+
+\noindent
+Type interpretation $\llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')$
+looks for substitutions of variable in the input type $\tau$ that satisfy the subtyping constraints $\Delta$,
+such that the positive interpretation $\llbracket ... \rrbracket^+$ constructs the strongest interpretation possible
+and the negative interpretation $\llbracket ... \rrbracket^-$ constructs the weakest interpretation possible.
+Additionally, any interpretation $\delta'$ for the resulting subtyping environment $\Delta$' must
+be part of some interpretation for the original subtyping environment $\Delta$.
+
+The details of finding the type interpretation involves numerous tedious details, so we leave the definition
+in the appendix (Section \ref{sect:appendix}).
+
 
 \begin{property} 
   \label{def:proof_subtyping_soundness}
@@ -2347,13 +2393,12 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
-\noindent
 \begin{definition} 
   \label{def:type_interpretation}
   Type Interpretation 
-  \\\\
+  \hfill
   \boxed{
-    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau)
+    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
   }
   \\
   \begin{mathpar}
@@ -2475,6 +2520,7 @@ rely on analogous techniques.
 \end{definition} 
 
 \TODO{...}
+
 
 \begin{definition} 
   \label{def:pruning_interpretation}
