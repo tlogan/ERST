@@ -1580,48 +1580,108 @@ and the the correspondence holds for the previous constraints in the environment
   \\
   \begin{mathpar}
     \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^+ = (\Delta', \tau')
       \\
-      \delta' \satisfies \Delta'
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
+      \\
+      \vec{\delta}' \satisfies \Delta'
     } {
-      \exists \delta .\ 
-      \delta \cup \delta' \satisfies \Delta 
-      \land
-      (
-      \delta' \satisfies e \hastype \tau'
-      \implies
-      \delta \cup \delta' \satisfies e \hastype \tau
-      )
+      \vec{\delta}' \satisfies e \hastype \tau' \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
     } 
 
     \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^- = (\Delta', \tau')
       \\
-      \delta' \satisfies \Delta'
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta
+      \\
+      \vec{\delta}' \satisfies \Delta'
+    } {
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau \implies
+      \vec{\delta}' \satisfies e \hastype \tau'
+    } 
+
+    \inferrule { 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \\
+      \vec{\delta}' \satisfies \Delta'
     } {
       \exists \delta .\ 
-      \delta \cup \delta' \satisfies \Delta 
-      \land
-      (
-      \delta \cup \delta' \satisfies e \hastype \tau
-      \implies
-      \delta' \satisfies e \hastype \tau'
-      )
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
+    } 
+
+    \inferrule { 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    } {
+      \TODO{preservation of ignored variables}
     } 
   \end{mathpar}
 \end{property}
 
 \noindent
-Type interpretation $\llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')$
-looks for substitutions of variable in the input type $\tau$ that satisfy the subtyping constraints $\Delta$,
+Type interpretation $\llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')$
+looks for interpretations of type variables in the input type $\tau$ that satisfy the subtyping constraints $\Delta$,
 such that the positive interpretation $\llbracket ... \rrbracket^+$ constructs the strongest interpretation possible
-and the negative interpretation $\llbracket ... \rrbracket^-$ constructs the weakest interpretation possible.
+ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$
+and the negative interpretation $\llbracket ... \rrbracket^-$ constructs the weakest interpretation possible
+ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$
+.
+The ignored variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$ must not be replaced in the type or removed
+from the subtyping environment. 
+.
 Additionally, any interpretation $\delta'$ for the resulting subtyping environment $\Delta$' must
 be part of some interpretation for the original subtyping environment $\Delta$.
 
 The details of finding the type interpretation involves numerous tedious details, so we leave the definition
 in the appendix (Section \ref{sect:appendix}).
 
+\begin{property}
+  \label{prop:packaging_soundness}
+  Packaging Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
+    } {
+      \TODO{...}
+    } 
+    % \inferrule { 
+    %   \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
+    % } {
+    %   (
+    %   \forall \vec{\delta}'.\ 
+    %   (\vec{\alpha}, \Delta, \tau) \in \vec{\pi} \implies
+    %   \text{dom}(\vec{\delta}') = \vec{\alpha} \implies
+    %   \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
+    %   \vec{\delta} \cup \vec{\delta}'\satisfies e \hastype \tau
+    %   )
+    %   \\\\
+    %   \iff
+    %   \\\\
+    %   \vec{\delta} \satisfies e \hastype \tau'
+    % } 
+
+    % \inferrule { 
+    %   \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
+    %   \\
+    %   (\vec{\alpha}, \Delta, \tau) \in \vec{\pi}
+    %   \\
+    %   \vec{\delta} \satisfies \Delta
+    % } {
+    %   \vec{\delta} \satisfies \tau \subtypes \tau'
+    % } 
+
+    % \inferrule { 
+    %   \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'
+    % } {
+    %   \TODO{preservation of ignored variables}
+    % } 
+  \end{mathpar}
+\end{property}
+
+\noindent
+Packaging $\text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'$
+\TODO{...}
 
 \begin{property} 
   \label{def:proof_subtyping_soundness}
