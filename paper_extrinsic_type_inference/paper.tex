@@ -1582,7 +1582,7 @@ and the the correspondence holds for the previous constraints in the environment
     \inferrule { 
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
       \\
-      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')       \\
+      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')
       \\
       \vec{\delta}' \satisfies \Delta'
       \\
@@ -1637,14 +1637,12 @@ and the the correspondence holds for the previous constraints in the environment
 
 \noindent
 Type interpretation $\llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')$
-looks for interpretations of type variables in the input type $\tau$ that satisfy the subtyping constraints $\Delta$,
-such that the positive interpretation $\llbracket ... \rrbracket^+$ tries to construct the strongest interpretation
-satisfying the constraints and ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$,
-and the negative interpretation $\llbracket ... \rrbracket^-$ tries to construct the weakest interpretation
-satisfying the constraints ignoring variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$.
-The ignored variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$ must not be replaced in the type or removed
-from the subtyping environment. 
-.
+constructs a type $\tau'$, such that $\tau'$ is behaves like the input type $\tau$ for some interpretation $\vec{\delta}$. 
+The positive form $\llbracket ... \rrbracket^+$ constructs the strongest type or tries to get close to the strongest type possible.  
+The negative form $\llbracket ... \rrbracket^-$ constructs the weakest type or tries to get close to the weakest type possible. 
+The type variables $\vec{\alpha}_\ignore$ and $\vec{\alpha}$ must be irrelevant, meaning
+the constructed type $\tau'$ must behave like $\tau$ 
+for all interpretations over those variables $\vec{\delta}'$.
 Additionally, any interpretation $\delta'$ for the resulting subtyping environment $\Delta$' must
 be part of some interpretation for the original subtyping environment $\Delta$.
 
