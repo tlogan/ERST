@@ -2718,15 +2718,15 @@ rely on analogous techniques.
     \inferrule {
       \text{FTV}(\tau) = \vec{\alpha}_p
       \\
-      \Delta \entails \vec{\alpha}_\ignore \cup \vec{\alpha} \backslash \vec{\alpha}_p \pitchfork \Delta' 
+      \vec{\alpha}_\ignore \cup \vec{\alpha} \cup \vec{\alpha}_p \entails \Delta \dashrightarrow \Delta' 
       \\
-      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta' \entails \Delta_o \wr \Delta_i 
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta' \rightrightarrows \Delta_o, \Delta_i 
       \\\\
       (\text{FTV}(\Delta) \cup \vec{\alpha}_p) \cap \vec{\alpha} = \vec{\alpha}_o 
       \\
       \text{FTV}(\Delta_i) \cup \vec{\alpha}_p \backslash \vec{\alpha} \backslash \vec{\alpha}_\ignore = \vec{\alpha}_i 
-      \\\\
-      \text{quantify}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
+      \\
+      \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
     } {
       \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
     }
@@ -2896,32 +2896,30 @@ rely on analogous techniques.
 \end{definition}
 
 \begin{definition}
-  Influential Filter 
+  Subtyping Environment Filter 
   \hfill
-  \boxed{\Delta \entails \vec{\alpha} \pitchfork \Delta}\ 
+  \boxed{\vec{\alpha} \entails \Delta \dashrightarrow \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \epsilon \entails \vec{\alpha} \pitchfork \epsilon 
+      \vec{\alpha} \entails \epsilon \dashrightarrow \epsilon 
     }
 
     \inferrule {
-      \alpha \in \vec{\alpha}  
+      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \cap \vec{\alpha}
       \\
-      \alpha \in \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
-      \\
-      \Delta \entails \vec{\alpha} \pitchfork \Delta'
+      \vec{\alpha} \entails \Delta \dashrightarrow \Delta'
     } {
-      \Delta \ \tau_l<:\tau_r \entails \vec{\alpha} \pitchfork \Delta' \J{;} \tau_l \J{<:} \tau_r
+      \vec{\alpha} \entails  \Delta \J{;} \tau_l \J{<:} \tau_r\dashrightarrow \Delta' \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
       \forall \alpha .\ \alpha \in \vec{\alpha} \implies \alpha \notin \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
       \\
-      \Delta \entails \vec{\alpha} \pitchfork \Delta'
+      \vec{\alpha} \entails \Delta \dashrightarrow \Delta'
     } {
-      \Delta \J{;} \tau_l \J{<:} \tau_r \entails \vec{\alpha} \pitchfork \Delta'
+      \vec{\alpha} \entails  \Delta \J{;} \tau_l \J{<:} \tau_r\dashrightarrow \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -2994,36 +2992,31 @@ rely on analogous techniques.
 \begin{definition}
   Partition
   \hfill
-  \boxed{\vec{\alpha}_\ignore, \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i}
+  \boxed{\vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \rightrightarrows \Delta_o , \Delta_i}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}, \epsilon \entails \epsilon \wr \epsilon 
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \epsilon \rightrightarrows \epsilon , \epsilon 
     }
 
     \inferrule {
-      \TODO{...}
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \rightrightarrows \Delta_o , \Delta_i 
       \\\\
-      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) = \vec{\alpha}_q
-      \\
-      \alpha \in \vec{\alpha}_q \\ \alpha \notin \vec{\alpha}
-      \\
-      \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i 
+      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \backslash \vec{\alpha}_\ignore \backslash \vec{\alpha}
     } {
-      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta \J{;} \tau_l \J{<:}\tau_r \entails \Delta_o \wr \Delta_i \J{;} \tau_l \J{<:} \tau_r
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \J{;} \tau_l \J{<:}\tau_r \rightrightarrows \Delta_o , \Delta_i \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
-      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) = \vec{\alpha}_q
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \rightrightarrows \Delta_o , \Delta_i 
+      \\\\
+      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \cap \vec{\alpha} 
       \\
-      \forall \alpha .\ \alpha \in \vec{\alpha}_q \implies \alpha \in \vec{\alpha}
-      \\
-      \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i 
+      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) \subseteq \vec{\alpha}_\ignore \cup \vec{\alpha}
     } {
-      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta \J{;} \tau_l \J{<:}\tau_r \entails \Delta_o \J{;} \tau_l \J{<:} \tau_r \wr \Delta_i 
+      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \J{;} \tau_l \J{<:}\tau_r \rightrightarrows \Delta_o  \J{;} \tau_l \J{<:} \tau_r , \Delta_i
     }
-
   \end{mathpar}
 \end{definition}
 
