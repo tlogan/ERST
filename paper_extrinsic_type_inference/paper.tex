@@ -2554,9 +2554,9 @@ rely on analogous techniques.
 \end{definition}
 
 \begin{definition} 
-  \label{def:Qualification_interpretation}
+  \label{def:qualification_interpretation}
   Qualification Interpretation 
-  \\\\
+  \hfill
   \boxed{
     \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
   }
@@ -2586,7 +2586,7 @@ rely on analogous techniques.
 \begin{definition} 
   \label{def:pruning_interpretation}
   Pruning Interpretation 
-  \\\\
+  \hfill
   \boxed{
     \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
   }
@@ -2607,7 +2607,7 @@ rely on analogous techniques.
 \begin{definition} 
   \label{def:indirection}
   Indirection  
-  \\\\
+  \hfill
   \boxed{
     \vec{\alpha}_\ignore, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
   }
@@ -2660,7 +2660,7 @@ rely on analogous techniques.
 \begin{definition} 
   \label{def:interpretation}
   Interpretation
-  \\\\
+  \hfill
   \boxed{
     \llbracket\Delta, \alpha \rrbracket^\pm = (\Delta, \tau)
   }
@@ -2708,159 +2708,108 @@ rely on analogous techniques.
 
 \TODO{...}
 
-\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha}, \vec{\alpha}, \Delta \entails \tau) = \tau} Type Packaging 
-
-  \TODO{update}
-
+\begin{definition}
+  \label{def:type_packaging}
+  Type Packaging 
+  \hfill
+  \boxed{\text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'} 
+  \\
   \begin{mathpar}
     \inferrule {
       \text{FTV}(\tau) = \vec{\alpha}_p
       \\
-      \Delta \entails \vec{\alpha}_f\ \vec{\alpha}_c\ \vec{\alpha}_p \pitchfork \Delta' 
-      \\\\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta' \entails \Delta_o \wr \Delta_i 
-      \\\\
-      (\text{FTV}(\Delta)\ \vec{\alpha}_p)\ \diamond\ \vec{\alpha}_c = \vec{\alpha}_o 
+      \Delta \entails \vec{\alpha}_\ignore \cup \vec{\alpha} \backslash \vec{\alpha}_p \pitchfork \Delta' 
       \\
-      (\text{FTV}(\Delta_i)\ \vec{\alpha}_p)\ \backslash\ \vec{\alpha}_c \ \backslash\ \vec{\alpha}_f = \vec{\alpha}_i 
+      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta' \entails \Delta_o \wr \Delta_i 
+      \\\\
+      (\text{FTV}(\Delta) \cup \vec{\alpha}_p) \cap \vec{\alpha} = \vec{\alpha}_o 
+      \\
+      \text{FTV}(\Delta_i) \cup \vec{\alpha}_p \backslash \vec{\alpha} \backslash \vec{\alpha}_\ignore = \vec{\alpha}_i 
       \\\\
       \text{quantify}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
     } {
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^{\pm} \tau'
+      \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
     }
   \end{mathpar}
 \end{definition}
 
 
-\begin{definition}\boxed{\text{pack}^\pm(\vec{\alpha} \entails \vec{\pi}) = \vec{\tau}}\ Multiple Type Packaging 
+\begin{definition}
   \label{def:multiple_type_packaging}
-
-  \TODO{update}
-
+  Multiple Type Packaging 
+  \hfill
+  \boxed{\text{pack}^\pm(\vec{\alpha} \entails \vec{\pi}) = \vec{\tau}}\ 
+  \\
   \begin{mathpar}
     \inferrule {
     } {
-      \vec{\alpha}_f \entails \epsilon \cong^\pm \epsilon 
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \epsilon) = \J{TOP} 
     }
 
     \inferrule {
-      \vec{\alpha}_f \entails \vec{\pi} \cong^\pm \vec{\tau} 
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
       \\
-      \vec{\alpha}_f, \vec{\alpha}_c, \Delta \entails \tau \cong^\pm \tau'
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
     } {
-      \vec{\alpha}_f \entails \vec{\pi}\ \left<\vec{\alpha}_c, \Delta, \tau \right> \cong^\pm \vec{\tau}\ \tau' 
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau)) =  \vec{\tau} \J{\&} \tau' 
     }
-  \end{mathpar}
-\end{definition}
 
-
-
-\begin{definition}\boxed{\vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}}\ Modulo Type Solution  
-  \label{def:modulo_type_solution}
-  \begin{mathpar}
     \inferrule {
-      \TODO{...}
     } {
-      \vec{\alpha} \entails \Delta \wr \vec{\alpha} \given \vec{\delta}
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \epsilon) = \J{BOT} 
     }
-  \end{mathpar}
-\end{definition}
 
-
-\begin{definition}\boxed{\entails \tau_l \subtypes \tau \consis}\ Constraint Consistency  
-  \label{def:constraint_consistency}
-  \begin{mathpar}
     \inferrule {
-      \TODO{...}
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
+      \\
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
     } {
-      \entails \tau_l \subtypes \J{LFP[}\alpha\J{]}\tau_r \consis 
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau)) =  \vec{\tau} \J{|} \tau' 
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\Delta[\alpha\slash\tau]^\pm = \Delta}\ Polar Subtyping Environment Substitution 
+
+\begin{definition}
   \label{def:polar_subtyping_environment_substitution}
-  \TODO{...}
+  Polar Subtyping Environment Substitution 
+  \hfill
+  \boxed{\Delta[\alpha\slash\tau]^\pm = \Delta}\ 
+  \\
   \begin{mathpar}
+    \TODO{...}
   \end{mathpar}
 \end{definition}
 
 
-\begin{definition}\boxed{\tau[\alpha\slash\tau]^\pm = \tau}\ Polar Type Substitution 
-  \label{def:polar_type_substitution}
-  \TODO{...}
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\text{skolem}(\Delta) = (\Delta, \Delta)}\ Skolem Subtyping Separation 
-  \label{def:skolem}
-  \TODO{...}
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
-
-
-
-\begin{definition} \boxed{\Alpha \notfree \tau}\ Type Variable Liberty 
-  \label{def:type_variable_liberty}
+\begin{definition}
+  \label{def:varirable_sequence_non_freedom}
+  Variable Sequence Non-freedom 
+  \hfill
+  \boxed{\vec{\alpha} \notfree \tau}
+  \\
   \begin{mathpar}
     \inferrule {
-      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FTV}(\tau)
+      \forall \alpha .\ \alpha \in \vec{\alpha} \implies \alpha \notin \text{FTV}(\tau)
     } {
-      \Alpha \notfree \tau
+      \vec{\alpha} \notfree \tau
     }
   \end{mathpar}
 \end{definition}
 
 
-\begin{definition}\boxed{\tau \subtypes \tau \given Z}\ (Proof universe subtyping)
-  \label{def:proof_universe_subtyping}
-  \begin{mathpar}
-    \inferrule {
-      \left< M, \Delta \right> \in Z 
-      \\
-      \forall  M\ \Delta .\  
-      \tau_l \subtypes \tau_r \given M, \Delta 
-      \iff
-      \left< M, \Delta \right> \in Z 
-    } {
-      \tau_l \subtypes \tau_r \given Z 
-    }
-
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{Q \given M, \Delta}
-  \begin{mathpar}
-    \inferrule {
-      Q \given M_0, \Delta_0
-      \\
-      M_0 \preceq M_1
-      \\
-      \Delta_0 \preceq \Delta_1
-      \\
-      \tau_l \subtypes \tau_r \given M_1, \Delta_1
-    } {
-      Q \J{.$\tau_l$<:$\tau_r$}
-      \given
-      M_1, \Delta_1
-    }
-
-    \inferrule {
-    } {
-      M, \Delta \entails \epsilon
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}(Collection)
+\begin{definition}
+  Collection
   \[\begin{array}[t]{r@{}l}
     \nonterm{C} & \is \epsilon \sep C\ c
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{C \cup C = C}\ Concatenation
+\begin{definition}
+  Concatenation
+  \hfill
+  \boxed{C \cup C = C}
+  \\
   \[\begin{array}{rclr}
     C \cup \epsilon 
     &=& 
@@ -2873,7 +2822,11 @@ rely on analogous techniques.
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{C \diamond  C = C}\ Filter
+\begin{definition}
+  Filter
+  \hfill
+  \boxed{C \cap  C = C}
+  \\
   \[\begin{array}{rclr}
     C \cap \epsilon 
     &=& 
@@ -2892,7 +2845,11 @@ rely on analogous techniques.
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{c \in C}\ Collection Membership 
+\begin{definition}
+  Collection Membership 
+  \hfill
+  \boxed{c \in C}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
@@ -2909,7 +2866,11 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{C_l \cong C_r}\ Collection Congruence 
+\begin{definition}
+  Collection Congruence 
+  \hfill
+  \boxed{C_l \cong C_r}
+  \\
   \begin{mathpar}
     \inferrule {
       \forall c .\ c \in C_l \iff c \in C_r
@@ -2920,686 +2881,149 @@ rely on analogous techniques.
 \end{definition}
 
 
-\begin{definition} \boxed{C \preceq C}
+\begin{definition} 
+  Collection Containment
+  \hfill
+  \boxed{C \subseteq C'}
+  \\
   \begin{mathpar}
     \inferrule {
+      \forall c .\ c \in C \implies c \in C'
     } {
-      C \preceq C 
-    }
-
-    \inferrule {
-      C \preceq C' 
-    } {
-      C \preceq C'\ c 
+      C \subseteq C'
     }
   \end{mathpar}
 \end{definition}
 
-% \begin{definition}\boxed{\text{union}(\Tau) = \tau}\ Collective Union
-%   \[\begin{array}{rclr}
-%     \text{union}(\epsilon)
-%     &=& 
-%     \J{BOT}
-%     & \C{empty} 
-%     \\
-
-%     \text{union}(\Tau\ \tau)
-%     &=& 
-%     \text{union}(\Tau) \J{|} \tau
-%     & \C{step} 
-%     \\
-%   \end{array}\]
-% \end{definition}
-
-% \begin{definition}\boxed{\text{inter}(\Tau) = \tau}\ Collective Intersection
-%   \[\begin{array}{rclr}
-%     \text{inter}(\epsilon)
-%     &=& 
-%     \J{TOP}
-%     & \C{empty} 
-%     \\
-
-%     \text{inter}(\Tau\ \tau)
-%     &=& 
-%     \text{inter}(\Tau) \J{\&} \tau
-%     & \C{step} 
-%     \\
-%   \end{array}\]
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails m <:^\sharp \alpha}\ Lower closed subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       m \in M
-%       \\
-%       m <: \alpha \in \Delta
-%     } {
-%       M, \Delta \entails  m <:^\sharp \alpha
-%     }
-
-%     % \inferrule {
-%     %   m' \in M
-%     %   \\
-%     %   M, \Delta \entails m <:^\sharp m' 
-%     %   \\
-%     %   m' <: \alpha \in \Delta
-%     % } {
-%     %   M, \Delta \entails  m <:^\sharp \alpha
-%     % }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \Delta <:^\sharp \alpha \slash \tau}\ Universal lower closed subtyping
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall m\ \tau .\ m <: \tau \in \Delta' \iff  M, \Delta \entails 
-%       m \in M
-%       \land
-%       m <: \alpha \in \Delta
-%       % m <:^\sharp \alpha
-%     } {
-%       M, \Delta \entails \Delta' <:^\sharp \alpha \slash \tau
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\sharp m}\ Upper closed subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       m \in M
-%       \\
-%       \alpha <: m \in \Delta
-%     } {
-%       M, \Delta \entails  \alpha <:^\sharp m 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau <:^\sharp \Delta}\ Universal upper closed subtyping
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall \tau\ m .\ \tau <: m \in \Delta' \iff  
-%       m \in M
-%       \land
-%       \alpha <: m \in \Delta
-% % M, \Delta \entails \alpha <:^\sharp m 
-%     } {
-%       M, \Delta \entails \alpha <:^\sharp \Delta' 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails M \lessdot \alpha}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \epsilon \lessdot \alpha
-%     }
-
-%     \inferrule {
-%       m \in M_0
-%       \\
-%       M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
-%       \\\\
-%       M_0, \Delta_0, \Delta_0 \entails M_2 \lessdot m 
-%     } {
-%       M_0, \Delta_0, \Delta_1 \ m<:\alpha 
-%       \entails M_1 \cup M_2 \ m \lessdot \alpha
-%     }
-
-%     \inferrule {
-%       \neg (\tau_l \in M_0 \land \tau_r = \alpha)
-%       \\\\
-%       M_0, \Delta_0, \Delta_1 \entails M_1 \lessdot \alpha
-%     } {
-%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r
-%       \entails M_1 \lessdot \alpha
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-
-% \begin{definition}\boxed{M, \Delta \entails \tau <:^\dagger \alpha}\ Lower transitive subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       \tau \notin M
-%       \\
-%       \tau <: \alpha \in \Delta 
-%     } {
-%       M, \Delta \entails \tau <:^\dagger \alpha
-%     }
-
-%     \inferrule {
-%       m \in M
-%       \\
-%       M, \Delta \entails \tau <:^\dagger m 
-%       \\
-%       m <: \alpha \in \Delta 
-%     } {
-%       M, \Delta \entails \tau <:^\dagger \alpha
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \Tau <:^\dagger \alpha}\ Universal lower transitive subtyping
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall \tau .\ \tau \in \Tau \iff  M, \Delta \entails \tau <:^\dagger \alpha
-%     } {
-%       M, \Delta \entails \Tau <:^\dagger \alpha
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\dagger \tau}\ Upper transitive subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       \tau \notin M
-%       \\
-%       \alpha <: \tau \in \Delta 
-%     } {
-%       M, \Delta \entails \alpha <:^\dagger \tau
-%     }
-
-%     \inferrule {
-%       m \in M
-%       \\
-%       \alpha <: m \in \Delta 
-%       \\
-%       M, \Delta \entails m <:^\dagger \tau 
-%     } {
-%       M, \Delta \entails \alpha <:^\dagger \tau 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha <:^\dagger \Tau}\ Universal upper transitive subtyping
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall \tau .\ \tau \in \Tau \iff  M, \Delta \entails \alpha <:^\dagger \Tau
-%     } {
-%       M, \Delta \entails \alpha <:^\dagger \Tau
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails \Tau \ll \alpha}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \epsilon \ll \alpha
-%     }
-
-%     \inferrule {
-%       \tau \notin M
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau<:\alpha \entails \Tau\ \tau \ll \alpha
-%     }
-
-%     \inferrule {
-%       m \in M
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \Tau_0 \ll \alpha
-%       \\
-%       M, \Delta_0, \Delta_0 \entails \Tau_1 \ll z 
-%     } {
-%       M, \Delta_0, \Delta_1 \ m<:\alpha \entails \Tau_0 \cup \Tau_1 \ll \alpha
-%     }
-
-%     \inferrule {
-%       \tau_r \neq \alpha
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \Tau \ll \alpha
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \Tau \ll \alpha
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot M}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
-%     }
-
-%     \inferrule {
-%       m \in M_0
-%       \\
-%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1 
-%       \\\\
-%       M_0, \Delta_0, \Delta_0 \entails m \lessdot M_2 
-%     } {
-%       M_0, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \lessdot M_1 \cup M_2\ m 
-%     }
-
-%     \inferrule {
-%       \neg (\tau_r \in M_0 \land \tau_l = \alpha)
-%       \\\\
-%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot M_1
-%     } {
-%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot M_1
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Tau}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \alpha \ll \epsilon
-%     }
-
-%     \inferrule {
-%       \tau \notin M
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
-%     } {
-%       M, \Delta_0, \Delta_1 \ \alpha<:\tau \entails \alpha \ll \Tau\ \tau
-%     }
-
-%     \inferrule {
-%       m \in M
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau_0
-%       \\
-%       M, \Delta_0, \Delta_0 \entails m \ll \Tau_1
-%     } {
-%       M, \Delta_0, \Delta_1 \ \alpha<:m \entails \alpha \ll \Tau_0 \cup \Tau_1
-%     }
-
-%     \inferrule {
-%       \tau_l \neq \alpha
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Tau
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Tau
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha \star \tau <: m}\ Relational transitive closed subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       \alpha \in \text{FTV}(\tau_l) 
-%       \\
-%       m \in M
-%     } {
-%       M, \Delta \entails \alpha \star \tau <: m 
-%     }
-
-%     \inferrule {
-%       \alpha \in \text{FTV}(\tau_l) 
-%       \\
-%       m \in M
-%       \\
-%       \tau <: m \in \Delta
-%       \\
-%       M, \Delta \entails m <:^\sharp m' 
-%     } {
-%       M, \Delta \entails \alpha \star \tau <: m' 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha \star \Delta}\ Universal relational transitive closed subtyping
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall \tau_l\ \tau_r .\ \tau_l <: \tau_r \in \Delta \iff  M, \Delta \entails \alpha \star \tau_l <: \tau_r
-%     } {
-%       M, \Delta \entails \alpha \star \Delta 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \lessdot \Delta}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \alpha \lessdot \epsilon
-%     }
-
-%     \inferrule {
-%       \alpha \in \text{FTV}(\tau)
-%       \\
-%       m_0 \in M_0
-%       \\
-%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2
-%       \\
-%       M_0, \Delta_0, \Delta_0 \entails m_0 \lessdot M_1 
-%     } {
-%       M_0, \Delta_0
-%       \entails
-%       \Delta_1 \ \tau<:m_0
-%       \entails
-%       \alpha 
-%       \lessdot 
-%       \Delta_2 \cup \widebar{\tau<:m_1}^{m_1 \in M_1}\ \tau<:m_0
-%     }
-
-%     \inferrule {
-%       \neg (\tau_r \in M_0 \land \alpha \in \text{FTV}(\tau_l))
-%       \\
-%       M_0, \Delta_0, \Delta_1 \entails \alpha \lessdot \Delta_2 
-%     } {
-%       M_0, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \lessdot \Delta_2
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha \dagger \tau <: \tau}\ Relational subtyping 
-%   \begin{mathpar}
-%     \inferrule {
-%       \alpha \neq \tau_l
-%       \\
-%       \alpha \in \text{FTV}(\tau_l) 
-%     } {
-%       \Delta \entails \alpha \dagger \tau_l <: \tau_r 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta \entails \alpha \slash \tau \dagger \Delta}\ Relational substitution 
-%   \begin{mathpar}
-%     \inferrule {
-%       \forall \tau_l\ \tau_r .\ \tau_l[\alpha\slash\tau] <: \tau_r \in \Delta' \iff  M, \Delta \entails \alpha \dagger \tau_l <: \tau_r
-%     } {
-%       M, \Delta \entails \alpha \slash \tau \dagger \Delta' 
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{M, \Delta, \Delta \entails \alpha \ll \Delta}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       M, \Delta, \epsilon \entails \alpha \ll \epsilon
-%     }
-
-%     \inferrule {
-%       \alpha \in \text{FTV}(\tau_l)
-%       \\
-%       \tau \notin M 
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2 \ \tau_l<:\tau_r
-%     }
-
-%     \inferrule {
-%       \alpha \in \text{FTV}(\tau)
-%       \\
-%       m \in M 
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
-%       \\\\
-%       M, \Delta_0, \Delta_0 \entails z \ll \Delta_3 
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau<:z \entails \alpha \ll \Delta_2 \cup \Delta_3
-%     }
-
-%     \inferrule {
-%       \alpha \notin \text{FTV}(\tau_l)
-%       \\
-%       M, \Delta_0, \Delta_1 \entails \alpha \ll \Delta_2
-%     } {
-%       M, \Delta_0, \Delta_1 \ \tau_l<:\tau_r \entails \alpha \ll \Delta_2
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Subtyping Solving (Inductive) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{definition}\boxed{M, \Delta, \Alpha \entails \vec{\delta}}
+\begin{definition}
+  Influential Filter 
+  \hfill
+  \boxed{\Delta \entails \vec{\alpha} \pitchfork \Delta}\ 
+  \\
   \begin{mathpar}
     \inferrule {
     } {
-      M, \Delta, \epsilon \entails \epsilon
+      \epsilon \entails \vec{\alpha} \pitchfork \epsilon 
     }
 
     \inferrule {
-      \alpha \notin M 
-      \\
-      \forall \tau .\ \tau<:\alpha \notin \Delta
-      \\
-      M, \Delta, A \entails \vec{\delta}
-    } {
-      M, \Delta, A \ \alpha \entails \vec{\delta}
-    }
-
-    \inferrule {
-      \alpha \notin M 
-      \\
-      \exists \tau .\  \tau<:\alpha \in \Delta
-      \\
-      M, \Delta, \Alpha \entails \vec{\delta}
-    } {
-      M, \Delta, \Alpha\ \alpha 
-      \entails 
-      \vec{\delta}\ \alpha \slash \J{|}(\widebar{\ \tau\ }^{\tau<:\alpha \in \Delta})
-    }
-  \end{mathpar}
-\end{definition}
-
-% \begin{definition}
-% \boxed{\vec{\alpha} \entails \text{GFP}[\alpha]\vec{\Omega} \Rightarrow \alpha \rightarrow \alpha \fallingdotseq \text{LFP}[\alpha]\vec{\tau}}
-% \ Fixpoint Duality
-% \label{def:fixpoint_duality}
-
-%   % NOTE: read "z, \- a0 Circle W  . a1 -> a2 --> T" as 
-%   % - forall x y, (LFP[a] intersect vec{W}: a1 -> a2) <: (x -> y) iff (x, y) <: union of vec{T}
-%   \begin{mathpar}
-%     \inferrule {
-%     } {
-%       \vec{\alpha}_f \entails 
-%       \text{GFP}[\alpha_{h^+}] \epsilon \Rightarrow \alpha_l \rightarrow \alpha_r 
-%       \fallingdotseq 
-%       \text{LFP}[\alpha_{h^-}]\epsilon 
-%     }
-
-%     \inferrule {
-%       \vec{\alpha}_f \entails 
-%       \text{GFP}[\alpha_{\nu}] \vec{\Omega} \Rightarrow \alpha_l \rightarrow \alpha_r
-%       \fallingdotseq 
-%       \text{LFP}[\alpha_{\mu}]\vec{\tau}
-%       \\\\
-%       \Delta_\nu \entails \alpha_{\nu} \subtypes \vec{\tau}_\nu
-%       \\
-%       \Delta_\nu \entails \alpha_l \subtypes \vec{\tau}_l 
-%       \\
-%       \Delta_\nu \entails \vec{\tau}_r \subtypes \alpha_r
-%       \\\\
-%       \vec{\tau}_\nu \fallingdotseq \vec{\tau}_\mu
-%       \\
-%       \text{union}(\vec{\tau}_\mu) \subtypes \alpha_\mu \given \Delta_\mu
-%       \\\\
-%       \vec{\alpha}_f\ \alpha_{\mu}, \vec{\alpha}_c, \Delta_\nu\ \Delta_\mu \entails \J{\&$(\vec{\tau}_l)$*|$(\vec{\tau}_r)$} \cong^{-} \tau
-%       % TODO: should closeds be included using universal constraint? 
-%     } {
-%       \vec{\alpha}_f \entails 
-%       \text{GFP}[\alpha_{\nu}]\vec{\Omega}\ \left< \vec{\alpha}_c,\Delta_\nu \right> \Rightarrow \alpha_l \rightarrow \alpha_r 
-%       \fallingdotseq 
-%       \text{LFP}[\alpha_{\mu}] \vec{\tau}\ \tau
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-% \begin{definition}\boxed{\vec{\tau} \fallingdotseq \vec{\tau} }\ Pair Duality 
-% \label{def:pair_duality}
-%   \begin{mathpar}
-
-%     \inferrule {
-%     } {
-%       \epsilon \fallingdotseq \epsilon 
-%     }
-
-%     \inferrule {
-%     } {
-%       \vec{\tau}_\nu\ (\tau_l \J{->} \tau_r) \fallingdotseq \vec{\tau}_\mu\ (\tau_l \J{*} \tau_r)
-%     }
-%   \end{mathpar}
-% \end{definition}
-
-\begin{definition}\boxed{\Delta \entails \Alpha \pitchfork \Delta}\ Influential Filter 
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \epsilon \entails \Alpha \pitchfork \epsilon 
-    }
-
-    \inferrule {
-      \alpha \in \Alpha  
+      \alpha \in \vec{\alpha}  
       \\
       \alpha \in \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
       \\
-      \Delta \entails \Alpha \pitchfork \Delta'
+      \Delta \entails \vec{\alpha} \pitchfork \Delta'
     } {
-      \Delta \ \tau_l<:\tau_r \entails N \pitchfork \Delta' \ \tau_l<:\tau_r
+      \Delta \ \tau_l<:\tau_r \entails \vec{\alpha} \pitchfork \Delta' \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in \Alpha \implies \alpha \notin \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in \vec{\alpha} \implies \alpha \notin \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
       \\
-      \Delta \entails \Alpha \pitchfork \Delta'
+      \Delta \entails \vec{\alpha} \pitchfork \Delta'
     } {
-      \Delta \ \tau_l<:\tau_r \entails \Alpha \pitchfork \Delta'
+      \Delta \J{;} \tau_l \J{<:} \tau_r \entails \vec{\alpha} \pitchfork \Delta'
     }
   \end{mathpar}
 \end{definition}
 
-\begin{definition}\boxed{\Delta \entails \Tau \subtypes \alpha}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \epsilon \entails \epsilon \subtypes \alpha
-    }
-
-    \inferrule {
-      \Delta \entails \Tau \subtypes \alpha
-    } {
-      \Delta \ \tau<:\alpha \entails \Tau\ \tau \subtypes \alpha
-    }
-
-    \inferrule {
-      \tau_r \neq \alpha
-      \\
-      \Delta \entails \Tau \subtypes \alpha
-    } {
-      \Delta \ \tau_l<:\tau_r \entails \Tau \subtypes \alpha
-    }
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}\boxed{\Delta \entails \alpha \subtypes \Tau}
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \epsilon \entails \alpha \subtypes \epsilon
-    }
-
-    \inferrule {
-      \Delta \entails \alpha \subtypes \Tau
-    } {
-      \Delta \ \alpha<:\tau \entails \alpha \subtypes \Tau\ \tau
-    }
-
-    \inferrule {
-      \tau_l \neq \alpha
-      \\
-      \Delta \entails \alpha \subtypes \Tau
-    } {
-      \Delta \ \tau_l<:\tau_r \entails \alpha \subtypes \Tau
-    }
-  \end{mathpar}
-\end{definition}
-
-
-
-\begin{definition}\boxed{\text{outer}(\pm) = \J{ALL}|\J{EXI}}
+\begin{definition}
+  Outer
+  \hfill
+  \boxed{\text{outer}(\pm) = \J{ALL}|\J{EXI}}
+  \\
   \[\begin{array}{rclr}
     \\
     \text{outer}(+) 
     &=& 
     \J{EXI} 
-    & \C{positive} 
+    % & \C{positive} 
     \\
     \text{outer}(-) 
     &=& 
     \J{ALL} 
-    & \C{negative} 
+    % & \C{negative} 
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{inner}(\pm) = \J{ALL}|\J{EXI}}
+\begin{definition}
+  Inner
+  \hfill
+  \boxed{\text{inner}(\pm) = \J{ALL}|\J{EXI}}
+  \\
   \[\begin{array}{rclr}
     \\
     \text{inner}(+) 
     &=& 
     \J{ALL} 
-    & \C{positive} 
+    % & \C{positive} 
     \\
     \text{inner}(-) 
     &=& 
     \J{EXI} 
-    & \C{negative} 
+    % & \C{negative} 
   \end{array}\]
 \end{definition}
 
-\begin{definition}\boxed{\text{quantify}^{\pm}(\Alpha, \Delta, \Alpha, \Delta, \tau) = \tau}
+\begin{definition}
+  Wrap
+  \hfill
+  \boxed{\text{wrap}^{\pm}(\vec{\alpha}, \Delta, \vec{\alpha}, \Delta, \tau) = \tau}
+  \\
   \[\begin{array}{rclr}
-    \text{quantify}^{\pm}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
+    \text{wrap}^{\pm}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
     &=& 
     \tau
     \\
-    \text{quantify}^{\pm}(\epsilon, \epsilon, \Alpha_i, \Delta_i, \tau) 
+    \text{wrap}^{\pm}(\epsilon, \epsilon, \vec{\alpha}_i, \Delta_i, \tau) 
     &=& 
-    \text{inner}(\pm)\J{[}\Alpha_i\J{ }\Delta_i\J{]}\tau
+    \text{inner}(\pm)\J{[}\vec{\alpha}_i\J{ }\Delta_i\J{]}\tau
     \\
-    \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \epsilon, \epsilon, \tau) 
+    \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \epsilon, \epsilon, \tau) 
     &=& 
-    \text{outer}(\pm)\J{[}\Alpha_o\J{ }\Delta_o\J{]}\tau
+    \text{outer}(\pm)\J{[}\vec{\alpha}_o\J{ }\Delta_o\J{]}\tau
     \\
-    \text{quantify}^{\pm}(\Alpha_o, \Delta_o, \Alpha_i, \Delta_i, \tau) 
+    \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) 
     &=& 
-    \text{outer}(\pm)\J{[}\Alpha_o\J{ }\Delta_o\J{]}
-    \text{inner}(\pm)\J{[}\Alpha_i\J{ }\Delta_i\J{]}
+    \text{outer}(\pm)\J{[}\vec{\alpha}_o\J{ }\Delta_o\J{]}
+    \text{inner}(\pm)\J{[}\vec{\alpha}_i\J{ }\Delta_i\J{]}
     \tau
   \end{array}\]
 \end{definition}
 
 
-\begin{definition}\boxed{\Alpha, \Delta \entails \Delta \wr \Delta}
+\begin{definition}
+  Partition
+  \hfill
+  \boxed{\vec{\alpha}_\ignore, \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i}
+  \\
   \begin{mathpar}
     \inferrule {
     } {
-      \Alpha_z, \epsilon \entails \epsilon \wr \epsilon 
+      \vec{\alpha}, \epsilon \entails \epsilon \wr \epsilon 
     }
 
     \inferrule {
-      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \Alpha_q
+      \TODO{...}
+      \\\\
+      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) = \vec{\alpha}_q
       \\
-      \forall \alpha .\ \alpha \in \Alpha_q \implies \alpha \in \Alpha_z
+      \alpha \in \vec{\alpha}_q \\ \alpha \notin \vec{\alpha}
       \\
-      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \Alpha_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \ \tau_l<:\tau_r \wr \Delta_i 
+      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta \J{;} \tau_l \J{<:}\tau_r \entails \Delta_o \wr \Delta_i \J{;} \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
-      \text{FTV}(\tau_l)\ \text{FTV}(\tau_r) = \Alpha_q
+      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) = \vec{\alpha}_q
       \\
-      \alpha \in \Alpha_q \\ \alpha \notin \Alpha_z
+      \forall \alpha .\ \alpha \in \vec{\alpha}_q \implies \alpha \in \vec{\alpha}
       \\
-      \Alpha_z, \Delta \entails \Delta_o \wr \Delta_i 
+      \vec{\alpha}, \Delta \entails \Delta_o \wr \Delta_i 
     } {
-      \Alpha_z, \Delta \ \tau_l<:\tau_r \entails \Delta_o \wr \Delta_i \ \tau_l<:\tau_r
+      \vec{\alpha}_\ignore, \vec{\alpha}, \Delta \J{;} \tau_l \J{<:}\tau_r \entails \Delta_o \J{;} \tau_l \J{<:} \tau_r \wr \Delta_i 
     }
+
   \end{mathpar}
 \end{definition}
 
