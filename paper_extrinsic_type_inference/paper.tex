@@ -1660,8 +1660,29 @@ in the appendix (Section \ref{sect:appendix}).
 \end{property}
 
 \noindent
-Packaging $\text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'$
-\TODO{...}
+Packaging ($\text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\pi}) = \tau'$)
+constructs a type $\tau'$ from the colonies $\vec{\pi}$
+such that for each colony $(\vec{\alpha}, \Delta, \tau)$,
+it binds the variables of the type $\tau$ within
+some combination of 
+indexed unions and/or indexed intersections,
+where indexes are qualified by the constraints 
+of the subtyping environment $\Delta$.
+The choice of binding in an indexed union or indexed intersection is 
+determined by whether the variable is open ($\alpha \not\in \vec{\alpha}$)
+or closed ($\alpha \in \vec{\alpha}$)
+and whether the interpretation is 
+positive ($\text{pack}^+(...)$) or negative ($\text{pack}^-(...)$).
+For the positive form, the construction (including how the closed variables are bound)
+must result in a type $\tau'$ that is weaker than the type of every colony in every interpretation
+of the closed variables $\vec{\delta}'$, for some interpretation of the open variables $\vec{\delta}$  
+.
+For the negative form, the construction must result in a type $\tau'$
+that is stronger than the type of every colony in every interpretation
+of the closed variables $\vec{\delta}'$, for some interpretation of the open variables $\vec{\delta}$  
+.
+
+The interested reader can find the actual the definition of packaging in the appendix (Section \ref{sect:appendix}).
 
 \begin{property} 
   \label{def:proof_subtyping_soundness}
@@ -2683,9 +2704,6 @@ rely on analogous techniques.
       \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
     }
   \end{mathpar}
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta' \satisfies \alpha <: \tau$}
-
-  \TODO{soundess: $\llbracket \Delta, \alpha \rrbracket^- \subtypes (\Delta', \tau) \implies \Delta \satisfies \Delta'$}
 \end{definition}
 
 \TODO{...}
