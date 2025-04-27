@@ -127,7 +127,7 @@ having types specified at constructor declarations and relying on type inference
 However, one of the drawbacks of intrinsically typed languages is that they prevent reusing of
 constructors in contexts that are weaker than or incomparable to their declared spaces. 
 For instance, if a programmer declares data constructors \emph{cons} and \emph{nil} to belong to type list,
-and \emph{node} and \emph{empty} to belong to type tree, then it is impossible to construct function
+and \emph{node} and \emph{empty} to belong to type tree, then it is impossible to construct a function
 that accepts either a list or a tree, or returns either a list or a tree. The only option would be to define
 a new datatype that contains isomorphs of all of the above the data constructors, which would 
 likely add overhead to development, compilation, and execution.
@@ -470,7 +470,71 @@ every type contained within the type of even natural numbers is also
 contained within the type of natural numbers.
 In followup work, we will extend this inductive reasoning to handle inductive relations. 
 
+\Par{Multi-specialization} 
+Functions on lists can be generic, in that they may be independent of the item values, as in $\J{repeat}$,
+or they may factor out the details that depend on item values, as in $\J{sort}$. 
+\[
+  \begin{array}[t]{@{} l}
+    \J{let sort : ALL[X] (X*X->} \text{bool} \J{) -> }\text{list}(\J{X}) \J{ -> } \text{list}(\J{X}) \J{ = }
+    \\
+    \J{? compare => ...}
+  \end{array}
+\]
+\noindent
+The notation $\text{bool}$ and $\text{list}(\J{X})$ are meta-language terms representing types.
+The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
+In intrinsically typed languages, the programmer would need a different specialization for every predefined
+datatype (in ML) or class hierarchy (in Java). 
 
+\[
+  \begin{array}[t]{@{} l}
+    \J{let scalarSort = sort(scalarCompare) in}
+    \\
+    \J{let lexicoSort = sort(lexicoCompare) in} 
+    \\
+    \J{...} 
+  \end{array}
+\]
+
+\noindent
+Having many different specializations burdens the client of
+the generic function to know many different names for roughly the same behavior and can obscure the meaning
+of code at the call site. 
+Untyped languages can bypass this rigidity found in extrinsically typed by specializing in multiple ways.
+
+\[
+  \begin{array}[t]{@{} l}
+    ...
+    \\
+    \J{let standardCompare = (? a,b =>} 
+    \\
+    \I \J{if isNat(a) and isNat(b) then} 
+    \\
+    \I\I \J{scalarCompare(a,b)}
+    \\
+    \I \J{else assert isNatList(a) and isNatList(b) then} 
+    \\
+    \I\I \J{lexicoCompare(a,b)}
+    \\
+    \J{) in} 
+    \\
+    \J{let standardSort : (TOP}
+    \\
+    \I \J{\& (}\text{nat}\J{*}\text{nat}\J{->}\text{bool} \J{) -> }\text{list}(\text{nat}) \J{ -> } \text{list}(\text{nat})
+    \\
+    \I \J{\& (}\text{list}(\text{nat})\J{*}\text{list}(\text{nat})\J{->}\text{bool} \J{) -> }\text{list}(\text{list}(\text{nat})) \J{ -> } \text{list}(\text{list}(\text{nat}))
+    \\
+    \J{) = sort(standardCompare) in}
+    \\
+    \J{...} 
+  \end{array}
+\]
+
+\noindent
+Some intrinsically typed languages also have ways to perform multi-specialization, but they introduce additional
+complexity, since data constructors can't be mixed in arbitrary ways. In Lean and Haskell, multi-specialization
+is achieved via type classes \cite{}. 
+The notion of type classes, among other things, translates the notion of pattern matching to the syntactic category of types.
 
 \section{Structures}
 \label{sec:structures}
@@ -568,6 +632,22 @@ although possibly weaker than the inferred type, is sufficient for the continuin
           \I \J{? <true> @ => } e_t
           \\
           \I \J{? <false> @ => } e_f
+          \\
+        \J{)}
+      \end{array}
+      \\
+      \llbracket \J{assert}\ e_c\ \J{then}\ e_t \rrbracket^\square &= 
+      \begin{array}[t]{@{} l}
+        e_c \J{ |> (? <true> @ => } e_t \J{)}
+      \end{array}
+      \\
+      \llbracket e_l\ \J{and}\ e_r \rrbracket^\square &= 
+      \begin{array}[t]{@{} l}
+        e_l \J{ |> (}
+          \\
+          \I \J{? <true> @ => } e_r
+          \\
+          \I \J{? <false> @ => <false> @}
           \\
         \J{)}
       \end{array}
