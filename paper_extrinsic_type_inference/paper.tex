@@ -2579,7 +2579,6 @@ rely on analogous techniques.
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
-        \ \land
         \\
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
       \end{array}
@@ -2592,7 +2591,6 @@ rely on analogous techniques.
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-        \ \land
         \\
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
       \end{array}
@@ -2605,7 +2603,6 @@ rely on analogous techniques.
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-        \ \land 
         \\
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
       \end{array}
@@ -2618,7 +2615,6 @@ rely on analogous techniques.
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
-        \ \land
         \\
         \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
       \end{array}
@@ -2631,7 +2627,6 @@ rely on analogous techniques.
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-        \ \land
         \\
         \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
       \end{array}
@@ -2664,23 +2659,28 @@ rely on analogous techniques.
     \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
   }
   \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm = (\Delta', \epsilon')
-    }
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm
+      &\ =\ & 
+      (\Delta', \epsilon')
+      && 
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm = (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q' \J{;} \tau_l' \J{<:} \tau_r')
-    }
+      \\
 
-  \end{mathpar}
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm
+      &\ =\ & 
+      (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q' \J{;} \tau_l' \J{<:} \tau_r')
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
+      \end{array}
+  \end{array}
+  \]
 \end{definition} 
 
 \TODO{...}
@@ -2694,15 +2694,21 @@ rely on analogous techniques.
     \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
   }
   \\
-  \begin{mathpar}
-    \inferrule {
-      \forall \tau_l\ \tau_r .\ \J{;} \tau_l \J{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\ignore, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm
+      &\ =\ & 
+      (\Delta', \tau)
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        (\forall \tau_l\ \tau_r .\ \J{;} \tau_l \J{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\ignore, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r)
+        \\
+        \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
+      \end{array}
+
       \\
-      \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
-    }
-  \end{mathpar}
+  \end{array}
+  \]
 \end{definition}
 
 \TODO{...}
@@ -2768,45 +2774,60 @@ rely on analogous techniques.
     \llbracket\Delta, \alpha \rrbracket^\pm = (\Delta, \tau)
   }
   \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \llbracket \epsilon, \alpha \rrbracket^- = (\epsilon, \J{TOP})
-    }
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
 
-    \inferrule {
+      \llbracket \epsilon, \alpha \rrbracket^-
+      &\ =\ & 
+      (\epsilon, \J{TOP})
+
+      \\
+
+      \llbracket \Delta \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- 
+      &\ =\ & 
+      (\Delta', \tau' \J{\&} \tau)
+      &\text{if}& 
       \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
-    } {
-      \llbracket \Delta \J{;}\alpha  \J{<:} \tau, \alpha \rrbracket^- = (\Delta', \tau' \J{\&} \tau)
-    }
 
-    \inferrule {
-      \alpha \neq \tau_l
       \\
-      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
-    } {
-      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
-    }
-    \\
-    \inferrule {
-    } {
-      \llbracket \epsilon, \alpha \rrbracket^+ = (\epsilon, \J{BOT})
-    }
 
-    \inferrule {
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^- 
+      &\ =\ & 
+      (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \alpha \neq \tau_l
+        \\
+        \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
+      \end{array}
+
+      \\
+
+      \llbracket \epsilon, \alpha \rrbracket^+ 
+      &\ =\ & 
+      (\epsilon, \J{BOT})
+
+      \\
+
+      \llbracket \Delta \J{;} \tau \J{<:} \alpha  , \alpha \rrbracket^+ 
+      &\ =\ & 
+      (\Delta', \tau' \J{|} \tau)
+      &\text{if}& 
       \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau')
-    } {
-      \llbracket \Delta \J{;} \tau \J{<:} \alpha  , \alpha \rrbracket^+ = (\Delta', \tau' \J{|} \tau)
-    }
 
-    \inferrule {
-      \alpha \neq \tau_r
       \\
-      \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
-    } {
-      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ = (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
-    }
-  \end{mathpar}
+
+      \llbracket \Delta \J{;}\tau_l \J{<:} \tau_r, \alpha \rrbracket^+ 
+      &\ =\ & 
+      (\Delta' \J{;}\tau_l \J{<:} \tau_r, \tau)
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \alpha \neq \tau_r
+        \\
+        \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
+      \end{array}
+  \end{array}
+  \]
 \end{definition}
 
 \TODO{...}
@@ -2817,23 +2838,25 @@ rely on analogous techniques.
   \hfill
   \boxed{\text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'} 
   \\
-  \begin{mathpar}
-    \inferrule {
-      \text{FTV}(\tau) = \vec{\alpha}_p
-      \\
-      \vec{\alpha}_\ignore \cup \vec{\alpha} \cup \vec{\alpha}_p \entails \Delta \dashrightarrow \Delta' 
-      \\
-      \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta' \rightrightarrows \Delta_o, \Delta_i 
-      \\\\
-      (\text{FTV}(\Delta) \cup \vec{\alpha}_p) \cap \vec{\alpha} = \vec{\alpha}_o 
-      \\
-      \text{FTV}(\Delta_i) \cup \vec{\alpha}_p \backslash \vec{\alpha} \backslash \vec{\alpha}_\ignore = \vec{\alpha}_i 
-      \\
-      \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) = \tau'
-    } {
-      \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
-    }
-  \end{mathpar}
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
+      \text{pack}^\pm(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) 
+      &\ =\ & 
+      \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau)
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \text{FTV}(\tau) = \vec{\alpha}_p
+        \\
+        \vec{\alpha}_\ignore \cup \vec{\alpha} \cup \vec{\alpha}_p \entails \Delta \dashrightarrow \Delta' 
+        \\
+        \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta' \rightrightarrows \Delta_o, \Delta_i 
+        \\
+        (\text{FTV}(\Delta) \cup \vec{\alpha}_p) \cap \vec{\alpha} = \vec{\alpha}_o 
+        \\
+        \text{FTV}(\Delta_i) \cup \vec{\alpha}_p \backslash \vec{\alpha} \backslash \vec{\alpha}_\ignore = \vec{\alpha}_i 
+      \end{array}
+  \end{array}
+  \]
 \end{definition}
 
 
@@ -2843,33 +2866,43 @@ rely on analogous techniques.
   \hfill
   \boxed{\text{pack}^\pm(\vec{\alpha} \entails \vec{\pi}) = \vec{\tau}}\ 
   \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \text{pack}^+(\vec{\alpha}_\ignore \entails \epsilon) = \J{TOP} 
-    }
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \epsilon) 
+      &\ =\ & 
+      \J{TOP} 
 
-    \inferrule {
-      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
       \\
-      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
-    } {
-      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau)) =  \vec{\tau} \J{\&} \tau' 
-    }
 
-    \inferrule {
-    } {
-      \text{pack}^-(\vec{\alpha}_\ignore \entails \epsilon) = \J{BOT} 
-    }
+      \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau)) 
+      &\ =\ & 
+      \vec{\tau} \J{\&} \tau' 
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
+        \\
+        \text{pack}^+(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
+      \end{array}
 
-    \inferrule {
-      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
       \\
-      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
-    } {
-      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau)) =  \vec{\tau} \J{|} \tau' 
-    }
-  \end{mathpar}
+
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \epsilon) 
+      &\ =\ & 
+      \J{BOT} 
+
+      \\
+
+      \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}\ (\vec{\alpha}, \Delta, \tau))
+      &\ =\ & 
+      \vec{\tau} \J{|} \tau' 
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\pi}) = \vec{\tau} 
+        \\
+        \text{pack}^-(\vec{\alpha}_\ignore \entails \vec{\alpha}, \Delta, \tau) = \tau'
+      \end{array}
+  \end{array}
+  \]
 \end{definition}
 
 
@@ -3032,15 +3065,15 @@ rely on analogous techniques.
   \hfill
   \boxed{\text{outer}(\pm) = \J{ALL}|\J{EXI}}
   \\
-  \[\begin{array}{rclr}
+  \[\begin{array}[t]{r@{}c@{}lcl}
     \\
     \text{outer}(+) 
-    &=& 
+    &\ =\ & 
     \J{EXI} 
     % & \C{positive} 
     \\
     \text{outer}(-) 
-    &=& 
+    &\ =\ & 
     \J{ALL} 
     % & \C{negative} 
   \end{array}\]
@@ -3051,15 +3084,15 @@ rely on analogous techniques.
   \hfill
   \boxed{\text{inner}(\pm) = \J{ALL}|\J{EXI}}
   \\
-  \[\begin{array}{rclr}
+  \[\begin{array}[t]{r@{}c@{}lcl}
     \\
     \text{inner}(+) 
-    &=& 
+    &\ =\ & 
     \J{ALL} 
     % & \C{positive} 
     \\
     \text{inner}(-) 
-    &=& 
+    &\ =\ & 
     \J{EXI} 
     % & \C{negative} 
   \end{array}\]
@@ -3070,21 +3103,22 @@ rely on analogous techniques.
   \hfill
   \boxed{\text{wrap}^{\pm}(\vec{\alpha}, \Delta, \vec{\alpha}, \Delta, \tau) = \tau}
   \\
-  \[\begin{array}{rclr}
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
     \text{wrap}^{\pm}(\epsilon, \epsilon, \epsilon, \epsilon, \tau) 
-    &=& 
+    &\ =\ & 
     \tau
     \\
     \text{wrap}^{\pm}(\epsilon, \epsilon, \vec{\alpha}_i, \Delta_i, \tau) 
-    &=& 
+    &\ =\ & 
     \text{inner}(\pm)\J{[}\vec{\alpha}_i\J{ }\Delta_i\J{]}\tau
     \\
     \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \epsilon, \epsilon, \tau) 
-    &=& 
+    &\ =\ & 
     \text{outer}(\pm)\J{[}\vec{\alpha}_o\J{ }\Delta_o\J{]}\tau
     \\
     \text{wrap}^{\pm}(\vec{\alpha}_o, \Delta_o, \vec{\alpha}_i, \Delta_i, \tau) 
-    &=& 
+    &\ =\ & 
     \text{outer}(\pm)\J{[}\vec{\alpha}_o\J{ }\Delta_o\J{]}
     \text{inner}(\pm)\J{[}\vec{\alpha}_i\J{ }\Delta_i\J{]}
     \tau
