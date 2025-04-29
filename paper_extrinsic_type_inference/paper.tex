@@ -2541,95 +2541,119 @@ rely on analogous techniques.
     \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
   }
   \\
-  \begin{mathpar}
-    \inferrule {
-      \alpha \notin \vec{\alpha}_\ignore
+  \[
+  \begin{array}[t]{r@{}c@{}lcl}
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm 
+      &\ =\ & 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm
+      &\text{if}& 
+      \alpha \notin \vec{\alpha}_\ignore \land \alpha \notin \vec{\alpha}_\closed
+
       \\
-      \alpha \notin \vec{\alpha}_\closed
+
+      &&
+      (\Delta, \alpha)
+      &\text{if}&
+      \alpha \in \vec{\alpha}_\ignore \lor \alpha \in \vec{\alpha}_\closed
+
       \\
-      \llbracket \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
-    }
 
-    \inferrule {
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{@} \rrbracket^\pm = (\Delta, \J{@})
-    }
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{@} \rrbracket^\pm 
+      &\ =\ & 
+      (\Delta, \J{@})
+      &&
 
-    \inferrule {
+      \\
+
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm
+      &\ =\ & 
+      (\Delta', \J{<}l\J{>}\tau')
+      &\text{if}& 
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm = (\Delta', \J{<}l\J{>}\tau')
-    }
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, l\J{->}\tau \rrbracket^\pm = (\Delta', l\J{->}\tau')
-    }
+      \\
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{->}\tau_r')
-    }
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm 
+      &\ =\ & 
+      (\Delta_l \cap \Delta_r, \tau_l'\J{->}\tau_r')
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
+        \ \land
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
+      \end{array}
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{|}\tau_r')
-    }
+      \\
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
-    } {
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm
+      &\ =\ & 
+      (\Delta_l \cap \Delta_r, \tau_l'\J{|}\tau_r')
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \ \land
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+      \end{array}
+
+      \\
+
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm 
+      &\ =\ & 
+      (\Delta_l \cap \Delta_r, \tau_l'\J{\&}\tau_r')
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \ \land 
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+      \end{array}
+
+      \\
+
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{EXI[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
-      = 
+      &\ =\ & 
       (\Delta' \cap \Delta'', \J{EXI[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
-    }
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+        \ \land
+        \\
+        \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+      \end{array}
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
-      = 
-      (\Delta', \J{LFP[}\alpha \J{]}\tau')
-    }
+      \\
 
-    \\
-
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
-    } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm = (\Delta_l \cap \Delta_r, \tau_l'\J{\&}\tau_r')
-    }
-
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
-      \\\\
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
-    } {
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{ALL[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
-      = 
+      &\ =\ & 
       (\Delta' \cap \Delta'', \J{ALL[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
-    }
+      &\text{if}& 
+      \begin{array}[t]{@{}l}
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \ \land
+        \\
+        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+      \end{array}
 
-    \inferrule {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
-    } {
+      \\
+
       \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \typdiff \eta \rrbracket^\pm 
-      = (\Delta', \tau' \typdiff \eta)
-    }
-  \end{mathpar}
+      &\ =\ & 
+      (\Delta', \tau' \typdiff \eta)
+      &\text{if}& 
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+
+      \\
+
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
+      &\ =\ & 
+      (\Delta', \J{LFP[}\alpha \J{]}\tau')
+      &\text{if}& 
+      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
+      \\
+  \end{array}
+  \]
 \end{definition}
 
 \begin{definition} 
@@ -2667,7 +2691,7 @@ rely on analogous techniques.
   Pruning Interpretation 
   \hfill
   \boxed{
-    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
   }
   \\
   \begin{mathpar}
@@ -2676,7 +2700,7 @@ rely on analogous techniques.
       \\
       \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
     } {
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
     }
   \end{mathpar}
 \end{definition}
