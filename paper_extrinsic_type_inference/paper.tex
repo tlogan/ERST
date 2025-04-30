@@ -1215,7 +1215,7 @@ aims to prove the validity of typing directly by including elimination rules.
       \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
       \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
-      \vec{\sigma} \satisfies \Gamma \implies
+      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies \Gamma \implies
       \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
     }
   \end{mathpar}
@@ -3156,6 +3156,149 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
+
+\begin{theorem}
+  \label{theorem:typing_environment_soundness}
+  Typing Environment Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \vec{\delta}, \vec{\sigma} \satisfies \Gamma
+    } {
+      x:\tau \in \Gamma
+      \implies
+      \vec{\delta} \satisfies x[\vec{\sigma}] \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
+  \label{theorem:proof_typing_soundness}
+  Proof Typing Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
+    } {
+      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
+      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies \Gamma \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+  
+We prove proof typing soundness using induction.
+In the case of $\Gamma \entails \J{@} \hastype \J{@} \given \Omega$,
+we derive the conclusion using the definition of model typing (Def. \ref{def:model_typing}).
+In the case of $\Gamma \entails x \hastype \tau \given \Omega$,
+we derive the conclusion using the theorem of typing environment soundness (Theorem \ref{theorem:typing_environment_soundness}).
+$\square$
+
+
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Gamma \entails \J{@} \hastype \J{@} \given \Omega 
+    }
+
+    \inferrule {
+      x:\tau \in \Gamma
+    } {
+      \Gamma \entails x \hastype \tau \given \Omega 
+    }
+
+    \inferrule {
+    } {
+      \Gamma \entails \epsilon \hastype \J{TOP} \given \Omega
+    }
+
+    \inferrule {
+      \Gamma \entails \vec{r} \hastype \tau \given \Omega 
+      \\\\
+      \Omega \preceq \Omega'
+      \\
+      \Gamma \entails e \hastype \tau' \given \Omega' 
+    } {
+      \Gamma \entails \vec{r} \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') \given \Omega' 
+    }
+
+    \inferrule {
+      \exists \vec{\eta}.\ \vec{\alpha}, \Delta, \Gamma \entails \vec{f} \liftfun \vec{\pi} \sim \vec{\eta} 
+      \\\\
+      \text{pack}^+(\text{FTV}(\Gamma)\ \vec{\alpha} \entails \vec{\pi}) = \tau 
+    } {
+      \Gamma \entails \vec{f} \hastype \tau \given \vec{\alpha}, \Delta
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+      \\\\
+      \Omega \preceq \Omega'
+      \\
+      \tau \subtypes  \J{<} l \J{>} \alpha \given \Omega' 
+    } {
+      \Gamma \entails e\J{.}l \hastype \alpha \given \Omega'
+    }
+
+    \inferrule {
+      \Gamma \entails e_f \hastype \tau_f \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
+      \\\\
+      \Omega' \preceq \Omega''
+      \\
+      \tau_f \subtypes \tau_a\J{->}\alpha \given \Omega'' 
+    } {
+      \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Omega''
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \tau \given \Omega 
+      \\
+      \Omega \preceq \Omega'
+      \\
+      \tau \subtypes \tau_a \given \Omega' 
+      \\\\
+      \Omega' \preceq \Omega''
+      \\
+      \Gamma\ x:\tau_a \entails e' \hastype \tau' \given \Omega''
+    } {
+      \Gamma \entails \J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e' \hastype \tau' \given \Omega'' 
+    }
+
+    \inferrule {
+      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \vec{\alpha}, \Delta 
+      \\
+      \text{FTV}(\Gamma) \cup \text{FTV}(\Delta) = \vec{\alpha}_\ignore
+      \\\\
+      \forall \vec{\alpha}'\ \Delta' .\ 
+        \vec{\alpha}', \llbracket \alpha_\ignore \cup \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+      \implies
+      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
+      \\\\
+      \exists \pi.\ \pi \in \vec{\pi}_\nu
+      \\
+      \alpha_\nu \downarrow \vec{\pi}_\nu
+      \fallingdotseq 
+      \alpha_\mu \uparrow \vec{\pi}_\mu
+      \\
+      \text{pack}^-(\text{FTV}(\Gamma) \cup \vec{\alpha}\ \alpha_\mu \entails \vec{\pi}_\mu) = \tau_\mu
+      \\\\
+      \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \\
+      \exists \alpha .\ \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r 
+    } {
+      \Gamma \entails \J{loop(}e\J{)} 
+      \hastype 
+      \tau_l \J{->} \tau_r
+      \given \vec{\alpha}, \Delta 
+    }
+  \end{mathpar}
 
 
 % \begin{definition}\boxed{\VDash e}
