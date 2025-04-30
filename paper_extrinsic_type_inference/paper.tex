@@ -1329,7 +1329,7 @@ enumerates all possible outputs.
       \text{FTV}(\Gamma) \cup \text{FTV}(\Delta) = \vec{\alpha}_\ignore
       \\\\
       \forall \vec{\alpha}'\ \Delta' .\ 
-        \vec{\alpha}', \llbracket \alpha_\ignore, \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
+        \vec{\alpha}', \llbracket \alpha_\ignore \cup \vec{\alpha}' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \vec{\pi}_\nu
       \implies
       \tau \subtypes \alpha_l\J{->}\alpha_r \given  \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
       \\\\
@@ -1446,7 +1446,7 @@ of a single path type.
       \text{FTV}(\Gamma) \cup \text{FTV}(\Delta) = \vec{\alpha}_\ignore
       \\\\
       \forall \vec{\alpha}'\ \Delta'\ \tau_r .\ 
-      \vec{\alpha}', \llbracket \vec{\alpha}_\ignore, \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
+      \vec{\alpha}', \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}' \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+ \in \vec{\pi}'
       \implies
       \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \vec{\alpha} \cup \vec{\alpha}', \Delta \cup \Delta' 
       \\\\
@@ -1659,9 +1659,9 @@ and the the correspondence holds for the previous constraints in the environment
   \\
   \begin{mathpar}
     \inferrule { 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
       \\
-      \vec{\alpha}_\ignore \cup \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')
+      \vec{\alpha} \subseteq \text{dom}(\vec{\delta}')
     } {
       \exists \delta .\ 
       (
@@ -2538,114 +2538,114 @@ rely on analogous techniques.
   Type Interpretation 
   \hfill
   \boxed{
-    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \alpha \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \alpha \rrbracket^\pm 
       &\ =\ & 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm
+      \llbracket \vec{\alpha} \star \Delta, \alpha \rrbracket^\pm
       &\text{if}& 
-      \alpha \notin \vec{\alpha}_\ignore \land \alpha \notin \vec{\alpha}_\closed
+      \alpha \notin \vec{\alpha}
 
       \\
 
       &&
       (\Delta, \alpha)
       &\text{if}&
-      \alpha \in \vec{\alpha}_\ignore \lor \alpha \in \vec{\alpha}_\closed
+      \alpha \in \vec{\alpha}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{@} \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \J{@} \rrbracket^\pm 
       &\ =\ & 
       (\Delta, \J{@})
       &&
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm
+      \llbracket \vec{\alpha} \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm
       &\ =\ & 
       (\Delta', \J{<}l\J{>}\tau')
       &\text{if}& 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm 
       &\ =\ & 
       (\Delta_l \cap \Delta_r, \tau_l'\J{->}\tau_r')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
       \end{array}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm
+      \llbracket \vec{\alpha} \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm
       &\ =\ & 
       (\Delta_l \cap \Delta_r, \tau_l'\J{|}\tau_r')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
       \end{array}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm 
       &\ =\ & 
       (\Delta_l \cap \Delta_r, \tau_l'\J{\&}\tau_r')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
       \end{array}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{EXI[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \J{EXI[}\vec{\alpha}_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
-      (\Delta' \cap \Delta'', \J{EXI[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
+      (\Delta' \cap \Delta'', \J{EXI[}\vec{\alpha}_q\ \Delta_q' \J{]}\tau')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+        \llbracket \vec{\alpha} \cup \vec{\alpha}_q \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
         \\
-        \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
+        \llbracket \vec{\alpha} \cup \vec{\alpha}_q \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
       \end{array}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{ALL[}\vec{\alpha}\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \J{ALL[}\vec{\alpha}_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
-      (\Delta' \cap \Delta'', \J{ALL[}\vec{\alpha}\ \Delta_q' \J{]}\tau')
+      (\Delta' \cap \Delta'', \J{ALL[}\vec{\alpha}_q\ \Delta_q' \J{]}\tau')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
+        \llbracket \vec{\alpha} \cup \vec{\alpha}_q \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
+        \llbracket \vec{\alpha} \cup \vec{\alpha}_q \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
       \end{array}
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \typdiff \eta \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \tau \typdiff \eta \rrbracket^\pm 
       &\ =\ & 
       (\Delta', \tau' \typdiff \eta)
       &\text{if}& 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \vec{\alpha} \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
+      \llbracket \vec{\alpha} \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
       (\Delta', \J{LFP[}\alpha \J{]}\tau')
       &\text{if}& 
-      \llbracket \vec{\alpha}_\ignore \cup \vec{\alpha}, \vec{\alpha}_\closed \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
+      \llbracket \vec{\alpha}\ \alpha \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
       \\
   \end{array}
   \]
@@ -2656,28 +2656,28 @@ rely on analogous techniques.
   Qualification Interpretation 
   \hfill
   \boxed{
-    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+    \llbracket \vec{\alpha} \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \epsilon \rrbracket^\pm
+      \llbracket \vec{\alpha} \entails \Delta, \epsilon \rrbracket^\pm
       &\ =\ & 
       (\Delta', \epsilon')
       && 
 
       \\
 
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm
+      \llbracket \vec{\alpha} \entails \Delta, \Delta_q \J{;} \tau_l \J{<:} \tau_r \rrbracket^\pm
       &\ =\ & 
       (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q' \J{;} \tau_l' \J{<:} \tau_r')
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
+        \llbracket \vec{\alpha} \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_l, \tau_r')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
         \\
-        \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_r \tau_l')
+        \llbracket \vec{\alpha} \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
       \end{array}
   \end{array}
   \]
@@ -2691,17 +2691,17 @@ rely on analogous techniques.
   Pruning Interpretation 
   \hfill
   \boxed{
-    \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+    \llbracket \vec{\alpha} \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \vec{\alpha}_\ignore, \vec{\alpha}_\closed \star \Delta, \alpha \rrbracket^\pm
+      \llbracket \vec{\alpha} \star \Delta, \alpha \rrbracket^\pm
       &\ =\ & 
       (\Delta', \tau)
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        (\forall \tau_l\ \tau_r .\ \J{;} \tau_l \J{<:} \tau_r \in \Delta' \iff \vec{\alpha}_\ignore, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r)
+        (\forall \tau_l\ \tau_r .\ \J{;} \tau_l \J{<:} \tau_r \in \Delta' \iff \vec{\alpha}, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r)
         \\
         \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
       \end{array}
@@ -2718,48 +2718,48 @@ rely on analogous techniques.
   Indirection  
   \hfill
   \boxed{
-    \vec{\alpha}_\ignore, \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+    \vec{\alpha}, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
   }
   \\
   \begin{mathpar}
     \inferrule {
       \J{;}\alpha\J{<:}\tau \in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}_\ignore \backslash \vec{\alpha}_\closed
+      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}
       \\
       \J{;}\alpha'\J{<:}\tau' \in \Delta 
     } {
-      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
+      \vec{\alpha}, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
     }
 
     \inferrule {
       \J{;}\alpha\J{<:}\tau \in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}_\ignore \backslash \vec{\alpha}_\closed
+      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}
       \\
       \J{;}\alpha'\J{<:}\tau' \in \Delta 
     } {
-      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
+      \vec{\alpha}, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
     }
     \\
     \inferrule {
       \J{;}\tau \J{<:} \alpha\in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}_\ignore \backslash \vec{\alpha}_\closed
+      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}
       \\
       \J{;}\tau'\J{<:} \alpha' \in \Delta 
     } {
-      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
+      \vec{\alpha}, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
     }
 
     \inferrule {
       \J{;}\tau \J{<:} \alpha\in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}_\ignore \backslash \vec{\alpha}_\closed
+      \alpha' \in \text{FTV}(\tau) \backslash \vec{\alpha}
       \\
       \J{;}\tau'\J{<:} \alpha' \in \Delta 
     } {
-      \vec{\alpha}_\bullet, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
+      \vec{\alpha}, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
     }
   \end{mathpar}
 \end{definition}
