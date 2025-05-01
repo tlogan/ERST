@@ -1217,13 +1217,16 @@ aims to prove the validity of typing directly by including elimination rules.
     \inferrule {
       \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
     } {
-      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
-      \vec{\alpha} \subseteq \text{dom}(\vec{\delta}') \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
-      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies \Gamma \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
+      \exists \vec{\delta} .\ \vec{\alpha} \subseteq \text{dom}(\vec{\delta}) \land
+      (
+      \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
+      \vec{\delta}' \cup \vec{\delta}, \vec{\sigma} \satisfies \Gamma \implies
+      \vec{\delta}' \cup \vec{\delta} \satisfies e[\vec{\sigma}] \hastype \tau
+      )
     }
   \end{mathpar}
+
 \end{property}
 
 \noindent
@@ -1233,11 +1236,10 @@ interpretations of typing and subtyping environments.
 The typing environment $\Gamma$ and the subtyping environment $\Delta$
 represent assumptions that enable the typing $e \hastype \tau$ to be proved. 
 the type variables $\vec{\alpha}$ are closed, meaning that proof typing
-holds only if the typing holds under every interpretation of every type variable in $\vec{\alpha}$.
+holds only if the typing holds under some interpretation of every type variable in $\vec{\alpha}$.
 Type variables not in $\vec{\alpha}$ are considered open, meaning that proof typing
-holds only if the typing holds for some interpretation variables not in $\vec{\alpha}$.
-Additionally, proof typing holds only if the typing holds for every interpretation of
-the typing environment $\Gamma$.
+holds only if the typing holds for every interpretation of variables not in $\vec{\alpha}$,
+assuming each interpretation satisfies the subtyping environment $\Delta$ and the typing environment $\Gamma$.  
 
 The proof typing predicate $\Gamma \entails e \hastype \tau \given \Omega'$
 implies an algorithmic interpretation, 
@@ -1776,10 +1778,12 @@ The interested reader can find the actual the definition of packaging in the app
     \inferrule {
       \tau_l \subtypes \tau_r \given \vec{\alpha}, \Delta 
     } {
-      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
-      \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies \tau_l \subtypes \tau_r
+      \exists \vec{\delta} .\ 
+      \vec{\alpha} \subseteq \text{dom}(\vec{\delta})
+      \land
+      \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
+      \vec{\delta}' \cup \vec{\delta} \satisfies \tau_l \subtypes \tau_r
     }
   \end{mathpar}
 \end{property}
@@ -1791,9 +1795,10 @@ interpretation of the subtyping environment.
 The subtyping environment $\Delta$
 represent assumptions that enable the subtyping $\tau_l \subtypes \tau_r$ to be proved. 
 The type variables $\vec{\alpha}$ are closed, meaning that the proof subtyping
-holds only if the model subtyping holds under every interpretation of every type variable in $\vec{\alpha}$.
+holds only if the model subtyping holds under some interpretation of every type variable in $\vec{\alpha}$.
 Type variables not in $\vec{\alpha}$ are considered open, meaning the proof subtyping
-holds only if the model subtyping holds for some interpretation variables not in $\vec{\alpha}$.
+holds only if the model subtyping holds for every interpretation of variables not in $\vec{\alpha}$,
+assuming each interpretation satisfies the subtyping environment.
 
 The proof subtyping predicate $\tau_l \subtypes \tau_r \given \Omega'$
 implies an algorithmic interpretation, 
@@ -3226,11 +3231,13 @@ rely on analogous techniques.
     \inferrule {
       \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
     } {
-      \exists \vec{\delta} .\ \forall \vec{\delta}'\ \vec{\sigma} .\ 
-      \vec{\alpha} \subseteq \text{dom}(\vec{\delta}') \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies
-      \vec{\delta} \cup \vec{\delta}', \vec{\sigma} \satisfies \Gamma \implies
-      \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau
+      \exists \vec{\delta} .\ \vec{\alpha} \subseteq \text{dom}(\vec{\delta}) \land
+      (
+      \forall \vec{\delta}'\ \vec{\sigma} .\ 
+      \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
+      \vec{\delta}' \cup \vec{\delta}, \vec{\sigma} \satisfies \Gamma \implies
+      \vec{\delta}' \cup \vec{\delta} \satisfies e[\vec{\sigma}] \hastype \tau
+      )
     }
   \end{mathpar}
 \end{theorem}
@@ -3251,16 +3258,22 @@ In the case of $\Gamma \entails \vec{r} \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \
 we deduce $\Gamma \entails \vec{r} \hastype \tau \given \vec{\alpha}, \Delta$; $\Omega \preceq \vec{\alpha}, \Delta$; and $\Gamma \entails e \hastype \tau' \given \vec{\alpha}, \Delta$,
 using the definition of proof typing (Def. \ref{def:proof_typing}).
 We have 
-$\exists \vec{\delta}. \ \forall \vec{\delta}'\ \vec{\sigma}'.\ 
-... \implies \vec{\delta} \cup \vec{\delta}' \satisfies \vec{r}[\vec{\sigma}] \hastype \tau$ 
+$\exists \vec{\delta}.\ 
+... \land
+\forall \vec{\delta}'\ \vec{\sigma}'.\ 
+... \implies \vec{\delta}' \cup \vec{\delta} \satisfies \vec{r}[\vec{\sigma}] \hastype \tau$ 
 and
-$\exists \vec{\delta}. \ \forall \vec{\delta}'\ \vec{\sigma}'.\ 
+$\exists \vec{\delta}.\  
+... \land
+\forall \vec{\delta}'\ \vec{\sigma}'.\ 
 ... \implies \vec{\delta} \cup \vec{\delta}' \satisfies e[\vec{\sigma}] \hastype \tau'$
 by the induction hypothesis.
 
 We have
-$\exists \vec{\delta}. \ \forall \vec{\delta}'\ \vec{\sigma}'.\ 
-... \implies \vec{\delta} \cup \vec{\delta}' \satisfies \J{<}l\J{>}e[\vec{\sigma}] \hastype \J{<}l\J{>}\tau'$
+$\exists \vec{\delta}.\  
+... \land
+\forall \vec{\delta}'\ \vec{\sigma}'.\ 
+... \implies \vec{\delta}' \cup \vec{\delta} \satisfies \J{<}l\J{>}e[\vec{\sigma}] \hastype \J{<}l\J{>}\tau'$
 by the theorem of entry type introduction (Theorem \ref{theorem:entry_type_introduction}).
 Finally, we derive the model typing of the intersection by the definition of model typing (Def. \ref{def:model_typing}).
 
