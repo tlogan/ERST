@@ -3217,7 +3217,9 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
+      \vec{\delta} \satisfies e \hastype \tau
     } {
+      \vec{\delta} \satisfies \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau
     }
   \end{mathpar}
 \end{theorem}
@@ -3240,6 +3242,7 @@ rely on analogous techniques.
       )
     }
   \end{mathpar}
+  \TODO{this conclusion is too weak to be used in induction?!!!!}
 \end{theorem}
 \hfill
 
