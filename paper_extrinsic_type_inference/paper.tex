@@ -1075,19 +1075,6 @@ with meaning.  At the very least, types should inform us that an expression is s
     } 
 
     \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies 
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
-    } 
-
-    \inferrule { 
-      \vec{\delta} \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
-    } 
-
-    \inferrule { 
       \vec{\delta} \satisfies e \hastype \tau_l
     } {
       \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
@@ -1103,8 +1090,25 @@ with meaning.  At the very least, types should inform us that an expression is s
       \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
       \\
       \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
+      \\
+      \text{dom}(\vec{\delta}') \cong \vec{\alpha}
     } {
       \vec{\delta} \satisfies e \hastype \J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau
+    } 
+
+    \inferrule { 
+      \forall \vec{\delta}' .\ 
+      \text{dom}(\vec{\delta}') \cong \vec{\alpha} \implies
+      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies 
+      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
+    } 
+
+    \inferrule { 
+      \vec{\delta} \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
+    } {
+      \vec{\delta} \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
     } 
 
     \inferrule { 
@@ -1217,7 +1221,7 @@ aims to prove the validity of typing directly by including elimination rules.
     \inferrule {
       \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
     } {
-      \exists \vec{\delta} .\ \vec{\alpha} \subseteq \text{dom}(\vec{\delta}) \land
+      \exists \vec{\delta} .\ \text{dom}(\vec{\delta}) \cong \vec{\alpha} \land
       (
       \forall \vec{\delta}'\ \vec{\sigma} .\ 
       \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
@@ -1236,7 +1240,7 @@ interpretations of typing and subtyping environments.
 The typing environment $\Gamma$ and the subtyping environment $\Delta$
 represent assumptions that enable the typing $e \hastype \tau$ to be proved. 
 the type variables $\vec{\alpha}$ are closed, meaning that proof typing
-holds only if the typing holds under some interpretation of every type variable in $\vec{\alpha}$.
+holds only if the typing holds under some interpretation of type variables in $\vec{\alpha}$.
 Type variables not in $\vec{\alpha}$ are considered open, meaning that proof typing
 holds only if the typing holds for every interpretation of variables not in $\vec{\alpha}$,
 assuming each interpretation satisfies the subtyping environment $\Delta$ and the typing environment $\Gamma$.  
@@ -1779,7 +1783,7 @@ The interested reader can find the actual the definition of packaging in the app
       \tau_l \subtypes \tau_r \given \vec{\alpha}, \Delta 
     } {
       \exists \vec{\delta} .\ 
-      \vec{\alpha} \subseteq \text{dom}(\vec{\delta})
+      \text{dom}(\vec{\delta}) \cong \vec{\alpha}
       \land
       \forall \vec{\delta}'\ \vec{\sigma} .\ 
       \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
@@ -1795,7 +1799,7 @@ interpretation of the subtyping environment.
 The subtyping environment $\Delta$
 represent assumptions that enable the subtyping $\tau_l \subtypes \tau_r$ to be proved. 
 The type variables $\vec{\alpha}$ are closed, meaning that the proof subtyping
-holds only if the model subtyping holds under some interpretation of every type variable in $\vec{\alpha}$.
+holds only if the model subtyping holds under some interpretation of type variables in $\vec{\alpha}$.
 Type variables not in $\vec{\alpha}$ are considered open, meaning the proof subtyping
 holds only if the model subtyping holds for every interpretation of variables not in $\vec{\alpha}$,
 assuming each interpretation satisfies the subtyping environment.
@@ -3165,6 +3169,7 @@ rely on analogous techniques.
       \vec{\alpha}_\ignore, \vec{\alpha} \entails \Delta \J{;} \tau_l \J{<:}\tau_r \rightrightarrows \Delta_o  \J{;} \tau_l \J{<:} \tau_r , \Delta_i
     }
   \end{mathpar}
+
 \end{definition}
 
 \begin{theorem}
@@ -3233,7 +3238,7 @@ rely on analogous techniques.
     \inferrule {
       \Gamma \entails e \hastype \tau \given \vec{\alpha}, \Delta
     } {
-      \exists \vec{\delta} .\ \vec{\alpha} \subseteq \text{dom}(\vec{\delta}) \land
+      \exists \vec{\delta} .\ \text{dom}(\vec{\delta}) \cong \vec{\alpha}\land
       (
       \forall \vec{\delta}'\ \vec{\sigma} .\ 
       \vec{\delta}' \cup \vec{\delta} \satisfies \Delta \implies
@@ -3243,6 +3248,8 @@ rely on analogous techniques.
     }
   \end{mathpar}
   \TODO{this conclusion is too weak to be used in induction?!!!!}
+
+  \TODO{might need to modify model typing to include something about closed variables}
 \end{theorem}
 \hfill
 
@@ -3386,125 +3393,6 @@ $\square$
       \given \vec{\alpha}, \Delta 
     }
   \end{mathpar}
-
-
-
-\begin{definition}
-  \label{def:model_typing}
-  Model Typing
-  \hfill
-  \boxed{\vec{\delta} \satisfies e \hastype \tau}
-  \\
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \J{@} \hastype \J{@}
-    } 
-
-    \inferrule { 
-    } {
-      \vec{\delta} \satisfies \epsilon \hastype \J{TOP}
-    } 
-
-    \inferrule { 
-      \J{<}l \J{>} v \in \vec{g}
-      \\
-      \vec{\delta} \satisfies v \hastype \tau 
-      \\
-      \forall v' .\ \J{<} l \J{>} v' \in \vec{g} \implies v' = v
-    } {
-      \vec{\delta} \satisfies \vec{g} \hastype \J{<} l \J{>} \tau
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies \vec{f} \hastype \tau_l \J{->} \tau_r
-    } {
-      \vec{\delta} \satisfies \vec{f} \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
-    } 
-
-    \inferrule { 
-      \forall \vec{\sigma}.\ 
-      \vec{\delta} \satisfies p[\vec{\sigma}] \hastype \tau_l
-      \implies
-      \vec{\delta}  \satisfies e[\vec{\sigma}] \hastype \tau_r
-      \\\\
-      \forall \tau_l'\ \tau_r'.\ 
-      \vec{\delta} \satisfies \vec{f} \hastype \tau_l' \J{->} \tau_r'
-      \implies
-      \vec{\delta} \satisfies \tau_l \subtypes \tau_l'
-      \implies
-      \vec{\delta} \satisfies \tau_r' \subtypes \tau_r
-    } {
-      \vec{\delta} \satisfies \vec{f} \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
-    }
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-      \\
-      \neg\ (\vec{\delta} \satisfies e \hastype \tau_r)
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \typdiff \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-      \\
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{\&} \tau_r
-    } 
-
-    \inferrule { 
-      \forall \vec{\delta}' .\ \vec{\delta} \cup \vec{\delta}' \satisfies \Delta \implies 
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{ALL[}\vec{\alpha}\ \Delta \J{]} \tau
-    } 
-
-    \inferrule { 
-      \vec{\delta} \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_l
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \satisfies e \hastype \tau_r
-    } {
-      \vec{\delta} \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
-
-    \inferrule { 
-      \vec{\delta} \cup \vec{\delta}' \satisfies \Delta 
-      \\
-      \vec{\delta} \cup \vec{\delta}' \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \J{EXI[}\vec{\alpha}\ \Delta\J{]}\tau
-    } 
-
-    \inferrule { 
-      e \rightsquigarrow e'
-      \\
-      \vec{\delta} \satisfies e' \hastype \tau 
-    } {
-      \vec{\delta} \satisfies e \hastype \tau 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \in \vec{\delta}
-      \\
-      \vec{\delta} \satisfies e \hastype \tau
-    } {
-      \vec{\delta} \satisfies e \hastype \alpha 
-    } 
-  \end{mathpar}
-\end{definition}
-
 
 *********************************************************************
 
