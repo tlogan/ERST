@@ -3190,7 +3190,7 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{theorem:subtyping_environment_prefix_preservation}
-  Subtying Environment Prefix Subtraction
+  Subtyping Environment Prefix Preservation 
   \\
   \begin{mathpar}
     \inferrule {
@@ -3246,10 +3246,8 @@ rely on analogous techniques.
       \vec{\delta}' \cup \vec{\delta} \satisfies e[\vec{\sigma}] \hastype \tau
       )
     }
-  \end{mathpar}
-  \TODO{this conclusion is too weak to be used in induction?!!!!}
 
-  \TODO{might need to modify model typing to include something about closed variables}
+  \end{mathpar}
 \end{theorem}
 \hfill
 
@@ -3288,6 +3286,11 @@ by the theorem of entry type introduction (Theorem \ref{theorem:entry_type_intro
 Finally, we derive the model typing of the intersection by the definition of model typing (Def. \ref{def:model_typing}).
 
 
+\TODO{figure out how to construct one expression with two different types}
+
+\TODO{maybe just induction on the right part}
+
+\TODO{might need a separate inductive theorem for describing the sequence on the left}
 
 $\square$
 

@@ -3072,6 +3072,15 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_application ASSUME
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# world.closedids: {world.closedids}
+# cator_typ: {concretize_typ(cator_typ)}
+# arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
         worlds = [world] 
         current_cator_typ = cator_typ
         for arg_typ in arg_typs:
@@ -3081,6 +3090,27 @@ class ExprRule(Rule):
                 new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var)))
             worlds = new_worlds
             current_cator_typ = result_var
+
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_application GUARANTEE 
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# cator_typ: {concretize_typ(cator_typ)}
+# arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
+
+# result: {result_var}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+#         for i,world in enumerate(worlds):
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine_application - World {i} 
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# world.closedids: {world.closedids}
+# world.constraints: 
+# {concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
         return [
             Result(pid, world, result_var)
