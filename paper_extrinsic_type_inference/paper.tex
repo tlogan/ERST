@@ -3204,16 +3204,66 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+% \begin{theorem}
+%   \label{theorem:entry_type_introdcution}
+%   Entry Type Introduction 
+%   \\
+%   \begin{mathpar}
+%     \inferrule {
+%       \delta \satisfies e \hastype \tau
+%     } {
+%       \delta \satisfies \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau
+%     }
+%   \end{mathpar}
+% \end{theorem}
+% \hfill
+
 \begin{theorem}
-  \label{theorem:entry_type_introdcution}
+  \label{theorem:record_extension_preservation}
+  Record Extension Preservation 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies r \hastype \tau
+      \\
+      \nexists e' .\ \J{<} l \J{>} e' \in r
+    } {
+      \delta \satisfies r\ \J{<}l\J{>}e \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:entry_type_introduction}
   Entry Type Introduction 
   \\
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \tau
+      \\
+      \nexists e' .\ \J{<} l \J{>} e' \in r
     } {
-      \delta \satisfies \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau
+      \delta \satisfies r\ \J{<}l\J{>}e \hastype \J{<}l\J{>} \tau
     }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:intersection_type_introduction}
+  Intersection Type Introduction
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \tau_l
+      \\
+      \delta \satisfies e \hastype \tau_r
+    } {
+      \delta \satisfies e \hastype \tau_l \J{\&} \tau_r
+    }
+
+    \TODO{modify model typing intersection rule to work with existentially quantified interpretations}
   \end{mathpar}
 \end{theorem}
 \hfill
@@ -3273,6 +3323,8 @@ $\exists \delta.\
 by the theorem of entry type introduction (Theorem \ref{theorem:entry_type_introduction}).
 Finally, we derive the model typing of the intersection by the definition of model typing (Def. \ref{def:model_typing}).
 
+
+\TODO{figure out how to connect parts of a record}
 
 \TODO{figure out how to construct one expression with two different types}
 
