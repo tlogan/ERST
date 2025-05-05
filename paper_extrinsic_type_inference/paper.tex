@@ -3251,24 +3251,6 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:intersection_type_introduction}
-  Intersection Type Introduction
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies e \hastype \tau_l
-      \\
-      \delta \satisfies e \hastype \tau_r
-    } {
-      \delta \satisfies e \hastype \tau_l \J{\&} \tau_r
-    }
-
-    \TODO{modify model typing intersection rule to work with existentially quantified interpretations}
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
   \label{theorem:proof_typing_soundness}
   Proof Typing Soundness 
   \\
@@ -3284,6 +3266,30 @@ rely on analogous techniques.
       \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
+
+    \inferrule {
+      \Theta_0\ \Delta_0 \preceq \Theta\ \Delta
+      \\
+      \text{FTV}(\Gamma) \cup \Theta_0 \cup \text{FTV}(\Delta) = \Theta_\ignore
+      \\
+      \Gamma \entails e \hastype \tau \given \Theta, \Delta
+      \\
+      \text{dom}(\delta_0) \cong \Theta_\ignore
+    } {
+      \exists \delta .\ \text{dom}(\delta) \cong \Theta \backslash \Theta_\ignore \land
+      (
+      \forall \delta'\ \sigma .\ 
+      \delta' \cup \delta_0 \cup \delta \satisfies \Delta \implies
+      \delta' \cup \delta_0 \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta' \cup \delta_0 \cup \delta \satisfies e[\sigma] \hastype \tau
+      )
+    }
+
+    \TODO{this might work because it the existential deltas to be combined somehow or maybe be empty?}
+
+    \TODO{what happens if closed variables are unchanged; do they still need to be existentially quantified?}
+
+    \TODO{but probably need to play around to get the details right}
 
   \end{mathpar}
 \end{theorem}
