@@ -1966,35 +1966,35 @@ whose consequents are the intersection's constituent parts.
   \label{def:proof_subtyping_abstraction_elimination}
   Proof Subtyping (Expansion Elimination)
   \hfill
-  \boxed{\phi \subtypes \tau \given \Omega}
+  \boxed{\phi \subtypes \tau \given \Theta\ \Delta}
   \\
   \begin{mathpar}
     \inferrule {
       \tau_a \subtypes \tau
-      \given \Omega 
+      \given \Theta\ \Delta 
       \\
-      \Omega \preceq \Omega'
+      \Theta\ \Delta \preceq \Theta'\ \Delta'
       \\
       \tau_b \subtypes \tau
-      \given \Omega' 
+      \given \Theta'\ \Delta' 
     } {
       \tau_a\J{|}\tau_b \subtypes \tau
-      \given \Omega' 
+      \given \Theta'\ \Delta' 
     }
     \\
     \inferrule {
       \Theta_l \notfree \tau_r
       \\
-      \Delta_l \given \Theta, \Delta
+      \Delta_l \given \Theta\ \Delta
       \\
-      \forall \Omega .\ \Delta_l \given \Omega \implies \Omega = \Theta, \Delta
+      \forall \Theta'\ \Delta' .\ \Delta_l \given \Theta'\ \Delta' \implies (\Theta'\ \Delta') = (\Theta\ \Delta)
       \\\\
-      (\Theta\ \Theta_l, \Delta) \preceq \Omega 
+      (\Theta \cup \Theta_l, \Delta) \preceq \Theta'\ \Delta' 
       \\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \tau_l \subtypes \tau_r \given \Theta'\ \Delta' 
     } {
       \J{EXI[}\Theta_l\ \Delta_l \J{]}\tau_l \subtypes \tau_r
-      \given \Omega 
+      \given \Theta'\ \Delta' 
     }
   \end{mathpar}
 \end{definition}
@@ -2029,17 +2029,17 @@ splitting the worlds too eagerly.
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Introduction)
   \hfill
-  \boxed{\tau \subtypes \psi \given \Omega}
+  \boxed{\tau \subtypes \psi \given \Theta\ \Delta}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_{l} \subtypes \tau_{rl} \given \Omega 
+      \tau \subtypes \tau_{a} \given \Theta\ \Delta 
       \\
-      \Omega \preceq \Omega'
+      \Theta\ \Delta \preceq \Theta'\ \Delta'
       \\
-      \tau_{l} \subtypes \tau_{rr} \given \Omega' 
+      \tau \subtypes \tau_{b} \given \Theta'\ \Delta' 
     } {
-      \tau_l \subtypes \tau_{rl}\J{\&}\tau_{rr} \given \Omega '
+      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'\ \Delta'
     }
     \\
     \inferrule {
@@ -2047,13 +2047,13 @@ splitting the worlds too eagerly.
       \\
       \Delta_r \given \Theta, \Delta
       \\
-      \forall \Omega .\ \Delta_r \given \Omega \implies \Omega = \Theta, \Delta
+      \forall \Theta'\ \Delta' .\ \Delta_r \given \Theta'\ \Delta' \implies (\Theta'\ \Delta') = (\Theta\ \Delta)
       \\\\
-      (\Theta\ \Theta_r, \Delta) \preceq \Omega 
+      (\Theta \cup \Theta_r, \Delta) \preceq \Theta'\ \Delta' 
       \\
-      \tau_l \subtypes \tau_r \given \Omega 
+      \tau_l \subtypes \tau_r \given \Theta'\ \Delta' 
     } {
-      \tau_l \subtypes \J{ALL[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Omega 
+      \tau_l \subtypes \J{ALL[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Theta'\ \Delta' 
     }
   \end{mathpar}
 \end{definition}
@@ -3285,9 +3285,13 @@ rely on analogous techniques.
       )
     }
 
-    \TODO{this might work because it the existential deltas to be combined somehow or maybe be empty?}
+    \TODO{this might work because it the existential deltas can be combined somehow or maybe be empty?}
 
     \TODO{what happens if closed variables are unchanged; do they still need to be existentially quantified?}
+
+    \TODO{what if we simply choose the inputs to be the same as the outputs?}
+
+    \TODO{this wouldn't actually happen because the rule that adds constraints depends on the input being smaller than the output}
 
     \TODO{but probably need to play around to get the details right}
 
