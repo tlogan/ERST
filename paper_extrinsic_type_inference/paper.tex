@@ -3285,15 +3285,40 @@ rely on analogous techniques.
       )
     }
 
-    \TODO{this might work because it the existential deltas can be combined somehow or maybe be empty?}
+    \TODO{if we distinguis between input and output worlds}
+
+    \TODO{then can we generalize over the common input variables?}
+
+    \TODO{assuming the input closed variables should not affect the local expression?}
+
+    \TODO{need to test out this assumption}
+
+    \TODO{and can we union the environments of the mutually independent output variables?}
+
+
+    ***********************************************************************
+    \TODO{this might work because the existential deltas can be combined somehow or maybe be empty?}
 
     \TODO{what happens if closed variables are unchanged; do they still need to be existentially quantified?}
 
-    \TODO{what if we simply choose the inputs to be the same as the outputs?}
+    \TODO{we add constraint between outputs of two consecutive steps}
 
-    \TODO{this wouldn't actually happen because the rule that adds constraints depends on the input being smaller than the output}
 
-    \TODO{but probably need to play around to get the details right}
+    \TODO{Q: what's the deal if there is no previoius step?}
+
+    \TODO{A: maybe we can treat any variable in Gamma as pre-existing, and everything else as an fresh output variable}
+    \TODO{this is not good enough to disitinguis between input and output variables. input variabes could be in constraint, but not in Gamma}
+
+    \TODO{Q: is it sufficient to simply treat all variables in Gamma as inputs and everything else as outputs}
+    \TODO{this is NOT the same as constraining the outputs of consecutive steps}
+    \TODO{Actually, maybe the consecutive steps should be independent! and then unioned together}
+    \TODO{need to test out this idea}
+
+    \TODO{should the previous output be treated as empty?}
+
+    \TODO{can we simply choose the inputs to be the same as the outputs?}
+
+    \TODO{probably need to play around to get the details right}
 
   \end{mathpar}
 \end{theorem}
