@@ -1207,19 +1207,26 @@ aims to prove the validity of typing directly by including elimination rules.
   \\
   \begin{mathpar}
     \inferrule {
-      \Gamma \entails e \hastype \tau \given \Theta, \Delta
+      \Theta\ \Delta, \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
     } {
-      \exists \delta .\ \text{dom}(\delta) \cong \Theta \land
+      \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
+      \delta \satisfies \Delta \implies
+      \delta, \sigma \satisfies \Gamma \implies
+      \\\\
+      \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \land
       (
-      \forall \delta'\ \sigma .\ 
-      \delta' \cup \delta \satisfies \Delta \implies
-      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \forall \delta'' .\ 
+      \delta'' \cup \delta' \cup \delta \satisfies \Delta' \implies
+      \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
 
 \end{property}
+
+\TODO{note that the input variables are for checking compositionality against outer expressions}
+
+\TODO{therefore, they cannot contradict the typing of the current expression}
 
 \noindent
 The system for proving typing $\Gamma \entails e \hastype \tau \given \Theta, \Delta$ 
@@ -3301,33 +3308,6 @@ rely on analogous techniques.
   Proof Typing Soundness 
   \\
   \begin{mathpar}
-    % \inferrule {
-    %   \Gamma \entails e \hastype \tau \given \Theta, \Delta
-    % } {
-    %   \exists \delta .\ \text{dom}(\delta) \cong \Theta\land
-    %   (
-    %   \forall \delta'\ \sigma .\ 
-    %   \delta' \cup \delta \satisfies \Delta \implies
-    %   \delta' \cup \delta, \sigma \satisfies \Gamma \implies
-    %   \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
-    %   )
-    % }
-
-    % \TODO{if we distinguish between input and output worlds}
-
-    % \TODO{then can we generalize over the common input variables?}
-
-    % \TODO{notice that input variables are used to detect errors}
-
-    % \TODO{if no errors are detected, then for any interpretation of input variables}
-
-    % \TODO{there is an existential interpretation for the generated variables, such that .... the typing holds}
-
-    % \TODO{then we can choose a single interpretation that saitisfies assumptions of two separate IHs}
-
-    \TODO{note that the input variables are for checking compositionality against outer expressions}
-    \TODO{therefore, they cannot contradict the typing of the current expression}
-
     \inferrule {
       \Theta\ \Delta, \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
     } {
