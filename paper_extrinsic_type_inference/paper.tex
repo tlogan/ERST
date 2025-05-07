@@ -74,6 +74,8 @@
 \newcommand{\open}{\circ}
 
 
+\newcommand{\up}{\ \land\ }
+\newcommand{\down}{\ \lor\ }
 
 % \newcommand{\tl}{\textasciitilde{}}
 
@@ -1210,15 +1212,12 @@ aims to prove the validity of typing directly by including elimination rules.
     \inferrule {
       \Theta\ \Delta\ \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
     } {
-      \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
-      \delta \satisfies \Delta \implies
-      \delta, \sigma \satisfies \Gamma \implies
-      \\\\
-      \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \backslash \Theta \land
+      \exists \delta .\ \text{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
-      \forall \delta'' .\ 
-      \delta'' \cup \delta' \cup \delta \satisfies \Delta' \backslash \Delta \implies
-      \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \forall \delta' .\ 
+      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
@@ -3264,16 +3263,16 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_environment_interpretation_elimination}
-  Subtyping Environment Interpretation Elimination 
+  \label{theorem:subtyping_environment_interpretation_contraction}
+  Subtyping Environment Interpretation Contraction 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \cup \delta' \cup \delta'' \satisfies \Delta
+      \delta \cup \delta' \satisfies \Delta
       \\
       \text{dom}(\delta') \cap \text{FTV}(\Delta) = \epsilon
     } {
-      \delta \cup \delta'' \satisfies \Delta
+      \delta \satisfies \Delta
     }
   \end{mathpar}
 \end{theorem}
@@ -3281,15 +3280,15 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{theorem:typing_interpretation_introduction}
-  Typing Interpretation Introduction 
+  Typing Interpretation Interpretation Extension 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \cup \delta'' \satisfies e \hastype \tau 
+      \delta \satisfies e \hastype \tau 
       \\
       \text{dom}(\delta') \cap \text{FTV}(\tau) = \epsilon
     } {
-      \delta \cup \delta' \cup \delta'' \satisfies e \hastype \tau 
+      \delta \cup \delta' \satisfies e \hastype \tau 
     }
   \end{mathpar}
 \end{theorem}
@@ -3301,18 +3300,30 @@ rely on analogous techniques.
   Proof Typing Soundness 
   \\
   \begin{mathpar}
+    % \inferrule {
+    %   \Theta\ \Delta\ \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
+    % } {
+    %   \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
+    %   \delta \satisfies \Delta \implies
+    %   \delta, \sigma \satisfies \Gamma \implies
+    %   \\\\
+    %   \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \backslash \Theta \land
+    %   (
+    %   \forall \delta'' .\ 
+    %   \delta'' \cup \delta' \cup \delta \satisfies \Delta' \backslash \Delta \implies
+    %   \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+    %   )
+    % }
+
     \inferrule {
       \Theta\ \Delta\ \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
     } {
-      \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
-      \delta \satisfies \Delta \implies
-      \delta, \sigma \satisfies \Gamma \implies
-      \\\\
-      \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \backslash \Theta \land
+      \exists \delta .\ \text{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
-      \forall \delta'' .\ 
-      \delta'' \cup \delta' \cup \delta \satisfies \Delta' \backslash \Delta \implies
-      \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \forall \delta' .\ 
+      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
