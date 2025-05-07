@@ -3267,66 +3267,19 @@ rely on analogous techniques.
       )
     }
 
-    \inferrule {
-      \Theta_0\ \Delta_0 \preceq \Theta\ \Delta
-      \\
-      \text{FTV}(\Gamma) \cup \Theta_0 \cup \text{FTV}(\Delta) = \Theta_\ignore
-      \\
-      \Gamma \entails e \hastype \tau \given \Theta, \Delta
-      \\
-      \text{dom}(\delta_0) \cong \Theta_\ignore
-    } {
-      \exists \delta .\ \text{dom}(\delta) \cong \Theta \backslash \Theta_\ignore \land
-      (
-      \forall \delta'\ \sigma .\ 
-      \delta' \cup \delta_0 \cup \delta \satisfies \Delta \implies
-      \delta' \cup \delta_0 \cup \delta, \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta_0 \cup \delta \satisfies e[\sigma] \hastype \tau
-      )
-    }
-
-    \TODO{if we distinguis between input and output worlds}
+    \TODO{if we distinguish between input and output worlds}
 
     \TODO{then can we generalize over the common input variables?}
 
-    \TODO{assuming the input closed variables should not affect the local expression?}
+    \TODO{notice that input variables are used to detect errors}
+    \TODO{if no errors are detected, then for any interpretation of input variables}
+    \TODO{there is an existential interpretation for the generated variables, such that .... the typing holds}
 
-    \TODO{seems valid, since an expression is only constrained by closed variables that arise from within}
+    \TODO{then we can choose a single interpretation that saitisfies assumptions of two separate IHs}
 
-    \TODO{consider example of function application, where the return variable is constrained by a closed variable}
+    ******************
 
-    \TODO{however, subtyping does need rely on input closed variables}
-
-    \TODO{need to modify implementation and test out this assumption}
-
-    \TODO{and can we union the environments of the mutually independent output variables?}
-
-    \TODO{and can we union the environments of the mutually independent output variables?}
-
-
-    ***********************************************************************
-    \TODO{this might work because the existential deltas can be combined somehow or maybe be empty?}
-
-    \TODO{what happens if closed variables are unchanged; do they still need to be existentially quantified?}
-
-    \TODO{we add constraint between outputs of two consecutive steps}
-
-
-    \TODO{Q: what's the deal if there is no previoius step?}
-
-    \TODO{A: maybe we can treat any variable in Gamma as pre-existing, and everything else as an fresh output variable}
-    \TODO{this is not good enough to disitinguis between input and output variables. input variabes could be in constraint, but not in Gamma}
-
-    \TODO{Q: is it sufficient to simply treat all variables in Gamma as inputs and everything else as outputs}
-    \TODO{this is NOT the same as constraining the outputs of consecutive steps}
-    \TODO{Actually, maybe the consecutive steps should be independent! and then unioned together}
-    \TODO{need to test out this idea}
-
-    \TODO{should the previous output be treated as empty?}
-
-    \TODO{can we simply choose the inputs to be the same as the outputs?}
-
-    \TODO{probably need to play around to get the details right}
+    \TODO{modify implementation and rules so that output does not include input}
 
   \end{mathpar}
 \end{theorem}
@@ -3365,15 +3318,6 @@ $\exists \delta.\
 ... \implies \delta' \cup \delta \satisfies \J{<}l\J{>}e[\sigma] \hastype \J{<}l\J{>}\tau'$
 by the theorem of entry type introduction (Theorem \ref{theorem:entry_type_introduction}).
 Finally, we derive the model typing of the intersection by the definition of model typing (Def. \ref{def:model_typing}).
-
-
-\TODO{figure out how to connect parts of a record}
-
-\TODO{figure out how to construct one expression with two different types}
-
-\TODO{maybe just induction on the right part}
-
-\TODO{might need a separate inductive theorem for describing the sequence on the left}
 
 $\square$
 
