@@ -3251,38 +3251,97 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{theorem:empty_extension_equivalence}
+  Empty Extension Equivalence 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      C \cup \epsilon = C 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:subtyping_environment_interpretation_elimination}
+  Subtyping Environment Interpretation Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \cup \delta' \cup \delta'' \satisfies \Delta
+      \\
+      \text{dom}(\delta') \cap \text{FTV}(\Delta) = \epsilon
+    } {
+      \delta \cup \delta'' \satisfies \Delta
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:typing_interpretation_introduction}
+  Typing Interpretation Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \cup \delta'' \satisfies e \hastype \tau 
+      \\
+      \text{dom}(\delta') \cap \text{FTV}(\tau) = \epsilon
+    } {
+      \delta \cup \delta' \cup \delta'' \satisfies e \hastype \tau 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+\begin{theorem}
   \label{theorem:proof_typing_soundness}
   Proof Typing Soundness 
   \\
   \begin{mathpar}
+    % \inferrule {
+    %   \Gamma \entails e \hastype \tau \given \Theta, \Delta
+    % } {
+    %   \exists \delta .\ \text{dom}(\delta) \cong \Theta\land
+    %   (
+    %   \forall \delta'\ \sigma .\ 
+    %   \delta' \cup \delta \satisfies \Delta \implies
+    %   \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+    %   \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+    %   )
+    % }
+
+    % \TODO{if we distinguish between input and output worlds}
+
+    % \TODO{then can we generalize over the common input variables?}
+
+    % \TODO{notice that input variables are used to detect errors}
+
+    % \TODO{if no errors are detected, then for any interpretation of input variables}
+
+    % \TODO{there is an existential interpretation for the generated variables, such that .... the typing holds}
+
+    % \TODO{then we can choose a single interpretation that saitisfies assumptions of two separate IHs}
+
+    \TODO{note that the input variables are for checking compositionality against outer expressions}
+    \TODO{therefore, they cannot contradict the typing of the current expression}
+
     \inferrule {
-      \Gamma \entails e \hastype \tau \given \Theta, \Delta
+      \Theta\ \Delta, \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
     } {
-      \exists \delta .\ \text{dom}(\delta) \cong \Theta\land
+      \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
+      \delta \satisfies \Delta \implies
+      \delta, \sigma \satisfies \Gamma \implies
+      \\\\
+      \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \land
       (
-      \forall \delta'\ \sigma .\ 
-      \delta' \cup \delta \satisfies \Delta \implies
-      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \forall \delta'' .\ 
+      \delta'' \cup \delta' \cup \delta \satisfies \Delta' \implies
+      \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
-
-    \TODO{if we distinguish between input and output worlds}
-
-    \TODO{then can we generalize over the common input variables?}
-
-    \TODO{notice that input variables are used to detect errors}
-    \TODO{if no errors are detected, then for any interpretation of input variables}
-    \TODO{there is an existential interpretation for the generated variables, such that .... the typing holds}
-
-    \TODO{then we can choose a single interpretation that saitisfies assumptions of two separate IHs}
-
-    **********************************************************************
-
-    \TODO{just modify rules so that output does not include input}
-
-    \TODO{no need to bother with adjusting implementation}
-
   \end{mathpar}
 \end{theorem}
 \hfill
