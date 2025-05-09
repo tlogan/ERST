@@ -60,6 +60,9 @@
 \newcommand{\safe}{\ \checkmark}
 \newcommand{\relational}{\ \Re}
 
+
+\newcommand{\unique}{\ \dagger}
+
 \newcommand{\factorsinto}{\Vvdash}
 
 
@@ -1767,14 +1770,16 @@ The interested reader can find the actual the definition of packaging in the app
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_l \subtypes \tau_r \given \Theta, \Delta 
+      \Theta\ \Delta \entails \tau_l \subtypes \tau_r \given \Theta'\ \Delta'
     } {
       \exists \delta .\ 
-      \text{dom}(\delta) \cong \Theta
-      \land
-      \forall \delta'\ \sigma .\ 
-      \delta' \cup \delta \satisfies \Delta \implies
+      \text{dom}(\delta) \cong \Theta' \backslash \Theta
+      \up
+      (
+      \forall \delta' .\ 
+      \delta' \cup \delta \satisfies \Delta' \implies
       \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r
+      )
     }
   \end{mathpar}
 \end{property}
@@ -1819,12 +1824,12 @@ presented in the paper.
   \label{def:proof_subtyping_reflection}
   Proof Subtyping (Reflection)
   \hfill
-  \boxed{\tau_l \subtypes \tau_r \given \Omega}
+  \boxed{\Theta\ \Delta \entails \tau_l \subtypes \tau_r \given \Theta'\ \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \tau \subtypes \tau \given \Omega 
+      \Theta\ \Delta \entails \tau \subtypes \tau \given \Theta\ \Delta 
     }
   \end{mathpar}
 \end{definition}
@@ -1841,28 +1846,29 @@ such as de Bruijin indexes \cite{} before comparing type forms.
   \label{def:proof_subtyping_implication_preservation}
   Proof Subtyping (Implication Preservation)
   \hfill
-  \boxed{\kappa_l \subtypes \kappa_r \given \Omega}
+  \boxed{\Theta\ \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta'\ \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
+      \Theta\ \Delta \entails 
       \tau_l \subtypes \tau_r
-      \given \Omega 
+      \given \Theta'\ \Delta' 
     } {
+      \Theta\ \Delta \entails 
       \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r
-      \given \Omega 
+      \given \Theta'\ \Delta'
     }
 
     \inferrule {
-      \tau_{x} \subtypes \tau_{p} \given \Omega
+      \Theta\ \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta'\ \Delta'
       \\
-      \Omega \preceq \Omega'
-      \\
-      \tau_{q} \subtypes \tau_{y} \given \Omega' 
+      \Theta'\ \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta''\ \Delta'' 
     } {
+      \Theta\ \Delta \entails 
       \tau_{p} \J{->} \tau_{q} 
       \subtypes 
       \tau_{x} \J{->} \tau_{y}
-      \given \Omega' 
+      \given \Theta''\ \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -1885,44 +1891,50 @@ of the subtype is stronger than the consequent of the supertype.
   \label{def:proof_subtyping_implication_rewriting}
   Proof Subtyping (Implication Rewriting)
   \hfill
-  \boxed{\tau \subtypes \tau \given \Omega}
+  \boxed{\Theta\ \Delta \entails \tau_l \subtypes \tau_r \given \Theta'\ \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
+      \Theta\ \Delta \entails 
       \tau_l \subtypes
       (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
-      \given \Omega
+      \given \Theta'\ \Delta'
     } {
+      \Theta\ \Delta \entails 
       \tau_l \subtypes 
       (\tau_a\J{|}\tau_b)\J{->}\tau_r
-      \given \Omega 
+      \given \Theta'\ \Delta' 
     }
 
 
     \inferrule {
+      \Theta\ \Delta \entails 
       \tau_l
       \subtypes
       (\tau_r\J{->}\tau_a)
       \J{\&}
       (\tau_r\J{->}\tau_b)
-      \given \Omega 
+      \given \Theta'\ \Delta' 
     } {
+      \Theta\ \Delta \entails 
       \tau_l \subtypes 
       \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
-      \given \Omega
+      \given \Theta'\ \Delta'
     }
 
     \inferrule {
+      \Theta\ \Delta \entails 
       \tau
       \subtypes
       (\J{<} l \J{>} \tau_a)
       \J{\&}
       (\J{<} l \J{>} \tau_b)
-      \given \Omega 
+      \given \Theta'\ \Delta' 
     } {
+      \Theta\ \Delta \entails 
       \tau \subtypes 
       \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
-      \given \Omega
+      \given \Theta'\ \Delta'
     }
 
   \end{mathpar}
@@ -1965,35 +1977,36 @@ whose consequents are the intersection's constituent parts.
   \label{def:proof_subtyping_abstraction_elimination}
   Proof Subtyping (Expansion Elimination)
   \hfill
-  \boxed{\phi \subtypes \tau \given \Theta\ \Delta}
+  \boxed{\Theta\ \Delta \entails \phi \subtypes \tau \given \Theta'\ \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
+      \Theta\ \Delta \entails
       \tau_a \subtypes \tau
-      \given \Theta\ \Delta 
+      \given \Theta'\ \Delta'
       \\
-      \Theta\ \Delta \preceq \Theta'\ \Delta'
-      \\
+      \Theta'\ \Delta' \entails
       \tau_b \subtypes \tau
-      \given \Theta'\ \Delta' 
+      \given \Theta''\ \Delta''
     } {
+      \Theta\ \Delta \entails
       \tau_a\J{|}\tau_b \subtypes \tau
-      \given \Theta'\ \Delta' 
+      \given \Theta''\ \Delta'' 
     }
     \\
     \inferrule {
+      \Theta_l \notfree \Delta
+      \\
       \Theta_l \notfree \tau_r
-      \\
-      \Delta_l \given \Theta\ \Delta
-      \\
-      \forall \Theta'\ \Delta' .\ \Delta_l \given \Theta'\ \Delta' \implies (\Theta'\ \Delta') = (\Theta\ \Delta)
       \\\\
-      (\Theta \cup \Theta_l, \Delta) \preceq \Theta'\ \Delta' 
+      \Theta\ \Delta \entails \Delta_l \given \Theta'\ \Delta' \unique
       \\
-      \tau_l \subtypes \tau_r \given \Theta'\ \Delta' 
+      \Theta' \cup \Theta_l\ \Delta' \entails
+      \tau_l \subtypes \tau_r \given \Theta''\ \Delta''
     } {
+      \Theta\ \Delta \entails
       \J{EXI[}\Theta_l\ \Delta_l \J{]}\tau_l \subtypes \tau_r
-      \given \Theta'\ \Delta' 
+      \given \Theta''\ \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -2028,31 +2041,30 @@ splitting the worlds too eagerly.
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Introduction)
   \hfill
-  \boxed{\tau \subtypes \psi \given \Theta\ \Delta}
+  \boxed{\Theta\ \Delta \entails \tau \subtypes \psi \given \Theta'\ \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau \subtypes \tau_{a} \given \Theta\ \Delta 
+      \Theta\ \Delta \entails
+      \tau \subtypes \tau_{a} \given \Theta'\ \Delta' 
       \\
-      \Theta\ \Delta \preceq \Theta'\ \Delta'
-      \\
-      \tau \subtypes \tau_{b} \given \Theta'\ \Delta' 
+      \Theta'\ \Delta' \entails
+      \tau \subtypes \tau_{b} \given \Theta''\ \Delta''
     } {
-      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'\ \Delta'
+      \Theta\ \Delta \entails
+      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta''\ \Delta''
     }
     \\
     \inferrule {
+      \Theta_r \notfree \Delta
+      \\
       \Theta_r \notfree \tau_l
-      \\
-      \Delta_r \given \Theta, \Delta
-      \\
-      \forall \Theta'\ \Delta' .\ \Delta_r \given \Theta'\ \Delta' \implies (\Theta'\ \Delta') = (\Theta\ \Delta)
       \\\\
-      (\Theta \cup \Theta_r, \Delta) \preceq \Theta'\ \Delta' 
+      \Theta\ \Delta \given \Delta_r  \given \Theta'\ \Delta' \unique
       \\
-      \tau_l \subtypes \tau_r \given \Theta'\ \Delta' 
+      \Theta' \cup \Theta_r\ \Delta' \entails \tau_l \subtypes \tau_r \given \Theta''\ \Delta'' 
     } {
-      \tau_l \subtypes \J{ALL[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Theta'\ \Delta' 
+      \tau_l \subtypes \J{ALL[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Theta''\ \Delta''
     }
   \end{mathpar}
 \end{definition}
@@ -2430,6 +2442,25 @@ The second condition is that all lower bounds of that variable can be eliminated
 \noindent
 Variable introduction safety is the dual of variable elimination safety, so its rules
 rely on analogous techniques.
+
+\begin{definition} 
+  \label{def:unique_proof_sequence_subtyping}
+  Unique Proof Sequence Subtyping
+  \hfill
+  \boxed{\Theta\ \Delta \entails \Delta_q \entails \Theta'\ \Delta' \unique}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta\ \Delta \entails \Delta_q \given \Theta'\ \Delta'
+      \\\\
+      \forall \Theta''\ \Delta'' .\ 
+      \Theta\ \Delta \entails
+      \Delta_q \given \Theta'\ \Delta' \implies (\Theta''\ \Delta'') = (\Theta'\ \Delta')
+    } {
+      \Theta\ \Delta \entails \Delta_q \given \Theta'\ \Delta' \unique
+    }
+  \end{mathpar}
+\end{definition}
 
 
 % \section{Experiments}
