@@ -2181,15 +2181,19 @@ rely on analogous techniques.
   \label{def:proof_subtyping_lfp_elimination}
   Proof Subtyping (Least Fixed Point Elimination)
   \hfill
-  \boxed{\J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega}
+  \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
       \alpha \not\in \text{FTV}(\tau_r)
       \\
-      \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given \Omega 
+      \Theta, \Delta \entails 
+      \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
+      \Theta', \Delta'
     } {
-      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Omega 
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
     }
   \end{mathpar}
 \end{definition}
@@ -2210,21 +2214,22 @@ $\alpha \subtypes \tau_r$
   \label{def:proof_subtyping_difference_intro}
   Proof Subtyping (Difference Introduction)
   \hfill
-  \boxed{\tau \subtypes \rho \typdiff \eta \given \Omega}
+  \boxed{\Theta, \Delta \entails\tau \subtypes \rho \typdiff \eta \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau \subtypes \rho \given \Omega 
+      \Theta, \Delta \entails 
+      \tau \subtypes \rho \given \Theta', \Delta' 
       \\
       \text{FTV}(\eta) \subseteq \epsilon
       \\
-      \nexists \Omega' .\  
-      \Omega \preceq \Omega'
-      \land
-      \tau \subtypes \eta \given \Omega'
+      \nexists \Theta', \Delta' \qua  
+      \Theta, \Delta \entails 
+      \tau \subtypes \eta \given \Theta', \Delta'
     } {
+      \Theta, \Delta \entails 
       \tau \subtypes \rho \typdiff \eta
-      \given \Omega 
+      \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -2249,18 +2254,18 @@ which in turn guarantees that is failure is sound.
   \label{def:proof_subtyping_lfp_intro}
   Proof Subtyping (Least Fixed Point Introduction)
   \hfill
-  \boxed{\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega}
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+      \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
       \\
-      \Omega \preceq \Omega'
-      \\
+      \Theta, \Delta \entails
       \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
-      \given \Omega'
+      \given \Theta', \Delta'
     } {
-      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Omega'
+      \Theta, \Delta \entails
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -2277,13 +2282,15 @@ and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \a
   \label{def:proof_subtyping_diff_elimination}
   Proof Subtyping (Difference Elimination)
   \hfill
-  \boxed{\rho \typdiff \eta \subtypes \tau \given \Omega}
+  \boxed{\Theta, \Delta \entails \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \rho \subtypes \tau \J{|} \eta \given \Omega
+      \Theta, \Delta \entails 
+      \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
     } {
-      \rho \typdiff \eta \subtypes \tau \given \Omega
+      \Theta, \Delta \entails 
+      \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -2297,31 +2304,30 @@ $\rho \subtypes \tau \J{|} \eta$.
   \label{def:proof_subtyping_abstraction_introduction}
   Proof Subtyping (Expansion Introduction)
   \hfill
-  \boxed{\tau \subtypes \phi \given \Omega}
+  \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau \subtypes \tau_{l} \given \Omega 
+      \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
     } {
-      \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \tau \subtypes \tau_{r} \given \Omega 
+      \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
     } {
-      \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Omega 
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
       \\
-      \Omega \preceq \Omega' 
-      \\
-      \Delta_r \given \Omega' 
+      \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
     } {
+      \Theta, \Delta \entails 
       \tau_l
       \subtypes 
-      \J{EXI[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Omega' 
+      \J{EXI[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Theta'', \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -2345,32 +2351,31 @@ by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
   \label{def:proof_subtyping_refinement_elimination}
   Proof Subtyping (Refinement Elimination)
   \hfill
-  \boxed{\psi \subtypes \tau \given \Omega}
+  \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_{l} \subtypes \tau \given \Omega
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
     } {
-      \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Omega 
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \tau_{l} \subtypes \tau \given \Omega 
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
     } {
-      \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Omega 
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
     }
 
     \inferrule {
-      \tau_l \subtypes \tau_r \given \Omega 
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
       \\
-      \Omega \preceq \Omega' 
-      \\
-      \Delta_l \given \Omega' 
+      \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
     } {
+      \Theta, \Delta \entails 
       \J{ALL[}\Theta_l\ \Delta_l\J{]}\tau_l
       \subtypes 
       \tau_r
-      \given \Omega' 
+      \given \Theta'', \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -2383,24 +2388,24 @@ rely on analogous techniques.
   \label{def:variable_elimination_safety}
   Variable Elimination Safety 
   \hfill
-  \boxed{(\Theta, \Delta) \entails \alpha \subtypes \tau \safe}
+  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \safe}
   \\
   \begin{mathpar}
     \inferrule {
-      \exists \tau' .\  \alpha \J{<:} \tau' \in \Delta
+      \exists \tau' \qua  \alpha \J{<:} \tau' \in \Delta
       \land 
       (
-      (\exists \alpha' .\ \tau' = \alpha' \land \alpha' \notin \Theta) 
+      (\exists \alpha' \qua \tau' = \alpha' \land \alpha' \notin \Theta) 
       \lor 
-      (\exists \Omega .\ (\Theta, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega) 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
       )
       \\\\
-      \forall \tau' .\  \tau' \J{<:} \alpha \in \Delta
+      \forall \tau' \qua  \tau' \J{<:} \alpha \in \Delta
       \implies 
-      \exists \Omega .\ (\Theta, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega 
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'  
       \\
     } {
-      (\Theta, \Delta) \entails \alpha \subtypes \tau \safe
+      \Theta, \Delta \entails \alpha \subtypes \tau \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2416,24 +2421,24 @@ The second condition is that all lower bounds of that variable can be eliminated
   \label{def:variable_introduction_safety}
   Variable Introduction Safety
   \hfill
-  \boxed{(\Theta, \Delta) \entails \tau \subtypes \alpha \safe}
+  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \safe}
   \\
   \begin{mathpar}
     \inferrule {
-      \exists \tau' .\  \tau' \J{<:} \alpha \in \Delta
+      \exists \tau' \qua  \tau' \J{<:} \alpha \in \Delta
       \land 
       (
-      (\exists \alpha' .\ \tau' = \alpha' \land \alpha' \notin \Theta) 
+      (\exists \alpha' \qua \tau' = \alpha' \land \alpha' \notin \Theta) 
       \lor 
-      (\exists \Omega .\ (\Theta, \Delta) \preceq \Omega \land \tau \subtypes \tau' \given \Omega) 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
       )
       \\\\
-      \forall \tau' .\  \alpha \J{<:} \tau' \in \Delta
+      \forall \tau' \qua  \alpha \J{<:} \tau' \in \Delta
       \implies 
-      \exists \Omega .\ (\Theta, \Delta) \preceq \Omega \land \tau' \subtypes \tau \given \Omega 
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta' 
       \\
     } {
-      (\Theta, \Delta) \entails \tau \subtypes \alpha \safe
+      \Theta, \Delta \entails \tau \subtypes \alpha \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2443,20 +2448,42 @@ Variable introduction safety is the dual of variable elimination safety, so its 
 rely on analogous techniques.
 
 \begin{definition} 
-  \label{def:unique_proof_sequence_subtyping}
-  Unique Proof Sequence Subtyping
+  \label{def:proof_sequence_subtyping}
+  Proof Sequence Subtyping
   \hfill
-  \boxed{\Theta\ \Delta \entails \Delta_q \entails \Theta'\ \Delta' \unique}
+  \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta\ \Delta \entails \Delta_q \given \Theta'\ \Delta'
-      \\\\
-      \forall \Theta''\ \Delta'' .\ 
-      \Theta\ \Delta \entails
-      \Delta_q \given \Theta'\ \Delta' \implies (\Theta''\ \Delta'') = (\Theta'\ \Delta')
     } {
-      \Theta\ \Delta \entails \Delta_q \given \Theta'\ \Delta' \unique
+      \Theta, \Delta \entails \epsilon \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \J{<:} \tau_r \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails \Delta_q\ \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} 
+  \label{def:unique_proof_sequence_subtyping}
+  Unique Proof Sequence Subtyping
+  \hfill
+  \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta' \unique}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
+      \\\\
+      \forall \Theta'', \Delta'' \qua 
+      \Theta, \Delta \entails
+      \Delta_q \given \Theta', \Delta' \implies (\Theta'', \Delta'') = (\Theta', \Delta')
+    } {
+      \Theta\ \Delta \entails \Delta_q \given \Theta', \Delta' \unique
     }
   \end{mathpar}
 \end{definition}
@@ -2549,20 +2576,6 @@ rely on analogous techniques.
 
 \section{Appendix}
 \label{sect:appendix}
-
-\begin{definition} 
-  \label{def:world_containment}
-  World Containment 
-  \hfill
-  \boxed{\Omega \preceq \Omega}
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      (\Theta,\Delta)  \preceq (\Theta \cup \Theta',\Delta \cup \Delta') 
-    }
-  \end{mathpar}
-\end{definition}
 
 \begin{definition} 
   \label{def:type_interpretation}
