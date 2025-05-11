@@ -110,10 +110,14 @@
 \newcommand{\sep}{\ \ |\ \ }
 \newcommand{\nonterm}[1]{#1\ }
 \newcommand{\contin}{|\ \ \ \ \ \ \ }
-\newcommand{\case}{\B{case }}
 \newcommand{\wrt}{\B{wrt }}
 % \newcommand{\let}{\B{let }}
 % \newcommand{\for}{\B{for }}
+
+
+\newcommand{\pc}{\noindent \ \ $\diamond$ \ \ }
+
+ 
      
 
 
@@ -1084,14 +1088,14 @@ with meaning.  At the very least, types should inform us that an expression is s
       \\
       \delta \cup \delta' \satisfies e \hastype \tau
       \\
-      \text{dom}(\delta') \cong \Theta
+      \textbf{dom}(\delta') \cong \Theta
     } {
       \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta\ \tau
     } 
 
     \inferrule { 
       \forall \delta' .\ 
-      \text{dom}(\delta') \cong \Theta \implies
+      \textbf{dom}(\delta') \cong \Theta \implies
       \delta \cup \delta' \satisfies \Delta \implies 
       \delta \cup \delta' \satisfies e \hastype \tau
     } {
@@ -1214,7 +1218,7 @@ aims to prove the validity of typing directly by including elimination rules.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
     } {
-      \exists \delta .\ \text{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      \exists \delta .\ \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
       \forall \delta' .\ 
       \delta' \cup \delta \satisfies \Delta' \implies
@@ -1287,7 +1291,7 @@ enumerates all possible outputs.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \text{pack}^+(\text{FTV}(\Gamma), \Theta \entails \Pi) = \tau 
+      \textbf{pack}^+(\textbf{ftv}(\Gamma), \Theta \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -1325,7 +1329,7 @@ enumerates all possible outputs.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta'
       \\
-      \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) = \Theta_\invar
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \Theta_\invar
       \\\\
       \forall \Theta'', \Delta''  \qua 
         \Theta', \llbracket \Theta_\invar \cup \Theta' \entails \Delta'' \backslash \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ 
@@ -1339,7 +1343,7 @@ enumerates all possible outputs.
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
       \\
-      \text{pack}^-(\Theta_\invar, \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\Theta_\invar, \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
       \exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
@@ -1370,7 +1374,7 @@ $\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$
 constructs a sequence of path types, 
 with each path type associated with a world, represented by $\Pi$.
 Then, the metalanguage function for positive packaging 
-$\text{pack}^+(\text{FTV}(\Gamma)\ \Theta \entails \Pi)$
+$\textbf{pack}^+(\textbf{ftv}(\Gamma)\ \Theta \entails \Pi)$
 takes the path colonies and for each path colony,
 it rewrites the colony into a type by wrapping the path type in indexed unions
 and indexed intersections qualified by the constraints in the colony's subtyping environment. 
@@ -1416,7 +1420,7 @@ $, which rewrites the implicitly co-inductive pairs of path types and worlds int
 implicitly inductive pairs of pair types and worlds. 
 Rewriting the co-inductive paths into inductive pairs is the first
 step towards factoring the infinite paths of the recursive function into a weaker single path.
-By leveraging the negative packaging $\text{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
+By leveraging the negative packaging $\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
 the qualification by the worlds becomes embedded in a single type $\tau_\mu$. 
 Finally, it makes inductive nature of the relational type explicit,
 by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$, 
@@ -1443,7 +1447,7 @@ of a single path type.
       \\
       \text{diff}(\rho, \Xi) = \tau_l
       \\
-      \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) = \Theta_\invar
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \Theta_\invar
       \\\\
       \forall \Theta', \Delta', \tau_r  \qua 
       \Theta', \llbracket \Theta_\invar \cup \Theta' \entails \Delta' \backslash \Delta, \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
@@ -1489,7 +1493,7 @@ types more readable.
       \forall \tau_\nu\ \Theta_\nu\ \Delta_\nu\ \tau_\nu'\ \delta_\nu.\ 
       \\\\
       (\Theta_\nu,\Delta_\nu, \tau_\nu') \in \Pi_\nu \implies
-      \text{dom}(\delta_\nu) \cong \Theta_\nu \implies
+      \textbf{dom}(\delta_\nu) \cong \Theta_\nu \implies
       \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies \Delta_\nu \implies
       \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies e_f \hastype \tau_\nu'
       \\\\
@@ -1498,7 +1502,7 @@ types more readable.
       \exists e_a\ \tau_\mu\ \Theta_\mu\ \Delta_\mu\ \tau_\mu'\ \delta_\mu.\ 
       \\\\
       (\Theta_\mu,\Delta_\mu, \tau_\mu') \in \Pi_\mu \land
-      \text{dom}(\delta_\mu) \cong \Theta_\mu \land
+      \textbf{dom}(\delta_\mu) \cong \Theta_\mu \land
       \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies \Delta_\mu \land
       \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu'
     }
@@ -1614,9 +1618,9 @@ at least one type $\tau_\mu$ constrained by the environment's pair type lower bo
     }
 
     \inferrule {
-      \alpha_\nu \notin \text{FTV}(\tau_l)
+      \alpha_\nu \notin \textbf{ftv}(\tau_l)
       \\
-      \alpha_\nu \notin \text{FTV}(\tau_r)
+      \alpha_\nu \notin \textbf{ftv}(\tau_r)
       \\
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
@@ -1661,7 +1665,7 @@ and the the correspondence holds for the previous constraints in the environment
     \inferrule { 
       \llbracket \Theta \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
       \\
-      \Theta \subseteq \text{dom}(\delta')
+      \Theta \subseteq \textbf{dom}(\delta')
     } {
       \exists \delta .\ 
       (
@@ -1699,15 +1703,15 @@ in the appendix (Section \ref{sect:appendix}).
   \\
   \begin{mathpar}
     \inferrule { 
-      \text{pack}^+(\Theta_\ignore \entails \Pi) = \tau'
+      \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau'
       \\
-      \text{dom}(\delta_\ignore) \cong \Theta_\ignore
+      \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
     } {
       \exists \delta .\ 
       \forall \Theta\ \Delta\ \tau\ \delta' .\ 
       (\Theta, \Delta, \tau) \in \Pi
       \implies
-      \text{dom}(\delta') = \Theta
+      \textbf{dom}(\delta') = \Theta
       \implies
       \\\\
       \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
@@ -1718,15 +1722,15 @@ in the appendix (Section \ref{sect:appendix}).
     } 
 
     \inferrule { 
-      \text{pack}^-(\Theta_\ignore \entails \Pi) = \tau'
+      \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau'
       \\
-      \text{dom}(\delta_\ignore) \cong \Theta_\ignore
+      \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
     } {
       \exists \delta .\ 
       \forall \Theta\ \Delta\ \tau\ \delta' .\ 
       (\Theta, \Delta, \tau) \in \Pi
       \implies
-      \text{dom}(\delta') = \Theta
+      \textbf{dom}(\delta') = \Theta
       \implies
       \\\\
       \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
@@ -1739,7 +1743,7 @@ in the appendix (Section \ref{sect:appendix}).
 \end{property}
 
 \noindent
-Packaging ($\text{pack}^\pm(\Theta_\ignore \entails \Pi) = \tau'$)
+Packaging ($\textbf{pack}^\pm(\Theta_\ignore \entails \Pi) = \tau'$)
 constructs a type $\tau'$ from the colonies $\Pi$
 such that for each colony $(\Theta, \Delta, \tau)$,
 it binds the variables of the type $\tau$ within
@@ -1751,7 +1755,7 @@ The choice of binding in an indexed union or indexed intersection is
 determined by whether the variable is open ($\alpha \not\in \Theta$)
 or closed ($\alpha \in \Theta$)
 and whether the interpretation is 
-positive ($\text{pack}^+(...)$) or negative ($\text{pack}^-(...)$).
+positive ($\textbf{pack}^+(...)$) or negative ($\textbf{pack}^-(...)$).
 For the positive form, the construction (including how the closed variables are bound)
 must result in a type $\tau'$ that is weaker than the type of every colony in every interpretation
 of the closed variables $\delta'$, for some interpretation of the open variables $\delta$  
@@ -1772,7 +1776,7 @@ The interested reader can find the actual the definition of packaging in the app
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
       \exists \delta .\ 
-      \text{dom}(\delta) \cong \Theta' \backslash \Theta
+      \textbf{dom}(\delta) \cong \Theta' \backslash \Theta
       \up
       (
       \forall \delta' .\ 
@@ -2185,7 +2189,7 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \alpha \not\in \text{FTV}(\tau_r)
+      \alpha \not\in \textbf{ftv}(\tau_r)
       \\
       \Theta, \Delta \entails 
       \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
@@ -2221,7 +2225,7 @@ $\alpha \subtypes \tau_r$
       \Theta, \Delta \entails 
       \tau \subtypes \rho \given \Theta', \Delta' 
       \\
-      \text{FTV}(\eta) \subseteq \epsilon
+      \textbf{ftv}(\eta) \subseteq \epsilon
       \\
       \nexists \Theta', \Delta' \qua  
       \Theta, \Delta \entails 
@@ -2239,7 +2243,7 @@ For difference introduction, $\tau \subtypes \tau_r \typdiff \eta$,
 proof subtyping checks that subtyping holds for the positive part 
 $\tau \subtypes \rho \given \Omega$.
 Then it requires that there are no free variables
-in the subtracted part $\text{FTV}(\eta) \subseteq \epsilon$,
+in the subtracted part $\textbf{ftv}(\eta) \subseteq \epsilon$,
 and also that introduction of the subtracted part fails $
   \nexists \Omega' .\  
   \Omega \preceq \Omega'
@@ -2327,7 +2331,7 @@ $\rho \subtypes \tau \J{|} \eta$.
       \Theta, \Delta \entails 
       \tau_l
       \subtypes 
-      \J{EXI[}\Theta_r\ \Delta_r \J{]}\tau_r \given \Theta'', \Delta'' 
+      \J{EXI[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -2372,7 +2376,7 @@ by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
       \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails 
-      \J{ALL[}\Theta_l\ \Delta_l\J{]}\tau_l
+      \J{ALL[}\Theta_l\J{]} \Delta_l\ \tau_l
       \subtypes 
       \tau_r
       \given \Theta'', \Delta'' 
@@ -2393,10 +2397,10 @@ rely on analogous techniques.
   \begin{mathpar}
     \inferrule {
       \exists \tau' \qua  \alpha \J{<:} \tau' \in \Delta
-      \land 
+      \up 
       (
-      (\exists \alpha' \qua \tau' = \alpha' \land \alpha' \notin \Theta) 
-      \lor 
+      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
+      \down 
       (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
       )
       \\\\
@@ -2426,10 +2430,10 @@ The second condition is that all lower bounds of that variable can be eliminated
   \begin{mathpar}
     \inferrule {
       \exists \tau' \qua  \tau' \J{<:} \alpha \in \Delta
-      \land 
+      \up 
       (
-      (\exists \alpha' \qua \tau' = \alpha' \land \alpha' \notin \Theta) 
-      \lor 
+      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
+      \down 
       (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
       )
       \\\\
@@ -2769,7 +2773,7 @@ rely on analogous techniques.
     \inferrule {
       \ \alpha\J{<:}\tau \in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \Theta
+      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
       \\
       \ \alpha'\J{<:}\tau' \in \Delta 
     } {
@@ -2779,7 +2783,7 @@ rely on analogous techniques.
     \inferrule {
       \ \alpha\J{<:}\tau \in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \Theta
+      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
       \\
       \ \alpha'\J{<:}\tau' \in \Delta 
     } {
@@ -2789,7 +2793,7 @@ rely on analogous techniques.
     \inferrule {
       \ \tau \J{<:} \alpha\in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \Theta
+      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
       \\
       \ \tau'\J{<:} \alpha' \in \Delta 
     } {
@@ -2799,7 +2803,7 @@ rely on analogous techniques.
     \inferrule {
       \ \tau \J{<:} \alpha\in \Delta 
       \\\\
-      \alpha' \in \text{FTV}(\tau) \backslash \Theta
+      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
       \\
       \ \tau'\J{<:} \alpha' \in \Delta 
     } {
@@ -2880,24 +2884,24 @@ rely on analogous techniques.
   \label{def:type_packaging}
   Type Packaging 
   \hfill
-  \boxed{\text{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'} 
+  \boxed{\textbf{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'} 
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \text{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) 
+      \textbf{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) 
       &\ =\ & 
       \text{wrap}^{\pm}(\Theta_o, \Delta_o, \Theta_i, \Delta_i, \tau)
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \text{FTV}(\tau) = \Theta_p
+        \textbf{ftv}(\tau) = \Theta_p
         \\
         \Theta_\ignore \cup \Theta \cup \Theta_p \entails \Delta \dashrightarrow \Delta' 
         \\
         \Theta_\ignore, \Theta \entails \Delta' \rightrightarrows \Delta_o, \Delta_i 
         \\
-        (\text{FTV}(\Delta) \cup \Theta_p) \cap \Theta = \Theta_o 
+        (\textbf{ftv}(\Delta) \cup \Theta_p) \cap \Theta = \Theta_o 
         \\
-        \text{FTV}(\Delta_i) \cup \Theta_p \backslash \Theta \backslash \Theta_\ignore = \Theta_i 
+        \textbf{ftv}(\Delta_i) \cup \Theta_p \backslash \Theta \backslash \Theta_\ignore = \Theta_i 
       \end{array}
   \end{array}
   \]
@@ -2908,42 +2912,42 @@ rely on analogous techniques.
   \label{def:multiple_type_packaging}
   Multiple Type Packaging 
   \hfill
-  \boxed{\text{pack}^\pm(\Theta \entails \Pi) = \tau}\ 
+  \boxed{\textbf{pack}^\pm(\Theta \entails \Pi) = \tau}\ 
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \text{pack}^+(\Theta_\ignore \entails \epsilon) 
+      \textbf{pack}^+(\Theta_\ignore \entails \epsilon) 
       &\ =\ & 
       \J{TOP} 
 
       \\
 
-      \text{pack}^+(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau)) 
+      \textbf{pack}^+(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau)) 
       &\ =\ & 
       \tau \J{\&} \tau' 
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \text{pack}^+(\Theta_\ignore \entails \Pi) = \tau 
+        \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau 
         \\
-        \text{pack}^+(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
+        \textbf{pack}^+(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
       \end{array}
 
       \\
 
-      \text{pack}^-(\Theta_\ignore \entails \epsilon) 
+      \textbf{pack}^-(\Theta_\ignore \entails \epsilon) 
       &\ =\ & 
       \J{BOT} 
 
       \\
 
-      \text{pack}^-(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau))
+      \textbf{pack}^-(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau))
       &\ =\ & 
       \tau \J{|} \tau' 
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \text{pack}^-(\Theta_\ignore \entails \Pi) = \tau 
+        \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau 
         \\
-        \text{pack}^-(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
+        \textbf{pack}^-(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
       \end{array}
   \end{array}
   \]
@@ -2970,7 +2974,7 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \text{FTV}(\tau)
+      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \textbf{ftv}(\tau)
     } {
       \Theta \notfree \tau
     }
@@ -3087,7 +3091,7 @@ rely on analogous techniques.
     }
 
     \inferrule {
-      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \cap \Theta
+      \exists \alpha .\ \alpha \in (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \cap \Theta
       \\
       \Theta \entails \Delta \dashrightarrow \Delta'
     } {
@@ -3095,7 +3099,7 @@ rely on analogous techniques.
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)
+      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)
       \\
       \Theta \entails \Delta \dashrightarrow \Delta'
     } {
@@ -3184,7 +3188,7 @@ rely on analogous techniques.
     \inferrule {
       \Theta_\ignore , \Theta \entails \Delta \rightrightarrows \Delta_o , \Delta_i 
       \\\\
-      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \backslash \Theta_\ignore \backslash \Theta
+      \exists \alpha .\ \alpha \in (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \backslash \Theta_\ignore \backslash \Theta
     } {
       \Theta_\ignore , \Theta \entails \Delta \  \tau_l \J{<:}\tau_r \rightrightarrows \Delta_o , \Delta_i \  \tau_l \J{<:} \tau_r
     }
@@ -3192,9 +3196,9 @@ rely on analogous techniques.
     \inferrule {
       \Theta_\ignore , \Theta \entails \Delta \rightrightarrows \Delta_o , \Delta_i 
       \\\\
-      \exists \alpha .\ \alpha \in (\text{FTV}(\tau_l) \cup \text{FTV}(\tau_r)) \cap \Theta 
+      \exists \alpha .\ \alpha \in (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \cap \Theta 
       \\
-      \text{FTV}(\tau_l) \cup \text{FTV}(\tau_r) \subseteq \Theta_\ignore \cup \Theta
+      \textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r) \subseteq \Theta_\ignore \cup \Theta
     } {
       \Theta_\ignore , \Theta \entails \Delta \  \tau_l \J{<:}\tau_r \rightrightarrows \Delta_o  \  \tau_l \J{<:} \tau_r , \Delta_i
     }
@@ -3293,19 +3297,6 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:empty_extension_equivalence}
-  Empty Extension Equivalence 
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      C \cup \epsilon = C 
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
   \label{theorem:subtyping_environment_interpretation_contraction}
   Subtyping Environment Interpretation Contraction 
   \\
@@ -3313,7 +3304,7 @@ rely on analogous techniques.
     \inferrule {
       \delta \cup \delta' \satisfies \Delta
       \\
-      \text{dom}(\delta') \cap \text{FTV}(\Delta) = \epsilon
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon
     } {
       \delta \satisfies \Delta
     }
@@ -3322,16 +3313,64 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:typing_interpretation_introduction}
-  Typing Interpretation Interpretation Extension 
+  \label{theorem:typing_environment_interpretation_contraction}
+  Typing Environment Interpretation Contraction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \cup \delta', \sigma \satisfies \Gamma 
+      \\
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Gamma) = \epsilon
+    } {
+      \delta, \sigma \satisfies \Gamma
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:typing_interpretation_extension}
+  Typing Interpretation Extension 
   \\
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \tau 
       \\
-      \text{dom}(\delta') \cap \text{FTV}(\tau) = \epsilon
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \epsilon
     } {
       \delta \cup \delta' \satisfies e \hastype \tau 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+
+\begin{theorem}
+  \label{theorem:skolem_variable_freshness}
+  Skolem Variable Freshness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \epsilon
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:domain_extension}
+  Domain Extension 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \textbf{dom}(\delta_l) = \Theta_l  
+      \\
+      \textbf{dom}(\delta_r) = \Theta_r  
+    } {
+      \textbf{dom}(\delta_l \cup \delta_r) = \Theta_l \cup \Theta_r 
     }
   \end{mathpar}
 \end{theorem}
@@ -3343,25 +3382,10 @@ rely on analogous techniques.
   Proof Typing Soundness 
   \\
   \begin{mathpar}
-    % \inferrule {
-    %   \Theta\ \Delta\ \Gamma \entails e \hastype \tau \given \Theta'\ \Delta'
-    % } {
-    %   \text{dom}(\delta) \cong \Theta \cup \text{FTV}(\Delta) \cup \text{FTV}(\Gamma) \implies
-    %   \delta \satisfies \Delta \implies
-    %   \delta, \sigma \satisfies \Gamma \implies
-    %   \\\\
-    %   \exists \delta' .\ \text{dom}(\delta') \cong \Theta' \backslash \Theta \land
-    %   (
-    %   \forall \delta'' .\ 
-    %   \delta'' \cup \delta' \cup \delta \satisfies \Delta' \backslash \Delta \implies
-    %   \delta'' \cup \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
-    %   )
-    % }
-
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
     } {
-      \exists \delta \qua \text{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta' \implies
@@ -3374,38 +3398,69 @@ rely on analogous techniques.
 \hfill
 
   
-We prove proof typing soundness using induction.
-In the case of $\Gamma \entails \J{@} \hastype \J{@} \given \Theta, \Delta$,
-we derive the conclusion using the definition of model typing (Def. \ref{def:model_typing}).
-In the case of $\Gamma \entails x \hastype \tau \given \Theta, \Delta$,
-we derive the conclusion using the theorem of typing environment soundness (Theorem \ref{theorem:typing_environment_soundness}).
-In the case of $\Gamma \entails \epsilon \hastype \J{TOP} \given \Theta, \Delta$,
-we derive the conclusion using the definition of model typing (Def. \ref{def:model_typing}).
+\noindent
+We prove Proof Typing Soundness by induction over Definition \ref{def:proof_typing} (Proof Typing).
 
+\pc
+For $\J{@} \hastype \J{@}$,
+we derive the conclusion by Definition \ref{def:model_typing} (Model Typing).
 
+\pc
+For $ x \hastype \tau$, 
+we derive the conclusion by Theorem \ref{theorem:typing_environment_soundness}
+(Typing Environment Soundness).
 
-In the case of $\Gamma \entails r \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') \given \Theta, \Delta$,
-we deduce $\Gamma \entails r \hastype \tau \given \Theta, \Delta$; $\Omega \preceq \Theta, \Delta$; and $\Gamma \entails e \hastype \tau' \given \Theta, \Delta$,
-using the definition of proof typing (Def. \ref{def:proof_typing}).
-We have 
-$\exists \delta.\ 
-... \land
-\forall \delta'\ \sigma'.\ 
-... \implies \delta' \cup \delta \satisfies r[\sigma] \hastype \tau$ 
-and
-$\exists \delta.\  
-... \land
-\forall \delta'\ \sigma'.\ 
-... \implies \delta \cup \delta' \satisfies e[\sigma] \hastype \tau'$
-by the induction hypothesis.
+\pc
+For $\epsilon \hastype \J{TOP}$,
+we derive the conclusion using Definition \ref{def:model_typing} (Model Typing).
 
-We have
-$\exists \delta.\  
-... \land
-\forall \delta'\ \sigma'.\ 
-... \implies \delta' \cup \delta \satisfies \J{<}l\J{>}e[\sigma] \hastype \J{<}l\J{>}\tau'$
-by the theorem of entry type introduction (Theorem \ref{theorem:entry_type_introduction}).
-Finally, we derive the model typing of the intersection by the definition of model typing (Def. \ref{def:model_typing}).
+\pc
+For $r \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau')$,
+we apply the induction hypothesis to the two inductive premises
+\newline
+$r \hastype \tau$ and $e \hastype \tau'$. For the former, we derive
+an interpretation $\delta_r$, such that $\textbf{dom}(\delta_r) \cong \Theta' \backslash \Theta$.
+
+\noindent
+First, we address the left part of the conclusion's conjunction. 
+For the latter, we derive an interpretation $\delta_e$, 
+such that $\textbf{dom}(\delta_e) \cong \Theta'' \backslash \Theta'$.
+We combine these two interpretations into $\delta$,
+such that $\delta = \delta_r \cup \delta_e$.
+We derive $\textbf{dom}(\delta) = (\Theta' \backslash \Theta) \cup (\Theta'' \backslash \Theta')$
+by Theorem \ref{theorem:domain_extension} (Domain Extension),
+which simplifies to  $\textbf{dom}(\delta) = \Theta'' \backslash \Theta$.
+
+\noindent
+Next, we address the right part of the conclusion's conjunction. 
+We introduce an arbitrary interpretation $\delta'$, and we assume
+$\delta' \cup \delta \satisfies \Delta'$ and $\delta' \cup \delta, \sigma \satisfies \Gamma$.
+With a little rewriting, we have $\delta' \cup \delta_r \cup \delta_e \satisfies \Delta'$
+and $\delta' \cup \delta_r \cup \delta_e, \sigma \satisfies \Gamma$. 
+We derive $\delta' \cup \delta_r \satisfies \Delta'$ by 
+Theorem \ref{theorem:skolem_variable_freshness} 
+and Theorem \ref{theorem:subtyping_environment_interpretation_contraction}. 
+Likewise, we derive $\delta' \cup \delta_r, \sigma \satisfies \Gamma$ by 
+Theorem \ref{theorem:skolem_variable_freshness} 
+and Theorem \ref{theorem:typing_environment_interpretation_contraction}. 
+From here, we apply the results of the induction hypothesis to get 
+$\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau$,
+and then lift to $\delta' \cup \delta \satisfies r[\sigma] \hastype \tau$ 
+by Theorem \ref{theorem:typing_interpretation_extension} and Theorem \ref{theorem:skolem_variable_freshness}.
+Additionally, we apply the other results of the induction hypothesis to get
+$\delta' \cup \delta \satisfies e[\sigma] \hastype \tau'$.
+We combine these terms for both types, resulting
+in $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
+by Theorem \ref{theorem:record_extension_preservation}
+and $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau'$
+by Theorem \ref{theorem:entry_type_introduction}.
+We simplify to 
+$\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau$
+and $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau'$
+by Definition \ref{...} (Substitution).
+Thus, we derive 
+$\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} \tau'$
+by Definition \ref{def:model_typing} (Model Typing).
 
 $\square$
 
@@ -3440,7 +3495,7 @@ $\square$
     \inferrule {
       \exists \Xi.\ \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \text{pack}^+(\text{FTV}(\Gamma)\ \Theta \entails \Pi) = \tau 
+      \textbf{pack}^+(\textbf{ftv}(\Gamma)\ \Theta \entails \Pi) = \tau 
     } {
       \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -3486,7 +3541,7 @@ $\square$
     \inferrule {
       \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta, \Delta 
       \\
-      \text{FTV}(\Gamma) \cup \text{FTV}(\Delta) = \Theta_\ignore
+      \textbf{ftv}(\Gamma) \cup \textbf{ftv}(\Delta) = \Theta_\ignore
       \\\\
       \forall \Theta'\ \Delta' .\ 
         \Theta', \llbracket \alpha_\ignore \cup \Theta' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \Pi_\nu
@@ -3499,7 +3554,7 @@ $\square$
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
       \\
-      \text{pack}^-(\text{FTV}(\Gamma) \cup \Theta\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\textbf{ftv}(\Gamma) \cup \Theta\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
       \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
@@ -3787,7 +3842,7 @@ $\square$
     \tau' \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
   $ 
   \item \Z $\contin  
-    \text{FTV}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
+    \textbf{ftv}(\Gamma) \entails \alpha_{h^+} \cdot Z_1 \cdot \J{$\alpha_l$->$\alpha_r$} \fallingdotseq \alpha_{h^-} \cdot \Tau
   $
   \item \Z $\B{hypo } 
     \forall \delta .\ \delta \satisfies Z_0 \implies
@@ -3835,7 +3890,7 @@ $\square$
     \inferrule { 
       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
       \\
-      \text{FTV}(\tau) \subseteq N
+      \textbf{ftv}(\tau) \subseteq N
       \\
       \alpha_l \notin N
       \\
@@ -3935,7 +3990,7 @@ $\square$
     \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\ \tau_r .\ \tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
   $
   \item \Z $\contin
-    N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+    N \cup M \cup \textbf{ftv}(\Tau_l) \cup \textbf{ftv}(\Tau_r)\ \alpha_{h^-} = \Alpha 
     \I
     \Delta \entails \Alpha \pitchfork \Delta_i  
   $
@@ -4026,7 +4081,7 @@ $\square$
       \\\\
       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
-      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      N \cup M \cup \textbf{ftv}(\Tau_l) \cup \textbf{ftv}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
@@ -4057,7 +4112,7 @@ $\square$
       \\\\
       \widebar{\J{$\tau_l$*$\tau_r$<:$\alpha_{h^-}$}}^{\tau_l\J{->}\tau_r \in \Tau_h} = \Delta_h
       \\
-      N \cup M \cup \text{FTV}(\Tau_l) \cup \text{FTV}(\Tau_r)\ \alpha_{h^-} = \Alpha 
+      N \cup M \cup \textbf{ftv}(\Tau_l) \cup \textbf{ftv}(\Tau_r)\ \alpha_{h^-} = \Alpha 
       \\ 
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
@@ -4114,7 +4169,7 @@ $\square$
       \\\\
       \Delta \entails \Alpha \pitchfork \Delta_i  
       \\
-      \text{FTV}(\tau) \subseteq \Alpha
+      \textbf{ftv}(\tau) \subseteq \Alpha
       \\\\
       N, M, \Delta \cup \Delta' \given \J{\&$(\Tau_l)$*|$(\Tau_r)$} \cong^- \tau
       \\
@@ -4250,7 +4305,7 @@ $\square$
 %     \inferrule { 
 %       \tau \subtypes \J{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
 %       \\\\
-%       \text{FTV}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \J{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
+%       \textbf{ftv}(\Gamma) \entails \alpha_0 \cdot Z_1 \cdot \J{$\alpha_1$->$\alpha_2$} \fallingdotseq \alpha_3 \circlearrowright \Tau_{rel}
 %     } {
 %       \J{ALL[$\alpha_4$]$\alpha_4$->EXI[$\alpha_5$.($\alpha_4$,$\alpha_5$)<:LFP[$\alpha_3$.|$(\Tau_{rel})$]]$\alpha_5$} 
 %       \subtypes
