@@ -3403,11 +3403,11 @@ We prove Proof Typing Soundness by induction over Definition \ref{def:proof_typi
 
 \pc
 For $\J{@} \hastype \J{@}$,
-we derive the conclusion by Definition \ref{def:model_typing} (Model Typing).
+we derive the conclusion by applying Definition \ref{def:model_typing} (Model Typing).
 
 \pc
 For $ x \hastype \tau$, 
-we derive the conclusion by Theorem \ref{theorem:typing_environment_soundness}
+we derive the conclusion by applying Theorem \ref{theorem:typing_environment_soundness}
 (Typing Environment Soundness).
 
 \pc
@@ -3416,19 +3416,21 @@ we derive the conclusion using Definition \ref{def:model_typing} (Model Typing).
 
 \pc
 For $r \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau')$,
-we apply the induction hypothesis to the two inductive premises
-\newline
-$r \hastype \tau$ and $e \hastype \tau'$. For the former, we derive
-an interpretation $\delta_r$, such that $\textbf{dom}(\delta_r) \cong \Theta' \backslash \Theta$.
+we introduce an arbitrary value interpretation $\sigma$,
+and we apply the induction hypothesis to the two typings 
+$r \hastype \tau$ and $e \hastype \tau'$, 
+resulting in two statements, which we name $P_r$ and $P_e$, respectively. 
 
 \noindent
 First, we address the left part of the conclusion's conjunction. 
+For the former, we derive
+an interpretation $\delta_r$, such that $\textbf{dom}(\delta_r) \cong \Theta' \backslash \Theta$.
 For the latter, we derive an interpretation $\delta_e$, 
 such that $\textbf{dom}(\delta_e) \cong \Theta'' \backslash \Theta'$.
 We combine these two interpretations into $\delta$,
 such that $\delta = \delta_r \cup \delta_e$.
 We derive $\textbf{dom}(\delta) = (\Theta' \backslash \Theta) \cup (\Theta'' \backslash \Theta')$
-by Theorem \ref{theorem:domain_extension} (Domain Extension),
+by applying Theorem \ref{theorem:domain_extension} (Domain Extension),
 which simplifies to  $\textbf{dom}(\delta) = \Theta'' \backslash \Theta$.
 
 \noindent
@@ -3438,29 +3440,29 @@ $\delta' \cup \delta \satisfies \Delta'$ and $\delta' \cup \delta, \sigma \satis
 With a little rewriting, we have $\delta' \cup \delta_r \cup \delta_e \satisfies \Delta'$
 and $\delta' \cup \delta_r \cup \delta_e, \sigma \satisfies \Gamma$. 
 We derive $\delta' \cup \delta_r \satisfies \Delta'$ by 
-Theorem \ref{theorem:skolem_variable_freshness} 
+applying Theorem \ref{theorem:skolem_variable_freshness} 
 and Theorem \ref{theorem:subtyping_environment_interpretation_contraction}. 
 Likewise, we derive $\delta' \cup \delta_r, \sigma \satisfies \Gamma$ by 
-Theorem \ref{theorem:skolem_variable_freshness} 
+applying Theorem \ref{theorem:skolem_variable_freshness} 
 and Theorem \ref{theorem:typing_environment_interpretation_contraction}. 
-From here, we apply the results of the induction hypothesis to get 
+From here, we apply the result of the induction hypothesis $P_r$ to get 
 $\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau$,
 and then lift to $\delta' \cup \delta \satisfies r[\sigma] \hastype \tau$ 
-by Theorem \ref{theorem:typing_interpretation_extension} and Theorem \ref{theorem:skolem_variable_freshness}.
-Additionally, we apply the other results of the induction hypothesis to get
+by applying Theorem \ref{theorem:typing_interpretation_extension} and Theorem \ref{theorem:skolem_variable_freshness}.
+Additionally, we apply the other result of the induction hypothesis $P_e$ to get
 $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau'$.
 We combine these terms for both types, resulting
 in $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
-by Theorem \ref{theorem:record_extension_preservation}
+by applying Theorem \ref{theorem:record_extension_preservation}
 and $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau'$
-by Theorem \ref{theorem:entry_type_introduction}.
+by applying Theorem \ref{theorem:entry_type_introduction}.
 We simplify to 
 $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau$
 and $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau'$
-by Definition \ref{...} (Substitution).
+by applying Definition \ref{...} (Substitution).
 Thus, we derive 
 $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} \tau'$
-by Definition \ref{def:model_typing} (Model Typing).
+by applying Definition \ref{def:model_typing} (Model Typing).
 
 $\square$
 
