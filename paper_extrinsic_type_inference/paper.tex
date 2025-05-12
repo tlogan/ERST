@@ -73,7 +73,7 @@
 
 
 \newcommand{\ignore}{\varnothing}
-\newcommand{\invar}{\mho}
+\newcommand{\dTheta}{\dot{\Theta}}
 \newcommand{\closed}{\bullet}
 \newcommand{\local}{\blacktriangle}
 \newcommand{\open}{\circ}
@@ -115,7 +115,7 @@
 % \newcommand{\for}{\B{for }}
 
 
-\newcommand{\pc}{\noindent \ \ $\diamond$ \ \ }
+\newcommand{\pc}{\noindent \ $\diamond$ \ }
 
  
      
@@ -1291,7 +1291,9 @@ enumerates all possible outputs.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \textbf{pack}^+(\textbf{ftv}(\Gamma), \Theta \entails \Pi) = \tau 
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+      \\\\
+      \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -1329,10 +1331,10 @@ enumerates all possible outputs.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta'
       \\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \Theta_\invar
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
       \\\\
       \forall \Theta'', \Delta''  \qua 
-        \Theta', \llbracket \Theta_\invar \cup \Theta' \entails \Delta'' \backslash \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ 
+        \Theta'' \backslash \Theta', \llbracket \dTheta \cup \Theta' \entails \Delta'' \backslash \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ 
         \in \Pi_\nu
       \implies
       \Theta', \Delta' \entails \tau \subtypes \alpha_l\J{->}\alpha_r \given \Theta'', \Delta'' 
@@ -1343,7 +1345,7 @@ enumerates all possible outputs.
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
       \\
-      \textbf{pack}^-(\Theta_\invar, \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\dTheta\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
       \exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
@@ -1447,10 +1449,10 @@ of a single path type.
       \\
       \text{diff}(\rho, \Xi) = \tau_l
       \\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \Theta_\invar
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
       \\\\
       \forall \Theta', \Delta', \tau_r  \qua 
-      \Theta', \llbracket \Theta_\invar \cup \Theta' \entails \Delta' \backslash \Delta, \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
+      \Theta' \backslash \Theta, \llbracket \dTheta \cup \Theta' \entails \Delta' \backslash \Delta, \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
       \implies
       \Theta, \Delta, \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
       \\\\
@@ -1702,43 +1704,35 @@ in the appendix (Section \ref{sect:appendix}).
   Packaging Soundness 
   \\
   \begin{mathpar}
-    \inferrule { 
-      \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau'
-      \\
-      \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
+    \inferrule {
+      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
     } {
-      \exists \delta .\ 
-      \forall \Theta\ \Delta\ \tau\ \delta' .\ 
-      (\Theta, \Delta, \tau) \in \Pi
-      \implies
-      \textbf{dom}(\delta') = \Theta
-      \implies
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
       \\\\
-      \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
-      \implies
-      \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
-      \implies
-      \delta_\ignore \satisfies e \hastype \tau'
-    } 
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
+      )
+      )
+    }
 
-    \inferrule { 
-      \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau'
-      \\
-      \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
+    \inferrule {
+      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
     } {
-      \exists \delta .\ 
-      \forall \Theta\ \Delta\ \tau\ \delta' .\ 
-      (\Theta, \Delta, \tau) \in \Pi
-      \implies
-      \textbf{dom}(\delta') = \Theta
-      \implies
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
       \\\\
-      \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
-      \implies
-      \delta_\ignore \satisfies e \hastype \tau'
-      \implies
-      \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
-    } 
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies \tau^\dagger \subtypes \tau
+      )
+      )
+    }
   \end{mathpar}
 \end{property}
 
@@ -3376,6 +3370,104 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+\begin{theorem}
+  \label{theorem:function_lifting_soundness}
+  Function Lifting Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
+    } {
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      \\\\
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta' \cup \delta \satisfies f[\sigma] \hastype \tau^\dagger
+      )
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:packaging_soundness}
+  Packaging Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
+    } {
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      \\\\
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
+      )
+      )
+    }
+
+    \inferrule {
+      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
+    } {
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      \\\\
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies \tau^\dagger \subtypes \tau
+      )
+      )
+    }
+    % \inferrule { 
+    %   \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau'
+    %   \\
+    %   \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
+    % } {
+    %   \exists \delta .\ 
+    %   \forall \Theta\ \Delta\ \tau\ \delta' .\ 
+    %   (\Theta, \Delta, \tau) \in \Pi
+    %   \implies
+    %   \textbf{dom}(\delta') = \Theta
+    %   \implies
+    %   \\\\
+    %   \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
+    %   \implies
+    %   \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
+    %   \implies
+    %   \delta_\ignore \satisfies e \hastype \tau'
+    % } 
+
+    % \inferrule { 
+    %   \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau'
+    %   \\
+    %   \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
+    % } {
+    %   \exists \delta .\ 
+    %   \forall \Theta\ \Delta\ \tau\ \delta' .\ 
+    %   (\Theta, \Delta, \tau) \in \Pi
+    %   \implies
+    %   \textbf{dom}(\delta') = \Theta
+    %   \implies
+    %   \\\\
+    %   \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
+    %   \implies
+    %   \delta_\ignore \satisfies e \hastype \tau'
+    %   \implies
+    %   \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
+    % } 
+  \end{mathpar}
+\end{theorem}
+\hfill
 
 \begin{theorem}
   \label{theorem:proof_typing_soundness}
@@ -3464,110 +3556,21 @@ Thus, we derive
 $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} \tau'$
 by applying Definition \ref{def:model_typing} (Model Typing).
 
+\pc
+For $f \hastype \tau$,
+we leverage the mutual Theorem
+
+    % \inferrule {
+    %   \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
+    %   \\\\
+    %   \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+    %   \\\\
+    %   \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
+    % } {
+    %   \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
+    % }
+
 $\square$
-
-
-  \begin{mathpar}
-    % \inferrule {
-    % } {
-    %   \Gamma \entails \J{@} \hastype \J{@} \given \Omega 
-    % }
-
-    % \inferrule {
-    %   x:\tau \in \Gamma
-    % } {
-    %   \Gamma \entails x \hastype \tau \given \Omega 
-    % }
-
-    % \inferrule {
-    % } {
-    %   \Gamma \entails \epsilon \hastype \J{TOP} \given \Omega
-    % }
-
-    \inferrule {
-      \Gamma \entails r \hastype \tau \given \Omega 
-      \\\\
-      \Omega \preceq \Omega'
-      \\
-      \Gamma \entails e \hastype \tau' \given \Omega' 
-    } {
-      \Gamma \entails r \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') \given \Omega' 
-    }
-
-    \inferrule {
-      \exists \Xi.\ \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
-      \\\\
-      \textbf{pack}^+(\textbf{ftv}(\Gamma)\ \Theta \entails \Pi) = \tau 
-    } {
-      \Gamma \entails f \hastype \tau \given \Theta, \Delta
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-      \\\\
-      \Omega \preceq \Omega'
-      \\
-      \tau \subtypes  \J{<} l \J{>} \alpha \given \Omega' 
-    } {
-      \Gamma \entails e\J{.}l \hastype \alpha \given \Omega'
-    }
-
-    \inferrule {
-      \Gamma \entails e_f \hastype \tau_f \given \Omega 
-      \\
-      \Omega \preceq \Omega'
-      \\
-      \Gamma \entails e_a \hastype \tau_a \given \Omega' 
-      \\\\
-      \Omega' \preceq \Omega''
-      \\
-      \tau_f \subtypes \tau_a\J{->}\alpha \given \Omega'' 
-    } {
-      \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Omega''
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \tau \given \Omega 
-      \\
-      \Omega \preceq \Omega'
-      \\
-      \tau \subtypes \tau_a \given \Omega' 
-      \\\\
-      \Omega' \preceq \Omega''
-      \\
-      \Gamma\ x:\tau_a \entails e' \hastype \tau' \given \Omega''
-    } {
-      \Gamma \entails \J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e' \hastype \tau' \given \Omega'' 
-    }
-
-    \inferrule {
-      \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta, \Delta 
-      \\
-      \textbf{ftv}(\Gamma) \cup \textbf{ftv}(\Delta) = \Theta_\ignore
-      \\\\
-      \forall \Theta'\ \Delta' .\ 
-        \Theta', \llbracket \alpha_\ignore \cup \Theta' \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ \in \Pi_\nu
-      \implies
-      \tau \subtypes \alpha_l\J{->}\alpha_r \given  \Theta \cup \Theta', \Delta \cup \Delta' 
-      \\\\
-      \exists \pi.\ \pi \in \Pi_\nu
-      \\
-      \alpha_\nu \downarrow \Pi_\nu
-      \fallingdotseq 
-      \alpha_\mu \uparrow \Pi_\mu
-      \\
-      \textbf{pack}^-(\textbf{ftv}(\Gamma) \cup \Theta\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
-      \\\\
-      \exists \alpha .\ \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
-      \\
-      \exists \alpha .\ \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r 
-    } {
-      \Gamma \entails \J{loop(}e\J{)} 
-      \hastype 
-      \tau_l \J{->} \tau_r
-      \given \Theta, \Delta 
-    }
-  \end{mathpar}
 
 *********************************************************************
 
