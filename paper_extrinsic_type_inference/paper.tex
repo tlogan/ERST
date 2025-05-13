@@ -1222,7 +1222,7 @@ aims to prove the validity of typing directly by including elimination rules.
       (
       \forall \delta' .\ 
       \delta' \cup \delta \satisfies \Delta' \implies
-      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta', \sigma \satisfies \Gamma \implies
       \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
@@ -1704,35 +1704,6 @@ in the appendix (Section \ref{sect:appendix}).
   Packaging Soundness 
   \\
   \begin{mathpar}
-    \inferrule {
-      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
-    } {
-      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
-      \\\\
-      (
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
-      (
-      \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
-      )
-      )
-    }
-
-    \inferrule {
-      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
-    } {
-      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
-      \\\\
-      (
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
-      (
-      \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau^\dagger \subtypes \tau
-      )
-      )
-    }
   \end{mathpar}
 \end{property}
 
@@ -3378,6 +3349,7 @@ rely on analogous techniques.
     \inferrule {
       \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
     } {
+      \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
       \\\\
       (
@@ -3385,9 +3357,26 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
-      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta', \sigma \satisfies \Gamma \implies
       \delta' \cup \delta \satisfies f[\sigma] \hastype \tau^\dagger
       )
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:function_lifting_skolem_freshness}
+  Function Lifting Skolem Freshness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
+    } {
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      (
+      \Theta^\dagger \backslash \Theta = \Theta^\dagger
       )
     }
   \end{mathpar}
@@ -3400,71 +3389,28 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
+      \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
     } {
+      (\forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
       \\\\
       (
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \dTheta \up 
       (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
+      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau^\dagger
       )
-      )
-    }
-
-    \inferrule {
-      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
-    } {
-      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      ) 
+      \\\\
+      \iff
       \\\\
       (
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \Theta \up 
-      (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau^\dagger \subtypes \tau
-      )
-      )
+      \delta' \satisfies \Delta \implies
+      \delta' \satisfies e[\sigma] \hastype \tau
+      ) 
     }
-    % \inferrule { 
-    %   \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau'
-    %   \\
-    %   \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
-    % } {
-    %   \exists \delta .\ 
-    %   \forall \Theta\ \Delta\ \tau\ \delta' .\ 
-    %   (\Theta, \Delta, \tau) \in \Pi
-    %   \implies
-    %   \textbf{dom}(\delta') = \Theta
-    %   \implies
-    %   \\\\
-    %   \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
-    %   \implies
-    %   \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
-    %   \implies
-    %   \delta_\ignore \satisfies e \hastype \tau'
-    % } 
-
-    % \inferrule { 
-    %   \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau'
-    %   \\
-    %   \textbf{dom}(\delta_\ignore) \cong \Theta_\ignore
-    % } {
-    %   \exists \delta .\ 
-    %   \forall \Theta\ \Delta\ \tau\ \delta' .\ 
-    %   (\Theta, \Delta, \tau) \in \Pi
-    %   \implies
-    %   \textbf{dom}(\delta') = \Theta
-    %   \implies
-    %   \\\\
-    %   \delta \cup \delta' \cup \delta_\ignore \satisfies \Delta
-    %   \implies
-    %   \delta_\ignore \satisfies e \hastype \tau'
-    %   \implies
-    %   \delta \cup \delta' \cup \delta_\ignore \satisfies e \hastype \tau
-    % } 
   \end{mathpar}
 \end{theorem}
 \hfill
@@ -3510,7 +3456,7 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta' \implies
-      \delta' \cup \delta, \sigma \satisfies \Gamma \implies
+      \delta', \sigma \satisfies \Gamma \implies
       \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
       )
     }
@@ -3537,8 +3483,7 @@ we derive the conclusion using Definition \ref{def:model_typing} (Model Typing).
 
 \pc
 For $r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau')$,
-we introduce an arbitrary value interpretation $\sigma$,
-and we apply the induction hypothesis to the two typings 
+We apply the induction hypothesis to the two typings 
 $r \hastype \tau$ and $e \hastype \tau'$, 
 resulting in two statements, which we name $P_r$ and $P_e$, respectively. 
 
@@ -3587,8 +3532,7 @@ by applying Definition \ref{def:model_typing} (Model Typing).
 
 \pc
 For $f \hastype \tau$,
-we introduce an arbitrary value interpretation $\sigma$. 
-The left part of the conclusions's conjunction is trivial. We construct an empty type interpretation $\delta$,
+the left part of the conclusions's conjunction is trivial. We construct an empty type interpretation $\delta$,
 such that $\textbf{dom}(\delta) = \epsilon$, which is equivalent to $\textbf{dom}(\delta) = \Theta \backslash \Theta$.
 Next, we tackle the right part of the conclusion's conjunction.  We introduce and arbitrary type interpretation $\delta'$,
 and we assume $\delta' \cup \delta \satisfies \Delta'$ and $\delta' \cup \delta, \sigma \satisfies \Gamma$.
@@ -3614,6 +3558,7 @@ $(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi$.
     %   \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     % }
 
+\noindent
 $\square$
 
 *********************************************************************
