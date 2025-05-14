@@ -1963,9 +1963,9 @@ whose consequents are the intersection's constituent parts.
     }
     \\
     \inferrule {
-      \Theta_l \notfree \Delta
+      \Theta_l \cap \textbf{dom}(\Delta) = \epsilon
       \\
-      \Theta_l \notfree \tau_r
+      \Theta_l \cap \textbf{dom}(\tau_r) = \epsilon
       \\\\
       \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
       \\
@@ -2024,9 +2024,9 @@ splitting the worlds too eagerly.
     }
     \\
     \inferrule {
-      \Theta_r \notfree \Delta
+      \Theta_r \cap \textbf{dom}(\Delta)
       \\
-      \Theta_r \notfree \tau_l
+      \Theta_r \cap \textbf{dom}(\tau_l)
       \\\\
       \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
       \\
@@ -2930,23 +2930,6 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
-
-\begin{definition}
-  \label{def:varirable_sequence_non_freedom}
-  Variable Sequence Non-freedom 
-  \hfill
-  \boxed{\Theta \notfree \tau}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \textbf{ftv}(\tau)
-    } {
-      \Theta \notfree \tau
-    }
-  \end{mathpar}
-\end{definition}
-
-
 \begin{definition}
   Collection
   \[\begin{array}[t]{r@{}l}
@@ -3277,42 +3260,42 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-\begin{theorem}
-  \label{theorem:typing_environment_interpretation_contraction}
-  Typing Environment Interpretation Contraction 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \cup \delta', \sigma \satisfies \Gamma 
-      \\
-      \textbf{dom}(\delta') \cap \textbf{ftv}(\Gamma) = \epsilon
-    } {
-      \delta, \sigma \satisfies \Gamma
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
 % \begin{theorem}
-%   \label{theorem:typing_interpretation_extension}
-%   Typing Interpretation Extension 
+%   \label{theorem:typing_environment_interpretation_contraction}
+%   Typing Environment Interpretation Contraction 
 %   \\
 %   \begin{mathpar}
 %     \inferrule {
-%       \delta \satisfies e \hastype \tau 
+%       \delta \cup \delta', \sigma \satisfies \Gamma 
 %       \\
-%       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \epsilon
+%       \textbf{dom}(\delta') \cap \textbf{ftv}(\Gamma) = \epsilon
 %     } {
-%       \delta \cup \delta' \satisfies e \hastype \tau 
+%       \delta, \sigma \satisfies \Gamma
 %     }
 %   \end{mathpar}
 % \end{theorem}
 % \hfill
 
+\begin{theorem}
+  \label{theorem:typing_interpretation_extension}
+  Typing Interpretation Extension 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \tau 
+      \\
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \epsilon
+    } {
+      \delta \cup \delta' \satisfies e \hastype \tau 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
 
 \begin{theorem}
-  \label{theorem:skolem_variable_freshness}
-  Skolem Variable Freshness 
+  \label{theorem:proof_typing_skolem_freshness}
+  Proof Typing Skolem Freshness 
   \\
   \begin{mathpar}
     \inferrule {
@@ -3375,7 +3358,40 @@ rely on analogous techniques.
     } {
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi 
       \implies
-      \Theta^\dagger \backslash \Theta \backslash \textbf{ftv}(\Delta) \backslash \textbf{ftv}(\Gamma) = \Theta^\dagger
+      % \Theta^\dagger \backslash \Theta \backslash \textbf{ftv}(\Delta) \backslash \textbf{ftv}(\Gamma) = \Theta^\dagger
+      \Theta^\dagger \cap \Theta = \epsilon 
+      \up
+      \Theta^\dagger \cap \textbf{ftv}(\Delta) = \epsilon
+      \up
+      \Theta^\dagger \cap  \textbf{ftv}(\Gamma) = \epsilon 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:collection_difference_union}
+  Collection Difference Union 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      C_a \backslash (C_b \cup C_c) = C_a \backslash C_b \backslash C_c
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+
+\begin{theorem}
+  \label{theorem:collection_empty_filter_identity_difference}
+  Collection Empty Filter Identity Difference 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      C_a \cap C_b = \epsilon \iff C_a \backslash C_b = C_a
     }
   \end{mathpar}
 \end{theorem}
@@ -3487,12 +3503,12 @@ We introduce an arbitrary interpretation $\delta'$, and we assume
 $\delta' \cup \delta \satisfies \Delta'$ and $\delta', \sigma \satisfies \Gamma$.
 With a little rewriting, we have $\delta' \cup \delta_r \cup \delta_e \satisfies \Delta'$.
 We derive $\delta' \cup \delta_r \satisfies \Delta'$ by 
-applying Theorem \ref{theorem:skolem_variable_freshness} 
+applying Theorem \ref{theorem:proof_typing_skolem_freshness} 
 and Theorem \ref{theorem:subtyping_environment_interpretation_contraction}. 
 From here, we apply the result of the induction hypothesis $P_r$ to get 
 $\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau$,
 and then lift to $\delta' \cup \delta \satisfies r[\sigma] \hastype \tau$ 
-by applying Theorem \ref{theorem:typing_interpretation_extension} and Theorem \ref{theorem:skolem_variable_freshness}.
+by applying Theorem \ref{theorem:typing_interpretation_extension} and Theorem \ref{theorem:proof_typing_skolem_freshness}.
 Additionally, we apply the other result of the induction hypothesis $P_e$ to get
 $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau'$.
 We combine these terms for both types, resulting
