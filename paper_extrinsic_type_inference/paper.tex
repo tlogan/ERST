@@ -1784,7 +1784,7 @@ of the closed variables $\delta'$, for some interpretation of the open variables
 The interested reader can find the actual the definition of packaging in the appendix (Section \ref{sect:appendix}).
 
 \begin{property} 
-  \label{def:proof_subtyping_soundness}
+  \label{prop:proof_subtyping_soundness}
   Proof Subtyping Soundness 
   \\
   \begin{mathpar}
@@ -3138,19 +3138,6 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-\begin{theorem}
-  \label{theorem:containment_prefix_perservation}
-  Containment Prefix Preservation 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      C \cup C' \subseteq C''
-    } {
-      C \subseteq C''
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
 
 % \begin{theorem}
 %   \label{theorem:entry_type_introdcution}
@@ -3193,6 +3180,20 @@ rely on analogous techniques.
       \nexists e' .\ \J{<} l \J{>} e' \in r
     } {
       \delta \satisfies r\ \J{<}l\J{>}e \hastype \J{<}l\J{>} \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:record_type_elimination}
+  Record Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \J{<}l\J{>} \tau
+    } {
+      \delta \satisfies e \J{.} l \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
@@ -3254,6 +3255,20 @@ rely on analogous techniques.
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \emptyset
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:proof_subtyping_skolem_freshness}
+  Proof Subtyping Skolem Freshness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
       \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \emptyset
     }
@@ -3407,7 +3422,7 @@ we derive the conclusion using Definition \ref{def:model_typing} (Model Typing).
 
 \pc
 For $r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau')$,
-We apply the induction hypothesis to the two typings 
+we apply the induction hypothesis to the two typings 
 $r \hastype \tau$ and $e \hastype \tau'$, 
 resulting in two statements, which we name $P_r$ and $P_e$, respectively. 
 
@@ -3461,6 +3476,37 @@ Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem
 Theorem \ref{theorem:function_lifting_skolem_freshness}, and Theorem \ref{prop:packaging_soundness}, along with a little
 rewriting.
 Thus, we have $\delta' \cup \delta \satisfies f[\sigma] \hastype \tau$ by Definition \ref{...} (Concatenation).
+
+
+\pc
+For $e \J{.} l \hastype \alpha$,
+we apply the induction hypothesis to the typing $e \hastype \tau$, resulting in a statement, which we name $P_a$.
+We also apply Theorem \ref{theorem:proof_subtyping_soundness} (Proof Subtyping Soundness) to get a statement, which we 
+name $P_b$.
+From $P_a$, we derive an interpretation $\delta_a$, such that $\textbf{dom}(\delta_a) = \Theta' \backslash \Theta$. 
+From $P_b$, we derive an interpretation $\delta_b$, such that $\textbf{dom}(\delta_b) = \Theta'' \backslash \Theta'$. 
+We combine these two interpretation into $\delta$, such that $\delta = \delta_a \cup \delta_b$.
+Thus, we have $\textbf{dom}(\delta) = (\Theta' \backslash \Theta) \cup (\Theta'' \backslash \Theta')$ by applying
+Theorem \ref{theorem:domain_extension} (Domain Extension), 
+which simplifies to $\textbf{dom}(\delta) = \Theta'' \backslash \Theta$.
+
+
+Next, we introduce an arbitrary interpretation $\delta'$, and we assume
+$\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
+Under these assumptions, we derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$
+by applying Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
+Theorem \ref{theorem:typing_interpretation_extension},
+and Theorem \ref{theorem:proof_subtyping_skolem_freshness}.
+Likewise, we derive $\delta' \cup \delta \hastype \tau \subtypes \J{<}l\J{>}\alpha$ by (TODO: various theorems).
+Then, we have $\delta' \cup \delta \hastype e[\sigma] \hastype \J{<}l\J{>}\alpha$ 
+by applying Theorem \ref{subsumption} (Subsumption).
+Finall, we get $\delta' \cup \delta \hastype (e[\sigma]).\J{<}l\J{>} \hastype \alpha$ 
+by applying Theorem \ref{elimination} (Record Type Elimination),
+which simplifies to $\delta' \cup \delta \hastype (e.\J{<}l\J{>})[\sigma] \hastype \alpha$
+by applying Definition \ref{sub} (Substitution).
+
+
+\TODO{remove some tedious details and clean up lemmas}.
 
 
 \noindent
