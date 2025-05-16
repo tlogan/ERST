@@ -1360,7 +1360,7 @@ enumerates all possible outputs.
     }
 
     \inferrule {
-      \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Omega 
+      \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
       \\
       \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
       \\\\
@@ -3186,14 +3186,30 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:record_type_elimination}
-  Record Type Elimination 
+  \label{theorem:entry_type_elimination}
+  Entry Type Elimination 
   \\
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \J{<}l\J{>} \tau
     } {
       \delta \satisfies e \J{.} l \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:path_type_elimination}
+  Path Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e_f \hastype \tau \J{->} \tau'
+      \\
+      \delta \satisfies e_a \hastype \tau
+    } {
+      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau'
     }
   \end{mathpar}
 \end{theorem}
@@ -3276,6 +3292,22 @@ rely on analogous techniques.
       \textbf{dom}(\delta_r) = \Theta_r  
     } {
       \textbf{dom}(\delta_l \cup \delta_r) = \Theta_l \cup \Theta_r 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:subsumption}
+  Subsumption 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau \subtypes \tau'
+      \\
+      \delta \satisfies e \hastype \tau
+    } {
+      \delta \satisfies e \hastype \tau'
     }
   \end{mathpar}
 \end{theorem}
@@ -3397,20 +3429,20 @@ rely on analogous techniques.
 We prove Proof Typing Soundness by induction over Definition \ref{def:proof_typing} (Proof Typing).
 
 \pc
-For $\J{@} \hastype \J{@}$,
+For $\Theta, \Delta, \Gamma \entails \J{@} \hastype \J{@} \given \Theta, \Delta$,
 we derive the conclusion by applying Definition \ref{def:model_typing} (Model Typing).
 
 \pc
-For $ x \hastype \tau$, 
+For $\Theta, \Delta, \Gamma \entails x \hastype \tau \given \Theta, \Delta$, 
 we derive the conclusion by applying Theorem \ref{theorem:typing_environment_soundness}
 (Typing Environment Soundness).
 
 \pc
-For $\epsilon \hastype \J{TOP}$,
+For $\Theta, \Delta, \Gamma \entails \epsilon \hastype \J{TOP} \given \Theta, \Delta$,
 we derive the conclusion using Definition \ref{def:model_typing} (Model Typing).
 
 \pc
-For $r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau')$,
+For $r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') \given \Theta'', \Delta''$,
 we apply the induction hypothesis to the two typings 
 $r \hastype \tau$ and $e \hastype \tau'$,
 from which, we derive an interpretation $\delta_r$, such that $\textbf{dom}(\delta_r) \cong \Theta' \backslash \Theta$.
@@ -3447,7 +3479,8 @@ $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} 
 by applying Definition \ref{def:model_typing} (Model Typing).
 
 \pc
-For $f \hastype \tau$, we construct an empty type interpretation $\delta$,
+For $\Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta$, 
+we construct an empty type interpretation $\delta$,
 such that $\textbf{dom}(\delta) = \epsilon$, which is equivalent to $\textbf{dom}(\delta) = \Theta \backslash \Theta$.
 Next, we introduce and arbitrary type interpretation $\delta'$,
 and we assume $\delta' \cup \delta \satisfies \Delta$ and $\delta', \sigma \satisfies \Gamma$.
@@ -3460,7 +3493,7 @@ by rewriting the statement to include the empty interpretation.
 
 
 \pc
-For $e \J{.} l \hastype \alpha$,
+For $\Theta, \Delta, \Gamma \entails e \J{.} l \hastype \alpha \given \Theta'', \Delta''$,
 we apply the induction hypothesis to the typing $e \hastype \tau$, 
 from which we derive an interpretation $\delta_a$, such that $\textbf{dom}(\delta_a) = \Theta' \backslash \Theta$.
 We also apply Theorem \ref{theorem:proof_subtyping_soundness} (Proof Subtyping Soundness) to
@@ -3478,9 +3511,11 @@ and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
 and Theorem \ref{theorem:typing_interpretation_extension}.
-Likewise, we derive $\delta' \cup \delta \hastype \tau \subtypes \J{<}l\J{>}\alpha$ by 
+Likewise, we derive $\delta' \cup \delta \satisfies \tau \subtypes \J{<}l\J{>}\alpha$ by 
 instantiating the applied Theorem \ref{theorem:proof_subtyping_soundness} with $\delta' \cup \delta_a$,
-and applying \ref{theorem:proof_typing_skolem_freshness},
+and applying 
+Theorem \ref{theorem:proof_typing_skolem_freshness}
+and
 Theorem \ref{theorem:typing_environment_interpretation_contraction}.
 
 Next, we have $\delta' \cup \delta \satisfies e[\sigma] \hastype \J{<}l\J{>}\alpha$ 
@@ -3489,6 +3524,54 @@ Then, we get $\delta' \cup \delta \satisfies (e[\sigma])\J{.}l \hastype \alpha$
 by applying Theorem \ref{elimination} (Record Type Elimination),
 which simplifies to $\delta' \cup \delta \satisfies (e\J{.}l)[\sigma] \hastype \alpha$
 by applying Definition \ref{sub} (Substitution).
+
+
+\pc
+For $\Theta, \Delta, \Gamma \entails e_f \J{(} e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''$,
+we derive three typing interpretations $\delta_f$, $\delta_a$, $\delta_s$,
+such that 
+$\text{dom}(\delta_f) = \Theta' \backslash \Theta$, 
+$\text{dom}(\delta_a) = \Theta'' \backslash \Theta'$, 
+and
+$\text{dom}(\delta_s) = \Theta''' \backslash \Theta''$,
+by applying the induction hypothesis twice and Theorem \ref{theorem:proof_subtyping_soundness}.
+We construction the typing interpretation $\delta$, such that $\delta = \delta_f \cup \delta_a \cup \delta_s$,
+which gives us $\text{dom}(\delta) = \Theta''' \backslash \Theta$ by rewriting.
+Next, we introduce an arbitrary typing environment $\delta$,
+and we assume $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
+
+We derive $\delta' \cup \delta \satisfies e_f[\sigma] \hastype \tau_f$,
+by instantiating the first applied induction hypothesis with $\delta'$,
+and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
+and Theorem \ref{theorem:typing_interpretation_extension}.
+
+
+We derive $\delta' \cup \delta \satisfies e_a[\sigma] \hastype \tau_a$,
+by instantiating the second applied induction hypothesis with $\delta' \cup \delta_a$,
+and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
+and Theorem \ref{theorem:typing_interpretation_extension}.
+
+
+
+We derive $\delta' \cup \delta \satisfies \tau_f \subtypes \tau_a \J{->} \alpha$ by 
+instantiating the applied Theorem \ref{theorem:proof_subtyping_soundness} 
+with $\delta' \cup \delta_f \cup \delta_a$,
+and applying 
+Theorem \ref{theorem:proof_typing_skolem_freshness}
+and
+Theorem \ref{theorem:typing_environment_interpretation_contraction}.
+
+We derive $\delta' \cup \delta \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
+by applying Theorem \ref{theorem:subsumption}.
+
+Thus, we have $\delta' \cup \delta \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \alpha$
+by Theorem \ref{theorem:path_type_elimination},
+which simplifies to $\delta' \cup \delta \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
+by Definition \ref{def:substitution}.
 
 \noindent
 $\square$
