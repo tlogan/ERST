@@ -115,11 +115,8 @@
 % \newcommand{\for}{\B{for }}
 
 
-\newcommand{\pc}{\noindent \ $\diamond$ \ }
 
- 
-     
-
+\newcommand{\pc}{\hfill \break \noindent \ $\diamond$ \ }
 
 \newcommand{\tl}{\textasciitilde{}}
 \newcommand{\typdiff}{\J{\textbackslash}}
@@ -1789,7 +1786,7 @@ The interested reader can find the actual the definition of packaging in the app
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
       \exists \delta .\ 
       \textbf{dom}(\delta) \cong \Theta' \backslash \Theta
@@ -1843,12 +1840,12 @@ presented in the paper.
   \label{def:proof_subtyping_reflection}
   Proof Subtyping (Reflection)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \Theta, \Delta \entails \tau \subtypes \tau \given \Theta, \Delta 
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \tau \given \Theta, \Delta 
     }
   \end{mathpar}
 \end{definition}
@@ -1865,25 +1862,25 @@ such as de Bruijin indexes \cite{} before comparing type forms.
   \label{def:proof_subtyping_implication_preservation}
   Proof Subtyping (Implication Preservation)
   \hfill
-  \boxed{\Theta, \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l \subtypes \tau_r
       \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r
       \given \Theta', \Delta'
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
+      \Theta', \Delta', \Gamma \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_{p} \J{->} \tau_{q} 
       \subtypes 
       \tau_{x} \J{->} \tau_{y}
@@ -1910,16 +1907,16 @@ of the subtype is stronger than the consequent of the supertype.
   \label{def:proof_subtyping_implication_rewriting}
   Proof Subtyping (Implication Rewriting)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l \subtypes
       (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
       \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l \subtypes 
       (\tau_a\J{|}\tau_b)\J{->}\tau_r
       \given \Theta', \Delta' 
@@ -1927,7 +1924,7 @@ of the subtype is stronger than the consequent of the supertype.
 
 
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l
       \subtypes
       (\tau_r\J{->}\tau_a)
@@ -1935,14 +1932,14 @@ of the subtype is stronger than the consequent of the supertype.
       (\tau_r\J{->}\tau_b)
       \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l \subtypes 
       \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
       \given \Theta', \Delta'
     }
 
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau
       \subtypes
       (\J{<} l \J{>} \tau_a)
@@ -1950,7 +1947,7 @@ of the subtype is stronger than the consequent of the supertype.
       (\J{<} l \J{>} \tau_b)
       \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau \subtypes 
       \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
       \given \Theta', \Delta'
@@ -1996,34 +1993,36 @@ whose consequents are the intersection's constituent parts.
   \label{def:proof_subtyping_abstraction_elimination}
   Proof Subtyping (Expansion Elimination)
   \hfill
-  \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \phi \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau_a \subtypes \tau
       \given \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails
+      \Theta', \Delta', \Gamma \entails
       \tau_b \subtypes \tau
       \given \Theta'', \Delta''
     } {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau_a\J{|}\tau_b \subtypes \tau
       \given \Theta'', \Delta'' 
     }
     \\
     \inferrule {
-      \Theta_l \cap \textbf{dom}(\Delta) = \emptyset 
+      \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
       \\
-      \Theta_l \cap \textbf{dom}(\tau_r) = \emptyset
+      \Theta_l \cap \textbf{ftv}(\Gamma) = \emptyset 
+      \\
+      \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
       \\\\
-      \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
+      \Theta, \Delta, \Gamma \entails \Delta_l \given \Theta', \Delta' \unique
       \\
-      \Theta' \cup \Theta_l, \Delta' \entails
+      \Theta' \cup \Theta_l, \Delta', \Gamma \entails
       \tau_l \subtypes \tau_r \given \Theta'', \Delta''
     } {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \J{EXI[}\Theta_l\J{]}\Delta_l\ \tau_l \subtypes \tau_r
       \given \Theta'', \Delta'' 
     }
@@ -2060,30 +2059,32 @@ splitting the worlds too eagerly.
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Introduction)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau \subtypes \psi \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau \subtypes \psi \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau \subtypes \tau_{a} \given \Theta', \Delta' 
       \\
-      \Theta', \Delta' \entails
+      \Theta', \Delta', \Gamma \entails
       \tau \subtypes \tau_{b} \given \Theta'', \Delta''
     } {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'', \Delta''
     }
     \\
     \inferrule {
-      \Theta_r \cap \textbf{dom}(\Delta)
+      \Theta_r \cap \textbf{ftv}(\Delta)
       \\
-      \Theta_r \cap \textbf{dom}(\tau_l)
+      \Theta_r \cap \textbf{ftv}(\Gamma)
+      \\
+      \Theta_r \cap \textbf{ftv}(\tau_l)
       \\\\
       \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
       \\
-      \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
+      \Theta' \cup \Theta_r, \Delta', \Gamma \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
     } {
-      \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
+      \Theta, \Delta, \Gamma \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
     }
   \end{mathpar}
 \end{definition}
@@ -2096,7 +2097,7 @@ rely on analogous techniques.
   \label{def:proof_subtyping_variable_elimination}
   Proof Subtyping (Variable Elimination)
   \hfill
-  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
+  \boxed{\Theta, \Delta, \Gamma \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
   \\
   \begin{mathpar}
     \inferrule {
@@ -2104,11 +2105,11 @@ rely on analogous techniques.
       \\
       \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
       \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
+      \Theta, \Delta, \Gamma \entails \Delta_\closed \safe
       \\
-      \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
+      \Theta, \Delta \cup \Delta_\closed, \Gamma \entails \Delta_\open \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
+      \Theta, \Delta, \Gamma \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
     }
 
     \inferrule {
@@ -2162,7 +2163,7 @@ are stronger than $\tau_r$.
   \label{def:proof_subtyping_variable_introduction}
   Proof Subtyping (Variable Introduction)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau \subtypes \alpha \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
@@ -2170,23 +2171,23 @@ are stronger than $\tau_r$.
       \\
       \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
       \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
+      \Theta, \Delta, \Gamma \entails \Delta_\closed \safe
       \\
-      \Theta, \Delta \cup \Delta_\closed \entails 
+      \Theta, \Delta \cup \Delta_\closed, \Gamma \entails 
       \Delta_\open \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
     }
 
     \inferrule {
       \alpha \in \Theta 
       \\
-      \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
+      \Theta, \Delta, \Gamma \entails \tau_l \subtypes \alpha \safe
       \\
       \nexists \alpha' \qua \tau_l = \alpha'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l \subtypes \alpha \given \Theta, \Delta
     }
   \end{mathpar}
@@ -2201,17 +2202,17 @@ rely on analogous techniques.
   \label{def:proof_subtyping_lfp_elimination}
   Proof Subtyping (Least Fixed Point Elimination)
   \hfill
-  \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
       \alpha \not\in \textbf{ftv}(\tau_r)
       \\
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
       \Theta', \Delta'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
       \given \Theta', \Delta' 
     }
@@ -2234,20 +2235,20 @@ $\alpha \subtypes \tau_r$
   \label{def:proof_subtyping_difference_intro}
   Proof Subtyping (Difference Introduction)
   \hfill
-  \boxed{\Theta, \Delta \entails\tau \subtypes \rho \typdiff \eta \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails\tau \subtypes \rho \typdiff \eta \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau \subtypes \rho \given \Theta', \Delta' 
       \\
       \textbf{ftv}(\eta) \subseteq \epsilon
       \\
       \nexists \Theta', \Delta' \qua  
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau \subtypes \eta \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau \subtypes \rho \typdiff \eta
       \given \Theta', \Delta'
     }
@@ -2274,17 +2275,17 @@ which in turn guarantees that is failure is sound.
   \label{def:proof_subtyping_lfp_intro}
   Proof Subtyping (Least Fixed Point Introduction)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+      \Theta, \Delta, \Gamma \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
       \\
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
       \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
     }
   \end{mathpar}
@@ -2302,14 +2303,14 @@ and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \a
   \label{def:proof_subtyping_diff_elimination}
   Proof Subtyping (Difference Elimination)
   \hfill
-  \boxed{\Theta, \Delta \entails \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
     }
   \end{mathpar}
@@ -2324,27 +2325,27 @@ $\rho \subtypes \tau \J{|} \eta$.
   \label{def:proof_subtyping_abstraction_introduction}
   Proof Subtyping (Expansion Introduction)
   \hfill
-  \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau \subtypes \phi \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
+      \Theta', \Delta', \Gamma \entails \Delta_r \given \Theta'', \Delta'' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \tau_l
       \subtypes 
       \J{EXI[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta'' 
@@ -2371,27 +2372,27 @@ by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
   \label{def:proof_subtyping_refinement_elimination}
   Proof Subtyping (Refinement Elimination)
   \hfill
-  \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \psi \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
     } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
+      \Theta', \Delta', \Gamma \entails \Delta_l \given \Theta'', \Delta'' 
     } {
-      \Theta, \Delta \entails 
+      \Theta, \Delta, \Gamma \entails 
       \J{ALL[}\Theta_l\J{]} \Delta_l\ \tau_l
       \subtypes 
       \tau_r
@@ -2408,7 +2409,7 @@ rely on analogous techniques.
   \label{def:variable_elimination_safety}
   Variable Elimination Safety 
   \hfill
-  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \safe}
+  \boxed{\Theta, \Delta, \Gamma \entails \alpha \subtypes \tau \safe}
   \\
   \begin{mathpar}
     \inferrule {
@@ -2417,15 +2418,15 @@ rely on analogous techniques.
       (
       (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
       \down 
-      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta, \Gamma \entails \tau' \subtypes \tau \given \Theta', \Delta') 
       )
       \\\\
       \forall \tau' \qua  \tau' \J{<:} \alpha \in \Delta
       \implies 
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'  
+      \exists \Theta', \Delta' \qua \Theta, \Delta, \Gamma \entails \tau' \subtypes \tau \given \Theta', \Delta'  
       \\
     } {
-      \Theta, \Delta \entails \alpha \subtypes \tau \safe
+      \Theta, \Delta, \Gamma \entails \alpha \subtypes \tau \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2441,7 +2442,7 @@ The second condition is that all lower bounds of that variable can be eliminated
   \label{def:variable_introduction_safety}
   Variable Introduction Safety
   \hfill
-  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \safe}
+  \boxed{\Theta, \Delta, \Gamma \entails \tau \subtypes \alpha \safe}
   \\
   \begin{mathpar}
     \inferrule {
@@ -2450,15 +2451,15 @@ The second condition is that all lower bounds of that variable can be eliminated
       (
       (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
       \down 
-      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta, \Gamma \entails \tau \subtypes \tau' \given \Theta', \Delta') 
       )
       \\\\
       \forall \tau' \qua  \alpha \J{<:} \tau' \in \Delta
       \implies 
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta' 
+      \exists \Theta', \Delta' \qua \Theta, \Delta, \Gamma \entails \tau' \subtypes \tau \given \Theta', \Delta' 
       \\
     } {
-      \Theta, \Delta \entails \tau \subtypes \alpha \safe
+      \Theta, \Delta, \Gamma \entails \tau \subtypes \alpha \safe
     }
   \end{mathpar}
 \end{definition}
@@ -2471,20 +2472,20 @@ rely on analogous techniques.
   \label{def:proof_sequence_subtyping}
   Proof Sequence Subtyping
   \hfill
-  \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta, \Gamma \entails \Delta_q \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \Theta, \Delta \entails \epsilon \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \epsilon \given \Theta', \Delta'
     }
 
     \inferrule {
-      \Theta, \Delta \entails \tau_l \J{<:} \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \tau_l \J{<:} \tau_r \given \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+      \Theta', \Delta', \Gamma \entails \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
     } {
-      \Theta, \Delta \entails \Delta_q\ \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+      \Theta, \Delta, \Gamma \entails \Delta_q\ \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
     }
   \end{mathpar}
 \end{definition}
@@ -2493,17 +2494,17 @@ rely on analogous techniques.
   \label{def:unique_proof_sequence_subtyping}
   Unique Proof Sequence Subtyping
   \hfill
-  \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta' \unique}
+  \boxed{\Theta, \Delta, \Gamma \entails \Delta_q \given \Theta', \Delta' \unique}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \Delta_q \given \Theta', \Delta'
       \\\\
       \forall \Theta'', \Delta'' \qua 
-      \Theta, \Delta \entails
+      \Theta, \Delta, \Gamma \entails
       \Delta_q \given \Theta', \Delta' \implies (\Theta'', \Delta'') = (\Theta', \Delta')
     } {
-      \Theta\ \Delta \entails \Delta_q \given \Theta', \Delta' \unique
+      \Theta, \Delta, \Gamma \entails \Delta_q \given \Theta', \Delta' \unique
     }
   \end{mathpar}
 \end{definition}
@@ -3200,22 +3201,6 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:typing_environment_extension}
-  Typing Environment Extension 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta, \sigma \satisfies \Gamma 
-      \\
-      \delta \satisfies e[\sigma] \hastype \tau
-    } {
-      \exists v \qua \delta, \sigma\ x \slash v \satisfies \Gamma\ x \hastype \tau 
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
   \label{theorem:path_type_elimination}
   Path Type Elimination 
   \\
@@ -3230,6 +3215,24 @@ rely on analogous techniques.
   \end{mathpar}
 \end{theorem}
 \hfill
+
+\begin{theorem}
+  \label{theorem:annotated_binding_introduction}
+  Annotated Binding Introduction  
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \tau
+      \\
+      \delta \satisfies  e'[x \slash e]\hastype \tau'
+    } {
+      \delta \satisfies \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau'
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+% \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''
 
 \begin{theorem}
   \label{theorem:subtyping_environment_interpretation_contraction}
@@ -3306,6 +3309,8 @@ rely on analogous techniques.
       \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
     } {
       \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \emptyset
+      \up 
+      \Theta' \backslash \Theta \cap \textbf{ftv}(\Gamma) = \emptyset
     }
   \end{mathpar}
 \end{theorem}
@@ -3519,14 +3524,18 @@ Next, we introduce an arbitrary interpretation $\delta'$, and we assume
 $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
 We derive $\delta' \cup \delta \satisfies r[\sigma] \hastype \tau$
 by instantiating the induction hypothesis applied to $r \hastype \tau$ with $\delta'$,
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+and applying 
+Theorem \ref{theorem:subtyping_environment_prefix_preservation},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 We derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau'$
 by instantiating the induction hypothesis applied to $e \hastype \tau'$ with $\delta' \cup \delta_r$,
-and applying Theorem \ref{theorem:proof_typing_skolem_freshness}
-and Theorem \ref{theorem:typing_environment_interpretation_contraction}. 
+and applying 
+Theorem \ref{theorem:proof_typing_skolem_freshness}
+and 
+Theorem \ref{theorem:typing_environment_interpretation_contraction}. 
 
 We combine these terms for both types, resulting
 in $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
@@ -3570,10 +3579,12 @@ Next, we introduce an arbitrary interpretation $\delta'$, and we assume
 $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
 Under these assumptions, we derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$
 by instantiating the applied induction hypothesis with $\delta'$, 
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
-Theorem \ref{theorem:proof_typing_skolem_freshness},
+and applying 
+Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 Likewise, we derive $\delta' \cup \delta \satisfies \tau \subtypes \J{<}l\J{>}\alpha$ by 
 instantiating the applied Theorem \ref{theorem:proof_subtyping_soundness} with $\delta' \cup \delta_a$,
 and applying 
@@ -3605,21 +3616,29 @@ Next, we introduce an arbitrary typing environment $\delta$,
 and we assume $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
 We derive $\delta' \cup \delta \satisfies e_f[\sigma] \hastype \tau_f$,
 by instantiating the first applied induction hypothesis with $\delta'$,
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+and applying 
+Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{theorem:proof_subtyping_subset},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 We derive $\delta' \cup \delta \satisfies e_a[\sigma] \hastype \tau_a$,
 by instantiating the second applied induction hypothesis with $\delta' \cup \delta_a$,
 and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
-Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:typing_environment_interpretation_contraction},
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 We derive $\delta' \cup \delta \satisfies \tau_f \subtypes \tau_a \J{->} \alpha$ by 
 instantiating the applied Theorem \ref{theorem:proof_subtyping_soundness} 
 with $\delta' \cup \delta_f \cup \delta_a$,
 and applying 
-Theorem \ref{theorem:proof_typing_skolem_freshness}
+Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:proof_typing_subset},
 and
 Theorem \ref{theorem:typing_environment_interpretation_contraction}.
 
@@ -3630,9 +3649,8 @@ by Theorem \ref{theorem:path_type_elimination},
 which simplifies to $\delta' \cup \delta \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
 by Definition \ref{def:substitution}.
 
-
 \pc
-For $\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''$,
+For $\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''$,
 we derive a typing interpretation $\delta_a$, such that $\textbf{dom}(\delta_a) = \Theta' \backslash \Theta$
 by applying the induction hypothesis to the Proof Typing of $e \hastype \tau$.
 We derive a typing interpretation $\delta_b$, such that $\textbf{dom}(\delta_b) = \Theta'' \backslash \Theta'$
@@ -3648,41 +3666,53 @@ and we assume $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \sa
 
 We derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$,
 by instantiating the first applied induction hypothesis with $\delta'$,
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+and applying 
+Theorem \ref{theorem:subtyping_environment_prefix_preservation},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:proof_typing_subset},
 Theorem \ref{theorem:proof_subtyping_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 
 We derive $\delta' \cup \delta \satisfies \tau \subtypes \tau_a$,
 by instantiating the first applied induction hypothesis with $\delta' \cup \delta_a$,
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+and applying 
+Theorem \ref{theorem:subtyping_environment_prefix_preservation},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
 Theorem \ref{theorem:typing_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
 
 
-We derive a value $v$, such that $\delta', \sigma\ x \slash v \satisfies \Gamma\ x \hastype \tau$
-by Theorem \ref{theorem:typing_environment_extension}.
-
-We derive $\delta' \cup \delta \satisfies e'[\sigma\ x \slash v] \hastype \tau'$,
+We derive $\delta' \cup \delta, \sigma\ x \slash e[\sigma] \hastype \tau_a$
+by applying Theorem \ref{theorem:subsumption}.
+We derive $\delta' \cup \delta, \sigma\ x \slash e[\sigma] \satisfies \Gamma\ x \hastype \tau$
+by applying Definition \ref{def:model_sequence_typing} (Model Sequence Typing).
+We derive $\delta' \cup \delta \satisfies e'[\sigma\ x \slash e[\sigma]] \hastype \tau'$,
 by instantiating the first applied induction hypothesis with the typing interpretation $\delta' \cup \delta_a \cup \delta_b$,
-and the value interpretation $\sigma\ x \slash v$,
+and the value interpretation $\sigma\ x \slash e[\sigma]$,
 and applying
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{theorem:proof_subtyping_subset},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-Theorem \ref{theorem:typing_environment_interpretation_contraction},
-and Theorem \ref{theorem:typing_interpretation_extension}.
+and 
+Theorem \ref{theorem:typing_interpretation_extension}.
+We simplify to $\delta' \cup \delta \satisfies e'[\sigma][x \slash e[\sigma]] \hastype \tau'$,
+by rewriting with Definition \ref{def:substitution}.
 
-\TODO{need to include Gamma as input to subtyping so that output skolems from subtyping are not already in Gamma from typing}.
+Then, we have 
+$\delta' \cup \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'$
+by applying Theorem \ref{theorem:annotated_binding_introduction},
+which simplifies to 
+$\delta' \cup \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'$
+by applying Definition \ref{def:substitution}. 
+
 
 \TODO{update implementation to be consistent with paper}.
 
-\TODO{double check the correct theorems are being applied}.
-
-\TODO{last step is to compose the model typings and model subtypings}.
 
 \noindent
 $\square$
