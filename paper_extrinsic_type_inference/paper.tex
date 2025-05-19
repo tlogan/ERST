@@ -3662,56 +3662,127 @@ which simplifies to $\delta' \cup \delta \satisfies (e\J{.}l)[\sigma] \hastype \
 by applying Definition \ref{sub} (Substitution).
 
 
-*************************************************
 
 \pc
-For $\Theta, \Delta, \Gamma \entails e_f \J{(} e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''$,
-we derive three typing interpretations $\delta_f$, $\delta_a$, $\delta_s$,
-such that 
-$\text{dom}(\delta_f) = \Theta' \backslash \Theta$, 
-$\text{dom}(\delta_a) = \Theta'' \backslash \Theta'$, 
+For $(\Theta, \Delta, \Gamma \entails e_f \J{(} e_a \J{)} \hastype \alpha \given \Theta''', \Delta''')$,
+we have 
+$(\Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta')$,
+$(\Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta'')$,
 and
-$\text{dom}(\delta_s) = \Theta''' \backslash \Theta''$,
-by applying the induction hypothesis twice and Theorem \ref{theorem:proof_subtyping_soundness}.
-We construct the typing interpretation $\delta$, such that $\delta = \delta_f \cup \delta_a \cup \delta_s$,
-which gives us $\text{dom}(\delta) = \Theta''' \backslash \Theta$ by rewriting.
+$(\Theta'', \Delta'', \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta''')$
+by applying Definition \ref{def:proof_typing}.
 
-Next, we introduce an arbitrary typing environment $\delta$,
-and we assume $\delta' \cup \delta \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
-We derive $\delta' \cup \delta \satisfies e_f[\sigma] \hastype \tau_f$,
-by instantiating the first applied induction hypothesis with $\delta'$,
-and applying 
-Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+We derive a type interpretation $\delta_f$, such that
+$(\textbf{dom}(\delta_f) = \Theta' \backslash \Theta)$
+and $(
+\forall \delta', \sigma \qua 
+\delta' \cup \delta_f \satisfies \Delta' \implies
+\delta', \sigma \satisfies \Gamma \implies
+\delta' \cup \delta_f \satisfies e_f[\sigma] \hastype \tau_f
+)$ (P0)
+by applying the induction hypothesis.
+We derive a type interpretation $\delta_a$, such that
+$(\textbf{dom}(\delta_a) = \Theta'' \backslash \Theta')$
+and $(
+\forall \delta', \sigma \qua 
+\delta' \cup \delta_a \satisfies \Delta' \implies
+\delta', \sigma \satisfies \Gamma \implies
+\delta' \cup \delta_a \satisfies e_a[\sigma] \hastype \tau_a
+)$ (P1)
+by applying the induction hypothesis.
+We derive a type interpretation $\delta_s$, such that
+$(\textbf{dom}(\delta_s) = \Theta''' \backslash \Theta'')$
+and $(
+\forall \delta' \qua 
+\delta' \cup \delta_s \satisfies \Delta' \implies
+\delta' \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
+)$ (P2)
+by applying Theorem \ref{theorem:proof_subtyping_soundness}.
+
+Next, we derive $(\text{dom}(\delta_f \cup \delta_a \cup \delta_s) = \Theta''' \backslash \Theta)$
+by applying
+Theorem \ref{theorem:domain_extension}
+and
+rewriting with set arithmetic.
+The, we introduce an arbitrary type interpretation $\delta'$ and 
+an arbitrary expression interpretation $\sigma$, and
+we assume 
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta''')$
+and
+$(\delta' \satisfies \Gamma)$.
+
+We derive 
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta')$
+by applying
+Theorem \ref{theorem:proof_subtyping_containment},
+Theorem \ref{theorem:proof_typing_containment},
+and
+Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Then, we derive
+$(\delta' \cup \delta_f \satisfies \Delta')$
+by applying
 Theorem \ref{theorem:proof_subtyping_skolem_freshness},
 Theorem \ref{theorem:proof_subtyping_containment},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-and 
-Theorem \ref{theorem:typing_interpretation_extension}.
-We derive $\delta' \cup \delta \satisfies e_a[\sigma] \hastype \tau_a$,
-by instantiating the second applied induction hypothesis with $\delta' \cup \delta_a$,
-and applying Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+and
+Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Then, we derive
+$(\delta' \cup \delta_f \satisfies e_f[\sigma] \hastype \tau_f)$
+by instantiating (P0)
+with $\delta'$ and $\sigma$ and applying the result.
+We derive
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_f)$
+by applying 
 Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction},
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:typing_environment_interpretation_extension},
-and 
-Theorem \ref{theorem:typing_interpretation_extension}.
-We derive $\delta' \cup \delta \satisfies \tau_f \subtypes \tau_a \J{->} \alpha$ by 
-instantiating the applied Theorem \ref{theorem:proof_subtyping_soundness} 
-with $\delta' \cup \delta_f \cup \delta_a$,
-and applying 
+Theorem \ref{theorem:proof_subtyping_containment},
 Theorem \ref{theorem:proof_typing_skolem_freshness},
 Theorem \ref{theorem:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_environment_interpretation_extension}.
+Theorem \ref{theorem:typing_interpretation_extension}.
 
-Then, we derive $\delta' \cup \delta \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
-by applying Theorem \ref{theorem:subsumption}.
-Thus, we have $\delta' \cup \delta \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \alpha$
+
+We derive 
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta'')$
+by applying
+Theorem \ref{theorem:proof_subtyping_containment}
+and
+Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Then, we derive
+$(\delta' \cup \delta_f \cup \delta_a \satisfies \Delta'')$
+by applying
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+and
+Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Then, we derive
+$(\delta' \cup \delta_f \satisfies \Gamma)$
+by applying
+Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{theorem:proof_typing_containment},
+and
+Theorem \ref{theorem:typing_interpretation_extension}.
+Then, we derive
+$(\delta' \cup \delta_f \cup \delta_a \satisfies e_a[\sigma] \hastype \tau_a)$
+by instantiating (P1)
+with $\delta' \cup \delta_f$ and $\sigma$ and applying the result.
+We derive
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_a[\sigma] \hastype \tau_a)$
+by applying 
+Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{theorem:proof_typing_containment},
+and
+Theorem \ref{theorem:typing_interpretation_extension}.
+
+We derive
+$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
+by instantiating (P2) with $\delta' \cup \delta_f \cup \delta_a$, and applying the result.
+Then, we derive $\delta' \cup \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
+by applying 
+Theorem \ref{theorem:subsumption}.
+Thus, we have $\delta' \cup \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \alpha$
 by Theorem \ref{theorem:path_type_elimination},
-which simplifies to $\delta' \cup \delta \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
-by Definition \ref{def:substitution}.
+which simplifies to $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
+by Definition \ref{def:substitution}
+.
 
 \pc
 For $\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''$,
