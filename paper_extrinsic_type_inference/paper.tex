@@ -3775,10 +3775,10 @@ Theorem \ref{theorem:typing_interpretation_extension}.
 We derive
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
 by instantiating (P2) with $\delta' \cup \delta_f \cup \delta_a$, and applying the result.
-Then, we derive $\delta' \cup \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
+Then, we derive $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
 by applying 
 Theorem \ref{theorem:subsumption}.
-Thus, we have $\delta' \cup \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \alpha$
+Thus, we have $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha$
 by Theorem \ref{theorem:path_type_elimination},
 which simplifies to $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
 by Definition \ref{def:substitution}
