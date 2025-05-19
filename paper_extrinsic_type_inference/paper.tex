@@ -1379,21 +1379,13 @@ enumerates all possible outputs.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta'
       \\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+      \Theta', \Delta' \entails \tau \circledast \Pi_\nu
       \\\\
-      \forall \Theta'', \Delta''  \qua 
-        \Theta'' \backslash \Theta', \llbracket \dTheta \cup \Theta' \entails \Delta'' \backslash \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+ 
-        \in \Pi_\nu
-      \implies
-      \Theta', \Delta' \entails \tau \subtypes \alpha_l\J{->}\alpha_r \given \Theta'', \Delta'' 
-      \\\\
-      \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi_\nu
-      \\
       \alpha_\nu \downarrow \Pi_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
       \\
-      \textbf{pack}^-(\dTheta\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
       \exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
       \\
@@ -1477,6 +1469,28 @@ by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$,
 and it leverages the factorization predicate $... \subtypes \J{LFP[} \alpha_\mu \J{]} \tau_\mu \Vvdash \alpha \subtypes ...$
 to factor the inductive relational type into an inductive antecedent and an inductive consequent
 of a single path type.
+
+\begin{definition}
+  \label{def:function_type_explosion}
+  Function Type Explosion 
+  \hfill 
+  \boxed{\Theta, \Delta \entails \tau \circledast \Pi}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall \Theta', \Delta'  \qua 
+        \Theta' \backslash \Theta, \llbracket \textbf{ftv}(\Delta) \cup \Theta' \entails \Delta' \backslash \Delta, \alpha_l \J{->} \alpha_r \rrbracket^+ 
+        \in \Pi
+      \implies
+      \Theta, \Delta \entails \tau \subtypes \alpha_l\J{->}\alpha_r \given \Theta', \Delta' 
+      \\\\
+      \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi
+    } {
+      \Theta, \Delta \entails \tau \circledast \Pi 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
 
 \begin{definition} 
   \label{def:path_sequence_typing}
@@ -3937,7 +3951,21 @@ $\delta' \cup \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\s
 by applying Definition \ref{def:substitution}. 
 
 
-\TODO{last case of Proof Typing}
+\pc For $(
+\Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
+\hastype 
+\tau_l \J{->} \tau_r
+\given \Theta, \Delta
+)$,
+we have 
+$(\Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta')$,
+$(\Theta', \Delta' \entails \tau \circledast \Pi_\nu)$,
+$( \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu)$,
+$(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)$,
+$(\exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l)$,
+and
+$(\exists \alpha  \qua \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r)$
+by Definition \ref{def:proof_typing}.
 
 *********************************************************************
 
