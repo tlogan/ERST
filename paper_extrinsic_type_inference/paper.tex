@@ -1554,21 +1554,33 @@ types more readable.
     \inferrule {
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
     } {
-      \forall \tau_\nu\ \Theta_\nu\ \Delta_\nu\ \tau_\nu'\ \delta_\nu.\ 
+      (
+      \forall \Theta_\nu, \Delta_\nu, \tau_\nu \qua
+      (\Theta_\nu,\Delta_\nu, \tau_\nu) \in \Pi_\nu \implies
       \\\\
-      (\Theta_\nu,\Delta_\nu, \tau_\nu') \in \Pi_\nu \implies
-      \textbf{dom}(\delta_\nu) \cong \Theta_\nu \implies
-      \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies \Delta_\nu \implies
-      \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies e_f \hastype \tau_\nu'
+      \exists \delta_\nu \qua \textbf{dom}(\delta_\nu) \cong \Theta_\nu \up
+      (
+      \forall \delta, \tau_\nu' \qua
+      \delta\ \alpha_\nu \slash \tau_\nu' \cup \delta_\nu \satisfies \Delta_\nu \implies
+      \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies e_f \hastype \tau_\nu
+      )
+      )
       \\\\
       \iff
       \\\\
-      \exists e_a\ \tau_\mu\ \Theta_\mu\ \Delta_\mu\ \tau_\mu'\ \delta_\mu.\ 
+      (
+      \exists e_a, \Theta_\mu, \Delta_\mu, \tau_\mu \qua
+      (\Theta_\mu,\Delta_\mu, \tau_\mu) \in \Pi_\mu \up
       \\\\
-      (\Theta_\mu,\Delta_\mu, \tau_\mu') \in \Pi_\mu \land
-      \textbf{dom}(\delta_\mu) \cong \Theta_\mu \land
-      \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies \Delta_\mu \land
-      \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu'
+      (
+      \forall \delta_\mu \qua \textbf{dom}(\delta_\mu) \cong \Theta_\mu \implies
+      (
+      \exists \delta, \tau_\mu' \qua
+      \delta\ \alpha_\mu \slash \tau_\mu' \cup \delta_\mu \satisfies \Delta_\mu \up
+      \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      )
+      )
+      )
     }
   \end{mathpar} 
 \end{property} 
@@ -3409,6 +3421,31 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{theorem:function_type_explosion_soundness}
+  Function Type Explosion Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails \tau \circledast \Pi 
+    } {
+      \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      \\\\
+      (
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
+      )
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+\begin{theorem}
   \label{theorem:function_lifting_soundness}
   Function Lifting Soundness 
   \\
@@ -3422,7 +3459,7 @@ rely on analogous techniques.
       (
       \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \up 
       (
-      \forall \delta' \qua 
+      \forall \delta', \sigma \qua 
       \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
       \delta', \sigma \satisfies \Gamma \implies
       \delta' \cup \delta \satisfies f[\sigma] \hastype \tau^\dagger
@@ -3479,6 +3516,30 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \delta' \satisfies \Delta \implies
+      \delta' \satisfies e[\sigma] \hastype \tau
+      ) 
+    }
+
+    \inferrule {
+      \textbf{pack}^-(\dTheta \entails \Pi) = \tau 
+    } {
+      (\exists  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \up
+      \\\\
+      (
+      \forall \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \dTheta \implies
+      (
+      \exists \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \up
+      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau^\dagger
+      )
+      ) 
+      \\\\
+      \iff
+      \\\\
+      (
+      \exists \delta' \qua 
+      \delta' \satisfies \Delta \up
       \delta' \satisfies e[\sigma] \hastype \tau
       ) 
     }
@@ -3967,6 +4028,7 @@ and
 $(\exists \alpha  \qua \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r)$
 by Definition \ref{def:proof_typing}.
 
+\TODO{induction won't work since the output subtyping environment is the input, and not bigger or equal to the output of the subproblems }
 *********************************************************************
 
 \TODO{update implementation to be consistent with paper}.
