@@ -1387,9 +1387,9 @@ enumerates all possible outputs.
       \\
       \textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
-      \exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l 
+      \exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha
       \\
-      \exists \alpha  \qua \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r 
+      \exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{TOP} \J{*} \alpha \factorsinto \tau_r \subtypes \alpha 
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -1652,17 +1652,21 @@ $
     \inferrule {
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
     } {
+      (
       \forall \tau_\nu\ \Delta_\nu\ .\ 
       \delta\ \alpha_\nu \slash \tau_\nu \satisfies \Delta_\nu \implies
       \delta\ \alpha_\nu \slash \tau_\nu 
       \satisfies e_f \hastype \tau_\nu
+      )
       \\\\
       \iff
       \\\\
+      (
       \exists e_a\ \tau_\mu\ \Delta_\mu.\ 
       \delta\ \alpha_\mu \slash \tau_\mu \satisfies \Delta_\mu \land
       \delta\ \alpha_\mu \slash \tau_\mu 
       \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      )
     }
   \end{mathpar} 
 \end{property} 
@@ -3547,6 +3551,57 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+
+
+\begin{theorem}
+  \label{theorem:subtyping_factorization_soundness}
+  Subtyping Factorization Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l \subtypes \tau_r \factorsinto \tau \subtypes \alpha
+    } {
+      \forall \delta \qua
+      \delta \satisfies \tau_l \subtypes \tau_r
+      \implies
+      \delta \satisfies \tau \subtypes \alpha
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:subtyping_positive_substitution}
+  Subtyping Positive Substitution 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau_l \subtypes \tau_r
+      \\
+      \delta \satisfies \tau \subtypes \alpha
+    } {
+      \delta \satisfies \tau_l\subtypes \tau_r[\alpha \slash \tau]^+
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:path_type_introduction}
+  Path Type Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e_a \hastype \tau_l
+      \\
+      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
+    } {
+      \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
 \begin{theorem}
   \label{theorem:collection_membership_choice}
   Collection Membership Choice 
@@ -4023,9 +4078,9 @@ $(\Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta
 $(\Theta', \Delta' \entails \tau \circledast \Pi_\nu)$,
 $( \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu)$,
 $(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)$,
-$(\exists \alpha  \qua \alpha \J{*} \J{BOT} \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_l)$,
+$(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha)$, 
 and
-$(\exists \alpha  \qua \J{BOT} \J{*} \alpha  \subtypes \J{LFP[} \alpha_\mu \J{]}\tau_\mu \factorsinto \alpha \subtypes \tau_r)$
+$(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{TOP} \J{*} \alpha \factorsinto \tau_r \subtypes \alpha)$
 by Definition \ref{def:proof_typing}.
 
 \TODO{induction won't work since the output subtyping environment is the input, and not bigger or equal to the output of the subproblems }

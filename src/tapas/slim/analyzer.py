@@ -1110,6 +1110,7 @@ def factorize_least_fp(t : Fixpoint, path : tuple[str, ...]) -> Fixpoint:
     return Fixpoint(t.id, factorized_body)
 
 
+# TODO: replace with find_paths plural
 def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
     results = s()
     for constraint in world.constraints:
