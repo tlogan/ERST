@@ -1377,9 +1377,9 @@ enumerates all possible outputs.
     }
 
     \inferrule {
-      \Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \tau \circledast \Pi_\nu
+      \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
       \\\\
       \alpha_\nu \downarrow \Pi_\nu
       \fallingdotseq 
@@ -1394,7 +1394,7 @@ enumerates all possible outputs.
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
       \tau_l \J{->} \tau_r
-      \given \Theta, \Delta
+      \given \Theta, \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -1474,19 +1474,23 @@ of a single path type.
   \label{def:function_type_explosion}
   Function Type Explosion 
   \hfill 
-  \boxed{\Theta, \Delta \entails \tau \circledast \Pi}
+  \boxed{\Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi}
   \\
   \begin{mathpar}
     \inferrule {
+      \TODO{update call to positive interp}
+      \\\\
+      \TODO{no need to ignore any variables in input to interp}
+      \\\\
       \forall \Theta', \Delta'  \qua 
         \Theta' \backslash \Theta, \llbracket \textbf{ftv}(\Delta) \cup \Theta' \entails \Delta' \backslash \Delta, \alpha_l \J{->} \alpha_r \rrbracket^+ 
         \in \Pi
       \implies
-      \Theta, \Delta \entails \tau \subtypes \alpha_l\J{->}\alpha_r \given \Theta', \Delta' 
+      \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
       \\\\
       \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi
     } {
-      \Theta, \Delta \entails \tau \circledast \Pi 
+      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
     }
   \end{mathpar}
 \end{definition}
@@ -3430,7 +3434,7 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta, \Gamma \entails \tau \circledast \Pi 
+      \Theta, \Delta, \Gamma \entails \tau \circledast \alpha \rightarrow \Pi 
     } {
       \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
@@ -3440,7 +3444,7 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau \subtypes \tau^\dagger
+      \delta' \cup \delta \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
       )
       )
     }
@@ -3603,13 +3607,34 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:collection_membership_choice}
-  Collection Membership Choice 
+  \label{theorem:path_type_elimination_loop}
+  Path Type Elimination Loop 
   \\
   \begin{mathpar}
     \inferrule {
+      \delta \satisfies e \hastype \alpha \J{->} \tau
     } {
-      C = \epsilon \down \exists c \qua c \in C
+      \delta\ \alpha \slash \tau \satisfies \J{loop(}e\J{)} \hastype \tau
+    } {
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:proof_subtyping_soundness}
+  Proof Subtyping Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r
+      )
     }
   \end{mathpar}
 \end{theorem}
@@ -4071,11 +4096,11 @@ by applying Definition \ref{def:substitution}.
 \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
 \hastype 
 \tau_l \J{->} \tau_r
-\given \Theta, \Delta
+\given \Theta', \Delta'
 )$,
 we have 
-$(\Theta, \Delta, \Gamma \entails e \hastype \alpha_\nu\J{->}\tau \given  \Theta', \Delta')$,
-$(\Theta', \Delta' \entails \tau \circledast \Pi_\nu)$,
+$(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$,
+$(\Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu)$,
 $( \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu)$,
 $(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)$,
 $(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha)$, 
