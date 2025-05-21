@@ -1565,23 +1565,23 @@ types more readable.
       \exists \delta_\nu \qua \textbf{dom}(\delta_\nu) \cong \Theta_\nu \up
       (
       \forall \delta, \tau_\nu' \qua
-      \delta\ \alpha_\nu \slash \tau_\nu' \cup \delta_\nu \satisfies \Delta_\nu \implies
-      \delta\ \alpha_\nu \slash \tau_\nu \cup \delta_\nu \satisfies e_f \hastype \tau_\nu
+      \delta \cup \delta_\nu\ \alpha_\nu \slash \tau_\nu' \satisfies \Delta_\nu \implies
+      \delta \cup \delta_\nu\ \alpha_\nu \slash \tau_\nu \satisfies e_f \hastype \tau_\nu
       )
       )
       \\\\
       \iff
       \\\\
       (
-      \exists e_a, \Theta_\mu, \Delta_\mu, \tau_\mu \qua
+      \exists \Theta_\mu, \Delta_\mu, \tau_\mu \qua
       (\Theta_\mu,\Delta_\mu, \tau_\mu) \in \Pi_\mu \up
       \\\\
       (
       \forall \delta_\mu \qua \textbf{dom}(\delta_\mu) \cong \Theta_\mu \implies
       (
-      \exists \delta, \tau_\mu' \qua
-      \delta\ \alpha_\mu \slash \tau_\mu' \cup \delta_\mu \satisfies \Delta_\mu \up
-      \delta\ \alpha_\mu \slash \tau_\mu \cup \delta_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      \exists \delta, \tau_\mu', e_a \qua
+      \delta \cup \delta_\mu\ \alpha_\mu \slash \tau_\mu' \satisfies \Delta_\mu \up
+      \delta \cup \delta_\mu\ \alpha_\mu \slash \tau_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
       )
       )
       )
@@ -3434,7 +3434,7 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta, \Gamma \entails \tau \circledast \alpha \rightarrow \Pi 
+      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
     } {
       \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
@@ -3447,6 +3447,25 @@ rely on analogous techniques.
       \delta' \cup \delta \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
       )
       )
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+\begin{theorem}
+  \label{theorem:function_type_explosion_skolem_freshness}
+  Function Type Explosion Skolem Freshness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
+    } {
+      \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      \Theta^\dagger \cap \Theta = \emptyset 
+      \up
+      \Theta^\dagger \cap \textbf{ftv}(\Delta) = \emptyset
     }
   \end{mathpar}
 \end{theorem}
@@ -4106,9 +4125,71 @@ $(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)
 $(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha)$, 
 and
 $(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{TOP} \J{*} \alpha \factorsinto \tau_r \subtypes \alpha)$
-by Definition \ref{def:proof_typing}.
+by applying Definition \ref{def:proof_typing}.
 
-\TODO{induction won't work since the output subtyping environment is the input, and not bigger or equal to the output of the subproblems }
+We derive a typing interpretation $\delta$, such that 
+$(\textbf{dom}(\delta) = \Theta' \backslash \Theta)$
+and $(
+\forall \delta', \sigma \qua 
+\delta' \cup \delta \satisfies \Delta' \implies
+\delta', \sigma \satisfies \Gamma \implies
+\delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+)$ (P0)
+by applying the induction hypothesis.
+Next, we introduce an arbitrary type interpretation $\delta'$
+and an arbitrary expression interpretation $\sigma$,
+and wee assume 
+$\delta' \cup \delta \satisfies \Delta'$
+and $\delta', \sigma \satisfies \Gamma$.
+We derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$
+by instantiating (P0) with $\delta'$ and $\sigma$, and
+applying the result. 
+
+
+
+We derive
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+)
+)
+$ (P1)
+by applying
+Theorem \ref{theorem:function_type_explosion_soundness}.
+We have  
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+)
+)
+)$ (P2) by applying 
+Theorem \ref{theorem:function_type_explosion_skolem_freshness},
+Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{theorem:typing_interpretation_extension},
+Theorem \ref{theorem:subsumption}
+to instances of (P1).
+Then, we have
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta^\dagger\ \alpha \slash \tau^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
+)
+)
+)$ (P3)
+by applying Theorem \ref{theorem:path_type_elimination_loop}
+to instances of (P2).
+
 *********************************************************************
 
 \TODO{update implementation to be consistent with paper}.
