@@ -1558,6 +1558,8 @@ types more readable.
     \inferrule {
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
     } {
+      % \exists e_f \qua
+      % \\\\
       (
       \forall \Theta_\nu, \Delta_\nu, \tau_\nu \qua
       (\Theta_\nu,\Delta_\nu, \tau_\nu) \in \Pi_\nu \implies
@@ -1572,6 +1574,8 @@ types more readable.
       \\\\
       \iff
       \\\\
+      (\forall e_a \qua \satisfies e_f\J{(} e_a \J{)} \hastype \J{TOP}
+      \implies
       (
       \exists \Theta_\mu, \Delta_\mu, \tau_\mu \qua
       (\Theta_\mu,\Delta_\mu, \tau_\mu) \in \Pi_\mu \up
@@ -1579,9 +1583,10 @@ types more readable.
       (
       \forall \delta_\mu \qua \textbf{dom}(\delta_\mu) \cong \Theta_\mu \implies
       (
-      \exists \delta, \tau_\mu', e_a \qua
+      \exists \delta, \tau_\mu' \qua
       \delta \cup \delta_\mu\ \alpha_\mu \slash \tau_\mu' \satisfies \Delta_\mu \up
       \delta \cup \delta_\mu\ \alpha_\mu \slash \tau_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      )
       )
       )
       )
@@ -1665,11 +1670,14 @@ $
       \\\\
       \iff
       \\\\
+      (\forall e_a \qua \satisfies e_f\J{(} e_a \J{)} \hastype \J{TOP}
+      \implies
       (
-      \exists e_a\ \tau_\mu\ \Delta_\mu.\ 
+      \exists \tau_\mu\ \Delta_\mu.\ 
       \delta\ \alpha_\mu \slash \tau_\mu \satisfies \Delta_\mu \land
       \delta\ \alpha_\mu \slash \tau_\mu 
       \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      )
       )
     }
   \end{mathpar} 
@@ -3169,6 +3177,22 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+\begin{theorem}
+  \label{theorem:subtyping_environment_union}
+  Subtyping Environment Union 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta
+      \\
+      \delta \satisfies \Delta'
+    } {
+      \delta \satisfies \Delta \cup \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
 
 % \begin{theorem}
 %   \label{theorem:entry_type_introdcution}
@@ -3610,22 +3634,6 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:path_type_introduction}
-  Path Type Introduction 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies e_a \hastype \tau_l
-      \\
-      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
-    } {
-      \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
   \label{theorem:path_type_elimination_loop}
   Path Type Elimination Loop 
   \\
@@ -3633,7 +3641,7 @@ rely on analogous techniques.
     \inferrule {
       \delta \satisfies e \hastype \alpha \J{->} \tau
     } {
-      \delta\ \alpha \slash \tau \satisfies \J{loop(}e\J{)} \hastype \tau
+      \delta \satisfies \J{loop(}e\J{)} \hastype \tau
     } {
     }
   \end{mathpar}
@@ -4183,13 +4191,24 @@ $(
 \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
 (
 \delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
-\delta' \cup \delta \cup \delta^\dagger\ \alpha \slash \tau^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
+\delta' \cup \delta \cup \delta^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
 )
 )
 )$ (P3)
 by applying Theorem \ref{theorem:path_type_elimination_loop}
 to instances of (P2).
-
+We derive 
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\delta' \cup \delta \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
+)
+)
+)$ (P4)
+by applying Theorem \ref{theorem:subtyping_environment_union}.
 *********************************************************************
 
 \TODO{update implementation to be consistent with paper}.
