@@ -3304,6 +3304,22 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+\begin{theorem}
+  \label{theorem:subtyping_environment_interpretation_extension}
+  Subtyping Environment Interpretation Extension 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta
+      \\
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
+    } {
+      \delta \cup \delta' \satisfies \Delta
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
 
 \begin{theorem}
   \label{theorem:typing_interpretation_extension}
@@ -4152,6 +4168,19 @@ and $\delta', \sigma \satisfies \Gamma$.
 We derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$
 by instantiating (P0) with $\delta'$ and $\sigma$, and
 applying the result. 
+Additionally, we derive 
+$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies \Delta'$
+(P1)
+by applying 
+Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+We derive 
+$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies e[\sigma] \hastype \tau$
+(P2)
+by applying
+Theorem \ref{theorem:proof_typing_containment},
+and
+Theorem \ref{theorem:typing_interpretation_extension}.
+
 
 
 We derive
@@ -4161,99 +4190,60 @@ $(
 \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
 (
 \forall \delta' \qua
-\delta' \cup \delta^\dagger \satisfies \Delta' \cup \Delta^\dagger \implies
+\delta' \cup \delta^\dagger \satisfies \Delta' \implies
+\delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
 \delta' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
 )
 )
-$ (P1)
+$ (P3)
 by applying
-Theorem \ref{theorem:function_type_explosion_soundness}.
-
+Theorem \ref{theorem:function_type_explosion_soundness}
+and
+Theorem \ref{theorem:subtyping_environment_union}.
 We derive
 $(
 \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
 (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
 \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
 (
-\forall \delta', \delta'' \qua
-\delta' \cup \delta'' \cup \delta^\dagger \satisfies \Delta' \cup \Delta^\dagger \implies
-\delta' \cup \delta'' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
-)
-)
-$ (P...)
-by applying
-Theorem \ref{theorem:...}.
-
-
-
-We derive
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta' \qua
-\delta' \cup \delta^\dagger \satisfies \Delta' \cup \Delta^\dagger \implies
 \forall \delta'' \qua
-\delta' \cup \delta'' \cup \delta^\dagger \satisfies \Delta' \cup \Delta^\dagger \implies
-\delta' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta' \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
 )
 )
-$ (P...)
-by applying
-Theorem \ref{...}.
+$
+by rewriting and partially instantiating (P3).
+Then, we have
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\forall \delta'' \qua
+\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+)
+)
+$
+by applying (P1), (P2), and Theorem \ref{theorem:subsumption}.
+Thus, we have
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\forall \delta'' \qua
+\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau^\dagger
+)
+)
+$
+by Theorem \ref{theorem:path_type_elimination_loop}.
 
 
-\TODO{need a way to stay general for new constraints but be specific for inherited constraints}
-
-\TODO{perhaps the duality lemmas need to generalize over inherited constraints}
-
-
-
-
-
-
-% We have  
-% $(
-% \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-% (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-% \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-% (
-% \delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
-% \delta' \cup \delta \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
-% )
-% )
-% )$ (P2) by applying 
-% Theorem \ref{theorem:function_type_explosion_skolem_freshness},
-% Theorem \ref{theorem:proof_typing_containment},
-% Theorem \ref{theorem:typing_interpretation_extension},
-% Theorem \ref{theorem:subsumption}
-% to instances of (P1).
-% Then, we have
-% $(
-% \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-% (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-% \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-% (
-% \delta' \cup \delta \cup \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
-% \delta' \cup \delta \cup \delta^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
-% )
-% )
-% )$ (P3)
-% by applying Theorem \ref{theorem:path_type_elimination_loop}
-% to instances of (P2).
-% We derive 
-% $(
-% \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-% (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-% \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-% (
-% \delta' \cup \delta \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-% \delta' \cup \delta \cup \delta^\dagger \satisfies \J{loop(}e[\sigma] \J{)} \hastype \tau^\dagger
-% )
-% )
-% )$ (P4)
-% by applying Theorem \ref{theorem:subtyping_environment_union}.
 *********************************************************************
 
 \TODO{update implementation to be consistent with paper}.
