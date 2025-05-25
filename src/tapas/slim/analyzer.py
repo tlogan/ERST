@@ -3156,6 +3156,9 @@ class ExprRule(Rule):
         """
 
 
+        
+
+
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
@@ -3204,6 +3207,7 @@ class ExprRule(Rule):
             induc_body = Unio(constrained_rel, induc_body) 
         #end for
 
+        # TODO: add constraint to parameter to ensuire soundness 
         rel_typ = Fixpoint(IH_typ.id, induc_body)
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()

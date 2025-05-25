@@ -1561,37 +1561,73 @@ types more readable.
       \delta \satisfies \Delta
     } {
       (
-      \forall \Theta_\nu, \Delta_\nu, \tau_\nu \qua
-      (\Theta_\nu,\Delta_\nu, \tau_\nu) \in \Pi_\nu \implies
-      \\\\
-      \exists \delta_\nu \qua \textbf{dom}(\delta_\nu) \cong \Theta_\nu \up
+      \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up
       \\\\
       (
       \forall \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
-      \delta \cup \delta' \cup \delta_\nu \satisfies \Delta_\nu \implies
-      \delta \cup \delta' \cup \delta_\nu \satisfies e_f \hastype \tau_\nu
+      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
       )
       )
       \\\\
       \iff
       \\\\
-      (
-      \forall \Theta_\mu, \Delta_\mu, \tau_\mu \qua
-      (\Theta_\mu,\Delta_\mu, \tau_\mu) \in \Pi_\mu \implies
+      \forall e_a \qua
       \\\\
       (
-      \forall \delta_\mu \qua \textbf{dom}(\delta_\mu) \cong \Theta_\mu \implies
+      \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
       \\\\
-      (
-      \exists \delta', e_a \qua
-      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up 
-      \delta \cup \delta' \cup \delta_\mu \satisfies \Delta_\mu \up
-      \delta \cup \delta' \cup \delta_\mu \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau_\mu
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,BOT}) \hastype \tau^\dagger 
       )
       )
+      \implies
+      \\\\
+      (\exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
+      \\\\
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a\J{,}e_f\J{(}e_a\J{)}) \hastype \tau^\dagger
       )
       )
+      % \\\\
+      % \\\\
+      % (
+      % \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      % (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      % (
+      % \forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
+      % \\\\
+      % (
+      % \exists \delta' \qua
+      % \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up 
+      % \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      % \\\\
+      % %%%%%
+      % % (
+      % % \forall e_a \qua
+      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,BOT} ) \hastype \tau^\dagger \implies
+      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (\J{BOT,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
+      % % )
+      % %%%%%
+      % % \exists e_a \qua
+      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
+      % %%%%%
+      % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
+      % %%%%%
+      % )
+      % )
+      % )
     }
   \end{mathpar} 
 \end{property} 
@@ -3565,50 +3601,50 @@ rely on analogous techniques.
   \begin{mathpar}
     \inferrule {
       \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
     } {
       (\forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
       \\\\
       (
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \dTheta \up 
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \backslash \dTheta \up 
+      \\\\
       (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau^\dagger
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \implies
+      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta \cup \delta' \cup \delta^\dagger \satisfies e[\sigma] \hastype \tau^\dagger
       )
       ) 
       \\\\
       \iff
       \\\\
-      (
-      \forall \delta' \qua 
-      \delta' \satisfies \Delta \implies
-      \delta' \satisfies e[\sigma] \hastype \tau
-      ) 
+      \delta \satisfies e[\sigma] \hastype \tau
     }
 
     \inferrule {
       \textbf{pack}^-(\dTheta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
     } {
       (\exists  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \up
       \\\\
       (
-      \forall \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \backslash \dTheta \implies
+      \forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \backslash \dTheta \implies
+      \\\\
       (
       \exists \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \up
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau^\dagger
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta \cup \delta' \cup \delta^\dagger \satisfies e[\sigma] \hastype \tau^\dagger
       )
       ) 
       \\\\
       \iff
       \\\\
-      (
-      \exists \delta' \qua 
-      \delta' \satisfies \Delta \up
-      \delta' \satisfies e[\sigma] \hastype \tau
-      ) 
+      \delta \satisfies e[\sigma] \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
@@ -3658,6 +3694,24 @@ rely on analogous techniques.
       \delta \satisfies e \hastype \alpha \J{->} \tau
     } {
       \delta \satisfies \J{loop(}e\J{)} \hastype \tau
+    } {
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:path_type_introduction}
+  Path Type Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall e_a \qua
+      \delta \satisfies e_a \hastype \tau_l 
+      \implies
+      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
+    } {
+      \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
     } {
     }
   \end{mathpar}
@@ -4245,22 +4299,40 @@ by Theorem \ref{theorem:path_type_elimination_loop}.
 
 \TODO{...}
 
-We derive an expression $e_a$, such that ....
+We derive
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
+(
+\exists \delta'', e_a \qua
+\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \up
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau^\dagger
+)
+)
+$
+by Theorem \ref{...} (Duality Soundness).
 
 We derive
-$... \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau^\dagger$
+$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau^\dagger$
 by ....
 
 We derive
-$... \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_\mu$
+$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_\mu$
 by ....
 
 We derive
-$... \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \J{LFP[} \alpha_\mu \J{]}\tau_\mu$
+$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \J{LFP[} \alpha_\mu \J{]}\tau_\mu$
 by ....
 
 We derive
-$... \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_l \J{\&} \tau_r$
+$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_l \J{\&} \tau_r$
+by ....
+
+
+We derive
+$\forall e_a \qua \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \J{TOP} \implies ... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_l \J{\&} \tau_r$
 by ....
 
 We derive
