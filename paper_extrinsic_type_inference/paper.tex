@@ -1616,7 +1616,7 @@ types more readable.
       \\\\
       \iff
       \\\\
-      (\forall e_a \qua
+      (\forall e_a, e_r \qua
       (
       \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
       (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
@@ -1625,50 +1625,12 @@ types more readable.
       \exists \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
       \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \exists e_r \qua \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
       )
       )
       \implies
-      \\\\
-      (\exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
-      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
-      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
-      \\\\
-      \exists \delta' \qua
-      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a\J{,}e_f\J{(}e_a\J{)}) \hastype \tau^\dagger
+      e_r \cong e_f\J{(}e_a\J{)}
       )
-      )
-      )
-      % \\\\
-      % \\\\
-      % (
-      % \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
-      % (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
-      % (
-      % \forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
-      % \\\\
-      % (
-      % \exists \delta' \qua
-      % \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up 
-      % \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      % \\\\
-      % %%%%%
-      % % (
-      % % \forall e_a \qua
-      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,BOT} ) \hastype \tau^\dagger \implies
-      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (\J{BOT,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
-      % % )
-      % %%%%%
-      % % \exists e_a \qua
-      % % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
-      % %%%%%
-      % \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_f\J{(} e_a \J{)}) \hastype \tau^\dagger
-      % %%%%%
-      % )
-      % )
-      % )
     }
   \end{mathpar} 
 \end{property} 
@@ -4368,71 +4330,82 @@ $(
 $
 by Theorem \ref{theorem:path_type_elimination_loop}.
 
-
 We derive
-$\forall e_a \qua 
-(\exists e_r \qua
+$(
+\forall e_a, e_r \qua 
 \delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
-)
 \implies 
-\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \tau_\mu
-$
+e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+)$
 by applying 
 Theorem \ref{...} (Duality Soundness)
 and
 Theorem \ref{theorem:packaging_soundness}.
 
-
-We have 
-$\forall e_a \qua 
-(\exists e_r \qua
+We derive
+$(
+\forall e_a, e_r \qua 
 \delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
-)
 \implies 
-\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
-$
-by ...
-
+e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+)$
+by applying 
 \TODO{...}
 
 
-We have 
-$\forall e_a \qua 
+
+We derive
+$(
+\forall e_a, e_r \qua 
+\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+\implies 
+\delta' \cup \delta \satisfies e_r \hastype \tau_r 
+\up
+e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+)$
+by applying 
+Theorem \ref{theorem:subtyping_factorization_soundness}.
+Theorem \ref{theorem:subsumption},
+Theorem \ref{theorem:entry_type_elimination},
+and
+Theorem \ref{theorem:right_congruence}.
+
+
+We derive
+$(
+\forall e_a, e_r \qua 
 \delta' \cup \delta \satisfies e_a \hastype \tau_l 
 \implies 
-\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
-$
+\delta' \cup \delta \satisfies e_r \hastype \tau_r 
+\up
+e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+)$
 by applying 
 Theorem \ref{theorem:left_congruence}
 and
 Theorem \ref{theorem:subtyping_factorization_soundness}.
 
-
-We have 
-$\forall e_a \qua 
+We derive
+$(
+\forall e_a \qua 
 \delta' \cup \delta \satisfies e_a \hastype \tau_l 
 \implies 
-\delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
-$
-Theorem \ref{theorem:subtyping_factorization_soundness}.
-Theorem \ref{theorem:subsumption},
-Theorem \ref{theorem:entry_type_elimination},
-Theorem \ref{theorem:right_congruence},
-and
+\delta' \cup \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
+)$
+by applying 
 Theorem \ref{theorem:expression_congruence_typing}.
 
-
 We have 
-$
+$(
 \delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
-$
+)$
 by applying 
 Theorem \ref{theorem:path_type_elimination_loop}
 
 We have 
-$
+$(
 \delta' \cup \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
-$
+)$
 by applying 
 Definition \ref{...} (Substitution)
 
