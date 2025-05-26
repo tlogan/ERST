@@ -1010,44 +1010,27 @@ Records are similar to functions, except that their entries are guarded by liter
 Additionally, records may act as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
-\begin{definition}
-  \label{def:multi_progression}
-  Multi Progression 
-  \hfill
-  \boxed{e \rightsquigarrow^\star e'}
-  \\
-  \begin{mathpar}
-    \inferrule { 
-    } {
-      e \rightsquigarrow^\star e 
-    } 
+% \begin{definition}
+%   \label{def:multi_progression}
+%   Multi Progression 
+%   \hfill
+%   \boxed{e \rightsquigarrow^\star e'}
+%   \\
+%   \begin{mathpar}
+%     \inferrule { 
+%     } {
+%       e \rightsquigarrow^\star e 
+%     } 
 
-    \inferrule { 
-      e \rightsquigarrow e'
-      \\
-      e' \rightsquigarrow^\star e''
-    } {
-      e \rightsquigarrow^\star e''
-    } 
-  \end{mathpar}
-\end{definition}
-
-\begin{definition}
-  \label{def:expression_congruence}
-  Expression Congruence 
-  \hfill
-  \boxed{e_l \cong e_r}
-  \\
-  \begin{mathpar}
-    \inferrule { 
-      e_l \rightsquigarrow^\star e 
-      \\
-      e_r \rightsquigarrow^\star e 
-    } {
-      e_l \cong e_r 
-    } 
-  \end{mathpar}
-\end{definition}
+%     \inferrule { 
+%       e \rightsquigarrow e'
+%       \\
+%       e' \rightsquigarrow^\star e''
+%     } {
+%       e \rightsquigarrow^\star e''
+%     } 
+%   \end{mathpar}
+% \end{definition}
 
 \begin{definition}
   \label{def:stability}
@@ -1223,10 +1206,26 @@ The indirection into progression is not practical, but it guides the design
 of a sound type system that can directly prove the validity of typings and subtypings 
 by eliminating type forms.
 
-
-
-
 \TODO{describe the various rules of model typing}
+
+\begin{definition}
+  \label{def:expression_congruence}
+  Expression Congruence 
+  \hfill
+  \boxed{e_l \cong e_r}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \forall \delta, \tau \qua 
+      \delta \satisfies e_l \hastype \tau 
+      \iff
+      \delta \satisfies e_r \hastype \tau
+    } {
+      e_l \cong e_r 
+    } 
+  \end{mathpar}
+\end{definition}
+
 
 % \hfill
 % \begin{definition}
@@ -3708,31 +3707,49 @@ rely on analogous techniques.
     } {
       \forall e' \qua \delta \satisfies e'  \hastype \tau'
       \implies
-      \exists e \qua e \J{.} l \rightsquigarrow e' \up \delta \satisfies e \hastype \tau
-    }
-
-    \inferrule {
-      \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
-    } {
-      \delta \satisfies e \J{.} l \hastype \tau'
-      \implies
-      \delta \satisfies e \hastype \tau
+      \exists e \qua e \J{.} l \cong e' \up \delta \satisfies e \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
 \hfill
 
 \begin{theorem}
-  \label{theorem:entry_type_elimination_progression}
-  Entry Type Elimination Progression 
+  \label{theorem:expression_congruence_typing}
+  Expression Congruence Typing 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies e \hastype \J{<}l\J{>} \tau
-      \\
-      e \J{.} l \rightsquigarrow e' 
+      e_l \cong e_r
     } {
-      \delta \satisfies e' \hastype \tau
+      \delta \satisfies e_l \hastype \tau
+      \iff
+      \delta \satisfies e_r \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:left_congruence}
+  Left Congruence 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (e_l\J{,}e_r)\J{.left} \cong e_l
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:right_congruence}
+  Right Congruence 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (e_l\J{,}e_r)\J{.right} \cong e_r
     }
   \end{mathpar}
 \end{theorem}
@@ -4386,9 +4403,7 @@ $\forall e_a \qua
 \delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
 $
 by applying 
-Definition \ref{def:progression},
-Definition \ref{def:multi_progression},
-Definition \ref{def:expression_congruence},
+Theorem \ref{theorem:left_congruence}
 and
 Theorem \ref{theorem:subtyping_factorization_soundness}.
 
@@ -4401,9 +4416,10 @@ $\forall e_a \qua
 $
 Theorem \ref{theorem:subtyping_factorization_soundness}.
 Theorem \ref{theorem:subsumption},
+Theorem \ref{theorem:entry_type_elimination},
+Theorem \ref{theorem:right_congruence},
 and
-Theorem \ref{...}
-.
+Theorem \ref{theorem:expression_congruence_typing}.
 
 
 We have 
@@ -4417,7 +4433,7 @@ We have
 $
 \delta' \cup \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
 $
-by rewriting with 
+by applying 
 Definition \ref{...} (Substitution)
 
 *********************************************************************
