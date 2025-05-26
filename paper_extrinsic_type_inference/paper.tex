@@ -1011,6 +1011,45 @@ Additionally, records may act as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
 \begin{definition}
+  \label{def:multi_progression}
+  Multi Progression 
+  \hfill
+  \boxed{e \rightsquigarrow^\star e'}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      e \rightsquigarrow^\star e 
+    } 
+
+    \inferrule { 
+      e \rightsquigarrow e'
+      \\
+      e' \rightsquigarrow^\star e''
+    } {
+      e \rightsquigarrow^\star e''
+    } 
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}
+  \label{def:expression_congruence}
+  Expression Congruence 
+  \hfill
+  \boxed{e_l \cong e_r}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      e_l \rightsquigarrow^\star e 
+      \\
+      e_r \rightsquigarrow^\star e 
+    } {
+      e_l \cong e_r 
+    } 
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}
   \label{def:stability}
   Stability 
   \hfill
@@ -1183,6 +1222,9 @@ expression forms, from which further type forms may be introduced.
 The indirection into progression is not practical, but it guides the design 
 of a sound type system that can directly prove the validity of typings and subtypings 
 by eliminating type forms.
+
+
+
 
 \TODO{describe the various rules of model typing}
 
@@ -1387,9 +1429,9 @@ enumerates all possible outputs.
       \\
       \textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
-      \exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha
+      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
       \\
-      \exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{TOP} \J{*} \alpha \factorsinto \tau_r \subtypes \alpha 
+      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -1575,8 +1617,7 @@ types more readable.
       \\\\
       \iff
       \\\\
-      \forall e_a \qua
-      \\\\
+      (\forall e_a \qua
       (
       \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
       (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
@@ -1585,7 +1626,7 @@ types more readable.
       \exists \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
       \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,BOT}) \hastype \tau^\dagger 
+      \exists e_r \qua \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
       )
       )
       \implies
@@ -1598,6 +1639,7 @@ types more readable.
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
       \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
       \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a\J{,}e_f\J{(}e_a\J{)}) \hastype \tau^\dagger
+      )
       )
       )
       % \\\\
@@ -3650,40 +3692,52 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-
-
 \begin{theorem}
   \label{theorem:subtyping_factorization_soundness}
   Subtyping Factorization Soundness 
   \\
   \begin{mathpar}
     \inferrule {
-      \tau_l \subtypes \tau_r \factorsinto \tau \subtypes \alpha
+      \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
     } {
-      \forall \delta \qua
-      \delta \satisfies \tau_l \subtypes \tau_r
+      \delta \satisfies \tau \subtypes \J{<}l\J{>} \tau'
+    }
+
+    \inferrule {
+      \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
+    } {
+      \forall e' \qua \delta \satisfies e'  \hastype \tau'
       \implies
-      \delta \satisfies \tau \subtypes \alpha
+      \exists e \qua e \J{.} l \rightsquigarrow e' \up \delta \satisfies e \hastype \tau
+    }
+
+    \inferrule {
+      \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
+    } {
+      \delta \satisfies e \J{.} l \hastype \tau'
+      \implies
+      \delta \satisfies e \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_positive_substitution}
-  Subtyping Positive Substitution 
+  \label{theorem:entry_type_elimination_progression}
+  Entry Type Elimination Progression 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies \tau_l \subtypes \tau_r
+      \delta \satisfies e \hastype \J{<}l\J{>} \tau
       \\
-      \delta \satisfies \tau \subtypes \alpha
+      e \J{.} l \rightsquigarrow e' 
     } {
-      \delta \satisfies \tau_l\subtypes \tau_r[\alpha \slash \tau]^+
+      \delta \satisfies e' \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
 \hfill
+
 
 \begin{theorem}
   \label{theorem:path_type_elimination_loop}
@@ -4200,9 +4254,9 @@ $(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$,
 $(\Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu)$,
 $( \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu)$,
 $(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)$,
-$(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \alpha \J{*} \J{TOP} \factorsinto \tau_l \subtypes \alpha)$, 
+$(\factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l)$, 
 and
-$(\exists \alpha  \qua \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{TOP} \J{*} \alpha \factorsinto \tau_r \subtypes \alpha)$
+$(\factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r)$
 by applying Definition \ref{def:proof_typing}.
 
 We derive a typing interpretation $\delta$, such that 
@@ -4297,47 +4351,74 @@ $(
 $
 by Theorem \ref{theorem:path_type_elimination_loop}.
 
+
+We derive
+$\forall e_a \qua 
+(\exists e_r \qua
+\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
+)
+\implies 
+\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \tau_\mu
+$
+by applying 
+Theorem \ref{...} (Duality Soundness)
+and
+Theorem \ref{theorem:packaging_soundness}.
+
+
+We have 
+$\forall e_a \qua 
+(\exists e_r \qua
+\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+)
+\implies 
+\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+$
+by ...
+
 \TODO{...}
 
-We derive
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
-(
-\exists \delta'', e_a \qua
-\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \up
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau^\dagger
-)
-)
+
+We have 
+$\forall e_a \qua 
+\delta' \cup \delta \satisfies e_a \hastype \tau_l 
+\implies 
+\delta' \cup \delta  \satisfies (e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)}) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
 $
-by Theorem \ref{...} (Duality Soundness).
-
-We derive
-$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau^\dagger$
-by ....
-
-We derive
-$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_\mu$
-by ....
-
-We derive
-$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \J{LFP[} \alpha_\mu \J{]}\tau_\mu$
-by ....
-
-We derive
-$... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_l \J{\&} \tau_r$
-by ....
+by applying 
+Definition \ref{def:progression},
+Definition \ref{def:multi_progression},
+Definition \ref{def:expression_congruence},
+and
+Theorem \ref{theorem:subtyping_factorization_soundness}.
 
 
-We derive
-$\forall e_a \qua \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \J{TOP} \implies ... \satisfies e_a\J{,loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_l \J{\&} \tau_r$
-by ....
+We have 
+$\forall e_a \qua 
+\delta' \cup \delta \satisfies e_a \hastype \tau_l 
+\implies 
+\delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
+$
+Theorem \ref{theorem:subtyping_factorization_soundness}.
+Theorem \ref{theorem:subsumption},
+and
+Theorem \ref{...}
+.
 
-We derive
-$... \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->} \tau_r$
-by ....
+
+We have 
+$
+\delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
+$
+by applying 
+Theorem \ref{theorem:path_type_elimination_loop}
+
+We have 
+$
+\delta' \cup \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
+$
+by rewriting with 
+Definition \ref{...} (Substitution)
 
 *********************************************************************
 
