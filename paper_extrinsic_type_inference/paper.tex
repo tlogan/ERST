@@ -4349,6 +4349,25 @@ $(
 )
 $
 by applying (P1), (P2), and Theorem \ref{theorem:subsumption}.
+
+
+We derive
+$(
+\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+(
+\forall \delta'' \qua
+\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+\delta' \cup \delta\ \alpha \slash \J{BOT} \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \cup \delta\ \alpha \slash \J{BOT} \cup \delta'' \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+)
+)
+$
+by applying 
+Theorem \ref{...} (weakest interpretation of alpha).
+
+
 Thus, we have
 $(
 \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
@@ -4367,7 +4386,7 @@ by Theorem \ref{theorem:path_type_elimination_loop}.
 We derive
 $(
 \forall e_a, e_r \qua 
-\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
+\delta' \cup \delta\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
 \implies 
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
@@ -4384,7 +4403,7 @@ $(
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
 by applying 
-\TODO{...}
+Theorem \ref{theorem:least_fixed_point_type_elimination}.
 
 
 
@@ -4444,6 +4463,9 @@ by applying
 Definition \ref{...} (Substitution)
 
 *********************************************************************
+
+
+\TODO{update proof formatting to make easier to read and edit}.
 
 \TODO{update implementation to be consistent with paper}.
 
