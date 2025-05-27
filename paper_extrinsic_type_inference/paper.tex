@@ -1417,6 +1417,9 @@ enumerates all possible outputs.
       \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''
     }
 
+
+    \TODO{make sure the fixed point constraints are pruned before flipping}
+
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
@@ -1426,7 +1429,7 @@ enumerates all possible outputs.
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
       \\
-      \textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
       \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
       \\
@@ -1435,7 +1438,7 @@ enumerates all possible outputs.
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
       \tau_l \J{->} \tau_r
-      \given \Theta, \Delta'
+      \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}
@@ -1596,6 +1599,14 @@ types more readable.
   Duality Correspondence Soundness
   \\
   \begin{mathpar}
+    \TODO{add some detail about the fixed point variables being TOP vs BOT or something}
+
+    \TODO{the quantification of interpretion should be enough to assume or derive the fixed point types}
+
+    \TODO{may need to assume that fixed point variables are the only non-skolem local variables}
+
+    \TODO{make sure that the only constraints have the fixpoint variable subtyping a path type}
+
     \inferrule {
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
       \\
@@ -1609,8 +1620,9 @@ types more readable.
       (
       \forall \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
-      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-      \delta \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      \\\\
+      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
       )
       )
       \\\\
@@ -1624,8 +1636,9 @@ types more readable.
       \\\\
       \exists \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \\\\
+      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
       )
       )
       \implies
@@ -1743,22 +1756,25 @@ at least one type $\tau_\mu$ constrained by the environment's pair type lower bo
   \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
   \\
   \begin{mathpar}
+
+    \TODO{this should only work if each input constraint is a fixed point subtyping a path type}
+
     \inferrule {
     } {
       \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
     }
 
-    \inferrule {
-      \alpha_\nu \notin \textbf{ftv}(\tau_l)
-      \\
-      \alpha_\nu \notin \textbf{ftv}(\tau_r)
-      \\
-      \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
-    } {
-      \alpha_\nu \downarrow \Delta_\nu \  \tau_l \J{<:} \tau_r 
-      \fallingdotseq 
-      \alpha_\mu \uparrow \Delta_\mu \  \tau_l \J{<:} \tau_r
-    }
+    % \inferrule {
+    %   \alpha_\nu \notin \textbf{ftv}(\tau_l)
+    %   \\
+    %   \alpha_\nu \notin \textbf{ftv}(\tau_r)
+    %   \\
+    %   \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
+    % } {
+    %   \alpha_\nu \downarrow \Delta_\nu \  \tau_l \J{<:} \tau_r 
+    %   \fallingdotseq 
+    %   \alpha_\mu \uparrow \Delta_\mu \  \tau_l \J{<:} \tau_r
+    % }
 
     \inferrule {
       \alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu
@@ -3606,6 +3622,8 @@ rely on analogous techniques.
       \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
       \\
       \delta \satisfies \Delta
+      \\
+      \dTheta \subseteq \textbf{dom}(\delta)
     } {
       (\forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
@@ -3630,6 +3648,8 @@ rely on analogous techniques.
       \textbf{pack}^-(\dTheta \entails \Pi) = \tau 
       \\
       \delta \satisfies \Delta
+      \\
+      \dTheta \subseteq \textbf{dom}(\delta)
     } {
       (\exists  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \up
@@ -3686,6 +3706,20 @@ rely on analogous techniques.
       \delta \satisfies e_l \hastype \tau
       \iff
       \delta \satisfies e_r \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{theorem:least_fixed_point_type_elimination}
+  Least Fixed Point Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau
+    } {
+      \delta\ \alpha \slash \J{TOP} \satisfies e \hastype \tau
     }
   \end{mathpar}
 \end{theorem}

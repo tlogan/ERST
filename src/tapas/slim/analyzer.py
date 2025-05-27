@@ -3195,6 +3195,34 @@ class ExprRule(Rule):
             new_constraints, left_typ = self.solver.prune_interpret_negative_id(foreignids.union(inner_closedids), new_constraints, in_typ.id) 
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
+
+            ####################################
+            flipped_constraints = self.solver.prune_flip_constraints(self_typ.id, foreignids.union(inner_closedids), new_constraints, IH_typ.id)
+            ####################################
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+combine_fix {i}:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+new_constraints:
+{concretize_constraints(new_constraints)}
+
+foreignids:
+{foreignids}
+
+inner_closedids:
+{inner_closedids}
+
+self:
+{self_typ.id}
+
+IH type:
+{IH_typ.id}
+
+flipped_constraints:
+{concretize_constraints(flipped_constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             new_constraints = self.solver.prune_flip_constraints(self_typ.id, foreignids.union(inner_closedids), new_constraints, IH_typ.id)
             new_constraints = new_constraints.difference(world.constraints)
 

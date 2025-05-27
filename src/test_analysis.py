@@ -2300,11 +2300,11 @@ if __name__ == '__main__':
     # test_two_cons_query_subs_nat_list()
     # test_plus_equals_two_query()
     #####################################
-    test_even_list_subs_nat_list_pass()
-    test_nat_list_subs_even_list_fail()
+    # test_even_list_subs_nat_list_pass()
+    # test_nat_list_subs_even_list_fail()
     # #####################################
-    test_even_subs_nat_pass()
-    test_nat_subs_even_fail()
+    # test_even_subs_nat_pass()
+    # test_nat_subs_even_fail()
     #####################################
     # test_one_plus_equals_two_query()
     #####################################
