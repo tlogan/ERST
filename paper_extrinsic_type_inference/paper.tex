@@ -1519,10 +1519,19 @@ of a single path type.
   \\
   \begin{mathpar}
     \inferrule {
+      % (\forall \Theta', \Delta' \qua 
+      % \Theta' \backslash \Theta, 
+      % \Delta' \backslash \Delta, 
+      % \llbracket \textbf{ftv}(\Delta) \cup \Theta', \Delta' \entails \alpha_l \J{->} \alpha_r \rrbracket^+ 
+      % \in \Pi
+      % \implies
+      % \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
+      % )
+      % \\\\
       (\forall \Theta', \Delta' \qua 
       \Theta' \backslash \Theta, 
       \Delta' \backslash \Delta, 
-      \llbracket \textbf{ftv}(\Delta) \cup \Theta', \Delta' \entails \alpha_l \J{->} \alpha_r \rrbracket^+ 
+      \alpha_l \J{->} \alpha_r 
       \in \Pi
       \implies
       \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
@@ -1530,7 +1539,7 @@ of a single path type.
       \\\\
       \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi
       \\
-      \textbf{ftv}(\Delta) \entails \Pi \dashrightarrow \Pi' 
+      \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
     } {
       \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi'
     }
@@ -1561,8 +1570,8 @@ of a single path type.
       \\\\
       (\forall \Theta', \Delta', \tau_r  \qua 
       \Theta' \backslash \Theta, 
-      \Delta' \backslash \Delta, \llbracket 
-      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \cup \Theta' \entails \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
+      \Delta' \backslash \Delta, 
+      \tau_l \J{->} \tau_r \in \Pi'
       \implies
       \Theta, \Delta, \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
       )
@@ -1571,7 +1580,7 @@ of a single path type.
       \\
       \text{capture}(\rho) = \eta
       \\
-      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \dashrightarrow \Pi'' 
+      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \searrow \Pi'' 
     } {
       \Theta, \Delta, \Gamma \entails f\ \J{?}p\J{=>}e \liftfun 
       \Pi \cup \Pi'' \sim \Xi\ \eta
@@ -3056,22 +3065,24 @@ rely on analogous techniques.
 \end{definition}
 
 \begin{definition}
-  Multi Subtyping Environment Filter 
+   Colony Sequence Compaction
   \hfill
-  \boxed{\dTheta \entails \Pi \dashrightarrow \Pi'}
+  \boxed{\dTheta \entails \Pi \searrow \Pi'}
   \\
   \begin{mathpar}
     \inferrule {
     } {
-      \dTheta \entails \epsilon \dashrightarrow \epsilon 
+      \dTheta \entails \epsilon \searrow \epsilon 
     }
 
     \inferrule {
-      \dTheta \entails \Pi \dashrightarrow \Pi'
+      \dTheta \entails \Pi \searrow \Pi'
       \\
       \dTheta \cup \Theta \entails \Delta \dashrightarrow \Delta'
+      \\
+      \llbracket \dTheta \cup \Theta, \Delta \entails \tau \rrbracket^\pm = \tau'
     } {
-      \dTheta \entails \Pi\ (\Theta, \Delta, \tau) \dashrightarrow \Pi'\ (\Theta, \Delta', \tau)
+      \dTheta \entails \Pi\ (\Theta, \Delta, \tau) \searrow \Pi'\ (\Theta, \Delta', \tau')
     }
   \end{mathpar}
 \end{definition}
