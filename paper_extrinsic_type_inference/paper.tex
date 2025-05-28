@@ -1417,11 +1417,6 @@ enumerates all possible outputs.
       \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''
     }
 
-
-    \TODO{make sure the fixed point constraints are pruned before flipping}
-
-    \TODO{function type explosion should handle all pruning}
-
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
@@ -1524,19 +1519,20 @@ of a single path type.
   \\
   \begin{mathpar}
     \inferrule {
-      \TODO{update call to positive interp}
-      \\\\
-      \TODO{no need to ignore any variables in input to interp}
-      \\\\
-      \forall \Theta', \Delta'  \qua 
-        \Theta' \backslash \Theta, \llbracket \textbf{ftv}(\Delta) \cup \Theta' \entails \Delta' \backslash \Delta, \alpha_l \J{->} \alpha_r \rrbracket^+ 
-        \in \Pi
+      (\forall \Theta', \Delta' \qua 
+      \Theta' \backslash \Theta, 
+      \Delta' \backslash \Delta, 
+      \llbracket \textbf{ftv}(\Delta) \cup \Theta', \Delta' \entails \alpha_l \J{->} \alpha_r \rrbracket^+ 
+      \in \Pi
       \implies
       \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
+      )
       \\\\
       \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi
+      \\
+      \textbf{ftv}(\Delta) \entails \Pi \dashrightarrow \Pi' 
     } {
-      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
+      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi'
     }
   \end{mathpar}
 \end{definition}
@@ -1563,20 +1559,26 @@ of a single path type.
       \\
       \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
       \\\\
-      \forall \Theta', \Delta', \tau_r  \qua 
-      \Theta' \backslash \Theta, \llbracket \dTheta \cup \Theta' \entails \Delta' \backslash \Delta, \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
+      (\forall \Theta', \Delta', \tau_r  \qua 
+      \Theta' \backslash \Theta, 
+      \Delta' \backslash \Delta, \llbracket 
+      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \cup \Theta' \entails \tau_l \J{->} \tau_r \rrbracket^+ \in \Pi'
       \implies
       \Theta, \Delta, \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
+      )
       \\\\
-      \exists \Theta, \Delta, \tau  \qua (\Theta, \Delta, \tau) \in \Pi' 
+      \exists \Theta, \Delta, \tau  \qua (\Theta, \Delta, \tau) \in \Pi'
       \\
       \text{capture}(\rho) = \eta
+      \\
+      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \dashrightarrow \Pi'' 
     } {
       \Theta, \Delta, \Gamma \entails f\ \J{?}p\J{=>}e \liftfun 
-      \Pi \cup \Pi' \sim \Xi\ \eta
+      \Pi \cup \Pi'' \sim \Xi\ \eta
     }
   \end{mathpar}
 \end{definition}
+
 
 \noindent
 Path sequence typing $\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$
@@ -1601,14 +1603,6 @@ types more readable.
   Duality Correspondence Soundness
   \\
   \begin{mathpar}
-    \TODO{add some detail about the fixed point variables being TOP vs BOT or something}
-
-    \TODO{the quantification of interpretion should be enough to assume or derive the fixed point types}
-
-    \TODO{may need to assume that fixed point variables are the only non-skolem local variables}
-
-    \TODO{make sure that the only constraints have the fixpoint variable subtyping a path type}
-
     \inferrule {
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
       \\
@@ -1758,8 +1752,6 @@ at least one type $\tau_\mu$ constrained by the environment's pair type lower bo
   \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
   \\
   \begin{mathpar}
-
-    \TODO{this should only work if each input constraint is a fixed point subtyping a path type}
 
     \inferrule {
     } {
@@ -2698,12 +2690,12 @@ rely on analogous techniques.
   Type Interpretation 
   \hfill
   \boxed{
-    \llbracket \Theta \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+    \llbracket \Theta, \Delta \entails \tau \rrbracket^\pm = \tau'
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \Theta \entails \Delta, \alpha \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \alpha \rrbracket^\pm 
       &\ =\ & 
       \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm
       &\text{if}& 
@@ -2712,100 +2704,72 @@ rely on analogous techniques.
       \\
 
       &&
-      (\Delta, \alpha)
+      \alpha
       &\text{if}&
       \alpha \in \Theta
 
       \\
 
-      \llbracket \Theta \entails \Delta, \J{@} \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{@} \rrbracket^\pm 
       &\ =\ & 
-      (\Delta, \J{@})
+      \J{@}
       &&
 
       \\
 
-      \llbracket \Theta \entails \Delta, \J{<}l\J{>}\tau \rrbracket^\pm
+      \llbracket \Theta, \Delta \entails \J{<}l\J{>}\tau \rrbracket^\pm
       &\ =\ & 
-      (\Delta', \J{<}l\J{>}\tau')
-      &\text{if}& 
-      \llbracket \Theta \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \J{<}l\J{>}\llbracket \Theta, \Delta \entails \tau \rrbracket^\pm
 
       \\
 
-      \llbracket \Theta \entails \Delta, \tau_l\J{->}\tau_r \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \tau_l\J{->}\tau_r \rrbracket^\pm 
       &\ =\ & 
-      (\Delta_l \cap \Delta_r, \tau_l'\J{->}\tau_r')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
-        \\
-        \llbracket \Theta \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
-      \end{array}
+      \llbracket \Theta, \Delta \entails \tau_l \rrbracket^{\text{flip}(\pm)}
+      \J{->}
+      \llbracket \Theta, \Delta \entails \tau_r \rrbracket^\pm
 
       \\
 
-      \llbracket \Theta \entails \Delta, \tau_l\J{|}\tau_r \rrbracket^\pm
+      \llbracket \Theta, \Delta \entails \tau_l\J{|}\tau_r \rrbracket^\pm
       &\ =\ & 
-      (\Delta_l \cap \Delta_r, \tau_l'\J{|}\tau_r')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-        \\
-        \llbracket \Theta \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
-      \end{array}
+      \llbracket \Theta, \Delta \entails \tau_l \rrbracket^\pm
+      \J{|}
+      \llbracket \Theta, \Delta \entails \tau_r \rrbracket^{\pm}
 
       \\
 
-      \llbracket \Theta \entails \Delta, \tau_l\J{\&}\tau_r \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \tau_l\J{\&}\tau_r \rrbracket^\pm 
       &\ =\ & 
-      (\Delta_l \cap \Delta_r, \tau_l'\J{\&}\tau_r')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \entails \Delta, \tau_l \rrbracket^\pm = (\Delta_l, \tau_l')
-        \\
-        \llbracket \Theta \entails \Delta, \tau_r \rrbracket^{\pm} = (\Delta_r, \tau_r')
-      \end{array}
+      \llbracket \Theta, \Delta \entails \tau_l \rrbracket^\pm
+      \J{\&}
+      \llbracket \Theta, \Delta \entails \tau_r \rrbracket^{\pm}
 
       \\
 
-      \llbracket \Theta \entails \Delta, \J{EXI[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{EXI[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
-      (\Delta' \cap \Delta'', \J{EXI[}\Theta_q\ \Delta_q' \J{]}\tau')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \cup \Theta_q \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
-        \\
-        \llbracket \Theta \cup \Theta_q \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
-      \end{array}
+      \J{EXI[}\Theta_q\ \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm \J{]}
+      \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
 
       \\
 
-      \llbracket \Theta \entails \Delta, \J{ALL[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{ALL[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
-      (\Delta' \cap \Delta'', \J{ALL[}\Theta_q\ \Delta_q' \J{]}\tau')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \cup \Theta_q \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
-        \\
-        \llbracket \Theta \cup \Theta_q \entails \Delta, \tau \rrbracket^{\pm} = (\Delta'', \tau')
-      \end{array}
+      \J{ALL[}\Theta_q\ \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm \J{]}
+      \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
 
       \\
 
-      \llbracket \Theta \entails \Delta, \tau \typdiff \eta \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \tau \typdiff \eta \rrbracket^\pm 
       &\ =\ & 
-      (\Delta', \tau' \typdiff \eta)
-      &\text{if}& 
-      \llbracket \Theta \entails \Delta, \tau \rrbracket^\pm = (\Delta', \tau')
+      \llbracket \Theta, \Delta \entails \tau \rrbracket^\pm \typdiff \eta
 
       \\
 
-      \llbracket \Theta \entails \Delta, \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{LFP[}\alpha \J{]} \tau \rrbracket^\pm 
       &\ =\ & 
-      (\Delta', \J{LFP[}\alpha \J{]}\tau')
-      &\text{if}& 
-      \llbracket \Theta\ \alpha \entails \Delta, \tau \rrbracket^{\pm} = (\Delta', \tau')
+      \J{LFP[}\alpha \J{]}\llbracket \Theta\ \alpha, \Delta \entails \tau \rrbracket^{\pm}
       \\
   \end{array}
   \]
@@ -2816,29 +2780,24 @@ rely on analogous techniques.
   Qualification Interpretation 
   \hfill
   \boxed{
-    \llbracket \Theta \entails \Delta, \Delta_q \rrbracket^\pm = (\Delta', \Delta_q')
+    \llbracket \Theta, \Delta \entails \Delta_q \rrbracket^\pm = \Delta_q'
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \Theta \entails \Delta, \epsilon \rrbracket^\pm
+      \llbracket \Theta, \Delta \entails \epsilon \rrbracket^\pm
       &\ =\ & 
-      (\Delta', \epsilon')
+      \epsilon
       && 
 
       \\
 
-      \llbracket \Theta \entails \Delta, \Delta_q \  \tau_l \J{<:} \tau_r \rrbracket^\pm
+      \llbracket \Theta, \Delta \entails \Delta_q \  \tau_l \J{<:} \tau_r \rrbracket^\pm
       &\ =\ & 
-      (\Delta' \cap \Delta_l \cap \Delta_r, \Delta_q' \  \tau_l' \J{<:} \tau_r')
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        \llbracket \Theta \entails \Delta, \Delta_q\rrbracket^\pm = (\Delta', \Delta_q')
-        \\
-        \llbracket \Theta \entails \Delta, \tau_r \rrbracket^\pm = (\Delta_r, \tau_r')
-        \\
-        \llbracket \Theta \entails \Delta, \tau_l \rrbracket^{\text{flip}(\pm)} = (\Delta_l, \tau_l')
-      \end{array}
+      \llbracket \Theta, \Delta \entails \Delta_q\rrbracket^\pm\  
+      \llbracket \Theta, \Delta \entails \tau_l \rrbracket^{\text{flip}(\pm)} 
+      \J{<:} 
+      \llbracket \Theta, \Delta \entails \tau_r \rrbracket^\pm
   \end{array}
   \]
 \end{definition} 
@@ -2846,145 +2805,137 @@ rely on analogous techniques.
 \TODO{...}
 
 
+% \begin{definition} 
+%   \label{def:pruning_interpretation}
+%   Pruning Interpretation 
+%   \hfill
+%   \boxed{
+%     \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+%   }
+%   \\
+%   \[
+%   \begin{array}[t]{r@{}c@{}lcl}
+%       \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm
+%       &\ =\ & 
+%       (\Delta', \tau)
+%       &\text{if}& 
+%       \begin{array}[t]{@{}l}
+%         (\forall \tau_l\ \tau_r .\  \tau_l \J{<:} \tau_r \in \Delta' \iff \Theta, \Theta_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r)
+%         \\
+%         \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
+%       \end{array}
+
+%       \\
+%   \end{array}
+%   \]
+% \end{definition}
+
+% \TODO{...}
+
+% \begin{definition} 
+%   \label{def:indirection}
+%   Indirection  
+%   \hfill
+%   \boxed{
+%     \Theta, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
+%   }
+%   \\
+%   \begin{mathpar}
+%     \inferrule {
+%       \ \alpha\J{<:}\tau \in \Delta 
+%       \\\\
+%       \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
+%       \\
+%       \ \alpha'\J{<:}\tau' \in \Delta 
+%     } {
+%       \Theta, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
+%     }
+
+%     \inferrule {
+%       \ \alpha\J{<:}\tau \in \Delta 
+%       \\\\
+%       \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
+%       \\
+%       \ \alpha'\J{<:}\tau' \in \Delta 
+%     } {
+%       \Theta, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
+%     }
+%     \\
+%     \inferrule {
+%       \ \tau \J{<:} \alpha\in \Delta 
+%       \\\\
+%       \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
+%       \\
+%       \ \tau'\J{<:} \alpha' \in \Delta 
+%     } {
+%       \Theta, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
+%     }
+
+%     \inferrule {
+%       \ \tau \J{<:} \alpha\in \Delta 
+%       \\\\
+%       \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
+%       \\
+%       \ \tau'\J{<:} \alpha' \in \Delta 
+%     } {
+%       \Theta, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
+%     }
+%   \end{mathpar}
+% \end{definition}
+
+% \TODO{...}
+
 \begin{definition} 
-  \label{def:pruning_interpretation}
-  Pruning Interpretation 
+  \label{def:variable_interpretation}
+  Variable Interpretation
   \hfill
   \boxed{
-    \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm = (\Delta', \tau)
+    \llbracket\Delta \star \alpha \rrbracket^\pm = \tau
   }
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm
+
+      \llbracket \epsilon \star \alpha \rrbracket^-
       &\ =\ & 
-      (\Delta', \tau)
-      &\text{if}& 
-      \begin{array}[t]{@{}l}
-        (\forall \tau_l\ \tau_r .\  \tau_l \J{<:} \tau_r \in \Delta' \iff \Theta, \Theta_\bullet, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r)
-        \\
-        \llbracket \Delta\backslash\Delta', \alpha \rrbracket^\pm = (\Delta', \tau)
-      \end{array}
+      \J{TOP}
 
       \\
-  \end{array}
-  \]
-\end{definition}
 
-\TODO{...}
-
-\begin{definition} 
-  \label{def:indirection}
-  Indirection  
-  \hfill
-  \boxed{
-    \Theta, \Delta, \alpha \looparrowright^\pm \tau_l \subtypes \tau_r 
-  }
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \ \alpha\J{<:}\tau \in \Delta 
-      \\\\
-      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
-      \\
-      \ \alpha'\J{<:}\tau' \in \Delta 
-    } {
-      \Theta, \Delta, \alpha \looparrowright^- \alpha \subtypes \tau
-    }
-
-    \inferrule {
-      \ \alpha\J{<:}\tau \in \Delta 
-      \\\\
-      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
-      \\
-      \ \alpha'\J{<:}\tau' \in \Delta 
-    } {
-      \Theta, \Delta, \alpha \looparrowright^- \alpha' \subtypes \tau'
-    }
-    \\
-    \inferrule {
-      \ \tau \J{<:} \alpha\in \Delta 
-      \\\\
-      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
-      \\
-      \ \tau'\J{<:} \alpha' \in \Delta 
-    } {
-      \Theta, \Delta, \alpha \looparrowright^+ \tau \subtypes \alpha
-    }
-
-    \inferrule {
-      \ \tau \J{<:} \alpha\in \Delta 
-      \\\\
-      \alpha' \in \textbf{ftv}(\tau) \backslash \Theta
-      \\
-      \ \tau'\J{<:} \alpha' \in \Delta 
-    } {
-      \Theta, \Delta, \alpha \looparrowright^+ \tau' \subtypes \alpha'
-    }
-  \end{mathpar}
-\end{definition}
-
-\TODO{...}
-
-\begin{definition} 
-  \label{def:interpretation}
-  Interpretation
-  \hfill
-  \boxed{
-    \llbracket\Delta, \alpha \rrbracket^\pm = (\Delta, \tau)
-  }
-  \\
-  \[
-  \begin{array}[t]{r@{}c@{}lcl}
-
-      \llbracket \epsilon, \alpha \rrbracket^-
+      \llbracket \Delta \ \alpha  \J{<:} \tau \star \alpha \rrbracket^- 
       &\ =\ & 
-      (\epsilon, \J{TOP})
+      \llbracket \Delta \star \alpha \rrbracket^- \J{\&} \tau
 
       \\
 
-      \llbracket \Delta \ \alpha  \J{<:} \tau, \alpha \rrbracket^- 
+      \llbracket \Delta \ \tau_l \J{<:} \tau_r \star \alpha \rrbracket^- 
       &\ =\ & 
-      (\Delta', \tau' \J{\&} \tau)
-      &\text{if}& 
-      \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau')
-
-      \\
-
-      \llbracket \Delta \ \tau_l \J{<:} \tau_r, \alpha \rrbracket^- 
-      &\ =\ & 
-      (\Delta' \ \tau_l \J{<:} \tau_r, \tau)
+      \llbracket \Delta, \alpha \rrbracket^-
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \alpha \neq \tau_l
-        \\
-        \llbracket \Delta, \alpha \rrbracket^- = (\Delta', \tau)
       \end{array}
 
       \\
 
-      \llbracket \epsilon, \alpha \rrbracket^+ 
+      \llbracket \epsilon \star \alpha \rrbracket^+ 
       &\ =\ & 
-      (\epsilon, \J{BOT})
+      \J{BOT}
 
       \\
 
-      \llbracket \Delta \  \tau \J{<:} \alpha  , \alpha \rrbracket^+ 
+      \llbracket \Delta \  \tau \J{<:} \alpha \star \alpha \rrbracket^+ 
       &\ =\ & 
-      (\Delta', \tau' \J{|} \tau)
-      &\text{if}& 
-      \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau')
+      \llbracket \Delta \star \alpha \rrbracket^+ \J{|} \tau
 
       \\
 
-      \llbracket \Delta \ \tau_l \J{<:} \tau_r, \alpha \rrbracket^+ 
+      \llbracket \Delta \ \tau_l \J{<:} \tau_r \star \alpha \rrbracket^+ 
       &\ =\ & 
-      (\Delta' \ \tau_l \J{<:} \tau_r, \tau)
+      \llbracket \Delta \star \alpha \rrbracket^+
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \alpha \neq \tau_r
-        \\
-        \llbracket \Delta, \alpha \rrbracket^+ = (\Delta', \tau)
       \end{array}
   \end{array}
   \]
@@ -2996,24 +2947,22 @@ rely on analogous techniques.
   \label{def:type_packaging}
   Type Packaging 
   \hfill
-  \boxed{\textbf{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'} 
+  \boxed{\textbf{pack}^\pm(\dTheta \entails \Theta, \Delta, \tau) = \tau'} 
   \\
   \[
   \begin{array}[t]{r@{}c@{}lcl}
-      \textbf{pack}^\pm(\Theta_\ignore \entails \Theta, \Delta, \tau) 
+      \textbf{pack}^\pm(\dTheta \entails \Theta, \Delta, \tau) 
       &\ =\ & 
       \text{wrap}^{\pm}(\Theta_o, \Delta_o, \Theta_i, \Delta_i, \tau)
       &\text{if}& 
       \begin{array}[t]{@{}l}
         \textbf{ftv}(\tau) = \Theta_p
         \\
-        \Theta_\ignore \cup \Theta \cup \Theta_p \entails \Delta \dashrightarrow \Delta' 
-        \\
-        \Theta_\ignore, \Theta \entails \Delta' \rightrightarrows \Delta_o, \Delta_i 
+        \dTheta, \Theta \entails \Delta \rightrightarrows \Delta_o, \Delta_i 
         \\
         (\textbf{ftv}(\Delta) \cup \Theta_p) \cap \Theta = \Theta_o 
         \\
-        \textbf{ftv}(\Delta_i) \cup \Theta_p \backslash \Theta \backslash \Theta_\ignore = \Theta_i 
+        \textbf{ftv}(\Delta_i) \cup \Theta_p \backslash \Theta \backslash \dTheta = \Theta_i 
       \end{array}
   \end{array}
   \]
@@ -3102,6 +3051,27 @@ rely on analogous techniques.
       \Theta \entails \Delta \dashrightarrow \Delta'
     } {
       \Theta \entails  \Delta \  \tau_l \J{<:} \tau_r\dashrightarrow \Delta'
+    }
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}
+  Multi Subtyping Environment Filter 
+  \hfill
+  \boxed{\dTheta \entails \Pi \dashrightarrow \Pi'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \dTheta \entails \epsilon \dashrightarrow \epsilon 
+    }
+
+    \inferrule {
+      \dTheta \entails \Pi \dashrightarrow \Pi'
+      \\
+      \dTheta \cup \Theta \entails \Delta \dashrightarrow \Delta'
+    } {
+      \dTheta \entails \Pi\ (\Theta, \Delta, \tau) \dashrightarrow \Pi'\ (\Theta, \Delta', \tau)
     }
   \end{mathpar}
 \end{definition}
