@@ -88,6 +88,8 @@
 \newcommand{\hastype}{:}
 \newcommand{\pattype}{\ \lozenge\ }
 \newcommand{\liftfun}{:}
+
+\newcommand{\R}[1]{\color{teal}\ \ [\emph{#1}]}
  
 \newcommand{\subtypes}{<:}
 \newcommand{\supertypes}{:>}
@@ -117,6 +119,11 @@
 
 
 \newcommand{\pc}{\hfill \break \noindent \ $\diamond$ \ }
+
+
+\newcommand{\N}{\ $\cdot$\ \ }
+
+\newcommand{\pitem}{\item[$\diamond$]}
 
 \newcommand{\tl}{\textasciitilde{}}
 \newcommand{\typdiff}{\J{\textbackslash}}
@@ -1926,6 +1933,16 @@ The subtyping relation must consider the forms of both types in the subtyping re
 There are elimination rules, which make decisions based on the form of the subtype,
 and there are introduction rules, which make decisions based on the form of the supertype.
 Some rules handle both elimination and introduction of type forms.
+
+
+\begin{definition} 
+  \label{def:proof_subtyping}
+  Proof Subtyping
+  \hfill
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+\end{definition}
+
+\noindent
 Due to the complexity of types and there being two input types,
 proof subtyping relies on many rules. 
 For clarity, we subdivide the proof subtyping rules 
@@ -3186,7 +3203,7 @@ rely on analogous techniques.
 \end{definition}
 
 \begin{theorem}
-  \label{theorem:typing_environment_soundness}
+  \label{thm:typing_environment_soundness}
   Typing Environment Soundness 
   \\
   \begin{mathpar}
@@ -3202,7 +3219,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:subtyping_environment_prefix_preservation}
+  \label{thm:subtyping_environment_prefix_preservation}
   Subtyping Environment Prefix Preservation 
   \\
   \begin{mathpar}
@@ -3216,7 +3233,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_environment_union}
+  \label{thm:subtyping_environment_union}
   Subtyping Environment Union 
   \\
   \begin{mathpar}
@@ -3233,7 +3250,7 @@ rely on analogous techniques.
 
 
 % \begin{theorem}
-%   \label{theorem:entry_type_introdcution}
+%   \label{thm:entry_type_introdcution}
 %   Entry Type Introduction 
 %   \\
 %   \begin{mathpar}
@@ -3247,7 +3264,7 @@ rely on analogous techniques.
 % \hfill
 
 \begin{theorem}
-  \label{theorem:record_extension_preservation}
+  \label{thm:record_extension_preservation}
   Record Extension Preservation 
   \\
   \begin{mathpar}
@@ -3263,7 +3280,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:entry_type_introduction}
+  \label{thm:entry_type_introduction}
   Entry Type Introduction 
   \\
   \begin{mathpar}
@@ -3279,7 +3296,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:entry_type_elimination}
+  \label{thm:entry_type_elimination}
   Entry Type Elimination 
   \\
   \begin{mathpar}
@@ -3293,7 +3310,21 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:path_type_elimination}
+  \label{thm:entry_type_preservation}
+  Entry Type Preservation 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau_l \subtypes \tau_r
+    } {
+      \delta \satisfies \J{<}l\J{>} \tau_l \subtypes \J{<}l\J{>} \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:path_type_elimination}
   Path Type Elimination 
   \\
   \begin{mathpar}
@@ -3309,7 +3340,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:annotated_binding_introduction}
+  \label{thm:annotated_binding_introduction}
   Annotated Binding Introduction  
   \\
   \begin{mathpar}
@@ -3327,7 +3358,7 @@ rely on analogous techniques.
 % \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''
 
 \begin{theorem}
-  \label{theorem:subtyping_environment_interpretation_contraction}
+  \label{thm:subtyping_environment_interpretation_contraction}
   Subtyping Environment Interpretation Contraction 
   \\
   \begin{mathpar}
@@ -3343,7 +3374,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_environment_interpretation_extension}
+  \label{thm:subtyping_environment_interpretation_extension}
   Subtyping Environment Interpretation Extension 
   \\
   \begin{mathpar}
@@ -3360,7 +3391,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:typing_interpretation_extension}
+  \label{thm:typing_interpretation_extension}
   Typing Interpretation Extension 
   \\
   \begin{mathpar}
@@ -3376,7 +3407,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_interpretation_extension}
+  \label{thm:subtyping_interpretation_extension}
   Subyping Interpretation Extension 
   \\
   \begin{mathpar}
@@ -3394,7 +3425,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:typing_environment_interpretation_extension}
+  \label{thm:typing_environment_interpretation_extension}
   Typing Environment Interpretation Extension 
   \\
   \begin{mathpar}
@@ -3410,7 +3441,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:proof_typing_containment}
+  \label{thm:proof_typing_containment}
   Proof Typing Containment 
   \\
   \begin{mathpar}
@@ -3428,7 +3459,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:proof_subtyping_containment}
+  \label{thm:proof_subtyping_containment}
   Proof Subtyping Containment 
   \\
   \begin{mathpar}
@@ -3447,7 +3478,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:proof_typing_skolem_freshness}
+  \label{thm:proof_typing_skolem_freshness}
   Proof Typing Skolem Freshness 
   \\
   \begin{mathpar}
@@ -3461,7 +3492,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:proof_subtyping_skolem_freshness}
+  \label{thm:proof_subtyping_skolem_freshness}
   Proof Subtyping Skolem Freshness 
   \\
   \begin{mathpar}
@@ -3475,7 +3506,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:domain_extension}
+  \label{thm:domain_extension}
   Domain Extension 
   \\
   \begin{mathpar}
@@ -3491,7 +3522,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subsumption}
+  \label{thm:subsumption}
   Subsumption 
   \\
   \begin{mathpar}
@@ -3507,7 +3538,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:function_type_explosion_soundness}
+  \label{thm:function_type_explosion_soundness}
   Function Type Explosion Soundness 
   \\
   \begin{mathpar}
@@ -3532,7 +3563,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:function_type_explosion_skolem_freshness}
+  \label{thm:function_type_explosion_skolem_freshness}
   Function Type Explosion Skolem Freshness 
   \\
   \begin{mathpar}
@@ -3551,7 +3582,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:function_lifting_soundness}
+  \label{thm:function_lifting_soundness}
   Function Lifting Soundness 
   \\
   \begin{mathpar}
@@ -3576,7 +3607,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:function_lifting_skolem_freshness}
+  \label{thm:function_lifting_skolem_freshness}
   Function Lifting Skolem Freshness 
   \\
   \begin{mathpar}
@@ -3597,7 +3628,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem} 
-  \label{theorem:colony_sequence_duality_soundness}
+  \label{thm:colony_sequence_duality_soundness}
   Colony Sequence Duality Correspondence Soundness
   \\
   \begin{mathpar}
@@ -3644,7 +3675,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:packaging_soundness}
+  \label{thm:packaging_soundness}
   Packaging Soundness 
   \\
   \begin{mathpar}
@@ -3704,7 +3735,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:subtyping_factorization_soundness}
+  \label{thm:subtyping_factorization_soundness}
   Subtyping Factorization Soundness 
   \\
   \begin{mathpar}
@@ -3726,7 +3757,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:expression_congruence_typing}
+  \label{thm:expression_congruence_typing}
   Expression Congruence Typing 
   \\
   \begin{mathpar}
@@ -3742,7 +3773,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:least_fixed_point_type_elimination}
+  \label{thm:least_fixed_point_type_elimination}
   Least Fixed Point Type Elimination 
   \\
   \begin{mathpar}
@@ -3756,7 +3787,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:left_congruence}
+  \label{thm:left_congruence}
   Left Congruence 
   \\
   \begin{mathpar}
@@ -3769,7 +3800,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:right_congruence}
+  \label{thm:right_congruence}
   Right Congruence 
   \\
   \begin{mathpar}
@@ -3783,7 +3814,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{theorem:path_type_elimination_loop}
+  \label{thm:path_type_elimination_loop}
   Path Type Elimination Loop 
   \\
   \begin{mathpar}
@@ -3798,7 +3829,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:path_type_introduction}
+  \label{thm:path_type_introduction}
   Path Type Introduction 
   \\
   \begin{mathpar}
@@ -3816,7 +3847,7 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{theorem:proof_subtyping_soundness}
+  \label{thm:proof_subtyping_soundness}
   Proof Subtyping Soundness 
   \\
   \begin{mathpar}
@@ -3831,11 +3862,310 @@ rely on analogous techniques.
       )
     }
   \end{mathpar}
+
+  \noindent
+  Induct over Definition \ref{def:proof_subtyping}.
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(\Theta, \Delta \entails \tau \subtypes \tau \given \Theta, \Delta)$
+  \item \I \N Let $\delta$ be, such that $(\delta = \epsilon)$ [Def. \ref{def:}]
+  \item \I \N Derive $(\textbf{dom}(\delta) = \Theta \backslash \Theta)$
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta)$
+  \item \I\I \N Derive $(\forall e \qua \delta' \cup \delta \satisfies e \hastype \tau \implies \delta' \cup \delta \satisfies e \hastype \tau)$
+  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau \subtypes \tau)$ 
+    [Def. \ref{def:model_subtyping}]
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+      \Theta, \Delta \entails 
+      \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r
+      \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r
+      \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping}]
+
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta' \qua 
+    \delta \cup \delta \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta \satisfies \tau_l \subtypes \tau_r 
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau_l \subtypes \tau_r)$ [P0]
+  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \J{<}l\J{>}\tau_l \subtypes \J{<}l\J{>}\tau_r)$ [Thm. \ref{thm:entry_type_preservation}]
+
+  %%%%%%%%%%%%%%%%
+
+
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_{p} \J{->} \tau_{q} 
+      \subtypes 
+      \tau_{x} \J{->} \tau_{y}
+      \given \Theta'', \Delta'' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes
+      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      (\tau_a\J{|}\tau_b)\J{->}\tau_r
+      \given \Theta', \Delta' 
+    }
+
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l
+      \subtypes
+      (\tau_r\J{->}\tau_a)
+      \J{\&}
+      (\tau_r\J{->}\tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau
+      \subtypes
+      (\J{<} l \J{>} \tau_a)
+      \J{\&}
+      (\J{<} l \J{>} \tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes 
+      \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails
+      \tau_a \subtypes \tau
+      \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails
+      \tau_b \subtypes \tau
+      \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \tau_a\J{|}\tau_b \subtypes \tau
+      \given \Theta'', \Delta'' 
+    }
+    \\
+    \inferrule {
+      \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
+      \\
+      \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
+      \\\\
+      \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
+      \\
+      \Theta' \cup \Theta_l, \Delta' \entails
+      \tau_l \subtypes \tau_r \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \J{EXI[}\Theta_l\J{]}\Delta_l\ \tau_l \subtypes \tau_r
+      \given \Theta'', \Delta'' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails
+      \tau \subtypes \tau_{a} \given \Theta', \Delta' 
+      \\
+      \Theta', \Delta' \entails
+      \tau \subtypes \tau_{b} \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'', \Delta''
+    }
+    \\
+    \inferrule {
+      \Theta_r \cap \textbf{ftv}(\Delta)
+      \\
+      \Theta_r \cap \textbf{ftv}(\tau_l)
+      \\\\
+      \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
+      \\
+      \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
+    }
+
+
+    \inferrule {
+      \alpha \notin \Theta
+      \\
+      \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
+      \\\\
+      \Theta, \Delta \entails \Delta_\closed \safe
+      \\
+      \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \Theta, \Delta \entails \alpha \subtypes \tau_r \safe
+      \\
+      \nexists \alpha'  \qua \tau_r = \alpha'
+    } {
+      \Theta, \Delta \entails 
+      \alpha \subtypes \tau_r
+      \given \Theta, \Delta
+    }
+
+    \inferrule {
+      \alpha \notin \Theta
+      \\
+      \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
+      \\\\
+      \Theta, \Delta \entails \Delta_\closed \safe
+      \\
+      \Theta, \Delta \cup \Delta_\closed \entails 
+      \Delta_\open \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
+      \\
+      \nexists \alpha' \qua \tau_l = \alpha'
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \alpha \given \Theta, \Delta
+    }
+
+    \inferrule {
+      \alpha \not\in \textbf{ftv}(\tau_r)
+      \\
+      \Theta, \Delta \entails 
+      \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
+      \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau \subtypes \rho \given \Theta', \Delta' 
+      \\
+      \textbf{ftv}(\eta) \subseteq \epsilon
+      \\
+      \nexists \Theta', \Delta' \qua  
+      \Theta, \Delta \entails 
+      \tau \subtypes \eta \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \rho \typdiff \eta
+      \given \Theta', \Delta'
+    }
+
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+      \\
+      \Theta, \Delta \entails
+      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_l
+      \subtypes 
+      \J{EXI[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta'' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \J{ALL[}\Theta_l\J{]} \Delta_l\ \tau_l
+      \subtypes 
+      \tau_r
+      \given \Theta'', \Delta'' 
+    }
+  \end{mathpar}
+
+  \noindent
+  $\square$
 \end{theorem}
 \hfill
 
+
 \begin{theorem}
-  \label{theorem:proof_typing_soundness}
+  \label{thm:proof_typing_soundness}
   Proof Typing Soundness 
   \\
   \begin{mathpar}
@@ -3864,7 +4194,7 @@ we derive the conclusion by applying Definition \ref{def:model_typing} (Model Ty
 
 \pc
 For $\Theta, \Delta, \Gamma \entails x \hastype \tau \given \Theta, \Delta$, 
-we derive the conclusion by applying Theorem \ref{theorem:typing_environment_soundness}
+we derive the conclusion by applying Theorem \ref{thm:typing_environment_soundness}
 (Typing Environment Soundness).
 
 \pc
@@ -3899,7 +4229,7 @@ $ (P1)
 by applying the induction hypothesis.
 
 Next, we derive $\textbf{dom}(\delta_r \cup \delta_e) = \Theta'' \backslash \Theta$
-by applying Theorem \ref{theorem:domain_extension} and rewriting with set arithmetic.
+by applying Theorem \ref{thm:domain_extension} and rewriting with set arithmetic.
 Then, we introduce an arbitrary typing interpretation $\delta'$
 and an arbitrary expression interpretation $\sigma$,
 and we assume 
@@ -3909,39 +4239,39 @@ $\delta', \sigma \satisfies \Gamma$.
 
 We derive $\delta' \cup \delta_r \cup \delta_e \satisfies \Delta'$ 
 by applying
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:subtyping_environment_prefix_preservation},
 and rewriting with set arithmetic.
 We derive $\delta' \cup \delta_r \satisfies \Delta'$ 
 by applying
-Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_skolem_freshness},
 and
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we have $\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau$ 
 by instantiating (P0) with the $\delta'$ and $\sigma$, and applying the result.  
 Thus, we have $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma] \hastype \tau$ 
 by applying 
-Theorem \ref{theorem:proof_typing_skolem_freshness}
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness}
+Theorem \ref{thm:proof_typing_containment},
 rewriting with set arithmetic,
 and applying
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 
 We derive $\delta' \cup \delta_r, \sigma \satisfies \Gamma$ 
 by applying
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
 and 
-Theorem \ref{theorem:typing_environment_interpretation_extension}.
+Theorem \ref{thm:typing_environment_interpretation_extension}.
 Then, we have $\delta' \cup \delta_r \cup \delta_e \satisfies e[\sigma] \hastype \tau' $
 by instantiating (P1) with $\delta' \cup \delta_r$ and $\sigma$, and applying the result.
 
 
 We derive $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
-by applying Theorem \ref{theorem:record_extension_preservation}
+by applying Theorem \ref{thm:record_extension_preservation}
 We derive $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau'$
-by applying Theorem \ref{theorem:entry_type_introduction}.
+by applying Theorem \ref{thm:entry_type_introduction}.
 Then, we derive 
 $\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau \J{\&} \tau'$
 by applying Definition \ref{def:model_typing} (Model Typing).
@@ -3962,8 +4292,8 @@ We know that $\textbf{dom}(\epsilon) = \Theta \backslash \Theta$ by rewriting wi
 Next, we introduce an arbitrary type interpretation $\delta'$ and an arbitrary expression interpretation $\sigma$,
 and we assume $\delta' \cup \epsilon \satisfies \Delta$ and $\delta', \sigma \satisfies \Gamma$.
 With a little rewriting, we have $\delta' \satisfies \Delta'$.
-Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem \ref{theorem:function_lifting_soundness}, 
-Theorem \ref{theorem:function_lifting_skolem_freshness}, and Theorem \ref{prop:packaging_soundness}, along with a little
+Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem \ref{thm:function_lifting_soundness}, 
+Theorem \ref{thm:function_lifting_skolem_freshness}, and Theorem \ref{prop:packaging_soundness}, along with a little
 rewriting.
 Thus, we have $\delta' \cup \delta \satisfies f[\sigma] \hastype \tau$ 
 by rewriting the statement to include the empty interpretation.
@@ -3992,33 +4322,33 @@ and $
 \delta' \cup \delta_b \satisfies \Delta'' \implies
 \delta' \cup \delta_b \satisfies \tau \hastype \tau
 $ (P1)
-by applying Theorem \ref{theorem:proof_subtyping_soundness}.
+by applying Theorem \ref{thm:proof_subtyping_soundness}.
 
 Next, we derive $\textbf{dom}(\delta_a \cup \delta_b) = \Theta'' \backslash \Theta$ by applying
-Theorem \ref{theorem:domain_extension} and rewriting with set arithmetic. 
+Theorem \ref{thm:domain_extension} and rewriting with set arithmetic. 
 Then, we introduce an arbitrary type interpretation $\delta'$ and an arbitrary expression interpretation $\sigma$,
 and we assume 
 $\delta' \cup \delta_a \cup \delta_b \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
 
 We derive $\delta' \cup \delta_a \cup \delta_b \satisfies \Delta'$ 
 by applying 
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:subtyping_environment_prefix_preservation},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:subtyping_environment_prefix_preservation},
 and rewriting with set arithmetic.
 We derive $\delta' \cup \delta_a \satisfies \Delta'$ 
 by applying 
-Theorem \ref{theorem:proof_subtyping_skolem_freshness}
+Theorem \ref{thm:proof_subtyping_skolem_freshness}
 and 
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we have $\delta' \cup \delta_a \satisfies e[\sigma] \hastype \tau$ 
 by instantiating (P0) with the $\delta'$ and $\sigma$, and applying the result.  
 Thus, we have $\delta' \cup \delta_a \cup \delta_b \satisfies r[\sigma] \hastype \tau$ 
 by applying 
-Theorem \ref{theorem:proof_subtyping_skolem_freshness}
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness}
+Theorem \ref{thm:proof_typing_containment},
 rewriting with set arithmetic,
 and applying
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 We derive $\delta' \cup \delta_a \cup \delta_b \satisfies \tau \subtypes \J{<}l\J{>}\alpha$ by 
 instantiating (P1) with $\delta' \cup \delta_a$ and $\sigma$.
@@ -4066,11 +4396,11 @@ and $(
 \delta' \cup \delta_s \satisfies \Delta' \implies
 \delta' \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
 )$ (P2)
-by applying Theorem \ref{theorem:proof_subtyping_soundness}.
+by applying Theorem \ref{thm:proof_subtyping_soundness}.
 
 Next, we derive $(\text{dom}(\delta_f \cup \delta_a \cup \delta_s) = \Theta''' \backslash \Theta)$
 by applying
-Theorem \ref{theorem:domain_extension}
+Theorem \ref{thm:domain_extension}
 and
 rewriting with set arithmetic.
 The, we introduce an arbitrary type interpretation $\delta'$ and 
@@ -4083,18 +4413,18 @@ $(\delta' \satisfies \Gamma)$.
 We derive 
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta')$
 by applying
-Theorem \ref{theorem:proof_subtyping_containment},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
 $(\delta' \cup \delta_f \satisfies \Delta')$
 by applying
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:proof_subtyping_containment},
-Theorem \ref{theorem:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
 and
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
 $(\delta' \cup \delta_f \satisfies e_f[\sigma] \hastype \tau_f)$
 by instantiating (P0)
@@ -4102,33 +4432,33 @@ with $\delta'$ and $\sigma$ and applying the result.
 We derive
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_f)$
 by applying 
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:proof_subtyping_containment},
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 
 We derive 
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta'')$
 by applying
-Theorem \ref{theorem:proof_subtyping_containment}
+Theorem \ref{thm:proof_subtyping_containment}
 and
-Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
 $(\delta' \cup \delta_f \cup \delta_a \satisfies \Delta'')$
 by applying
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
 $(\delta' \cup \delta_f \satisfies \Gamma)$
 by applying
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 Then, we derive
 $(\delta' \cup \delta_f \cup \delta_a \satisfies e_a[\sigma] \hastype \tau_a)$
 by instantiating (P1)
@@ -4136,19 +4466,19 @@ with $\delta' \cup \delta_f$ and $\sigma$ and applying the result.
 We derive
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_a[\sigma] \hastype \tau_a)$
 by applying 
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 We derive
 $(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
 by instantiating (P2) with $\delta' \cup \delta_f \cup \delta_a$, and applying the result.
 Then, we derive $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
 by applying 
-Theorem \ref{theorem:subsumption}.
+Theorem \ref{thm:subsumption}.
 Thus, we have $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha$
-by Theorem \ref{theorem:path_type_elimination},
+by Theorem \ref{thm:path_type_elimination},
 which simplifies to $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
 by Definition \ref{def:substitution}.
 
@@ -4177,7 +4507,7 @@ and $(
 \delta' \cup \delta_b \satisfies \Delta'' \implies
 \delta' \cup \delta_b \satisfies \tau \hastype \tau_a
 )$ (P1)
-by applying Theorem \ref{theorem:proof_subtyping_soundness}.
+by applying Theorem \ref{thm:proof_subtyping_soundness}.
 We derive a typing interpretation $\delta_c$, such that 
 $(\textbf{dom}(\delta_c) = \Theta''' \backslash \Theta'')$
 and $(
@@ -4190,7 +4520,7 @@ by applying the induction hypothesis.
 
 Next, we derive $(\textbf{dom}(\delta_a \cup \delta_b \cup \delta_c) \cong \Theta''' \backslash \Theta)$
 by applying
-Theorem \ref{theorem:domain_extension} 
+Theorem \ref{thm:domain_extension} 
 and rewriting with set arithmetic.
 Then, we introduce an arbitrary type interpretation $\delta'$
 and an arbitrary expression interpretation $\sigma$,
@@ -4204,18 +4534,18 @@ $(\delta, \sigma \satisfies \Gamma)$.
 We derive 
 $(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \Delta')$
 by applying
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_containment},
 and
-Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
 $(\delta' \cup \delta_a \satisfies \Delta')$
 by applying
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
 $(\delta' \cup \delta_a \satisfies e[\sigma] \hastype \tau)$
 by instantiating (P0)
@@ -4223,26 +4553,26 @@ with $\delta'$ and $\sigma$ and applying the result.
 We derive
 $(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies e[\sigma] \hastype \tau)$
 by applying 
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 
 We derive 
 $(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \Delta'')$
 by applying
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:subtyping_environment_prefix_preservation}.
+Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
 $(\delta' \cup \delta_a \cup \delta_b \satisfies \Delta')$
 by applying
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 We derive
 $(\delta' \cup \delta_a \cup \delta_b \satisfies \tau \subtypes \tau_a)$
 by instantiating (P1)
@@ -4250,24 +4580,24 @@ with $\delta' \cup \delta_a$ and applying the result.
 We derive
 $(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \tau \subtypes \tau_a)$
 by applying 
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_containment},
 and
-Theorem \ref{theorem:subtyping_interpretation_extension}.
+Theorem \ref{thm:subtyping_interpretation_extension}.
 
 
 We derive 
 $(\delta' \cup \delta_a \cup \delta_b \satisfies \Gamma)$
 by applying
-Theorem \ref{theorem:proof_typing_skolem_freshness},
-Theorem \ref{theorem:proof_typing_containment},
-Theorem \ref{theorem:proof_subtyping_skolem_freshness},
-Theorem \ref{theorem:proof_subtyping_containment},
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_skolem_freshness},
+Theorem \ref{thm:proof_typing_containment},
+Theorem \ref{thm:proof_subtyping_skolem_freshness},
+Theorem \ref{thm:proof_subtyping_containment},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_environment_interpretation_extension}.
+Theorem \ref{thm:typing_environment_interpretation_extension}.
 Then, we derive $\delta' \cup \delta_a \cup \delta_b, \sigma \satisfies e[\sigma] \hastype \tau_a$
-by applying Theorem \ref{theorem:subsumption}.
+by applying Theorem \ref{thm:subsumption}.
 Then, We derive $\delta' \cup \delta_a \cup \delta_b, \sigma\ x \slash e[\sigma] \satisfies \Gamma\ x \hastype \tau$
 by applying Definition \ref{def:model_sequence_typing} (Model Sequence Typing).
 Then, we derive
@@ -4280,7 +4610,7 @@ We derive $\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies e'[\sigm
 by rewriting with Definition \ref{def:substitution}.
 Then, we have 
 $\delta' \cup \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'$
-by applying Theorem \ref{theorem:annotated_binding_introduction},
+by applying Theorem \ref{thm:annotated_binding_introduction},
 which simplifies to 
 $\delta' \cup \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'$
 by applying Definition \ref{def:substitution}. 
@@ -4323,14 +4653,14 @@ Additionally, we derive
 $\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies \Delta'$
 (P1)
 by applying 
-Theorem \ref{theorem:subtyping_environment_interpretation_contraction}.
+Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 We derive 
 $\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies e[\sigma] \hastype \tau$
 (P2)
 by applying
-Theorem \ref{theorem:proof_typing_containment},
+Theorem \ref{thm:proof_typing_containment},
 and
-Theorem \ref{theorem:typing_interpretation_extension}.
+Theorem \ref{thm:typing_interpretation_extension}.
 
 
 
@@ -4348,9 +4678,9 @@ $(
 )
 $ (P3)
 by applying
-Theorem \ref{theorem:function_type_explosion_soundness}
+Theorem \ref{thm:function_type_explosion_soundness}
 and
-Theorem \ref{theorem:subtyping_environment_union}.
+Theorem \ref{thm:subtyping_environment_union}.
 We derive
 $(
 \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
@@ -4378,7 +4708,7 @@ $(
 )
 )
 $
-by applying (P1), (P2), and Theorem \ref{theorem:subsumption}.
+by applying (P1), (P2), and Theorem \ref{thm:subsumption}.
 
 
 We derive
@@ -4411,7 +4741,7 @@ $(
 )
 )
 $
-by Theorem \ref{theorem:path_type_elimination_loop}.
+by Theorem \ref{thm:path_type_elimination_loop}.
 
 We derive
 $(
@@ -4423,7 +4753,7 @@ e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 by applying 
 Theorem \ref{...} (Duality Soundness)
 and
-Theorem \ref{theorem:packaging_soundness}.
+Theorem \ref{thm:packaging_soundness}.
 
 We derive
 $(
@@ -4433,7 +4763,7 @@ $(
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
 by applying 
-Theorem \ref{theorem:least_fixed_point_type_elimination}.
+Theorem \ref{thm:least_fixed_point_type_elimination}.
 
 
 
@@ -4447,11 +4777,11 @@ $(
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
 by applying 
-Theorem \ref{theorem:subtyping_factorization_soundness}.
-Theorem \ref{theorem:subsumption},
-Theorem \ref{theorem:entry_type_elimination},
+Theorem \ref{thm:subtyping_factorization_soundness}.
+Theorem \ref{thm:subsumption},
+Theorem \ref{thm:entry_type_elimination},
 and
-Theorem \ref{theorem:right_congruence}.
+Theorem \ref{thm:right_congruence}.
 
 
 We derive
@@ -4464,9 +4794,9 @@ $(
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
 by applying 
-Theorem \ref{theorem:left_congruence}
+Theorem \ref{thm:left_congruence}
 and
-Theorem \ref{theorem:subtyping_factorization_soundness}.
+Theorem \ref{thm:subtyping_factorization_soundness}.
 
 We derive
 $(
@@ -4476,14 +4806,14 @@ $(
 \delta' \cup \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
 )$
 by applying 
-Theorem \ref{theorem:expression_congruence_typing}.
+Theorem \ref{thm:expression_congruence_typing}.
 
 We have 
 $(
 \delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
 )$
 by applying 
-Theorem \ref{theorem:path_type_elimination_loop}
+Theorem \ref{thm:path_type_elimination_loop}
 
 We have 
 $(
@@ -4525,7 +4855,7 @@ $\square$
 % \end{definition}
 
 % \begin{theorem}(Typing Soundness)
-%   \label{theorem:typing_soundness}
+%   \label{thm:typing_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \entails e \hastype \tau \given Z
@@ -4535,16 +4865,16 @@ $\square$
 %   \end{mathpar}
 %   Proof:
 %   \item $\B{assume } \entails e \hastype \tau \given Z$
-%     \item \Z $\B{let } \delta\ \Gamma' \ \tau' \B{ s.t. } \delta, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{theorem:proof_typing_soundness}}
+%     \item \Z $\B{let } \delta\ \Gamma' \ \tau' \B{ s.t. } \delta, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{thm:proof_typing_soundness}}
 %     \item \Z $\delta, \sigma \satisfies \Gamma'$ by ...
-%     \item \Z $\VDash e[\sigma]$ by theorem \ref{theorem:model_typing_soundness}
+%     \item \Z $\VDash e[\sigma]$ by theorem \ref{thm:model_typing_soundness}
 %     \item \Z $e[\sigma] = e$ by ...
 %     \item \Z $\VDash e$ by substitution 
 %   \item $\square$
 % \end{theorem}
 
 % \begin{theorem}(Proof typing consistency)
-%   \label{theorem:proof_typing_consistency}
+%   \label{thm:proof_typing_consistency}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \Gamma \entails e \hastype \tau \given Z  
@@ -4556,7 +4886,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Proof typing soundness)
-%   \label{theorem:proof_typing_soundness}
+%   \label{thm:proof_typing_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \Gamma \entails e \hastype \tau \given Z  
@@ -4568,26 +4898,27 @@ $\square$
 % \end{theorem}
 
 
-% \begin{theorem}(Proof typing weak soundness)
-%   \label{theorem:proof_typing_weak_soundness}
-%   \begin{mathpar}
-%     \inferrule { 
-%       \Gamma \entails e \hastype \tau \given Z  
-%     } {
-%       \forall \delta .\ \delta \satisfies Z \implies \delta, \Gamma \satisfies e \hastype \tau
-%     } 
-%   \end{mathpar}
+\begin{theorem}(Proof typing weak soundness)
+  \label{thm:proof_typing_weak_soundness}
+  \begin{mathpar}
+    \inferrule { 
+      \Gamma \entails e \hastype \tau \given Z  
+    } {
+      \forall \delta .\ \delta \satisfies Z \implies \delta, \Gamma \satisfies e \hastype \tau
+    } 
+  \end{mathpar}
 
-%   \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
+  \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
 
-%   \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
+  \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
 
-%   Proof: 
-%   \item $
-%     \B{assume } 
-%     \Gamma \entails e \hastype \tau \given Z 
-%   $ 
-%     \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+  Proof: 
+  \item $
+    \B{assume } 
+    \Gamma \entails e \hastype \tau \given Z 
+  $ 
+    \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+\end{theorem}
 
 %     \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
 %       \item \Z\Z $\B{let } \delta$ by definition
@@ -4684,18 +5015,18 @@ $\square$
 %       M\ \Delta
 %       \B{ s.t. }
 %       \tau_0 \subtypes \J{$l$->$\alpha$} \given M, \Delta
-%     $ by theorem \ref{theorem:proof_subtyping_choice}
+%     $ by theorem \ref{thm:proof_subtyping_choice}
 
 
 %     \item \Z\Z $
 %       \delta \satisfies \tau_0  \subtypes \J{$l$->$\alpha$}
-%     $ by theorem \ref{theorem:proof_subtyping_weak_soundness}
+%     $ by theorem \ref{thm:proof_subtyping_weak_soundness}
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies e_0 \hastype \J{$l$->$\alpha$}
-%     $ by theorem \ref{theorem:model_subtyping_elimination} 
+%     $ by theorem \ref{thm:model_subtyping_elimination} 
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies \J{$e_0$.$l$} \hastype \alpha 
-%     $ by theorem \ref{theorem:model_subtyping_record_elimination} 
+%     $ by theorem \ref{thm:model_subtyping_record_elimination} 
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies e \hastype \tau
 %     $ by substitution 
@@ -4743,16 +5074,16 @@ $\square$
 %       \B{let } M\ \Delta
 %       \B{ s.t. }
 %       \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
-%     $ by theorem \ref{theorem:proof_subtyping_choice} 
+%     $ by theorem \ref{thm:proof_subtyping_choice} 
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies \tau_0 \subtypes \J{$\tau_1$->$\alpha$} 
-%     $ by theorem \ref{theorem:proof_subtyping_weak_soundness} 
+%     $ by theorem \ref{thm:proof_subtyping_weak_soundness} 
 %     \item \Z\Z $
 %       \delta \satisfies e_0 \hastype \J{$\tau_1$->$\alpha$} 
-%     $ by theorem \ref{theorem:model_subtyping_elimination} 
+%     $ by theorem \ref{thm:model_subtyping_elimination} 
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies \J{$e_0$($e_1$)} \hastype \alpha
-%     $ by theorem \ref{theorem:model_typing_implication_elimination} 
+%     $ by theorem \ref{thm:model_typing_implication_elimination} 
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies e \hastype \tau
 %     $ by substitution 
@@ -4792,7 +5123,7 @@ $\square$
 %       \item \Z\Z\Z $
 %         \delta \satisfies \tau' \subtypes 
 %         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.$\alpha_l'$*$\alpha_r'$<:LFP[$\alpha_{h^-}$] |$(\Tau)$]$\alpha_r$}
-%       $ by theorem \ref{theorem:fixpoint_duality_soundness}
+%       $ by theorem \ref{thm:fixpoint_duality_soundness}
 
 %       \item \Z\Z\Z $
 %         \delta \satisfies \tau' \subtypes \tau
@@ -4800,11 +5131,11 @@ $\square$
 
 %       \item \Z\Z\Z $
 %         \delta \satisfies e' \hastype \J{$\alpha_{h^+}$->$\tau$}
-%       $ by theorem \ref{theorem:model_subtyping_elimination} 
+%       $ by theorem \ref{thm:model_subtyping_elimination} 
 
 %       \item \Z\Z\Z $
 %         \delta \satisfies \J{loop($e'$)} \hastype \tau 
-%       $ by theorem \ref{theorem:model_typing_implication_independence}
+%       $ by theorem \ref{thm:model_typing_implication_independence}
 
 %       \item \Z\Z\Z $
 %         \delta \satisfies e \hastype \tau 
@@ -4820,7 +5151,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Fixpoint duality soundness (new))
-%   \label{theorem:fixpoint_duality_soundness}
+%   \label{thm:fixpoint_duality_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
@@ -4847,7 +5178,7 @@ $\square$
 % \TODO{See how Cretin proves this without using subject reduction}
 
 % \begin{theorem}(Fixpoint duality soundness old)
-%   \label{theorem:fixpoint_duality_soundness_old}
+%   \label{thm:fixpoint_duality_soundness_old}
 %   \begin{mathpar}
 %     \inferrule { 
 %       Z_0 \looparrowright Z_1
@@ -4885,9 +5216,9 @@ $\square$
 
 %         \item \Z\Z\Z\Z $
 %           \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
-%         $ by theorem \ref{theorem:universe_proof_typing_worldly}  
+%         $ by theorem \ref{thm:universe_proof_typing_worldly}  
 
-%         \item \Z\Z\Z\Z $\bot$ by theorem \ref{theorem:empty_containment_absurd}
+%         \item \Z\Z\Z\Z $\bot$ by theorem \ref{thm:empty_containment_absurd}
 %       \item \Z\Z\Z $
 %         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
 %         \implies
@@ -4960,7 +5291,7 @@ $\square$
 
 %       \item \Z\Z\Z $
 %         \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
-%       $ by theorem \ref{theorem:proof_subtyping_decomposition}
+%       $ by theorem \ref{thm:proof_subtyping_decomposition}
 
 %       \item \Z\Z\Z $
 %         \tau
@@ -4973,7 +5304,7 @@ $\square$
 %         \subtypes
 %         \J{ALL[$\alpha_l'$]$\alpha_l'$->EXI[$\alpha_r'$.($\alpha_l'$,$\alpha_r'$)<:LFP[$\alpha_{h^-}$] |$(\Tau_i\ \tau_i)$]$\alpha_r'$} 
 %         \given Z_0
-%       $ by theorem \ref{theorem:universe_proof_typing_fixpoint_extension}
+%       $ by theorem \ref{thm:universe_proof_typing_fixpoint_extension}
 %     \item \Z\Z $
 %       \forall \tau .\ 
 %       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given Z_1
@@ -4998,7 +5329,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Universe proof typing fixpoint extension)
-%   \label{theorem:universe_proof_typing_fixpoint_extension}
+%   \label{thm:universe_proof_typing_fixpoint_extension}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies
@@ -5034,7 +5365,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Universe proof typing case soundness)
-%   \label{theorem:universe_proof_typing_case_soundnes}
+%   \label{thm:universe_proof_typing_case_soundnes}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau \subtypes \J{$\alpha_l$->$\alpha_r$} \given\left<M, \Delta\right>
@@ -5065,7 +5396,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Universe proof typing fixpoint union)
-%   \label{theorem:universe_proof_typing_fixpoint_union}
+%   \label{thm:universe_proof_typing_fixpoint_union}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies
@@ -5090,7 +5421,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}\ Influential soundness 
-%   \label{theorem:influential_soundness}
+%   \label{thm:influential_soundness}
 
 %   \TODO{Prove that any constraints on non-influential variables with have been transitively applied to the influential variables}
 
@@ -5121,7 +5452,7 @@ $\square$
 % \end{theorem}
 
 % % \begin{theorem}(Universe proof typing implication expansion)
-% %   \label{theorem:universe_proof_typing_implication}
+% %   \label{thm:universe_proof_typing_implication}
 % %   \begin{mathpar}
 % %     \inferrule { 
 % %       M, \Delta, \Delta \entails \alpha_l \subtypes \Tau_l 
@@ -5141,7 +5472,7 @@ $\square$
 % % \end{theorem}
 
 % \begin{theorem}(Universe proof typing implication expansion)
-%   \label{theorem:universe_proof_typing_implication_expansion}
+%   \label{thm:universe_proof_typing_implication_expansion}
 %   \begin{mathpar}
 %     \inferrule { 
 %     } {
@@ -5159,7 +5490,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Upper bound interpretation sound)
-%   \label{theorem:upper_bound_interpretation_sound}
+%   \label{thm:upper_bound_interpretation_sound}
 %   \begin{mathpar}
 %     \inferrule { 
 %       M, \Delta, \Delta \entails \alpha \subtypes \Tau 
@@ -5173,7 +5504,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Lower bound interpretation sound)
-%   \label{theorem:lower_bound_interpretation_sound}
+%   \label{thm:lower_bound_interpretation_sound}
 %   \begin{mathpar}
 %     \inferrule { 
 %       M, \Delta, \Delta \entails \Tau \subtypes \alpha
@@ -5189,7 +5520,7 @@ $\square$
 
 
 % \begin{theorem}(Universe proof typing worldly)
-%   \label{theorem:universe_proof_typing_worldly}
+%   \label{thm:universe_proof_typing_worldly}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given Z 
@@ -5203,7 +5534,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Empty containment absurd)
-%   \label{theorem:empty_containment_absurd}
+%   \label{thm:empty_containment_absurd}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \left<M, \Delta\right> \in \epsilon 
@@ -5218,7 +5549,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing implication independence)
-%   \label{theorem:model_typing_implication_independence}
+%   \label{thm:model_typing_implication_independence}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e \hastype \J{$\tau_l$->$\tau_r$} 
@@ -5235,7 +5566,7 @@ $\square$
 
 
 % % \begin{theorem}(Proof typing fix interpolation weakest pre-condition)
-% %   \label{theorem:fix_duality}
+% %   \label{thm:fix_duality}
 % %   \begin{mathpar}
 % %     \inferrule { 
 % %       \tau \subtypes \J{$\alpha_0$->$\alpha_1$->$\alpha_2$} \given Z_1
@@ -5254,7 +5585,7 @@ $\square$
 % % \end{theorem}
 
 % \begin{theorem}(Proof subtyping decomposition)
-%   \label{theorem:proof_subtyping_decomposition}
+%   \label{thm:proof_subtyping_decomposition}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given Z\ \left<M, \Delta\right>
@@ -5269,7 +5600,7 @@ $\square$
 
 
 % \begin{theorem}(Proof subtyping choice)
-%   \label{theorem:proof_subtyping_choice}
+%   \label{thm:proof_subtyping_choice}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given Z 
@@ -5283,7 +5614,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Model subtyping elimination)
-%   \label{theorem:model_subtyping_elimination}
+%   \label{thm:model_subtyping_elimination}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \tau_l \subtypes \tau_r
@@ -5309,7 +5640,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing record elimination)
-%   \label{theorem:model_subtyping_record_elimination}
+%   \label{thm:model_subtyping_record_elimination}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e \hastype \J{$l$->$\tau$}
@@ -5415,7 +5746,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Proof subtyping consistency)
-%   \label{theorem:proof_subtyping_consistency}
+%   \label{thm:proof_subtyping_consistency}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given M, \Delta 
@@ -5427,7 +5758,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Proof subtyping soundness)
-%   \label{theorem:proof_subtyping_soundness}
+%   \label{thm:proof_subtyping_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given M, \Delta 
@@ -5440,7 +5771,7 @@ $\square$
 
 
 % \begin{theorem}(Proof subtyping weak soundness)
-%   \label{theorem:proof_subtyping_weak_soundness}
+%   \label{thm:proof_subtyping_weak_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given M, \Delta 
@@ -5475,7 +5806,7 @@ $\square$
 %     \item \Z $\B{wrt } \tau $
 %       \item \Z\Z $\B{for } \delta \B{ assume } \delta \satisfies \Delta$
 %         \item \Z\Z\Z $\delta \satisfies \tau \subtypes \tau$
-%         by theorem \ref{theorem:model_typing_reflexivity}
+%         by theorem \ref{thm:model_typing_reflexivity}
 %         \item \Z\Z\Z $\delta \satisfies \tau_l \subtypes \tau_r$ by substitution 
 %       \item \Z\Z $\forall \delta .\ \delta \satisfies \Delta \implies \delta \satisfies \tau_l \subtypes \tau_r$ 
 %       by implication and generalization 
@@ -5514,13 +5845,13 @@ $\square$
 %         by application
 %         \item \Z\Z\Z $\B{for } e\ \Gamma \B{ assume } \delta, \Gamma \satisfies e \hastype \tau_l$ 
 %           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{($l$->$\tau_{rl}$)\&($l$->$\tau_{rr}$)}$
-%           by theorem \ref{theorem:model_typing_subsumption} 
-%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rl}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rr}$}$ by theorem \ref{theorem:model_typing_intersection_elimination}
-%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{theorem:model_subtyping_record_elimination}
-%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{theorem:model_subtyping_record_elimination}
+%           by theorem \ref{thm:model_typing_subsumption} 
+%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rl}$}$ by theorem \ref{thm:model_typing_intersection_elimination}
+%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->$\tau_{rr}$}$ by theorem \ref{thm:model_typing_intersection_elimination}
+%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rl}$ by theorem \ref{thm:model_subtyping_record_elimination}
+%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies \J{$e$.$l$} \hastype \tau_{rr}$ by theorem \ref{thm:model_subtyping_record_elimination}
 %           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies \J{$e$.$l$} \hastype \J{$\tau_{rl}$\&$\tau_{rr}$}$ by definition
-%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{theorem:model_typing_record_introduction} 
+%           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \J{$l$->($\tau_{rl}$\&$\tau_{rr}$)}$ by theorem \ref{thm:model_typing_record_introduction} 
 %           \item \Z\Z\Z\Z $\delta, \Gamma \satisfies e \hastype \tau_r$ by substitution 
 %         \item \Z\Z\Z $\forall e\ \Gamma .\ \delta, \Gamma \satisfies e \hastype \tau_l \implies 
 %           \delta, \Gamma \satisfies e \hastype \tau_r
@@ -5661,11 +5992,11 @@ $\square$
 %       \item \Z\Z $\B{for } \delta \B{ assume } \delta \satisfies \Delta$
 %         \item \Z\Z\Z $\delta \satisfies \Delta_1 $ by substitution
 %         \item \Z\Z\Z $\delta \satisfies \tau_b \subtypes \tau_r$ by application
-%         \item \Z\Z\Z $\delta \satisfies \Delta_0 $ by theorem \ref{theorem:model_subtyping_sequence_prefix}
+%         \item \Z\Z\Z $\delta \satisfies \Delta_0 $ by theorem \ref{thm:model_subtyping_sequence_prefix}
 %         \item \Z\Z\Z $\delta \satisfies Q$ by application
 %         \item \Z\Z\Z $\B{for } e \B{ assume } \delta \satisfies e \hastype \tau_l$ 
 %           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_b$}$ by substitution
-%           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \tau_r$ by theorem \ref{theorem:model_typing_existential_elimination} 
+%           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \tau_r$ by theorem \ref{thm:model_typing_existential_elimination} 
 %         \item \Z\Z\Z $\forall e .\ \delta \satisfies e \hastype \tau_l 
 %           \implies \delta \satisfies e \hastype \tau_r
 %         $ 
@@ -5702,10 +6033,10 @@ $\square$
 %       \item \Z\Z $\B{for } \delta \B{ assume } \delta \satisfies \Delta$
 %         \item \Z\Z\Z $\delta \satisfies \Delta_1$ by substitution 
 %         \item \Z\Z\Z $\delta \satisfies \tau_l \subtypes \tau_b$ by application 
-%         \item \Z\Z\Z $\delta \satisfies \Delta_0$ by theorem \ref{theorem:model_subtyping_sequence_prefix} 
+%         \item \Z\Z\Z $\delta \satisfies \Delta_0$ by theorem \ref{thm:model_subtyping_sequence_prefix} 
 %         \item \Z\Z\Z $\delta \satisfies Q$ by application 
 %         \item \Z\Z\Z $\B{for } e \B{ assume } \delta \satisfies e \hastype \tau_l$ 
-%           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{theorem:model_typing_universal_introduction} 
+%           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \J{ALL[$\Alpha$ $Q$]$\tau_b$}$ by theorem \ref{thm:model_typing_universal_introduction} 
 %           \item \Z\Z\Z\Z $\delta \satisfies e \hastype \tau_r$ by substitution 
 %         \item \Z\Z\Z $\forall e .\ \delta \satisfies e \hastype \tau_l 
 %           \implies \delta \satisfies e \hastype \tau_r
@@ -5743,7 +6074,7 @@ $\square$
 %     \item \Z $\B{wrt } \alpha\ M_1\ \Delta_1\ M_0\ \Delta_0\ \Delta_m\ \Tau$
 %       \item \Z\Z $\B{for } \delta \B{ assume } \delta \satisfies \Delta$
 %         \item \Z\Z\Z $\delta \satisfies \Delta_1 \J{($\alpha$<:$\tau_r$)}$ by substitution
-%         \item \Z\Z\Z $\delta \satisfies \alpha <: \tau_r$ by theorem \ref{theorem:model_subtyping_sequence_last} 
+%         \item \Z\Z\Z $\delta \satisfies \alpha <: \tau_r$ by theorem \ref{thm:model_subtyping_sequence_last} 
 %         \item \Z\Z\Z $\delta \satisfies \tau_l <: \tau_r$ by substitution 
 %       \item \Z\Z $\forall \delta .\ \delta \satisfies \Delta \implies \delta \satisfies \tau_l \subtypes \tau_r$ 
 %       by implication and generalization 
@@ -5913,7 +6244,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model typing existential elimination 
-%   \label{theorem:model_typing_existential_elimination}
+%   \label{thm:model_typing_existential_elimination}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies e \hastype \J{EXI[$\Alpha$ $Q$]$\tau_l$}
@@ -5946,7 +6277,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model typing universal introduction 
-%   \label{theorem:model_typing_universal_introduction}
+%   \label{thm:model_typing_universal_introduction}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies e \hastype \tau_l
@@ -5969,7 +6300,7 @@ $\square$
 
 
 % \begin{theorem} Model subtyping sequence last 
-%   \label{theorem:model_subtyping_sequence_last}
+%   \label{thm:model_subtyping_sequence_last}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \Delta\ \J{($\tau_l$<:$\tau_r$)}
@@ -5982,7 +6313,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model subtyping sequence reduction 
-%   \label{theorem:model_subtyping_sequence_reduction}
+%   \label{thm:model_subtyping_sequence_reduction}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \Delta\ \delta
@@ -5995,7 +6326,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model subtyping sequence prefix  
-%   \label{theorem:model_subtyping_sequence_prefix}
+%   \label{thm:model_subtyping_sequence_prefix}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \Delta'
@@ -6010,7 +6341,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model subtyping sequence uncat 
-%   \label{theorem:model_subtyping_sequence_uncat}
+%   \label{thm:model_subtyping_sequence_uncat}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \Delta \cup \Delta'
@@ -6023,7 +6354,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} concatenation prefix 
-%   \label{theorem:concatenation prefix}
+%   \label{thm:concatenation prefix}
 %   \begin{mathpar}
 %     \inferrule { 
 %     } {
@@ -6037,7 +6368,7 @@ $\square$
 
 
 % \begin{theorem} Model subtyping unsub left 
-%   \label{theorem:Modle_subtyping_unsub_left}
+%   \label{thm:Modle_subtyping_unsub_left}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \tau_l \subtypes \tau_r
@@ -6052,7 +6383,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model subtyping unsub right 
-%   \label{theorem:Modle_subtyping_unsub_right}
+%   \label{thm:Modle_subtyping_unsub_right}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \tau_l \subtypes \tau_r
@@ -6067,7 +6398,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model subtyping something 
-%   \label{theorem:Modle_subtyping_something}
+%   \label{thm:Modle_subtyping_something}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \Delta 
@@ -6083,7 +6414,7 @@ $\square$
 
 
 % \begin{theorem} Model typing record introduction 
-%   \label{theorem:model_typing_record_introduction}
+%   \label{thm:model_typing_record_introduction}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies \J{$e$.$l$} \hastype \tau
@@ -6096,7 +6427,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model typing implication introduction 
-%   \label{theorem:model_typing_implication_introduction}
+%   \label{thm:model_typing_implication_introduction}
 %   \TODO{this is really messed up}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -6114,7 +6445,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem} Model typing intersection elimination 
-%   \label{theorem:model_typing_intersection_elimination}
+%   \label{thm:model_typing_intersection_elimination}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta \satisfies e \hastype \tau_l \& \tau_r
@@ -6131,7 +6462,7 @@ $\square$
 
 
 % \begin{theorem} Model typing reflexivity
-%   \label{theorem:model_typing_reflexivity}
+%   \label{thm:model_typing_reflexivity}
 %   \begin{mathpar}
 %     \inferrule { 
 %     } {
@@ -6148,7 +6479,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing subsumption)
-%   \label{theorem:model_typing_subsumption}
+%   \label{thm:model_typing_subsumption}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e \hastype \tau_l 
@@ -6172,7 +6503,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Model typing implication elimination)
-%   \label{theorem:model_typing_implication_elimination}
+%   \label{thm:model_typing_implication_elimination}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r
@@ -6228,7 +6559,7 @@ $\square$
 %       F\ p\ e_2 
 %     $
 %       \item \Z\Z $\VDash \J{$F$($e_1$)}[\sigma] $
-%       by theorem \ref{theorem:model_typing_soundness}
+%       by theorem \ref{thm:model_typing_soundness}
 %       \item \Z\Z $\B{invert on } \VDash \J{$F$($e_1$)}[\sigma]$
 %       \item \Z\Z $\B{case } \J{$F$($e_1$)}[\sigma] = v$
 %       \item \Z\Z $\B{wrt } v$
@@ -6281,7 +6612,7 @@ $\square$
 %     % $
 %     %   \item \Z\Z $F = \epsilon \lor \delta, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ by application
 %     %   \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r$ by substitution 
-%     %   \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_reduced_implication_elimination}
+%     %   \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)}\J{(}e_1\J{)} \hastype \tau_r$ by theorem \ref{thm:model_typing_reduced_implication_elimination}
 %     %   \item \Z\Z $\delta, \Gamma \satisfies e_0\J{(}e_1\J{)} \hastype \tau_r$ by substitution 
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -6312,7 +6643,7 @@ $\square$
 
 % \begin{theorem}\ Model typing reduced implication elimination  
 
-%   \label{theorem:model_typing_reduced_implication_elimination}
+%   \label{thm:model_typing_reduced_implication_elimination}
 %   \begin{mathpar}
 %     \inferrule {
 %       \delta, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
@@ -6328,13 +6659,13 @@ $\square$
 %   \item $\B{assume } \VDash e_1[\sigma]$
 
 
-%     \item \Z $\B{let } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma $ by theorem \ref{theorem:model_typing_assignability} 
-%     \item \Z $\VDash e_1[\sigma]$ by theorem \ref{theorem:model_typing_soundness}
+%     \item \Z $\B{let } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma $ by theorem \ref{thm:model_typing_assignability} 
+%     \item \Z $\VDash e_1[\sigma]$ by theorem \ref{thm:model_typing_soundness}
 %     \item \Z $\B{induct on } \VDash e_1[\sigma]$
 
 %     \item \Z $\B{case } e_1[\sigma] = v_1 $
 %     \item \Z $\B{wrt } v_1$  
-%       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{theorem:model_typing_fully_reduced_implication_elimination}
+%       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by theorem \ref{thm:model_typing_fully_reduced_implication_elimination}
 
 %     \item \Z $\B{case}\ e_1[\sigma] \rightsquigarrow e_1' \I \VDash e_1'$
 %     \item \Z $\B{hypo}\ \VDash e_1' \implies \delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$
@@ -6342,8 +6673,8 @@ $\square$
 
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1'$)} \hastype \tau_r$ by application
 %       \item \Z\Z $\J{($F$?$p$=>$e$)$[\sigma]$($e_1[\sigma]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\sigma]$($e_1'$)}$ by definition 
-%       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{theorem:reduction_closed} 
-%       \item \Z\Z $e_1' = e_1'[\sigma]$ by by theorem \ref{theorem:closed_substitution} 
+%       \item \Z\Z $\forall x .\ x \notin \B{FV}(e_1')$ by theorem \ref{thm:reduction_closed} 
+%       \item \Z\Z $e_1' = e_1'[\sigma]$ by by theorem \ref{thm:closed_substitution} 
 %       \item \Z\Z $\J{($F$?$p$=>$e$)$[\sigma]$($e_1[\sigma]$)} \rightsquigarrow \J{($F$?$p$=>$e$)$[\sigma]$($e_1'[\sigma]$)}$ by substitution 
 %       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\sigma] \rightsquigarrow (\J{($F$?$p$=>$e$)($e_1'$)})[\sigma]$ by definition 
 %       \item \Z\Z $\sigma \cup \epsilon = \sigma$ by definition 
@@ -6357,7 +6688,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}\ Model typing fully reduced implication elimination 
-%   \label{theorem:model_typing_fully_reduced_implication_elimination}
+%   \label{thm:model_typing_fully_reduced_implication_elimination}
 %   \begin{mathpar}
 %     \inferrule {
 %       \delta, \Gamma \satisfies \J{($F$?$p$=>$e$)} \hastype \tau_l \J{->} \tau_r
@@ -6377,15 +6708,15 @@ $\square$
 %   Proof:
 %   \item $\B{assume}\ F = \epsilon \lor \delta, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
 %     \TODO{add more assumptions}
-%     \item \Z $\delta \satisfies e_1[\sigma] \hastype \tau_l$ by theorem \ref{theorem:model_typing_valuation} 
+%     \item \Z $\delta \satisfies e_1[\sigma] \hastype \tau_l$ by theorem \ref{thm:model_typing_valuation} 
 %     \item \Z $\delta \satisfies v_1 \hastype \tau_l$ by substitution 
 %     \item \Z $\B{invert on}\ F = \epsilon \lor \delta, \Gamma \satisfies F \hastype \tau_l \J{->} \tau_r$
 %     \item \Z $\B{case } F = \epsilon$ 
-%       \item \Z\Z $\delta, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{theorem:model_typing_unwrapping} 
+%       \item \Z\Z $\delta, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{thm:model_typing_unwrapping} 
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by substitution 
 
 %       \item \Z\Z $\B{let}\ \sigma' \B{ s.t. } p \equiv v_1 \given \sigma'$ 
-%       by theorem \ref{theorem:model_typing_pattern_matching} 
+%       by theorem \ref{thm:model_typing_pattern_matching} 
 
 %       \item \Z\Z $\B{for } e'$ 
 %         \item \Z\Z\Z $\neg \epsilon[\sigma]\J{($v_1$)} \rightsquigarrow e'$ by definition
@@ -6395,11 +6726,11 @@ $\square$
 %       \item \Z\Z $\J{($F[\sigma]$?$p$=>$e[\sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\sigma\backslash\B{FV}(p)][\sigma]$ by definition 
 
 %       \item \Z\Z $\forall x .\ x \in \B{FV}(p) \iff x \in \B{dom}(\sigma')$ 
-%       by theorem \ref{theorem:pattern_matching_consistency}
+%       by theorem \ref{thm:pattern_matching_consistency}
 %       \item \Z\Z $\sigma\backslash\B{FV}(p) = \sigma\backslash\B{dom}(\sigma')$ 
-%       by theorem \ref{theorem:consistency_diffing}
+%       by theorem \ref{thm:consistency_diffing}
 %       \item \Z\Z $e[\sigma\backslash\B{dom}(\sigma')][\sigma'] = e[\sigma \cup \sigma']$ 
-%       by theorem \ref{theorem:concatenation_substitution}
+%       by theorem \ref{thm:concatenation_substitution}
 
 %       \item \Z\Z $\J{($F[\sigma]$?$p$=>$e[\sigma\backslash\B{FV}(p)]$)($v_1$)} \rightsquigarrow e[\sigma\backslash\B{dom}(\sigma')][\sigma]$ 
 %         by substitution
@@ -6414,7 +6745,7 @@ $\square$
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
 %     \item \Z $\B{case } \delta, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ 
-%       \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\sigma] \rightsquigarrow e' \land \delta, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{theorem:model_typing_function_progress}
+%       \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\sigma] \rightsquigarrow e' \land \delta, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{thm:model_typing_function_progress}
 %       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\sigma] \rightsquigarrow e'$ by definition 
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 %     \item \Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
@@ -6423,7 +6754,7 @@ $\square$
 
 
 % \begin{theorem}\ (Pattern matching consistency)
-%   \label{theorem:pattern_matching_consistency}
+%   \label{thm:pattern_matching_consistency}
 %   \begin{mathpar}
 %     \inferrule {
 %       p \equiv v \given \sigma
@@ -6439,7 +6770,7 @@ $\square$
 
 
 % \begin{theorem}\ (Consistency diffing)
-%   \label{theorem:consistency_diffing}
+%   \label{thm:consistency_diffing}
 %   \begin{mathpar}
 %     \inferrule {
 %       \forall x .\ x \in X_l \iff x \in X_r 
@@ -6453,7 +6784,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Concatenation Substitution )
-%   \label{theorem:concatenation_substitution}
+%   \label{thm:concatenation_substitution}
 %   \begin{mathpar}
 %     \inferrule {
 %     } {
@@ -6468,7 +6799,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing valuation)
-%   \label{theorem:model_typing_valuation}
+%   \label{thm:model_typing_valuation}
 %   \begin{mathpar}
 %     \inferrule {
 %       \delta, \Gamma \satisfies e \hastype \tau 
@@ -6490,7 +6821,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing pattern matching)
-%   \label{theorem:model_typing_pattern_matching}
+%   \label{thm:model_typing_pattern_matching}
 %   \begin{mathpar}
 %     \inferrule {
 %       \delta, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r
@@ -6512,7 +6843,7 @@ $\square$
 
 
 % \begin{theorem}(Well-formed function valuation)
-%   \label{theorem:wellformed_function_valuation}
+%   \label{thm:wellformed_function_valuation}
 %   \begin{mathpar}
 %     \inferrule {
 %       \VDash F
@@ -6536,7 +6867,7 @@ $\square$
 
 
 % \begin{theorem}(Reduction closed)
-%   \label{theorem:reduction_closed}
+%   \label{thm:reduction_closed}
 %   \begin{mathpar}
 %     \inferrule {
 %       e \rightsquigarrow e'
@@ -6553,7 +6884,7 @@ $\square$
 % \end{theorem}
 
 % \begin{theorem}(Closed substitution)
-%   \label{theorem:closed_substitution}
+%   \label{thm:closed_substitution}
 %   \begin{mathpar}
 %     \inferrule {
 %       \forall x .\ x \notin \B{FV}(e)
@@ -6572,7 +6903,7 @@ $\square$
 
 
 % % \begin{theorem}(Progress of pattern matching)
-% %   \label{theorem:pattern_matching_progress}
+% %   \label{thm:pattern_matching_progress}
 % %   \begin{mathpar}
 % %     \inferrule {
 % %       \J{*$p$=>$e$} \in F 
@@ -6623,7 +6954,7 @@ $\square$
 % % \end{theorem}
 
 % \begin{theorem}(Model typing assignability)
-%   \label{theorem:model_typing_assignability}
+%   \label{thm:model_typing_assignability}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e \hastype \tau
@@ -6637,7 +6968,7 @@ $\square$
 
 
 % \begin{theorem}(Model typing soundness)
-%   \label{theorem:model_typing_soundness}
+%   \label{thm:model_typing_soundness}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \delta, \Gamma \satisfies e \hastype \tau
@@ -6723,7 +7054,7 @@ $\square$
 % further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
 
 % % \begin{theorem}(Progress of proof typing)
-% %   \label{theorem:proof_typing_soundness}
+% %   \label{thm:proof_typing_soundness}
 % %   \begin{mathpar}
 % %     \inferrule { 
 % %       \Gamma \entails e \hastype \tau \given Z  
