@@ -1608,8 +1608,8 @@ keeps things tidy by compacting the subtyping environments and making the path
 types more readable.
 
 \begin{property} 
-  \label{prop:duality_correspondence_soundness}
-  Duality Correspondence Soundness
+  \label{prop:colony_sequence_duality_soundness}
+  Colony Sequence Duality Correspondence Soundness
   \\
   \begin{mathpar}
     \inferrule {
@@ -1663,8 +1663,8 @@ there's an argument $e_a$ paired with the function applied to it that inhabits
 at least one of the pair type colonies.
 
 \begin{definition} 
-  \label{def:duality_correspondence}
-  Duality Correspondence 
+  \label{def:colony_sequence_duality}
+  Colony Sequence Duality 
   \hfill
   \boxed{\alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu}
   \\
@@ -1713,8 +1713,8 @@ $
 .
 
 \begin{property} 
-  \label{prop:subtyping_duality_correspondence_soundness}
-  Subtyping Duality Correspondence Soudness
+  \label{prop:subtyping_environment_duality_soundness}
+  Subtyping Environment Duality Soudness
   \\
   \begin{mathpar}
     \inferrule {
@@ -1755,8 +1755,8 @@ there's an argument $e_a$ paired with the function applied to it that inhabits
 at least one type $\tau_\mu$ constrained by the environment's pair type lower bounds.
 
 \begin{definition}
-  \label{def:subtyping_duality_correspondence}
-  Subtyping Duality Correspondence 
+  \label{def:subtyping_environment_duality}
+  Subtyping Environment Duality
   \hfill
   \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
   \\
@@ -3596,6 +3596,53 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+\begin{theorem} 
+  \label{theorem:colony_sequence_duality_soundness}
+  Colony Sequence Duality Correspondence Soundness
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
+      \\
+      \delta \satisfies \Delta
+    } {
+      (
+      \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up
+      \\\\
+      (
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
+      \\\\
+      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      )
+      )
+      \\\\
+      \iff
+      \\\\
+      (\forall e_a, e_r \qua
+      (
+      \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \implies
+      \\\\
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
+      \\\\
+      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      )
+      )
+      \implies
+      e_r \cong e_f\J{(}e_a\J{)}
+      )
+    }
+  \end{mathpar} 
+\end{theorem} 
+\hfill
+
 \begin{theorem}
   \label{theorem:packaging_soundness}
   Packaging Soundness 
@@ -3661,18 +3708,18 @@ rely on analogous techniques.
   Subtyping Factorization Soundness 
   \\
   \begin{mathpar}
-    \inferrule {
-      \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
-    } {
-      \delta \satisfies \tau \subtypes \J{<}l\J{>} \tau'
-    }
-
+    % \inferrule {
+    %   \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
+    % } {
+    %   \delta \satisfies \tau \subtypes \J{<}l\J{>} \tau'
+    % }
+    % 
     \inferrule {
       \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
     } {
       \forall e' \qua \delta \satisfies e'  \hastype \tau'
-      \implies
-      \exists e \qua e \J{.} l \cong e' \up \delta \satisfies e \hastype \tau
+      \iff
+      (\exists e \qua e \J{.} l \cong e' \up \delta \satisfies e \hastype \tau)
     }
   \end{mathpar}
 \end{theorem}
