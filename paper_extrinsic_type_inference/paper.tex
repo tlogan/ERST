@@ -2740,7 +2740,7 @@ rely on analogous techniques.
   \begin{array}[t]{r@{}c@{}lcl}
       \llbracket \Theta, \Delta \entails \alpha \rrbracket^\pm 
       &\ =\ & 
-      \llbracket \Theta \star \Delta, \alpha \rrbracket^\pm
+      \llbracket \Delta \star  \alpha \rrbracket^\pm
       &\text{if}& 
       \alpha \notin \Theta
 
@@ -2790,17 +2790,17 @@ rely on analogous techniques.
 
       \\
 
-      \llbracket \Theta, \Delta \entails \J{EXI[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{EXI[}\Theta_q\J{]} \Delta_q\ \tau \rrbracket^\pm 
       &\ =\ & 
-      \J{EXI[}\Theta_q\ \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm \J{]}
-      \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
+      \J{EXI[}\Theta_q\J{]} \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm 
+      \ \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
 
       \\
 
-      \llbracket \Theta, \Delta \entails \J{ALL[}\Theta_q\ \Delta_q \J{]} \tau \rrbracket^\pm 
+      \llbracket \Theta, \Delta \entails \J{ALL[}\Theta_q\J{]} \Delta_q\ \tau \rrbracket^\pm 
       &\ =\ & 
-      \J{ALL[}\Theta_q\ \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm \J{]}
-      \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
+      \J{ALL[} \Theta_q \J{]} \llbracket \Theta \cup \Theta_q, \Delta \entails \Delta_q \rrbracket^\pm
+      \ \llbracket \Theta \cup \Theta_q, \Delta \entails \tau \rrbracket^{\pm}
 
       \\
 
@@ -4943,27 +4943,27 @@ $\square$
 % \end{theorem}
 
 
-\begin{theorem}(Proof typing weak soundness)
-  \label{thm:proof_typing_weak_soundness}
-  \begin{mathpar}
-    \inferrule { 
-      \Gamma \entails e \hastype \tau \given Z  
-    } {
-      \forall \delta .\ \delta \satisfies Z \implies \delta, \Gamma \satisfies e \hastype \tau
-    } 
-  \end{mathpar}
+% \begin{theorem}(Proof typing weak soundness)
+%   \label{thm:proof_typing_weak_soundness}
+%   \begin{mathpar}
+%     \inferrule { 
+%       \Gamma \entails e \hastype \tau \given Z  
+%     } {
+%       \forall \delta .\ \delta \satisfies Z \implies \delta, \Gamma \satisfies e \hastype \tau
+%     } 
+%   \end{mathpar}
 
-  \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
+%   \TODO{rewrite inductive hypotheses with just the conclusion implied by the case conditions}
 
-  \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
+%   \TODO{rewrite cases with universal/implication in conclusion/hypotheses}
 
-  Proof: 
-  \item $
-    \B{assume } 
-    \Gamma \entails e \hastype \tau \given Z 
-  $ 
-    \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
-\end{theorem}
+%   Proof: 
+%   \item $
+%     \B{assume } 
+%     \Gamma \entails e \hastype \tau \given Z 
+%   $ 
+%     \item \Z $\B{induct on } \Gamma \entails e \hastype \tau \given Z$ 
+% \end{theorem}
 
 %     \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
 %       \item \Z\Z $\B{let } \delta$ by definition
