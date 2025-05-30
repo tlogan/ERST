@@ -3340,6 +3340,22 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:path_type_preservation}
+  Path Type Preservation 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau_x \subtypes \tau_p
+      \\
+      \delta \satisfies \tau_q \subtypes \tau_y 
+    } {
+      \delta \satisfies \tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
   \label{thm:annotated_binding_introduction}
   Annotated Binding Introduction  
   \\
@@ -3696,13 +3712,13 @@ rely on analogous techniques.
       \forall \delta' \qua 
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \implies
       \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-      \delta \cup \delta' \cup \delta^\dagger \satisfies e[\sigma] \hastype \tau^\dagger
+      \delta \cup \delta' \cup \delta^\dagger \satisfies e \hastype \tau^\dagger
       )
       ) 
       \\\\
       \iff
       \\\\
-      \delta \satisfies e[\sigma] \hastype \tau
+      \delta \satisfies e \hastype \tau
     }
 
     \inferrule {
@@ -3722,13 +3738,13 @@ rely on analogous techniques.
       \exists \delta' \qua 
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \up
       \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies e[\sigma] \hastype \tau^\dagger
+      \delta \cup \delta' \cup \delta^\dagger \satisfies e \hastype \tau^\dagger
       )
       ) 
       \\\\
       \iff
       \\\\
-      \delta \satisfies e[\sigma] \hastype \tau
+      \delta \satisfies e \hastype \tau
     }
   \end{mathpar}
 \end{theorem}
@@ -3862,8 +3878,7 @@ rely on analogous techniques.
       )
     }
   \end{mathpar}
-
-  \noindent
+  \\\\
   Induct over Definition \ref{def:proof_subtyping}.
 
   %%%%%%%%%%%%%%%%
@@ -3887,7 +3902,7 @@ rely on analogous techniques.
       \Theta, \Delta \entails 
       \tau_l \subtypes \tau_r
       \given \Theta', \Delta' 
-  )$ [Def. \ref{def:proof_subtyping}]
+  )$ [Def. \ref{def:proof_subtyping_implication_preservation}]
 
   \item \I \N Let $\delta$ be, such that $(
     \textbf{dom}(\delta) = \Theta' \backslash \Theta
@@ -3904,20 +3919,71 @@ rely on analogous techniques.
 
   %%%%%%%%%%%%%%%%
 
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau_{p} \J{->} \tau_{q} 
+    \subtypes 
+    \tau_{x} \J{->} \tau_{y}
+    \given \Theta'', \Delta'' 
+  )$
+
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_implication_preservation}]
+
+  \item \I \N And $(
+    \Theta', \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
+  )$ [Def. \ref{def:proof_subtyping_implication_preservation}]
+
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_0) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_0 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_0 \satisfies \tau_x \subtypes \tau_p
+  )$ [IH]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) = \Theta'' \backslash \Theta'
+  )$ [IH]
+  \item \I \N And P1: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_1 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_1 \satisfies \tau_q \subtypes \tau_y
+  )$ [IH]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) = \Theta'' \backslash \Theta
+  )$
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'')$
+
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \satisfies \tau_x \subtypes \tau_p
+  )$ [P0]
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_x \subtypes \tau_p
+  )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_interpretation_extension}]
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_q \subtypes \tau_y
+  )$ [P1]
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y
+  )$ [Thm \ref{thm:path_type_preservation}]
+
+  %%%%%%%%%%%%%%%%
+
 
   \begin{mathpar}
-    \inferrule {
-      \Theta, \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
-      \\
-      \Theta', \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
-    } {
-      \Theta, \Delta \entails 
-      \tau_{p} \J{->} \tau_{q} 
-      \subtypes 
-      \tau_{x} \J{->} \tau_{y}
-      \given \Theta'', \Delta'' 
-    }
-
     \inferrule {
       \Theta, \Delta \entails 
       \tau_l \subtypes
