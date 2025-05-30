@@ -1274,8 +1274,8 @@ by eliminating type forms.
 
 
 \begin{definition}
-  \label{def:model_sequence_subtyping}
-  Model Sequence Subtyping
+  \label{def:model_subtyping_environment}
+  Model Subtyping Environment
   \hfill
   \boxed{\delta \satisfies \Delta}
   \\
@@ -1292,6 +1292,22 @@ by eliminating type forms.
     } {
       \delta \satisfies \Delta \  \tau_l \J{<:} \tau_r
     } 
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}
+  \label{def:model_typing_environment}
+  Model Typing Environment 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall x \qua
+      x \hastype \tau \in \Gamma
+      \implies
+      \delta \satisfies x[\sigma] \hastype \tau
+    } {
+      \delta, \sigma \satisfies \Gamma
+    }
   \end{mathpar}
 \end{definition}
 
@@ -2708,8 +2724,9 @@ rely on analogous techniques.
 % Different: RLT isn't cartesian
 
 
-\section{Appendix}
-\label{sect:appendix}
+
+\section{Library}
+\label{sec:library}
 
 \begin{definition} 
   \label{def:type_interpretation}
@@ -3202,66 +3219,8 @@ rely on analogous techniques.
 
 \end{definition}
 
-\begin{theorem}
-  \label{thm:typing_environment_soundness}
-  Typing Environment Soundness 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta, \sigma \satisfies \Gamma
-    } {
-      x:\tau \in \Gamma
-      \implies
-      \delta \satisfies x[\sigma] \hastype \tau
-    }
-  \end{mathpar}
-\end{theorem}
-
-
-\begin{theorem}
-  \label{thm:subtyping_environment_prefix_preservation}
-  Subtyping Environment Prefix Preservation 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies \Delta \cup \Delta'
-    } {
-      \delta \satisfies \Delta
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:subtyping_environment_union}
-  Subtyping Environment Union 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies \Delta
-      \\
-      \delta \satisfies \Delta'
-    } {
-      \delta \satisfies \Delta \cup \Delta'
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-
-% \begin{theorem}
-%   \label{thm:entry_type_introdcution}
-%   Entry Type Introduction 
-%   \\
-%   \begin{mathpar}
-%     \inferrule {
-%       \delta \satisfies e \hastype \tau
-%     } {
-%       \delta \satisfies \J{<}l\J{>}e \hastype \J{<}l\J{>}\tau
-%     }
-%   \end{mathpar}
-% \end{theorem}
-% \hfill
+\section{Model Theory}
+\label{sec:model_theory}
 
 \begin{theorem}
   \label{thm:record_extension_preservation}
@@ -3371,7 +3330,35 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-% \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta'''
+\begin{theorem}
+  \label{thm:subtyping_environment_union}
+  Subtyping Environment Union 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta
+      \\
+      \delta \satisfies \Delta'
+    } {
+      \delta \satisfies \Delta \cup \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:subtyping_environment_prefix_preservation}
+  Subtyping Environment Prefix Preservation 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta \cup \Delta'
+    } {
+      \delta \satisfies \Delta
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
 
 \begin{theorem}
   \label{thm:subtyping_environment_interpretation_contraction}
@@ -3457,6 +3444,118 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:domain_extension}
+  Domain Extension 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \textbf{dom}(\delta_l) = \Theta_l  
+      \\
+      \textbf{dom}(\delta_r) = \Theta_r  
+    } {
+      \textbf{dom}(\delta_l \cup \delta_r) = \Theta_l \cup \Theta_r 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:subsumption}
+  Subsumption 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau \subtypes \tau'
+      \\
+      \delta \satisfies e \hastype \tau
+    } {
+      \delta \satisfies e \hastype \tau'
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:least_fixed_point_type_elimination}
+  Least Fixed Point Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau
+    } {
+      \delta\ \alpha \slash \J{TOP} \satisfies e \hastype \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:left_congruence}
+  Left Congruence 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (e_l\J{,}e_r)\J{.left} \cong e_l
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:right_congruence}
+  Right Congruence 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      (e_l\J{,}e_r)\J{.right} \cong e_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+\begin{theorem}
+  \label{thm:path_type_elimination_loop}
+  Path Type Elimination Loop 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies e \hastype \alpha \J{->} \tau
+    } {
+      \delta \satisfies \J{loop(}e\J{)} \hastype \tau
+    } {
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:path_type_introduction}
+  Path Type Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall e_a \qua
+      \delta \satisfies e_a \hastype \tau_l 
+      \implies
+      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
+    } {
+      \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
+    } {
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+
+
+\section{Proof Theory}
+\label{sec:proof_theory}
+
+
+\begin{theorem}
   \label{thm:proof_typing_containment}
   Proof Typing Containment 
   \\
@@ -3521,37 +3620,6 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-\begin{theorem}
-  \label{thm:domain_extension}
-  Domain Extension 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \textbf{dom}(\delta_l) = \Theta_l  
-      \\
-      \textbf{dom}(\delta_r) = \Theta_r  
-    } {
-      \textbf{dom}(\delta_l \cup \delta_r) = \Theta_l \cup \Theta_r 
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:subsumption}
-  Subsumption 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies \tau \subtypes \tau'
-      \\
-      \delta \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \tau'
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
 
 \begin{theorem}
   \label{thm:function_type_explosion_soundness}
@@ -3772,95 +3840,6 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-\begin{theorem}
-  \label{thm:expression_congruence_typing}
-  Expression Congruence Typing 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      e_l \cong e_r
-    } {
-      \delta \satisfies e_l \hastype \tau
-      \iff
-      \delta \satisfies e_r \hastype \tau
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:least_fixed_point_type_elimination}
-  Least Fixed Point Type Elimination 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau
-    } {
-      \delta\ \alpha \slash \J{TOP} \satisfies e \hastype \tau
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:left_congruence}
-  Left Congruence 
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      (e_l\J{,}e_r)\J{.left} \cong e_l
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:right_congruence}
-  Right Congruence 
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      (e_l\J{,}e_r)\J{.right} \cong e_r
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-
-\begin{theorem}
-  \label{thm:path_type_elimination_loop}
-  Path Type Elimination Loop 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \delta \satisfies e \hastype \alpha \J{->} \tau
-    } {
-      \delta \satisfies \J{loop(}e\J{)} \hastype \tau
-    } {
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:path_type_introduction}
-  Path Type Introduction 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \forall e_a \qua
-      \delta \satisfies e_a \hastype \tau_l 
-      \implies
-      \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
-    } {
-      \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
-    } {
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
 
 \begin{theorem}
   \label{thm:proof_subtyping_soundness}
