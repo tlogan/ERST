@@ -3283,6 +3283,70 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:model_subtyping_union_type_path_antecedent}
+  Model Subtyping Union Type Path Antecedent 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies 
+      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+      \subtypes 
+      (\tau_a\J{|}\tau_b)\J{->}\tau_r)
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_intersection_type_path_consequent}
+  Model Subtyping Intersection Type Path Consequent 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies 
+      (\tau_r\J{->}\tau_a)\J{\&}(\tau_r\J{->}\tau_b)
+      \subtypes 
+      \tau_r\J{->}(\tau_a\J{\&}\tau_b)
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_intersection_type_entry_consequent}
+  Model Subtyping Intersection Type Entry Consequent 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies 
+      (\J{<}l\J{>}\tau_a)\J{\&}(\J{<}l\J{>}\tau_b)
+      \subtypes 
+      \J{<}l\J{>}(\tau_a\J{\&}\tau_b)
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_transitivity}
+  Model Subtyping Transitivity 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau \subtypes \tau'
+      \\
+      \delta \satisfies \tau' \subtypes \tau''
+    } {
+      \delta \satisfies \tau \subtypes \tau''
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
   \label{thm:path_type_elimination}
   Path Type Elimination 
   \\
@@ -3886,14 +3950,14 @@ rely on analogous techniques.
   \item \I \N Let $\delta$ be, such that $(
     \textbf{dom}(\delta) = \Theta' \backslash \Theta
   )$ [IH]
-  \item \I \N And P0: $(
+  \item \I \N And P: $(
     \forall \delta' \qua 
     \delta \cup \delta \satisfies \Delta' 
     \implies 
     \delta \cup \delta \satisfies \tau_l \subtypes \tau_r 
   )$ [IH]
   \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
-  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau_l \subtypes \tau_r)$ [P0]
+  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau_l \subtypes \tau_r)$ [P]
   \item \I\I \N Derive $(\delta' \cup \delta \satisfies \J{<}l\J{>}\tau_l \subtypes \J{<}l\J{>}\tau_r)$ [Thm. \ref{thm:entry_type_preservation}]
 
   %%%%%%%%%%%%%%%%
@@ -3961,50 +4025,117 @@ rely on analogous techniques.
 
   %%%%%%%%%%%%%%%%
 
-
-  \begin{mathpar}
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes
-      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
-      \given \Theta', \Delta'
-    } {
+  \item \N Assume $(
       \Theta, \Delta \entails 
       \tau_l \subtypes 
       (\tau_a\J{|}\tau_b)\J{->}\tau_r
       \given \Theta', \Delta' 
-    }
+  )$ 
+  \item \I \N Derive $(
+    \Theta, \Delta \entails 
+    \tau_l \subtypes
+    (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+    \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_implication_rewriting}]
+
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \cup \delta \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r) 
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+  )$ [P]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r)
+  )$ [Thm. \ref{thm:model_subtyping_union_type_path_antecedent}, Thm. \ref{thm:model_subtyping_transitivity}]
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau_l \subtypes 
+    \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
+    \given \Theta', \Delta'
+  )$ 
+  \item \I \N Derive $(
+    \Theta, \Delta \entails 
+    \tau_l
+    \subtypes
+    (\tau_r\J{->}\tau_a)
+    \J{\&}
+    (\tau_r\J{->}\tau_b)
+    \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_implication_rewriting}]
+
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \cup \delta \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta \satisfies \tau_l \subtypes 
+    (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \tau_l \subtypes
+    (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
+  )$ [P]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r\J{->}(\tau_a\J{\&}\tau_b))
+  )$ [Thm. \ref{thm:model_subtyping_intersection_type_path_consequent}, Thm. \ref{thm:model_subtyping_transitivity}]
 
 
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau_l
-      \subtypes
-      (\tau_r\J{->}\tau_a)
-      \J{\&}
-      (\tau_r\J{->}\tau_b)
-      \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes 
-      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
-      \given \Theta', \Delta'
-    }
+  %%%%%%%%%%%%%%%%
 
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau
-      \subtypes
-      (\J{<} l \J{>} \tau_a)
-      \J{\&}
-      (\J{<} l \J{>} \tau_b)
-      \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails 
-      \tau \subtypes 
-      \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
-      \given \Theta', \Delta'
-    }
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau \subtypes 
+    \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
+    \given \Theta', \Delta'
+  )$ 
+  \item \I \N Derive $(
+    \Theta, \Delta \entails 
+    \tau
+    \subtypes
+    (\J{<} l \J{>} \tau_a)
+    \J{\&}
+    (\J{<} l \J{>} \tau_b)
+    \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_implication_rewriting}]
+
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \cup \delta \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta \satisfies \tau_l \subtypes 
+    (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies 
+    \tau \subtypes
+    (\J{<} l \J{>} \tau_a)
+    \J{\&}
+    (\J{<} l \J{>} \tau_b)
+  )$ [P]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \tau \subtypes \J{<} l \J{>}(\tau_a\J{\&}\tau_b))
+  )$ [Thm. \ref{thm:model_subtyping_intersection_type_entry_consequent}, Thm. \ref{thm:model_subtyping_transitivity}]
+
+  %%%%%%%%%%%%%%%%
+
+  \begin{mathpar}
 
     \inferrule {
       \Theta, \Delta \entails
