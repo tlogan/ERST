@@ -2123,7 +2123,7 @@ that the subtype holds against two entries
 whose consequents are the intersection's constituent parts. 
 
 \begin{definition} 
-  \label{def:proof_subtyping_abstraction_elimination}
+  \label{def:proof_subtyping_expansion_elimination}
   Proof Subtyping (Expansion Elimination)
   \hfill
   \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
@@ -2451,7 +2451,7 @@ proof subtyping simply rewrites the problem in terms of union
 $\rho \subtypes \tau \J{|} \eta$.
 
 \begin{definition} 
-  \label{def:proof_subtyping_abstraction_introduction}
+  \label{def:proof_subtyping_expansion_introduction}
   Proof Subtyping (Expansion Introduction)
   \hfill
   \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
@@ -2620,8 +2620,8 @@ rely on analogous techniques.
 \end{definition}
 
 \begin{definition} 
-  \label{def:unique_proof_sequence_subtyping}
-  Unique Proof Sequence Subtyping
+  \label{def:unique_proof_subtyping_environment}
+  Unique Proof Subtyping Environment 
   \hfill
   \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta' \unique}
   \\
@@ -3540,6 +3540,22 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:model_subtyping_union_type_elimination}
+  Model Subtyping Union Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau_l \subtypes \tau
+      \\
+      \delta \satisfies \tau_r \subtypes \tau
+    } {
+      \delta \satisfies \tau_l \J{|} \tau_r \subtypes \tau
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
   \label{thm:least_fixed_point_type_elimination}
   Least Fixed Point Type Elimination 
   \\
@@ -3906,6 +3922,24 @@ rely on analogous techniques.
 
 
 \begin{theorem}
+  \label{thm:proof_subtyping_environment_soundness}
+  Proof Subtyping Environment Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
+    } {
+      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      (
+      \forall \delta' \qua 
+      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \cup \delta \satisfies \Delta_q 
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
   \label{thm:proof_subtyping_soundness}
   Proof Subtyping Soundness 
   \\
@@ -4139,204 +4173,364 @@ rely on analogous techniques.
 
   %%%%%%%%%%%%%%%%
 
-  \begin{mathpar}
+  \item \N Assume $(
+    \Theta, \Delta \entails
+    \tau_a\J{|}\tau_b \subtypes \tau
+    \given \Theta'', \Delta'' 
+  )$
 
-    \inferrule {
-      \Theta, \Delta \entails
-      \tau_a \subtypes \tau
-      \given \Theta', \Delta'
-      \\
-      \Theta', \Delta' \entails
-      \tau_b \subtypes \tau
-      \given \Theta'', \Delta''
-    } {
-      \Theta, \Delta \entails
-      \tau_a\J{|}\tau_b \subtypes \tau
-      \given \Theta'', \Delta'' 
-    }
-    \\
-    \inferrule {
-      \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
-      \\
-      \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
-      \\\\
-      \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
-      \\
-      \Theta' \cup \Theta_l, \Delta' \entails
-      \tau_l \subtypes \tau_r \given \Theta'', \Delta''
-    } {
-      \Theta, \Delta \entails
-      \J{EXI[}\Theta_l\J{]}\Delta_l\ \tau_l \subtypes \tau_r
-      \given \Theta'', \Delta'' 
-    }
+  \item \I \N Derive $(
+    \Theta, \Delta \entails
+    \tau_a \subtypes \tau
+    \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
 
-    \inferrule {
-      \Theta, \Delta \entails
-      \tau \subtypes \tau_{a} \given \Theta', \Delta' 
-      \\
-      \Theta', \Delta' \entails
-      \tau \subtypes \tau_{b} \given \Theta'', \Delta''
-    } {
-      \Theta, \Delta \entails
-      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'', \Delta''
-    }
-    \\
-    \inferrule {
-      \Theta_r \cap \textbf{ftv}(\Delta)
-      \\
-      \Theta_r \cap \textbf{ftv}(\tau_l)
-      \\\\
-      \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
-      \\
-      \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
-    } {
-      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
-    }
+  \item \I \N And $(
+    \Theta', \Delta' \entails
+    \tau_b \subtypes \tau
+    \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
 
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_0) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_0 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_0 \satisfies \tau_a \subtypes \tau
+  )$ [IH]
 
-    \inferrule {
-      \alpha \notin \Theta
-      \\
-      \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
-      \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
-      \\
-      \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
-    }
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) = \Theta'' \backslash \Theta'
+  )$ [IH]
+  \item \I \N And P1: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_1 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_1 \satisfies \tau_b \subtypes \tau
+  )$ [IH]
 
-    \inferrule {
-      \alpha \in \Theta 
-      \\
-      \Theta, \Delta \entails \alpha \subtypes \tau_r \safe
-      \\
-      \nexists \alpha'  \qua \tau_r = \alpha'
-    } {
-      \Theta, \Delta \entails 
-      \alpha \subtypes \tau_r
-      \given \Theta, \Delta
-    }
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) = \Theta'' \backslash \Theta
+  )$
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'')$
 
-    \inferrule {
-      \alpha \notin \Theta
-      \\
-      \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
-      \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
-      \\
-      \Theta, \Delta \cup \Delta_\closed \entails 
-      \Delta_\open \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
-    }
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \satisfies \tau_a \subtypes \tau
+  )$ [P0]
 
-    \inferrule {
-      \alpha \in \Theta 
-      \\
-      \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
-      \\
-      \nexists \alpha' \qua \tau_l = \alpha'
-    } {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes \alpha \given \Theta, \Delta
-    }
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_a \subtypes \tau
+  )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_interpretation_extension}]
 
-    \inferrule {
-      \alpha \not\in \textbf{ftv}(\tau_r)
-      \\
-      \Theta, \Delta \entails 
-      \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
-      \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
-      \given \Theta', \Delta' 
-    }
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_b \subtypes \tau
+  )$ [P1]
 
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau \subtypes \rho \given \Theta', \Delta' 
-      \\
-      \textbf{ftv}(\eta) \subseteq \epsilon
-      \\
-      \nexists \Theta', \Delta' \qua  
-      \Theta, \Delta \entails 
-      \tau \subtypes \eta \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \tau \subtypes \rho \typdiff \eta
-      \given \Theta', \Delta'
-    }
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_a \J{|} \tau_b \subtypes \tau
+  )$ [Thm \ref{thm:model_subtyping_union_type_elimination}]
 
+  %%%%%%%%%%%%%%%%
 
-    \inferrule {
-      \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
-      \\
-      \Theta, \Delta \entails
-      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
-      \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails
-      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
-    }
+  %%%%%%%%%%%%%%%%
 
-    \inferrule {
-      \Theta, \Delta \entails 
-      \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
-    }
+  \item \N Assume $(
+    \Theta, \Delta \entails
+    \J{EXI[}\Theta_l\J{]}\Delta_l\ \tau_l \subtypes \tau_r
+    \given \Theta'', \Delta'' 
+  )$
 
-    \inferrule {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
-    }
+  \item \I \N Derive $(
+    \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  \item \I \N And $(
+    \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  \item \I \N And $(
+    \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  \item \I \N And $(
+    \Theta' \cup \Theta_l, \Delta' \entails
+    \tau_l \subtypes \tau_r \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
 
-    \inferrule {
-      \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
-    }
+  \item \I \N \TODO{why is uniqueness of subtyping enironment necessary for soundness?}
 
-    \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-      \\
-      \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
-    } {
-      \Theta, \Delta \entails 
-      \tau_l
-      \subtypes 
-      \J{EXI[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta'' 
-    }
+  %%%%%%%%%%%%%%%%
 
-    \inferrule {
-      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
-    }
+  \item \N Assume $(
+    \Theta, \Delta \entails
+    \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'', \Delta''
+  )$
 
-    \inferrule {
-      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
-    }
+  \item \I \N Derive $(
+    \Theta, \Delta \entails
+    \tau \subtypes \tau_{a} \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
 
-    \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-      \\
-      \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
-    } {
-      \Theta, \Delta \entails 
-      \J{ALL[}\Theta_l\J{]} \Delta_l\ \tau_l
-      \subtypes 
-      \tau_r
-      \given \Theta'', \Delta'' 
-    }
-  \end{mathpar}
+  \item \I \N Derive $(
+    \Theta', \Delta' \entails
+    \tau \subtypes \tau_{b} \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
+  )$
+  \item \I \N Derive $(
+    \Theta_r \cap \textbf{ftv}(\Delta)
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+  \item \I \N And $(
+    \Theta_r \cap \textbf{ftv}(\tau_l)
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+  \item \I \N And $(
+    \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+  \item \I \N And $(
+    \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
+  )$ and $(
+    \alpha \notin \Theta
+  )$
+  \item \I \N Derive $(
+    \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
+  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
+  \item \I \N And $(
+    \Theta, \Delta \entails \Delta_\closed \safe
+  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
+  \item \I \N And $(
+    \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \alpha \subtypes \tau_r
+    \given \Theta, \Delta
+  )$ and $(
+    \alpha \in \Theta 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \alpha \subtypes \tau_r \safe
+  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
+  \item \I \N And $(
+    \nexists \alpha'  \qua \tau_r = \alpha'
+  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
+  )$ and $(
+    \alpha \notin \Theta
+  )$
+  \item \I \N Derive $(
+    \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
+  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+
+  \item \I \N And $(
+    \Theta, \Delta \entails \Delta_\closed \safe
+  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+
+  \item \I \N And $(
+    \Theta, \Delta \cup \Delta_\closed \entails 
+    \Delta_\open \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau_l \subtypes \alpha \given \Theta, \Delta
+  )$ and $(
+    \alpha \in \Theta
+  )$
+
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
+  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+
+  \item \I \N And $(
+    \nexists \alpha' \qua \tau_l = \alpha'
+  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+    \given \Theta', \Delta' 
+  )$
+
+  \item \I \N Derive $(
+    \alpha \not\in \textbf{ftv}(\tau_r)
+  )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
+  \item \I \N And $(
+    \Theta, \Delta \entails 
+    \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
+    \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau \subtypes \rho \typdiff \eta
+    \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails 
+    \tau \subtypes \rho \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+  \item \I \N And $(
+    \textbf{ftv}(\eta) \subseteq \epsilon
+  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+  \item \I \N And $(
+    \nexists \Theta', \Delta' \qua  
+    \Theta, \Delta \entails 
+    \tau \subtypes \eta \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails
+    \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+  )$ [Def. \ref{def:proof_subtyping_lfp_intro}]
+  \item \I \N And $(
+    \Theta, \Delta \entails
+    \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
+    \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_lfp_intro}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails 
+    \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_diff_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \tau_l
+    \subtypes 
+    \J{EXI[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta'' 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
+  \item \I \N And $(
+    \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
+  )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
+
+  \item \N Assume $(
+    \Theta, \Delta \entails 
+    \J{ALL[}\Theta_l\J{]} \Delta_l\ \tau_l
+    \subtypes 
+    \tau_r
+    \given \Theta'', \Delta'' 
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
+  \item \I \N And $(
+    \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
+  )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
+
+  \item \I \N \TODO{...}
+
+  %%%%%%%%%%%%%%%%
 
   \noindent
   $\square$
