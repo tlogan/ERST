@@ -4118,8 +4118,12 @@ rely on analogous techniques.
     \forall \delta' \qua 
     \delta \cup \delta \satisfies \Delta' 
     \implies 
-    \delta \cup \delta \satisfies \tau_l \subtypes 
-    (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
+    \delta \cup \delta \satisfies 
+    \tau
+    \subtypes
+    (\J{<} l \J{>} \tau_a)
+    \J{\&}
+    (\J{<} l \J{>} \tau_b)
   )$ [IH]
   \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
   \item \I\I \N Derive $(
