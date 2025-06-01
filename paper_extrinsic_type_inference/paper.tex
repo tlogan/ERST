@@ -3475,7 +3475,7 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:subtyping_interpretation_extension}
-  Subyping Interpretation Extension 
+  Subtyping Interpretation Extension 
   \\
   \begin{mathpar}
     \inferrule {
@@ -3486,6 +3486,22 @@ rely on analogous techniques.
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau') = \emptyset
     } {
       \delta \cup \delta' \satisfies \tau \subtypes \tau' 
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:subtyping_environment_interpretation_extension}
+  Subtyping Environment Interpretation Extension 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta 
+      \\
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
+    } {
+      \delta \cup \delta' \satisfies \Delta 
     }
   \end{mathpar}
 \end{theorem}
@@ -3671,6 +3687,22 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+\begin{theorem}
+  \label{thm:proof_subtyping_environment_containment}
+  Proof Subtyping Environment Containment 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
+    } {
+      \Delta \subseteq \Delta'
+      \up
+      \textbf{ftv}(\Delta_q) \subseteq \textbf{ftv}(\Delta')
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
 
 \begin{theorem}
   \label{thm:proof_typing_skolem_freshness}
@@ -3693,6 +3725,20 @@ rely on analogous techniques.
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
+    } {
+      \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \emptyset
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:proof_subtyping_environment_skolem_freshness}
+  Proof Subtyping Environment Skolem Freshness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
     } {
       \Theta' \backslash \Theta \cap \textbf{ftv}(\Delta) = \emptyset
     }
@@ -3929,7 +3975,7 @@ rely on analogous techniques.
     \inferrule {
       \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
     } {
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      \exists \delta \qua \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta \up 
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta' \implies
@@ -3947,13 +3993,15 @@ rely on analogous techniques.
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
-      \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      \exists \delta \qua \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta \up 
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta' \implies
       \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r
       )
     }
+
+    \TODO{rewrite existential condition to be containment}
   \end{mathpar}
   \\\\
   Induct over Definition \ref{def:proof_subtyping}.
@@ -4259,6 +4307,59 @@ rely on analogous techniques.
     \Theta' \cup \Theta_l, \Delta' \entails
     \tau_l \subtypes \tau_r \given \Theta'', \Delta''
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+
+
+  \item \I \N Derive $(
+    \Theta, \Delta \entails \Delta_l \given \Theta', \Delta'
+  )$ [Def. \ref{def:unique_proof_subtyping_environment}]
+  \item \I \N And $(
+    \forall \Theta'', \Delta'' \qua 
+    \Theta, \Delta \entails
+    \Delta_l \given \Theta', \Delta' \implies (\Theta'', \Delta'') = (\Theta', \Delta')
+  )$ [Def. \ref{def:unique_proof_subtyping_environment}]
+
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_0) \subseteq \Theta' \backslash \Theta
+  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+  \item \I \N And P0: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_0 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_0 \satisfies \Delta_q
+  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) \subseteq \Theta'' \backslash (\Theta' \cup \Theta_l)
+  )$ [Thm. \ref{thm:proof_subtyping_soundness}]
+  \item \I \N And P1: $(
+    \forall \delta' \qua 
+    \delta \cup \delta_1 \satisfies \Delta' 
+    \implies 
+    \delta \cup \delta_1 \satisfies \tau_l \subtypes \tau_r 
+  )$ [IH]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta_l \backslash \Theta
+  )$
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta
+  )$
+
+
+  \item \I \N For $\delta'$, assume $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'')$
+
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta_l)$
+    [P0]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta_l)$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
+      Thm. \ref{thm:proof_subtyping_environment_containment},
+      Thm. \ref{thm:subtyping_environment_interpretation_extension},
+    ]
+
 
   \item \I \N \TODO{why is uniqueness of subtyping enironment necessary for soundness?}
 
