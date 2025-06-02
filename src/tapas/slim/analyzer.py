@@ -2437,7 +2437,8 @@ class Solver:
                     for m1 in self.solve(m0, constraint.lower, constraint.upper)
                 ]  
 
-            # TODO: modify so worlds has exactly one world?
+            # TODO: modify to ensure qualifiers are decidable (thus, complete) 
+            # TODO: allow vacuous truth   
 
             return [
                 m2
