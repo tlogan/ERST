@@ -2148,27 +2148,8 @@ whose consequents are the intersection's constituent parts.
       \\
       \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
       \\\\
-      \Theta, \Delta \entails \Delta_l \given \Theta', \Delta' \unique
-      \\
-      \Theta' \cup \Theta_l, \Delta' \entails
-      \tau_l \subtypes \tau_r \given \Theta'', \Delta''
-    } {
-      \Theta, \Delta \entails
-      \J{EXI[}\Theta_l\J{]}\Delta_l\ \tau_l \subtypes \tau_r
-      \given \Theta'', \Delta'' 
-    }
-
-
-    \TODO{remove old rule}
-
-    \inferrule {
-      \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
-      \\
-      \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
-      \\\\
-      \forall \Theta', \Delta' \qua 
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-      \implies
+      \\
       \Theta' \cup \Theta_l, \Delta' \entails
       \tau_l \subtypes \tau_r \given \Theta'', \Delta''
     } {
@@ -2228,23 +2209,8 @@ splitting the worlds too eagerly.
       \\
       \Theta_r \cap \textbf{ftv}(\tau_l)
       \\\\
-      \Theta, \Delta \given \Delta_r  \given \Theta', \Delta' \unique
-      \\
-      \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
-    } {
-      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Delta_r\ \tau_r \given \Theta'', \Delta''
-    }
-
-    \TODO{remove old rule}
-
-    \inferrule {
-      \Theta_r \cap \textbf{ftv}(\Delta)
-      \\
-      \Theta_r \cap \textbf{ftv}(\tau_l)
-      \\\\
-      \forall \Theta', \Delta' \qua
       \Theta, \Delta \given \Omega \given \Theta', \Delta'
-      \implies
+      \\
       \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega\ \tau_r \given \Theta'', \Delta''
@@ -3466,15 +3432,15 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:subtyping_environment_interpretation_contraction}
-  Subtyping Environment Interpretation Contraction 
+  Subtyping Environment Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \cup \delta' \satisfies \Delta
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
     } {
       \delta \satisfies \Delta
+      \iff
+      \delta \cup \delta' \satisfies \Delta
     }
   \end{mathpar}
 \end{theorem}
@@ -3482,14 +3448,14 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:subtyping_environment_interpretation_extension}
-  Subtyping Environment Interpretation Extension 
+  Subtyping Environment Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies \Delta
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
     } {
+      \delta \satisfies \Delta 
+      \iff
       \delta \cup \delta' \satisfies \Delta
     }
   \end{mathpar}
@@ -3499,14 +3465,14 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:typing_interpretation_extension}
-  Typing Interpretation Extension 
+  Typing Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies e \hastype \tau 
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \emptyset
     } {
+      \delta \satisfies e \hastype \tau 
+      \iff
       \delta \cup \delta' \satisfies e \hastype \tau 
     }
   \end{mathpar}
@@ -3515,16 +3481,16 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:subtyping_interpretation_extension}
-  Subtyping Interpretation Extension 
+  Subtyping Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies \tau \subtypes \tau' 
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \emptyset
       \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau') = \emptyset
     } {
+      \delta \satisfies \tau \subtypes \tau' 
+      \iff
       \delta \cup \delta' \satisfies \tau \subtypes \tau' 
     }
   \end{mathpar}
@@ -3533,14 +3499,14 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:subtyping_environment_interpretation_extension}
-  Subtyping Environment Interpretation Extension 
+  Subtyping Environment Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies \Delta 
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
     } {
+      \delta \satisfies \Delta 
+      \iff
       \delta \cup \delta' \satisfies \Delta 
     }
   \end{mathpar}
@@ -3549,14 +3515,14 @@ rely on analogous techniques.
 
 \begin{theorem}
   \label{thm:typing_environment_interpretation_extension}
-  Typing Environment Interpretation Extension 
+  Typing Environment Interpretation Irrelevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \delta, \sigma \satisfies \Gamma 
-      \\
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Gamma) = \emptyset
     } {
+      \delta, \sigma \satisfies \Gamma 
+      \iff
       \delta \cup \delta', \sigma \satisfies \Gamma
     }
   \end{mathpar}
@@ -4060,19 +4026,36 @@ rely on analogous techniques.
 \end{theorem}
 
 \begin{theorem}
+  \label{thm:proof_decidable_subtyping_environment_uniqueness}
+  Proof Decidable Subtyping Environment Uniqueness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+    } {
+      \forall \Theta'', \Delta'' \qua
+      \Theta, \Delta \entails \Omega \given \Theta'', \Delta''
+      \implies
+      (\Theta'', \Delta'') = (\Theta', \Delta')
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
   \label{thm:proof_decidable_subtyping_environment_completeness}
   Proof Decidable Subtyping Environment Completeness 
   \\
   \begin{mathpar}
     \inferrule {
-      \exists \delta \qua \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta \up 
+      \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+      \\
       (
       \forall \delta' \qua 
       \delta' \cup \delta \satisfies \Delta' \implies
       \delta' \cup \delta \satisfies \Omega 
       )
     } {
-      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \exists \Theta, \Delta \qua \Theta, \Delta \entails \Omega \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{theorem}
@@ -4393,15 +4376,101 @@ rely on analogous techniques.
     \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
+    \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  \item \I \N And $(
+    \Theta' \cup \Theta_l, \Delta' \entails
+    \tau_l \subtypes \tau_r \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+
+
+
+
+
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+  \item \I \N And P0: $(
+      \forall \delta' \qua
+      \delta' \cup \delta_0 \satisfies \Delta'
+      \implies
+      \delta' \cup \delta_0 \satisfies \Omega
+  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+
+  \item \I \N Derive $(
     \forall \Theta', \Delta' \qua
     \Theta, \Delta \entails \Omega \given \Theta', \Delta'
     \implies
     \Theta' \cup \Theta_l, \Delta' \entails
     \tau_l \subtypes \tau_r \given \Theta'', \Delta''
-  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  )$ [Thm. \ref{thm:proof_decidable_subtyping_environment_uniqueness}]
 
-  \item \I \N \TODO{rewrite rule without the uniqueness constraint} 
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) \subseteq \Theta'' \backslash (\Theta' \cup \Theta_l)
+  )$ [IH]
+  \item \I \N And P1: $(
+      \forall \Theta', \Delta' \qua
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \implies
+      \forall \delta' \qua
+      \delta' \cup \delta_1 \satisfies \Delta''
+      \implies
+      \delta' \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
+  )$ [IH]
 
+
+
+
+
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta \backslash \Theta_l
+  )$
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta
+  )$
+  \item \I \N For $\delta'$, assume $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta''
+  )$
+
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
+  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \satisfies \Omega 
+  )$ [P0]
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \satisfies \Omega
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_l \subtypes \tau_r 
+  )$ [Thm. \ref{thm:proof_decidable_subtyping_environment_completeness}, P1]
+
+  \TODO{something is off with application of completeness; implication in premise}
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \Omega
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_l \subtypes \tau_r 
+  )$ [
+      Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
+      Thm. \ref{thm:proof_subtyping_environment_containment}
+      Thm. \ref{thm:subtyping_environment_interpretation_extension}
+    ]
+
+  \item \I\I \N Derive $(
+    \forall \delta_l \qua
+    \textbf{dom}(\delta_l) \subseteq \Theta_l
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \tau_l \subtypes \tau_r
+  )$
+
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega\ \tau_l \subtypes \tau_r
+  )$ [Thm. \ref{thm:model_subtyping_indexed_union_type_elimination}]
 
 
   %%%%%%%%%%%%%%%%

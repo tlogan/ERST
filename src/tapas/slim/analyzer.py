@@ -2438,7 +2438,8 @@ class Solver:
                 ]  
 
             # TODO: modify to ensure qualifiers are decidable (thus, complete) 
-            # TODO: allow vacuous truth   
+            # TODO: restriction should make world unique 
+            # TODO: if multiple contextual worlds, then final solutions should be crossed with previous solutions
 
             return [
                 m2
