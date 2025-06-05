@@ -4107,65 +4107,54 @@ rely on analogous techniques.
 % \end{theorem}
 
 \begin{theorem}
-  Crux Complete? 
-  \label{thm:crux_complete}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
-      \\
-      (\forall \delta' \qua \delta' \cup \delta \satisfies \Delta' \implies \delta' \cup \delta \satisfies \Omega)
-      \\
-      \exists \delta \qua \delta \satisfies \Delta
-      \\
-      \Delta \subseteq \Delta'
-    } {
-      \exists \Delta' \qua
-      \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
-      \up
-      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-      \up
-      \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
-      \up
-      \delta \cup \delta^\dagger \satisfies \Delta'
-    }
-  \end{mathpar}
-\end{theorem}
-
-\begin{theorem}
   Crux 
   \label{thm:crux}
   \\
   \begin{mathpar}
+
     \inferrule {
-      \forall \Theta', \Delta' \qua 
-      \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
-      \implies
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-      \implies
-      \\\\
-      (
-      \forall \delta^\dagger \qua
-      \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
-      \implies
-      \delta \cup \delta^\dagger \satisfies \Delta'
-      \implies
-      \delta \cup \delta^\dagger \satisfies \Delta''
-      )
+      \\
+      \delta \satisfies \Delta'
     } {
       \forall \delta^\dagger \qua
-      \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger
-      \implies
-      \delta \cup \delta^\dagger \satisfies \Omega
-      \implies
-      \delta \cup \delta^\dagger \satisfies \Delta''
+      \delta \cup \delta^\dagger \satisfies \Omega \implies
+      \delta \cup \delta^\dagger \satisfies \Delta'
     }
+
+    % \inferrule {
+    %   \delta \cup \delta^\dagger \satisfies \Omega
+    %   \\
+    %   \delta \satisfies \Delta'
+    % } {
+    %   \exists \Theta', \Delta' \qua
+    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+    %   \up
+    %   \delta \cup \delta^\dagger \satisfies \Delta'
+    % }
+
+    % \inferrule {
+    %   \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger
+    %   \\
+    %   \delta \cup \delta^\dagger \satisfies \Omega
+    %   \\
+    %   \delta \satisfies \Delta'
+    %   \\
+    %   (
+    %   \forall \Theta', \Delta' \qua 
+    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+    %   \implies
+    %   \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
+    %   )
+    % } {
+    %   \exists \Theta', \Delta' \qua
+    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+    %   \up
+    %   \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
+    %   \up
+    %   \delta \cup \delta^\dagger \satisfies \Delta'
+    % }
   \end{mathpar}
-
-  \TODO{some irrelevance notion}
-
-  \TODO{since subtyping holds for all input constraints, then an arbitrary interpretation affecting just the input constraints has no effect}
-
 \end{theorem}
 
 \begin{theorem}
@@ -4606,6 +4595,9 @@ rely on analogous techniques.
   %   \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \tau_l \subtypes \tau_r
   % )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
+  \item \I\I \N Derive $(
+    \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'
+  )$ [Thm. \ref{thm:subtyping_environment_union}]
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
@@ -4616,9 +4608,17 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
   )$ [Thm \ref{thm:proof_subtyping_input} (Proof Subtyping Input)]
 
-  \item \I\I \N  \TODO{generalize with uniqueuess}
 
-  \item \I\I \N  \TODO{switch antecedent condition from $\Delta'$ to $\Omega$}
+  \item \I\I \N Derive $(
+    \forall \delta_l \qua
+    \textbf{dom}(\delta_l) \subseteq \textbf{ftv}(\Delta')
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega 
+    \implies
+    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
+  )$ [Crux]
+
+  \item \I\I \N \TODO{why isn't uniqueness needed?}
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
@@ -4627,7 +4627,7 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
     \implies
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
-  )$ [Thm. CRUX]
+  )$ [subset rewriting]
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
