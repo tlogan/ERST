@@ -2147,15 +2147,13 @@ whose consequents are the intersection's constituent parts.
       \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
       \\
       \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
+      \\
+      \Theta_l \subseteq \textbf{ftv}(\Omega)
       \\\\
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
       \Theta' \cup \Theta_l, \Delta' \entails
       \tau_l \subtypes \tau_r \given \Theta'', \Delta''
-      \\\\
-      \TODO{ensure bound variables are added to constraints with top upper bound}
-      \\\\
-      \Theta, \Delta \entails \Omega \cup \textbf{taut}(\Theta_l) \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails
       \J{EXI[}\Theta_l\J{]}\Omega\ \tau_l \subtypes \tau_r
@@ -2212,6 +2210,8 @@ splitting the worlds too eagerly.
       \Theta_r \cap \textbf{ftv}(\Delta)
       \\
       \Theta_r \cap \textbf{ftv}(\tau_l)
+      \\
+      \Theta_r \subseteq \textbf{ftv}(\Omega)
       \\\\
       \Theta, \Delta \given \Omega \given \Theta', \Delta'
       \\
@@ -4107,15 +4107,51 @@ rely on analogous techniques.
 % \end{theorem}
 
 \begin{theorem}
+  Crux Complete? 
+  \label{thm:crux_complete}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+      \\
+      (\forall \delta' \qua \delta' \cup \delta \satisfies \Delta' \implies \delta' \cup \delta \satisfies \Omega)
+      \\
+      \exists \delta \qua \delta \satisfies \Delta
+      \\
+      \Delta \subseteq \Delta'
+    } {
+      \exists \Delta' \qua
+      \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
+      \up
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \up
+      \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
+      \up
+      \delta \cup \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
   Crux 
   \label{thm:crux}
   \\
   \begin{mathpar}
     \inferrule {
       \forall \Theta', \Delta' \qua 
+      \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
+      \implies
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \implies
-      ...
+      \\\\
+      (
+      \forall \delta^\dagger \qua
+      \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
+      \implies
+      \delta \cup \delta^\dagger \satisfies \Delta'
+      \implies
+      \delta \cup \delta^\dagger \satisfies \Delta''
+      )
     } {
       \forall \delta^\dagger \qua
       \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger
@@ -4468,6 +4504,9 @@ rely on analogous techniques.
     \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
+    \Theta_l \subseteq \textbf{ftv}(\Omega)
+  )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
+  \item \I \N And $(
     \Theta, \Delta \entails \Omega \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
@@ -4505,9 +4544,6 @@ rely on analogous techniques.
   )$ [IH]
 
 
-  \item \I \N Derive $(
-    \Theta_l \subseteq \textbf{ftv}(\Omega \cup \textbf{taut}(\Theta_l))
-  )$ [...]
 
   \item \I \N Derive $(
     \Theta_l \subseteq \textbf{ftv}(\Delta')
@@ -4654,6 +4690,9 @@ rely on analogous techniques.
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
     \Theta_r \cap \textbf{ftv}(\tau_l)
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+  \item \I \N And $(
+    \Theta_r \subseteq \textbf{ftv}(\Omega)
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
     \forall \Theta', \Delta' \qua
