@@ -4070,8 +4070,8 @@ rely on analogous techniques.
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:proof_decidable_subtyping_environment_uniqueness}
-  Proof Decidable Subtyping Environment Uniqueness 
+  \label{thm:proof_decidable_subtyping_sequence_uniqueness}
+  Proof Decidable Subtyping Sequence Uniqueness 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4085,81 +4085,31 @@ rely on analogous techniques.
   \end{mathpar}
 \end{theorem}
 
-% \begin{theorem}
-%   \label{thm:proof_decidable_subtyping_environment_completeness}
-%   Proof Decidable Subtyping Environment Completeness 
-%   \\
-%   \begin{mathpar}
-%     \inferrule {
-%       \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta 
-%       \\
-%       (
-%       \forall \delta' \qua 
-%       \delta' \cup \delta \satisfies \Delta' \implies
-%       \delta' \cup \delta \satisfies \Omega 
-%       )
-%       \\
-%       \exists \delta \qua \delta \satisfies \Delta
-%     } {
-%       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-%     }
-%   \end{mathpar}
-% \end{theorem}
-
 \begin{theorem}
-  Crux 
-  \label{thm:crux}
+  Proof Decidable Subtyping Sequence Completeness  
+  \label{thm:proof_decidable_subtyping_sequence_completeness}
   \\
   \begin{mathpar}
 
     \inferrule {
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
-      \delta \satisfies \Delta'
+      \delta' \satisfies \Delta'
     } {
       \forall \delta^\dagger \qua
-      \delta \cup \delta^\dagger \satisfies \Omega \implies
-      \delta \cup \delta^\dagger \satisfies \Delta'
+      \delta' \cup \delta^\dagger \satisfies \Omega \implies
+      \delta' \cup \delta^\dagger \satisfies \Delta'
     }
 
-    % \inferrule {
-    %   \delta \cup \delta^\dagger \satisfies \Omega
-    %   \\
-    %   \delta \satisfies \Delta'
-    % } {
-    %   \exists \Theta', \Delta' \qua
-    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-    %   \up
-    %   \delta \cup \delta^\dagger \satisfies \Delta'
-    % }
+    \TODO{note that this is a sufficient form of completeness, derived from uniqueness}
 
-    % \inferrule {
-    %   \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger
-    %   \\
-    %   \delta \cup \delta^\dagger \satisfies \Omega
-    %   \\
-    %   \delta \satisfies \Delta'
-    %   \\
-    %   (
-    %   \forall \Theta', \Delta' \qua 
-    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-    %   \implies
-    %   \Theta^\dagger \subseteq \textbf{ftv}(\Delta')
-    %   )
-    % } {
-    %   \exists \Theta', \Delta' \qua
-    %   \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-    %   \up
-    %   \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta')
-    %   \up
-    %   \delta \cup \delta^\dagger \satisfies \Delta'
-    % }
+    \TODO{meaning any solution $\Delta'$ is complete wrt to $\Omega$}
   \end{mathpar}
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:proof_subtyping_input}
-  Proof Subtyping Input 
+  \label{thm:proof_subtyping_environment_strengthening}
+  Proof Subtyping Environment Strengthening 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4167,12 +4117,12 @@ rely on analogous techniques.
       \\
       \delta' \satisfies \Delta'
     } {
-      \forall \delta \qua
-      \textbf{dom}(\delta) \subseteq \textbf{ftv}(\Delta)
+      \forall \delta^\dagger \qua
+      \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta)
       \implies
-      \delta' \cup \delta \satisfies \Delta
+      \delta' \cup \delta^\dagger \satisfies \Delta
       \implies
-      \delta' \cup \delta \satisfies \Delta'
+      \delta' \cup \delta^\dagger \satisfies \Delta'
     }
   \end{mathpar}
 \end{theorem}
@@ -4512,13 +4462,12 @@ rely on analogous techniques.
   )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
 
   
-
-  \item \I \N \TODO{EXTRA?} And P0: $(
-      \forall \delta' \qua
-      \delta' \cup \delta_0 \satisfies \Delta'
-      \implies
-      \delta' \cup \delta_0 \satisfies \Omega
-  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+  % \item \I \N \TODO{EXTRA?} And P0: $(
+  %     \forall \delta' \qua
+  %     \delta' \cup \delta_0 \satisfies \Delta'
+  %     \implies
+  %     \delta' \cup \delta_0 \satisfies \Omega
+  % )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
 
   \item \I \N Let $\delta_1$ be, such that $(
     \textbf{dom}(\delta_1) \subseteq \Theta'' \backslash (\Theta' \cup \Theta_l)
@@ -4532,16 +4481,6 @@ rely on analogous techniques.
     \delta' \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
   )$ [IH]
 
-
-
-  \item \I \N Derive $(
-    \Theta_l \subseteq \textbf{ftv}(\Delta')
-  )$ [Thm. \ref{thm:proof_subtyping_environment_containment}]
-
-  \item \I \N Derive $(
-    \Delta' \subseteq \Delta''
-  )$ [Thm. \ref{thm:proof_subtyping_containment}]
-
   \item \I \N Derive $(
     \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta \backslash \Theta_l
   )$
@@ -4554,47 +4493,6 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta''
   )$ 
 
-  % \item \I\I \N Derive $(
-  %   \forall \delta_l \qua
-  %   \textbf{dom}(\delta_l) \subseteq \Theta_l
-  %   \implies
-  %   \delta' \cup \delta_l \cup \delta_0 \cup \delta_1 \satisfies \Delta'' 
-  %   \implies
-  %   \delta' \cup \delta_l \cup \delta_0 \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
-  % )$ [P1]
-
-  % \item \I\I \N Derive $(
-  %   \forall \delta_l \qua
-  %   \textbf{dom}(\delta_l) \subseteq \Theta_l
-  %   \implies
-  %   \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta'' 
-  %   \implies
-  %   \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \tau_l \subtypes \tau_r
-  % )$ [Thm. \ref{thm:subtyping_interpretation_reordering}, Thm \ref{thm:subtyping_environment_interpretation_reordering}]
-
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_l \cup \delta_0 \cup \delta_1 \satisfies \Delta'
-  % )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_l \cup \delta_0 \satisfies \Delta'
-  % )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_l \cup \delta_0 \satisfies \Omega 
-  % )$ [P0]
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_l \cup \delta_0 \cup \delta_1 \satisfies \Omega 
-  % )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
-  %   Thm. \ref{thm:proof_subtyping_environment_containment}
-  %   Thm. \ref{thm:subtyping_environment_interpretation_extension}]
-
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_l \cup \delta_0 \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
-  % )$ [P1]
-
-  % \item \I\I \N Derive $(
-  %   \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \tau_l \subtypes \tau_r
-  % )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
-
   \item \I\I \N Derive $(
     \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'
   )$ [Thm. \ref{thm:subtyping_environment_union}]
@@ -4606,7 +4504,7 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta' 
     \implies
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
-  )$ [Thm \ref{thm:proof_subtyping_input} (Proof Subtyping Input)]
+  )$ [Thm \ref{thm:proof_subtyping_environment_strengthening}]
 
 
   \item \I\I \N Derive $(
@@ -4616,9 +4514,11 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega 
     \implies
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
-  )$ [Crux]
+  )$ [Thm \ref{thm:proof_decidable_subtyping_sequence_completeness}]
 
-  \item \I\I \N \TODO{why isn't uniqueness needed?}
+  \item \I\I \N Derive $(
+    \Theta_l \subseteq \textbf{ftv}(\Delta')
+  )$ [Thm. \ref{thm:proof_subtyping_environment_containment}]
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
@@ -4627,7 +4527,7 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
     \implies
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
-  )$ [subset rewriting]
+  )$ 
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
