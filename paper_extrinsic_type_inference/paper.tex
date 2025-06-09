@@ -2236,11 +2236,7 @@ rely on analogous techniques.
     \inferrule {
       \alpha \notin \Theta
       \\
-      \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
-      \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
-      \\
-      \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
     }
@@ -2248,13 +2244,13 @@ rely on analogous techniques.
     \inferrule {
       \alpha \in \Theta 
       \\
-      \Theta, \Delta \entails \alpha \subtypes \tau_r \safe
+      \Theta, \Delta \entails \alpha \subtypes \tau \safe
       \\
-      \nexists \alpha'  \qua \tau_r = \alpha'
+      \nexists \alpha'  \qua \tau = \alpha'
     } {
       \Theta, \Delta \entails 
-      \alpha \subtypes \tau_r
-      \given \Theta, \Delta
+      \alpha \subtypes \tau
+      \given \Theta, \Delta\ \alpha \subtypes \tau
     }
   \end{mathpar}
 \end{definition}
@@ -2302,12 +2298,7 @@ are stronger than $\tau_r$.
     \inferrule {
       \alpha \notin \Theta
       \\
-      \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
-      \\\\
-      \Theta, \Delta \entails \Delta_\closed \safe
-      \\
-      \Theta, \Delta \cup \Delta_\closed \entails 
-      \Delta_\open \given \Theta', \Delta'
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails 
       \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
@@ -2316,12 +2307,13 @@ are stronger than $\tau_r$.
     \inferrule {
       \alpha \in \Theta 
       \\
-      \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
+      \Theta, \Delta \entails \tau \subtypes \alpha \safe
       \\
-      \nexists \alpha' \qua \tau_l = \alpha'
+      \nexists \alpha' \qua \tau = \alpha'
     } {
       \Theta, \Delta \entails 
-      \tau_l \subtypes \alpha \given \Theta, \Delta
+      \tau_l \subtypes \alpha 
+      \given \Theta, \Delta\ \tau \subtypes \alpha 
     }
   \end{mathpar}
 \end{definition}
@@ -3771,6 +3763,7 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
+
 \begin{theorem}
   \label{thm:proof_subtyping_environment_containment}
   Proof Subtyping Environment Containment 
@@ -4108,8 +4101,8 @@ rely on analogous techniques.
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:proof_subtyping_environment_strengthening}
-  Proof Subtyping Environment Strengthening 
+  \label{thm:proof_subtyping_conditional_independence}
+  Proof Subtyping Conditional Independence 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4125,6 +4118,27 @@ rely on analogous techniques.
       \delta' \cup \delta^\dagger \satisfies \Delta'
     }
   \end{mathpar}
+
+  \TODO{need extension to overwrite previous keys; order matters; set union not sufficient}
+\end{theorem}
+
+\begin{theorem}
+  \label{thm:proof_subtyping_consistency}
+  Proof Subtyping Consistency 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \satisfies \Delta
+      \implies
+      \satisfies \Delta'
+    }
+  \end{mathpar}
+
+  \TODO{note how this is necessary for safety of function type inference}
+
+  \TODO{so that bottom can't be inferred for a function expression}
 \end{theorem}
 
 \begin{theorem}
@@ -4504,7 +4518,7 @@ rely on analogous techniques.
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta' 
     \implies
     \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
-  )$ [Thm \ref{thm:proof_subtyping_environment_strengthening}]
+  )$ [Thm \ref{thm:proof_subtyping_conditional_independence}]
 
 
   \item \I\I \N Derive $(

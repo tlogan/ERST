@@ -2165,33 +2165,11 @@ class Solver:
 
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
-        new_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower).difference(world.constraints)
-
-        closed_constraints = pset(
-            st
-            for st in new_constraints 
-            if (
-                False
-                or isinstance(st.lower, TVar) and st.lower.id in world.closedids
-                or isinstance(st.upper, TVar) and st.upper.id in world.closedids
-            )
-        )
-
-        unsolved_constraints = pset(
-            st
-            for st in new_constraints 
-            if not isinstance(st.lower, TVar) or st.lower.id not in world.closedids
-            if not isinstance(st.upper, TVar) or st.upper.id not in world.closedids
-        )
-
-        if self.closed_constraints_safe(world, closed_constraints):
-            new_world = replace(world, constraints = world.constraints.union(closed_constraints))
-            return [
-                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve_multi(new_world, unsolved_constraints)
-            ]
-        else:
-            return []
+        subbed_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower).difference(world.constraints)
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(world, subbed_constraints)
+        ]
 
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
@@ -2513,52 +2491,26 @@ class Solver:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
-            new_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
+            subbed_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
 
-            closed_constraints = pset(
-                st
-                for st in new_constraints 
-                if (
-                    False
-                    or (isinstance(st.lower, TVar) and st.lower.id in world.closedids)
-                    or (isinstance(st.upper, TVar) and st.upper.id in world.closedids)
-                )
-            )
+            worlds = [
+                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                for w0 in self.solve_multi(world, subbed_constraints)
+            ]
 
-            unsolved_constraints = pset(
-                st
-                for st in new_constraints 
-                if not isinstance(st.lower, TVar) or st.lower.id not in world.closedids
-                if not isinstance(st.upper, TVar) or st.upper.id not in world.closedids
-            )
-
-            if self.closed_constraints_safe(world, closed_constraints):
-                new_world = replace(world, constraints = world.constraints.union(closed_constraints))
+            if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 worlds = [
-                    replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                    for w0 in self.solve_multi(new_world, unsolved_constraints)
+                    w1
+                    for w0 in worlds 
+                    for w1 in self.solve_open_variable_introduction(w0, lower, upper) 
                 ]
-
-                # worlds = [
-                #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                #     for w0 in self.solve_multi(world, new_constraints)
-                # ]
-
-                if isinstance(upper, TVar) and upper.id not in world.closedids: 
-                    worlds = [
-                        w1
-                        for w0 in worlds 
-                        for w1 in self.solve_open_variable_introduction(w0, lower, upper) 
-                    ]
-                return worlds 
-            else:
-                return []
+            return worlds 
 
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
             if self.closed_variable_elimination_safe(world, lower, upper): 
-                return [world]
+                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 return []
 
@@ -2572,7 +2524,7 @@ class Solver:
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
             if self.closed_variable_introduction_safe(world, lower, upper): 
-                return [world]
+                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 return []
 
