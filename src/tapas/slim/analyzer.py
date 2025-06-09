@@ -2233,6 +2233,7 @@ class Solver:
             # if not isinstance(upper_part, TVar) or upper_part.id in world.closedids  else
         )
 
+        # TODO: switch this part to use polar substitution to be more comprehensive
         all_parts_consistent = all(
             bool(self.solve(world, st.lower, upper))
             for st in world.constraints

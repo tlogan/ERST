@@ -2531,8 +2531,8 @@ Refinement elimination is the dual of expansion introduction, so its rules
 rely on analogous techniques.
 
 \begin{definition} 
-  \label{def:variable_elimination_safety}
-  Variable Elimination Safety 
+  \label{def:skolem_variable_elimination}
+  Skolem Variable Elimination 
   \hfill
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \safe}
   \\
@@ -2549,7 +2549,8 @@ rely on analogous techniques.
       \forall \tau' \qua  \tau' \J{<:} \alpha \in \Delta
       \implies 
       \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'  
-      \\
+      \\\\
+      \TODO{change universal part to use polar sub to be comprehensive}
     } {
       \Theta, \Delta \entails \alpha \subtypes \tau \safe
     }
@@ -2564,8 +2565,8 @@ can be as strong as its lower bounds.
 The second condition is that all lower bounds of that variable can be eliminated. 
 
 \begin{definition} 
-  \label{def:variable_introduction_safety}
-  Variable Introduction Safety
+  \label{def:skolem_variable_introduction}
+  Skolem Variable Introduction
   \hfill
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \safe}
   \\
@@ -2582,7 +2583,8 @@ The second condition is that all lower bounds of that variable can be eliminated
       \forall \tau' \qua  \alpha \J{<:} \tau' \in \Delta
       \implies 
       \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta' 
-      \\
+      \\\\
+      \TODO{change universal part to use polar sub to be comprehensive}
     } {
       \Theta, \Delta \entails \tau \subtypes \alpha \safe
     }
@@ -4168,6 +4170,19 @@ rely on analogous techniques.
 \end{theorem}
 
 \begin{theorem}
+  \label{thm:proof_subtyping_skolem_variable_elimination_soundness}
+  Proof Subtyping Skolem Variable Elimination Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \alpha \J{<:} \tau \safe
+    } {
+      \forall \delta \qua \delta \satisfies \Delta \implies \delta \satisfies \alpha \subtypes \tau 
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
   \label{thm:proof_subtyping_soundness}
   Proof Subtyping Soundness 
   \\
@@ -4672,28 +4687,30 @@ rely on analogous techniques.
     \delta' \cup \delta \satisfies \alpha \J{<:} \tau
   )$ [Thm. \ref{...}]
 
-  \item \I \N \TODO{hehe}
-
-      % \alpha \notin \Theta
-      % \\
-
   %%%%%%%%%%%%%%%%
 
   \item \N Assume $(
     \Theta, \Delta \entails 
-    \alpha \subtypes \tau_r
-    \given \Theta, \Delta
+    \alpha \subtypes \tau
+    \given \Theta, \Delta\ \alpha \J{<:} \tau
   )$ and $(
     \alpha \in \Theta 
   )$
   \item \I \N Derive $(
-    \Theta, \Delta \entails \alpha \subtypes \tau_r \safe
+    \Theta, \Delta \entails \alpha \subtypes \tau \safe
   )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
   \item \I \N And $(
-    \nexists \alpha'  \qua \tau_r = \alpha'
+    \nexists \alpha'  \qua \tau = \alpha'
   )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
 
-  \item \I \N \TODO{...}
+
+
+  \item \I \N For $\delta'$, Assume $(
+    \delta' \cup \epsilon \satisfies \Delta\ \alpha \J{<:} \tau 
+  )$ 
+  \item \I\I \N Derive $(
+    \delta' \cup \epsilon \satisfies\ \alpha \J{<:} \tau
+  )$ 
 
   %%%%%%%%%%%%%%%%
 
