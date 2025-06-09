@@ -4045,7 +4045,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:proof_subtyping_environment_soundness}
+  \label{thm:proof_subtyping_sequence_soundness}
   Proof Subtyping Environment Soundness 
   \\
   \begin{mathpar}
@@ -4139,6 +4139,32 @@ rely on analogous techniques.
   \TODO{note how this is necessary for safety of function type inference}
 
   \TODO{so that bottom can't be inferred for a function expression}
+\end{theorem}
+
+\begin{theorem}
+  \label{thm:polar_substitution_soundness}
+  Polar Substitution Soundness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \Delta[\alpha \slash \tau]^+ 
+    } {
+      \exists \delta' \qua
+      \delta \satisfies \Delta\ \alpha \J{<:} \tau
+    }
+
+    \inferrule {
+      \delta \satisfies \Delta[\alpha \slash \tau]^-
+    } {
+      \exists \delta' \qua
+      \delta \satisfies \Delta\ \tau \J{<:} \alpha
+    }
+  \end{mathpar}
+
+  \TODO{note how this is necessary to prove subtyping consistency}
+
+  \TODO{note how consitency is necessary to prove parts of subtyping soundness}
+
 \end{theorem}
 
 \begin{theorem}
@@ -4473,7 +4499,7 @@ rely on analogous techniques.
 
   \item \I \N Let $\delta_0$ be, such that $(
     \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
-  )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+  )$ [Thm. \ref{thm:proof_subtyping_sequence_soundness}]
 
   
   % \item \I \N \TODO{EXTRA?} And P0: $(
@@ -4481,7 +4507,7 @@ rely on analogous techniques.
   %     \delta' \cup \delta_0 \satisfies \Delta'
   %     \implies
   %     \delta' \cup \delta_0 \satisfies \Omega
-  % )$ [Thm. \ref{thm:proof_subtyping_environment_soundness}]
+  % )$ [Thm. \ref{thm:proof_subtyping_sequence_soundness}]
 
   \item \I \N Let $\delta_1$ be, such that $(
     \textbf{dom}(\delta_1) \subseteq \Theta'' \backslash (\Theta' \cup \Theta_l)
@@ -4626,16 +4652,30 @@ rely on analogous techniques.
     \alpha \notin \Theta
   )$
   \item \I \N Derive $(
-    \Theta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
-  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
-  \item \I \N And $(
-    \Theta, \Delta \entails \Delta_\closed \safe
-  )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
-  \item \I \N And $(
-    \Theta, \Delta \cup \Delta_\closed \entails \Delta_\open \given \Theta', \Delta'
+    \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [Inductive Thm. \ref{thm:proof_subtyping_sequence_soundness}]
+  % \item \I \N And P: $(
+  %   \forall \delta' \qua 
+  %   \delta \cup \delta \satisfies \Delta' 
+  %   \implies 
+  %   \delta' \cup \delta \satisfies \Delta[\alpha\slash\tau]^{+} \backslash \Delta 
+  % )$ [IH]
+
+  \item \I \N For $\delta'$, assume $(
+    \delta' \cup \delta \satisfies \Delta'\ \alpha \J{<:} \tau
+  )$ 
+  \item \I\I \N Derive $(
+    \delta' \cup \delta \satisfies \alpha \J{<:} \tau
+  )$ [Thm. \ref{...}]
+
+  \item \I \N \TODO{hehe}
+
+      % \alpha \notin \Theta
+      % \\
 
   %%%%%%%%%%%%%%%%
 
