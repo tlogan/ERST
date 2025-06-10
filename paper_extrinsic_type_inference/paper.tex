@@ -1161,9 +1161,9 @@ with meaning.  At the very least, types should inform us that an expression is s
     } 
 
     \inferrule { 
-      \delta \cup \delta' \satisfies \Delta 
+      \delta \oplus \delta' \satisfies \Delta 
       \\
-      \delta \cup \delta' \satisfies e \hastype \tau
+      \delta \oplus \delta' \satisfies e \hastype \tau
       \\
       \textbf{dom}(\delta') \cong \Theta
     } {
@@ -1173,8 +1173,8 @@ with meaning.  At the very least, types should inform us that an expression is s
     \inferrule { 
       \forall \delta' .\ 
       \textbf{dom}(\delta') \cong \Theta \implies
-      \delta \cup \delta' \satisfies \Delta \implies 
-      \delta \cup \delta' \satisfies e \hastype \tau
+      \delta \oplus \delta' \satisfies \Delta \implies 
+      \delta \oplus \delta' \satisfies e \hastype \tau
     } {
       \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta\ \tau
     } 
@@ -1333,9 +1333,9 @@ aims to prove the validity of typing directly by including elimination rules.
       \exists \delta .\ \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
       \forall \delta' .\ 
-      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \oplus \delta \satisfies \Delta' \implies
       \delta', \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
@@ -1649,8 +1649,8 @@ types more readable.
       \forall \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
       \\\\
-      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
       )
       )
       \\\\
@@ -1665,8 +1665,8 @@ types more readable.
       \exists \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
       \\\\
-      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
       )
       )
       \implies
@@ -1842,9 +1842,9 @@ and the the correspondence holds for the previous constraints in the environment
     } {
       \exists \delta .\ 
       (
-      \delta \cup \delta' \satisfies \Delta
+      \delta \oplus \delta' \satisfies \Delta
       \land
-      \delta \cup \delta' \satisfies e \hastype \tau
+      \delta \oplus \delta' \satisfies e \hastype \tau
       )
       \iff
       (
@@ -1916,8 +1916,8 @@ The interested reader can find the actual the definition of packaging in the app
       \up
       (
       \forall \delta' .\ 
-      \delta' \cup \delta \satisfies \Delta' \implies
-      \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r
+      \delta' \oplus \delta \satisfies \Delta' \implies
+      \delta' \oplus \delta \satisfies \tau_l \subtypes \tau_r
       )
     }
   \end{mathpar}
@@ -3438,7 +3438,7 @@ rely on analogous techniques.
     } {
       \delta \satisfies \Delta
       \iff
-      \delta \cup \delta' \satisfies \Delta
+      \delta \oplus \delta' \satisfies \Delta
     }
   \end{mathpar}
 \end{theorem}
@@ -3454,7 +3454,7 @@ rely on analogous techniques.
     } {
       \delta \satisfies \Delta 
       \iff
-      \delta \cup \delta' \satisfies \Delta
+      \delta \oplus \delta' \satisfies \Delta
     }
   \end{mathpar}
 \end{theorem}
@@ -3471,7 +3471,7 @@ rely on analogous techniques.
     } {
       \delta \satisfies e \hastype \tau 
       \iff
-      \delta \cup \delta' \satisfies e \hastype \tau 
+      \delta \oplus \delta' \satisfies e \hastype \tau 
     }
   \end{mathpar}
 \end{theorem}
@@ -3489,7 +3489,7 @@ rely on analogous techniques.
     } {
       \delta \satisfies \tau \subtypes \tau' 
       \iff
-      \delta \cup \delta' \satisfies \tau \subtypes \tau' 
+      \delta \oplus \delta' \satisfies \tau \subtypes \tau' 
     }
   \end{mathpar}
 \end{theorem}
@@ -3503,9 +3503,9 @@ rely on analogous techniques.
     \inferrule {
       \textbf{dom}(\delta_1) \cap \textbf{dom}(\delta_2) = \emptyset
     } {
-      \delta_0 \cup \delta_1 \cup \delta_2 \cup \delta_3 \satisfies \tau \subtypes \tau' 
+      \delta_0 \oplus \delta_1 \oplus \delta_2 \oplus \delta_3 \satisfies \tau \subtypes \tau' 
       \iff
-      \delta_0 \cup \delta_2 \cup \delta_1 \cup \delta_3 \satisfies \tau \subtypes \tau' 
+      \delta_0 \oplus \delta_2 \oplus \delta_1 \oplus \delta_3 \satisfies \tau \subtypes \tau' 
     }
   \end{mathpar}
 \end{theorem}
@@ -3519,9 +3519,9 @@ rely on analogous techniques.
     \inferrule {
       \textbf{dom}(\delta_1) \cap \textbf{dom}(\delta_2) = \emptyset
     } {
-      \delta_0 \cup \delta_1 \cup \delta_2 \cup \delta_3 \satisfies \Delta 
+      \delta_0 \oplus \delta_1 \oplus \delta_2 \oplus \delta_3 \satisfies \Delta 
       \iff
-      \delta_0 \cup \delta_2 \cup \delta_1 \cup \delta_3 \satisfies \Delta 
+      \delta_0 \oplus \delta_2 \oplus \delta_1 \oplus \delta_3 \satisfies \Delta 
     }
   \end{mathpar}
 \end{theorem}
@@ -3537,7 +3537,7 @@ rely on analogous techniques.
     } {
       \delta \satisfies \Delta 
       \iff
-      \delta \cup \delta' \satisfies \Delta 
+      \delta \oplus \delta' \satisfies \Delta 
     }
   \end{mathpar}
 \end{theorem}
@@ -3553,7 +3553,7 @@ rely on analogous techniques.
     } {
       \delta, \sigma \satisfies \Gamma 
       \iff
-      \delta \cup \delta', \sigma \satisfies \Gamma
+      \delta \oplus \delta', \sigma \satisfies \Gamma
     }
   \end{mathpar}
 \end{theorem}
@@ -3569,7 +3569,7 @@ rely on analogous techniques.
       \\
       \textbf{dom}(\delta_r) = \Theta_r  
     } {
-      \textbf{dom}(\delta_l \cup \delta_r) = \Theta_l \cup \Theta_r 
+      \textbf{dom}(\delta_l \oplus \delta_r) = \Theta_l \cup \Theta_r 
     }
   \end{mathpar}
 \end{theorem}
@@ -3616,8 +3616,8 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \textbf{dom}(\delta') \subseteq \Theta \implies
-      \delta \cup \delta' \satisfies \Delta \implies 
-      \delta \cup \delta' \satisfies \tau \subtypes \tau'
+      \delta \oplus \delta' \satisfies \Delta \implies 
+      \delta \oplus \delta' \satisfies \tau \subtypes \tau'
       )
       \\
       \Theta \cap \textbf{ftv}(\tau') = \emptyset
@@ -3637,8 +3637,8 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \textbf{dom}(\delta') \subseteq \Theta \implies
-      \delta \cup \delta' \satisfies \Delta \implies 
-      \delta \cup \delta' \satisfies \tau \subtypes \tau'
+      \delta \oplus \delta' \satisfies \Delta \implies 
+      \delta \oplus \delta' \satisfies \tau \subtypes \tau'
       )
       \\
       \Theta \cap \textbf{ftv}(\tau') = \emptyset
@@ -3841,8 +3841,8 @@ rely on analogous techniques.
       \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \up 
       (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
-      \delta' \cup \delta \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+      \delta' \oplus \delta \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta' \oplus \delta \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
       )
       )
     }
@@ -3871,8 +3871,8 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:function_lifting_soundness}
-  Function Lifting Soundness 
+  \label{thm:path_sequence_typing_soundness}
+  Path Sequence Typing Soundness 
   \\
   \begin{mathpar}
     \inferrule {
@@ -3885,12 +3885,16 @@ rely on analogous techniques.
       \exists \delta \qua \textbf{dom}(\delta) \cong \Theta^\dagger \up 
       (
       \forall \delta', \sigma \qua 
-      \delta' \cup \delta \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta' \oplus \delta \satisfies \Delta \cup \Delta^\dagger \implies
       \delta', \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta \satisfies f[\sigma] \hastype \tau^\dagger
+      \delta' \oplus \delta \satisfies f[\sigma] \hastype \tau^\dagger
       )
       )
     }
+
+    \TODO{proof of this depends on consistency of subtyping environment when checking skolem variables}
+
+    \TODO{to prevent a path expression from having an empty type}
   \end{mathpar}
 \end{theorem}
 \hfill
@@ -3935,8 +3939,8 @@ rely on analogous techniques.
       \forall \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
       \\\\
-      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-      \delta\ \alpha_\nu \slash \J{BOT} \cup \delta' \cup \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
       )
       )
       \\\\
@@ -3951,8 +3955,8 @@ rely on analogous techniques.
       \exists \delta' \qua
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
       \\\\
-      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta\ \alpha_\mu \slash \J{TOP} \cup \delta' \cup \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
       )
       )
       \implies
@@ -3984,8 +3988,8 @@ rely on analogous techniques.
       (
       \forall \delta' \qua 
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \implies
-      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-      \delta \cup \delta' \cup \delta^\dagger \satisfies e \hastype \tau^\dagger
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
       )
       ) 
       \\\\
@@ -4010,8 +4014,8 @@ rely on analogous techniques.
       (
       \exists \delta' \qua 
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies \Delta^\dagger \up
-      \delta \cup \delta' \cup \delta^\dagger \satisfies e \hastype \tau^\dagger
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
       )
       ) 
       \\\\
@@ -4057,8 +4061,8 @@ rely on analogous techniques.
       \exists \delta \qua \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta \up 
       (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta' \implies
-      \delta' \cup \delta \satisfies \Delta_q 
+      \delta' \oplus \delta \satisfies \Delta' \implies
+      \delta' \oplus \delta \satisfies \Delta_q 
       )
     }
   \end{mathpar}
@@ -4092,8 +4096,8 @@ rely on analogous techniques.
       \delta' \satisfies \Delta'
     } {
       \forall \delta^\dagger \qua
-      \delta' \cup \delta^\dagger \satisfies \Omega \implies
-      \delta' \cup \delta^\dagger \satisfies \Delta'
+      \delta' \oplus \delta^\dagger \satisfies \Omega \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
     }
 
     \TODO{note that this is a sufficient form of completeness, derived from uniqueness}
@@ -4115,9 +4119,9 @@ rely on analogous techniques.
       \forall \delta^\dagger \qua
       \textbf{dom}(\delta^\dagger) \subseteq \textbf{ftv}(\Delta)
       \implies
-      \delta' \cup \delta^\dagger \satisfies \Delta
+      \delta' \oplus \delta^\dagger \satisfies \Delta
       \implies
-      \delta' \cup \delta^\dagger \satisfies \Delta'
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
     }
   \end{mathpar}
 
@@ -4132,9 +4136,10 @@ rely on analogous techniques.
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
-      \satisfies \Delta
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta
       \implies
-      \satisfies \Delta'
+      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta'
     }
   \end{mathpar}
 
@@ -4193,8 +4198,8 @@ rely on analogous techniques.
       \exists \delta \qua \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta \up 
       (
       \forall \delta' \qua 
-      \delta' \cup \delta \satisfies \Delta' \implies
-      \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r
+      \delta' \oplus \delta \satisfies \Delta' \implies
+      \delta' \oplus \delta \satisfies \tau_l \subtypes \tau_r
       )
     }
 
@@ -4208,9 +4213,9 @@ rely on analogous techniques.
   \item \N Assume $(\Theta, \Delta \entails \tau \subtypes \tau \given \Theta, \Delta)$
   \item \I \N Let $\delta$ be, such that $(\delta = \epsilon)$ [Def. \ref{def:}]
   \item \I \N Derive $(\textbf{dom}(\delta) = \Theta \backslash \Theta)$
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta)$
-  \item \I\I \N Derive $(\forall e \qua \delta' \cup \delta \satisfies e \hastype \tau \implies \delta' \cup \delta \satisfies e \hastype \tau)$
-  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau \subtypes \tau)$ 
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta)$
+  \item \I\I \N Derive $(\forall e \qua \delta' \oplus \delta \satisfies e \hastype \tau \implies \delta' \oplus \delta \satisfies e \hastype \tau)$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau \subtypes \tau)$ 
     [Def. \ref{def:model_subtyping}]
 
   %%%%%%%%%%%%%%%%
@@ -4231,13 +4236,13 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P: $(
     \forall \delta' \qua 
-    \delta \cup \delta \satisfies \Delta' 
+    \delta \oplus \delta \satisfies \Delta' 
     \implies 
-    \delta \cup \delta \satisfies \tau_l \subtypes \tau_r 
+    \delta \oplus \delta \satisfies \tau_l \subtypes \tau_r 
   )$ [IH]
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
-  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \tau_l \subtypes \tau_r)$ [P]
-  \item \I\I \N Derive $(\delta' \cup \delta \satisfies \J{<}l\J{>}\tau_l \subtypes \J{<}l\J{>}\tau_r)$ [Thm. \ref{thm:entry_type_preservation}]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau_l \subtypes \tau_r)$ [P]
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \J{<}l\J{>}\tau_l \subtypes \J{<}l\J{>}\tau_r)$ [Thm. \ref{thm:entry_type_preservation}]
 
   %%%%%%%%%%%%%%%%
 
@@ -4262,9 +4267,9 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P0: $(
     \forall \delta' \qua 
-    \delta \cup \delta_0 \satisfies \Delta' 
+    \delta \oplus \delta_0 \satisfies \Delta' 
     \implies 
-    \delta \cup \delta_0 \satisfies \tau_x \subtypes \tau_p
+    \delta \oplus \delta_0 \satisfies \tau_x \subtypes \tau_p
   )$ [IH]
 
   \item \I \N Let $\delta_1$ be, such that $(
@@ -4272,34 +4277,34 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P1: $(
     \forall \delta' \qua 
-    \delta \cup \delta_1 \satisfies \Delta' 
+    \delta \oplus \delta_1 \satisfies \Delta' 
     \implies 
-    \delta \cup \delta_1 \satisfies \tau_q \subtypes \tau_y
+    \delta \oplus \delta_1 \satisfies \tau_q \subtypes \tau_y
   )$ [IH]
 
   \item \I \N Derive $(
-    \textbf{dom}(\delta_0 \cup \delta_1) = \Theta'' \backslash \Theta
+    \textbf{dom}(\delta_0 \oplus \delta_1) = \Theta'' \backslash \Theta
   )$
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'')$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'')$
 
-  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta')$
     [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
-  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \satisfies \Delta')$
     [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \satisfies \tau_x \subtypes \tau_p
+    \delta' \oplus \delta_0 \satisfies \tau_x \subtypes \tau_p
   )$ [P0]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_x \subtypes \tau_p
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_x \subtypes \tau_p
   )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_interpretation_extension}]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_q \subtypes \tau_y
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_q \subtypes \tau_y
   )$ [P1]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y
   )$ [Thm \ref{thm:path_type_preservation}]
 
   %%%%%%%%%%%%%%%%
@@ -4322,16 +4327,16 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P: $(
     \forall \delta' \qua 
-    \delta \cup \delta \satisfies \Delta' 
+    \delta \oplus \delta \satisfies \Delta' 
     \implies 
-    \delta \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r) 
+    \delta \oplus \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r) 
   )$ [IH]
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+    \delta' \oplus \delta \satisfies \tau_l \subtypes (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
   )$ [P]
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r)
+    \delta' \oplus \delta \satisfies \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r)
   )$ [Thm. \ref{thm:model_subtyping_union_type_path_antecedent}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
@@ -4357,18 +4362,18 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P: $(
     \forall \delta' \qua 
-    \delta \cup \delta \satisfies \Delta' 
+    \delta \oplus \delta \satisfies \Delta' 
     \implies 
-    \delta \cup \delta \satisfies \tau_l \subtypes 
+    \delta \oplus \delta \satisfies \tau_l \subtypes 
     (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
   )$ [IH]
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \tau_l \subtypes
+    \delta' \oplus \delta \satisfies \tau_l \subtypes
     (\tau_r\J{->}\tau_a) \J{\&} (\tau_r\J{->}\tau_b)
   )$ [P]
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \tau_l \subtypes \tau_r\J{->}(\tau_a\J{\&}\tau_b))
+    \delta' \oplus \delta \satisfies \tau_l \subtypes \tau_r\J{->}(\tau_a\J{\&}\tau_b))
   )$ [Thm. \ref{thm:model_subtyping_intersection_type_path_consequent}, Thm. \ref{thm:model_subtyping_transitivity}]
 
 
@@ -4395,25 +4400,25 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P: $(
     \forall \delta' \qua 
-    \delta \cup \delta \satisfies \Delta' 
+    \delta \oplus \delta \satisfies \Delta' 
     \implies 
-    \delta \cup \delta \satisfies 
+    \delta \oplus \delta \satisfies 
     \tau
     \subtypes
     (\J{<} l \J{>} \tau_a)
     \J{\&}
     (\J{<} l \J{>} \tau_b)
   )$ [IH]
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta \satisfies \Delta')$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies 
+    \delta' \oplus \delta \satisfies 
     \tau \subtypes
     (\J{<} l \J{>} \tau_a)
     \J{\&}
     (\J{<} l \J{>} \tau_b)
   )$ [P]
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \tau \subtypes \J{<} l \J{>}(\tau_a\J{\&}\tau_b))
+    \delta' \oplus \delta \satisfies \tau \subtypes \J{<} l \J{>}(\tau_a\J{\&}\tau_b))
   )$ [Thm. \ref{thm:model_subtyping_intersection_type_entry_consequent}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
@@ -4441,9 +4446,9 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P0: $(
     \forall \delta' \qua 
-    \delta \cup \delta_0 \satisfies \Delta' 
+    \delta \oplus \delta_0 \satisfies \Delta' 
     \implies 
-    \delta \cup \delta_0 \satisfies \tau_a \subtypes \tau
+    \delta \oplus \delta_0 \satisfies \tau_a \subtypes \tau
   )$ [IH]
 
   \item \I \N Let $\delta_1$ be, such that $(
@@ -4451,34 +4456,34 @@ rely on analogous techniques.
   )$ [IH]
   \item \I \N And P1: $(
     \forall \delta' \qua 
-    \delta \cup \delta_1 \satisfies \Delta' 
+    \delta \oplus \delta_1 \satisfies \Delta' 
     \implies 
-    \delta \cup \delta_1 \satisfies \tau_b \subtypes \tau
+    \delta \oplus \delta_1 \satisfies \tau_b \subtypes \tau
   )$ [IH]
 
   \item \I \N Derive $(
-    \textbf{dom}(\delta_0 \cup \delta_1) = \Theta'' \backslash \Theta
+    \textbf{dom}(\delta_0 \oplus \delta_1) = \Theta'' \backslash \Theta
   )$
-  \item \I \N For $\delta'$, assume $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'')$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'')$
 
-  \item \I\I \N Derive $(\delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta')$
     [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
-  \item \I\I \N Derive $(\delta' \cup \delta_0 \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \satisfies \Delta')$
     [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_contraction}]
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \satisfies \tau_a \subtypes \tau
+    \delta' \oplus \delta_0 \satisfies \tau_a \subtypes \tau
   )$ [P0]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_a \subtypes \tau
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_a \subtypes \tau
   )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_interpretation_extension}]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_b \subtypes \tau
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_b \subtypes \tau
   )$ [P1]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \tau_a \J{|} \tau_b \subtypes \tau
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_a \J{|} \tau_b \subtypes \tau
   )$ [Thm \ref{thm:model_subtyping_union_type_elimination}]
 
   %%%%%%%%%%%%%%%%
@@ -4519,9 +4524,9 @@ rely on analogous techniques.
   
   % \item \I \N \TODO{EXTRA?} And P0: $(
   %     \forall \delta' \qua
-  %     \delta' \cup \delta_0 \satisfies \Delta'
+  %     \delta' \oplus \delta_0 \satisfies \Delta'
   %     \implies
-  %     \delta' \cup \delta_0 \satisfies \Omega
+  %     \delta' \oplus \delta_0 \satisfies \Omega
   % )$ [Thm. \ref{thm:proof_subtyping_sequence_soundness}]
 
   \item \I \N Let $\delta_1$ be, such that $(
@@ -4531,34 +4536,34 @@ rely on analogous techniques.
 
   \item \I \N And P1: $(
     \forall \delta' \qua
-    \delta' \cup \delta_1 \satisfies \Delta''
+    \delta' \oplus \delta_1 \satisfies \Delta''
     \implies
-    \delta' \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
+    \delta' \oplus \delta_1 \satisfies \tau_l \subtypes \tau_r
   )$ [IH]
 
   \item \I \N Derive $(
-    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta \backslash \Theta_l
+    \textbf{dom}(\delta_0 \oplus \delta_1) \subseteq \Theta'' \backslash \Theta \backslash \Theta_l
   )$
 
   \item \I \N Derive $(
-    \textbf{dom}(\delta_0 \cup \delta_1) \subseteq \Theta'' \backslash \Theta
+    \textbf{dom}(\delta_0 \oplus \delta_1) \subseteq \Theta'' \backslash \Theta
   )$
 
   \item \I \N For $\delta'$, assume $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta''
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta''
   )$ 
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \Delta'
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'
   )$ [Thm. \ref{thm:subtyping_environment_union}]
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \textbf{ftv}(\Delta')
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta' 
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta' 
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta''
   )$ [Thm \ref{thm:proof_subtyping_conditional_independence}]
 
 
@@ -4566,9 +4571,9 @@ rely on analogous techniques.
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \textbf{ftv}(\Delta')
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega 
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Omega 
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta''
   )$ [Thm \ref{thm:proof_decidable_subtyping_sequence_completeness}]
 
   \item \I\I \N Derive $(
@@ -4579,40 +4584,40 @@ rely on analogous techniques.
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \Theta_l 
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Omega
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Delta''
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta''
   )$ 
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \Theta_l 
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Omega
     \implies
-    \delta' \cup \delta_0 \cup \delta_l \cup \delta_1 \satisfies \Delta''
+    \delta' \oplus \delta_0 \oplus \delta_l \oplus \delta_1 \satisfies \Delta''
   )$ [Thm. Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \Theta_l
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Omega
     \implies
-    \delta' \cup \delta_0 \cup \delta_l \cup \delta_1 \satisfies \tau_l \subtypes \tau_r
+    \delta' \oplus \delta_0 \oplus \delta_l \oplus \delta_1 \satisfies \tau_l \subtypes \tau_r
   )$ [P1] 
 
   \item \I\I \N Derive $(
     \forall \delta_l \qua
     \textbf{dom}(\delta_l) \subseteq \Theta_l
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \Omega
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Omega
     \implies
-    \delta' \cup \delta_0 \cup \delta_1 \cup \delta_l \satisfies \tau_l \subtypes \tau_r
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \tau_l \subtypes \tau_r
   )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
-    \delta' \cup \delta_0 \cup \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega\ \tau_l \subtypes \tau_r
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega\ \tau_l \subtypes \tau_r
   )$ [Thm. \ref{thm:model_subtyping_indexed_union_type_elimination}]
 
 
@@ -4675,16 +4680,16 @@ rely on analogous techniques.
   )$ [Inductive Thm. \ref{thm:proof_subtyping_sequence_soundness}]
   % \item \I \N And P: $(
   %   \forall \delta' \qua 
-  %   \delta \cup \delta \satisfies \Delta' 
+  %   \delta \oplus \delta \satisfies \Delta' 
   %   \implies 
-  %   \delta' \cup \delta \satisfies \Delta[\alpha\slash\tau]^{+} \backslash \Delta 
+  %   \delta' \oplus \delta \satisfies \Delta[\alpha\slash\tau]^{+} \backslash \Delta 
   % )$ [IH]
 
   \item \I \N For $\delta'$, assume $(
-    \delta' \cup \delta \satisfies \Delta'\ \alpha \J{<:} \tau
+    \delta' \oplus \delta \satisfies \Delta'\ \alpha \J{<:} \tau
   )$ 
   \item \I\I \N Derive $(
-    \delta' \cup \delta \satisfies \alpha \J{<:} \tau
+    \delta' \oplus \delta \satisfies \alpha \J{<:} \tau
   )$ [Thm. \ref{...}]
 
   %%%%%%%%%%%%%%%%
@@ -4706,10 +4711,10 @@ rely on analogous techniques.
 
 
   \item \I \N For $\delta'$, Assume $(
-    \delta' \cup \epsilon \satisfies \Delta\ \alpha \J{<:} \tau 
+    \delta' \oplus \epsilon \satisfies \Delta\ \alpha \J{<:} \tau 
   )$ 
   \item \I\I \N Derive $(
-    \delta' \cup \epsilon \satisfies\ \alpha \J{<:} \tau
+    \delta' \oplus \epsilon \satisfies\ \alpha \J{<:} \tau
   )$ 
 
   %%%%%%%%%%%%%%%%
@@ -4923,9 +4928,9 @@ rely on analogous techniques.
       \exists \delta \qua \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
       (
       \forall \delta', \sigma \qua 
-      \delta' \cup \delta \satisfies \Delta' \implies
+      \delta' \oplus \delta \satisfies \Delta' \implies
       \delta', \sigma \satisfies \Gamma \implies
-      \delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+      \delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
@@ -4961,43 +4966,43 @@ We derive an interpretation $\delta_r$, such that
 $\textbf{dom}(\delta_r) \cong \Theta' \backslash \Theta$
 and $
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_r \satisfies \Delta' \implies
+\delta' \oplus \delta_r \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau
+\delta' \oplus \delta_r \satisfies r[\sigma] \hastype \tau
 $ (P0)
 by applying the induction hypothesis.
 We derive an interpretation $\delta_e$, such that 
 $\textbf{dom}(\delta_e) \cong \Theta'' \backslash \Theta'$
 and $
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_e \satisfies \Delta'' \implies
+\delta' \oplus \delta_e \satisfies \Delta'' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_e \satisfies e[\sigma] \hastype \tau'
+\delta' \oplus \delta_e \satisfies e[\sigma] \hastype \tau'
 $ (P1)
 by applying the induction hypothesis.
 
-Next, we derive $\textbf{dom}(\delta_r \cup \delta_e) = \Theta'' \backslash \Theta$
+Next, we derive $\textbf{dom}(\delta_r \oplus \delta_e) = \Theta'' \backslash \Theta$
 by applying Theorem \ref{thm:domain_extension} and rewriting with set arithmetic.
 Then, we introduce an arbitrary typing interpretation $\delta'$
 and an arbitrary expression interpretation $\sigma$,
 and we assume 
-$\delta' \cup \delta_r \cup \delta_e \satisfies \Delta''$ 
+$\delta' \oplus \delta_r \oplus \delta_e \satisfies \Delta''$ 
 and 
 $\delta', \sigma \satisfies \Gamma$.
 
-We derive $\delta' \cup \delta_r \cup \delta_e \satisfies \Delta'$ 
+We derive $\delta' \oplus \delta_r \oplus \delta_e \satisfies \Delta'$ 
 by applying
 Theorem \ref{thm:proof_typing_containment},
 Theorem \ref{thm:subtyping_environment_prefix_preservation},
 and rewriting with set arithmetic.
-We derive $\delta' \cup \delta_r \satisfies \Delta'$ 
+We derive $\delta' \oplus \delta_r \satisfies \Delta'$ 
 by applying
 Theorem \ref{thm:proof_typing_skolem_freshness},
 and
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
-Then, we have $\delta' \cup \delta_r \satisfies r[\sigma] \hastype \tau$ 
+Then, we have $\delta' \oplus \delta_r \satisfies r[\sigma] \hastype \tau$ 
 by instantiating (P0) with the $\delta'$ and $\sigma$, and applying the result.  
-Thus, we have $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma] \hastype \tau$ 
+Thus, we have $\delta' \oplus \delta_r \oplus \delta_e \satisfies r[\sigma] \hastype \tau$ 
 by applying 
 Theorem \ref{thm:proof_typing_skolem_freshness}
 Theorem \ref{thm:proof_typing_containment},
@@ -5006,24 +5011,24 @@ and applying
 Theorem \ref{thm:typing_interpretation_extension}.
 
 
-We derive $\delta' \cup \delta_r, \sigma \satisfies \Gamma$ 
+We derive $\delta' \oplus \delta_r, \sigma \satisfies \Gamma$ 
 by applying
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
 and 
 Theorem \ref{thm:typing_environment_interpretation_extension}.
-Then, we have $\delta' \cup \delta_r \cup \delta_e \satisfies e[\sigma] \hastype \tau' $
-by instantiating (P1) with $\delta' \cup \delta_r$ and $\sigma$, and applying the result.
+Then, we have $\delta' \oplus \delta_r \oplus \delta_e \satisfies e[\sigma] \hastype \tau' $
+by instantiating (P1) with $\delta' \oplus \delta_r$ and $\sigma$, and applying the result.
 
 
-We derive $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
+We derive $\delta' \oplus \delta_r \oplus \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau$
 by applying Theorem \ref{thm:record_extension_preservation}
-We derive $\delta' \cup \delta_r \cup \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau'$
+We derive $\delta' \oplus \delta_r \oplus \delta_e \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau'$
 by applying Theorem \ref{thm:entry_type_introduction}.
 Then, we derive 
-$\delta' \cup \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau \J{\&} \tau'$
+$\delta' \oplus \delta \satisfies r[\sigma]\ \J{<}l\J{>} e[\sigma] \hastype \tau \J{\&} \tau'$
 by applying Definition \ref{def:model_typing} (Model Typing).
-Finally, we get $\delta' \cup \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} \tau'$
+Finally, we get $\delta' \oplus \delta \satisfies (r\ \J{<}l\J{>} e)[\sigma] \hastype \tau \J{\&} \tau'$
 by rewriting with Definition \ref{...} (Substitution).
 
 
@@ -5038,12 +5043,12 @@ by applying Definition \ref{def:proof_typing}.
 
 We know that $\textbf{dom}(\epsilon) = \Theta \backslash \Theta$ by rewriting with set arithmetic.
 Next, we introduce an arbitrary type interpretation $\delta'$ and an arbitrary expression interpretation $\sigma$,
-and we assume $\delta' \cup \epsilon \satisfies \Delta$ and $\delta', \sigma \satisfies \Gamma$.
+and we assume $\delta' \oplus \epsilon \satisfies \Delta$ and $\delta', \sigma \satisfies \Gamma$.
 With a little rewriting, we have $\delta' \satisfies \Delta'$.
-Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem \ref{thm:function_lifting_soundness}, 
+Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem \ref{thm:path_sequence_typing_soundness}, 
 Theorem \ref{thm:function_lifting_skolem_freshness}, and Theorem \ref{prop:packaging_correspondence}, along with a little
 rewriting.
-Thus, we have $\delta' \cup \delta \satisfies f[\sigma] \hastype \tau$ 
+Thus, we have $\delta' \oplus \delta \satisfies f[\sigma] \hastype \tau$ 
 by rewriting the statement to include the empty interpretation.
 
 
@@ -5059,38 +5064,38 @@ by applying Definition \ref{def:proof_typing}.
 We derive an interpretation $\delta_a$, such that $\textbf{dom}(\delta_a) = \Theta' \backslash \Theta$
 and $
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_a \satisfies \Delta' \implies
+\delta' \oplus \delta_a \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_a \satisfies r[\sigma] \hastype \tau
+\delta' \oplus \delta_a \satisfies r[\sigma] \hastype \tau
 $ (P0)
 by applying the induction hypothesis.
 We derive an interpretation $\delta_b$, such that $\textbf{dom}(\delta_b) = \Theta'' \backslash \Theta'$
 and $
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_b \satisfies \Delta'' \implies
-\delta' \cup \delta_b \satisfies \tau \hastype \tau
+\delta' \oplus \delta_b \satisfies \Delta'' \implies
+\delta' \oplus \delta_b \satisfies \tau \hastype \tau
 $ (P1)
 by applying Theorem \ref{thm:proof_subtyping_soundness}.
 
-Next, we derive $\textbf{dom}(\delta_a \cup \delta_b) = \Theta'' \backslash \Theta$ by applying
+Next, we derive $\textbf{dom}(\delta_a \oplus \delta_b) = \Theta'' \backslash \Theta$ by applying
 Theorem \ref{thm:domain_extension} and rewriting with set arithmetic. 
 Then, we introduce an arbitrary type interpretation $\delta'$ and an arbitrary expression interpretation $\sigma$,
 and we assume 
-$\delta' \cup \delta_a \cup \delta_b \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
+$\delta' \oplus \delta_a \oplus \delta_b \satisfies \Delta''$ and $\delta', \sigma \satisfies \Gamma$.
 
-We derive $\delta' \cup \delta_a \cup \delta_b \satisfies \Delta'$ 
+We derive $\delta' \oplus \delta_a \oplus \delta_b \satisfies \Delta'$ 
 by applying 
 Theorem \ref{thm:proof_typing_containment},
 Theorem \ref{thm:subtyping_environment_prefix_preservation},
 and rewriting with set arithmetic.
-We derive $\delta' \cup \delta_a \satisfies \Delta'$ 
+We derive $\delta' \oplus \delta_a \satisfies \Delta'$ 
 by applying 
 Theorem \ref{thm:proof_subtyping_skolem_freshness}
 and 
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
-Then, we have $\delta' \cup \delta_a \satisfies e[\sigma] \hastype \tau$ 
+Then, we have $\delta' \oplus \delta_a \satisfies e[\sigma] \hastype \tau$ 
 by instantiating (P0) with the $\delta'$ and $\sigma$, and applying the result.  
-Thus, we have $\delta' \cup \delta_a \cup \delta_b \satisfies r[\sigma] \hastype \tau$ 
+Thus, we have $\delta' \oplus \delta_a \oplus \delta_b \satisfies r[\sigma] \hastype \tau$ 
 by applying 
 Theorem \ref{thm:proof_subtyping_skolem_freshness}
 Theorem \ref{thm:proof_typing_containment},
@@ -5098,14 +5103,14 @@ rewriting with set arithmetic,
 and applying
 Theorem \ref{thm:typing_interpretation_extension}.
 
-We derive $\delta' \cup \delta_a \cup \delta_b \satisfies \tau \subtypes \J{<}l\J{>}\alpha$ by 
-instantiating (P1) with $\delta' \cup \delta_a$ and $\sigma$.
+We derive $\delta' \oplus \delta_a \oplus \delta_b \satisfies \tau \subtypes \J{<}l\J{>}\alpha$ by 
+instantiating (P1) with $\delta' \oplus \delta_a$ and $\sigma$.
 
-Next, we have $\delta' \cup \delta \satisfies e[\sigma] \hastype \J{<}l\J{>}\alpha$ 
+Next, we have $\delta' \oplus \delta \satisfies e[\sigma] \hastype \J{<}l\J{>}\alpha$ 
 by applying Theorem \ref{subsumption} (Subsumption).
-Then, we get $\delta' \cup \delta \satisfies (e[\sigma])\J{.}l \hastype \alpha$ 
+Then, we get $\delta' \oplus \delta \satisfies (e[\sigma])\J{.}l \hastype \alpha$ 
 by applying Theorem \ref{elimination} (Record Type Elimination),
-which simplifies to $\delta' \cup \delta \satisfies (e\J{.}l)[\sigma] \hastype \alpha$
+which simplifies to $\delta' \oplus \delta \satisfies (e\J{.}l)[\sigma] \hastype \alpha$
 by applying Definition \ref{sub} (Substitution).
 
 
@@ -5123,30 +5128,30 @@ We derive a type interpretation $\delta_f$, such that
 $(\textbf{dom}(\delta_f) = \Theta' \backslash \Theta)$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_f \satisfies \Delta' \implies
+\delta' \oplus \delta_f \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_f \satisfies e_f[\sigma] \hastype \tau_f
+\delta' \oplus \delta_f \satisfies e_f[\sigma] \hastype \tau_f
 )$ (P0)
 by applying the induction hypothesis.
 We derive a type interpretation $\delta_a$, such that
 $(\textbf{dom}(\delta_a) = \Theta'' \backslash \Theta')$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_a \satisfies \Delta' \implies
+\delta' \oplus \delta_a \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_a \satisfies e_a[\sigma] \hastype \tau_a
+\delta' \oplus \delta_a \satisfies e_a[\sigma] \hastype \tau_a
 )$ (P1)
 by applying the induction hypothesis.
 We derive a type interpretation $\delta_s$, such that
 $(\textbf{dom}(\delta_s) = \Theta''' \backslash \Theta'')$
 and $(
 \forall \delta' \qua 
-\delta' \cup \delta_s \satisfies \Delta' \implies
-\delta' \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
+\delta' \oplus \delta_s \satisfies \Delta' \implies
+\delta' \oplus \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
 )$ (P2)
 by applying Theorem \ref{thm:proof_subtyping_soundness}.
 
-Next, we derive $(\text{dom}(\delta_f \cup \delta_a \cup \delta_s) = \Theta''' \backslash \Theta)$
+Next, we derive $(\text{dom}(\delta_f \oplus \delta_a \oplus \delta_s) = \Theta''' \backslash \Theta)$
 by applying
 Theorem \ref{thm:domain_extension}
 and
@@ -5154,19 +5159,19 @@ rewriting with set arithmetic.
 The, we introduce an arbitrary type interpretation $\delta'$ and 
 an arbitrary expression interpretation $\sigma$, and
 we assume 
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta''')$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta''')$
 and
 $(\delta' \satisfies \Gamma)$.
 
 We derive 
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta')$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta')$
 by applying
 Theorem \ref{thm:proof_subtyping_containment},
 Theorem \ref{thm:proof_typing_containment},
 and
 Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
-$(\delta' \cup \delta_f \satisfies \Delta')$
+$(\delta' \oplus \delta_f \satisfies \Delta')$
 by applying
 Theorem \ref{thm:proof_subtyping_skolem_freshness},
 Theorem \ref{thm:proof_subtyping_containment},
@@ -5174,11 +5179,11 @@ Theorem \ref{thm:proof_typing_skolem_freshness},
 and
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
-$(\delta' \cup \delta_f \satisfies e_f[\sigma] \hastype \tau_f)$
+$(\delta' \oplus \delta_f \satisfies e_f[\sigma] \hastype \tau_f)$
 by instantiating (P0)
 with $\delta'$ and $\sigma$ and applying the result.
 We derive
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_f)$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma] \hastype \tau_f)$
 by applying 
 Theorem \ref{thm:proof_subtyping_skolem_freshness},
 Theorem \ref{thm:proof_subtyping_containment},
@@ -5189,30 +5194,30 @@ Theorem \ref{thm:typing_interpretation_extension}.
 
 
 We derive 
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \Delta'')$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta'')$
 by applying
 Theorem \ref{thm:proof_subtyping_containment}
 and
 Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
-$(\delta' \cup \delta_f \cup \delta_a \satisfies \Delta'')$
+$(\delta' \oplus \delta_f \oplus \delta_a \satisfies \Delta'')$
 by applying
 Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
-$(\delta' \cup \delta_f \satisfies \Gamma)$
+$(\delta' \oplus \delta_f \satisfies \Gamma)$
 by applying
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
 and
 Theorem \ref{thm:typing_interpretation_extension}.
 Then, we derive
-$(\delta' \cup \delta_f \cup \delta_a \satisfies e_a[\sigma] \hastype \tau_a)$
+$(\delta' \oplus \delta_f \oplus \delta_a \satisfies e_a[\sigma] \hastype \tau_a)$
 by instantiating (P1)
-with $\delta' \cup \delta_f$ and $\sigma$ and applying the result.
+with $\delta' \oplus \delta_f$ and $\sigma$ and applying the result.
 We derive
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_a[\sigma] \hastype \tau_a)$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_a[\sigma] \hastype \tau_a)$
 by applying 
 Theorem \ref{thm:proof_subtyping_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
@@ -5220,14 +5225,14 @@ and
 Theorem \ref{thm:typing_interpretation_extension}.
 
 We derive
-$(\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
-by instantiating (P2) with $\delta' \cup \delta_f \cup \delta_a$, and applying the result.
-Then, we derive $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
+$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
+by instantiating (P2) with $\delta' \oplus \delta_f \oplus \delta_a$, and applying the result.
+Then, we derive $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
 by applying 
 Theorem \ref{thm:subsumption}.
-Thus, we have $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha$
+Thus, we have $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha$
 by Theorem \ref{thm:path_type_elimination},
-which simplifies to $\delta' \cup \delta_f \cup \delta_a \cup \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
+which simplifies to $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
 by Definition \ref{def:substitution}.
 
 \pc
@@ -5243,51 +5248,51 @@ We derive a typing interpretation $\delta_a$, such that
 $(\textbf{dom}(\delta_a) = \Theta' \backslash \Theta)$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_a \satisfies \Delta' \implies
+\delta' \oplus \delta_a \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta_a \satisfies e[\sigma] \hastype \tau
+\delta' \oplus \delta_a \satisfies e[\sigma] \hastype \tau
 )$ (P0)
 by applying the induction hypothesis.
 We derive a typing interpretation $\delta_b$, such that 
 $(\textbf{dom}(\delta_b) = \Theta'' \backslash \Theta')$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_b \satisfies \Delta'' \implies
-\delta' \cup \delta_b \satisfies \tau \hastype \tau_a
+\delta' \oplus \delta_b \satisfies \Delta'' \implies
+\delta' \oplus \delta_b \satisfies \tau \hastype \tau_a
 )$ (P1)
 by applying Theorem \ref{thm:proof_subtyping_soundness}.
 We derive a typing interpretation $\delta_c$, such that 
 $(\textbf{dom}(\delta_c) = \Theta''' \backslash \Theta'')$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta_c \satisfies \Delta''' \implies
+\delta' \oplus \delta_c \satisfies \Delta''' \implies
 \delta', \sigma \satisfies \Gamma\ x \hastype \tau_a \implies
-\delta' \cup \delta_c \satisfies e'[\sigma] \hastype \tau'
+\delta' \oplus \delta_c \satisfies e'[\sigma] \hastype \tau'
 )$ (P2)
 by applying the induction hypothesis.
 
-Next, we derive $(\textbf{dom}(\delta_a \cup \delta_b \cup \delta_c) \cong \Theta''' \backslash \Theta)$
+Next, we derive $(\textbf{dom}(\delta_a \oplus \delta_b \oplus \delta_c) \cong \Theta''' \backslash \Theta)$
 by applying
 Theorem \ref{thm:domain_extension} 
 and rewriting with set arithmetic.
 Then, we introduce an arbitrary type interpretation $\delta'$
 and an arbitrary expression interpretation $\sigma$,
 and we assume 
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \Delta''')$
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta''')$
 and
 $(\delta, \sigma \satisfies \Gamma)$.
 
 
 
 We derive 
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \Delta')$
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta')$
 by applying
 Theorem \ref{thm:proof_typing_containment},
 Theorem \ref{thm:proof_subtyping_containment},
 and
 Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
-$(\delta' \cup \delta_a \satisfies \Delta')$
+$(\delta' \oplus \delta_a \satisfies \Delta')$
 by applying
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
@@ -5295,11 +5300,11 @@ Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 Then, we derive
-$(\delta' \cup \delta_a \satisfies e[\sigma] \hastype \tau)$
+$(\delta' \oplus \delta_a \satisfies e[\sigma] \hastype \tau)$
 by instantiating (P0)
 with $\delta'$ and $\sigma$ and applying the result.
 We derive
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies e[\sigma] \hastype \tau)$
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e[\sigma] \hastype \tau)$
 by applying 
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
@@ -5310,23 +5315,23 @@ Theorem \ref{thm:typing_interpretation_extension}.
 
 
 We derive 
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \Delta'')$
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta'')$
 by applying
 Theorem \ref{thm:proof_typing_containment},
 and
 Theorem \ref{thm:subtyping_environment_prefix_preservation}.
 Then, we derive
-$(\delta' \cup \delta_a \cup \delta_b \satisfies \Delta')$
+$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \Delta')$
 by applying
 Theorem \ref{thm:proof_subtyping_skolem_freshness},
 and
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 We derive
-$(\delta' \cup \delta_a \cup \delta_b \satisfies \tau \subtypes \tau_a)$
+$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \tau \subtypes \tau_a)$
 by instantiating (P1)
-with $\delta' \cup \delta_a$ and applying the result.
+with $\delta' \oplus \delta_a$ and applying the result.
 We derive
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies \tau \subtypes \tau_a)$
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \tau \subtypes \tau_a)$
 by applying 
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_subtyping_containment},
@@ -5335,7 +5340,7 @@ Theorem \ref{thm:subtyping_interpretation_extension}.
 
 
 We derive 
-$(\delta' \cup \delta_a \cup \delta_b \satisfies \Gamma)$
+$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \Gamma)$
 by applying
 Theorem \ref{thm:proof_typing_skolem_freshness},
 Theorem \ref{thm:proof_typing_containment},
@@ -5344,23 +5349,23 @@ Theorem \ref{thm:proof_subtyping_containment},
 Theorem \ref{thm:proof_typing_containment},
 and
 Theorem \ref{thm:typing_environment_interpretation_extension}.
-Then, we derive $\delta' \cup \delta_a \cup \delta_b, \sigma \satisfies e[\sigma] \hastype \tau_a$
+Then, we derive $\delta' \oplus \delta_a \oplus \delta_b, \sigma \satisfies e[\sigma] \hastype \tau_a$
 by applying Theorem \ref{thm:subsumption}.
-Then, We derive $\delta' \cup \delta_a \cup \delta_b, \sigma\ x \slash e[\sigma] \satisfies \Gamma\ x \hastype \tau$
+Then, We derive $\delta' \oplus \delta_a \oplus \delta_b, \sigma\ x \slash e[\sigma] \satisfies \Gamma\ x \hastype \tau$
 by applying Definition \ref{def:model_sequence_typing} (Model Sequence Typing).
 Then, we derive
-$(\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies e'[\sigma\ x \slash e[\sigma]] \hastype \tau')$
-by instantiating (P2) with $\delta' \cup \delta_a \cup \delta_b$ and $\sigma\ x \slash e[\sigma]$,
+$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e'[\sigma\ x \slash e[\sigma]] \hastype \tau')$
+by instantiating (P2) with $\delta' \oplus \delta_a \oplus \delta_b$ and $\sigma\ x \slash e[\sigma]$,
 applying the result.
 
 
-We derive $\delta' \cup \delta_a \cup \delta_b \cup \delta_c \satisfies e'[\sigma][x \slash e[\sigma]] \hastype \tau'$,
+We derive $\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e'[\sigma][x \slash e[\sigma]] \hastype \tau'$,
 by rewriting with Definition \ref{def:substitution}.
 Then, we have 
-$\delta' \cup \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'$
+$\delta' \oplus \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'$
 by applying Theorem \ref{thm:annotated_binding_introduction},
 which simplifies to 
-$\delta' \cup \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'$
+$\delta' \oplus \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'$
 by applying Definition \ref{def:substitution}. 
 
 
@@ -5384,26 +5389,26 @@ We derive a typing interpretation $\delta$, such that
 $(\textbf{dom}(\delta) = \Theta' \backslash \Theta)$
 and $(
 \forall \delta', \sigma \qua 
-\delta' \cup \delta \satisfies \Delta' \implies
+\delta' \oplus \delta \satisfies \Delta' \implies
 \delta', \sigma \satisfies \Gamma \implies
-\delta' \cup \delta \satisfies e[\sigma] \hastype \tau
+\delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
 )$ (P0)
 by applying the induction hypothesis.
 Next, we introduce an arbitrary type interpretation $\delta'$
 and an arbitrary expression interpretation $\sigma$,
 and we assume 
-$\delta' \cup \delta \satisfies \Delta'$
+$\delta' \oplus \delta \satisfies \Delta'$
 and $\delta', \sigma \satisfies \Gamma$.
-We derive $\delta' \cup \delta \satisfies e[\sigma] \hastype \tau$
+We derive $\delta' \oplus \delta \satisfies e[\sigma] \hastype \tau$
 by instantiating (P0) with $\delta'$ and $\sigma$, and
 applying the result. 
 Additionally, we derive 
-$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies \Delta'$
+$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies \Delta'$
 (P1)
 by applying 
 Theorem \ref{thm:subtyping_environment_interpretation_contraction}.
 We derive 
-$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \cup \delta \cup \delta'' \satisfies e[\sigma] \hastype \tau$
+$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies e[\sigma] \hastype \tau$
 (P2)
 by applying
 Theorem \ref{thm:proof_typing_containment},
@@ -5419,9 +5424,9 @@ $(
 \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
 (
 \forall \delta' \qua
-\delta' \cup \delta^\dagger \satisfies \Delta' \implies
-\delta' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+\delta' \oplus \delta^\dagger \satisfies \Delta' \implies
+\delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
 )
 )
 $ (P3)
@@ -5436,9 +5441,9 @@ $(
 \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
 (
 \forall \delta'' \qua
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta' \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta' \implies
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
 )
 )
 $
@@ -5451,8 +5456,8 @@ $(
 (
 \forall \delta'' \qua
 \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
 )
 )
 $
@@ -5467,8 +5472,8 @@ $(
 (
 \forall \delta'' \qua
 \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \cup \delta\ \alpha \slash \J{BOT} \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \cup \delta\ \alpha \slash \J{BOT} \cup \delta'' \cup \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+\delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
 )
 )
 $
@@ -5484,8 +5489,8 @@ $(
 (
 \forall \delta'' \qua
 \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \cup \delta \cup \delta'' \cup \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau^\dagger
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau^\dagger
 )
 )
 $
@@ -5494,7 +5499,7 @@ by Theorem \ref{thm:path_type_elimination_loop}.
 We derive
 $(
 \forall e_a, e_r \qua 
-\delta' \cup \delta\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
+\delta' \oplus \delta\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
 \implies 
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
@@ -5506,7 +5511,7 @@ Theorem \ref{thm:packaging_correspondence}.
 We derive
 $(
 \forall e_a, e_r \qua 
-\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+\delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
 \implies 
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
@@ -5518,9 +5523,9 @@ Theorem \ref{thm:least_fixed_point_type_elimination}.
 We derive
 $(
 \forall e_a, e_r \qua 
-\delta' \cup \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+\delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
 \implies 
-\delta' \cup \delta \satisfies e_r \hastype \tau_r 
+\delta' \oplus \delta \satisfies e_r \hastype \tau_r 
 \up
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
@@ -5535,9 +5540,9 @@ Theorem \ref{thm:right_congruence}.
 We derive
 $(
 \forall e_a, e_r \qua 
-\delta' \cup \delta \satisfies e_a \hastype \tau_l 
+\delta' \oplus \delta \satisfies e_a \hastype \tau_l 
 \implies 
-\delta' \cup \delta \satisfies e_r \hastype \tau_r 
+\delta' \oplus \delta \satisfies e_r \hastype \tau_r 
 \up
 e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
 )$
@@ -5549,23 +5554,23 @@ Theorem \ref{thm:subtyping_factorization_correspondence}.
 We derive
 $(
 \forall e_a \qua 
-\delta' \cup \delta \satisfies e_a \hastype \tau_l 
+\delta' \oplus \delta \satisfies e_a \hastype \tau_l 
 \implies 
-\delta' \cup \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
+\delta' \oplus \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
 )$
 by applying 
 Theorem \ref{thm:expression_congruence_typing}.
 
 We have 
 $(
-\delta' \cup \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
+\delta' \oplus \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
 )$
 by applying 
 Theorem \ref{thm:path_type_elimination_loop}
 
 We have 
 $(
-\delta' \cup \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
+\delta' \oplus \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
 )$
 by applying 
 Definition \ref{...} (Substitution)
