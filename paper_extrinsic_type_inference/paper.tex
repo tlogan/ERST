@@ -1161,20 +1161,24 @@ with meaning.  At the very least, types should inform us that an expression is s
     } 
 
     \inferrule { 
+      \textbf{dom}(\delta') \subseteq \Theta
+      \\
       \delta \oplus \delta' \satisfies \Delta 
       \\
       \delta \oplus \delta' \satisfies e \hastype \tau
-      \\
-      \textbf{dom}(\delta') \cong \Theta
     } {
       \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta\ \tau
     } 
 
     \inferrule { 
-      \forall \delta' .\ 
-      \textbf{dom}(\delta') \cong \Theta \implies
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \subseteq \Theta \implies
       \delta \oplus \delta' \satisfies \Delta \implies 
       \delta \oplus \delta' \satisfies e \hastype \tau
+      \\\\
+      \exists \delta' \qua 
+      \textbf{dom}(\delta') \subseteq \Theta \up 
+      \delta \oplus \delta' \satisfies \Delta
     } {
       \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta\ \tau
     } 
@@ -1214,6 +1218,8 @@ of a sound type system that can directly prove the validity of typings and subty
 by eliminating type forms.
 
 \TODO{describe the various rules of model typing}
+
+\TODO{note how indexed intersection disallows vacuous non-empty types, which would allow erroneous expressions to have a type}
 
 \begin{definition}
   \label{def:expression_congruence}
