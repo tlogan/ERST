@@ -2337,11 +2337,15 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
-      \alpha \not\in \textbf{ftv}(\tau_r)
+      \tau_l[\alpha \slash \tau_r]^+ = \tau^\dagger
       \\
       \Theta, \Delta \entails 
-      \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
+      \tau^\dagger \subtypes \tau_r \given 
       \Theta', \Delta'
+      \\
+      \alpha \not\in \textbf{ftv}(\tau^\dagger)
+      \\
+      \alpha \not\in \textbf{ftv}(\tau_r)
     } {
       \Theta, \Delta \entails 
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
@@ -2349,6 +2353,7 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
+
 
 \noindent
 For least fixed point elimination, $\J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r$, 
@@ -3670,6 +3675,22 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:model_subtyping_induction}
+  Model Subtyping Induction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \forall \tau \qua
+      \delta \satisfies \tau \subtypes \tau_r
+      \implies
+      \delta\ \alpha \slash \tau \satisfies \tau_l \subtypes \tau_r
+    } {
+      \delta \satisfies \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
   \label{thm:left_congruence}
   Left Congruence 
   \\
@@ -4179,6 +4200,29 @@ rely on analogous techniques.
   \TODO{note how consitency is necessary to prove parts of subtyping soundness}
 
 \end{theorem}
+
+\begin{theorem}
+  \label{thm:type_substitution_positive_elimination}
+  Type Substitution (Positive) Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \tau_l[\alpha \slash \tau_r]^+ = \tau^\dagger
+      \\
+      \delta \satisfies  \tau^\dagger \subtypes \tau_r
+      \\
+      \alpha \notin \textbf{ftv}(\tau^\dagger)
+      \\
+      \alpha \notin \textbf{ftv}(\tau_r)
+    } {
+      \forall \tau \qua
+      \delta \satisfies \tau \subtypes \tau_r
+      \implies
+      \delta\ \alpha \slash \tau \satisfies \tau_l \subtypes \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+
 
 \begin{theorem}
   \label{thm:proof_subtyping_skolem_variable_elimination_soundness}
@@ -4772,17 +4816,48 @@ rely on analogous techniques.
     \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
     \given \Theta', \Delta' 
   )$
-
   \item \I \N Derive $(
-    \alpha \not\in \textbf{ftv}(\tau_r)
+    \tau_l[\alpha\slash\tau_r]^+ = \tau^\dagger 
   )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
   \item \I \N And $(
     \Theta, \Delta \entails 
     \tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given 
     \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
+  \item \I \N And $(
+    \alpha \not\in \textbf{ftv}(\tau^\dagger)
+  )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
+  \item \I \N And $(
+    \alpha \not\in \textbf{ftv}(\tau_r)
+  )$ [Def. \ref{def:proof_subtyping_lfp_elimination}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+  )$ [IH]
+
+  \item \I \N And P: $(
+    \forall \delta' \qua
+    \delta' \oplus \delta \satisfies \Delta'
+    \implies
+    \delta' \oplus \delta \satisfies \tau^\dagger \subtypes \tau_r
+  )$ [IH]
+
+
+  \item \I \N For $\delta'$, Assume $(
+    \delta' \oplus \delta \satisfies \Delta'
+  )$
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau^\dagger \subtypes \tau_r
+  )$ [P]
+
+  \item \I\I \N Derive $(
+    \forall \tau \qua \delta' \oplus \delta \satisfies \tau \subtypes \tau_r \implies \delta' \oplus \delta\ \alpha \slash \tau \satisfies \tau_l \subtypes \tau_r
+  )$ [Thm. \ref{thm:type_substitution_positive_elimination}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r
+  )$ [Thm. \ref{thm:model_subtyping_induction}]
 
   %%%%%%%%%%%%%%%%
 
