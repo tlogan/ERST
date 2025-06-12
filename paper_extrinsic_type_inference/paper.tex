@@ -3771,40 +3771,6 @@ rely on analogous techniques.
 \end{theorem}
 \hfill
 
-\begin{theorem}
-  \label{thm:model_subtyping_lfp_introduction}
-  Model Subtyping Least Fixed Point Introduction 
-  \\
-  \begin{mathpar}
-    \inferrule {
-    } {
-      \delta\ \alpha \slash \J{LFP[} \alpha \J{]} \tau \satisfies
-      \tau \subtypes \J{LFP[} \alpha \J{]} \tau
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-\begin{theorem}
-  \label{thm:model_typing_not_free_independence}
-  Model Typing Not Free Independence 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \\
-      \alpha \notin \textbf{ftv}(\tau)
-    } {
-      \forall \tau' \qua
-      \delta \satisfies e \hastype \tau
-      \iff
-      \delta\ \alpha \slash \tau' \satisfies
-      e \hastype \tau
-    }
-  \end{mathpar}
-\end{theorem}
-\hfill
-
-
 
 \section{Proof Theory}
 \label{sec:proof_theory}
@@ -5049,15 +5015,34 @@ rely on analogous techniques.
   )$ [P]
 
   \item \I\I \N Derive $(
+    \forall e \qua
+    \delta' \oplus \delta \satisfies
+    e \hastype \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r] 
+    \implies 
+    \delta' \oplus \delta\ \alpha \slash \J{LFP[} \alpha \J{]} \tau_r \satisfies
+    e \hastype
+    \tau_r
+  )$ [Thm. \ref{thm:type_substitution_correspondence}]
+
+  \item \I\I \N Derive $(
+    \forall e \qua
+    \delta' \oplus \delta \satisfies
+    e \hastype \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r] 
+    \implies 
+    \delta' \oplus \delta \satisfies
+    e \hastype
+    \J{LFP[} \alpha \J{]} \tau_r
+  )$ [Thm. \ref{def:model_typing}]
+
+  \item \I\I \N Derive $(
     \delta' \oplus \delta \satisfies
     \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r] \subtypes \J{LFP[} \alpha \J{]} \tau_r
-  )$ [Thm. \ref{thm:type_substitution_correspondence}, Thm. \ref{thm:model_typing_not_free_independence}, Thm. \ref{thm:model_subtyping_lfp_introduction},
-Def. \ref{def:type_substitution}, Def. \ref{def:ftv}, Def. \ref{def:model_subtyping}]
+  )$ [Def. \ref{def:model_subtyping}]
 
   \item \I\I \N Derive $(
     \delta' \oplus \delta \satisfies
     \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
-  )$ [Thm. \ref{thm:model_subtyping_transitivity}
+  )$ [Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
 
