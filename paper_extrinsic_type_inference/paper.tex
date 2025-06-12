@@ -3680,10 +3680,14 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
+      (
       \forall \tau \qua
       \delta \satisfies \tau \subtypes \tau_r
       \implies
       \delta\ \alpha \slash \tau \satisfies \tau_l \subtypes \tau_r
+      )
+      \\
+      \alpha \notin \textbf{ftv}(\tau_r)
     } {
       \delta \satisfies \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r
     }
@@ -3744,6 +3748,23 @@ rely on analogous techniques.
       \delta \satisfies e_f \J{(} e_a \J{)} \hastype \tau_r
     } {
       \delta \satisfies e_f \hastype \tau_l \J{->} \tau_r
+    } {
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_difference_introduction}
+  Model Subtyping Difference Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau_0 \subtypes \tau_1
+      \\
+      \neg (\delta \satisfies \tau_0 \subtypes \tau_2)
+    } {
+      \delta \satisfies \tau_0 \subtypes \tau_1 \typdiff \tau_2
     } {
     }
   \end{mathpar}
@@ -4116,7 +4137,6 @@ rely on analogous techniques.
   \label{thm:proof_decidable_subtyping_sequence_completeness}
   \\
   \begin{mathpar}
-
     \inferrule {
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
@@ -4126,12 +4146,47 @@ rely on analogous techniques.
       \delta' \oplus \delta^\dagger \satisfies \Omega \implies
       \delta' \oplus \delta^\dagger \satisfies \Delta'
     }
-
-    \TODO{note that this is a sufficient form of completeness, derived from uniqueness}
-
-    \TODO{meaning any solution $\Delta'$ is complete wrt to $\Omega$}
+    % \TODO{note that this is a sufficient form of completeness, derived from uniqueness}
+    % \TODO{meaning any solution $\Delta'$ is complete wrt to $\Omega$}
   \end{mathpar}
 \end{theorem}
+
+
+\begin{theorem}
+  Proof Decidable Subtyping Solution Completeness  
+  \label{thm:proof_decidable_subtyping_solution_completeness}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+      \\
+      \textbf{ftv}(\eta) \subseteq \emptyset
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \forall \delta^\dagger \qua
+      \delta' \oplus \delta^\dagger \satisfies \tau \subtypes \eta \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+\begin{theorem}
+  Proof Decidable Subtyping Existential Completeness
+  \label{thm:proof_decidable_subtyping_strong_existential_completeness}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau \subtypes \eta
+      \\
+      \delta \satisfies \Delta
+    } {
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+
 
 \begin{theorem}
   \label{thm:proof_subtyping_conditional_independence}
@@ -4871,7 +4926,7 @@ rely on analogous techniques.
     \tau \subtypes \rho \given \Theta', \Delta' 
   )$ [Def. \ref{def:proof_subtyping_difference_intro}]
   \item \I \N And $(
-    \textbf{ftv}(\eta) \subseteq \epsilon
+    \textbf{ftv}(\eta) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_difference_intro}]
   \item \I \N And $(
     \nexists \Theta', \Delta' \qua  
@@ -4879,7 +4934,37 @@ rely on analogous techniques.
     \tau \subtypes \eta \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_difference_intro}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+  )$ [IH]
+
+  \item \I \N And P: $(
+    \forall \delta' \qua
+    \delta' \oplus \delta \satisfies \Delta'
+    \implies
+    \delta' \oplus \delta \satisfies \tau \subtypes \rho
+  )$ [IH]
+
+  \item \I \N For $\delta'$, Assume $(
+    \delta' \oplus \delta \satisfies \Delta'
+  )$
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau \subtypes \rho
+  )$ [P]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \Delta
+  )$ [Thm. \ref{thm:proof_subtyping_containment}]
+
+  \item \I\I \N Derive $(
+    \neg (\delta' \oplus \delta \satisfies \tau \subtypes \eta)
+  )$ [Thm \ref{thm:proof_decidable_subtyping_strong_existential_completeness}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau \subtypes \rho \typdiff \eta
+  )$ [Thm \ref{thm:model_subtyping_difference_introduction}]
+
 
   %%%%%%%%%%%%%%%%
 
@@ -4896,7 +4981,7 @@ rely on analogous techniques.
     \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_lfp_intro}]
 
-  \item \I \N \TODO{...}
+  \item \I \N \TODO{THIS ONE}
 
   %%%%%%%%%%%%%%%%
 
