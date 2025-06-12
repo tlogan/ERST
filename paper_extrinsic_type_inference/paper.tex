@@ -2444,7 +2444,7 @@ and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \a
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
-      \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
+      \rho \subtypes \eta \J{|} \tau \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails 
       \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
@@ -3760,6 +3760,87 @@ rely on analogous techniques.
   \\
   \begin{mathpar}
     \inferrule {
+      \delta \satisfies \tau_0 \subtypes \tau_1 \J{|} \tau_2
+    } {
+      \delta \satisfies \tau_0 \typdiff \tau_1 \subtypes \tau_2
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_union_right_introduction}
+  Model Subtyping Union Right Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies \tau_l \subtypes \tau_l \J{|} \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_union_left_introduction}
+  Model Subtyping Union Left Introduction 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies \tau_r \subtypes \tau_l \J{|} \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_intersection_left_elimination}
+  Model Subtyping Intersection Left Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies \tau_l \J{\&} \tau_r \subtypes \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_intersection_right_elimination}
+  Model Subtyping Intersection Right Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies \tau_l \J{\&} \tau_r \subtypes \tau_l
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_typing_union_reorder}
+  Model Typing Union Reorder 
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \delta \satisfies e \hastype \tau_a \J{|} \tau_b
+      \iff
+      \delta \satisfies e \hastype \tau_b \J{|} \tau_a
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
+  \label{thm:model_subtyping_difference_elimination}
+  Model Subtyping Difference Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
       \delta \satisfies \tau_0 \subtypes \tau_1
       \\
       \neg (\delta \satisfies \tau_0 \subtypes \tau_2)
@@ -5052,10 +5133,21 @@ rely on analogous techniques.
   )$
   \item \I \N Derive $(
     \Theta, \Delta \entails 
-    \rho \subtypes \tau \J{|} \eta \given \Theta', \Delta'
+    \rho \subtypes \eta \J{|} \tau \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_diff_elimination}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta \satisfies \rho \subtypes \eta \J{|} \tau
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \rho \subtypes \eta \J{|} \tau)$ [P]
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \rho \typdiff \eta \subtypes \tau)$ [Thm. \ref{thm:model_subtyping_difference_elimination}]
 
   %%%%%%%%%%%%%%%%
 
@@ -5066,7 +5158,20 @@ rely on analogous techniques.
     \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
   )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta \satisfies \tau \subtypes \tau_{l}
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau \subtypes \tau_{l})$ [P]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau \subtypes \tau_l \J{|} \tau_r
+  )$ [Thm. \ref{thm:model_subtyping_union_right_introduction}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
 
@@ -5077,7 +5182,20 @@ rely on analogous techniques.
     \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
   )$ [Def. \ref{def:proof_subtyping_expansion_introduction}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta \satisfies \tau \subtypes \tau_{r}
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau \subtypes \tau_{r})$ [P]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau \subtypes \tau_l \J{|} \tau_r
+  )$ [Thm. \ref{thm:model_subtyping_union_left_introduction}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
 
@@ -5105,7 +5223,20 @@ rely on analogous techniques.
     \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta \satisfies \tau_l \subtypes \tau
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau_l \subtypes \tau)$ [P]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau_l \J{\&} \tau_r \subtypes \tau 
+  )$ [Thm. \ref{thm:model_subtyping_intersection_right_elimination}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
 
@@ -5113,10 +5244,23 @@ rely on analogous techniques.
     \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
   )$
   \item \I \N Derive $(
-    \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
+    \Theta, \Delta \entails \tau_r \subtypes \tau \given \Theta', \Delta' 
   )$ [Def. \ref{def:proof_subtyping_refinement_elimination}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta \satisfies \tau_r \subtypes \tau
+  )$ [IH]
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta \satisfies \Delta')$
+  \item \I\I \N Derive $(\delta' \oplus \delta \satisfies \tau_r \subtypes \tau)$ [P]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau_l \J{\&} \tau_r \subtypes \tau 
+  )$ [Thm. \ref{thm:model_subtyping_intersection_left_elimination}, Thm. \ref{thm:model_subtyping_transitivity}]
 
   %%%%%%%%%%%%%%%%
 
