@@ -1280,8 +1280,8 @@ by eliminating type forms.
 
 
 \begin{definition}
-  \label{def:model_subtyping_environment}
-  Model Subtyping Environment
+  \label{def:model_subtyping_sequence}
+  Model Subtyping Sequence 
   \hfill
   \boxed{\delta \satisfies \Delta}
   \\
@@ -1302,8 +1302,8 @@ by eliminating type forms.
 \end{definition}
 
 \begin{definition}
-  \label{def:model_typing_environment}
-  Model Typing Environment 
+  \label{def:model_typing_sequence}
+  Model Typing Sequence 
   \\
   \begin{mathpar}
     \inferrule {
@@ -2318,7 +2318,7 @@ are stronger than $\tau_r$.
       \nexists \alpha' \qua \tau = \alpha'
     } {
       \Theta, \Delta \entails 
-      \tau_l \subtypes \alpha 
+      \tau \subtypes \alpha 
       \given \Theta, \Delta\ \tau \subtypes \alpha 
     }
   \end{mathpar}
@@ -3640,6 +3640,22 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
+  \label{thm:model_subtyping_intersection_type_introduction}
+  Model Subtyping Union Type Elimination 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \delta \satisfies \tau \subtypes \tau_l
+      \\
+      \delta \satisfies \tau \subtypes \tau_r
+    } {
+      \delta \satisfies \tau \subtypes \tau_l \J{\&} \tau_r
+    }
+  \end{mathpar}
+\end{theorem}
+\hfill
+
+\begin{theorem}
   \label{thm:model_subtyping_indexed_intersection_type_introduction}
   Model Subtyping Indexed Intersection Type Introduction 
   \\
@@ -4872,7 +4888,50 @@ rely on analogous techniques.
     \tau \subtypes \tau_{b} \given \Theta'', \Delta''
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_0) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta_0 \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta_0 \satisfies \tau \subtypes \tau_a
+  )$ [IH]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) = \Theta'' \backslash \Theta'
+  )$ [IH]
+  \item \I \N And P1: $(
+    \forall \delta' \qua 
+    \delta \oplus \delta_1 \satisfies \Delta' 
+    \implies 
+    \delta \oplus \delta_1 \satisfies \tau \subtypes \tau_b
+  )$ [IH]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \oplus \delta_1) = \Theta'' \backslash \Theta
+  )$
+  \item \I \N For $\delta'$, assume $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'')$
+
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_environment_union}]
+  \item \I\I \N Derive $(\delta' \oplus \delta_0 \satisfies \Delta')$
+    [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:subtyping_environment_interpretation_independence}]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \tau \subtypes \tau_a
+  )$ [P0]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau \subtypes \tau_a
+  )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:subtyping_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau \subtypes \tau_b
+  )$ [P1]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau \subtypes \tau_a \J{\&} \tau_b
+  )$ [Thm \ref{thm:model_subtyping_intersection_type_introduction}]
 
   %%%%%%%%%%%%%%%%
 
@@ -4889,14 +4948,115 @@ rely on analogous techniques.
     \Theta_r \subseteq \textbf{ftv}(\Omega)
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
-    \forall \Theta', \Delta' \qua
     \Theta, \Delta \entails \Omega \given \Theta', \Delta'
-    \implies
+  )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
+  \item \I \N And $(
     \Theta' \cup \Theta_r, \Delta' \entails
     \tau_l \subtypes \tau_r \given \Theta'', \Delta''
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
 
-  \item \I \N \TODO{...}
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta) \subseteq \Theta' \backslash \Theta
+  )$ [Thm. \ref{thm:proof_subtyping_sequence_soundness}]
+
+  
+  % \item \I \N \TODO{EXTRA?} And P0: $(
+  %     \forall \delta' \qua
+  %     \delta' \oplus \delta_0 \satisfies \Delta'
+  %     \implies
+  %     \delta' \oplus \delta_0 \satisfies \Omega
+  % )$ [Thm. \ref{thm:proof_subtyping_sequence_soundness}]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) \subseteq \Theta'' \backslash (\Theta' \cup \Theta_r)
+  )$ [IH]
+
+
+  \item \I \N And P1: $(
+    \forall \delta' \qua
+    \delta' \oplus \delta_1 \satisfies \Delta''
+    \implies
+    \delta' \oplus \delta_1 \satisfies \tau_l \subtypes \tau_r
+  )$ [IH]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \oplus \delta_1) \subseteq \Theta'' \backslash \Theta \backslash \Theta_r
+  )$
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \oplus \delta_1) \subseteq \Theta'' \backslash \Theta
+  )$
+
+  \item \I \N For $\delta'$, assume $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta''
+  )$ 
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'
+  )$ [Thm. \ref{thm:subtyping_environment_union}]
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \textbf{ftv}(\Delta')
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta' 
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta''
+  )$ [Thm \ref{thm:proof_subtyping_conditional_independence}]
+
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \textbf{ftv}(\Delta')
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Omega 
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta''
+  )$ [Thm \ref{thm:proof_decidable_subtyping_sequence_completeness}]
+
+  \item \I\I \N Derive $(
+    \Theta_r \subseteq \textbf{ftv}(\Delta')
+  )$ [Thm. \ref{thm:proof_subtyping_environment_containment}]
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \Theta_r 
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Omega
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta''
+  )$ 
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \Theta_r
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Omega
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_r \oplus \delta_1 \satisfies \Delta''
+  )$ [Thm. Thm. \ref{thm:subtyping_interpretation_reordering}]
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \Theta_r
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Omega
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_r \oplus \delta_1 \satisfies \tau_l \subtypes \tau_r
+  )$ [P1] 
+
+  \item \I\I \N Derive $(
+    \forall \delta_r \qua
+    \textbf{dom}(\delta_r) \subseteq \Theta_r
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Omega
+    \implies
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \tau_l \subtypes \tau_r
+  )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \tau_l \subtypes \J{ALL[} \Theta_r \J{]} \Omega\ \tau_r
+  )$ [Thm. \ref{thm:model_subtyping_indexed_intersection_type_introduction}]
 
   %%%%%%%%%%%%%%%%
 
@@ -4911,13 +5071,7 @@ rely on analogous techniques.
 
   \item \I \N Let $\delta$ be, such that $(
     \textbf{dom}(\delta) = \Theta' \backslash \Theta
-  )$ [Inductive Thm. \ref{thm:proof_subtyping_sequence_soundness}]
-  % \item \I \N And P: $(
-  %   \forall \delta' \qua 
-  %   \delta \oplus \delta \satisfies \Delta' 
-  %   \implies 
-  %   \delta' \oplus \delta \satisfies \Delta[\alpha\slash\tau]^{+} \backslash \Delta 
-  % )$ [IH]
+  )$ [Def. \ref{def:type_variable_assigment_sequence}]
 
   \item \I \N For $\delta'$, assume $(
     \delta' \oplus \delta \satisfies \Delta'\ \alpha \J{<:} \tau
@@ -4942,14 +5096,12 @@ rely on analogous techniques.
     \nexists \alpha'  \qua \tau = \alpha'
   )$ [Def. \ref{def:proof_subtyping_variable_elimination}]
 
-
-
-  \item \I \N For $\delta'$, Assume $(
+  \item \I \N For $\delta'$, assume $(
     \delta' \oplus \epsilon \satisfies \Delta\ \alpha \J{<:} \tau 
   )$ 
   \item \I\I \N Derive $(
-    \delta' \oplus \epsilon \satisfies\ \alpha \J{<:} \tau
-  )$ 
+    \delta' \oplus \epsilon \satisfies \alpha \J{<:} \tau
+  )$ [Def. \ref{def:model_subtyping_sequence}]
 
   %%%%%%%%%%%%%%%%
 
@@ -4960,38 +5112,44 @@ rely on analogous techniques.
     \alpha \notin \Theta
   )$
   \item \I \N Derive $(
-    \Theta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \twoheadrightarrow \Delta_\closed \wr \Delta_\open
+    \Theta, \Delta \entails 
+    \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
   )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
 
-  \item \I \N And $(
-    \Theta, \Delta \entails \Delta_\closed \safe
-  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [Def. \ref{def:type_variable_assigment_sequence}]
 
-  \item \I \N And $(
-    \Theta, \Delta \cup \Delta_\closed \entails 
-    \Delta_\open \given \Theta', \Delta'
-  )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
-
-  \item \I \N \TODO{...}
+  \item \I \N For $\delta'$, assume $(
+    \delta' \oplus \delta \satisfies \Delta'\ \tau \J{<:} \alpha
+  )$ 
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies \tau \J{<:} \alpha
+  )$ [Thm. \ref{...}]
 
   %%%%%%%%%%%%%%%%
 
   \item \N Assume $(
     \Theta, \Delta \entails 
-    \tau_l \subtypes \alpha \given \Theta, \Delta
+    \tau \subtypes \alpha \given \Theta, \Delta
   )$ and $(
     \alpha \in \Theta
   )$
 
   \item \I \N Derive $(
-    \Theta, \Delta \entails \tau_l \subtypes \alpha \safe
+    \Theta, \Delta \entails \tau \subtypes \alpha \safe
   )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
 
   \item \I \N And $(
-    \nexists \alpha' \qua \tau_l = \alpha'
+    \nexists \alpha' \qua \tau = \alpha'
   )$ [Def. \ref{def:proof_subtyping_variable_introduction}]
 
-  \item \I \N \TODO{...}
+  \item \I \N For $\delta'$, assume $(
+    \delta' \oplus \epsilon \satisfies \Delta\ \tau \J{<:} \alpha
+  )$ 
+  \item \I\I \N Derive $(
+    \delta' \oplus \epsilon \satisfies \tau \J{<:} \alpha
+  )$ [Def. \ref{def:model_subtyping_sequence}]
 
   %%%%%%%%%%%%%%%%
 
@@ -8331,7 +8489,7 @@ $\square$
 
 
 % \begin{definition}\boxed{\delta, \sigma \satisfies \Gamma}
-%   \label{def:model_typing_environment}
+%   \label{def:model_typing_sequence}
 %   \begin{mathpar}
 %     \inferrule { 
 %     } {
