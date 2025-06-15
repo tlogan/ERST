@@ -41,6 +41,41 @@ def test_typ_parsing_2():
 (LFP[E] <zero> @ | <succ> <succ> E)
     """)
 
+def test_typ_parsing_3():
+    assert  parse_typ(f"""
+(<succ> @) * (<cons> @)  
+    """)
+
+def test_typ_parsing_4():
+    assert  parse_typ(f"""
+EXI[N L] ((N * L) <: @) ; (<succ> N) * (<cons> L)  
+    """)
+
+def test_typ_parsing_5():
+    assert  parse_typ(f"""
+EXI[N L] ; (<succ> N) * (<cons> L)  
+    """)
+
+def test_typ_parsing_6():
+    assert  parse_typ(f"""
+EXI[N L] (<succ> N) * (<cons> L)  
+    """)
+
+def test_typ_parsing_7():
+    assert  parse_typ(f"""
+ALL[N L] ((N * L) <: @) ; (<succ> N) -> (<cons> L)  
+    """)
+
+def test_typ_parsing_8():
+    assert  parse_typ(f"""
+ALL[N L] ; (<succ> N) -> (<cons> L)  
+    """)
+
+def test_typ_parsing_9():
+    assert  parse_typ(f"""
+ALL[N L] (<succ> N) -> (<cons> L)  
+    """)
+
 ###############################################################
 ##### Expr Parsing 
 ###############################################################
@@ -61,6 +96,6 @@ case x => case y => y
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typ_parsing_2()
+    test_typ_parsing_9()
 
 #######################################################################

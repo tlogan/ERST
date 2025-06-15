@@ -171,7 +171,7 @@ $combo = Imp($typ_base.combo, $typ.combo)
 
 
 // Tuple 
-| typ_base ',' typ {
+| typ_base '*' typ {
 $combo = Inter(TEntry('head', $typ_base.combo), TEntry('tail', $typ.combo)) 
 }
 
@@ -180,25 +180,10 @@ $combo = Inter(TEntry('head', $typ_base.combo), TEntry('tail', $typ.combo))
 $combo = Exi($ids.combo, (), $typ.combo) 
 }
 
-// // Existential 
-// | 'EXI' '[' qualification ']' typ {
-// $combo = Exi((), $qualification.combo, $typ.combo) 
-// }
-
 // Existential 
-| 'EXI' '[' ids qualification ']' typ {
+| 'EXI' '[' ids ']' qualification typ {
 $combo = Exi($ids.combo, $qualification.combo, $typ.combo) 
 }
-
-// // Universal unconstrained 
-// | 'ALL' '[' ID ']' body = typ {
-// $combo = All($ID.text, Top(), $body.combo) 
-// }
-
-// // Universal 
-// | 'ALL' '[' ID '<:' upper = typ ']' body = typ {
-// $combo = All($ID.text, $upper.combo, $body.combo) 
-// }
 
 ///////////////
 
@@ -208,7 +193,7 @@ $combo = All($ids.combo, (), $typ.combo)
 }
 
 // Universal 
-| 'ALL' '[' ids qualification ']' typ {
+| 'ALL' '[' ids ']' qualification typ {
 $combo = All($ids.combo, $qualification.combo, $typ.combo) 
 }
 
@@ -246,11 +231,12 @@ $combo = Diff(context, $negation.combo)
 
 qualification returns [tuple[Subtyping, ...] combo] :
 
-| ';' subtyping {
-$combo = tuple([$subtyping.combo])
+
+| ';' {
+$combo = tuple([])
 }
 
-| ';' subtyping qualification {
+| '(' subtyping ')' qualification {
 $combo = tuple([$subtyping.combo]) + $qualification.combo
 }
 
