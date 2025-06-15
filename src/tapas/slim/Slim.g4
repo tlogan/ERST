@@ -445,16 +445,16 @@ $results = [
 
 
 record [list[Context] contexts] returns [list[Result] results] :
-| ';'  ID '=' 
+| '<' ID '>' 
 body = expr[contexts] {
 $results = [
-    RecordRule(self._solver).combine_single(pid, contexts[pid].enviro, body_result.world, $ID.text, body_result.typ)
+    RecordRule(self._solver).combine_single(pid, body_result.world, $ID.text, body_result.typ)
     for body_result in $body.results
     for pid in [body_result.pid]
 ]
 }
 
-| ';' ID '=' 
+| '<' ID '>' 
 body = expr[contexts] {
 tail_contexts = [
     Context(contexts[body_result.pid].enviro, body_result.world)

@@ -428,7 +428,7 @@ def concretize_ids(ids : tuple[str, ...]) -> str:
 
 def concretize_constraints(subtypings : Iterable[Subtyping]) -> str:
     return "\n".join([
-        "; " + concretize_typ(st.lower) + " <: " + concretize_typ(st.upper)
+        "(" + concretize_typ(st.lower) + " <: " + concretize_typ(st.upper) + ") "
         for st in subtypings
     ])
 
@@ -494,19 +494,19 @@ def concretize_typ(typ : Typ) -> str:
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
             if constraints:
-                plate_entry = ([control.body], lambda body : f"(EXI [{ids}\n{indent(constraints)}\n] {body})")
+                plate_entry = ([control.body], lambda body : f"(EXI[{ids}]\n{indent(constraints)}\n ; {body})")
             else:
-                plate_entry = ([control.body], lambda body : f"(EXI [{ids}] {body})")
+                plate_entry = ([control.body], lambda body : f"(EXI[{ids}] {body})")
         elif isinstance(control, All):
             constraints = concretize_constraints(control.constraints)
             ids = concretize_ids(control.ids)
             if constraints:
-                plate_entry = ([control.body], lambda body : f"(ALL [{ids}\n{indent(constraints)}\n] {body})")  
+                plate_entry = ([control.body], lambda body : f"(ALL[{ids}]\n{indent(constraints)}\n ; {body})")  
             else:
-                plate_entry = ([control.body], lambda body : f"(ALL [{ids}] {body})")
+                plate_entry = ([control.body], lambda body : f"(ALL[{ids}] {body})")
         elif isinstance(control, LeastFP):
             id = control.id
-            plate_entry = ([control.body], lambda body : f"(FX {id}\n{indent('| ' + body)})")  
+            plate_entry = ([control.body], lambda body : f"(LFP[{id}]\n{indent(body)})")  
         elif isinstance(control, Top):
             plate_entry = ([], lambda: "TOP")  
         elif isinstance(control, Bot):

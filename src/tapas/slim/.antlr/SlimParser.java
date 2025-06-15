@@ -1403,16 +1403,16 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(267);
-				match(T__19);
+				match(T__5);
 				setState(268);
 				((RecordContext)_localctx).ID = match(ID);
 				setState(269);
-				match(T__1);
+				match(T__6);
 				setState(270);
 				((RecordContext)_localctx).body = expr(contexts);
 
 				_localctx.results = [
-				    RecordRule(self._solver).combine_single(pid, contexts[pid].enviro, body_result.world, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_result.typ)
+				    RecordRule(self._solver).combine_single(pid, body_result.world, (((RecordContext)_localctx).ID!=null?((RecordContext)_localctx).ID.getText():null), body_result.typ)
 				    for body_result in ((RecordContext)_localctx).body.results
 				    for pid in [body_result.pid]
 				]
@@ -1423,11 +1423,11 @@ public class SlimParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(273);
-				match(T__19);
+				match(T__5);
 				setState(274);
 				((RecordContext)_localctx).ID = match(ID);
 				setState(275);
-				match(T__1);
+				match(T__6);
 				setState(276);
 				((RecordContext)_localctx).body = expr(contexts);
 
@@ -2335,10 +2335,10 @@ public class SlimParser extends Parser {
 		"\u0001\u0000\u0000\u0000\u0108\u00ff\u0001\u0000\u0000\u0000\u0108\u0103"+
 		"\u0001\u0000\u0000\u0000\u0108\u0105\u0001\u0000\u0000\u0000\u0109\u0013"+
 		"\u0001\u0000\u0000\u0000\u010a\u011a\u0001\u0000\u0000\u0000\u010b\u010c"+
-		"\u0005\u0014\u0000\u0000\u010c\u010d\u0005#\u0000\u0000\u010d\u010e\u0005"+
-		"\u0002\u0000\u0000\u010e\u010f\u0003\u0010\b\u0000\u010f\u0110\u0006\n"+
+		"\u0005\u0006\u0000\u0000\u010c\u010d\u0005#\u0000\u0000\u010d\u010e\u0005"+
+		"\u0007\u0000\u0000\u010e\u010f\u0003\u0010\b\u0000\u010f\u0110\u0006\n"+
 		"\uffff\uffff\u0000\u0110\u011a\u0001\u0000\u0000\u0000\u0111\u0112\u0005"+
-		"\u0014\u0000\u0000\u0112\u0113\u0005#\u0000\u0000\u0113\u0114\u0005\u0002"+
+		"\u0006\u0000\u0000\u0112\u0113\u0005#\u0000\u0000\u0113\u0114\u0005\u0007"+
 		"\u0000\u0000\u0114\u0115\u0003\u0010\b\u0000\u0115\u0116\u0006\n\uffff"+
 		"\uffff\u0000\u0116\u0117\u0003\u0014\n\u0000\u0117\u0118\u0006\n\uffff"+
 		"\uffff\u0000\u0118\u011a\u0001\u0000\u0000\u0000\u0119\u010a\u0001\u0000"+

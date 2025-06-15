@@ -122,9 +122,9 @@ def serializedATN():
         0,261,262,3,26,13,0,262,263,6,9,-1,0,263,265,1,0,0,0,264,244,1,0,
         0,0,264,245,1,0,0,0,264,247,1,0,0,0,264,252,1,0,0,0,264,255,1,0,
         0,0,264,259,1,0,0,0,264,261,1,0,0,0,265,19,1,0,0,0,266,282,1,0,0,
-        0,267,268,5,20,0,0,268,269,5,35,0,0,269,270,5,2,0,0,270,271,3,16,
-        8,0,271,272,6,10,-1,0,272,282,1,0,0,0,273,274,5,20,0,0,274,275,5,
-        35,0,0,275,276,5,2,0,0,276,277,3,16,8,0,277,278,6,10,-1,0,278,279,
+        0,267,268,5,6,0,0,268,269,5,35,0,0,269,270,5,7,0,0,270,271,3,16,
+        8,0,271,272,6,10,-1,0,272,282,1,0,0,0,273,274,5,6,0,0,274,275,5,
+        35,0,0,275,276,5,7,0,0,276,277,3,16,8,0,277,278,6,10,-1,0,278,279,
         3,20,10,0,279,280,6,10,-1,0,280,282,1,0,0,0,281,266,1,0,0,0,281,
         267,1,0,0,0,281,273,1,0,0,0,282,21,1,0,0,0,283,300,1,0,0,0,284,285,
         5,30,0,0,285,286,3,32,16,0,286,287,5,31,0,0,287,288,6,11,-1,0,288,
@@ -1657,16 +1657,16 @@ class SlimParser ( Parser ):
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 267
-                self.match(SlimParser.T__19)
+                self.match(SlimParser.T__5)
                 self.state = 268
                 localctx._ID = self.match(SlimParser.ID)
                 self.state = 269
-                self.match(SlimParser.T__1)
+                self.match(SlimParser.T__6)
                 self.state = 270
                 localctx.body = self.expr(contexts)
 
                 localctx.results = [
-                    RecordRule(self._solver).combine_single(pid, contexts[pid].enviro, body_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ)
+                    RecordRule(self._solver).combine_single(pid, body_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ)
                     for body_result in localctx.body.results
                     for pid in [body_result.pid]
                 ]
@@ -1676,11 +1676,11 @@ class SlimParser ( Parser ):
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 273
-                self.match(SlimParser.T__19)
+                self.match(SlimParser.T__5)
                 self.state = 274
                 localctx._ID = self.match(SlimParser.ID)
                 self.state = 275
-                self.match(SlimParser.T__1)
+                self.match(SlimParser.T__6)
                 self.state = 276
                 localctx.body = self.expr(contexts)
 

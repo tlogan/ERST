@@ -9,12 +9,15 @@ from tapas.slim.typlib import *
 #### Context ####
 ############################################################
 
-def contextualize(name : str, typ : str, code : str):
-    return (f"""
-let zzz : ({typ} -> TOP) = (case {name} => 
-{code}
-) in @
-    """.strip())
+def ctx(names : list[str], code : str):
+    base = code
+    for name in names:
+        base = (f"""
+let zzz : ({context_map.get(name)}) -> TOP = (case {name} => 
+{base}
+) in zzz 
+        """.strip())
+    return base
 
 context_map = {
 "head" : f"ALL[A] {List_('A')} -> A",
@@ -32,7 +35,7 @@ context_map = {
 "poly" : f"(ALL[A] A -> A) -> ({Nat} * {Bool})",
 "fst" : f"ALL[A B] (A * B) -> A",
 "auto" : f"(ALL[A] A -> A) -> (ALL [A] A -> A)",
-"auto_prime" : f"ALL[B] (ALL [A] A -> A) -> B -> B)",
+"auto_prime" : f"ALL[B] (ALL[A] A -> A) -> B -> B",
 "map" : f"ALL[A B] (A -> B) -> {List_('A')} -> {List_('B')})",
 "app" : f"ALL[A B] (A -> B) -> A -> B",
 "revapp" : f"ALL[A B] A -> (A -> B) -> B",
@@ -40,6 +43,7 @@ context_map = {
 "argState" : f"ALL[S] {State('S', Nat)}",
 "zero" : Church,
 "succ" : f"{Church} -> {Church}",
+"foo" : f"ALL[A] (A -> A) -> ({List_('A')} -> A)",
 }
 
 

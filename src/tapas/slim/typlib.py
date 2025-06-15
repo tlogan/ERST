@@ -16,7 +16,7 @@ Bool = (f"""
 """.strip())
 
 Nat = (f"""
-(FX Self 
+(LFP[Self] BOT
 | (<zero> @) 
 | (<succ> Self)
 )
@@ -24,7 +24,7 @@ Nat = (f"""
 
 def List_(T): 
     return (f"""
-(FX Self 
+(LFP[Self] Bot
 | (<nil> @) 
 | (<cons> (({T}) * Self))
 )
