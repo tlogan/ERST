@@ -242,7 +242,7 @@ class All:
     body : Typ 
 
 @dataclass(frozen=True, eq=True)
-class Fixpoint:
+class LeastFP:
     id : str 
     body : Typ 
 
@@ -255,7 +255,7 @@ class Bot:
     pass
 
 # Typ = Union[TVar, TUnit, TTag, TField, Unio, Inter, Diff, Imp, Exi, All, Fixpoint, Top, Bot]
-Typ = Union[TVar, TUnit, TEntry, Unio, Inter, Diff, Imp, Exi, All, Fixpoint, Top, Bot]
+Typ = Union[TVar, TUnit, TEntry, Unio, Inter, Diff, Imp, Exi, All, LeastFP, Top, Bot]
 
 
 @dataclass(frozen=True, eq=True)
@@ -397,7 +397,7 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
         )
         return AllNL(count, constraints_nl, to_nameless(bound_ids, typ.body))
 
-    elif isinstance(typ, Fixpoint):
+    elif isinstance(typ, LeastFP):
         bound_ids = tuple([typ.id]) + bound_ids
         return LeastFPNL(to_nameless(bound_ids, typ.body))
 
@@ -504,7 +504,7 @@ def concretize_typ(typ : Typ) -> str:
                 plate_entry = ([control.body], lambda body : f"(ALL [{ids}\n{indent(constraints)}\n] {body})")  
             else:
                 plate_entry = ([control.body], lambda body : f"(ALL [{ids}] {body})")
-        elif isinstance(control, Fixpoint):
+        elif isinstance(control, LeastFP):
             id = control.id
             plate_entry = ([control.body], lambda body : f"(FX {id}\n{indent('| ' + body)})")  
         elif isinstance(control, Top):
@@ -863,7 +863,7 @@ def is_decidable_shape(t : Typ) -> bool:
     else:
         return False
 
-def extract_column_comparisons(key : Typ, rel : Fixpoint) -> list[tuple[Typ, list[Typ]]]:
+def extract_column_comparisons(key : Typ, rel : LeastFP) -> list[tuple[Typ, list[Typ]]]:
     choices = [
         choice
         for choice in linearize_unions(rel.body)
@@ -925,7 +925,7 @@ def find_longest_common_prefixes(src : Typ, choices : list[Typ]) -> PSet[tuple[s
     
     
 
-def is_decomposable(key : Typ, rel : Fixpoint) -> bool:
+def is_decomposable(key : Typ, rel : LeastFP) -> bool:
     comparisons = extract_column_comparisons(key, rel)
 
     result = False 
@@ -1009,14 +1009,14 @@ def normalize_choice(induc_id : str, choice : Typ, ordered_paths : list[tuple[st
     else:
         return to_tuple_typ(choice, ordered_paths)
 
-def normalize_least_fp(t : Fixpoint, ordered_paths : list[tuple[str, ...]]) -> Fixpoint:
+def normalize_least_fp(t : LeastFP, ordered_paths : list[tuple[str, ...]]) -> LeastFP:
 
     normalized_body = Bot() 
     choices = linearize_unions(t.body)
     for choice in reversed(choices):
         norm_choice = normalize_choice(t.id, choice, ordered_paths)
         normalized_body = Unio(norm_choice, normalized_body)
-    return Fixpoint(t.id, normalized_body)
+    return LeastFP(t.id, normalized_body)
 
 
 def extract_ordered_path_target_pairs(key : Typ) -> list[tuple[tuple[str, ...], Typ]]:
@@ -1027,7 +1027,7 @@ def extract_ordered_path_target_pairs(key : Typ) -> list[tuple[tuple[str, ...], 
     return ordered_path_target_pairs
 
 
-def extract_relational_paths(t : Fixpoint) -> PSet[tuple[str, ...]]: 
+def extract_relational_paths(t : LeastFP) -> PSet[tuple[str, ...]]: 
     choices = linearize_unions(t.body)
     paths = s()
     for choice in reversed(choices):
@@ -1100,14 +1100,14 @@ def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Ty
     else:
         return project_typ(choice, path)
 
-def factorize_least_fp(t : Fixpoint, path : tuple[str, ...]) -> Fixpoint:
+def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
 
     factorized_body = Bot() 
     choices = linearize_unions(t.body)
     for choice in reversed(choices):
         factor_choice = factorize_choice(t.id, choice, path)
         factorized_body = Unio(factor_choice, factorized_body)
-    return Fixpoint(t.id, factorized_body)
+    return LeastFP(t.id, factorized_body)
 
 
 # TODO: replace with find_paths plural
@@ -1116,7 +1116,7 @@ def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
     for constraint in world.constraints:
         path = find_path(constraint.lower, search_target)
         if path != None:
-            if isinstance(constraint.upper, Fixpoint):
+            if isinstance(constraint.upper, LeastFP):
                 result = factorize_least_fp(constraint.upper, path)
                 results = results.add(result)
     return results
@@ -1126,7 +1126,7 @@ def find_factors_from_constraint(constraint : Subtyping, search_target : Typ) ->
     paths = find_paths(constraint.lower, search_target)
     # paths = [find_path(constraint.lower, search_target)]
     for path in paths:
-        if isinstance(constraint.upper, Fixpoint) and path != None:
+        if isinstance(constraint.upper, LeastFP) and path != None:
             result = factorize_least_fp(constraint.upper, path)
             results = results.add(result)
     return results
@@ -1184,9 +1184,9 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
         for bid in typ.ids:
             assignment_map = assignment_map.discard(bid)
         return All(typ.ids, sub_constraints(assignment_map, typ.constraints), sub_typ(assignment_map, typ.body)) 
-    elif isinstance(typ, Fixpoint):  
+    elif isinstance(typ, LeastFP):  
         assignment_map = assignment_map.discard(typ.id)
-        return Fixpoint(typ.id, sub_typ(assignment_map, typ.body))
+        return LeastFP(typ.id, sub_typ(assignment_map, typ.body))
     elif isinstance(typ, Top):  
         return typ
     elif isinstance(typ, Bot):  
@@ -1247,7 +1247,7 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
             set_constraints = extract_free_vars_from_constraints(bound_vars, typ.constraints)
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_constraints.union(set_body))
 
-        elif isinstance(typ, Fixpoint):
+        elif isinstance(typ, LeastFP):
             bound_vars = bound_vars.add(typ.id)
             plate_entry = (pair_up(bound_vars, [typ.body]), lambda set_body: set_body)
 
@@ -1481,7 +1481,7 @@ def get_polarity_from_target(positive : bool, target : Typ, id : str) -> Optiona
             body = get_polarity_from_target(positive, target.body, id)
             return compare_polarities(constraints, body)
 
-    elif isinstance(target, Fixpoint):
+    elif isinstance(target, LeastFP):
 
         if id == target.id:
             return None
@@ -1535,7 +1535,7 @@ class Solver:
             for constraint in world.constraints:
                 ordered_paths = extract_matching_ordered_paths(constraint.lower, extract_targets(key))
                 if ordered_paths != None:
-                    if isinstance(constraint.upper, Fixpoint):
+                    if isinstance(constraint.upper, LeastFP):
                         return normalize_least_fp(constraint.upper, ordered_paths)
             return None
         else:
@@ -1606,8 +1606,8 @@ class Solver:
             return Exi(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
         elif isinstance(typ, All):
             return All(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
-        elif isinstance(typ, Fixpoint):
-            return Fixpoint(typ.id, self.simplify_typ(typ.body))
+        elif isinstance(typ, LeastFP):
+            return LeastFP(typ.id, self.simplify_typ(typ.body))
         else:
             return typ
         
@@ -1662,9 +1662,9 @@ class Solver:
             constraints = self.to_aliasing_constraints(t.constraints)
             body_typ = self.to_aliasing_typ(t.body)
             return All(t.ids, constraints, body_typ)
-        elif isinstance(t, Fixpoint):
+        elif isinstance(t, LeastFP):
             body_typ = self.to_aliasing_typ(t.body)
-            new_typ = Fixpoint(t.id, body_typ)
+            new_typ = LeastFP(t.id, body_typ)
             alias = next((
                 alias
                 for alias,ty in self.aliasing.items()
@@ -1746,7 +1746,7 @@ class Solver:
             return (bound_ids + body_ids, constraints + body_constraints, body_typ)
         elif isinstance(t, All):
             return ((), (), t)
-        elif isinstance(t, Fixpoint):
+        elif isinstance(t, LeastFP):
             return ((), (), t)
         elif isinstance(t, Top):
             return ((), (), t)
@@ -1874,7 +1874,7 @@ class Solver:
             id
             for st in constraints
             if self.is_relational_key(st.lower)
-            if isinstance(st.upper, Fixpoint)
+            if isinstance(st.upper, LeastFP)
             for id in extract_free_vars_from_typ(s(), st.lower) 
         )
 
@@ -1931,9 +1931,9 @@ class Solver:
             body = self.interpret_polar_typ(positive, ignore.union(src.ids), constraints, src.body)
             return All(src.ids, tuple(inner_constraints), body)
 
-        elif isinstance(src, Fixpoint):  
+        elif isinstance(src, LeastFP):  
             body = self.interpret_polar_typ(positive, ignore.add(src.id), constraints, src.body)
-            return Fixpoint(src.id, src.body)
+            return LeastFP(src.id, src.body)
         elif isinstance(src, Top):  
             return src
         elif isinstance(src, Bot):  
@@ -2033,11 +2033,11 @@ class Solver:
                     tuple(self.sub_polar_constraints(greenlight, src.constraints, id, payload)),
                     self.sub_polar_typ(greenlight, src.body, id, payload),
                 )
-        elif isinstance(src, Fixpoint):  
+        elif isinstance(src, LeastFP):  
             if id == src.id:
                 return src
             else:
-                return Fixpoint(
+                return LeastFP(
                     src.id,
                     self.sub_polar_typ(greenlight, src.body, id, payload)
                 )
@@ -2120,7 +2120,7 @@ class Solver:
         else:
             return False
 
-    def is_relational_constraint_consistent(self, lower : Typ, upper : Fixpoint) -> bool: 
+    def is_relational_constraint_consistent(self, lower : Typ, upper : LeastFP) -> bool: 
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
         upper_body = sub_typ(renaming, upper.body)
         # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
@@ -2212,7 +2212,7 @@ class Solver:
         return (
             isinstance(t, Bot) or
             isinstance(t, Unio) or
-            isinstance(t, Fixpoint) or
+            isinstance(t, LeastFP) or
             isinstance(t, Exi)
         )
 
@@ -2346,7 +2346,7 @@ class Solver:
                 for m1 in self.solve(m0, lower, TEntry(upper.label, upper.body.right))
             ]
 
-        elif isinstance(upper, Imp) and isinstance(upper.antec, Fixpoint):
+        elif isinstance(upper, Imp) and isinstance(upper.antec, LeastFP):
             param_typ = self.fresh_type_var()
             universal_typ = All(
                 tuple([param_typ.id]), 
@@ -2565,7 +2565,7 @@ class Solver:
         #######################################
 
 
-        elif isinstance(lower, Fixpoint):
+        elif isinstance(lower, LeastFP):
             if is_typ_structured(lower.body):
                 # renaming : PMap[str, Typ] = pmap({lower.id : upper})
                 # lower_body = sub_typ(renaming, lower.body)
@@ -2604,7 +2604,7 @@ class Solver:
         #### Fixpoint Introduction #############
         #######################################
 
-        elif isinstance(upper, Fixpoint): 
+        elif isinstance(upper, LeastFP): 
 
 #             print(f"""
 # DEBUG upper, Fixpoint SOLVE:
@@ -3133,7 +3133,7 @@ class ExprRule(Rule):
         #end for
 
         # TODO: add constraint to parameter to ensuire soundness 
-        rel_typ = Fixpoint(IH_typ.id, induc_body)
+        rel_typ = LeastFP(IH_typ.id, induc_body)
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)

@@ -128,12 +128,14 @@ $combo = TUnit()
 // | '~' ID typ_base {
 // $combo = TTag($ID.text, $typ_base.combo) 
 // }
-| '~' ID typ_base {
-$combo = TEntry($ID.text, $typ_base.combo) 
-}
 
 // TEntry 
-| ID ':' typ_base {
+// | ID ':' typ_base {
+// $combo = TEntry($ID.text, $typ_base.combo) 
+// }
+
+// TEntry 
+| '<' ID '>' typ_base {
 $combo = TEntry($ID.text, $typ_base.combo) 
 }
 
@@ -212,13 +214,8 @@ $combo = All($ids.combo, $qualification.combo, $typ.combo)
 
 
 
-//induction // least fixed point; smallest set such that typ <: ID is invariant
-//   
-// least self with 
-// :zero, :nil |  
-// {n, l <: self] succ n, cons l 
-| 'FX' ID '|' typ {
-$combo = Fixpoint($ID.text, $typ.combo) 
+| 'LFP' '[' ID ']' typ {
+$combo = LeastFP($ID.text, $typ.combo) 
 }
 
 

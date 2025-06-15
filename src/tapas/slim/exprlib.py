@@ -2,6 +2,77 @@ from __future__ import annotations
 
 from typing import *
 from dataclasses import dataclass
+from tapas.slim.typlib import *
+
+
+############################################################
+#### Context ####
+############################################################
+
+def contextualize(name : str, typ : str, code : str):
+    return (f"""
+let zzz : ({typ} -> TOP) = (case {name} => 
+{code}
+) in @
+    """.strip())
+
+context_map = {
+"head" : f"ALL [A] {List_('A')} -> A",
+"tail" : f"ALL [A] {List_('A')} -> {List_('A')}",
+"nil" : f"ALL [A] {List_('A')}",
+"cons" : f"ALL [A] A -> {List_('A')} -> {List_('A')}",
+"single" : f"ALL [A] A -> {List_('A')}",
+"append" : f"ALL [A] {List_('A')} -> {List_('A')} -> {List_('A')}",
+"length" : f"ALL [A] {List_('A')} -> {Nat}",
+"const" : f"ALL [A B] A -> B -> A",
+"id" : f"ALL [A] A -> A",
+"ids" : List_(f"ALL [A] A -> A"),
+"inc" : f"{Nat} -> {Nat}",
+"choose" : f"ALL [A] A -> A -> A",
+"poly" : f"(ALL [A] A -> A) -> ({Nat} * {Bool})",
+"fst" : f"ALL [A B] (A * B) -> A",
+"auto" : f"(ALL [A] A -> A) -> (ALL [A] A -> A)",
+"auto_prime" : f"ALL [B] (ALL [A] A -> A) -> B -> B)",
+"map" : f"ALL [A B] (A -> B) -> {List_('A')} -> {List_('B')})",
+"app" : f"ALL [A B] (A -> B) -> A -> B",
+"revapp" : f"ALL [A B] A -> (A -> B) -> B",
+"runState" : f"ALL [A] (ALL [S] {State('S', 'A')}) -> B",
+"argState" : f"ALL [S] {State('S', Nat)}",
+"zero" : Church,
+"succ" : f"{Church} -> {Church}",
+}
+
+
+############################################################
+#### Basics ####
+############################################################
+
+church_zero = (f"""
+case f => case x => x
+""".strip())
+
+church_succ = (f"""
+case n => case f => case x => f(n(f)(x)) 
+""".strip())
+
+
+head = (f"""
+    case (<cons> (x, xs)) => x
+""".strip())
+
+tail = (f"""
+    case (<cons> (x, xs)) => xs
+""".strip())
+
+single = (f"""
+    case x => (<cons> (x, <nil> @)) 
+""".strip())
+
+append = (f"""
+""".strip())
+
+############################################################
+############################################################
 
 ltd = ('''
 fix(case self => (

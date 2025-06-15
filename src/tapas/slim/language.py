@@ -145,9 +145,15 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     token_stream : Any = CommonTokenStream(lexer)
     parser = SlimParser(token_stream)
     tc = parser.typ()
-    return tc.combo
+    answer = tc.combo
+    print(f"""
+============================================================================================
+{answer}
+============================================================================================
+    """)
+    return answer
 
-def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
+def analyze(code : str) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
     try:
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
@@ -161,14 +167,42 @@ def analyze(code : str) -> tuple[analyzer.Typ, str, analyzer.Solver]:
             result = tc.results[0]
             return (result.typ, tc.toStringTree(recog=parser), parser._solver)
         else: 
-            return (analyzer.Bot(), tc.toStringTree(recog=parser), parser._solver)
+            return (None, tc.toStringTree(recog=parser), parser._solver)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")
         print("RECURSION ERROR")
         print("!!!!!!!!!!!!!!!")
-        return (analyzer.Bot(), "", parser._solver)
+        return (None, "", parser._solver)
     except analyzer.InhabitableError:
-        return (analyzer.Bot(), "", parser._solver)
+        return (None, "", parser._solver)
+
+def infer_typ(code : str) -> str:
+    (result, parsetree, solver) = analyze(code)
+    if result == None:
+        return ""
+    else:
+        answer = analyzer.concretize_typ(result)
+        print(f"""
+=========================================================================================================================
+{answer}
+=========================================================================================================================
+        """)
+        return answer
+
+def solve_subtyping(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
+    x = parse_typ(a)
+    assert x
+    y = parse_typ(b)
+    assert y 
+    try:
+        return solver.solve_composition(x, y)
+    except RecursionError:
+        print("!!!!!!!!!!!!!!!")
+        print("RECURSION ERROR")
+        print("!!!!!!!!!!!!!!!")
+        return []
+    # except:
+    #     return []
 
 def refine_grammar(code : str) -> analyzer.Grammar:
     input_stream = InputStream(code)

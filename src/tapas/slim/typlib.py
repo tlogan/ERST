@@ -3,34 +3,42 @@ from __future__ import annotations
 from typing import *
 from dataclasses import dataclass
 
-import sys
-from antlr4 import *
-import sys
+############################################################
+#### Basics ####
+############################################################
 
-import asyncio
-from asyncio import Queue
+Church = (f"""
+(ALL[A] (A -> A) -> (A -> A))
+""".strip())
 
-from tapas.slim.SlimLexer import SlimLexer
-from tapas.slim.SlimParser import SlimParser
-from tapas.slim import analyzer, language
+Bool = (f"""
+((<true> @) | (<false> @))
+""".strip())
 
-from tapas.util_system import box, unbox
+Nat = (f"""
+(FX Self 
+| (<zero> @) 
+| (<succ> Self)
+)
+""".strip())
 
-from pyrsistent import m, s, pmap, pset
-from pyrsistent.typing import PMap, PSet 
+def List_(T): 
+    return (f"""
+(FX Self 
+| (<nil> @) 
+| (<cons> (({T}) * Self))
+)
+    """.strip())
 
-import pytest
-from tapas.slim.language import analyze 
-import re
-import json
+def State(S, T): 
+    return (f"""
+(<state> (({S}) * ({T})))
+    """.strip())
 
-from openai import OpenAI
-from dataclasses import dataclass
-from typing import *
-from tapas.slim.analyzer import * 
-from tapas.slim.language import * 
-import random
-from tapas.util_system import *
+
+############################################################
+############################################################
+
 
 # nat = (f"""
 # (FX N | ~zero @  | ~succ N )
@@ -184,3 +192,4 @@ max = (f"""
 #     ] (EXI [O ; ((M, N), O) <: {open_lted} ; O <: G44 ] (M, N) -> M)))
 # )
 # """)
+

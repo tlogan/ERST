@@ -1305,7 +1305,7 @@ def test_lted_normalization():
 # {analyzer.concretize_typ(weak)}
 # ~~~~~~~~~~~~~~~~~~~
 #           """)
-    assert isinstance(weak, analyzer.Fixpoint)
+    assert isinstance(weak, analyzer.LeastFP)
 
 
     ordered_path_target_pairs = analyzer.extract_ordered_path_target_pairs(strong)
