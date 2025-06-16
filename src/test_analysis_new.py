@@ -260,6 +260,117 @@ map(head)(single(ids))
     print(code)
     assert infer_typ(code)
 
+###############################################################
+##### Typing D. Application functions 
+###############################################################
+
+def test_typing_D1():
+    code = ctx(["app", "poly", "id"], f"""
+app(poly)(id)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_D2():
+    code = ctx(["revapp", "poly", "id"], f"""
+revapp(id)(poly)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_D3():
+    code = ctx(["runST", "argST"], f"""
+runST(argST)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_D4():
+    code = ctx(["app", "runST", "argST"], f"""
+app(runST)(argST)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_D5():
+    code = ctx(["revapp", "runST", "argST"], f"""
+revapp(argST)(runST)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+###############################################################
+##### Typing E. Eta expansion 
+###############################################################
+
+def test_typing_E1():
+    code = ctx(["k", "h", "l"], f"""
+k(h)(l)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_E2():
+    code = ctx(["k", "h", "l"], f"""
+k(case x => h(x))(l)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_E3():
+    code = ctx(["r"], f"""
+r(case x => case y => y)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+###############################################################
+##### Typing F. FreezeML paper additions 
+###############################################################
+def test_typing_F5():
+    code = ctx(["auto", "id"], f"""
+auto(id)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_F6():
+    code = ctx(["cons", "head", "ids", "id"], f"""
+cons (head(ids))(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_F7():
+    code = ctx(["head", "ids"], f"""
+head(ids)(<succ><succ><succ><zero>@)
+    """)
+    print(code)
+    #TODO: why is this so slow??? 
+    assert infer_typ(code)
+
+def test_typing_F8():
+    code = ctx(["choose", "head", "ids"], f"""
+choose(head(ids))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_F9():
+    code = ctx(["revapp", "id", "poly"], f"""
+let f = revapp(id) in
+f(poly)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_F10():
+    code = ctx(["choose", "id", "auto_prime"], f"""
+choose(id)(case x => auto_prime(x))
+    """)
+    print(code)
+    assert infer_typ(code)
+
 
 ###############################################################
 ###############################################################
@@ -267,7 +378,5 @@ map(head)(single(ids))
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_C3()
-    # test_subtyping()
 
 #######################################################################

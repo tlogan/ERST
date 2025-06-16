@@ -174,6 +174,7 @@ def analyze(code : str) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
         print("!!!!!!!!!!!!!!!")
         return (None, "", parser._solver)
     except analyzer.InhabitableError:
+        print("DEBUG A")
         return (None, "", parser._solver)
 
 def infer_typ(code : str) -> str:

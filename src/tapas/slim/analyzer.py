@@ -2524,23 +2524,6 @@ class Solver:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
-
-
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG lower, TVar Skolem
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-skolems:
-{world.closedids}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-constraints:
-{concretize_constraints(world.constraints)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{lower.id}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
             if self.closed_variable_elimination_safe(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:

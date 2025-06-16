@@ -461,7 +461,7 @@ tail_contexts = [
     for body_result in $body.results
 ]
 } 
-tail = record[tail_contexts] {
+';' tail = record[tail_contexts] {
 $results = [
     RecordRule(self._solver).combine_cons(pid, contexts[pid].enviro, tail_result.world, $ID.text, body_result.typ, tail_result.branches) 
     for tail_result in $tail.results

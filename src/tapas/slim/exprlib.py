@@ -45,6 +45,11 @@ context_map = {
 "succ" : f"{Church} -> {Church}",
 "foo" : f"ALL[A] (A -> A) -> ({List_('A')} -> A)",
 "g" : f"ALL[A] {List_('A')} -> {List_('A')} -> A",
+"k" : f"ALL[A] A -> {List_('A')} -> A",
+"h" : f"{Nat} -> ALL[A] A -> A",
+"l" : List_(f"ALL[A] {Nat} -> A -> A"),
+"r" : f"(ALL[A] A -> ALL[B] B -> B) -> {Nat}",
+"x" : "<succ><succ><succ><zero>@"
 }
 
 
