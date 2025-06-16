@@ -173,6 +173,82 @@ case xs => poly(head)(xs)
     print(code)
     assert infer_typ(code)
 
+###############################################################
+##### Typing C. Function on polymorphic lists 
+###############################################################
+
+def test_typing_C1():
+    code = ctx(["length", "ids"], f"""
+length(ids)
+    """)
+    print(code)
+    # TODO: shouldn't the result type be a list?
+    # TODO: maybe the annotations aren't restricting the type inference 
+    assert infer_typ(code)
+
+def test_typing_C2():
+    code = ctx(["tail", "ids"], f"""
+tail(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C3():
+    code = ctx(["head", "ids"], f"""
+head(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C4():
+    code = ctx(["single", "id"], f"""
+single(id)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C5():
+    code = ctx(["cons", "id", "ids"], f"""
+cons(id)(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C6():
+    code = ctx(["cons", "ids"], f"""
+cons(case x => x)(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C7():
+    code = ctx(["append", "single", "inc", "id"], f"""
+append(single(inc))(single(id))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C8():
+    code = ctx(["g", "single", "id", "ids"], f"""
+g(single(id))(ids)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C9():
+    code = ctx(["map", "poly", "single", "id"], f"""
+map(poly)(single(id))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_C10():
+    code = ctx(["map", "head", "single", "ids"], f"""
+map(head)(single(ids))
+    """)
+    print(code)
+    assert infer_typ(code)
+
 
 ###############################################################
 ##### Subtyping 
@@ -181,6 +257,6 @@ case xs => poly(head)(xs)
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_B2()
+    test_typing_C10()
 
 #######################################################################

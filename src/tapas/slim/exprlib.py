@@ -36,7 +36,7 @@ context_map = {
 "fst" : f"ALL[A B] (A * B) -> A",
 "auto" : f"(ALL[A] A -> A) -> (ALL [A] A -> A)",
 "auto_prime" : f"ALL[B] (ALL[A] A -> A) -> B -> B",
-"map" : f"ALL[A B] (A -> B) -> {List_('A')} -> {List_('B')})",
+"map" : f"ALL[A B] (A -> B) -> {List_('A')} -> {List_('B')}",
 "app" : f"ALL[A B] (A -> B) -> A -> B",
 "revapp" : f"ALL[A B] A -> (A -> B) -> B",
 "runState" : f"ALL[A] (ALL[S] {State('S', 'A')}) -> B",
@@ -44,6 +44,7 @@ context_map = {
 "zero" : Church,
 "succ" : f"{Church} -> {Church}",
 "foo" : f"ALL[A] (A -> A) -> ({List_('A')} -> A)",
+"g" : f"ALL[A] {List_('A')} -> {List_('A')} -> A",
 }
 
 
