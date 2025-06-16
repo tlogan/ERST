@@ -6,6 +6,8 @@ import sys
 from antlr4 import *
 import sys
 
+import random
+
 import asyncio
 from asyncio import Queue
 
@@ -1522,7 +1524,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 1000 
+        self._limit = 500 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2218,11 +2220,13 @@ class Solver:
 
 
     def closed_variable_elimination_safe(self, world : World, lower : TVar, upper : Typ) -> bool:
-        upper_parts = pset(
+        upper_parts = list(pset(
             st.upper
             for st in world.constraints
             if st.lower == lower 
-        ).union(self.extract_factored_upper_bounds(world, lower.id))
+        ).union(self.extract_factored_upper_bounds(world, lower.id)))
+        # upper_parts.sort(key=lambda up : str(up))
+        random.shuffle(upper_parts)
 
         some_parts_consistent = any(
             (
@@ -2243,13 +2247,20 @@ class Solver:
         return some_parts_consistent and all_parts_consistent
 
     def closed_variable_introduction_safe(self, world : World, lower : Typ, upper : TVar) -> bool:
-        some_parts_consistent = any(
-            (
-                (isinstance(st.lower, TVar) and st.lower.id not in world.closedids)
-                or bool(self.solve(world, lower, st.lower))
-            )
+
+        lower_parts = list(pset(
+            st.lower
             for st in world.constraints
             if st.upper == upper 
+        ))
+        random.shuffle(lower_parts)
+
+        some_parts_consistent = any(
+            (
+                (isinstance(lower, TVar) and lower.id not in world.closedids)
+                or bool(self.solve(world, lower, lower))
+            )
+            for lower in lower_parts
         )
 
         all_parts_consistent = all(
@@ -2277,10 +2288,13 @@ class Solver:
         )
             
 
-    def solve(self, world : World, lower : Typ, upper : Typ) -> list[World]:
+    def solve(self, world : World, lower : Typ, upper : Typ, reset = False) -> list[World]:
         self.count += 1
-        if self.count > self._limit:
-            return []
+        if reset:
+            self.count = 0
+
+        # if self.count > self._limit:
+        #     return []
 
 #         print(f"""
 # DEBUG SOLVE:
@@ -2510,6 +2524,23 @@ class Solver:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
+
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG lower, TVar Skolem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+skolems:
+{world.closedids}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+constraints:
+{concretize_constraints(world.constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{lower.id}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             if self.closed_variable_elimination_safe(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
@@ -2992,7 +3023,7 @@ class ExprRule(Rule):
             result_var = self.solver.fresh_type_var()
             new_worlds = []
             for world in worlds:
-                new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var)))
+                new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True))
             worlds = new_worlds
             current_cator_typ = result_var
 
@@ -3244,4 +3275,12 @@ class RecordPatternRule(Rule):
         pattern = Inter(TEntry(label, body_result.typ), tail_result.typ)
         enviro = body_result.enviro.update(tail_result.enviro)
         return PatternResult(enviro, pattern)
+
+class TargetRule(Rule):
+
+    def combine_anno(self, pid : int, world : World, expr_typ : Typ, anno_typ : Typ) -> list[Result]:
+        return [
+            Result(pid, new_world, anno_typ)
+            for new_world in self.solver.solve(world, expr_typ, anno_typ, reset=True)
+        ]
 

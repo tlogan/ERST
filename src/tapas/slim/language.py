@@ -189,12 +189,13 @@ def infer_typ(code : str) -> str:
         """)
         return answer
 
-def solve_subtyping(solver : analyzer.Solver, a : str, b : str) -> list[analyzer.World]:
+def solve_subtyping(a : str, b : str) -> list[analyzer.World]:
     x = parse_typ(a)
     assert x
     y = parse_typ(b)
     assert y 
     try:
+        solver = analyzer.Solver(m())
         return solver.solve_composition(x, y)
     except RecursionError:
         print("!!!!!!!!!!!!!!!")

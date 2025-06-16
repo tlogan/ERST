@@ -1816,6 +1816,7 @@ public class SlimParser extends Parser {
 		public list[Context] contexts;
 		public list[Result] results;
 		public ExprContext expr;
+		public TypContext typ;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
@@ -1860,15 +1861,22 @@ public class SlimParser extends Parser {
 				setState(346);
 				match(T__33);
 				setState(347);
-				typ();
+				((TargetContext)_localctx).typ = typ();
 				setState(348);
 				match(T__1);
 				setState(349);
 				((TargetContext)_localctx).expr = expr(contexts);
 
 				_localctx.results = [
-				    Result(expr_result.pid, expr_result.world, expr_result.typ)
-				    for expr_result in ((TargetContext)_localctx).expr.results 
+				    result 
+				    for expr_result in ((TargetContext)_localctx).expr.results
+				    for pid in [expr_result.pid]
+				    for result in TargetRule(self._solver).combine_anno(
+				        pid,
+				        expr_result.world,
+				        expr_result.typ,
+				        ((TargetContext)_localctx).typ.combo
+				    )
 				]
 
 				}

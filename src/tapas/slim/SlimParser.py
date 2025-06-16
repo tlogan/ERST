@@ -2113,6 +2113,7 @@ class SlimParser ( Parser ):
             self.contexts = None
             self.results = None
             self._expr = None # ExprContext
+            self._typ = None # TypContext
             self.contexts = contexts
 
         def expr(self):
@@ -2164,15 +2165,22 @@ class SlimParser ( Parser ):
                 self.state = 346
                 self.match(SlimParser.T__33)
                 self.state = 347
-                self.typ()
+                localctx._typ = self.typ()
                 self.state = 348
                 self.match(SlimParser.T__1)
                 self.state = 349
                 localctx._expr = self.expr(contexts)
 
                 localctx.results = [
-                    Result(expr_result.pid, expr_result.world, expr_result.typ)
-                    for expr_result in localctx._expr.results 
+                    result 
+                    for expr_result in localctx._expr.results
+                    for pid in [expr_result.pid]
+                    for result in TargetRule(self._solver).combine_anno(
+                        pid,
+                        expr_result.world,
+                        expr_result.typ,
+                        localctx._typ.combo
+                    )
                 ]
 
                 pass

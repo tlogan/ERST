@@ -24,7 +24,7 @@ Nat = (f"""
 
 def List_(T): 
     return (f"""
-(LFP[Self] Bot
+(LFP[Self] BOT
 | (<nil> @) 
 | (<cons> (({T}) * Self))
 )

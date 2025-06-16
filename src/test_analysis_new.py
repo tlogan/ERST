@@ -20,13 +20,26 @@ from pyrsistent import m, s, pmap, pset
 from pyrsistent.typing import PMap, PSet 
 
 import pytest
-from tapas.slim.language import analyze, infer_typ, parse_typ
+from tapas.slim.language import analyze, infer_typ, parse_typ, solve_subtyping
 
 from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
 def test_max():
     assert infer_typ(el.max) != "" 
+
+
+###############################################################
+##### Subtyping 
+###############################################################
+
+def test_subtyping():
+    solve_subtyping(f"""
+ALL[A](LFP[Self] (<nil> @) | (<cons> (A * Self)))
+    """, f"""
+EXI[B](LFP[Self] (<nil> @) | (<cons> (B * Self)))
+    """
+    )
 
 ###############################################################
 ##### Typ Parsing 
@@ -182,8 +195,6 @@ def test_typing_C1():
 length(ids)
     """)
     print(code)
-    # TODO: shouldn't the result type be a list?
-    # TODO: maybe the annotations aren't restricting the type inference 
     assert infer_typ(code)
 
 def test_typing_C2():
@@ -251,12 +262,12 @@ map(head)(single(ids))
 
 
 ###############################################################
-##### Subtyping 
 ###############################################################
 
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_C10()
+    test_typing_C3()
+    # test_subtyping()
 
 #######################################################################

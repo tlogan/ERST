@@ -584,8 +584,15 @@ $results = $expr.results
 
 | ':' typ '=' expr[contexts] {
 $results = [
-    Result(expr_result.pid, expr_result.world, expr_result.typ)
-    for expr_result in $expr.results 
+    result 
+    for expr_result in $expr.results
+    for pid in [expr_result.pid]
+    for result in TargetRule(self._solver).combine_anno(
+        pid,
+        expr_result.world,
+        expr_result.typ,
+        $typ.combo
+    )
 ]
 }
 ;
