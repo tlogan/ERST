@@ -22,7 +22,7 @@ from pyrsistent import m, s, pmap, pset
 
 def serializedATN():
     return [
-        4,1,37,400,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,36,393,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,1,0,1,0,1,0,1,
         0,1,0,1,0,1,0,3,0,46,8,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -39,129 +39,127 @@ def serializedATN():
         8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,
         8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,3,8,243,
         8,8,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,
-        1,9,1,9,1,9,1,9,1,9,3,9,265,8,9,1,10,1,10,1,10,1,10,1,10,1,10,1,
-        10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,283,8,10,1,
-        11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,
-        11,1,11,1,11,3,11,301,8,11,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,
-        12,1,12,1,12,3,12,313,8,12,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,
-        13,1,13,1,13,1,13,1,13,1,13,3,13,328,8,13,1,14,1,14,1,14,1,14,1,
-        14,1,14,1,14,1,14,1,14,1,14,1,14,3,14,341,8,14,1,15,1,15,1,15,1,
-        15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,3,15,354,8,15,1,16,1,16,1,
-        16,1,16,1,16,1,16,1,16,1,16,1,16,1,16,3,16,366,8,16,1,17,1,17,1,
-        17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,3,17,381,8,
-        17,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,
-        18,1,18,1,18,3,18,398,8,18,1,18,0,0,19,0,2,4,6,8,10,12,14,16,18,
-        20,22,24,26,28,30,32,34,36,0,0,442,0,45,1,0,0,0,2,61,1,0,0,0,4,72,
-        1,0,0,0,6,94,1,0,0,0,8,161,1,0,0,0,10,174,1,0,0,0,12,185,1,0,0,0,
-        14,193,1,0,0,0,16,242,1,0,0,0,18,264,1,0,0,0,20,282,1,0,0,0,22,300,
-        1,0,0,0,24,312,1,0,0,0,26,327,1,0,0,0,28,340,1,0,0,0,30,353,1,0,
-        0,0,32,365,1,0,0,0,34,380,1,0,0,0,36,397,1,0,0,0,38,46,1,0,0,0,39,
-        40,5,35,0,0,40,46,6,0,-1,0,41,42,5,35,0,0,42,43,3,0,0,0,43,44,6,
-        0,-1,0,44,46,1,0,0,0,45,38,1,0,0,0,45,39,1,0,0,0,45,41,1,0,0,0,46,
-        1,1,0,0,0,47,62,1,0,0,0,48,49,5,1,0,0,49,50,5,35,0,0,50,51,5,2,0,
-        0,51,52,3,8,4,0,52,53,6,1,-1,0,53,62,1,0,0,0,54,55,5,1,0,0,55,56,
-        5,35,0,0,56,57,5,2,0,0,57,58,3,8,4,0,58,59,3,2,1,0,59,60,6,1,-1,
-        0,60,62,1,0,0,0,61,47,1,0,0,0,61,48,1,0,0,0,61,54,1,0,0,0,62,3,1,
-        0,0,0,63,73,1,0,0,0,64,65,3,2,1,0,65,66,6,2,-1,0,66,67,3,16,8,0,
-        67,68,6,2,-1,0,68,73,1,0,0,0,69,70,3,16,8,0,70,71,6,2,-1,0,71,73,
-        1,0,0,0,72,63,1,0,0,0,72,64,1,0,0,0,72,69,1,0,0,0,73,5,1,0,0,0,74,
-        95,1,0,0,0,75,76,5,3,0,0,76,95,6,3,-1,0,77,78,5,4,0,0,78,95,6,3,
-        -1,0,79,80,5,35,0,0,80,95,6,3,-1,0,81,82,5,5,0,0,82,95,6,3,-1,0,
-        83,84,5,6,0,0,84,85,5,35,0,0,85,86,5,7,0,0,86,87,3,6,3,0,87,88,6,
-        3,-1,0,88,95,1,0,0,0,89,90,5,8,0,0,90,91,3,8,4,0,91,92,5,9,0,0,92,
-        93,6,3,-1,0,93,95,1,0,0,0,94,74,1,0,0,0,94,75,1,0,0,0,94,77,1,0,
-        0,0,94,79,1,0,0,0,94,81,1,0,0,0,94,83,1,0,0,0,94,89,1,0,0,0,95,7,
-        1,0,0,0,96,162,1,0,0,0,97,98,3,6,3,0,98,99,6,4,-1,0,99,162,1,0,0,
-        0,100,101,3,6,3,0,101,102,5,10,0,0,102,103,3,8,4,0,103,104,6,4,-1,
-        0,104,162,1,0,0,0,105,106,3,6,3,0,106,107,5,11,0,0,107,108,3,8,4,
-        0,108,109,6,4,-1,0,109,162,1,0,0,0,110,111,3,6,3,0,111,112,3,10,
-        5,0,112,113,6,4,-1,0,113,162,1,0,0,0,114,115,3,6,3,0,115,116,5,12,
-        0,0,116,117,3,8,4,0,117,118,6,4,-1,0,118,162,1,0,0,0,119,120,3,6,
-        3,0,120,121,5,13,0,0,121,122,3,8,4,0,122,123,6,4,-1,0,123,162,1,
-        0,0,0,124,125,5,14,0,0,125,126,5,15,0,0,126,127,3,0,0,0,127,128,
-        5,16,0,0,128,129,3,8,4,0,129,130,6,4,-1,0,130,162,1,0,0,0,131,132,
-        5,14,0,0,132,133,5,15,0,0,133,134,3,0,0,0,134,135,5,16,0,0,135,136,
-        3,12,6,0,136,137,3,8,4,0,137,138,6,4,-1,0,138,162,1,0,0,0,139,140,
-        5,17,0,0,140,141,5,15,0,0,141,142,3,0,0,0,142,143,5,16,0,0,143,144,
-        3,8,4,0,144,145,6,4,-1,0,145,162,1,0,0,0,146,147,5,17,0,0,147,148,
-        5,15,0,0,148,149,3,0,0,0,149,150,5,16,0,0,150,151,3,12,6,0,151,152,
-        3,8,4,0,152,153,6,4,-1,0,153,162,1,0,0,0,154,155,5,18,0,0,155,156,
-        5,15,0,0,156,157,5,35,0,0,157,158,5,16,0,0,158,159,3,8,4,0,159,160,
-        6,4,-1,0,160,162,1,0,0,0,161,96,1,0,0,0,161,97,1,0,0,0,161,100,1,
-        0,0,0,161,105,1,0,0,0,161,110,1,0,0,0,161,114,1,0,0,0,161,119,1,
-        0,0,0,161,124,1,0,0,0,161,131,1,0,0,0,161,139,1,0,0,0,161,146,1,
-        0,0,0,161,154,1,0,0,0,162,9,1,0,0,0,163,175,1,0,0,0,164,165,5,19,
-        0,0,165,166,3,8,4,0,166,167,6,5,-1,0,167,175,1,0,0,0,168,169,5,19,
-        0,0,169,170,3,8,4,0,170,171,6,5,-1,0,171,172,3,10,5,0,172,173,6,
-        5,-1,0,173,175,1,0,0,0,174,163,1,0,0,0,174,164,1,0,0,0,174,168,1,
-        0,0,0,175,11,1,0,0,0,176,186,1,0,0,0,177,178,5,20,0,0,178,186,6,
-        6,-1,0,179,180,5,8,0,0,180,181,3,14,7,0,181,182,5,9,0,0,182,183,
-        3,12,6,0,183,184,6,6,-1,0,184,186,1,0,0,0,185,176,1,0,0,0,185,177,
-        1,0,0,0,185,179,1,0,0,0,186,13,1,0,0,0,187,194,1,0,0,0,188,189,3,
-        8,4,0,189,190,5,21,0,0,190,191,3,8,4,0,191,192,6,7,-1,0,192,194,
-        1,0,0,0,193,187,1,0,0,0,193,188,1,0,0,0,194,15,1,0,0,0,195,243,1,
-        0,0,0,196,197,3,18,9,0,197,198,6,8,-1,0,198,243,1,0,0,0,199,200,
-        3,18,9,0,200,201,5,22,0,0,201,202,6,8,-1,0,202,203,3,16,8,0,203,
-        204,6,8,-1,0,204,243,1,0,0,0,205,206,5,23,0,0,206,207,3,16,8,0,207,
-        208,5,24,0,0,208,209,6,8,-1,0,209,210,3,16,8,0,210,211,5,25,0,0,
-        211,212,3,16,8,0,212,213,6,8,-1,0,213,243,1,0,0,0,214,215,3,18,9,
-        0,215,216,3,24,12,0,216,217,6,8,-1,0,217,243,1,0,0,0,218,219,3,18,
-        9,0,219,220,6,8,-1,0,220,221,3,26,13,0,221,222,6,8,-1,0,222,243,
-        1,0,0,0,223,224,3,18,9,0,224,225,6,8,-1,0,225,226,3,28,14,0,226,
-        227,6,8,-1,0,227,243,1,0,0,0,228,229,5,26,0,0,229,230,5,35,0,0,230,
-        231,3,30,15,0,231,232,5,27,0,0,232,233,6,8,-1,0,233,234,3,16,8,0,
-        234,235,6,8,-1,0,235,243,1,0,0,0,236,237,5,28,0,0,237,238,5,8,0,
-        0,238,239,3,16,8,0,239,240,5,9,0,0,240,241,6,8,-1,0,241,243,1,0,
-        0,0,242,195,1,0,0,0,242,196,1,0,0,0,242,199,1,0,0,0,242,205,1,0,
-        0,0,242,214,1,0,0,0,242,218,1,0,0,0,242,223,1,0,0,0,242,228,1,0,
-        0,0,242,236,1,0,0,0,243,17,1,0,0,0,244,265,1,0,0,0,245,246,5,5,0,
-        0,246,265,6,9,-1,0,247,248,5,29,0,0,248,249,5,35,0,0,249,250,3,18,
-        9,0,250,251,6,9,-1,0,251,265,1,0,0,0,252,253,3,20,10,0,253,254,6,
-        9,-1,0,254,265,1,0,0,0,255,256,6,9,-1,0,256,257,3,22,11,0,257,258,
-        6,9,-1,0,258,265,1,0,0,0,259,260,5,35,0,0,260,265,6,9,-1,0,261,262,
-        3,26,13,0,262,263,6,9,-1,0,263,265,1,0,0,0,264,244,1,0,0,0,264,245,
-        1,0,0,0,264,247,1,0,0,0,264,252,1,0,0,0,264,255,1,0,0,0,264,259,
-        1,0,0,0,264,261,1,0,0,0,265,19,1,0,0,0,266,283,1,0,0,0,267,268,5,
-        6,0,0,268,269,5,35,0,0,269,270,5,7,0,0,270,271,3,16,8,0,271,272,
-        6,10,-1,0,272,283,1,0,0,0,273,274,5,6,0,0,274,275,5,35,0,0,275,276,
-        5,7,0,0,276,277,3,16,8,0,277,278,6,10,-1,0,278,279,5,20,0,0,279,
-        280,3,20,10,0,280,281,6,10,-1,0,281,283,1,0,0,0,282,266,1,0,0,0,
-        282,267,1,0,0,0,282,273,1,0,0,0,283,21,1,0,0,0,284,301,1,0,0,0,285,
-        286,5,30,0,0,286,287,3,32,16,0,287,288,5,31,0,0,288,289,6,11,-1,
-        0,289,290,3,16,8,0,290,291,6,11,-1,0,291,301,1,0,0,0,292,293,5,30,
-        0,0,293,294,3,32,16,0,294,295,5,31,0,0,295,296,6,11,-1,0,296,297,
-        3,16,8,0,297,298,3,22,11,0,298,299,6,11,-1,0,299,301,1,0,0,0,300,
-        284,1,0,0,0,300,285,1,0,0,0,300,292,1,0,0,0,301,23,1,0,0,0,302,313,
-        1,0,0,0,303,304,5,32,0,0,304,305,5,35,0,0,305,313,6,12,-1,0,306,
-        307,5,32,0,0,307,308,5,35,0,0,308,309,6,12,-1,0,309,310,3,24,12,
-        0,310,311,6,12,-1,0,311,313,1,0,0,0,312,302,1,0,0,0,312,303,1,0,
-        0,0,312,306,1,0,0,0,313,25,1,0,0,0,314,328,1,0,0,0,315,316,5,8,0,
-        0,316,317,3,16,8,0,317,318,5,9,0,0,318,319,6,13,-1,0,319,328,1,0,
-        0,0,320,321,5,8,0,0,321,322,3,16,8,0,322,323,5,9,0,0,323,324,6,13,
-        -1,0,324,325,3,26,13,0,325,326,6,13,-1,0,326,328,1,0,0,0,327,314,
-        1,0,0,0,327,315,1,0,0,0,327,320,1,0,0,0,328,27,1,0,0,0,329,341,1,
-        0,0,0,330,331,5,33,0,0,331,332,3,16,8,0,332,333,6,14,-1,0,333,341,
-        1,0,0,0,334,335,5,33,0,0,335,336,3,16,8,0,336,337,6,14,-1,0,337,
-        338,3,28,14,0,338,339,6,14,-1,0,339,341,1,0,0,0,340,329,1,0,0,0,
-        340,330,1,0,0,0,340,334,1,0,0,0,341,29,1,0,0,0,342,354,1,0,0,0,343,
-        344,5,2,0,0,344,345,3,16,8,0,345,346,6,15,-1,0,346,354,1,0,0,0,347,
-        348,5,34,0,0,348,349,3,8,4,0,349,350,5,2,0,0,350,351,3,16,8,0,351,
-        352,6,15,-1,0,352,354,1,0,0,0,353,342,1,0,0,0,353,343,1,0,0,0,353,
-        347,1,0,0,0,354,31,1,0,0,0,355,366,1,0,0,0,356,357,3,34,17,0,357,
-        358,6,16,-1,0,358,366,1,0,0,0,359,360,6,16,-1,0,360,361,3,34,17,
-        0,361,362,5,22,0,0,362,363,3,32,16,0,363,364,6,16,-1,0,364,366,1,
-        0,0,0,365,355,1,0,0,0,365,356,1,0,0,0,365,359,1,0,0,0,366,33,1,0,
-        0,0,367,381,1,0,0,0,368,369,5,35,0,0,369,381,6,17,-1,0,370,371,5,
-        5,0,0,371,381,6,17,-1,0,372,373,3,36,18,0,373,374,6,17,-1,0,374,
-        381,1,0,0,0,375,376,5,8,0,0,376,377,3,32,16,0,377,378,5,9,0,0,378,
-        379,6,17,-1,0,379,381,1,0,0,0,380,367,1,0,0,0,380,368,1,0,0,0,380,
-        370,1,0,0,0,380,372,1,0,0,0,380,375,1,0,0,0,381,35,1,0,0,0,382,398,
-        1,0,0,0,383,384,5,6,0,0,384,385,5,35,0,0,385,386,5,7,0,0,386,387,
-        3,32,16,0,387,388,6,18,-1,0,388,398,1,0,0,0,389,390,5,6,0,0,390,
-        391,5,35,0,0,391,392,5,7,0,0,392,393,3,32,16,0,393,394,5,20,0,0,
-        394,395,3,36,18,0,395,396,6,18,-1,0,396,398,1,0,0,0,397,382,1,0,
-        0,0,397,383,1,0,0,0,397,389,1,0,0,0,398,37,1,0,0,0,19,45,61,72,94,
-        161,174,185,193,242,264,282,300,312,327,340,353,365,380,397
+        3,9,260,8,9,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,
+        10,1,10,1,10,1,10,1,10,3,10,277,8,10,1,11,1,11,1,11,1,11,1,11,1,
+        11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,3,11,295,8,
+        11,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,3,12,307,8,
+        12,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,
+        13,3,13,322,8,13,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,
+        14,1,14,3,14,335,8,14,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,
+        15,1,15,1,15,3,15,348,8,15,1,16,1,16,1,16,1,16,1,16,1,16,1,16,1,
+        16,1,16,1,16,3,16,360,8,16,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,
+        17,1,17,1,17,1,17,1,17,1,17,3,17,375,8,17,1,18,1,18,1,18,1,18,1,
+        18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,1,18,3,18,391,8,18,1,
+        18,0,0,19,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,0,
+        0,434,0,45,1,0,0,0,2,61,1,0,0,0,4,72,1,0,0,0,6,94,1,0,0,0,8,161,
+        1,0,0,0,10,174,1,0,0,0,12,185,1,0,0,0,14,193,1,0,0,0,16,242,1,0,
+        0,0,18,259,1,0,0,0,20,276,1,0,0,0,22,294,1,0,0,0,24,306,1,0,0,0,
+        26,321,1,0,0,0,28,334,1,0,0,0,30,347,1,0,0,0,32,359,1,0,0,0,34,374,
+        1,0,0,0,36,390,1,0,0,0,38,46,1,0,0,0,39,40,5,34,0,0,40,46,6,0,-1,
+        0,41,42,5,34,0,0,42,43,3,0,0,0,43,44,6,0,-1,0,44,46,1,0,0,0,45,38,
+        1,0,0,0,45,39,1,0,0,0,45,41,1,0,0,0,46,1,1,0,0,0,47,62,1,0,0,0,48,
+        49,5,1,0,0,49,50,5,34,0,0,50,51,5,2,0,0,51,52,3,8,4,0,52,53,6,1,
+        -1,0,53,62,1,0,0,0,54,55,5,1,0,0,55,56,5,34,0,0,56,57,5,2,0,0,57,
+        58,3,8,4,0,58,59,3,2,1,0,59,60,6,1,-1,0,60,62,1,0,0,0,61,47,1,0,
+        0,0,61,48,1,0,0,0,61,54,1,0,0,0,62,3,1,0,0,0,63,73,1,0,0,0,64,65,
+        3,2,1,0,65,66,6,2,-1,0,66,67,3,16,8,0,67,68,6,2,-1,0,68,73,1,0,0,
+        0,69,70,3,16,8,0,70,71,6,2,-1,0,71,73,1,0,0,0,72,63,1,0,0,0,72,64,
+        1,0,0,0,72,69,1,0,0,0,73,5,1,0,0,0,74,95,1,0,0,0,75,76,5,3,0,0,76,
+        95,6,3,-1,0,77,78,5,4,0,0,78,95,6,3,-1,0,79,80,5,34,0,0,80,95,6,
+        3,-1,0,81,82,5,5,0,0,82,95,6,3,-1,0,83,84,5,6,0,0,84,85,5,34,0,0,
+        85,86,5,7,0,0,86,87,3,6,3,0,87,88,6,3,-1,0,88,95,1,0,0,0,89,90,5,
+        8,0,0,90,91,3,8,4,0,91,92,5,9,0,0,92,93,6,3,-1,0,93,95,1,0,0,0,94,
+        74,1,0,0,0,94,75,1,0,0,0,94,77,1,0,0,0,94,79,1,0,0,0,94,81,1,0,0,
+        0,94,83,1,0,0,0,94,89,1,0,0,0,95,7,1,0,0,0,96,162,1,0,0,0,97,98,
+        3,6,3,0,98,99,6,4,-1,0,99,162,1,0,0,0,100,101,3,6,3,0,101,102,5,
+        10,0,0,102,103,3,8,4,0,103,104,6,4,-1,0,104,162,1,0,0,0,105,106,
+        3,6,3,0,106,107,5,11,0,0,107,108,3,8,4,0,108,109,6,4,-1,0,109,162,
+        1,0,0,0,110,111,3,6,3,0,111,112,3,10,5,0,112,113,6,4,-1,0,113,162,
+        1,0,0,0,114,115,3,6,3,0,115,116,5,12,0,0,116,117,3,8,4,0,117,118,
+        6,4,-1,0,118,162,1,0,0,0,119,120,3,6,3,0,120,121,5,13,0,0,121,122,
+        3,8,4,0,122,123,6,4,-1,0,123,162,1,0,0,0,124,125,5,14,0,0,125,126,
+        5,15,0,0,126,127,3,0,0,0,127,128,5,16,0,0,128,129,3,8,4,0,129,130,
+        6,4,-1,0,130,162,1,0,0,0,131,132,5,14,0,0,132,133,5,15,0,0,133,134,
+        3,0,0,0,134,135,5,16,0,0,135,136,3,12,6,0,136,137,3,8,4,0,137,138,
+        6,4,-1,0,138,162,1,0,0,0,139,140,5,17,0,0,140,141,5,15,0,0,141,142,
+        3,0,0,0,142,143,5,16,0,0,143,144,3,8,4,0,144,145,6,4,-1,0,145,162,
+        1,0,0,0,146,147,5,17,0,0,147,148,5,15,0,0,148,149,3,0,0,0,149,150,
+        5,16,0,0,150,151,3,12,6,0,151,152,3,8,4,0,152,153,6,4,-1,0,153,162,
+        1,0,0,0,154,155,5,18,0,0,155,156,5,15,0,0,156,157,5,34,0,0,157,158,
+        5,16,0,0,158,159,3,8,4,0,159,160,6,4,-1,0,160,162,1,0,0,0,161,96,
+        1,0,0,0,161,97,1,0,0,0,161,100,1,0,0,0,161,105,1,0,0,0,161,110,1,
+        0,0,0,161,114,1,0,0,0,161,119,1,0,0,0,161,124,1,0,0,0,161,131,1,
+        0,0,0,161,139,1,0,0,0,161,146,1,0,0,0,161,154,1,0,0,0,162,9,1,0,
+        0,0,163,175,1,0,0,0,164,165,5,19,0,0,165,166,3,8,4,0,166,167,6,5,
+        -1,0,167,175,1,0,0,0,168,169,5,19,0,0,169,170,3,8,4,0,170,171,6,
+        5,-1,0,171,172,3,10,5,0,172,173,6,5,-1,0,173,175,1,0,0,0,174,163,
+        1,0,0,0,174,164,1,0,0,0,174,168,1,0,0,0,175,11,1,0,0,0,176,186,1,
+        0,0,0,177,178,5,20,0,0,178,186,6,6,-1,0,179,180,5,8,0,0,180,181,
+        3,14,7,0,181,182,5,9,0,0,182,183,3,12,6,0,183,184,6,6,-1,0,184,186,
+        1,0,0,0,185,176,1,0,0,0,185,177,1,0,0,0,185,179,1,0,0,0,186,13,1,
+        0,0,0,187,194,1,0,0,0,188,189,3,8,4,0,189,190,5,21,0,0,190,191,3,
+        8,4,0,191,192,6,7,-1,0,192,194,1,0,0,0,193,187,1,0,0,0,193,188,1,
+        0,0,0,194,15,1,0,0,0,195,243,1,0,0,0,196,197,3,18,9,0,197,198,6,
+        8,-1,0,198,243,1,0,0,0,199,200,3,18,9,0,200,201,5,22,0,0,201,202,
+        6,8,-1,0,202,203,3,16,8,0,203,204,6,8,-1,0,204,243,1,0,0,0,205,206,
+        5,23,0,0,206,207,3,16,8,0,207,208,5,24,0,0,208,209,6,8,-1,0,209,
+        210,3,16,8,0,210,211,5,25,0,0,211,212,3,16,8,0,212,213,6,8,-1,0,
+        213,243,1,0,0,0,214,215,3,18,9,0,215,216,3,24,12,0,216,217,6,8,-1,
+        0,217,243,1,0,0,0,218,219,3,18,9,0,219,220,6,8,-1,0,220,221,3,26,
+        13,0,221,222,6,8,-1,0,222,243,1,0,0,0,223,224,3,18,9,0,224,225,6,
+        8,-1,0,225,226,3,28,14,0,226,227,6,8,-1,0,227,243,1,0,0,0,228,229,
+        5,26,0,0,229,230,5,34,0,0,230,231,3,30,15,0,231,232,5,27,0,0,232,
+        233,6,8,-1,0,233,234,3,16,8,0,234,235,6,8,-1,0,235,243,1,0,0,0,236,
+        237,5,28,0,0,237,238,5,8,0,0,238,239,3,16,8,0,239,240,5,9,0,0,240,
+        241,6,8,-1,0,241,243,1,0,0,0,242,195,1,0,0,0,242,196,1,0,0,0,242,
+        199,1,0,0,0,242,205,1,0,0,0,242,214,1,0,0,0,242,218,1,0,0,0,242,
+        223,1,0,0,0,242,228,1,0,0,0,242,236,1,0,0,0,243,17,1,0,0,0,244,260,
+        1,0,0,0,245,246,5,5,0,0,246,260,6,9,-1,0,247,248,3,20,10,0,248,249,
+        6,9,-1,0,249,260,1,0,0,0,250,251,6,9,-1,0,251,252,3,22,11,0,252,
+        253,6,9,-1,0,253,260,1,0,0,0,254,255,5,34,0,0,255,260,6,9,-1,0,256,
+        257,3,26,13,0,257,258,6,9,-1,0,258,260,1,0,0,0,259,244,1,0,0,0,259,
+        245,1,0,0,0,259,247,1,0,0,0,259,250,1,0,0,0,259,254,1,0,0,0,259,
+        256,1,0,0,0,260,19,1,0,0,0,261,277,1,0,0,0,262,263,5,6,0,0,263,264,
+        5,34,0,0,264,265,5,7,0,0,265,266,3,18,9,0,266,267,6,10,-1,0,267,
+        277,1,0,0,0,268,269,5,6,0,0,269,270,5,34,0,0,270,271,5,7,0,0,271,
+        272,3,18,9,0,272,273,6,10,-1,0,273,274,3,20,10,0,274,275,6,10,-1,
+        0,275,277,1,0,0,0,276,261,1,0,0,0,276,262,1,0,0,0,276,268,1,0,0,
+        0,277,21,1,0,0,0,278,295,1,0,0,0,279,280,5,29,0,0,280,281,3,32,16,
+        0,281,282,5,30,0,0,282,283,6,11,-1,0,283,284,3,16,8,0,284,285,6,
+        11,-1,0,285,295,1,0,0,0,286,287,5,29,0,0,287,288,3,32,16,0,288,289,
+        5,30,0,0,289,290,6,11,-1,0,290,291,3,16,8,0,291,292,3,22,11,0,292,
+        293,6,11,-1,0,293,295,1,0,0,0,294,278,1,0,0,0,294,279,1,0,0,0,294,
+        286,1,0,0,0,295,23,1,0,0,0,296,307,1,0,0,0,297,298,5,31,0,0,298,
+        299,5,34,0,0,299,307,6,12,-1,0,300,301,5,31,0,0,301,302,5,34,0,0,
+        302,303,6,12,-1,0,303,304,3,24,12,0,304,305,6,12,-1,0,305,307,1,
+        0,0,0,306,296,1,0,0,0,306,297,1,0,0,0,306,300,1,0,0,0,307,25,1,0,
+        0,0,308,322,1,0,0,0,309,310,5,8,0,0,310,311,3,16,8,0,311,312,5,9,
+        0,0,312,313,6,13,-1,0,313,322,1,0,0,0,314,315,5,8,0,0,315,316,3,
+        16,8,0,316,317,5,9,0,0,317,318,6,13,-1,0,318,319,3,26,13,0,319,320,
+        6,13,-1,0,320,322,1,0,0,0,321,308,1,0,0,0,321,309,1,0,0,0,321,314,
+        1,0,0,0,322,27,1,0,0,0,323,335,1,0,0,0,324,325,5,32,0,0,325,326,
+        3,16,8,0,326,327,6,14,-1,0,327,335,1,0,0,0,328,329,5,32,0,0,329,
+        330,3,16,8,0,330,331,6,14,-1,0,331,332,3,28,14,0,332,333,6,14,-1,
+        0,333,335,1,0,0,0,334,323,1,0,0,0,334,324,1,0,0,0,334,328,1,0,0,
+        0,335,29,1,0,0,0,336,348,1,0,0,0,337,338,5,2,0,0,338,339,3,16,8,
+        0,339,340,6,15,-1,0,340,348,1,0,0,0,341,342,5,33,0,0,342,343,3,8,
+        4,0,343,344,5,2,0,0,344,345,3,16,8,0,345,346,6,15,-1,0,346,348,1,
+        0,0,0,347,336,1,0,0,0,347,337,1,0,0,0,347,341,1,0,0,0,348,31,1,0,
+        0,0,349,360,1,0,0,0,350,351,3,34,17,0,351,352,6,16,-1,0,352,360,
+        1,0,0,0,353,354,6,16,-1,0,354,355,3,34,17,0,355,356,5,22,0,0,356,
+        357,3,32,16,0,357,358,6,16,-1,0,358,360,1,0,0,0,359,349,1,0,0,0,
+        359,350,1,0,0,0,359,353,1,0,0,0,360,33,1,0,0,0,361,375,1,0,0,0,362,
+        363,5,34,0,0,363,375,6,17,-1,0,364,365,5,5,0,0,365,375,6,17,-1,0,
+        366,367,3,36,18,0,367,368,6,17,-1,0,368,375,1,0,0,0,369,370,5,8,
+        0,0,370,371,3,32,16,0,371,372,5,9,0,0,372,373,6,17,-1,0,373,375,
+        1,0,0,0,374,361,1,0,0,0,374,362,1,0,0,0,374,364,1,0,0,0,374,366,
+        1,0,0,0,374,369,1,0,0,0,375,35,1,0,0,0,376,391,1,0,0,0,377,378,5,
+        6,0,0,378,379,5,34,0,0,379,380,5,7,0,0,380,381,3,32,16,0,381,382,
+        6,18,-1,0,382,391,1,0,0,0,383,384,5,6,0,0,384,385,5,34,0,0,385,386,
+        5,7,0,0,386,387,3,32,16,0,387,388,3,36,18,0,388,389,6,18,-1,0,389,
+        391,1,0,0,0,390,376,1,0,0,0,390,377,1,0,0,0,390,383,1,0,0,0,391,
+        37,1,0,0,0,19,45,61,72,94,161,174,185,193,242,259,276,294,306,321,
+        334,347,359,374,390
     ]
 
 class SlimParser ( Parser ):
@@ -178,8 +176,7 @@ class SlimParser ( Parser ):
                      "'<'", "'>'", "'('", "')'", "'|'", "'&'", "'->'", "'*'", 
                      "'EXI'", "'['", "']'", "'ALL'", "'LFP'", "'\\'", "';'", 
                      "'<:'", "','", "'if'", "'then'", "'else'", "'let'", 
-                     "'in'", "'fix'", "'~'", "'case'", "'=>'", "'.'", "'|>'", 
-                     "':'" ]
+                     "'in'", "'fix'", "'case'", "'=>'", "'.'", "'|>'", "':'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
@@ -189,8 +186,7 @@ class SlimParser ( Parser ):
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "<INVALID>", "<INVALID>", "<INVALID>", "ID", "INT", 
-                      "WS" ]
+                      "<INVALID>", "<INVALID>", "ID", "INT", "WS" ]
 
     RULE_ids = 0
     RULE_preamble = 1
@@ -251,10 +247,9 @@ class SlimParser ( Parser ):
     T__30=31
     T__31=32
     T__32=33
-    T__33=34
-    ID=35
-    INT=36
-    WS=37
+    ID=34
+    INT=35
+    WS=36
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -1125,7 +1120,7 @@ class SlimParser ( Parser ):
                 self.enterOuterAlt(localctx, 1)
 
                 pass
-            elif token in [3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 17, 18, 19, 21, 35]:
+            elif token in [3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 17, 18, 19, 21, 34]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 188
                 localctx.strong = self.typ()
@@ -1458,19 +1453,11 @@ class SlimParser ( Parser ):
             self.parser = parser
             self.contexts = None
             self.results = None
-            self._ID = None # Token
-            self.body = None # BaseContext
             self._record = None # RecordContext
             self._function = None # FunctionContext
+            self._ID = None # Token
             self._argchain = None # ArgchainContext
             self.contexts = contexts
-
-        def ID(self):
-            return self.getToken(SlimParser.ID, 0)
-
-        def base(self):
-            return self.getTypedRuleContext(SlimParser.BaseContext,0)
-
 
         def record(self):
             return self.getTypedRuleContext(SlimParser.RecordContext,0)
@@ -1479,6 +1466,9 @@ class SlimParser ( Parser ):
         def function(self):
             return self.getTypedRuleContext(SlimParser.FunctionContext,0)
 
+
+        def ID(self):
+            return self.getToken(SlimParser.ID, 0)
 
         def argchain(self):
             return self.getTypedRuleContext(SlimParser.ArgchainContext,0)
@@ -1503,7 +1493,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.BaseContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 18, self.RULE_base)
         try:
-            self.state = 264
+            self.state = 259
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,9,self._ctx)
             if la_ == 1:
@@ -1526,34 +1516,17 @@ class SlimParser ( Parser ):
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 247
-                self.match(SlimParser.T__28)
-                self.state = 248
-                localctx._ID = self.match(SlimParser.ID)
-                self.state = 249
-                localctx.body = self.base(contexts)
-
-                localctx.results = [
-                    BaseRule(self._solver).combine_tag(pid, body_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ)
-                    for body_result in localctx.body.results
-                    for pid in [body_result.pid]
-                ]
-
-                pass
-
-            elif la_ == 4:
-                self.enterOuterAlt(localctx, 4)
-                self.state = 252
                 localctx._record = self.record(contexts)
 
                 localctx.results = localctx._record.results 
 
                 pass
 
-            elif la_ == 5:
-                self.enterOuterAlt(localctx, 5)
+            elif la_ == 4:
+                self.enterOuterAlt(localctx, 4)
 
 
-                self.state = 256
+                self.state = 251
                 localctx._function = self.function(contexts)
 
                 localctx.results = [
@@ -1564,9 +1537,9 @@ class SlimParser ( Parser ):
 
                 pass
 
-            elif la_ == 6:
-                self.enterOuterAlt(localctx, 6)
-                self.state = 259
+            elif la_ == 5:
+                self.enterOuterAlt(localctx, 5)
+                self.state = 254
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.results = [
@@ -1577,9 +1550,9 @@ class SlimParser ( Parser ):
 
                 pass
 
-            elif la_ == 7:
-                self.enterOuterAlt(localctx, 7)
-                self.state = 261
+            elif la_ == 6:
+                self.enterOuterAlt(localctx, 6)
+                self.state = 256
                 localctx._argchain = self.argchain(contexts)
 
                 localctx.results = [
@@ -1610,15 +1583,15 @@ class SlimParser ( Parser ):
             self.contexts = None
             self.results = None
             self._ID = None # Token
-            self.body = None # ExprContext
+            self.body = None # BaseContext
             self.tail = None # RecordContext
             self.contexts = contexts
 
         def ID(self):
             return self.getToken(SlimParser.ID, 0)
 
-        def expr(self):
-            return self.getTypedRuleContext(SlimParser.ExprContext,0)
+        def base(self):
+            return self.getTypedRuleContext(SlimParser.BaseContext,0)
 
 
         def record(self):
@@ -1644,7 +1617,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.RecordContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 20, self.RULE_record)
         try:
-            self.state = 282
+            self.state = 276
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,10,self._ctx)
             if la_ == 1:
@@ -1654,14 +1627,14 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 267
+                self.state = 262
                 self.match(SlimParser.T__5)
-                self.state = 268
+                self.state = 263
                 localctx._ID = self.match(SlimParser.ID)
-                self.state = 269
+                self.state = 264
                 self.match(SlimParser.T__6)
-                self.state = 270
-                localctx.body = self.expr(contexts)
+                self.state = 265
+                localctx.body = self.base(contexts)
 
                 localctx.results = [
                     RecordRule(self._solver).combine_single(pid, body_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ)
@@ -1673,27 +1646,25 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 273
+                self.state = 268
                 self.match(SlimParser.T__5)
-                self.state = 274
+                self.state = 269
                 localctx._ID = self.match(SlimParser.ID)
-                self.state = 275
+                self.state = 270
                 self.match(SlimParser.T__6)
-                self.state = 276
-                localctx.body = self.expr(contexts)
+                self.state = 271
+                localctx.body = self.base(contexts)
 
                 tail_contexts = [
                     Context(contexts[body_result.pid].enviro, body_result.world)
                     for body_result in localctx.body.results
                 ]
 
-                self.state = 278
-                self.match(SlimParser.T__19)
-                self.state = 279
+                self.state = 273
                 localctx.tail = self.record(tail_contexts)
 
                 localctx.results = [
-                    RecordRule(self._solver).combine_cons(pid, contexts[pid].enviro, tail_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ, tail_result.branches) 
+                    RecordRule(self._solver).combine_cons(pid, tail_result.world, (None if localctx._ID is None else localctx._ID.text), body_result.typ, tail_result.typ) 
                     for tail_result in localctx.tail.results
                     for body_result in [localctx.body.results[tail_result.pid]]
                     for pid in [body_result.pid]
@@ -1755,7 +1726,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.FunctionContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 22, self.RULE_function)
         try:
-            self.state = 300
+            self.state = 294
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,11,self._ctx)
             if la_ == 1:
@@ -1765,19 +1736,19 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 285
-                self.match(SlimParser.T__29)
-                self.state = 286
+                self.state = 279
+                self.match(SlimParser.T__28)
+                self.state = 280
                 localctx._pattern = self.pattern()
-                self.state = 287
-                self.match(SlimParser.T__30)
+                self.state = 281
+                self.match(SlimParser.T__29)
 
                 body_contexts = [
                     Context(context.enviro.update(localctx._pattern.result.enviro), context.world)
                     for context in contexts 
                 ]
 
-                self.state = 289
+                self.state = 283
                 localctx.body = self.expr(body_contexts)
 
                 localctx.results = [
@@ -1790,21 +1761,21 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 292
-                self.match(SlimParser.T__29)
-                self.state = 293
+                self.state = 286
+                self.match(SlimParser.T__28)
+                self.state = 287
                 localctx._pattern = self.pattern()
-                self.state = 294
-                self.match(SlimParser.T__30)
+                self.state = 288
+                self.match(SlimParser.T__29)
 
                 body_contexts = [
                     Context(context.enviro.update(localctx._pattern.result.enviro), context.world)
                     for context in contexts 
                 ]
 
-                self.state = 296
+                self.state = 290
                 localctx.body = self.expr(body_contexts)
-                self.state = 297
+                self.state = 291
                 localctx.tail = self.function(contexts)
 
                 localctx.results = [
@@ -1862,7 +1833,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.KeychainContext(self, self._ctx, self.state)
         self.enterRule(localctx, 24, self.RULE_keychain)
         try:
-            self.state = 312
+            self.state = 306
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,12,self._ctx)
             if la_ == 1:
@@ -1872,9 +1843,9 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 303
-                self.match(SlimParser.T__31)
-                self.state = 304
+                self.state = 297
+                self.match(SlimParser.T__30)
+                self.state = 298
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.keys = KeychainRule(self._solver).combine_single((None if localctx._ID is None else localctx._ID.text))
@@ -1883,13 +1854,13 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 306
-                self.match(SlimParser.T__31)
-                self.state = 307
+                self.state = 300
+                self.match(SlimParser.T__30)
+                self.state = 301
                 localctx._ID = self.match(SlimParser.ID)
 
 
-                self.state = 309
+                self.state = 303
                 localctx.tail = self.keychain()
 
                 localctx.keys = KeychainRule(self._solver).combine_cons((None if localctx._ID is None else localctx._ID.text), localctx.tail.keys)
@@ -1946,7 +1917,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.ArgchainContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 26, self.RULE_argchain)
         try:
-            self.state = 327
+            self.state = 321
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,13,self._ctx)
             if la_ == 1:
@@ -1956,11 +1927,11 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 315
+                self.state = 309
                 self.match(SlimParser.T__7)
-                self.state = 316
+                self.state = 310
                 localctx.content = self.expr(contexts)
-                self.state = 317
+                self.state = 311
                 self.match(SlimParser.T__8)
 
                 localctx.results = [
@@ -1973,11 +1944,11 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 320
+                self.state = 314
                 self.match(SlimParser.T__7)
-                self.state = 321
+                self.state = 315
                 localctx.head = self.expr(contexts)
-                self.state = 322
+                self.state = 316
                 self.match(SlimParser.T__8)
 
                 tail_contexts = [
@@ -1985,7 +1956,7 @@ class SlimParser ( Parser ):
                     for head_result in localctx.head.results
                 ]
 
-                self.state = 324
+                self.state = 318
                 localctx.tail = self.argchain(tail_contexts)
 
                 localctx.results = [
@@ -2047,7 +2018,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.PipelineContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 28, self.RULE_pipeline)
         try:
-            self.state = 340
+            self.state = 334
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,14,self._ctx)
             if la_ == 1:
@@ -2057,9 +2028,9 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 330
-                self.match(SlimParser.T__32)
-                self.state = 331
+                self.state = 324
+                self.match(SlimParser.T__31)
+                self.state = 325
                 localctx.content = self.expr(contexts)
 
                 localctx.results = [
@@ -2072,9 +2043,9 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 334
-                self.match(SlimParser.T__32)
-                self.state = 335
+                self.state = 328
+                self.match(SlimParser.T__31)
+                self.state = 329
                 localctx.head = self.expr(contexts)
 
                 tail_contexts = [
@@ -2082,7 +2053,7 @@ class SlimParser ( Parser ):
                     for head_result in localctx.head.results
                 ]
 
-                self.state = 337
+                self.state = 331
                 localctx.tail = self.pipeline(tail_contexts)
 
                 localctx.results = [
@@ -2143,7 +2114,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.TargetContext(self, self._ctx, self.state, contexts)
         self.enterRule(localctx, 30, self.RULE_target)
         try:
-            self.state = 353
+            self.state = 347
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [27]:
@@ -2152,23 +2123,23 @@ class SlimParser ( Parser ):
                 pass
             elif token in [2]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 343
+                self.state = 337
                 self.match(SlimParser.T__1)
-                self.state = 344
+                self.state = 338
                 localctx._expr = self.expr(contexts)
 
                 localctx.results = localctx._expr.results
 
                 pass
-            elif token in [34]:
+            elif token in [33]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 347
-                self.match(SlimParser.T__33)
-                self.state = 348
+                self.state = 341
+                self.match(SlimParser.T__32)
+                self.state = 342
                 localctx._typ = self.typ()
-                self.state = 349
+                self.state = 343
                 self.match(SlimParser.T__1)
-                self.state = 350
+                self.state = 344
                 localctx._expr = self.expr(contexts)
 
                 localctx.results = [
@@ -2234,7 +2205,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.PatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 32, self.RULE_pattern)
         try:
-            self.state = 365
+            self.state = 359
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,16,self._ctx)
             if la_ == 1:
@@ -2244,7 +2215,7 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 356
+                self.state = 350
                 localctx._base_pattern = self.base_pattern()
 
                 localctx.result = localctx._base_pattern.result
@@ -2255,11 +2226,11 @@ class SlimParser ( Parser ):
                 self.enterOuterAlt(localctx, 3)
 
 
-                self.state = 360
+                self.state = 354
                 localctx.head = self.base_pattern()
-                self.state = 361
+                self.state = 355
                 self.match(SlimParser.T__21)
-                self.state = 362
+                self.state = 356
                 localctx.tail = self.pattern()
 
                 localctx.result = PatternRule(self._solver).combine_tuple(localctx.head.result, localctx.tail.result)
@@ -2317,7 +2288,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.Base_patternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 34, self.RULE_base_pattern)
         try:
-            self.state = 380
+            self.state = 374
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,17,self._ctx)
             if la_ == 1:
@@ -2327,7 +2298,7 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 368
+                self.state = 362
                 localctx._ID = self.match(SlimParser.ID)
 
                 localctx.result = BasePatternRule(self._solver).combine_var((None if localctx._ID is None else localctx._ID.text))
@@ -2336,7 +2307,7 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 370
+                self.state = 364
                 self.match(SlimParser.T__4)
 
                 localctx.result = BasePatternRule(self._solver).combine_unit()
@@ -2345,7 +2316,7 @@ class SlimParser ( Parser ):
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 372
+                self.state = 366
                 localctx._record_pattern = self.record_pattern()
 
                 localctx.result = localctx._record_pattern.result
@@ -2354,11 +2325,11 @@ class SlimParser ( Parser ):
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 375
+                self.state = 369
                 self.match(SlimParser.T__7)
-                self.state = 376
+                self.state = 370
                 localctx._pattern = self.pattern()
-                self.state = 377
+                self.state = 371
                 self.match(SlimParser.T__8)
 
                 localctx.result = localctx._pattern.result
@@ -2416,7 +2387,7 @@ class SlimParser ( Parser ):
         localctx = SlimParser.Record_patternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_record_pattern)
         try:
-            self.state = 397
+            self.state = 390
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,18,self._ctx)
             if la_ == 1:
@@ -2426,13 +2397,13 @@ class SlimParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 383
+                self.state = 377
                 self.match(SlimParser.T__5)
-                self.state = 384
+                self.state = 378
                 localctx._ID = self.match(SlimParser.ID)
-                self.state = 385
+                self.state = 379
                 self.match(SlimParser.T__6)
-                self.state = 386
+                self.state = 380
                 localctx.body = self.pattern()
 
                 localctx.result = RecordPatternRule(self._solver, self._light_mode).combine_single((None if localctx._ID is None else localctx._ID.text), localctx.body.result)
@@ -2441,17 +2412,15 @@ class SlimParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 389
+                self.state = 383
                 self.match(SlimParser.T__5)
-                self.state = 390
+                self.state = 384
                 localctx._ID = self.match(SlimParser.ID)
-                self.state = 391
+                self.state = 385
                 self.match(SlimParser.T__6)
-                self.state = 392
+                self.state = 386
                 localctx.body = self.pattern()
-                self.state = 393
-                self.match(SlimParser.T__19)
-                self.state = 394
+                self.state = 387
                 localctx.tail = self.record_pattern()
 
                 localctx.result = RecordPatternRule(self._solver).combine_cons((None if localctx._ID is None else localctx._ID.text), localctx.body.result, localctx.tail.result)

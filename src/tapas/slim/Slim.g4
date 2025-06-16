@@ -400,14 +400,14 @@ $results = [
 ]
 } 
 
-//tag
-| '~' ID body = base[contexts] {
-$results = [
-    BaseRule(self._solver).combine_tag(pid, body_result.world, $ID.text, body_result.typ)
-    for body_result in $body.results
-    for pid in [body_result.pid]
-]
-}
+// //tag
+// | '~' ID body = base[contexts] {
+// $results = [
+//     BaseRule(self._solver).combine_tag(pid, body_result.world, $ID.text, body_result.typ)
+//     for body_result in $body.results
+//     for pid in [body_result.pid]
+// ]
+// }
 
 | record[contexts] {
 $results = $record.results 
@@ -446,7 +446,7 @@ $results = [
 
 record [list[Context] contexts] returns [list[Result] results] :
 | '<' ID '>' 
-body = expr[contexts] {
+body = base[contexts] {
 $results = [
     RecordRule(self._solver).combine_single(pid, body_result.world, $ID.text, body_result.typ)
     for body_result in $body.results
@@ -455,15 +455,15 @@ $results = [
 }
 
 | '<' ID '>' 
-body = expr[contexts] {
+body = base[contexts] {
 tail_contexts = [
     Context(contexts[body_result.pid].enviro, body_result.world)
     for body_result in $body.results
 ]
 } 
-';' tail = record[tail_contexts] {
+tail = record[tail_contexts] {
 $results = [
-    RecordRule(self._solver).combine_cons(pid, contexts[pid].enviro, tail_result.world, $ID.text, body_result.typ, tail_result.branches) 
+    RecordRule(self._solver).combine_cons(pid, tail_result.world, $ID.text, body_result.typ, tail_result.typ) 
     for tail_result in $tail.results
     for body_result in [$body.results[tail_result.pid]]
     for pid in [body_result.pid]
@@ -648,7 +648,6 @@ $result = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.t
 
 | '<' ID '>' 
 body = pattern
-';'
 tail = record_pattern {
 $result = RecordPatternRule(self._solver).combine_cons($ID.text, $body.result, $tail.result)
 }
