@@ -624,10 +624,10 @@ $result = BasePatternRule(self._solver).combine_var($ID.text)
 $result = BasePatternRule(self._solver).combine_unit()
 } 
 
-| '~' ID
-body = base_pattern {
-$result = BasePatternRule(self._solver).combine_tag($ID.text, $body.result)
-}
+// | '<' ID '>'
+// body = base_pattern {
+// $result = BasePatternRule(self._solver).combine_tag($ID.text, $body.result)
+// }
 
 | record_pattern {
 $result = $record_pattern.result
@@ -642,12 +642,13 @@ $result = $pattern.result
 
 record_pattern returns [PatternResult result] :
 
-| ';' ID '=' body = pattern {
+| '<' ID '>' body = pattern {
 $result = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.text, $body.result)
 }
 
-| ';' ID '=' 
+| '<' ID '>' 
 body = pattern
+';'
 tail = record_pattern {
 $result = RecordPatternRule(self._solver).combine_cons($ID.text, $body.result, $tail.result)
 }

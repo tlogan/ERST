@@ -371,6 +371,147 @@ choose(id)(case x => auto_prime(x))
     print(code)
     assert infer_typ(code)
 
+###############################################################
+##### Typing G. SuperF paper additions 
+###############################################################
+def test_typing_G1A():
+    code = (f"""
+let z : {tl.Church} = ({el.church_zero}) in
+z
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G2():
+    code = (f"""
+{el.church_succ}
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G2A():
+    code = (f"""
+let s : {tl.Church} -> {tl.Church} = {el.church_succ} in
+s
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G3A():
+    #TODO: this is very slow
+    code = (f"""
+let n3 : {tl.Church} = {el.church_three} in
+n3
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G4A():
+    #TODO: this is very slow; 
+    code = (f"""
+let c : @ -> {tl.Church} = (case @ => {el.church_three}({el.church_three})) in
+c
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G5():
+    #TODO: this is very slow; 
+    code = ctx(["fst"], f"""
+fst(fst(fst({el.church_three}(case x => x,(<zero>@))(<succ><zero>@))))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G6():
+    code = ctx(["succ", "zero"], f"""
+(succ(succ(zero)))(succ(succ(zero)))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G7():
+    #TODO: very slow
+    code = (f"""
+({el.church_two})({el.church_two})
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G8():
+    #TODO: a little bit slow
+    code = (f"""
+{el.to_church}
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G8A():
+    #TODO: FAILS 
+    code = (f"""
+let c : {tl.Nat} -> {tl.Church} = {el.to_church} in
+c
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G9():
+    #TODO: fail
+    code = (f"""
+fix(case loop =>
+    case x =>
+        if <true> @ then
+            x
+        else 
+            loop(loop)(x)
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G10():
+    code = (f"""
+(case x => x)(case x => x)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G11():
+    code = ctx(["auto", "auto_prime", "id"], f"""
+auto(auto_prime(id))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G12():
+    code = ctx(["const"], f"""
+(case y =>
+    (let tmp = y(id) in y(const))(case x => x)
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G13():
+    code = ctx(["single"], f"""
+(case k => 
+    ((k)(case x => x), (k)(case x => single(x)))
+) (case f => ((f)(<succ><zero>@)), (f)(<true>@))
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_G14():
+    #TODO: fail
+    code = ctx(["const", "id"], f"""
+(case f =>
+    let a : @ -> {tl.Nat} -> (ALL[B] B -> B) = (case @ => f(id)) in
+    (a(@))(const(const(id)))
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
 
 ###############################################################
 ###############################################################
@@ -378,5 +519,6 @@ choose(id)(case x => auto_prime(x))
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
+    test_typing_G14()
 
 #######################################################################

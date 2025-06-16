@@ -58,11 +58,30 @@ context_map = {
 ############################################################
 
 church_zero = (f"""
-case f => case x => x
+(case f => case x => x)
 """.strip())
 
 church_succ = (f"""
-case n => case f => case x => f(n(f)(x)) 
+(case n => case f => case x => f(n(f)(x)))
+""".strip())
+
+church_one = (f"""
+{church_succ}({church_zero})
+""".strip())
+
+church_two = (f"""
+{church_succ}({church_one})
+""".strip())
+
+church_three = (f"""
+{church_succ}({church_two})
+""".strip())
+
+to_church = (f"""
+fix(case loop => (
+    case <zero> @ => {church_zero}
+    case <succ> n => {church_succ}(loop(n))
+))
 """.strip())
 
 
