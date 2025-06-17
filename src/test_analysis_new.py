@@ -95,7 +95,7 @@ ALL[N L] (<succ> N) -> (<cons> L)
 ###############################################################
 def test_typing_A1():
     assert infer_typ(f"""
-case x => case y => y
+{{ x => {{ y => y }} }}
     """)
 
 def test_typing_A2():
@@ -113,7 +113,7 @@ choose(nil)(ids)
     assert infer_typ(code)
 
 def test_typing_A4():
-    assert infer_typ("case x => x(x)")
+    assert infer_typ("{ x => x(x) }")
 
 def test_typing_A5():
     code = ctx(["id", "auto"], f"""
@@ -159,14 +159,14 @@ poly(id)
 
 def test_typing_A11():
     code = ctx(["poly"], f"""
-poly(case x => x)
+poly({{ x => x }})
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_A12():
     code = ctx(["id", "poly"], f"""
-id(poly)(case x => x)
+id(poly)({{ x => x }})
     """)
     print(code)
     assert infer_typ(code)
@@ -176,12 +176,12 @@ id(poly)(case x => x)
 ###############################################################
 def test_typing_B1():
     assert infer_typ(f"""
-case f => (f(<succ> <zero> @)), (f(<true> @))
+{{ f => (f(<succ> <zero> @)), (f(<true> @)) }}
     """)
 
 def test_typing_B2():
     code = ctx(["poly", "head"], f"""
-case xs => poly(head)(xs)
+{{ xs => poly(head)(xs) }}
     """)
     print(code)
     assert infer_typ(code)
@@ -227,7 +227,7 @@ cons(id)(ids)
 
 def test_typing_C6():
     code = ctx(["cons", "ids"], f"""
-cons(case x => x)(ids)
+cons({{ x => x }})(ids)
     """)
     print(code)
     assert infer_typ(code)
@@ -312,14 +312,14 @@ k(h)(l)
 
 def test_typing_E2():
     code = ctx(["k", "h", "l"], f"""
-k(case x => h(x))(l)
+k({{ x => h(x) }})(l)
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_E3():
     code = ctx(["r"], f"""
-r(case x => case y => y)
+r({{ x => {{ y => y }} }})
     """)
     print(code)
     assert infer_typ(code)
@@ -335,6 +335,7 @@ auto(id)
     assert infer_typ(code)
 
 def test_typing_F6():
+    # TODO: this is a little slow
     code = ctx(["cons", "head", "ids", "id"], f"""
 cons (head(ids))(ids)
     """)
@@ -346,7 +347,6 @@ def test_typing_F7():
 head(ids)(succ;succ;succ;zero;@)
     """)
     print(code)
-    #TODO: why is this so slow??? 
     assert infer_typ(code)
 
 def test_typing_F8():
@@ -365,8 +365,9 @@ f(poly)
     assert infer_typ(code)
 
 def test_typing_F10():
+    #TODO: fail
     code = ctx(["choose", "id", "auto_prime"], f"""
-choose(id)(case x => auto_prime(x))
+choose(id)({{ x => auto_prime(x) }})
     """)
     print(code)
     assert infer_typ(code)
@@ -409,7 +410,7 @@ n3
 def test_typing_G4A():
     #TODO: this is very slow; 
     code = (f"""
-let c : @ -> {tl.Church} = (case @ => {el.church_three}({el.church_three})) in
+let c : @ -> {tl.Church} = ({{ @ => {el.church_three}({el.church_three}) }}) in
 c
     """)
     print(code)
@@ -418,7 +419,7 @@ c
 def test_typing_G5():
     #TODO: this is very slow; 
     code = ctx(["fst"], f"""
-fst(fst(fst({el.church_three}(case x => x,(<zero>@))(<succ><zero>@))))
+fst(fst(fst({el.church_three}({{ x => x }},(<zero>@))(<succ><zero>@))))
     """)
     print(code)
     assert infer_typ(code)
@@ -458,20 +459,21 @@ c
 def test_typing_G9():
     #TODO: fail
     code = (f"""
-fix(case loop =>
-    case x =>
+fix({{ loop =>
+    {{ x =>
         if <true> @ then
             x
         else 
             loop(loop)(x)
-)
+    }}
+}})
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_G10():
     code = (f"""
-(case x => x)(case x => x)
+({{ x => x }})({{ x => x }})
     """)
     print(code)
     assert infer_typ(code)
@@ -485,18 +487,18 @@ auto(auto_prime(id))
 
 def test_typing_G12():
     code = ctx(["const"], f"""
-(case y =>
-    (let tmp = y(id) in y(const))(case x => x)
-)
+({{ y =>
+    (let tmp = y(id) in y(const))({{ x => x }})
+}})
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_G13():
     code = ctx(["single"], f"""
-(case k => 
-    ((k)(case x => x), (k)(case x => single(x)))
-) (case f => ((f)(<succ><zero>@)), (f)(<true>@))
+({{ k => 
+    ((k)({{ x => x }}), (k)({{ x => single(x) }}))
+}}) ({{ f => ((f)(<succ><zero>@)), (f)(<true>@) }})
     """)
     print(code)
     assert infer_typ(code)
@@ -504,10 +506,10 @@ def test_typing_G13():
 def test_typing_G14():
     #TODO: fail
     code = ctx(["const", "id"], f"""
-(case f =>
-    let a : @ -> {tl.Nat} -> (ALL[B] B -> B) = (case @ => f(id)) in
+({{ f =>
+    let a : @ -> {tl.Nat} -> (ALL[B] B -> B) = ({{ @ => f(id) }}) in
     (a(@))(const(const(id)))
-)
+}})
     """)
     print(code)
     assert infer_typ(code)
@@ -518,34 +520,18 @@ def test_typing_G14():
 ###############################################################
 
 def test_typing_sanity_1():
-    import time
-    start = time.time()
-#     code = (f"""
-# (<succ> (<succ> (<succ> (<zero> @))))
-#     """)
-
     code = (f"""
 succ;succ;succ;succ;succ;succ;zero;@
     """)
     print(code)
-    #TODO: why is this so slow??? 
     assert infer_typ(code)
-    end = time.time()
-    print(f"TIME: {end - start}")
 
 def test_typing_sanity_2():
-    import time
-    start = time.time()
-
-    code = ctx(["head", "ids"], f"""
-<succ> <succ> <zero> @
+    code = ctx(["head", "head", "head", "head", "head"],f"""
+@
     """)
     print(code)
-    #TODO: why is this so slow??? 
     assert infer_typ(code)
-    end = time.time()
-    print(f"TIME: {end - start}")
-
 
 ###############################################################
 ##### Subtyping Sanity 
@@ -557,6 +543,6 @@ def test_typing_sanity_2():
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_F7()
+    test_typing_F10()
 
 #######################################################################

@@ -3,6 +3,8 @@ from typing import *
 from antlr4 import *
 import sys
 
+import time
+
 import asyncio
 from asyncio import Queue, Task
 
@@ -178,7 +180,10 @@ def analyze(code : str) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
         return (None, "", parser._solver)
 
 def infer_typ(code : str) -> str:
+    start = time.time()
     (result, parsetree, solver) = analyze(code)
+    end = time.time()
+    print(f"TIME: {end - start}")
     if result == None:
         return ""
     else:

@@ -13,9 +13,9 @@ def ctx(names : list[str], code : str):
     base = code
     for name in names:
         base = (f"""
-let zzz : ({context_map.get(name)}) -> TOP = (case {name} => 
-({base})
-) in zzz 
+let zzz : ({context_map.get(name)}) -> TOP = 
+{{ {name} => {base} }} 
+in zzz 
         """.strip())
     return base
 
@@ -49,7 +49,6 @@ context_map = {
 "h" : f"{Nat} -> ALL[A] A -> A",
 "l" : List_(f"ALL[A] {Nat} -> A -> A"),
 "r" : f"(ALL[A] A -> ALL[B] B -> B) -> {Nat}",
-"x" : "<succ><succ><succ><zero>@"
 }
 
 
@@ -58,11 +57,11 @@ context_map = {
 ############################################################
 
 church_zero = (f"""
-(case f => case x => x)
+{{ f => {{ x => x }} }}
 """.strip())
 
 church_succ = (f"""
-(case n => case f => case x => f(n(f)(x)))
+{{ n => {{ f => {{ x => f(n(f)(x))) }} }} }}
 """.strip())
 
 church_one = (f"""
@@ -78,23 +77,25 @@ church_three = (f"""
 """.strip())
 
 to_church = (f"""
-fix(case loop => (
-    case <zero> @ => {church_zero}
-    case <succ> n => {church_succ}(loop(n))
-))
+fix({{ self => 
+    {{ zero;@ => {church_zero} }}
+    {{ succ;n => {church_succ}(self(n)) }}
+}})
 """.strip())
 
 
 head = (f"""
-    case (<cons> (x, xs)) => x
+    case (cons;(x,xs)) {{ x }}
 """.strip())
 
+    # case (cons;(x,xs)) { x }
+
 tail = (f"""
-    case (<cons> (x, xs)) => xs
+    case (cons;(x, xs)) => xs
 """.strip())
 
 single = (f"""
-    case x => (<cons> (x, <nil> @)) 
+    case x => (cons;(x, <nil> @)) 
 """.strip())
 
 append = (f"""
