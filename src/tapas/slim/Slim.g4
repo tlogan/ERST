@@ -232,7 +232,7 @@ $combo = Diff(context, $negation.combo)
 qualification returns [tuple[Subtyping, ...] combo] :
 
 
-| ';' {
+| '::' {
 $combo = tuple([])
 }
 
@@ -400,14 +400,15 @@ $results = [
 ]
 } 
 
-// //tag
-// | '~' ID body = base[contexts] {
-// $results = [
-//     BaseRule(self._solver).combine_tag(pid, body_result.world, $ID.text, body_result.typ)
-//     for body_result in $body.results
-//     for pid in [body_result.pid]
-// ]
-// }
+// singleton record
+| ID ';' 
+body = base[contexts] {
+$results = [
+    RecordRule(self._solver).combine_single(pid, body_result.world, $ID.text, body_result.typ)
+    for body_result in $body.results
+    for pid in [body_result.pid]
+]
+}
 
 | record[contexts] {
 $results = $record.results 
@@ -480,7 +481,7 @@ body_contexts = [
     Context(context.enviro.update($pattern.result.enviro), context.world)
     for context in contexts 
 ]
-} body = expr[body_contexts] {
+} body = base[body_contexts] {
 $results = [
     FunctionRule(self._solver).combine_single(pid, context.world, $pattern.result.typ, body_results)
     for pid, context in enumerate(contexts)
@@ -494,7 +495,7 @@ body_contexts = [
     for context in contexts 
 ]
 } 
-body = expr[body_contexts]
+body = base[body_contexts]
 tail = function[contexts] 
 {
 $results = [
@@ -628,6 +629,11 @@ $result = BasePatternRule(self._solver).combine_unit()
 // body = base_pattern {
 // $result = BasePatternRule(self._solver).combine_tag($ID.text, $body.result)
 // }
+
+// singleton record pattern
+| ID ';' body = pattern {
+$result = RecordPatternRule(self._solver, self._light_mode).combine_single($ID.text, $body.result)
+}
 
 | record_pattern {
 $result = $record_pattern.result

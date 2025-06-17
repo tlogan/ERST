@@ -343,7 +343,7 @@ cons (head(ids))(ids)
 
 def test_typing_F7():
     code = ctx(["head", "ids"], f"""
-head(ids)(<succ><succ><succ><zero>@)
+head(ids)(succ;succ;succ;zero;@)
     """)
     print(code)
     #TODO: why is this so slow??? 
@@ -525,7 +525,20 @@ def test_typing_sanity_1():
 #     """)
 
     code = (f"""
-<succ> <succ> <succ> <succ> <zero> @
+succ;succ;succ;succ;succ;succ;zero;@
+    """)
+    print(code)
+    #TODO: why is this so slow??? 
+    assert infer_typ(code)
+    end = time.time()
+    print(f"TIME: {end - start}")
+
+def test_typing_sanity_2():
+    import time
+    start = time.time()
+
+    code = ctx(["head", "ids"], f"""
+<succ> <succ> <zero> @
     """)
     print(code)
     #TODO: why is this so slow??? 
@@ -544,6 +557,6 @@ def test_typing_sanity_1():
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_sanity_1()
+    test_typing_F7()
 
 #######################################################################
