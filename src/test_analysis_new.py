@@ -335,7 +335,6 @@ auto(id)
     assert infer_typ(code)
 
 def test_typing_F6():
-    # TODO: this is a little slow
     code = ctx(["cons", "head", "ids", "id"], f"""
 cons (head(ids))(ids)
     """)
@@ -365,7 +364,6 @@ f(poly)
     assert infer_typ(code)
 
 def test_typing_F10():
-    #TODO: fail
     code = ctx(["choose", "id", "auto_prime"], f"""
 choose(id)({{ x => auto_prime(x) }})
     """)
@@ -399,7 +397,6 @@ s
     assert infer_typ(code)
 
 def test_typing_G3A():
-    #TODO: this is very slow
     code = (f"""
 let n3 : {tl.Church} = {el.church_three} in
 n3
@@ -408,7 +405,6 @@ n3
     assert infer_typ(code)
 
 def test_typing_G4A():
-    #TODO: this is very slow; 
     code = (f"""
 let c : @ -> {tl.Church} = ({{ @ => {el.church_three}({el.church_three}) }}) in
 c
@@ -417,7 +413,6 @@ c
     assert infer_typ(code)
 
 def test_typing_G5():
-    #TODO: this is very slow; 
     code = ctx(["fst"], f"""
 fst(fst(fst({el.church_three}({{ x => x }},(<zero>@))(<succ><zero>@))))
     """)
@@ -432,7 +427,6 @@ def test_typing_G6():
     assert infer_typ(code)
 
 def test_typing_G7():
-    #TODO: very slow
     code = (f"""
 ({el.church_two})({el.church_two})
     """)
@@ -440,7 +434,6 @@ def test_typing_G7():
     assert infer_typ(code)
 
 def test_typing_G8():
-    #TODO: a little bit slow
     code = (f"""
 {el.to_church}
     """)
@@ -448,7 +441,7 @@ def test_typing_G8():
     assert infer_typ(code)
 
 def test_typing_G8A():
-    #TODO: FAILS 
+    #TODO: fail 
     code = (f"""
 let c : {tl.Nat} -> {tl.Church} = {el.to_church} in
 c
@@ -537,12 +530,77 @@ def test_typing_sanity_2():
 ##### Subtyping Sanity 
 ###############################################################
 
+def test_subtyping_sanity_1():
+
+    lfp = (f"""
+(LFP[SELF] BOT
+    | ((<zero>@) * (ALL[A] (A -> (ALL[B] (B -> B)))))
+    | (EXI[N] (<succ>N) * (ALL[A] (A -> (ALL[B C] (B -> C)))))
+)
+    """)
+
+    lfp = (f"""
+(LFP[SELF] BOT
+    | ((<zero>@) * (ALL[A] (A -> A) -> (A -> A)))
+    | (EXI[N] (<succ>N) * (ALL[A] (A -> A) -> (A -> A)))
+)
+    """)
+
+    lower = (f"""
+(ALL[X] (X -> (EXI[Y] ((X*Y) <: {lfp}) :: Y)))
+    """)
+    upper = (f"""
+{tl.Nat} -> {tl.Church} 
+    """)
+    assert solve_subtyping(lower, upper)
+
+def test_subtyping_sanity_2():
+
+    lower = (f"""
+(ALL[A] ((A -> A) -> (A -> A)))
+    """)
+
+    upper = (f"""
+((G -> G) -> (G -> G))
+    """)
+
+    assert solve_subtyping(lower, upper)
+
+def test_subtyping_sanity_3():
+
+    lower = (f"""
+(ALL[A] (A -> A))
+|
+(ALL[A] (A -> A))
+    """)
+
+    upper = (f"""
+(G -> G)
+    """)
+
+    assert solve_subtyping(lower, upper)
+
+def test_subtyping_sanity_4():
+
+    lower = (f"""
+LFP[SELF] (ALL[A] ((A -> A) -> (A -> A)))
+    """)
+
+    upper = (f"""
+((G -> G) -> (G -> G))
+    """)
+
+    assert solve_subtyping(lower, upper)
+
+
 ###############################################################
 ###############################################################
 
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_F10()
+    test_typing_G8A()
+    # test_subtyping_sanity_1()
+    # test_max()
 
 #######################################################################

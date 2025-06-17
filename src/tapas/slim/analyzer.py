@@ -1524,7 +1524,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 500 
+        self._limit = 20 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2168,10 +2168,16 @@ class Solver:
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
         subbed_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower).difference(world.constraints)
-        return [
-            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            for w0 in self.solve_multi(world, subbed_constraints)
-        ]
+        # OLD:
+        # return [
+        #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+        #     for w0 in self.solve_multi(world, subbed_constraints)
+        # ]
+        # NEW:
+        return self.solve_multi(
+            replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
+            subbed_constraints
+        )
 
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
@@ -2315,6 +2321,7 @@ class Solver:
         #######################################
         #### Reflection ####
         #######################################
+
 
         if alpha_equiv(lower, upper): 
             return [world] 
@@ -2508,10 +2515,24 @@ class Solver:
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
             subbed_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
 
-            worlds = [
-                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve_multi(world, subbed_constraints)
-            ]
+            # OLD
+            # worlds = [
+            #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            #     for w0 in self.solve_multi(world, subbed_constraints)
+            # ]
+
+            # NEW: allows learning when infinite loop is detected;
+            # preserves consistency of output constraints
+            # the learned constraint is added to the inputs 
+            # for solving the substitutions
+            # which means the input is valid if and only if the substitution is valid. 
+            # If inputs and subs are valid then inductive constraint is valid 
+            # this is another form of induction
+            # TODO: can this subsume the induction of LFP?
+            worlds = self.solve_multi(
+                replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
+                subbed_constraints
+            )
 
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 worlds = [
@@ -2580,6 +2601,9 @@ class Solver:
 
 
         elif isinstance(lower, LeastFP):
+            if lower.id not in extract_free_vars_from_typ(s(), lower.body):
+                # TODO: add case to rules in paper
+                return self.solve(world, lower.body, upper)
             if is_typ_structured(lower.body):
                 # renaming : PMap[str, Typ] = pmap({lower.id : upper})
                 # lower_body = sub_typ(renaming, lower.body)

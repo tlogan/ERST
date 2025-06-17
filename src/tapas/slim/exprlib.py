@@ -61,7 +61,7 @@ church_zero = (f"""
 """.strip())
 
 church_succ = (f"""
-{{ n => {{ f => {{ x => f(n(f)(x))) }} }} }}
+{{ n => {{ f => {{ x => f(n(f)(x)) }} }} }}
 """.strip())
 
 church_one = (f"""
@@ -114,21 +114,22 @@ fix(case self => (
 
 
 lted = (f"""
-fix(case self => (
-    case (~zero @, n) => ~true @ 
-    case (~succ m, ~succ n) => self(m,n) 
-    case (~succ m, ~zero @) => ~false @ 
-))
+fix({{ self =>
+    {{ (zero;@), n => true;@ }}
+    {{ (succ;m), (succ;n) => self(m,n) }}
+    {{ (succ;m), (zero;@) => false;@  }}
+}})
+
 """.strip())
 
 max = (f'''
 let lted = {lted} in
-case (x, y) => (
+{{ (x, y) =>
     if lted(x, y) then
         y
     else
         x
-)
+}}
 ''')
 
 # max = (f'''
