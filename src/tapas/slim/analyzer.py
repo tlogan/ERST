@@ -2522,13 +2522,7 @@ class Solver:
             # ]
 
             # NEW: allows learning when infinite loop is detected;
-            # preserves consistency of output constraints
-            # the learned constraint is added to the inputs 
-            # for solving the substitutions
-            # which means the input is valid if and only if the substitution is valid. 
-            # If inputs and subs are valid then inductive constraint is valid 
-            # this is another form of induction
-            # TODO: can this subsume the induction of LFP?
+            # TODO: explain why adding target constraint to assumptions is safe for determining consistency
             worlds = self.solve_multi(
                 replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
                 subbed_constraints

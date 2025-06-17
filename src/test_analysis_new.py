@@ -441,7 +441,6 @@ def test_typing_G8():
     assert infer_typ(code)
 
 def test_typing_G8A():
-    #TODO: fail 
     code = (f"""
 let c : {tl.Nat} -> {tl.Church} = {el.to_church} in
 c
@@ -599,7 +598,7 @@ LFP[SELF] (ALL[A] ((A -> A) -> (A -> A)))
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_G8A()
+    test_typing_G14()
     # test_subtyping_sanity_1()
     # test_max()
 
