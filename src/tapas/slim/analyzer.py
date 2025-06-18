@@ -1524,7 +1524,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 20 
+        self._limit = 1000 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2239,7 +2239,7 @@ class Solver:
         )
 
 
-    def closed_variable_elimination_safe(self, world : World, lower : TVar, upper : Typ) -> bool:
+    def check_closed_variable_elimination(self, world : World, lower : TVar, upper : Typ) -> bool:
         upper_parts = list(pset(
             st.upper
             for st in world.constraints
@@ -2247,6 +2247,21 @@ class Solver:
         ).union(self.extract_factored_upper_bounds(world, lower.id)))
         # upper_parts.sort(key=lambda up : str(up))
         random.shuffle(upper_parts)
+#         for i, up in enumerate(upper_parts):
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG ELIM SAFE ({i})
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# closedids:
+# {world.closedids}
+# constraints:
+# {concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(up)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
         some_parts_consistent = any(
             (
@@ -2266,7 +2281,7 @@ class Solver:
 
         return some_parts_consistent and all_parts_consistent
 
-    def closed_variable_introduction_safe(self, world : World, lower : Typ, upper : TVar) -> bool:
+    def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
         lower_parts = list(pset(
             st.lower
@@ -2277,10 +2292,10 @@ class Solver:
 
         some_parts_consistent = any(
             (
-                (isinstance(lower, TVar) and lower.id not in world.closedids)
-                or bool(self.solve(world, lower, lower))
+                (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
+                or bool(self.solve(world, lower, lower_part))
             )
-            for lower in lower_parts
+            for lower_part in lower_parts
         )
 
         all_parts_consistent = all(
@@ -2297,12 +2312,12 @@ class Solver:
             (False
                 or not isinstance(st.lower, TVar) 
                 or (st.lower.id not in world.closedids)
-                or self.closed_variable_elimination_safe(world, st.lower, st.upper)
+                or self.check_closed_variable_elimination(world, st.lower, st.upper)
             ) and
             (False
                 or not isinstance(st.upper, TVar) 
                 or (st.upper.id not in world.closedids)
-                or self.closed_variable_introduction_safe(world, st.lower, st.upper)
+                or self.check_closed_variable_introduction(world, st.lower, st.upper)
             )
             for st in constraints
         )
@@ -2313,11 +2328,14 @@ class Solver:
         if reset:
             self.count = 0
 
-        # if self.count > self._limit:
-        #     return []
+        if self.count > self._limit:
+            return []
 
 #         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# count: {self.count}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # closed:
 # {world.closedids}
@@ -2582,7 +2600,7 @@ class Solver:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
-            if self.closed_variable_elimination_safe(world, lower, upper): 
+            if self.check_closed_variable_elimination(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 return []
@@ -2596,7 +2614,7 @@ class Solver:
 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
-            if self.closed_variable_introduction_safe(world, lower, upper): 
+            if self.check_closed_variable_introduction(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 return []

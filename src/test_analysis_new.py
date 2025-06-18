@@ -62,7 +62,7 @@ def test_typ_parsing_3():
 
 def test_typ_parsing_4():
     assert  parse_typ(f"""
-EXI[N L] ((N * L) <: @) ; (<succ> N) * (<cons> L)  
+EXI[N L] ((N * L) <: @) :: (<succ> N) * (<cons> L)  
     """)
 
 def test_typ_parsing_5():
@@ -77,7 +77,7 @@ EXI[N L] (<succ> N) * (<cons> L)
 
 def test_typ_parsing_7():
     assert  parse_typ(f"""
-ALL[N L] ((N * L) <: @) ; (<succ> N) -> (<cons> L)  
+ALL[N L] ((N * L) <: @) :: (<succ> N) -> (<cons> L)  
     """)
 
 def test_typ_parsing_8():
@@ -565,14 +565,6 @@ def test_subtyping_sanity_2():
 
     assert solve_subtyping(lower, upper)
 
-def test_subtyping_sanity_3():
-
-    lower = (f"""
-(ALL[A] (A -> A))
-|
-(ALL[A] (A -> A))
-    """)
-
     upper = (f"""
 (G -> G)
     """)
@@ -603,6 +595,8 @@ if __name__ == '__main__':
     # test_max()
     # test_subtyping_sanity_3()
     ############
-    test_typing_G14()
+    # test_typing_G14()
+    ############
+    test_typing_A9()
 
 #######################################################################
