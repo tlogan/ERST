@@ -1805,14 +1805,14 @@ class Solver:
                 st
                 for st in constraints
                 for fids in [extract_free_vars_from_constraints(s(), [st])]
-                if not bool (fids.difference(closedids).union(foreignids)) # every free id is closed or foreign
+                if not bool (fids.difference(closedids).difference(foreignids)) # every free id is closed or foreign
                 if bool(fids.intersection(closedids)) # there's at least one closed id
             )
             inner_constraints = constraints.difference(outer_constraints)
 
             outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
-            ######### invariant: for each constraint in inner_constraints, there is at least one open and inner id in fids(constraint) 
+            ######### invariant: for each constraint in inner_constraints, there is at least one open / inner id in fids(constraint) 
             for st in inner_constraints:
                 fids = extract_free_vars_from_constraints(s(), [st]) 
                 assert bool(inner_ids.intersection(fids))
