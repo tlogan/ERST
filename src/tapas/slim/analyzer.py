@@ -1524,7 +1524,7 @@ class Solver:
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 1000 
+        self._limit = 200 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2247,21 +2247,6 @@ class Solver:
         ).union(self.extract_factored_upper_bounds(world, lower.id)))
         # upper_parts.sort(key=lambda up : str(up))
         random.shuffle(upper_parts)
-#         for i, up in enumerate(upper_parts):
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG ELIM SAFE ({i})
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# closedids:
-# {world.closedids}
-# constraints:
-# {concretize_constraints(world.constraints)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# {concretize_typ(up)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
 
         some_parts_consistent = any(
             (
@@ -2288,6 +2273,7 @@ class Solver:
             for st in world.constraints
             if st.upper == upper 
         ))
+        # lower_parts.sort(key=lambda lp : str(lp))
         random.shuffle(lower_parts)
 
         some_parts_consistent = any(
