@@ -525,6 +525,21 @@ def test_typing_sanity_2():
     print(code)
     assert infer_typ(code)
 
+def test_typing_sanity_inter_nesting_constraint():
+    # NOTE: extrusion isn't necessary
+    # because we keep inner variables locally bound 
+    # instead of lifting them to the outer binding
+    # basically, we maintain the same abstraction hierarchy
+    # of the expression
+    code = (f"""
+let foo = {{f =>
+    (f(zero;@)), f(true;@)  
+}} in 
+{{ x => foo({{y => x(y,y) }}) }}
+    """)
+    print(code)
+    assert infer_typ(code)
+
 ###############################################################
 ##### Subtyping Sanity 
 ###############################################################
@@ -597,6 +612,7 @@ if __name__ == '__main__':
     ############
     # test_typing_G14()
     ############
-    test_typing_A9()
+    # test_typing_A9()
+    test_typing_sanity_inter_nesting_constraint()
 
 #######################################################################
