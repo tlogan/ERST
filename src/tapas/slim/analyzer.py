@@ -2167,17 +2167,31 @@ class Solver:
 
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
-        subbed_constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower).difference(world.constraints)
+        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+        subbed_constraints = constraints.difference(world.constraints)
+        unsubbed_constraints = constraints.intersection(world.constraints)
         # OLD:
-        # return [
-        #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-        #     for w0 in self.solve_multi(world, subbed_constraints)
-        # ]
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(world, subbed_constraints)
+        ]
         # NEW:
-        return self.solve_multi(
-            replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
-            subbed_constraints
-        )
+        # return self.solve_multi(
+        #     replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
+        #     subbed_constraints
+        # )
+
+        # NEW B:
+        # skol : Typ = self.fresh_type_var()
+        # renaming : PMap[str, Typ] = pmap({upper.id : skol})
+        # assumptions = pset(sub_constraints(renaming, unsubbed_constraints.add(Subtyping(lower, upper))))
+        # return [
+        #     replace(w, constraints = world.constraints.union(w.constraints))
+        #     for w in self.solve_multi(
+        #         replace(world, closedids = world.closedids.add(skol.id), constraints = assumptions), 
+        #         subbed_constraints
+        #     )
+        # ]
 
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
@@ -2513,20 +2527,49 @@ class Solver:
         #######################################
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
-            subbed_constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper).difference(world.constraints)
+            constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+            subbed_constraints = constraints.difference(world.constraints)
+            unsubbed_constraints = constraints.intersection(world.constraints)
 
             # OLD
-            # worlds = [
-            #     replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-            #     for w0 in self.solve_multi(world, subbed_constraints)
-            # ]
+            #########
+            worlds = [
+                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+                for w0 in self.solve_multi(world, subbed_constraints)
+            ]
 
             # NEW: allows learning when infinite loop is detected;
+            #########
             # TODO: explain why adding target constraint to assumptions is safe for determining consistency
-            worlds = self.solve_multi(
-                replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
-                subbed_constraints
-            )
+            # NOTE: this is a form of induction
+            # NOTE: in this and in LFP induction, 
+            # we need to explain how the solver fails, even if the assumptions with IH are inconsistent  
+            # the logic would be unsound if the inconsistent assumptions allowed vacuous truth
+            # how do we precisely characterize that the solver fails on these inductive problems when the 
+            # IH makes the assumptions inconsistent
+            # essentially, we need a completeness criteria for these problems.
+            #########
+            # worlds = self.solve_multi(
+            #     replace(world, constraints = world.constraints.add(Subtyping(lower, upper))), 
+            #     subbed_constraints
+            # )
+
+            #########
+            # NEW B; breaks test test_max
+            #########
+            # NOTE: this version only assumes the unsubbed constraints,
+            # which cannot contradict the induction hypothesis
+            #########
+            # skol = self.fresh_type_var()
+            # renaming = pmap({lower.id : skol})
+            # assumptions = pset(sub_constraints(renaming, unsubbed_constraints.add(Subtyping(lower, upper))))
+            # worlds = [
+            #     replace(w, constraints = world.constraints.union(w.constraints))
+            #     for w in self.solve_multi(
+            #         replace(world, closedids = world.closedids.add(skol.id), constraints = assumptions), 
+            #         subbed_constraints
+            #     )
+            # ]
 
             if isinstance(upper, TVar) and upper.id not in world.closedids: 
                 worlds = [

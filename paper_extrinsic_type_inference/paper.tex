@@ -2261,6 +2261,27 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
+% \TODO{loop detection isn't necessary to pass example G8A}
+
+% \TODO{is loop detection a form of (co)inductive reasoning?}
+
+% \TODO{there is infinitely never a contradictioin}
+
+% \TODO{inputs are satisfiable regardless of context}
+
+% \TODO{inputs are equisatisfiable with context and target constraint}
+
+% \TODO{so inputs are consistent with target constraint}
+
+% \TODO{the satisfiability property ensures there aren't invalid assumptions used to prove by induction}
+
+% \TODO{that is, induction is only valid if the assumptions are consistent with the induction hypothesis}
+
+% \TODO{A more principaled approach would be to remove the original constraints that have been subbed out,
+% and then rename the remaning variables to skolems and use as assumptions}
+
+% \TODO{the remaining unsubbed constraints cannot contradict the IH because the polarity is the same}
+
 \noindent
 Variable elimination has two cases, 
 one for open variables $\alpha \not\in \Theta$,
@@ -4353,6 +4374,19 @@ rely on analogous techniques.
   \end{mathpar}
 
   \TODO{need extension to overwrite previous keys; order matters; set union not sufficient}
+\end{theorem}
+
+\begin{theorem}
+  \label{thm:proof_subtyping_satisfiability}
+  Proof Subtyping Satisfiability 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \exists \delta \qua \delta \satisfies \tau_l \subtypes \tau_r
+    }
+  \end{mathpar}
 \end{theorem}
 
 \begin{theorem}

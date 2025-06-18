@@ -598,8 +598,11 @@ LFP[SELF] (ALL[A] ((A -> A) -> (A -> A)))
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_G14()
+    # test_typing_G8A()
     # test_subtyping_sanity_1()
     # test_max()
+    # test_subtyping_sanity_3()
+    ############
+    # test_typing_G14()
 
 #######################################################################
