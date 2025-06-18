@@ -1518,13 +1518,15 @@ class Solver:
 
     aliasing : PMap[str, Typ]
 
+    priority_map : dict[Subtyping, int] = {} 
+
     def print(self, x):
         if not self._checking:
             print(x)
 
     def __init__(self, aliasing : PMap[str, Typ]):
         self._type_id = 0 
-        self._limit = 200 
+        self._limit = 500 
         self.debug = True
         self.count = 0
         self.aliasing = aliasing
@@ -2050,6 +2052,59 @@ class Solver:
         else:
             return src
 
+    def extract_polar_vars_from_constraints(self, greenlight : bool, ignore : PSet[str], constraints : Iterable[Subtyping]) -> PSet[str]:
+        return pset(
+            id 
+            for st in constraints
+            for id in self.extract_polar_vars_from_typ(not greenlight, ignore, st.lower).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore, st.upper)
+            )
+        )
+
+    def extract_polar_vars_from_typ(self, greenlight : bool, ignore : PSet[str], src : Typ) -> PSet[str]:
+        if False:
+            assert False
+        elif isinstance(src, TVar) and greenlight:  
+            return pset({src.id})
+        elif isinstance(src, TUnit):  
+            return pset({})
+        elif isinstance(src, TEntry):  
+            return self.extract_polar_vars_from_typ(greenlight, ignore, src.body)
+        elif isinstance(src, Unio):  
+            return self.extract_polar_vars_from_typ(greenlight, ignore, src.left).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore, src.right)
+            )
+        elif isinstance(src, Inter):  
+            return self.extract_polar_vars_from_typ(greenlight, ignore, src.left).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore, src.right)
+            )
+        elif isinstance(src, Diff):  
+            return self.extract_polar_vars_from_typ(greenlight, ignore, src.context).union(
+                self.extract_polar_vars_from_typ(not greenlight, ignore, src.negation)
+            )
+        elif isinstance(src, Imp):  
+            return self.extract_polar_vars_from_typ(not greenlight, ignore, src.antec).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore, src.consq)
+            )
+
+        elif isinstance(src, Exi):  
+            return self.extract_polar_vars_from_constraints(greenlight, ignore.union(src.ids), src.constraints).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore.union(src.ids), src.body)
+            )
+
+        elif isinstance(src, All):  
+            return self.extract_polar_vars_from_constraints(greenlight, ignore.union(src.ids), src.constraints).union(
+                self.extract_polar_vars_from_typ(greenlight, ignore.union(src.ids), src.body)
+            )
+        elif isinstance(src, LeastFP):  
+            return self.extract_polar_vars_from_typ(greenlight, ignore.add(src.id), src.body)
+        elif isinstance(src, Top):  
+            return pset({}) 
+        elif isinstance(src, Bot):  
+            return pset({}) 
+        else:
+            return pset({}) 
+
     def make_diff(self, world : World, pos : Typ, negs : list[Typ]) -> Typ:
         result = pos 
         for neg in negs:
@@ -2155,20 +2210,62 @@ class Solver:
 #             """)
             return False
 
+
+    def infinite_potential(self, world : World, st : Subtyping) -> int:
+        neg_vars = self.extract_polar_vars_from_constraints(False, s(), world.constraints.add(st)).difference(world.closedids)
+        pos_vars = self.extract_polar_vars_from_constraints(True, s(), world.constraints.add(st)).difference(world.closedids)
+        print(f"""
+neg_vars: {neg_vars}
+pos_vars: {pos_vars}
+        """)
+        return len(list(neg_vars.intersection(pos_vars)))
+
     def solve_multi(self, world : World, constraints : Iterable[Subtyping]) -> list[World]:
+        priorities = list(constraints)
+        priorities.sort(key=lambda k : str(k))
+        random.shuffle(priorities)
         worlds = [world]
-        for st in constraints:
+        for st in priorities:
             worlds = [
                 w1
                 for w0 in worlds
                 for w1 in self.solve(w0, st.lower, st.upper)
             ]
         return worlds
+        #############################
+
+        # priorities = list(constraints)
+        # for st in priorities:
+        #     if st not in self.priority_map:
+        #         self.priority_map[st] = self.infinite_potential(world, st) 
+
+        # def key(st):
+        #     i = self.priority_map.get(st)
+        #     if i == None:
+        #         return 0 
+        #     else:
+        #         return i 
+
+        # priorities.sort(key=key)
+
+        # worlds : list[World] = [world]
+
+        # for st in priorities:
+        #     all_solutions = []
+        #     for world in worlds:
+        #         solutions = self.solve(world, st.lower, st.upper)
+        #         if solutions:
+        #             self.priority_map[st] = 1 
+        #         else:
+        #             self.priority_map[st] = 2 
+        #         all_solutions = all_solutions + solutions
+        #     worlds = all_solutions
+        # return worlds
 
 
     def solve_open_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
         constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
-        subbed_constraints = constraints.difference(world.constraints)
+        subbed_constraints = list(constraints.difference(world.constraints))
         unsubbed_constraints = constraints.intersection(world.constraints)
         # OLD:
         return [
@@ -2415,6 +2512,24 @@ class Solver:
                 return [] 
 
         elif isinstance(lower, Imp) and isinstance(upper, Imp): 
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG IMP IMP
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# count: {self.count}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~
+# skolems:
+# {world.closedids}
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
             worlds = [
                 m1
                 # TODO: consider switching order
@@ -2532,7 +2647,7 @@ class Solver:
 
         elif isinstance(lower, TVar) and lower.id not in world.closedids:
             constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-            subbed_constraints = constraints.difference(world.constraints)
+            subbed_constraints = list(constraints.difference(world.constraints))
             unsubbed_constraints = constraints.intersection(world.constraints)
 
             # OLD

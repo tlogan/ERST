@@ -612,7 +612,8 @@ if __name__ == '__main__':
     ############
     # test_typing_G14()
     ############
-    # test_typing_A9()
-    test_typing_sanity_inter_nesting_constraint()
+    test_typing_A9()
+    # test_typing_F7()
+    # test_typing_sanity_inter_nesting_constraint()
 
 #######################################################################
