@@ -279,22 +279,22 @@ revapp(id)(poly)
     assert infer_typ(code)
 
 def test_typing_D3():
-    code = ctx(["runST", "argST"], f"""
-runST(argST)
+    code = ctx(["runState", "argState"], f"""
+runState(argState)
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_D4():
-    code = ctx(["app", "runST", "argST"], f"""
-app(runST)(argST)
+    code = ctx(["app", "runState", "argState"], f"""
+app(runState)(argState)
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_D5():
-    code = ctx(["revapp", "runST", "argST"], f"""
-revapp(argST)(runST)
+    code = ctx(["revapp", "runState", "argState"], f"""
+revapp(argState)(runState)
     """)
     print(code)
     assert infer_typ(code)
@@ -560,6 +560,5 @@ let foo = {{f =>
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_A9()
 
 #######################################################################

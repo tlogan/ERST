@@ -11,7 +11,7 @@ from tapas.slim.typlib import *
 
 def ctx(names : list[str], code : str):
     base = code
-    for name in reversed(names):
+    for name in (names):
         base = (f"""
 let zzz_{name} : ({context_map.get(name)}) -> TOP = 
 {{ {name} => {base} }} 
@@ -39,7 +39,7 @@ context_map = {
 "map" : f"ALL[A B] (A -> B) -> {List_('A')} -> {List_('B')}",
 "app" : f"ALL[A B] (A -> B) -> A -> B",
 "revapp" : f"ALL[A B] A -> (A -> B) -> B",
-"runState" : f"ALL[A] (ALL[S] {State('S', 'A')}) -> B",
+"runState" : f"ALL[A B] (ALL[S] {State('S', 'A')}) -> B",
 "argState" : f"ALL[S] {State('S', Nat)}",
 "zero" : Church,
 "succ" : f"{Church} -> {Church}",
