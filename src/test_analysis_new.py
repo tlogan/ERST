@@ -144,7 +144,8 @@ choose(id)(auto_prime)
     assert infer_typ(code)
 
 def test_typing_A9():
-    code = ctx(["foo", "choose", "id", "ids"], f"""
+    # TODO: figure out why order of annotations affects determinism 
+    code = ctx(["choose", "id", "ids", "foo"], f"""
 foo(choose(id))(ids)
     """)
     print(code)
@@ -602,18 +603,40 @@ LFP[SELF] (ALL[A] ((A -> A) -> (A -> A)))
 ###############################################################
 ###############################################################
 
+def test_typing_A9_debug():
+#     code = ctx(["foo", "choose", "id", "ids"], f"""
+# foo(choose(id))(ids)
+#     """)
+    code = ctx(["choose", "foo"], f"""
+foo(choose(@))(nil;@)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_subtyping_A9():
+# G004 <: (<nil> @ -> G005)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# skolems:
+# pset()
+
+# constraints:
+# (G001 <: (@ -> G003)) 
+# (G002 <: (G003 -> G004)) 
+
+    lower = (f"""
+(ALL[A B C D] (A <: (@ -> C)) (B <: (C -> D)) :: D)
+    """)
+
+    upper = (f"""
+Z
+    """)
+
+    assert solve_subtyping(lower, upper)
+
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    # test_typing_G8A()
-    # test_subtyping_sanity_1()
-    # test_max()
-    # test_subtyping_sanity_3()
-    ############
-    # test_typing_G14()
-    ############
     test_typing_A9()
-    # test_typing_F7()
-    # test_typing_sanity_inter_nesting_constraint()
 
 #######################################################################

@@ -13,9 +13,9 @@ def ctx(names : list[str], code : str):
     base = code
     for name in names:
         base = (f"""
-let zzz : ({context_map.get(name)}) -> TOP = 
+let zzz_{name} : ({context_map.get(name)}) -> TOP = 
 {{ {name} => {base} }} 
-in zzz 
+in zzz_{name} 
         """.strip())
     return base
 

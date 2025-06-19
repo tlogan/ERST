@@ -2214,18 +2214,11 @@ class Solver:
     def infinite_potential(self, world : World, st : Subtyping) -> int:
         neg_vars = self.extract_polar_vars_from_constraints(False, s(), world.constraints.add(st)).difference(world.closedids)
         pos_vars = self.extract_polar_vars_from_constraints(True, s(), world.constraints.add(st)).difference(world.closedids)
-        print(f"""
-neg_vars: {neg_vars}
-pos_vars: {pos_vars}
-        """)
         return len(list(neg_vars.intersection(pos_vars)))
 
     def solve_multi(self, world : World, constraints : Iterable[Subtyping]) -> list[World]:
-        priorities = list(constraints)
-        priorities.sort(key=lambda k : str(k))
-        random.shuffle(priorities)
         worlds = [world]
-        for st in priorities:
+        for st in constraints:
             worlds = [
                 w1
                 for w0 in worlds
@@ -2344,6 +2337,7 @@ pos_vars: {pos_vars}
         ).union(self.extract_factored_upper_bounds(world, lower.id)))
         # upper_parts.sort(key=lambda up : str(up))
         random.shuffle(upper_parts)
+        # upper_parts.sort(key=lambda up : self.infinite_potential(world, Subtyping(lower, up)))
 
         some_parts_consistent = any(
             (
@@ -2372,6 +2366,7 @@ pos_vars: {pos_vars}
         ))
         # lower_parts.sort(key=lambda lp : str(lp))
         random.shuffle(lower_parts)
+        # lower_parts.sort(key=lambda lp : self.infinite_potential(world, Subtyping(lp, upper)))
 
         some_parts_consistent = any(
             (
@@ -3171,15 +3166,6 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_application ASSUME
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# world.closedids: {world.closedids}
-# cator_typ: {concretize_typ(cator_typ)}
-# arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
-# ~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
         worlds = [world] 
         current_cator_typ = cator_typ
         for arg_typ in arg_typs:
@@ -3189,27 +3175,6 @@ class ExprRule(Rule):
                 new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True))
             worlds = new_worlds
             current_cator_typ = result_var
-
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_application GUARANTEE 
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# cator_typ: {concretize_typ(cator_typ)}
-# arg_typs: {[concretize_typ(arg_typ) for arg_typ in arg_typs]}
-
-# result: {result_var}
-# ~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
-#         for i,world in enumerate(worlds):
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG combine_application - World {i} 
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# world.closedids: {world.closedids}
-# world.constraints: 
-# {concretize_constraints(world.constraints)}
-# ~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
 
         return [
             Result(pid, world, result_var)
