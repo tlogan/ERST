@@ -11,7 +11,7 @@ from tapas.slim.typlib import *
 
 def ctx(names : list[str], code : str):
     base = code
-    for name in names:
+    for name in reversed(names):
         base = (f"""
 let zzz_{name} : ({context_map.get(name)}) -> TOP = 
 {{ {name} => {base} }} 

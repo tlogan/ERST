@@ -144,8 +144,7 @@ choose(id)(auto_prime)
     assert infer_typ(code)
 
 def test_typing_A9():
-    # TODO: figure out why order of annotations affects determinism 
-    code = ctx(["choose", "id", "ids", "foo"], f"""
+    code = ctx(["foo", "choose", "ids", "id"], f"""
 foo(choose(id))(ids)
     """)
     print(code)
@@ -545,94 +544,18 @@ let foo = {{f =>
 ##### Subtyping Sanity 
 ###############################################################
 
-def test_subtyping_sanity_1():
+# def test_subtyping_sanity_debug():
 
-    lfp = (f"""
-(LFP[SELF] BOT
-    | ((<zero>@) * (ALL[A] (A -> (ALL[B] (B -> B)))))
-    | (EXI[N] (<succ>N) * (ALL[A] (A -> (ALL[B C] (B -> C)))))
-)
-    """)
-
-    lfp = (f"""
-(LFP[SELF] BOT
-    | ((<zero>@) * (ALL[A] (A -> A) -> (A -> A)))
-    | (EXI[N] (<succ>N) * (ALL[A] (A -> A) -> (A -> A)))
-)
-    """)
-
-    lower = (f"""
-(ALL[X] (X -> (EXI[Y] ((X*Y) <: {lfp}) :: Y)))
-    """)
-    upper = (f"""
-{tl.Nat} -> {tl.Church} 
-    """)
-    assert solve_subtyping(lower, upper)
-
-def test_subtyping_sanity_2():
-
-    lower = (f"""
-(ALL[A] ((A -> A) -> (A -> A)))
-    """)
-
-    upper = (f"""
-((G -> G) -> (G -> G))
-    """)
-
-    assert solve_subtyping(lower, upper)
-
-    upper = (f"""
-(G -> G)
-    """)
-
-    assert solve_subtyping(lower, upper)
-
-def test_subtyping_sanity_4():
-
-    lower = (f"""
-LFP[SELF] (ALL[A] ((A -> A) -> (A -> A)))
-    """)
-
-    upper = (f"""
-((G -> G) -> (G -> G))
-    """)
-
-    assert solve_subtyping(lower, upper)
-
-
-###############################################################
-###############################################################
-
-def test_typing_A9_debug():
-#     code = ctx(["foo", "choose", "id", "ids"], f"""
-# foo(choose(id))(ids)
+#     lower = (f"""
 #     """)
-    code = ctx(["choose", "foo"], f"""
-foo(choose(@))(nil;@)
-    """)
-    print(code)
-    assert infer_typ(code)
 
-def test_subtyping_A9():
-# G004 <: (<nil> @ -> G005)
+#     upper = (f"""
+#     """)
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# skolems:
-# pset()
+#     assert solve_subtyping(lower, upper)
 
-# constraints:
-# (G001 <: (@ -> G003)) 
-# (G002 <: (G003 -> G004)) 
-
-    lower = (f"""
-(ALL[A B C D] (A <: (@ -> C)) (B <: (C -> D)) :: D)
-    """)
-
-    upper = (f"""
-Z
-    """)
-
-    assert solve_subtyping(lower, upper)
+###############################################################
+###############################################################
 
 if __name__ == '__main__':
     pass
