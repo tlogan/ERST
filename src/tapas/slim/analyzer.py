@@ -2339,7 +2339,7 @@ class Solver:
         random.shuffle(upper_parts)
         # upper_parts.sort(key=lambda up : self.infinite_potential(world, Subtyping(lower, up)))
 
-        some_parts_consistent = any(
+        some_parts_consistent = lambda : any(
             (
                 (isinstance(upper_part, TVar) and upper_part.id not in world.closedids) 
                 or bool(self.solve(world, upper_part, upper))
@@ -2348,14 +2348,11 @@ class Solver:
             # if not isinstance(upper_part, TVar) or upper_part.id in world.closedids  else
         )
 
-        # TODO: switch this part to use polar substitution to be more comprehensive
-        all_parts_consistent = all(
-            bool(self.solve(world, st.lower, upper))
-            for st in world.constraints
-            if st.upper == lower 
-        )
+        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+        subbed_constraints = list(constraints.difference(world.constraints))
+        all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
 
-        return some_parts_consistent and all_parts_consistent
+        return all_parts_consistent() and some_parts_consistent()
 
     def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
@@ -2368,7 +2365,7 @@ class Solver:
         random.shuffle(lower_parts)
         # lower_parts.sort(key=lambda lp : self.infinite_potential(world, Subtyping(lp, upper)))
 
-        some_parts_consistent = any(
+        some_parts_consistent = lambda : any(
             (
                 (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
                 or bool(self.solve(world, lower, lower_part))
@@ -2376,13 +2373,11 @@ class Solver:
             for lower_part in lower_parts
         )
 
-        all_parts_consistent = all(
-            bool(self.solve(world, lower, st.upper))
-            for st in world.constraints
-            if st.lower == upper 
-        )
+        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+        subbed_constraints = list(constraints.difference(world.constraints))
+        all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
 
-        return some_parts_consistent and all_parts_consistent
+        return all_parts_consistent() and some_parts_consistent()
 
 
     def closed_constraints_safe(self, world : World, constraints : PSet[Subtyping]) -> bool:
