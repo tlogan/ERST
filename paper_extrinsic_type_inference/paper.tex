@@ -1437,16 +1437,14 @@ enumerates all possible outputs.
     }
 
     \inferrule {
-      \TODO{update proof with packing changes}
+      \TODO{update proof with ignoring of learnings from annotation check}
       \\\\
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
       \\
-      \textbf{pack}^+(\Theta', \Delta' \entails \tau) = \tau^\dagger
-      \\\\
       \textbf{ftv}(\tau_a) \subseteq \emptyset
-      \\
-      \exists \Theta'', \Delta'' \qua \Theta', \Delta' \entails \tau^\dagger \subtypes \tau_a \given \Theta'', \Delta''
       \\\\
+      \exists \Theta'', \Delta'' \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta'', \Delta''
+      \\
       \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
     } {
       \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''

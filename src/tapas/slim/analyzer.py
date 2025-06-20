@@ -3402,13 +3402,11 @@ class RecordPatternRule(Rule):
 class TargetRule(Rule):
 
     def combine_anno(self, pid : int, world : World, expr_typ : Typ, anno_typ : Typ) -> list[Result]:
-        # NOTE: packing makesd sense because we don't want the annotation to further constrain the learnable variables
         if bool(extract_free_vars_from_typ(s(), anno_typ)):
             return []
         else:
-            ctyp = self.solver.make_constraint_typ(True)(s(), world.closedids, world.constraints, expr_typ)
             # NOTE: we don't care about learning anything about the annotation; just that it's legal
-            if bool(self.solver.solve(world, ctyp, anno_typ, reset=True)): 
+            if bool(self.solver.solve(world, expr_typ, anno_typ, reset=True)): 
                 return [
                     Result(pid, world, anno_typ)
                 ]
