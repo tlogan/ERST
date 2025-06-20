@@ -2330,14 +2330,11 @@ class Solver:
 
 
     def check_closed_variable_elimination(self, world : World, lower : TVar, upper : Typ) -> bool:
-        upper_parts = list(pset(
+        upper_parts = pset(
             st.upper
             for st in world.constraints
             if st.lower == lower 
-        ).union(self.extract_factored_upper_bounds(world, lower.id)))
-        # upper_parts.sort(key=lambda up : str(up))
-        random.shuffle(upper_parts)
-        # upper_parts.sort(key=lambda up : self.infinite_potential(world, Subtyping(lower, up)))
+        ).union(self.extract_factored_upper_bounds(world, lower.id))
 
         some_parts_consistent = lambda : any(
             (
@@ -2345,7 +2342,6 @@ class Solver:
                 or bool(self.solve(world, upper_part, upper))
             )
             for upper_part in upper_parts
-            # if not isinstance(upper_part, TVar) or upper_part.id in world.closedids  else
         )
 
         constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
@@ -2356,14 +2352,11 @@ class Solver:
 
     def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
-        lower_parts = list(pset(
+        lower_parts = pset(
             st.lower
             for st in world.constraints
             if st.upper == upper 
-        ))
-        # lower_parts.sort(key=lambda lp : str(lp))
-        random.shuffle(lower_parts)
-        # lower_parts.sort(key=lambda lp : self.infinite_potential(world, Subtyping(lp, upper)))
+        )
 
         some_parts_consistent = lambda : any(
             (

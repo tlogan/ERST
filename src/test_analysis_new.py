@@ -560,6 +560,7 @@ let foo = {{f =>
 if __name__ == '__main__':
     pass
     # SCRATCH WORK
-    test_typing_A9()
+    # test_typing_A9()
+    # test_max()
 
 #######################################################################
