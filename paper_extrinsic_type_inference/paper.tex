@@ -5626,29 +5626,20 @@ rely on analogous techniques.
       \given \Theta, \Delta
   )$
 
-  \item \I \N Let $\delta$ be, such that $(
-    \textbf{dom}(\delta) = \Theta \backslash \Theta
-  )$ [IH]
-
-  \item \I \N And P: $(
-    \forall \delta' \qua 
-    \delta' \oplus \delta \satisfies \Delta
-    \implies 
-    \delta', \sigma \satisfies \Gamma
-    \implies 
-    \delta' \oplus \delta \satisfies \J{@} \hastype \J{@} 
-  )$ [IH]
+  \item \I \N Derive $(
+    \textbf{dom}(\epsilon) = \Theta \backslash \Theta
+  )$
 
   \item \I \N For $\delta'$, $\sigma$,
-    assume $(\delta' \oplus \delta \satisfies \Delta')$
+    assume $(\delta' \oplus \epsilon \satisfies \Delta')$
     and $(\delta', \sigma \satisfies \Gamma)$
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies \J{@} \hastype \J{@}
+    \delta' \oplus \epsilon \satisfies \J{@} \hastype \J{@}
   )$ [Def. \ref{def:model_typing}]
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies \J{@}[\sigma] \hastype \J{@}
+    \delta' \oplus \epsilon \satisfies \J{@}[\sigma] \hastype \J{@}
   )$ [Def. \ref{def:expr_substitution}]
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5661,25 +5652,16 @@ rely on analogous techniques.
     x \hastype \tau \in \Gamma 
   )$ [Def. \ref{def:proof_typing}]
 
-  \item \I \N Let $\delta$ be, such that $(
-    \textbf{dom}(\delta) = \Theta \backslash \Theta
-  )$ [IH]
-
-  \item \I \N And P: $(
-    \forall \delta' \qua 
-    \delta' \oplus \delta \satisfies \Delta
-    \implies 
-    \delta', \sigma \satisfies \Gamma
-    \implies 
-    \delta' \oplus \delta \satisfies x \hastype \tau 
-  )$ [IH]
+  \item \I \N Derive $(
+    \textbf{dom}(\epsilon) = \Theta \backslash \Theta
+  )$
 
   \item \I \N For $\delta'$, $\sigma$,
-    assume $(\delta' \oplus \delta \satisfies \Delta')$
+    assume $(\delta' \oplus \epsilon \satisfies \Delta')$
     and $(\delta', \sigma \satisfies \Gamma)$
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies x[\sigma] \hastype \tau
+    \delta' \oplus \epsilon \satisfies x[\sigma] \hastype \tau
   )$ [Def. \ref{def:model_typing_sequence}]
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5688,29 +5670,20 @@ rely on analogous techniques.
     \Theta, \Delta, \Gamma \entails \epsilon \hastype \J{TOP} \given \Theta, \Delta
   )$
 
-  \item \I \N Let $\delta$ be, such that $(
-    \textbf{dom}(\delta) = \Theta \backslash \Theta
-  )$ [IH]
-
-  \item \I \N And P: $(
-    \forall \delta' \qua 
-    \delta' \oplus \delta \satisfies \Delta
-    \implies 
-    \delta', \sigma \satisfies \Gamma
-    \implies 
-    \delta' \oplus \delta \satisfies \epsilon \hastype \J{TOP} 
-  )$ [IH]
+  \item \I \N Derive $(
+    \textbf{dom}(\epsilon) = \Theta \backslash \Theta
+  )$
 
   \item \I \N For $\delta'$, $\sigma$,
-    assume $(\delta' \oplus \delta \satisfies \Delta')$
+    assume $(\delta' \oplus \epsilon \satisfies \Delta')$
     and $(\delta', \sigma \satisfies \Gamma)$
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies \epsilon \hastype \J{TOP}
+    \delta' \oplus \epsilon \satisfies \epsilon \hastype \J{TOP}
   )$ [Def. \ref{def:model_typing}]
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies \epsilon[\sigma] \hastype \J{TOP}
+    \delta' \oplus \epsilon \satisfies \epsilon[\sigma] \hastype \J{TOP}
   )$ [Def. \ref{def:expr_substitution}]
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5804,31 +5777,49 @@ rely on analogous techniques.
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+  \item \N Assume $(
+    \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
+  )$
+
+  \item \I \N Derive $(
+    \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi
+  )$ [Def. \ref{def:proof_typing}]
+
+  \item \I \N Derive $(
+    \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+  )$ [Def. \ref{def:proof_typing}]
+
+  \item \I \N Derive $(
+    \textbf{pack}^+(\dTheta \entails \Pi) = \tau
+  )$ [Def. \ref{def:proof_typing}]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\epsilon) = \Theta \backslash \Theta
+  )$
+
+  \item \I \N For $\delta'$, $\sigma$,
+    assume $(\delta' \oplus \epsilon \satisfies \Delta)$
+    and $(\delta', \sigma \satisfies \Gamma)$
+
+  \item \I\I \N Derive $(
+    \delta' \satisfies \Delta'
+  )$
+
+  \item \I\I \N Derive $(
+    \delta' \satisfies f[\sigma] \hastype \tau
+  )$ [Ind. Thm. \ref{thm:path_sequence_typing_soundness}, Thm. \ref{thm:function_lifting_skolem_freshness},
+      Thm. \ref{thm:packaging_correspondence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \epsilon \satisfies f[\sigma] \hastype \tau
+  )$ 
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \TODO{...}
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{theorem}
 \hfill
-
-\pc
-For $\Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta$, 
-we have 
-$\exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$,
-$\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta$,
-and 
-$\textbf{pack}^+(\dTheta \entails \Pi) = \tau$
-by applying Definition \ref{def:proof_typing}.
-
-We know that $\textbf{dom}(\epsilon) = \Theta \backslash \Theta$ by rewriting with set arithmetic.
-Next, we introduce an arbitrary type interpretation $\delta'$ and an arbitrary expression interpretation $\sigma$,
-and we assume $\delta' \oplus \epsilon \satisfies \Delta$ and $\delta', \sigma \satisfies \Gamma$.
-With a little rewriting, we have $\delta' \satisfies \Delta'$.
-Then, we derive $\delta' \satisfies f[\sigma] \hastype \tau$ by applying Theorem \ref{thm:path_sequence_typing_soundness}, 
-Theorem \ref{thm:function_lifting_skolem_freshness}, and Theorem \ref{prop:packaging_correspondence}, along with a little
-rewriting.
-Thus, we have $\delta' \oplus \delta \satisfies f[\sigma] \hastype \tau$ 
-by rewriting the statement to include the empty interpretation.
-
-
 
 \pc
 For $\Theta, \Delta, \Gamma \entails e \J{.} l \hastype \alpha \given \Theta'', \Delta''$,
