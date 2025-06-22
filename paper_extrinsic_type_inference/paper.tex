@@ -1933,6 +1933,9 @@ The interested reader can find the actual the definition of packaging in the app
   \end{mathpar}
 \end{property}
 
+\TODO{rename consistency properties to non-vacuity}
+\TODO{note how without non-vacuity it could be constructs a vacuous type with an erroneous program as its proof}
+
 \noindent
 The system for proving subtyping $\tau_l \subtypes \tau_r \given \Theta, \Delta$ 
 must be sound with respect to model typing under
@@ -3387,8 +3390,8 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{thm:path_type_elimination}
-  Path Type Elimination 
+  \label{thm:model_typing_path_elimination}
+  Model Typing Path Elimination 
   \\
   \begin{mathpar}
     \inferrule {
@@ -3749,7 +3752,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:path_type_elimination_loop}
+  \label{thm:model_typing_path_elimination_loop}
   Path Type Elimination Loop 
   \\
   \begin{mathpar}
@@ -5878,16 +5881,131 @@ rely on analogous techniques.
   )$ [P1]
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies e[\sigma] \hastype \J{<}l\J{>}\alpha
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e[\sigma] \hastype \J{<}l\J{>}\alpha
   )$ [Thm. \ref{thm:model_typing_subsumption}]
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies (e[\sigma])\J{.}l
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies (e[\sigma])\J{.}l
   )$ [Thm. \ref{thm:model_typing_entry_elimination}]
 
   \item \I\I \N Derive $(
-    \delta' \oplus \delta \satisfies (e\J{.}l)[\sigma]
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies (e\J{.}l)[\sigma]
   )$ [Def. \ref{def:expr_substitution}]
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \item \N Assume $(
+    \Theta, \Delta, \Gamma \entails e_f \J{(} e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \Theta'', \Delta'', \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta'''
+  )$ [Def. \ref{def:proof_typing}]
+
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_0) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta_0 \satisfies \Delta' \implies
+    \delta', \sigma \satisfies \Gamma \implies
+    \delta' \oplus \delta_0 \satisfies e_f[\sigma] \hastype \tau_f
+  )$ [IH]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) = \Theta'' \backslash \Theta'
+  )$ [IH]
+  \item \I \N And P1: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta_1 \satisfies \Delta' \implies
+    \delta', \sigma \satisfies \Gamma \implies
+    \delta' \oplus \delta_1 \satisfies e_a[\sigma] \hastype \tau_a
+  )$ [IH]
+
+  \item \I \N Let $\delta_2$ be, such that $(
+    \textbf{dom}(\delta_2) = \Theta''' \backslash \Theta''
+  )$ [Ind. Thm. \ref{thm:proof_subtyping_soundness}]
+  \item \I \N And P2: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta_2 \satisfies \Delta' \implies
+    \delta' \oplus \delta_2 \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
+  )$ [Ind. Thm. \ref{thm:proof_subtyping_soundness}]
+
+  \item \I \N Derive $(
+    \text{dom}(\delta_0 \oplus \delta_1 \oplus \delta_2) = \Theta''' \backslash \Theta
+  )$ [Thm. \ref{thm:domain_extension}]
+
+
+  \item \I \N For $\delta'$, $\sigma$,
+    assume $(\delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies \Delta''')$
+    and $(\delta', \sigma \satisfies \Gamma)$
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies \Delta''
+  )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:model_subtyping_sequence_elimination}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta''
+  )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'
+  )$ [Thm. \ref{thm:proof_typing_containment}, Thm. \ref{thm:model_subtyping_sequence_elimination}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \Delta'
+  )$ [Thm. \ref{thm:proof_typing_skolem_freshness}, Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies e_f[\sigma] \hastype \tau_f
+  )$ [P0]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e_f[\sigma] \hastype \tau_f
+  )$ [Thm. \ref{thm:proof_typing_skolem_freshness}, 
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_interpretation_independence}]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies e_f[\sigma] \hastype \tau_f
+  )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \Gamma
+  )$ [Thm. \ref{thm:proof_typing_skolem_freshness},
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e_a[\sigma] \hastype \tau_a
+  )$ [P1]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies e_a[\sigma] \hastype \tau_a
+  )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2  \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
+  )$ [P2]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha
+  )$ [Thm. \ref{thm:model_typing_subsumption}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha
+  )$ [Thm \ref{thm:model_typing_path_elimination}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_2 \satisfies (e_f\J{(}e_a\J{)})[\sigma] \hastype \alpha
+  )$ [Def. \ref{def:expr_substitution}]
+
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \TODO{...}
@@ -5895,135 +6013,6 @@ rely on analogous techniques.
 
 \end{theorem}
 \hfill
-
-\pc
-
-Then, we get $ \hastype \alpha$ 
-by applying Theorem \ref{elimination} (Record Type Elimination),
-which simplifies to $\delta' \oplus \delta \satisfies (e\J{.}l)[\sigma] \hastype \alpha$
-by applying Definition \ref{sub} (Substitution).
-
-
-
-\pc
-For $(\Theta, \Delta, \Gamma \entails e_f \J{(} e_a \J{)} \hastype \alpha \given \Theta''', \Delta''')$,
-we have 
-$(\Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta')$,
-$(\Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta'')$,
-and
-$(\Theta'', \Delta'', \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta''')$
-by applying Definition \ref{def:proof_typing}.
-
-We derive a type interpretation $\delta_f$, such that
-$(\textbf{dom}(\delta_f) = \Theta' \backslash \Theta)$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta_f \satisfies \Delta' \implies
-\delta', \sigma \satisfies \Gamma \implies
-\delta' \oplus \delta_f \satisfies e_f[\sigma] \hastype \tau_f
-)$ (P0)
-by applying the induction hypothesis.
-We derive a type interpretation $\delta_a$, such that
-$(\textbf{dom}(\delta_a) = \Theta'' \backslash \Theta')$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta_a \satisfies \Delta' \implies
-\delta', \sigma \satisfies \Gamma \implies
-\delta' \oplus \delta_a \satisfies e_a[\sigma] \hastype \tau_a
-)$ (P1)
-by applying the induction hypothesis.
-We derive a type interpretation $\delta_s$, such that
-$(\textbf{dom}(\delta_s) = \Theta''' \backslash \Theta'')$
-and $(
-\forall \delta' \qua 
-\delta' \oplus \delta_s \satisfies \Delta' \implies
-\delta' \oplus \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha
-)$ (P2)
-by applying Theorem \ref{thm:proof_subtyping_soundness}.
-
-Next, we derive $(\text{dom}(\delta_f \oplus \delta_a \oplus \delta_s) = \Theta''' \backslash \Theta)$
-by applying
-Theorem \ref{thm:domain_extension}
-and
-rewriting with set arithmetic.
-The, we introduce an arbitrary type interpretation $\delta'$ and 
-an arbitrary expression interpretation $\sigma$, and
-we assume 
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta''')$
-and
-$(\delta' \satisfies \Gamma)$.
-
-We derive 
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta')$
-by applying
-Theorem \ref{thm:proof_subtyping_containment},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_subtyping_sequence_elimination}.
-Then, we derive
-$(\delta' \oplus \delta_f \satisfies \Delta')$
-by applying
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-Theorem \ref{thm:proof_subtyping_containment},
-Theorem \ref{thm:proof_typing_skolem_freshness},
-and
-Theorem \ref{thm:model_subtyping_sequence_interpretation_independence}.
-Then, we derive
-$(\delta' \oplus \delta_f \satisfies e_f[\sigma] \hastype \tau_f)$
-by instantiating (P0)
-with $\delta'$ and $\sigma$ and applying the result.
-We derive
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma] \hastype \tau_f)$
-by applying 
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-Theorem \ref{thm:proof_subtyping_containment},
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_interpretation_independence}.
-
-
-We derive 
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \Delta'')$
-by applying
-Theorem \ref{thm:proof_subtyping_containment}
-and
-Theorem \ref{thm:model_subtyping_sequence_elimination}.
-Then, we derive
-$(\delta' \oplus \delta_f \oplus \delta_a \satisfies \Delta'')$
-by applying
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-and
-Theorem \ref{thm:model_subtyping_sequence_interpretation_independence}.
-Then, we derive
-$(\delta' \oplus \delta_f \satisfies \Gamma)$
-by applying
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_interpretation_independence}.
-Then, we derive
-$(\delta' \oplus \delta_f \oplus \delta_a \satisfies e_a[\sigma] \hastype \tau_a)$
-by instantiating (P1)
-with $\delta' \oplus \delta_f$ and $\sigma$ and applying the result.
-We derive
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_a[\sigma] \hastype \tau_a)$
-by applying 
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_interpretation_independence}.
-
-We derive
-$(\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies \tau_f \subtypes \tau_a \J{->} \alpha)$
-by instantiating (P2) with $\delta' \oplus \delta_f \oplus \delta_a$, and applying the result.
-Then, we derive $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma] \hastype \tau_a \J{->} \alpha$
-by applying 
-Theorem \ref{thm:model_typing_subsumption}.
-Thus, we have $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f[\sigma]\J{(}e_a[\sigma]\J{)} \hastype \alpha$
-by Theorem \ref{thm:path_type_elimination},
-which simplifies to $\delta' \oplus \delta_f \oplus \delta_a \oplus \delta_s \satisfies e_f\J{(}e_a\J{)}[\sigma] \hastype \alpha$,
-by Definition \ref{def:substitution}.
 
 \pc
 For $(\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta''')$,
@@ -6298,7 +6287,7 @@ $(
 )
 )
 $
-by Theorem \ref{thm:path_type_elimination_loop}.
+by Theorem \ref{thm:model_typing_path_elimination_loop}.
 
 We derive
 $(
@@ -6370,7 +6359,7 @@ $(
 \delta' \oplus \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
 )$
 by applying 
-Theorem \ref{thm:path_type_elimination_loop}
+Theorem \ref{thm:model_typing_path_elimination_loop}
 
 We have 
 $(
