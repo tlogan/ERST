@@ -1352,6 +1352,8 @@ aims to prove the validity of typing directly by including elimination rules.
 
 \TODO{therefore, they cannot contradict the typing of the current expression}
 
+\TODO{note how we also want to ensure that the annotations are relevant and not ignored}
+
 \noindent
 The system for proving typing $\Gamma \entails e \hastype \tau \given \Theta, \Delta$ 
 must be sound with respect to model typing assuming 
@@ -6087,14 +6089,6 @@ rely on analogous techniques.
       Thm. \ref{thm:proof_typing_containment},
       Thm. \ref{thm:model_typing_interpretation_independence}]
 
-  % \item \I\I \N Derive $(
-  %   \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta
-  % )$ [Thm. \ref{thm:proof_typing_containment}, Thm. \ref{thm:model_subtyping_sequence_elimination}]
-
-  % \item \I\I \N Derive $(
-  %   \delta' \satisfies \Delta
-  % )$ [Thm. \ref{thm:proof_typing_skolem_freshness}, Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
-
   \item \I\I \N Derive $(
     \delta' \oplus \delta_0 \oplus \delta^\dagger \satisfies \Delta^\dagger
   )$ [Ind. Thm. NonVac \TODO{...}]
@@ -6137,228 +6131,175 @@ rely on analogous techniques.
     \delta' \oplus \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'
   )$ [Def. \ref{def:expr_substitution}]
 
-  \TODO{...}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+  \item \N Assume $(
+    \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} \hastype 
+    \tau_l \J{->} \tau_r \given \Theta', \Delta'
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
+  )$ [Def. \ref{def:proof_typing}]
+
+  \item \I \N Let $\delta$ be, such that $(
+    \textbf{dom}(\delta) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta \satisfies \Delta' \implies
+    \delta', \sigma \satisfies \Gamma \implies
+    \delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
+  )$ [P0]
+
+  \item \I \N For $\delta'$, $\sigma$,
+    assume $(\delta' \oplus \delta \satisfies \Delta')$
+    and $(\delta', \sigma \satisfies \Gamma)$
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
+  )$ [P0]
+
+  \item \I\I \N Derive P1: $(
+    \forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies \Delta'
+  )$ [Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive P2: $(
+    \forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies e[\sigma] \hastype \tau
+  )$ [Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_interpretation_independence}]
+
+  \item \I\I \N Derive P3: $(
+    \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+    (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+    \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+    (
+    \forall \delta' \qua
+    \delta' \oplus \delta^\dagger \satisfies \Delta' \implies
+    \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+    )
+  )$ [Thm. \ref{thm:function_type_explosion_soundness}, Thm. \ref{thm:model_subtyping_sequence_introduction}]
+
+  \item \I\I \N Derive $(
+    \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+    (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+    \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+    (
+    \forall \delta'' \qua
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta' \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
+    )
+  )$ [P3]
+
+  \item \I\I \N Derive $(
+    \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+    (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+    \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+    (
+    \forall \delta'' \qua
+    \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+    )
+  )$ [P1, P2, Thm. \ref{thm:model_typing_subsumption}]
+
+  \item \I\I \N Derive $(
+    \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+    (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+    \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+    (
+    \forall \delta'' \qua
+    \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+    \delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
+    )
+  )$ [Thm. \ref{...} \TODO{weakest interpretation of alpha}]
+
+  \item \I\I \N Derive $(
+    \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+    (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+    \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
+    (
+    \forall \delta'' \qua
+    \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau^\dagger
+    )
+  )$ [Thm. \ref{thm:model_typing_path_elimination_loop}]
+
+  \item \I\I \N Derive $(
+    \forall e_a, e_r \qua 
+    \delta' \oplus \delta\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
+    \implies 
+    e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+  )$ [Thm. \ref{thm:packaging_correspondence}]
+
+  \item \I\I \N Derive $(
+    \forall e_a, e_r \qua 
+    \delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+    \implies 
+    e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+  )$ [Thm. \ref{thm:least_fixed_point_type_elimination}]
+
+  \item \I\I \N Derive $(
+    \forall e_a, e_r \qua 
+    \delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
+    \implies 
+    \delta' \oplus \delta \satisfies e_r \hastype \tau_r 
+    \up
+    e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+  )$ [Thm. \ref{thm:subtyping_factorization_correspondence},
+      Thm. \ref{thm:model_typing_subsumption},
+      Thm. \ref{thm:model_typing_entry_elimination},
+      Thm. \ref{thm:right_congruence}]
+
+  \item \I\I \N Derive $(
+    \forall e_a, e_r \qua 
+    \delta' \oplus \delta \satisfies e_a \hastype \tau_l 
+    \implies 
+    \delta' \oplus \delta \satisfies e_r \hastype \tau_r 
+    \up
+    e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
+  )$ [Thm. \ref{thm:left_congruence}, Thm. \ref{thm:subtyping_factorization_correspondence}]
+
+  \item \I\I \N Derive $(
+    \forall e_a \qua 
+    \delta' \oplus \delta \satisfies e_a \hastype \tau_l 
+    \implies 
+    \delta' \oplus \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
+  )$ [Thm. \ref{thm:expression_congruence_typing} \TODO{...}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
+  )$ [Thm. \ref{thm:model_typing_path_elimination_loop}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
+  )$ [Thm. \ref{def:expr_substitution}]
+
+  \noindent
+  $\square$
+
 \end{theorem}
-\hfill
 
-\pc For $(
-\Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
-\hastype 
-\tau_l \J{->} \tau_r
-\given \Theta', \Delta'
-)$,
-we have 
-$(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$,
-$(\Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu)$,
-$( \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu)$,
-$(\textbf{pack}^-(\textbf{ftv}(\Delta)\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu)$,
-$(\factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l)$, 
-and
-$(\factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r)$
-by applying Definition \ref{def:proof_typing}.
-
-We derive a typing interpretation $\delta$, such that 
-$(\textbf{dom}(\delta) = \Theta' \backslash \Theta)$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta \satisfies \Delta' \implies
-\delta', \sigma \satisfies \Gamma \implies
-\delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
-)$ (P0)
-by applying the induction hypothesis.
-Next, we introduce an arbitrary type interpretation $\delta'$
-and an arbitrary expression interpretation $\sigma$,
-and we assume 
-$\delta' \oplus \delta \satisfies \Delta'$
-and $\delta', \sigma \satisfies \Gamma$.
-We derive $\delta' \oplus \delta \satisfies e[\sigma] \hastype \tau$
-by instantiating (P0) with $\delta'$ and $\sigma$, and
-applying the result. 
-Additionally, we derive 
-$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies \Delta'$
-(P1)
-by applying 
-Theorem \ref{thm:model_subtyping_sequence_interpretation_independence}.
-We derive 
-$\forall \delta'' \qua \textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies \delta' \oplus \delta \oplus \delta'' \satisfies e[\sigma] \hastype \tau$
-(P2)
-by applying
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_interpretation_independence}.
-
-
-
-We derive
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta' \qua
-\delta' \oplus \delta^\dagger \satisfies \Delta' \implies
-\delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
-)
-)
-$ (P3)
-by applying
-Theorem \ref{thm:function_type_explosion_soundness}
-and
-Theorem \ref{thm:model_subtyping_sequence_introduction}.
-We derive
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta'' \qua
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta' \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
-)
-)
-$
-by rewriting and partially instantiating (P3).
-Then, we have
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta'' \qua
-\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
-)
-)
-$
-by applying (P1), (P2), and Theorem \ref{thm:model_typing_subsumption}.
-
-
-We derive
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta'' \qua
-\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \oplus \delta\ \alpha \slash \J{BOT} \oplus \delta'' \oplus \delta^\dagger \satisfies e[\sigma] \hastype \alpha \J{->} \tau^\dagger
-)
-)
-$
-by applying 
-Theorem \ref{...} (weakest interpretation of alpha).
-
-
-Thus, we have
-$(
-\forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
-(\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
-\exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \cong \Theta^\dagger \up 
-(
-\forall \delta'' \qua
-\textbf{dom}(\delta'') \cap \textbf{ftv}(\Delta') \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
-\delta' \oplus \delta \oplus \delta'' \oplus \delta^\dagger \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau^\dagger
-)
-)
-$
-by Theorem \ref{thm:model_typing_path_elimination_loop}.
-
-We derive
-$(
-\forall e_a, e_r \qua 
-\delta' \oplus \delta\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
-\implies 
-e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
-)$
-by applying 
-Theorem \ref{...} (Duality Correspondence)
-and
-Theorem \ref{thm:packaging_correspondence}.
-
-We derive
-$(
-\forall e_a, e_r \qua 
-\delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
-\implies 
-e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
-)$
-by applying 
-Theorem \ref{thm:least_fixed_point_type_elimination}.
-
-
-
-We derive
-$(
-\forall e_a, e_r \qua 
-\delta' \oplus \delta \satisfies (e_a\J{,}e_r) \hastype \J{LFP[}\alpha_\mu\J{]}\tau_\mu
-\implies 
-\delta' \oplus \delta \satisfies e_r \hastype \tau_r 
-\up
-e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
-)$
-by applying 
-Theorem \ref{thm:subtyping_factorization_correspondence}.
-Theorem \ref{thm:model_typing_subsumption},
-Theorem \ref{thm:model_typing_entry_elimination},
-and
-Theorem \ref{thm:right_congruence}.
-
-
-We derive
-$(
-\forall e_a, e_r \qua 
-\delta' \oplus \delta \satisfies e_a \hastype \tau_l 
-\implies 
-\delta' \oplus \delta \satisfies e_r \hastype \tau_r 
-\up
-e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
-)$
-by applying 
-Theorem \ref{thm:left_congruence}
-and
-Theorem \ref{thm:subtyping_factorization_correspondence}.
-
-We derive
-$(
-\forall e_a \qua 
-\delta' \oplus \delta \satisfies e_a \hastype \tau_l 
-\implies 
-\delta' \oplus \delta \satisfies \J{loop(}e[\sigma]\J{)(} e_a \J{)} \hastype \tau_r 
-)$
-by applying 
-Theorem \ref{thm:expression_congruence_typing}.
-
-We have 
-$(
-\delta' \oplus \delta  \satisfies \J{loop(}e[\sigma]\J{)} \hastype \tau_l \J{->}\tau_r 
-)$
-by applying 
-Theorem \ref{thm:model_typing_path_elimination_loop}
-
-We have 
-$(
-\delta' \oplus \delta  \satisfies \J{loop(}e\J{)}[\sigma] \hastype \tau_l \J{->}\tau_r 
-)$
-by applying 
-Definition \ref{...} (Substitution)
-
-*********************************************************************
-
-
-\TODO{update proof formatting to make easier to read and edit}.
 
 \TODO{update implementation to be consistent with paper}.
-
-
-\noindent
-$\square$
 
 
 
