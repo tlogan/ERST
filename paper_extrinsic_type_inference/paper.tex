@@ -1443,7 +1443,7 @@ enumerates all possible outputs.
       \\
       \textbf{ftv}(\tau_a) \subseteq \emptyset
       \\\\
-      \exists \Theta'', \Delta'' \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta'', \Delta''
+      \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
       \\
       \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
     } {
@@ -6008,159 +6008,140 @@ rely on analogous techniques.
 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \item \N Assume $(
+    (\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta'')
+  )$
+  \item \I \N Derive $(
+    \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \textbf{ftv}(\tau_a) \subseteq \emptyset
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
+  )$ [Def. \ref{def:proof_typing}]
+  \item \I \N Derive $(
+    \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
+  )$ [Def. \ref{def:proof_typing}]
+
+
+  \item \I \N Let $\delta_0$ be, such that $(
+    \textbf{dom}(\delta_a) = \Theta' \backslash \Theta
+  )$ [IH]
+  \item \I \N And P0: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta_0 \satisfies \Delta' \implies
+    \delta', \sigma \satisfies \Gamma \implies
+    \delta' \oplus \delta_0 \satisfies e[\sigma] \hastype \tau
+  )$ [IH]
+
+  \item \I \N Let $\Theta^\dagger$, $\Delta^\dagger$ be, such that $(
+    \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
+  )$
+
+  \item \I \N Let $\delta^\dagger$ be, such that $(
+    \textbf{dom}(\delta^\dagger) = \Theta^\dagger \backslash \Theta'
+  )$ [Ind. Thm. \ref{thm:proof_subtyping_soundness}]
+  \item \I \N And P$\dagger$: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+    \delta' \oplus \delta^\dagger \satisfies \tau \subtypes \tau_a
+  )$ [Ind. Thm. \ref{thm:proof_subtyping_soundness}]
+
+  \item \I \N Let $\delta_1$ be, such that $(
+    \textbf{dom}(\delta_1) = \Theta'' \backslash \Theta'
+  )$ [IH]
+  \item \I \N And P1: $(
+    \forall \delta', \sigma \qua 
+    \delta' \oplus \delta_1 \satisfies \Delta'' \implies
+    \delta', \sigma \satisfies \Gamma\ x \hastype \tau_a \implies
+    \delta' \oplus \delta_1 \satisfies e'[\sigma] \hastype \tau'
+  )$ [IH]
+
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \oplus \delta^\dagger) \subseteq \Theta^\dagger \backslash \Theta
+  )$ [Thm. \ref{thm:domain_extension}]
+
+  \item \I \N Derive $(
+    \textbf{dom}(\delta_0 \oplus \delta_1) \subseteq \Theta'' \backslash \Theta
+  )$ [Thm. \ref{thm:domain_extension}]
+
+
+  \item \I \N For $\delta'$, $\sigma$,
+    assume $(\delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'')$
+    and $(\delta', \sigma \satisfies \Gamma)$
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta'
+  )$ [Thm. \ref{thm:proof_subtyping_containment}, Thm. \ref{thm:model_subtyping_sequence_elimination}]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \Delta'
+  )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies e[\sigma] \hastype \tau
+  )$ [P0]
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e[\sigma] \hastype \tau
+  )$ [Thm. \ref{thm:proof_subtyping_skolem_freshness}, 
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_interpretation_independence}]
+
+  % \item \I\I \N Derive $(
+  %   \delta' \oplus \delta_0 \oplus \delta_1 \satisfies \Delta
+  % )$ [Thm. \ref{thm:proof_typing_containment}, Thm. \ref{thm:model_subtyping_sequence_elimination}]
+
+  % \item \I\I \N Derive $(
+  %   \delta' \satisfies \Delta
+  % )$ [Thm. \ref{thm:proof_typing_skolem_freshness}, Thm. \ref{thm:model_subtyping_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta^\dagger \satisfies \Delta^\dagger
+  )$ [Ind. Thm. NonVac \TODO{...}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta^\dagger \satisfies \tau \subtypes \tau_a
+  )$ [P$\dagger$]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \tau \subtypes \tau_a
+  )$ [Because ftv is empty]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies e[\sigma] \hastype \tau_a
+  )$ [Thm. \ref{thm:model_typing_subsumption}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \satisfies \Gamma
+  )$ [Thm. \ref{thm:proof_typing_skolem_freshness},
+      Thm. \ref{thm:proof_typing_containment},
+      Thm. \ref{thm:model_typing_sequence_interpretation_independence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0\ x \slash e[\sigma] \satisfies \Gamma\ x \slash \tau_a
+  )$ [Def. \ref{def:model_typing_sequence}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e'[\sigma\ x\slash[\sigma]] \hastype \tau'
+  )$ [P2]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta_0 \oplus \delta_1 \satisfies e'[\sigma][x\slash[\sigma]] \hastype \tau'
+  )$ [Def. \ref{def:expr_substitution}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'
+  )$ [Thm. \ref{thm:annotated_binding_introduction}]
+
+  \item \I\I \N Derive $(
+    \delta' \oplus \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'
+  )$ [Def. \ref{def:expr_substitution}]
+
   \TODO{...}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{theorem}
 \hfill
-
-\pc
-For $(\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta''', \Delta''')$,
-we have
-$(\Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta')$,
-$(\Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta'', \Delta'')$,
-and
-$(\Theta'', \Delta'', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta''', \Delta''')$
-by applying Definition \ref{def:proof_typing}.
-
-    % \inferrule {
-    %   \TODO{update proof with ignoring of learnings from annotation check}
-    %   \\\\
-    %   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
-    %   \\
-    %   \textbf{ftv}(\tau_a) \subseteq \emptyset
-    %   \\\\
-    %   \exists \Theta'', \Delta'' \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta'', \Delta''
-    %   \\
-    %   \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
-    % } {
-    %   \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''
-    % }
-
-We derive a typing interpretation $\delta_a$, such that 
-$(\textbf{dom}(\delta_a) = \Theta' \backslash \Theta)$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta_a \satisfies \Delta' \implies
-\delta', \sigma \satisfies \Gamma \implies
-\delta' \oplus \delta_a \satisfies e[\sigma] \hastype \tau
-)$ (P0)
-by applying the induction hypothesis.
-We derive a typing interpretation $\delta_b$, such that 
-$(\textbf{dom}(\delta_b) = \Theta'' \backslash \Theta')$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta_b \satisfies \Delta'' \implies
-\delta' \oplus \delta_b \satisfies \tau \hastype \tau_a
-)$ (P1)
-by applying Theorem \ref{thm:proof_subtyping_soundness}.
-We derive a typing interpretation $\delta_c$, such that 
-$(\textbf{dom}(\delta_c) = \Theta''' \backslash \Theta'')$
-and $(
-\forall \delta', \sigma \qua 
-\delta' \oplus \delta_c \satisfies \Delta''' \implies
-\delta', \sigma \satisfies \Gamma\ x \hastype \tau_a \implies
-\delta' \oplus \delta_c \satisfies e'[\sigma] \hastype \tau'
-)$ (P2)
-by applying the induction hypothesis.
-
-Next, we derive $(\textbf{dom}(\delta_a \oplus \delta_b \oplus \delta_c) \cong \Theta''' \backslash \Theta)$
-by applying
-Theorem \ref{thm:domain_extension} 
-and rewriting with set arithmetic.
-Then, we introduce an arbitrary type interpretation $\delta'$
-and an arbitrary expression interpretation $\sigma$,
-and we assume 
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta''')$
-and
-$(\delta, \sigma \satisfies \Gamma)$.
-
-
-
-We derive 
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta')$
-by applying
-Theorem \ref{thm:proof_typing_containment},
-Theorem \ref{thm:proof_subtyping_containment},
-and
-Theorem \ref{thm:model_subtyping_sequence_elimination}.
-Then, we derive
-$(\delta' \oplus \delta_a \satisfies \Delta')$
-by applying
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-and
-Theorem \ref{thm:model_subtyping_sequence_interpretation_independence}.
-Then, we derive
-$(\delta' \oplus \delta_a \satisfies e[\sigma] \hastype \tau)$
-by instantiating (P0)
-with $\delta'$ and $\sigma$ and applying the result.
-We derive
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e[\sigma] \hastype \tau)$
-by applying 
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_interpretation_independence}.
-
-
-We derive 
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \Delta'')$
-by applying
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_subtyping_sequence_elimination}.
-Then, we derive
-$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \Delta')$
-by applying
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-and
-Theorem \ref{thm:model_subtyping_sequence_interpretation_independence}.
-We derive
-$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \tau \subtypes \tau_a)$
-by instantiating (P1)
-with $\delta' \oplus \delta_a$ and applying the result.
-We derive
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies \tau \subtypes \tau_a)$
-by applying 
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_subtyping_containment},
-and
-Theorem \ref{thm:subtyping_interpretation_independence}.
-
-
-We derive 
-$(\delta' \oplus \delta_a \oplus \delta_b \satisfies \Gamma)$
-by applying
-Theorem \ref{thm:proof_typing_skolem_freshness},
-Theorem \ref{thm:proof_typing_containment},
-Theorem \ref{thm:proof_subtyping_skolem_freshness},
-Theorem \ref{thm:proof_subtyping_containment},
-Theorem \ref{thm:proof_typing_containment},
-and
-Theorem \ref{thm:model_typing_sequence_interpretation_independence}.
-Then, we derive $\delta' \oplus \delta_a \oplus \delta_b, \sigma \satisfies e[\sigma] \hastype \tau_a$
-by applying Theorem \ref{thm:model_typing_subsumption}.
-Then, We derive $\delta' \oplus \delta_a \oplus \delta_b, \sigma\ x \slash e[\sigma] \satisfies \Gamma\ x \hastype \tau$
-by applying Definition \ref{def:model_sequence_typing} (Model Sequence Typing).
-Then, we derive
-$(\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e'[\sigma\ x \slash e[\sigma]] \hastype \tau')$
-by instantiating (P2) with $\delta' \oplus \delta_a \oplus \delta_b$ and $\sigma\ x \slash e[\sigma]$,
-applying the result.
-
-
-We derive $\delta' \oplus \delta_a \oplus \delta_b \oplus \delta_c \satisfies e'[\sigma][x \slash e[\sigma]] \hastype \tau'$,
-by rewriting with Definition \ref{def:substitution}.
-Then, we have 
-$\delta' \oplus \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'$
-by applying Theorem \ref{thm:annotated_binding_introduction},
-which simplifies to 
-$\delta' \oplus \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'$
-by applying Definition \ref{def:substitution}. 
-
 
 \pc For $(
 \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
