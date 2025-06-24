@@ -4372,8 +4372,8 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:proof_typig_annotation_relevance}
-  Proof Typing Annotation Relevance 
+  \label{thm:proof_typig_annotation_soundness}
+  Proof Typing Annotation Soudness 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4395,12 +4395,13 @@ rely on analogous techniques.
       \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta'
     } {
       \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
       \implies
-      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta'
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
     }
   \end{mathpar}
 \end{theorem}
+
 
 
 \begin{theorem}
@@ -4412,9 +4413,9 @@ rely on analogous techniques.
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
       \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
       \implies
-      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta'
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
     }
   \end{mathpar}
 
