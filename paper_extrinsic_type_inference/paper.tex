@@ -2587,11 +2587,8 @@ rely on analogous techniques.
       (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
       )
       \\\\
-      \forall \tau' \qua  \tau' \J{<:} \alpha \in \Delta
-      \implies 
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'  
-      \\\\
-      \TODO{change universal part to use polar sub to be comprehensive}
+      \exists \Theta', \Delta' \qua
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails \alpha \subtypes \tau \safe
     }
@@ -2621,11 +2618,8 @@ The second condition is that all lower bounds of that variable can be eliminated
       (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
       )
       \\\\
-      \forall \tau' \qua  \alpha \J{<:} \tau' \in \Delta
-      \implies 
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta' 
-      \\\\
-      \TODO{change universal part to use polar sub to be comprehensive}
+      \exists \Theta', \Delta' \qua
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails \tau \subtypes \alpha \safe
     }
@@ -2768,6 +2762,15 @@ rely on analogous techniques.
 
 % Different: RLT isn't cartesian
 
+
+\section{Experiments}
+\label{sec:experiments}
+
+\TODO{describe implementation}
+
+\TODO{describe experiments in comparison to SuperF}
+
+\TODO{describe experiments with overlapping types}
 
 
 \section{Library}
