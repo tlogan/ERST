@@ -4350,8 +4350,8 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:proof_subtyping_conditional_independence}
-  Proof Subtyping Conditional Independence 
+  \label{thm:proof_subtyping_interpretation_independence}
+  Proof Subtyping Interpretation Independence 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4367,26 +4367,45 @@ rely on analogous techniques.
       \delta' \oplus \delta^\dagger \satisfies \Delta'
     }
   \end{mathpar}
-
-  \TODO{need extension to overwrite previous keys; order matters; set union not sufficient}
 \end{theorem}
 
+
+
 \begin{theorem}
-  \label{thm:proof_subtyping_satisfiability}
-  Proof Subtyping Satisfiability 
+  \label{thm:proof_typig_annotation_relevance}
+  Proof Typing Annotation Relevance 
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
     } {
-      \exists \delta \qua \delta \satisfies \tau_l \subtypes \tau_r
+      \forall \delta, \sigma \qua 
+      \delta, \sigma \satisfies \Gamma \implies
+      \delta \satisfies e \hastype \tau_a
     }
   \end{mathpar}
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:proof_subtyping_consistency}
-  Proof Subtyping Consistency 
+  \label{thm:proof_typig_substance}
+  Proof Typing Substance 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta
+      \implies
+      \exists \delta' \qua \delta' \oplus \delta \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+
+\begin{theorem}
+  \label{thm:proof_subtypig_substance}
+  Proof Subtyping Substance 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4844,7 +4863,7 @@ rely on analogous techniques.
     \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta' 
     \implies
     \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_l \satisfies \Delta''
-  )$ [Thm \ref{thm:proof_subtyping_conditional_independence}]
+  )$ [Thm \ref{thm:proof_subtyping_interpretation_independence}]
 
 
   \item \I\I \N Derive $(
@@ -5032,7 +5051,7 @@ rely on analogous techniques.
     \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta' 
     \implies
     \delta' \oplus \delta_0 \oplus \delta_1 \oplus \delta_r \satisfies \Delta''
-  )$ [Thm \ref{thm:proof_subtyping_conditional_independence}]
+  )$ [Thm \ref{thm:proof_subtyping_interpretation_independence}]
 
 
   \item \I\I \N Derive $(
@@ -7214,7 +7233,7 @@ rely on analogous techniques.
 % \end{theorem}
 
 % \begin{theorem}(Proof subtyping consistency)
-%   \label{thm:proof_subtyping_consistency}
+%   \label{thm:proof_subtypig_substance}
 %   \begin{mathpar}
 %     \inferrule { 
 %       \tau_l \subtypes \tau_r \given M, \Delta 
