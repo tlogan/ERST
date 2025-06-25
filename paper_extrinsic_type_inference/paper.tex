@@ -737,14 +737,14 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{|}\tau \sep 
-      \J{EXI[}\Theta\J{]} \Delta\ \tau
+      \J{EXI[}\Theta\J{]} \Delta \J{::} \tau
     \end{array}
     & \com{expansion}
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{\&}\tau \sep 
-      \J{ALL[}\Theta\J{]} \Delta\ \tau
+      \J{ALL[}\Theta\J{]} \Delta \J{::} \tau
     \end{array}
     & \com{refinement}
     \\
@@ -790,7 +790,7 @@ its inhabitants and may take the form of
 entries $\J{<}l\J{>}\tau$ or paths $\tau \J{->} \tau$.
 
 An expansion type $\phi$ is either a binary union $\tau \J{|} \tau$ or 
-an indexed union $\J{EXI[}\Theta\ \Delta\J{]}\tau$.
+an indexed union $\J{EXI[}\Theta \J{]} \Delta \J{::} \tau$.
 An expansion type is weaker than its constituent types. 
 An indexed union is parametrized by type variables $\Theta$ 
 and qualified by subtyping constraints $\Delta$.
@@ -800,7 +800,7 @@ In effect, the qualification by subtyping constraints provides an upper bound, i
 the weaker the qualification, the weaker the indexed union.
 
 A refinement type $\psi$ is either a binary intersection $\tau \J{\&} \tau$ or 
-an indexed intersection $\J{ALL[} \Theta\ \Delta \J{]}\tau$.
+an indexed intersection $\J{ALL[} \Theta \J{]} \Delta \J{::}\tau$.
 A refinement type is strengthened relative to its constituent types. 
 An indexed intersection is parametrized by type variables $\Theta$ 
 and qualified by subtyping constraints $\Delta$.
@@ -864,10 +864,10 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
     & \com{subtracted type seq}
     \\
-    \nonterm{\Omega} & \is \epsilon \sep \Delta \  \tau \J{<:} \eta
+    \nonterm{\Omega} & \is \epsilon \sep \Omega \  \tau \J{<:} \eta
     & \com{restricted subtyping seq}
     \\
-    \nonterm{\mathrm{I}} & \is \epsilon \sep \mathrm{I}\ \iota 
+    \nonterm{C} & \is \epsilon \sep C\ \iota 
     & \com{composite seq}
     \\
     \nonterm{\iota} & \is 
@@ -909,8 +909,8 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
 
 
 \begin{definition} 
-  \label{def:collection_Setting}
-  Collection Setting 
+  \label{def:sequence_setting}
+  Sequence Setting 
   \hfill 
   \boxed{\textbf{set}(C) = S}
   \\
@@ -922,30 +922,30 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
 
       \\
 
-      \textbf{set}(C\ c)
+      \textbf{set}(C\ \iota)
       &\ =\ & 
-      \textbf{set}(C) \cup \{ c \} 
+      \textbf{set}(C) \cup \{ \iota \} 
   \end{array}
   \]
 \end{definition} 
 
 \begin{definition} 
-  \label{def:set_collecting}
-  Set Collecting 
+  \label{def:set_sequencing}
+  Set Sequencing 
   \hfill 
-  \boxed{\textbf{collect}(S) = C}
+  \boxed{\textbf{seq}(S) = C}
   \\
   \[
   \begin{array}[t]{r@{}c@{}l}
-      \textbf{collect}(\emptyset)
+      \textbf{seq}(\emptyset)
       &\ =\ & 
       \epsilon 
 
       \\
 
-      \textbf{collect}(S \cup \{s\})
+      \textbf{seq}(S \cup \{\iota\})
       &\ =\ & 
-      \textbf{collect}(S \backslash \{s\})\ s 
+      \textbf{seq}(S \backslash \{\iota\})\ \iota 
   \end{array}
   \]
 \end{definition} 
@@ -1084,22 +1084,22 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
 % A expression is stable if and only if it is a value or it can take a step to a stable expression.
 % In other words, if an expression is not a value then its behavior is defined by progression.
 
-\begin{property}
-  \label{def:model_typing_soundness}
-  Model Typing Soundness 
-  \\
-  \begin{mathpar}
-    \inferrule { 
-      \delta \satisfies e \hastype \tau
-    } {
-      \VDash e 
-    } 
-  \end{mathpar}
-\end{property}
+% \begin{property}
+%   \label{def:model_typing_soundness}
+%   Model Typing Soundness 
+%   \\
+%   \begin{mathpar}
+%     \inferrule { 
+%       \delta \satisfies e \hastype \tau
+%     } {
+%       \VDash e 
+%     } 
+%   \end{mathpar}
+% \end{property}
 
-\noindent
-Model typing $\delta \satisfies e \hastype \tau$ attempts to imbue types
-with meaning.  At the very least, types should inform us that an expression is stable.  
+% \noindent
+% Model typing $\delta \satisfies e \hastype \tau$ attempts to imbue types
+% with meaning.  At the very least, types should inform us that an expression is stable.  
 
 \begin{definition}
   \label{def:model_typing}
@@ -1185,7 +1185,7 @@ with meaning.  At the very least, types should inform us that an expression is s
       \\
       \delta \oplus \delta' \satisfies e \hastype \tau
     } {
-      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta\ \tau
+      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{::} \tau
     } 
 
     \inferrule { 
@@ -1198,7 +1198,7 @@ with meaning.  At the very least, types should inform us that an expression is s
       \textbf{dom}(\delta') \subseteq \Theta \up 
       \delta \oplus \delta' \satisfies \Delta
     } {
-      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta\ \tau
+      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{::} \tau
     } 
 
     \inferrule { 
@@ -1342,14 +1342,16 @@ by eliminating type forms.
 The static system is a strengthening of the dynamic system, designed to
 ensure that expressions can make progress and satisfy approximate specifications
 represented by types. 
-The entry point into the static system is proof typing $(
+The entry point into the static system is Proof Typing $(
   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
-)$, which
-aims to prove the validity of typing directly by including elimination rules.  
-
+)$, which aims to infer types and verify typings. 
+The predicate represents a procedure 
+that inherits skolem variables $\Theta$, subtyping constraints $\Delta$ and typing constraints $\Gamma$,
+takes an expression $e$, and then generates a type $\tau$,
+a new set of skolem variables $\Theta'$, and a new set of subtyping constraints $\Delta'$.
 
 \begin{property}
-  \label{def:proof_typing_soundness}
+  \label{prop:proof_typing_soundness}
   Proof Typing Soundness 
   \\
   \begin{mathpar}
@@ -1368,33 +1370,20 @@ aims to prove the validity of typing directly by including elimination rules.
 
 \end{property}
 
-\TODO{note that the input variables are for checking compositionality against outer expressions}
-
-\TODO{therefore, they cannot contradict the typing of the current expression}
-
-\TODO{note how we also want to ensure that the annotations are relevant and not ignored}
 
 \noindent
-The system for proving typing $\Gamma \entails e \hastype \tau \given \Theta, \Delta$ 
-must be sound with respect to model typing assuming 
-interpretations of typing and subtyping environments.
-The typing environment $\Gamma$ and the subtyping environment $\Delta$
-represent assumptions that enable the typing $e \hastype \tau$ to be proved. 
-the type variables $\Theta$ are closed, meaning that proof typing
-holds only if the typing holds under some interpretation of type variables in $\Theta$.
-Type variables not in $\Theta$ are considered open, meaning that proof typing
-holds only if the typing holds for every interpretation of variables not in $\Theta$,
-assuming each interpretation satisfies the subtyping environment $\Delta$ and the typing environment $\Gamma$.  
+The most basic requirement is Proof Typing Soundness (Prop. \ref{prop:proof_typing_soundness}),
+which, states that the generated type $\tau$ contains the input expression $e$, 
+$(e \hastype \tau)$ 
+if the generated constraints $\Delta'$ and input typing constraints $\Gamma$ hold,
+in terms of Model Typing (Def. \ref{def:model_typing}). 
+Additionally, the guarded typing must be satisfiable with respect to the skolem variables
+$\Theta' \backslash \Theta$, and it it must be valid with respect to the remaining type variables. 
 
-The proof typing predicate $\Gamma \entails e \hastype \tau \given \Omega'$
-implies an algorithmic interpretation, 
-which takes a typing environment $\Gamma$, an expression $e$,
-and a world $\Omega$ as inputs and returns a type and a world $\Omega'$ as outputs,
-such that the output world is an extension of the input world $(\Omega \preceq \Omega')$.
-The input world is not explicitly represented in the predicate, so the algorithm
-interprets the input world as the smallest world that can satisfy the predicate. 
-Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
-enumerates all possible outputs.
+\TODO{intution: input skolems make the premise proof typing more strict}
+
+\TODO{intuition: output skolems make the generated constraints weaker, therefore, easy to satisfy
+even in some cases where the typing fails}
 
 \begin{property}
   \label{prop:proof_typing_substance}
@@ -1412,13 +1401,15 @@ enumerates all possible outputs.
   \end{mathpar}
 \end{property}
 
+\noindent
 The property of Proof Typing Soundness is actually a bit weak on its own. It does not
-guarantee that a program has no errors, since the property could be satisfied vacuously by
+require that a program has no errors, since the property could be satisfied vacuously by
 having it produce an invalid set of subtyping constraints $\Delta'$.
-To ensure that the proof typing system ensure that a program $e$ has no errors,
-we need Proof Typing Substance \ref{prop:proof_subtyping_substance}, which guarantees that    
-the constraints generated by Proof Typing are valid. That is,
-Proof Typing is not vacuous, assuming valid inputs.
+To ensure that a program $e$ has no errors,
+we need Proof Typing Substance \ref{prop:proof_subtyping_substance}, 
+to require that the constraints generated by Proof Typing hold. 
+The guarded subtyping constraints must be valid with respect to the skolem variables $\Theta$,
+and they must be satisfiable with respect to the remaining type variables. 
 
 \begin{property}
   \label{prop:proof_typig_annotation_soundness}
@@ -1435,6 +1426,7 @@ Proof Typing is not vacuous, assuming valid inputs.
   \end{mathpar}
 \end{property}
 
+\noindent
 In addition to constructing types from programs, we are also interested in checking that 
 programs meets specifications annotated by the programmer. Proof Typing Soundness
 does not directly reference these annotations, so we need an additional property to ensure
@@ -1477,9 +1469,9 @@ used in the binding syntax respect the type annotations.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
       \\\\
-      \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
+      \TODO{update proof to avoid dTheta}
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -1505,8 +1497,6 @@ used in the binding syntax respect the type annotations.
     }
 
     \inferrule {
-      \TODO{update proof with ignoring of learnings from annotation check}
-      \\\\
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
       \\
       \textbf{ftv}(\tau_a) \subseteq \emptyset
@@ -1540,6 +1530,8 @@ used in the binding syntax respect the type annotations.
     }
   \end{mathpar}
 \end{definition}
+
+\TODO{edit here}
 
 \noindent
 For the unit expression \J{@}, proof typing simply returns the unit type \J{@}. 
@@ -2236,7 +2228,7 @@ whose consequents are the intersection's constituent parts.
       \Theta, \Delta \entails
       \tau_a \subtypes \tau
       \given \Theta', \Delta'
-      \\
+      \\\\
       \Theta', \Delta' \entails
       \tau_b \subtypes \tau
       \given \Theta'', \Delta''
@@ -2301,7 +2293,7 @@ splitting the worlds too eagerly.
     \inferrule {
       \Theta, \Delta \entails
       \tau \subtypes \tau_{a} \given \Theta', \Delta' 
-      \\
+      \\\\
       \Theta', \Delta' \entails
       \tau \subtypes \tau_{b} \given \Theta'', \Delta''
     } {
