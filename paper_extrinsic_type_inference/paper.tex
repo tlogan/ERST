@@ -184,9 +184,9 @@ certain kinds of higher-order functions, which was first solved by SuperF \cite{
 However, SuperF's programming language and type system is purposefully 
 restricted, and it isn't sufficient for the high-degree of code reusability allowed by untyped languages.
 
-Our extrinsic type system relies on intersection, union, along with their indexed version, and inductive types, in order 
+Our extrinsic type system relies on intersection, union, along with their indexed version, and recursive types, in order 
 to construct strong types from the observed programs. 
-To keep things simple, we restrict the reasoning of inductive types to scalars. In future work, 
+To keep things simple, we restrict the reasoning of recursive types to scalars. In future work, 
 we will extend the system to include inductive relational reasoning. By adding inductive relational
 reasoning to the extrinsic type system, one effectively gets an extrinsic alternative to CHC solving \cite{} 
 or liquid types \cite{}.
@@ -380,7 +380,7 @@ rewriting.
 Although the strength of precision of this type would be very beneficial,
 reasoning with such a type would be complicated. To keep the type system as
 simple as possible for the purpose of extrinsic type inference with a high-degree
-of code reusability, we leave such relational reasoning of inductive and co-inductive types out of
+of code reusability, we leave such relational reasoning of inductive and co-recursive types out of
 the type system. 
 In this work, the type system actually avoids constructing a relational type, and instead, it
 constructs a type that is significantly weaker than the actual behavior of the function,
@@ -406,9 +406,9 @@ we will show how to remedy this limitation by augmenting the type system with
 mechanisms for inductive relational reasoning.
 
 \Par{Scalar Unrolling.} 
-Since the inputs to functions may have inductive types, the type 
+Since the inputs to functions may have recursive types, the type 
 system must be able to check for errors at function application by unrolling
-inductive types.
+recursive types.
 Consider applying the function $\J{repeat}$ to some item and the number two, 
 which results in the type system checking that two is in fact an instance of the natural numbers.
 
@@ -417,14 +417,14 @@ which results in the type system checking that two is in fact an instance of the
 \]
 
 \noindent
-The type system confirms that two is a valid input by unrolling the inductive type three times.
+The type system confirms that two is a valid input by unrolling the recursive type three times.
 Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
 is unable to infer a stronger type for the application than the original list type. 
 In the followup paper, inductive relational reasoning will remedy this limitation.
 
 
 \Par{Scalar Induction.} 
-Another scenario that may arise is one in which the input to a function has an inductive type.
+Another scenario that may arise is one in which the input to a function has an recursive type.
 Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
 
 \[
@@ -859,7 +859,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     & \com{typing seq}
     \\
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
-    & \com{colony seq}
+    & \com{schema seq}
     \\
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
     & \com{subtracted type seq}
@@ -1380,7 +1380,7 @@ in terms of Model Typing (Def. \ref{def:model_typing}).
 Additionally, the guarded typing must be satisfiable with respect to the skolem variables
 $\Theta' \backslash \Theta$, and it it must be valid with respect to the remaining type variables. 
 
-\TODO{intution: input skolems make the premise proof typing more strict}
+\TODO{intution: input skolems make the premise Proof Typing more strict}
 
 \TODO{intuition: output skolems make the generated constraints weaker, therefore, easy to satisfy
 even in some cases where the typing fails}
@@ -1531,78 +1531,113 @@ used in the binding syntax respect the type annotations.
   \end{mathpar}
 \end{definition}
 
-\TODO{edit here}
 
 \noindent
-For the unit expression \J{@}, proof typing simply returns the unit type \J{@}. 
-For a variable expression, $x$, proof typing looks for a corresponding typing in the environment, 
+The definition of Proof Typing (Def. \ref{def:proof_typing}) consists of a few rules, which are 
+distinguished by the form of the expression. The definition is recursive and also depends on
+other definitions, which we will elaborate on as they arise.
+
+For the unit expression \J{@}, Proof Typing simply returns the unit type \J{@}. 
+For a variable expression, $x$, Proof Typing looks for a corresponding typing in the environment, 
 and it returns the type it found.
-For an empty expression $\epsilon$, proof typing returns the top type \J{TOP},
+For an empty expression $\epsilon$, Proof Typing returns the top type \J{TOP},
 thereby providing a basis for constructing types for record expressions. 
-For a non-empty record expression $r\J{?}l\J{=>}e$, proof typing 
+For a non-empty record expression $r\ \J{<}l\J{>}e$, Proof Typing 
 recursively constructs the type for each entry, and
 refines their types against each other via compounded intersection.
 
-For a function expression $f$, proof typing 
+For a function expression $f$, Proof Typing 
 delegates the work to two helpers. 
 The predicate for path sequence typing 
-$\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$
+$(\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi)$
 constructs a sequence of path types, 
 with each path type associated with a world, represented by $\Pi$.
 Then, the metalanguage function for positive packing 
-$\textbf{pack}^+(\textbf{ftv}(\Gamma)\ \Theta \entails \Pi)$
-takes the path colonies and for each path colony,
-it rewrites the colony into a type by wrapping the path type in indexed unions
-and indexed intersections qualified by the constraints in the colony's subtyping environment. 
+$(\textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau)$
+takes the path schemas and for each path schema,
+it rewrites the schema into a type by wrapping the path type in indexed unions
+and indexed intersections qualified by the constraints in the schema's subtyping environment. 
 The positive $+$ annotation on pack indicates that the resulting type 
 is should approximate an expression used in a positive position,
 which determines whether closed and open variables are mapped to
 bindings in indexed unions or indexed intersections.
 
-For projection $e\J{.}l$, proof typing
-leverages proof subtyping $\tau \subtypes \J{<}l\J{>}\alpha \given \Omega$ 
+For projection $e\J{.}l$, Proof Typing
+leverages Proof Subtyping $(... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...)$ 
 to check that there is an entry with the label $l$ 
 in the supposed record $e$ with type $\tau'$, 
 and it learns a lower bound 
 on the type of the body $\alpha$, which is associated with that label.
-For application $e_f\J{(}e_a\J{)}$, proof typing
-leverages proof subtyping $\tau_f \subtypes \tau_a \J{->} \alpha \given \Omega$
+For application $e_f\J{(}e_a\J{)}$, Proof Typing
+leverages Proof Subtyping $(... \entails \tau_f \subtypes \tau_a \J{->} \alpha \given ...)$
 to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$, which is associated with that argument.
 For an annotated binding, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
-proof typing checks the definition's source $e$ against the annotation $\tau_a$,
+Proof Typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the continuation $e'$.
 
-For a recursive expression, $\J{loop(}e{)}$, proof typing
+For a looping expression, $\J{loop(}e{)}$, Proof Typing
 eagerly factors the paths of the recursive function 
-to construct a single path type with an inductive type as its input and an inductive type as its output. 
+to construct a single path type with an recursive type as its input and an recursive type as its output. 
 First, it ensures that argument of the fixed point combinator $e$ is indeed a 
-single path function $\Gamma \entails e \hastype \alpha_\nu \J{->} \tau \given \Theta, \Delta$. 
-Then, by leveraging subtyping $\tau \subtypes \alpha_l \J{->} \alpha_r \given ...$, 
+function that returns a function.
+The rule infers its type $(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$
+and then rewrites it as a single path containing multiple path schemas $(
+  \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
+)$
+. 
+Then, by leveraging subtyping $(... \entails \tau \subtypes \alpha_l \J{->} \alpha_r \given ...)$, 
 it gathers all the path types that approximate the body of $e$ (via its type $\tau$)
 into a sequence $\Pi$, which pairs each parametric path type with a world to qualify its meaning.
-As it collects the path colonies, it leverages positive type interpretation 
+As it collects the path schemas, it leverages positive type interpretation 
 $\llbracket ... \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+$ 
 to instantiate the parametric path type with interpretations consistent with its corresponding world. 
 This interpretation makes the path type more readable and the subtyping environment more compact.
 
-Using the whole collection path colonies $\Pi$, 
-proof typing delegates to duality correspondence $
+
+      % 
+      % \\
+      % 
+      % \\\\
+      % \alpha_\nu \downarrow \Pi_\nu
+      % \fallingdotseq 
+      % \alpha_\mu \uparrow \Pi_\mu
+      % \\
+      % \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      % \\\\
+      % \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+      % \\
+      % \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
+
+
+
+
+
+Using the whole collection path schemas $\Pi$, 
+Proof Typing delegates to duality correspondence $
       \alpha_\nu \downarrow \Pi_\nu
       \fallingdotseq 
       \alpha_\mu \uparrow \Pi_\mu
-$, which rewrites the implicitly co-inductive pairs of path types and worlds into
-implicitly inductive pairs of pair types and worlds. 
-Rewriting the co-inductive paths into inductive pairs is the first
+$, which rewrites the implicitly co-recursive path schemas into
+implicitly recursive pair schemas. 
+Rewriting the co-recursive paths into recursive pairs is the first
 step towards factoring the infinite paths of the recursive function into a weaker single path.
 By leveraging the negative packing $\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
 the qualification by the worlds becomes embedded in a single type $\tau_\mu$. 
-Finally, it makes inductive nature of the relational type explicit,
+Finally, it makes recursive nature of the relational type explicit,
 by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$, 
-and it leverages the factorization predicate $... \subtypes \J{LFP[} \alpha_\mu \J{]} \tau_\mu \Vvdash \alpha \subtypes ...$
-to factor the inductive relational type into an inductive antecedent and an inductive consequent
+and it leverages the factorization predicate on the left of the pair $(
+  \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+)$
+and the right of the pair $(
+  \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
+)$ 
+to factor the recursive relational type into a recursive antecedent and a recursive consequent
 of a single path type.
+
+
+\TODO{move sub definitions to appendix}
 
 \begin{definition}
   \label{def:function_type_explosion}
@@ -1640,6 +1675,8 @@ of a single path type.
 \end{definition}
 \hfill
 
+\TODO{...}
+
 \begin{definition} 
   \label{def:path_sequence_typing}
   Path Sequence Typing 
@@ -1666,7 +1703,7 @@ of a single path type.
       \Delta' \backslash \Delta, 
       \tau_l \J{->} \tau_r \in \Pi'
       \implies
-      \Theta, \Delta, \Gamma \cup \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma \oplus \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
       )
       \\\\
       \exists \Theta, \Delta, \tau  \qua (\Theta, \Delta, \tau) \in \Pi'
@@ -1681,9 +1718,11 @@ of a single path type.
   \end{mathpar}
 \end{definition}
 
+\TODO{edit here}
+
 
 \noindent
-Path sequence typing $\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$
+Path sequence typing $(\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi)$
 handles the details of constructing types for each path of a function.
 Progression of application tries each path of the applied function is in order.
 That is, the application will progress along the first path whose pattern
@@ -1692,17 +1731,17 @@ To account for this ordering and short-circuiting of pattern matching,
 the types for each path of the function must subtract the types of patterns
 from earlier paths $\Xi$ when constructing antecedents of path types.  
 Each path of the function could branch out,
-represented by the typing $\Gamma \cup \Gamma' \entails e \hastype \tau_r \given ...$, 
-so each function path can produce multiple path types $\tau_l \J{->} \tau_r$, 
+represented by the typing $(\Gamma \oplus \Gamma' \entails e \hastype \tau_r \given ...)$, 
+so each function path can produce multiple path types $(\tau_l \J{->} \tau_r)$, 
 which are collected in $\pi'$.
-The metalanguage function for positive type interpretation 
-$\llbracket ... \entails \Delta', \tau_l \J{->} \tau_r \rrbracket^+$ 
-keeps things tidy by compacting the subtyping environments and making the path
+
+\TODO{explain the tidy up relation}
+Keeps things tidy by compacting the subtyping environments and making the path
 types more readable.
 
 \begin{property} 
-  \label{prop:colony_sequence_duality_correspondence}
-  Colony Sequence Duality Correspondence
+  \label{prop:schema_sequence_duality_correspondence}
+  Schema Sequence Duality Correspondence
   \\
   \begin{mathpar}
     \inferrule {
@@ -1746,18 +1785,20 @@ types more readable.
   \end{mathpar} 
 \end{property} 
 
+\TODO{leave duality correspondence property to the appendix}
+
 \noindent
 Duality correspondence $\alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu$
-rewrites colonies with path types $\Pi_\nu$ into colonies with pair types $\Pi_\nu$
+rewrites schemas with path types $\Pi_\nu$ into schemas with pair types $\Pi_\nu$
 such that for any interpretation $\delta$, a given function $e_f$ 
-inhabits all interpretations of every path type colony
+inhabits all interpretations of every path type schema
 if and only if 
 there's an argument $e_a$ paired with the function applied to it that inhabits 
-at least one of the pair type colonies.
+at least one of the pair type schemas.
 
 \begin{definition} 
-  \label{def:colony_sequence_duality}
-  Colony Sequence Duality 
+  \label{def:schema_sequence_duality}
+  Schema Sequence Duality 
   \hfill
   \boxed{\alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu}
   \\
@@ -1784,20 +1825,20 @@ at least one of the pair type colonies.
 \end{definition}
 
 \noindent
-The duality correspondence predicate unrolls the two sequences of colonies simultaneously.  
+The duality correspondence predicate unrolls the two sequences of schemas simultaneously.  
 In the case where both sequence are empty
 $
 \alpha_{\nu} \downarrow \epsilon
 \fallingdotseq 
 \alpha_{\mu} \uparrow \epsilon 
 $, duality correspondence simply holds.
-Otherwise, duality correspondence requires that the left sequence's last colony 
+Otherwise, duality correspondence requires that the left sequence's last schema 
 has a path type  $(\Theta_c,\Delta_\nu, \tau_l \J{->} \tau_r)$
-and the right sequence's last colony has a pair type 
+and the right sequence's last schema has a pair type 
 $(\Theta_c,\Delta_\nu, \tau_l \J{*} \tau_r)$;
 the subtyping environments correspond 
 $\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu$;
-and the earlier sequences of colonies correspond
+and the earlier sequences of schemas correspond
 $
 \alpha_{\nu} \downarrow \Pi_\nu
 \fallingdotseq 
@@ -1940,18 +1981,13 @@ be part of some interpretation for the original subtyping environment $\Delta$.
 The details of finding the type interpretation involves numerous tedious details, so we leave the definition
 in the appendix (Section \ref{sect:appendix}).
 
-\begin{property}
-  \label{prop:packing_correspondence}
-  Packing Correspondence 
-  \\
-  \begin{mathpar}
-  \end{mathpar}
-\end{property}
+
+\TODO{move packing details into appendix by packing definition}
 
 \noindent
 Packing ($\textbf{pack}^\pm(\Theta_\ignore \entails \Pi) = \tau'$)
-constructs a type $\tau'$ from the colonies $\Pi$
-such that for each colony $(\Theta, \Delta, \tau)$,
+constructs a type $\tau'$ from the schemas $\Pi$
+such that for each schema $(\Theta, \Delta, \tau)$,
 it binds the variables of the type $\tau$ within
 some combination of 
 indexed unions and/or indexed intersections,
@@ -1963,15 +1999,18 @@ or closed ($\alpha \in \Theta$)
 and whether the interpretation is 
 positive ($\textbf{pack}^+(...)$) or negative ($\textbf{pack}^-(...)$).
 For the positive form, the construction (including how the closed variables are bound)
-must result in a type $\tau'$ that is weaker than the type of every colony in every interpretation
+must result in a type $\tau'$ that is weaker than the type of every schema in every interpretation
 of the closed variables $\delta'$, for some interpretation of the open variables $\delta$  
 .
 For the negative form, the construction must result in a type $\tau'$
-that is stronger than the type of every colony in every interpretation
+that is stronger than the type of every schema in every interpretation
 of the closed variables $\delta'$, for some interpretation of the open variables $\delta$  
 .
 
 The interested reader can find the actual the definition of packing in the appendix (Section \ref{sect:appendix}).
+
+
+\TODO{edit here: follow-up on proof subtyping}
 
 \begin{property} 
   \label{prop:proof_subtyping_soundness}
@@ -2003,13 +2042,13 @@ must be sound with respect to model typing under
 interpretation of the subtyping environment.
 The subtyping environment $\Delta$
 represent assumptions that enable the subtyping $\tau_l \subtypes \tau_r$ to be proved. 
-The type variables $\Theta$ are closed, meaning that the proof subtyping
+The type variables $\Theta$ are closed, meaning that the Proof Subtyping
 holds only if the model subtyping holds under some interpretation of type variables in $\Theta$.
-Type variables not in $\Theta$ are considered open, meaning the proof subtyping
+Type variables not in $\Theta$ are considered open, meaning the Proof Subtyping
 holds only if the model subtyping holds for every interpretation of variables not in $\Theta$,
 assuming each interpretation satisfies the subtyping environment.
 
-The proof subtyping predicate $\tau_l \subtypes \tau_r \given \Omega'$
+The Proof Subtyping predicate $\tau_l \subtypes \tau_r \given \Omega'$
 implies an algorithmic interpretation, 
 which takes a subtype $\tau_l$, a supertype $\tau_r$,
 and a world $\Omega$ as inputs and returns a world $\Omega'$ as output,
@@ -2055,8 +2094,8 @@ Thus, Proof Subtyping must be not be vacuous; in other words, it must have subst
 
 \noindent
 Due to the complexity of types and there being two input types,
-proof subtyping relies on many rules. 
-For clarity, we subdivide the proof subtyping rules 
+Proof Subtyping relies on many rules. 
+For clarity, we subdivide the Proof Subtyping rules 
 according to some themes.
 The order of the rules is critical to ensure that easier sub-problems are generated 
 when possible. 
@@ -2120,14 +2159,14 @@ such as de Bruijin indexes \cite{} before comparing type forms.
 \noindent
 Both entry types and path types may be viewed as analogs of propositional implication. 
 However, unlike the typical separate rules for introduction and elimination in propositional implication,
-The proof subtyping for each implication types combines the semantics for introduction
+The Proof Subtyping for each implication types combines the semantics for introduction
 and elimination into a single preservation rule.
-For entries and paths, proof subtyping preserves the form if the type's constituent parts meet certain criteria. 
+For entries and paths, Proof Subtyping preserves the form if the type's constituent parts meet certain criteria. 
 For entries, $ \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r \given \Omega$
-proof subtyping simply checks that the entries' labels match and that 
+Proof Subtyping simply checks that the entries' labels match and that 
 subtyping holds for their contents.
 For paths, $\tau_{p} \J{->} \tau_{q} \subtypes \tau_{x} \J{->} \tau_{y}$
-proof subtyping simply checks that the antecedent of the subtype
+Proof Subtyping simply checks that the antecedent of the subtype
 is weaker than the antecedent of the supertype, and the consequent
 of the subtype is stronger than the consequent of the supertype. 
 
@@ -2189,7 +2228,7 @@ Just as entries and paths are analogous to propositional implication,
 the analogy extends to union and intersection.
 Union is analogous to propositional disjunction,
 and intersection is analogous to propositional conjunction. 
-However, since the proof subtyping rules simply preserve implication types,
+However, since the Proof Subtyping rules simply preserve implication types,
 rather than introducing and eliminating them,
 The subtyping logic needs an union antecedent rule, corresponding
 to disjunction elimination, and intersection consequent rules,
@@ -2199,21 +2238,21 @@ For elimination of a path with a union antecedent
 $
   \tau_l \subtypes 
   (\tau_a\J{|}\tau_b)\J{->}\tau_r
-$, proof subtyping breaks apart the union and checks
+$, Proof Subtyping breaks apart the union and checks
 that the subtype holds against two paths 
 whose antecedents are the union's constituent parts. 
 For elimination of a path with an intersection consequent 
 $
   \tau_l \subtypes 
   \tau_r \J{->}(\tau_a\J{\&}\tau_b)
-$, proof subtyping breaks apart the intersection and checks
+$, Proof Subtyping breaks apart the intersection and checks
 that the subtype holds against two paths 
 whose consequents are the intersection's constituent parts. 
 For elimination of an entry with an intersection consequent
 $
   \tau \subtypes 
   \J{<}l\J{>} (\tau_a\J{\&}\tau_b)
-$, proof subtyping breaks apart the intersection and checks
+$, Proof Subtyping breaks apart the intersection and checks
 that the subtype holds against two entries 
 whose consequents are the intersection's constituent parts. 
 
@@ -2259,10 +2298,10 @@ whose consequents are the intersection's constituent parts.
 
 \noindent
 For elimination of a union $\tau_a\J{|}\tau_b$,
-proof subtyping solves the easier sub-problems
+Proof Subtyping solves the easier sub-problems
 on the union's constituents.
 For elimination of an indexed union $\J{EXI[}\Theta_l\ \Delta_l \J{]}\tau_l$, 
-proof subtyping ensures that the indexed union's bound variables
+Proof Subtyping ensures that the indexed union's bound variables
 are not free in the super type $\tau_r$. 
 Then it finds a solution for the qualifiers $\Delta_l$.
 Finally it finds a solution for eliminating the indexed union's body $\tau_l$,
@@ -2273,14 +2312,14 @@ the the bound variables $\Theta_l$ must be treated as closed variables.
 Since the indexed union is in the elimination position, 
 the qualifiers $\Delta_l$ and its solution $\Delta$ indicate 
 the strongest information that can safely be assumed when eliminating the body $\tau_l$.
-Marking $\Theta_l$ as closed ensures that proof subtyping
+Marking $\Theta_l$ as closed ensures that Proof Subtyping
 does not erroneously learn stronger information on those variables 
 in order to prove the elimination of $\tau_l$.
 Another requirement for safety is that 
 eliminating of $\tau_l$ must hold under all solutions of the qualifiers $\Delta_l$.
 Proof subtyping ensures this with the even stronger restriction that the solution
 to $\Delta_l$ is unique. That is, instead of letting the proof split into
-different worlds and then recombining when necessary, proof subtyping simply prevents
+different worlds and then recombining when necessary, Proof Subtyping simply prevents
 splitting the worlds too eagerly. 
 
 \begin{definition} 
@@ -2375,13 +2414,13 @@ rely on analogous techniques.
 Variable elimination has two cases, 
 one for open variables $\alpha \not\in \Theta$,
 and one for closed variables $\alpha \in \Theta$.
-For open variable elimination, proof subtyping simply learns
+For open variable elimination, Proof Subtyping simply learns
 the subtyping constraint that it's proving.
 However, it must check that the constraint is consistent
 with the other assumptions of the world,
 to ensure that there is an interpretation under which the subtyping holds. 
 To check consistency of assumptions,  
-proof subtyping constructs constraints $\Delta[\alpha/\tau]^+$ that must hold by 
+Proof Subtyping constructs constraints $\Delta[\alpha/\tau]^+$ that must hold by 
 substituting the supertype $\tau$ into all positive occurrences
 of $\alpha$ in the subtyping environment $\Delta$.
 It takes just the new constraints with successful substitutions
@@ -2393,13 +2432,13 @@ environment $\Delta_\open$ contains all the remaining constraints.
 Proof subtyping leverages the environment safety predicate 
 $(\Theta, \Delta) \entails \Delta_\closed \safe$, 
 to ensure that the updated constraints on closed variables are consistent and safe.
-If so, then proof subtyping takes the updated constraints on closed variables, influenced by their relation
+If so, then Proof Subtyping takes the updated constraints on closed variables, influenced by their relation
 to open variables, and adds them to the input assumptions 
 $(\Theta, \Delta \cup \Delta_\closed) \preceq (\Theta', \Delta')$ 
 and then solves the remaining constraints $\Delta_\open \given \Theta', \Delta'$. 
 
 To eliminate a closed variable $\alpha \in \Theta$,
-proof subtyping leverages the predicate for variable elimination safety
+Proof Subtyping leverages the predicate for variable elimination safety
 $(\Theta, \Delta) \entails \alpha \subtypes \tau_r \safe$,
 which guarantees that all possible interpretations for $\alpha$
 are stronger than $\tau_r$.
@@ -2467,8 +2506,8 @@ rely on analogous techniques.
 
 \noindent
 For least fixed point elimination, $\J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r$, 
-proof subtyping reasons by mathematical induction. 
-In practice, proof subtyping substitutes the super type $\tau_r$
+Proof Subtyping reasons by mathematical induction. 
+In practice, Proof Subtyping substitutes the super type $\tau_r$
 into all positive occurrences of the self reference $\alpha$ in the least fixed point body $\tau_l$.
 It then solves the elimination of this substitution against the super type 
 $\tau_l[\alpha\slash\tau_r]^+ \subtypes \tau_r \given \Omega$.
@@ -2503,7 +2542,7 @@ $\alpha \subtypes \tau_r$
 
 \noindent
 For difference introduction, $\tau \subtypes \tau_r \typdiff \eta$, 
-proof subtyping checks that subtyping holds for the positive part 
+Proof Subtyping checks that subtyping holds for the positive part 
 $\tau \subtypes \rho \given \Omega$.
 Then it requires that there are no free variables
 in the subtracted part $\textbf{ftv}(\eta) \subseteq \epsilon$,
@@ -2539,10 +2578,10 @@ which in turn guarantees that is failure is sound.
 
 \noindent
 For least fixed point introduction $\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r$,
-proof subtyping employs a heuristic $\Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r$ 
+Proof Subtyping employs a heuristic $\Omega \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r$ 
 to approximately judge whether or not the subtyping constraint is decidable. 
 Once the syntactic forms of the types indicate that a decision can be made,
-then proof subtyping simply unrolls the least fixed point type 
+then Proof Subtyping simply unrolls the least fixed point type 
 and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]$.
 
 \begin{definition} 
@@ -2564,7 +2603,7 @@ and solves the new subproblem $\tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \a
 
 \noindent
 For difference elimination $\rho \typdiff \eta \subtypes \tau$,
-proof subtyping simply rewrites the problem in terms of union
+Proof Subtyping simply rewrites the problem in terms of union
 $\rho \subtypes \tau \J{|} \eta$.
 
 \begin{definition} 
@@ -2588,7 +2627,7 @@ $\rho \subtypes \tau \J{|} \eta$.
 
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-      \\
+      \\\\
       \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails 
@@ -2603,11 +2642,11 @@ $\rho \subtypes \tau \J{|} \eta$.
 Expansion introduction provides a means for introducing
 generalized types from one of their instances.
 For union introduction $\tau \subtypes \tau_{l}\J{|}\tau_{r}$, 
-proof subtyping can choose from two possible worlds:
+Proof Subtyping can choose from two possible worlds:
 one where the left part is introduced $\tau \subtypes \tau_l$,
 or one where the right part is introduced $\tau \subtypes \tau_r$. 
 For index union introduce $\J{EXI[}\Theta_r\ \Delta_r \J{]}\tau_r$,
-proof subtyping constructs potential witnesses by solving the introduction
+Proof Subtyping constructs potential witnesses by solving the introduction
 of the indexed union's body $\tau_l \subtypes \tau_r \given \Omega$, 
 where the witnesses can be inferred from the subtyping environment of the world $\Omega$.
 It then confirms these are the potential witnesses are valid
@@ -2635,7 +2674,7 @@ by proving the qualifiers hold under such witnesses $\Delta_r \given \Omega'$.
 
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-      \\
+      \\\\
       \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails 
@@ -2826,7 +2865,7 @@ rely on analogous techniques.
 % solving with the abstractor vs solving with the refiner.
 
 % \paragraph{Craig interpolation.} 
-% Similar: extracting an inductive type with unions and intersections 
+% Similar: extracting an recursive type with unions and intersections 
 % from a recursive program without needing to specify a predicate universe might be similar to
 % craig interpolation.
 
@@ -3235,7 +3274,7 @@ rely on analogous techniques.
 \TODO{need lemma for correctness}
 
 \begin{definition}
-   Colony Sequence Compaction
+   Schema Sequence Compaction
   \hfill
   \boxed{\dTheta \entails \Pi \searrow \Pi'}
   \\
@@ -4223,8 +4262,8 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem} 
-  \label{thm:colony_sequence_duality_correspondence}
-  Colony Sequence Duality Correspondence
+  \label{thm:schema_sequence_duality_correspondence}
+  Schema Sequence Duality Correspondence
   \\
   \begin{mathpar}
     \inferrule {
@@ -6913,7 +6952,7 @@ rely on analogous techniques.
 %   \item $\square$ by implication
 % \end{theorem}
 
-% \begin{theorem}(Universe proof typing fixpoint extension)
+% \begin{theorem}(Universe Proof Typing fixpoint extension)
 %   \label{thm:universe_proof_typing_fixpoint_extension}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -6949,7 +6988,7 @@ rely on analogous techniques.
 %   \item $\square$
 % \end{theorem}
 
-% \begin{theorem}(Universe proof typing case soundness)
+% \begin{theorem}(Universe Proof Typing case soundness)
 %   \label{thm:universe_proof_typing_case_soundnes}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -6980,7 +7019,7 @@ rely on analogous techniques.
 %   \item $\square$
 % \end{theorem}
 
-% \begin{theorem}(Universe proof typing fixpoint union)
+% \begin{theorem}(Universe Proof Typing fixpoint union)
 %   \label{thm:universe_proof_typing_fixpoint_union}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -7036,7 +7075,7 @@ rely on analogous techniques.
 %   \item $\square$
 % \end{theorem}
 
-% % \begin{theorem}(Universe proof typing implication expansion)
+% % \begin{theorem}(Universe Proof Typing implication expansion)
 % %   \label{thm:universe_proof_typing_implication}
 % %   \begin{mathpar}
 % %     \inferrule { 
@@ -7056,7 +7095,7 @@ rely on analogous techniques.
 % %   \item $\square$
 % % \end{theorem}
 
-% \begin{theorem}(Universe proof typing implication expansion)
+% \begin{theorem}(Universe Proof Typing implication expansion)
 %   \label{thm:universe_proof_typing_implication_expansion}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -7104,7 +7143,7 @@ rely on analogous techniques.
 % \end{theorem}
 
 
-% \begin{theorem}(Universe proof typing worldly)
+% \begin{theorem}(Universe Proof Typing worldly)
 %   \label{thm:universe_proof_typing_worldly}
 %   \begin{mathpar}
 %     \inferrule { 
@@ -7844,11 +7883,11 @@ rely on analogous techniques.
 %     } 
 %   \end{mathpar}
 %   Proof:
-%   \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
+%   \item \TODO{depends on Proof Subtyping. can we abstract away Proof Subtyping?}
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % TODO: 
-% % depends on proof subtyping 
+% % depends on Proof Subtyping 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % ... |= 2 : (EXI[X . 1 <: X, X <: 3] X)
 % % X/1 |= 1 <: X, X <: 3
@@ -7877,7 +7916,7 @@ rely on analogous techniques.
 %     } 
 %   \end{mathpar}
 %   Proof:
-%   \item \TODO{depends on proof subtyping. can we abstract away proof subtyping?}
+%   \item \TODO{depends on Proof Subtyping. can we abstract away Proof Subtyping?}
 % \end{theorem}
 
 
@@ -8638,7 +8677,7 @@ rely on analogous techniques.
 % has been progress in observing the elements of the stream (guardedness) and there is no
 % further analysis of the tails (opacity)".  Kozen demonstrates a legal proof by induction on infinite streams too
 
-% % \begin{theorem}(Progress of proof typing)
+% % \begin{theorem}(Progress of Proof Typing)
 % %   \label{thm:proof_typing_soundness}
 % %   \begin{mathpar}
 % %     \inferrule { 
@@ -8650,7 +8689,7 @@ rely on analogous techniques.
 % %   Proof ... 
 % % \end{theorem}
 
-% % \begin{theorem}(Preservation of proof typing)
+% % \begin{theorem}(Preservation of Proof Typing)
 % %   \begin{mathpar}
 % %     \inferrule { 
 % %       \Gamma \entails e \hastype \tau \given Z  
