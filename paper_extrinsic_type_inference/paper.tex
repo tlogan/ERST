@@ -554,6 +554,7 @@ The notion of type classes, among other things, translates the notion of pattern
 
 \section{Structures}
 \label{sec:structures}
+\TODO{divide this section between static and dynamic systems}
 To demonstrate the capabilities of the extrinsic type system, we rely on an applicative
 programming language with pattern matching, but without effects.
 The design attempts to keep the forms of expressions and types relatively 
@@ -593,6 +594,7 @@ significant modifications to the current system.
     & 
     \is 
     \begin{array}[t]{@{}l}
+      l \J{;} e \sep
       e \J{,} e \sep
       e\ \J{|>}\ e \sep
       \J{if}\ e\ \J{then}\ e\ \J{else}\ e \sep
@@ -631,6 +633,8 @@ although possibly weaker than the inferred type, is sufficient for the continuin
   \boxed{\llbracket s \rrbracket^\square = e}
   \\
   \begin{align*}
+      \llbracket l \J{;} e \rrbracket^\square &= \J{<}l \J{>}\ e
+      \\
       \llbracket e_l \J{,} e_r \rrbracket^\square &= \J{<left>}\ e_l \ \J{<right>}\ e_r
       \\
       \llbracket e_l\ \J{|>}\ e_r \rrbracket^\square &= e_r\J{(}e_l\J{)}
@@ -842,25 +846,50 @@ bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
 For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
 
 
-\begin{definition} Ancillaries 
-  \label{def:type_ancillaries}
+\begin{definition} Sequences 
+  \label{def:sequences}
   \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{\Theta} & \is \epsilon \sep \Theta\ \alpha 
     & \com{type var seq}
     \\
     \nonterm{\Delta} & \is \epsilon \sep \Delta \  \tau \J{<:} \tau
-    & \com{subtyping environ}
+    & \com{subtyping seq}
     \\
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x \hastype \tau
-    & \com{typing environ}
+    & \com{typing seq}
     \\
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
     & \com{colony seq}
     \\
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
     & \com{subtracted type seq}
+    \\
+    \nonterm{\Omega} & \is \epsilon \sep \Delta \  \tau \J{<:} \eta
+    & \com{restricted subtyping seq}
+    \\
+    \nonterm{\mathrm{I}} & \is \epsilon \sep \mathrm{I}\ \iota 
+    & \com{composite seq}
+    \\
+    \nonterm{\iota} & \is 
+    \alpha
+    \sep 
+    \tau \J{<:} \tau
+    \sep
+    x \hastype \tau
+    \sep
+    (\Theta, \Delta, \tau)
+    \sep
+    \eta
+    \sep
+    \tau \J{<:} \eta
+
+    & \com{item}
   \end{array}\]
 \end{definition}
+
+\TODO{make sure there are no free vars in the eta of the Omega}
+
+\TODO{add collection concatentation to library}
 
 
 There are a few ancillary structures, upon which both the representation of types and the reasoning with types depend.
@@ -1017,54 +1046,43 @@ Records are similar to functions, except that their entries are guarded by liter
 Additionally, records may act as patterns, but functions may not.
 The semantics enables recursion via the fixed point combinator \J{loop}.
 
+\begin{definition} Interpretation Map
+  \label{def:interpretation_map}
+  \[\begin{array}[t]{r@{}l@{}r}
+    \nonterm{\sigma} & \is \epsilon \sep \sigma\ x \slash e 
+    & \com{expr interp map}
+    \\
+    \nonterm{\delta} & \is \epsilon \sep \delta\ \alpha \slash \tau
+    & \com{type interp map}
+  \end{array}\]
+\end{definition}
+
 % \begin{definition}
-%   \label{def:multi_progression}
-%   Multi Progression 
+%   \label{def:stability}
+%   Stability 
 %   \hfill
-%   \boxed{e \rightsquigarrow^\star e'}
+%   \boxed{\VDash e}
 %   \\
 %   \begin{mathpar}
-%     \inferrule { 
+%     \inferrule {
+%       e = v
 %     } {
-%       e \rightsquigarrow^\star e 
+%       \VDash e
 %     } 
 
 %     \inferrule { 
-%       e \rightsquigarrow e'
+%       e \rightsquigarrow e' 
 %       \\
-%       e' \rightsquigarrow^\star e''
+%       \VDash e'
 %     } {
-%       e \rightsquigarrow^\star e''
+%       \VDash e
 %     } 
 %   \end{mathpar}
 % \end{definition}
 
-\begin{definition}
-  \label{def:stability}
-  Stability 
-  \hfill
-  \boxed{\VDash e}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      e = v
-    } {
-      \VDash e
-    } 
-
-    \inferrule { 
-      e \rightsquigarrow e' 
-      \\
-      \VDash e'
-    } {
-      \VDash e
-    } 
-  \end{mathpar}
-\end{definition}
-
-\noindent
-A expression is stable if and only if it is a value or it can take a step to a stable expression.
-In other words, if an expression is not a value then its behavior is defined by progression.
+% \noindent
+% A expression is stable if and only if it is a value or it can take a step to a stable expression.
+% In other words, if an expression is not a value then its behavior is defined by progression.
 
 \begin{property}
   \label{def:model_typing_soundness}
@@ -1324,7 +1342,9 @@ by eliminating type forms.
 The static system is a strengthening of the dynamic system, designed to
 ensure that expressions can make progress and satisfy approximate specifications
 represented by types. 
-The entry point into the static system is proof typing, which
+The entry point into the static system is proof typing $(
+  \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+)$, which
 aims to prove the validity of typing directly by including elimination rules.  
 
 
@@ -1336,12 +1356,12 @@ aims to prove the validity of typing directly by including elimination rules.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
     } {
-      \exists \delta .\ \textbf{dom}(\delta) \cong \Theta' \backslash \Theta \up 
+      \exists \delta' \qua \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta \up 
       (
-      \forall \delta' .\ 
-      \delta' \oplus \delta \satisfies \Delta' \implies
-      \delta', \sigma \satisfies \Gamma \implies
-      \delta' \oplus \delta \satisfies e[\sigma] \hastype \tau
+      \forall \delta \qua
+      \delta \oplus \delta' \satisfies \Delta' \implies
+      \delta, \sigma \satisfies \Gamma \implies
+      \delta \oplus \delta' \satisfies e[\sigma] \hastype \tau
       )
     }
   \end{mathpar}
@@ -1375,6 +1395,52 @@ The input world is not explicitly represented in the predicate, so the algorithm
 interprets the input world as the smallest world that can satisfy the predicate. 
 Additionally, the outputs of the predicate are not deterministic. Therefore, the algorithm
 enumerates all possible outputs.
+
+\begin{property}
+  \label{prop:proof_typing_substance}
+  Proof Typing Substance 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{property}
+
+The property of Proof Typing Soundness is actually a bit weak on its own. It does not
+guarantee that a program has no errors, since the property could be satisfied vacuously by
+having it produce an invalid set of subtyping constraints $\Delta'$.
+To ensure that the proof typing system ensure that a program $e$ has no errors,
+we need Proof Typing Substance \ref{prop:proof_subtyping_substance}, which guarantees that    
+the constraints generated by Proof Typing are valid. That is,
+Proof Typing is not vacuous, assuming valid inputs.
+
+\begin{property}
+  \label{prop:proof_typig_annotation_soundness}
+  Proof Typing Annotation Soudness 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
+    } {
+      \forall \delta, \sigma \qua 
+      \delta, \sigma \satisfies \Gamma \implies
+      \delta \satisfies e \hastype \tau_a
+    }
+  \end{mathpar}
+\end{property}
+
+In addition to constructing types from programs, we are also interested in checking that 
+programs meets specifications annotated by the programmer. Proof Typing Soundness
+does not directly reference these annotations, so we need an additional property to ensure
+the annotations are respected. Proof Typing Annotation Soundness 
+\ref{prop:proof_typig_annotation_soundness} requires that the expressions
+used in the binding syntax respect the type annotations.  
 
 \begin{definition} 
   \label{def:proof_typing}
@@ -1491,7 +1557,7 @@ The predicate for path sequence typing
 $\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi$
 constructs a sequence of path types, 
 with each path type associated with a world, represented by $\Pi$.
-Then, the metalanguage function for positive packaging 
+Then, the metalanguage function for positive packing 
 $\textbf{pack}^+(\textbf{ftv}(\Gamma)\ \Theta \entails \Pi)$
 takes the path colonies and for each path colony,
 it rewrites the colony into a type by wrapping the path type in indexed unions
@@ -1538,7 +1604,7 @@ $, which rewrites the implicitly co-inductive pairs of path types and worlds int
 implicitly inductive pairs of pair types and worlds. 
 Rewriting the co-inductive paths into inductive pairs is the first
 step towards factoring the infinite paths of the recursive function into a weaker single path.
-By leveraging the negative packaging $\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
+By leveraging the negative packing $\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
 the qualification by the worlds becomes embedded in a single type $\tau_\mu$. 
 Finally, it makes inductive nature of the relational type explicit,
 by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$, 
@@ -1883,15 +1949,15 @@ The details of finding the type interpretation involves numerous tedious details
 in the appendix (Section \ref{sect:appendix}).
 
 \begin{property}
-  \label{prop:packaging_correspondence}
-  Packaging Correspondence 
+  \label{prop:packing_correspondence}
+  Packing Correspondence 
   \\
   \begin{mathpar}
   \end{mathpar}
 \end{property}
 
 \noindent
-Packaging ($\textbf{pack}^\pm(\Theta_\ignore \entails \Pi) = \tau'$)
+Packing ($\textbf{pack}^\pm(\Theta_\ignore \entails \Pi) = \tau'$)
 constructs a type $\tau'$ from the colonies $\Pi$
 such that for each colony $(\Theta, \Delta, \tau)$,
 it binds the variables of the type $\tau$ within
@@ -1913,7 +1979,7 @@ that is stronger than the type of every colony in every interpretation
 of the closed variables $\delta'$, for some interpretation of the open variables $\delta$  
 .
 
-The interested reader can find the actual the definition of packaging in the appendix (Section \ref{sect:appendix}).
+The interested reader can find the actual the definition of packing in the appendix (Section \ref{sect:appendix}).
 
 \begin{property} 
   \label{prop:proof_subtyping_soundness}
@@ -1923,19 +1989,20 @@ The interested reader can find the actual the definition of packaging in the app
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
-      \exists \delta .\ 
-      \textbf{dom}(\delta) \cong \Theta' \backslash \Theta
+      \exists \delta' \qua 
+      \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta
       \up
       (
-      \forall \delta' .\ 
-      \delta' \oplus \delta \satisfies \Delta' \implies
-      \delta' \oplus \delta \satisfies \tau_l \subtypes \tau_r
+      \forall \delta \qua 
+      \delta \oplus \delta' \satisfies \Delta' \implies
+      \delta \oplus \delta' \satisfies \tau_l \subtypes \tau_r
       )
     }
   \end{mathpar}
 \end{property}
 
 \TODO{rename consistency properties to non-vacuity}
+
 \TODO{note how without non-vacuity it could be constructs a vacuous type with an erroneous program as its proof}
 
 \noindent
@@ -1965,6 +2032,27 @@ There are elimination rules, which make decisions based on the form of the subty
 and there are introduction rules, which make decisions based on the form of the supertype.
 Some rules handle both elimination and introduction of type forms.
 
+\begin{property}
+  \label{prop:proof_subtyping_substance}
+  Proof Subtyping Substance 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{property}
+
+The property of Proof Subtyping Soundness cannot ensure that a subtyping is valid on its own,
+since it could hold vacuously by generating invalid constraints.
+To this end, we require Proof Subtyping Substance \ref{prop:proof_subtyping_substance},
+which states that the generated constraints are valid if the input constraints are valid.
+Thus, Proof Subtyping must be not be vacuous; in other words, it must have substance. 
 
 \begin{definition} 
   \label{def:proof_subtyping}
@@ -2776,6 +2864,12 @@ rely on analogous techniques.
 \section{Library}
 \label{sec:library}
 
+\TODO{add generic collection syntax}
+
+\TODO{add collection concatentation}
+
+\TODO{read through definitions and update syntax}
+
 \begin{definition} 
   \label{def:type_interpretation}
   Type Interpretation 
@@ -3035,8 +3129,8 @@ rely on analogous techniques.
 \TODO{...}
 
 \begin{definition}
-  \label{def:type_packaging}
-  Type Packaging 
+  \label{def:type_packing}
+  Type Packing 
   \hfill
   \boxed{\textbf{pack}^\pm(\dTheta \entails \Theta, \Delta, \tau) = \tau'} 
   \\
@@ -3061,8 +3155,8 @@ rely on analogous techniques.
 
 
 \begin{definition}
-  \label{def:multiple_type_packaging}
-  Multiple Type Packaging 
+  \label{def:multiple_type_packing}
+  Multiple Type Packing 
   \hfill
   \boxed{\textbf{pack}^\pm(\Theta \entails \Pi) = \tau}\ 
   \\
@@ -3076,12 +3170,12 @@ rely on analogous techniques.
 
       \textbf{pack}^+(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau)) 
       &\ =\ & 
-      \tau \J{\&} \tau' 
+      \tau_l \J{\&} \tau_r
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau 
+        \textbf{pack}^+(\Theta_\ignore \entails \Pi) = \tau_l 
         \\
-        \textbf{pack}^+(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
+        \textbf{pack}^+(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau_r
       \end{array}
 
       \\
@@ -3094,12 +3188,12 @@ rely on analogous techniques.
 
       \textbf{pack}^-(\Theta_\ignore \entails \Pi\ (\Theta, \Delta, \tau))
       &\ =\ & 
-      \tau \J{|} \tau' 
+      \tau_l \J{|} \tau_r
       &\text{if}& 
       \begin{array}[t]{@{}l}
-        \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau 
+        \textbf{pack}^-(\Theta_\ignore \entails \Pi) = \tau_l
         \\
-        \textbf{pack}^-(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau'
+        \textbf{pack}^-(\Theta_\ignore \entails \Theta, \Delta, \tau) = \tau_r
       \end{array}
   \end{array}
   \]
@@ -3146,6 +3240,8 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
+\TODO{need lemma for correctness}
+
 \begin{definition}
    Colony Sequence Compaction
   \hfill
@@ -3168,6 +3264,8 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
+
+\TODO{need lemma for correctness}
 
 \begin{definition}
   Outer
@@ -4180,8 +4278,8 @@ rely on analogous techniques.
 \hfill
 
 \begin{theorem}
-  \label{thm:packaging_correspondence}
-  Packaging Correspondence 
+  \label{thm:packing_correspondence}
+  Packing Correspondence 
   \\
   \begin{mathpar}
     \inferrule {
@@ -4390,7 +4488,7 @@ rely on analogous techniques.
 \end{theorem}
 
 \begin{theorem}
-  \label{thm:proof_typig_substance}
+  \label{thm:proof_typing_substance}
   Proof Typing Substance 
   \\
   \begin{mathpar}
@@ -4408,7 +4506,7 @@ rely on analogous techniques.
 
 
 \begin{theorem}
-  \label{thm:proof_subtypig_substance}
+  \label{thm:proof_subtyping_substance}
   Proof Subtyping Substance 
   \\
   \begin{mathpar}
@@ -5840,7 +5938,7 @@ rely on analogous techniques.
   \item \I\I \N Derive $(
     \delta \satisfies f[\sigma] \hastype \tau
   )$ [Ind. Thm. \ref{thm:path_sequence_typing_soundness}, Thm. \ref{thm:function_lifting_skolem_freshness},
-      Thm. \ref{thm:packaging_correspondence}]
+      Thm. \ref{thm:packing_correspondence}]
 
   \item \I\I \N Derive $(
     \delta \oplus \epsilon \satisfies f[\sigma] \hastype \tau
@@ -6275,7 +6373,7 @@ rely on analogous techniques.
     \delta \oplus \delta'\ \alpha_\mu \slash \J{TOP} \satisfies (e_a\J{,}e_r) \hastype \tau_\mu
     \implies 
     e_r \cong \J{loop(}e[\sigma]\J{)(} e_a \J{)}
-  )$ [Thm. \ref{thm:packaging_correspondence}]
+  )$ [Thm. \ref{thm:packing_correspondence}]
 
   \item \I\I \N Derive $(
     \forall e_a, e_r \qua 
