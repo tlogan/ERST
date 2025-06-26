@@ -50,11 +50,11 @@ def State(S, T):
 
 
 nat = (f"""
-(FX N | zero : @  | succ : N )
+(FX N | zero;@  | succ;N )
 """.strip())
 
 even = (f"""
-(FX E | zero : @ | succ : succ : E)
+(FX E | zero;@ | succ;succ;E)
 """.strip())
 
 # nat_list = (f"""

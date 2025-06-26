@@ -737,14 +737,14 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{|}\tau \sep 
-      \J{EXI[}\Theta\J{]} \Delta \J{::} \tau
+      \J{EXI[}\Theta\J{]} \Delta \J{:} \tau
     \end{array}
     & \com{expansion}
     \\
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{\&}\tau \sep 
-      \J{ALL[}\Theta\J{]} \Delta \J{::} \tau
+      \J{ALL[}\Theta\J{]} \Delta \J{:} \tau
     \end{array}
     & \com{refinement}
     \\
@@ -790,7 +790,7 @@ its inhabitants and may take the form of
 entries $\J{<}l\J{>}\tau$ or paths $\tau \J{->} \tau$.
 
 An expansion type $\phi$ is either a binary union $\tau \J{|} \tau$ or 
-an indexed union $\J{EXI[}\Theta \J{]} \Delta \J{::} \tau$.
+an indexed union $\J{EXI[}\Theta \J{]} \Delta \J{:} \tau$.
 An expansion type is weaker than its constituent types. 
 An indexed union is parametrized by type variables $\Theta$ 
 and qualified by subtyping constraints $\Delta$.
@@ -800,7 +800,7 @@ In effect, the qualification by subtyping constraints provides an upper bound, i
 the weaker the qualification, the weaker the indexed union.
 
 A refinement type $\psi$ is either a binary intersection $\tau \J{\&} \tau$ or 
-an indexed intersection $\J{ALL[} \Theta \J{]} \Delta \J{::}\tau$.
+an indexed intersection $\J{ALL[} \Theta \J{]} \Delta \J{:}\tau$.
 A refinement type is strengthened relative to its constituent types. 
 An indexed intersection is parametrized by type variables $\Theta$ 
 and qualified by subtyping constraints $\Delta$.
@@ -1185,7 +1185,7 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
       \\
       \delta \oplus \delta' \satisfies e \hastype \tau
     } {
-      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{::} \tau
+      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
     } 
 
     \inferrule { 
@@ -1198,7 +1198,7 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
       \textbf{dom}(\delta') \subseteq \Theta \up 
       \delta \oplus \delta' \satisfies \Delta
     } {
-      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{::} \tau
+      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
     } 
 
     \inferrule { 
@@ -1906,7 +1906,7 @@ whose consequents are the intersection's constituent parts.
       \tau_l \subtypes \tau_r \given \Theta'', \Delta''
     } {
       \Theta, \Delta \entails
-      \J{EXI[}\Theta_l\J{]}\Omega \J{::} \tau_l \subtypes \tau_r
+      \J{EXI[}\Theta_l\J{]}\Omega \J{:} \tau_l \subtypes \tau_r
       \given \Theta'', \Delta'' 
     }
   \end{mathpar}
@@ -1919,7 +1919,7 @@ For elimination of a union $(
 Proof Subtyping solves the easier sub-problems
 on the union's constituents.
 For elimination of an indexed union $(
-... \entails \J{EXI[}\Theta_l \J{]} \Omega \J{::}\tau_l \subtypes \tau_r \given ...
+... \entails \J{EXI[}\Theta_l \J{]} \Omega \J{:}\tau_l \subtypes \tau_r \given ...
 )$, 
 Proof Subtyping ensures that the indexed union's bound variables
 are not free in the super type $\tau_r$. 
@@ -1971,7 +1971,7 @@ splitting the worlds too eagerly.
       \\
       \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
     } {
-      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{::} \tau_r \given \Theta'', \Delta''
+      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{:} \tau_r \given \Theta'', \Delta''
     }
   \end{mathpar}
 \end{definition}
@@ -1997,38 +1997,28 @@ rely on analogous techniques.
 
     \inferrule {
       \alpha \in \Theta 
-      \\
-      \Theta, \Delta \entails \alpha \subtypes \tau \safe
+      % \\
+      % \Theta, \Delta \entails \alpha \subtypes \tau \safe
       \\
       \nexists \alpha'  \qua \tau = \alpha'
+      \\
+      \exists \Theta', \Delta' \qua
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
+      \\\\
+      \exists \tau' \qua  \alpha \J{<:} \tau' \in \Delta
+      \up 
+      (
+      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
+      \down 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
+      )
     } {
       \Theta, \Delta \entails 
       \alpha \subtypes \tau
-      \given \Theta, \Delta\ \alpha \subtypes \tau
+      \given \Theta, \Delta\ \alpha \J{<:} \tau
     }
   \end{mathpar}
 \end{definition}
-
-% \TODO{loop detection isn't necessary to pass example G8A}
-
-% \TODO{is loop detection a form of (co)inductive reasoning?}
-
-% \TODO{there is infinitely never a contradictioin}
-
-% \TODO{inputs are satisfiable regardless of context}
-
-% \TODO{inputs are equisatisfiable with context and target constraint}
-
-% \TODO{so inputs are consistent with target constraint}
-
-% \TODO{the satisfiability property ensures there aren't invalid assumptions used to prove by induction}
-
-% \TODO{that is, induction is only valid if the assumptions are consistent with the induction hypothesis}
-
-% \TODO{A more principaled approach would be to remove the original constraints that have been subbed out,
-% and then rename the remaning variables to skolems and use as assumptions}
-
-% \TODO{the remaining unsubbed constraints cannot contradict the IH because the polarity is the same}
 
 \noindent
 Variable elimination has two cases:
@@ -2046,9 +2036,14 @@ Proof Subtyping leverages Polar Subtyping Sequence Substitution $(
 of $\alpha$ .
 
 To eliminate a closed variable $(\alpha \in \Theta)$,
-Proof Subtyping leverages Skolem Variable Elimination 
-$(\Theta, \Delta \entails \alpha \subtypes \tau \safe)$
-(Def. \ref{def:skolem_variable_elimination}),
+Proof Subtyping 
+\TODO{...}
+A variable may be eliminated if it meets two conditions.
+The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
+An upper bound of an open variable indicates that the variable being eliminated
+can be as strong as its lower bounds.
+The second condition is that all lower bounds of that variable can be eliminated. 
+\TODO{...}
 which checks that all possible interpretations for $\alpha$
 are stronger than $\tau$.
 
@@ -2071,13 +2066,24 @@ are stronger than $\tau$.
     \inferrule {
       \alpha \in \Theta 
       \\
-      \Theta, \Delta \entails \tau \subtypes \alpha \safe
-      \\
+      % \Theta, \Delta \entails \tau \subtypes \alpha \safe
+      % \\
       \nexists \alpha' \qua \tau = \alpha'
+      \\
+      \exists \Theta', \Delta' \qua
+      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
+      \\\\
+      \exists \tau' \qua  \tau' \J{<:} \alpha \in \Delta
+      \up 
+      (
+      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
+      \down 
+      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
+      )
     } {
       \Theta, \Delta \entails 
       \tau \subtypes \alpha 
-      \given \Theta, \Delta\ \tau \subtypes \alpha 
+      \given \Theta, \Delta\ \tau \J{<:} \alpha 
     }
   \end{mathpar}
 \end{definition}
@@ -2261,7 +2267,7 @@ $(
       \Theta, \Delta \entails 
       \tau_l
       \subtypes 
-      \J{EXI[}\Theta_r\J{]}\Delta_r \J{::} \tau_r \given \Theta'', \Delta'' 
+      \J{EXI[}\Theta_r\J{]}\Delta_r \J{:} \tau_r \given \Theta'', \Delta'' 
     }
   \end{mathpar}
 \end{definition}
@@ -2280,7 +2286,7 @@ or one where the right part is introduced $(
 ... \entails \tau \subtypes \tau_r \given ...
 )$. 
 For index union introduce $(
-... \entails \tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{::}\tau_r \given ...
+... \entails \tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{:}\tau_r \given ...
 )$,
 Proof Subtyping constructs potential witnesses by solving the introduction
 of the indexed union's body $(
@@ -2318,7 +2324,7 @@ by proving the qualifiers hold under such witnesses $(
       \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails 
-      \J{ALL[}\Theta_l\J{]} \Delta_l \J{::} \tau_l
+      \J{ALL[}\Theta_l\J{]} \Delta_l \J{:} \tau_l
       \subtypes 
       \tau_r
       \given \Theta'', \Delta'' 
@@ -2328,65 +2334,6 @@ by proving the qualifiers hold under such witnesses $(
 
 \noindent
 Refinement elimination is the dual of expansion introduction, so its rules
-rely on analogous techniques.
-
-\begin{definition} 
-  \label{def:skolem_variable_elimination}
-  Skolem Variable Elimination 
-  \hfill
-  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \safe}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \exists \tau' \qua  \alpha \J{<:} \tau' \in \Delta
-      \up 
-      (
-      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
-      \down 
-      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta') 
-      )
-      \\\\
-      \exists \Theta', \Delta' \qua
-      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails \alpha \subtypes \tau \safe
-    }
-  \end{mathpar}
-\end{definition}
-
-\noindent
-A variable may be eliminated if it meets two conditions.
-The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
-An upper bound of an open variable indicates that the variable being eliminated
-can be as strong as its lower bounds.
-The second condition is that all lower bounds of that variable can be eliminated. 
-
-\begin{definition} 
-  \label{def:skolem_variable_introduction}
-  Skolem Variable Introduction
-  \hfill
-  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \safe}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \exists \tau' \qua  \tau' \J{<:} \alpha \in \Delta
-      \up 
-      (
-      (\exists \alpha' \qua \tau' = \alpha' \up \alpha' \notin \Theta) 
-      \down 
-      (\exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta') 
-      )
-      \\\\
-      \exists \Theta', \Delta' \qua
-      \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails \tau \subtypes \alpha \safe
-    }
-  \end{mathpar}
-\end{definition}
-
-\noindent
-Variable introduction safety is the dual of variable elimination safety, so its rules
 rely on analogous techniques.
 
 \begin{definition} 
@@ -4930,7 +4877,7 @@ The interested reader can find the actual the definition of packing in the appen
 
   \item \N Assume $(
     \Theta, \Delta \entails
-    \J{EXI[}\Theta_l\J{]}\Omega \J{::} \tau_l \subtypes \tau_r
+    \J{EXI[}\Theta_l\J{]}\Omega \J{:} \tau_l \subtypes \tau_r
     \given \Theta'', \Delta'' 
   )$
 
@@ -5044,7 +4991,7 @@ The interested reader can find the actual the definition of packing in the appen
   )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega \J{::} \tau_l \subtypes \tau_r
+    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega \J{:} \tau_l \subtypes \tau_r
   )$ [Thm. \ref{thm:model_subtyping_indexed_union_type_elimination}]
 
 
@@ -5116,7 +5063,7 @@ The interested reader can find the actual the definition of packing in the appen
   %%%%%%%%%%%%%%%%
 
   \item \N Assume $(
-    \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{::} \tau_r \given \Theta'', \Delta''
+    \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{:} \tau_r \given \Theta'', \Delta''
   )$
   \item \I \N Derive $(
     \Theta_r \cap \textbf{ftv}(\Delta) \subseteq \emptyset
@@ -5226,7 +5173,7 @@ The interested reader can find the actual the definition of packing in the appen
   )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \tau_l \subtypes \J{ALL[} \Theta_r \J{]} \Omega \J{::} \tau_r
+    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \tau_l \subtypes \J{ALL[} \Theta_r \J{]} \Omega \J{:} \tau_r
   )$ [Thm. \ref{thm:model_subtyping_indexed_intersection_type_introduction}]
 
   %%%%%%%%%%%%%%%%

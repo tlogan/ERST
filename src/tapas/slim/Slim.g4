@@ -232,7 +232,7 @@ $combo = Diff(context, $negation.combo)
 qualification returns [tuple[Subtyping, ...] combo] :
 
 
-| '::' {
+| ':' {
 $combo = tuple([])
 }
 
