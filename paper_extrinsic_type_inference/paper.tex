@@ -1883,7 +1883,7 @@ whose consequents are the intersection's constituent parts.
       \Theta, \Delta \entails
       \tau_a \subtypes \tau
       \given \Theta', \Delta'
-      \\\\
+      \\
       \Theta', \Delta' \entails
       \tau_b \subtypes \tau
       \given \Theta'', \Delta''
@@ -1894,11 +1894,11 @@ whose consequents are the intersection's constituent parts.
     }
 
     \inferrule {
-      \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
+      \Theta_l \cap \textbf{ftv}(\Delta) \subseteq \emptyset 
       \\
-      \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
+      \Theta_l \cap \textbf{ftv}(\tau_r) \subseteq \emptyset
       \\
-      \Theta_l \subseteq \textbf{ftv}(\Omega)
+      (\forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset) 
       \\\\
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
@@ -1911,10 +1911,6 @@ whose consequents are the intersection's constituent parts.
     }
   \end{mathpar}
 \end{definition}
-
-\TODO{add no free var check on Omega}
-
-\TODO{consider ways too relax bound variables in Omega requirement}
 
 \noindent
 For elimination of a union $(
@@ -1956,7 +1952,7 @@ splitting the worlds too eagerly.
     \inferrule {
       \Theta, \Delta \entails
       \tau \subtypes \tau_{a} \given \Theta', \Delta' 
-      \\\\
+      \\
       \Theta', \Delta' \entails
       \tau \subtypes \tau_{b} \given \Theta'', \Delta''
     } {
@@ -1965,11 +1961,11 @@ splitting the worlds too eagerly.
     }
 
     \inferrule {
-      \Theta_r \cap \textbf{ftv}(\Delta) = \emptyset
+      \Theta_r \cap \textbf{ftv}(\Delta) \subseteq \emptyset
       \\
-      \Theta_r \cap \textbf{ftv}(\tau_l) = \emptyset
+      \Theta_r \cap \textbf{ftv}(\tau_l) \subseteq \emptyset
       \\
-      \Theta_r \subseteq \textbf{ftv}(\Omega)
+      (\forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset) 
       \\\\
       \Theta, \Delta \given \Omega \given \Theta', \Delta'
       \\
@@ -4934,18 +4930,18 @@ The interested reader can find the actual the definition of packing in the appen
 
   \item \N Assume $(
     \Theta, \Delta \entails
-    \J{EXI[}\Theta_l\J{]}\Omega\ \tau_l \subtypes \tau_r
+    \J{EXI[}\Theta_l\J{]}\Omega \J{::} \tau_l \subtypes \tau_r
     \given \Theta'', \Delta'' 
   )$
 
   \item \I \N Derive $(
-    \Theta_l \cap \textbf{ftv}(\Delta) = \emptyset 
+    \Theta_l \cap \textbf{ftv}(\Delta) \subseteq \emptyset 
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
-    \Theta_l \cap \textbf{ftv}(\tau_r) = \emptyset
+    \Theta_l \cap \textbf{ftv}(\tau_r) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
-    \Theta_l \subseteq \textbf{ftv}(\Omega)
+    \forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_expansion_elimination}]
   \item \I \N And $(
     \Theta, \Delta \entails \Omega \given \Theta', \Delta'
@@ -5048,7 +5044,7 @@ The interested reader can find the actual the definition of packing in the appen
   )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega\ \tau_l \subtypes \tau_r
+    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \J{EXI[} \Theta_l \J{]} \Omega \J{::} \tau_l \subtypes \tau_r
   )$ [Thm. \ref{thm:model_subtyping_indexed_union_type_elimination}]
 
 
@@ -5120,16 +5116,16 @@ The interested reader can find the actual the definition of packing in the appen
   %%%%%%%%%%%%%%%%
 
   \item \N Assume $(
-    \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega\ \tau_r \given \Theta'', \Delta''
+    \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{::} \tau_r \given \Theta'', \Delta''
   )$
   \item \I \N Derive $(
-    \Theta_r \cap \textbf{ftv}(\Delta) = \emptyset
+    \Theta_r \cap \textbf{ftv}(\Delta) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
-    \Theta_r \cap \textbf{ftv}(\tau_l) = \emptyset
+    \Theta_r \cap \textbf{ftv}(\tau_l) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
-    \Theta_r \subseteq \textbf{ftv}(\Omega)
+    \forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset
   )$ [Def. \ref{def:proof_subtyping_refinement_introduction}]
   \item \I \N And $(
     \Theta, \Delta \entails \Omega \given \Theta', \Delta'
@@ -5230,7 +5226,7 @@ The interested reader can find the actual the definition of packing in the appen
   )$ [Thm. \ref{thm:subtyping_interpretation_reordering}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \tau_l \subtypes \J{ALL[} \Theta_r \J{]} \Omega\ \tau_r
+    \delta \oplus \delta_0 \oplus \delta_1 \satisfies \tau_l \subtypes \J{ALL[} \Theta_r \J{]} \Omega \J{::} \tau_r
   )$ [Thm. \ref{thm:model_subtyping_indexed_intersection_type_introduction}]
 
   %%%%%%%%%%%%%%%%
