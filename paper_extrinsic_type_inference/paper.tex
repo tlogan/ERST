@@ -51,8 +51,8 @@
 
 \newcommand{\Par}[1]{\paragraph{\textbf{#1}}}
 \newcommand*{\code}{\fontfamily{pcr}\selectfont}
-\newcommand{\J}[1]{\texttt{\small \code #1}}
-\newcommand{\lab}[1]{\small \text{\color{Gray}\ [#1]}}
+\newcommand{\J}[1]{\texttt{\code #1}}
+\newcommand{\lab}[1]{\text{\color{Gray}\ [#1]}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
@@ -568,6 +568,7 @@ significant modifications to the current system.
 
 \begin{definition} Expressions
   \label{def:expressions}
+  \small
   \[\begin{array}[t]{r@{}l@{}r}
     \nonterm{e} 
     & 
@@ -632,6 +633,7 @@ although possibly weaker than the inferred type, is sufficient for the continuin
   \label{def:expression_desugaring}
   Expression Desugaring
   \hfill 
+  \small
   \boxed{\llbracket s \rrbracket^\square = e}
   \\
   \begin{align*}
@@ -831,6 +833,7 @@ and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
   \label{def:type_desugaring}
   Type Desugaring 
   \hfill 
+  \small
   \boxed{\llbracket \gamma \rrbracket^\square = \tau}
   \\
   \begin{align*}
@@ -914,6 +917,7 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
   \label{def:sequence_setting}
   Sequence Setting 
   \hfill 
+  \small
   \boxed{\textbf{set}(C) = S}
   \\
   \[
@@ -935,6 +939,7 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
   \label{def:set_sequencing}
   Set Sequencing 
   \hfill 
+  \small
   \boxed{\textbf{seq}(S) = C}
   \\
   \[
@@ -970,6 +975,7 @@ The programming language is pure and applicative.
   \label{def:progression}
   Progression
   \hfill 
+  \small
   \boxed{e \rightsquigarrow e}
   \\
   \begin{mathpar}
@@ -1107,6 +1113,7 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
   \label{def:model_typing}
   Model Typing
   \hfill
+  \small
   \boxed{\delta \satisfies e \hastype \tau}
   \\
   \begin{mathpar}
@@ -1245,6 +1252,7 @@ by eliminating type forms.
   \label{def:expression_congruence}
   Expression Congruence 
   \hfill
+  \small
   \boxed{e_l \cong e_r}
   \\
   \begin{mathpar}
@@ -1285,6 +1293,7 @@ by eliminating type forms.
   \label{def:model_subtyping}
   Model Subtyping
   \hfill
+  \small
   \boxed{\delta \satisfies \tau <: \tau}
   \\
   \begin{mathpar}
@@ -1303,6 +1312,7 @@ by eliminating type forms.
   \label{def:model_subtyping_sequence}
   Model Subtyping Sequence 
   \hfill
+  \small
   \boxed{\delta \satisfies \Delta}
   \\
   \begin{mathpar}
@@ -1442,6 +1452,7 @@ used in the binding syntax respect the type annotations.
   \label{def:proof_typing}
   Proof Typing
   \hfill 
+  \small
   \boxed{\Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1711,6 +1722,7 @@ and they must be satisfiable with respect to the remaining type variables.
   \label{def:proof_subtyping}
   Proof Subtyping
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
 \end{definition}
 
@@ -1728,6 +1740,7 @@ according to some themes.
   \label{def:proof_subtyping_reflection}
   Proof Subtyping (Reflection)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1750,6 +1763,7 @@ such as de Bruijin indexes \cite{} before comparing type forms.
   \label{def:proof_subtyping_implication_preservation}
   Proof Subtyping (Implication Preservation)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1795,6 +1809,7 @@ of the subtype is stronger than the consequent of the supertype.
   \label{def:proof_subtyping_implication_rewriting}
   Proof Subtyping (Implication Rewriting)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1878,6 +1893,7 @@ whose consequents are the intersection's constituent parts.
   \label{def:proof_subtyping_expansion_elimination}
   Proof Subtyping (Expansion Elimination)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1948,6 +1964,7 @@ splitting the worlds too eagerly.
   \label{def:proof_subtyping_refinement_introduction}
   Proof Subtyping (Refinement Introduction)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \psi \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -1986,6 +2003,7 @@ rely on analogous techniques.
   \label{def:proof_subtyping_variable_elimination}
   Proof Subtyping (Variable Elimination)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
   \\
   \begin{mathpar}
@@ -2053,6 +2071,7 @@ are stronger than $\tau$.
   \label{def:proof_subtyping_variable_introduction}
   Proof Subtyping (Variable Introduction)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2099,6 +2118,7 @@ rely on analogous techniques.
   \label{def:proof_subtyping_lfp_elimination}
   Proof Subtyping (Least Fixed Point Elimination)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2141,6 +2161,7 @@ $\alpha \subtypes \tau_r$
   \label{def:proof_subtyping_difference_intro}
   Proof Subtyping (Difference Introduction)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails\tau \subtypes \rho \typdiff \eta \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2185,6 +2206,7 @@ which in turn ensures that its failure is sound.
   \label{def:proof_subtyping_lfp_intro}
   Proof Subtyping (Least Fixed Point Introduction)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2220,6 +2242,7 @@ and solves the new subproblem $(
   \label{def:proof_subtyping_diff_elimination}
   Proof Subtyping (Difference Elimination)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2246,6 +2269,7 @@ $(
   \label{def:proof_subtyping_expansion_introduction}
   Proof Subtyping (Expansion Introduction)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2305,6 +2329,7 @@ by proving the qualifiers hold under such witnesses $(
   \label{def:proof_subtyping_refinement_elimination}
   Proof Subtyping (Refinement Elimination)
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2342,6 +2367,7 @@ rely on analogous techniques.
   \label{def:proof_sequence_subtyping}
   Proof Sequence Subtyping
   \hfill
+  \small
   \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
   \\
   \begin{mathpar}
@@ -2474,103 +2500,108 @@ rely on analogous techniques.
 \section{Experiments}
 \label{sec:experiments}
 
-\begin{definition} Experimental Types  
-  \label{def:experimental_types}
+\begin{definition} Experimental Expressions and Types  
+  \label{def:experimental_expressions_and_types}
+  \scriptsize
   \[
-  \begin{array}[t]{r@{}c@{}l}
-    \textbf{Bool} 
-    &\ \ =\ \ & 
-    \J{(true;@ | false;@)} 
-    \\
-    \textbf{Nat} 
-    &\ \ =\ \ & 
-    \J{(LFP[R] zero;@ | succ;R)} 
-    \\
-    \textbf{List}(\alpha) 
-    &\ \ =\ \ & 
-    \J{(LFP[R] nil;@ | cons;((}\alpha\J{)*R))} 
-    \\
-    \textbf{ChurchNum} 
-    &\ \ =\ \ & 
-    \J{(ALL[T] (T -> T) -> T -> T)}
-    \\
-    \textbf{ST}(\alpha^\dagger, \alpha) 
-    &\ \ =\ \ & 
-    \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
+  \begin{array}[t]{ll}
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{Bool} 
+      &\ \ =\ \ & 
+      \J{(true;@ | false;@)} 
+      \\
+      \textbf{Nat} 
+      &\ \ =\ \ & 
+      \J{(LFP[R] zero;@ | succ;R)} 
+      \\
+      \textbf{List}(\alpha) 
+      &\ \ =\ \ & 
+      \J{(LFP[R] nil;@ | cons;((}\alpha\J{)*R))} 
+      \\
+      \textbf{ChurchNum} 
+      &\ \ =\ \ & 
+      \J{(ALL[T] (T -> T) -> T -> T)}
+      \\
+      \textbf{ST}(\alpha^\dagger, \alpha) 
+      &\ \ =\ \ & 
+      \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
+    \end{array}
+    &
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{z} 
+      &\ \ =\ \ & 
+      \J{\{f => \{x => x\}\}} 
+      \\
+      \textbf{s} 
+      &\ \ =\ \ & 
+      \J{\{n => \{f => \{x => f(n(f(x)))\}\}\}} 
+      \\
+      \textbf{n3} 
+      &\ \ =\ \ & 
+      \textbf{s}\J{(}\textbf{s}\J{(}\textbf{s}\J{(}\textbf{z}\J{)}\J{)}\J{)} 
+    \end{array}
   \end{array}
   \]
 \end{definition}
 
-\begin{definition} Experimental Expressions  
-  \label{def:experimental_expressions}
-  \[
-  \begin{array}[t]{r@{}c@{}l}
-    \textbf{z} 
-    &\ \ =\ \ & 
-    \J{\{f => \{x => x\}\}} 
-    \\
-    \textbf{s} 
-    &\ \ =\ \ & 
-    \J{\{n => \{f => \{x => f(n(f(x)))\}\}\}} 
-    \\
-    \textbf{n3} 
-    &\ \ =\ \ & 
-    \textbf{s}\J{(}\textbf{s}\J{(}\textbf{s}\J{(}\textbf{z}\J{)}\J{)}\J{)} 
-  \end{array}
-  \]
-\end{definition} 
-
 \begin{definition} Experimental Typing Context  
   \label{def:experimental_typing_context}
+  \scriptsize
   \[
-  \begin{array}[t]{r@{}c@{}l}
-    \textbf{context} & = &  \hfill
-    \\
-    \J{head} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> T}
-    \\
-    \J{tail} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
-    \\
-    \J{nil} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})
-    \\
-    \J{single} &\J{ : }& \J{ALL[T] T -> }\textbf{List}(\J{T})
-    \\
-    \J{append} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T})
-    \\
-    \J{length} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{Nat}
-    \\
-    \J{const} &\J{ : }& \J{ALL[T U] T -> U -> T}
-    \\
-    \J{id} &\J{ : }& \J{ALL[T] T -> T}
-    \\
-    \J{ids} &\J{ : }& \textbf{List}(\J{ALL[T] T -> T}\J{)}
-    \\
-    \J{inc} &\J{ : }& \textbf{Nat}\J{ -> }\textbf{Nat}
-    \\
-    \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
-    \\
-    \J{poly} &\J{ : }& \J{(ALL[T] T -> T) -> } \textbf{Nat}\J{*}\textbf{Bool}
-    \\
-    \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
-    \\
-    \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
-    \\
-    \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
-    \\
-    \J{map} &\J{ : }& \J{ALL[T U] (T -> U) -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{U})
-    \\
-    \J{app} &\J{ : }& \J{ALL[T U] (T -> U) -> T -> U}
-    \\
-    \J{revapp} &\J{ : }& \J{ALL[T U] T -> (T -> U) -> U}
-    \\
-    \J{runST} &\J{ : }& \J{ALL[T] (ALL[U] } \textbf{ST}(\J{U}, \J{T})\J{) -> T}
-    \\
-    \J{argST} &\J{ : }& \J{ALL[U] } \textbf{ST}(\J{U}, \textbf{Nat})
-    \\
-    \J{zero} &\J{ : }& \textbf{ChurchNum}
-    \\
-    \J{succ} &\J{ : }& \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum}
+  \begin{array}[t]{ll}
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{context} & = &  \hfill
+      \\
+      \J{head} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> T}
+      \\
+      \J{tail} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
+      \\
+      \J{nil} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})
+      \\
+      \J{single} &\J{ : }& \J{ALL[T] T -> }\textbf{List}(\J{T})
+      \\
+      \J{append} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T})
+      \\
+      \J{length} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{Nat}
+      \\
+      \J{const} &\J{ : }& \J{ALL[T U] T -> U -> T}
+      \\
+      \J{id} &\J{ : }& \J{ALL[T] T -> T}
+      \\
+      \J{ids} &\J{ : }& \textbf{List}(\J{ALL[T] T -> T}\J{)}
+      \\
+      \J{inc} &\J{ : }& \textbf{Nat}\J{ -> }\textbf{Nat}
+      \\
+      \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
+    \end{array}
+    &
+    \begin{array}[t]{r@{}c@{}l}
+      \\
+      \J{poly} &\J{ : }& \J{(ALL[T] T -> T) -> } \textbf{Nat}\J{*}\textbf{Bool}
+      \\
+      \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
+      \\
+      \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
+      \\
+      \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
+      \\
+      \J{map} &\J{ : }& \J{ALL[T U] (T -> U) -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{U})
+      \\
+      \J{app} &\J{ : }& \J{ALL[T U] (T -> U) -> T -> U}
+      \\
+      \J{revapp} &\J{ : }& \J{ALL[T U] T -> (T -> U) -> U}
+      \\
+      \J{runST} &\J{ : }& \J{ALL[T] (ALL[U] } \textbf{ST}(\J{U}, \J{T})\J{) -> T}
+      \\
+      \J{argST} &\J{ : }& \J{ALL[U] } \textbf{ST}(\J{U}, \textbf{Nat})
+      \\
+      \J{zero} &\J{ : }& \textbf{ChurchNum}
+      \\
+      \J{succ} &\J{ : }& \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum}
+    \end{array}
   \end{array}
   \]
+
 \end{definition}
 
 
@@ -2606,6 +2637,7 @@ rely on analogous techniques.
   \label{def:function_type_explosion}
   Function Type Explosion 
   \hfill 
+  \small
   \boxed{\Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi}
   \\
   \begin{mathpar}
@@ -2644,6 +2676,7 @@ rely on analogous techniques.
   \label{def:path_sequence_typing}
   Path Sequence Typing 
   \hfill
+  \small
   \boxed{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
   \\
   \begin{mathpar}
@@ -2759,6 +2792,7 @@ at least one of the pair type schemas.
   \label{def:schema_sequence_duality}
   Schema Sequence Duality 
   \hfill
+  \small
   \boxed{\alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu}
   \\
   \begin{mathpar}
@@ -2851,6 +2885,7 @@ at least one type $\tau_\mu$ constrained by the environment's pair type lower bo
   \label{def:subtyping_environment_duality}
   Subtyping Environment Duality
   \hfill
+  \small
   \boxed{\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu}
   \\
   \begin{mathpar}
@@ -2970,6 +3005,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{def:type_interpretation}
   Type Interpretation 
   \hfill
+  \small
   \boxed{
     \llbracket \Theta, \Delta \entails \tau \rrbracket^\pm = \tau'
   }
@@ -3060,6 +3096,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{def:qualification_interpretation}
   Qualification Interpretation 
   \hfill
+  \small
   \boxed{
     \llbracket \Theta, \Delta \entails \Delta_q \rrbracket^\pm = \Delta_q'
   }
@@ -3170,6 +3207,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{def:variable_interpretation}
   Variable Interpretation
   \hfill
+  \small
   \boxed{
     \llbracket\Delta \star \alpha \rrbracket^\pm = \tau
   }
@@ -3228,6 +3266,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{def:type_packing}
   Type Packing 
   \hfill
+  \small
   \boxed{\textbf{pack}^\pm(\dTheta \entails \Theta, \Delta, \tau) = \tau'} 
   \\
   \[
@@ -3300,6 +3339,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{def:polar_subtyping_environment_substitution}
   Polar Subtyping Environment Substitution 
   \hfill
+  \small
   \boxed{\Delta[\alpha\slash\tau]^\pm = \Delta}\ 
   \\
   \begin{mathpar}
@@ -3310,6 +3350,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
   Subtyping Environment Filter 
   \hfill
+  \small
   \boxed{\Theta \entails \Delta \dashrightarrow \Delta'}
   \\
   \begin{mathpar}
@@ -3341,6 +3382,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
    Schema Sequence Compaction
   \hfill
+  \small
   \boxed{\dTheta \entails \Pi \searrow \Pi'}
   \\
   \begin{mathpar}
@@ -3366,6 +3408,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
   Outer
   \hfill
+  \small
   \boxed{\text{outer}(\pm) = \J{ALL}|\J{EXI}}
   \\
   \[\begin{array}[t]{r@{}c@{}lcl}
@@ -3385,6 +3428,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
   Inner
   \hfill
+  \small
   \boxed{\text{inner}(\pm) = \J{ALL}|\J{EXI}}
   \\
   \[\begin{array}[t]{r@{}c@{}lcl}
@@ -3404,6 +3448,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
   Wrap
   \hfill
+  \small
   \boxed{\text{wrap}^{\pm}(\Theta, \Delta, \Theta, \Delta, \tau) = \tau}
   \\
   \[
@@ -3432,6 +3477,7 @@ The interested reader can find the actual the definition of packing in the appen
 \begin{definition}
   Partition
   \hfill
+  \small
   \boxed{\Theta_\ignore , \Theta \entails \Delta \rightrightarrows \Delta_o , \Delta_i}
   \\
   \begin{mathpar}
@@ -3468,6 +3514,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:record_extension_preservation}
   Record Extension Preservation 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies r \hastype \tau
@@ -3484,6 +3531,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:entry_type_introduction}
   Entry Type Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \tau
@@ -3500,6 +3548,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_entry_elimination}
   Model Typing Entry Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \J{<}l\J{>} \tau
@@ -3514,6 +3563,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:entry_type_preservation}
   Entry Type Preservation 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_l \subtypes \tau_r
@@ -3528,6 +3578,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_union_type_path_antecedent}
   Model Subtyping Union Type Path Antecedent 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -3544,6 +3595,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_intersection_type_path_consequent}
   Model Subtyping Intersection Type Path Consequent 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -3560,6 +3612,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_intersection_type_entry_consequent}
   Model Subtyping Intersection Type Entry Consequent 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -3576,6 +3629,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_transitivity}
   Model Subtyping Transitivity 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau \subtypes \tau'
@@ -3592,6 +3646,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_path_elimination}
   Model Typing Path Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e_f \hastype \tau \J{->} \tau'
@@ -3608,6 +3663,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:path_type_preservation}
   Path Type Preservation 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_x \subtypes \tau_p
@@ -3624,6 +3680,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:annotated_binding_introduction}
   Annotated Binding Introduction  
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \tau
@@ -3640,6 +3697,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_sequence_introduction}
   Model Subtyping Sequence Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \Delta
@@ -3656,6 +3714,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_sequence_elimination}
   Model Subtyping Sequence Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \Delta'
@@ -3672,6 +3731,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_sequence_interpretation_independence}
   Model Subtyping Sequence Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
@@ -3689,6 +3749,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_interpretation_independence}
   Model Typing Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \emptyset
@@ -3705,6 +3766,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:subtyping_interpretation_independence}
   Subtyping Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta') \cap \textbf{ftv}(\tau) = \emptyset
@@ -3723,6 +3785,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:subtyping_interpretation_reordering}
   Subtyping Interpretation Reordering 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta_1) \cap \textbf{dom}(\delta_2) = \emptyset
@@ -3739,6 +3802,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:submodel_typing_sequence_interpretation_reordering}
   Subtyping Environment Interpretation Reordering 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta_1) \cap \textbf{dom}(\delta_2) = \emptyset
@@ -3755,6 +3819,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_sequence_interpretation_independence}
   Subtyping Environment Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset
@@ -3771,6 +3836,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_sequence_interpretation_independence}
   Model Typing Sequence Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta') \cap \textbf{ftv}(\Gamma) = \emptyset
@@ -3787,6 +3853,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:domain_extension}
   Domain Extension 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{dom}(\delta_l) = \Theta_l  
@@ -3803,6 +3870,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_subsumption}
   Subsumption 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau \subtypes \tau'
@@ -3819,6 +3887,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_union_type_elimination}
   Model Subtyping Union Type Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_l \subtypes \tau
@@ -3835,6 +3904,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_indexed_union_type_elimination}
   Model Subtyping Indexed Union Type Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       (
@@ -3856,6 +3926,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_intersection_type_introduction}
   Model Subtyping Union Type Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau \subtypes \tau_l
@@ -3872,6 +3943,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_indexed_intersection_type_introduction}
   Model Subtyping Indexed Intersection Type Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       (
@@ -3893,6 +3965,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:least_fixed_point_type_elimination}
   Least Fixed Point Type Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau
@@ -3907,6 +3980,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_induction}
   Model Subtyping Induction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       (
@@ -3927,6 +4001,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:left_congruence}
   Left Congruence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -3940,6 +4015,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:right_congruence}
   Right Congruence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -3954,6 +4030,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_path_elimination_loop}
   Path Type Elimination Loop 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies e \hastype \alpha \J{->} \tau
@@ -3969,6 +4046,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:path_type_introduction}
   Path Type Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \forall e_a \qua
@@ -3987,6 +4065,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_difference_introduction}
   Model Subtyping Difference Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_0 \subtypes \tau_1 \J{|} \tau_2
@@ -4001,6 +4080,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_union_right_introduction}
   Model Subtyping Union Right Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4014,6 +4094,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_union_left_introduction}
   Model Subtyping Union Left Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4027,6 +4108,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_intersection_left_elimination}
   Model Subtyping Intersection Left Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4040,6 +4122,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_intersection_right_elimination}
   Model Subtyping Intersection Right Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4053,6 +4136,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_typing_union_reorder}
   Model Typing Union Reorder 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4068,6 +4152,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_difference_elimination}
   Model Subtyping Difference Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_0 \subtypes \tau_1
@@ -4085,6 +4170,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_indexed_union_introduction}
   Model Subtyping Indexed Union Introduction 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_l \subtypes \tau_r
@@ -4102,6 +4188,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:model_subtyping_indexed_intersection_elimination}
   Model Subtyping Indexed Intersection Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau_l \subtypes \tau_r
@@ -4124,6 +4211,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:type_substitution_correspondence}
   Type Substitution Correspondence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
     } {
@@ -4139,6 +4227,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_typing_containment}
   Proof Typing Containment 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
@@ -4157,6 +4246,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_containment}
   Proof Subtyping Containment 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
@@ -4176,6 +4266,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_environment_containment}
   Proof Subtyping Environment Containment 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
@@ -4193,6 +4284,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_typing_skolem_freshness}
   Proof Typing Skolem Freshness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
@@ -4207,6 +4299,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_skolem_freshness}
   Proof Subtyping Skolem Freshness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
@@ -4221,6 +4314,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_sequence_skolem_freshness}
   Proof Subtyping Sequence Skolem Freshness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
@@ -4236,6 +4330,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:function_type_explosion_soundness}
   Function Type Explosion Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
@@ -4261,6 +4356,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:function_type_explosion_skolem_freshness}
   Function Type Explosion Skolem Freshness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
@@ -4280,6 +4376,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:path_sequence_typing_soundness}
   Path Sequence Typing Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
@@ -4309,6 +4406,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:function_lifting_skolem_freshness}
   Function Lifting Skolem Freshness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
@@ -4330,6 +4428,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:schema_sequence_duality_correspondence}
   Schema Sequence Duality Correspondence
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
@@ -4377,6 +4476,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:packing_correspondence}
   Packing Correspondence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \textbf{pack}^+(\dTheta \entails \Pi) = \tau 
@@ -4437,6 +4537,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:subtyping_factorization_correspondence}
   Subtyping Factorization Correspondence 
   \\
+  \small
   \begin{mathpar}
     % \inferrule {
     %   \factorsinto \tau \subtypes \J{<}l\J{>} \tau'
@@ -4460,6 +4561,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_sequence_soundness}
   Proof Subtyping Sequence Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \Delta_q \given \Theta', \Delta'
@@ -4478,6 +4580,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_decidable_subtyping_sequence_uniqueness}
   Proof Decidable Subtyping Sequence Uniqueness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
@@ -4494,6 +4597,7 @@ The interested reader can find the actual the definition of packing in the appen
   Proof Decidable Subtyping Sequence Completeness  
   \label{thm:proof_decidable_subtyping_sequence_completeness}
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
@@ -4514,6 +4618,7 @@ The interested reader can find the actual the definition of packing in the appen
   Proof Decidable Subtyping Solution Completeness  
   \label{thm:proof_decidable_subtyping_solution_completeness}
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
@@ -4533,6 +4638,7 @@ The interested reader can find the actual the definition of packing in the appen
   Proof Decidable Subtyping Existential Completeness
   \label{thm:proof_decidable_subtyping_strong_existential_completeness}
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \tau \subtypes \eta
@@ -4550,6 +4656,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_interpretation_independence}
   Proof Subtyping Interpretation Independence 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
@@ -4572,6 +4679,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_typig_annotation_soundness}
   Proof Typing Annotation Soudness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
@@ -4587,6 +4695,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_typing_substance}
   Proof Typing Substance 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta'
@@ -4605,6 +4714,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_substance}
   Proof Subtyping Substance 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
@@ -4625,6 +4735,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:polar_substitution_consistency}
   Polar Substitution Consistency 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \delta \satisfies \Delta[\alpha \slash \tau]^+ 
@@ -4651,6 +4762,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:type_substitution_positive_elimination}
   Type Substitution (Positive) Elimination 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \tau_l[\alpha \slash \tau_r]^+ = \tau^\dagger
@@ -4674,6 +4786,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_skolem_variable_elimination_soundness}
   Proof Subtyping Skolem Variable Elimination Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \alpha \J{<:} \tau \safe
@@ -4687,6 +4800,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_subtyping_soundness}
   Proof Subtyping Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
@@ -5828,6 +5942,7 @@ The interested reader can find the actual the definition of packing in the appen
   \label{thm:proof_typing_soundness}
   Proof Typing Soundness 
   \\
+  \small
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
