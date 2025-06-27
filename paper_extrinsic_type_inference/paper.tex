@@ -41,6 +41,8 @@
 \newtheorem{property}{Property}[section]
 % \newtheorem{proof}{Proof}[section]
 
+\newtheorem{experiment}{Experiment}[section]
+
 
 \title{Extrinsic Type Inference (DRAFT 2025-05-25)}
 \author{Thomas Logan}
@@ -2471,6 +2473,116 @@ rely on analogous techniques.
 
 \section{Experiments}
 \label{sec:experiments}
+
+\begin{definition} Experimental Types  
+  \label{def:experimental_types}
+  \[
+  \begin{array}[t]{r@{}c@{}l}
+    \textbf{Bool} 
+    &\ \ =\ \ & 
+    \J{(true;@ | false;@)} 
+    \\
+    \textbf{Nat} 
+    &\ \ =\ \ & 
+    \J{(LFP[R] zero;@ | succ;R)} 
+    \\
+    \textbf{List}(\alpha) 
+    &\ \ =\ \ & 
+    \J{(LFP[R] nil;@ | cons;((}\alpha\J{)*R))} 
+    \\
+    \textbf{ChurchNum} 
+    &\ \ =\ \ & 
+    \J{(ALL[T] (T -> T) -> T -> T)}
+    \\
+    \textbf{ST}(\alpha^\dagger, \alpha) 
+    &\ \ =\ \ & 
+    \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
+  \end{array}
+  \]
+\end{definition}
+
+\begin{definition} Experimental Expressions  
+  \label{def:experimental_expressions}
+  \[
+  \begin{array}[t]{r@{}c@{}l}
+    \textbf{z} 
+    &\ \ =\ \ & 
+    \J{\{f => \{x => x\}\}} 
+    \\
+    \textbf{s} 
+    &\ \ =\ \ & 
+    \J{\{n => \{f => \{x => x\}\}\}} 
+    \\
+    \textbf{n3} 
+    &\ \ =\ \ & 
+    \textbf{s}\J{(}\textbf{s}\J{(}\textbf{s}\J{(}\textbf{z}\J{)}\J{)}\J{)} 
+  \end{array}
+  \]
+\end{definition} 
+
+\begin{definition} Experimental Typing Context  
+  \label{def:experimental_typing_context}
+  \[
+  \begin{array}[t]{r@{}c@{}l}
+    \textbf{context} & = &  \hfill
+    \\
+    \J{head} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> T}
+    \\
+    \J{tail} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
+    \\
+    \J{nil} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})
+    \\
+    \J{single} &\J{ : }& \J{ALL[T] T -> }\textbf{List}(\J{T})
+    \\
+    \J{append} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T})
+    \\
+    \J{length} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{Nat}
+    \\
+    \J{const} &\J{ : }& \J{ALL[T U] T -> U -> T}
+    \\
+    \J{id} &\J{ : }& \J{ALL[T] T -> T}
+    \\
+    \J{ids} &\J{ : }& \textbf{List}(\J{ALL[T] T -> T}\J{)}
+    \\
+    \J{inc} &\J{ : }& \textbf{Nat}\J{ -> }\textbf{Nat}
+    \\
+    \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
+    \\
+    \J{poly} &\J{ : }& \J{(ALL[T] T -> T) -> } \textbf{Nat}\J{*}\textbf{Bool}
+    \\
+    \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
+    \\
+    \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
+    \\
+    \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
+    \\
+    \J{map} &\J{ : }& \J{ALL[T U] (T -> U) -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{U})
+    \\
+    \J{app} &\J{ : }& \J{ALL[T U] (T -> U) -> T -> U}
+    \\
+    \J{revapp} &\J{ : }& \J{ALL[T U] T -> (T -> U) -> U}
+    \\
+    \J{runST} &\J{ : }& \J{ALL[T] (ALL[U] } \textbf{ST}(\J{U}, \J{T})\J{) -> T}
+    \\
+    \J{argST} &\J{ : }& \J{ALL[U] } \textbf{ST}(\J{U}, \textbf{Nat})
+    \\
+    \J{zero} &\J{ : }& \textbf{ChurchNum}
+    \\
+    \J{succ} &\J{ : }& \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum}
+  \end{array}
+  \]
+\end{definition}
+
+
+% \begin{center}
+% \begin{tabular}{ c c c }
+%  cell1 & cell2 & cell3 \\ 
+%  cell4 & cell5 & cell6 \\  
+%  cell7 & cell8 & cell9    
+% \end{tabular}
+% \end{center}
+
+
 
 \TODO{describe implementation}
 
