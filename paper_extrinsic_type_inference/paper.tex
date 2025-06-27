@@ -62,6 +62,8 @@
 \newcommand{\safe}{\ \checkmark}
 \newcommand{\relational}{\ \Re}
 
+\newcommand{\pass}{$\top$}
+\newcommand{\fail}{$\bot$}
 
 \newcommand{\unique}{\ \dagger}
 
@@ -2573,6 +2575,8 @@ rely on analogous techniques.
       \J{inc} &\J{ : }& \textbf{Nat}\J{ -> }\textbf{Nat}
       \\
       \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
+      \\
+      \J{foo} &\J{ : }& \J{ALL[T] (T -> T) -> } \textbf{List}(\J{T}) \J{ -> T}
     \end{array}
     &
     \begin{array}[t]{r@{}c@{}l}
@@ -2605,13 +2609,75 @@ rely on analogous techniques.
 \end{definition}
 
 
-% \begin{center}
-% \begin{tabular}{ c c c }
-%  cell1 & cell2 & cell3 \\ 
-%  cell4 & cell5 & cell6 \\  
-%  cell7 & cell8 & cell9    
-% \end{tabular}
-% \end{center}
+
+\begin{experiment}
+  \label{experi:typability_comparison_polymorphic_instantiation}
+  Typability Comparison (Polymorphic Instantiation) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lc||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{\{x => \{y => y\}\}} 
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{choose(id)} 
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{choose(nil)(id)} 
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{\{x => x(x)\}} 
+    & \pass & \pass & \pass \\
+    \hline
+    5. &
+    \J{id(auto)} 
+    & \pass & \pass & \pass \\
+    \hline
+    6. &
+    \J{id(auto')} 
+    & \pass & \pass & \pass \\
+    \hline
+    7. &
+    \J{choose(id)(auto)} 
+    & \pass & \pass & \pass \\
+    \hline
+    8. &
+    \J{choose(id)(auto')} 
+    & \pass & \pass & \pass \\
+    \hline
+    9. &
+    \J{foo(choose(ids))(ids)} 
+    & \pass & \pass & \pass \\
+    \hline
+    10. &
+    \J{poly(id)} 
+    & \pass & \pass & \pass \\
+    \hline
+    11. &
+    \J{poly(\{x => x\})} 
+    & \pass & \pass & \pass \\
+    \hline
+    12. &
+    \J{id(poly)(\{x => x\})} 
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
 
 
 
