@@ -14,6 +14,7 @@
 \usepackage[scaled]{beramono}
 \usepackage[T1]{fontenc}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{array}
 
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
@@ -2576,16 +2577,14 @@ rely on analogous techniques.
       \\
       \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
       \\
-      \J{foo} &\J{ : }& \J{ALL[T] (T -> T) -> } \textbf{List}(\J{T}) \J{ -> T}
-    \end{array}
-    &
-    \begin{array}[t]{r@{}c@{}l}
-      \\
       \J{poly} &\J{ : }& \J{(ALL[T] T -> T) -> } \textbf{Nat}\J{*}\textbf{Bool}
       \\
       \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
       \\
       \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
+    \end{array}
+    &
+    \begin{array}[t]{r@{}c@{}l}
       \\
       \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
       \\
@@ -2602,6 +2601,18 @@ rely on analogous techniques.
       \J{zero} &\J{ : }& \textbf{ChurchNum}
       \\
       \J{succ} &\J{ : }& \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum}
+      \\
+      \J{foo} &\J{ : }& \J{ALL[T] (T -> T) -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{g} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{k} &\J{ : }& \J{ALL[T] T -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{h} &\J{ : }& \textbf{Nat} \J{-> ALL[T] T -> T}
+      \\
+      \J{l} &\J{ : }& \textbf{List}(\J{ALL[T] } \textbf{Nat} \J{ -> T -> T}\J{)}
+      \\
+      \J{r} &\J{ : }& \J{(ALL[T] T -> ALL[U] B -> B) -> }\textbf{Nat}
     \end{array}
   \end{array}
   \]
@@ -2615,11 +2626,14 @@ rely on analogous techniques.
   Typability Comparison (Polymorphic Instantiation) 
   \\
   \begin{center}
+
+  \TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
+
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lc||c||c|c|} 
+  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
     \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
     \hline
@@ -2673,6 +2687,310 @@ rely on analogous techniques.
     \hline
     12. &
     \J{id(poly)(\{x => x\})} 
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_polymorphic_generalization}
+  Typability Comparison (Polymorphic Generalization) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{\{f => f(succ;zero;@), f(true;@)\}}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{\{xs => poly(head(xs))\}}
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_polymorphic_list}
+  Typability Comparison (Polymorphic Lists) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{length(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{tail(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{head(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{single(id)}
+    & \pass & \pass & \pass \\
+    \hline
+    5. &
+    \J{cons(id)(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    6. &
+    \J{cons(\{x => x\})(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    7. &
+    \J{append(single(inc))(single(id))}
+    & \pass & \pass & \pass \\
+    \hline
+    8. &
+    \J{g(single(id))(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    9. &
+    \J{map(poly)(single(id))}
+    & \pass & \pass & \pass \\
+    \hline
+    10. &
+    \J{map(head)(single(ids))}
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_meta_application}
+  Typability Comparison (Meta-application) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{app(poly)(id)}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{revapp(id)(poly)}
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{runST(argST)}
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{app(runST)(argST)}
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{revapp(argST)(runST)}
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_eta_expansion}
+  Typability Comparison (Eta Expansion) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{k(h)(l)}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{k(\{x => h(x)\})(l)}
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{r(\{x => \{y => y\}\})}
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_misc_freezeml}
+  Typability Comparison (Misc from FreezeML Paper) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{auto(id)}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{cons(head(ids))(ids)}
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{head(ids)(succ;succ;succ;zero;@)}
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{choose(head(ids))}
+    & \pass & \pass & \pass \\
+    \hline
+    5. &
+    \J{let f = revapp(id) in f(poly)}
+    & \pass & \pass & \pass \\
+    \hline
+    6. &
+    \J{choose(id)(\{x => auto'(x)\})}
+    & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:typability_comparison_misc_superf}
+  Typability Comparison (Misc from SuperF Paper) 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \J{let ignore : } \textbf{ChurchNum} \J{ = z in @}
+    & \pass & \pass & \pass \\
+    \hline
+    2. &
+    \J{s}
+    & \pass & \pass & \pass \\
+    \hline
+    3. &
+    \J{let ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
+    & \pass & \pass & \pass \\
+    \hline
+    4. &
+    \J{let ignore : } \textbf{ChurchNum} \J{ = n3 in @}
+    & \pass & \pass & \pass \\
+    \hline
+    5. &
+    \J{let ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = \{@ => n3(n3)\} in @}
+    & \pass & \pass & \pass \\
+    \hline
+    6. &
+    \J{fst(fst(fst(n3(\{x => x,(zero;@)\})(succ;zero;@))))}
+    & \pass & \pass & \pass \\
+    \hline
+    7. &
+    \J{(s(s(z)))(s(s(z)))}
+    & \pass & \pass & \pass \\
+    \hline
+    8. &
+    \begin{array}[t]{l}
+      \J{let to\_church = loop(\{self => } 
+      \\
+      \I \J{\{zero;@ => z\}}
+      \\
+      \I \J{\{succ;n => s(self(n))\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \pass & \pass \\
+    \hline
+    9. &
+    \J{let ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
+    & \pass & \pass & \pass \\
+    \hline
+    10. &
+    \J{loop(\{self => \{x => if true;@ then x else self(self)(x)\}\}} 
+    & \fail & \fail & \fail \\
+    \hline
+    11. &
+    \J{\{x => x(x)\}(\{x => x(x)\})}
+    & \pass & \pass & \pass \\
+    \hline
+    12. &
+    \J{auto(auto'(id))}
+    & \pass & \pass & \pass \\
+    \hline
+    13. &
+    \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
+    & \pass & \pass & \pass \\
+    \hline
+    14. &
+    \begin{array}[t]{l}
+      \J{\{f => } 
+      \\
+      \I \J{let a = \{@ => f(id)\} in }
+      \\
+      \I \J{let y : } \textbf{Nat} \J{ -> (ALL[T] T -> T) = a(@) in }
+      \\
+      \I \J{y}
+      \\
+      \J{\}(const(const(id)))}
+    \end{array}
     & \pass & \pass & \pass \\
     \hline
   \end{tabular}
