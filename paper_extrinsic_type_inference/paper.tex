@@ -2525,19 +2525,19 @@ However, the distinction is useful for comparing our design to previous work.
     \begin{array}[t]{r@{}c@{}l}
       \textbf{Bool} 
       &\ \ =\ \ & 
-      \J{(true;@ | false;@)} 
+      \J{(<true>@ | <false>@)} 
       \\
       \textbf{Nat} 
       &\ \ =\ \ & 
-      \J{(LFP[R] zero;@ | succ;R)} 
+      \J{(LFP[R] <zero>@ | <succ>R)} 
       \\
       \textbf{Even} 
       &\ \ =\ \ & 
-      \J{(LFP[R] zero;@ | succ;succ;R)} 
+      \J{(LFP[R] <zero>@ | <succ><succ>R)} 
       \\
       \textbf{List}(\alpha) 
       &\ \ =\ \ & 
-      \J{(LFP[R] nil;@ | cons;((}\alpha\J{)*R))} 
+      \J{(LFP[R] <nil>@ | <cons>((}\alpha\J{)*R))} 
       \\
       \textbf{ChurchNum} 
       &\ \ =\ \ & 
@@ -2938,17 +2938,17 @@ However, the distinction is useful for comparing our design to previous work.
     \hline\hline
     1. &
     \begin{array}[t]{l}
-      \J{let bool = } 
+      \J{let bool = (} 
       \\
       \I \J{\{nil;@ => false;@\}}
       \\
-      \I \J{\{succ;n => true;@\}}
+      \I \J{\{cons;(x,xs) => true;@\}}
       \\
       \I \J{\{zero;@ => false;@\}}
       \\
-      \I \J{\{cons;(x,xs) => true;@\}}
+      \I \J{\{succ;n => true;@\}}
       \\
-      \J{\}) in ...}
+      \J{) in ...}
     \end{array}
     & \pass & \pass \\
     \hline

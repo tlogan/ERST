@@ -49,6 +49,9 @@ context_map = {
 "h" : f"{Nat} -> ALL[A] A -> A",
 "l" : List_(f"ALL[A] {Nat} -> A -> A"),
 "r" : f"(ALL[A] A -> ALL[B] B -> B) -> {Nat}",
+"sort" : f"(ALL[A] (A * A -> {Bool}) -> {List_('A')} -> {List_('A')})",
+"scalarCmp" : f"{Nat} * {Nat} -> {Bool}",
+"lexicoCmp" : f"{List_(Nat)} * {List_(Nat)} -> {Bool}",
 }
 
 
@@ -98,7 +101,54 @@ single = (f"""
     case x => (cons;(x, <nil> @)) 
 """.strip())
 
-append = (f"""
+double = (f"""
+fix({{ self => 
+    {{ zero;@ => zero;@ }}
+    {{ succ;n => succ;succ;(self(n)) }}
+}})
+""".strip())
+
+halve = (f"""
+fix({{ self => 
+    {{ zero;@ => zero;@ }}
+    {{ succ;succ;n => succ;(self(n)) }}
+}})
+""".strip())
+
+
+both = (f"""
+(
+{{ (true;@),(true;@) => true;@  }}
+{{ (false;@),(true;@) => false;@  }}
+{{ (false;@),(false;@) => false;@  }}
+{{ (true;@),(false;@) => false;@  }}
+)
+""".strip())
+
+isNat = (f"""
+fix({{ self => 
+    {{ zero;@ => true;@ }}
+    {{ succ;n => self(n) }}
+    {{ ignore => false;@ }}
+}})
+""".strip())
+
+isNatList = (f"""
+fix({{ self => 
+    {{ nil;@ => true;@ }}
+    {{ cons;(n, xs) => both(({isNat}(n)), self(xs)) }}
+    {{ ignore => false;@ }}
+}})
+""".strip())
+
+stdCmp = (f"""
+({{a,b =>
+    if both(({isNat})(a), ({isNat})(b)) then
+        scalarCmp(a,b)
+    else (both(({isNatList})(a), ({isNatList})(b))) |> ({{true;@ =>
+        lexicoCmp(a,b)
+    }})
+}})
 """.strip())
 
 ############################################################

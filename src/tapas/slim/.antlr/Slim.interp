@@ -27,7 +27,7 @@ null
 'else'
 'let'
 'in'
-'fix'
+'loop'
 ';'
 '{'
 '=>'

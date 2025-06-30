@@ -451,12 +451,12 @@ c
 def test_typing_G9():
     #TODO: fail
     code = (f"""
-fix({{ loop =>
+loop({{ self =>
     {{ x =>
         if <true> @ then
             x
         else 
-            loop(loop)(x)
+            self(self)(x)
     }}
 }})
     """)
@@ -555,6 +555,58 @@ let foo = {{f =>
 #     assert solve_subtyping(lower, upper)
 
 ###############################################################
+##### Structural Typing 
+###############################################################
+def test_typing_structures_1():
+    code = (f"""
+(
+{{ nil;@ => false;@}}
+{{ zero;@ => false;@}}
+{{ succ;n => true;@}}
+{{ cons;(x,xs) => true;@}}
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+# def test_typing_structures_debug():
+
+#     lower = (f"""
+#     """)
+
+#     upper = (f"""
+#     """)
+
+#     assert solve_subtyping(lower, upper)
+
+
+def test_typing_structures_2():
+    # double
+    code = (f"""
+let double : (
+   {tl.Nat} -> {tl.Even} 
+) = loop({{self => (
+    {{ (zero;@) => zero;@ }}
+    {{ (succ;n) => succ;succ;((self)(n)) }}
+)}}) in double)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_structures_3():
+    # halve 
+    code = (f"""
+let halve : (
+    {tl.Even} -> {tl.Nat} 
+) = loop({{self => (
+    {{ (zero;@) => zero;@ }}
+    {{ (succ;succ;n) => succ;((self)(n)) }}
+)}}) in halve)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+###############################################################
 ###############################################################
 
 if __name__ == '__main__':
@@ -562,5 +614,6 @@ if __name__ == '__main__':
     # SCRATCH WORK
     # test_typing_A9()
     # test_max()
+    test_typing_structures_3()
 
 #######################################################################

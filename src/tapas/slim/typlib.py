@@ -16,17 +16,24 @@ Bool = (f"""
 """.strip())
 
 Nat = (f"""
-(LFP[Self] BOT
+(LFP[R] BOT
 | (<zero> @) 
-| (<succ> Self)
+| (<succ> R)
+)
+""".strip())
+
+Even = (f"""
+(LFP[R] BOT
+| (<zero> @) 
+| (<succ> <succ> R)
 )
 """.strip())
 
 def List_(T): 
     return (f"""
-(LFP[Self] BOT
+(LFP[R] BOT
 | (<nil> @) 
-| (<cons> (({T}) * Self))
+| (<cons> (({T}) * R))
 )
     """.strip())
 

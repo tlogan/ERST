@@ -375,7 +375,7 @@ $results = [
 ]
 }
 
-| 'fix' '(' body = expr[contexts] ')' {
+| 'loop' '(' body = expr[contexts] ')' {
 $results = [
     ExprRule(self._solver).combine_fix(
         pid,

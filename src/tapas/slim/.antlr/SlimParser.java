@@ -53,7 +53,7 @@ public class SlimParser extends Parser {
 			null, "'alias'", "'='", "'TOP'", "'BOT'", "'@'", "'<'", "'>'", "'('", 
 			"')'", "'|'", "'&'", "'->'", "'*'", "'EXI'", "'['", "']'", "'ALL'", "'LFP'", 
 			"'\\'", "':'", "'<:'", "','", "'if'", "'then'", "'else'", "'let'", "'in'", 
-			"'fix'", "';'", "'{'", "'=>'", "'}'", "'.'", "'|>'"
+			"'loop'", "';'", "'{'", "'=>'", "'}'", "'.'", "'|>'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
