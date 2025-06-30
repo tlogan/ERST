@@ -15,6 +15,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{array}
+\usepackage{wasysym}
 
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
@@ -63,8 +64,8 @@
 \newcommand{\safe}{\ \checkmark}
 \newcommand{\relational}{\ \Re}
 
-\newcommand{\pass}{$\top$}
-\newcommand{\fail}{$\bot$}
+\newcommand{\pass}{$\CIRCLE$}
+\newcommand{\fail}{$\Circle$}
 
 \newcommand{\unique}{\ \dagger}
 
@@ -138,6 +139,13 @@
 
 \section{Introduction}
 \label{sec:introduction}
+
+\TODO{note the use case of analyzing code that someone else wrote}
+
+\TODO{extrinsic is necessary, because you can't easily modify the code to contain intrinsically typed constructors}
+
+\TODO{MLStruct/MLScript are closely related, but still rely on intrinsic types}
+
 
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit the space of correctness.
@@ -521,7 +529,7 @@ datatype (in ML) or class hierarchy (in Java).
 Having many different specializations burdens the client of
 the generic function to know many different names for roughly the same behavior and can obscure the meaning
 of code at the call site. 
-Untyped languages can bypass this rigidity found in extrinsically typed by specializing in multiple ways.
+Untyped languages or extrinsically typed languages can bypass this rigidity found in intrinsically typed by specializing in multiple ways.
 
 \[
   \begin{array}[t]{@{} l}
@@ -1529,7 +1537,7 @@ used in the binding syntax respect the type annotations.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
+      \Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi_\nu
       \\\\
       \alpha_\nu \downarrow \Pi_\nu
       \fallingdotseq 
@@ -1602,7 +1610,7 @@ First, it ensures that argument of the fixed point combinator $e$ is indeed a
 function that returns a function.
 The rule infers its type $(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$
 and then rewrites it as a single path containing multiple path schemas $(
-  \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
+  \Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi_\nu
 )$
 . 
 Then, by leveraging subtyping $(... \entails \tau \subtypes \alpha_l \J{->} \alpha_r \given ...)$, 
@@ -2503,6 +2511,12 @@ rely on analogous techniques.
 \section{Experiments}
 \label{sec:experiments}
 
+We performed experiments for two broad categories of type inference capabilities: parametric and structural. 
+These two categories have historically been tackled independently of each other, where parametric types
+tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
+Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
+However, the distinction is useful for comparing our design to previous work. 
+
 \begin{definition} Experimental Expressions and Types  
   \label{def:experimental_expressions_and_types}
   \scriptsize
@@ -2517,6 +2531,10 @@ rely on analogous techniques.
       &\ \ =\ \ & 
       \J{(LFP[R] zero;@ | succ;R)} 
       \\
+      \textbf{Even} 
+      &\ \ =\ \ & 
+      \J{(LFP[R] zero;@ | succ;succ;R)} 
+      \\
       \textbf{List}(\alpha) 
       &\ \ =\ \ & 
       \J{(LFP[R] nil;@ | cons;((}\alpha\J{)*R))} 
@@ -2524,13 +2542,13 @@ rely on analogous techniques.
       \textbf{ChurchNum} 
       &\ \ =\ \ & 
       \J{(ALL[T] (T -> T) -> T -> T)}
-      \\
-      \textbf{ST}(\alpha^\dagger, \alpha) 
-      &\ \ =\ \ & 
-      \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
     \end{array}
     &
     \begin{array}[t]{r@{}c@{}l}
+      \textbf{ST}(\alpha^\dagger, \alpha) 
+      &\ \ =\ \ & 
+      \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
+      \\
       \textbf{z} 
       &\ \ =\ \ & 
       \J{\{f => \{x => x\}\}} 
@@ -2581,6 +2599,8 @@ rely on analogous techniques.
       \\
       \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
       \\
+      \J{sort} &\J{ : }& \J{ALL[T] (T * T -> } \textbf{Bool} \J{) -> }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
+      \\
       \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
     \end{array}
     &
@@ -2622,13 +2642,11 @@ rely on analogous techniques.
 
 
 \begin{experiment}
-  \label{experi:typability_comparison_polymorphic_instantiation}
-  Typability Comparison (Polymorphic Instantiation) 
+  \label{experi:typing_parameters_part_1}
+  Typing Parameters - Part 1
+  \TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
   \\
   \begin{center}
-
-  \TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
-
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
@@ -2689,27 +2707,7 @@ rely on analogous techniques.
     \J{id(poly)(\{x => x\})} 
     & \pass & \pass & \pass \\
     \hline
-  \end{tabular}
-  \end{center}
-\end{experiment}
-
-\begin{experiment}
-  \label{experi:typability_comparison_polymorphic_generalization}
-  Typability Comparison (Polymorphic Generalization) 
-  \\
-  \begin{center}
-  \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
-    \hline\hline
     1. &
     \J{\{f => f(succ;zero;@), f(true;@)\}}
     & \pass & \pass & \pass \\
@@ -2718,27 +2716,7 @@ rely on analogous techniques.
     \J{\{xs => poly(head(xs))\}}
     & \pass & \pass & \pass \\
     \hline
-  \end{tabular}
-  \end{center}
-\end{experiment}
-
-\begin{experiment}
-  \label{experi:typability_comparison_polymorphic_list}
-  Typability Comparison (Polymorphic Lists) 
-  \\
-  \begin{center}
-  \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
-    \hline\hline
     1. &
     \J{length(ids)}
     & \pass & \pass & \pass \\
@@ -2779,27 +2757,7 @@ rely on analogous techniques.
     \J{map(head)(single(ids))}
     & \pass & \pass & \pass \\
     \hline
-  \end{tabular}
-  \end{center}
-\end{experiment}
-
-\begin{experiment}
-  \label{experi:typability_comparison_meta_application}
-  Typability Comparison (Meta-application) 
-  \\
-  \begin{center}
-  \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
-    \hline\hline
     1. &
     \J{app(poly)(id)}
     & \pass & \pass & \pass \\
@@ -2825,8 +2783,8 @@ rely on analogous techniques.
 \end{experiment}
 
 \begin{experiment}
-  \label{experi:typability_comparison_eta_expansion}
-  Typability Comparison (Eta Expansion) 
+  \label{experi:typing_parameters_part_2}
+  Typing Parameters - Part 2 
   \\
   \begin{center}
   \scriptsize
@@ -2853,27 +2811,7 @@ rely on analogous techniques.
     \J{r(\{x => \{y => y\}\})}
     & \pass & \pass & \pass \\
     \hline
-  \end{tabular}
-  \end{center}
-\end{experiment}
-
-\begin{experiment}
-  \label{experi:typability_comparison_misc_freezeml}
-  Typability Comparison (Misc from FreezeML Paper) 
-  \\
-  \begin{center}
-  \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
-    \hline\hline
     1. &
     \J{auto(id)}
     & \pass & \pass & \pass \\
@@ -2898,27 +2836,7 @@ rely on analogous techniques.
     \J{choose(id)(\{x => auto'(x)\})}
     & \pass & \pass & \pass \\
     \hline
-  \end{tabular}
-  \end{center}
-\end{experiment}
-
-\begin{experiment}
-  \label{experi:typability_comparison_misc_superf}
-  Typability Comparison (Misc from SuperF Paper) 
-  \\
-  \begin{center}
-  \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
-    \hline\hline
     1. &
     \J{let ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
@@ -2997,6 +2915,96 @@ rely on analogous techniques.
   \end{center}
 \end{experiment}
 
+\begin{experiment}
+  \label{experi:typing_structures}
+  Typing Structures 
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|} 
+    \hline
+    \multicolumn{4}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
+% [0.5ex] 
+    \hline\hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let bool = } 
+      \\
+      \I \J{\{nil;@ => false;@\}}
+      \\
+      \I \J{\{succ;n => true;@\}}
+      \\
+      \I \J{\{zero;@ => false;@\}}
+      \\
+      \I \J{\{cons;(x,xs) => true;@\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop(\{self => } 
+      \\
+      \I \J{\{zero;@ => zero;@\}}
+      \\
+      \I \J{\{succ;n => succ;succ;(self(n))\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \fail \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop(\{self => } 
+      \\
+      \I \J{\{zero;@ => zero;@\}}
+      \\
+      \I \J{\{succ;succ;n => succ;(self(n))\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \fail \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let isNat = loop(\{self => } 
+      \\
+      \I \J{\{zero;@ => true;@\}}
+      \\
+      \I \J{\{succ;n => self(n)\}}
+      \\
+      \I \J{\{ignore => false;@\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let isNatList = loop(\{self => } 
+      \\
+      \I \J{\{nil;@ => true;@\}}
+      \\
+      \I \J{\{cons;(n, xs) => isNat(n) and self(xs)\}}
+      \\
+      \I \J{\{ignore => false;@\}}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\TODO{test these examples in implementations}
 
 
 \TODO{describe implementation}
@@ -3022,7 +3030,7 @@ rely on analogous techniques.
   Function Type Explosion 
   \hfill 
   \small
-  \boxed{\Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi}
+  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi}
   \\
   \begin{mathpar}
     \inferrule {
@@ -3048,7 +3056,7 @@ rely on analogous techniques.
       \\
       \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
     } {
-      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi'
+      \Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi'
     }
   \end{mathpar}
 \end{definition}
@@ -3097,6 +3105,7 @@ rely on analogous techniques.
     }
   \end{mathpar}
 \end{definition}
+
 
 
 \noindent
@@ -4717,7 +4726,7 @@ The interested reader can find the actual the definition of packing in the appen
   \small
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
+      \Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi 
     } {
       \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
@@ -4743,7 +4752,7 @@ The interested reader can find the actual the definition of packing in the appen
   \small
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau \circledast \alpha \rightarrow \Pi 
+      \Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi 
     } {
       \forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
       (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
@@ -6861,7 +6870,7 @@ The interested reader can find the actual the definition of packing in the appen
     \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
   )$ [Def. \ref{def:proof_typing}]
   \item \I \N Derive $(
-    \Theta', \Delta' \entails \tau \circledast \alpha_\nu \rightarrow \Pi_\nu
+    \Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi_\nu
   )$ [Def. \ref{def:proof_typing}]
   \item \I \N Derive $(
     \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
