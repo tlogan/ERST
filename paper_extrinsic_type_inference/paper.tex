@@ -549,9 +549,9 @@ Untyped languages or extrinsically typed languages can bypass this rigidity foun
     \\
     \J{let standardSort : (TOP}
     \\
-    \I \J{\& (}\text{nat}\J{*}\text{nat}\J{->}\text{bool} \J{) -> }\text{list}(\text{nat}) \J{ -> } \text{list}(\text{nat})
+    \I \J{\& (}\text{list}(\text{nat}) \J{ -> } \text{list}(\text{nat})
     \\
-    \I \J{\& (}\text{list}(\text{nat})\J{*}\text{list}(\text{nat})\J{->}\text{bool} \J{) -> }\text{list}(\text{list}(\text{nat})) \J{ -> } \text{list}(\text{list}(\text{nat}))
+    \I \J{\& (}\text{list}(\text{list}(\text{nat})) \J{ -> } \text{list}(\text{list}(\text{nat}))
     \\
     \J{) = sort(standardCompare) in}
     \\
@@ -2601,10 +2601,14 @@ However, the distinction is useful for comparing our design to previous work.
       \\
       \J{sort} &\J{ : }& \J{ALL[T] (T * T -> } \textbf{Bool} \J{) -> }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
       \\
-      \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
+      \J{scalarCmp} &\J{ : }& \textbf{Nat} \J{\*} \textbf{Nat} \J{ -> } \textbf{Bool} 
+      \\
+      \J{lexicoCmp} &\J{ : }& \textbf{List}(\textbf{Nat}) \J{\*} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} 
     \end{array}
     &
     \begin{array}[t]{r@{}c@{}l}
+      \\
+      \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
       \\
       \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
       \\
@@ -2997,6 +3001,34 @@ However, the distinction is useful for comparing our design to previous work.
       \I \J{\{ignore => false;@\}}
       \\
       \J{\}) in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let stdCmp = \{ a,b => } 
+      \\
+      \I \J{if isNat(a) and isNat(b) then}
+      \\
+      \I\I \J{scalarCmp(a,b)}
+      \\
+      \I \J{else assert isNatList(a) and isNatList(b) then }
+      \\
+      \I\I \J{lexicoCmp(a,b)}
+      \\
+      \J{\}) in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let stdSort : (TOP } 
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{)}
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{List}(\textbf{Nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat})) \J{)}
+      \\
+      \J{) = sort(stdCmp) in ...} 
     \end{array}
     & \pass & \pass \\
     \hline
