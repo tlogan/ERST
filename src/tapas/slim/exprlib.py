@@ -125,29 +125,14 @@ both = (f"""
 )
 """.strip())
 
-isNat = (f"""
-loop({{ self => 
-    {{ zero;@ => true;@ }}
-    {{ succ;n => self(n) }}
-    {{ ignore => false;@ }}
-}})
-""".strip())
-
-isNatList = (f"""
-loop({{ self => 
-    {{ nil;@ => true;@ }}
-    {{ cons;(n, xs) => both(({isNat})(n), (self)(xs)) }}
-    {{ ignore => false;@ }}
-}})
-""".strip())
-
 stdCmp = (f"""
 ({{a,b =>
-    if both(({isNat})(a), ({isNat})(b)) then
-        scalarCmp(a,b)
-    else (both(({isNatList})(a), ({isNatList})(b))) |> ({{true;@ =>
-        lexicoCmp(a,b)
-    }})
+    a |> (
+        {{zero;@ => scalarCmp(a,b)}}
+        {{succ;n => scalarCmp(a,b)}}
+        {{nil;@ => lexicoCmp(a,b)}}
+        {{cons;(x,xs) => lexicoCmp(a,b)}}
+    )
 }})
 """.strip())
 

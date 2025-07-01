@@ -557,30 +557,29 @@ let foo = {{f =>
 ###############################################################
 ##### Structural Typing 
 ###############################################################
+
+
 def test_typing_structures_1():
-    code = (f"""
-(
-{{ nil;@ => false;@}}
-{{ zero;@ => false;@}}
-{{ succ;n => true;@}}
-{{ cons;(x,xs) => true;@}}
-)
+    #TODO: find way to speed up; parsing might be slow
+    code = ctx(["scalarCmp", "lexicoCmp"], f"""
+{el.stdCmp}
     """)
     print(code)
     assert infer_typ(code)
 
-# def test_typing_structures_debug():
-
-#     lower = (f"""
-#     """)
-
-#     upper = (f"""
-#     """)
-
-#     assert solve_subtyping(lower, upper)
-
-
 def test_typing_structures_2():
+    code = ctx(["scalarCmp", "lexicoCmp", "sort"], f"""
+let stdCmp = {el.stdCmp} in
+let stdSort : (
+    ({tl.List_(tl.Nat)} -> {tl.List_(tl.Nat)}) &
+    ({tl.List_(tl.List_(tl.Nat))} -> {tl.List_(tl.List_(tl.Nat))})
+) = sort(stdCmp) in @
+    """)
+    print(code)
+    assert infer_typ(code)
+
+
+def test_typing_structures_3():
     code = (f"""
 let double : (
    {tl.Nat} -> {tl.Even} 
@@ -592,7 +591,7 @@ let double : (
     print(code)
     assert infer_typ(code)
 
-def test_typing_structures_3():
+def test_typing_structures_4():
     code = (f"""
 let halve : (
     {tl.Even} -> {tl.Nat} 
@@ -600,39 +599,6 @@ let halve : (
     {{ (zero;@) => zero;@ }}
     {{ (succ;succ;n) => succ;((self)(n)) }}
 )}}) in halve)
-    """)
-    print(code)
-    assert infer_typ(code)
-
-def test_typing_structures_4():
-    code = (f"""
-{el.isNat}
-    """)
-    print(code)
-    assert infer_typ(code)
-
-def test_typing_structures_5():
-    code = (f"""
-{el.isNatList}
-    """)
-    print(code)
-    assert infer_typ(code)
-
-def test_typing_structures_6():
-    #TODO: find way to speed up; parsing might be slow
-    code = ctx(["scalarCmp", "lexicoCmp"], f"""
-{el.stdCmp}
-    """)
-    print(code)
-    assert infer_typ(code)
-
-def test_typing_structures_7():
-    code = ctx(["scalarCmp", "lexicoCmp", "sort"], f"""
-let stdCmp = {el.stdCmp} in
-let stdSort : (
-    ({tl.List_(tl.Nat)} -> {tl.List_(tl.Nat)}) &
-    ({tl.List_(tl.List_(tl.Nat))} -> {tl.List_(tl.List_(tl.Nat))})
-) = sort(stdCmp) in @
     """)
     print(code)
     assert infer_typ(code)
@@ -645,6 +611,6 @@ if __name__ == '__main__':
     # SCRATCH WORK
     # test_typing_A9()
     # test_max()
-    test_typing_structures_7()
+    test_typing_structures_4()
 
 #######################################################################

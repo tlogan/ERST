@@ -504,22 +504,22 @@ Functions on lists can be generic, in that they may be independent of the item v
 or they may factor out the details that depend on item values, as in $\J{sort}$. 
 \[
   \begin{array}[t]{@{} l}
-    \J{let sort : ALL[X] (X*X->} \text{bool} \J{) -> }\text{list}(\J{X}) \J{ -> } \text{list}(\J{X}) \J{ = }
+    \J{let sort : ALL[X] (X*X->} \textbf{Bool} \J{) -> }\textbf{List}(\J{X}) \J{ -> } \textbf{List}(\J{X}) \J{ = }
     \\
-    \J{? compare => ...}
+    \J{? cmp => ...}
   \end{array}
 \]
 \noindent
-The notation $\text{bool}$ and $\text{list}(\J{X})$ are meta-language terms representing types.
+The notation $\textbf{Bool}$ and $\textbf{List}(\J{X})$ are meta-language terms representing types.
 The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
 In intrinsically typed languages, the programmer would need a different specialization for every predefined
 datatype (in ML) or class hierarchy (in Java). 
 
 \[
   \begin{array}[t]{@{} l}
-    \J{let scalarSort = sort(scalarCompare) in}
+    \J{let scalarSort = sort(scalarCmp) in}
     \\
-    \J{let lexicoSort = sort(lexicoCompare) in} 
+    \J{let lexicoSort = sort(lexicoCmp) in} 
     \\
     \J{...} 
   \end{array}
@@ -535,25 +535,29 @@ Untyped languages or extrinsically typed languages can bypass this rigidity foun
   \begin{array}[t]{@{} l}
     ...
     \\
-    \J{let standardCompare = (? a,b =>} 
+    \J{let stdCmp = \{ a,b => } 
     \\
-    \I \J{if isNat(a) and isNat(b) then} 
+    \I \J{a |> (}
     \\
-    \I\I \J{scalarCompare(a,b)}
+    \I\I \J{\{zero;@ => scalarCmp(a,b)\}}
     \\
-    \I \J{else assert isNatList(a) and isNatList(b) then} 
+    \I\I \J{\{succ;n => scalarCmp(a,b)\}}
     \\
-    \I\I \J{lexicoCompare(a,b)}
+    \I\I \J{\{nil;@ => lexicoCmp(a,b)\}}
+    \\
+    \I\I \J{\{cons;(x,xs) => lexicoCmp(a,b)\}}
+    \\
+    \I \J{)}
     \\
     \J{) in} 
     \\
-    \J{let standardSort : (TOP}
+    \J{let stdSort : (TOP}
     \\
-    \I \J{\& (}\text{list}(\text{nat}) \J{ -> } \text{list}(\text{nat})
+    \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
     \\
-    \I \J{\& (}\text{list}(\text{list}(\text{nat})) \J{ -> } \text{list}(\text{list}(\text{nat}))
+    \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
     \\
-    \J{) = sort(standardCompare) in}
+    \J{) = sort(stdCmp) in}
     \\
     \J{...} 
   \end{array}
@@ -661,22 +665,6 @@ although possibly weaker than the inferred type, is sufficient for the continuin
           \I \J{? <true> @ => } e_t
           \\
           \I \J{? <false> @ => } e_f
-          \\
-        \J{)}
-      \end{array}
-      \\
-      \llbracket \J{assert}\ e_c\ \J{then}\ e_t \rrbracket^\square &= 
-      \begin{array}[t]{@{} l}
-        e_c \J{ |> (? <true> @ => } e_t \J{)}
-      \end{array}
-      \\
-      \llbracket e_l\ \J{and}\ e_r \rrbracket^\square &= 
-      \begin{array}[t]{@{} l}
-        e_l \J{ |> (}
-          \\
-          \I \J{? <true> @ => } e_r
-          \\
-          \I \J{? <false> @ => <false> @}
           \\
         \J{)}
       \end{array}
@@ -2938,17 +2926,33 @@ However, the distinction is useful for comparing our design to previous work.
     \hline\hline
     1. &
     \begin{array}[t]{l}
-      \J{let bool = (} 
+      \J{let stdCmp = \{ a,b => } 
       \\
-      \I \J{\{nil;@ => false;@\}}
+      \I \J{a |> (}
       \\
-      \I \J{\{cons;(x,xs) => true;@\}}
+      \I\I \J{\{zero;@ => scalarCmp(a,b)\}}
       \\
-      \I \J{\{zero;@ => false;@\}}
+      \I\I \J{\{succ;n => scalarCmp(a,b)\}}
       \\
-      \I \J{\{succ;n => true;@\}}
+      \I\I \J{\{nil;@ => lexicoCmp(a,b)\}}
       \\
-      \J{) in ...}
+      \I\I \J{\{cons;(x,xs) => lexicoCmp(a,b)\}}
+      \\
+      \I \J{)}
+      \\
+      \J{\} in ...}
+    \end{array}
+    & \pass & \pass \\
+    \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{let stdSort : (TOP } 
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{)}
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{List}(\textbf{Nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat})) \J{)}
+      \\
+      \J{) = sort(stdCmp) in ...} 
     \end{array}
     & \pass & \pass \\
     \hline
@@ -2975,62 +2979,6 @@ However, the distinction is useful for comparing our design to previous work.
       \J{\}) in ...}
     \end{array}
     & \pass & \fail \\
-    \hline
-    1. &
-    \begin{array}[t]{l}
-      \J{let isNat = loop(\{self => } 
-      \\
-      \I \J{\{zero;@ => true;@\}}
-      \\
-      \I \J{\{succ;n => self(n)\}}
-      \\
-      \I \J{\{ignore => false;@\}}
-      \\
-      \J{\}) in ...}
-    \end{array}
-    & \pass & \pass \\
-    \hline
-    1. &
-    \begin{array}[t]{l}
-      \J{let isNatList = loop(\{self => } 
-      \\
-      \I \J{\{nil;@ => true;@\}}
-      \\
-      \I \J{\{cons;(n, xs) => isNat(n) and self(xs)\}}
-      \\
-      \I \J{\{ignore => false;@\}}
-      \\
-      \J{\}) in ...}
-    \end{array}
-    & \pass & \pass \\
-    \hline
-    1. &
-    \begin{array}[t]{l}
-      \J{let stdCmp = \{ a,b => } 
-      \\
-      \I \J{if isNat(a) and isNat(b) then}
-      \\
-      \I\I \J{scalarCmp(a,b)}
-      \\
-      \I \J{else assert isNatList(a) and isNatList(b) then }
-      \\
-      \I\I \J{lexicoCmp(a,b)}
-      \\
-      \J{\}) in ...}
-    \end{array}
-    & \pass & \pass \\
-    \hline
-    1. &
-    \begin{array}[t]{l}
-      \J{let stdSort : (TOP } 
-      \\
-      \I \J{ \& (} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{)}
-      \\
-      \I \J{ \& (} \textbf{List}(\textbf{List}(\textbf{Nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat})) \J{)}
-      \\
-      \J{) = sort(stdCmp) in ...} 
-    \end{array}
-    & \pass & \pass \\
     \hline
   \end{tabular}
   \end{center}
