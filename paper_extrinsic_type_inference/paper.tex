@@ -147,6 +147,7 @@
 \TODO{MLStruct/MLScript are closely related, but still rely on intrinsic types}
 
 
+
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit the space of correctness.
 In languages such as as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
@@ -160,7 +161,6 @@ and \emph{node} and \emph{empty} to belong to type tree, then it is impossible t
 that accepts either a list or a tree, or returns either a list or a tree. The only option would be to define
 a new datatype that contains isomorphs of all of the above the data constructors, which would 
 likely add overhead to development, compilation, and execution.
-
 
 For various reasons, which may include the reusability drawbacks just mentioned, 
 intrinsically typed languages have lost favor,
@@ -182,6 +182,21 @@ There have been some relaxations of intrinsic type systems, allowing for sightly
 Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger spaces than their intrinsic types, by
 inferring refinement types for particular uses.
 Unfortunately, refinements aren't sufficient to handle the full range of data constructor reusability allowed by untyped languages.
+
+In order to achieve a language with a high degree of both code reusability and type inference, 
+This work presents an extremely extrinsic type inference system
+that allows programs to be as flexible as those in untyped languages
+without any required annotation burden. 
+Neither parametric data nor structural data is required to have
+any intrinsic type information annotated by the programmer in order
+to guarantee that highly reusable code does not get stuck.
+Although annotations are allowed to enable programmers to check their logic,
+annotations do not play any role in aiding type inference. In fact, 
+type checking of annotations is constructed from type inference, 
+so soundness and completeness of type inference with respect to type checking is trivial.  
+
+
+\TODO{note how the key to extrinsic type inference is describing flow}
 
 In order to achieve a language with a high degree of both code reusability and type inference, 
 we introduce a novel type system with extrinsic type inference. 
@@ -2839,7 +2854,7 @@ However, the distinction is useful for comparing our design to previous work.
     \hline
     3. &
     \J{let ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
-    & \pass & \pass & \pass \\
+    & \pass & \pass & \fail \\
     \hline
     4. &
     \J{let ignore : } \textbf{ChurchNum} \J{ = n3 in @}
@@ -2847,7 +2862,7 @@ However, the distinction is useful for comparing our design to previous work.
     \hline
     5. &
     \J{let ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = \{@ => n3(n3)\} in @}
-    & \pass & \pass & \pass \\
+    & \pass & \pass & \fail \\
     \hline
     6. &
     \J{fst(fst(fst(n3(\{x => x,(zero;@)\})(succ;zero;@))))}
@@ -2879,11 +2894,11 @@ However, the distinction is useful for comparing our design to previous work.
     \hline
     11. &
     \J{\{x => x(x)\}(\{x => x(x)\})}
-    & \pass & \pass & \pass \\
+    & \pass & \fail & \fail \\
     \hline
     12. &
     \J{auto(auto'(id))}
-    & \pass & \pass & \pass \\
+    & \pass & \pass & \fail \\
     \hline
     13. &
     \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
@@ -2901,7 +2916,7 @@ However, the distinction is useful for comparing our design to previous work.
       \\
       \J{\}(const(const(id)))}
     \end{array}
-    & \pass & \pass & \pass \\
+    & \pass & \fail & \pass \\
     \hline
   \end{tabular}
   \end{center}
@@ -2984,14 +2999,95 @@ However, the distinction is useful for comparing our design to previous work.
   \end{center}
 \end{experiment}
 
-\TODO{test these examples in implementations}
-
-
 \TODO{describe implementation}
 
-\TODO{describe experiments in comparison to SuperF}
+\TODO{reformat tables, spacing, etc.}
 
-\TODO{describe experiments with overlapping types}
+\section{Related Work}
+\label{sec:related_work}
+
+Over the past decades many type inference have been designed and analyzed 
+with varying degrees of expressivity and varying degrees of intrinsic requirements
+or extrinsic relaxations, with respect to both parametric data (e.g. functions or paths dependent on variables)
+and structural data (e.g. data constructors or records).  
+The first technique to infer parametric types for parametric
+data without any assistance from annotations was Hindley-Milner type inference \cite{}. Despite its age, 
+it remains one of the foundational 
+theoretical underpinnings of practical programming languages used today, such as Standard ML \cite{}. 
+For instance, in Standard ML, the system infers the identifier $\J{foo}$ in $(\J{fun foo f = (f 123);})$
+to have type $(\J{forall 'a . (int -> 'a) -> 'a})$ 
+Despite its practical utility, a significant drawback of Hindley-Milner type inference is that
+certain kinds of flexible programs are simply not allowed.
+For instance, in Standard ML, the system rejects the program $(\J{fun fooPair f = (f 123, f true);})$.
+
+In order to type the program $\J{fooPair}$, a type system would either need to determine that
+$\J{f}$ is parametric, or that the types of $\J{123}$ and $\J{true}$ are compatible.
+Treating the parameter $\J{f}$ is allowed in systems that have impredicative parametric polymorphism \cite{}, which
+was introduced into ML-style languages using boxed polymorphism \cite{} and developed further with ML$^F$ \cite{}. 
+Unfortunately, it's not clear what parametric type should be inferred for $\J{f}$.
+For instance, $(\J{forall 'a . 'a -> 'a})$, $(\J{forall 'a . 'a -> 'a list})$, $(\J{forall 'a . 'a -> 'a option})$, 
+or an infinite number of
+other parametric types could be used, but none is weaker than all the rest.
+Therefore, these systems with impredicative parametric polymorphism rely on annotations of parameters to
+determine second order parametric types, which we believe constitutes intrinsic typing of
+of parametric data. Since there is no parameter type that is weaker than all the rest,
+relying on intrinsic second order parametric type significantly restricts the reusability
+of the program.
+
+In order to avoid this loss of expressivity and the annotation burden of intrinsic typing, 
+SuperF \cite{} introduced 
+a technique that relies on extrinsic subtyping polymorphism, 
+which bypasses the need for intrinsic parametric polymorphism.
+In the previous example, SuperF can infer the principal type for $\J{fooPair}$ by inferring the 
+weakest type of its parameter $\J{f}$, which it achieved by leveraging subtyping to find 
+a type that is compatible with both $\J{123}$ and $\J{true}$.
+The SuperF type system infers subtyping constraints that represent the data flow represented by
+function application and pattern matching. It relies 
+intersection and union type combinators to represent the strongest or weakest interpretations
+of type variables that meet certain subtyping constraints.   
+With SuperF's type inference mechanism, it is possible to infer the principal type for the 
+previous problematic example $\J{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}$.
+
+SuperF has a restricted language of types. It is concerned with the type inference
+of parametric data, and it is agnostic towards type inference of structural data. 
+It restricts the type and subtyping constraint syntax according to polarity; that is, a
+types position within an implication type or subtyping relation. Depending on polar position,
+universal types (i.e. indexed intersections) may or may not be qualified by subtyping constraints.
+The authors of SuperF highlight some technical features, including extrusion and distributivity.
+Their extrusion technique ensures that types are not overly specialized
+when inferring types of nested parametric data. Their distributivity technique allows
+rewriting universal quantifiers to increase the chance that skolemization occurs before instantiation. 
+They point out that the distributivity rule is an improvement for most cases, but there are certain
+problems for which it more actually more restrictive.
+
+
+The high level ideas in SuperF of relying on subtyping constraints were very influential in our work.
+Like SuperF, our system relies syntax-directed subtyping rules check constraints and to learn 
+new subtyping constraints by traversing previously learned constraints;
+Both systems have instantiation and skolemization in their subtyping rules. 
+
+\TODO{discuss how our system doesn't need extrusion or distributivity}
+
+\TODO{discuss relationship to flow analysis}
+
+\TODO{discuss type inference of structural data}
+
+
+\TODO{organize by the spectrum of type inference from intrinsic to extrinsic}
+
+\TODO{Note how Extrinsic recombined various paths using the pack function}
+
+\TODO{try to understand what SuperF folks mean by no backtracking in light of rhs union}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\TODO{recap the achievements. Mention the relational reasoning in future work}
+
+
+\section{Bibliography}
+\label{sec:bibliography}
+
 
 
 \section{Ancillaries}
