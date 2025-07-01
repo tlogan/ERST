@@ -126,7 +126,7 @@ both = (f"""
 """.strip())
 
 isNat = (f"""
-fix({{ self => 
+loop({{ self => 
     {{ zero;@ => true;@ }}
     {{ succ;n => self(n) }}
     {{ ignore => false;@ }}
@@ -134,9 +134,9 @@ fix({{ self =>
 """.strip())
 
 isNatList = (f"""
-fix({{ self => 
+loop({{ self => 
     {{ nil;@ => true;@ }}
-    {{ cons;(n, xs) => both(({isNat}(n)), self(xs)) }}
+    {{ cons;(n, xs) => both(({isNat})(n), (self)(xs)) }}
     {{ ignore => false;@ }}
 }})
 """.strip())
