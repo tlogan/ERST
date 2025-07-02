@@ -3000,11 +3000,21 @@ However, the distinction is useful for comparing our design to previous work.
     \end{array}
     & \pass & \fail \\
     \hline
+    1. &
+    \begin{array}[t]{l}
+      \J{\{zero;@ => \{zero;@ => @\}(@)\}}
+      \\
+      \J{\{nil;@ => @\}}
+    \end{array}
+    & \pass & \fail \\
+    \hline
   \end{tabular}
   \end{center}
 \end{experiment}
 
 \TODO{describe implementation}
+
+\TODO{describe the structural examples in more details}
 
 \TODO{reformat tables, spacing, etc.}
 
@@ -3146,12 +3156,35 @@ determined by learning subset constraints from the control-flow of the program.
 Instead of labels, type inference with subtyping associate types  
 with expressions and learns subtyping constraints.
 
+\TODO{discuss recursive types}
+
+\TODO{discuss regular trees: seems we restrict reasoning to regular trees}
+
+\TODO{discuss issue of caching when checking recursion}
+
 
 \section{Conclusion}
 \label{sec:conclusion}
-
-\TODO{recap the achievements. Mention the relational reasoning in future work}
-
+We have presented a novel extrinsic type inference system
+that can guarantee programs are bug-free while maintaining
+code-reusability nearly on par with untyped scripting languages,
+and exceeding that of an previous type inference system we know of.  
+We have incorporated previous studied ideas of subtyping constraints,
+intersection types, union types, parametric types, and recursive types into
+a cohesive design that enables more principal types to be inferred 
+and more subtyping relations to be verified than in previous systems. 
+In particular, our system is able to learn recursive types of function inputs
+and outputs purely from the construction of recursive functions without 
+any intrinsic recursive type specifications.
+Additionally, our system can perform inductive reasoning to
+verify than one recursive type subtypes another.
+In the future, we will extend the recursive type reasoning capabilities
+to handle recursive relational types, enabling the infinite paths
+of recursive functions to be represented and reasoned with at the type level. 
+With inductive reasoning over relational types, we will be
+moving closer to a full fledged theorem proving system,
+in which subtyping enables a form of proof automation,
+by reusing the proof of one proposition as a proof for another. 
 
 \section{Bibliography}
 \label{sec:bibliography}

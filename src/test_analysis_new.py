@@ -540,6 +540,27 @@ let foo = {{f =>
     print(code)
     assert infer_typ(code)
 
+
+def test_typing_sanity_branch_error():
+    code = (f"""
+(
+{{zero;@ => {{zero;@ => @}}(@)}}
+{{one;@ => one;@}}
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_sanity_trivial_application():
+    # TODO: why is the result just a variable?
+    code = (f"""
+(
+({{one;@ => @}})(one;@)
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
 ###############################################################
 ##### Subtyping Sanity 
 ###############################################################
@@ -603,6 +624,16 @@ let halve : (
     print(code)
     assert infer_typ(code)
 
+def test_typing_structures_5():
+    code = (f"""
+(
+{{zero;@ => {{zero;@ => @}}(@)}}
+{{nil;@ => nil;@}}
+)
+    """)
+    print(code)
+    assert infer_typ(code)
+
 ###############################################################
 ###############################################################
 
@@ -612,6 +643,7 @@ if __name__ == '__main__':
     # test_typing_A9()
     # test_max()
     # test_typing_structures_4()
-    test_typing_sanity_inter_nesting_constraint()
+    # test_typing_sanity_inter_nesting_constraint()
+    test_typing_sanity_trivial_application()
 
 #######################################################################
