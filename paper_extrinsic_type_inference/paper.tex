@@ -65,6 +65,7 @@
 \newcommand{\relational}{\ \Re}
 
 \newcommand{\pass}{$\CIRCLE$}
+\newcommand{\assisted}{$\LEFTcircle$}
 \newcommand{\fail}{$\Circle$}
 
 \newcommand{\unique}{\ \dagger}
@@ -2648,10 +2649,13 @@ However, the distinction is useful for comparing our design to previous work.
 
 
 
+\TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
+
+\TODO{update tests to inspect the inferred type}
+
 \begin{experiment}
   \label{experi:typing_parameters_part_1}
   Typing Parameters - Part 1
-  \TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
   \\
   \begin{center}
   \scriptsize
@@ -2922,6 +2926,7 @@ However, the distinction is useful for comparing our design to previous work.
   \end{center}
 \end{experiment}
 
+
 \begin{experiment}
   \label{experi:typing_structures}
   Typing Structures 
@@ -2957,7 +2962,7 @@ However, the distinction is useful for comparing our design to previous work.
       \\
       \J{\} in ...}
     \end{array}
-    & \pass & \pass \\
+    & \pass & \assisted \\
     \hline
     1. &
     \begin{array}[t]{l}
@@ -2969,7 +2974,7 @@ However, the distinction is useful for comparing our design to previous work.
       \\
       \J{) = sort(stdCmp) in ...} 
     \end{array}
-    & \pass & \pass \\
+    & \pass & \assisted \\
     \hline
     1. &
     \begin{array}[t]{l}
@@ -3062,20 +3067,25 @@ problems for which it more actually more restrictive.
 
 
 The high level ideas in SuperF of relying on subtyping constraints were very influential in our work.
-Like SuperF, our system relies syntax-directed subtyping rules check constraints and to learn 
+Like SuperF, our system relies syntax-directed subtyping rules to check constraints and to learn 
 new subtyping constraints by traversing previously learned constraints;
-Both systems have instantiation and skolemization in their subtyping rules. 
-
-\TODO{discuss how our system doesn't need extrusion or distributivity}
-
-\TODO{discuss relationship to flow analysis}
+Additionally, our system also relies on instantiation and skolemization in its subtyping rules. 
+Type polarity is also important in our system.
+However, our system does not restrict the syntax of types based on polarity. Instead, we rely on
+polarity to constrain Proof Typing and Proof Subtyping when interpreting or checking interpretations
+of type variables.    
+Our system does not need extrusion because Packing $(\textbf{pack(...)})$ preserves the nested structure of 
+parametric data at the type level, such that the constraint between inner and outer bound type variables
+qualifies the inner parametric type, which ensures that instantiation of the inner parametric type 
+continues to constrain the outer bound type variables.  
+Our system does not need distributivity of type variable bindings, because it is requires
+that skolemization occurs before learning constraints on type variables. Therefore, it is fine to allow
+instantiation to occur before skolemization in our system, 
+since it does not cause learning constraints before skolemization.  
 
 \TODO{discuss type inference of structural data}
 
-
-\TODO{organize by the spectrum of type inference from intrinsic to extrinsic}
-
-\TODO{Note how Extrinsic recombined various paths using the pack function}
+\TODO{discuss relationship to flow analysis}
 
 \TODO{try to understand what SuperF folks mean by no backtracking in light of rhs union}
 

@@ -611,6 +611,7 @@ if __name__ == '__main__':
     # SCRATCH WORK
     # test_typing_A9()
     # test_max()
-    test_typing_structures_4()
+    # test_typing_structures_4()
+    test_typing_sanity_inter_nesting_constraint()
 
 #######################################################################
