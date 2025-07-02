@@ -3083,11 +3083,69 @@ that skolemization occurs before learning constraints on type variables. Therefo
 instantiation to occur before skolemization in our system, 
 since it does not cause learning constraints before skolemization.  
 
-\TODO{discuss type inference of structural data}
-
-\TODO{discuss relationship to flow analysis}
-
 \TODO{try to understand what SuperF folks mean by no backtracking in light of rhs union}
+
+In addition to parametric data, practical programming languages need to have some form of structural data.
+Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative parametric data
+very early on, type inference has always relied on some degree of intrinsic types for structural data.
+intrinsically typed structural data is exemplified by the datatype mechanism of Standard ML.
+For instance, the list datatype $(\J{'a list = nil | cons 'a * 'a list})$ specifies that 
+data constructed with ${\J{nil}}$ or $\J{cons}$ have the type ${\J{'a list}}$. Additionally,
+it requires that the input to the constructor $(\J{cons})$  has the types $(\J{'a * 'a list})$
+Although the datatype mechanism has been used with great success across many languages (including Lean, Haskell, Ocaml, and Isabelle),
+it enforces a very rigid form of programming. For instance, there is no way to guarantee
+that the output of a function is a nonempty list and then use that output in a function that expects an optionally empty list.
+
+To get around this limitation, refinement types \cite{} relaxed the meaning of the datatype mechanism, to 
+allow constructions to represent types that are stronger than their intrinsic type.
+For instance, $(\J{nil})$ could have a type as strong as the single type $\J{?nil}$ or as weak as $(\J{'a list})$.
+Likewise, a list of two elements $\J{cons(x, cons(y, nil))}$ could have a type as strong $(\J{?cons 'a * (?cons 'a * nil)})$
+or as weak as $(\J{'a list})$. A refinement type system can choose how strong to make the type based on how the data is used, 
+which depends on how data flows, for which subtyping provides a natural formulation. 
+It can find these stronger types by starting with intrinsic weakest type and using intersection with 
+all the ways it sees the data being used.
+However, the refinement relaxation is not enough to allow common flexible idioms used in untyped languages. 
+For instance, it would allow pattern matching that chooses between a list and a number.
+
+To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
+must be abolished so that there is no intrinsic weakest type other than a top type. 
+Typescript \cite{} does not have an intrinsic weakest type for structural data,
+and it can infer output types of functions that return different structural forms in different branches.
+However, it is unable to infer a weak type for the parameters, and thus requires annotation of parameters.  
+Typescript and other systems for scripting languages, rely on flow-sensitive, or occurrence typing \cite{},
+which can refine the types of variables in branches based on the condition guarding each branch.
+For Typescript, this flow information is only used in one direction, and it is not leveraged to infer
+the weakest type of parameters.
+
+To extend type inference of scripting languages further, MLStruct \cite{} and others like MLSub \cite{}, 
+leveraged the flow information to infer both input types and output types of functions.
+MLStruct, along with SuperF, represents some of the foundational ideas of the MLScript language.
+Like SuperF, it learns the data flow of programs in terms of subtyping constraints.
+Other than our system, it appears that MLStruct has the best type inference of structural data
+with the least amount of intrinsic type requirements. 
+However, MLStruct still has a significant intrinsic type requirement, which reduces flexibility compared
+to untyped languages. It requires that the inputs to data constructors have an intrinsic type.  
+In essence, this requirement prescribes a lower bound on data constructions,
+which reduces the flexibility of programs compared to untyped languages. 
+As our tests (Experiment \ref{experi:typing_structures})
+illustrate, it is not possible to type a function that expects only even numbers that is interoperable with natural numbers.
+Moreover, the additional annotation burden alone would prevent the analysis of untyped code without
+significant effort in augmenting the code with annotations.
+In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
+without any annotation requirements on structural data. 
+
+The common ingredient in all of these systems that perform some amount of extrinsic type inference is
+learning data flow. Data flow analysis comes in many forms. As the goal for these systems is verification,
+subtyping is a natural choice. There has been some work on extracting rules for checking subtyping relations
+from the semantic interpretation of types, known as semantic subtyping \cite{}, or set-theoretic types \cite{}.
+Other approaches, like algebraic subtyping \cite{}, and Cretin \cite{}, and superF, 
+rely on designing syntax-directed subtyping rules and then proving their soundness with respect to some semantic interpretation. 
+Additionally, there are similarities between type inference with subtyping and control-flow analysis \cite{}, or polyvariant flow analysis \cite{}.
+In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
+determined by learning subset constraints from the control-flow of the program. 
+Instead of labels, type inference with subtyping associate types  
+with expressions and learns subtyping constraints.
+
 
 \section{Conclusion}
 \label{sec:conclusion}
