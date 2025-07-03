@@ -51,7 +51,7 @@
 \newtheorem{experiment}{Experiment}[section]
 
 
-\title{Extrinsic Type Inference (DRAFT 2025-05-25)}
+\title{Extrinsic Type Inference (DRAFT 2025-06-03)}
 \author{Thomas Logan}
 
 \begin{document}
@@ -154,15 +154,7 @@
 
 \section{Introduction}
 \label{sec:introduction}
-
-\TODO{note the use case of analyzing code that someone else wrote}
-
-\TODO{extrinsic is necessary, because you can't easily modify the code to contain intrinsically typed constructors}
-
-\TODO{MLStruct/MLScript are closely related, but still rely on intrinsic types}
-
-
-
+\noindent
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit the space of correctness.
 In languages such as as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
