@@ -2350,6 +2350,46 @@ class Solver:
 
         return all_parts_consistent() and some_parts_consistent()
 
+    def check_closed_variable_elimination_new(self, world : World, lower : TVar, upper : Typ) -> list[World]:
+        upper_parts = pset(
+            st.upper
+            for st in world.constraints
+            if st.lower == lower 
+        ).union(self.extract_factored_upper_bounds(world, lower.id))
+
+        if any(
+            isinstance(upper_part, TVar) and upper_part.id not in world.closedids
+            for upper_part in upper_parts
+        ):
+            worlds = [world]
+            last_constraints = [Subtyping(lower, upper)]
+        else:
+            closed_upper_parts = [
+                upper_part
+                for upper_part in upper_parts
+                if not isinstance(upper_part, TVar) or upper_part.id in world.closedids
+            ]
+            worlds = []
+            for upper_part in closed_upper_parts:
+                worlds += self.solve(world, upper_part, upper)
+            last_constraints = []
+
+              
+        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+        subbed_constraints = list(constraints.difference(world.constraints))
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG lower TVar Skolem
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(lower)} <: {concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
+        return [
+            replace(w1, constraints = w1.constraints.union(last_constraints)) 
+            for w0 in worlds
+            for w1 in self.solve_multi(w0, subbed_constraints)
+        ]
+
     def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
         lower_parts = pset(
@@ -2371,6 +2411,41 @@ class Solver:
         all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
 
         return all_parts_consistent() and some_parts_consistent()
+
+    def check_closed_variable_introduction_new(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+
+        lower_parts = pset(
+            st.lower
+            for st in world.constraints
+            if st.upper == upper 
+        )
+
+        if any( 
+            (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
+            for lower_part in lower_parts
+        ):
+            worlds = [world]
+            last_constraints = [Subtyping(lower, upper)]
+        else:
+            closed_lower_parts = [
+                lower_part
+                for lower_part in lower_parts
+                if not isinstance(lower_part, TVar) or lower_part.id in world.closedids
+            ]
+            worlds = []
+            for lower_part in closed_lower_parts:
+                worlds += self.solve(world, lower, lower_part)
+            last_constraints = []
+
+
+
+        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+        subbed_constraints = list(constraints.difference(world.constraints))
+
+        return [ replace(w1, constraints = w1.constraints.union(last_constraints)) 
+            for w0 in worlds
+            for w1 in self.solve_multi(w0, subbed_constraints)
+        ]
 
 
     def closed_constraints_safe(self, world : World, constraints : PSet[Subtyping]) -> bool:
@@ -2397,24 +2472,24 @@ class Solver:
         if self.count > self._limit:
             return []
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG SOLVE:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# count: {self.count}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closed:
-# {world.closedids}
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG SOLVE:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+count: {self.count}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closed:
+{world.closedids}
 
-# constraints:
-# {concretize_constraints(world.constraints)}
+constraints:
+{concretize_constraints(world.constraints)}
               
-# |-
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+|-
+{concretize_typ(lower)}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         #######################################
         #### Reflection ####
@@ -2684,6 +2759,7 @@ class Solver:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
+            # return self.check_closed_variable_elimination_new(world, lower, upper)
             if self.check_closed_variable_elimination(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
@@ -2698,6 +2774,7 @@ class Solver:
 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
+            # return self.check_closed_variable_introduction_new(world, lower, upper)
             if self.check_closed_variable_introduction(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
@@ -3154,6 +3231,11 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
+        print(f"""
+~~~~~~~~~~~~~~~~~~~
+DEBUG combine_app
+~~~~~~~~~~~~~~~~~~~
+        """)
         worlds = [world] 
         current_cator_typ = cator_typ
         for arg_typ in arg_typs:

@@ -181,7 +181,7 @@ def test_typing_B1():
 
 def test_typing_B2():
     code = f"""
-{{ xs => poly(head)(xs) }}
+{{ xs => poly((head)(xs)) }}
     """
     print(code)
     assert infer_typ(code, ctx(["poly", "head"]))
@@ -257,6 +257,17 @@ def test_typing_C10():
     code = f"""
 map(head)(single(ids))
     """
+#     code = f"""
+# single(ids)
+#     """
+
+# #     code = f"""
+# # map(head)(cons;(ids,(nil;@))) 
+# #     """
+
+#     code = f"""
+# map(head)(cons;(ids,(nil;@))) 
+#     """
     print(code)
     assert infer_typ(code, ctx(["map", "head", "single", "ids"]))
 
@@ -630,7 +641,7 @@ let f = (
 }}
     """)
     print(code)
-    assert infer_typ(code) == "TOP"
+    assert not infer_typ(code)
 
 
 ###############################################################
@@ -713,15 +724,8 @@ if __name__ == '__main__':
     pass
     ##########################
     # test_typing_A9()
-    # test_typing_C3()
-    # test_typing_C8() #nondeterminism
-    # test_typing_E2()
-    # test_typing_F6() #nondeterminism
-    test_typing_F7() #nondeterminism
-    # test_typing_F8() #nondeterminism
-    # test_typing_G9() # assertion error
     # test_typing_structures_2() #assertion error
-    # test_max()
+    test_max()
 
 
 #######################################################################

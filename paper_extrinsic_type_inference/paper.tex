@@ -2045,6 +2045,8 @@ rely on analogous techniques.
     }
 
     \inferrule {
+      \TODO{update to learn constraints more constraints}
+      \\\\
       \alpha \in \Theta 
       % \\
       % \Theta, \Delta \entails \alpha \subtypes \tau \safe
@@ -2114,6 +2116,8 @@ are stronger than $\tau$.
     }
 
     \inferrule {
+      \TODO{update to learn constraints more constraints}
+      \\\\
       \alpha \in \Theta 
       \\
       % \Theta, \Delta \entails \tau \subtypes \alpha \safe
@@ -2827,7 +2831,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \J{head(ids)}
-    & \fail & \pass & \pass \\
+    & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \J{single(id)}
@@ -2847,7 +2851,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \J{g(single(id))(ids)}
-    & \fail & \pass & \pass \\
+    & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \J{map(poly)(single(id))}
@@ -2923,11 +2927,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \J{cons(head(ids))(ids)}
-    & \fail & \pass & \pass \\
+    & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \J{head(ids)(succ;succ;succ;zero;@)}
-    & \fail & \pass & \pass \\
+    & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \J{choose(head(ids))}

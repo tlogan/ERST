@@ -16,8 +16,8 @@ Bool = (f"""
 """.strip())
 
 Nat = (f"""
-(LFP[R] BOT
-| (<zero> @) 
+(LFP[R] 
+ (<zero> @) 
 | (<succ> R)
 )
 """.strip())
@@ -31,8 +31,8 @@ Even = (f"""
 
 def List_(T): 
     return (f"""
-(LFP[R] BOT
-| (<nil> @) 
+(LFP[R] 
+ (<nil> @) 
 | (<cons> (({T}) * R))
 )
     """.strip())

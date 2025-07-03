@@ -150,7 +150,7 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     answer = tc.combo
     print(f"""
 ============================================================================================
-{answer}
+Parse Type: {answer}
 ============================================================================================
     """)
     return answer
@@ -170,6 +170,27 @@ def analyze(code : str, typing_context = m()) -> tuple[Optional[analyzer.Typ], s
         elif len(tc.results) == 1:
             result = tc.results[0]
             solver = parser._solver
+
+
+            print(f"""
+=======================
+analysis result
+=======================
+typ:
+{analyzer.concretize_typ(result.typ)}
+
+skolems:
+{result.world.closedids}
+
+constraints:
+{analyzer.concretize_constraints(result.world.constraints)}
+=======================
+            """)
+
+
+
+
+
             t1 = solver.interpret_polar_typ(True, result.world.closedids, result.world.constraints, result.typ) 
             influential_ids = result.world.closedids.union(analyzer.extract_free_vars_from_typ(s(), t1))
             influential_constraints = analyzer.filter_constraints_by_all_variables(result.world.constraints, influential_ids)
@@ -206,13 +227,15 @@ def infer_typ(code : str, context = {}) -> str:
     print(f"TIME: {end - start}")
     if result == None:
         return ""
-    if result == analyzer.Top:
+    if result == analyzer.Top():
         print("~~~~~~~~~~~TOP!!!!!!!")
         return ""
     else:
         answer = analyzer.concretize_typ(result)
         print(f"""
 =========================================================================================================================
+INFERENCE: 
+~~~~~~~
 {answer}
 =========================================================================================================================
         """)
