@@ -24,6 +24,9 @@
 
 \usepackage{url}
 
+\newcounter{pdc}
+\newcounter{sdc}
+
 \makeatletter % allow us to mention @-commands
 \def\arcr{\@arraycr}
 \makeatother
@@ -52,6 +55,9 @@
 \author{Thomas Logan}
 
 \begin{document}
+
+\newcommand{\pdc}{\stepcounter{pdc}\arabic{pdc}}
+\newcommand{\sdc}{\stepcounter{sdc}\arabic{sdc}}
 
 \newcommand{\Par}[1]{\paragraph{\textbf{#1}}}
 \newcommand*{\code}{\fontfamily{pcr}\selectfont}
@@ -2523,11 +2529,37 @@ rely on analogous techniques.
 \section{Experiments}
 \label{sec:experiments}
 
+
+
+\noindent
 We performed experiments to see how type inference performs on both parametric data and structural data. 
 These two categories have historically been tackled independently of each other, where parametric types
 tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
 Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
 However, the distinction is useful for comparing our design to previous work. 
+
+We implemented an extrinsic type inference system that corresponds to the predicate definitions
+presented thus far. 
+
+To observe the expressiveness of our system on parametric data, 
+we evaluated our implementation on the same suite of programs 
+that SuperF was evaluated on, as presented in the paper on SuperF \cite{}.
+Based on these experiments, our system all programs admitted by SuperF, as well as some programs 
+that SuperF is unable to admit.
+Thus, our system appears to be more expressive on parametric data than the previous most expressive
+type inference system that we know of.
+
+To observe the expressiveness of our system on structural data, 
+we constructed simple programs that represent the kind of flexible and reusable code
+often found programs written in untyped scripting languages. 
+We ran these examples in our implementation, and created analogous version to run
+in the online implementation of MLScript \cite{},
+which represents the theoretical system MLStruct \cite{}. 
+All of these examples are admitted by our system, while MLStruct
+can either requires intrinsic specifications to admit the program, 
+or simply can't admit the program.
+
+
 
 \begin{definition} Experimental Expressions and Types  
   \label{def:experimental_expressions_and_types}
@@ -2668,8 +2700,8 @@ the typing of some identifiers have already been learned or verified.
 \TODO{update tests to inspect the inferred type}
 
 \begin{experiment}
-  \label{experi:parametric_data_1_thru_14}
-  Parametric Data [1, 14] 
+  \label{experi:parametric_data_part_1}
+  Parametric Data (Part 1) 
   \\
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
@@ -2692,61 +2724,60 @@ the typing of some identifiers have already been learned or verified.
     \multicolumn{2}{|c||}{} & \multicolumn{3}{c|}{$impl$} \\ 
     \hline
     \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-% [0.5ex] 
     \hline\hline
-    1. &
+    \pdc. &
     \J{\{x => \{y => y\}\}} 
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{choose(id)} 
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{choose(nil)(id)} 
     & \pass & \pass & \pass \\
     \hline
-    4. &
+    \pdc. &
     \J{\{x => x(x)\}} 
     & \pass & \pass & \pass \\
     \hline
-    5. &
+    \pdc. &
     \J{id(auto)} 
     & \pass & \pass & \pass \\
     \hline
-    6. &
+    \pdc. &
     \J{id(auto')} 
     & \pass & \pass & \pass \\
     \hline
-    7. &
+    \pdc. &
     \J{choose(id)(auto)} 
     & \pass & \pass & \pass \\
     \hline
-    8. &
+    \pdc. &
     \J{choose(id)(auto')} 
     & \pass & \pass & \pass \\
     \hline
-    9. &
+    \pdc. &
     \J{foo(choose(ids))(ids)} 
     & \pass & \pass & \pass \\
     \hline
-    10. &
+    \pdc. &
     \J{poly(id)} 
     & \pass & \pass & \pass \\
     \hline
-    11. &
+    \pdc. &
     \J{poly(\{x => x\})} 
     & \pass & \pass & \pass \\
     \hline
-    12. &
+    \pdc. &
     \J{id(poly)(\{x => x\})} 
     & \pass & \pass & \pass \\
     \hline
-    13. &
+    \pdc. &
     \J{\{f => f(succ;zero;@), f(true;@)\}}
     & \pass & \pass & \pass \\
     \hline
-    14. &
+    \pdc. &
     \J{\{xs => poly(head(xs))\}}
     & \pass & \pass & \pass \\
     \hline
@@ -2757,80 +2788,86 @@ the typing of some identifiers have already been learned or verified.
 % $\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{ctx} \entails e \hastype \tau \given \Theta, \Delta$ 
 
 \begin{experiment}
-  \label{experi:parametric_data_15_}
-  Parametric Data [15, ...]
+  \label{experi:parametric_data_part_2}
+  Parametric Data (Part 2) 
   \\
   \begin{center}
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
+  \begin{tabular}{|l m{30em} || >{\centering}m{5em} || >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+    \multicolumn{5}{l}{
+      \sz{
+      Does $ impl(\textbf{ctx}\entails e)
+      $ admit the expression? 
+      }
+      \sz{
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+      }
+    } \\
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \multicolumn{2}{|c||}{} & \multicolumn{3}{c|}{$impl$} \\ 
     \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-    \hline
-    \hline
-    1. &
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    \hline\hline
+    \pdc. &
     \J{length(ids)}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{tail(ids)}
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{head(ids)}
     & \pass & \pass & \pass \\
     \hline
-    4. &
+    \pdc. &
     \J{single(id)}
     & \pass & \pass & \pass \\
     \hline
-    5. &
+    \pdc. &
     \J{cons(id)(ids)}
     & \pass & \pass & \pass \\
     \hline
-    6. &
+    \pdc. &
     \J{cons(\{x => x\})(ids)}
     & \pass & \pass & \pass \\
     \hline
-    7. &
+    \pdc. &
     \J{append(single(inc))(single(id))}
     & \pass & \pass & \pass \\
     \hline
-    8. &
+    \pdc. &
     \J{g(single(id))(ids)}
     & \pass & \pass & \pass \\
     \hline
-    9. &
+    \pdc. &
     \J{map(poly)(single(id))}
     & \pass & \pass & \pass \\
     \hline
-    10. &
+    \pdc. &
     \J{map(head)(single(ids))}
     & \pass & \pass & \pass \\
     \hline
-    \hline
-    1. &
+    \pdc. &
     \J{app(poly)(id)}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{revapp(id)(poly)}
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{runST(argST)}
     & \pass & \pass & \pass \\
     \hline
-    4. &
+    \pdc. &
     \J{app(runST)(argST)}
     & \pass & \pass & \pass \\
     \hline
-    4. &
+    \pdc. &
     \J{revapp(argST)(runST)}
     & \pass & \pass & \pass \\
     \hline
@@ -2840,55 +2877,61 @@ the typing of some identifiers have already been learned or verified.
 
 \begin{experiment}
   \label{experi:typing_parameters_part_3}
-  Typing Parameters - Part 3 
+  Typing Parameters (Part 3) 
   \\
   \begin{center}
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
+  \begin{tabular}{|l m{30em} || >{\centering}m{5em} || >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+    \multicolumn{5}{l}{
+      \sz{
+      Does $ impl(\textbf{ctx}\entails e)
+      $ admit the expression? 
+      }
+      \sz{
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+      }
+    } \\
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \multicolumn{2}{|c||}{} & \multicolumn{3}{c|}{$impl$} \\ 
     \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
     \hline\hline
-    1. &
+    \pdc. &
     \J{k(h)(l)}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{k(\{x => h(x)\})(l)}
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{r(\{x => \{y => y\}\})}
     & \pass & \pass & \pass \\
     \hline
-    \hline
-    1. &
+    \pdc. &
     \J{auto(id)}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{cons(head(ids))(ids)}
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{head(ids)(succ;succ;succ;zero;@)}
     & \pass & \pass & \pass \\
     \hline
-    4. &
+    \pdc. &
     \J{choose(head(ids))}
     & \pass & \pass & \pass \\
     \hline
-    5. &
+    \pdc. &
     \J{let f = revapp(id) in f(poly)}
     & \pass & \pass & \pass \\
     \hline
-    6. &
+    \pdc. &
     \J{choose(id)(\{x => auto'(x)\})}
     & \pass & \pass & \pass \\
     \hline
@@ -2897,51 +2940,58 @@ the typing of some identifiers have already been learned or verified.
 \end{experiment}
 
 \begin{experiment}
-  \label{experi:parametric_data_part_3}
-  Parametric Data - Part 4
+  \label{experi:parametric_data_part_4}
+  Parametric Data (Part 4)
   \\
   \begin{center}
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
+  \begin{tabular}{|l m{30em} || >{\centering}m{5em} || >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+    \multicolumn{5}{l}{
+      \sz{
+      Does $ impl(\textbf{ctx}\entails e)
+      $ admit the expression? 
+      }
+      \sz{
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+      }
+    } \\
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \multicolumn{2}{|c||}{} & \multicolumn{3}{c|}{$impl$} \\ 
     \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
-% [0.5ex] 
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
     \hline\hline
-    1. &
+    \pdc. &
     \J{let ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    \pdc. &
     \J{s}
     & \pass & \pass & \pass \\
     \hline
-    3. &
+    \pdc. &
     \J{let ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
     & \pass & \pass & \fail \\
     \hline
-    4. &
+    \pdc. &
     \J{let ignore : } \textbf{ChurchNum} \J{ = n3 in @}
     & \pass & \pass & \pass \\
     \hline
-    5. &
+    \pdc. &
     \J{let ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = \{@ => n3(n3)\} in @}
     & \pass & \pass & \fail \\
     \hline
-    6. &
+    \pdc. &
     \J{fst(fst(fst(n3(\{x => x,(zero;@)\})(succ;zero;@))))}
     & \pass & \pass & \pass \\
     \hline
-    7. &
+    \pdc. &
     \J{(s(s(z)))(s(s(z)))}
     & \pass & \pass & \pass \\
     \hline
-    8. &
+    \pdc. &
     \begin{array}[t]{l}
       \J{let to\_church = loop(\{self => } 
       \\
@@ -2953,27 +3003,27 @@ the typing of some identifiers have already been learned or verified.
     \end{array}
     & \pass & \pass & \pass \\
     \hline
-    9. &
+    \pdc. &
     \J{let ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
     & \pass & \pass & \pass \\
     \hline
-    10. &
+    \pdc. &
     \J{loop(\{self => \{x => if true;@ then x else self(self)(x)\}\}} 
     & \fail & \fail & \fail \\
     \hline
-    11. &
+    \pdc. &
     \J{\{x => x(x)\}(\{x => x(x)\})}
     & \pass & \fail & \fail \\
     \hline
-    12. &
+    \pdc. &
     \J{auto(auto'(id))}
     & \pass & \pass & \fail \\
     \hline
-    13. &
+    \pdc. &
     \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
     & \pass & \pass & \pass \\
     \hline
-    14. &
+    \pdc. &
     \begin{array}[t]{l}
       \J{\{f => } 
       \\
@@ -3001,15 +3051,22 @@ the typing of some identifiers have already been learned or verified.
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|} 
+  \begin{tabular}{|l m{35em} || >{\centering}m{5em} || >{\centering\arraybackslash}m{5em} |} 
+    \multicolumn{4}{l}{
+      \sz{
+      Does $ impl(\textbf{ctx}\entails e)
+      $ admit the expression? 
+      }
+      \sz{
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+      }
+    } \\
     \hline
-    \multicolumn{4}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
-    \hline
+    \multicolumn{2}{|c||}{} & \multicolumn{2}{c|}{$impl$} \\ 
     \hline
     \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
-% [0.5ex] 
     \hline\hline
-    1. &
+    \sdc. &
     \begin{array}[t]{l}
       \J{let stdCmp = \{ a,b => } 
       \\
@@ -3029,7 +3086,7 @@ the typing of some identifiers have already been learned or verified.
     \end{array}
     & \pass & \assisted \\
     \hline
-    1. &
+    \sdc. &
     \begin{array}[t]{l}
       \J{let stdSort : (TOP } 
       \\
@@ -3041,7 +3098,7 @@ the typing of some identifiers have already been learned or verified.
     \end{array}
     & \pass & \assisted \\
     \hline
-    1. &
+    \sdc. &
     \begin{array}[t]{l}
       \J{let double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop(\{self => } 
       \\
@@ -3053,7 +3110,7 @@ the typing of some identifiers have already been learned or verified.
     \end{array}
     & \pass & \fail \\
     \hline
-    1. &
+    \sdc. &
     \begin{array}[t]{l}
       \J{let halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop(\{self => } 
       \\
@@ -3065,7 +3122,7 @@ the typing of some identifiers have already been learned or verified.
     \end{array}
     & \pass & \fail \\
     \hline
-    1. &
+    \sdc. &
     \begin{array}[t]{l}
       \J{\{zero;@ => \{zero;@ => @\}(@)\}}
       \\
