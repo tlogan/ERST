@@ -832,6 +832,7 @@ if __name__ == '__main__':
     # test_variable_subtypes_tag_pair()
     # test_length()
     # test_typing_sanity_application_6()
+    test_max()
 
 
 #######################################################################

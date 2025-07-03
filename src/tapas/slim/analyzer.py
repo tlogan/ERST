@@ -428,8 +428,9 @@ class Subtyping:
 def concretize_ids(ids : tuple[str, ...]) -> str:
     return " ".join(ids)
 
-def concretize_constraints(subtypings : Iterable[Subtyping]) -> str:
-    return "\n".join([
+def concretize_constraints(subtypings : Iterable[Subtyping], inline = False) -> str:
+    sep = " " if inline else "\n"
+    return sep.join([
         "(" + concretize_typ(st.lower) + " <: " + concretize_typ(st.upper) + ") "
         for st in subtypings
     ])
@@ -476,39 +477,39 @@ def concretize_typ(typ : Typ) -> str:
         elif isinstance(control, Imp):
             plate_entry = ([control.antec, control.consq], lambda antec, consq : f"({antec} -> {consq})")  
         elif isinstance(control, Unio):
-            plate_entry = ([control.left,control.right], lambda left, right : f"({left}\n{indent('| ' + right)})")  
+            plate_entry = ([control.left,control.right], lambda left, right : f"({left} | {right})")  
         elif isinstance(control, Inter):
             if (
                 isinstance(control.left, TEntry) and control.left.label == "head" and 
                 isinstance(control.right, TEntry) and control.right.label == "tail" 
             ):
-                plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({left}, {right})")  
+                plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({left} * {right})")  
             elif (
                 isinstance(control.right, TEntry) and control.right.label == "head" and 
                 isinstance(control.left, TEntry) and control.left.label == "tail" 
             ):
-                plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({right}, {left})")  
+                plate_entry = ([control.left.body,control.right.body], lambda left, right : f"({right} * {left})")  
             else:
                 plate_entry = ([control.left,control.right], lambda left, right : f"({left} & {right})")  
         elif isinstance(control, Diff):
             plate_entry = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})")  
         elif isinstance(control, Exi):
-            constraints = concretize_constraints(control.constraints)
+            constraints = concretize_constraints(control.constraints, inline=True)
             ids = concretize_ids(control.ids)
             if constraints:
-                plate_entry = ([control.body], lambda body : f"(EXI[{ids}]\n{indent(constraints)}\n ; {body})")
+                plate_entry = ([control.body], lambda body : f"(EXI[{ids}] {constraints} : {body})")
             else:
                 plate_entry = ([control.body], lambda body : f"(EXI[{ids}] {body})")
         elif isinstance(control, All):
-            constraints = concretize_constraints(control.constraints)
+            constraints = concretize_constraints(control.constraints, inline=True)
             ids = concretize_ids(control.ids)
             if constraints:
-                plate_entry = ([control.body], lambda body : f"(ALL[{ids}]\n{indent(constraints)}\n ; {body})")  
+                plate_entry = ([control.body], lambda body : f"(ALL[{ids}] {constraints} : {body})")  
             else:
                 plate_entry = ([control.body], lambda body : f"(ALL[{ids}] {body})")
         elif isinstance(control, LeastFP):
             id = control.id
-            plate_entry = ([control.body], lambda body : f"(LFP[{id}]\n{indent(body)})")  
+            plate_entry = ([control.body], lambda body : f"(LFP[{id}] {body})")  
         elif isinstance(control, Top):
             plate_entry = ([], lambda: "TOP")  
         elif isinstance(control, Bot):
