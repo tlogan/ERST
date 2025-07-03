@@ -2357,22 +2357,22 @@ class Solver:
             if st.lower == lower 
         ).union(self.extract_factored_upper_bounds(world, lower.id))
 
-        if any(
+        closed_upper_parts = [
+            upper_part
+            for upper_part in upper_parts
+            if not isinstance(upper_part, TVar) or upper_part.id in world.closedids
+        ]
+        worlds = []
+        last_constraints = []
+        for upper_part in closed_upper_parts:
+            worlds += self.solve(world, upper_part, upper)
+
+        if not worlds and any(
             isinstance(upper_part, TVar) and upper_part.id not in world.closedids
             for upper_part in upper_parts
         ):
             worlds = [world]
             last_constraints = [Subtyping(lower, upper)]
-        else:
-            closed_upper_parts = [
-                upper_part
-                for upper_part in upper_parts
-                if not isinstance(upper_part, TVar) or upper_part.id in world.closedids
-            ]
-            worlds = []
-            for upper_part in closed_upper_parts:
-                worlds += self.solve(world, upper_part, upper)
-            last_constraints = []
 
               
         constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
@@ -2420,24 +2420,22 @@ DEBUG lower TVar Skolem
             if st.upper == upper 
         )
 
-        if any( 
+        closed_lower_parts = [
+            lower_part
+            for lower_part in lower_parts
+            if not isinstance(lower_part, TVar) or lower_part.id in world.closedids
+        ]
+        worlds = []
+        last_constraints = []
+        for lower_part in closed_lower_parts:
+            worlds += self.solve(world, lower, lower_part)
+
+        if not worlds and any( 
             (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
             for lower_part in lower_parts
         ):
             worlds = [world]
             last_constraints = [Subtyping(lower, upper)]
-        else:
-            closed_lower_parts = [
-                lower_part
-                for lower_part in lower_parts
-                if not isinstance(lower_part, TVar) or lower_part.id in world.closedids
-            ]
-            worlds = []
-            for lower_part in closed_lower_parts:
-                worlds += self.solve(world, lower, lower_part)
-            last_constraints = []
-
-
 
         constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
         subbed_constraints = list(constraints.difference(world.constraints))
@@ -2759,7 +2757,7 @@ constraints:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
-            # return self.check_closed_variable_elimination_new(world, lower, upper)
+            return self.check_closed_variable_elimination_new(world, lower, upper)
             if self.check_closed_variable_elimination(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
@@ -2774,7 +2772,7 @@ constraints:
 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
-            # return self.check_closed_variable_introduction_new(world, lower, upper)
+            return self.check_closed_variable_introduction_new(world, lower, upper)
             if self.check_closed_variable_introduction(world, lower, upper): 
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
