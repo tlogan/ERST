@@ -17,6 +17,8 @@
 \usepackage{array}
 \usepackage{wasysym}
 
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
 
@@ -64,9 +66,12 @@
 \newcommand{\safe}{\ \checkmark}
 \newcommand{\relational}{\ \Re}
 
-\newcommand{\pass}{$\CIRCLE$}
-\newcommand{\assisted}{$\LEFTcircle$}
-\newcommand{\fail}{$\Circle$}
+
+% \newcommand{\cmark}{\ding{51}}%
+% \newcommand{\xmark}{\ding{55}}%
+\newcommand{\pass}{\text{\normalsize \color{Green} \ding{51}}}
+\newcommand{\assisted}{\text{\normalsize \color{Purple} \ding{45}}}
+\newcommand{\fail}{\text{\normalsize \color{red} \ding{55}}}
 
 \newcommand{\unique}{\ \dagger}
 
@@ -86,6 +91,7 @@
 \newcommand{\open}{\circ}
 
 
+
 \newcommand{\up}{\ \land\ }
 \newcommand{\down}{\ \lor\ }
 
@@ -95,6 +101,8 @@
 \newcommand{\hastype}{:}
 \newcommand{\pattype}{\ \lozenge\ }
 \newcommand{\liftfun}{:}
+
+\newcommand{\sz}[1]{\text{\small #1}}
 
 \newcommand{\R}[1]{\color{teal}\ \ [\emph{#1}]}
  
@@ -2515,7 +2523,7 @@ rely on analogous techniques.
 \section{Experiments}
 \label{sec:experiments}
 
-We performed experiments for two broad categories of type inference capabilities: parametric and structural. 
+We performed experiments to see how type inference performs on both parametric data and structural data. 
 These two categories have historically been tackled independently of each other, where parametric types
 tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
 Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
@@ -2569,13 +2577,17 @@ However, the distinction is useful for comparing our design to previous work.
   \]
 \end{definition}
 
+\noindent
+For clarity, we define a few metalinguistic terms to stand in for 
+types and expressions used as inputs to our system. 
+
 \begin{definition} Experimental Typing Context  
   \label{def:experimental_typing_context}
   \scriptsize
   \[
   \begin{array}[t]{ll}
     \begin{array}[t]{r@{}c@{}l}
-      \textbf{context} & = &  \hfill
+      \textbf{ctx} & = &  \hfill
       \\
       \J{head} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> T}
       \\
@@ -2644,9 +2656,11 @@ However, the distinction is useful for comparing our design to previous work.
     \end{array}
   \end{array}
   \]
-
 \end{definition}
 
+\noindent
+Additionally, for the purpose of experiment, it is useful to assume that   
+the typing of some identifiers have already been learned or verified.
 
 
 \TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
@@ -2654,20 +2668,30 @@ However, the distinction is useful for comparing our design to previous work.
 \TODO{update tests to inspect the inferred type}
 
 \begin{experiment}
-  \label{experi:typing_parameters_part_1}
-  Typing Parameters - Part 1
+  \label{experi:parametric_data_1_thru_14}
+  Parametric Data [1, 14] 
   \\
-  \begin{center}
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
+  % \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|lm{35em}||c||c|c|} 
+  \begin{center}
+  \centering
+  % \setlength{\tabcolsep}{2pt}
+  \begin{tabular}{|l m{30em} || >{\centering}m{5em} || >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+    \multicolumn{5}{l}{
+      \sz{
+      Does $ impl(\textbf{ctx}\entails e)
+      $ admit the expression? 
+      }
+      \sz{
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+      }
+    } \\
     \hline
-    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \multicolumn{2}{|c||}{} & \multicolumn{3}{c|}{$impl$} \\ 
     \hline
-    \hline
-    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
 % [0.5ex] 
     \hline\hline
     1. &
@@ -2718,14 +2742,35 @@ However, the distinction is useful for comparing our design to previous work.
     \J{id(poly)(\{x => x\})} 
     & \pass & \pass & \pass \\
     \hline
-    \hline
-    1. &
+    13. &
     \J{\{f => f(succ;zero;@), f(true;@)\}}
     & \pass & \pass & \pass \\
     \hline
-    2. &
+    14. &
     \J{\{xs => poly(head(xs))\}}
     & \pass & \pass & \pass \\
+    \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+% $\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{ctx} \entails e \hastype \tau \given \Theta, \Delta$ 
+
+\begin{experiment}
+  \label{experi:parametric_data_15_}
+  Parametric Data [15, ...]
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
+    \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
     \hline
     \hline
     1. &
@@ -2794,8 +2839,8 @@ However, the distinction is useful for comparing our design to previous work.
 \end{experiment}
 
 \begin{experiment}
-  \label{experi:typing_parameters_part_2}
-  Typing Parameters - Part 2 
+  \label{experi:typing_parameters_part_3}
+  Typing Parameters - Part 3 
   \\
   \begin{center}
   \scriptsize
@@ -2847,7 +2892,27 @@ However, the distinction is useful for comparing our design to previous work.
     \J{choose(id)(\{x => auto'(x)\})}
     & \pass & \pass & \pass \\
     \hline
+  \end{tabular}
+  \end{center}
+\end{experiment}
+
+\begin{experiment}
+  \label{experi:parametric_data_part_3}
+  Parametric Data - Part 4
+  \\
+  \begin{center}
+  \scriptsize
+  % \setlength{\arrayrulewidth}{0.5mm}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|lm{35em}||c||c|c|} 
     \hline
+    \multicolumn{5}{|c|}{$\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{context} \entails e \hastype \tau \given \Theta, \Delta$ } \\
+    \hline
+    \hline
+    \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SuperF w/o D} \\ 
+% [0.5ex] 
+    \hline\hline
     1. &
     \J{let ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
