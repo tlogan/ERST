@@ -2759,7 +2759,7 @@ the typing of some identifiers have already been learned or verified.
     \hline
     \pdc. &
     \J{foo(choose(ids))(ids)} 
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{poly(id)} 
@@ -2821,7 +2821,7 @@ the typing of some identifiers have already been learned or verified.
     \hline
     \pdc. &
     \J{head(ids)}
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{single(id)}
@@ -2841,7 +2841,7 @@ the typing of some identifiers have already been learned or verified.
     \hline
     \pdc. &
     \J{g(single(id))(ids)}
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{map(poly)(single(id))}
@@ -2917,11 +2917,11 @@ the typing of some identifiers have already been learned or verified.
     \hline
     \pdc. &
     \J{cons(head(ids))(ids)}
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{head(ids)(succ;succ;succ;zero;@)}
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{choose(head(ids))}
@@ -3096,7 +3096,7 @@ the typing of some identifiers have already been learned or verified.
       \\
       \J{) = sort(stdCmp) in ...} 
     \end{array}
-    & \pass & \assisted \\
+    & \fail & \assisted \\
     \hline
     \sdc. &
     \begin{array}[t]{l}

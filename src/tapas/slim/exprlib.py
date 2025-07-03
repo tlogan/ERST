@@ -4,20 +4,14 @@ from typing import *
 from dataclasses import dataclass
 from tapas.slim.typlib import *
 
+from pyrsistent.typing import PMap, PSet 
+from pyrsistent import m, s, pmap, pset
+
 
 ############################################################
 #### Context ####
 ############################################################
 
-def ctx(names : list[str], code : str):
-    base = code
-    for name in (names):
-        base = (f"""
-let zzz_{name} : ({context_map.get(name)}) -> TOP = 
-{{ {name} => {base} }} 
-in zzz_{name} 
-        """.strip())
-    return base
 
 context_map = {
 "head" : f"ALL[A] {List_('A')} -> A",
@@ -53,6 +47,21 @@ context_map = {
 "scalarCmp" : f"{Nat} * {Nat} -> {Bool}",
 "lexicoCmp" : f"{List_(Nat)} * {List_(Nat)} -> {Bool}",
 }
+
+def ctx(names : list[str]) -> PMap[str, str]:
+    return pmap({
+        n : context_map[n]
+        for n in names
+    })
+# def ctx(names : list[str], code : str):
+#     base = code
+#     for name in (names):
+#         base = (f"""
+# let zzz_{name} : ({context_map.get(name)}) -> TOP = 
+# {{ {name} => {base} }} 
+# in zzz_{name} 
+#         """.strip())
+#     return base
 
 
 ############################################################

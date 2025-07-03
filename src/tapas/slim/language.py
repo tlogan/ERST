@@ -169,15 +169,12 @@ def analyze(code : str, typing_context = m()) -> tuple[Optional[analyzer.Typ], s
             raise Exception("Parsing Error")
         elif len(tc.results) == 1:
             result = tc.results[0]
-            print(f"""
-~~~~~~~~~~~~~
-constraints:
-~~~~~~~~~~~~~
-{analyzer.concretize_constraints(result.world.constraints)}
-~~~~~~~~~~~~~
-constraints:
-            """)
-            return (result.typ, tc.toStringTree(recog=parser), parser._solver)
+            solver = parser._solver
+            t1 = solver.interpret_polar_typ(True, result.world.closedids, result.world.constraints, result.typ) 
+            influential_ids = result.world.closedids.union(analyzer.extract_free_vars_from_typ(s(), t1))
+            influential_constraints = analyzer.filter_constraints_by_all_variables(result.world.constraints, influential_ids)
+            t2 = solver.make_constraint_typ(True)(s(), result.world.closedids, influential_constraints, t1)
+            return (t2, tc.toStringTree(recog=parser), parser._solver)
         else: 
             print("!!!!!!!!!!!!!!!")
             print("result size: " + str(len(tc.results)))
@@ -208,6 +205,9 @@ def infer_typ(code : str, context = {}) -> str:
     end = time.time()
     print(f"TIME: {end - start}")
     if result == None:
+        return ""
+    if result == analyzer.Top:
+        print("~~~~~~~~~~~TOP!!!!!!!")
         return ""
     else:
         answer = analyzer.concretize_typ(result)

@@ -99,77 +99,77 @@ def test_typing_A1():
     """)
 
 def test_typing_A2():
-    code = ctx(["choose", "id"], f"""
+    code =f"""
 choose(id)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["choose", "id"]))
 
 def test_typing_A3():
-    code = ctx(["choose", "nil", "ids"], f"""
+    code = f"""
 choose(nil)(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["choose", "nil", "ids"]))
 
 def test_typing_A4():
     assert infer_typ("{ x => x(x) }")
 
 def test_typing_A5():
-    code = ctx(["id", "auto"], f"""
+    code = f"""
 id(auto)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["id", "auto"]))
 
 def test_typing_A6():
-    code = ctx(["id", "auto_prime"], f"""
+    code = f"""
 id(auto_prime)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["id", "auto_prime"]))
 
 def test_typing_A7():
-    code = ctx(["choose", "id", "auto"], f"""
+    code = f"""
 choose(id)(auto)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["choose", "id", "auto"]))
 
 def test_typing_A8():
-    code = ctx(["choose", "id", "auto_prime"], f"""
+    code = f"""
 choose(id)(auto_prime)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["choose", "id", "auto_prime"]))
 
 def test_typing_A9():
-    code = ctx(["foo", "choose", "ids", "id"], f"""
+    code = f"""
 foo(choose(id))(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["foo", "choose", "ids", "id"]))
 
 def test_typing_A10():
-    code = ctx(["poly", "id"], f"""
+    code = f"""
 poly(id)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["poly", "id"]))
 
 def test_typing_A11():
-    code = ctx(["poly"], f"""
+    code = f"""
 poly({{ x => x }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["poly"]))
 
 def test_typing_A12():
-    code = ctx(["id", "poly"], f"""
+    code = f"""
 id(poly)({{ x => x }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["id", "poly"]))
 
 ###############################################################
 ##### Typing B. Inference with polymorphic arguments
@@ -180,195 +180,198 @@ def test_typing_B1():
     """)
 
 def test_typing_B2():
-    code = ctx(["poly", "head"], f"""
+    code = f"""
 {{ xs => poly(head)(xs) }}
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["poly", "head"]))
 
 ###############################################################
 ##### Typing C. Function on polymorphic lists 
 ###############################################################
 
 def test_typing_C1():
-    code = ctx(["length", "ids"], f"""
+    code = f"""
 length(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["length", "ids"]))
 
 def test_typing_C2():
-    code = ctx(["tail", "ids"], f"""
+    code =f"""
 tail(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code,  ctx(["tail", "ids"]))
 
 def test_typing_C3():
-    code = ctx(["head", "ids"], f"""
+    code = f"""
 head(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["head", "ids"]))
 
 def test_typing_C4():
-    code = ctx(["single", "id"], f"""
+    code = f"""
 single(id)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["single", "id"]))
 
 def test_typing_C5():
-    code = ctx(["cons", "id", "ids"], f"""
+    code = f"""
 cons(id)(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["cons", "id", "ids"]))
 
 def test_typing_C6():
-    code = ctx(["cons", "ids"], f"""
+    code = f"""
 cons({{ x => x }})(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["cons", "ids"]))
 
 def test_typing_C7():
-    code = ctx(["append", "single", "inc", "id"], f"""
+    code = f"""
 append(single(inc))(single(id))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["append", "single", "inc", "id"]))
 
 def test_typing_C8():
-    code = ctx(["g", "single", "id", "ids"], f"""
+    code = f"""
 g(single(id))(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["g", "single", "id", "ids"]))
 
 def test_typing_C9():
-    code = ctx(["map", "poly", "single", "id"], f"""
+    code = f"""
 map(poly)(single(id))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["map", "poly", "single", "id"]))
 
 def test_typing_C10():
-    code = ctx(["map", "head", "single", "ids"], f"""
+    code = f"""
 map(head)(single(ids))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["map", "head", "single", "ids"]))
 
 ###############################################################
 ##### Typing D. Application functions 
 ###############################################################
 
 def test_typing_D1():
-    code = ctx(["app", "poly", "id"], f"""
+    code = f"""
 app(poly)(id)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["app", "poly", "id"]))
 
 def test_typing_D2():
-    code = ctx(["revapp", "poly", "id"], f"""
+    code = f"""
 revapp(id)(poly)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["revapp", "poly", "id"]))
 
 def test_typing_D3():
-    code = ctx(["runState", "argState"], f"""
+    code = f"""
 runState(argState)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["runState", "argState"]))
 
 def test_typing_D4():
-    code = ctx(["app", "runState", "argState"], f"""
+    code = f"""
 app(runState)(argState)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["app", "runState", "argState"]))
 
 def test_typing_D5():
-    code = ctx(["revapp", "runState", "argState"], f"""
+    code = f"""
 revapp(argState)(runState)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["revapp", "runState", "argState"]))
 
 ###############################################################
 ##### Typing E. Eta expansion 
 ###############################################################
 
 def test_typing_E1():
-    code = ctx(["k", "h", "l"], f"""
+    code = f"""
 k(h)(l)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["k", "h", "l"]))
 
 def test_typing_E2():
-    code = ctx(["k", "h", "l"], f"""
+    code = f"""
 k({{ x => h(x) }})(l)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["k", "h", "l"]))
 
 def test_typing_E3():
-    code = ctx(["r"], f"""
+    code = f"""
 r({{ x => {{ y => y }} }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["r"]))
 
 ###############################################################
 ##### Typing F. FreezeML paper additions 
 ###############################################################
 def test_typing_F5():
-    code = ctx(["auto", "id"], f"""
+    code = f"""
 auto(id)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["auto", "id"]))
 
 def test_typing_F6():
-    code = ctx(["cons", "head", "ids", "id"], f"""
+    code = f"""
 cons (head(ids))(ids)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["cons", "head", "ids", "id"]))
 
 def test_typing_F7():
-    code = ctx(["head", "ids"], f"""
+    code = f"""
 head(ids)(succ;succ;succ;zero;@)
-    """)
+    """
+#     code = f"""
+# head(ids)
+#     """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["head", "ids"]))
 
 def test_typing_F8():
-    code = ctx(["choose", "head", "ids"], f"""
+    code =f"""
 choose(head(ids))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code,  ctx(["choose", "head", "ids"]))
 
 def test_typing_F9():
-    code = ctx(["revapp", "id", "poly"], f"""
+    code = f"""
 let f = revapp(id) in
 f(poly)
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["revapp", "id", "poly"]))
 
 def test_typing_F10():
-    code = ctx(["choose", "id", "auto_prime"], f"""
+    code = f"""
 choose(id)({{ x => auto_prime(x) }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["choose", "id", "auto_prime"]))
 
 ###############################################################
 ##### Typing G. SuperF paper additions 
@@ -413,18 +416,18 @@ c
     assert infer_typ(code)
 
 def test_typing_G5():
-    code = ctx(["fst"], f"""
+    code = f"""
 fst(fst(fst({el.church_three}({{ x => x }},(<zero>@))(<succ><zero>@))))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["fst"]))
 
 def test_typing_G6():
-    code = ctx(["succ", "zero"], f"""
+    code = f"""
 (succ(succ(zero)))(succ(succ(zero)))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["succ", "zero"]))
 
 def test_typing_G7():
     code = (f"""
@@ -471,40 +474,39 @@ def test_typing_G10():
     assert infer_typ(code)
 
 def test_typing_G11():
-    code = ctx(["auto", "auto_prime", "id"], f"""
+    code = f"""
 auto(auto_prime(id))
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["auto", "auto_prime", "id"]))
 
 def test_typing_G12():
-    code = ctx(["const"], f"""
+    code = f"""
 ({{ y =>
     (let tmp = y(id) in y(const))({{ x => x }})
 }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["const"]))
 
 def test_typing_G13():
-    code = ctx(["single"], f"""
+    code = f"""
 ({{ k => 
     ((k)({{ x => x }}), (k)({{ x => single(x) }}))
 }}) ({{ f => ((f)(<succ><zero>@)), (f)(<true>@) }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["single"]))
 
 def test_typing_G14():
-    #TODO: fail
-    code = ctx(["const", "id"], f"""
+    code = f"""
 ({{ f =>
     let a : @ -> {tl.Nat} -> (ALL[B] B -> B) = ({{ @ => f(id) }}) in
     (a(@))(const(const(id)))
 }})
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["const", "id"]))
 
 
 ###############################################################
@@ -514,13 +516,6 @@ def test_typing_G14():
 def test_typing_sanity_1():
     code = (f"""
 succ;succ;succ;succ;succ;succ;zero;@
-    """)
-    print(code)
-    assert infer_typ(code)
-
-def test_typing_sanity_2():
-    code = ctx(["head", "head", "head", "head", "head"],f"""
-@
     """)
     print(code)
     assert infer_typ(code)
@@ -553,13 +548,14 @@ def test_typing_sanity_branch_error():
 
 def test_typing_sanity_trivial_application():
     # TODO: why is the result just a variable?
+    # need to interpret and/or pack before printing
     code = (f"""
 (
 ({{one;@ => @}})(one;@)
 )
     """)
     print(code)
-    assert not infer_typ(code)
+    assert infer_typ(code)
 
 def test_typing_sanity_binding_annotation_1():
     code = (f"""
@@ -567,7 +563,7 @@ let x : <two> @ = y
 in @
     """)
     print(code)
-    assert infer_typ(code, {"y" : "(<one> @) | (<two> @)"})
+    assert not infer_typ(code, {"y" : "(<one> @) | (<two> @)"})
 
 def test_typing_sanity_binding_annotation_2():
     code = (f"""
@@ -619,7 +615,22 @@ let f = (
 }}
     """)
     print(code)
-    assert infer_typ(code)
+    result = infer_typ(code)
+    assert result and result != "TOP"
+
+def test_typing_sanity_application_6():
+    # This is admitted with a useless type
+    code = (f"""
+{{ y =>
+let f = (
+    {{ one;@ => uno;@ }}
+    {{ two;@ => dos;@ }}
+) in
+({{ tres;@ => @ }})(f(y))
+}}
+    """)
+    print(code)
+    assert infer_typ(code) == "TOP"
 
 
 ###############################################################
@@ -643,22 +654,22 @@ let f = (
 
 def test_typing_structures_1():
     #TODO: find way to speed up; parsing might be slow
-    code = ctx(["scalarCmp", "lexicoCmp"], f"""
+    code = f"""
 {el.stdCmp}
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["scalarCmp", "lexicoCmp"]))
 
 def test_typing_structures_2():
-    code = ctx(["scalarCmp", "lexicoCmp", "sort"], f"""
+    code = f"""
 let stdCmp = {el.stdCmp} in
 let stdSort : (
     ({tl.List_(tl.Nat)} -> {tl.List_(tl.Nat)}) &
     ({tl.List_(tl.List_(tl.Nat))} -> {tl.List_(tl.List_(tl.Nat))})
 ) = sort(stdCmp) in @
-    """)
+    """
     print(code)
-    assert infer_typ(code)
+    assert infer_typ(code, ctx(["scalarCmp", "lexicoCmp", "sort"]))
 
 
 def test_typing_structures_3():
@@ -700,12 +711,17 @@ def test_typing_structures_5():
 
 if __name__ == '__main__':
     pass
-    # SCRATCH WORK
+    ##########################
     # test_typing_A9()
+    # test_typing_C3()
+    # test_typing_C8() #nondeterminism
+    # test_typing_E2()
+    # test_typing_F6() #nondeterminism
+    test_typing_F7() #nondeterminism
+    # test_typing_F8() #nondeterminism
+    # test_typing_G9() # assertion error
+    # test_typing_structures_2() #assertion error
     # test_max()
-    # test_typing_structures_4()
-    # test_typing_sanity_inter_nesting_constraint()
-    test_typing_sanity_binding_annotation_4()
-    # test_max()
+
 
 #######################################################################
