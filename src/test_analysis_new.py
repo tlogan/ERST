@@ -559,7 +559,68 @@ def test_typing_sanity_trivial_application():
 )
     """)
     print(code)
+    assert not infer_typ(code)
+
+def test_typing_sanity_binding_annotation_1():
+    code = (f"""
+let x : <two> @ = y 
+in @
+    """)
+    print(code)
+    assert infer_typ(code, {"y" : "(<one> @) | (<two> @)"})
+
+def test_typing_sanity_binding_annotation_2():
+    code = (f"""
+let f = (
+    {{ one;@ => uno;@ }}
+    {{ two;@ => dos;@ }}
+) in
+let x : <dos> @  = f(y) 
+in @
+    """)
+    print(code)
+    assert not infer_typ(code, {"y" : "(<one> @) | (<two> @)"})
+
+def test_typing_sanity_binding_annotation_3():
+    code = (f"""
+let f = (
+    {{ one;@ => uno;@ }}
+    {{ two;@ => dos;@ }}
+) in
+f(y) 
+    """)
+    print(code)
+    assert infer_typ(code, {"y" : "(<one> @) | (<two> @)"})
+
+def test_typing_sanity_binding_annotation_4():
+    # this is admitted by strengthening the type of y
+    code = (f"""
+{{ y =>
+let f = (
+    {{ one;@ => uno;@ }}
+    {{ two;@ => dos;@ }}
+) in
+let x : <uno> @ = f(y) in
+x
+}}
+    """)
+    print(code)
     assert infer_typ(code)
+
+def test_typing_sanity_application_5():
+    # this is admitted by strengthening the type of y
+    code = (f"""
+{{ y =>
+let f = (
+    {{ one;@ => uno;@ }}
+    {{ two;@ => dos;@ }}
+) in
+({{ uno;@ => @ }})(f(y))
+}}
+    """)
+    print(code)
+    assert infer_typ(code)
+
 
 ###############################################################
 ##### Subtyping Sanity 
@@ -644,6 +705,7 @@ if __name__ == '__main__':
     # test_max()
     # test_typing_structures_4()
     # test_typing_sanity_inter_nesting_constraint()
-    test_typing_sanity_trivial_application()
+    test_typing_sanity_binding_annotation_4()
+    # test_max()
 
 #######################################################################

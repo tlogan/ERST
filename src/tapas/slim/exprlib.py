@@ -80,7 +80,7 @@ church_three = (f"""
 """.strip())
 
 to_church = (f"""
-fix({{ self => 
+loop({{ self => 
     {{ zero;@ => {church_zero} }}
     {{ succ;n => {church_succ}(self(n)) }}
 }})
@@ -102,14 +102,14 @@ single = (f"""
 """.strip())
 
 double = (f"""
-fix({{ self => 
+loop({{ self => 
     {{ zero;@ => zero;@ }}
     {{ succ;n => succ;succ;(self(n)) }}
 }})
 """.strip())
 
 halve = (f"""
-fix({{ self => 
+loop({{ self => 
     {{ zero;@ => zero;@ }}
     {{ succ;succ;n => succ;(self(n)) }}
 }})
@@ -140,7 +140,7 @@ stdCmp = (f"""
 ############################################################
 
 ltd = ('''
-fix(case self => (
+loop(case self => (
     case (~zero @, ~succ x) => ~true @ 
     case (~succ a, ~succ b) => self(a,b) 
     case (x, ~zero @) => ~false @ 
@@ -149,7 +149,7 @@ fix(case self => (
 
 
 lted = (f"""
-fix({{ self =>
+loop({{ self =>
     {{ (zero;@), n => true;@ }}
     {{ (succ;m), (succ;n) => self(m,n) }}
     {{ (succ;m), (zero;@) => false;@  }}
@@ -183,14 +183,14 @@ let lted = {lted} in
 # ''')
 
 length = (f"""
-fix(case self => (
+loop(case self => (
     case ~nil @ => ~zero @ 
     case ~cons (x, xs) => ~succ (self(xs)) 
 )) 
 """.strip())
 
 add = (f"""
-fix (case self => ( 
+loop (case self => ( 
     case (~zero @, n) => n 
     case (~succ m, n) => ~succ (self(m, n))
 ))
@@ -199,14 +199,14 @@ fix (case self => (
 
 mult = (f"""
 let add = {add} in 
-fix (case self => ( 
+loop (case self => ( 
     case (~zero @, n) => ~zero 
     case (~succ m, n) => (add)(n, (self)(m, n))
 ))
 """.strip())
 
 concat_lists = (f"""
-fix (case self => ( 
+loop (case self => ( 
     case (~nil @, ys) => ys 
     case (~cons (x, xs), ys) => ~cons (x, (self)(xs, ys))
 ))
@@ -214,7 +214,7 @@ fix (case self => (
 
 reverse = (f"""
 let concat = ({concat_lists}) in
-fix (case self => ( 
+loop (case self => ( 
     case (~nil @) => ~nil @ 
     case (~cons (x, xs)) => 
         concat((self)(xs), ~cons(x, ~nil @))
@@ -222,7 +222,7 @@ fix (case self => (
 """.strip())
 
 tail_reverse = (f"""
-let f = fix (case self => ( 
+let f = loop (case self => ( 
     case (result, ~nil @) => result 
     case (result, ~cons (x, xs)) => 
         self(~cons(x, result), xs)
@@ -231,7 +231,7 @@ case xs => f(~nil @, xs)
 """.strip())
 
 stepped_tail_reverse = (f"""
-let f = fix (case self => case (result, l) => ( 
+let f = loop (case self => case (result, l) => ( 
     l |> (
     case (~nil @) => result 
     case (~cons (x, xs)) => 
@@ -242,7 +242,7 @@ case xs => f(~nil @, xs)
 """.strip())
 
 curried_tail_reverse = (f"""
-let f = fix (case self => case result => ( 
+let f = loop (case self => case result => ( 
     case (~nil @) => result 
     case (~cons (x, xs)) => 
         self(~cons(x, result))(xs)
@@ -253,7 +253,7 @@ f(~nil @)
 
 suml = (f"""
 let add = {add} in
-fix (case self => ( 
+loop (case self => ( 
     case (~nil @, b) => b
     case (~cons (x, xs), b) => self(xs, (add)(b, x))
 ))
@@ -261,7 +261,7 @@ fix (case self => (
 
 sumr = (f"""
 let add = {add} in
-fix (case self => ( 
+loop (case self => ( 
     case (b, ~nil @) => b
     case (b, ~cons (x, xs)) => (add)((self)(b, xs), x)
 ))
@@ -269,28 +269,28 @@ fix (case self => (
 
 curried_sumr = (f"""
 let add = {add} in
-fix (case self => case b => ( 
+loop (case self => case b => ( 
     case (~nil @) => b
     case (~cons (x, xs)) => (add)((self)(b)(xs), x)
 ))
 """.strip())
 
 foldr = (f'''
-fix (case self => ( 
+loop (case self => ( 
     case (f, b, ~nil @) => b
     case (f, b, ~cons (x, xs)) => f((self)(f, b, xs), x)
 ))
 '''.strip())
 
 foldl = (f'''
-fix (case self => ( 
+loop (case self => ( 
     case (f, b, ~nil @) => b
     case (f, b, ~cons (x, xs)) => self(f, (f)(b, x), xs)
 ))
 '''.strip())
 
 curried_foldl = (f'''
-fix (case self => case (f, b) => ( 
+loop (case self => case (f, b) => ( 
     case ~nil @ => b
     case ~cons (x, xs) => self(f, f(b, x))(xs)
 ))
@@ -299,7 +299,7 @@ fix (case self => case (f, b) => (
 
 fib = (f"""
 let add = {add} in
-fix (case self => ( 
+loop (case self => ( 
     case (~zero @) => ~zero @
     case (~succ ~zero @) => ~succ ~zero @
     case (~succ ~succ n) => ({add})((self)(~succ n), (self)(n))
@@ -308,7 +308,7 @@ fix (case self => (
 
 curried_tail_fib = (f"""
 let add = {add} in
-let f = fix (case self => (case (result, next) =>( 
+let f = loop (case self => (case (result, next) =>( 
     case (~zero @) => result 
     case (~succ n) => 
         let new_result = next in
@@ -339,7 +339,7 @@ f(~zero @, ~succ ~zero @)
 
 fact = (f"""
 let mult = {mult}
-fix (case self => ( 
+loop (case self => ( 
     case (~zero @) => ~succ ~zero @
     case (~succ n) => (mult)((self)(n), ~succ n)
 ))
@@ -381,7 +381,7 @@ let length = {length} in
 
 
 halve_list = (f"""
-fix(case self => (
+loop(case self => (
     case ~nil @ => (~nil @, ~nil @) 
     case ~cons (x, ~nil @) => (~cons (x, ~nil @), ~nil @) 
     case ~cons (x, ~cons(y, zs)) => 
@@ -393,7 +393,7 @@ fix(case self => (
 
 merge_lists = (f"""
 let lted = ({lted}) in
-fix(case self => (
+loop(case self => (
     case (xs, ~nil @) => xs 
     case (~cons (x, xs), ~cons (y, ys)) => 
         if lted(x, y) then
@@ -407,7 +407,7 @@ fix(case self => (
 merge_sort = (f"""
 let halve = ({halve_list}) in
 let merge = ({merge_lists}) in
-fix(case self => (
+loop(case self => (
     case ~nil @ => ~nil @
     case ~cons(x, ~nil @) => ~cons(x, ~nil @)
     case xs =>
@@ -419,7 +419,7 @@ fix(case self => (
 
 is_member = (f"""
 let lt = {ltd} in
-fix(case self => (
+loop(case self => (
     case (x, ~empty @) => ~false @
     case (x, ~tree (c, l, y, r)) => 
         if lt(x, y) then 
@@ -432,7 +432,7 @@ fix(case self => (
 """.strip())
 
 balance = (f"""
-fix(self =>
+loop(self =>
     case (~black @,~tree(~red @,~tree(~red @,a,x,b),y,c),z,d) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
     case (~black @,~tree(~red @,a,x,~tree(~red @,b,y,c)),z,d) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
     case (~black @,a,x,~tree(~red @,~tree(~red @,b,y,c),z,d)) => ~tree(~red@,~tree(~black@,a,x,b),y,~tree(~black@,c,z,d))
@@ -446,7 +446,7 @@ insert = (f"""
 let balance = {balance} in
 let lt = {ltd} in
 case (x, t) => (
-    let f = fix(case self => (
+    let f = loop(case self => (
         case (~empty @) => ~tree (~red @, ~empty @, x, ~empty @) 
         case (~tree (color, l, y, r)) => (
             (if lt(x,y) then

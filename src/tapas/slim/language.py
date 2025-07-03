@@ -14,8 +14,8 @@ from tapas.slim import analyzer
 
 T = TypeVar("T")
 
-from pyrsistent.typing import PMap 
-from pyrsistent import m, pmap, v
+from pyrsistent.typing import PMap, PSet
+from pyrsistent import m, pmap, v, pset, s
 
 
 
@@ -155,18 +155,28 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     """)
     return answer
 
-def analyze(code : str) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
+def analyze(code : str, typing_context = m()) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
     try:
         input_stream = InputStream(code)
         lexer = SlimLexer(input_stream)
         token_stream : Any = CommonTokenStream(lexer)
         parser = SlimParser(token_stream)
         parser.init()
-        tc = parser.program([analyzer.default_context])
+
+        context = analyzer.Context(typing_context, analyzer.World(s(), s(), s()))
+        tc = parser.program([context])
         if tc.results == None:
             raise Exception("Parsing Error")
         elif len(tc.results) == 1:
             result = tc.results[0]
+            print(f"""
+~~~~~~~~~~~~~
+constraints:
+~~~~~~~~~~~~~
+{analyzer.concretize_constraints(result.world.constraints)}
+~~~~~~~~~~~~~
+constraints:
+            """)
             return (result.typ, tc.toStringTree(recog=parser), parser._solver)
         else: 
             print("!!!!!!!!!!!!!!!")
@@ -184,9 +194,17 @@ def analyze(code : str) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
         print("DEBUG A")
         return (None, "", parser._solver)
 
-def infer_typ(code : str) -> str:
+def infer_typ(code : str, context = {}) -> str:
+
+    typing_context = pmap({
+        k : parse_typ(v) 
+        for k,v in context.items()
+    })
+
+    print(context)
+
     start = time.time()
-    (result, parsetree, solver) = analyze(code)
+    (result, parsetree, solver) = analyze(code, typing_context)
     end = time.time()
     print(f"TIME: {end - start}")
     if result == None:
