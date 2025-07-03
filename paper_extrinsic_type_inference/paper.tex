@@ -3007,7 +3007,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \J{let ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
-    & \pass & \pass & \pass \\
+    & \pass & \pass & \fail \\
     \hline
     \pdc. &
     \J{loop(\{self => \{x => if true;@ then x else self(self)(x)\}\}} 
@@ -3020,6 +3020,18 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \pdc. &
     \J{auto(auto'(id))}
     & \pass & \pass & \fail \\
+    \hline
+    \pdc. &
+    \begin{array}[t]{l}
+      \J{\{y => } 
+      \\
+      \I \J{let tmp = y in}
+      \\
+      \I \J{y(const)}
+      \\
+      \J{\}\{x => x(x)\}}
+    \end{array}
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
@@ -3037,7 +3049,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\}(const(const(id)))}
     \end{array}
-    & \pass & \fail & \pass \\
+    & \fail & \fail & \pass \\
     \hline
   \end{tabular}
   \end{center}
@@ -3086,7 +3098,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\} in ...}
     \end{array}
-    & \pass & \assisted \\
+    & \fail & \assisted \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
