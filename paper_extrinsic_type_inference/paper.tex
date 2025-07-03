@@ -1883,6 +1883,8 @@ of the subtype is stronger than the consequent of the supertype.
   \end{mathpar}
 \end{definition}
 
+\TODO{move rewritng after variable rules}
+
 \noindent
 Just as entries and paths are analogous to propositional implication,
 the analogy extends to union and intersection.
@@ -3034,7 +3036,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\}\{x => x(x)\}}
     \end{array}
-    & \pass & \pass & \pass \\
+    & \fail & \pass & \pass \\
     \hline
     \pdc. &
     \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
@@ -3052,7 +3054,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\}(const(const(id)))}
     \end{array}
-    & \pass & \fail & \pass \\
+    & \fail & \fail & \pass \\
     \hline
   \end{tabular}
   \end{center}

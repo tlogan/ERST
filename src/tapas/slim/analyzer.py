@@ -2498,24 +2498,24 @@ DEBUG lower TVar Skolem
         if self.count > self._limit:
             return []
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG SOLVE:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-count: {self.count}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closed:
-{world.closedids}
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# count: {self.count}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closed:
+# {world.closedids}
 
-constraints:
-{concretize_constraints(world.constraints)}
+# constraints:
+# {concretize_constraints(world.constraints)}
               
-|-
-{concretize_typ(lower)}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# |-
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         #######################################
         #### Reflection ####
@@ -2543,38 +2543,6 @@ constraints:
 
         elif isinstance(lower, TVar) and lower.id in self.aliasing: 
             return self.solve(world, self.aliasing[lower.id], upper)
-
-        #######################################
-        #### Implication Rewriting ############
-        #######################################
-        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec.left, upper.consq), 
-                Imp(upper.antec.right, upper.consq)
-            ))
-
-        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
-            return self.solve(world, lower, Inter(
-                Imp(upper.antec, upper.consq.left), 
-                Imp(upper.antec, upper.consq.right)
-            ))
-
-        elif isinstance(upper, TEntry) and isinstance(upper.body, Inter):
-            return [
-                m1
-                for m0 in self.solve(world, lower, TEntry(upper.label, upper.body.left))
-                for m1 in self.solve(m0, lower, TEntry(upper.label, upper.body.right))
-            ]
-
-        elif isinstance(upper, Imp) and isinstance(upper.antec, LeastFP):
-            param_typ = self.fresh_type_var()
-            universal_typ = All(
-                tuple([param_typ.id]), 
-                tuple([Subtyping(param_typ, upper.antec)]), 
-                Imp(param_typ, upper.consq)
-            )
-            return self.solve(world, lower, universal_typ)
-
 
         #######################################
         #### Base Preservation ################
@@ -2805,6 +2773,41 @@ constraints:
                 return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
             else:
                 return []
+
+        #######################################
+        #### Implication Rewriting ############
+        #######################################
+        elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec.left, upper.consq), 
+                Imp(upper.antec.right, upper.consq)
+            ))
+
+        elif isinstance(upper, Imp) and isinstance(upper.consq, Inter):
+            return self.solve(world, lower, Inter(
+                Imp(upper.antec, upper.consq.left), 
+                Imp(upper.antec, upper.consq.right)
+            ))
+
+        elif isinstance(upper, TEntry) and isinstance(upper.body, Inter):
+            return [
+                m1
+                for m0 in self.solve(world, lower, TEntry(upper.label, upper.body.left))
+                for m1 in self.solve(m0, lower, TEntry(upper.label, upper.body.right))
+            ]
+
+        elif isinstance(upper, Imp) and isinstance(upper.antec, LeastFP):
+            param_typ = self.fresh_type_var()
+            universal_typ = All(
+                tuple([param_typ.id]), 
+                tuple([Subtyping(param_typ, upper.antec)]), 
+                Imp(param_typ, upper.consq)
+            )
+            return self.solve(world, lower, universal_typ)
+
+
+
+
 
         #######################################
         #### Diff Introduction #############
@@ -3351,32 +3354,47 @@ DEBUG combine_app
 
             flipped_constraints = self.solver.flip_constraints(self_typ.id, influential_constraints, IH_typ.id)
 
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# combine_fix {i}:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# local_constraints:
-# {concretize_constraints(local_constraints)}
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+combine_fix {i}:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+local_constraints:
+{concretize_constraints(local_constraints)}
 
-# foreignids:
-# {foreignids}
+foreignids:
+{foreignids}
 
-# local_closedids:
-# {local_closedids}
+local_closedids:
+{local_closedids}
 
-# self:
-# {self_typ.id}
+self:
+{self_typ.id}
 
-# IH type:
-# {IH_typ.id}
+IH type:
+{IH_typ.id}
 
-# influential_constraints:
-# {concretize_constraints(influential_constraints)}
+influential_constraints:
+{concretize_constraints(influential_constraints)}
 
-# flipped_constraints:
-# {concretize_constraints(flipped_constraints)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
+flipped_constraints:
+{concretize_constraints(flipped_constraints)}
+
+rel_patern:
+{concretize_typ(rel_pattern)}
+
+left_typ:
+{concretize_typ(left_typ)}
+
+in_typ.id:
+{in_typ.id}
+
+local_constraints:
+{concretize_constraints(local_constraints)}
+
+body_typ:
+{concretize_typ(body_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union(world.closedids).union([IH_typ.id]), 

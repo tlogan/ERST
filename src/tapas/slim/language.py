@@ -224,19 +224,21 @@ def infer_typ(code : str, context = {}) -> str:
     print(f"TIME: {end - start}")
     if result == None:
         return ""
-    if result == analyzer.Top():
-        print("~~~~~~~~~~~TOP!!!!!!!")
-        return ""
     else:
-        answer = analyzer.concretize_typ(result)
-        print(f"""
-=========================================================================================================================
-INFERENCE: 
-~~~~~~~
-{answer}
-=========================================================================================================================
-        """)
-        return answer
+        simpres = solver.simplify_typ(result)
+        if simpres == analyzer.Top():
+            print("~~~~~~~~~~~TOP!!!!!!!")
+            return ""
+        else:
+            answer = analyzer.concretize_typ(simpres)
+            print(f"""
+    =========================================================================================================================
+    INFERENCE: 
+    ~~~~~~~
+    {answer}
+    =========================================================================================================================
+            """)
+            return answer
 
 def solve_subtyping(a : str, b : str) -> list[analyzer.World]:
     x = parse_typ(a)

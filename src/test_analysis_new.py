@@ -32,11 +32,39 @@ def test_max():
 
 def test_length():
     #TODO: why is cons distributed across the pair?
-    assert infer_typ(el.length)
+
+    length = (f"""
+    loop({{ self => 
+        {{ nil;@ => zero;@  }}
+        {{ cons;(x,xs) => succ;(self(xs)) }}
+    }}) 
+    """.strip())
+    assert infer_typ(length)
+    # assert infer_typ(el.length)
+
+def test_variable_subtypes_tag_pair():
+    worlds = solve_subtyping(f"""
+X
+    """, f"""
+<cons> (Y * Z) 
+    """
+    )
+    assert len(worlds) == 1
+    assert len(worlds[0].constraints) == 1
+
+def test_entry_rewriting():
+    worlds = solve_subtyping(f"""
+(<cons> (<head> <uno>@)) & (<cons> <tail> <dos>@)) 
+    """, f"""
+<cons> ((<uno>@) * (<dos>@)) 
+    """
+    )
+    assert worlds
 
 def test_lengthy():
     # TODO: is this type due to lack of consolidation?  
     assert infer_typ(el.lengthy)
+
 
 
 ###############################################################
@@ -797,7 +825,13 @@ if __name__ == '__main__':
     # test_length()
     # test_lengthy()
     # test_max()
-    test_identity_application()
+    # test_identity_application()
+    # test_length()
+    # test_tag_pair_subtyping()
+    # test_entry_rewriting()
+    # test_variable_subtypes_tag_pair()
+    # test_length()
+    # test_typing_sanity_application_6()
 
 
 #######################################################################
