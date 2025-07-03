@@ -1533,6 +1533,8 @@ used in the binding syntax respect the type annotations.
     }
 
     \inferrule {
+      \TODO{update annotation rule with consolidation and packing}
+      \\\\
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
       \\
       \textbf{ftv}(\tau_a) \subseteq \emptyset
@@ -1567,6 +1569,7 @@ used in the binding syntax respect the type annotations.
   \end{mathpar}
 \end{definition}
 
+\TODO{explain the rationale of consolidation points: packing at function, annotation, and fixed point rules}
 
 \noindent
 The definition of Proof Typing (Def. \ref{def:proof_typing}) consists of a few rules, which are 
@@ -3031,7 +3034,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\}\{x => x(x)\}}
     \end{array}
-    & \fail & \pass & \pass \\
+    & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
@@ -3049,7 +3052,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\}(const(const(id)))}
     \end{array}
-    & \fail & \fail & \pass \\
+    & \pass & \fail & \pass \\
     \hline
   \end{tabular}
   \end{center}
@@ -3098,7 +3101,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{\} in ...}
     \end{array}
-    & \fail & \assisted \\
+    & \pass & \assisted \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
@@ -3110,7 +3113,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \\
       \J{) = sort(stdCmp) in ...} 
     \end{array}
-    & \fail & \assisted \\
+    & \pass & \assisted \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
@@ -3988,6 +3991,13 @@ The interested reader can find the actual the definition of packing in the appen
 \end{definition}
 
 \TODO{...}
+
+\TODO{update type packing to place constraints on inside if they have neither skolem nor learnable variables} 
+\TODO{the inner constraints will not be required to have conform to a decidable syntax}
+
+\TODO{update implementation to check restriction on skolem constraints}
+
+\TODO{double check that tests still pass}
 
 \begin{definition}
   \label{def:type_packing}

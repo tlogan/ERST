@@ -829,7 +829,6 @@ def to_record_typ(rnode : RNode) -> Typ:
             t = to_record_typ(v)
             field = TEntry(key, t)
         result = Inter(field, result)
-    # return simplify_typ(result)
     return result
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
@@ -1701,15 +1700,16 @@ class Solver:
 
         return lower_result or upper_result 
 
-    def decode_polarity_typ(self, results : list[WorldTyp], polarity : bool) -> Typ:
-        base = (Bot() if polarity else Top())
-        operator = (Unio if polarity else Inter)
+    def decode_polarity_typ(self, results : list[Result], polarity : bool) -> Typ:
+        base = (Top() if polarity else Bot())
+        operator = (Inter if polarity else Unio)
 
         big_typ = base
         for result in results:
-
             t = self.interpret_polar_typ(polarity, result.world.closedids, result.world.constraints, result.typ)
-            ctyp = self.make_constraint_typ(polarity)(s(), result.world.closedids, result.world.constraints, t)
+            influential_ids = result.world.closedids.union(extract_free_vars_from_typ(s(), t))
+            influential_constraints =  filter_constraints_by_all_variables(result.world.constraints, influential_ids)
+            ctyp = self.make_constraint_typ(polarity)(s(), result.world.closedids, influential_constraints, t)
             big_typ = operator(big_typ, ctyp)
         return big_typ
 
@@ -1812,23 +1812,51 @@ class Solver:
             )
             inner_constraints = constraints.difference(outer_constraints)
 
+            # NOTE: If a constraint has neither a skolem variable nor a learnable variable,
+            # then is should be packed in the inner (learnable) constraints 
+            # this is a safe but weaker requirement. 
+            # in the outer (skoleim) constraints it could run afoul of the decidabily requirement.
+
             outer_ids = extract_free_vars_from_constraints(s(), constraints).union(payload_ids).intersection(closedids)
             inner_ids = extract_free_vars_from_constraints(s(), inner_constraints).union(payload_ids).difference(closedids).difference(foreignids)
-            ######### invariant: for each constraint in inner_constraints, there is at least one open / inner id in fids(constraint) 
-            for st in inner_constraints:
-                fids = extract_free_vars_from_constraints(s(), [st]) 
-                assert bool(inner_ids.intersection(fids))
-            ######################
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG MAKE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# foreignids: {foreignids}
+# skolems: {closedids}
 
-            if outer_ids and inner_ids:
+# payload
+# {concretize_typ(payload)}
+
+# outer_constraints:
+# {concretize_constraints(outer_constraints)}
+
+# inner_constraints:
+# {concretize_constraints(inner_constraints)}
+
+# outer_ids:
+# {outer_ids}
+
+# inner_ids:
+# {inner_ids}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+            # ######### invariant: for each constraint in inner_constraints, there is at least one open / inner id in fids(constraint) 
+            # for st in inner_constraints:
+            #     fids = extract_free_vars_from_constraints(s(), [st]) 
+            #     assert bool(inner_ids.intersection(fids))
+            # ######################
+
+            if (outer_ids or outer_constraints) and (inner_ids or inner_constraints):
                 return outer_con(
                     tuple(outer_ids), tuple(outer_constraints),
                     inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
                 )
-            elif outer_ids:
+            elif (outer_ids or outer_constraints):
                 assert not inner_constraints
                 return outer_con(tuple(outer_ids), tuple(outer_constraints), payload)
-            elif inner_ids:
+            elif (inner_ids or inner_constraints):
                 assert not outer_constraints
                 return inner_con(tuple(inner_ids), tuple(inner_constraints), payload)
             else:
@@ -3079,10 +3107,10 @@ class Rule:
 #             )
 #         ]
 
-@dataclass(frozen=True, eq=True)
-class WorldTyp:
-    world: World
-    typ: Typ
+# @dataclass(frozen=True, eq=True)
+# class WorldTyp:
+#     world: World
+#     typ: Typ
 
 @dataclass(frozen=True, eq=True)
 class Result:
@@ -3474,12 +3502,51 @@ class RecordPatternRule(Rule):
 
 class TargetRule(Rule):
 
-    def combine_anno(self, pid : int, world : World, expr_typ : Typ, anno_typ : Typ) -> list[Result]:
+    # def combine_anno(self, pid : int, world : World, expr_typ : Typ, anno_typ : Typ) -> list[Result]:
+    #     if bool(extract_free_vars_from_typ(s(), anno_typ)):
+    #         return []
+    #     else:
+    #         # NOTE: we don't care about learning anything about the annotation; just that it's legal
+    #         if bool(self.solver.solve(world, expr_typ, anno_typ, reset=True)): 
+    #             return [
+    #                 Result(pid, world, anno_typ)
+    #             ]
+    #         else:
+    #             return []
+
+    def combine_anno(self, pid : int, enviro : Enviro, world : World, target_results : list[Result], anno_typ : Typ) -> list[Result]:
         if bool(extract_free_vars_from_typ(s(), anno_typ)):
             return []
         else:
+
+            foreignids = extract_free_vars_from_enviro(enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
             # NOTE: we don't care about learning anything about the annotation; just that it's legal
-            if bool(self.solver.solve(world, expr_typ, anno_typ, reset=True)): 
+            generalized_cases = []
+            for target_result in target_results:
+                pass
+
+                local_constraints = target_result.world.constraints.difference(world.constraints)
+                local_closedids = target_result.world.closedids.difference(world.closedids)
+                target = self.solver.interpret_polar_typ(
+                    True, 
+                    foreignids.union(local_closedids), local_constraints, 
+                    target_result.typ
+                )
+
+                influential_ids = foreignids.union(local_closedids).union(extract_free_vars_from_typ(s(), target))
+                influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
+
+                generalized_case = self.solver.make_constraint_typ(True)( 
+                    foreignids, 
+                    local_closedids,
+                    influential_constraints, 
+                    target 
+                )
+
+                generalized_cases = generalized_cases + [generalized_case]
+            # endfor
+
+            if bool(self.solver.solve(world, make_inter(generalized_cases), anno_typ, reset=True)): 
                 return [
                     Result(pid, world, anno_typ)
                 ]

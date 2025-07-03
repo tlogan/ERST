@@ -2176,13 +2176,14 @@ class SlimParser ( Parser ):
                 localctx._expr = self.expr(contexts)
 
                 localctx.results = [
-                    result 
-                    for expr_result in localctx._expr.results
-                    for pid in [expr_result.pid]
+                    result
+                    for pid, context in enumerate(contexts)
+                    for expr_results in [self.filter(pid, localctx._expr.results)]
                     for result in TargetRule(self._solver).combine_anno(
                         pid,
-                        expr_result.world,
-                        expr_result.typ,
+                        context.enviro,
+                        context.world,
+                        expr_results,
                         localctx._typ.combo
                     )
                 ]

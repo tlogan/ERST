@@ -26,7 +26,17 @@ from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
 def test_max():
-    assert infer_typ(el.max) != "" 
+    assert infer_typ(el.max) 
+
+
+
+def test_length():
+    #TODO: why is cons distributed across the pair?
+    assert infer_typ(el.length)
+
+def test_lengthy():
+    # TODO: is this type due to lack of consolidation?  
+    assert infer_typ(el.lengthy)
 
 
 ###############################################################
@@ -671,14 +681,69 @@ def test_typing_structures_1():
     print(code)
     assert infer_typ(code, ctx(["scalarCmp", "lexicoCmp"]))
 
+
+
+def test_typing_structures_sanity():
+    #TODO: find way to speed up; parsing might be slow
+    code = f"""
+let f = {{ ((one;@), (two;@)) => three;@ }} in
+let g = {{ ((uno;@), (dos;@)) => tres;@ }} in
+let h = {{(a,b) => 
+    (
+    {{one;@ => f(a,b)}}
+    {{uno;@ => g(a,b)}}
+    ) (a)
+}} in
+h
+    """
+    print(code)
+    assert infer_typ(code, ctx(["hof"]))
+
+def test_typing_structures_sanity_path():
+    code = f"""
+let h = (
+    {{one;@ => three;@}}
+    {{uno;@ => tres;@}}
+)
+in
+let result : (
+    ((<uno> @) -> (<tres> @)) &
+    ((<one> @) -> (<three> @))
+) = mkpath(h) in
+result
+    """
+    print(code)
+    assert infer_typ(code, ctx(["mkpath"]))
+
+def test_identity_application():
+    # TODO: why is there so much extra clutter?
+    code = f"""
+let h = ({{self =>
+    {{zero;@ => nil;@}}
+    {{succ;n => cons;n}}
+}}
+) in
+h
+{{x => x }}(h)
+    """
+    print(code)
+    assert infer_typ(code, ctx(["mkpath"]))
+
+
+
 def test_typing_structures_2():
     code = f"""
 let stdCmp = {el.stdCmp} in
 let stdSort : (
     ({tl.List_(tl.Nat)} -> {tl.List_(tl.Nat)}) &
     ({tl.List_(tl.List_(tl.Nat))} -> {tl.List_(tl.List_(tl.Nat))})
-) = sort(stdCmp) in @
+) = sort(stdCmp) in stdSort 
     """
+
+#     code = f"""
+# let stdCmp = {el.stdCmp} in
+# let stdSort = sort(stdCmp) in @
+#     """
     print(code)
     assert infer_typ(code, ctx(["scalarCmp", "lexicoCmp", "sort"]))
 
@@ -724,8 +789,15 @@ if __name__ == '__main__':
     pass
     ##########################
     # test_typing_A9()
+    # test_typing_structures_sanity() #assertion error
+    # test_typing_structures_sanity_path()
+    # test_typing_structures_1() #assertion error
     # test_typing_structures_2() #assertion error
-    test_max()
+    # test_max()
+    # test_length()
+    # test_lengthy()
+    # test_max()
+    test_identity_application()
 
 
 #######################################################################

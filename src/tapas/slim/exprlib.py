@@ -43,9 +43,12 @@ context_map = {
 "h" : f"{Nat} -> ALL[A] A -> A",
 "l" : List_(f"ALL[A] {Nat} -> A -> A"),
 "r" : f"(ALL[A] A -> ALL[B] B -> B) -> {Nat}",
-"sort" : f"(ALL[A] (A * A -> {Bool}) -> {List_('A')} -> {List_('A')})",
-"scalarCmp" : f"{Nat} * {Nat} -> {Bool}",
-"lexicoCmp" : f"{List_(Nat)} * {List_(Nat)} -> {Bool}",
+"sort" : f"(ALL[A] ((A * A) -> {Bool}) -> {List_('A')} -> {List_('A')})",
+"scalarCmp" : f"({Nat} * {Nat}) -> ({Bool})",
+"lexicoCmp" : f"({List_(Nat)} * {List_(Nat)}) -> ({Bool})",
+"hof" : f"ALL[A B C] ((A * B) -> C) -> (<thing> A) -> (<thing> B)",
+"mkpath" : f"ALL[A C] (A -> C) -> (A) -> (C)",
+"mkpair" : f"ALL[A B] (A -> B) -> (A * B)",
 }
 
 def ctx(names : list[str]) -> PMap[str, str]:
@@ -192,10 +195,18 @@ let lted = {lted} in
 # ''')
 
 length = (f"""
-loop(case self => (
-    case ~nil @ => ~zero @ 
-    case ~cons (x, xs) => ~succ (self(xs)) 
-)) 
+loop({{ self => 
+    {{ nil;@ => zero;@  }}
+    {{ cons;(x,xs) => succ;(self(xs)) }}
+}}) 
+""".strip())
+
+lengthy = (f"""
+let id = {{x => x}} in
+loop(id({{ self => 
+    {{ nil;@ => zero;@  }}
+    {{ cons;(x,xs) => succ;(self(xs)) }}
+}})) 
 """.strip())
 
 add = (f"""

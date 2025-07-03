@@ -167,14 +167,13 @@ def analyze(code : str, typing_context = m()) -> tuple[Optional[analyzer.Typ], s
         tc = parser.program([context])
         if tc.results == None:
             raise Exception("Parsing Error")
-        elif len(tc.results) == 1:
-            result = tc.results[0]
+        elif len(tc.results) > 0:
+            # result = tc.results[0]
             solver = parser._solver
-
-
-            print(f"""
+            for i, result in enumerate(tc.results):
+                print(f"""
 =======================
-analysis result
+analysis multi result {i}
 =======================
 typ:
 {analyzer.concretize_typ(result.typ)}
@@ -185,18 +184,16 @@ skolems:
 constraints:
 {analyzer.concretize_constraints(result.world.constraints)}
 =======================
-            """)
+                """)
 
-
-
-
-
-            t1 = solver.interpret_polar_typ(True, result.world.closedids, result.world.constraints, result.typ) 
-            influential_ids = result.world.closedids.union(analyzer.extract_free_vars_from_typ(s(), t1))
-            influential_constraints = analyzer.filter_constraints_by_all_variables(result.world.constraints, influential_ids)
-            t2 = solver.make_constraint_typ(True)(s(), result.world.closedids, influential_constraints, t1)
+            # t1 = solver.interpret_polar_typ(True, result.world.closedids, result.world.constraints, result.typ) 
+            # influential_ids = result.world.closedids.union(analyzer.extract_free_vars_from_typ(s(), t1))
+            # influential_constraints = analyzer.filter_constraints_by_all_variables(result.world.constraints, influential_ids)
+            # t2 = solver.make_constraint_typ(True)(s(), result.world.closedids, influential_constraints, t1)
+            t2 = solver.decode_polarity_typ(tc.results, True)
             return (t2, tc.toStringTree(recog=parser), parser._solver)
         else: 
+            # In what scenario would we expect be multiple results at the top level?
             print("!!!!!!!!!!!!!!!")
             print("result size: " + str(len(tc.results)))
             print("!!!!!!!!!!!!!!!")

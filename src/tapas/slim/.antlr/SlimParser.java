@@ -1872,13 +1872,14 @@ public class SlimParser extends Parser {
 				((TargetContext)_localctx).expr = expr(contexts);
 
 				_localctx.results = [
-				    result 
-				    for expr_result in ((TargetContext)_localctx).expr.results
-				    for pid in [expr_result.pid]
+				    result
+				    for pid, context in enumerate(contexts)
+				    for expr_results in [self.filter(pid, ((TargetContext)_localctx).expr.results)]
 				    for result in TargetRule(self._solver).combine_anno(
 				        pid,
-				        expr_result.world,
-				        expr_result.typ,
+				        context.enviro,
+				        context.world,
+				        expr_results,
 				        ((TargetContext)_localctx).typ.combo
 				    )
 				]

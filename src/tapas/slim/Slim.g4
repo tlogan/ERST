@@ -584,20 +584,43 @@ target [list[Context] contexts] returns [list[Result] results]:
 $results = $expr.results
 }
 
+// | ':' typ '=' expr[contexts] {
+// $results = [
+//     result 
+//     for expr_result in $expr.results
+//     for pid in [expr_result.pid]
+//     for result in TargetRule(self._solver).combine_anno(
+//         pid,
+//         expr_result.world,
+//         expr_result.typ,
+//         $typ.combo
+//     )
+// ]
+// }
+
 | ':' typ '=' expr[contexts] {
 $results = [
-    result 
-    for expr_result in $expr.results
-    for pid in [expr_result.pid]
+    result
+    for pid, context in enumerate(contexts)
+    for expr_results in [self.filter(pid, $expr.results)]
     for result in TargetRule(self._solver).combine_anno(
         pid,
-        expr_result.world,
-        expr_result.typ,
+        context.enviro,
+        context.world,
+        expr_results,
         $typ.combo
     )
 ]
 }
 ;
+
+// } body = expr[body_contexts] '}' {
+// $results = [
+//     FunctionRule(self._solver).combine_single(pid, context.world, $pattern.result.typ, body_results)
+//     for pid, context in enumerate(contexts)
+//     for body_results in [self.filter(pid, $body.results)]
+// ]
+// }
 
 
 
