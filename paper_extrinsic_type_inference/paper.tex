@@ -2540,7 +2540,6 @@ However, the distinction is useful for comparing our design to previous work.
 
 We implemented an extrinsic type inference system that corresponds to the predicate definitions
 presented thus far. 
-
 To observe the expressiveness of our system on parametric data, 
 we evaluated our implementation on the same suite of programs 
 that SuperF was evaluated on, as presented in the paper on SuperF \cite{}.
@@ -2548,7 +2547,6 @@ Based on these experiments, our system all programs admitted by SuperF, as well 
 that SuperF is unable to admit.
 Thus, our system appears to be more expressive on parametric data than the previous most expressive
 type inference system that we know of.
-
 To observe the expressiveness of our system on structural data, 
 we constructed simple programs that represent the kind of flexible and reusable code
 often found programs written in untyped scripting languages. 
@@ -2694,11 +2692,6 @@ types and expressions used as inputs to our system.
 Additionally, for the purpose of experiment, it is useful to assume that   
 the typing of some identifiers have already been learned or verified.
 
-
-\TODO{this first example is actually generalization, not instantiation. Should we ignore/modify this delineation from SuperF?}
-
-\TODO{update tests to inspect the inferred type}
-
 \begin{experiment}
   \label{experi:parametric_data_part_1}
   Parametric Data (Part 1) 
@@ -2784,6 +2777,19 @@ the typing of some identifiers have already been learned or verified.
   \end{tabular}
   \end{center}
 \end{experiment}
+
+\noindent
+In the experiment on parametric data, we 
+are interested to observe if our implementation (\textbf{Extrinsic})
+can admit various programs on parametric data. 
+For our implementation, we reject a program if the implementation
+finds a contradiction, diverges, or infers the top type. 
+In our system, we infer a top type when the top level 
+expression represents a function and all of its branches 
+have errors. Since the top level function is not applied,
+the program technically cannot produce an error, but it's 
+perfectly useless and would produce an error if applied to any value. 
+We compare our system to SuperF and Super without Distributivity (\textbf{SF no D}). 
 
 % $\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{ctx} \entails e \hastype \tau \given \Theta, \Delta$ 
 
@@ -3134,11 +3140,17 @@ the typing of some identifiers have already been learned or verified.
   \end{center}
 \end{experiment}
 
-\TODO{describe implementation}
+\noindent
+The experiment on programs with structural data demonstrate
+that our system is roughly as expressive as untyped languages
+without sacrificing safety guarantees.
+Our system can easily mix structures together, reducing
+the need for programmers to call different interfaces for different data.  
+If there is an error in one branch of a function, the
+system can still admit the program by ensuring 
+that the erroneous branch is never used, and there
+is at least one branch that could be used.
 
-\TODO{describe the structural examples in more details}
-
-\TODO{reformat tables, spacing, etc.}
 
 \section{Related Work}
 \label{sec:related_work}
@@ -3215,7 +3227,7 @@ that skolemization occurs before learning constraints on type variables. Therefo
 instantiation to occur before skolemization in our system, 
 since it does not cause learning constraints before skolemization.  
 
-\TODO{try to understand what SuperF folks mean by no backtracking in light of rhs union}
+\TODO{look into what SuperF folks mean by no backtracking in light of rhs union}
 
 In addition to parametric data, practical programming languages need to have some form of structural data.
 Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative parametric data
@@ -3280,9 +3292,9 @@ with expressions and learns subtyping constraints.
 
 \TODO{discuss recursive types}
 
-\TODO{discuss regular trees: seems we restrict reasoning to regular trees}
+\TODO{discuss regular trees}
 
-\TODO{discuss issue of caching when checking recursion}
+\TODO{look into the issue of caching related to recursion}
 
 
 \section{Conclusion}
