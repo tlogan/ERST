@@ -1112,16 +1112,24 @@ def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
     return LeastFP(t.id, factorized_body)
 
 
-# TODO: replace with find_paths plural
 def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
-    results = s()
-    for constraint in world.constraints:
-        path = find_path(constraint.lower, search_target)
-        if path != None:
-            if isinstance(constraint.upper, LeastFP):
-                result = factorize_least_fp(constraint.upper, path)
-                results = results.add(result)
-    return results
+    return pset( 
+        result
+        for constraint in world.constraints
+        for result in find_factors_from_constraint(constraint, search_target)
+    )
+    #######################
+    #### OLD #######
+    #######################
+    # results = s()
+    # for constraint in world.constraints:
+    #     path = find_path(constraint.lower, search_target)
+    #     if path != None:
+    #         if isinstance(constraint.upper, LeastFP):
+    #             result = factorize_least_fp(constraint.upper, path)
+    #             results = results.add(result)
+    # return results
+    #######################
 
 def find_factors_from_constraint(constraint : Subtyping, search_target : Typ) -> PSet[Typ]:
     results = s()
@@ -1868,9 +1876,6 @@ class Solver:
         return make
     # end def
 
-    def extract_factored_upper_bounds(self, world : World, id : str) -> PSet[Typ]:
-        return find_factors(world, TVar(id))
-
     def get_negative_extra_constraints(self, ignore : PSet[str], constraints : PSet[Subtyping], id : str) -> PSet[Subtyping]:
         extra_constraints : PSet[Subtyping] = s()
         for st in constraints:
@@ -2387,7 +2392,7 @@ class Solver:
             st.upper
             for st in world.constraints
             if st.lower == lower 
-        ).union(self.extract_factored_upper_bounds(world, lower.id))
+        ).union(find_factors(world, lower))
 
         some_parts_consistent = lambda : any(
             (
@@ -2408,7 +2413,7 @@ class Solver:
             st.upper
             for st in world.constraints
             if st.lower == lower 
-        ).union(self.extract_factored_upper_bounds(world, lower.id))
+        ).union(find_factors(world, lower))
 
         closed_upper_parts = [
             upper_part
@@ -2937,7 +2942,7 @@ class Solver:
                                 st.upper
                                 for st in world.constraints
                                 if st.lower == TVar(fv)
-                            ).union(self.extract_factored_upper_bounds(world, fv))
+                            ).union(find_factors(world, TVar(fv)))
 
                             some_parts_consistent = any(
                                 all(
