@@ -2326,7 +2326,7 @@ class Solver:
         else:
             return False
 
-    def is_subtractable_typ(self, t : Typ) -> bool:
+    def is_negatable_typ(self, t : Typ) -> bool:
         return (
             (
                 self.is_pattern_typ(t) or
@@ -2344,7 +2344,7 @@ class Solver:
         return all(
             self.is_solvable_relational_constraint(st.lower, st.upper)
             if isinstance(st.upper, LeastFP) else
-            self.is_subtractable_typ(st.upper)
+            self.is_negatable_typ(st.upper)
             for st in constraints
         )
 
@@ -2832,7 +2832,7 @@ class Solver:
         #######################################
 
         elif isinstance(upper, Diff): 
-            if self.is_subtractable_typ(upper.negation):
+            if self.is_negatable_typ(upper.negation):
                 if not bool(self.solve(world, lower, upper.negation)):
                     return self.solve(world, lower, upper.context)
                 else:
