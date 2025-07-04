@@ -25,14 +25,16 @@ from tapas.slim.language import analyze, infer_typ, parse_typ, solve_subtyping
 from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
+
+def test_lted():
+    assert infer_typ(el.lted) 
+
 def test_max():
     assert infer_typ(el.max) 
 
 
 
 def test_length():
-    #TODO: why is cons distributed across the pair?
-
     length = (f"""
     loop({{ self => 
         {{ nil;@ => zero;@  }}
@@ -98,26 +100,34 @@ LFP [R] (<succ> R) | (<zero> @)
     assert not bool(worlds)
 
 def test_recursive_relational_factorization_learning():
-    worlds = solve_subtyping(f"""
-LFP [R]
-(<nil> @ * <zero> @) |
-(EXI[A B] (A * B <: R) : (<cons> A * <succ> B))
-    """, f"""
-(X * Y) 
-    """
-    )
-    for i, world in enumerate(worlds):
-        print(f"""
-=========================
-world {i}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-skolems:
-{world.closedids}
+    assert infer_typ(f"""
+let f = loop({{ self => 
+    {{ nil;@ => nil;@ , zero;@  }}
+    {{ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) }}
+}}) in
+let extract = {{ a, b => b }} in
+{{ x => extract(f(x)) }}
+    """)
+#     worlds = solve_subtyping(f"""
+# LFP [R]
+# (<nil> @ * <zero> @) |
+# (EXI[A B] (A * B <: R) : (<cons> A * <succ> B))
+#     """, f"""
+# (X * Y) 
+#     """
+#     )
+#     for i, world in enumerate(worlds):
+#         print(f"""
+# =========================
+# world {i}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# skolems:
+# {world.closedids}
 
-constraints:
-{analyzer.concretize_constraints(world.constraints)}
-=========================
-        """)
+# constraints:
+# {analyzer.concretize_constraints(world.constraints)}
+# =========================
+#         """)
 
 def test_recursive_relational_factorization_checking():
     worlds = solve_subtyping(f"""
@@ -905,6 +915,14 @@ if __name__ == '__main__':
     pass
     ##########################
     # test_typing_A9()
+
+    # this probably fails due to lack of factoring in subtyping #
+    # test_max()
+
+    # test_recursive_relational_factorization_learning()
+
+    # test_length()
+    # test_lted()
     test_max()
 
 

@@ -751,7 +751,7 @@ def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
         left = project_typ_recurse(t.left, path)
         right = project_typ_recurse(t.right, path)
         if left and right:
-            return Inter(left, right)
+            return make_inter([left, right])
         else:
             return left or right
     # elif isinstance(t, TField):
@@ -780,7 +780,7 @@ def project_typ(t : Typ, path : tuple[str, ...]) -> Typ:
     if result:
         return result
     else:
-        raise Exception(f"extract_field_plain error: {path} in {concretize_typ(t)}")
+        raise Exception(f"extract_field_plain error: {list(path)} in {concretize_typ(t)}")
 
 def project_typ_induc(id_induc : str, t : Typ, path : tuple[str, ...]) -> Typ:
     if isinstance(t, Exi):  
@@ -829,7 +829,7 @@ def to_record_typ(rnode : RNode) -> Typ:
             assert isinstance(v, RNode)
             t = to_record_typ(v)
             field = TEntry(key, t)
-        result = Inter(field, result)
+        result = make_inter([field, result])
     return result
 
 def alpha_equiv(t1 : Typ, t2 : Typ) -> bool:
@@ -1179,9 +1179,9 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
     elif isinstance(typ, TEntry):  
         return TEntry(typ.label, sub_typ(assignment_map, typ.body))
     elif isinstance(typ, Unio):  
-        return Unio(sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right))
+        return make_unio([sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right)])
     elif isinstance(typ, Inter):  
-        return Inter(sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right))
+        return make_inter([sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right)])
     elif isinstance(typ, Diff):  
         return Diff(sub_typ(assignment_map, typ.context), sub_typ(assignment_map, typ.negation))
     elif isinstance(typ, Imp):  
@@ -1579,14 +1579,14 @@ class Solver:
                 elif self.check(empty_world(), new_right, new_left): 
                     return new_right
                 else:
-                    return Inter(new_left, new_right)
+                    return make_inter([new_left, new_right])
             else:
                 if isinstance(new_left, Top):
                     return new_right
                 elif isinstance(new_right, Top):
                     return new_left
                 else:
-                    return Inter(new_left, new_right)
+                    return make_inter([new_left, new_right])
         elif isinstance(typ, Unio): 
             new_left = self.simplify_typ(typ.left)
             new_right = self.simplify_typ(typ.right)
@@ -1598,14 +1598,14 @@ class Solver:
                 elif self.check(empty_world(), new_right, new_left): 
                     return new_left
                 else:
-                    return Unio(new_left, new_right)
+                    return make_unio([new_left, new_right])
             else:
                 if isinstance(new_left, Bot):
                     return new_right
                 elif isinstance(new_right, Bot): 
                     return new_left
                 else:
-                    return Unio(new_left, new_right)
+                    return make_unio([new_left, new_right])
         elif isinstance(typ, Diff): 
             typ = Diff(self.simplify_typ(typ.context), self.simplify_typ(typ.negation))
             if typ.negation == Bot():
@@ -2656,33 +2656,41 @@ class Solver:
                 for m2 in self.solve(m1, lower_body, upper)
             ]
 
-        # elif isinstance(lower, Fixpoint) and not isinstance(upper, Fixpoint):
-        #     # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
-        #     # to avoid infinitue  back into the original problem, causing non-termination
-        #     '''
-        #     NOTE: rewrite into existential making shape of relation visible
-        #     - allows matching shapes even if unrolling is undecidable
-        #     '''
-        #     paths = extract_relational_paths(lower)
-        #     if bool(paths):
-        #         rnode = RNode(m()) 
-        #         tvars = []
-        #         for path in paths:
-        #             tvar = self.fresh_type_var()
-        #             assert isinstance(rnode, RNode)
-        #             rnode = insert_at_path(rnode, path, tvar)
-        #             tvars.append(tvar)
-        #         # end for
+#         elif isinstance(lower, LeastFP) and not isinstance(upper, LeastFP):
+#             # TODO: modify rewriting to ensure relational constraint has at least a pair of variables
+#             # to avoid infinitue  back into the original problem, causing non-termination
+#             '''
+#             NOTE: rewrite into existential making shape of relation visible
+#             - allows matching shapes even if unrolling is undecidable
+#             '''
+#             paths = extract_relational_paths(lower)
+#             if bool(paths):
+#                 rnode = RNode(m()) 
+#                 tvars = []
+#                 for path in paths:
+#                     tvar = self.fresh_type_var()
+#                     assert isinstance(rnode, RNode)
+#                     rnode = insert_at_path(rnode, path, tvar)
+#                     tvars.append(tvar)
+#                 # end for
 
-        #         key = to_record_typ(rnode) 
-        #     else:
-        #         tvar = self.fresh_type_var()
-        #         tvars = [tvar]
-        #         key = tvar
+#                 key = to_record_typ(rnode) 
+#             else:
+#                 tvar = self.fresh_type_var()
+#                 tvars = [tvar]
+#                 key = tvar
 
-        #     exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
+#             exi = Exi(tuple(t.id for t in tvars), tuple([Subtyping(key, lower)]), key)
 
-        #     return self.solve(world, exi, upper)
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG new constraint
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(exi)} <: {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
+
+#             return self.solve(world, exi, upper)
 
         #######################################
         #### Refinement Introduction ##########
@@ -3335,10 +3343,6 @@ DEBUG combine_app
         ALL[X Y . (X, Y) <: (nil,zero) | (cons A\\nil, succ B)] X -> EXI[Z ; Z <: Y] Z
         """
 
-
-        
-
-
         self_typ = self.solver.fresh_type_var()
         in_typ = self.solver.fresh_type_var()
         out_typ = self.solver.fresh_type_var()
@@ -3372,47 +3376,47 @@ DEBUG combine_app
 
             flipped_constraints = self.solver.flip_constraints(self_typ.id, influential_constraints, IH_typ.id)
 
-            print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-combine_fix {i}:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-local_constraints:
-{concretize_constraints(local_constraints)}
+#             print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# combine_fix {i}:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# local_constraints:
+# {concretize_constraints(local_constraints)}
 
-foreignids:
-{foreignids}
+# foreignids:
+# {foreignids}
 
-local_closedids:
-{local_closedids}
+# local_closedids:
+# {local_closedids}
 
-self:
-{self_typ.id}
+# self:
+# {self_typ.id}
 
-IH type:
-{IH_typ.id}
+# IH type:
+# {IH_typ.id}
 
-influential_constraints:
-{concretize_constraints(influential_constraints)}
+# influential_constraints:
+# {concretize_constraints(influential_constraints)}
 
-flipped_constraints:
-{concretize_constraints(flipped_constraints)}
+# flipped_constraints:
+# {concretize_constraints(flipped_constraints)}
 
-rel_patern:
-{concretize_typ(rel_pattern)}
+# rel_patern:
+# {concretize_typ(rel_pattern)}
 
-left_typ:
-{concretize_typ(left_typ)}
+# left_typ:
+# {concretize_typ(left_typ)}
 
-in_typ.id:
-{in_typ.id}
+# in_typ.id:
+# {in_typ.id}
 
-local_constraints:
-{concretize_constraints(local_constraints)}
+# local_constraints:
+# {concretize_constraints(local_constraints)}
 
-body_typ:
-{concretize_typ(body_typ)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            """)
+# body_typ:
+# {concretize_typ(body_typ)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#             """)
 
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union(world.closedids).union([IH_typ.id]), 
@@ -3423,15 +3427,48 @@ body_typ:
             induc_body = Unio(constrained_rel, induc_body) 
         #end for
 
-        # TODO: add constraint to parameter to ensuire soundness 
         rel_typ = LeastFP(IH_typ.id, induc_body)
+        ################################################
+        # Relational Type
+        ################################################
+        # TODO: add constraint to parameter to ensuire soundness 
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
         consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
         return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
+        ################################################
 
-        ##################################
+        ################################################
+        # Factored Type
+        ################################################
+#         param_var = self.solver.fresh_type_var()
+#         param_typs = find_factors_from_constraint(Subtyping(TEntry("head", param_var), rel_typ), param_var)
+#         assert len(param_typs) == 1
+#         param_typ = list(param_typs)[0]
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG param type
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # {concretize_typ(param_typ)}
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+
+#         return_var = self.solver.fresh_type_var()
+#         return_typs = find_factors_from_constraint(Subtyping(TEntry("head", return_var), rel_typ), return_var)
+#         assert len(return_typs) == 1
+#         return_typ = list(return_typs)[0]
+
+# #         print(f"""
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # DEBUG return type
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # {concretize_typ(return_typ)}
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #         """)
+
+#         return Result(pid, outer_world, Imp(param_typ, return_typ))
+        ################################################
 
     
 '''
@@ -3445,7 +3482,7 @@ class RecordRule(Rule):
         return Result(pid, world, TEntry(label, body_typ))
 
     def combine_cons(self, pid : int, world : World, label : str, body_typ : Typ, tail_typ : Typ) -> Result:
-        return Result(pid, world, Inter(TEntry(label, body_typ), tail_typ))
+        return Result(pid, world, make_inter([TEntry(label, body_typ), tail_typ]))
 
 
 class FunctionRule(Rule):
@@ -3532,7 +3569,7 @@ class RecordPatternRule(Rule):
         return PatternResult(body_result.enviro, pattern)
 
     def combine_cons(self, label : str, body_result : PatternResult, tail_result : PatternResult) -> PatternResult:
-        pattern = Inter(TEntry(label, body_result.typ), tail_result.typ)
+        pattern = make_inter([TEntry(label, body_result.typ), tail_result.typ])
         enviro = body_result.enviro.update(tail_result.enviro)
         return PatternResult(enviro, pattern)
 
