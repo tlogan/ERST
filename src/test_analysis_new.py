@@ -822,17 +822,7 @@ if __name__ == '__main__':
     # test_typing_structures_1() #assertion error
     # test_typing_structures_2() #assertion error
     # test_max()
-    # test_length()
-    # test_lengthy()
-    # test_max()
-    # test_identity_application()
-    # test_length()
-    # test_tag_pair_subtyping()
-    # test_entry_rewriting()
-    # test_variable_subtypes_tag_pair()
-    # test_length()
-    # test_typing_sanity_application_6()
-    test_max()
+    test_length()
 
 
 #######################################################################

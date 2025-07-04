@@ -778,7 +778,7 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
       \J{EXI[}\Theta \J{]} \rho \sep 
       \rho
     \end{array}
-    & \com{subtracted}
+    & \com{subtractable}
     \\
     \nonterm{\rho} & \is 
     \begin{array}[t]{@{}l}
@@ -838,12 +838,12 @@ A least fixed point type $\J{LFP[}\alpha \J{]}$
 enables the representation of an infinite space of data,
 e.g. natural numbers or lists. 
 A difference type represents subtracting one space from another.
-Its subtracted type $\eta$ has a restricted form of either
+Its subtractable type $\eta$ has a restricted form of either
 a pattern type $\rho$ or an unqualified indexed union 
 over a pattern $\J{EXI[}\Theta \J{]} \rho$, for which the type system
 is complete, thus making its negation sound.  
 This restricted form is of no hindrance to type inference, since the 
-subtracted types arise only from patterns, whose forms are sufficiently
+subtractable types arise only from patterns, whose forms are sufficiently
 limited.
 A pattern type $\rho$ reflects the forms of pattern expressions, consisting of 
 variables $\alpha$, unit $@$, entries $\J{<} l \J{l} \rho$, intersections $\rho \J{\&} \rho$,
@@ -888,7 +888,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     & \com{schema seq}
     \\
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
-    & \com{subtracted type seq}
+    & \com{subtractable type seq}
     \\
     \nonterm{\Omega} & \is \epsilon \sep \Omega \  \tau \J{<:} \eta
     & \com{restricted subtyping seq}
@@ -2228,7 +2228,7 @@ and also that introduction of the subtracted part fails $(
   \nexists \Theta', \Delta' .\  
   \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
 )$.
-The restricted form of a subtracted type $\eta$ and its lack of free variables
+The restricted form of a subtractable type $\eta$ and its lack of free variables
 ensures that its introduction is complete,
 which in turn ensures that its failure is sound.
 

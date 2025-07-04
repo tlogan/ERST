@@ -2326,6 +2326,19 @@ class Solver:
         else:
             return False
 
+    def is_subtractable_typ(self, t : Typ) -> bool:
+        if self.is_pattern_typ(t):
+            return True
+        else:
+            return (
+                isinstance(t, Exi) and
+                self.is_pattern_typ(t.body) and
+                not bool(t.constraints) and 
+                not bool(extract_free_vars_from_typ(s(), t)) and
+                True
+            )
+
+
     def is_base_typ(self, t : Typ) -> bool:
         return (
             # isinstance(t, TTag) or
@@ -2815,28 +2828,11 @@ DEBUG lower TVar Skolem
         #######################################
 
         elif isinstance(upper, Diff): 
-
-            # if diff_well_formed(upper): # TODO: change to: DF(lower) and DF(upper)
-            if True:
-                # TODO: need a sound/safe/conservative inhabitable check
-                # only works if we assume T is not empty
-                '''
-                T <: A \\ B === (T <: A) and (T is inhabitable --> ~(T <: B))
-                ----
-                T <: A \\ B === (T <: A) and ((T <: B) --> T is empty)
-                ----
-                T <: A \\ B === (T <: A) and (~(T <: B) or T is empty)
-                '''
-                context_worlds = self.solve(world, lower, upper.context)
-                return [
-                    m
-                    for m in context_worlds 
-                    # if (
-                    #     # not self.is_inhabitable(world, lower) or 
-                    #     # Fail (incompletely) if lower is empty
-                    #     self.solve(m, lower, upper.negation) == []
-                    # )
-                ]   
+            if self.is_pattern_typ(upper.context) and self.is_subtractable_typ(upper.negation):
+                if not bool(self.solve(world, lower, upper.negation)):
+                    return self.solve(world, lower, upper.context)
+                else:
+                    return []
             else:
                 return []
 
