@@ -905,18 +905,7 @@ if __name__ == '__main__':
     pass
     ##########################
     # test_typing_A9()
-    # test_typing_structures_sanity() #assertion error
-    # test_typing_structures_sanity_path()
-    # test_typing_structures_1() #assertion error
-    # test_typing_structures_2() #assertion error
-    # test_max()
-    # test_length()
-    # test_recursive_relational_factorization_learning()
-    # test_weaker_than_lfp()
-    # test_two_not_three()
-    test_induction_even_is_not_three()
-    # test_induction_even_is_nat()
-    # test_induction_even_is_nat_not_three()
+    test_typing_structures_4()
 
 
 #######################################################################

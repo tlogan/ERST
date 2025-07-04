@@ -2206,7 +2206,7 @@ class Solver:
         else:
             return False
 
-    def is_relational_constraint_consistent(self, lower : Typ, upper : LeastFP) -> bool: 
+    def is_solvable_relational_constraint(self, lower : Typ, upper : LeastFP) -> bool: 
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
         upper_body = sub_typ(renaming, upper.body)
         # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
@@ -2327,16 +2327,27 @@ class Solver:
             return False
 
     def is_subtractable_typ(self, t : Typ) -> bool:
-        if self.is_pattern_typ(t):
-            return True
-        else:
-            return (
-                isinstance(t, Exi) and
-                self.is_pattern_typ(t.body) and
-                not bool(t.constraints) and 
-                not bool(extract_free_vars_from_typ(s(), t)) and
-                True
-            )
+        return (
+            (
+                self.is_pattern_typ(t) or
+                isinstance(t, Top) or
+                (
+                    isinstance(t, Exi) and
+                    self.is_pattern_typ(t.body) and
+                    not self.are_skolemizable_constraints(t.constraints)
+                )
+            ) and
+            not bool(extract_free_vars_from_typ(s(), t))
+        )
+
+    def are_skolemizable_constraints(self, constraints : Iterable[Subtyping]) -> bool:
+        return all(
+            self.is_solvable_relational_constraint(st.lower, st.upper)
+            if isinstance(st.upper, LeastFP) else
+            self.is_subtractable_typ(st.upper)
+            for st in constraints
+        )
+
 
 
     def is_base_typ(self, t : Typ) -> bool:
@@ -2505,24 +2516,24 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG SOLVE:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-count: {self.count}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closed:
-{world.closedids}
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# count: {self.count}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closed:
+# {world.closedids}
 
-constraints:
-{concretize_constraints(world.constraints)}
+# constraints:
+# {concretize_constraints(world.constraints)}
               
-|-
-{concretize_typ(lower)}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# |-
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         #######################################
         #### Reflection ####
@@ -2956,7 +2967,7 @@ constraints:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         """)
 
-                    if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_relational_constraint_consistent(lower, upper):
+                    if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_solvable_relational_constraint(lower, upper):
                         # WRITE 
                         new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
                         if new_lower != lower:
@@ -2990,7 +3001,18 @@ constraints:
         elif isinstance(upper, Unio): 
             return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
-        elif isinstance(upper, Exi): 
+        elif isinstance(upper, Exi) and self.are_skolemizable_constraints(upper.constraints):
+#                 print(f"""
+# ==================================================
+# DEBUG upper EXI
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# {concretize_typ(lower)} <: {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# upper constraints:
+# {concretize_constraints(upper.constraints)}
+# ==================================================
+#                 """)
             renaming = self.make_renaming(upper.ids)
             weak_constraints = sub_constraints(renaming, upper.constraints)
             weak_body = sub_typ(renaming, upper.body)
