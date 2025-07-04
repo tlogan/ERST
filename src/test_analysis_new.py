@@ -52,6 +52,59 @@ X
     assert len(worlds) == 1
     assert len(worlds[0].constraints) == 1
 
+def test_weaker_than_lfp():
+    worlds = solve_subtyping(f"""
+EXI [X] (<succ> X) | (<zero> @) | X
+    """, f"""
+
+LFP [R] (<succ> R) | (<zero> @)
+    """
+    )
+    assert not bool(worlds)
+
+def test_recursive_relational_factorization_learning():
+    worlds = solve_subtyping(f"""
+LFP [R]
+(<nil> @ * <zero> @) |
+(EXI[A B] (A * B <: R) : (<cons> A * <succ> B))
+    """, f"""
+(X * Y) 
+    """
+    )
+    for i, world in enumerate(worlds):
+        print(f"""
+=========================
+world {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+skolems:
+{world.closedids}
+
+constraints:
+{analyzer.concretize_constraints(world.constraints)}
+=========================
+        """)
+
+def test_recursive_relational_factorization_checking():
+    worlds = solve_subtyping(f"""
+LFP [R]
+(<nil> @ * <zero> @) |
+(EXI[A B] (A * B <: R) : (<cons> A * <succ> B))
+    """, f"""
+(LFP[R] <nil> @ | <cons> R)
+*
+(LFP[R] <zero> @ | <succ> R)
+    """
+    )
+#     for i, world in enumerate(worlds):
+#         print(f"""
+# =========================
+# world {i}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# constraints:
+# {analyzer.concretize_constraints(world.constraints)}
+# =========================
+#         """)
+
 def test_entry_rewriting():
     worlds = solve_subtyping(f"""
 (<cons> (<head> <uno>@)) & (<cons> <tail> <dos>@)) 
@@ -822,7 +875,9 @@ if __name__ == '__main__':
     # test_typing_structures_1() #assertion error
     # test_typing_structures_2() #assertion error
     # test_max()
-    test_length()
+    # test_length()
+    # test_recursive_relational_factorization_learning()
+    # test_weaker_than_lfp()
 
 
 #######################################################################

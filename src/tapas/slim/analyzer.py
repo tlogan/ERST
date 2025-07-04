@@ -2419,13 +2419,6 @@ class Solver:
               
         constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
         subbed_constraints = list(constraints.difference(world.constraints))
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG lower TVar Skolem
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-{concretize_typ(lower)} <: {concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
         return [
             replace(w1, constraints = w1.constraints.union(last_constraints)) 
             for w0 in worlds

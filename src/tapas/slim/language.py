@@ -148,11 +148,11 @@ def parse_typ(code : str) -> Optional[analyzer.Typ]:
     parser = SlimParser(token_stream)
     tc = parser.typ()
     answer = tc.combo
-    print(f"""
-============================================================================================
-Parse Type: {answer}
-============================================================================================
-    """)
+#     print(f"""
+# ============================================================================================
+# Parse Type: {answer}
+# ============================================================================================
+#     """)
     return answer
 
 def analyze(code : str, typing_context = m()) -> tuple[Optional[analyzer.Typ], str, analyzer.Solver]:
