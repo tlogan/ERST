@@ -44,6 +44,14 @@ def test_length():
     assert infer_typ(length)
     # assert infer_typ(el.length)
 
+def test_recursive_pair():
+    assert infer_typ(f"""
+loop({{ self => 
+    {{ nil;@ => nil;@ , zero;@  }}
+    {{ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) }}
+}}) 
+    """)
+
 def test_induction_even_is_nat():
     worlds = solve_subtyping(f"""
 LFP [R] (<zero> @) | (<succ> <succ> R)
@@ -99,7 +107,27 @@ LFP [R] (<succ> R) | (<zero> @)
     )
     assert not bool(worlds)
 
-def test_recursive_relational_factorization_learning():
+def test_recursive_relational_factorization_learning_in_subtyping():
+    worlds = solve_subtyping(f"""
+(LFP[R]
+    (<nil> @ * <zero> @) | 
+    (EXI[XS N] (XS * N <: R)  : (<cons> XS * <succ> N))
+)
+    """, f"""
+ <head> X 
+    """
+    )
+    for i, world in enumerate(worlds):
+        print(f"""
+=========================
+world {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+constraints:
+{analyzer.concretize_constraints(world.constraints)}
+=========================
+        """)
+
+def test_recursive_relational_factorization_learning_in_typing():
     assert infer_typ(f"""
 let f = loop({{ self => 
     {{ nil;@ => nil;@ , zero;@  }}
@@ -108,26 +136,6 @@ let f = loop({{ self =>
 let extract = {{ a, b => b }} in
 {{ x => extract(f(x)) }}
     """)
-#     worlds = solve_subtyping(f"""
-# LFP [R]
-# (<nil> @ * <zero> @) |
-# (EXI[A B] (A * B <: R) : (<cons> A * <succ> B))
-#     """, f"""
-# (X * Y) 
-#     """
-#     )
-#     for i, world in enumerate(worlds):
-#         print(f"""
-# =========================
-# world {i}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# skolems:
-# {world.closedids}
-
-# constraints:
-# {analyzer.concretize_constraints(world.constraints)}
-# =========================
-#         """)
 
 def test_recursive_relational_factorization_checking():
     worlds = solve_subtyping(f"""
@@ -140,6 +148,7 @@ LFP [R]
 (LFP[R] <zero> @ | <succ> R)
     """
     )
+    assert worlds
 #     for i, world in enumerate(worlds):
 #         print(f"""
 # =========================
@@ -919,11 +928,13 @@ if __name__ == '__main__':
     # this probably fails due to lack of factoring in subtyping #
     # test_max()
 
-    # test_recursive_relational_factorization_learning()
+    # test_recursive_relational_factorization_learning_in_subtyping()
+    # test_recursive_relational_factorization_learning_in_typing()
+    # test_recursive_pair()
 
     # test_length()
     # test_lted()
-    test_max()
+    # test_max()
 
 
 #######################################################################

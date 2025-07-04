@@ -725,7 +725,7 @@ def extract_paths(t : Typ, tvar : Optional[TVar] = None) -> PSet[tuple[str, ...]
         return pset()
 
 
-def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
+def project_typ_recurse(t : Typ, path : Sequence[str]) -> Optional[Typ]:
     if not path:
         return None
     elif isinstance(t, Diff):
@@ -736,7 +736,7 @@ def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
         else:
             return None
     elif isinstance(t, Exi):
-        assert not bool(t.constraints)
+        # assert not bool(t.constraints)
         body = project_typ_recurse(t.body, path)
         if body:
             ids = tuple(
@@ -744,7 +744,7 @@ def project_typ_recurse(t : Typ, path : tuple[str, ...]) -> Optional[Typ]:
                 for id in t.ids
                 if id in extract_free_vars_from_typ(s(), body)
             )
-            return Exi(ids, (), body)
+            return Exi(ids, t.constraints, body)
         else:
             None
     elif isinstance(t, Inter):
@@ -927,6 +927,14 @@ def find_longest_common_prefixes(src : Typ, choices : list[Typ]) -> PSet[tuple[s
     
     
 
+def is_consistently_labeled(src : LeastFP, label : str) -> bool:
+    choices = linearize_unions(src.body)
+    return all(
+        bool(project_typ_recurse(choice, tuple([label])))
+        for choice in choices
+    )
+
+
 def is_decomposable(key : Typ, rel : LeastFP) -> bool:
     comparisons = extract_column_comparisons(key, rel)
 
@@ -1088,11 +1096,16 @@ def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Ty
 
         new_constraints = tuple(
             (
-            Subtyping(project_typ(st.lower, path), TVar(induc_id))
-            if st.upper == TVar(induc_id) else
+            Subtyping(proj, st.upper)
+            if proj else
             st
             )
             for st in choice.constraints
+            for proj in [
+                project_typ_recurse(st.lower, path)
+                if st.upper == TVar(induc_id) else
+                None
+            ]
         )
 
         new_body = project_typ(choice.body, path)
@@ -1107,8 +1120,8 @@ def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
     factorized_body = Bot() 
     choices = linearize_unions(t.body)
     for choice in reversed(choices):
-        factor_choice = factorize_choice(t.id, choice, path)
-        factorized_body = Unio(factor_choice, factorized_body)
+        fc = factorize_choice(t.id, choice, path)
+        factorized_body = Unio(fc, factorized_body)
     return LeastFP(t.id, factorized_body)
 
 
@@ -1131,13 +1144,34 @@ def find_factors(world : World, search_target : Typ) -> PSet[Typ]:
     # return results
     #######################
 
+
+
+
 def find_factors_from_constraint(constraint : Subtyping, search_target : Typ) -> PSet[Typ]:
+    if isinstance(constraint.upper, LeastFP):
+        return find_factors_from_pattern(constraint.upper, constraint.lower, search_target)
+    else:
+        return s()
+    #########################
+    ########### OLD #########
+    #########################
+    # results = s()
+    # paths = find_paths(constraint.lower, search_target)
+    # # paths = [find_path(constraint.lower, search_target)]
+    # for path in paths:
+    #     if isinstance(constraint.upper, LeastFP) and path != None:
+    #         result = factorize_least_fp(constraint.upper, path)
+    #         results = results.add(result)
+    # return results
+    #########################
+
+
+def find_factors_from_pattern(src : LeastFP, pattern : Typ, target : Typ) -> PSet[Typ]:
     results = s()
-    paths = find_paths(constraint.lower, search_target)
-    # paths = [find_path(constraint.lower, search_target)]
+    paths = find_paths(pattern, target)
     for path in paths:
-        if isinstance(constraint.upper, LeastFP) and path != None:
-            result = factorize_least_fp(constraint.upper, path)
+        if path != None:
+            result = factorize_least_fp(src, path)
             results = results.add(result)
     return results
 
@@ -2686,6 +2720,11 @@ class Solver:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEBUG new constraint
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# original:
+# {concretize_typ(lower)} <: {concretize_typ(upper)}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# rewritten:
 # {concretize_typ(exi)} <: {concretize_typ(upper)}
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             """)
@@ -2858,6 +2897,12 @@ class Solver:
         #### Fixpoint Elimination #############
         #######################################
 
+
+        elif isinstance(lower, LeastFP) and isinstance(upper, TEntry) and is_consistently_labeled(lower, upper.label):
+            factors = find_factors_from_pattern(lower, upper, upper.body)
+            assert len(factors) == 1
+            factor = list(factors)[0]
+            return self.solve(world, factor, upper.body)
 
         elif isinstance(lower, LeastFP):
 
@@ -3442,10 +3487,10 @@ DEBUG combine_app
         ################################################
         # Factored Type
         ################################################
-#         param_var = self.solver.fresh_type_var()
-#         param_typs = find_factors_from_constraint(Subtyping(TEntry("head", param_var), rel_typ), param_var)
-#         assert len(param_typs) == 1
-#         param_typ = list(param_typs)[0]
+        param_var = self.solver.fresh_type_var()
+        param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
+        assert len(param_typs) == 1
+        param_typ = list(param_typs)[0]
 # #         print(f"""
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # # DEBUG param type
@@ -3455,7 +3500,7 @@ DEBUG combine_app
 # #         """)
 
 #         return_var = self.solver.fresh_type_var()
-#         return_typs = find_factors_from_constraint(Subtyping(TEntry("head", return_var), rel_typ), return_var)
+#         return_typs = find_factors_from_pattern(rel_typ, TEntry("head", return_var, return_var)
 #         assert len(return_typs) == 1
 #         return_typ = list(return_typs)[0]
 
