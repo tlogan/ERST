@@ -2505,24 +2505,24 @@ class Solver:
         if self.count > self._limit:
             return []
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG SOLVE:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# count: {self.count}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closed:
-# {world.closedids}
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG SOLVE:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+count: {self.count}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closed:
+{world.closedids}
 
-# constraints:
-# {concretize_constraints(world.constraints)}
+constraints:
+{concretize_constraints(world.constraints)}
               
-# |-
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+|-
+{concretize_typ(lower)}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         #######################################
         #### Reflection ####
@@ -2821,7 +2821,7 @@ class Solver:
         #######################################
 
         elif isinstance(upper, Diff): 
-            if self.is_pattern_typ(upper.context) and self.is_subtractable_typ(upper.negation):
+            if self.is_subtractable_typ(upper.negation):
                 if not bool(self.solve(world, lower, upper.negation)):
                     return self.solve(world, lower, upper.context)
                 else:
@@ -2836,6 +2836,7 @@ class Solver:
 
 
         elif isinstance(lower, LeastFP):
+
             if lower.id not in extract_free_vars_from_typ(s(), lower.body):
                 # TODO: add case to rules in paper
                 return self.solve(world, lower.body, upper)

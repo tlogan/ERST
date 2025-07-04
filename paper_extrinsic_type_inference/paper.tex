@@ -2192,12 +2192,12 @@ $\alpha \subtypes \tau_r$
   Proof Subtyping (Difference Introduction)
   \hfill
   \small
-  \boxed{\Theta, \Delta \entails\tau \subtypes \rho \typdiff \eta \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \typdiff \eta \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
-      \tau \subtypes \rho \given \Theta', \Delta' 
+      \tau_l \subtypes \tau_r \given \Theta', \Delta' 
       \\
       \textbf{ftv}(\eta) \subseteq \emptyset
       \\
@@ -2206,7 +2206,7 @@ $\alpha \subtypes \tau_r$
       \tau \subtypes \eta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails 
-      \tau \subtypes \rho \typdiff \eta
+      \tau_l \subtypes \tau_r \typdiff \eta
       \given \Theta', \Delta'
     }
   \end{mathpar}
@@ -2273,15 +2273,15 @@ and solves the new subproblem $(
   Proof Subtyping (Difference Elimination)
   \hfill
   \small
-  \boxed{\Theta, \Delta \entails \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta \entails \tau_l \typdiff \eta \subtypes \tau_r \given \Theta', \Delta'}
   \\
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
-      \rho \subtypes \eta \J{|} \tau \given \Theta', \Delta'
+      \tau_l \subtypes \eta \J{|} \tau_r \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails 
-      \rho \typdiff \eta \subtypes \tau \given \Theta', \Delta'
+      \tau_l \typdiff \eta \subtypes \tau_r \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}

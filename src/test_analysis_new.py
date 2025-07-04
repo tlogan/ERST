@@ -42,6 +42,42 @@ def test_length():
     assert infer_typ(length)
     # assert infer_typ(el.length)
 
+def test_induction_even_is_nat():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+LFP [R] (<zero> @) | (<succ> R)
+    """
+    )
+    assert bool(worlds)
+
+def test_induction_even_is_nat_not_three():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+(LFP [R] (<zero> @) | (<succ> R)) \\ (<succ> <succ> <succ> <zero> @)
+    """
+    )
+    assert bool(worlds)
+
+def test_two_not_three():
+    worlds = solve_subtyping(f"""
+(<succ> <succ> <zero> @)
+    """, f"""
+TOP \\ (<succ> <succ> <succ> <zero> @)
+    """
+    )
+    assert bool(worlds)
+
+def test_induction_even_is_not_three():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+TOP \\ (<succ> <succ> <succ> <zero> @)
+    """
+    )
+    assert bool(worlds)
+
 def test_variable_subtypes_tag_pair():
     worlds = solve_subtyping(f"""
 X
@@ -56,7 +92,6 @@ def test_weaker_than_lfp():
     worlds = solve_subtyping(f"""
 EXI [X] (<succ> X) | (<zero> @) | X
     """, f"""
-
 LFP [R] (<succ> R) | (<zero> @)
     """
     )
@@ -878,6 +913,10 @@ if __name__ == '__main__':
     # test_length()
     # test_recursive_relational_factorization_learning()
     # test_weaker_than_lfp()
+    # test_two_not_three()
+    test_induction_even_is_not_three()
+    # test_induction_even_is_nat()
+    # test_induction_even_is_nat_not_three()
 
 
 #######################################################################
