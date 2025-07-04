@@ -1400,13 +1400,21 @@ def get_skolems_adjacent_learnable_ids(world : World) -> PSet[str]:
         if isinstance(st.upper, TVar) and st.upper.id not in world.closedids  
     ) 
 
-def is_typ_structured(t : Typ) -> bool:
+def is_typ_structured(t : Typ, lfp_id : str) -> bool:
     if False:
         assert False
     elif isinstance(t, Exi):
-        return is_typ_structured(t.body)
+        return (
+            is_typ_structured(t.body, lfp_id) or
+            any(
+                is_typ_structured(t.body, st.lower.id)
+                for st in t.constraints 
+                if isinstance(st.upper, TVar) and st.upper.id == lfp_id
+                if isinstance(st.lower, TVar)
+            )
+        )
     elif isinstance(t, All):
-        return is_typ_structured(t.body)
+        return is_typ_structured(t.body, lfp_id)
     elif isinstance(t, Top):
         return True
     elif isinstance(t, Bot):
@@ -1416,9 +1424,11 @@ def is_typ_structured(t : Typ) -> bool:
     elif isinstance(t, TEntry):
         return True
     elif isinstance(t, Unio):
-        return is_typ_structured(t.left) and is_typ_structured(t.right)
+        return is_typ_structured(t.left, lfp_id) and is_typ_structured(t.right, lfp_id)
     elif isinstance(t, Inter):
-        return is_typ_structured(t.left) and is_typ_structured(t.right)
+        return is_typ_structured(t.left, lfp_id) and is_typ_structured(t.right, lfp_id)
+    elif isinstance(t, TVar):
+        return t.id == lfp_id
     else:
         return False
 
@@ -2350,6 +2360,13 @@ class Solver:
         #         subbed_constraints
         #     )
         # ]
+    def is_finite_paths_typ(self, t : Typ) -> bool:
+        if isinstance(t, Imp): 
+            return True
+        elif isinstance(t, Inter): 
+            return self.is_finite_paths_typ(t.left) and self.is_finite_paths_typ(t.right)
+        else:
+            return False
 
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
@@ -2555,24 +2572,24 @@ class Solver:
         if self.count > self._limit:
             return []
 
-#         print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEBUG SOLVE:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# count: {self.count}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closed:
-# {world.closedids}
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG SOLVE:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+count: {self.count}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+closed:
+{world.closedids}
 
-# constraints:
-# {concretize_constraints(world.constraints)}
+constraints:
+{concretize_constraints(world.constraints)}
               
-# |-
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         """)
+|-
+{concretize_typ(lower)}
+<:
+{concretize_typ(upper)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
 
         #######################################
         #### Reflection ####
@@ -2824,10 +2841,10 @@ class Solver:
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
             return self.check_closed_variable_elimination_new(world, lower, upper)
-            if self.check_closed_variable_elimination(world, lower, upper): 
-                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            else:
-                return []
+            # if self.check_closed_variable_elimination(world, lower, upper): 
+            #     return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+            # else:
+            #     return []
 
         #######################################
         #### Variable Introduction #############
@@ -2839,14 +2856,16 @@ class Solver:
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
             return self.check_closed_variable_introduction_new(world, lower, upper)
-            if self.check_closed_variable_introduction(world, lower, upper): 
-                return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            else:
-                return []
+            # if self.check_closed_variable_introduction(world, lower, upper): 
+            #     return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+            # else:
+            #     return []
 
         #######################################
         #### Implication Rewriting ############
         #######################################
+
+
         elif isinstance(upper, Imp) and isinstance(upper.antec, Unio):
             return self.solve(world, lower, Inter(
                 Imp(upper.antec.left, upper.consq), 
@@ -2909,7 +2928,7 @@ class Solver:
             if lower.id not in extract_free_vars_from_typ(s(), lower.body):
                 # TODO: add case to rules in paper
                 return self.solve(world, lower.body, upper)
-            if is_typ_structured(lower.body):
+            if is_typ_structured(lower.body, lower.id):
                 # renaming : PMap[str, Typ] = pmap({lower.id : upper})
                 # lower_body = sub_typ(renaming, lower.body)
 
@@ -2976,6 +2995,12 @@ class Solver:
                 worlds = self.solve(world, lower, weak_body)
                 return worlds
             else:
+                ######################################################
+                ### TODO: simplified scalar reasoning by factoring 
+                ######################################################
+                ##########################################
+                ### Advanced Relational Reasoning
+                ##########################################
                 # READ
                 assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
                 if assumed_relational_typ != None:
@@ -3005,25 +3030,7 @@ class Solver:
                                 for closed_part in upper_parts
                                 if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
                             )
-
                             closed_var_consistent = closed_var_consistent and some_parts_consistent
-
-#                         print(f"""
-# DEBUG upper, Fixpoint:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closedids: {world.closedids}
-# constraints: 
-# {concretize_constraints(world.constraints)}
-
-# closed_constraints_consistent: {closed_var_consistent} 
-# bool(lower_fvs.difference(world.closedids)): {bool(lower_fvs.difference(world.closedids))}
-# self.is_relational_constraint_consistent(lower, upper): {self.is_relational_constraint_consistent(lower, upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                         """)
 
                     if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_solvable_relational_constraint(lower, upper):
                         # WRITE 
@@ -3093,7 +3100,21 @@ class Solver:
         #     # and not isinstance(upper, Exi)
         # ) : 
         elif isinstance(lower, Inter):
-            return self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
+            worlds = self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
+            if worlds:
+                return worlds
+            elif isinstance(upper, Imp) and self.is_finite_paths_typ(lower):
+                paths = linearize_intersections(lower)
+                param_types = []
+                return_types = []
+                for path in paths:
+                    assert isinstance(path, Imp)
+                    param_types.append(path.antec)
+                    return_types.append(path.consq)
+                return self.solve(world, Imp(make_unio(param_types), make_unio(return_types)), upper)
+            else:
+                return []
+                
 
         elif isinstance(lower, All): 
             renaming = self.make_renaming(lower.ids)
@@ -3331,11 +3352,6 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~
-DEBUG combine_app
-~~~~~~~~~~~~~~~~~~~
-        """)
         worlds = [world] 
         current_cator_typ = cator_typ
         for arg_typ in arg_typs:
@@ -3476,7 +3492,7 @@ DEBUG combine_app
         ################################################
         # Relational Type
         ################################################
-        # TODO: add constraint to parameter to ensuire soundness 
+        ####### TODO: add constraint to parameter to ensuire soundness 
         param_typ = self.solver.fresh_type_var()
         return_typ = self.solver.fresh_type_var()
         consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
@@ -3487,32 +3503,20 @@ DEBUG combine_app
         ################################################
         # Factored Type
         ################################################
-        param_var = self.solver.fresh_type_var()
-        param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
-        assert len(param_typs) == 1
-        param_typ = list(param_typs)[0]
-# #         print(f"""
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # DEBUG param type
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # {concretize_typ(param_typ)}
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# #         """)
+        ##### NOTE: not sure there's any benefit to factoring at this point
+        ##### TODO: modify the induction subtyping to factor in order to avoid more complicated relational reasoning 
+        ################################################
+        # param_var = self.solver.fresh_type_var()
+        # param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
+        # assert len(param_typs) == 1
+        # param_typ = list(param_typs)[0]
 
-#         return_var = self.solver.fresh_type_var()
-#         return_typs = find_factors_from_pattern(rel_typ, TEntry("head", return_var, return_var)
-#         assert len(return_typs) == 1
-#         return_typ = list(return_typs)[0]
+        # return_var = self.solver.fresh_type_var()
+        # return_typs = find_factors_from_pattern(rel_typ, TEntry("tail", return_var), return_var)
+        # assert len(return_typs) == 1
+        # return_typ = list(return_typs)[0]
 
-# #         print(f"""
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # DEBUG return type
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # {concretize_typ(return_typ)}
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# #         """)
-
-#         return Result(pid, outer_world, Imp(param_typ, return_typ))
+        # return Result(pid, outer_world, Imp(param_typ, return_typ))
         ################################################
 
     

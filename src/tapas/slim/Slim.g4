@@ -176,6 +176,10 @@ $combo = Inter(TEntry('head', $typ_base.combo), TEntry('tail', $typ.combo))
 }
 
 // Existential unconstrained 
+| 'EXI' '[' ']' typ {
+$combo = Exi((), (), $typ.combo) 
+}
+
 | 'EXI' '[' ids ']' typ {
 $combo = Exi($ids.combo, (), $typ.combo) 
 }
@@ -188,6 +192,11 @@ $combo = Exi($ids.combo, $qualification.combo, $typ.combo)
 ///////////////
 
 // Universal unconstrained 
+
+| 'ALL' '[' ']' typ {
+$combo = All((), (), $typ.combo) 
+}
+
 | 'ALL' '[' ids ']' typ {
 $combo = All($ids.combo, (), $typ.combo) 
 }
@@ -195,6 +204,10 @@ $combo = All($ids.combo, (), $typ.combo)
 // Universal 
 | 'ALL' '[' ids ']' qualification typ {
 $combo = All($ids.combo, $qualification.combo, $typ.combo) 
+}
+
+| 'ALL' '[' ']' qualification typ {
+$combo = All((), $qualification.combo, $typ.combo) 
 }
 
 
