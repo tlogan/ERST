@@ -2300,37 +2300,34 @@ class Solver:
     def is_compatible(self, lower : Typ, upper : LeastFP) -> bool:
         fresh_var = self.fresh_type_var()
         return self.is_record_key(lower) and all(
-            # not bool(key_paths.difference(case_paths))
             any(
                 key_path == case_path[:len(key_path)]
                 for case_path in case_paths
             )
             for upper_body in [sub_typ(pmap({upper.id : fresh_var}), upper.body)]
-            for fid in extract_free_vars_from_typ(s(), lower)
             for case in linearize_unions(upper_body)
-            for key_paths in [extract_paths(lower, TVar(fid))]
-            for case_paths in [extract_paths(case, TVar(fid))]
+            for key_paths in [extract_paths(lower)]
+            for case_paths in [extract_paths(case)]
             for key_path in key_paths
-            for thing in [
-                print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-DEBUG:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-fid: {fid}
-lower
-{concretize_typ(lower)}
+#             for thing in [
+#                 print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+# DEBUG:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+# lower
+# {concretize_typ(lower)}
 
-key_paths: {key_paths}
+# key_paths: {key_paths}
 
-case:
-{concretize_typ(case)}
+# case:
+# {concretize_typ(case)}
 
-case_paths: {case_paths}
+# case_paths: {case_paths}
 
-result: {not bool(key_paths.difference(case_paths))}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-                """)
-            ]
+# result: {not bool(key_paths.difference(case_paths))}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+#                 """)
+            # ]
         )
 
 
