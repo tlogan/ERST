@@ -32,6 +32,21 @@ def test_lted():
 def test_max():
     assert infer_typ(el.max) 
 
+def test_subtyping_unrolling():
+    assert solve_subtyping(f"""
+<true> @
+    """, f"""
+(LFP[R] ((EXI[] <true> @) | ((EXI[X] (X <: R)  : X) | ((EXI[] <false> @) | BOT))))
+    """
+    )
+
+def test_max_app():
+    code = f"""
+let max = {el.max} in
+max(zero;@,zero;@)
+    """
+    assert infer_typ(code) 
+
 def test_intersection_arrow_subtypes_lfp_arrow():
     assert solve_subtyping(f"""
 (<true> @ -> @) & (<false> @ -> @)
@@ -943,10 +958,11 @@ if __name__ == '__main__':
     # test_length()
     # test_lted()
     # test_max()
-    # test_subtyping_exi()
     # test_max()
     # test_intersection_arrow_subtypes_lfp_arrow()
-    test_typing_sanity_binding_annotation_4()
+    # test_typing_sanity_binding_annotation_4()
+    # test_max_app()
+    test_subtyping_unrolling()
 
 
 #######################################################################

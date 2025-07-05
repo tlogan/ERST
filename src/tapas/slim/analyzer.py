@@ -935,7 +935,7 @@ def is_consistently_labeled(src : LeastFP, label : str) -> bool:
     )
 
 
-def is_decomposable(key : Typ, rel : LeastFP) -> bool:
+def is_inflatable(key : Typ, rel : LeastFP) -> bool:
     comparisons = extract_column_comparisons(key, rel)
 
     result = False 
@@ -2968,31 +2968,13 @@ constraints:
 
         elif isinstance(upper, LeastFP): 
 
-#             print(f"""
-# DEBUG upper, Fixpoint SOLVE:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# closed:
-# {world.closedids}
-
-# constraints:
-# {concretize_constraints(world.constraints)}
-              
-# |-
-# {concretize_typ(lower)}
-# <:
-# {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# decomp: {is_decomposable(lower, upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
-
-            if is_decomposable(lower, upper): # TODO: make is_deciable more strict
+            if is_inflatable(lower, upper): # TODO: make is_deciable more strict
                 '''
                 unroll
                 '''
                 renaming : PMap[str, Typ] = pmap({upper.id : upper})
-                weak_body = sub_typ(renaming, upper.body)
-                worlds = self.solve(world, lower, weak_body)
+                upper_body = sub_typ(renaming, upper.body)
+                worlds = self.solve(world, lower, upper_body)
                 return worlds
             else:
                 ######################################################
@@ -3053,7 +3035,10 @@ constraints:
                             )]
                         #end if
                     else:
-                        return []
+                        renaming : PMap[str, Typ] = pmap({upper.id : Bot()})
+                        upper_body = sub_typ(renaming, upper.body)
+                        worlds = self.solve(world, lower, upper_body)
+                        return worlds
                     #end if
                 #end if
 
