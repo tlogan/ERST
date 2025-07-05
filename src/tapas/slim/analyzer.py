@@ -3107,18 +3107,19 @@ SOLVABLE:
                 worlds = self.solve(world, lower, upper_body)
                 return worlds
             else :
-                worlds = self.learn_or_check_relational_constraints(world, lower, upper)
-                # worlds = self.learn_factored_constraints(world, lower, upper)
-                if worlds:
-                    return worlds
-                else:
-                    strengthened_upper = make_unio([
-                        case
-                        for case in linearize_unions(upper.body)
-                        if upper.id not in extract_free_vars_from_typ(s(), case)
-                    ])
-                    worlds = self.solve(world, lower, strengthened_upper)
-                    return worlds
+                #############################################
+                ##### OLD Relational constraint reasoning
+                #############################################
+                # worlds = self.learn_or_check_relational_constraints(world, lower, upper)
+                ################
+
+                strengthened_upper = make_unio([
+                    case
+                    for case in linearize_unions(upper.body)
+                    if upper.id not in extract_free_vars_from_typ(s(), case)
+                ])
+                worlds = self.solve(world, lower, strengthened_upper)
+                return worlds
 
 
         #######################################
@@ -3556,30 +3557,27 @@ class ExprRule(Rule):
         # Relational Type
         ################################################
         ####### TODO: add constraint to parameter to ensuire soundness 
-        param_typ = self.solver.fresh_type_var()
-        return_typ = self.solver.fresh_type_var()
-        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
+        # param_typ = self.solver.fresh_type_var()
+        # return_typ = self.solver.fresh_type_var()
+        # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+        # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        # return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
         ################################################
 
         ################################################
         # Factored Type
         ################################################
-        ##### NOTE: not sure there's any benefit to factoring at this point
-        ##### TODO: modify the induction subtyping to factor in order to avoid more complicated relational reasoning 
-        ################################################
-        # param_var = self.solver.fresh_type_var()
-        # param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
-        # assert len(param_typs) == 1
-        # param_typ = list(param_typs)[0]
+        param_var = self.solver.fresh_type_var()
+        param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
+        assert len(param_typs) == 1
+        param_typ = list(param_typs)[0]
 
-        # return_var = self.solver.fresh_type_var()
-        # return_typs = find_factors_from_pattern(rel_typ, TEntry("tail", return_var), return_var)
-        # assert len(return_typs) == 1
-        # return_typ = list(return_typs)[0]
+        return_var = self.solver.fresh_type_var()
+        return_typs = find_factors_from_pattern(rel_typ, TEntry("tail", return_var), return_var)
+        assert len(return_typs) == 1
+        return_typ = list(return_typs)[0]
 
-        # return Result(pid, outer_world, Imp(param_typ, return_typ))
+        return Result(pid, outer_world, Imp(param_typ, return_typ))
         ################################################
 
     
