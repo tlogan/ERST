@@ -154,6 +154,10 @@
 
 \section{Introduction}
 \label{sec:introduction}
+
+\TODO{define intrisic types as type annotations that restrict the seach space or control flow of a program}
+
+\TODO{note the four kinds of intrinsic types: inputs/outpus of functions, inputs/outputs constructors}
 \noindent
 Automatically catching errors in programs is a hard enough problem
 that many languages require users to provide simple specifications to limit the space of correctness.
@@ -194,7 +198,7 @@ In order to achieve a language with a high degree of both code reusability and t
 This work presents an extremely extrinsic type inference system
 that allows programs to be as flexible as those in untyped languages
 without any required annotation burden. 
-Neither parametric data nor structural data is required to have
+Neither functions nor constructors is required to have
 any intrinsic type information annotated by the programmer in order
 to guarantee that highly reusable code does not get stuck.
 Although annotations are allowed to enable programmers to check their logic,
@@ -2539,7 +2543,7 @@ rely on analogous techniques.
 
 
 \noindent
-We performed experiments to see how type inference performs on both parametric data and structural data. 
+We performed experiments to see how type inference performs on both functions and constructors. 
 These two categories have historically been tackled independently of each other, where parametric types
 tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
 Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
@@ -2547,14 +2551,14 @@ However, the distinction is useful for comparing our design to previous work.
 
 We implemented an extrinsic type inference system that corresponds to the predicate definitions
 presented thus far. 
-To observe the expressiveness of our system on parametric data, 
+To observe the expressiveness of our system on functions, 
 we evaluated our implementation on the same suite of programs 
 that SuperF was evaluated on, as presented in the paper on SuperF \cite{}.
 Based on these experiments, our system all programs admitted by SuperF, as well as some programs 
 that SuperF is unable to admit.
-Thus, our system appears to be more expressive on parametric data than the previous most expressive
+Thus, our system appears to be more expressive on functions than the previous most expressive
 type inference system that we know of.
-To observe the expressiveness of our system on structural data, 
+To observe the expressiveness of our system on constructors, 
 we constructed simple programs that represent the kind of flexible and reusable code
 often found programs written in untyped scripting languages. 
 We ran these examples in our implementation, and created analogous version to run
@@ -2701,7 +2705,7 @@ the typing of some identifiers have already been learned or verified.
 
 \begin{experiment}
   \label{experi:parametric_data_part_1}
-  Parametric Data (Part 1) 
+  Functions (Part 1) 
   \\
   \scriptsize
   % \setlength{\arrayrulewidth}{0.5mm}
@@ -2786,9 +2790,9 @@ the typing of some identifiers have already been learned or verified.
 \end{experiment}
 
 \noindent
-In the experiment on parametric data, we 
+In the experiment on functions, we 
 are interested to observe if our implementation (\textbf{Extrinsic})
-can admit various programs on parametric data. 
+can admit various programs on functions. 
 For our implementation, we reject a program if the implementation
 finds a contradiction, diverges, or infers the top type. 
 In our system, we infer a top type when the top level 
@@ -2802,7 +2806,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:parametric_data_part_2}
-  Parametric Data (Part 2) 
+  Functions (Part 2) 
   \\
   \begin{center}
   \scriptsize
@@ -2954,7 +2958,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:parametric_data_part_4}
-  Parametric Data (Part 4)
+  Functions (Part 4)
   \\
   \begin{center}
   \scriptsize
@@ -3068,8 +3072,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 
 \begin{experiment}
-  \label{experi:typing_structures}
-  Typing Structures 
+  \label{experi:constructors}
+  Constructors 
   \\
   \begin{center}
   \scriptsize
@@ -3160,7 +3164,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \end{experiment}
 
 \noindent
-The experiment on programs with structural data demonstrate
+The experiment on programs with constructors demonstrate
 that our system is roughly as expressive as untyped languages
 without sacrificing safety guarantees.
 Our system can easily mix structures together, reducing
@@ -3176,8 +3180,8 @@ is at least one branch that could be used.
 
 Over the past decades many type inference have been designed and analyzed 
 with varying degrees of expressivity and varying degrees of intrinsic requirements
-or extrinsic relaxations, with respect to both parametric data (e.g. functions or paths dependent on variables)
-and structural data (e.g. data constructors or records).  
+or extrinsic relaxations, with respect to both functions (e.g. functions or paths dependent on variables)
+and constructors (e.g. data constructors or records).  
 The first technique to infer parametric types for parametric
 data without any assistance from annotations was Hindley-Milner type inference \cite{}. Despite its age, 
 it remains one of the foundational 
@@ -3198,7 +3202,7 @@ or an infinite number of
 other parametric types could be used, but none is weaker than all the rest.
 Therefore, these systems with impredicative parametric polymorphism rely on annotations of parameters to
 determine second order parametric types, which we believe constitutes intrinsic typing of
-of parametric data. Since there is no parameter type that is weaker than all the rest,
+of functions. Since there is no parameter type that is weaker than all the rest,
 relying on intrinsic second order parametric type significantly restricts the reusability
 of the program.
 
@@ -3217,13 +3221,13 @@ With SuperF's type inference mechanism, it is possible to infer the principal ty
 previous problematic example $\J{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}$.
 
 SuperF has a restricted language of types. It is concerned with the type inference
-of parametric data, and it is agnostic towards type inference of structural data. 
+of functions, and it is agnostic towards type inference of constructors. 
 It restricts the type and subtyping constraint syntax according to polarity; that is, a
 types position within an implication type or subtyping relation. Depending on polar position,
 universal types (i.e. indexed intersections) may or may not be qualified by subtyping constraints.
 The authors of SuperF highlight some technical features, including extrusion and distributivity.
 Their extrusion technique ensures that types are not overly specialized
-when inferring types of nested parametric data. Their distributivity technique allows
+when inferring types of nested functions. Their distributivity technique allows
 rewriting universal quantifiers to increase the chance that skolemization occurs before instantiation. 
 They point out that the distributivity rule is an improvement for most cases, but there are certain
 problems for which it more actually more restrictive.
@@ -3238,7 +3242,7 @@ However, our system does not restrict the syntax of types based on polarity. Ins
 polarity to constrain Proof Typing and Proof Subtyping when interpreting or checking interpretations
 of type variables.    
 Our system does not need extrusion because Packing $(\textbf{pack(...)})$ preserves the nested structure of 
-parametric data at the type level, such that the constraint between inner and outer bound type variables
+functions at the type level, such that the constraint between inner and outer bound type variables
 qualifies the inner parametric type, which ensures that instantiation of the inner parametric type 
 continues to constrain the outer bound type variables.  
 Our system does not need distributivity of type variable bindings, because it is requires
@@ -3248,10 +3252,10 @@ since it does not cause learning constraints before skolemization.
 
 \TODO{look into what SuperF folks mean by no backtracking in light of rhs union}
 
-In addition to parametric data, practical programming languages need to have some form of structural data.
-Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative parametric data
-very early on, type inference has always relied on some degree of intrinsic types for structural data.
-intrinsically typed structural data is exemplified by the datatype mechanism of Standard ML.
+In addition to functions, practical programming languages need to have some form of constructors.
+Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative functions
+very early on, type inference has always relied on some degree of intrinsic types for constructors.
+intrinsically typed constructors is exemplified by the datatype mechanism of Standard ML.
 For instance, the list datatype $(\J{'a list = nil | cons 'a * 'a list})$ specifies that 
 data constructed with ${\J{nil}}$ or $\J{cons}$ have the type ${\J{'a list}}$. Additionally,
 it requires that the input to the constructor $(\J{cons})$  has the types $(\J{'a * 'a list})$
@@ -3272,7 +3276,7 @@ For instance, it would allow pattern matching that chooses between a list and a 
 
 To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
 must be abolished so that there is no intrinsic weakest type other than a top type. 
-Typescript \cite{} does not have an intrinsic weakest type for structural data,
+Typescript \cite{} does not have an intrinsic weakest type for constructors,
 and it can infer output types of functions that return different structural forms in different branches.
 However, it is unable to infer a weak type for the parameters, and thus requires annotation of parameters.  
 Typescript and other systems for scripting languages, rely on flow-sensitive, or occurrence typing \cite{},
@@ -3284,7 +3288,7 @@ To extend type inference of scripting languages further, MLStruct \cite{} and ot
 leveraged the flow information to infer both input types and output types of functions.
 MLStruct, along with SuperF, represents some of the foundational ideas of the MLScript language.
 Like SuperF, it learns the data flow of programs in terms of subtyping constraints.
-Other than our system, it appears that MLStruct has the best type inference of structural data
+Other than our system, it appears that MLStruct has the best type inference of constructors
 with the least amount of intrinsic type requirements. 
 However, MLStruct still has a significant intrinsic type requirement, which reduces flexibility compared
 to untyped languages. It requires that the inputs to data constructors have an intrinsic type.  
@@ -3295,7 +3299,7 @@ illustrate, it is not possible to type a function that expects only even numbers
 Moreover, the additional annotation burden alone would prevent the analysis of untyped code without
 significant effort in augmenting the code with annotations.
 In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
-without any annotation requirements on structural data. 
+without any annotation requirements on constructors. 
 
 The common ingredient in all of these systems that perform some amount of extrinsic type inference is
 learning data flow. Data flow analysis comes in many forms. As the goal for these systems is verification,
