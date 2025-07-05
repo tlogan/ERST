@@ -55,6 +55,25 @@ def test_intersection_arrow_subtypes_lfp_arrow():
     """
     )
 
+def test_intersection_arrow_single_selection():
+    worlds = solve_subtyping(f"""
+(<true> X -> @) & (<false> X -> @)
+    """, """
+(<true> @) -> @
+    """
+    )
+    assert worlds
+
+    for i, world in enumerate(worlds):
+        print(f"""
+=========================
+world {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+constraints:
+{analyzer.concretize_constraints(world.constraints)}
+=========================
+        """)
+
 
 
 def test_length():
@@ -977,6 +996,8 @@ if __name__ == '__main__':
     # test_max_app()
     # test_subtyping_unrolling()
     # test_length_eta_expansion()
+    # test_intersection_arrow_subtypes_lfp_arrow()
+    test_intersection_arrow_single_selection()
 
 
 #######################################################################
