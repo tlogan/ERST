@@ -957,8 +957,7 @@ if __name__ == '__main__':
 
     # test_length()
     # test_lted()
-    # test_max()
-    # test_max()
+    test_max()
     # test_intersection_arrow_subtypes_lfp_arrow()
     # test_typing_sanity_binding_annotation_4()
     # test_max_app()

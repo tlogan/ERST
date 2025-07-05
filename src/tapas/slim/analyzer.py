@@ -2256,6 +2256,8 @@ class Solver:
             return False
 
     def is_solvable_relational_constraint(self, lower : Typ, upper : LeastFP) -> bool: 
+        # TODO: need to redo this; subbing in TOP could weaken if target is in positive position,
+        # but subbing in BOT could also weakenG if target is in negative position
         renaming : PMap[str, Typ] = pmap({upper.id : Top()})
         upper_body = sub_typ(renaming, upper.body)
         # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
@@ -2293,6 +2295,61 @@ class Solver:
         neg_vars = self.extract_polar_vars_from_constraints(False, s(), world.constraints.add(st)).difference(world.closedids)
         pos_vars = self.extract_polar_vars_from_constraints(True, s(), world.constraints.add(st)).difference(world.closedids)
         return len(list(neg_vars.intersection(pos_vars)))
+
+    def learn_or_check_relational_constraints(self, world : World, lower : Typ, upper : LeastFP) -> list[World]:
+        # TODO: clean up this logic
+        # CHECK (READ) 
+        assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
+        if assumed_relational_typ != None:
+            # print("~~~~~~ FIX A")
+            # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
+            ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
+            normalized_upper = normalize_least_fp(upper, ordered_paths)
+            worlds = self.solve(world, assumed_relational_typ, normalized_upper)
+            return worlds
+        else:
+            lower_fvs = extract_free_vars_from_typ(s(), lower)  
+            closed_var_consistent = True 
+            for fv in lower_fvs:
+                if fv in world.closedids: 
+                    upper_parts = pset(
+                        st.upper
+                        for st in world.constraints
+                        if st.lower == TVar(fv)
+                    ).union(find_factors(world, TVar(fv)))
+
+                    some_parts_consistent = any(
+                        all(
+                            bool(self.solve(world, closed_part, factor))
+                            for factor in find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
+                        )
+                        for closed_part in upper_parts
+                        if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
+                    )
+                    closed_var_consistent = closed_var_consistent and some_parts_consistent
+
+            if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_solvable_relational_constraint(lower, upper):
+                # LEARN (WRITE) 
+                new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
+                if new_lower != lower:
+                    lower_fvs = extract_free_vars_from_typ(s(), lower)  
+                    return [
+                        new_world
+                        for world in self.solve(world, new_lower, upper)
+                        for new_world in [replace(world, 
+                            constraints = world.constraints.add(Subtyping(lower, upper)),
+                            relids = world.relids.union(lower_fvs)
+                        )]
+                        # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
+                    ]
+                else:
+                    return [replace(world, 
+                        constraints = world.constraints.add(Subtyping(lower, upper)),
+                        relids = world.relids.union(lower_fvs)
+                    )]
+                #end if
+            else:
+                return []
 
     def solve_multi(self, world : World, constraints : Iterable[Subtyping]) -> list[World]:
         worlds = [world]
@@ -2977,73 +3034,14 @@ constraints:
                 worlds = self.solve(world, lower, upper_body)
                 return worlds
             else:
-                ######################################################
-                ### TODO: simplified scalar reasoning by factoring 
-                ######################################################
-                ##########################################
-                ### Advanced Relational Reasoning
-                ##########################################
-                # READ
-                assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
-                if assumed_relational_typ != None:
-
-                    # print("~~~~~~ FIX A")
-                    # NOTE: this only uses the strict interpretation; so frozen or not doesn't matter
-                    ordered_paths = [k for (k,v) in extract_ordered_path_target_pairs(lower)]
-                    normalized_upper = normalize_least_fp(upper, ordered_paths)
-                    worlds = self.solve(world, assumed_relational_typ, normalized_upper)
-                    return worlds
-                else:
-                    lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                    closed_var_consistent = True 
-                    for fv in lower_fvs:
-                        if fv in world.closedids: 
-                            upper_parts = pset(
-                                st.upper
-                                for st in world.constraints
-                                if st.lower == TVar(fv)
-                            ).union(find_factors(world, TVar(fv)))
-
-                            some_parts_consistent = any(
-                                all(
-                                    bool(self.solve(world, closed_part, factor))
-                                    for factor in find_factors_from_constraint(Subtyping(lower, upper), TVar(fv))
-                                )
-                                for closed_part in upper_parts
-                                if not isinstance(closed_part, TVar) or closed_part.id in world.closedids 
-                            )
-                            closed_var_consistent = closed_var_consistent and some_parts_consistent
-
-                    if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_solvable_relational_constraint(lower, upper):
-                        # WRITE 
-                        new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
-                        if new_lower != lower:
-                            lower_fvs = extract_free_vars_from_typ(s(), lower)  
-                            return [
-                                new_world
-                                for world in self.solve(world, new_lower, upper)
-                                for new_world in [replace(world, 
-                                    constraints = world.constraints.add(Subtyping(lower, upper)),
-                                    relids = world.relids.union(lower_fvs)
-                                )]
-                                # if self.ensure_upper_intersection_inhabitable(new_world, lower.id, upper)
-                            ]
-                        else:
-                            return [replace(world, 
-                                constraints = world.constraints.add(Subtyping(lower, upper)),
-                                relids = world.relids.union(lower_fvs)
-                            )]
-                        #end if
-                    else:
-                        strengthened_upper = make_unio([
-                            case
-                            for case in linearize_unions(upper.body)
-                            if upper.id not in extract_free_vars_from_typ(s(), case)
-                        ])
-                        worlds = self.solve(world, lower, strengthened_upper)
-                        return worlds
-                    #end if
-                #end if
+                # worlds = self.learn_or_check_relational_constraints(world, lower, upper)
+                strengthened_upper = make_unio([
+                    case
+                    for case in linearize_unions(upper.body)
+                    if upper.id not in extract_free_vars_from_typ(s(), case)
+                ])
+                worlds = self.solve(world, lower, strengthened_upper)
+                return worlds
 
 
         #######################################
