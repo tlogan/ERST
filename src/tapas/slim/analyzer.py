@@ -2570,130 +2570,158 @@ SOLVABLE:
         )
 
 
-    def check_closed_variable_elimination(self, world : World, lower : TVar, upper : Typ) -> bool:
-        upper_parts = pset(
-            st.upper
-            for st in world.constraints
-            if st.lower == lower 
-        ).union(find_factors(world, lower))
+    # def check_closed_variable_elimination(self, world : World, lower : TVar, upper : Typ) -> bool:
+    #     upper_parts = pset(
+    #         st.upper
+    #         for st in world.constraints
+    #         if st.lower == lower 
+    #     ).union(find_factors(world, lower))
 
-        some_parts_consistent = lambda : any(
-            (
-                (isinstance(upper_part, TVar) and upper_part.id not in world.closedids) 
-                or bool(self.solve(world, upper_part, upper))
-            )
-            for upper_part in upper_parts
-        )
+    #     some_parts_consistent = lambda : any(
+    #         (
+    #             (isinstance(upper_part, TVar) and upper_part.id not in world.closedids) 
+    #             or bool(self.solve(world, upper_part, upper))
+    #         )
+    #         for upper_part in upper_parts
+    #     )
 
-        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-        subbed_constraints = list(constraints.difference(world.constraints))
-        all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
+    #     constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+    #     subbed_constraints = list(constraints.difference(world.constraints))
+    #     all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
 
-        return all_parts_consistent() and some_parts_consistent()
+    #     return all_parts_consistent() and some_parts_consistent()
 
-    def check_closed_variable_elimination_new(self, world : World, lower : TVar, upper : Typ) -> list[World]:
-        upper_parts = pset(
-            st.upper
-            for st in world.constraints
-            if st.lower == lower 
-        ).union(find_factors(world, lower))
+    # def check_closed_variable_elimination_new_old(self, world : World, lower : TVar, upper : Typ) -> list[World]:
+    #     upper_parts = pset(
+    #         st.upper
+    #         for st in world.constraints
+    #         if st.lower == lower 
+    #     ).union(find_factors(world, lower))
 
-        closed_upper_parts = [
-            upper_part
-            for upper_part in upper_parts
-            if not isinstance(upper_part, TVar) or upper_part.id in world.closedids
-        ]
-        worlds = []
-        last_constraints = []
-        for upper_part in closed_upper_parts:
-            worlds += self.solve(world, upper_part, upper)
+    #     closed_upper_parts = [
+    #         upper_part
+    #         for upper_part in upper_parts
+    #         if not isinstance(upper_part, TVar) or upper_part.id in world.closedids
+    #     ]
+    #     worlds = []
+    #     last_constraints = []
+    #     for upper_part in closed_upper_parts:
+    #         worlds += self.solve(world, upper_part, upper)
 
-        if not worlds and any(
-            isinstance(upper_part, TVar) and upper_part.id not in world.closedids
-            for upper_part in upper_parts
-        ):
-            worlds = [world]
-            last_constraints = [Subtyping(lower, upper)]
+    #     if not worlds and any(
+    #         isinstance(upper_part, TVar) and upper_part.id not in world.closedids
+    #         for upper_part in upper_parts
+    #     ):
+    #         worlds = [world]
+    #         last_constraints = [Subtyping(lower, upper)]
 
               
-        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-        subbed_constraints = list(constraints.difference(world.constraints))
-        return [
-            replace(w1, constraints = w1.constraints.union(last_constraints)) 
-            for w0 in worlds
-            for w1 in self.solve_multi(w0, subbed_constraints)
-        ]
+    #     constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+    #     subbed_constraints = list(constraints.difference(world.constraints))
+    #     return [
+    #         replace(w1, constraints = w1.constraints.union(last_constraints)) 
+    #         for w0 in worlds
+    #         for w1 in self.solve_multi(w0, subbed_constraints)
+    #     ]
 
-    def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
-        lower_parts = pset(
-            st.lower
+    def solve_skolem_elimination(self, world : World, lower : TVar, upper : Typ) -> list[World]:
+        upper_parts = pset(
+            st.upper
             for st in world.constraints
-            if st.upper == upper 
-        )
+            if st.lower == lower 
+            if not isinstance(st.upper, TVar) or st.upper.id in world.closedids
+        ).union(find_factors(world, lower))
 
-        some_parts_consistent = lambda : any(
-            (
-                (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
-                or bool(self.solve(world, lower, lower_part))
-            )
-            for lower_part in lower_parts
-        )
-
-        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
-        subbed_constraints = list(constraints.difference(world.constraints))
-        all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
-
-        return all_parts_consistent() and some_parts_consistent()
-
-    def check_closed_variable_introduction_new(self, world : World, lower : Typ, upper : TVar) -> list[World]:
-
-        lower_parts = pset(
-            st.lower
-            for st in world.constraints
-            if st.upper == upper 
-        )
-
-        closed_lower_parts = [
-            lower_part
-            for lower_part in lower_parts
-            if not isinstance(lower_part, TVar) or lower_part.id in world.closedids
-        ]
         worlds = []
-        last_constraints = []
-        for lower_part in closed_lower_parts:
-            worlds += self.solve(world, lower, lower_part)
+        for upper_part in upper_parts:
+            worlds += self.solve(world, upper_part, upper)
 
-        if not worlds and any( 
-            (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
-            for lower_part in lower_parts
-        ):
-            worlds = [world]
-            last_constraints = [Subtyping(lower, upper)]
+        return worlds
 
-        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
-        subbed_constraints = list(constraints.difference(world.constraints))
+    # def check_closed_variable_introduction(self, world : World, lower : Typ, upper : TVar) -> bool:
 
-        return [ replace(w1, constraints = w1.constraints.union(last_constraints)) 
-            for w0 in worlds
-            for w1 in self.solve_multi(w0, subbed_constraints)
-        ]
+    #     lower_parts = pset(
+    #         st.lower
+    #         for st in world.constraints
+    #         if st.upper == upper 
+    #     )
 
+    #     some_parts_consistent = lambda : any(
+    #         (
+    #             (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
+    #             or bool(self.solve(world, lower, lower_part))
+    #         )
+    #         for lower_part in lower_parts
+    #     )
 
-    def closed_constraints_safe(self, world : World, constraints : PSet[Subtyping]) -> bool:
-        return all(
-            (False
-                or not isinstance(st.lower, TVar) 
-                or (st.lower.id not in world.closedids)
-                or self.check_closed_variable_elimination(world, st.lower, st.upper)
-            ) and
-            (False
-                or not isinstance(st.upper, TVar) 
-                or (st.upper.id not in world.closedids)
-                or self.check_closed_variable_introduction(world, st.lower, st.upper)
-            )
-            for st in constraints
+    #     constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+    #     subbed_constraints = list(constraints.difference(world.constraints))
+    #     all_parts_consistent = lambda : bool(self.solve_multi(world, subbed_constraints))
+
+    #     return all_parts_consistent() and some_parts_consistent()
+
+    # def check_closed_variable_introduction_new_old(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+
+    #     lower_parts = pset(
+    #         st.lower
+    #         for st in world.constraints
+    #         if st.upper == upper 
+    #     )
+
+    #     closed_lower_parts = [
+    #         lower_part
+    #         for lower_part in lower_parts
+    #         if not isinstance(lower_part, TVar) or lower_part.id in world.closedids
+    #     ]
+    #     worlds = []
+    #     last_constraints = []
+    #     for lower_part in closed_lower_parts:
+    #         worlds += self.solve(world, lower, lower_part)
+
+    #     if not worlds and any( 
+    #         (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
+    #         for lower_part in lower_parts
+    #     ):
+    #         worlds = [world]
+    #         last_constraints = [Subtyping(lower, upper)]
+
+    #     constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
+    #     subbed_constraints = list(constraints.difference(world.constraints))
+
+    #     return [ replace(w1, constraints = w1.constraints.union(last_constraints)) 
+    #         for w0 in worlds
+    #         for w1 in self.solve_multi(w0, subbed_constraints)
+    #     ]
+
+    def solve_skolem_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+        lower_parts = pset(
+            st.lower
+            for st in world.constraints
+            if st.upper == upper 
+            if not isinstance(st.lower, TVar) or st.lower.id in world.closedids
         )
+        worlds = []
+        for lower_part in lower_parts:
+            worlds += self.solve(world, lower, lower_part)
+        return worlds
+
+
+
+    # def closed_constraints_safe(self, world : World, constraints : PSet[Subtyping]) -> bool:
+    #     return all(
+    #         (False
+    #             or not isinstance(st.lower, TVar) 
+    #             or (st.lower.id not in world.closedids)
+    #             or bool(self.solve_skolem_elimination(world, st.lower, st.upper))
+    #         ) and
+    #         (False
+    #             or not isinstance(st.upper, TVar) 
+    #             or (st.upper.id not in world.closedids)
+    #             or bool(self.solve_skolem_introduction(world, st.lower, st.upper))
+    #         )
+    #         for st in constraints
+    #     )
             
 
     def solve(self, world : World, lower : Typ, upper : Typ, reset = False) -> list[World]:
@@ -2972,11 +3000,7 @@ SOLVABLE:
         # elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar) or upper.id in world.closedids): 
         elif isinstance(lower, TVar) and lower.id in world.closedids and (not isinstance(upper, TVar)): 
         # elif isinstance(lower, TVar) and lower.id in world.closedids: 
-            return self.check_closed_variable_elimination_new(world, lower, upper)
-            # if self.check_closed_variable_elimination(world, lower, upper): 
-            #     return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            # else:
-            #     return []
+            return self.solve_skolem_elimination(world, lower, upper)
 
         #######################################
         #### Variable Introduction #############
@@ -2987,11 +3011,7 @@ SOLVABLE:
 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
-            return self.check_closed_variable_introduction_new(world, lower, upper)
-            # if self.check_closed_variable_introduction(world, lower, upper): 
-            #     return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
-            # else:
-            #     return []
+            return self.solve_skolem_introduction(world, lower, upper)
 
         #######################################
         #### Implication Rewriting ############
