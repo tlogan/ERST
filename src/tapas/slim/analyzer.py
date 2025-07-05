@@ -3554,9 +3554,8 @@ class ExprRule(Rule):
 
         rel_typ = LeastFP(IH_typ.id, induc_body)
         ################################################
-        # Relational Type
+        # OLD Relational Type
         ################################################
-        ####### TODO: add constraint to parameter to ensuire soundness 
         # param_typ = self.solver.fresh_type_var()
         # return_typ = self.solver.fresh_type_var()
         # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
