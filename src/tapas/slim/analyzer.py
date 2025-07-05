@@ -2255,15 +2255,14 @@ class Solver:
         else:
             return False
 
-    def is_solvable_relational_constraint(self, lower : Typ, upper : LeastFP) -> bool: 
-        # TODO: need to redo this; subbing in TOP could weaken if target is in positive position,
-        # but subbing in BOT could also weakenG if target is in negative position
-        renaming : PMap[str, Typ] = pmap({upper.id : Top()})
-        upper_body = sub_typ(renaming, upper.body)
-        # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
-        # NOTE: this check only cares about the local structure of the types
-        # NOTE: consistency with the rest of the world is handled elsewhere
-        return bool(self.check(empty_world(), lower, upper_body))
+    # def is_solvable_relational_constraint(self, lower : Typ, upper : LeastFP) -> bool: 
+    #     # but subbing in BOT could also weakenG if target is in negative position
+    #     renaming : PMap[str, Typ] = pmap({upper.id : Top()})
+    #     upper_body = sub_typ(renaming, upper.body)
+    #     # NOTE: this is not circular because it's unrolled and TOP is subbed in for self reference 
+    #     # NOTE: this check only cares about the local structure of the types
+    #     # NOTE: consistency with the rest of the world is handled elsewhere
+    #     return bool(self.check(empty_world(), lower, upper_body))
 
     def check(self, world : World, lower : Typ, upper : Typ) -> bool:
         try:
@@ -2296,9 +2295,69 @@ class Solver:
         pos_vars = self.extract_polar_vars_from_constraints(True, s(), world.constraints.add(st)).difference(world.closedids)
         return len(list(neg_vars.intersection(pos_vars)))
 
+
+
+    def is_compatible(self, lower : Typ, upper : LeastFP) -> bool:
+        fresh_var = self.fresh_type_var()
+        return self.is_record_key(lower) and all(
+            # not bool(key_paths.difference(case_paths))
+            any(
+                key_path == case_path[:len(key_path)]
+                for case_path in case_paths
+            )
+            for upper_body in [sub_typ(pmap({upper.id : fresh_var}), upper.body)]
+            for fid in extract_free_vars_from_typ(s(), lower)
+            for case in linearize_unions(upper_body)
+            for key_paths in [extract_paths(lower, TVar(fid))]
+            for case_paths in [extract_paths(case, TVar(fid))]
+            for key_path in key_paths
+            for thing in [
+                print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+DEBUG:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+fid: {fid}
+lower
+{concretize_typ(lower)}
+
+key_paths: {key_paths}
+
+case:
+{concretize_typ(case)}
+
+case_paths: {case_paths}
+
+result: {not bool(key_paths.difference(case_paths))}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+                """)
+            ]
+        )
+
+
+    def learn_factored_constraints(self, world : World, lower : Typ, upper : LeastFP) -> list[World]:
+        if self.is_compatible(lower, upper): 
+            fids = extract_free_vars_from_typ(s(), lower)
+            if not bool(fids.intersection(world.closedids)):
+                factored_constraints = []
+                for fid in fids:
+                    factored_lower = TVar(fid) 
+                    factored_uppers = find_factors_from_pattern(upper, lower, factored_lower)
+                    assert factored_uppers
+                    factored_upper = make_inter(list(factored_uppers))
+                    factored_constraints.append(Subtyping(factored_lower, factored_upper))
+                return self.solve_multi(world, factored_constraints) 
+            else:
+                return []
+        else:
+            return []
+        
+
     def learn_or_check_relational_constraints(self, world : World, lower : Typ, upper : LeastFP) -> list[World]:
         # TODO: clean up this logic
         # CHECK (READ) 
+
+
+
         assumed_relational_typ = self.lookup_normalized_relational_typ(world, lower)
         if assumed_relational_typ != None:
             # print("~~~~~~ FIX A")
@@ -2328,7 +2387,14 @@ class Solver:
                     )
                     closed_var_consistent = closed_var_consistent and some_parts_consistent
 
-            if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_solvable_relational_constraint(lower, upper):
+            if closed_var_consistent and bool(lower_fvs.difference(world.closedids)) and self.is_compatible(lower, upper):
+                print(f"""
+==============================================
+SOLVABLE:
+~~~~~~~~~~~~~~~~~~~~~~~~~
+{concretize_typ(lower)} <: {concretize_typ(upper)}
+==============================================
+                """)
                 # LEARN (WRITE) 
                 new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
                 if new_lower != lower:
@@ -2425,6 +2491,16 @@ class Solver:
         else:
             return False
 
+    def is_record_key(self, t : Typ) -> bool:
+        if isinstance(t, TVar):
+            return True
+        elif isinstance(t, TEntry):
+            return self.is_record_key(t.body)
+        elif isinstance(t, Inter):
+            return self.is_record_key(t.left) and self.is_record_key(t.right)
+        else:
+            return False
+
     def is_pattern_typ(self, t : Typ) -> bool:
         if isinstance(t, TVar):
             return True
@@ -2455,7 +2531,7 @@ class Solver:
 
     def are_skolemizable_constraints(self, constraints : Iterable[Subtyping]) -> bool:
         return all(
-            self.is_solvable_relational_constraint(st.lower, st.upper)
+            self.is_compatible(st.lower, st.upper)
             if isinstance(st.upper, LeastFP) else
             self.is_negatable_typ(st.upper)
             for st in constraints
@@ -2629,24 +2705,24 @@ class Solver:
         if self.count > self._limit:
             return []
 
-        print(f"""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG SOLVE:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-count: {self.count}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-closed:
-{world.closedids}
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG SOLVE:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# count: {self.count}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# closed:
+# {world.closedids}
 
-constraints:
-{concretize_constraints(world.constraints)}
+# constraints:
+# {concretize_constraints(world.constraints)}
               
-|-
-{concretize_typ(lower)}
-<:
-{concretize_typ(upper)}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """)
+# |-
+# {concretize_typ(lower)}
+# <:
+# {concretize_typ(upper)}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
 
         #######################################
         #### Reflection ####
@@ -3033,15 +3109,19 @@ constraints:
                 upper_body = sub_typ(renaming, upper.body)
                 worlds = self.solve(world, lower, upper_body)
                 return worlds
-            else:
-                # worlds = self.learn_or_check_relational_constraints(world, lower, upper)
-                strengthened_upper = make_unio([
-                    case
-                    for case in linearize_unions(upper.body)
-                    if upper.id not in extract_free_vars_from_typ(s(), case)
-                ])
-                worlds = self.solve(world, lower, strengthened_upper)
-                return worlds
+            else :
+                worlds = self.learn_or_check_relational_constraints(world, lower, upper)
+                # worlds = self.learn_factored_constraints(world, lower, upper)
+                if worlds:
+                    return worlds
+                else:
+                    strengthened_upper = make_unio([
+                        case
+                        for case in linearize_unions(upper.body)
+                        if upper.id not in extract_free_vars_from_typ(s(), case)
+                    ])
+                    worlds = self.solve(world, lower, strengthened_upper)
+                    return worlds
 
 
         #######################################

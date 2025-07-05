@@ -67,6 +67,20 @@ def test_length():
     assert infer_typ(length)
     # assert infer_typ(el.length)
 
+def test_length_eta_expansion():
+    length = (f"""
+    loop({{ self => 
+        {{ nil;@ => zero;@  }}
+        {{ cons;(x,xs) => succ;(self(xs)) }}
+    }}) 
+    """.strip())
+    code = f"""
+let length = {length} in
+{{ x => length(x) }}
+    """
+    assert infer_typ(code)
+    # assert infer_typ(el.length)
+
 def test_recursive_pair():
     assert infer_typ(f"""
 loop({{ self => 
@@ -957,11 +971,12 @@ if __name__ == '__main__':
 
     # test_length()
     # test_lted()
-    test_max()
+    # test_max()
     # test_intersection_arrow_subtypes_lfp_arrow()
     # test_typing_sanity_binding_annotation_4()
     # test_max_app()
     # test_subtyping_unrolling()
+    test_length_eta_expansion()
 
 
 #######################################################################
