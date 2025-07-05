@@ -1000,6 +1000,7 @@ if __name__ == '__main__':
     # test_intersection_arrow_single_selection()
     # test_typing_C3()
     # test_max_app()
+    test_variable_subtypes_tag_pair()
 
 
 #######################################################################
