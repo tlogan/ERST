@@ -3564,6 +3564,22 @@ class ExprRule(Rule):
         ################################################
 
         ################################################
+        # NEW Relational Type Option B
+        ################################################
+        # param_var = self.solver.fresh_type_var()
+        # param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
+        # assert len(param_typs) == 1
+        # param_typ = list(param_typs)[0]
+        # param_constraint = Subtyping(param_var, param_typ)
+
+        # return_var = self.solver.fresh_type_var()
+        # return_constraint = Subtyping(make_pair_typ(param_var, return_var), rel_typ)
+        # return_typ = Exi(tuple([return_var.id]), tuple([return_constraint]), return_var)  
+
+        # return Result(pid, outer_world, All(tuple([param_var.id]), tuple([param_constraint]), Imp(param_typ, return_typ)))
+        ################################################
+
+        ################################################
         # Factored Type
         ################################################
         param_var = self.solver.fresh_type_var()
