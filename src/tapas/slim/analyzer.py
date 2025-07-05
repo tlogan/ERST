@@ -2528,8 +2528,10 @@ SOLVABLE:
 
     def are_skolemizable_constraints(self, constraints : Iterable[Subtyping]) -> bool:
         return all(
-            self.is_compatible(st.lower, st.upper)
-            if isinstance(st.upper, LeastFP) else
+            # NOTE: compatible check only necessary for relational reasoning 
+            # self.is_compatible(st.lower, st.upper)
+            # if isinstance(st.upper, LeastFP) else
+            isinstance(st.lower, TVar) or
             self.is_negatable_typ(st.upper)
             for st in constraints
         )
