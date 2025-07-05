@@ -3035,9 +3035,12 @@ constraints:
                             )]
                         #end if
                     else:
-                        renaming : PMap[str, Typ] = pmap({upper.id : Bot()})
-                        upper_body = sub_typ(renaming, upper.body)
-                        worlds = self.solve(world, lower, upper_body)
+                        strengthened_upper = make_unio([
+                            case
+                            for case in linearize_unions(upper.body)
+                            if upper.id not in extract_free_vars_from_typ(s(), case)
+                        ])
+                        worlds = self.solve(world, lower, strengthened_upper)
                         return worlds
                     #end if
                 #end if
