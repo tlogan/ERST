@@ -229,6 +229,7 @@ Thus, it forbids pattern matching with on fewer patterns than those in the datat
   \J{fun nlen(nil) = zero}
 }
 
+\noindent
 Additionally, the list specification 
 means that the strongest assumption allowed for \code{cons} is that its
 content has type \code{'a * 'a list}. Thus, 
@@ -241,49 +242,31 @@ like a length function that only works on even length lists.
   \J{\ \ | elen(cons(x,cons(y,zs))) = succ(succ(elen(zs)))}
 }
 
-Additionally, the nat datatype prescribes the strongest type
-inferrable for constructions, and    
 
-For instance, the datatype mechanism in Standard ML and related languages 
+Even with all the intrinsic specifications required for structural expressions, Standard ML,
+and languages like it, ease the burden on the programmer by leveraging Hindley-Milner
+type inference \cite{}, which can infer principal types for
+predicative and non-structural expressions extrinsically, without intrinsic specifications. 
+Despite the mitigating type inference capabilities of intrinsically typed systems, 
+much more software these days is written
+in untyped scripting languages, like Python and Javascript. 
+These programs are not written with any control flow restrictions in mind,
+and the are unlikely to conform to the control flow restrictions imposed by intrinsic types.
+In fact, the lack of control flow restrictions may be one of the reasons that people
+choose scripting languages over intrinsically typed languages.
+Without artificial restrictions, programers can write code with a high degree of reusability,
+with very little effort.
+For instance, one might want a comparison function that works on both numbers and strings,
+so that the caller can sort lists of numbers or lists of strings without having to
+clutter the call site with a particular comparison function.  
+Some have tried reconcile intrinsic types with code reusability by adding
+advanced construct to languages, classes and type classes.
+Indeed, these constructs do enable reusability, but they require additional
+complexity and may fragment code in ways that obscures its essence.   
+An alternative approach is to simply relax the intrinsic type requirements,
+and infer types extrinsically according to the control flow of the program. 
 
-\TODO{define intrisic types as type annotations that restrict the seach space or control flow of a program}
-
-\TODO{note the four kinds of intrinsic types: inputs/outputs of compositional data and input/output of structural data}
-
-\TODO{f(a) is an example of a compositional data}
-
-\TODO{(cons;(x, xs), zero;@) is an example of structural data}
-
-\noindent
-Automatically catching errors in programs is a hard enough problem
-that many languages require users to provide simple specifications to limit the space of correctness.
-In languages such as as Java or ML, programmers must declare each data constructor along with the weakest space it belongs to. 
-That is, the data constructors are intrinsically typed.
-The clever design of ML allows annotations to be fairly sparse by 
-having types specified at constructor declarations and relying on type inference elsewhere.
-However, one of the drawbacks of intrinsically typed languages is that they prevent reusing of
-constructors in contexts that are weaker than or incomparable to their declared spaces. 
-For instance, if a programmer declares data constructors \emph{cons} and \emph{nil} to belong to type list,
-and \emph{node} and \emph{empty} to belong to type tree, then it is impossible to construct a function
-that accepts either a list or a tree, or returns either a list or a tree. The only option would be to define
-a new datatype that contains isomorphs of all of the above the data constructors, which would 
-likely add overhead to development, compilation, and execution.
-
-For various reasons, which may include the reusability drawbacks just mentioned, 
-intrinsically typed languages have lost favor,
-and untyped languages, 
-such as Javascript and Python, have increased in popularity. 
-Untyped languages remove the burden on the programmer to prescribe the weakest space each data constructor belongs to, 
-which in turn allows programmers to mix and match data constructors in
-various contexts, with the potential for enhancing the reusability and clarity of code.
-However, the automatic detection of errors is still important. Python and Javascript have 
-evolved over the years to include extrinsic types, whereby the programmer annotates particular uses of
-their data constructors with types, rather than the declarations of data constructors.
- 
-Because extrinsically typed languages do not require users to specify the weakest space each data constructor belongs to,
-extrinsically typed languages lack the type inference capabilities of intrinsically typed languages, such as ML. 
-A lack of type inference is a significant drawback, since it results in code cluttered with annotations in order
-to achieve any safety assurance.
+\TODO{OLD STUFF BELOW}
 
 There have been some relaxations of intrinsic type systems, allowing for sightly more code reusability.
 Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger spaces than their intrinsic types, by
