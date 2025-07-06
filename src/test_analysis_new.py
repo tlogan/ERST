@@ -1012,6 +1012,8 @@ if __name__ == '__main__':
     # test_typing_structures_2()
     # test_max()
 
+    # test_recursive_relational_factorization_learning_in_typing()
+
 
 
 

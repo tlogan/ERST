@@ -775,7 +775,7 @@ def project_typ_recurse(t : Typ, path : Sequence[str]) -> Optional[Typ]:
             return None
 
 
-def project_typ(t : Typ, path : tuple[str, ...]) -> Typ:
+def project_typ(t : Typ, path : Sequence[str]) -> Typ:
     result = project_typ_recurse(t, path)
     if result:
         return result
@@ -1083,15 +1083,15 @@ def find_path(assumed_key : Typ, search_target : Typ) -> Optional[tuple[str, ...
             return k
     return None
 
-def find_paths(assumed_key : Typ, search_target : Typ) -> PSet[tuple[str, ...]]:
-    results : PSet[tuple[str, ...]] = s()
+def find_paths(assumed_key : Typ, search_target : Typ) -> PSet[Sequence[str]]:
+    results : PSet[Sequence[str]] = s()
     ordered_path_target_pairs = extract_ordered_path_target_pairs(assumed_key)
     for (k,v) in ordered_path_target_pairs:
         if v == search_target:
             results = results.add(k)
     return results 
 
-def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Typ:
+def factorize_choice(induc_id : str, choice : Typ, path : Sequence[str]) -> Optional[Typ]:
     if isinstance(choice, Exi):
 
         new_constraints = tuple(
@@ -1108,20 +1108,26 @@ def factorize_choice(induc_id : str, choice : Typ, path : tuple[str, ...]) -> Ty
             ]
         )
 
-        new_body = project_typ(choice.body, path)
-        used_ids = extract_free_vars_from_constraints(s(), new_constraints).union(extract_free_vars_from_typ(s(), new_body))
-        new_ids = used_ids.intersection(choice.ids)
-        return Exi(tuple(new_ids), new_constraints, new_body)
+        new_body = project_typ_recurse(choice.body, path)
+        if new_body:
+            used_ids = extract_free_vars_from_constraints(s(), new_constraints).union(extract_free_vars_from_typ(s(), new_body))
+            new_ids = used_ids.intersection(choice.ids)
+            return Exi(tuple(new_ids), new_constraints, new_body)
+        else:
+            return None
     else:
-        return project_typ(choice, path)
+        return project_typ_recurse(choice, path)
 
-def factorize_least_fp(t : LeastFP, path : tuple[str, ...]) -> LeastFP:
+def factorize_least_fp(t : LeastFP, path : Sequence[str]) -> Optional[LeastFP]:
 
     factorized_body = Bot() 
     choices = linearize_unions(t.body)
     for choice in reversed(choices):
         fc = factorize_choice(t.id, choice, path)
-        factorized_body = Unio(fc, factorized_body)
+        if fc:
+            factorized_body = Unio(fc, factorized_body)
+        else:
+            return None
     return LeastFP(t.id, factorized_body)
 
 
@@ -1167,13 +1173,19 @@ def find_factors_from_constraint(constraint : Subtyping, search_target : Typ) ->
 
 
 def find_factors_from_pattern(src : LeastFP, pattern : Typ, target : Typ) -> PSet[Typ]:
+    paths : PSet[Sequence[str]] = find_paths(pattern, target)
+    return find_factors_from_labels(src, paths)
+
+def find_factors_from_labels(src : LeastFP, labels : PSet[Sequence[str]]) -> PSet[Typ]:
     results = s()
-    paths = find_paths(pattern, target)
-    for path in paths:
-        if path != None:
-            result = factorize_least_fp(src, path)
+    for label_seq in labels:
+        result = factorize_least_fp(src, label_seq)
+        if result:
             results = results.add(result)
     return results
+
+def find_factor_from_label(src : LeastFP, label : str) -> Optional[Typ]:
+    return factorize_least_fp(src, [label])
 
 
 def mapOp(f):
@@ -2598,10 +2610,10 @@ SOLVABLE:
 
         constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
         subbed_constraints = list(constraints.difference(world.constraints))
-        if bool(self.solve_multi(world, subbed_constraints)) and any(
+        if any(
             isinstance(upper_part, TVar) and upper_part.id not in world.closedids
             for upper_part in upper_parts
-        ):
+        ) and bool(self.solve_multi(world, subbed_constraints)):
             return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
         else:
             closed_upper_parts = [
@@ -2936,7 +2948,6 @@ SOLVABLE:
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar) or lower.id in world.closedids): 
         # elif isinstance(upper, TVar) and upper.id in world.closedids and (not isinstance(lower, TVar)): 
         elif isinstance(upper, TVar) and upper.id in world.closedids: 
-            # return self.solve_skolem_introduction(world, lower, upper)
             return self.solve_skolem_introduction(world, lower, upper)
 
         #######################################
@@ -3009,13 +3020,15 @@ SOLVABLE:
         #######################################
 
 
-        elif isinstance(lower, LeastFP) and isinstance(upper, TEntry) and is_consistently_labeled(lower, upper.label):
-            factors = find_factors_from_pattern(lower, upper, upper.body)
-            assert len(factors) == 1
-            factor = list(factors)[0]
-            return self.solve(world, factor, upper.body)
 
         elif isinstance(lower, LeastFP):
+            factor = (
+                find_factor_from_label(lower, upper.label)
+                if isinstance(upper, TEntry) else
+                None
+            )
+            if factor and isinstance(upper, TEntry):
+                return self.solve(world, factor, upper.body)
 
             if lower.id not in extract_free_vars_from_typ(s(), lower.body):
                 # TODO: add case to rules in paper
@@ -3072,18 +3085,19 @@ SOLVABLE:
                 #############################################
                 ##### OLD Relational constraint reasoning
                 #############################################
-                worlds = self.learn_or_check_relational_constraints(world, lower, upper)
-                ################
-                if worlds:
-                    return worlds
-                else:
-                    strengthened_upper = make_unio([
-                        case
-                        for case in linearize_unions(upper.body)
-                        if upper.id not in extract_free_vars_from_typ(s(), case)
-                    ])
-                    worlds = self.solve(world, lower, strengthened_upper)
-                    return worlds
+                # worlds = self.learn_or_check_relational_constraints(world, lower, upper)
+                # ################
+                # if worlds:
+                #     return worlds
+                # else:
+                # ################
+                strengthened_upper = make_unio([
+                    case
+                    for case in linearize_unions(upper.body)
+                    if upper.id not in extract_free_vars_from_typ(s(), case)
+                ])
+                worlds = self.solve(world, lower, strengthened_upper)
+                return worlds
 
 
         #######################################
@@ -3522,11 +3536,11 @@ class ExprRule(Rule):
         ################################################
         # OLD Relational Type
         ################################################
-        param_typ = self.solver.fresh_type_var()
-        return_typ = self.solver.fresh_type_var()
-        consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
+        # param_typ = self.solver.fresh_type_var()
+        # return_typ = self.solver.fresh_type_var()
+        # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
+        # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
+        # return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
         ################################################
 
         ################################################
@@ -3548,20 +3562,10 @@ class ExprRule(Rule):
         ################################################
         # Factored Type
         ################################################
-        param_var = self.solver.fresh_type_var()
-        # TODO: simplify find_factors so it only needs a path, and not a fresh var
-        param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
-        assert len(param_typs) == 1
-        param_typ = list(param_typs)[0]
-
-        return_var = self.solver.fresh_type_var()
-        return_typs = find_factors_from_pattern(rel_typ, TEntry("tail", return_var), return_var)
-        assert len(return_typs) == 1
-        return_typ = list(return_typs)[0]
-
+        param_typ = find_factor_from_label(rel_typ, "head")
+        return_typ = find_factor_from_label(rel_typ, "tail")
+        assert param_typ and return_typ
         return Result(pid, outer_world, Imp(param_typ, return_typ))
-        ################################################
-
     
 '''
 end ExprRule

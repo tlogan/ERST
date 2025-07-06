@@ -2187,6 +2187,28 @@ are stronger than $\tau$.
   \\
   \begin{mathpar}
     \inferrule {
+      \Vdash \J{LFP[}\alpha\J{]}\tau_l \subtypes l \mapsto \tau_r' 
+      \\
+      \Theta, \Delta \entails \tau_r' \subtypes \tau_r \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \J{<} l \J{>} \tau_r 
+      \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \alpha \notin \textbf{ftv}(\tau_l)
+      \\
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    }
+
+    \inferrule {
       \tau_l[\alpha \slash \tau_r]^+ = \tau^\dagger
       \\
       \Theta, \Delta \entails 
@@ -2284,6 +2306,14 @@ which in turn ensures that its failure is sound.
       \Theta, \Delta \entails
       \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
     }
+
+    \inferrule {
+      \TODO{strengthening of rhs}
+    } {
+      \Theta, \Delta \entails
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
+    }
+
   \end{mathpar}
 \end{definition}
 
