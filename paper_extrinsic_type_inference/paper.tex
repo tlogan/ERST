@@ -3387,23 +3387,40 @@ by reusing the proof of one proposition as a proof for another.
 \TODO{describe the important properties in depth}
 
 \begin{definition}
-  \label{def:function_type_explosion}
-  Function Type Explosion 
+  \label{def:typing_consolidation}
+  Typing Consolidation 
+  \hfill 
+  \small
+  \boxed{\Theta, \Delta \entails e \hastype \Pi}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      (\forall \Theta', \Delta' \qua 
+      \Theta' \backslash \Theta, 
+      \Delta' \backslash \Delta, 
+      \tau 
+      \in \Pi
+      \implies
+      \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta' 
+      )
+      \\\\
+      \Theta \cup \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
+    } {
+      \Theta, \Delta \entails e \hastype \Pi'
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\begin{definition}
+  \label{def:loop_subtyping_consolidation}
+  Loop Subtyping Consolidation 
   \hfill 
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi}
   \\
   \begin{mathpar}
     \inferrule {
-      % (\forall \Theta', \Delta' \qua 
-      % \Theta' \backslash \Theta, 
-      % \Delta' \backslash \Delta, 
-      % \llbracket \textbf{ftv}(\Delta) \cup \Theta', \Delta' \entails \alpha_l \J{->} \alpha_r \rrbracket^+ 
-      % \in \Pi
-      % \implies
-      % \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
-      % )
-      % \\\\
       (\forall \Theta', \Delta' \qua 
       \Theta' \backslash \Theta, 
       \Delta' \backslash \Delta, 
@@ -3413,9 +3430,7 @@ by reusing the proof of one proposition as a proof for another.
       \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
       )
       \\\\
-      \exists \Theta, \Delta, \tau \qua (\Theta, \Delta, \tau) \in \Pi
-      \\
-      \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
+      \Theta \cup \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
     } {
       \Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi'
     }
@@ -3426,8 +3441,8 @@ by reusing the proof of one proposition as a proof for another.
 \TODO{...}
 
 \begin{definition} 
-  \label{def:path_sequence_typing}
-  Path Sequence Typing 
+  \label{def:function_typing_consolidation}
+  Function Typing Consolidation 
   \hfill
   \small
   \boxed{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
@@ -3455,11 +3470,9 @@ by reusing the proof of one proposition as a proof for another.
       \Theta, \Delta, \Gamma \oplus \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
       )
       \\\\
-      \exists \Theta, \Delta, \tau  \qua (\Theta, \Delta, \tau) \in \Pi'
-      \\
       \text{capture}(\rho) = \eta
       \\
-      \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \searrow \Pi'' 
+      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \searrow \Pi'' 
     } {
       \Theta, \Delta, \Gamma \entails f\ \J{?}p\J{=>}e \liftfun 
       \Pi \cup \Pi'' \sim \Xi\ \eta
@@ -5088,7 +5101,7 @@ The interested reader can find the actual the definition of packing in the appen
 
 
 \begin{theorem}
-  \label{thm:function_type_explosion_soundness}
+  \label{thm:loop_subtyping_consolidation_soundness}
   Function Type Explosion Soundness 
   \\
   \small
@@ -5114,7 +5127,7 @@ The interested reader can find the actual the definition of packing in the appen
 
 
 \begin{theorem}
-  \label{thm:function_type_explosion_skolem_freshness}
+  \label{thm:loop_subtyping_consolidation_skolem_freshness}
   Function Type Explosion Skolem Freshness 
   \\
   \small
@@ -5134,7 +5147,7 @@ The interested reader can find the actual the definition of packing in the appen
 
 
 \begin{theorem}
-  \label{thm:path_sequence_typing_soundness}
+  \label{thm:function_typing_consolidation_soundness}
   Path Sequence Typing Soundness 
   \\
   \small
@@ -6909,7 +6922,7 @@ The interested reader can find the actual the definition of packing in the appen
 
   \item \I\I \N Derive $(
     \delta \satisfies f[\sigma] \hastype \tau
-  )$ [Ind. Thm. \ref{thm:path_sequence_typing_soundness}, Thm. \ref{thm:function_lifting_skolem_freshness},
+  )$ [Ind. Thm. \ref{thm:function_typing_consolidation_soundness}, Thm. \ref{thm:function_lifting_skolem_freshness},
       Thm. \ref{thm:packing_correspondence}]
 
   \item \I\I \N Derive $(
@@ -7290,7 +7303,7 @@ The interested reader can find the actual the definition of packing in the appen
     \delta \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
     \delta \oplus \delta^\dagger \satisfies \tau \subtypes \alpha \J{->} \tau^\dagger
     )
-  )$ [Thm. \ref{thm:function_type_explosion_soundness}, Thm. \ref{thm:model_subtyping_sequence_introduction}]
+  )$ [Thm. \ref{thm:loop_subtyping_consolidation_soundness}, Thm. \ref{thm:model_subtyping_sequence_introduction}]
 
   \item \I\I \N Derive $(
     \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
