@@ -114,6 +114,22 @@
 
 \newcommand{\sz}[1]{\text{\small #1}}
 
+
+\newcommand{\mathblock}[1]{
+  {\small
+  \[
+    \begin{array}[t]{@{} l}
+      #1
+    \end{array}
+  \]
+  }
+}
+
+\newcommand{\mathspan}[1]{
+  {\small $ #1 $}
+}
+
+
 \newcommand{\R}[1]{\color{teal}\ \ [\emph{#1}]}
  
 \newcommand{\subtypes}{<:}
@@ -168,7 +184,7 @@
 
 \TODO{f(a) is an example of a compositional data}
 
-\TODO{(succ;zero;@, zero;@) is an example of structural data}
+\TODO{(cons;(x, xs), zero;@) is an example of structural data}
 
 \noindent
 Automatically catching errors in programs is a hard enough problem
@@ -266,38 +282,36 @@ looking at a few examples.
 
 \Par{Finite Isomorphism.}
 A function can be constructed from multiple paths. 
-Consider the function $\J{talky}$, which completes a simple English phrase.
+Consider the function \mathspan{\J{talky}}, which completes a simple English phrase.
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{let talky = (}
-      \\
-      \I \J{? <hello> @ => <world> @}
-      \\
-      \I \J{? <good> @ => <morning> @} 
-      \\
-      \I \J{? <thank> @ => <you> @} 
-      \\
-    \J{)}
-  \end{array}
-\]
+\mathblock{
+  \J{def talky = (}
+  \\
+  \I \J{[hello;@ => world;@]}
+  \\
+  \I \J{[good;@ => morning;@]} 
+  \\
+  \I \J{[thank;@ => you;@]} 
+  \\
+  \J{)}
+}
 
 \noindent
 Since there is no recursion, the number of paths is finite.
 For these simple finite functions, the type system constructs
 an isomorphic type without any weakening in precision. 
 
+{\small
 \[
   \begin{array}[t]{@{} l}
-    \J{TOP}
+      \J{(<hello>@ -> <world>@) \&}
       \\
-      \J{\& <hello> @ -> <world> @}
+      \J{(<good>@ -> <morning>@) \&} 
       \\
-      \J{\& <good> @ -> <morning> @} 
-      \\
-      \J{\& <thank> @ -> <you> @} 
+      \J{(<thank>@ -> <you>@)} 
   \end{array}
 \]
+}
 
 \noindent
 Each path is represented using the path type,
@@ -398,13 +412,13 @@ as inputs and returns a list of that item repeated the input number of times.
 
 \[
   \begin{array}[t]{@{} l}
-      \J{let repeat = ? x => loop(? self =>}
+      \J{def repeat = [x => loop([self => [}
       \\
-      \I \J{? <zero> @ => <nil> @}
+      \I \J{[zero;@ => nil;@]}
       \\
-      \I \J{? <succ> n => <cons>(x,self(n))}
+      \I \J{[succ;n => <cons>(x,self(n))]}
       \\
-      \J{)}
+      \J{])]}
   \end{array}
 \]
 
@@ -417,11 +431,11 @@ rewriting.
 
 \[
   \begin{array}[t]{@{} l}
-      \J{ALL[T] T -> GFP[R]( TOP} 
+      \J{ALL[T] T -> GFP[R](} 
       \\
-      \I \J{\& <zero> @ -> <nil> @}
+      \I \J{(<zero> @ -> <nil> @) \&}
       \\
-      \I \J{\& (ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
+      \I \J{(ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
       \\
       \J{)} 
   \end{array}
@@ -607,9 +621,10 @@ complexity, since data constructors can't be mixed in arbitrary ways. In Lean an
 is achieved via type classes \cite{}. 
 The notion of type classes, among other things, translates the notion of pattern matching to the syntactic category of types.
 
-\section{Structures}
-\label{sec:structures}
-\TODO{divide this section between static and dynamic systems}
+\section{Dynamic System}
+\label{sec:dynamic_system}
+
+\noindent
 To demonstrate the capabilities of the extrinsic type system, we rely on an applicative
 programming language with pattern matching, but without effects.
 The design attempts to keep the forms of expressions and types relatively 
@@ -750,6 +765,102 @@ A pattern $p$ may be composed of variables $x$, unit $\J{@}$, or records $k$.
 
 \noindent
 A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$. 
+
+
+\begin{definition}
+  \label{def:progression}
+  Progression
+  \hfill 
+  \small
+  \boxed{e \rightsquigarrow e}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      r\J{<}l\J{>}e \rightsquigarrow r\J{<}l\J{>}e'
+    }
+
+    \inferrule {
+      r \rightsquigarrow r'
+    } {
+      r \J{<}l \J{>} v \rightsquigarrow r' \J{<} l \J{>} v
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      e\J{.}l \rightsquigarrow e'\J{.}l
+    }
+
+    \inferrule {
+      \J{?}l\J{=>}v \in g
+      \\
+      \forall\ e .\ \J{?}l\J{=>}e \in g \implies e = v
+    } {
+      g\J{.}l \rightsquigarrow v
+    }
+
+    \inferrule {
+      e_f \rightsquigarrow e_f'
+    } {
+      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      f\J{(}e\J{)} \rightsquigarrow f\J{(}e'\J{)}
+    }
+
+    \inferrule {
+      f\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      \text{FV}(e) \subseteq \text{FV}(p)
+    } {
+      (f\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \exists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      p \equiv v \given \sigma 
+    } {
+      (f\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e[\sigma]
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
+    }
+
+    \inferrule {
+    } {
+      \J{loop(?}x\J{=>}e\J{)} \rightsquigarrow e[x \slash \J{loop(?}x\J{=>}e\J{)}]
+    }
+  \end{mathpar}
+\end{definition}
+
+Progression of an expression is a small-step operational semantics. 
+It adheres to typical definitions of applicative languages for the most part. One 
+slight departure is that pattern matching is merely a special case of function application. 
+Likewise, a switch is merely a function abstraction.
+Records are similar to functions, except that their entries are guarded by literal identifiers. 
+Additionally, records may act as patterns, but functions may not.
+The semantics enables recursion via the fixed point combinator \J{loop}.
+
+\begin{definition} Interpretation Map
+  \label{def:interpretation_map}
+  \[\begin{array}[t]{r@{}l@{}r}
+    \nonterm{\sigma} & \is \epsilon \sep \sigma\ x \slash e 
+    & \com{expr interp map}
+    \\
+    \nonterm{\delta} & \is \epsilon \sep \delta\ \alpha \slash \tau
+    & \com{type interp map}
+  \end{array}\]
+\end{definition}
+
 
 \begin{definition} Types 
   \label{def:types}
@@ -998,107 +1109,6 @@ We assume that any collection term $C$ is implicitly replaced with $\textbf{set}
 or any set term $S$ is implicitly replaced with $\textbf{collect}(S)$, if it helps
 us make progress.
 
-
-\section{Dynamic System}
-\label{sec:dynamic_system}
-
-The programming language is pure and applicative. 
-
-
-\begin{definition}
-  \label{def:progression}
-  Progression
-  \hfill 
-  \small
-  \boxed{e \rightsquigarrow e}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      r\J{<}l\J{>}e \rightsquigarrow r\J{<}l\J{>}e'
-    }
-
-    \inferrule {
-      r \rightsquigarrow r'
-    } {
-      r \J{<}l \J{>} v \rightsquigarrow r' \J{<} l \J{>} v
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      e\J{.}l \rightsquigarrow e'\J{.}l
-    }
-
-    \inferrule {
-      \J{?}l\J{=>}v \in g
-      \\
-      \forall\ e .\ \J{?}l\J{=>}e \in g \implies e = v
-    } {
-      g\J{.}l \rightsquigarrow v
-    }
-
-    \inferrule {
-      e_f \rightsquigarrow e_f'
-    } {
-      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      f\J{(}e\J{)} \rightsquigarrow f\J{(}e'\J{)}
-    }
-
-    \inferrule {
-      f\J{(}v\J{)} \rightsquigarrow e'
-      \\
-      \text{FV}(e) \subseteq \text{FV}(p)
-    } {
-      (f\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e' 
-    }
-
-    \inferrule {
-      \exists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
-      \\
-      p \equiv v \given \sigma 
-    } {
-      (f\J{?}p\J{=>}e)\J{(}v\J{)} \rightsquigarrow e[\sigma]
-    }
-
-    \inferrule {
-      e \rightsquigarrow e'
-    } {
-      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
-    }
-
-    \inferrule {
-    } {
-      \J{loop(?}x\J{=>}e\J{)} \rightsquigarrow e[x \slash \J{loop(?}x\J{=>}e\J{)}]
-    }
-  \end{mathpar}
-\end{definition}
-
-Progression of an expression is a small-step operational semantics. 
-It adheres to typical definitions of applicative languages for the most part. One 
-slight departure is that pattern matching is merely a special case of function application. 
-Likewise, a switch is merely a function abstraction.
-Records are similar to functions, except that their entries are guarded by literal identifiers. 
-Additionally, records may act as patterns, but functions may not.
-The semantics enables recursion via the fixed point combinator \J{loop}.
-
-\begin{definition} Interpretation Map
-  \label{def:interpretation_map}
-  \[\begin{array}[t]{r@{}l@{}r}
-    \nonterm{\sigma} & \is \epsilon \sep \sigma\ x \slash e 
-    & \com{expr interp map}
-    \\
-    \nonterm{\delta} & \is \epsilon \sep \delta\ \alpha \slash \tau
-    & \com{type interp map}
-  \end{array}\]
-\end{definition}
-
 % \begin{definition}
 %   \label{def:stability}
 %   Stability 
@@ -1139,9 +1149,11 @@ The semantics enables recursion via the fixed point combinator \J{loop}.
 %   \end{mathpar}
 % \end{property}
 
+
 % \noindent
 % Model typing $\delta \satisfies e \hastype \tau$ attempts to imbue types
 % with meaning.  At the very least, types should inform us that an expression is stable.  
+
 
 \begin{definition}
   \label{def:model_typing}
