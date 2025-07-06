@@ -3189,12 +3189,14 @@ SOLVABLE:
             worlds = self.solve(world, lower.left, upper) + self.solve(world, lower.right, upper)
             if worlds:
                 return worlds
-            elif isinstance(upper, Imp) and self.is_finite_paths_typ(lower):
+            # elif isinstance(upper, Imp) and self.is_finite_paths_typ(lower):
+            elif isinstance(upper, Imp):
                 paths = linearize_intersections(lower)
                 param_types = []
                 return_types = []
                 for path in paths:
-                    assert isinstance(path, Imp)
+                    if not isinstance(path, Imp):
+                        return []
                     param_types.append(path.antec)
                     return_types.append(path.consq)
                 return self.solve(world, Imp(make_unio(param_types), make_unio(return_types)), upper)
@@ -3605,6 +3607,7 @@ class ExprRule(Rule):
         # Factored Type
         ################################################
         param_var = self.solver.fresh_type_var()
+        # TODO: simplify find_factors so it only needs a path, and not a fresh var
         param_typs = find_factors_from_pattern(rel_typ, TEntry("head", param_var), param_var)
         assert len(param_typs) == 1
         param_typ = list(param_typs)[0]

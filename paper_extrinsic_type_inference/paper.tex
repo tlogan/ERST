@@ -1516,9 +1516,7 @@ used in the binding syntax respect the type annotations.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
-      \\\\
-      \TODO{update proof to avoid dTheta}
+      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -1537,7 +1535,7 @@ used in the binding syntax respect the type annotations.
       \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
       \\
       \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
-      \\\\
+      \\
       \Theta'', \Delta'', \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta'''
     } {
       \Theta, \Delta, \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''
@@ -1568,9 +1566,9 @@ used in the binding syntax respect the type annotations.
       \\
       \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
       \\\\
-      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{left} \mapsto \tau_l
       \\
-      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
+      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{right} \mapsto \tau_r
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -2400,11 +2398,13 @@ by proving the qualifiers hold under such witnesses $(
     } {
       \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
     }
-
+    \\
     \inferrule {
-      \TODO{rewrite fine paths function type}
+      \Vdash \tau_{l}\J{\&}\tau_{r} \subtypes \tau_x \rightarrow \tau_y 
+      \\\\
+      \Theta, \Delta \entails \tau_x \J{->} \tau_y  \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
     } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
     }
 
     \inferrule {
