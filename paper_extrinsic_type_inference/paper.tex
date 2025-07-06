@@ -2308,7 +2308,10 @@ which in turn ensures that its failure is sound.
     }
 
     \inferrule {
-      \TODO{strengthening of rhs}
+      \alpha \Vvdash \tau_r \supertypes \tau_r'
+      \\
+      \Theta, \Delta \entails
+      \tau_l \subtypes \tau_r' \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails
       \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
@@ -3439,6 +3442,42 @@ by reusing the proof of one proposition as a proof for another.
 \TODO{organize descriptions}
 
 \TODO{describe the important properties in depth}
+
+
+\begin{definition}
+  \label{def:union_drop}
+  Union Drop 
+  \hfill 
+  \small
+  \boxed{\alpha \Vvdash \tau_r \supertypes \tau_r'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha \notin \textbf{ftv}(\tau)
+    } {
+      \alpha \Vvdash \tau \supertypes \tau 
+    }
+
+    \inferrule {
+      \alpha \in \textbf{ftv}(\tau)
+      \\
+      \alpha \Vvdash \tau_l \supertypes \tau_l' 
+      \\
+      \alpha \Vvdash \tau_r \supertypes \tau_r' 
+    } {
+      \alpha \Vvdash \tau_l \J{|} \tau_r \supertypes \tau_l' \J{|} \tau_r'
+    }
+
+    \inferrule {
+      \alpha \in \textbf{ftv}(\tau)
+      \\
+      \nexists \tau_l, \tau_r \qua \tau = \tau_l \J{|} \tau_r
+    } {
+      \alpha \Vvdash \tau \supertypes \J{BOT} 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
 
 \begin{definition}
   \label{def:type_negatability}
