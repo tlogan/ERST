@@ -2026,44 +2026,6 @@ splitting the worlds too eagerly.
 Refinement introduction is the dual of expansion elimination, so its rules
 rely on analogous techniques.
 
-\begin{definition} 
-  \label{def:proof_subtyping_skolem_elimination}
-  Proof Subtyping (Skolem Elimination)
-  \hfill
-  \small
-  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \alpha \in \Theta 
-      \\
-      \nexists \alpha'  \qua \tau = \alpha'
-      \\
-      \alpha \J{<:} \tau' \in \Delta
-      \\\\
-      (\forall \alpha' \qua \tau' = \alpha' \implies \alpha' \in \Theta) 
-      \\
-      \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \alpha \subtypes \tau
-      \given \Theta', \Delta'
-    }
-  \end{mathpar}
-\end{definition}
-
-To eliminate a closed variable $(\alpha \in \Theta)$,
-Proof Subtyping 
-\TODO{...}
-A variable may be eliminated if it meets two conditions.
-The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
-An upper bound of an open variable indicates that the variable being eliminated
-can be as strong as its lower bounds.
-The second condition is that all lower bounds of that variable can be eliminated. 
-\TODO{...}
-which checks that all possible interpretations for $\alpha$
-are stronger than $\tau$.
-
 
 \begin{definition} 
   \label{def:proof_subtyping_plastic_elimination}
@@ -2099,36 +2061,6 @@ Proof Subtyping leverages Polar Subtyping Sequence Substitution $(
 of $\alpha$ .
 
 \begin{definition} 
-  \label{def:proof_subtyping_skolem_introduction}
-  Proof Subtyping (Skolem Introduction)
-  \hfill
-  \small
-  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \alpha \in \Theta 
-      \\
-      \nexists \alpha' \qua \tau = \alpha'
-      \\
-      \tau' \J{<:} \alpha \in \Delta
-      \\\\
-      (\forall \alpha' \qua \tau' = \alpha' \implies \alpha' \in \Theta) 
-      \\
-      \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \tau \subtypes \alpha 
-      \given \Theta', \Delta' 
-    }
-  \end{mathpar}
-\end{definition}
-
-\noindent
-Skolem introduction is the dual of skolem elimination, so its rules
-rely on analogous techniques.
-
-\begin{definition} 
   \label{def:proof_subtyping_plastic_introduction}
   Proof Subtyping (Plastic Introduction)
   \hfill
@@ -2150,6 +2082,100 @@ rely on analogous techniques.
 \noindent
 Plastic introduction is the dual of plastic elimination, so its rules
 rely on analogous techniques.
+
+
+
+\begin{definition} 
+  \label{def:proof_subtyping_skolem_introduction}
+  Proof Subtyping (Skolem Introduction)
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \exists \alpha' \qua \alpha' \J{<:} \alpha \in \Delta \up \alpha' \notin \Theta 
+      \\\\
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha 
+      \given \Theta, \Delta\ \tau \J{<:} \alpha 
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \tau' \J{<:} \alpha \in \Delta
+      \\\\
+      (\forall \alpha' \qua \tau' = \alpha' \implies \alpha' \in \Theta) 
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha 
+      \given \Theta', \Delta' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Skolem introduction is the dual of skolem elimination, so its rules
+rely on analogous techniques.
+
+\begin{definition} 
+  \label{def:proof_subtyping_skolem_elimination}
+  Proof Subtyping (Skolem Elimination)
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \exists \alpha' \qua \alpha \J{<:} \alpha' \in \Delta \up \alpha' \notin \Theta 
+      \\\\
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \alpha \subtypes \tau
+      \given \Theta, \Delta\ \alpha \J{<:} \tau
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \alpha \J{<:} \tau' \in \Delta
+      \\\\
+      (\forall \alpha' \qua \tau' = \alpha' \implies \alpha' \in \Theta) 
+      \\
+      \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \alpha \subtypes \tau
+      \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{definition}
+
+\TODO{Note how plastic constraints can make skolems plastic selectively on one side or the other}
+
+\TODO{note that we can't simply substitute in the plastic variable; as it would cause an infinite loop}
+
+To eliminate a closed variable $(\alpha \in \Theta)$,
+Proof Subtyping 
+\TODO{...}
+A variable may be eliminated if it meets two conditions.
+The first condition is that the variable has an upper bound that is either an open variable or can be eliminated.
+An upper bound of an open variable indicates that the variable being eliminated
+can be as strong as its lower bounds.
+The second condition is that all lower bounds of that variable can be eliminated. 
+\TODO{...}
+which checks that all possible interpretations for $\alpha$
+are stronger than $\tau$.
 
 
 \begin{definition} 
