@@ -617,7 +617,8 @@ significant modifications to the current system.
 \begin{definition} Expressions
   \label{def:expressions}
   \small
-  \[\begin{array}[t]{r@{}l@{}r}
+  \[\begin{array}[t]{rr@{}l}
+    \com{expression} &
     \nonterm{e} 
     & 
     \is 
@@ -628,19 +629,18 @@ significant modifications to the current system.
       f \sep 
       e\J{.}l \sep
       e\J{(}e\J{)} \sep
-      \\
       \J{loop(}e\J{)} \sep
       \J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e \sep
       s
     \end{array}
-    & \com{expression}
     \\
+    \com{record} &
     \nonterm{r} & \is \epsilon \sep r\ \J{<}l\J{>}e 
-    & \com{record}
     \\
+    \com{function} &
     \nonterm{f} & \is \epsilon \sep f\ \J{?}p\J{=>}e
-    & \com{function}
     \\
+    \com{sugar} &
     \nonterm{s} 
     & 
     \is 
@@ -651,7 +651,6 @@ significant modifications to the current system.
       \J{if}\ e\ \J{then}\ e\ \J{else}\ e \sep
       \J{let}\ x\ \J{=}\ e\ \J{in}\ e
     \end{array}
-    & \com{sugar}
   \end{array}\]
 \end{definition}
 
@@ -715,15 +714,15 @@ For any metalanguage statement or term containing sugar $s$, we assume that $s$ 
 
 \begin{definition} Patterns 
   \label{def:patterns}
-  \[\begin{array}[t]{r@{}l@{}r}
+  \[\begin{array}[t]{rr@{}l}
+    \com{pattern} &
     \nonterm{p} & \is 
       x \sep
       \J{@} \sep
       k
-    & \com{pattern}
     \\
+    \com{record} &
     \nonterm{k} & \is \epsilon \sep k\ \J{<}l\J{>}p
-    & \com{record}
   \end{array}\]
 \end{definition}
 
@@ -732,15 +731,15 @@ A pattern $p$ may be composed of variables $x$, unit $\J{@}$, or records $k$.
 
 \begin{definition} Values 
   \label{def:values}
-  \[\begin{array}[t]{r@{}l@{}r}
+  \[\begin{array}[t]{rr@{}l}
+    \com{value} &
     \nonterm{v} & \is 
       \J{@} \sep
       g \sep
       f
-    & \com{value}
     \\
+    \com{record} &
     \nonterm{g} & \is \epsilon \sep g\ \J{<}l\J{>}v
-    & \com{record}
   \end{array}\]
 \end{definition}
 
@@ -749,7 +748,8 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
 
 \begin{definition} Types 
   \label{def:types}
-  \[\begin{array}[t]{r@{}l@{}r}
+  \[\begin{array}[t]{rr@{}l}
+    \com{type} &
     \nonterm{\tau} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
@@ -761,36 +761,36 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
       \tau \typdiff \eta \sep
       \gamma
     \end{array}
-    & \com{type}
     \\
+    \com{implication} &
     \nonterm{\kappa} & \is 
     \begin{array}[t]{@{}l}
       \J{<} l \J{>} \tau \sep 
       \tau\J{->}\tau
     \end{array}
-    & \com{implication}
     \\
+    \com{expansion} &
     \nonterm{\phi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{|}\tau \sep 
       \J{EXI[}\Theta\J{]} \Delta \J{:} \tau
     \end{array}
-    & \com{expansion}
     \\
+    \com{refinement} &
     \nonterm{\psi} & \is 
     \begin{array}[t]{@{}l}
       \tau\J{\&}\tau \sep 
       \J{ALL[}\Theta\J{]} \Delta \J{:} \tau
     \end{array}
-    & \com{refinement}
     \\
+    \com{negatable} &
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
       \J{EXI[}\Theta \J{]} \Omega \J{:} \eta \sep 
       \rho
     \end{array}
-    & \com{negatable}
     \\
+    \com{pattern} &
     \nonterm{\rho} & \is 
     \begin{array}[t]{@{}l}
       \alpha \sep
@@ -799,14 +799,13 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
       \rho\J{\&}\rho \sep
       \rho\J{*}\rho
     \end{array}
-    & \com{pattern}
     \\
+    \com{sugar} &
     \nonterm{\gamma} & \is 
     \begin{array}[t]{@{}l}
       \J{TOP} \sep \J{BOT} \sep 
       \tau \J{*} \tau 
     \end{array}
-    & \com{sugar}
   \end{array}\]
 \end{definition}
 
@@ -885,30 +884,31 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
 
 \begin{definition} Sequences 
   \label{def:sequences}
-  \[\begin{array}[t]{r@{}l@{}r}
+  \[\begin{array}[t]{rr@{}l}
+    \com{type var seq} &
     \nonterm{\Theta} & \is \epsilon \sep \Theta\ \alpha 
-    & \com{type var seq}
     \\
+    \com{subtyping seq} &
     \nonterm{\Delta} & \is \epsilon \sep \Delta \  \tau \J{<:} \tau
-    & \com{subtyping seq}
     \\
+    \com{typing seq} &
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x \hastype \tau
-    & \com{typing seq}
     \\
+    \com{schema seq} &
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
-    & \com{schema seq}
     \\
+    \com{negatable type seq} &
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
-    & \com{negatable type seq}
     \\
+    \com{negatable subtyping seq} &
     \nonterm{\Omega} & \is \epsilon \sep 
       \Omega\ \tau \J{<:} \eta \sep 
       \Omega\ \alpha \J{<:} \tau
-    & \com{negatable subtyping seq}
     \\
+    \com{composite seq} &
     \nonterm{C} & \is \epsilon \sep C\ \iota 
-    & \com{composite seq}
     \\
+    \com{item} &
     \nonterm{\iota} & \is 
     \alpha
     \sep 
@@ -922,7 +922,6 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \sep
     \tau \J{<:} \eta
 
-    & \com{item}
   \end{array}\]
 \end{definition}
 
@@ -1836,94 +1835,6 @@ Proof Subtyping simply checks that the antecedent of the subtype
 is weaker than the antecedent of the supertype, and the consequent
 of the subtype is stronger than the consequent of the supertype. 
 
-
-\TODO{move implication rewriting after plastic rules}
-\begin{definition} 
-  \label{def:proof_subtyping_implication_rewriting}
-  Proof Subtyping (Implication Rewriting)
-  \hfill
-  \small
-  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes
-      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
-      \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes 
-      (\tau_a\J{|}\tau_b)\J{->}\tau_r
-      \given \Theta', \Delta' 
-    }
-
-
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau_l
-      \subtypes
-      (\tau_r\J{->}\tau_a)
-      \J{\&}
-      (\tau_r\J{->}\tau_b)
-      \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails 
-      \tau_l \subtypes 
-      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
-      \given \Theta', \Delta'
-    }
-
-    \inferrule {
-      \Theta, \Delta \entails 
-      \tau
-      \subtypes
-      (\J{<} l \J{>} \tau_a)
-      \J{\&}
-      (\J{<} l \J{>} \tau_b)
-      \given \Theta', \Delta' 
-    } {
-      \Theta, \Delta \entails 
-      \tau \subtypes 
-      \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
-      \given \Theta', \Delta'
-    }
-
-  \end{mathpar}
-\end{definition}
-
-\TODO{move rewritng after variable rules}
-
-\noindent
-Just as entries and paths are analogous to propositional implication,
-the analogy extends to union and intersection.
-Union is analogous to propositional disjunction,
-and intersection is analogous to propositional conjunction. 
-However, since the Proof Subtyping rules simply preserve implication types,
-rather than introducing and eliminating them,
-The subtyping logic needs an union antecedent rule, corresponding
-to disjunction elimination, and intersection consequent rules,
-corresponding to conjunction introduction. 
-
-For elimination of a path with a union antecedent 
-$(
-... \entails \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r \given ...
-)$, Proof Subtyping breaks apart the union and checks
-that the subtype holds against two paths 
-whose antecedents are the union's constituent parts. 
-For elimination of a path with an intersection consequent 
-$(
-... \entails \tau_l \subtypes \tau_r \J{->}(\tau_a\J{\&}\tau_b) \given ...
-)$, Proof Subtyping breaks apart the intersection and checks
-that the subtype holds against two paths 
-whose consequents are the intersection's constituent parts. 
-For elimination of an entry with an intersection consequent
-$(
-... \entails \tau \subtypes \J{<}l\J{>} (\tau_a\J{\&}\tau_b) \given ...
-)$, Proof Subtyping breaks apart the intersection and checks
-that the subtype holds against two entries 
-whose consequents are the intersection's constituent parts. 
-
 \begin{definition} 
   \label{def:proof_subtyping_expansion_elimination}
   Proof Subtyping (Expansion Elimination)
@@ -2083,8 +1994,6 @@ of $\alpha$ .
 Plastic introduction is the dual of plastic elimination, so its rules
 rely on analogous techniques.
 
-
-
 \begin{definition} 
   \label{def:proof_subtyping_skolem_introduction}
   Proof Subtyping (Skolem Introduction)
@@ -2124,6 +2033,93 @@ rely on analogous techniques.
 \noindent
 Skolem introduction is the dual of skolem elimination, so its rules
 rely on analogous techniques.
+
+\TODO{move implication rewriting after plastic rules}
+\begin{definition} 
+  \label{def:proof_subtyping_implication_rewriting}
+  Proof Subtyping (Implication Rewriting)
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes
+      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      (\tau_a\J{|}\tau_b)\J{->}\tau_r
+      \given \Theta', \Delta' 
+    }
+
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l
+      \subtypes
+      (\tau_r\J{->}\tau_a)
+      \J{\&}
+      (\tau_r\J{->}\tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau
+      \subtypes
+      (\J{<} l \J{>} \tau_a)
+      \J{\&}
+      (\J{<} l \J{>} \tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes 
+      \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+  \end{mathpar}
+\end{definition}
+
+\TODO{move rewritng after variable rules}
+
+\noindent
+Just as entries and paths are analogous to propositional implication,
+the analogy extends to union and intersection.
+Union is analogous to propositional disjunction,
+and intersection is analogous to propositional conjunction. 
+However, since the Proof Subtyping rules simply preserve implication types,
+rather than introducing and eliminating them,
+The subtyping logic needs an union antecedent rule, corresponding
+to disjunction elimination, and intersection consequent rules,
+corresponding to conjunction introduction. 
+
+For elimination of a path with a union antecedent 
+$(
+... \entails \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r \given ...
+)$, Proof Subtyping breaks apart the union and checks
+that the subtype holds against two paths 
+whose antecedents are the union's constituent parts. 
+For elimination of a path with an intersection consequent 
+$(
+... \entails \tau_l \subtypes \tau_r \J{->}(\tau_a\J{\&}\tau_b) \given ...
+)$, Proof Subtyping breaks apart the intersection and checks
+that the subtype holds against two paths 
+whose consequents are the intersection's constituent parts. 
+For elimination of an entry with an intersection consequent
+$(
+... \entails \tau \subtypes \J{<}l\J{>} (\tau_a\J{\&}\tau_b) \given ...
+)$, Proof Subtyping breaks apart the intersection and checks
+that the subtype holds against two entries 
+whose consequents are the intersection's constituent parts. 
 
 \begin{definition} 
   \label{def:proof_subtyping_skolem_elimination}
