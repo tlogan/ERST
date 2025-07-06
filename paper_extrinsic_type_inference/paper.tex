@@ -189,7 +189,7 @@ expressions, constructions, or patterns.
 For example, the Standard ML expression \code{fn x => (f x)}
 could be annotated with \code{val f' : int -> int = fn x => (f x)},
 which artificially prunes the allowed control flow of expressions that use \code{f'}.
-As for constructions and patterns, consider a Standard ML program that computes the length of a list,
+As for constructions and sums of patterns, consider a Standard ML program that computes the length of a list,
 using \code{nil} and \code{cons} as data constructors representing lists, 
 and using \code{zero} and \code{succ} as data constructors representing natural numbers.
 
@@ -221,9 +221,9 @@ which forbids mixing the constructions with those not specificated in the dataty
 
 \noindent
 As for the patterns with \code{nil} and \code{cons}, the list specification 
-means that the strongest assumption allowed for the the sum of the patterns,
+means that the strongest assumed for the sum of the patterns
 is \code{'a list}. 
-Thus, it forbids pattern matching with on fewer patterns than those in the datatype.
+Thus, it forbids pattern matching fewer patterns than those in the datatype.
 
 \block{
   \J{fun nlen(nil) = zero}
@@ -241,6 +241,12 @@ like a length function that only works on even length lists.
   \\
   \J{\ \ | elen(cons(x,cons(y,zs))) = succ(succ(elen(zs)))}
 }
+
+\noindent
+With the datatype being both the strongest type of a sum of patterns and also the weakest
+type of each construction, there is no additional loss in precision by
+prescribing the datatype as the weakest type of a sum of patterns and the strongest type of    
+each construction.
 
 
 Even with all the intrinsic specifications required for structural expressions, Standard ML,
