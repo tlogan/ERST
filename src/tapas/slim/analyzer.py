@@ -3019,8 +3019,6 @@ SOLVABLE:
         #### Fixpoint Elimination #############
         #######################################
 
-
-
         elif isinstance(lower, LeastFP):
             factor = (
                 find_factor_from_label(lower, upper.label)
@@ -3029,17 +3027,9 @@ SOLVABLE:
             )
             if factor and isinstance(upper, TEntry):
                 return self.solve(world, factor, upper.body)
-
-            if lower.id not in extract_free_vars_from_typ(s(), lower.body):
-                # TODO: add case to rules in paper
+            elif lower.id not in extract_free_vars_from_typ(s(), lower.body):
                 return self.solve(world, lower.body, upper)
-            if is_typ_structured(lower.body, lower.id):
-                # renaming : PMap[str, Typ] = pmap({lower.id : upper})
-                # lower_body = sub_typ(renaming, lower.body)
-
-                # return self.solve(world, lower_body, upper)
-                ####################
-
+            else:
                 renaming : PMap[str, Typ] = pmap({lower.id : upper})
                 lower_body = self.sub_polar_typ(True, lower.body, lower.id, upper)
                 if (lower.id in extract_free_vars_from_typ(s(), lower_body)):
@@ -3047,24 +3037,6 @@ SOLVABLE:
                 else:
                     return self.solve(world, lower_body, upper)
                 # end-if
-
-                ####################
-                fresh_id = self.fresh_type_id()
-                renaming : PMap[str, Typ] = pmap({lower.id : TVar(fresh_id)})
-                lower_body = sub_typ(renaming, lower.body)
-
-                new_world = World(
-                    world.constraints.add(Subtyping(TVar(fresh_id), upper)),
-                    # world.constraints,
-                    # world.closedids,
-                    world.closedids.add(fresh_id),
-                    world.relids
-                )
-                return self.solve(new_world, lower_body, upper)
-                ####################
-                # return []
-            else:
-                return []
 
 
         #######################################
