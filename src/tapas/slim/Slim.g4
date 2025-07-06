@@ -372,7 +372,7 @@ $results = [
 ]
 }
 
-| 'let' ID target[contexts] 'in' {
+| 'def' ID target[contexts] 'in' {
 contin_contexts = [
     Context(enviro, world)
     for target_result in $target.results
@@ -489,12 +489,12 @@ $results = [
 
 function [list[Context] contexts] returns [list[Switch] results] :
 
-| '{' pattern '=>' {
+| '[' pattern '=>' {
 body_contexts = [
     Context(context.enviro.update($pattern.result.enviro), context.world)
     for context in contexts 
 ]
-} body = expr[body_contexts] '}' {
+} body = expr[body_contexts] ']' {
 $results = [
     FunctionRule(self._solver).combine_single(pid, context.world, $pattern.result.typ, body_results)
     for pid, context in enumerate(contexts)
@@ -502,14 +502,14 @@ $results = [
 ]
 }
 
-| '{' pattern  '=>' {
+| '[' pattern  '=>' {
 body_contexts = [
     Context(context.enviro.update($pattern.result.enviro), context.world)
     for context in contexts 
 ]
 } 
 body = expr[body_contexts] 
-'}'
+']'
 tail = function[contexts] 
 {
 $results = [

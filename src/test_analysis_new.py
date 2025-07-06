@@ -28,8 +28,8 @@ from tapas.slim.exprlib import ctx
 
 def test_free_var_annotation():
     code = f"""
-let x : X = uno;@ in
-{{dos;@ => @}}(x)
+def x : X = uno;@ in
+[dos;@ => @](x)
     """
     assert not infer_typ(code) 
 
@@ -49,7 +49,7 @@ def test_subtyping_unrolling():
 
 def test_max_app():
     code = f"""
-let max = {el.max} in
+def max = {el.max} in
 max(zero;@,zero;@)
     """
     assert infer_typ(code) 
@@ -85,34 +85,34 @@ constraints:
 
 def test_length():
     length = (f"""
-    loop({{ self => 
-        {{ nil;@ => zero;@  }}
-        {{ cons;(x,xs) => succ;(self(xs)) }}
-    }}) 
+    loop([ self => 
+        [ nil;@ => zero;@  ]
+        [ cons;(x,xs) => succ;(self(xs)) ]
+    ]) 
     """.strip())
     assert infer_typ(length)
     # assert infer_typ(el.length)
 
 def test_length_eta_expansion():
     length = (f"""
-    loop({{ self => 
-        {{ nil;@ => zero;@  }}
-        {{ cons;(x,xs) => succ;(self(xs)) }}
-    }}) 
+    loop([ self => 
+        [ nil;@ => zero;@  ]
+        [ cons;(x,xs) => succ;(self(xs)) ]
+    ]) 
     """.strip())
     code = f"""
-let length = {length} in
-{{ x => length(x) }}
+def length = {length} in
+[ x => length(x) ]
     """
     assert infer_typ(code)
     # assert infer_typ(el.length)
 
 def test_recursive_pair():
     assert infer_typ(f"""
-loop({{ self => 
-    {{ nil;@ => nil;@ , zero;@  }}
-    {{ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) }}
-}}) 
+loop([ self => 
+    [ nil;@ => nil;@ , zero;@  ]
+    [ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) ]
+]) 
     """)
 
 def test_induction_even_is_nat():
@@ -192,12 +192,12 @@ constraints:
 
 def test_recursive_relational_factorization_learning_in_typing():
     assert infer_typ(f"""
-let f = loop({{ self => 
-    {{ nil;@ => nil;@ , zero;@  }}
-    {{ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) }}
-}}) in
-let extract = {{ a, b => b }} in
-{{ x => extract(f(x)) }}
+def f = loop([ self => 
+    [ nil;@ => nil;@ , zero;@  ]
+    [ cons;(x,xs) => cons;(x,xs) , succ;(self(xs)) ]
+]) in
+def extract = [ a, b => b ] in
+[ x => extract(f(x)) ]
     """)
 
 def test_recursive_relational_factorization_checking():
@@ -303,7 +303,7 @@ ALL[N L] (<succ> N) -> (<cons> L)
 ###############################################################
 def test_typing_A1():
     assert infer_typ(f"""
-{{ x => {{ y => y }} }}
+[ x => [ y => y ] ]
     """)
 
 def test_typing_A2():
@@ -321,7 +321,7 @@ choose(nil)(ids)
     assert infer_typ(code, ctx(["choose", "nil", "ids"]))
 
 def test_typing_A4():
-    assert infer_typ("{ x => x(x) }")
+    assert infer_typ("[x => x(x)]")
 
 def test_typing_A5():
     code = f"""
@@ -367,14 +367,14 @@ poly(id)
 
 def test_typing_A11():
     code = f"""
-poly({{ x => x }})
+poly([ x => x ])
     """
     print(code)
     assert infer_typ(code, ctx(["poly"]))
 
 def test_typing_A12():
     code = f"""
-id(poly)({{ x => x }})
+id(poly)([ x => x ])
     """
     print(code)
     assert infer_typ(code, ctx(["id", "poly"]))
@@ -384,12 +384,12 @@ id(poly)({{ x => x }})
 ###############################################################
 def test_typing_B1():
     assert infer_typ(f"""
-{{ f => (f(<succ> <zero> @)), (f(<true> @)) }}
+[ f => (f(<succ> <zero> @)), (f(<true> @)) ]
     """)
 
 def test_typing_B2():
     code = f"""
-{{ xs => poly((head)(xs)) }}
+[ xs => poly((head)(xs)) ]
     """
     print(code)
     assert infer_typ(code, ctx(["poly", "head"]))
@@ -435,7 +435,7 @@ cons(id)(ids)
 
 def test_typing_C6():
     code = f"""
-cons({{ x => x }})(ids)
+cons([ x => x ])(ids)
     """
     print(code)
     assert infer_typ(code, ctx(["cons", "ids"]))
@@ -531,14 +531,14 @@ k(h)(l)
 
 def test_typing_E2():
     code = f"""
-k({{ x => h(x) }})(l)
+k([ x => h(x) ])(l)
     """
     print(code)
     assert infer_typ(code, ctx(["k", "h", "l"]))
 
 def test_typing_E3():
     code = f"""
-r({{ x => {{ y => y }} }})
+r([ x => [ y => y ] ])
     """
     print(code)
     assert infer_typ(code, ctx(["r"]))
@@ -579,7 +579,7 @@ choose(head(ids))
 
 def test_typing_F9():
     code = f"""
-let f = revapp(id) in
+def f = revapp(id) in
 f(poly)
     """
     print(code)
@@ -587,7 +587,7 @@ f(poly)
 
 def test_typing_F10():
     code = f"""
-choose(id)({{ x => auto_prime(x) }})
+choose(id)([ x => auto_prime(x) ])
     """
     print(code)
     assert infer_typ(code, ctx(["choose", "id", "auto_prime"]))
@@ -597,7 +597,7 @@ choose(id)({{ x => auto_prime(x) }})
 ###############################################################
 def test_typing_G1A():
     code = (f"""
-let z : {tl.Church} = ({el.church_zero}) in
+def z : {tl.Church} = ({el.church_zero}) in
 z
     """)
     print(code)
@@ -612,7 +612,7 @@ def test_typing_G2():
 
 def test_typing_G2A():
     code = (f"""
-let s : {tl.Church} -> {tl.Church} = {el.church_succ} in
+def s : {tl.Church} -> {tl.Church} = {el.church_succ} in
 s
     """)
     print(code)
@@ -620,7 +620,7 @@ s
 
 def test_typing_G3A():
     code = (f"""
-let n3 : {tl.Church} = {el.church_three} in
+def n3 : {tl.Church} = {el.church_three} in
 n3
     """)
     print(code)
@@ -628,7 +628,7 @@ n3
 
 def test_typing_G4A():
     code = (f"""
-let c : @ -> {tl.Church} = ({{ @ => {el.church_three}({el.church_three}) }}) in
+def c : @ -> {tl.Church} = ([ @ => {el.church_three}({el.church_three}) ]) in
 c
     """)
     print(code)
@@ -636,7 +636,7 @@ c
 
 def test_typing_G5():
     code = f"""
-fst(fst(fst({el.church_three}({{ x => x }},(<zero>@))(<succ><zero>@))))
+fst(fst(fst({el.church_three}([ x => x ],(<zero>@))(<succ><zero>@))))
     """
     print(code)
     assert infer_typ(code, ctx(["fst"]))
@@ -664,7 +664,7 @@ def test_typing_G8():
 
 def test_typing_G8A():
     code = (f"""
-let c : {tl.Nat} -> {tl.Church} = {el.to_church} in
+def c : {tl.Nat} -> {tl.Church} = {el.to_church} in
 c
     """)
     print(code)
@@ -673,21 +673,21 @@ c
 def test_typing_G9():
     #TODO: fail
     code = (f"""
-loop({{ self =>
-    {{ x =>
+loop([ self =>
+    [ x =>
         if <true> @ then
             x
         else 
             self(self)(x)
-    }}
-}})
+    ]
+])
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_G10():
     code = (f"""
-({{ x => x }})({{ x => x }})
+([ x => x ])([ x => x ])
     """)
     print(code)
     assert infer_typ(code)
@@ -701,28 +701,28 @@ auto(auto_prime(id))
 
 def test_typing_G12():
     code = f"""
-({{ y =>
-    (let tmp = y(id) in y(const))({{ x => x }})
-}})
+([ y =>
+    (def tmp = y(id) in y(const))([ x => x ])
+])
     """
     print(code)
     assert infer_typ(code, ctx(["const"]))
 
 def test_typing_G13():
     code = f"""
-({{ k => 
-    ((k)({{ x => x }}), (k)({{ x => single(x) }}))
-}}) ({{ f => ((f)(<succ><zero>@)), (f)(<true>@) }})
+([ k => 
+    ((k)([ x => x ]), (k)([ x => single(x) ]))
+]) ([ f => ((f)(<succ><zero>@)), (f)(<true>@) ])
     """
     print(code)
     assert infer_typ(code, ctx(["single"]))
 
 def test_typing_G14():
     code = f"""
-({{ f =>
-    let a : @ -> {tl.Nat} -> (ALL[B] B -> B) = ({{ @ => f(id) }}) in
+([ f =>
+    def a : @ -> {tl.Nat} -> (ALL[B] B -> B) = ([ @ => f(id) ]) in
     (a(@))(const(const(id)))
-}})
+])
     """
     print(code)
     assert infer_typ(code, ctx(["const", "id"]))
@@ -746,10 +746,10 @@ def test_typing_sanity_inter_nesting_constraint():
     # basically, we maintain the same abstraction hierarchy
     # of the expression
     code = (f"""
-let foo = {{f =>
+def foo = [f =>
     (f(zero;@)), f(true;@)  
-}} in 
-{{ x => foo({{y => x(y,y) }}) }}
+] in 
+[ x => foo([y => x(y,y) ]) ]
     """)
     print(code)
     assert infer_typ(code)
@@ -758,8 +758,8 @@ let foo = {{f =>
 def test_typing_sanity_branch_error():
     code = (f"""
 (
-{{zero;@ => {{zero;@ => @}}(@)}}
-{{one;@ => one;@}}
+[zero;@ => [zero;@ => @](@)]
+[one;@ => one;@]
 )
     """)
     print(code)
@@ -770,7 +770,7 @@ def test_typing_sanity_trivial_application():
     # need to interpret and/or pack before printing
     code = (f"""
 (
-({{one;@ => @}})(one;@)
+([one;@ => @])(one;@)
 )
     """)
     print(code)
@@ -778,7 +778,7 @@ def test_typing_sanity_trivial_application():
 
 def test_typing_sanity_binding_annotation_1():
     code = (f"""
-let x : <two> @ = y 
+def x : <two> @ = y 
 in @
     """)
     print(code)
@@ -786,11 +786,11 @@ in @
 
 def test_typing_sanity_binding_annotation_2():
     code = (f"""
-let f = (
-    {{ one;@ => uno;@ }}
-    {{ two;@ => dos;@ }}
+def f = (
+    [ one;@ => uno;@ ]
+    [ two;@ => dos;@ ]
 ) in
-let x : <dos> @  = f(y) 
+def x : <dos> @  = f(y) 
 in @
     """)
     print(code)
@@ -798,9 +798,9 @@ in @
 
 def test_typing_sanity_binding_annotation_3():
     code = (f"""
-let f = (
-    {{ one;@ => uno;@ }}
-    {{ two;@ => dos;@ }}
+def f = (
+    [ one;@ => uno;@ ]
+    [ two;@ => dos;@ ]
 ) in
 f(y) 
     """)
@@ -810,14 +810,14 @@ f(y)
 def test_typing_sanity_binding_annotation_4():
     # this is admitted by strengthening the type of y
     code = (f"""
-{{ y =>
-let f = (
-    {{ one;@ => uno;@ }}
-    {{ two;@ => dos;@ }}
+[ y =>
+def f = (
+    [ one;@ => uno;@ ]
+    [ two;@ => dos;@ ]
 ) in
-let x : <uno> @ = f(y) in
+def x : <uno> @ = f(y) in
 x
-}}
+]
     """)
     print(code)
     assert infer_typ(code)
@@ -825,13 +825,13 @@ x
 def test_typing_sanity_application_5():
     # this is admitted by strengthening the type of y
     code = (f"""
-{{ y =>
-let f = (
-    {{ one;@ => uno;@ }}
-    {{ two;@ => dos;@ }}
+[ y =>
+def f = (
+    [ one;@ => uno;@ ]
+    [ two;@ => dos;@ ]
 ) in
-({{ uno;@ => @ }})(f(y))
-}}
+([ uno;@ => @ ])(f(y))
+]
     """)
     print(code)
     result = infer_typ(code)
@@ -840,13 +840,13 @@ let f = (
 def test_typing_sanity_application_6():
     # This is admitted with a useless type
     code = (f"""
-{{ y =>
-let f = (
-    {{ one;@ => uno;@ }}
-    {{ two;@ => dos;@ }}
+[ y =>
+def f = (
+    [ one;@ => uno;@ ]
+    [ two;@ => dos;@ ]
 ) in
-({{ tres;@ => @ }})(f(y))
-}}
+([ tres;@ => @ ])(f(y))
+]
     """)
     print(code)
     assert not infer_typ(code)
@@ -884,14 +884,14 @@ def test_typing_structures_1():
 def test_typing_structures_sanity():
     #TODO: find way to speed up; parsing might be slow
     code = f"""
-let f = {{ ((one;@), (two;@)) => three;@ }} in
-let g = {{ ((uno;@), (dos;@)) => tres;@ }} in
-let h = {{(a,b) => 
+def f = [ ((one;@), (two;@)) => three;@ ] in
+def g = [ ((uno;@), (dos;@)) => tres;@ ] in
+def h = [(a,b) => 
     (
-    {{one;@ => f(a,b)}}
-    {{uno;@ => g(a,b)}}
+    [one;@ => f(a,b)]
+    [uno;@ => g(a,b)]
     ) (a)
-}} in
+] in
 h
     """
     print(code)
@@ -899,12 +899,12 @@ h
 
 def test_typing_structures_sanity_path():
     code = f"""
-let h = (
-    {{one;@ => three;@}}
-    {{uno;@ => tres;@}}
+def h = (
+    [one;@ => three;@]
+    [uno;@ => tres;@]
 )
 in
-let result : (
+def result : (
     ((<uno> @) -> (<tres> @)) &
     ((<one> @) -> (<three> @))
 ) = mkpath(h) in
@@ -916,13 +916,13 @@ result
 def test_identity_application():
     # TODO: why is there so much extra clutter?
     code = f"""
-let h = ({{self =>
-    {{zero;@ => nil;@}}
-    {{succ;n => cons;n}}
-}}
+def h = ([self =>
+    [zero;@ => nil;@]
+    [succ;n => cons;n]
+]
 ) in
 h
-{{x => x }}(h)
+[x => x ](h)
     """
     print(code)
     assert infer_typ(code, ctx(["mkpath"]))
@@ -931,16 +931,16 @@ h
 
 def test_typing_structures_2():
     code = f"""
-let stdCmp = {el.stdCmp} in
-let stdSort : (
+def stdCmp = {el.stdCmp} in
+def stdSort : (
     ({tl.List_(tl.Nat)} -> {tl.List_(tl.Nat)}) &
     ({tl.List_(tl.List_(tl.Nat))} -> {tl.List_(tl.List_(tl.Nat))})
 ) = sort(stdCmp) in stdSort 
     """
 
 #     code = f"""
-# let stdCmp = {el.stdCmp} in
-# let stdSort = sort(stdCmp) in @
+# def stdCmp = {el.stdCmp} in
+# def stdSort = sort(stdCmp) in @
 #     """
     print(code)
     assert infer_typ(code, ctx(["scalarCmp", "lexicoCmp", "sort"]))
@@ -948,24 +948,24 @@ let stdSort : (
 
 def test_typing_structures_3():
     code = (f"""
-let double : (
+def double : (
    {tl.Nat} -> {tl.Even} 
-) = loop({{self => (
-    {{ (zero;@) => zero;@ }}
-    {{ (succ;n) => succ;succ;((self)(n)) }}
-)}}) in double)
+) = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;n) => succ;succ;((self)(n)) ]
+)]) in double)
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_structures_4():
     code = (f"""
-let halve : (
+def halve : (
     {tl.Even} -> {tl.Nat} 
-) = loop({{self => (
-    {{ (zero;@) => zero;@ }}
-    {{ (succ;succ;n) => succ;((self)(n)) }}
-)}}) in halve)
+) = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;succ;n) => succ;((self)(n)) ]
+)]) in halve)
     """)
     print(code)
     assert infer_typ(code)
@@ -973,8 +973,8 @@ let halve : (
 def test_typing_structures_5():
     code = (f"""
 (
-{{zero;@ => {{zero;@ => @}}(@)}}
-{{nil;@ => nil;@}}
+[zero;@ => [zero;@ => @](@)]
+[nil;@ => nil;@]
 )
     """)
     print(code)

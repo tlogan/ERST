@@ -60,8 +60,8 @@ def ctx(names : list[str]) -> PMap[str, str]:
 #     base = code
 #     for name in (names):
 #         base = (f"""
-# let zzz_{name} : ({context_map.get(name)}) -> TOP = 
-# {{ {name} => {base} }} 
+# def zzz_{name} : ({context_map.get(name)}) -> TOP = 
+# [ {name} => {base} ] 
 # in zzz_{name} 
 #         """.strip())
 #     return base
@@ -72,11 +72,11 @@ def ctx(names : list[str]) -> PMap[str, str]:
 ############################################################
 
 church_zero = (f"""
-{{ f => {{ x => x }} }}
+[ f => [ x => x ] ]
 """.strip())
 
 church_succ = (f"""
-{{ n => {{ f => {{ x => f(n(f)(x)) }} }} }}
+[ n => [ f => [ x => f(n(f)(x)) ] ] ]
 """.strip())
 
 church_one = (f"""
@@ -92,15 +92,15 @@ church_three = (f"""
 """.strip())
 
 to_church = (f"""
-loop({{ self => 
-    {{ zero;@ => {church_zero} }}
-    {{ succ;n => {church_succ}(self(n)) }}
-}})
+loop([ self => 
+    [ zero;@ => {church_zero} ]
+    [ succ;n => {church_succ}(self(n)) ]
+])
 """.strip())
 
 
 head = (f"""
-    case (cons;(x,xs)) {{ x }}
+    case (cons;(x,xs)) [ x ]
 """.strip())
 
     # case (cons;(x,xs)) { x }
@@ -114,38 +114,38 @@ single = (f"""
 """.strip())
 
 double = (f"""
-loop({{ self => 
-    {{ zero;@ => zero;@ }}
-    {{ succ;n => succ;succ;(self(n)) }}
-}})
+loop([ self => 
+    [ zero;@ => zero;@ ]
+    [ succ;n => succ;succ;(self(n)) ]
+])
 """.strip())
 
 halve = (f"""
-loop({{ self => 
-    {{ zero;@ => zero;@ }}
-    {{ succ;succ;n => succ;(self(n)) }}
-}})
+loop([ self => 
+    [ zero;@ => zero;@ ]
+    [ succ;succ;n => succ;(self(n)) ]
+])
 """.strip())
 
 
 both = (f"""
 (
-{{ (true;@),(true;@) => true;@  }}
-{{ (false;@),(true;@) => false;@  }}
-{{ (false;@),(false;@) => false;@  }}
-{{ (true;@),(false;@) => false;@  }}
+[ (true;@),(true;@) => true;@  ]
+[ (false;@),(true;@) => false;@  ]
+[ (false;@),(false;@) => false;@  ]
+[ (true;@),(false;@) => false;@  ]
 )
 """.strip())
 
 stdCmp = (f"""
-({{a,b =>
+([a,b =>
     a |> (
-        {{zero;@ => scalarCmp(a,b)}}
-        {{succ;n => scalarCmp(a,b)}}
-        {{nil;@ => lexicoCmp(a,b)}}
-        {{cons;(x,xs) => lexicoCmp(a,b)}}
+        [zero;@ => scalarCmp(a,b)]
+        [succ;n => scalarCmp(a,b)]
+        [nil;@ => lexicoCmp(a,b)]
+        [cons;(x,xs) => lexicoCmp(a,b)]
     )
-}})
+])
 """.strip())
 
 ############################################################
@@ -161,32 +161,32 @@ loop(case self => (
 
 
 lted = (f"""
-loop({{ self =>
-    {{ (zero;@), n => true;@ }}
-    {{ (succ;m), (succ;n) => self(m,n) }}
-    {{ (succ;m), (zero;@) => false;@  }}
-}})
+loop([ self =>
+    [ (zero;@), n => true;@ ]
+    [ (succ;m), (succ;n) => self(m,n) ]
+    [ (succ;m), (zero;@) => false;@  ]
+])
 
 """.strip())
 
 max = (f'''
-let lted = {lted} in
-{{ (x, y) =>
+def lted = {lted} in
+[ (x, y) =>
     if lted(x, y) then
         y
     else
         x
-}}
+]
 ''')
 
 # max = (f'''
-# let lted = {lted} in
+# def lted = {lted} in
 # case (x, y) => (
 #     lted(x, y)
 # )
 # ''')
 # max = (f'''
-# let f = case (~uno y) => y in 
+# def f = case (~uno y) => y in 
 # case x => f(x)
 # ''')
 
@@ -195,18 +195,18 @@ let lted = {lted} in
 # ''')
 
 length = (f"""
-loop({{ self => 
-    {{ nil;@ => zero;@  }}
-    {{ cons;(x,xs) => succ;(self(xs)) }}
-}}) 
+loop([ self => 
+    [ nil;@ => zero;@  ]
+    [ cons;(x,xs) => succ;(self(xs)) ]
+]) 
 """.strip())
 
 lengthy = (f"""
-let id = {{x => x}} in
-loop(id({{ self => 
-    {{ nil;@ => zero;@  }}
-    {{ cons;(x,xs) => succ;(self(xs)) }}
-}})) 
+def id = [x => x] in
+loop(id([ self => 
+    [ nil;@ => zero;@  ]
+    [ cons;(x,xs) => succ;(self(xs)) ]
+])) 
 """.strip())
 
 add = (f"""
@@ -218,7 +218,7 @@ loop (case self => (
 
 
 mult = (f"""
-let add = {add} in 
+def add = {add} in 
 loop (case self => ( 
     case (~zero @, n) => ~zero 
     case (~succ m, n) => (add)(n, (self)(m, n))
@@ -233,7 +233,7 @@ loop (case self => (
 """.strip())
 
 reverse = (f"""
-let concat = ({concat_lists}) in
+def concat = ({concat_lists}) in
 loop (case self => ( 
     case (~nil @) => ~nil @ 
     case (~cons (x, xs)) => 
@@ -242,7 +242,7 @@ loop (case self => (
 """.strip())
 
 tail_reverse = (f"""
-let f = loop (case self => ( 
+def f = loop (case self => ( 
     case (result, ~nil @) => result 
     case (result, ~cons (x, xs)) => 
         self(~cons(x, result), xs)
@@ -251,7 +251,7 @@ case xs => f(~nil @, xs)
 """.strip())
 
 stepped_tail_reverse = (f"""
-let f = loop (case self => case (result, l) => ( 
+def f = loop (case self => case (result, l) => ( 
     l |> (
     case (~nil @) => result 
     case (~cons (x, xs)) => 
@@ -262,7 +262,7 @@ case xs => f(~nil @, xs)
 """.strip())
 
 curried_tail_reverse = (f"""
-let f = loop (case self => case result => ( 
+def f = loop (case self => case result => ( 
     case (~nil @) => result 
     case (~cons (x, xs)) => 
         self(~cons(x, result))(xs)
@@ -272,7 +272,7 @@ f(~nil @)
 
 
 suml = (f"""
-let add = {add} in
+def add = {add} in
 loop (case self => ( 
     case (~nil @, b) => b
     case (~cons (x, xs), b) => self(xs, (add)(b, x))
@@ -280,7 +280,7 @@ loop (case self => (
 """.strip())
 
 sumr = (f"""
-let add = {add} in
+def add = {add} in
 loop (case self => ( 
     case (b, ~nil @) => b
     case (b, ~cons (x, xs)) => (add)((self)(b, xs), x)
@@ -288,7 +288,7 @@ loop (case self => (
 """.strip())
 
 curried_sumr = (f"""
-let add = {add} in
+def add = {add} in
 loop (case self => case b => ( 
     case (~nil @) => b
     case (~cons (x, xs)) => (add)((self)(b)(xs), x)
@@ -318,7 +318,7 @@ loop (case self => case (f, b) => (
 
 
 fib = (f"""
-let add = {add} in
+def add = {add} in
 loop (case self => ( 
     case (~zero @) => ~zero @
     case (~succ ~zero @) => ~succ ~zero @
@@ -327,12 +327,12 @@ loop (case self => (
 """.strip())
 
 curried_tail_fib = (f"""
-let add = {add} in
-let f = loop (case self => (case (result, next) =>( 
+def add = {add} in
+def f = loop (case self => (case (result, next) =>( 
     case (~zero @) => result 
     case (~succ n) => 
-        let new_result = next in
-        let new_next = ({add})(result, next) in
+        def new_result = next in
+        def new_next = ({add})(result, next) in
         (self)(new_result, new_next)(n)
 ))) in
 f(~zero @, ~succ ~zero @)
@@ -358,7 +358,7 @@ f(~zero @, ~succ ~zero @)
 # 0, 1, 1, 2, 3, 5, 8
 
 fact = (f"""
-let mult = {mult}
+def mult = {mult}
 loop (case self => ( 
     case (~zero @) => ~succ ~zero @
     case (~succ n) => (mult)((self)(n), ~succ n)
@@ -367,7 +367,7 @@ loop (case self => (
 
 
 # max = (f"""
-# let lted = {lted} in
+# def lted = {lted} in
 # case (x, y) => (
 #     if (lted)(x, y) then
 #         y
@@ -379,8 +379,8 @@ loop (case self => (
 # NOTE: an example demonstrating refinement abilities
 refiner : Callable[[str, str], str] = (lambda f, g : (f"""
 
-let f : T0 = (case (;uno = x) => x) in
-let g : T1 = (case (;dos = x) => x) in
+def f : T0 = (case (;uno = x) => x) in
+def g : T1 = (case (;dos = x) => x) in
 case x => (
     (({f})(x), ({g})(x))
 )
@@ -388,7 +388,7 @@ case x => (
 
 # NOTE: an example demonstrating expansion abilities
 expander = (f"""
-let length = {length} in 
+def length = {length} in 
 (case (b, l) => (
     (if b then
         ((length)(l), l)
@@ -412,7 +412,7 @@ loop(case self => (
 """.strip())
 
 merge_lists = (f"""
-let lted = ({lted}) in
+def lted = ({lted}) in
 loop(case self => (
     case (xs, ~nil @) => xs 
     case (~cons (x, xs), ~cons (y, ys)) => 
@@ -425,8 +425,8 @@ loop(case self => (
 
 
 merge_sort = (f"""
-let halve = ({halve_list}) in
-let merge = ({merge_lists}) in
+def halve = ({halve_list}) in
+def merge = ({merge_lists}) in
 loop(case self => (
     case ~nil @ => ~nil @
     case ~cons(x, ~nil @) => ~cons(x, ~nil @)
@@ -438,7 +438,7 @@ loop(case self => (
 """.strip())
 
 is_member = (f"""
-let lt = {ltd} in
+def lt = {ltd} in
 loop(case self => (
     case (x, ~empty @) => ~false @
     case (x, ~tree (c, l, y, r)) => 
@@ -463,10 +463,10 @@ loop(self =>
 """.strip())
 
 insert = (f"""
-let balance = {balance} in
-let lt = {ltd} in
+def balance = {balance} in
+def lt = {ltd} in
 case (x, t) => (
-    let f = loop(case self => (
+    def f = loop(case self => (
         case (~empty @) => ~tree (~red @, ~empty @, x, ~empty @) 
         case (~tree (color, l, y, r)) => (
             (if lt(x,y) then
