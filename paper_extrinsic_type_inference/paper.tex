@@ -39,7 +39,7 @@
     basicstyle=\ttfamily\small,
     % mathescape=true,
     % showspaces=false,
-    % morekeywords={let, fix, in}
+    % morekeywords={def, fix, in}
 }
 
 \theoremstyle{definition}
@@ -124,12 +124,12 @@
   }
 }
 
-\newcommand{\mathspan}[1]{
+\newcommand{\mspan}[1]{
   {\footnotesize $( #1 )$}
 }
 
 \newcommand{\code}[1]{
-  \mathspan{\J{#1}}
+  \mspan{\J{#1}}
 }
 
 
@@ -157,7 +157,7 @@
 \newcommand{\nonterm}[1]{#1\ }
 \newcommand{\contin}{|\ \ \ \ \ \ \ }
 \newcommand{\wrt}{\B{wrt }}
-% \newcommand{\let}{\B{let }}
+% \newcommand{\let}{\B{def }}
 % \newcommand{\for}{\B{for }}
 
 
@@ -237,9 +237,9 @@ it forbids overspecifying pattern contents,
 like a length function that only works on even length lists.  
 
 \block{
-  \J{fun elen(nil) = zero}
+  \J{fun evlen(nil) = zero}
   \\
-  \J{\ \ | elen(cons(x,cons(y,zs))) = succ(succ(elen(zs)))}
+  \J{\ \ | evlen(cons(x,cons(y,zs))) = succ(succ(evlen(zs)))}
 }
 
 \noindent
@@ -333,13 +333,16 @@ Proofs of these properties are in the appendix \TODO{...}, section \ref{sect:app
 We designed the type system around a simple applicative language with pattern matching,
 since such a language is syntactically close to predicate logic. Likewise,
 we designed the language of types to share many similarities with predicate logic. 
+The extrinsic type system is able to infer very precise types by analyzing the control
+flow of program in the form of generating and solving subtyping constraints. 
+In many cases the type system can infer the weakest possible types of parameters,
+and the strongest possible (i.e. most general or principal) types of results.
 To get a feel for the languages and reasoning capabilities, it's best to start by
 looking at a few examples.
 
-
 \Par{Finite Isomorphism.}
 A function can be constructed from multiple paths. 
-Consider the function \mathspan{\J{talky}}, which completes a simple English phrase.
+Consider the function \mspan{\J{talky}}, which completes a simple English phrase.
 
 \block{
   \J{def talky = (}
@@ -358,16 +361,12 @@ Since there is no recursion, the number of paths is finite.
 For these simple finite functions, the type system constructs
 an isomorphic type without any weakening in precision. 
 
-{\small
-\[
-  \begin{array}[t]{@{} l}
-      \J{(<hello>@ -> <world>@) \&}
-      \\
-      \J{(<good>@ -> <morning>@) \&} 
-      \\
-      \J{(<thank>@ -> <you>@)} 
-  \end{array}
-\]
+\block{
+  \J{(<hello>@ -> <world>@) \&}
+  \\
+  \J{(<good>@ -> <morning>@) \&} 
+  \\
+  \J{(<thank>@ -> <you>@)} 
 }
 
 \noindent
@@ -379,24 +378,23 @@ Although the type of function $\J{talky}$ is no weaker than the actual function,
 lifting into the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{let x : <hello> @ | <thank> @ = ... in}
-    \\
-    \J{...}
-    \\
-    \J{talky(x)} 
-    \\
-    \J{...}
-  \end{array}
-\]
+\block{
+  \J{def x : <hello> @ | <thank> @ = ... in}
+  \\
+  \J{...}
+  \\
+  \J{talky(x)} 
+  \\
+  \J{...}
+}
 
 \noindent
 If the type system affirms the type annotation,
 then it goes on to infer the type of the application. 
-\[
+
+\block{
   \J{<world> @ | <you> @}
-\]
+}
 
 \noindent
 In effect, the type system applies application to all possible arguments
@@ -409,9 +407,9 @@ like a function, or else the program is erroneous.
 Consider the higher order function $\J{foo}$ which takes a function as input
 and applies it to the number two and the boolean true.
 
-\[
-  \J{let foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
-\]
+\block{
+  \J{def foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
+}
 
 \noindent
 Type systems for System F have traditionally struggled to find the best
@@ -422,17 +420,17 @@ $\J{f}$.
 One possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an option. 
 
-\[
+\block{
   \J{f : ALL[X] X -> <some> X}
-\]
+}
 
 \noindent
 Another possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an list. 
 
-\[
+\block{
   \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
-\]
+}
 
 \noindent
 Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
@@ -442,9 +440,9 @@ that a principal type could be automatically constructed for functions like $\J{
 Our extrinsic type system relies on similar principles of solving subtyping constraints,
 and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
 
-\[
+\block{
   \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
-\]
+}
 
 \noindent
 Although the subtyping constraints are not present in the type's notation,
@@ -453,31 +451,27 @@ consistent with the subtyping constraints on a variable representing the paramet
 Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
 Eventually, due to the applications of the parameter $\J{f}$, the type
 system will attempt to find a solution to two constraints on $\J{F}$
-\[
-  \begin{array}[t]{@{} l}
-    \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
-    \\
-    \J{F} \subtypes \J{(<true> @ -> Y)}
-  \end{array}
-\]
 
+\block{
+  \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
+  \\
+  \J{F} \subtypes \J{(<true> @ -> Y)}
+}
 
 \Par{Factorization.}
 A function can represent infinite paths by using recursion.
 Consider the function $\J{repeat}$, which takes an item and a natural number
 as inputs and returns a list of that item repeated the input number of times.
 
-\[
-  \begin{array}[t]{@{} l}
-      \J{def repeat = [x => loop([self => [}
-      \\
-      \I \J{[zero;@ => nil;@]}
-      \\
-      \I \J{[succ;n => <cons>(x,self(n))]}
-      \\
-      \J{])]}
-  \end{array}
-\]
+\block{
+  \J{def repeat = [x => loop([self => [}
+  \\
+  \I \J{[zero;@ => nil;@]}
+  \\
+  \I \J{[succ;n => <cons>(x,self(n))]}
+  \\
+  \J{])]}
+}
 
 \noindent
 One possibility for constructing the type of the recursive function would
@@ -486,17 +480,15 @@ that preserves all the paths. If our type system had a greatest fixed point
 type constructor, then we could concisely represent such a type with minimal
 rewriting.
 
-\[
-  \begin{array}[t]{@{} l}
-      \J{ALL[T] T -> GFP[R](} 
-      \\
-      \I \J{(<zero> @ -> <nil> @) \&}
-      \\
-      \I \J{(ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
-      \\
-      \J{)} 
-  \end{array}
-\]
+\block{
+  \J{ALL[T] T -> GFP[R](} 
+  \\
+  \I \J{(<zero> @ -> <nil> @) \&}
+  \\
+  \I \J{(ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
+  \\
+  \J{)} 
+}
 
 \noindent
 Although the strength of precision of this type would be very beneficial,
@@ -508,17 +500,15 @@ In this work, the type system actually avoids constructing a relational type, an
 constructs a type that is significantly weaker than the actual behavior of the function,
 by factoring the paths into a recursive space of inputs and a recursive space of outputs. 
 
-\[
-  \begin{array}[t]{@{} l}
-      \J{ALL[T] T ->} 
-      \\
-      \I \J{(LFP[R] <zero> @ | <succ> R)}
-      \\
-      \I \J{->}
-      \\
-      \I \J{(LFP[R] <nil> @ | <cons> T*R)}
-  \end{array}
-\]
+\block{
+  \J{ALL[T] T ->} 
+  \\
+  \I \J{(LFP[R] <zero> @ | <succ> R)}
+  \\
+  \I \J{->}
+  \\
+  \I \J{(LFP[R] <nil> @ | <cons> T*R)}
+}
 
 \noindent
 This eager weakening approximation enables the type system
@@ -527,16 +517,16 @@ relational reasoning. In a follow up paper,
 we will show how to remedy this limitation by augmenting the type system with
 mechanisms for inductive relational reasoning.
 
-\Par{Scalar Unrolling.} 
+\Par{Scalar Inflation.} 
 Since the inputs to functions may have recursive types, the type 
 system must be able to check for errors at function application by unrolling
 recursive types.
 Consider applying the function $\J{repeat}$ to some item and the number two, 
 which results in the type system checking that two is in fact an instance of the natural numbers.
 
-\[
+\block{
   \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-\]
+}
 
 \noindent
 The type system confirms that two is a valid input by unrolling the recursive type three times.
@@ -549,58 +539,50 @@ In the followup paper, inductive relational reasoning will remedy this limitatio
 Another scenario that may arise is one in which the input to a function has an recursive type.
 Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{let x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
-    \\
-    \J{...}
-    \\
-    \J{repeat(...)(x)} 
-    \\
-    \J{...}
-  \end{array}
-\]
+\block{
+  \J{def x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
+  \\
+  \J{...}
+  \\
+  \J{repeat(...)(x)} 
+  \\
+  \J{...}
+}
 
 \noindent
 The application results in the type system checking that natural numbers are weaker than even numbers. 
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{LFP[R] <zero> @ | <succ> <succ> R}
-    \\
-    \subtypes
-    \\
-    \J{LFP[R] <zero> @ | <succ> R}
-  \end{array}
-\]
+\block{
+  \J{LFP[R] <zero> @ | <succ> <succ> R}
+  \\
+  \subtypes
+  \\
+  \J{LFP[R] <zero> @ | <succ> R}
+}
 
 \noindent
 Since even numbers are represented recursively, the type system performs mathematical induction,
 proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-    \\
-    \entails
-    \\
-    \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-  \end{array}
-\]
+\block{
+  \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+  \\
+  \entails
+  \\
+  \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+}
 
 \noindent
 In practice, the type system actually substitutes the supertype into
 the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
-    \\
-    \subtypes 
-    \\
-    \J{(LFP[R] <zero> @ | <succ> R)}
-  \end{array}
-\]
+\block{
+  \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
+  \\
+  \subtypes 
+  \\
+  \J{(LFP[R] <zero> @ | <succ> R)}
+}
 
 \noindent
 In effect, by using mathematical induction, the type system ensures that 
@@ -608,31 +590,40 @@ every type contained within the type of even natural numbers is also
 contained within the type of natural numbers.
 In followup work, we will extend this inductive reasoning to handle inductive relations. 
 
-\Par{Multi-specialization} 
-Functions on lists can be generic, in that they may be independent of the item values, as in $\J{repeat}$,
-or they may factor out the details that depend on item values, as in $\J{sort}$. 
-\[
-  \begin{array}[t]{@{} l}
-    \J{let sort : ALL[X] (X*X->} \textbf{Bool} \J{) -> }\textbf{List}(\J{X}) \J{ -> } \textbf{List}(\J{X}) \J{ = }
-    \\
-    \J{? cmp => ...}
-  \end{array}
-\]
-\noindent
-The notation $\textbf{Bool}$ and $\textbf{List}(\J{X})$ are meta-language terms representing types.
-The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
-In intrinsically typed languages, the programmer would need a different specialization for every predefined
-datatype (in ML) or class hierarchy (in Java). 
+\Par{Structural Generalization} 
+Functions on lists can be generic, in that they may be independent of the item values, as in \code{repeat}.
+Additionally, they may factor out the details that depend on item values, as in \code{sort}. 
 
-\[
-  \begin{array}[t]{@{} l}
-    \J{let scalarSort = sort(scalarCmp) in}
-    \\
-    \J{let lexicoSort = sort(lexicoCmp) in} 
-    \\
-    \J{...} 
-  \end{array}
-\]
+\block{
+  \J{def sort : ALL[T] (T*T->} \textbf{Bool} \J{) -> }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ = }
+  \\
+  \J{[ cmp => ...] in ...}
+}
+
+\noindent
+The notation \mspan{\textbf{Bool}} and \mspan{\textbf{List}(\J{X})} are meta-language terms representing types.
+The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
+Suppose we already have one scalar comparison function and one lexicographic comparison function.
+
+\block{
+  \J{def scalarCmp : }\textbf{Nat} \J{ -> } \textbf{Nat} \J{ -> } \textbf{Bool} \J{ = ... in}
+  \\
+  \J{def lexicoCmp : }\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} \J{ = ... in} 
+  \\
+  \J{...} 
+}
+
+\noindent
+In Standard ML, the programmer would need a different specialization for every predefined
+datatype. 
+
+\block{
+  \J{def scalarSort = sort(scalarCmp) in}
+  \\
+  \J{def lexicoSort = sort(lexicoCmp) in} 
+  \\
+  \J{...} 
+}
 
 \noindent
 Having many different specializations burdens the client of
@@ -640,43 +631,41 @@ the generic function to know many different names for roughly the same behavior 
 of code at the call site. 
 Untyped languages or extrinsically typed languages can bypass this rigidity found in intrinsically typed by specializing in multiple ways.
 
-\[
-  \begin{array}[t]{@{} l}
-    ...
-    \\
-    \J{let stdCmp = \{ a,b => } 
-    \\
-    \I \J{a |> (}
-    \\
-    \I\I \J{\{zero;@ => scalarCmp(a,b)\}}
-    \\
-    \I\I \J{\{succ;n => scalarCmp(a,b)\}}
-    \\
-    \I\I \J{\{nil;@ => lexicoCmp(a,b)\}}
-    \\
-    \I\I \J{\{cons;(x,xs) => lexicoCmp(a,b)\}}
-    \\
-    \I \J{)}
-    \\
-    \J{) in} 
-    \\
-    \J{let stdSort : (TOP}
-    \\
-    \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
-    \\
-    \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
-    \\
-    \J{) = sort(stdCmp) in}
-    \\
-    \J{...} 
-  \end{array}
-\]
+\block{
+  ...
+  \\
+  \J{def genCmp = [a,b => } 
+  \\
+  \I \J{a |> (}
+  \\
+  \I\I \J{[zero;@ => scalarCmp(a,b)]}
+  \\
+  \I\I \J{[succ;n => scalarCmp(a,b)]}
+  \\
+  \I\I \J{[nil;@ => lexicoCmp(a,b)]}
+  \\
+  \I\I \J{[cons;(x,xs) => lexicoCmp(a,b)]}
+  \\
+  \I \J{)}
+  \\
+  \J{] in} 
+  \\
+  \J{def genSort : (TOP}
+  \\
+  \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
+  \\
+  \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
+  \\
+  \J{) = sort(genCmp) in}
+  \\
+  \J{...} 
+}
 
 \noindent
-Some intrinsically typed languages also have ways to perform multi-specialization, but they introduce additional
-complexity, since data constructors can't be mixed in arbitrary ways. In Lean and Haskell, multi-specialization
-is achieved via type classes \cite{}. 
-The notion of type classes, among other things, translates the notion of pattern matching to the syntactic category of types.
+By combining the scalar and lexicographic comparison procedures into a single comparison
+procedure, a generalized sort function can be used to work on either scalars or vectors,
+thereby removing the burden of choosing the proper comparison function at the call site.  
+
 
 \section{Dynamic System}
 \label{sec:dynamic_system}
@@ -707,7 +696,7 @@ significant modifications to the current system.
       e\J{.}l \sep
       e\J{(}e\J{)} \sep
       \J{loop(}e\J{)} \sep
-      \J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e \sep
+      \J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e \sep
       s
     \end{array}
     \\
@@ -726,7 +715,7 @@ significant modifications to the current system.
       e \J{,} e \sep
       e\ \J{|>}\ e \sep
       \J{if}\ e\ \J{then}\ e\ \J{else}\ e \sep
-      \J{let}\ x\ \J{=}\ e\ \J{in}\ e
+      \J{def}\ x\ \J{=}\ e\ \J{in}\ e
     \end{array}
   \end{array}\]
 \end{definition}
@@ -735,7 +724,7 @@ significant modifications to the current system.
 A program is an expression $e$, which may be composed of variables $x$, unit $\J{@}$,
 records $... \J{<}l\J{>} e ...$, functions $...\J{?}p \J{=>} e ...$, record
 projection $e\J{.}l$, function application, $e\J{(}e\J{)}$, recursion $\J{loop(}e\J{)}$,
-or bindings with type annotations, $\J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$.
+or bindings with type annotations, $\J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$.
 A record $r$ is constructed from zero or more entries $r$, where an entry
 is a label associated with an expression $\J{<}l\J{>}e$.
 A function $f$ is constructed from zero or more paths $f$, where a path is distinguished by a pattern
@@ -746,7 +735,7 @@ Therefore, pattern matching is subsumed by function application.
 Projection $e\J{.}l$ allows getting the value from a particular entry in a record. 
 Application $e\J{(}e\J{)}$ handles instantiation functions and pattern matching. 
 Recursion $\J{loop(}e\J{)}$ is represented using a fixed point combinator $\J{loop}$.
-A binding with type annotation $\J{let}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$ allows the programmer 
+A binding with type annotation $\J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e$ allows the programmer 
 to verify expressions against a custom specification, instead of relying on merely 
 the specification generated by type inference.
 The annotation is used in two ways. First, the type system checks that specification is an approximation
@@ -778,14 +767,14 @@ although possibly weaker than the inferred type, is sufficient for the continuin
         \J{)}
       \end{array}
       \\
-      \llbracket \J{let}\ x\ \J{=}\ e\ \J{in}\ e' \rrbracket^\square &= (\J{?}x \J{=>} e')\J{(}e\J{)}
+      \llbracket \J{def}\ x\ \J{=}\ e\ \J{in}\ e' \rrbracket^\square &= (\J{?}x \J{=>} e')\J{(}e\J{)}
   \end{align*}
 
 \end{definition} 
 
 \noindent
 For convenience and clarity, expressions include syntactic sugar for tuples $e\J{,}e$, 
-unannotated bindings $\J{let}\ x\ \J{=}\ e\ \J{in}\ e$, data flow $e\ \J{|>}\ e$,
+unannotated bindings $\J{def}\ x\ \J{=}\ e\ \J{in}\ e$, data flow $e\ \J{|>}\ e$,
 and conditional branching $\J{if}\ e\ \J{then}\ e\ \J{else}\ e$.
 For any metalanguage statement or term containing sugar $s$, we assume that $s$ is implicitly replaced with $\llbracket s \rrbracket^\square$.
 
@@ -1132,7 +1121,7 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
 
       \textbf{set}(C\ \iota)
       &\ =\ & 
-      \textbf{set}(C) \cup \{ \iota \} 
+      \textbf{set}(C) \cup [ \iota ] 
   \end{array}
   \]
 \end{definition} 
@@ -1152,9 +1141,9 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
 
       \\
 
-      \textbf{seq}(S \cup \{\iota\})
+      \textbf{seq}(S \cup [\iota])
       &\ =\ & 
-      \textbf{seq}(S \backslash \{\iota\})\ \iota 
+      \textbf{seq}(S \backslash [\iota])\ \iota 
   \end{array}
   \]
 \end{definition} 
@@ -1534,7 +1523,7 @@ and they must be satisfiable with respect to the remaining type variables.
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
     } {
       \forall \delta, \sigma \qua 
       \delta, \sigma \satisfies \Gamma \implies
@@ -1623,7 +1612,7 @@ used in the binding syntax respect the type annotations.
       \\
       \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
     } {
-      \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''
+      \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''
     }
 
     \inferrule {
@@ -1692,7 +1681,7 @@ leverages Proof Subtyping $(... \entails \tau_f \subtypes \tau_a \J{->} \alpha \
 to check that that the function $e_f$ can actually
 map the argument $e_a$ to a result. It learns a lower bound 
 on the type of the result $\alpha$, which is associated with that argument.
-For an annotated binding, $\J{let}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
+For an annotated binding, $\J{def}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
 Proof Typing checks the definition's source $e$ against the annotation $\tau_a$,
 and adds the annotation to the typing environment when checking the continuation $e'$.
 
@@ -2675,7 +2664,7 @@ rely on analogous techniques.
 \section{Experiments}
 \label{sec:experiments}
 
-
+\TODO{only show experiments where our system differs from SuperF or MLStruct}
 
 \noindent
 We performed experiments to see how type inference performs on both functions and constructors. 
@@ -2739,11 +2728,11 @@ or simply can't admit the program.
       \\
       \textbf{z} 
       &\ \ =\ \ & 
-      \J{\{f => \{x => x\}\}} 
+      \J{[f => [x => x]]} 
       \\
       \textbf{s} 
       &\ \ =\ \ & 
-      \J{\{n => \{f => \{x => f(n(f(x)))\}\}\}} 
+      \J{[n => [f => [x => f(n(f(x)))]]]} 
       \\
       \textbf{n3} 
       &\ \ =\ \ & 
@@ -2865,7 +2854,7 @@ the typing of some identifiers have already been learned or verified.
     \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
     \hline\hline
     \pdc. &
-    \J{\{x => \{y => y\}\}} 
+    \J{[x => [y => y]]} 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -2877,7 +2866,7 @@ the typing of some identifiers have already been learned or verified.
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{\{x => x(x)\}} 
+    \J{[x => x(x)]} 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -2905,19 +2894,19 @@ the typing of some identifiers have already been learned or verified.
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{poly(\{x => x\})} 
+    \J{poly([x => x])} 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{id(poly)(\{x => x\})} 
+    \J{id(poly)([x => x])} 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{\{f => f(succ;zero;@), f(true;@)\}}
+    \J{[f => f(succ;zero;@), f(true;@)]}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{\{xs => poly(head(xs))\}}
+    \J{[xs => poly(head(xs))]}
     & \pass & \pass & \pass \\
     \hline
   \end{tabular}
@@ -2984,7 +2973,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{cons(\{x => x\})(ids)}
+    \J{cons([x => x])(ids)}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -3056,11 +3045,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{k(\{x => h(x)\})(l)}
+    \J{k([x => h(x)])(l)}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{r(\{x => \{y => y\}\})}
+    \J{r([x => [y => y]])}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -3080,11 +3069,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{let f = revapp(id) in f(poly)}
+    \J{def f = revapp(id) in f(poly)}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{choose(id)(\{x => auto'(x)\})}
+    \J{choose(id)([x => auto'(x)])}
     & \pass & \pass & \pass \\
     \hline
   \end{tabular}
@@ -3116,7 +3105,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \multicolumn{2}{|c||}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
     \hline\hline
     \pdc. &
-    \J{let ignore : } \textbf{ChurchNum} \J{ = z in @}
+    \J{def ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -3124,19 +3113,19 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{let ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
+    \J{def ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
     & \pass & \pass & \fail \\
     \hline
     \pdc. &
-    \J{let ignore : } \textbf{ChurchNum} \J{ = n3 in @}
+    \J{def ignore : } \textbf{ChurchNum} \J{ = n3 in @}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{let ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = \{@ => n3(n3)\} in @}
+    \J{def ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = [@ => n3(n3)] in @}
     & \pass & \pass & \fail \\
     \hline
     \pdc. &
-    \J{fst(fst(fst(n3(\{x => x,(zero;@)\})(succ;zero;@))))}
+    \J{fst(fst(fst(n3([x => x,(zero;@)])(succ;zero;@))))}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
@@ -3145,26 +3134,26 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \begin{array}[t]{l}
-      \J{let to\_church = loop(\{self => } 
+      \J{def to\_church = loop([self => } 
       \\
-      \I \J{\{zero;@ => z\}}
+      \I \J{[zero;@ => z]}
       \\
-      \I \J{\{succ;n => s(self(n))\}}
+      \I \J{[succ;n => s(self(n))]}
       \\
-      \J{\}) in ...}
+      \J{]) in ...}
     \end{array}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
-    \J{let ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
+    \J{def ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
     & \pass & \pass & \fail \\
     \hline
     \pdc. &
-    \J{loop(\{self => \{x => if true;@ then x else self(self)(x)\}\}} 
+    \J{loop([self => [x => if true;@ then x else self(self)(x)]]} 
     & \fail & \fail & \fail \\
     \hline
     \pdc. &
-    \J{\{x => x(x)\}(\{x => x(x)\})}
+    \J{[x => x(x)]([x => x(x)])}
     & \pass & \fail & \fail \\
     \hline
     \pdc. &
@@ -3173,31 +3162,31 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \pdc. &
     \begin{array}[t]{l}
-      \J{\{y => } 
+      \J{[y => } 
       \\
-      \I \J{let tmp = y in}
+      \I \J{def tmp = y in}
       \\
       \I \J{y(const)}
       \\
-      \J{\}\{x => x(x)\}}
+      \J{][x => x(x)]}
     \end{array}
     & \fail & \pass & \pass \\
     \hline
     \pdc. &
-    \J{\{k => (k(\{x => x\})),(k(\{x => single(x)\})) \}(\{f => (f(succ;zero;@)),(f(true;@))\})}
+    \J{[k => (k([x => x])),(k([x => single(x)])) ]([f => (f(succ;zero;@)),(f(true;@))])}
     & \pass & \pass & \pass \\
     \hline
     \pdc. &
     \begin{array}[t]{l}
-      \J{\{f => } 
+      \J{[f => } 
       \\
-      \I \J{let a = \{@ => f(id)\} in }
+      \I \J{def a = [@ => f(id)] in }
       \\
-      \I \J{let y : } \textbf{Nat} \J{ -> (ALL[T] T -> T) = a(@) in }
+      \I \J{def y : } \textbf{Nat} \J{ -> (ALL[T] T -> T) = a(@) in }
       \\
       \I \J{y}
       \\
-      \J{\}(const(const(id)))}
+      \J{](const(const(id)))}
     \end{array}
     & \fail & \fail & \pass \\
     \hline
@@ -3232,27 +3221,27 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline\hline
     \sdc. &
     \begin{array}[t]{l}
-      \J{let stdCmp = \{ a,b => } 
+      \J{def stdCmp = [ a,b => } 
       \\
       \I \J{a |> (}
       \\
-      \I\I \J{\{zero;@ => scalarCmp(a,b)\}}
+      \I\I \J{[zero;@ => scalarCmp(a,b)]}
       \\
-      \I\I \J{\{succ;n => scalarCmp(a,b)\}}
+      \I\I \J{[succ;n => scalarCmp(a,b)]}
       \\
-      \I\I \J{\{nil;@ => lexicoCmp(a,b)\}}
+      \I\I \J{[nil;@ => lexicoCmp(a,b)]}
       \\
-      \I\I \J{\{cons;(x,xs) => lexicoCmp(a,b)\}}
+      \I\I \J{[cons;(x,xs) => lexicoCmp(a,b)]}
       \\
       \I \J{)}
       \\
-      \J{\} in ...}
+      \J{] in ...}
     \end{array}
     & \pass & \assisted \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
-      \J{let stdSort : (TOP } 
+      \J{def stdSort : (TOP } 
       \\
       \I \J{ \& (} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{)}
       \\
@@ -3264,33 +3253,33 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \hline
     \sdc. &
     \begin{array}[t]{l}
-      \J{let double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop(\{self => } 
+      \J{def double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop([self => } 
       \\
-      \I \J{\{zero;@ => zero;@\}}
+      \I \J{[zero;@ => zero;@]}
       \\
-      \I \J{\{succ;n => succ;succ;(self(n))\}}
+      \I \J{[succ;n => succ;succ;(self(n))]}
       \\
-      \J{\}) in ...}
+      \J{]) in ...}
     \end{array}
     & \pass & \fail \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
-      \J{let halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop(\{self => } 
+      \J{def halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop([self => } 
       \\
-      \I \J{\{zero;@ => zero;@\}}
+      \I \J{[zero;@ => zero;@]}
       \\
-      \I \J{\{succ;succ;n => succ;(self(n))\}}
+      \I \J{[succ;succ;n => succ;(self(n))]}
       \\
-      \J{\}) in ...}
+      \J{]) in ...}
     \end{array}
     & \pass & \fail \\
     \hline
     \sdc. &
     \begin{array}[t]{l}
-      \J{\{zero;@ => \{zero;@ => @\}(@)\}}
+      \J{[zero;@ => [zero;@ => @](@)]}
       \\
-      \J{\{nil;@ => @\}}
+      \J{[nil;@ => @]}
     \end{array}
     & \pass & \fail \\
     \hline
@@ -4688,7 +4677,7 @@ The interested reader can find the actual the definition of packing in the appen
       \\
       \delta \satisfies  e'[x \slash e]\hastype \tau'
     } {
-      \delta \satisfies \J{let } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau'
+      \delta \satisfies \J{def } x \J{:} \tau \J{ = } e \J{ in } e' \hastype \tau'
     }
   \end{mathpar}
 \end{theorem}
@@ -5683,7 +5672,7 @@ The interested reader can find the actual the definition of packing in the appen
   \small
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
     } {
       \forall \delta, \sigma \qua 
       \delta, \sigma \satisfies \Gamma \implies
@@ -7348,7 +7337,7 @@ The interested reader can find the actual the definition of packing in the appen
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \item \N Assume $(
-    (\Theta, \Delta, \Gamma \entails \J{let } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta'')
+    (\Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta'')
   )$
   \item \I \N Derive $(
     \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
@@ -7461,11 +7450,11 @@ The interested reader can find the actual the definition of packing in the appen
   )$ [Def. \ref{def:expr_substitution}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta \entails \J{let } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'
+    \delta \oplus \delta \entails \J{def } x \J{:} \tau_a \J{ = } e[\sigma] \J{ in } e'[\sigma] \hastype \tau'
   )$ [Thm. \ref{thm:annotated_binding_introduction}]
 
   \item \I\I \N Derive $(
-    \delta \oplus \delta \entails (\J{let } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'
+    \delta \oplus \delta \entails (\J{def } x \J{:} \tau_a \J{ = } e \J{ in } e')[\sigma] \hastype \tau'
   )$ [Def. \ref{def:expr_substitution}]
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -7670,7 +7659,7 @@ The interested reader can find the actual the definition of packing in the appen
 %   \end{mathpar}
 %   Proof:
 %   \item $\B{assume } \entails e \hastype \tau \given Z$
-%     \item \Z $\B{let } \delta\ \Gamma' \ \tau' \B{ s.t. } \delta, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{thm:proof_typing_soundness}}
+%     \item \Z $\B{def } \delta\ \Gamma' \ \tau' \B{ s.t. } \delta, \Gamma' \satisfies e \hastype \tau'$ by \D{Lemma \ref{thm:proof_typing_soundness}}
 %     \item \Z $\delta, \sigma \satisfies \Gamma'$ by ...
 %     \item \Z $\VDash e[\sigma]$ by theorem \ref{thm:model_typing_soundness}
 %     \item \Z $e[\sigma] = e$ by ...
@@ -7726,14 +7715,14 @@ The interested reader can find the actual the definition of packing in the appen
 % \end{theorem}
 
 %     \item \Z $\B{case } e = \J{@} \I \tau = \J{@}$ 
-%       \item \Z\Z $\B{let } \delta$ by definition
+%       \item \Z\Z $\B{def } \delta$ by definition
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{@} \hastype \J{@}$ by definition
 %       \item \Z\Z $\delta, \Gamma \satisfies e \hastype \tau$ by substitution
 %       \item \Z\Z $\exists \delta .\ \delta, \Gamma \satisfies e \hastype \tau$ by witness 
 
 %     \item \Z $\B{case } e = x \I \J{$x$:$\tau$} \in \Gamma$ 
 %     \item \Z $\B{wrt } x$ 
-%       \item \Z\Z $\B{let } \delta$ by definition
+%       \item \Z\Z $\B{def } \delta$ by definition
 %       \item \Z\Z $\delta, \Gamma \satisfies x \hastype \tau$  by definition
 %       \item \Z\Z $\delta, \Gamma \satisfies e \hastype \tau$ by substitution
 %       \item \Z\Z $\exists \delta .\ \delta, \Gamma \satisfies e \hastype \tau$ by witness 
@@ -7751,7 +7740,7 @@ The interested reader can find the actual the definition of packing in the appen
 %       \delta, \Gamma \satisfies e' \hastype \tau'
 %   $ 
 %   \item \Z $\B{wrt } e' \ \tau'$ 
-%     \item \Z\Z $\B{let } \delta $ by definition
+%     \item \Z\Z $\B{def } \delta $ by definition
 %     \item \Z\Z $
 %       \delta, \Gamma \satisfies e' \hastype \tau'
 %     $ by application
@@ -7816,7 +7805,7 @@ The interested reader can find the actual the definition of packing in the appen
 %     $ by application
 
 %     \item \Z\Z $
-%       \B{let }
+%       \B{def }
 %       M\ \Delta
 %       \B{ s.t. }
 %       \tau_0 \subtypes \J{$l$->$\alpha$} \given M, \Delta
@@ -7876,7 +7865,7 @@ The interested reader can find the actual the definition of packing in the appen
 %     $ by application
 
 %     \item \Z\Z $
-%       \B{let } M\ \Delta
+%       \B{def } M\ \Delta
 %       \B{ s.t. }
 %       \tau_0 \subtypes \J{$\tau_1$->$\alpha$} \given \left<M, \Delta \right>
 %     $ by theorem \ref{thm:proof_subtyping_choice} 
@@ -8020,7 +8009,7 @@ The interested reader can find the actual the definition of packing in the appen
 %         $ by substitution
 
 %         \item \Z\Z\Z\Z $
-%           \B{let } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
+%           \B{def } M\ \Delta\ \B{ s.t. } \left<M, \Delta\right> \in \epsilon 
 %         $ by theorem \ref{thm:universe_proof_typing_worldly}  
 
 %         \item \Z\Z\Z\Z $\bot$ by theorem \ref{thm:empty_containment_absurd}
@@ -8482,7 +8471,7 @@ The interested reader can find the actual the definition of packing in the appen
 %       $ by definition 
 
 %       \item \Z\Z $
-%         \B{let } \sigma \B{ s.t. } \delta, \Gamma \satisfies \sigma 
+%         \B{def } \sigma \B{ s.t. } \delta, \Gamma \satisfies \sigma 
 %       $ by theorem \ref{...} 
 %       \item \Z\Z $
 %         \J{$G$.$l$}[\sigma] \rightsquigarrow v
@@ -9325,7 +9314,7 @@ The interested reader can find the actual the definition of packing in the appen
 %     \delta, \Gamma \satisfies e_1 \hastype \tau_l
 %   $ 
 
-%     \item \Z $\B{let } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma$ by theorem \ref{...}
+%     \item \Z $\B{def } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma$ by theorem \ref{...}
 %     \item \Z $\B{induct on } \delta, \Gamma \satisfies e_0 \hastype \tau_l \J{->} \tau_r$
 
 %     \item \Z $\B{case }$ \TODO{...}
@@ -9379,8 +9368,8 @@ The interested reader can find the actual the definition of packing in the appen
 %         \item \Z\Z\Z $(\J{$F$($e_1$)})[\sigma] = \J{$F[\sigma]$($e_1[\sigma]$)}$ by definition
 %         \item \Z\Z\Z $\J{$F[\sigma]$($e_1[\sigma]$)} \rightsquigarrow e_3$ by substitution 
 
-%         \item \Z\Z\Z $\B{let } F' \B{ s.t. } F[\sigma] = F'$ by theorem \ref{...} \TODO{...}
-%         \item \Z\Z\Z $\B{let } e_1' \B{ s.t. } e_1[\sigma] = e_1'$ by theorem \ref{...} \TODO{...}
+%         \item \Z\Z\Z $\B{def } F' \B{ s.t. } F[\sigma] = F'$ by theorem \ref{...} \TODO{...}
+%         \item \Z\Z\Z $\B{def } e_1' \B{ s.t. } e_1[\sigma] = e_1'$ by theorem \ref{...} \TODO{...}
 
 %         \item \Z\Z\Z $\text{FV}(e_2[\sigma\backslash\text{FV}(p)]) \subseteq \text{FV}(p)$ 
 %         by theorem \ref{...} \TODO{...}
@@ -9464,7 +9453,7 @@ The interested reader can find the actual the definition of packing in the appen
 %   \item $\B{assume } \VDash e_1[\sigma]$
 
 
-%     \item \Z $\B{let } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma $ by theorem \ref{thm:model_typing_assignability} 
+%     \item \Z $\B{def } \sigma \B{ s.t. } \delta, \sigma \satisfies \Gamma $ by theorem \ref{thm:model_typing_assignability} 
 %     \item \Z $\VDash e_1[\sigma]$ by theorem \ref{thm:model_typing_soundness}
 %     \item \Z $\B{induct on } \VDash e_1[\sigma]$
 
@@ -9520,7 +9509,7 @@ The interested reader can find the actual the definition of packing in the appen
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{$F$?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by theorem \ref{thm:model_typing_unwrapping} 
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{?$p$=>$e$} \hastype \tau_l \J{->} \tau_r$ by substitution 
 
-%       \item \Z\Z $\B{let}\ \sigma' \B{ s.t. } p \equiv v_1 \given \sigma'$ 
+%       \item \Z\Z $\B{def}\ \sigma' \B{ s.t. } p \equiv v_1 \given \sigma'$ 
 %       by theorem \ref{thm:model_typing_pattern_matching} 
 
 %       \item \Z\Z $\B{for } e'$ 
@@ -9550,7 +9539,7 @@ The interested reader can find the actual the definition of packing in the appen
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 
 %     \item \Z $\B{case } \delta, \Gamma \satisfies \J{$F$($e_1$)} \hastype \tau_r$ 
-%       \item \Z\Z $\B{let } e' \B{ s.t. } (\J{$F$($e_1$}))[\sigma] \rightsquigarrow e' \land \delta, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{thm:model_typing_function_progress}
+%       \item \Z\Z $\B{def } e' \B{ s.t. } (\J{$F$($e_1$}))[\sigma] \rightsquigarrow e' \land \delta, \Gamma \satisfies e' \hastype \tau_r$ by theorem \ref{thm:model_typing_function_progress}
 %       \item \Z\Z $(\J{($F$?$p$=>$e$)($e_1$)})[\sigma] \rightsquigarrow e'$ by definition 
 %       \item \Z\Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by definition
 %     \item \Z $\delta, \Gamma \satisfies \J{($F$?$p$=>$e$)($e_1$)} \hastype \tau_r$ by inversion 
@@ -9751,7 +9740,7 @@ The interested reader can find the actual the definition of packing in the appen
 % %     \I
 % %     \J{*$p$=>$e$} \in F' 
 % %   $
-% %   \item \Z\Z $\B{let } e' \B{ s.t. } F'\J{(}v\J{)} \rightsquigarrow e'$ by induction hypothesis
+% %   \item \Z\Z $\B{def } e' \B{ s.t. } F'\J{(}v\J{)} \rightsquigarrow e'$ by induction hypothesis
 % %   \item \Z\Z $F'\ f\J{(}v\J{)} \rightsquigarrow e'$ by definition
 % %   \item \Z\Z $F\J{(}v\J{)} \rightsquigarrow e'$ by definition
 % %   \item \Z $\exists e' .\ F\J{(}v\J{)} \rightsquigarrow e'$ by induction on $\J{*$p$=>$e$} \in F$
@@ -9791,7 +9780,7 @@ The interested reader can find the actual the definition of packing in the appen
 %         \I \delta, \Gamma \satisfies e \hastype \tau
 %   $
 %     \item \Z $\B{case } e = \J{@}$
-%       \item \Z\Z $\B{let } v \B{ s.t. } \J{@} = v$
+%       \item \Z\Z $\B{def } v \B{ s.t. } \J{@} = v$
 %       \item \Z\Z $e[\sigma] = v$
 %       \item \Z\Z $ \VDash e[\sigma]$
 
@@ -9805,7 +9794,7 @@ The interested reader can find the actual the definition of packing in the appen
 %     $
 %       \item \Z\Z $\Vdash e'$ by induction hypothesis
 %       \item \Z\Z $\B{case } e'[\sigma] = v$
-%         \item \Z\Z\Z $\B{let } v' \B{ s.t. } \J{<}l\J{>}v = v'$
+%         \item \Z\Z\Z $\B{def } v' \B{ s.t. } \J{<}l\J{>}v = v'$
 %         \item \Z\Z\Z $\J{<}l\J{>}e'[\sigma] = v'$
 %         \item \Z\Z\Z $(\J{<}l\J{>}e')[\sigma] = v'$
 %         \item \Z\Z\Z $e[\sigma] = v'$
