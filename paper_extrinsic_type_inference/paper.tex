@@ -1516,7 +1516,7 @@ used in the binding syntax respect the type annotations.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \entails \Pi) = \tau 
+      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -1535,18 +1535,18 @@ used in the binding syntax respect the type annotations.
       \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
       \\
       \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
-      \\
+      \\\\
       \Theta'', \Delta'', \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta'''
     } {
       \Theta, \Delta, \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''
     }
 
     \inferrule {
-      \TODO{update annotation rule with consolidation and packing}
-      \\\\
-      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
-      \\
       \textbf{ftv}(\tau_a) \subseteq \emptyset
+      \\
+      \Theta, \Delta, \Gamma \entails e \hastype \Pi
+      \\
+      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
       \\\\
       \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
       \\

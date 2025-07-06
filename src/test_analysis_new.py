@@ -26,6 +26,13 @@ from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
 
+def test_free_var_annotation():
+    code = f"""
+let x : X = uno;@ in
+{{dos;@ => @}}(x)
+    """
+    assert not infer_typ(code) 
+
 def test_lted():
     assert infer_typ(el.lted) 
 
@@ -1000,7 +1007,8 @@ if __name__ == '__main__':
     # test_intersection_arrow_single_selection()
     # test_typing_C3()
     # test_max_app()
-    test_variable_subtypes_tag_pair()
+    # test_variable_subtypes_tag_pair()
+    test_free_var_annotation()
 
 
 #######################################################################

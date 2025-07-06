@@ -3748,7 +3748,6 @@ class TargetRule(Rule):
         if bool(extract_free_vars_from_typ(s(), anno_typ)):
             return []
         else:
-
             foreignids = extract_free_vars_from_enviro(enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
             # NOTE: we don't care about learning anything about the annotation; just that it's legal
             generalized_cases = []
