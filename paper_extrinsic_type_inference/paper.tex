@@ -85,7 +85,7 @@
 
 \newcommand{\unique}{\ \dagger}
 
-\newcommand{\factorsinto}{\Vvdash}
+\newcommand{\factorsinto}{\Vdash}
 
 
 \newcommand{\allsafe}{\ \Re\checkmark}
@@ -786,7 +786,7 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
     \\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \J{EXI[}\Theta \J{]} \rho \sep 
+      \J{EXI[}\Theta \J{]} \Delta \J{:} \rho \sep 
       \rho
     \end{array}
     & \com{negatable}
@@ -1949,14 +1949,8 @@ whose consequents are the intersection's constituent parts.
     }
 
     \inferrule {
-      \TODO{add skolemizable constraints}
-      \\\\
-      \Theta_l \cap \textbf{ftv}(\Delta) \subseteq \emptyset 
+      \Theta, \Delta \Vvdash \Omega
       \\
-      \Theta_l \cap \textbf{ftv}(\tau_r) \subseteq \emptyset
-      \\
-      (\forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset) 
-      \\\\
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
       \Theta' \cup \Theta_l, \Delta' \entails
@@ -2019,14 +2013,8 @@ splitting the worlds too eagerly.
     }
 
     \inferrule {
-      \TODO{add skolemizable constraints}
-      \\\\
-      \Theta_r \cap \textbf{ftv}(\Delta) \subseteq \emptyset
+      \Theta, \Delta \Vvdash \Omega
       \\
-      \Theta_r \cap \textbf{ftv}(\tau_l) \subseteq \emptyset
-      \\
-      (\forall \tau, \eta \qua (\tau \J{<:} \eta) \in \Omega \implies \textbf{ftv}(\eta) \subseteq \emptyset) 
-      \\\\
       \Theta, \Delta \given \Omega \given \Theta', \Delta'
       \\
       \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
@@ -2218,12 +2206,10 @@ $\alpha \subtypes \tau_r$
   \\
   \begin{mathpar}
     \inferrule {
-      \TODO{add negatable constraints}
-      \\\\
+      \Theta, \Delta \Vvdash \eta
+      \\
       \Theta, \Delta \entails 
       \tau_l \subtypes \tau_r \given \Theta', \Delta' 
-      \\
-      \textbf{ftv}(\eta) \subseteq \emptyset
       \\
       \nexists \Theta', \Delta' \qua  
       \Theta, \Delta \entails 
@@ -2398,7 +2384,7 @@ by proving the qualifiers hold under such witnesses $(
     } {
       \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
     }
-    \\
+
     \inferrule {
       \Vdash \tau_{l}\J{\&}\tau_{r} \subtypes \tau_x \rightarrow \tau_y 
       \\\\
@@ -2409,7 +2395,7 @@ by proving the qualifiers hold under such witnesses $(
 
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-      \\\\
+      \\
       \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta \entails 

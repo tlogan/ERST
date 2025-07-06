@@ -2512,7 +2512,7 @@ SOLVABLE:
         else:
             return False
 
-    def is_negatable_typ(self, t : Typ) -> bool:
+    def is_negatable_typ(self, world : World, t : Typ) -> bool:
         return (
             (
                 self.is_pattern_typ(t) or
@@ -2520,19 +2520,26 @@ SOLVABLE:
                 (
                     isinstance(t, Exi) and
                     self.is_pattern_typ(t.body) and
-                    not self.are_skolemizable_constraints(t.constraints)
+                    not self.are_skolemizable_constraints(world, t.constraints)
                 )
             ) and
             not bool(extract_free_vars_from_typ(s(), t))
         )
 
-    def are_skolemizable_constraints(self, constraints : Iterable[Subtyping]) -> bool:
+    def are_skolemizable_constraints(self, world : World, constraints : Iterable[Subtyping]) -> bool:
         return all(
             # NOTE: compatible check only necessary for relational reasoning 
             # self.is_compatible(st.lower, st.upper)
             # if isinstance(st.upper, LeastFP) else
-            isinstance(st.lower, TVar) or
-            self.is_negatable_typ(st.upper)
+            self.is_negatable_typ(world, st.upper) or (
+                isinstance(st.lower, TVar) and
+                st.lower not in world.closedids and
+                all(
+                    wst.upper == Top()
+                    for wst in world.constraints
+                    if wst.lower == st.lower 
+                )
+            )
             for st in constraints
         )
 
@@ -3055,7 +3062,7 @@ SOLVABLE:
         #######################################
 
         elif isinstance(upper, Diff): 
-            if self.is_negatable_typ(upper.negation):
+            if self.is_negatable_typ(world, upper.negation):
                 if not bool(self.solve(world, lower, upper.negation)):
                     return self.solve(world, lower, upper.context)
                 else:
@@ -3152,7 +3159,7 @@ SOLVABLE:
         elif isinstance(upper, Unio): 
             return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
-        elif isinstance(upper, Exi) and self.are_skolemizable_constraints(upper.constraints):
+        elif isinstance(upper, Exi) and self.are_skolemizable_constraints(world, upper.constraints):
 #                 print(f"""
 # ==================================================
 # DEBUG upper EXI
