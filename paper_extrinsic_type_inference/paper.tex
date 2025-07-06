@@ -786,7 +786,7 @@ A value $v$ may be composed of unit $\J{@}$, records $g$, or functions $f$.
     \\
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \J{EXI[}\Theta \J{]} \Delta \J{:} \rho \sep 
+      \J{EXI[}\Theta \J{]} \Omega \J{:} \eta \sep 
       \rho
     \end{array}
     & \com{negatable}
@@ -901,8 +901,10 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
     & \com{negatable type seq}
     \\
-    \nonterm{\Omega} & \is \epsilon \sep \Omega \  \tau \J{<:} \eta
-    & \com{restricted subtyping seq}
+    \nonterm{\Omega} & \is \epsilon \sep 
+      \Omega\ \tau \J{<:} \eta \sep 
+      \Omega\ \alpha \J{<:} \tau
+    & \com{negatable subtyping seq}
     \\
     \nonterm{C} & \is \epsilon \sep C\ \iota 
     & \com{composite seq}
@@ -923,10 +925,6 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     & \com{item}
   \end{array}\]
 \end{definition}
-
-\TODO{make sure there are no free vars in the eta of the Omega}
-
-\TODO{add collection concatentation to library}
 
 
 There are a few ancillary structures, upon which both the representation of types and the reasoning with types depend.
@@ -3385,6 +3383,70 @@ by reusing the proof of one proposition as a proof for another.
 \TODO{organize descriptions}
 
 \TODO{describe the important properties in depth}
+
+\begin{definition}
+  \label{def:type_negatability}
+  Type Negatability
+  \hfill 
+  \small
+  \boxed{\Theta, \Delta \Vvdash \eta}
+  \\
+  \begin{mathpar}
+    \inferrule {
+      \textbf{ftv}(\rho) \subseteq \emptyset
+    } {
+      \Vvdash \rho
+    }
+
+    \inferrule {
+      \textbf{ftv}(\J{EXI[} \Theta \J{]} \Omega \J{:} \eta) \subseteq \emptyset
+      \\
+      \Theta, \Delta \Vvdash \Omega
+      \\
+      \Theta, \Delta \Vvdash \eta
+    } {
+      \Theta, \Delta \Vvdash \J{EXI[} \Theta \J{]} \Omega \J{:} \eta 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
+
+\begin{definition}
+  \label{def:subtyping_sequence_negatability}
+  Subtyping Sequence Negatability
+  \hfill 
+  \small
+  \boxed{\Theta, \Delta \Vvdash \Omega}
+  \\
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Theta, \Delta \Vvdash \epsilon 
+    }
+
+    \inferrule {
+      \Theta, \Delta \Vvdash \Omega
+      \\
+      \Theta, \Delta \Vvdash \eta
+    } {
+      \Theta, \Delta \Vvdash \Omega\ \tau \J{<:} \eta
+    }
+
+    \inferrule {
+      \alpha \notin \Theta
+      \\
+      \Theta, \Delta \Vvdash \Omega
+      \\
+      (
+      \forall \tau' \qua  \alpha \J{<:} \tau' \in \Delta \implies
+      \tau' = \J{TOP}
+      )
+    } {
+      \Theta, \Delta \Vvdash \Omega\ \alpha \J{<:} \tau 
+    }
+  \end{mathpar}
+\end{definition}
+\hfill
 
 \begin{definition}
   \label{def:typing_consolidation}

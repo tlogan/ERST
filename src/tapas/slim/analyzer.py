@@ -2519,14 +2519,14 @@ SOLVABLE:
                 isinstance(t, Top) or
                 (
                     isinstance(t, Exi) and
-                    self.is_pattern_typ(t.body) and
-                    not self.are_skolemizable_constraints(world, t.constraints)
+                    self.is_negatable_typ(world, t.body) and
+                    not self.are_negatable_constraints(world, t.constraints)
                 )
             ) and
             not bool(extract_free_vars_from_typ(s(), t))
         )
 
-    def are_skolemizable_constraints(self, world : World, constraints : Iterable[Subtyping]) -> bool:
+    def are_negatable_constraints(self, world : World, constraints : Iterable[Subtyping]) -> bool:
         return all(
             # NOTE: compatible check only necessary for relational reasoning 
             # self.is_compatible(st.lower, st.upper)
@@ -3159,7 +3159,7 @@ SOLVABLE:
         elif isinstance(upper, Unio): 
             return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
-        elif isinstance(upper, Exi) and self.are_skolemizable_constraints(world, upper.constraints):
+        elif isinstance(upper, Exi) and self.are_negatable_constraints(world, upper.constraints):
 #                 print(f"""
 # ==================================================
 # DEBUG upper EXI
