@@ -64,8 +64,7 @@
 \newcommand{\sdc}{\stepcounter{sdc}\arabic{sdc}}
 
 \newcommand{\Par}[1]{\paragraph{\textbf{#1}}}
-\newcommand*{\code}{\fontfamily{pcr}\selectfont}
-\newcommand{\J}[1]{\texttt{\code #1}}
+\newcommand{\J}[1]{\texttt{\fontfamily{pcr}\selectfont #1}}
 \newcommand{\lab}[1]{\text{\color{Gray}\ [#1]}}
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
@@ -115,8 +114,8 @@
 \newcommand{\sz}[1]{\text{\small #1}}
 
 
-\newcommand{\mathblock}[1]{
-  {\small
+\newcommand{\block}[1]{
+  {\footnotesize
   \[
     \begin{array}[t]{@{} l}
       #1
@@ -126,7 +125,11 @@
 }
 
 \newcommand{\mathspan}[1]{
-  {\small $ #1 $}
+  {\footnotesize $( #1 )$}
+}
+
+\newcommand{\code}[1]{
+  \mathspan{\J{#1}}
 }
 
 
@@ -177,6 +180,71 @@
 
 \section{Introduction}
 \label{sec:introduction}
+
+Type inference in practical programming languages has historically relied on intrinsic types.
+An expression has an intrinsic type if it is annotated with a type, such that the type
+constrains the control flow of the program.  
+Intrinsic types can occur in at least three ways, by annotating
+expressions, constructions, or patterns.     
+For example, the Standard ML expression \code{fn x => (f x)}
+could be annotated with \code{val f' : int -> int = fn x => (f x)},
+which artificially prunes the allowed control flow of expressions that use \code{f'}.
+As for constructions and patterns, consider a Standard ML program that computes the length of a list,
+using \code{nil} and \code{cons} as data constructors representing lists, 
+and using \code{zero} and \code{succ} as data constructors representing natural numbers.
+
+\block{
+  \J{fun len(nil) = zero}
+  \\
+  \J{\ \ | len(cons(x,xs)) = succ(len(xs))}
+}
+
+\noindent
+Standard ML uses the datatype mechanism to specify intrinsic types on both patterns and structures.
+
+\block{
+  \J{datatype nat = zero | succ of nat} 
+  \\
+  \J{datatype 'a list = nil | cons of 'a * 'a list}
+}
+
+\noindent
+For the constructions with \code{zero} and \code{succ}, the nat specification 
+means that the weakest type the constructions could belong to is \code{nat},
+which forbids mixing the constructions with those not specificated in the datatype, like \code{zero} with \code{nil}: 
+
+\block{
+  \J{fn nil => zero}
+  \\
+  \J{\ | cons(x,xs) => nil}
+}
+
+\noindent
+As for the patterns with \code{nil} and \code{cons}, the list specification 
+means that the strongest assumption allowed for the the sum of the patterns,
+is \code{'a list}. 
+Thus, it forbids pattern matching with on fewer patterns than those in the datatype.
+
+\block{
+  \J{fun nlen(nil) = zero}
+}
+
+Additionally, the list specification 
+means that the strongest assumption allowed for \code{cons} is that its
+content has type \code{'a * 'a list}. Thus, 
+it forbids overspecifying pattern contents,
+like a length function that only works on even length lists.  
+
+\block{
+  \J{fun elen(nil) = zero}
+  \\
+  \J{\ \ | elen(cons(x,cons(y,zs))) = succ(succ(elen(zs)))}
+}
+
+Additionally, the nat datatype prescribes the strongest type
+inferrable for constructions, and    
+
+For instance, the datatype mechanism in Standard ML and related languages 
 
 \TODO{define intrisic types as type annotations that restrict the seach space or control flow of a program}
 
@@ -284,7 +352,7 @@ looking at a few examples.
 A function can be constructed from multiple paths. 
 Consider the function \mathspan{\J{talky}}, which completes a simple English phrase.
 
-\mathblock{
+\block{
   \J{def talky = (}
   \\
   \I \J{[hello;@ => world;@]}
