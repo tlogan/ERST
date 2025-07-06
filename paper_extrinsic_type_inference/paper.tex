@@ -336,7 +336,8 @@ we designed the language of types to share many similarities with predicate logi
 The extrinsic type system is able to infer very precise types by analyzing the control
 flow of program in the form of generating and solving subtyping constraints. 
 In many cases the type system can infer the weakest possible types of parameters,
-and the strongest possible (i.e. most general or principal) types of results.
+and the strongest possible (i.e. most general or principal) types of results,
+all without inhibiting the reusability the code.
 To get a feel for the languages and reasoning capabilities, it's best to start by
 looking at a few examples.
 
@@ -1446,6 +1447,15 @@ by eliminating type forms.
 The static system is a strengthening of the dynamic system, designed to
 ensure that expressions can make progress and satisfy approximate specifications
 represented by types. 
+
+
+\TODO{move definitions before properties}
+
+\TODO{simply describe the desired properties informally as the definition is explained}
+
+\TODO{rename properties to theorems}
+
+
 The entry point into the static system is Proof Typing $(
   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
 )$, which aims to infer types and verify typings. 
