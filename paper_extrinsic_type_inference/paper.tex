@@ -855,7 +855,7 @@ A value may be unit, a function, or a record consisting of only values.
     \inferrule {
       \exists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
       \\
-      p \equiv v \given \sigma 
+      v  \simeq p \given \sigma 
     } {
       (f\ \J{[}p\J{=>}e\J{]})\J{(}v\J{)} \rightsquigarrow e[\sigma]
     }
@@ -894,7 +894,7 @@ Recursion is enabled by the \code{loop} keyword, such that
 \noindent
 A value map assigns variables to values.
 Progression relies on interpretation maps to collect
-values that are relevant from pattern matching \ms{p \equiv v \entails \sigma},
+values that are relevant from pattern matching \ms{v \simeq p \entails \sigma},
 and then to use them in a subsequent expression via substitution 
 \ms{e[\sigma]}
 
