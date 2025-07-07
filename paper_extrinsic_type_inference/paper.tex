@@ -1375,27 +1375,6 @@ the typing holds if the expression is unit.
 For inhabitation of a least fixed point \ms{\delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\alpha},
 the typing holds if the expression also inhabits the inflated type. 
 
-\TODO{next}
-
-\begin{definition}
-  \label{def:expression_congruence}
-  Expression Congruence 
-  \hfill
-  \small
-  \boxed{e_l \cong e_r}
-  \\
-  \begin{mathpar}
-    \inferrule { 
-      \forall \delta, \tau \qua 
-      \delta \satisfies e_l \hastype \tau 
-      \iff
-      \delta \satisfies e_r \hastype \tau
-    } {
-      e_l \cong e_r 
-    } 
-  \end{mathpar}
-\end{definition}
-
 
 % \hfill
 % \begin{definition}
@@ -1420,7 +1399,7 @@ the typing holds if the expression also inhabits the inflated type.
 
 \begin{definition}
   \label{def:model_subtyping}
-  Model Subtyping
+  \emph{model subtyping}
   \hfill
   \small
   \boxed{\delta \satisfies \tau <: \tau}
@@ -1436,10 +1415,12 @@ the typing holds if the expression also inhabits the inflated type.
   \end{mathpar}
 \end{definition}
 
+\noindent
+Model subtyping describes how the spaces of two types compare to each other.
 
 \begin{definition}
   \label{def:model_subtyping_sequence}
-  Model Subtyping Sequence 
+  \emph{model subtyping sequence} 
   \hfill
   \small
   \boxed{\delta \satisfies \Delta}
@@ -1460,9 +1441,15 @@ the typing holds if the expression also inhabits the inflated type.
   \end{mathpar}
 \end{definition}
 
+\noindent
+Model subtyping sequence describes multiple subtypings. 
+
 \begin{definition}
   \label{def:model_typing_sequence}
-  Model Typing Sequence 
+  \emph{model typing sequence} 
+  \hfill
+  \small
+  \boxed{\delta, \sigma \satisfies \Gamma}
   \\
   \begin{mathpar}
     \inferrule {
@@ -1476,10 +1463,13 @@ the typing holds if the expression also inhabits the inflated type.
   \end{mathpar}
 \end{definition}
 
-
+\noindent
+Model typing sequence describes multiples typings of variables.
 
 \section{Static System}
 \label{sec:static_system}
+
+\TODO{next}
 The static system is a strengthening of the dynamic system, designed to
 ensure that expressions can make progress and satisfy approximate specifications
 represented by types. 
@@ -3547,6 +3537,26 @@ by reusing the proof of one proposition as a proof for another.
 \TODO{organize descriptions}
 
 \TODO{describe the important properties in depth}
+
+\begin{definition}
+  \label{def:expression_congruence}
+  Expression Congruence 
+  \hfill
+  \small
+  \boxed{e_l \cong e_r}
+  \\
+  \begin{mathpar}
+    \inferrule { 
+      \forall \delta, \tau \qua 
+      \delta \satisfies e_l \hastype \tau 
+      \iff
+      \delta \satisfies e_r \hastype \tau
+    } {
+      e_l \cong e_r 
+    } 
+  \end{mathpar}
+\end{definition}
+
 
 
 \begin{definition}
