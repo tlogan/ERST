@@ -1557,26 +1557,16 @@ where the variables represent possible types of expressions.
   \end{mathpar}
 \end{definition}
 
-\TODO{next}
-
-% The entry point into the static system is Proof Typing $(
-%   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
-% )$, which aims to infer types and verify typings. 
-% The predicate represents a procedure 
-% that inherits skolem variables $\Theta$, subtypings $\Delta$ and typing constraints $\Gamma$,
-% takes an expression $e$, and then generates a type $\tau$,
-% a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
-
-
 \noindent
 For a given context and expression, 
-proof typing infers a type and a subtyping sequence from the expression,
-such that if the input context is satisfiable,
+proof typing infers a type and a subtyping sequence,
+such that if the context holds,
 then there is a solution to the generated subtyping sequence, such that
-the typing of the inferred type holds.
-The context consists of skolems \ms{\Theta}, subtypings \ms{\Delta}, and typings \ms{\Delta}. 
-The contextual subtypings and typings constrain the search space of valid typings, such that the
-generated subtypings are consistent with them. In fact, the generated subtypings contain
+the expression inhabits the inferred type.
+The context consists of skolems \ms{\Theta}, subtypings \ms{\Delta}, and typings \ms{\Gamma}. 
+The contextual subtypings and typings constrain the search space of valid typings, 
+such that the generated subtypings are consistent with them. 
+In fact, the generated subtypings contain
 all the contextual subtypings, as it keeps the definition a bit less cluttered.
 Skolems are variables that further constrain the search space. 
 The generated constraints must hold for every interpretation.  
@@ -1587,35 +1577,43 @@ in that it can be constrained in any way that is consistent with the other subty
 and the typing. 
 
 
+
+\noindent
+For unit \code{@}, it infers the unit type \J{@}. 
+For a variable, \ms{x}, it looks for a corresponding typing in the context, 
+and infers the type it finds.
+For an empty sequence \ms{\epsilon}, 
+it infers top \code{TOP},
+thereby providing a basis for inferring types of records. 
+For a record \ms{r\ \J{<}l\J{>}e},  
+it recursively constructs the type for each entry, and
+refines their types against each other by compounding intersection.
+
+For a function \ms{f},  
+it delegates the work to two helpers. 
+First, it leverages function typing consolidation 
+\ms{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
+to infer as many types as possible
+and consolidates the results into a sequence of schemes \ms{\Pi}.
+It must consolidate all of the inferred types in order to
+ensure that the inferred type of each 
+path's pattern does not subtype the type of subsequent paths' patterns. 
+The sequence of negatable types \ms{\Xi} can be ignored, as it is only
+exposed for the sake of being used recursively.
+
+\TODO{check if packing is actually necessary here}
+
 \TODO{next}
 
 \TODO{explain the rationale of consolidation points: packing at function, annotation, and fixed point rules}
 
-\noindent
-For the unit expression \J{@}, Proof Typing simply returns the unit type \J{@}. 
-For a variable expression, $x$, Proof Typing looks for a corresponding typing in the environment, 
-and it returns the type it found.
-For an empty expression $\epsilon$, Proof Typing returns the top type \J{TOP},
-thereby providing a basis for constructing types for record expressions. 
-For a non-empty record expression $r\ \J{<}l\J{>}e$, Proof Typing 
-recursively constructs the type for each entry, and
-refines their types against each other via compounded intersection.
+Next, it leverage positive packing 
+\ms{\textbf{pack}^+(... \entails \Pi) = \tau}
+to rewrite each scheme into a type,
+such that the skolems and plastics are converted to
+existential and universal bindings,
+and then combine all the types by compounding intersection.
 
-For a function expression $f$, Proof Typing 
-delegates the work to two helpers. 
-The predicate for path sequence typing 
-$(\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi)$
-constructs a sequence of path types, 
-with each path type associated with a world, represented by $\Pi$.
-Then, the metalanguage function for positive packing 
-$(\textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau)$
-takes the path schemas and for each path schema,
-it rewrites the schema into a type by wrapping the path type in existentials
-and universals qualified by the constraints in the schema's subtyping environment. 
-The positive $+$ annotation on pack indicates that the resulting type 
-is should approximate an expression used in a positive position,
-which determines whether closed and open variables are mapped to
-bindings in existentials or universals.
 
 For projection $e\J{.}l$, Proof Typing
 leverages Proof Subtyping $(... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...)$ 
