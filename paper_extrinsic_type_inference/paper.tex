@@ -326,7 +326,7 @@ We designed the type system around a simple applicative language with pattern ma
 since such a language is syntactically close to predicate logic. Likewise,
 we designed the language of types to share many similarities with predicate logic. 
 The extrinsic type system is able to infer very precise types by analyzing the control
-flow of program in the form of generating and solving subtyping constraints. 
+flow of program in the form of generating and solving subtypings. 
 In many cases the type system can infer the weakest possible types of parameters,
 and the strongest possible (i.e. most general or principal) types of results,
 all without inhibiting the reusability the code.
@@ -428,9 +428,9 @@ input in an list.
 \noindent
 Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
 types are insufficient for describing the weakest safe input type.
-It was not until SuperF introduced a technique for solving subtyping constraints
+It was not until SuperF introduced a technique for solving subtypings
 that a principal type could be automatically constructed for functions like $\J{foo}$
-Our extrinsic type system relies on similar principles of solving subtyping constraints,
+Our extrinsic type system relies on similar principles of solving subtypings,
 and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
 
 \block{
@@ -438,9 +438,9 @@ and likewise, can construct the weakest safe type for $\J{f}$, and thus the prin
 }
 
 \noindent
-Although the subtyping constraints are not present in the type's notation,
+Although the subtypings are not present in the type's notation,
 the intersection of paths is chosen because it represents the weakest type
-consistent with the subtyping constraints on a variable representing the parameter's type. 
+consistent with the subtypings on a variable representing the parameter's type. 
 Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
 Eventually, due to the applications of the parameter $\J{f}$, the type
 system will attempt to find a solution to two constraints on $\J{F}$
@@ -715,13 +715,12 @@ and used without any loss in type inference precision.
 \end{definition}
 
 \noindent
-A program may consist of expressions, records, functions, or sugar. 
-An expression may consist of variables \ms{x}, unit \code{@},
-records \ms{... \J{<}l\J{>} e ...}, functions \ms{...\J{[}p \J{=>} e \J{]}...}, 
-projection \ms{e\J{.}l}, application \ms{e\J{(}e\J{)}}, 
-recursion \ms{\J{loop(}e\J{)}},
-annotations \ms{\J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e},
-and various forms of sugar.
+An expression is a variable \ms{x}, unit \code{@},
+a record \ms{... \J{<}l\J{>} e ...}, a function \ms{...\J{[}p \J{=>} e \J{]}...}, 
+a projection \ms{e\J{.}l}, an application \ms{e\J{(}e\J{)}}, 
+a loop \ms{\J{loop(}e\J{)}},
+an annotation \ms{\J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e},
+or sugar.
 These forms are similar to those seen in other applicative structural languages,
 with a few choices that are a bit less common. One thing that may be
 a bit unconventional is that a function may syntactically consist of 
@@ -780,7 +779,7 @@ For any metalanguage statement or term containing sugar $s$, we assume that $s$ 
 \end{definition}
 
 \noindent
-A pattern may consist of units or records consisting of patterns.
+A pattern is either unit or a record consisting of patterns.
 
 \begin{definition}
   \label{def:value}
@@ -893,7 +892,7 @@ Recursion is enabled by the \code{loop} keyword, such that
 \end{definition}
 
 \noindent
-An expression interpretation map assigns variables to expressions.
+A value map assigns variables to expressions.
 Progression relies on interpretation maps to collect
 values that are relevant from pattern matching \ms{p \equiv v \entails \sigma},
 and then to use them in a subsequent expression via substitution 
@@ -963,57 +962,42 @@ and then to use them in a subsequent expression via substitution
   \end{array}\]
 \end{definition}
 
-\TODO{next}
-
 \noindent
 Types provide the representation for approximate specification.
-To accommodate a high degree of data constructor reusability,
+To accommodate a high degree of structure reusability,
 it is important that the forms of types accommodate a wide range of precision.
 To manage the complexity of the various forms, we subdivide the type forms
 according to some themes.
-A type $\tau$ may be composed of unit $\J{@}$, variables $\alpha$, 
-implication $\kappa$, expansions $\phi$, refinements $\psi$,
-least fixed points $\J{LFP[}\alpha \J{]} \tau$,
-differences $\tau \typdiff \eta$, and sugar $\gamma$.
+A type \ms{\tau} may consist of unit \code{@}, variables \ms{\alpha}, 
+implications, expansions, refinements,
+least fixed points \ms{\J{LFP[}\alpha \J{]} \tau},
+differences \ms{\tau \typdiff \eta}, and sugar.
 
-An implication type $\kappa$ reflects the structure of 
-its inhabitants and may take the form of  
-entries $\J{<}l\J{>}\tau$ or paths $\tau \J{->} \tau$.
 
-An expansion type $\phi$ is either a binary union $\tau \J{|} \tau$ or 
-an indexed union $\J{EXI[}\Theta \J{]} \Delta \J{:} \tau$.
-An expansion type is weaker than its constituent types. 
-An indexed union is parametrized by type variables $\Theta$ 
-and qualified by subtyping constraints $\Delta$.
-It represents the compounded union of all instantiations of its constituent type 
-consistent with its subtyping constraints.
-In effect, the qualification by subtyping constraints provides an upper bound, in which
-the weaker the qualification, the weaker the indexed union.
+An implication \ms{\kappa} may take the form of  
+an entry \ms{\J{<}l\J{>}\tau} or a path \ms{\tau \J{->} \tau},
+reflecting the structure of its inhabitants.
+An expansion \ms{\phi} is either a union \ms{\tau \J{|} \tau} or 
+an existential \ms{\J{EXI[}\Theta \J{]} \Delta \J{:} \tau},
+representing weakenings of their constituent types. 
+An existential is parameterized by type variables \ms{\Theta}
+and positively qualified by subtypings \ms{\Delta}, 
+such that the weaker the qualification, the weaker the existential.
+A refinement \ms{\psi} is either an intersection \ms{\tau \J{\&} \tau} or 
+a universal \ms{\J{ALL[} \Theta \J{]} \Delta \J{:}\tau},
+representing strengthenings of their constituent types. 
+An universal is parametrized by type variables \ms{\Theta} 
+and negatively qualified by subtypings $\Delta$,
+such that the weaker the qualification, the stronger the universal.
 
-A refinement type $\psi$ is either a binary intersection $\tau \J{\&} \tau$ or 
-an indexed intersection $\J{ALL[} \Theta \J{]} \Delta \J{:}\tau$.
-A refinement type is strengthened relative to its constituent types. 
-An indexed intersection is parametrized by type variables $\Theta$ 
-and qualified by subtyping constraints $\Delta$.
-It represents the compounded intersection of all instantiations of its constituent type 
-consistent with its subtyping constraints.
-In effect, the qualification by subtyping constraints provides a lower bound, in which
-the weaker the qualification, the stronger the indexed intersection.
 
-A least fixed point type $\J{LFP[}\alpha \J{]}$ 
-enables the representation of an infinite space of data,
-e.g. natural numbers or lists. 
-A difference type represents subtracting one space from another.
-Its negatable type $\eta$ has a restricted form of either
-a pattern type $\rho$ or an unqualified indexed union 
-over a pattern $\J{EXI[}\Theta \J{]} \rho$, for which the type system
-is complete, thus making its negation sound.  
-This restricted form is of no hindrance to type inference, since the 
-negatable types arise only from patterns, whose forms are sufficiently
-limited.
-A pattern type $\rho$ reflects the forms of pattern expressions, consisting of 
-variables $\alpha$, unit $@$, entries $\J{<} l \J{l} \rho$, intersections $\rho \J{\&} \rho$,
-and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
+A least fixed point \ms{\J{LFP[}\alpha \J{]}}
+represents an infinite space of structures, 
+such as natural numbers or lists. 
+A difference \ms{\tau \typdiff \eta} is a space without inhabitation by certain structures.
+The subtracted part is restricted to a negatable form,
+which is a form that our system can decide the inhabitation
+assuming additional semantics restrictions.
 
 
 \begin{definition} 
@@ -1031,6 +1015,9 @@ and pairs $\rho \J{*} \rho$ (whose form is just syntactic sugar).
     \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{<left>}\ \tau_l)  \J{\&} (\J{<right>}\ \tau_r)
   \end{align*}
 \end{definition} 
+
+
+\TODO{next}
 
 \noindent
 For convenience and clarity, types include syntactic sugar for top $\J{TOP}$, 
@@ -1085,7 +1072,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
 There are a few ancillary structures, upon which both the representation of types and the reasoning with types depend.
 A type variable sequence $\Theta$ is either empty $\epsilon$ or a smaller sequence extended by a single variable $\Theta\ \alpha$
 A subtyping environment $\Delta$ is either empty $\epsilon$ or a smaller environment extended by a single
-subtyping constraint $\Delta \  \tau \J{<:} \tau$.
+subtyping $\Delta \  \tau \J{<:} \tau$.
 A typing environment $\Gamma$ is either empty $\epsilon$ or a smaller environment extended by a single
 typing constraint over a variable $\Gamma\ x \subtypes \tau$.
 a World $\Omega$ is simply a pair of a type variables sequence and a subtyping environment $\Theta, \Delta$.
@@ -1341,7 +1328,7 @@ by eliminating type forms.
 
 \TODO{describe the various rules of model typing}
 
-\TODO{note how indexed intersection disallows vacuous non-empty types, which would allow erroneous expressions to have a type}
+\TODO{note how universal disallows vacuous non-empty types, which would allow erroneous expressions to have a type}
 
 \begin{definition}
   \label{def:expression_congruence}
@@ -1462,9 +1449,9 @@ The entry point into the static system is Proof Typing $(
   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
 )$, which aims to infer types and verify typings. 
 The predicate represents a procedure 
-that inherits skolem variables $\Theta$, subtyping constraints $\Delta$ and typing constraints $\Gamma$,
+that inherits skolem variables $\Theta$, subtypings $\Delta$ and typing constraints $\Gamma$,
 takes an expression $e$, and then generates a type $\tau$,
-a new set of skolem variables $\Theta'$, and a new set of subtyping constraints $\Delta'$.
+a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
 
 \begin{property}
   \label{prop:proof_typing_soundness}
@@ -1522,11 +1509,11 @@ even in some cases where the typing fails}
 \noindent
 The property of Proof Typing Soundness is actually a bit weak on its own. It does not
 require that a program has no errors, since the property could be satisfied vacuously by
-having Proof Typing generate an unsatisfiable set of subtyping constraints $\Delta'$.
+having Proof Typing generate an unsatisfiable set of subtypings $\Delta'$.
 To ensure that a program $e$ has no errors,
 we need Proof Typing Substance \ref{prop:proof_subtyping_substance}, 
-which requires that the subtyping constraints generated by Proof Typing hold. 
-The guarded subtyping constraints must be valid with respect to the skolem variables $\Theta$,
+which requires that the subtypings generated by Proof Typing hold. 
+The guarded subtypings must be valid with respect to the skolem variables $\Theta$,
 and they must be satisfiable with respect to the remaining type variables. 
 
 \begin{property}
@@ -1675,12 +1662,12 @@ with each path type associated with a world, represented by $\Pi$.
 Then, the metalanguage function for positive packing 
 $(\textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau)$
 takes the path schemas and for each path schema,
-it rewrites the schema into a type by wrapping the path type in indexed unions
-and indexed intersections qualified by the constraints in the schema's subtyping environment. 
+it rewrites the schema into a type by wrapping the path type in existentials
+and universals qualified by the constraints in the schema's subtyping environment. 
 The positive $+$ annotation on pack indicates that the resulting type 
 is should approximate an expression used in a positive position,
 which determines whether closed and open variables are mapped to
-bindings in indexed unions or indexed intersections.
+bindings in existentials or universals.
 
 For projection $e\J{.}l$, Proof Typing
 leverages Proof Subtyping $(... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...)$ 
@@ -1762,10 +1749,10 @@ Proof Subtyping $(
 )$ is the most significant of the predicates that the rules of Proof Typing 
 depends on.  
 The predicate represents a procedure 
-that inherits skolem variables $\Theta$, subtyping constraints $\Delta$, 
+that inherits skolem variables $\Theta$, subtypings $\Delta$, 
 and takes two types $\tau_l$ and $\tau_r$, 
 and then generates a new set of skolem variables $\Theta'$
-and a new set of subtyping constraints $\Delta'$.
+and a new set of subtypings $\Delta'$.
 
 \begin{property} 
   \label{prop:proof_subtyping_soundness}
@@ -1815,11 +1802,11 @@ $\Theta' \backslash \Theta$, and it must be valid with respect to the remaining 
 
 The property of Proof Subtyping Soundness is a bit weak on its own. It does not require that 
 the subtyping holds, since the property could be met vacuously by having Proof Subtyping 
-generate an unsatisfiable set of subtyping constraints.
+generate an unsatisfiable set of subtypings.
 To ensure that the subtyping holds,
 we need Proof Subtyping Substance \ref{prop:proof_subtyping_substance}, 
-which requires that the subtyping constraints generated by Proof Subtyping hold. 
-The guarded subtyping constraints must be valid with respect to the skolem variables $\Theta$,
+which requires that the subtypings generated by Proof Subtyping hold. 
+The guarded subtypings must be valid with respect to the skolem variables $\Theta$,
 and they must be satisfiable with respect to the remaining type variables. 
 
 
@@ -1860,7 +1847,7 @@ according to some themes.
 Proof subtyping is reflexive. In other words, a type
 is considered both weaker than and stronger than itself. 
 We implicitly assume alpha conversion for variables
-bound in indexed unions and indexed intersections.
+bound in existentials and universals.
 An algorithmic interpretation could convert to a nameless representation,
 such as de Bruijin indexes \cite{} before comparing type forms.
 
@@ -1953,18 +1940,18 @@ For elimination of a union $(
 )$,
 Proof Subtyping solves the easier sub-problems
 on the union's constituents.
-For elimination of an indexed union $(
+For elimination of an existential $(
 ... \entails \J{EXI[}\Theta_l \J{]} \Omega \J{:}\tau_l \subtypes \tau_r \given ...
 )$, 
-Proof Subtyping ensures that the indexed union's bound variables
+Proof Subtyping ensures that the existential's bound variables
 are not free in the super type $\tau_r$. 
 Then it finds a solution for the qualifiers $\Delta_l$.
-Finally it finds a solution for eliminating the indexed union's body $\tau_l$,
+Finally it finds a solution for eliminating the existential's body $\tau_l$,
 assuming the solution to the qualifiers $\Delta$.
 
-When eliminating the indexed union's body,
+When eliminating the existential's body,
 the the bound variables $\Theta_l$ must be treated as skolem variables.
-Since the indexed union is in the elimination position, 
+Since the existential is in the elimination position, 
 the qualifiers $\Delta_l$ and its solution $\Delta$ indicate 
 the strongest information that can safely be assumed when eliminating the body $\tau_l$.
 Marking $\Theta_l$ as skolem variables ensures that Proof Subtyping
@@ -2036,13 +2023,13 @@ Variable elimination has two cases:
 one for skolem variables $(\alpha \in \Theta)$
 and one for learnable variables $(\alpha \not\in \Theta)$.
 For learnable variable elimination, Proof Subtyping simply learns
-the subtyping constraint that it's proving.
+the subtyping that it's proving.
 However, it must check that the constraint is consistent
 with the other assumptions of the world.
 To check consistency of the subtyping with the assumptions,  
 Proof Subtyping leverages Polar Subtyping Sequence Substitution $(
 ... \entails \Delta[\alpha/\tau]^+ \backslash \Delta \given ...
-)$ to ensure that the subtyping constraints still hold with the substitution of
+)$ to ensure that the subtypings still hold with the substitution of
  the supertype $\tau$ into all positive occurrences
 of $\alpha$ .
 
@@ -2398,7 +2385,7 @@ For least fixed point introduction $(
 Proof Subtyping employs a heuristic $(
 ... \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
 )$ 
-to approximately judge whether or not the subtyping constraint is decidable. 
+to approximately judge whether or not the subtyping is decidable. 
 Once the syntactic forms of the types indicate that a decision can be made,
 then Proof Subtyping simply unrolls the least fixed point type 
 and solves the new subproblem $(
@@ -2483,7 +2470,7 @@ For index union introduce $(
 ... \entails \tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{:}\tau_r \given ...
 )$,
 Proof Subtyping constructs potential witnesses by solving the introduction
-of the indexed union's body $(
+of the existential's body $(
 ... \entails \tau_l \subtypes \tau_r \given ...
 )$, 
 where the witnesses can be inferred from the subtyping environment of the world $\Omega$.
@@ -3349,18 +3336,18 @@ which bypasses the need for intrinsic parametric polymorphism.
 In the previous example, SuperF can infer the principal type for $\J{fooPair}$ by inferring the 
 weakest type of its parameter $\J{f}$, which it achieved by leveraging subtyping to find 
 a type that is compatible with both $\J{123}$ and $\J{true}$.
-The SuperF type system infers subtyping constraints that represent the data flow represented by
+The SuperF type system infers subtypings that represent the data flow represented by
 function application and pattern matching. It relies 
 intersection and union type combinators to represent the strongest or weakest interpretations
-of type variables that meet certain subtyping constraints.   
+of type variables that meet certain subtypings.   
 With SuperF's type inference mechanism, it is possible to infer the principal type for the 
 previous problematic example $\J{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}$.
 
 SuperF has a restricted language of types. It is concerned with the type inference
 of functions, and it is agnostic towards type inference of constructors. 
-It restricts the type and subtyping constraint syntax according to polarity; that is, a
+It restricts the type and subtyping syntax according to polarity; that is, a
 types position within an implication type or subtyping relation. Depending on polar position,
-universal types (i.e. indexed intersections) may or may not be qualified by subtyping constraints.
+universal types (i.e. universals) may or may not be qualified by subtypings.
 The authors of SuperF highlight some technical features, including extrusion and distributivity.
 Their extrusion technique ensures that types are not overly specialized
 when inferring types of nested functions. Their distributivity technique allows
@@ -3369,9 +3356,9 @@ They point out that the distributivity rule is an improvement for most cases, bu
 problems for which it more actually more restrictive.
 
 
-The high level ideas in SuperF of relying on subtyping constraints were very influential in our work.
+The high level ideas in SuperF of relying on subtypings were very influential in our work.
 Like SuperF, our system relies syntax-directed subtyping rules to check constraints and to learn 
-new subtyping constraints by traversing previously learned constraints;
+new subtypings by traversing previously learned constraints;
 Additionally, our system also relies on instantiation and skolemization in its subtyping rules. 
 Type polarity is also important in our system.
 However, our system does not restrict the syntax of types based on polarity. Instead, we rely on
@@ -3427,7 +3414,7 @@ the weakest type of parameters.
 To extend type inference of scripting languages further, MLStruct \cite{} and others like MLSub \cite{}, 
 leveraged the flow information to infer both input types and output types of functions.
 MLStruct, along with SuperF, represents some of the foundational ideas of the MLScript language.
-Like SuperF, it learns the data flow of programs in terms of subtyping constraints.
+Like SuperF, it learns the data flow of programs in terms of subtypings.
 Other than our system, it appears that MLStruct has the best type inference of constructors
 with the least amount of intrinsic type requirements. 
 However, MLStruct still has a significant intrinsic type requirement, which reduces flexibility compared
@@ -3438,7 +3425,7 @@ As our tests (Experiment \ref{experi:typing_structures})
 illustrate, it is not possible to type a function that expects only even numbers that is interoperable with natural numbers.
 Moreover, the additional annotation burden alone would prevent the analysis of untyped code without
 significant effort in augmenting the code with annotations.
-In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
+In contrast to MLStruct, our system relies completely on learning data flow in the form of subtypings
 without any annotation requirements on constructors. 
 
 The common ingredient in all of these systems that perform some amount of extrinsic type inference is
@@ -3451,7 +3438,7 @@ Additionally, there are similarities between type inference with subtyping and c
 In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
 determined by learning subset constraints from the control-flow of the program. 
 Instead of labels, type inference with subtyping associate types  
-with expressions and learns subtyping constraints.
+with expressions and learns subtypings.
 
 \TODO{discuss recursive types}
 
@@ -3466,7 +3453,7 @@ We have presented a novel extrinsic type inference system
 that can guarantee programs are bug-free while maintaining
 code-reusability nearly on par with untyped scripting languages,
 and exceeding that of an previous type inference system we know of.  
-We have incorporated previous studied ideas of subtyping constraints,
+We have incorporated previous studied ideas of subtypings,
 intersection types, union types, parametric types, and recursive types into
 a cohesive design that enables more principal types to be inferred 
 and more subtyping relations to be verified than in previous systems. 
@@ -3918,14 +3905,14 @@ In the case where both environments are empty
 $
   \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
 $, subtyping duality correspondence simply holds.
-In the case where the subtyping constraints are the same,
+In the case where the subtypings are the same,
 the upper bounded variable $\alpha_\nu$ must not appear in the subtype $\tau_l$;
 the lower bounded variable $\alpha_\mu$ must not appear in the supertype $\tau_r$;
 and the correspondence must hold for the previous constraints in the environment
 $\alpha_\nu \downarrow \Delta_\nu \fallingdotseq \alpha_\mu \uparrow \Delta_\mu$
 .
 Lastly, subtyping duality correspondence holds if
-the last subtyping constraint of each subtyping environment contains
+the last subtyping of each subtyping environment contains
 the path type upper bounds $\alpha_\nu \J{<:} \alpha_l \J{->} \alpha_r$
 and pair type lower bounds $\alpha_l \J{*} \alpha_r \J{<:} \alpha_\mu$ on the specified variables,
 and the the correspondence holds for the previous constraints in the environment
@@ -3977,10 +3964,10 @@ constructs a type $\tau'$ from the schemas $\Pi$
 such that for each schema $(\Theta, \Delta, \tau)$,
 it binds the variables of the type $\tau$ within
 some combination of 
-indexed unions and/or indexed intersections,
+existentials and/or universals,
 where indexes are qualified by the constraints 
 of the subtyping environment $\Delta$.
-The choice of binding in an indexed union or indexed intersection is 
+The choice of binding in an existential or universal is 
 determined by whether the variable is open ($\alpha \not\in \Theta$)
 or closed ($\alpha \in \Theta$)
 and whether the interpretation is 
