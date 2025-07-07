@@ -892,7 +892,7 @@ Recursion is enabled by the \code{loop} keyword, such that
 \end{definition}
 
 \noindent
-A value map assigns variables to expressions.
+A value map assigns variables to values.
 Progression relies on interpretation maps to collect
 values that are relevant from pattern matching \ms{p \equiv v \entails \sigma},
 and then to use them in a subsequent expression via substitution 
@@ -1017,16 +1017,15 @@ assuming additional semantics restrictions.
 \end{definition} 
 
 
-\TODO{next}
 
 \noindent
 For convenience and clarity, types include syntactic sugar for top $\J{TOP}$, 
 bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
 For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
 
-
 \begin{definition}
   \label{def:sequence}
+  \small
   \[\begin{array}[t]{rr@{}l}
     \com{type var seq} &
     \nonterm{\Theta} & \is \epsilon \sep \Theta\ \alpha 
@@ -1069,20 +1068,16 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
 \end{definition}
 
 
-There are a few ancillary structures, upon which both the representation of types and the reasoning with types depend.
-A type variable sequence $\Theta$ is either empty $\epsilon$ or a smaller sequence extended by a single variable $\Theta\ \alpha$
-A subtyping environment $\Delta$ is either empty $\epsilon$ or a smaller environment extended by a single
-subtyping $\Delta \  \tau \J{<:} \tau$.
-A typing environment $\Gamma$ is either empty $\epsilon$ or a smaller environment extended by a single
-typing constraint over a variable $\Gamma\ x \subtypes \tau$.
-a World $\Omega$ is simply a pair of a type variables sequence and a subtyping environment $\Theta, \Delta$.
-A world represents the context for judging a typing or a subtyping relation.
-
-
-For clarity, we omit writing $\epsilon$ explicitly when describing semantics or instances of the forms.
+\noindent
+There are various scenarios where objects should be collected into in sequences or sets.
+For metalanguage operations or predicates that are generic with respect the form of a collection's items,
+it is convenient to have a composite sequence.
+A sequence is either empty \ms{\epsilon} or an extension,
+such as \ms{C\ \iota} in the case of the composite sequence. 
+For clarity, we omit writing \ms{\epsilon} explicitly when describing semantics or instances of the forms.
 That is, for any structure, if there is a malformed structure due to a missing piece, 
 we assume it is replaced by a well-formed structure, 
-where $\epsilon$ is inserted wherever necessary to make it well-formed.
+where \ms{\epsilon} is inserted wherever necessary to make it well-formed.
 
 
 \begin{definition} 
@@ -1107,6 +1102,11 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
   \]
 \end{definition} 
 
+\noindent
+In order to leverage set arithmetic and its theory,
+we implicitly convert sequences into sets. 
+We assume that any sequence \ms{C} may be implicitly replaced with \ms{\textbf{set}(C)}.
+
 \begin{definition} 
   \label{def:set_sequencing}
   \emph{set sequencing}
@@ -1130,11 +1130,11 @@ where $\epsilon$ is inserted wherever necessary to make it well-formed.
 \end{definition} 
 
 \noindent
-To keep the reinvention of basic definitions and theorems to a minimum, 
-we may implicitly convert collections into sets, or sets into collections.
-We assume that any collection term $C$ is implicitly replaced with $\textbf{set}(C)$,
-or any set term $S$ is implicitly replaced with $\textbf{collect}(S)$, if it helps
-us make progress.
+Likewise, it also beneficial to convert sets back into sequences, to leverage
+definitions that decompose sequences according to their structures. 
+We assume that any set \ms{S} may be implicitly replaced with \ms{\textbf{seq}(S)}.
+
+
 
 % \begin{definition}
 %   \label{def:stability}
@@ -1189,7 +1189,13 @@ us make progress.
   \end{array}\]
 \end{definition}
 
-
+\noindent
+A type map assigns variables to types.
+Since a type may be constructed from variables, it 
+is necessary to specify an interpretation of the variables
+when judging the inhabitation of the type.
+Thus, typing relies on type maps to provide interpretations
+for type variables.
 
 \begin{definition}
   \label{def:model_typing}
@@ -1315,6 +1321,8 @@ us make progress.
     } 
   \end{mathpar}
 \end{definition}
+
+\TODO{next}
 
 \noindent
 Model typing describes how the various forms of 
