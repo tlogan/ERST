@@ -1447,32 +1447,21 @@ Model typing sequence describes multiples typings of variables.
 \section{Static System}
 \label{sec:static_system}
 
-\TODO{next}
+The static system consists of ways to characterize abstract expressions 
+and abstract types without relying on progression to concretize and reduce expressions. 
+The two main components are proof typing and proof subtyping.
+Proof typing is a strengthening of model typing, and 
+proof subtyping is a strengthening of model subtyping.
+When viewed as an algorithm,
+they form the core of the type inference system. 
+Proof typing generates subtypings approximating the control flow of an expression, 
+and then leverages proof subtyping to solve for the variables in the the subtypings,
+where the variables represent possible types of expressions.
 
-\noindent
-The static system is a strengthening of the dynamic system, designed to
-ensure that expressions can make progress and satisfy approximate specifications
-represented by types. 
-
-
-\TODO{move definitions before properties}
-
-\TODO{simply describe the desired properties informally as the definition is explained}
-
-\TODO{rename properties to theorems}
-
-
-The entry point into the static system is Proof Typing $(
-  \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
-)$, which aims to infer types and verify typings. 
-The predicate represents a procedure 
-that inherits skolem variables $\Theta$, subtypings $\Delta$ and typing constraints $\Gamma$,
-takes an expression $e$, and then generates a type $\tau$,
-a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
 
 \begin{definition} 
   \label{def:proof_typing}
-  Proof Typing
+  \emph{proof typing}
   \hfill 
   \small
   \boxed{\Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'}
@@ -1567,6 +1556,16 @@ a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
     }
   \end{mathpar}
 \end{definition}
+
+\TODO{next}
+
+% The entry point into the static system is Proof Typing $(
+%   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+% )$, which aims to infer types and verify typings. 
+% The predicate represents a procedure 
+% that inherits skolem variables $\Theta$, subtypings $\Delta$ and typing constraints $\Gamma$,
+% takes an expression $e$, and then generates a type $\tau$,
+% a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
 
 \TODO{explain the rationale of consolidation points: packing at function, annotation, and fixed point rules}
 
