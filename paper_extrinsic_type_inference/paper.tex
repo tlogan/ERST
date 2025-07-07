@@ -1567,13 +1567,31 @@ where the variables represent possible types of expressions.
 % takes an expression $e$, and then generates a type $\tau$,
 % a new set of skolem variables $\Theta'$, and a new set of subtypings $\Delta'$.
 
+
+\noindent
+For a given context and expression, 
+proof typing infers a type and a subtyping sequence from the expression,
+such that if the input context is satisfiable,
+then there is a solution to the generated subtyping sequence, such that
+the typing of the inferred type holds.
+The context consists of skolems \ms{\Theta}, subtypings \ms{\Delta}, and typings \ms{\Delta}. 
+The contextual subtypings and typings constrain the search space of valid typings, such that the
+generated subtypings are consistent with them. In fact, the generated subtypings contain
+all the contextual subtypings, as it keeps the definition a bit less cluttered.
+Skolems are variables that further constrain the search space. 
+The generated constraints must hold for every interpretation.  
+Proof typing may also generate additional skolems, which can be used to constrain
+subsequent sub-problems.
+If a variable is not in the set of skolems, then we consider it to be plastic,
+in that it can be constrained in any way that is consistent with the other subtypings
+and the typing. 
+
+
+\TODO{next}
+
 \TODO{explain the rationale of consolidation points: packing at function, annotation, and fixed point rules}
 
 \noindent
-The definition of Proof Typing (Def. \ref{def:proof_typing}) consists of a few rules, which are 
-distinguished by the form of the expression. The definition is recursive and also depends on
-other definitions, which we will elaborate on as they arise.
-
 For the unit expression \J{@}, Proof Typing simply returns the unit type \J{@}. 
 For a variable expression, $x$, Proof Typing looks for a corresponding typing in the environment, 
 and it returns the type it found.
