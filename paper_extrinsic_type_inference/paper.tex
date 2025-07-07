@@ -1206,13 +1206,11 @@ for type variables.
   \\
   \begin{mathpar}
     \inferrule { 
+      e \rightsquigarrow e'
+      \\
+      \delta \satisfies e' \hastype \tau 
     } {
-      \delta \satisfies \J{@} \hastype \J{@}
-    } 
-
-    \inferrule { 
-    } {
-      \delta \satisfies \epsilon \hastype \J{TOP}
+      \delta \satisfies e \hastype \tau 
     } 
 
     \inferrule { 
@@ -1220,7 +1218,7 @@ for type variables.
       \\
       \delta \satisfies v \hastype \tau 
       \\
-      \forall v' .\ \J{<} l \J{>} v' \in g \implies v' = v
+      \forall v' \qua \J{<} l \J{>} v' \in g \implies v' = v
     } {
       \delta \satisfies g \hastype \J{<} l \J{>} \tau
     } 
@@ -1228,31 +1226,31 @@ for type variables.
     \inferrule { 
       \delta \satisfies f \hastype \tau_l \J{->} \tau_r
     } {
-      \delta \satisfies f \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
+      \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
     } 
 
     \inferrule { 
-      \forall \sigma.\ 
+      \forall \sigma \qua
       \delta \satisfies p[\sigma] \hastype \tau_l
       \implies
       \delta  \satisfies e[\sigma] \hastype \tau_r
       \\\\
-      \forall \tau_l'\ \tau_r'.\ 
+      \forall \tau_l', \tau_r' \qua
       \delta \satisfies f \hastype \tau_l' \J{->} \tau_r'
       \implies
       \delta \satisfies \tau_l \subtypes \tau_l'
       \implies
       \delta \satisfies \tau_r' \subtypes \tau_r
     } {
-      \delta \satisfies f \J{?}p \J{=>} e \hastype \tau_l \J{->} \tau_r
+      \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
     }
 
     \inferrule { 
-      \delta \satisfies e \hastype \tau_l
+      \alpha \slash \tau \in \delta
       \\
-      \neg\ (\delta \satisfies e \hastype \tau_r)
+      \delta \satisfies e \hastype \tau
     } {
-      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
+      \delta \satisfies e \hastype \alpha 
     } 
 
     \inferrule { 
@@ -1276,16 +1274,6 @@ for type variables.
     } 
 
     \inferrule { 
-      \textbf{dom}(\delta') \subseteq \Theta
-      \\
-      \delta \oplus \delta' \satisfies \Delta 
-      \\
-      \delta \oplus \delta' \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
-    } 
-
-    \inferrule { 
       \forall \delta' \qua
       \textbf{dom}(\delta') \subseteq \Theta \implies
       \delta \oplus \delta' \satisfies \Delta \implies 
@@ -1299,42 +1287,60 @@ for type variables.
     } 
 
     \inferrule { 
+      \textbf{dom}(\delta') \subseteq \Theta
+      \\
+      \delta \oplus \delta' \satisfies \Delta 
+      \\
+      \delta \oplus \delta' \satisfies e \hastype \tau
+    } {
+      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
+    } 
+
+    \inferrule { 
+    } {
+      \delta \satisfies \J{@} \hastype \J{@}
+    } 
+
+    \inferrule { 
       \delta \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
     } {
       \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
     } 
 
     \inferrule { 
-      e \rightsquigarrow e'
+      \delta \satisfies e \hastype \tau_l
       \\
-      \delta \satisfies e' \hastype \tau 
+      \neg\ (\delta \satisfies e \hastype \tau_r)
     } {
-      \delta \satisfies e \hastype \tau 
-    } 
-
-    \inferrule { 
-      \alpha \slash \tau \in \delta
-      \\
-      \delta \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \alpha 
+      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
     } 
   \end{mathpar}
 \end{definition}
 
+\noindent
+Model typing describes what expressions inhabit what types,
+according to the forms of types, the forms of values, and how expressions
+progress into values. 
+It imbues types with semantics, which we use
+to guide and judge the design of our type inference system. 
+
+A typing holds if its expression can make progress and 
+the typing holds for the reduced form.
+
+For inhabitation of a entry \ms{\delta \satisfies g \hastype \J{<}l\J{>}\tau},
+the typing holds if the the expression is a record value, and
+there is an entry in the record whose content inhabits     
+the content of the entry type. Additionally, there must be just one
+value per entry in the record. 
+
 \TODO{next}
 
-\noindent
-Model typing describes how the various forms of 
-types are introduced based on the various forms of values. 
-There are no rules for elimination 
-of type forms. Rather, the progression of expressions is leveraged to eliminate
-expression forms, from which further type forms may be introduced.
-The indirection into progression is not practical, but it guides the design 
-of a sound type system that can directly prove the validity of typings and subtypings 
-by eliminating type forms.
+For inhabitation of a variable \ms{\delta \satisfies e \hastype \alpha},
+the typing holds if there's an interpretation for which the typing holds. 
+For inhabitation of unit \ms{\delta \satisfies \J{@} \hastype \J{@}},
+the typing holds if the expression is unit.
 
-\TODO{describe the various rules of model typing}
+
 
 \TODO{note how universal disallows vacuous non-empty types, which would allow erroneous expressions to have a type}
 
