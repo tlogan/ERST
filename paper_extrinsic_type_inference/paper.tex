@@ -1594,7 +1594,7 @@ it delegates the work to two helpers.
 First, it leverages function typing consolidation 
 \ms{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
 to infer as many types as possible
-and consolidates the results into a sequence of schemes \ms{\Pi}.
+and consolidates the results into a sequence of schemas \ms{\Pi}.
 It must consolidate all of the inferred types in order to
 ensure that the inferred type of each 
 path's pattern does not subtype the type of subsequent paths' patterns. 
@@ -1602,7 +1602,7 @@ The sequence of negatable types \ms{\Xi} can be ignored, as it is only
 exposed for the sake of being used recursively.
 Next, it leverage positive packing 
 \ms{\textbf{pack}^+(... \entails \Pi) = \tau}
-to rewrite each scheme into a type,
+to rewrite each schema into a type,
 such that the skolems and plastics are converted to
 existential and universal bindings,
 and then combine all the types by compounding intersection.
@@ -1611,92 +1611,56 @@ control flows of application can be verified even when
 the best approximation of the type of the argument
 is less precise than the pattern of any one path.
 
-\TODO{next}
 
-For projection $e\J{.}l$, Proof Typing
-leverages Proof Subtyping $(... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...)$ 
-to check that there is an entry with the label $l$ 
-in the supposed record $e$ with type $\tau'$, 
-and it learns a lower bound 
-on the type of the body $\alpha$, which is associated with that label.
-For application $e_f\J{(}e_a\J{)}$, Proof Typing
-leverages Proof Subtyping $(... \entails \tau_f \subtypes \tau_a \J{->} \alpha \given ...)$
-to check that that the function $e_f$ can actually
-map the argument $e_a$ to a result. It learns a lower bound 
-on the type of the result $\alpha$, which is associated with that argument.
-For an annotated binding, $\J{def}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'$, 
-Proof Typing checks the definition's source $e$ against the annotation $\tau_a$,
-and adds the annotation to the typing environment when checking the continuation $e'$.
-
-For a looping expression, $\J{loop(}e{)}$, Proof Typing
-eagerly factors the paths of the recursive function 
-to construct a single path type with an recursive type as its input and an recursive type as its output. 
-First, it ensures that argument of the fixed point combinator $e$ is indeed a 
-function that returns a function.
-The rule infers its type $(\Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta')$
-and then rewrites it as a single path containing multiple path schemas $(
-  \Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi_\nu
-)$
-. 
-Then, by leveraging subtyping $(... \entails \tau \subtypes \alpha_l \J{->} \alpha_r \given ...)$, 
-it gathers all the path types that approximate the body of $e$ (via its type $\tau$)
-into a sequence $\Pi$, which pairs each parametric path type with a world to qualify its meaning.
-As it collects the path schemas, it leverages positive type interpretation 
-$\llbracket ... \entails \Delta', \alpha_l \J{->} \alpha_r \rrbracket^+$ 
-to instantiate the parametric path type with interpretations consistent with its corresponding world. 
-This interpretation makes the path type more readable and the subtyping environment more compact.
+For projection \ms{e\J{.}l}, 
+it delegates to proof subtyping 
+\ms{... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...}
+to check that there is an entry with the label \ms{l}
+in the source expression's type \ms{\tau}.
+With subtyping, it learns a lower bound on the type of the entry's content \ms{\alpha}.
+For application \ms{e_f\J{(}e_a\J{)}}, 
+it delates to proof subtyping 
+\ms{... \entails \tau_f \subtypes \tau_a \J{->} \alpha \given ...}
+to check that that the function \ms{e_f} can actually
+map the argument \ms{e_a} to a result. With subtyping, 
+it learns a lower bound on the type of the result \ms{\alpha}.
+For an annotation \ms{\J{def}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'}, 
+it first delegates to a few helpers. 
+First it leverages typing consolidation \ms{\Theta, \Delta, \Gamma \entails e \hastype \Pi}
+to infer as many possible schemas for the source expression \ms{e}.
+Then it packs all the schemas together and ensures that the packed type
+subtypes the type annotation.
+It assigns the annotated type to the defined variable in the contextual typing
+as it proceeds to infer the type of the continuation \ms{e'}, thereby
+artificially restricting the permissible control flow. 
 
 
-      % 
-      % \\
-      % 
-      % \\\\
-      % \alpha_\nu \downarrow \Pi_\nu
-      % \fallingdotseq 
-      % \alpha_\mu \uparrow \Pi_\mu
-      % \\
-      % \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
-      % \\\\
-      % \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
-      % \\
-      % \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
-
-
-
-
-
-Using the whole collection path schemas $\Pi$, 
-Proof Typing delegates to Schema Sequence Duality
-$(
+For a loop \ms{\J{loop(}e\J{)}}, 
+it eagerly factors the paths of the recursive function 
+to construct a single path type 
+with an recursive type as its antecedent and an recursive type as its consequent. 
+First, it infers the type of the fixed point combinators argument \ms{e},
+and it leverages loop subtyping consolidation 
+\ms{\Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi^\nu}
+to ensure the argument has a  
+form compatible with looping and 
+to collect as many type schemas of its paths as possible.  
+It leverage schema sequence duality 
+\ms{
   \alpha_\nu \downarrow \Pi_\nu
   \fallingdotseq 
   \alpha_\mu \uparrow \Pi_\mu
-)$, which rewrites the implicitly co-recursive path schemas into
+}, which rewrites the implicitly co-recursive path schemas into
 implicitly recursive pair schemas. 
-Rewriting the co-recursive paths into recursive pairs is the first
-step towards factoring the infinite paths of the recursive function into a weaker single path.
-By leveraging the negative packing $\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu$,
-the qualification by the worlds becomes embedded in a single type $\tau_\mu$. 
-Finally, it makes recursive nature of the relational type explicit,
-by wrapping the type in a least fixed point $\J{LFP[} \alpha_\mu \J{]}$, 
-and it leverages the factorization predicate on the left of the pair $(
-  \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
-)$
-and the right of the pair $(
-  \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<right>}\ \tau_r
-)$ 
-to factor the recursive relational type into a recursive antecedent and a recursive consequent
-of a single path type.
+Then, it leverages negative packing \ms{\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu},
+and constructs an explicitly recursive type by wrapping it in a least fixed point
+\ms{\J{LFP[}\alpha_\mu\J{]}\tau_\mu}.
+It then leverages factorization \ms{
+  \Vdash \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+} to factor out the left part of the recursive pair, and does the same for the right part. 
+Finally from the left and right parts, it forms a single path type
+with a least fixed point for both the antecedent and the consequent. 
 
-Proof Subtyping $(
-  \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
-)$ is the most significant of the predicates that the rules of Proof Typing 
-depends on.  
-The predicate represents a procedure 
-that inherits skolem variables $\Theta$, subtypings $\Delta$, 
-and takes two types $\tau_l$ and $\tau_r$, 
-and then generates a new set of skolem variables $\Theta'$
-and a new set of subtypings $\Delta'$.
 
 \begin{definition} 
   \label{def:proof_subtyping}
@@ -1705,6 +1669,8 @@ and a new set of subtypings $\Delta'$.
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
 \end{definition}
+
+\TODO{next}
 
 \noindent
 The subtyping relation must consider the forms of both types in the subtyping relation.
