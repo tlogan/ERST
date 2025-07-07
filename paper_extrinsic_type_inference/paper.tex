@@ -894,7 +894,7 @@ Recursion is enabled by the \code{loop} keyword, such that
 \noindent
 A value map assigns variables to values.
 Progression relies on interpretation maps to collect
-values that are relevant from pattern matching \ms{v \simeq p \entails \sigma},
+values that are relevant from pattern matching \ms{v \simeq p \given \sigma},
 and then to use them in a subsequent expression via substitution 
 \ms{e[\sigma]}
 
@@ -1246,11 +1246,11 @@ for type variables.
     }
 
     \inferrule { 
-      \alpha \slash \tau \in \delta
+      \delta \satisfies e \hastype \tau_l
       \\
-      \delta \satisfies e \hastype \tau
+      \neg\ (\delta \satisfies e \hastype \tau_r)
     } {
-      \delta \satisfies e \hastype \alpha 
+      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
     } 
 
     \inferrule { 
@@ -1297,6 +1297,14 @@ for type variables.
     } 
 
     \inferrule { 
+      \alpha \slash \tau \in \delta
+      \\
+      \delta \satisfies e \hastype \tau
+    } {
+      \delta \satisfies e \hastype \alpha 
+    } 
+
+    \inferrule { 
     } {
       \delta \satisfies \J{@} \hastype \J{@}
     } 
@@ -1307,13 +1315,6 @@ for type variables.
       \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
     } 
 
-    \inferrule { 
-      \delta \satisfies e \hastype \tau_l
-      \\
-      \neg\ (\delta \satisfies e \hastype \tau_r)
-    } {
-      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
-    } 
   \end{mathpar}
 \end{definition}
 
@@ -1323,8 +1324,7 @@ according to the forms of types, the forms of values, and how expressions
 progress into values. 
 It imbues types with semantics, which we use
 to guide and judge the design of our type inference system. 
-
-A typing holds if its expression can make progress and 
+In general, a typing holds if its expression can make progress and 
 the typing holds for the reduced form.
 
 For inhabitation of a entry \ms{\delta \satisfies g \hastype \J{<}l\J{>}\tau},
@@ -1332,17 +1332,50 @@ the typing holds if the the expression is a record value, and
 there is an entry in the record whose content inhabits     
 the content of the entry type. Additionally, there must be just one
 value per entry in the record. 
+For inhabitation of a path 
+\ms{\delta \satisfies f\ \J{[}p \J{=>} e \J{]} \hastype \tau_l\J{->}\tau_r},
+the typing holds if the the expression is a function,
+and there is one path in the function where 
+the typing of the path body holds whenever the typing of the pattern holds.   
+Additionally, since the paths of a function are tried in order, such that 
+only the result of the first matched path is returned,
+it is required that either the antecedent of the path type
+is not weaker than the antecedent of preceding paths 
+or the consequent of the path type is weaker than the consequent
+of preceding paths. 
 
-\TODO{next}
+For inhabitation of a difference 
+\ms{\delta \satisfies e \hastype \tau_l \typdiff \tau_r},
+the typing holds if the expression inhabits the left type
+but not the right right.
+For inhabitation of a intersection 
+\ms{\delta \satisfies e \hastype \tau_l \J{\&} \tau_r},
+the typing holds if the expression inhabits both the
+left type and the right type. 
+For inhabitation of a union 
+\ms{\delta \satisfies e \hastype \tau_l \J{|} \tau_r},
+the typing holds if the expression inhabits either the
+left type or the right type. 
+
+For inhabitation of a universal 
+\ms{\delta \satisfies e \hastype \J{ALL[} \Theta \J{]}\Delta\J{:}\tau},
+the typing holds if the expression inhabits the constituent type,
+under all interpretations of bound variables that satisfy the qualifiers. 
+To avoid accepting an erroneous expression inhabiting a vacuous
+type, it is required that the qualifiers are satisfiable.  
+For inhabitation of an existential 
+\ms{\delta \satisfies e \hastype \J{ALL[} \Theta \J{]}\Delta\J{:}\tau},
+the typing holds if qualifiers and the inhabitation of the constituent type
+are satisfiable by an interpretation of the bound variables.
 
 For inhabitation of a variable \ms{\delta \satisfies e \hastype \alpha},
 the typing holds if there's an interpretation for which the typing holds. 
 For inhabitation of unit \ms{\delta \satisfies \J{@} \hastype \J{@}},
 the typing holds if the expression is unit.
+For inhabitation of a least fixed point \ms{\delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\alpha},
+the typing holds if the expression also inhabits the inflated type. 
 
-
-
-\TODO{note how universal disallows vacuous non-empty types, which would allow erroneous expressions to have a type}
+\TODO{next}
 
 \begin{definition}
   \label{def:expression_congruence}
