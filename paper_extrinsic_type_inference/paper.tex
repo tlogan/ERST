@@ -1600,20 +1600,18 @@ ensure that the inferred type of each
 path's pattern does not subtype the type of subsequent paths' patterns. 
 The sequence of negatable types \ms{\Xi} can be ignored, as it is only
 exposed for the sake of being used recursively.
-
-\TODO{check if packing is actually necessary here}
-
-\TODO{next}
-
-\TODO{explain the rationale of consolidation points: packing at function, annotation, and fixed point rules}
-
 Next, it leverage positive packing 
 \ms{\textbf{pack}^+(... \entails \Pi) = \tau}
 to rewrite each scheme into a type,
 such that the skolems and plastics are converted to
 existential and universal bindings,
 and then combine all the types by compounding intersection.
+Packing the path types together ensures that certain
+control flows of application can be verified even when  
+the best approximation of the type of the argument
+is less precise than the pattern of any one path.
 
+\TODO{next}
 
 For projection $e\J{.}l$, Proof Typing
 leverages Proof Subtyping $(... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...)$ 
