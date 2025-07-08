@@ -351,11 +351,41 @@ choose(id)(auto_prime)
     print(code)
     assert infer_typ(code, ctx(["choose", "id", "auto_prime"]))
 
+######### DEBUG 
+def test_subtyping_debug():
+
+#     lower = (f"""
+# (ALL[G004] ((ALL[A] (A -> A)) <: G004)  : ((LFP[R] (<nil> @ | <cons> (G004 * R))) -> G004))
+#     """)
+
+#     upper = (f"""
+# (LFP[R] (<nil> @ | <cons> ((ALL[A] (A -> A)) * R))) -> Z
+#     """)
+
+    lower = (f"""
+(ALL[A] (A <: @ -> @): (A -> (A -> A)))
+    """)
+# TODO: how can I argue that it's safe to strengthen the upper bound of A when instantiating with a lower bound?
+
+    upper = (f"""
+(ALL[A] (A -> A)) -> Z
+    """)
+
+    worlds = solve_subtyping(lower, upper)
+    for i, world in enumerate(worlds):
+        print(f"""
+=========================
+world {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+constraints:
+{analyzer.concretize_constraints(world.constraints)}
+=========================
+        """)
+
 def test_typing_A9():
     code = f"""
 foo(choose(id))(ids)
     """
-    print(code)
     assert infer_typ(code, ctx(["foo", "choose", "ids", "id"]))
 
 def test_typing_A10():
@@ -980,21 +1010,16 @@ def test_typing_structures_5():
     print(code)
     assert infer_typ(code)
 
+
 ###############################################################
 ###############################################################
 
 if __name__ == '__main__':
     pass
     ##########################
-    # test_typing_A9()
-
-    # this probably fails due to lack of factoring in subtyping #
-    # test_max()
-
     # test_recursive_relational_factorization_learning_in_subtyping()
     # test_recursive_relational_factorization_learning_in_typing()
     # test_recursive_pair()
-
     # test_length()
     # test_lted()
     # test_max()
@@ -1010,8 +1035,11 @@ if __name__ == '__main__':
     # test_variable_subtypes_tag_pair()
     # test_free_var_annotation()
     # test_typing_structures_2()
-    test_max()
+    # test_max()
     # test_recursive_relational_factorization_learning_in_typing()
+    # test_typing_A9()
+    # test_subtyping_debug()
+    # test_max()
 
 
 

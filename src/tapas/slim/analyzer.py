@@ -1771,7 +1771,9 @@ class Solver:
 
         big_typ = base
         for result in results:
-            t = self.interpret_polar_typ(polarity, result.world.closedids, result.world.constraints, result.typ)
+            m = self.interpret_ids_polar(polarity, result.world.closedids, result.world.constraints)
+            t = sub_typ(m, result.typ)
+            # t = self.interpret_polar_typ(polarity, result.world.closedids, result.world.constraints, result.typ)
             influential_ids = result.world.closedids.union(extract_free_vars_from_typ(s(), t))
             influential_constraints =  filter_constraints_by_all_variables(result.world.constraints, influential_ids)
             ctyp = self.make_constraint_typ(polarity)(s(), result.world.closedids, influential_constraints, t)
@@ -1972,7 +1974,29 @@ class Solver:
             for id in extract_free_vars_from_typ(s(), st.lower) 
         )
 
-    def interpret_negative_id(self, constraints : PSet[Subtyping], id : str) -> Typ:
+    ###############################################3
+    def interpret_ids_strongest(self, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
+        fids = extract_free_vars_from_constraints(ignore, constraints)
+        return pmap({
+            fid : self.interpret_id_strongest(constraints, fid) 
+            for fid in fids
+        })
+
+    def interpret_ids_weakest(self, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
+        fids = extract_free_vars_from_constraints(ignore, constraints)
+        return pmap({
+            fid : self.interpret_id_weakest(constraints, fid) 
+            for fid in fids
+        })
+
+    def interpret_ids_polar(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
+        if strongest:
+            return self.interpret_ids_strongest(ignore, constraints)
+        else:
+            return self.interpret_ids_weakest(ignore, constraints)
+    ###############################################3
+
+    def interpret_id_weakest(self, constraints : PSet[Subtyping], id : str) -> Typ:
 
         if id in self.relational_ids(constraints):
             return TVar(id)
@@ -1986,69 +2010,69 @@ class Solver:
                     result_typ = Inter(result_typ, st.upper)
         return  result_typ
 
-    def interpret_polar_typ(self, positive : bool, ignore : PSet[str], constraints : PSet[Subtyping], src : Typ) -> Typ:
-        # TODO: simplify to always ignore closedids
-        # only open variables should be interpreted
-        if False:
-            assert False
-        elif isinstance(src, TVar) and src.id not in ignore:  
-            if positive:
-                return self.interpret_positive_id(constraints, src.id)
-            else:
-                return self.interpret_negative_id(constraints, src.id)
-        elif isinstance(src, TUnit):  
-            return TUnit()
-        elif isinstance(src, TEntry):  
-            body = self.interpret_polar_typ(positive, ignore, constraints, src.body)
-            return TEntry(src.label, body)
-        elif isinstance(src, Unio):  
-            left = self.interpret_polar_typ(positive, ignore, constraints, src.left)
-            right = self.interpret_polar_typ(positive, ignore, constraints, src.right)
-            return Unio(left, right)
-        elif isinstance(src, Inter):  
-            left = self.interpret_polar_typ(positive, ignore, constraints, src.left)
-            right = self.interpret_polar_typ(positive, ignore, constraints, src.right)
-            return Inter(left, right)
-        elif isinstance(src, Diff):  
-            context = self.interpret_polar_typ(positive, ignore, constraints, src.context)
-            return Diff(context, src.negation)
-        elif isinstance(src, Imp):  
-            consq = self.interpret_polar_typ(positive, ignore, constraints, src.consq)
-            antec = self.interpret_polar_typ(not positive, ignore, constraints, src.antec)
-            return Imp(antec, consq)
-        elif isinstance(src, Exi):  
-            inner_constraints = self.interpret_polar_constraints(positive, ignore.union(src.ids), constraints, src.constraints)
-            body = self.interpret_polar_typ(positive, ignore.union(src.ids), constraints, src.body)
-            return Exi(src.ids, tuple(inner_constraints), body)
-        elif isinstance(src, All):  
-            inner_constraints = self.interpret_polar_constraints(positive, ignore.union(src.ids), constraints, src.constraints)
-            body = self.interpret_polar_typ(positive, ignore.union(src.ids), constraints, src.body)
-            return All(src.ids, tuple(inner_constraints), body)
+    # def interpret_polar_typ(self, positive : bool, ignore : PSet[str], constraints : PSet[Subtyping], src : Typ) -> Typ:
+    #     # TODO: simplify to always ignore closedids
+    #     # only open variables should be interpreted
+    #     if False:
+    #         assert False
+    #     elif isinstance(src, TVar) and src.id not in ignore:  
+    #         if positive:
+    #             return self.interpret_positive_id(constraints, src.id)
+    #         else:
+    #             return self.interpret_negative_id(constraints, src.id)
+    #     elif isinstance(src, TUnit):  
+    #         return TUnit()
+    #     elif isinstance(src, TEntry):  
+    #         body = self.interpret_polar_typ(positive, ignore, constraints, src.body)
+    #         return TEntry(src.label, body)
+    #     elif isinstance(src, Unio):  
+    #         left = self.interpret_polar_typ(positive, ignore, constraints, src.left)
+    #         right = self.interpret_polar_typ(positive, ignore, constraints, src.right)
+    #         return Unio(left, right)
+    #     elif isinstance(src, Inter):  
+    #         left = self.interpret_polar_typ(positive, ignore, constraints, src.left)
+    #         right = self.interpret_polar_typ(positive, ignore, constraints, src.right)
+    #         return Inter(left, right)
+    #     elif isinstance(src, Diff):  
+    #         context = self.interpret_polar_typ(positive, ignore, constraints, src.context)
+    #         return Diff(context, src.negation)
+    #     elif isinstance(src, Imp):  
+    #         consq = self.interpret_polar_typ(positive, ignore, constraints, src.consq)
+    #         antec = self.interpret_polar_typ(not positive, ignore, constraints, src.antec)
+    #         return Imp(antec, consq)
+    #     elif isinstance(src, Exi):  
+    #         inner_constraints = self.interpret_polar_constraints(positive, ignore.union(src.ids), constraints, src.constraints)
+    #         body = self.interpret_polar_typ(positive, ignore.union(src.ids), constraints, src.body)
+    #         return Exi(src.ids, tuple(inner_constraints), body)
+    #     elif isinstance(src, All):  
+    #         inner_constraints = self.interpret_polar_constraints(positive, ignore.union(src.ids), constraints, src.constraints)
+    #         body = self.interpret_polar_typ(positive, ignore.union(src.ids), constraints, src.body)
+    #         return All(src.ids, tuple(inner_constraints), body)
 
-        elif isinstance(src, LeastFP):  
-            body = self.interpret_polar_typ(positive, ignore.add(src.id), constraints, src.body)
-            return LeastFP(src.id, src.body)
-        elif isinstance(src, Top):  
-            return src
-        elif isinstance(src, Bot):  
-            return src
-        else:
-            return src
+    #     elif isinstance(src, LeastFP):  
+    #         body = self.interpret_polar_typ(positive, ignore.add(src.id), constraints, src.body)
+    #         return LeastFP(src.id, src.body)
+    #     elif isinstance(src, Top):  
+    #         return src
+    #     elif isinstance(src, Bot):  
+    #         return src
+    #     else:
+    #         return src
 
-    def interpret_polar_constraints(self, positive : bool, ignore : PSet[str], 
-            outer_constraints : PSet[Subtyping], 
-            inner_constraints : Iterable[Subtyping]
-    ) -> PSet[Subtyping]:
-        result_inner_constraints : PSet[Subtyping] = s()
-        for inner in inner_constraints:
-            upper = self.interpret_polar_typ(positive, ignore, outer_constraints, inner.upper)
-            lower = self.interpret_polar_typ(not positive, ignore, outer_constraints, inner.lower)
+    # def interpret_polar_constraints(self, positive : bool, ignore : PSet[str], 
+    #         outer_constraints : PSet[Subtyping], 
+    #         inner_constraints : Iterable[Subtyping]
+    # ) -> PSet[Subtyping]:
+    #     result_inner_constraints : PSet[Subtyping] = s()
+    #     for inner in inner_constraints:
+    #         upper = self.interpret_polar_typ(positive, ignore, outer_constraints, inner.upper)
+    #         lower = self.interpret_polar_typ(not positive, ignore, outer_constraints, inner.lower)
 
-            result_inner_constraints = result_inner_constraints.add(Subtyping(lower, upper))
-        return result_inner_constraints
+    #         result_inner_constraints = result_inner_constraints.add(Subtyping(lower, upper))
+    #     return result_inner_constraints
 
 
-    def interpret_positive_id(self, constraints : PSet[Subtyping], id : str) -> Typ:
+    def interpret_id_strongest(self, constraints : PSet[Subtyping], id : str) -> Typ:
         result_typ : Typ = TVar(id) 
         for st in constraints:
             if st.upper == TVar(id): 
@@ -2405,7 +2429,9 @@ SOLVABLE:
 ==============================================
                 """)
                 # LEARN (WRITE) 
-                new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
+                # new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
+                m = self.interpret_ids_polar(True, world.closedids, world.constraints)
+                new_lower = sub_typ(m, lower)
                 if new_lower != lower:
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
                     return [
@@ -3326,11 +3352,16 @@ class BaseRule(Rule):
         for branch in augmented_branches: 
             local_constraints = branch.world.constraints.difference(world.constraints)
             local_closedids = branch.world.closedids.difference(world.closedids)
-            imp = self.solver.interpret_polar_typ(
-                True, 
-                foreignids.union(local_closedids), local_constraints, 
-                Imp(branch.pattern, branch.body)
-            )
+
+            # m_left = self.solver.interpret_ids_polar(False, foreignids.union(local_closedids), local_constraints)
+            m_right = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
+            imp = Imp(branch.pattern, sub_typ(m_right, branch.body))
+
+            # imp = self.solver.interpret_polar_typ(
+            #     True, 
+            #     foreignids.union(local_closedids), local_constraints, 
+            #     Imp(branch.pattern, branch.body)
+            # )
 
             influential_ids = foreignids.union(local_closedids).union(extract_free_vars_from_typ(s(), imp))
             influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
@@ -3392,20 +3423,74 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
-        worlds = [world] 
-        current_cator_typ = cator_typ
+        schemas = [(world, cator_typ)] 
         for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
-            new_worlds = []
-            for world in worlds:
-                new_worlds.extend(self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True))
-            worlds = new_worlds
-            current_cator_typ = result_var
+            new_schemas = []
+            for world, current_cator_typ in schemas:
+                # TODO: pass in enviro to get foreign vars 
+                # foreignids = extract_free_vars_from_enviro(world.enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
+                foreignids = extract_free_vars_from_constraints(s(), world.constraints)
+                new_schemas.extend([
+                    (w, t)
+                    for w in self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True)
+                    for local_constraints in [world.constraints.difference(world.constraints)]
+                    # for local_closedids in [world.closedids.difference(w.closedids)]
+                    for m in [self.solver.interpret_ids_polar(True, foreignids.union(w.closedids), local_constraints)]
+                    for t in [sub_typ(m, result_var)]
+                ])
+                schemas = new_schemas
+
+        for i, (w, result) in enumerate(schemas):
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEBUG application result world {i}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+skolems:
+{w.closedids} 
+
+constraints:
+{concretize_constraints(w.constraints)}
+
+result:
+{concretize_typ(result)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
         return [
-            Result(pid, world, result_var)
-            for world in worlds
+            Result(pid, world, t)
+            for world, t in schemas 
         ]
+
+
+
+#         ats = [
+#             concretize_typ(at)
+#             for at in arg_typs
+#         ]
+
+#         print(f"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEBUG combine application
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# skolems:
+# {world.closedids} 
+
+# constraints:
+# {concretize_constraints(world.constraints)}
+
+
+# cator_typ:
+# {concretize_typ(cator_typ)}
+
+# arg_typs:
+# {ats}
+
+# result_var: {result_var.id}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         """)
+
 
     #########
 
@@ -3467,8 +3552,8 @@ class ExprRule(Rule):
 
             local_closedids = inner_world.closedids.difference(world.closedids) 
 
-            right_typ = self.solver.interpret_positive_id(local_constraints, out_typ.id) 
-            left_typ = self.solver.interpret_negative_id(local_constraints, in_typ.id) 
+            right_typ = self.solver.interpret_id_strongest(local_constraints, out_typ.id) 
+            left_typ = self.solver.interpret_id_weakest(local_constraints, in_typ.id) 
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
@@ -3691,11 +3776,13 @@ class TargetRule(Rule):
 
                 local_constraints = target_result.world.constraints.difference(world.constraints)
                 local_closedids = target_result.world.closedids.difference(world.closedids)
-                target = self.solver.interpret_polar_typ(
-                    True, 
-                    foreignids.union(local_closedids), local_constraints, 
-                    target_result.typ
-                )
+                # target = self.solver.interpret_polar_typ(
+                #     True, 
+                #     foreignids.union(local_closedids), local_constraints, 
+                #     target_result.typ
+                # )
+                m = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
+                target = sub_typ(m, target_result.typ)
 
                 influential_ids = foreignids.union(local_closedids).union(extract_free_vars_from_typ(s(), target))
                 influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
