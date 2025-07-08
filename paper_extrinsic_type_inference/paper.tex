@@ -326,7 +326,7 @@ We designed the type system around a simple applicative language with pattern ma
 since such a language is syntactically close to predicate logic. Likewise,
 we designed the language of types to share many similarities with predicate logic. 
 The extrinsic type system is able to infer very precise types by analyzing the control
-flow of program in the form of generating and solving subtypings. 
+flow of program in the form of generating and solving subtyping constraints. 
 In many cases the type system can infer the weakest possible types of parameters,
 and the strongest possible (i.e. most general or principal) types of results,
 all without inhibiting the reusability the code.
@@ -428,9 +428,9 @@ input in an list.
 \noindent
 Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
 types are insufficient for describing the weakest safe input type.
-It was not until SuperF introduced a technique for solving subtypings
+It was not until SuperF introduced a technique for solving subtyping constraints
 that a principal type could be automatically constructed for functions like $\J{foo}$
-Our extrinsic type system relies on similar principles of solving subtypings,
+Our extrinsic type system relies on similar principles of solving subtyping constraints,
 and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
 
 \block{
@@ -438,9 +438,9 @@ and likewise, can construct the weakest safe type for $\J{f}$, and thus the prin
 }
 
 \noindent
-Although the subtypings are not present in the type's notation,
+Although the subtyping constraints are not present in the type's notation,
 the intersection of paths is chosen because it represents the weakest type
-consistent with the subtypings on a variable representing the parameter's type. 
+consistent with the subtyping constraints on a variable representing the parameter's type. 
 Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
 Eventually, due to the applications of the parameter $\J{f}$, the type
 system will attempt to find a solution to two constraints on $\J{F}$
@@ -981,13 +981,13 @@ An expansion \ms{\phi} is either a union \ms{\tau \J{|} \tau} or
 an existential \ms{\J{EXI[}\Theta \J{]} \Delta \J{:} \tau},
 representing weakenings of their constituent types. 
 An existential is parameterized by type variables \ms{\Theta}
-and positively qualified by subtypings \ms{\Delta}, 
+and positively qualified by subtyping constraints \ms{\Delta}, 
 such that the weaker the qualification, the weaker the existential.
 A refinement \ms{\psi} is either an intersection \ms{\tau \J{\&} \tau} or 
 a universal \ms{\J{ALL[} \Theta \J{]} \Delta \J{:}\tau},
 representing strengthenings of their constituent types. 
 An universal is parametrized by type variables \ms{\Theta} 
-and negatively qualified by subtypings $\Delta$,
+and negatively qualified by subtyping constraints $\Delta$,
 such that the weaker the qualification, the stronger the universal.
 
 
@@ -1420,7 +1420,7 @@ Model subtyping describes how the spaces of two types compare to each other.
 \end{definition}
 
 \noindent
-Model subtyping sequence describes multiple subtypings. 
+Model subtyping sequence describes multiple subtyping constraints. 
 
 \begin{definition}
   \label{def:model_typing_sequence}
@@ -1454,8 +1454,8 @@ Proof typing is a strengthening of model typing, and
 proof subtyping is a strengthening of model subtyping.
 When viewed as an algorithm,
 they form the core of the type inference system. 
-Proof typing generates subtypings approximating the control flow of an expression, 
-and then leverages proof subtyping to solve for the variables in the the subtypings,
+Proof typing generates subtyping constraints approximating the control flow of an expression, 
+and then leverages proof subtyping to solve for the variables in the the subtyping constraints,
 where the variables represent possible types of expressions.
 
 
@@ -1563,18 +1563,18 @@ proof typing attempts to infer a type and a subtyping sequence,
 such that if the context holds,
 then there is a solution to the generated subtyping sequence, under which 
 the expression inhabits the inferred type.
-The context consists of skolems \ms{\Theta}, subtypings \ms{\Delta}, and typings \ms{\Gamma}. 
-The contextual subtypings and typings constrain the search space of valid typings, 
-such that the generated subtypings are consistent with them. 
-In fact, the generated subtypings contain
-all the contextual subtypings, as it keeps the definition a bit less cluttered.
+The context consists of skolems \ms{\Theta}, subtyping constraints \ms{\Delta}, and typings \ms{\Gamma}. 
+The contextual subtyping constraints and typings constrain the search space of valid typings, 
+such that the generated subtyping constraints are consistent with them. 
+In fact, the generated subtyping constraints contain
+all the contextual subtyping constraints, as it keeps the definition a bit less cluttered.
 Skolems are variables that further constrain the search space. 
-The generated subtypings must be satisfiable under every interpretation of
+The generated subtyping constraints must be satisfiable under every interpretation of
 skolems for which the contextual constraints are satisfiable.  
 Proof typing may also generate additional skolems, which can be used to constrain
 subsequent sub-problems.
 If a variable is not in the set of skolems, then we consider it to be plastic,
-in that it can be constrained in any way that is consistent with the other subtypings
+in that it can be constrained in any way that is consistent with the other subtyping constraints
 and the typing. 
 
 
@@ -1678,13 +1678,13 @@ by generating a subtyping sequence, such that if the context holds,
 then there is a solution to the generated subtyping sequence, under which   
 the initial subtyping also holds. 
 
-The context consists of skolems \ms{\Theta} and subtypings \ms{\Delta}. 
-The contextual subtypings constrain the search space of valid subtypings, 
-such that the generated subtypings are consistent with them. 
-In fact, the generated subtypings contain all the contextual subtypings.
+The context consists of skolems \ms{\Theta} and subtyping constraints \ms{\Delta}. 
+The contextual subtyping constraints constrain the search space of valid subtyping constraints, 
+such that the generated subtyping constraints are consistent with them. 
+In fact, the generated subtyping constraints contain all the contextual subtyping constraints.
 As with proof typing, skolems constrain the search space,
-such that the generated subtypings must be satisfiable
-for every interpretation of skolems for which the contextual subtypings are satisfiable.
+such that the generated subtyping constraints must be satisfiable
+for every interpretation of skolems for which the contextual subtyping constraints are satisfiable.
 
 In order to find a solution, the solver considers the forms 
 of both types in the subtyping relation.
@@ -1820,7 +1820,7 @@ constrained by the skolemized bound variables,
 and the solution to the qualifiers. 
 The negatable check is necessary to ensure
 that a solution the the qualifiers implies
-a solution to the subtypings generated by solving the qualifiers.
+a solution to the subtyping constraints generated by solving the qualifiers.
 Thus, if the solver can eliminate the existential, 
 then a solution to the qualifiers implies a solution to the constituent's elimination.
 
@@ -2307,7 +2307,7 @@ For existential introduction \ms{
 },
 it constructs witnesses by solving the introduction
 of the existential's constituent type \ms{\entails \tau_l \subtypes \tau_r \given}, 
-from which the witnesses can be inferred from the generated subtypings.
+from which the witnesses can be inferred from the generated subtyping constraints.
 It then attempts to solve the qualifiers by leveraging the witnesses.
 
 \begin{definition} 
@@ -2392,7 +2392,7 @@ of compounded unions.
 \end{definition}
 
 \noindent
-Proof subtyping sequence very simply solves a sequence of subtypings
+Proof subtyping sequence very simply solves a sequence of subtyping constraints
 and compounds their results. 
 
 \section{Theory}
@@ -2403,6 +2403,7 @@ and compounds their results.
 \begin{theorem} 
   \label{theorem:proof_subtyping_soundness}
   \emph{proof subtyping soundness} 
+  \small
   \\
   \begin{mathpar}
     \inferrule {
@@ -2421,30 +2422,31 @@ and compounds their results.
 \end{theorem}
 
 \noindent
-Proof subtyping soundness states that if proof subtyping generates subtypings \ms{\Delta'} 
+Proof subtyping soundness states that if proof subtyping generates subtyping constraints \ms{\Delta'} 
 for a subtyping goal \ms{\tau_l \subtypes \tau_r},
-then any solution for the generated subtypings
+then any solution for the generated subtyping constraints
 is a solution for the subtyping goal, with the caveat that
 it only needs to hold for some interpretation of the generated skolems \ms{\Theta'\backslash\Theta}. 
-We prove soundness by induction, leveraging numerous lemmas to derive the semantics
+The proof is by induction, leveraging numerous lemmas to derive the semantics
 defined by model typing in each case. 
 Completeness of restricted forms is necessary whenever the corresponding model semantics 
 is used in a negative position, such as in negation or in the antecedent of an implication.     
 Additionally, when rewriting an object, it is necessary to characterize how the model
 semantics of its input form relates to the model semantics of its output form.
-Lastly, when pruning subtypings generated by the solver, it is necessary
-that the remaining subtyping are as strong or stronger that the removed subtypings
+Lastly, when pruning subtyping constraints generated by the solver, it is necessary
+that the remaining subtyping are as strong or stronger that the removed subtyping constraints
 with respect to the variables used in the goal.
 The property of proof subtyping soundness is a bit weak on its own. 
 It does not guarantee that there is a solution for the subtyping goal,
 it could be met vacuously by having proof subtyping 
-generate an unsatisfiable subtypings.
+generate an unsatisfiable subtyping constraints.
 To make the stronger guarantee, we can combine it with another theorem.
 
 
 \begin{theorem}
   \label{theorem:proof_subtyping_substance}
   \emph{proof subtyping substance}
+  \small
   \\
   \begin{mathpar}
     \inferrule {
@@ -2475,6 +2477,7 @@ of the variable, as those are the only opportunities for contradiction.
 \begin{theorem}
   \label{prop:proof_typing_soundness}
   \emph{proof typing soundness} 
+  \small
   \\
   \begin{mathpar}
     \inferrule {
@@ -2492,27 +2495,23 @@ of the variable, as those are the only opportunities for contradiction.
 
 \end{theorem}
 
-\TODO{next}
-
 \noindent
-The most basic requirement is Proof Typing Soundness (Prop. \ref{prop:proof_typing_soundness}),
-which, states that the generated type $\tau$ contains the input expression $e$, 
-$(e \hastype \tau)$ with respect to Model Typing (Def. \ref{def:model_typing}) 
-if the generated constraints $\Delta'$ hold with respect to 
-Model Subtyping Sequence (Def. \ref{def:model_subtyping_sequence})
-and input typing constraints $\Gamma$ hold with respect to Model Typing Sequence
-(Def. \ref{def:model_typing_sequence}).
-Additionally, the guarded typing must be satisfiable with respect to the skolem variables
-$\Theta' \backslash \Theta$, and it it must be valid with respect to the remaining type variables. 
-
-\TODO{intution: input skolems make the premise Proof Typing more strict}
-
-\TODO{intuition: output skolems make the generated constraints weaker, therefore, easy to satisfy
-even in some cases where the typing fails}
+Proof typing soundness states that if proof typing generates subtyping constraints \ms{\Delta'} 
+for a typing goal \ms{e \subtypes \tau},
+then any solution for the contextual typing constraints 
+and the generated subtyping constraints
+is a solution for the typing goal, with the caveat that
+it only needs to hold for some interpretation of the generated skolems \ms{\Theta'\backslash\Theta}. 
+We prove soundness by induction, leveraging subtyping soundness,
+and additional lemmas the characterize the relationships between rewritten forms of objects. 
+Proof typing soundness as the same limitations as proof subtyping soundness. 
+It's not strong enough to guarantee our goal of type inference,
+but we can easily compose it with another property to do so.
 
 \begin{theorem}
   \label{prop:proof_typing_substance}
-  Proof Typing Substance 
+  \emph{proof typing substance} 
+  \small
   \\
   \begin{mathpar}
     \inferrule {
@@ -2527,37 +2526,34 @@ even in some cases where the typing fails}
 \end{theorem}
 
 \noindent
-The theorem of Proof Typing Soundness is actually a bit weak on its own. It does not
-require that a program has no errors, since the theorem could be satisfied vacuously by
-having Proof Typing generate an unsatisfiable set of subtypings $\Delta'$.
-To ensure that a program $e$ has no errors,
-we need Proof Typing Substance \ref{prop:proof_subtyping_substance}, 
-which requires that the subtypings generated by Proof Typing hold. 
-The guarded subtypings must be valid with respect to the skolem variables $\Theta$,
-and they must be satisfiable with respect to the remaining type variables. 
+Proof typing substance states that the generated subtyping constraints are satisfiable
+assuming the contextual constraints are satisfiable, with respect
+to all interpretations of the contextual skolems.   
+The proof is by induction, and it follows easily from the induction hypothesis
+and proof subtyping soundness. 
 
-\begin{theorem}
-  \label{prop:proof_typig_annotation_soundness}
-  Proof Typing Annotation Soudness 
-  \\
-  \begin{mathpar}
-    \inferrule {
-      \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
-    } {
-      \forall \delta, \sigma \qua 
-      \delta, \sigma \satisfies \Gamma \implies
-      \delta \satisfies e \hastype \tau_a
-    }
-  \end{mathpar}
-\end{theorem}
+% \begin{theorem}
+%   \label{prop:proof_typing_annotation_soundness}
+%   \emph{proof typing annotation soudness}
+%   \\
+%   \begin{mathpar}
+%     \inferrule {
+%       \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
+%     } {
+%       \forall \delta, \sigma \qua 
+%       \delta, \sigma \satisfies \Gamma \implies
+%       \delta \satisfies e \hastype \tau_a
+%     }
+%   \end{mathpar}
+% \end{theorem}
 
-\noindent
-In addition to constructing types from programs, we are also interested in checking that 
-programs meets specifications annotated by the programmer. Proof Typing Soundness
-does not directly reference these annotations, so we need an additional theorem to ensure
-the annotations are respected. Proof Typing Annotation Soundness 
-\ref{prop:proof_typig_annotation_soundness} requires that the expressions
-used in the binding syntax respect the type annotations.  
+% \noindent
+% In addition to inferring type according to the control flow of a program,
+% we are also interested in checking that programs meet specifications 
+% annotated by the programmer. Proof typing soundness 
+% does not directly reference these annotations, 
+% so we need an additional theorem to ensure
+% the annotations are respected. 
 
 
 \section{Experiments}
@@ -3236,10 +3232,10 @@ which bypasses the need for intrinsic parametric polymorphism.
 In the previous example, SuperF can infer the principal type for $\J{fooPair}$ by inferring the 
 weakest type of its parameter $\J{f}$, which it achieved by leveraging subtyping to find 
 a type that is compatible with both $\J{123}$ and $\J{true}$.
-The SuperF type system infers subtypings that represent the data flow represented by
+The SuperF type system infers subtyping constraints that represent the data flow represented by
 function application and pattern matching. It relies 
 intersection and union type combinators to represent the strongest or weakest interpretations
-of type variables that meet certain subtypings.   
+of type variables that meet certain subtyping constraints.   
 With SuperF's type inference mechanism, it is possible to infer the principal type for the 
 previous problematic example $\J{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}$.
 
@@ -3247,7 +3243,7 @@ SuperF has a restricted language of types. It is concerned with the type inferen
 of functions, and it is agnostic towards type inference of constructors. 
 It restricts the type and subtyping syntax according to polarity; that is, a
 types position within an implication type or subtyping relation. Depending on polar position,
-universal types (i.e. universals) may or may not be qualified by subtypings.
+universal types (i.e. universals) may or may not be qualified by subtyping constraints.
 The authors of SuperF highlight some technical features, including extrusion and distributivity.
 Their extrusion technique ensures that types are not overly specialized
 when inferring types of nested functions. Their distributivity technique allows
@@ -3256,9 +3252,9 @@ They point out that the distributivity rule is an improvement for most cases, bu
 problems for which it more actually more restrictive.
 
 
-The high level ideas in SuperF of relying on subtypings were very influential in our work.
+The high level ideas in SuperF of relying on subtyping constraints were very influential in our work.
 Like SuperF, our system relies syntax-directed subtyping rules to check constraints and to learn 
-new subtypings by traversing previously learned constraints;
+new subtyping constraints by traversing previously learned constraints;
 Additionally, our system also relies on instantiation and skolemization in its subtyping rules. 
 Type polarity is also important in our system.
 However, our system does not restrict the syntax of types based on polarity. Instead, we rely on
@@ -3314,7 +3310,7 @@ the weakest type of parameters.
 To extend type inference of scripting languages further, MLStruct \cite{} and others like MLSub \cite{}, 
 leveraged the flow information to infer both input types and output types of functions.
 MLStruct, along with SuperF, represents some of the foundational ideas of the MLScript language.
-Like SuperF, it learns the data flow of programs in terms of subtypings.
+Like SuperF, it learns the data flow of programs in terms of subtyping constraints.
 Other than our system, it appears that MLStruct has the best type inference of constructors
 with the least amount of intrinsic type requirements. 
 However, MLStruct still has a significant intrinsic type requirement, which reduces flexibility compared
@@ -3325,7 +3321,7 @@ As our tests (Experiment \ref{experi:typing_structures})
 illustrate, it is not possible to type a function that expects only even numbers that is interoperable with natural numbers.
 Moreover, the additional annotation burden alone would prevent the analysis of untyped code without
 significant effort in augmenting the code with annotations.
-In contrast to MLStruct, our system relies completely on learning data flow in the form of subtypings
+In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
 without any annotation requirements on constructors. 
 
 The common ingredient in all of these systems that perform some amount of extrinsic type inference is
@@ -3338,7 +3334,7 @@ Additionally, there are similarities between type inference with subtyping and c
 In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
 determined by learning subset constraints from the control-flow of the program. 
 Instead of labels, type inference with subtyping associate types  
-with expressions and learns subtypings.
+with expressions and learns subtyping constraints.
 
 \TODO{discuss recursive types}
 
@@ -3353,7 +3349,7 @@ We have presented a novel extrinsic type inference system
 that can guarantee programs are bug-free while maintaining
 code-reusability nearly on par with untyped scripting languages,
 and exceeding that of an previous type inference system we know of.  
-We have incorporated previous studied ideas of subtypings,
+We have incorporated previous studied ideas of subtyping constraints,
 intersection types, union types, parametric types, and recursive types into
 a cohesive design that enables more principal types to be inferred 
 and more subtyping relations to be verified than in previous systems. 
@@ -3825,7 +3821,7 @@ In the case where both environments are empty
 $
   \alpha_\nu \downarrow \epsilon \fallingdotseq \alpha_\mu \uparrow \epsilon 
 $, subtyping duality correspondence simply holds.
-In the case where the subtypings are the same,
+In the case where the subtyping constraints are the same,
 the upper bounded variable $\alpha_\nu$ must not appear in the subtype $\tau_l$;
 the lower bounded variable $\alpha_\mu$ must not appear in the supertype $\tau_r$;
 and the correspondence must hold for the previous constraints in the environment
