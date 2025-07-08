@@ -1751,7 +1751,7 @@ based on de Bruijn indexes \cite{} before checking equality.
 \end{definition}
 
 \noindent
-Both entry types and path types are analogous to implication. 
+Both entry types and path types are analogous to propositional implication. 
 However, unlike the typical separate rules for introduction and elimination in propositional implication,
 the subtyping solver combines the semantics for introduction
 and elimination into rules that preserve the implication structures.
@@ -2081,38 +2081,16 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
-\TODO{next}
-
 \noindent
 Just as entries and paths are analogous to propositional implication,
-the analogy extends to union and intersection.
-Union is analogous to propositional disjunction,
-and intersection is analogous to propositional conjunction. 
-However, since the Proof Subtyping rules simply preserve implication types,
-rather than introducing and eliminating them,
-The subtyping logic needs an union antecedent rule, corresponding
-to disjunction elimination, and intersection consequent rules,
-corresponding to conjunction introduction. 
-
-For elimination of a path with a union antecedent 
-$(
-... \entails \tau_l \subtypes (\tau_a\J{|}\tau_b)\J{->}\tau_r \given ...
-)$, Proof Subtyping breaks apart the union and checks
-that the subtype holds against two paths 
-whose antecedents are the union's constituent parts. 
-For elimination of a path with an intersection consequent 
-$(
-... \entails \tau_l \subtypes \tau_r \J{->}(\tau_a\J{\&}\tau_b) \given ...
-)$, Proof Subtyping breaks apart the intersection and checks
-that the subtype holds against two paths 
-whose consequents are the intersection's constituent parts. 
-For elimination of an entry with an intersection consequent
-$(
-... \entails \tau \subtypes \J{<}l\J{>} (\tau_a\J{\&}\tau_b) \given ...
-)$, Proof Subtyping breaks apart the intersection and checks
-that the subtype holds against two entries 
-whose consequents are the intersection's constituent parts. 
-
+unions and intersections are analogous to disjunction and conjunction, respectively.
+Just as disjunction elimination or propositional logic relies on two cases of implication,
+the solver recognizes that union in the antecedent of a path,
+can be solved by rewriting into two cases of paths.  
+Additionally, since must preserve implications, there is no direct no single
+rule that corresponds modus ponens. Thus, the solver 
+recognizes that intersection in the consequent of a path or (the content of an entry),
+may need to be rewritten as two paths (or two entries).
 
 
 \begin{definition} 
@@ -2163,6 +2141,7 @@ whose consequents are the intersection's constituent parts.
   \end{mathpar}
 \end{definition}
 
+\TODO{next}
 
 \noindent
 For least fixed point elimination $(
