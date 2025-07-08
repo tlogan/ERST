@@ -2438,18 +2438,21 @@ To make the stronger guarantee, we can combine it with another theorem.
 \end{theorem}
 
 \noindent
-Proof subtyping substance states that generate constraints are satisfiable
+Proof subtyping substance states that the generated constraints are satisfiable
 assuming the contextual constraints are satisfiable, with respect
 to all interpretations of the contextual skolems.   
-The proof is by induction, 
-where in most cases the property follows directly from the the induction hypothesis.
+The proof is by following a slightly stronger statement,
+which says that the generated constraints are satisfiable, and 
+that the constraints on a single variable are as strong or stronger
+than all the constraints with respect to that variable.
+The proof of the stronger statement is by induction.
 The only cases that are actually interesting are the variable rules
 where new constraints are generated.
-Because the rules check for consistency by searching for constraints on single variables,
-it is necessary that the constraints on a single variable are as strong or stronger
-than all the constraints with respect to that variable.
-It then boils down to checking the bound in the goal against all the bounds on the other side
-of the variable, as those are the only opportunities for contradiction.    
+In every case that a new constraint is added, it is a constraint on
+a single variable, and in each case the solver compares the new bound on the variable
+to the previous bounds on the other side of the variable. Since bounds on
+opposite sides are the only opportunities for contradictions, the requirement
+preserves the strengthened substance property from the induction hypothesis.
 
 \begin{theorem}
   \label{thm:proof_typing_soundness}
