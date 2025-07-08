@@ -1994,6 +1994,14 @@ class Solver:
             return self.interpret_ids_strongest(ignore, constraints)
         else:
             return self.interpret_ids_weakest(ignore, constraints)
+
+    def interpret_deep(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping], target : Typ) -> Typ:
+        prev = Bot() if strongest else Top() 
+        while prev != target:
+            prev = target
+            m = self.interpret_ids_strongest(ignore, constraints)
+            target = sub_typ(m, target)
+        return target
     ###############################################3
 
     def interpret_id_weakest(self, constraints : PSet[Subtyping], id : str) -> Typ:
@@ -3432,14 +3440,17 @@ class ExprRule(Rule):
                 # foreignids = extract_free_vars_from_enviro(world.enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
                 foreignids = extract_free_vars_from_constraints(s(), world.constraints)
                 new_schemas.extend([
-                    (w, t)
+                    (w, result_var)
                     for w in self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True)
                     for local_constraints in [world.constraints.difference(world.constraints)]
                     # for local_closedids in [world.closedids.difference(w.closedids)]
-                    for m in [self.solver.interpret_ids_polar(True, foreignids.union(w.closedids), local_constraints)]
-                    for t in [sub_typ(m, result_var)]
+                    # for m in [self.solver.interpret_ids_polar(True, foreignids.union(w.closedids), w.constraints)]
+                    # for t in [sub_typ(m, result_var)]
+                    for t in [self.solver.interpret_deep(True, foreignids.union(w.closedids), w.constraints, result_var)]
                 ])
                 schemas = new_schemas
+
+        print(f"schemas found: {len(schemas)}")
 
         for i, (w, result) in enumerate(schemas):
 

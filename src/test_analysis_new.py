@@ -386,6 +386,10 @@ def test_typing_A9():
     code = f"""
 foo(choose(id))(ids)
     """
+
+    code = f"""
+choose(id)
+    """
     assert infer_typ(code, ctx(["foo", "choose", "ids", "id"]))
 
 def test_typing_A10():
@@ -1037,11 +1041,10 @@ if __name__ == '__main__':
     # test_typing_structures_2()
     # test_max()
     # test_recursive_relational_factorization_learning_in_typing()
-    # test_typing_A9()
     # test_subtyping_debug()
     # test_max()
-
-
+    # test_typing_A9()
+    # test_subtyping_debug()
 
 
 #######################################################################
