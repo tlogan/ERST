@@ -2215,7 +2215,7 @@ thus failure of its introduction is sound.
     }
 
     \inferrule {
-      \alpha \Vvdash \tau_r \supertypes \tau_r'
+      \alpha \Vdash \tau_r \supertypes \tau_r'
       \\
       \Theta, \Delta \entails
       \tau_l \subtypes \tau_r' \given \Theta', \Delta'
@@ -2236,7 +2236,7 @@ One option is to check for a syntactic guarantee that the least fixed point is i
 \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
 } and then solve the inflated introduction.
 Alternatively, it can strengthen the least fixed point
-with union drop \ms{\alpha \vdash \tau_r \supertypes \tau_r'},
+with union drop \ms{\alpha \Vdash \tau_r \supertypes \tau_r'},
 which drops any parts of the union containing the self reference. 
 
 \begin{definition} 
@@ -2295,37 +2295,24 @@ it simply rewrites the problem in terms of union.
     }
   \end{mathpar}
 \end{definition}
-\TODO{next}
 \noindent
-Expansion introduction provides a means for introducing
-generalized types from one of their instances.
-For union introduction $(
-... \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given ...
-)$, 
-Proof Subtyping can choose from two possible worlds:
-one where the left part is introduced $(
-... \entails \tau \subtypes \tau_l \given ...
-)$,
-or one where the right part is introduced $(
-... \entails \tau \subtypes \tau_r \given ...
-)$. 
-For index union introduce $(
-... \entails \tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{:}\tau_r \given ...
-)$,
-Proof Subtyping constructs potential witnesses by solving the introduction
-of the existential's body $(
-... \entails \tau_l \subtypes \tau_r \given ...
-)$, 
-where the witnesses can be inferred from the subtyping environment of the world $\Omega$.
-It then confirms these are the potential witnesses are valid
-by proving the qualifiers hold under such witnesses $(
-... \entails \Delta_r \given ...
-)$.
-
+For union introduction \ms{
+\tau \subtypes \tau_{l}\J{|}\tau_{r}
+}, 
+it can choose from two possible options:
+solving the introduction of of left part, 
+or solving the introduction of the right part.
+For existential introduction \ms{ 
+\tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{:}\tau_r
+},
+it constructs witnesses by solving the introduction
+of the existential's constituent type \ms{\entails \tau_l \subtypes \tau_r \given}, 
+from which the witnesses can be inferred from the generated subtypings.
+It then attempts to solve the qualifiers by leveraging the witnesses.
 
 \begin{definition} 
   \label{def:proof_subtyping_refinement_elimination}
-  Proof Subtyping (Refinement Elimination)
+  \emph{Proof Subtyping (Refinement Elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
@@ -2368,10 +2355,22 @@ by proving the qualifiers hold under such witnesses $(
 \noindent
 Refinement elimination is the dual of expansion introduction, so its rules
 rely on analogous techniques.
+However, there is one additional rule
+for eliminating an intersection and introducing an implication \ms{
+\tau_l \& \tau_r \subtypes \tau_a \J{->} \tau_b
+}.
+As we mentioned earlier when discussing packing together the inferred types of 
+multiple paths of functions, sometimes the argument type is weaker than each
+path type antecedent, yet could be stronger than union of all the path type antecedents.    
+As such, the solver may leverage function type factorization \ms{
+\Vdash \tau_l \J{\&} \tau_r \subtypes \tau_x \rightarrow \tau_y 
+} to weaken a function type
+into a single path type where the antecedent and the consequent may consist
+of compounded unions. 
 
 \begin{definition} 
-  \label{def:proof_sequence_subtyping}
-  Proof Sequence Subtyping
+  \label{def:proof_subtyping_sequence}
+  \emph{proof subtyping sequence} 
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
@@ -2392,9 +2391,13 @@ rely on analogous techniques.
   \end{mathpar}
 \end{definition}
 
+Proof subtyping sequence very simply solves a sequence of subtypings
+and compounds their results. 
 
 \section{Theory}
 \label{sec:theory}
+
+\TODO{next}
 
 \begin{theorem} 
   \label{prop:proof_subtyping_soundness}
@@ -3408,23 +3411,23 @@ by reusing the proof of one proposition as a proof for another.
   Union Drop 
   \hfill 
   \small
-  \boxed{\alpha \Vvdash \tau_r \supertypes \tau_r'}
+  \boxed{\alpha \Vdash \tau_r \supertypes \tau_r'}
   \\
   \begin{mathpar}
     \inferrule {
       \alpha \notin \textbf{ftv}(\tau)
     } {
-      \alpha \Vvdash \tau \supertypes \tau 
+      \alpha \Vdash \tau \supertypes \tau 
     }
 
     \inferrule {
       \alpha \in \textbf{ftv}(\tau)
       \\
-      \alpha \Vvdash \tau_l \supertypes \tau_l' 
+      \alpha \Vdash \tau_l \supertypes \tau_l' 
       \\
-      \alpha \Vvdash \tau_r \supertypes \tau_r' 
+      \alpha \Vdash \tau_r \supertypes \tau_r' 
     } {
-      \alpha \Vvdash \tau_l \J{|} \tau_r \supertypes \tau_l' \J{|} \tau_r'
+      \alpha \Vdash \tau_l \J{|} \tau_r \supertypes \tau_l' \J{|} \tau_r'
     }
 
     \inferrule {
@@ -3432,7 +3435,7 @@ by reusing the proof of one proposition as a proof for another.
       \\
       \nexists \tau_l, \tau_r \qua \tau = \tau_l \J{|} \tau_r
     } {
-      \alpha \Vvdash \tau \supertypes \J{BOT} 
+      \alpha \Vdash \tau \supertypes \J{BOT} 
     }
   \end{mathpar}
 \end{definition}
