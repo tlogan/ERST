@@ -717,8 +717,8 @@ multiple paths guarded by patterns.
   \label{def:expression_desugaring}
   \emph{expression desugaring}
   \hfill
-  \small \boxed{\llbracket s \rrbracket^\square = e}
-  \\
+  \small
+  \boxed{\llbracket s \rrbracket^\square = e}
   \nopad
   \begin{align*}
       \llbracket l \J{;} e \rrbracket^\square &= \J{<}l \J{>}\ e
@@ -753,6 +753,8 @@ For any metalanguage statement or term containing sugar $s$, we assume that $s$ 
 
 \begin{definition}
   \label{def:pattern}
+  \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{pattern} &
     \nonterm{p} & \is 
@@ -770,6 +772,8 @@ A pattern is either unit or a record consisting of patterns.
 
 \begin{definition}
   \label{def:value}
+  \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{value} &
     \nonterm{v} & \is 
@@ -791,7 +795,7 @@ A value may be unit, a function, or a record consisting of only values.
   \hfill 
   \small
   \boxed{e \rightsquigarrow e}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       e \rightsquigarrow e'
@@ -872,6 +876,8 @@ Recursion is enabled by the \code{loop} keyword, such that
 
 \begin{definition}
   \label{def:value_map}
+  \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{value map} &
     \nonterm{\sigma} & \is \epsilon \sep \sigma\ x \slash v 
@@ -888,6 +894,8 @@ and then to use them in a subsequent expression via substitution
 
 \begin{definition}
   \label{def:type}
+  \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{type} &
     \nonterm{\tau} & \is 
@@ -993,7 +1001,7 @@ assuming additional semantics restrictions.
   \hfill 
   \small
   \boxed{\llbracket \gamma \rrbracket^\square = \tau}
-  \\
+  \nopad
   \begin{align*}
     \llbracket \J{TOP} \rrbracket^\square &= \J{EXI[} \alpha \J{]} \alpha
     \\
@@ -1013,6 +1021,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
 \begin{definition}
   \label{def:sequence}
   \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{type var seq} &
     \nonterm{\Theta} & \is \epsilon \sep \Theta\ \alpha 
@@ -1073,7 +1082,7 @@ where \ms{\epsilon} is inserted wherever necessary to make it well-formed.
   \hfill 
   \small
   \boxed{\textbf{set}(C) = S}
-  \\
+  \nopad
   \[
   \begin{array}[t]{r@{}c@{}l}
       \textbf{set}(\epsilon)
@@ -1100,6 +1109,7 @@ We assume that any sequence \ms{C} may be implicitly replaced with \ms{\textbf{s
   \hfill 
   \small
   \boxed{\textbf{seq}(S) = C}
+  \nopad
   \\
   \[
   \begin{array}[t]{r@{}c@{}l}
@@ -1121,55 +1131,10 @@ Likewise, it also beneficial to convert sets back into sequences, to leverage
 definitions that decompose sequences according to their structures. 
 We assume that any set \ms{S} may be implicitly replaced with \ms{\textbf{seq}(S)}.
 
-
-
-% \begin{definition}
-%   \label{def:stability}
-%   Stability 
-%   \hfill
-%   \boxed{\VDash e}
-%   \\
-%   \begin{mathpar}
-%     \inferrule {
-%       e = v
-%     } {
-%       \VDash e
-%     } 
-
-%     \inferrule { 
-%       e \rightsquigarrow e' 
-%       \\
-%       \VDash e'
-%     } {
-%       \VDash e
-%     } 
-%   \end{mathpar}
-% \end{definition}
-
-% \noindent
-% A expression is stable if and only if it is a value or it can take a step to a stable expression.
-% In other words, if an expression is not a value then its behavior is defined by progression.
-
-% \begin{property}
-%   \label{def:model_typing_soundness}
-%   Model Typing Soundness 
-%   \\
-%   \begin{mathpar}
-%     \inferrule { 
-%       \delta \satisfies e \hastype \tau
-%     } {
-%       \VDash e 
-%     } 
-%   \end{mathpar}
-% \end{property}
-
-
-% \noindent
-% Model typing $\delta \satisfies e \hastype \tau$ attempts to imbue types
-% with meaning.  At the very least, types should inform us that an expression is stable.  
-
 \begin{definition}
   \label{def:type_map}
+  \small
+  \nopad
   \[\begin{array}[t]{rr@{}l}
     \com{type map} &
     \nonterm{\delta} & \is \epsilon \sep \delta\ \alpha \slash \tau
@@ -1190,7 +1155,7 @@ for type variables.
   \hfill
   \small
   \boxed{\delta \satisfies e \hastype \tau}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule { 
       e \rightsquigarrow e'
@@ -1368,7 +1333,7 @@ the typing holds if the expression also inhabits the inflated type.
   \hfill
   \small
   \boxed{\delta \satisfies \tau <: \tau}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule { 
       \forall e .\ 
@@ -1389,7 +1354,7 @@ Model subtyping describes how the spaces of two types compare to each other.
   \hfill
   \small
   \boxed{\delta \satisfies \Delta}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule { 
     } {
@@ -1415,7 +1380,7 @@ Model subtyping sequence describes multiple subtyping constraints.
   \hfill
   \small
   \boxed{\delta, \sigma \satisfies \Gamma}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \forall x \qua
@@ -1452,7 +1417,7 @@ where the variables represent possible types of expressions.
   \hfill 
   \small
   \boxed{\Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
     } {
@@ -1688,7 +1653,7 @@ For clarity, we subdivide into the rules into smaller groups according to some t
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
     } {
@@ -1711,7 +1676,7 @@ based on de Bruijn indexes \cite{} before checking equality.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
@@ -1760,7 +1725,7 @@ is stronger than the consequent of the supertype.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails
@@ -1818,7 +1783,7 @@ then a solution to the qualifiers implies a solution to the constituent's elimin
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \psi \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails
@@ -1853,7 +1818,7 @@ rely on analogous techniques.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \alpha \notin \Theta
@@ -1886,7 +1851,7 @@ of the plastic.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \alpha \notin \Theta
@@ -1919,7 +1884,7 @@ relies on analogous techniques.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \alpha \in \Theta 
@@ -1974,7 +1939,7 @@ a mutual dependence between plastic elimination and skolem elimination.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \alpha \in \Theta 
@@ -2020,7 +1985,7 @@ rely on analogous techniques.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
@@ -2086,7 +2051,7 @@ may need to be rewritten as two paths (or two entries).
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Vdash \J{LFP[}\alpha\J{]}\tau_l \subtypes l \mapsto \tau_r' 
@@ -2154,7 +2119,7 @@ akin to deriving the least fixed point elimination under the assumption of the i
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \typdiff \eta \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \Vvdash \eta
@@ -2188,7 +2153,7 @@ thus failure of its introduction is sound.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
@@ -2232,7 +2197,7 @@ which drops any parts of the union containing the self reference.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \typdiff \eta \subtypes \tau_r \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails 
@@ -2256,7 +2221,7 @@ it simply rewrites the problem in terms of union.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
@@ -2303,7 +2268,7 @@ It then attempts to solve the qualifiers by leveraging the witnesses.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
@@ -2361,7 +2326,7 @@ of compounded unions.
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
     } {
@@ -2389,7 +2354,7 @@ and compounds their results, such that the solution from one constrains the next
   \label{thm:proof_subtyping_soundness}
   \emph{proof subtyping soundness} 
   \small
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
@@ -2432,7 +2397,7 @@ To make the stronger guarantee, we can combine it with another theorem.
   \label{thm:proof_subtyping_substance}
   \emph{proof subtyping substance}
   \small
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
@@ -2466,7 +2431,7 @@ preserves the strengthened substance property from the induction hypothesis.
   \label{thm:proof_typing_soundness}
   \emph{proof typing soundness} 
   \small
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
@@ -2480,7 +2445,6 @@ preserves the strengthened substance property from the induction hypothesis.
       )
     }
   \end{mathpar}
-
 \end{theorem}
 
 \noindent
@@ -2500,7 +2464,7 @@ but we can easily compose it with another property to do so.
   \label{thm:proof_typing_substance}
   \emph{proof typing substance} 
   \small
-  \\
+  \nopad
   \begin{mathpar}
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
@@ -2578,8 +2542,8 @@ or simply can't admit the program.
 \begin{definition} 
   \label{def:experimental_expressions_and_types}
   \emph{experimental expressions and types} 
-  \nopad
   \scriptsize
+  \nopad
   \[
   \begin{array}[t]{ll}
     \begin{array}[t]{r@{}c@{}l}
@@ -2633,8 +2597,8 @@ types and expressions used as inputs to our system.
 \begin{definition} 
   \label{def:experimental_typing_context}
   \emph{experimental typing context}
-  \nopad
   \tiny
+  \nopad
   \[
   \begin{array}[t]{ll}
     \begin{array}[t]{r@{}c@{}l}
@@ -2714,10 +2678,11 @@ Additionally, for the purpose of experiment, it is useful to assume that
 the typing of some identifiers have already been learned or verified.
 
 \begin{experiment}
-  \label{experi:part_1}
+  \label{exp:part_1}
+  Something
   \hfill
-  \nopad
   \scriptsize
+  \nopad
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
@@ -2799,9 +2764,9 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \begin{experiment}
   \label{experi:part_2}
   \hfill
+  \scriptsize
   \nopad
   \begin{center}
-  \scriptsize
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
       \sz{
@@ -2885,8 +2850,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \begin{experiment}
   \label{experi:part_3}
   \hfill
-  \nopad
   \scriptsize
+  \nopad
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
@@ -2949,8 +2914,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \begin{experiment}
   \label{experi:part_4}
   \hfill
-  \nopad
   \scriptsize
+  \nopad
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
