@@ -24,6 +24,8 @@
 
 \usepackage{url}
 
+\usepackage{tabularx}
+
 \newcounter{pdc}
 \newcounter{sdc}
 
@@ -2702,15 +2704,8 @@ the typing of some identifiers have already been learned or verified.
 
 \begin{experiment}
   \label{experi:part_1}
-  Part 1
-  \\
   \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  % \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1}
   \begin{center}
-  \centering
-  % \setlength{\tabcolsep}{2pt}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
       \sz{
@@ -2721,8 +2716,11 @@ the typing of some identifiers have already been learned or verified.
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
+    \toprule
     \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
+    \cmidrule{3-5}
     \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    \midrule
     \pdc. &
     \J{[x => [y => y]]} 
     & \pass & \pass & \pass \\
@@ -2765,6 +2763,7 @@ the typing of some identifiers have already been learned or verified.
     \pdc. &
     \J{[xs => poly(head(xs))]}
     & \pass & \pass & \pass \\
+    \bottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2786,13 +2785,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_2}
-  Part 2
-  \\
   \begin{center}
   \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
       \sz{
@@ -2803,11 +2797,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    
+    \toprule
     \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    
+    \cmidrule{3-5}
     \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    
+    \midrule 
     \pdc. &
     \J{length(ids)}
     & \pass & \pass & \pass \\
@@ -2867,20 +2861,16 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \pdc. &
     \J{revapp(argST)(runST)}
     & \pass & \pass & \pass \\
-    
+
+    \bottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
 
 \begin{experiment}
   \label{experi:part_3}
-  Part 3
-  \\
   \begin{center}
   \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
@@ -2891,10 +2881,12 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    
+
+    \toprule
     \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    
+    \cmidrule{3-5} 
     \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    \midrule
     
     \pdc. &
     \J{k(h)(l)}
@@ -2932,19 +2924,15 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \J{choose(id)([x => auto'(x)])}
     & \pass & \pass & \pass \\
     
+    \bottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
 
 \begin{experiment}
   \label{experi:part_4}
-  Part 4
-  \\
   \begin{center}
   \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
@@ -2956,9 +2944,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       }
     } \\
     
+    \toprule
     \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    
+    \cmidrule{3-5}
     \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    \bottomrule
     
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ = z in @}
@@ -3051,6 +3041,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{](const(const(id)))}
     }
     & \fail & \fail & \pass \\
+
+    \bottomrule
     
   \end{tabular}
   \end{center}
@@ -3059,13 +3051,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_5}
-  Part 5 
-  \\
   \begin{center}
   \scriptsize
-  % \setlength{\arrayrulewidth}{0.5mm}
-  \setlength{\tabcolsep}{4pt}
-  \renewcommand{\arraystretch}{1}
   \begin{tabular}{l m{35em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{4}{l}{
       \sz{
@@ -3077,9 +3064,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       }
     } \\
     
+    \toprule
     \multicolumn{2}{c}{} & \multicolumn{2}{c}{$impl$} \\ 
-    
+    \cmidrule{3-4}
     \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
+    \midrule
     
     \sdc. &
     \cb{
@@ -3144,6 +3133,15 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{[nil;@ => @]}
     }
     & \pass & \fail \\
+
+    \sdc. &
+    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    & \pass & \fail \\
+
+    \bottomrule
     
   \end{tabular}
   \end{center}

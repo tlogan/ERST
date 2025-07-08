@@ -1043,7 +1043,7 @@ if __name__ == '__main__':
     # test_recursive_relational_factorization_learning_in_typing()
     # test_subtyping_debug()
     # test_max()
-    # test_typing_A9()
+    test_typing_A9()
     # test_subtyping_debug()
 
 
