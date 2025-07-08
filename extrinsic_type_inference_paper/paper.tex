@@ -24,7 +24,7 @@
 
 \usepackage{url}
 
-\usepackage{tabularx}
+\usepackage[table]{xcolor}
 
 \newcounter{pdc}
 \newcounter{sdc}
@@ -61,6 +61,37 @@
 \begin{document}
 
 
+
+\newcommand{\stoprule}{
+  \addlinespace[2pt]
+  \toprule
+  \addlinespace[5pt]
+}
+
+\newcommand{\sbottomrule}{
+  \addlinespace[2pt]
+  \bottomrule
+  \addlinespace[2pt]
+}
+
+\newcommand{\smidrule}[1]{
+  \addlinespace[2pt]
+  \midrule
+  \addlinespace[2pt]
+}
+
+\newcommand{\scmidrule}[1]{
+  \addlinespace[2pt]
+  \cmidrule{#1}
+  \addlinespace[2pt]
+}
+
+
+\newcommand{\sline}{
+  \arrayrulecolor{gray!50}
+  \specialrule{0.4pt}{2pt}{2pt}
+  \arrayrulecolor{black}
+}
 
 \newcommand{\pdc}{\stepcounter{pdc}\arabic{pdc}}
 \newcommand{\sdc}{\stepcounter{sdc}\arabic{sdc}}
@@ -121,19 +152,21 @@
   \setlength{\belowdisplayskip}{4pt}
 }
 
-\newcommand{\examp}[1]{{\nopad \footnotesize \[
-\begin{array}[t]{l}
+\newcommand{\examp}[1]{{\nopad \footnotesize 
+\vspace{-1em}
+\[
+\begin{array}[t]{@{}l}
 #1
 \end{array}
-\]}}
+\]
+\vspace{-1em}
+}}
 
 
 \newcommand{\cb}[1]{
-\begin{array}[t]{l}
-\\
-#1
-\\
-\end{array}
+$
+\begin{array}[t]{@{}l}#1\end{array}
+$
 }
 
 
@@ -2684,64 +2717,109 @@ the typing of some identifiers have already been learned or verified.
   \scriptsize
   \nopad
   \begin{center}
-  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
-      \sz{
-      Does $ impl(\textbf{ctx}\entails e)
-      $ admit the expression? 
-      }
-      \sz{
-      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
-      }
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
     } \\
-    \toprule
-    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    \cmidrule{3-5}
-    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \midrule
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
     \pdc. &
     \J{[x => [y => y]]} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{choose(id)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{choose(nil)(id)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{[x => x(x)]} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{id(auto)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{id(auto')} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{choose(id)(auto)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{choose(id)(auto')} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{foo(choose(ids))(ids)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{poly(id)} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{poly([x => x])} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{id(poly)([x => x])} 
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{[f => f(succ;zero;@), f(true;@)]}
     & \pass & \pass & \pass \\
+
+    \sline
+
     \pdc. &
     \J{[xs => poly(head(xs))]}
     & \pass & \pass & \pass \\
-    \bottomrule
+
+    \sbottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2767,82 +2845,116 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   \scriptsize
   \nopad
   \begin{center}
-  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
-      \sz{
-      Does $ impl(\textbf{ctx}\entails e)
-      $ admit the expression? 
-      }
-      \sz{
-      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
-      }
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
     } \\
-    \toprule
-    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    \cmidrule{3-5}
-    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \midrule 
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
+
     \pdc. &
     \J{length(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{tail(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{head(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{single(id)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{cons(id)(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{cons([x => x])(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{append(single(inc))(single(id))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{g(single(id))(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{map(poly)(single(id))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{map(head)(single(ids))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{app(poly)(id)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{revapp(id)(poly)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{runST(argST)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{app(runST)(argST)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{revapp(argST)(runST)}
     & \pass & \pass & \pass \\
 
-    \bottomrule
+    \sbottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2855,58 +2967,78 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
-      \sz{
-      Does $ impl(\textbf{ctx}\entails e)
-      $ admit the expression? 
-      }
-      \sz{
-      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
-      }
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
     } \\
 
-    \toprule
-    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    \cmidrule{3-5} 
-    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \midrule
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
     
     \pdc. &
     \J{k(h)(l)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{k([x => h(x)])(l)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{r([x => [y => y]])}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{auto(id)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{cons(head(ids))(ids)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{head(ids)(succ;succ;succ;zero;@)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{choose(head(ids))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{def f = revapp(id) in f(poly)}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{choose(id)([x => auto'(x)])}
     & \pass & \pass & \pass \\
-    
-    \bottomrule
+
+    \sbottomrule
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2914,53 +3046,71 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \begin{experiment}
   \label{experi:part_4}
   \hfill
-  \scriptsize
   \nopad
+  \scriptsize
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
-      \sz{
-      Does $ impl(\textbf{ctx}\entails e)
-      $ admit the expression? 
-      }
-      \sz{
-      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
-      }
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
     } \\
-    
-    \toprule
-    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
-    \cmidrule{3-5}
-    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \bottomrule
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
     
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{s}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
     & \pass & \pass & \fail \\
+
+    \sline
     
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ = n3 in @}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{def ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = [@ => n3(n3)] in @}
     & \pass & \pass & \fail \\
+
+    \sline
     
     \pdc. &
     \J{fst(fst(fst(n3([x => x,(zero;@)])(succ;zero;@))))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{(s(s(z)))(s(s(z)))}
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \cb{
@@ -2973,22 +3123,32 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{]) in ...}
     }
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \J{def ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
     & \pass & \pass & \fail \\
+
+    \sline
     
     \pdc. &
     \J{loop([self => [x => if true;@ then x else self(self)(x)]]} 
     & \fail & \fail & \fail \\
+
+    \sline
     
     \pdc. &
     \J{[x => x(x)]([x => x(x)])}
     & \pass & \fail & \fail \\
+
+    \sline
     
     \pdc. &
     \J{auto(auto'(id))}
     & \pass & \pass & \fail \\
+
+    \sline
     
     \pdc. &
     \cb{
@@ -3001,6 +3161,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{][x => x(x)]}
     }
     & \fail & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \cb{
@@ -3011,6 +3173,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{)}
     }
     & \pass & \pass & \pass \\
+
+    \sline
     
     \pdc. &
     \cb{
@@ -3026,7 +3190,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     }
     & \fail & \fail & \pass \\
 
-    \bottomrule
+    \sbottomrule
     
   \end{tabular}
   \end{center}
@@ -3039,23 +3203,27 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   \nopad
   \scriptsize
   \begin{center}
-  \begin{tabular}{l m{35em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
+  \begin{tabular}{p{1em} l >{\centering}p{5em} >{\centering\arraybackslash}p{5em}} 
     \multicolumn{4}{l}{
-      \sz{
-      Does $ impl(\textbf{ctx}\entails e)
-      $ admit the expression? 
-      }
-      \sz{
-      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
-      }
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
     } \\
-    
-    \toprule
-    \multicolumn{2}{c}{} & \multicolumn{2}{c}{$impl$} \\ 
-    \cmidrule{3-4}
-    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
-    \midrule
-    
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{2}{c}{\small implementation} \\ 
+
+    \scmidrule{3-4}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
+
+    \smidrule
+
     \sdc. &
     \cb{
       \J{def stdCmp = [ a,b => } 
@@ -3075,7 +3243,9 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{] in ...}
     }
     & \pass & \assisted \\
-    
+
+    \sline
+
     \sdc. &
     \cb{
       \J{def stdSort : (TOP } 
@@ -3087,7 +3257,9 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{) = sort(stdCmp) in ...} 
     }
     & \pass & \assisted \\
-    
+
+    \sline
+
     \sdc. &
     \cb{
       \J{def double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop([self => } 
@@ -3100,6 +3272,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     }
     & \pass & \fail \\
     
+    \sline
+
     \sdc. &
     \cb{
       \J{def halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop([self => } 
@@ -3112,6 +3286,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     }
     & \pass & \fail \\
     
+    \sline
+
     \sdc. &
     \cb{
       \J{[zero;@ => [zero;@ => @](@)]}
@@ -3120,14 +3296,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     }
     & \pass & \fail \\
 
-    \sdc. &
-    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-    & \pass & \fail \\
-
-    \bottomrule
+    \sbottomrule
     
   \end{tabular}
   \end{center}
