@@ -1710,16 +1710,13 @@ For clarity, we subdivide into the rules into smaller groups according to some t
   \end{mathpar}
 \end{definition}
 
-\TODO{next}
-
-
 \noindent
-Proof subtyping is reflexive. In other words, a type
-is considered both weaker than and stronger than itself. 
+Proof subtyping is reflexive. A type
+is considered both weaker and stronger than itself. 
 We implicitly assume alpha conversion for variables
 bound in existentials and universals.
-An algorithmic interpretation could convert to a nameless representation,
-such as de Bruijin indexes \cite{} before comparing type forms.
+Our implementation of proof typing converts to a nameless representation,
+based on de Bruijn indexes \cite{} before checking equality.
 
 \begin{definition} 
   \label{def:proof_subtyping_implication_preservation}
@@ -1754,18 +1751,21 @@ such as de Bruijin indexes \cite{} before comparing type forms.
 \end{definition}
 
 \noindent
-Both entry types and path types may be viewed as analogs of propositional implication. 
+Both entry types and path types are analogous to implication. 
 However, unlike the typical separate rules for introduction and elimination in propositional implication,
-The Proof Subtyping for each implication types combines the semantics for introduction
-and elimination into a single preservation rule.
-For entries and paths, Proof Subtyping preserves the form if the type's constituent parts meet certain criteria. 
-For entries $(... \entails \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r \given ...)$,
-Proof Subtyping simply checks that the entries' labels match and that 
+the subtyping solver combines the semantics for introduction
+and elimination into rules that preserve the implication structures.
+
+For preservation of entries 
+\ms{\J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r},
+it checks that the entries' labels match and that 
 subtyping holds for their contents.
-For paths $(... \entails \tau_{p} \J{->} \tau_{q} \subtypes \tau_{x} \J{->} \tau_{y} \given ...)$
-Proof Subtyping simply checks that the antecedent of the subtype
-is weaker than the antecedent of the supertype, and the consequent
-of the subtype is stronger than the consequent of the supertype. 
+For preservation of paths 
+\ms{\tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y},
+it checks that the antecedent of the subtype
+is weaker than the antecedent of the supertype, 
+and the consequent of the subtype 
+is stronger than the consequent of the supertype. 
 
 \begin{definition} 
   \label{def:proof_subtyping_expansion_elimination}
@@ -1803,6 +1803,8 @@ of the subtype is stronger than the consequent of the supertype.
     }
   \end{mathpar}
 \end{definition}
+
+\TODO{next}
 
 \noindent
 For elimination of a union $(
