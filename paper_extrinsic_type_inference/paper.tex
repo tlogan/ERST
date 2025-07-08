@@ -264,61 +264,32 @@ complexity and may fragment code in ways that obscures its essence.
 An alternative approach is to simply relax the intrinsic type requirements,
 and infer types extrinsically according to the control flow of the program. 
 
-\TODO{OLD STUFF BELOW}
+There have been some relaxations of intrinsic types to enable sightly more code reusability.
+Refinement types (Pfenning) \cite{} removed the intrinsic strongest type of sums of patters,
+allowing pattern matching with incomplete pattern coverage. It inferred stronger
+types too, by using intersection against the intrinsic weakest type to find safe but stronger types
+that could be used in functions with stronger assumptions. 
+Unfortunately, refinements aren't sufficient to handle the full range of structural mixing 
+and code reusability allowed by untyped languages.
+More recently, SuperF \cite{} demonstrated removal the the weakest intrinsic type,
+which enabled it infer principal types with subtyping constraints, 
+where second-order parametric
+types were insufficient. However, SuperF was not concerned with how functions
+with mixed structures could be represented literally.
+On the other hand, MLstruct \cite{} consisted of a detailed language design that allows
+constructing functions that mix structures, as long as information about the constructors
+are specified in particular ways. 
+MLStruct relaxed intrinsic requirements in a few ways, but still required a heavy annotation
+burden and restricted control flow in a significant way.
 
-There have been some relaxations of intrinsic type systems, allowing for sightly more code reusability.
-Refinement types (Pfenning) \cite{} allow reusing data constructors in stronger spaces than their intrinsic types, by
-inferring refinement types for particular uses.
-Unfortunately, refinements aren't sufficient to handle the full range of data constructor reusability allowed by untyped languages.
-
-In order to achieve a language with a high degree of both code reusability and type inference, 
-This work presents an extremely extrinsic type inference system
-that allows programs to be as flexible as those in untyped languages
-without any required annotation burden. 
-Neither functions nor constructors is required to have
-any intrinsic type information annotated by the programmer in order
-to guarantee that highly reusable code does not get stuck.
-Although annotations are allowed to enable programmers to check their logic,
-annotations do not play any role in aiding type inference. In fact, 
-type checking of annotations is constructed from type inference, 
-so soundness and completeness of type inference with respect to type checking is trivial.  
-
-
-\TODO{note how the key to extrinsic type inference is describing flow}
-
-In order to achieve a language with a high degree of both code reusability and type inference, 
-we introduce a novel type system with extrinsic type inference. 
-To avoid hindering the reusability allowed in untyped programming, 
-the type system must allow the type of a given data constructor in one context
-to be stronger, weaker, or incomparable to the type of 
-the same data constructor in a different context. 
-Due to the fact that a data constructor can belong to infinitely many types of varying precision,
-the system leverages subtyping to check, construct, and notate types.
-
-As a byproduct of inferring extrinsic types using subtyping, the system also happens to infer the principal types for 
-certain kinds of higher-order functions, which was first solved by SuperF \cite{}. 
-However, SuperF's programming language and type system is purposefully 
-restricted, and it isn't sufficient for the high-degree of code reusability allowed by untyped languages.
-
-Our extrinsic type system relies on intersection, union, along with their indexed version, and recursive types, in order 
-to construct strong types from the observed programs. 
-To keep things simple, we restrict the reasoning of recursive types to scalars. In future work, 
-we will extend the system to include inductive relational reasoning. By adding inductive relational
-reasoning to the extrinsic type system, one effectively gets an extrinsic alternative to CHC solving \cite{} 
-or liquid types \cite{}.
-
-
-In section \ref{sec:overview}, we give examples of the expressions and types that the system reasons with
-and demonstrate a few of the ways the system can reason. 
-In section \ref{sec:structures}, we define the forms of expressions, types, and ancillaries. 
-In section \ref{sec:dynamic_system}, we define the ground truth.
-In section \ref{sec:static_system}, we describe the verification and type inference mechanisms.
-
-When possible we will guide the design of definitions by soundness and/or completeness properties,
-which, in effect, constrain the space of correct designs with upper and/or lower bounds, respectively. 
-The derivations of these properties are hinted at by the inductive nature of the definitions 
-along with other properties mentioned throughout.
-Proofs of these properties are in the appendix \TODO{...}, section \ref{sect:appendix}.
+This work tackles these limitations, in order to achieve a language design and type inference system,
+such that there are almost no annotations are required, code reusability is uninhibited, and error-free programs
+are guaranteed. The system is extremely extrinsic, requiring no annotations on structures.  
+Despite the lack of assistance from intrinsic types, our system appears to be able to admit
+nearly all the programs admitted by MLStruct and SuperF.
+Moreover, our system's lack of certain intrinsic restrictions, which exists in MLstruct, 
+clears the way for automatic reasoning by induction, which allows even greater code reusability
+without sacrificing safety.  
 
 \section{Overview}
 \label{sec:overview}
@@ -2392,8 +2363,8 @@ of compounded unions.
 \end{definition}
 
 \noindent
-Proof subtyping sequence very simply solves a sequence of subtyping constraints
-and compounds their results. 
+Proof subtyping sequence very simply solves a sequence of subtyping goals
+and compounds their results, such that the solution from one constrains the next. 
 
 \section{Theory}
 \label{sec:theory}
