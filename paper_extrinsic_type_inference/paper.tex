@@ -1665,7 +1665,7 @@ with a least fixed point for both the antecedent and the consequent.
 
 \begin{definition} 
   \label{def:proof_subtyping}
-  Proof Subtyping
+  \emph{proof subtyping}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
@@ -1697,7 +1697,7 @@ For clarity, we subdivide into the rules into smaller groups according to some t
 
 \begin{definition} 
   \label{def:proof_subtyping_reflection}
-  Proof Subtyping (Reflection)
+  \emph{proof subtyping (reflection)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
@@ -1720,7 +1720,7 @@ based on de Bruijn indexes \cite{} before checking equality.
 
 \begin{definition} 
   \label{def:proof_subtyping_implication_preservation}
-  Proof Subtyping (Implication Preservation)
+  \emph{proof subtyping (implication preservation)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
@@ -1769,7 +1769,7 @@ is stronger than the consequent of the supertype.
 
 \begin{definition} 
   \label{def:proof_subtyping_expansion_elimination}
-  Proof Subtyping (Expansion Elimination)
+  \emph{proof subtyping (expansion elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
@@ -1805,11 +1805,11 @@ is stronger than the consequent of the supertype.
 \end{definition}
 
 \noindent
-For elimination of a union \ms{
+For union elimination \ms{
 \tau_a\J{|}\tau_b \subtypes \tau
 },
 it solves elimination for both of union's constituents.
-For elimination of an existential \ms{ 
+For existential elimination \ms{ 
 \J{EXI[}\Theta_l \J{]} \Omega \J{:}\tau_l \subtypes \tau_r
 }, 
 it ensures that the existential's qualifiers
@@ -1827,7 +1827,7 @@ then a solution to the qualifiers implies a solution to the constituent's elimin
 
 \begin{definition} 
   \label{def:proof_subtyping_refinement_introduction}
-  Proof Subtyping (Refinement Introduction)
+  \emph{proof subtyping (refinement introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \psi \given \Theta', \Delta'}
@@ -1862,7 +1862,7 @@ rely on analogous techniques.
 
 \begin{definition} 
   \label{def:proof_subtyping_plastic_elimination}
-  Proof Subtyping (Plastic Elimination)
+  \emph{proof subtyping (plastic elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
@@ -1888,14 +1888,14 @@ rely on analogous techniques.
 \end{definition}
 
 \noindent
-For a elimination of a plastic \ms{\alpha \subtypes \tau} where \ms{\alpha \notin \Theta}, 
+For plastic elimination \ms{\alpha \subtypes \tau} where \ms{\alpha \notin \Theta}, 
 it ensures that the supertype is consistent with all lower bounds of the plastic,
 solutions against those lower bounds. Then it learns that the supertype is an upper bound 
 of the plastic.
 
 \begin{definition} 
   \label{def:proof_subtyping_plastic_introduction}
-  Proof Subtyping (Plastic Introduction)
+  \emph{proof subtyping (plastic introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
@@ -1928,7 +1928,7 @@ relies on analogous techniques.
 
 \begin{definition} 
   \label{def:proof_subtyping_skolem_introduction}
-  Proof Subtyping (Skolem Introduction)
+  \emph{proof subtyping (skolem introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
@@ -1969,7 +1969,7 @@ relies on analogous techniques.
 \end{definition}
 
 \noindent
-For the introduction of a skolem \ms{\tau \subtypes \alpha} where \ms{\alpha \in \Theta},
+For skolem introduction \ms{\tau \subtypes \alpha} where \ms{\alpha \in \Theta},
 there are two possibilities.
 In the first scenario, the skolem has a plastic as a lower bound.
 If effect, this enables learning lower bounds on the skolem,
@@ -1983,7 +1983,7 @@ a mutual dependence between plastic elimination and skolem elimination.
 
 \begin{definition} 
   \label{def:proof_subtyping_skolem_elimination}
-  Proof Subtyping (Skolem Elimination)
+  \emph{proof subtyping (skolem elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
@@ -2029,7 +2029,7 @@ rely on analogous techniques.
 
 \begin{definition} 
   \label{def:proof_subtyping_implication_rewriting}
-  Proof Subtyping (Implication Rewriting)
+  \emph{proof subtyping (implication rewriting)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
@@ -2095,7 +2095,7 @@ may need to be rewritten as two paths (or two entries).
 
 \begin{definition} 
   \label{def:proof_subtyping_lfp_elimination}
-  Proof Subtyping (Least Fixed Point Elimination)
+  \emph{proof subtyping (least fixed point elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
@@ -2141,27 +2141,29 @@ may need to be rewritten as two paths (or two entries).
   \end{mathpar}
 \end{definition}
 
-\TODO{next}
-
 \noindent
-For least fixed point elimination $(
-... \entails \J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r \given ...
-)$, 
-Proof Subtyping reasons by mathematical induction. 
-It substitutes the super type $\tau_r$
-into all positive occurrences of the self reference $\alpha$ in the least fixed point body $\tau_l$.
-It then solves the elimination of this substitution into the super type 
-$(
-... \tau^\dagger \subtypes \tau_r \given ...
-)$.
-Using this polar substitution is stronger than the direct requirement of mathematical induction,
-which is that the body is stronger than the supertype $\tau_l \subtypes \tau_r$ 
-assuming the induction hypothesis that the self reference is stronger than the super type
-$\alpha \subtypes \tau_r$ 
+For least fixed point elimination \ms{
+\J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r
+}, there are a few scenarios
+that may work. 
+In the first scenario, the solver recognizes that the supertype
+is an entry, so it factors out the corresponding column from
+the least fixed point.
+In the second scenario, the solver recognizes that 
+the constituent type doesn't contain the self reference,
+so it's sufficient to simply solve the elimination of the constituent.  
+In the third case, the solver performs mathematical induction.
+It substitutes the super type \ms{\tau_r}
+into all positive occurrences of the self reference \ms{\alpha} within
+the least fixed point's constituent type \ms{\tau_l}.
+It then solves the elimination of this substitution into the super type.
+In effect, solving the least fixed point elimination under the positive substitution is 
+akin to deriving the least fixed point elimination under the assumption of the induction hypothesis,
+\ms{\alpha \subtypes \tau_r}.
 
 \begin{definition} 
   \label{def:proof_subtyping_difference_intro}
-  Proof Subtyping (Difference Introduction)
+  \emph{proof subtyping (difference introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \typdiff \eta \given \Theta', \Delta'}
@@ -2185,28 +2187,17 @@ $\alpha \subtypes \tau_r$
 \end{definition}
 
 \noindent
-For difference introduction $(
-... \entails \tau \subtypes \tau_r \typdiff \eta \given ...
-)$, 
-Proof Subtyping checks that subtyping holds for the positive part 
-$(
-... \entails \tau \subtypes \rho \given ...
-)$.
-Then it requires that there are no free variables
-in the subtracted part $(
-\textbf{ftv}(\eta) \subseteq \emptyset
-)$,
-and also that introduction of the subtracted part fails $(
-  \nexists \Theta', \Delta' .\  
-  \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
-)$.
-The restricted form of a negatable type $\eta$ and its lack of free variables
-ensures that its introduction is complete,
-which in turn ensures that its failure is sound.
+For difference introduction \ms{\tau \subtypes \tau_r \typdiff \eta}, 
+it checks that subtyping holds for the positive part 
+and fails for the subtracted part.
+Additionally, it requires that the subtracted part is negatable
+\ms{\Theta, \Delta \Vvdash \eta}, 
+which ensures that its introduction is complete,
+thus failure of its introduction is sound. 
 
 \begin{definition} 
   \label{def:proof_subtyping_lfp_intro}
-  Proof Subtyping (Least Fixed Point Introduction)
+  \emph{proof subtyping (least fixed point introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
@@ -2237,23 +2228,20 @@ which in turn ensures that its failure is sound.
 \end{definition}
 
 \noindent
-For least fixed point introduction $(
-... \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given ...
-)$,
-Proof Subtyping employs a heuristic $(
-... \entails \tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
-)$ 
-to approximately judge whether or not the subtyping is decidable. 
-Once the syntactic forms of the types indicate that a decision can be made,
-then Proof Subtyping simply unrolls the least fixed point type 
-and solves the new subproblem $(
-... \entails \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
-\given ...
-)$.
+For least fixed point introduction \ms{
+\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r
+}, the solver has a couple options.
+One option is to check for a syntactic guarantee that the least fixed point is inflatable without diverging 
+\ms{
+\tau_l \circlearrowleft \J{LFP[} \alpha \J{]} \tau_r
+} and then solve the inflated introduction.
+Alternatively, it can strengthen the least fixed point
+with union drop \ms{\alpha \vdash \tau_r \supertypes \tau_r'},
+which drops any parts of the union containing the self reference. 
 
 \begin{definition} 
   \label{def:proof_subtyping_diff_elimination}
-  Proof Subtyping (Difference Elimination)
+  \emph{Proof Subtyping (Difference Elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau_l \typdiff \eta \subtypes \tau_r \given \Theta', \Delta'}
@@ -2270,17 +2258,14 @@ and solves the new subproblem $(
 \end{definition}
 
 \noindent
-For difference elimination $(
-... \entails \rho \typdiff \eta \subtypes \tau \given ...
-)$,
-Proof Subtyping simply rewrites the problem in terms of union
-$(
-... \entails \rho \subtypes \tau \J{|} \eta \given ...
-)$.
+For difference elimination \ms{ 
+\rho \typdiff \eta \subtypes \tau
+},
+it simply rewrites the problem in terms of union.
 
 \begin{definition} 
   \label{def:proof_subtyping_expansion_introduction}
-  Proof Subtyping (Expansion Introduction)
+  \emph{Proof Subtyping (Expansion Introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
@@ -2310,7 +2295,7 @@ $(
     }
   \end{mathpar}
 \end{definition}
-
+\TODO{next}
 \noindent
 Expansion introduction provides a means for introducing
 generalized types from one of their instances.
