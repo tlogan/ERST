@@ -2467,21 +2467,43 @@ SOLVABLE:
 
 
     def solve_plastic_elimination(self, world : World, lower : TVar, upper : Typ) -> list[World]:
-            constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-            subbed_constraints = list(constraints.difference(world.constraints))
-            return [
-                replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
-                for w0 in self.solve_multi(world, subbed_constraints)
-            ]
+        constraints = [
+            Subtyping(st.lower, upper)
+            for st in world.constraints
+            if st.upper == lower
+        ]
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(world, constraints)
+        ]
+        ###### Relational ##########
+        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
+        subbed_constraints = list(constraints.difference(world.constraints))
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(world, subbed_constraints)
+        ]
+        #########################
 
 
     def solve_plastic_introduction(self, world : World, lower : Typ, upper : TVar) -> list[World]:
+        constraints = [
+            Subtyping(lower, st.upper)
+            for st in world.constraints
+            if st.lower == upper
+        ]
+        return [
+            replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
+            for w0 in self.solve_multi(world, constraints)
+        ]
+        ####### Relational ############
         constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
         subbed_constraints = list(constraints.difference(world.constraints))
         return [
             replace(w0, constraints = w0.constraints.add(Subtyping(lower, upper))) 
             for w0 in self.solve_multi(world, subbed_constraints)
         ]
+        ##########################
 
     def is_finite_paths_typ(self, t : Typ) -> bool:
         if isinstance(t, Imp): 
@@ -2608,13 +2630,14 @@ SOLVABLE:
             if st.lower == lower 
         ).union(find_factors(world, lower))
 
-        constraints = self.sub_polar_constraints(True, world.constraints, lower.id, upper)
-        subbed_constraints = list(constraints.difference(world.constraints))
+        worlds = []
         if any(
             isinstance(upper_part, TVar) and upper_part.id not in world.closedids
             for upper_part in upper_parts
-        ) and bool(self.solve_multi(world, subbed_constraints)):
-            return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+        ):
+            worlds = self.solve_plastic_elimination(world, lower, upper)
+        if worlds:
+            return worlds
         else:
             closed_upper_parts = [
                 upper_part
@@ -2651,13 +2674,14 @@ SOLVABLE:
             if st.upper == upper 
         )
 
-        constraints = self.sub_polar_constraints(False, world.constraints, upper.id, lower)
-        subbed_constraints = list(constraints.difference(world.constraints))
+        worlds = []
         if any( 
             (isinstance(lower_part, TVar) and lower_part.id not in world.closedids)
             for lower_part in lower_parts
-        ) and bool(self.solve_multi(world, subbed_constraints)):
-            return [replace(world, constraints = world.constraints.add(Subtyping(lower, upper)))]
+        ): 
+            worlds = self.solve_plastic_introduction(world, lower, upper)
+        if worlds:
+            return worlds
         else:
             closed_lower_parts = [
                 lower_part

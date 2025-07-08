@@ -1010,7 +1010,7 @@ if __name__ == '__main__':
     # test_variable_subtypes_tag_pair()
     # test_free_var_annotation()
     # test_typing_structures_2()
-    # test_max()
+    test_max()
     # test_recursive_relational_factorization_learning_in_typing()
 
 
