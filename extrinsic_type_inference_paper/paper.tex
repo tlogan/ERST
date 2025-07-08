@@ -116,7 +116,12 @@
 \newcommand{\sz}[1]{\text{\small #1}}
 
 
-\newcommand{\block}[1]{{\footnotesize \[
+\newcommand{\nopad}{
+  \setlength{\abovedisplayskip}{4pt}
+  \setlength{\belowdisplayskip}{4pt}
+}
+
+\newcommand{\examp}[1]{{\nopad \footnotesize \[
 \begin{array}[t]{l}
 #1
 \end{array}
@@ -195,7 +200,7 @@ As for constructions and sums of patterns, consider a Standard ML program that c
 using \code{nil} and \code{cons} as data constructors representing lists, 
 and using \code{zero} and \code{succ} as data constructors representing natural numbers.
 
-\block{
+\examp{
   \J{fun len(nil) = zero}
   \\
   \J{\ \ | len(cons(x,xs)) = succ(len(xs))}
@@ -204,7 +209,7 @@ and using \code{zero} and \code{succ} as data constructors representing natural 
 \noindent
 Standard ML uses the datatype mechanism to specify intrinsic types on both patterns and structures.
 
-\block{
+\examp{
   \J{datatype nat = zero | succ of nat} 
   \\
   \J{datatype 'a list = nil | cons of 'a * 'a list}
@@ -215,7 +220,7 @@ For the constructions with \code{zero} and \code{succ}, the nat specification
 means that the weakest type the constructions could belong to is \code{nat},
 which forbids mixing the constructions with those not specificated in the datatype, like \code{zero} with \code{nil}: 
 
-\block{
+\examp{
   \J{fn nil => zero}
   \\
   \J{\ | cons(x,xs) => nil}
@@ -227,7 +232,7 @@ means that the strongest assumed for the sum of the patterns
 is \code{'a list}. 
 Thus, it forbids pattern matching fewer patterns than those in the datatype.
 
-\block{
+\examp{
   \J{fun nlen(nil) = zero}
 }
 
@@ -238,7 +243,7 @@ content has type \code{'a * 'a list}. Thus,
 it forbids overspecifying pattern contents,
 like a length function that only works on even length lists.  
 
-\block{
+\examp{
   \J{fun evlen(nil) = zero}
   \\
   \J{\ \ | evlen(cons(x,cons(y,zs))) = succ(succ(evlen(zs)))}
@@ -318,7 +323,7 @@ looking at a few examples.
 A function can be constructed from multiple paths. 
 Consider the function \ms{\J{talky}}, which completes a simple English phrase.
 
-\block{
+\examp{
   \J{def talky = (}
   \\
   \I \J{[hello;@ => world;@]}
@@ -335,7 +340,7 @@ Since there is no recursion, the number of paths is finite.
 For these simple finite functions, the type system constructs
 an isomorphic type without any weakening in precision. 
 
-\block{
+\examp{
   \J{(<hello>@ -> <world>@) \&}
   \\
   \J{(<good>@ -> <morning>@) \&} 
@@ -352,7 +357,7 @@ Although the type of function $\J{talky}$ is no weaker than the actual function,
 lifting into the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
 
-\block{
+\examp{
   \J{def x : <hello> @ | <thank> @ = ... in}
   \\
   \J{...}
@@ -366,7 +371,7 @@ Consider an application of the function to a variable argument.
 If the type system affirms the type annotation,
 then it goes on to infer the type of the application. 
 
-\block{
+\examp{
   \J{<world> @ | <you> @}
 }
 
@@ -381,7 +386,7 @@ like a function, or else the program is erroneous.
 Consider the higher order function $\J{foo}$ which takes a function as input
 and applies it to the number two and the boolean true.
 
-\block{
+\examp{
   \J{def foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
 }
 
@@ -394,7 +399,7 @@ $\J{f}$.
 One possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an option. 
 
-\block{
+\examp{
   \J{f : ALL[X] X -> <some> X}
 }
 
@@ -402,7 +407,7 @@ input in an option.
 Another possibility is that the type system requires that $\J{f}$ is a function that wraps its
 input in an list. 
 
-\block{
+\examp{
   \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
 }
 
@@ -414,7 +419,7 @@ that a principal type could be automatically constructed for functions like $\J{
 Our extrinsic type system relies on similar principles of solving subtyping constraints,
 and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
 
-\block{
+\examp{
   \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
 }
 
@@ -426,7 +431,7 @@ Suppose the type system chooses the variable type $\J{F}$ for the input paramete
 Eventually, due to the applications of the parameter $\J{f}$, the type
 system will attempt to find a solution to two constraints on $\J{F}$
 
-\block{
+\examp{
   \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
   \\
   \J{F} \subtypes \J{(<true> @ -> Y)}
@@ -437,7 +442,7 @@ A function can represent infinite paths by using recursion.
 Consider the function $\J{repeat}$, which takes an item and a natural number
 as inputs and returns a list of that item repeated the input number of times.
 
-\block{
+\examp{
   \J{def repeat = [x => loop([self => [}
   \\
   \I \J{[zero;@ => nil;@]}
@@ -454,7 +459,7 @@ that preserves all the paths. If our type system had a greatest fixed point
 type constructor, then we could concisely represent such a type with minimal
 rewriting.
 
-\block{
+\examp{
   \J{ALL[T] T -> GFP[R](} 
   \\
   \I \J{(<zero> @ -> <nil> @) \&}
@@ -474,7 +479,7 @@ In this work, the type system actually avoids constructing a relational type, an
 constructs a type that is significantly weaker than the actual behavior of the function,
 by factoring the paths into a recursive space of inputs and a recursive space of outputs. 
 
-\block{
+\examp{
   \J{ALL[T] T ->} 
   \\
   \I \J{(LFP[R] <zero> @ | <succ> R)}
@@ -498,7 +503,7 @@ recursive types.
 Consider applying the function $\J{repeat}$ to some item and the number two, 
 which results in the type system checking that two is in fact an instance of the natural numbers.
 
-\block{
+\examp{
   \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
 }
 
@@ -513,7 +518,7 @@ In the followup paper, inductive relational reasoning will remedy this limitatio
 Another scenario that may arise is one in which the input to a function has an recursive type.
 Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
 
-\block{
+\examp{
   \J{def x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
   \\
   \J{...}
@@ -526,7 +531,7 @@ Consider the application of the function $\J{repeat}$ to a variable whose type r
 \noindent
 The application results in the type system checking that natural numbers are weaker than even numbers. 
 
-\block{
+\examp{
   \J{LFP[R] <zero> @ | <succ> <succ> R}
   \\
   \subtypes
@@ -538,7 +543,7 @@ The application results in the type system checking that natural numbers are wea
 Since even numbers are represented recursively, the type system performs mathematical induction,
 proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
 
-\block{
+\examp{
   \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
   \\
   \entails
@@ -550,7 +555,7 @@ proving under the assumption that the subtyping relation holds for the self refe
 In practice, the type system actually substitutes the supertype into
 the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
 
-\block{
+\examp{
   \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
   \\
   \subtypes 
@@ -568,7 +573,7 @@ In followup work, we will extend this inductive reasoning to handle inductive re
 Functions on lists can be generic, in that they may be independent of the item values, as in \code{repeat}.
 Additionally, they may factor out the details that depend on item values, as in \code{sort}. 
 
-\block{
+\examp{
   \J{def sort : ALL[T] (T*T->} \textbf{Bool} \J{) -> }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ = }
   \\
   \J{[ cmp => ...] in ...}
@@ -579,7 +584,7 @@ The notation \ms{\textbf{Bool}} and \ms{\textbf{List}(\J{X})} are meta-language 
 The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
 Suppose we already have one scalar comparison function and one lexicographic comparison function.
 
-\block{
+\examp{
   \J{def scalarCmp : }\textbf{Nat} \J{ -> } \textbf{Nat} \J{ -> } \textbf{Bool} \J{ = ... in}
   \\
   \J{def lexicoCmp : }\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} \J{ = ... in} 
@@ -591,7 +596,7 @@ Suppose we already have one scalar comparison function and one lexicographic com
 In Standard ML, the programmer would need a different specialization for every predefined
 datatype. 
 
-\block{
+\examp{
   \J{def scalarSort = sort(scalarCmp) in}
   \\
   \J{def lexicoSort = sort(lexicoCmp) in} 
@@ -605,7 +610,7 @@ the generic function to know many different names for roughly the same behavior 
 of code at the call site. 
 Untyped languages or extrinsically typed languages can bypass this rigidity found in intrinsically typed by specializing in multiple ways.
 
-\block{
+\examp{
   ...
   \\
   \J{def genCmp = [a,b => } 
@@ -657,6 +662,7 @@ and used without any loss in type inference precision.
 
 \begin{definition}
   \label{def:expression}
+  \nopad 
   \small
   \[\begin{array}[t]{rr@{}l}
     \com{expression} &
@@ -710,10 +716,10 @@ multiple paths guarded by patterns.
 \begin{definition} 
   \label{def:expression_desugaring}
   \emph{expression desugaring}
-  \hfill 
-  \small
-  \boxed{\llbracket s \rrbracket^\square = e}
+  \hfill
+  \small \boxed{\llbracket s \rrbracket^\square = e}
   \\
+  \nopad
   \begin{align*}
       \llbracket l \J{;} e \rrbracket^\square &= \J{<}l \J{>}\ e
       \\
@@ -2569,8 +2575,10 @@ or simply can't admit the program.
 
 
 
-\begin{definition} Experimental Expressions and Types  
+\begin{definition} 
   \label{def:experimental_expressions_and_types}
+  \emph{experimental expressions and types} 
+  \nopad
   \scriptsize
   \[
   \begin{array}[t]{ll}
@@ -2621,8 +2629,11 @@ or simply can't admit the program.
 For clarity, we define a few metalinguistic terms to stand in for 
 types and expressions used as inputs to our system. 
 
-\begin{definition} Experimental Typing Context  
+
+\begin{definition} 
   \label{def:experimental_typing_context}
+  \emph{experimental typing context}
+  \nopad
   \tiny
   \[
   \begin{array}[t]{ll}
@@ -2704,6 +2715,8 @@ the typing of some identifiers have already been learned or verified.
 
 \begin{experiment}
   \label{experi:part_1}
+  \hfill
+  \nopad
   \scriptsize
   \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
@@ -2785,6 +2798,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_2}
+  \hfill
+  \nopad
   \begin{center}
   \scriptsize
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
@@ -2869,8 +2884,10 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_3}
-  \begin{center}
+  \hfill
+  \nopad
   \scriptsize
+  \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
@@ -2931,8 +2948,10 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_4}
-  \begin{center}
+  \hfill
+  \nopad
   \scriptsize
+  \begin{center}
   \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
@@ -3051,8 +3070,10 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \begin{experiment}
   \label{experi:part_5}
-  \begin{center}
+  \hfill
+  \nopad
   \scriptsize
+  \begin{center}
   \begin{tabular}{l m{35em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{4}{l}{
       \sz{
