@@ -1559,9 +1559,9 @@ where the variables represent possible types of expressions.
 
 \noindent
 For a given context and expression, 
-proof typing infers a type and a subtyping sequence,
+proof typing attempts to infer a type and a subtyping sequence,
 such that if the context holds,
-then there is a solution to the generated subtyping sequence, such that
+then there is a solution to the generated subtyping sequence, under which 
 the expression inhabits the inferred type.
 The context consists of skolems \ms{\Theta}, subtypings \ms{\Delta}, and typings \ms{\Gamma}. 
 The contextual subtypings and typings constrain the search space of valid typings, 
@@ -1569,7 +1569,8 @@ such that the generated subtypings are consistent with them.
 In fact, the generated subtypings contain
 all the contextual subtypings, as it keeps the definition a bit less cluttered.
 Skolems are variables that further constrain the search space. 
-The generated constraints must hold for every interpretation.  
+The generated subtypings must be satisfiable under every interpretation of
+skolems for which the contextual constraints are satisfiable.  
 Proof typing may also generate additional skolems, which can be used to constrain
 subsequent sub-problems.
 If a variable is not in the set of skolems, then we consider it to be plastic,
@@ -1670,17 +1671,29 @@ with a least fixed point for both the antecedent and the consequent.
   \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
 \end{definition}
 
-\TODO{next}
-
 \noindent
-The subtyping relation must consider the forms of both types in the subtyping relation.
-There are elimination rules, which make decisions based on the form of the subtype,
-and there are introduction rules, which make decisions based on the form of the supertype.
+For a given context and two abstract types,
+proof subtyping attempts to solve the subtyping between the two types,
+by generating a subtyping sequence, such that if the context holds,
+then there is a solution to the generated subtyping sequence, under which   
+the initial subtyping also holds. 
+
+The context consists of skolems \ms{\Theta} and subtypings \ms{\Delta}. 
+The contextual subtypings constrain the search space of valid subtypings, 
+such that the generated subtypings are consistent with them. 
+In fact, the generated subtypings contain all the contextual subtypings.
+As with proof typing, skolems constrain the search space,
+such that the generated subtypings must be satisfiable
+for every interpretation of skolems for which the contextual subtypings are satisfiable.
+
+In order to find a solution, the solver considers the forms 
+of both types in the subtyping relation.
+There are elimination rules, which reason according to the form of the subtype,
+and there are introduction rules, which reason according to the form of the supertype.
 Some rules handle both elimination and introduction of type forms.
-Due to the complexity of types and there being two input types,
-Proof Subtyping relies on many rules. 
-For clarity, we subdivide the Proof Subtyping rules 
-according to some themes.
+Due to the numerous forms of types where each form is considered for each of the two types,
+proof subtyping relies on many rules.  
+For clarity, we subdivide into the rules into smaller groups according to some themes.
 
 \begin{definition} 
   \label{def:proof_subtyping_reflection}
@@ -1696,6 +1709,9 @@ according to some themes.
     }
   \end{mathpar}
 \end{definition}
+
+\TODO{next}
+
 
 \noindent
 Proof subtyping is reflexive. In other words, a type
@@ -2508,10 +2524,10 @@ even in some cases where the typing fails}
   \\
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails e \hastype \tau \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
     } {
       \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta 
       \implies
       \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
     }
