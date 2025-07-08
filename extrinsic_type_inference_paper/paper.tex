@@ -78,9 +78,9 @@
 
 % \newcommand{\cmark}{\ding{51}}%
 % \newcommand{\xmark}{\ding{55}}%
-\newcommand{\pass}{\text{\normalsize \color{Green} \ding{51}}}
-\newcommand{\assisted}{\text{\normalsize \color{Purple} \ding{45}}}
-\newcommand{\fail}{\text{\normalsize \color{red} \ding{55}}}
+\newcommand{\pass}{\text{\scriptsize \color{Green} \ding{51}}}
+\newcommand{\assisted}{\text{\scriptsize \color{Purple} \ding{45}}}
+\newcommand{\fail}{\text{\scriptsize \color{red} \ding{55}}}
 
 \newcommand{\unique}{\ \dagger}
 
@@ -2711,7 +2711,7 @@ the typing of some identifiers have already been learned or verified.
   \begin{center}
   \centering
   % \setlength{\tabcolsep}{2pt}
-  \begin{tabular}{|l m{30em} | >{\centering}m{5em} | >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
       \sz{
       Does $ impl(\textbf{ctx}\entails e)
@@ -2721,67 +2721,50 @@ the typing of some identifiers have already been learned or verified.
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    \hline
-    \multicolumn{2}{|c|}{} & \multicolumn{3}{c|}{$impl$} \\ 
-    \hline
-    \multicolumn{2}{|c|}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \hline\hline
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
+    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
     \pdc. &
     \J{[x => [y => y]]} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{choose(id)} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{choose(nil)(id)} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{[x => x(x)]} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{id(auto)} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{id(auto')} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{choose(id)(auto)} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{choose(id)(auto')} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{foo(choose(ids))(ids)} 
-    & \fail & \pass & \pass \\
-    \hline
+    & \pass & \pass & \pass \\
     \pdc. &
     \J{poly(id)} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{poly([x => x])} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{id(poly)([x => x])} 
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{[f => f(succ;zero;@), f(true;@)]}
     & \pass & \pass & \pass \\
-    \hline
     \pdc. &
     \J{[xs => poly(head(xs))]}
     & \pass & \pass & \pass \\
-    \hline
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2810,7 +2793,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1}
-  \begin{tabular}{|l m{30em} | >{\centering}m{5em} | >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{5}{l}{
       \sz{
       Does $ impl(\textbf{ctx}\entails e)
@@ -2820,71 +2803,71 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    \hline
-    \multicolumn{2}{|c|}{} & \multicolumn{3}{c|}{$impl$} \\ 
-    \hline
-    \multicolumn{2}{|c|}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \hline\hline
+    
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
+    
+    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    
     \pdc. &
     \J{length(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{tail(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{head(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{single(id)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{cons(id)(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{cons([x => x])(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{append(single(inc))(single(id))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{g(single(id))(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{map(poly)(single(id))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{map(head)(single(ids))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{app(poly)(id)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{revapp(id)(poly)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{runST(argST)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{app(runST)(argST)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{revapp(argST)(runST)}
     & \pass & \pass & \pass \\
-    \hline
+    
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2898,7 +2881,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1}
-  \begin{tabular}{|l m{30em} | >{\centering}m{5em} | >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
       Does $ impl(\textbf{ctx}\entails e)
@@ -2908,47 +2891,47 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    \hline
-    \multicolumn{2}{|c|}{} & \multicolumn{3}{c|}{$impl$} \\ 
-    \hline
-    \multicolumn{2}{|c|}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \hline\hline
+    
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
+    
+    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    
     \pdc. &
     \J{k(h)(l)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{k([x => h(x)])(l)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{r([x => [y => y]])}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{auto(id)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{cons(head(ids))(ids)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{head(ids)(succ;succ;succ;zero;@)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{choose(head(ids))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{def f = revapp(id) in f(poly)}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{choose(id)([x => auto'(x)])}
     & \pass & \pass & \pass \\
-    \hline
+    
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -2962,7 +2945,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1}
-  \begin{tabular}{|l m{30em} | >{\centering}m{5em} | >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
     \multicolumn{5}{l}{
       \sz{
       Does $ impl(\textbf{ctx}\entails e)
@@ -2972,39 +2955,39 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    \hline
-    \multicolumn{2}{|c|}{} & \multicolumn{3}{c|}{$impl$} \\ 
-    \hline
-    \multicolumn{2}{|c|}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
-    \hline\hline
+    
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{$impl$} \\ 
+    
+    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+    
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ = z in @}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{s}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
     & \pass & \pass & \fail \\
-    \hline
+    
     \pdc. &
     \J{def ignore : } \textbf{ChurchNum} \J{ = n3 in @}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{def ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = [@ => n3(n3)] in @}
     & \pass & \pass & \fail \\
-    \hline
+    
     \pdc. &
     \J{fst(fst(fst(n3([x => x,(zero;@)])(succ;zero;@))))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{(s(s(z)))(s(s(z)))}
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \cb{
       \J{def to\_church = loop([self => } 
@@ -3016,23 +2999,23 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{]) in ...}
     }
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \J{def ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
     & \pass & \pass & \fail \\
-    \hline
+    
     \pdc. &
     \J{loop([self => [x => if true;@ then x else self(self)(x)]]} 
     & \fail & \fail & \fail \\
-    \hline
+    
     \pdc. &
     \J{[x => x(x)]([x => x(x)])}
     & \pass & \fail & \fail \\
-    \hline
+    
     \pdc. &
     \J{auto(auto'(id))}
     & \pass & \pass & \fail \\
-    \hline
+    
     \pdc. &
     \cb{
       \J{[y => } 
@@ -3044,7 +3027,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{][x => x(x)]}
     }
     & \fail & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \cb{
       \J{[k => (k([x => x])),(k([x => single(x)])) ](}
@@ -3054,7 +3037,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{)}
     }
     & \pass & \pass & \pass \\
-    \hline
+    
     \pdc. &
     \cb{
       \J{[f => } 
@@ -3068,7 +3051,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{](const(const(id)))}
     }
     & \fail & \fail & \pass \\
-    \hline
+    
   \end{tabular}
   \end{center}
 \end{experiment}
@@ -3083,7 +3066,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
   % \setlength{\arrayrulewidth}{0.5mm}
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1}
-  \begin{tabular}{|l m{35em} | >{\centering}m{5em} | >{\centering\arraybackslash}m{5em} |} 
+  \begin{tabular}{l m{35em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em}} 
     \multicolumn{4}{l}{
       \sz{
       Does $ impl(\textbf{ctx}\entails e)
@@ -3093,11 +3076,11 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
       }
     } \\
-    \hline
-    \multicolumn{2}{|c|}{} & \multicolumn{2}{c|}{$impl$} \\ 
-    \hline
-    \multicolumn{2}{|c|}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
-    \hline\hline
+    
+    \multicolumn{2}{c}{} & \multicolumn{2}{c}{$impl$} \\ 
+    
+    \multicolumn{2}{c}{$e$} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
+    
     \sdc. &
     \cb{
       \J{def stdCmp = [ a,b => } 
@@ -3117,7 +3100,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{] in ...}
     }
     & \pass & \assisted \\
-    \hline
+    
     \sdc. &
     \cb{
       \J{def stdSort : (TOP } 
@@ -3129,7 +3112,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{) = sort(stdCmp) in ...} 
     }
     & \pass & \assisted \\
-    \hline
+    
     \sdc. &
     \cb{
       \J{def double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop([self => } 
@@ -3141,7 +3124,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{]) in ...}
     }
     & \pass & \fail \\
-    \hline
+    
     \sdc. &
     \cb{
       \J{def halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop([self => } 
@@ -3153,7 +3136,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{]) in ...}
     }
     & \pass & \fail \\
-    \hline
+    
     \sdc. &
     \cb{
       \J{[zero;@ => [zero;@ => @](@)]}
@@ -3161,7 +3144,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
       \J{[nil;@ => @]}
     }
     & \pass & \fail \\
-    \hline
+    
   \end{tabular}
   \end{center}
 \end{experiment}
