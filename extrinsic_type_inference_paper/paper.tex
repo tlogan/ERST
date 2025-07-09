@@ -2400,9 +2400,41 @@ From these abstract requirements, we can guarantee
 that the design of our proof semantics is correct with respect
 to our model semantics. 
  
-\TODO{add requirements on packing, polar sub and tidying, and negatble checks}
+\TODO{add requirements on factoring, packing, polar sub and tidying, and negatble checks}
 
-\TODO{for polar sub, dye type by subbing in a fresh skolem}
+\begin{theorem}
+  \label{thm:proof_subtyping_substance}
+  \emph{proof subtyping substance}
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+\noindent
+Proof subtyping substance states that the generated constraints are satisfiable
+assuming the contextual constraints are satisfiable, with respect
+to all interpretations of the contextual skolems.   
+This property follows directly from a slightly stronger theorem,
+which states that the generated constraints are satisfiable and 
+that the constraints on a single variable are as strong or stronger
+than all the constraints with respect to that variable.
+The proof of the stronger statement is by induction.
+The only cases that are actually interesting are the variable rules
+where new constraints are generated.
+In every case that a new constraint is added, it is a constraint on
+a single variable, and in each case the solver compares the new bound on the variable
+to the previous bounds on the other side of the variable. Since bounds on
+opposite sides are the only opportunities for contradictions, the requirement
+preserves the strengthened substance property from the induction hypothesis.
 
 \begin{theorem} 
   \label{thm:proof_subtyping_soundness}
@@ -2446,18 +2478,17 @@ it could be met vacuously by having proof subtyping
 generate an unsatisfiable subtyping constraints.
 To make the stronger guarantee, we can combine it with another theorem.
 
-
 \begin{theorem}
-  \label{thm:proof_subtyping_substance}
-  \emph{proof subtyping substance}
+  \label{thm:proof_typing_substance}
+  \emph{proof typing substance} 
   \small
   \nopad
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
     } {
       \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta 
       \implies
       \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
     }
@@ -2465,21 +2496,11 @@ To make the stronger guarantee, we can combine it with another theorem.
 \end{theorem}
 
 \noindent
-Proof subtyping substance states that the generated constraints are satisfiable
+Proof typing substance states that the generated subtyping constraints are satisfiable
 assuming the contextual constraints are satisfiable, with respect
 to all interpretations of the contextual skolems.   
-This property follows directly from a slightly stronger theorem,
-which states that the generated constraints are satisfiable and 
-that the constraints on a single variable are as strong or stronger
-than all the constraints with respect to that variable.
-The proof of the stronger statement is by induction.
-The only cases that are actually interesting are the variable rules
-where new constraints are generated.
-In every case that a new constraint is added, it is a constraint on
-a single variable, and in each case the solver compares the new bound on the variable
-to the previous bounds on the other side of the variable. Since bounds on
-opposite sides are the only opportunities for contradictions, the requirement
-preserves the strengthened substance property from the induction hypothesis.
+The proof is by induction, and it follows easily from the induction hypothesis
+and proof subtyping soundness. 
 
 \begin{theorem}
   \label{thm:proof_typing_soundness}
@@ -2513,30 +2534,6 @@ and additional lemmas the characterize the relationships between rewritten forms
 Proof typing soundness as the same limitations as proof subtyping soundness. 
 It's not strong enough to guarantee our goal of type inference,
 but we can easily compose it with another property to do so.
-
-\begin{theorem}
-  \label{thm:proof_typing_substance}
-  \emph{proof typing substance} 
-  \small
-  \nopad
-  \begin{mathpar}
-    \inferrule {
-      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
-    } {
-      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta 
-      \implies
-      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
-    }
-  \end{mathpar}
-\end{theorem}
-
-\noindent
-Proof typing substance states that the generated subtyping constraints are satisfiable
-assuming the contextual constraints are satisfiable, with respect
-to all interpretations of the contextual skolems.   
-The proof is by induction, and it follows easily from the induction hypothesis
-and proof subtyping soundness. 
 
 % \begin{theorem}
 %   \label{prop:proof_typing_annotation_soundness}
@@ -3390,9 +3387,16 @@ Additionally, many of these techniques require explicit instantiation to use par
 expressions, which can be seen as an intrinsic restriction that 
 delays pruning the control-flow until a particular usage. 
 
-\TODO{mention impredicative types with subtyping, bidirectional typing, local type inferenc (Pierce)}
-
-\TODO{mention how inferring parameter types and instations is processed before and independent from their subtyping check}
+To reduce the annotation burden and increase expressivity, researchers
+developed ways to infer type instantiations and compare type with varying
+amounts of possible instantiations, by combining impredicative types
+with subtyping and type inference techniques. Bidirectional type inference \cite{}  
+is one such technique where bounds on type variables can be inferred in 
+both directions of the control flow.
+It propagates inferred and annotated knowledge directly from
+the structures of the program and relies on subtyping merely to check compatibility between
+types. Additionally, whether a non-parametric type is an instantiation
+of a parametric type is treated as distinct from subtyping. 
 
 In addition to functions, practical programming languages need to have some form of constructors.
 Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative functions
@@ -3546,6 +3550,9 @@ With inductive reasoning over relational types, we will be
 moving closer to a full fledged theorem proving system,
 in which subtyping enables a form of proof automation,
 by reusing the proof of one proposition as a proof for another. 
+We may also explore different strategies for rewriting types 
+to get as much expressivity as possible.
+
 
 \newpage
 
