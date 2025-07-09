@@ -1522,17 +1522,17 @@ where the variables represent possible types of expressions.
     \inferrule {
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
-      \Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi_\nu
+      \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
       \\\\
-      \alpha_\nu \downarrow \Pi_\nu
+      \alpha \downarrow \Pi
       \fallingdotseq 
-      \alpha_\mu \uparrow \Pi_\mu
+      \alpha' \uparrow \Pi'
       \\
-      \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha_\mu \entails \Pi_\mu) = \tau_\mu
+      \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha' \entails \Pi') = \tau'
       \\\\
-      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{left} \mapsto \tau_l
+      \factorsinto \J{LFP[} \alpha' \J{]}\tau' \subtypes \J{left} \mapsto \tau_l
       \\
-      \factorsinto \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{right} \mapsto \tau_r
+      \factorsinto \J{LFP[} \alpha' \J{]}\tau' \subtypes \J{right} \mapsto \tau_r
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -3467,19 +3467,12 @@ with expressions and learns subtyping constraints.
 
 \TODO{discuss implicit and flow based approaches}
 
-\TODO{discuss universal, existential, iso-recursive types}
+\TODO{enumerate the various work with various type forms}
 
 \TODO{note how our structural requirements on recursive types prevent typing generators}
 
-
-\TODO{mention regular tree reasoning}
-
-\TODO{discuss how every types of expresions are implictly determine}
-
-\TODO{discuss how types are iso-recursive, but are implicitl}
-
-\TODO{look into the issue of caching related to recursion}
-
+\TODO{note the distinction between our least fixed point types and the more general 
+recursive types}
 
 \section{Conclusion}
 \label{sec:conclusion}
