@@ -3104,6 +3104,10 @@ SOLVABLE:
             )
             if factor and isinstance(upper, TEntry):
                 return self.solve(world, factor, upper.body)
+            elif isinstance(lower.body, Imp) and lower.id not in extract_free_vars_from_typ(s(), lower.body.antec):
+                # TODO: add distribution rule to paper
+                dist_lower = Imp(lower.body.antec, LeastFP(lower.id, lower.body.consq))
+                return self.solve(world, dist_lower, upper)
             elif lower.id not in extract_free_vars_from_typ(s(), lower.body):
                 return self.solve(world, lower.body, upper)
             else:
