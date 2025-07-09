@@ -1619,12 +1619,14 @@ class Solver:
         checker._checking = True 
         return checker
 
-    def is_useless(self, positive : bool, t : Typ):
+    def is_useless(self, positive : bool, t : Typ) -> bool:
         ult = Top() if positive else Bot()
         if t == ult: 
             return True
         elif isinstance(t, Imp): 
             return self.is_useless(not positive, t.antec) or self.is_useless(positive, t.consq)
+        else:
+            return False
 
 
 
@@ -3576,7 +3578,7 @@ result:
             for left_typ in [self.solver.interpret_id_weakest(local_constraints, in_typ.id)] 
             for pre_right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
             for (right_typ, right_constraints) in [
-                # TODO: handle recursion nested in function
+                # # TODO: handle recursion nested in function
                 # [
                 #     (right_body, right_constraints)
                 #     for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
