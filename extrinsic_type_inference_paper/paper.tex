@@ -339,6 +339,11 @@ Moreover, our system's lack of certain intrinsic restrictions, which exists in M
 clears the way for automatic reasoning by induction, which allows even greater code reusability
 without sacrificing safety.  
 
+\TODO{summarize contributions}
+\TODO{full extrinsic, no annotations required to very programs on par with untyped pgograms in terms of code reusability}
+\TODO{Normalizing all approximate control flow information into subtyping, allowing types to be infered in both directions}
+\TODO{inductive reasoning on scalars without any intrinsic specifications}
+
 \section{Overview}
 \label{sec:overview}
 We designed the type system around a simple applicative language with pattern matching,
@@ -3309,6 +3314,8 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 \TODO{add example of path sensitivity for if then else conditional}
 
+\TODO{add example of a counter stream}
+
 \noindent
 The experiment on programs with constructors demonstrate
 that our system is roughly as expressive as untyped languages
@@ -3324,33 +3331,102 @@ is at least one branch that could be used.
 \section{Related Work}
 \label{sec:related_work}
 
-Over the past decades many type inference have been designed and analyzed 
-with varying degrees of expressivity and varying degrees of intrinsic requirements
-or extrinsic relaxations, with respect to both functions (e.g. functions or paths dependent on variables)
-and constructors (e.g. data constructors or records).  
-The first technique to infer parametric types for parametric
-data without any assistance from annotations was Hindley-Milner type inference \cite{}. Despite its age, 
-it remains one of the foundational 
+Our system approximates values with many forms of types
+and reasons over their control with with subtyping. Our work
+builds on the techniques from MLStruct \cite{} and SuperF \cite{}, which
+like our system must reason over the combination of numerous forms of types.
+Leading up to these systems, there have been numerous techniques developed
+to reason over subsets of these type forms, with varying degrees 
+of intrinsic typing. 
+
+% Over the past decades many type inference have been designed and analyzed 
+% with varying degrees of expressivity and varying degrees of intrinsic requirements
+% or extrinsic relaxations, with respect to both functions (e.g. functions or paths dependent on variables)
+% and constructors (e.g. data constructors or records).  
+
+The first technique to infer parametric types without any assistance 
+from annotations was Hindley-Milner type inference (HM)\cite{}. 
+Despite its age, it remains one of the foundational 
 theoretical underpinnings of practical programming languages used today, such as Standard ML \cite{}. 
 For instance, in Standard ML, the system infers the identifier \code{foo} in \code{fun foo f = (f 123)}
 to have type \code{forall 'a . (int -> 'a) -> 'a}
-Despite its practical utility, a significant drawback of Hindley-Milner type inference is that
-certain kinds of flexible programs are simply not allowed.
-For instance, in Standard ML, the system rejects the program \code{fun fooPair f = (f 123, f true)}
+Despite its practical utility, a significant drawback of HM is that
+certain kinds of general-purpose expressions are simply not allowed.
+For instance, in Standard ML, the system rejects the program \code{fun fooPair f = (f 123, f true)}.
 
 In order to type the program \code{fooPair}, a type system would either need to determine that
 \code{f} is parametric, or that the types of \code{123} and \code{true} are compatible.
-Treating the parameter \code{f} is allowed in systems that have impredicative parametric polymorphism \cite{}, which
-was introduced into ML-style languages using boxed polymorphism \cite{} and developed further with ML$^F$ \cite{}. 
+Treating the parameter \code{f} is allowed in systems that have impredicative parametric polymorphism \cite{}, 
+which was introduced by System F \cite{}, 
+introduced into ML-style languages with boxed polymorphism \cite{} 
+and developed further with ML$^F$ \cite{} and various other systems \cite{}. 
 Unfortunately, it's not clear what parametric type should be inferred for \code{f}.
 For instance, \code{forall 'a . 'a -> 'a}, \code{forall 'a . 'a -> 'a list}, \code{forall 'a . 'a -> 'a option}, 
 or an infinite number of
 other parametric types could be used, but none is weaker than all the rest.
-Therefore, these systems with impredicative parametric polymorphism rely on annotations of parameters to
-determine second order parametric types, which we believe constitutes intrinsic typing of
-of functions. Since there is no parameter type that is weaker than all the rest,
-relying on intrinsic second order parametric type significantly restricts the reusability
-of the program.
+Thus, these systems with impredicative parametric polymorphism rely on annotations of parameters to
+determine second order parametric types, which constitutes intrinsic typing of
+of functions. 
+Since there is no parameter type that is weaker than all the rest,
+merely relying on intrinsic second order parametric types 
+significantly restricts the reusability of expressions.
+Additionally, many of these techniques require explicit instantiation to use parametrically typed
+expressions, which can be seen as an intrinsic restriction that 
+delays pruning the control-flow until a particular usage. 
+
+\TODO{mention impredicative types with subtyping, bidirectional typing, local type inferenc (Pierce)}
+
+\TODO{mention how inferring parameter types and instations is processed before and independent from their subtyping check}
+
+In addition to functions, practical programming languages need to have some form of constructors.
+Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative functions
+very early on, type inference has always relied on some degree of intrinsic types for constructors.
+intrinsically typed constructors is exemplified by the datatype mechanism of Standard ML.
+For instance, the list datatype \code{'a list = nil | cons 'a * 'a list} specifies that 
+data constructed with \code{nil} or \code{cons} have the type \code{'a list}. Additionally,
+it requires that the input to the constructor \code{cons}  has the types \code{'a * 'a list}
+Although the datatype mechanism has been used with great success across many languages (including Lean, Haskell, Ocaml, and Isabelle),
+it enforces a very rigid form of programming. For instance, there is no way to guarantee
+that the output of a function is a nonempty list and then use that output in a function that expects an optionally empty list.
+
+To get around this limitation, refinement types \cite{} relaxed the meaning of the datatype mechanism, to 
+allow constructions to represent types that are stronger than their intrinsic type.
+For instance, \code{nil} could have a type as strong as the single type \code{?nil} or as weak as \code{'a list}.
+Likewise, a list of two elements \code{cons(x, cons(y, nil))} could have a type as strong 
+\code{?cons 'a * (?cons 'a * nil)}
+or as weak as \code{'a list}. 
+A refinement type system can choose how strong to make the type based on how the data is used, 
+which depends on how data flows, for which subtyping provides a natural formulation. 
+It can find these stronger types by starting with intrinsic weakest type and using intersection with 
+all the ways it sees the data being used.
+However, the refinement relaxation is not enough to allow common flexible idioms used in untyped languages. 
+For instance, it would allow pattern matching that chooses between a list and a number.
+
+To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
+must be abolished so that there is no intrinsic weakest type other than a top type. 
+Typescript \cite{} does not have an intrinsic weakest type for constructors,
+and it can infer output types of functions that return different structural forms in different branches.
+However, it is unable to infer a weak type for the parameters, and thus requires annotation of parameters.  
+Typescript and other systems for scripting languages, rely on flow-sensitive, or occurrence typing \cite{},
+which can refine the types of variables in branches based on the condition guarding each branch.
+For Typescript, this flow information is only used in one direction, and it is not leveraged to infer
+the weakest type of parameters.
+
+\TODO{mention algebraic subtyping, Cretin, and flow analysis}
+
+\TODO{note how solving subtyping constraints subsume the notion of bidirection typig}
+
+The common ingredient in all of these systems that perform some amount of extrinsic type inference is
+learning data flow. Data flow analysis comes in many forms. As the goal for these systems is verification,
+subtyping is a natural choice. There has been some work on extracting rules for checking subtyping relations
+from the semantic interpretation of types, known as semantic subtyping \cite{}, or set-theoretic types \cite{}.
+Other approaches, like algebraic subtyping \cite{}, and Cretin \cite{}, and superF, 
+rely on designing syntax-directed subtyping rules and then proving their soundness with respect to some semantic interpretation. 
+Additionally, there are similarities between type inference with subtyping and control-flow analysis \cite{}, or polyvariant flow analysis \cite{}.
+In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
+determined by learning subset constraints from the control-flow of the program. 
+Instead of labels, type inference with subtyping associate types  
+with expressions and learns subtyping constraints.
 
 In order to avoid this loss of expressivity and the annotation burden of intrinsic typing, 
 SuperF \cite{} introduced 
@@ -3365,6 +3441,8 @@ intersection and union type combinators to represent the strongest or weakest in
 of type variables that meet certain subtyping constraints.   
 With SuperF's type inference mechanism, it is possible to infer the principal type for the 
 previous problematic example \code{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}.
+
+
 
 SuperF has a restricted language of types. It is concerned with the type inference
 of functions, and it is agnostic towards type inference of constructors. 
@@ -3402,39 +3480,6 @@ since it does not cause learning constraints before skolemization.
 
 \TODO{therefore, they must mean they avoid redundant backtracking, that mearely learns weaker constraints}
 
-In addition to functions, practical programming languages need to have some form of constructors.
-Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative functions
-very early on, type inference has always relied on some degree of intrinsic types for constructors.
-intrinsically typed constructors is exemplified by the datatype mechanism of Standard ML.
-For instance, the list datatype \code{'a list = nil | cons 'a * 'a list} specifies that 
-data constructed with \code{nil} or \code{cons} have the type \code{'a list}. Additionally,
-it requires that the input to the constructor \code{cons}  has the types \code{'a * 'a list}
-Although the datatype mechanism has been used with great success across many languages (including Lean, Haskell, Ocaml, and Isabelle),
-it enforces a very rigid form of programming. For instance, there is no way to guarantee
-that the output of a function is a nonempty list and then use that output in a function that expects an optionally empty list.
-
-To get around this limitation, refinement types \cite{} relaxed the meaning of the datatype mechanism, to 
-allow constructions to represent types that are stronger than their intrinsic type.
-For instance, \code{nil} could have a type as strong as the single type \code{?nil} or as weak as \code{'a list}.
-Likewise, a list of two elements \code{cons(x, cons(y, nil))} could have a type as strong 
-\code{?cons 'a * (?cons 'a * nil)}
-or as weak as \code{'a list}. 
-A refinement type system can choose how strong to make the type based on how the data is used, 
-which depends on how data flows, for which subtyping provides a natural formulation. 
-It can find these stronger types by starting with intrinsic weakest type and using intersection with 
-all the ways it sees the data being used.
-However, the refinement relaxation is not enough to allow common flexible idioms used in untyped languages. 
-For instance, it would allow pattern matching that chooses between a list and a number.
-
-To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
-must be abolished so that there is no intrinsic weakest type other than a top type. 
-Typescript \cite{} does not have an intrinsic weakest type for constructors,
-and it can infer output types of functions that return different structural forms in different branches.
-However, it is unable to infer a weak type for the parameters, and thus requires annotation of parameters.  
-Typescript and other systems for scripting languages, rely on flow-sensitive, or occurrence typing \cite{},
-which can refine the types of variables in branches based on the condition guarding each branch.
-For Typescript, this flow information is only used in one direction, and it is not leveraged to infer
-the weakest type of parameters.
 
 To extend type inference of scripting languages further, MLStruct \cite{} and others like MLSub \cite{}, 
 leveraged the flow information to infer both input types and output types of functions.
@@ -3453,17 +3498,6 @@ significant effort in augmenting the code with annotations.
 In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
 without any annotation requirements on constructors. 
 
-The common ingredient in all of these systems that perform some amount of extrinsic type inference is
-learning data flow. Data flow analysis comes in many forms. As the goal for these systems is verification,
-subtyping is a natural choice. There has been some work on extracting rules for checking subtyping relations
-from the semantic interpretation of types, known as semantic subtyping \cite{}, or set-theoretic types \cite{}.
-Other approaches, like algebraic subtyping \cite{}, and Cretin \cite{}, and superF, 
-rely on designing syntax-directed subtyping rules and then proving their soundness with respect to some semantic interpretation. 
-Additionally, there are similarities between type inference with subtyping and control-flow analysis \cite{}, or polyvariant flow analysis \cite{}.
-In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
-determined by learning subset constraints from the control-flow of the program. 
-Instead of labels, type inference with subtyping associate types  
-with expressions and learns subtyping constraints.
 
 \TODO{discuss implicit and flow based approaches}
 

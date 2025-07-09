@@ -3683,7 +3683,7 @@ rel_typ:
         ################################################
         # Factored Type
         ################################################
-        # TODO: need to update factor to generalize over variables common to both parts of the pair
+        # TODO: if param_typ has only one case, do not construct LFP 
         param_typ = find_factor_from_label(rel_typ, "head")
         return_typ = find_factor_from_label(rel_typ, "tail")
         assert param_typ and return_typ
