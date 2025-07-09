@@ -3569,19 +3569,31 @@ result:
 
         foreignids = extract_free_vars_from_enviro(enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
 
-        inner_worlds = [
-            inner_world
+        inner_schemas = [
+            (w, left_typ, right_typ) 
             for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
+            for local_constraints in [inner_world.constraints.difference(world.constraints)]
+            for left_typ in [self.solver.interpret_id_weakest(local_constraints, in_typ.id)] 
+            for pre_right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
+            for (right_typ, right_constraints) in [
+                # TODO: handle recursion nested in function
+                # [
+                #     (right_body, right_constraints)
+                #     for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
+                #     for right_constraints in [sub_constraints(renaming, pre_right_typ.constraints)]
+                #     for right_body in [sub_typ(renaming, pre_right_typ.body)]
+                # ][-1]
+                # if isinstance(pre_right_typ, All) else
+                (pre_right_typ, [])
+            ]
+            for w in self.solver.solve_multi(inner_world, right_constraints)
         ]
-        for i, inner_world in enumerate(reversed(inner_worlds)):
+        for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_schemas)):
             ###### TODO: ensure that the assertion is invariant
             assert in_typ.id not in inner_world.relids
             local_constraints = inner_world.constraints.difference(world.constraints)
 
             local_closedids = inner_world.closedids.difference(world.closedids) 
-
-            right_typ = self.solver.interpret_id_strongest(local_constraints, out_typ.id) 
-            left_typ = self.solver.interpret_id_weakest(local_constraints, in_typ.id) 
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
 
@@ -3599,54 +3611,23 @@ goal:
 IH_typ.id
 {IH_typ.id}
 
+
+local constraints:
+{concretize_constraints(local_constraints)}
+
 influential constraints:
 {concretize_constraints(influential_constraints)}
+
+
+left_typ:
+{concretize_typ(left_typ)}
+
+right_typ:
+{concretize_typ(right_typ)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             """)
 
             flipped_constraints = self.solver.flip_constraints(self_typ.id, influential_constraints, IH_typ.id)
-
-#             print(f"""
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# combine_fix {i}:
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# local_constraints:
-# {concretize_constraints(local_constraints)}
-
-# foreignids:
-# {foreignids}
-
-# local_closedids:
-# {local_closedids}
-
-# self:
-# {self_typ.id}
-
-# IH type:
-# {IH_typ.id}
-
-# influential_constraints:
-# {concretize_constraints(influential_constraints)}
-
-# flipped_constraints:
-# {concretize_constraints(flipped_constraints)}
-
-# rel_patern:
-# {concretize_typ(rel_pattern)}
-
-# left_typ:
-# {concretize_typ(left_typ)}
-
-# in_typ.id:
-# {in_typ.id}
-
-# local_constraints:
-# {concretize_constraints(local_constraints)}
-
-# body_typ:
-# {concretize_typ(body_typ)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#             """)
 
             constrained_rel = self.solver.make_constraint_typ(False)(
                 foreignids.union(world.closedids).union([IH_typ.id]), 
@@ -3658,6 +3639,15 @@ influential constraints:
         #end for
 
         rel_typ = LeastFP(IH_typ.id, induc_body)
+
+        print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+COMBINE FIX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rel_typ:
+{concretize_typ(rel_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """)
         ################################################
         # OLD Relational Type
         ################################################
@@ -3687,6 +3677,7 @@ influential constraints:
         ################################################
         # Factored Type
         ################################################
+        # TODO: need to update factor to generalize over variables common to both parts of the pair
         param_typ = find_factor_from_label(rel_typ, "head")
         return_typ = find_factor_from_label(rel_typ, "tail")
         assert param_typ and return_typ
