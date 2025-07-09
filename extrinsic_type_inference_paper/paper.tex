@@ -1525,6 +1525,8 @@ where the variables represent possible types of expressions.
     }
 
     \inferrule {
+      \TODO{modify with case for non-recursive parameter type}
+      \\\\
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
@@ -2387,6 +2389,20 @@ and compounds their results, such that the solution from one constrains the next
 
 \section{Theory}
 \label{sec:theory}
+
+Our design depends on numerous helpers to rewrite and check the syntax
+of types. The details of these helpers play a key role in 
+determining the level of expressivity allowed by the type inference system. 
+However, these details are beyond the scope of the theory in work.
+In this theory, we are agnostic to their specific details,
+but we require that they meet certain requirements. 
+From these abstract requirements, we can guarantee
+that the design of our proof semantics is correct with respect
+to our model semantics. 
+ 
+\TODO{add requirements on packing, polar sub and tidying, and negatble checks}
+
+\TODO{for polar sub, dye type by subbing in a fresh skolem}
 
 \begin{theorem} 
   \label{thm:proof_subtyping_soundness}
