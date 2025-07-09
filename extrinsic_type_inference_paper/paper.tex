@@ -3495,9 +3495,14 @@ For instance, it would allow pattern matching that chooses between a list and a 
 
 To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
 must be abolished so that there is no intrinsic weakest type other than a top type. 
-
 In MLSub and algebraic subtyping \cite{}, forgoes the datatype mechanism.
 Instead, it uses type inference to generates subtyping constraints and solve them, akin to unification in HM.
+
+Structures, when combined with loops, enable the construction of nested data (i.e. trees) 
+of arbitrary size. To ensure recursive functions on trees are error-free,
+systems have used regular tree grammars and recursive types to characterize spaces of trees.
+There has been plenty of research on reasoning over regular tree grammars/automata and recursive types \cite{}.
+Most relevant to our system is previous work on subtyping of recursive types \cite{}.  
 
 \TODO{understand the capabilities and limitations of MLSub better}
 
