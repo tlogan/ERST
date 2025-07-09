@@ -44,6 +44,7 @@
 
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
+\newtheorem{requirement}{Requirement}[section]
 \newtheorem{definition}{Definition}[section]
 \newtheorem{property}{Property}[section]
 % \newtheorem{proof}{Proof}[section]
@@ -2395,8 +2396,28 @@ but we require that they meet certain requirements.
 From these abstract requirements, we can guarantee
 that the design of our proof semantics is correct with respect
 to our model semantics. 
- 
-\TODO{add requirements on factoring, packing, polar sub and tidying, and negatble checks}
+
+\begin{requirement}
+  \label{req:positive_substitution_soundness}
+  \emph{positive substitution soundness}
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \notin \textbf{ftv}(\tau[\alpha \slash \tau_r]^+)
+    } {
+      \delta \satisfies \tau_l \subtypes \tau_r
+      \implies
+      \delta\ \alpha \slash \tau_l \satisfies \tau \subtypes \tau[\alpha \slash \tau_r]^+
+    }
+  \end{mathpar}
+\end{requirement}
+
+\TODO{say what it means simply}
+This property is necessary so that our proof typing rules can use positive substitution
+as a proxy reasoning under the induction hypothesis. 
+
+\TODO{add requirements on factoring, packing, and tidying, and negatble checks}
 
 \begin{theorem}
   \label{thm:proof_subtyping_substance}
