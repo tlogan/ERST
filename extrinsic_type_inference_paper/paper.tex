@@ -153,13 +153,11 @@
 }
 
 \newcommand{\examp}[1]{{\nopad \footnotesize 
-\vspace{-1em}
 \[
 \begin{array}[t]{@{}l}
 #1
 \end{array}
 \]
-\vspace{-1em}
 }}
 
 
@@ -3390,9 +3388,17 @@ In order to maintain HM's implicit first-order types in the context
 of higher-order types, other techniques were explored.  
 These techniques include boxed polymorphism \cite{}, ML$^F$ \cite{}, and various other systems \cite{}. 
 Unfortunately, it's not clear what parametric type should be inferred for \code{f}.
-For instance, \code{forall 'a . 'a -> 'a}, \code{forall 'a . 'a -> 'a list}, \code{forall 'a . 'a -> 'a option}, 
-or an infinite number of
-other parametric types could be used, but none is weaker than all the rest.
+There are an infinite number of
+parametric types that could be used, but none is weaker than all the rest.
+
+\examp{
+  \J{forall 'a . 'a -> 'a}
+  \\
+  \J{forall 'a . 'a -> 'a list}
+  \\
+  \J{forall 'a . 'a -> 'a option}
+}
+
 Thus, these systems with impredicative parametric polymorphism rely on annotations of parameters to
 determine second order parametric types, which constitutes intrinsic typing of
 of functions. 
