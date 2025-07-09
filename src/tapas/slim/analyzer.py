@@ -1619,6 +1619,15 @@ class Solver:
         checker._checking = True 
         return checker
 
+    def is_useless(self, positive : bool, t : Typ):
+        ult = Top() if positive else Bot()
+        if t == ult: 
+            return True
+        elif isinstance(t, Imp): 
+            return self.is_useless(not positive, t.antec) or self.is_useless(positive, t.consq)
+
+
+
     def simplify_typ(self, typ : Typ) -> Typ:
         if False:
             assert False
@@ -1671,11 +1680,19 @@ class Solver:
         elif isinstance(typ, Imp): 
             return Imp(self.simplify_typ(typ.antec), self.simplify_typ(typ.consq))
         elif isinstance(typ, Exi):
-            return Exi(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
+            if not typ.ids and not typ.constraints:
+                return self.simplify_typ(typ.body)
+            elif not typ.constraints and isinstance(typ.body, TVar) and typ.body.id in typ.ids:
+                return Top()
+            else:
+                return Exi(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
         elif isinstance(typ, All):
             return All(typ.ids, self.simplify_constraints(typ.constraints), self.simplify_typ(typ.body))
         elif isinstance(typ, LeastFP):
-            return LeastFP(typ.id, self.simplify_typ(typ.body))
+            if typ.id not in extract_free_vars_from_typ(s(), typ.body):
+                return self.simplify_typ(typ.body)
+            else:
+                return LeastFP(typ.id, self.simplify_typ(typ.body))
         else:
             return typ
         
@@ -3570,6 +3587,22 @@ result:
 
             influential_ids = foreignids.union([self_typ.id]).union(local_closedids).union(extract_free_vars_from_typ(s(), rel_pattern))
             influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+COMBINE FIX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+goal:
+{concretize_typ(body_typ)} <: {concretize_typ(Imp(self_typ, Imp(in_typ, out_typ)))}
+
+IH_typ.id
+{IH_typ.id}
+
+influential constraints:
+{concretize_constraints(influential_constraints)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
 
             flipped_constraints = self.solver.flip_constraints(self_typ.id, influential_constraints, IH_typ.id)
 

@@ -226,8 +226,12 @@ def infer_typ(code : str, context = {}) -> str:
         return ""
     else:
         simpres = solver.simplify_typ(result)
-        if simpres == analyzer.Top():
-            print("~~~~~~~~~~~TOP!!!!!!!")
+        if solver.is_useless(True, simpres):
+            print(f"""
+!!!!!!!!!!!!!!!!
+USELESS: {analyzer.concretize_typ(simpres)}
+!!!!!!!!!!!!!!!!
+            """)
             return ""
         else:
             answer = analyzer.concretize_typ(simpres)

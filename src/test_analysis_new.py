@@ -26,6 +26,36 @@ from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
 
+def test_simple_generator():
+    code = f"""
+loop([self => 
+    [x =>
+        (x, self)
+    ]
+])
+    """
+    # SELF -> X -> (X * SELF) <: R -> A -> B 
+    # R <: SELF, X -> (X * SELF) <: A -> B 
+    # R <: SELF, A <: X , (X * SELF) <: B 
+    # A <: X , (X * R) <: B 
+    # GFP[R] X -> (X * R)
+    assert infer_typ(code) 
+
+def test_infinite_stream():
+    code = f"""
+loop([self => [seed => 
+    [@ =>
+        (seed, (make)(succ;seed))
+    ]
+]])
+    """
+    # SELF -> X -> (X * SELF) <: R -> A -> B 
+    # R <: SELF, X -> (X * SELF) <: A -> B 
+    # R <: SELF, A <: X , (X * SELF) <: B 
+    # A <: X , (X * R) <: B 
+    # GFP[R] X -> (X * R)
+    assert infer_typ(code) 
+
 def test_free_var_annotation():
     code = f"""
 def x : X = uno;@ in
@@ -1043,8 +1073,10 @@ if __name__ == '__main__':
     # test_recursive_relational_factorization_learning_in_typing()
     # test_subtyping_debug()
     # test_max()
-    test_typing_A9()
+    # test_typing_A9()
     # test_subtyping_debug()
+    # test_simple_generator()
+    test_infinite_stream()
 
 
 #######################################################################
