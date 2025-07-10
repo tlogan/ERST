@@ -2554,15 +2554,72 @@ to construct least fixed point types does not violate soundness.
 
 \noindent
 
-\TODO{add requirements on packing}
+
+\begin{requirement}
+  \label{req:proof_subtyping_sequence_completeness_under_negatability}
+  \emph{proof subtyping sequence completeness under negatability} 
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \Omega
+      \\
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \forall \delta^\dagger \qua
+      \delta' \oplus \delta^\dagger \satisfies \Omega \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
 
 
-\TODO{add requirements on factoring}
+\begin{requirement}
+  \label{req:proof subtyping completeness under negatability}
+  \emph{proof subtyping completeness under negatability}  
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \eta
+      \\
+      \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \forall \delta^\dagger \qua
+      \delta' \oplus \delta^\dagger \satisfies \tau \subtypes \eta \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
+
+\begin{requirement}
+  \label{req:proof subtyping existential completeness under negatability}
+  \emph{proof subtyping existential completeness under negatability}  
+  \small
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \eta
+      \\
+      \delta \satisfies \tau \subtypes \eta
+      \\
+      \delta \satisfies \Delta
+    } {
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
 
 
 \TODO{add requirements on tidying}
 
-\TODO{add requirements on negatble checks}
+\TODO{add requirements on factoring}
+
+
+
 
 \begin{theorem}
   \label{thm:proof_subtyping_substance}
