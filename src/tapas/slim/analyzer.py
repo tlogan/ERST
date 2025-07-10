@@ -2590,6 +2590,9 @@ SOLVABLE:
         else:
             return False
 
+    def is_guarded_typ(self, t : Typ) -> bool:
+        return isinstance(t, TUnit) or isinstance(t, TEntry)
+
     def is_negatable_typ(self, world : World, t : Typ) -> bool:
         return (
             (
@@ -2609,7 +2612,10 @@ SOLVABLE:
             # NOTE: compatible check only necessary for relational reasoning 
             # self.is_compatible(st.lower, st.upper)
             # if isinstance(st.upper, LeastFP) else
-            self.is_negatable_typ(world, st.upper) or (
+
+
+            # TODO: rethink the constraints
+            (self.is_negatable_typ(world, st.lower) and self.is_negatable_typ(world, st.upper)) or (
                 isinstance(st.lower, TVar) and
                 st.lower not in world.closedids and
                 all(
@@ -3075,21 +3081,18 @@ SOLVABLE:
             return self.solve(world, lower, universal_typ)
 
 
-
-
-
         #######################################
         #### Diff Introduction #############
         #######################################
 
-        elif isinstance(upper, Diff): 
-            if self.is_negatable_typ(world, upper.negation):
-                if not bool(self.solve(world, lower, upper.negation)):
-                    return self.solve(world, lower, upper.context)
-                else:
-                    return []
+        elif isinstance(upper, Diff) and self.is_guarded_typ(lower) and self.is_negatable_typ(world, upper.negation):
+            if not bool(self.solve(world, lower, upper.negation)):
+                return self.solve(world, lower, upper.context)
             else:
                 return []
+
+        elif isinstance(upper, Diff) and bool(self.solve(world, upper.negation, lower)) and not bool(self.solve(world, lower, upper.negation)) and self.is_negatable_typ(world, upper.negation):
+            return []
 
 
         #######################################
@@ -3118,6 +3121,7 @@ SOLVABLE:
                 else:
                     return self.solve(world, lower_body, upper)
                 # end-if
+
 
 
         #######################################
@@ -3240,8 +3244,6 @@ SOLVABLE:
                 return self.solve(world, lower.context, Unio(upper, lower.negation))
             else:
                 return []
-
-
 
 
         #######################################

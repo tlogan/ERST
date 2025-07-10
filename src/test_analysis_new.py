@@ -149,20 +149,74 @@ LFP [R] (<zero> @) | (<succ> R)
     )
     assert bool(worlds)
 
-def test_induction_even_is_nat_not_three():
+def test_induction_nat_is_even_false():
     worlds = solve_subtyping(f"""
-LFP [R] (<zero> @) | (<succ> <succ> R)
+LFP [R] (<zero> @) | (<succ> R)
     """, f"""
-(LFP [R] (<zero> @) | (<succ> R)) \\ (<succ> <succ> <succ> <zero> @)
+LFP [R] (<zero> @) | (<succ> <succ> R)
     """
     )
-    assert bool(worlds)
+    assert not bool(worlds)
+
+# def test_induction_even_is_nat_not_three():
+#     worlds = solve_subtyping(f"""
+# LFP [R] (<zero> @) | (<succ> <succ> R)
+#     """, f"""
+# (LFP [R] (<zero> @) | (<succ> R)) \\ (<succ> <succ> <succ> <zero> @)
+#     """
+#     )
+#     assert bool(worlds)
 
 def test_two_not_three():
     worlds = solve_subtyping(f"""
 (<succ> <succ> <zero> @)
     """, f"""
 TOP \\ (<succ> <succ> <succ> <zero> @)
+    """
+    )
+    assert bool(worlds)
+
+# def test_induction_even_is_not_three():
+#     worlds = solve_subtyping(f"""
+# LFP [R] (<zero> @) | (<succ> <succ> R)
+#     """, f"""
+# TOP \\ (<succ> <succ> <succ> <zero> @)
+#     """
+#     )
+#     assert bool(worlds)
+
+def test_union_is_not_zero_false():
+    worlds = solve_subtyping(f"""
+(<zero> @) | (<succ> <zero> @)
+    """, f"""
+TOP \\ (<zero> @)
+    """
+    )
+    assert not bool(worlds)
+
+def test_induction_even_is_not_zero_false():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+TOP \\ (<zero> @)
+    """
+    )
+    assert not bool(worlds)
+
+def test_induction_nat_is_not_one_false():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> R)
+    """, f"""
+TOP \\ (<succ> <zero> @)
+    """
+    )
+    assert not bool(worlds)
+
+def test_induction_even_is_not_one():
+    worlds = solve_subtyping(f"""
+LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+TOP \\ (<succ> <zero> @)
     """
     )
     assert bool(worlds)
@@ -1024,12 +1078,42 @@ def halve : (
 ) = loop([self => (
     [ (zero;@) => zero;@ ]
     [ (succ;succ;n) => succ;((self)(n)) ]
-)]) in halve)
+)]) in halve
     """)
     print(code)
     assert infer_typ(code)
 
 def test_typing_structures_5():
+    code = (f"""
+def double = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;n) => succ;succ;((self)(n)) ]
+)]) in 
+def halve = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;succ;n) => succ;((self)(n)) ]
+)]) in 
+[x => halve(double(x))]
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_typing_halve_halve_false():
+    code = (f"""
+def double = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;n) => succ;succ;((self)(n)) ]
+)]) in 
+def halve = loop([self => (
+    [ (zero;@) => zero;@ ]
+    [ (succ;succ;n) => succ;((self)(n)) ]
+)]) in 
+[x => halve(halve(x))]
+    """)
+    print(code)
+    assert not infer_typ(code)
+
+def test_typing_structures_6():
     code = (f"""
 (
 [zero;@ => [zero;@ => @](@)]
@@ -1074,7 +1158,16 @@ if __name__ == '__main__':
     # test_infinite_stream()
 
     # test_typing_G8A()
-    test_typing_G8()
+    # test_typing_G8()
+    # test_induction_even_is_nat()
+    # test_induction_nat_is_even_false()
+    # test_typing_structures_5()
+    # test_typing_halve_halve_false()
+    # test_two_not_three()
+    test_induction_even_is_not_zero_false()
+    # test_induction_nat_is_not_one_false()
+    # test_induction_even_is_not_one()
+    # test_induction_even_is_not_three()
 
 
 #######################################################################

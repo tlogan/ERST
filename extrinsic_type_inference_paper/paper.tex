@@ -2168,7 +2168,7 @@ akin to deriving the least fixed point elimination under the assumption of the i
       \\
       \nexists \Theta', \Delta' \qua  
       \Theta, \Delta \entails 
-      \tau \subtypes \eta \given \Theta', \Delta'
+      \tau_l \subtypes \eta \given \Theta', \Delta'
     } {
       \Theta, \Delta \entails 
       \tau_l \subtypes \tau_r \typdiff \eta
@@ -3543,6 +3543,14 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     }
     & \pass & \fail \\
     
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{[x => halve(double(x))]}
+    }
+    & \pass & \fail \\
+
     \sline
 
     \sdc. &
