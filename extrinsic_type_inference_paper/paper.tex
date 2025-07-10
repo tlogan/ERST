@@ -2472,6 +2472,7 @@ as a proxy reasoning under the induction hypothesis without violating soundness.
   \end{mathpar}
 \end{requirement}
 
+
 \noindent
 The requirement of schema sequence duality has an ungodly amount of symbolic clutter,
 but the essence of its meaning is actually quite simple and natural.
@@ -2482,12 +2483,82 @@ gives the output.
 The requirement is essential to ensure that rewriting inferred schemas
 to construct least fixed point types does not violate soundness.
 
+
+
+\begin{requirement}
+  \label{req:positive packing correspondence}
+  \emph{positive packing correspondence}
+  \footnotesize
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
+      \\
+      \Theta \subseteq \textbf{dom}(\delta)
+    } {
+      (\forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      (
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \backslash \Theta \up 
+      \\\\
+      (
+      \forall \delta' \qua 
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
+      )
+      ) 
+      \\\\
+      \iff
+      \\\\
+      \delta \satisfies e \hastype \tau
+    }
+  \end{mathpar}
+\end{requirement}
+
+\begin{requirement}
+  \label{req:negative packing correspondence}
+  \emph{negative packing correspondence}
+  \footnotesize
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
+      \\
+      \Theta \subseteq \textbf{dom}(\delta)
+    } {
+      (\exists  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \up
+      (
+      \forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \backslash \Theta \implies
+      \\\\
+      (
+      \exists \delta' \qua 
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
+      )
+      ) 
+      \\\\
+      \iff
+      \\\\
+      \delta \satisfies e \hastype \tau
+    }
+  \end{mathpar}
+\end{requirement}
+
+
 \noindent
+
+\TODO{add requirements on packing}
 
 
 \TODO{add requirements on factoring}
 
-\TODO{add requirements on packing}
 
 \TODO{add requirements on tidying}
 
