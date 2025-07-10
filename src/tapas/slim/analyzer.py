@@ -3085,15 +3085,12 @@ SOLVABLE:
         #### Diff Introduction #############
         #######################################
 
-        elif isinstance(upper, Diff) and self.is_guarded_typ(lower) and self.is_negatable_typ(world, upper.negation):
-            if not bool(self.solve(world, lower, upper.negation)):
+        elif isinstance(upper, Diff):
+            # TODO: must ensure constraints are complete;
+            if not bool(self.solve(world, lower, upper.negation)) and not bool(self.solve(world, upper.negation, lower)):
                 return self.solve(world, lower, upper.context)
             else:
                 return []
-
-        elif isinstance(upper, Diff) and bool(self.solve(world, upper.negation, lower)) and not bool(self.solve(world, lower, upper.negation)) and self.is_negatable_typ(world, upper.negation):
-            return []
-
 
         #######################################
         #### Fixpoint Elimination #############

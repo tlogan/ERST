@@ -1165,9 +1165,9 @@ if __name__ == '__main__':
     # test_typing_halve_halve_false()
     # test_two_not_three()
     test_induction_even_is_not_zero_false()
-    # test_induction_nat_is_not_one_false()
-    # test_induction_even_is_not_one()
-    # test_induction_even_is_not_three()
+    test_induction_nat_is_not_one_false()
+    test_induction_even_is_not_one()
+    test_induction_even_is_not_three()
 
 
 #######################################################################
