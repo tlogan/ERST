@@ -2413,9 +2413,16 @@ to our model semantics.
   \end{mathpar}
 \end{requirement}
 
-\TODO{say what it means simply}
+\noindent
+The requirement of positive substitution soundness says that
+if a variable \ms{\alpha} only occurs in positive positions of a type \ms{\tau},
+then the result of the substituting in another type \ms{\tau_r} is weaker than 
+any interpretation of the original type \ms{\tau} 
+if the replaced variable \ms{\alpha} is interpreted with a type \ms{\tau_l} 
+that is weaker than the subbed in type \ms{\tau_r}.
 This property is necessary so that our proof typing rules can use positive substitution
-as a proxy reasoning under the induction hypothesis. 
+as a proxy reasoning under the induction hypothesis without violating soundness. 
+
 
 \TODO{add requirements on factoring, packing, and tidying, and negatble checks}
 
@@ -2452,6 +2459,8 @@ a single variable, and in each case the solver compares the new bound on the var
 to the previous bounds on the other side of the variable. Since bounds on
 opposite sides are the only opportunities for contradictions, the requirement
 preserves the strengthened substance property from the induction hypothesis.
+
+\TODO{note how substance allows positive packing to place generated constraints into qualified types without violating soundness }
 
 \begin{theorem} 
   \label{thm:proof_subtyping_soundness}
