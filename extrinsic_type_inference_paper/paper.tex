@@ -2614,9 +2614,21 @@ to construct least fixed point types does not violate soundness.
 \end{requirement}
 
 
-\TODO{add requirements on tidying}
-
-\TODO{add requirements on factoring}
+\begin{requirement}
+  \label{req:factorization_soundness}
+  \emph{factorization soundness}  
+  \small
+  \begin{mathpar}
+    \inferrule {
+      \Vdash \J{LFP[}\alpha\J{]}\tau \subtypes l \mapsto \tau'
+    } {
+      \forall e' \qua
+      e' \hastype \tau' 
+      \iff 
+      (\exists e \qua e \J{.} l \cong e' \up \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau)
+    }
+  \end{mathpar}
+\end{requirement}
 
 
 
