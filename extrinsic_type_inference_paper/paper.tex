@@ -1527,6 +1527,8 @@ where the variables represent possible types of expressions.
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
+      \\
+      \alpha \notin \textbf{ftv}(\Delta')
       \\\\
       \alpha \downarrow \Pi
       \fallingdotseq 
@@ -2433,6 +2435,10 @@ as a proxy reasoning under the induction hypothesis without violating soundness.
       \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
       \\
       \delta \satisfies \Delta
+      \\
+      \alpha_\nu \notin \textbf{ftv}(\Delta)
+      \\
+      \alpha_\mu \notin \textbf{ftv}(\Delta)
     } {
       (
       \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
