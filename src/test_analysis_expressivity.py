@@ -41,7 +41,7 @@ from tapas.slim.exprlib import ctx
 #     # GFP[R] X -> (X * R)
 #     assert infer_typ(code) 
 
-def test_infinite_stream():
+def test_succ_stream():
     code = f"""
 loop([self => [seed => 
     [@ =>
@@ -149,23 +149,14 @@ LFP [R] (<zero> @) | (<succ> R)
     )
     assert bool(worlds)
 
-def test_induction_nat_is_even_false():
+def test_induction_even_is_nat_not_three():
     worlds = solve_subtyping(f"""
-LFP [R] (<zero> @) | (<succ> R)
-    """, f"""
 LFP [R] (<zero> @) | (<succ> <succ> R)
+    """, f"""
+(LFP [R] (<zero> @) | (<succ> R)) \\ (<succ> <succ> <succ> <zero> @)
     """
     )
-    assert not bool(worlds)
-
-# def test_induction_even_is_nat_not_three():
-#     worlds = solve_subtyping(f"""
-# LFP [R] (<zero> @) | (<succ> <succ> R)
-#     """, f"""
-# (LFP [R] (<zero> @) | (<succ> R)) \\ (<succ> <succ> <succ> <zero> @)
-#     """
-#     )
-#     assert bool(worlds)
+    assert bool(worlds)
 
 def test_two_not_three():
     worlds = solve_subtyping(f"""
@@ -176,41 +167,6 @@ TOP \\ (<succ> <succ> <succ> <zero> @)
     )
     assert bool(worlds)
 
-# def test_induction_even_is_not_three():
-#     worlds = solve_subtyping(f"""
-# LFP [R] (<zero> @) | (<succ> <succ> R)
-#     """, f"""
-# TOP \\ (<succ> <succ> <succ> <zero> @)
-#     """
-#     )
-#     assert bool(worlds)
-
-def test_union_is_not_zero_false():
-    worlds = solve_subtyping(f"""
-(<zero> @) | (<succ> <zero> @)
-    """, f"""
-TOP \\ (<zero> @)
-    """
-    )
-    assert not bool(worlds)
-
-def test_induction_even_is_not_zero_false():
-    worlds = solve_subtyping(f"""
-LFP [R] (<zero> @) | (<succ> <succ> R)
-    """, f"""
-TOP \\ (<zero> @)
-    """
-    )
-    assert not bool(worlds)
-
-def test_induction_nat_is_not_one_false():
-    worlds = solve_subtyping(f"""
-LFP [R] (<zero> @) | (<succ> R)
-    """, f"""
-TOP \\ (<succ> <zero> @)
-    """
-    )
-    assert not bool(worlds)
 
 def test_induction_even_is_not_one():
     worlds = solve_subtyping(f"""
@@ -1130,44 +1086,10 @@ def test_typing_structures_6():
 if __name__ == '__main__':
     pass
     ##########################
-    # test_recursive_relational_factorization_learning_in_subtyping()
-    # test_recursive_relational_factorization_learning_in_typing()
-    # test_recursive_pair()
-    # test_length()
-    # test_lted()
     # test_max()
-    # test_intersection_arrow_subtypes_lfp_arrow()
-    # test_typing_sanity_binding_annotation_4()
     # test_max_app()
-    # test_subtyping_unrolling()
-    # test_length_eta_expansion()
-    # test_intersection_arrow_subtypes_lfp_arrow()
-    # test_intersection_arrow_single_selection()
-    # test_typing_C3()
-    # test_max_app()
-    # test_variable_subtypes_tag_pair()
-    # test_free_var_annotation()
-    # test_typing_structures_2()
-    # test_max()
-    # test_recursive_relational_factorization_learning_in_typing()
-    # test_subtyping_debug()
-    # test_max()
-    # test_typing_A9()
-    # test_subtyping_debug()
-    # test_simple_generator()
-    # test_infinite_stream()
-
+    test_succ_stream()
     # test_typing_G8A()
-    # test_typing_G8()
-    # test_induction_even_is_nat()
-    # test_induction_nat_is_even_false()
-    # test_typing_structures_5()
-    # test_typing_halve_halve_false()
-    # test_two_not_three()
-    test_induction_even_is_not_zero_false()
-    test_induction_nat_is_not_one_false()
-    test_induction_even_is_not_one()
-    test_induction_even_is_not_three()
 
 
 #######################################################################

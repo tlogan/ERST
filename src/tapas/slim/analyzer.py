@@ -1184,7 +1184,7 @@ def find_factors_from_labels(src : LeastFP, labels : PSet[Sequence[str]]) -> PSe
             results = results.add(result)
     return results
 
-def find_factor_from_label(src : LeastFP, label : str) -> Optional[Typ]:
+def find_factor_from_label(src : LeastFP, label : str) -> Optional[LeastFP]:
     return factorize_least_fp(src, [label])
 
 
@@ -3568,8 +3568,6 @@ result:
 
         IH_typ = self.solver.fresh_type_var()
 
-        induc_body = Bot()
-
         outer_world = world
 
         foreignids = extract_free_vars_from_enviro(enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
@@ -3581,18 +3579,32 @@ result:
             for left_typ in [self.solver.interpret_id_weakest(local_constraints, in_typ.id)] 
             for pre_right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
             for (right_typ, right_constraints) in [
-                # # TODO: handle recursion nested in function
-                # [
-                #     (right_body, right_constraints)
-                #     for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
-                #     for right_constraints in [sub_constraints(renaming, pre_right_typ.constraints)]
-                #     for right_body in [sub_typ(renaming, pre_right_typ.body)]
-                # ][-1]
-                # if isinstance(pre_right_typ, All) else
+                # TODO: handle recursion nested in function
+                [
+                    (right_body, right_constraints)
+                    for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
+                    for right_constraints in [sub_constraints(renaming, pre_right_typ.constraints)]
+                    for right_body in [sub_typ(renaming, pre_right_typ.body)]
+                ][-1]
+                if isinstance(pre_right_typ, All) else
                 (pre_right_typ, [])
             ]
             for w in self.solver.solve_multi(inner_world, right_constraints)
         ]
+        is_single = (len(inner_schemas) == 1) 
+        foreignids = foreignids.union(
+            pset(
+                id
+                for (inner_world, left_typ, right_typ) in inner_schemas
+                for id in extract_free_vars_from_typ(s(), left_typ).intersection(
+                    extract_free_vars_from_typ(s(), right_typ)
+                )
+            )
+            if is_single else
+            pset()
+        )
+
+        induc_body = Bot()
         for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_schemas)):
             ###### TODO: ensure that the assertion is invariant
             assert in_typ.id not in inner_world.relids
@@ -3601,6 +3613,7 @@ result:
             local_closedids = inner_world.closedids.difference(world.closedids) 
 
             rel_pattern = make_pair_typ(left_typ, right_typ)
+
 
             influential_ids = foreignids.union([self_typ.id]).union(local_closedids).union(extract_free_vars_from_typ(s(), rel_pattern))
             influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
@@ -3682,10 +3695,11 @@ rel_typ:
         ################################################
         # Factored Type
         ################################################
-        # TODO: if param_typ has only one case, do not construct LFP 
         param_typ = find_factor_from_label(rel_typ, "head")
         return_typ = find_factor_from_label(rel_typ, "tail")
         assert param_typ and return_typ
+        if is_single:
+            param_typ = param_typ.body
         return Result(pid, outer_world, Imp(param_typ, return_typ))
     
 '''
