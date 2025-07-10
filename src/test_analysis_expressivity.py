@@ -42,6 +42,9 @@ from tapas.slim.exprlib import ctx
 #     assert infer_typ(code) 
 
 def test_succ_stream():
+    # expected: make(seed : T) : @ -> GFP[R] <pair> (T * (@ -> Z))  where R <: <succ> T -> Z forall Z
+
+    # Note how the label is added to the input variable, rather than removed   
     code = f"""
 loop([self => [seed => 
     [@ =>
