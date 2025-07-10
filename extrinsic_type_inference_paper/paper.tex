@@ -2423,8 +2423,75 @@ that is weaker than the subbed in type \ms{\tau_r}.
 This property is necessary so that our proof typing rules can use positive substitution
 as a proxy reasoning under the induction hypothesis without violating soundness. 
 
+\begin{requirement}
+  \label{req:schema_sequence_duality_correspondence}
+  \emph{schema sequence duality correspondence}
+  \tiny
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
+      \\
+      \delta \satisfies \Delta
+    } {
+      (
+      \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \up
+      \\\\
+      (
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
+      % \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+      % \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      )
+      )
+      \\\\
+      \iff
+      \\\\
+      (\forall e_a, e_r \qua
+      (
+      \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \implies
+      \\\\
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
+      % \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \up
+      % \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      )
+      )
+      \implies
+      e_r \cong e_f\J{(}e_a\J{)}
+      )
+    }
+  \end{mathpar}
+\end{requirement}
 
-\TODO{add requirements on factoring, packing, and tidying, and negatble checks}
+\noindent
+The requirement of schema sequence duality has an ungodly amount of symbolic clutter,
+but the essence of its meaning is actually quite simple and natural.
+It says that a function inhabits all schemas in some 
+some collection if and only if for any input/ouput pair, if the pair inhabits some
+schema from the dual collection, then the function applied to the input
+gives the output. 
+The requirement is essential to ensure that rewriting inferred schemas
+to construct least fixed point types does not violate soundness.
+
+\noindent
+
+
+\TODO{add requirements on factoring}
+
+\TODO{add requirements on packing}
+
+\TODO{add requirements on tidying}
+
+\TODO{add requirements on negatble checks}
 
 \begin{theorem}
   \label{thm:proof_subtyping_substance}
