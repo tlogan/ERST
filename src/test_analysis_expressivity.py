@@ -27,7 +27,21 @@ from tapas.slim.exprlib import ctx
 
 
 def test_succ_stream():
-    # expected: make(seed : T) : @ -> GFP[F] <pair> (T * (@ -> Z))  where F <: <succ> T -> Z forall Z
+    ######################
+    # expected: GFP[F] T -> ALL(F <: <succ> T -> Z) : @ -> <pair> (T * Z)    
+    ######################
+    # expected: GFP[F] ALL(F <: <succ> T -> Z) : T -> @ -> <pair> (T * Z)    
+    ######################
+    # ...
+    ######################
+    # expected: T ->  LFP[R] @ -> <pair> ((LFP[W] EXI[U](<succ> U <: W): U) * R)    
+    # TODO: what is the rationale for why it's save to flip around the constraint into an LFP?
+    # does (LFP[W] EXI[U](<succ> U <: W): U) <: (LFP[W] T | <succ> W) ?
+    ######################
+    # expected: T ->  LFP[R] @ -> <pair> ((LFP[W] T | <succ> W) * R)    
+    ######################
+    # expected: T -> @ -> LFP[R] <pair> ((LFP[W] T | <succ> W) * @ -> R)    
+    ######################
     # consider if relational type should be retained for single case streams 
     # Note how the label is added to the input variable, rather than removed   
     code = f"""
