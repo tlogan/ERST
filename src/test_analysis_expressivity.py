@@ -1086,7 +1086,7 @@ if __name__ == '__main__':
     ##########################
     # test_max()
     # test_max_app()
-    # test_succ_stream()
+    test_succ_stream()
     # test_single_case_loop()
     # test_typing_G8A()
     # test_something_subtypes_non_decreasing_lfp()

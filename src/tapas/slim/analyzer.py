@@ -3564,19 +3564,21 @@ result:
             for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
             for local_constraints in [inner_world.constraints.difference(world.constraints)]
             for left_typ in [self.solver.interpret_id_weakest(local_constraints, in_typ.id)] 
-            for pre_right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
-            for (right_typ, right_constraints) in [
-                # TODO: handle recursion nested in function
-                [
-                    (right_body, right_constraints)
-                    for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
-                    for right_constraints in [sub_constraints(renaming, pre_right_typ.constraints)]
-                    for right_body in [sub_typ(renaming, pre_right_typ.body)]
-                ][-1]
-                if isinstance(pre_right_typ, All) else
-                (pre_right_typ, [])
-            ]
-            for w in self.solver.solve_multi(inner_world, right_constraints)
+            for right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
+            # for pre_right_typ in [self.solver.interpret_id_strongest(local_constraints, out_typ.id)]
+            # for (right_typ, right_constraints) in [
+            #     # TODO: handle recursion nested in function
+            #     [
+            #         (right_body, right_constraints)
+            #         for renaming in [self.solver.make_renaming(pre_right_typ.ids)]
+            #         for right_constraints in [sub_constraints(renaming, pre_right_typ.constraints)]
+            #         for right_body in [sub_typ(renaming, pre_right_typ.body)]
+            #     ][-1]
+            #     if isinstance(pre_right_typ, All) else
+            #     (pre_right_typ, [])
+            # ]
+            # for w in self.solver.solve_multi(inner_world, right_constraints)
+            for w in [inner_world]
         ]
         is_single = (len(inner_schemas) == 1) 
         # foreignids = foreignids.union(
@@ -3680,6 +3682,10 @@ rel_typ:
         assert param_upper_bound 
         print(f"RAW: {param_upper_bound.body}")
         if is_single and is_unstructured(self.solver.simplify_typ(param_upper_bound.body)):
+            param_typ = param_upper_bound 
+            return_typ = find_factor_from_label(rel_typ, "tail")
+            assert param_typ and return_typ
+            return Result(pid, outer_world, Imp(param_typ, return_typ))
             ################################################
             # Stream Type 
             ##################################################

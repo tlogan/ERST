@@ -422,7 +422,7 @@ Consider the higher order function $\J{foo}$ which takes a function as input
 and applies it to the number two and the boolean true.
 
 \examp{
-  \J{def foo = ? f => (f(<succ> <succ> <zero> @), f(<true> @))}
+  \J{def foo = [f => (f(succ;succ;zero;@), f(true;@))]}
 }
 
 \noindent
@@ -604,7 +604,7 @@ every type contained within the type of even natural numbers is also
 contained within the type of natural numbers.
 In followup work, we will extend this inductive reasoning to handle inductive relations. 
 
-\Par{Structural Generalization} 
+\Par{Path Sensitivity} 
 Functions on lists can be generic, in that they may be independent of the item values, as in \code{repeat}.
 Additionally, they may factor out the details that depend on item values, as in \code{sort}. 
 
@@ -643,11 +643,10 @@ datatype.
 Having many different specializations burdens the client of
 the generic function to know many different names for roughly the same behavior and can obscure the meaning
 of code at the call site. 
-Untyped languages or extrinsically typed languages can bypass this rigidity found in intrinsically typed by specializing in multiple ways.
+Untyped languages or extrinsically typed languages can bypass this rigidity found in 
+intrinsically typed languages by mixing the specialized procedures into a single generalized procedures.
 
 \examp{
-  ...
-  \\
   \J{def genCmp = [a,b => } 
   \\
   \I \J{a |> (}
@@ -664,21 +663,57 @@ Untyped languages or extrinsically typed languages can bypass this rigidity foun
   \\
   \J{] in} 
   \\
+  \J{...} 
+}
+
+\noindent
+Extrinsic type inference allows this mixing by inferring types locally for each path,
+such that the type inferred from one path is not required for another.
+As such, a generalized comparison procedure may be constructed and the
+programmer can use the same sort function no matter if its inputs are scalars or vectors.
+
+\examp{
   \J{def genSort : (TOP}
   \\
   \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
   \\
   \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
   \\
-  \J{) = sort(genCmp) in}
-  \\
-  \J{...} 
+  \J{) = sort(genCmp)}
 }
 
 \noindent
-By combining the scalar and lexicographic comparison procedures into a single comparison
-procedure, a generalized sort function can be used to work on either scalars or vectors,
-thereby removing the burden of choosing the proper comparison function at the call site.  
+This particular form of type inference, known as occurrence typing \cite{},
+has already been studied and used to great effect in type inference for Python and Javascript.
+Additionally, the path sensitivity of type inference obviates the need 
+for destruction in pattern matching.  
+For example, the \code{repeat} function can be rewritten.
+
+\examp{
+  \J{def repeat = [x => loop([self => [n =>}
+  \\
+  \I\J{n |> [}
+  \\
+  \I\I \J{[zero;\_ => nil;(n.zero)]}
+  \\
+  \I\I \J{[succ;\_ => cons;(x,self(n.succ))]}
+  \\
+  \I \J{]}
+  \\
+  \J{])]}
+}
+
+\noindent
+Thus, programs in Python and Javascript, which only having conditional branching,
+and no pattern matching, can rely on path sensitivity to simulate pattern matching. 
+
+\Par{Pruning} 
+
+\TODO{...}
+
+\Par{Streaming} 
+
+\TODO{...}
 
 
 \section{Dynamic System}
