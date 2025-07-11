@@ -26,24 +26,9 @@ from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
 
-# def test_simple_generator():
-#     code = f"""
-# loop([self => 
-#     [x =>
-#         (x, self)
-#     ]
-# ])
-#     """
-#     # SELF -> X -> (X * SELF) <: R -> A -> B 
-#     # R <: SELF, X -> (X * SELF) <: A -> B 
-#     # R <: SELF, A <: X , (X * SELF) <: B 
-#     # A <: X , (X * R) <: B 
-#     # GFP[R] X -> (X * R)
-#     assert infer_typ(code) 
-
 def test_succ_stream():
-    # expected: make(seed : T) : @ -> GFP[R] <pair> (T * (@ -> Z))  where R <: <succ> T -> Z forall Z
-
+    # expected: make(seed : T) : @ -> GFP[F] <pair> (T * (@ -> Z))  where F <: <succ> T -> Z forall Z
+    # consider if relational type should be retained for single case streams 
     # Note how the label is added to the input variable, rather than removed   
     code = f"""
 loop([self => [seed => 
@@ -53,6 +38,15 @@ loop([self => [seed =>
 ]])
     """
     assert infer_typ(code) 
+
+def test_single_case_loop():
+    code = f"""
+loop([ self => 
+    [ cons;(x,xs) => succ;(self(xs)) ]
+]) 
+    """
+    assert infer_typ(code) 
+
 
 def test_free_var_annotation():
     code = f"""
@@ -81,6 +75,7 @@ def max = {el.max} in
 max(zero;@,zero;@)
     """
     assert infer_typ(code) 
+
 
 def test_intersection_arrow_subtypes_lfp_arrow():
     assert solve_subtyping(f"""
@@ -1091,8 +1086,11 @@ if __name__ == '__main__':
     ##########################
     # test_max()
     # test_max_app()
-    test_succ_stream()
+    # test_succ_stream()
+    # test_single_case_loop()
     # test_typing_G8A()
+    # test_something_subtypes_non_decreasing_lfp()
+    # test_something_subtypes_increasing_lfp()
 
 
 #######################################################################

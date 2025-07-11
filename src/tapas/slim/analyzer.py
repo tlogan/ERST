@@ -3128,9 +3128,6 @@ SOLVABLE:
         elif isinstance(upper, LeastFP): 
 
             if is_inflatable(lower, upper): # TODO: make is_deciable more strict
-                '''
-                unroll
-                '''
                 renaming : PMap[str, Typ] = pmap({upper.id : upper})
                 upper_body = sub_typ(renaming, upper.body)
                 worlds = self.solve(world, lower, upper_body)
@@ -3162,18 +3159,8 @@ SOLVABLE:
         elif isinstance(upper, Unio): 
             return self.solve(world, lower, upper.left) + self.solve(world, lower, upper.right)
 
-        elif isinstance(upper, Exi) and self.are_negatable_constraints(world, upper.constraints):
-#                 print(f"""
-# ==================================================
-# DEBUG upper EXI
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# {concretize_typ(lower)} <: {concretize_typ(upper)}
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# upper constraints:
-# {concretize_constraints(upper.constraints)}
-# ==================================================
-#                 """)
+        elif isinstance(upper, Exi):
+            # and self.are_negatable_constraints(world, upper.constraints):
             renaming = self.make_renaming(upper.ids)
             weak_constraints = sub_constraints(renaming, upper.constraints)
             weak_body = sub_typ(renaming, upper.body)
@@ -3592,17 +3579,17 @@ result:
             for w in self.solver.solve_multi(inner_world, right_constraints)
         ]
         is_single = (len(inner_schemas) == 1) 
-        foreignids = foreignids.union(
-            pset(
-                id
-                for (inner_world, left_typ, right_typ) in inner_schemas
-                for id in extract_free_vars_from_typ(s(), left_typ).intersection(
-                    extract_free_vars_from_typ(s(), right_typ)
-                )
-            )
-            if is_single else
-            pset()
-        )
+        # foreignids = foreignids.union(
+        #     pset(
+        #         id
+        #         for (inner_world, left_typ, right_typ) in inner_schemas
+        #         for id in extract_free_vars_from_typ(s(), left_typ).intersection(
+        #             extract_free_vars_from_typ(s(), right_typ)
+        #         )
+        #     )
+        #     if is_single else
+        #     pset()
+        # )
 
         induc_body = Bot()
         for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_schemas)):
@@ -3666,15 +3653,6 @@ rel_typ:
 {concretize_typ(rel_typ)}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """)
-        ################################################
-        # OLD Relational Type
-        ################################################
-        # param_typ = self.solver.fresh_type_var()
-        # return_typ = self.solver.fresh_type_var()
-        # consq_constraint = Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)
-        # consq_typ = Exi(tuple([return_typ.id]), tuple([consq_constraint]), return_typ)  
-        # return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
-        ################################################
 
         ################################################
         # NEW Relational Type Option B
@@ -3692,15 +3670,37 @@ rel_typ:
         # return Result(pid, outer_world, All(tuple([param_var.id]), tuple([param_constraint]), Imp(param_typ, return_typ)))
         ################################################
 
-        ################################################
-        # Factored Type
-        ################################################
-        param_typ = find_factor_from_label(rel_typ, "head")
-        return_typ = find_factor_from_label(rel_typ, "tail")
-        assert param_typ and return_typ
-        if is_single:
-            param_typ = param_typ.body
-        return Result(pid, outer_world, Imp(param_typ, return_typ))
+        def is_unstructured(t : Typ) -> bool:
+            return isinstance(t, TVar) or (
+                isinstance(t, Exi) and
+                is_unstructured(t.body)
+            )
+
+        param_upper_bound = find_factor_from_label(rel_typ, "head")
+        assert param_upper_bound 
+        print(f"RAW: {param_upper_bound.body}")
+        if is_single and is_unstructured(self.solver.simplify_typ(param_upper_bound.body)):
+            ################################################
+            # Stream Type 
+            ##################################################
+            # NOTE: if the upper bound has no structure,  
+            # then no actual upper bound constraint could have been inferred from recursion
+            ################################################
+            param_typ = self.solver.fresh_type_var()
+            return_typ = self.solver.fresh_type_var()
+            consq_constraints = [Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)]
+            consq_typ = Exi(tuple([return_typ.id]), tuple(consq_constraints), return_typ)  
+            return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
+            ################################################
+
+        else:
+            ################################################
+            # Factored Type
+            ################################################
+            param_typ = param_upper_bound 
+            return_typ = find_factor_from_label(rel_typ, "tail")
+            assert param_typ and return_typ
+            return Result(pid, outer_world, Imp(param_typ, return_typ))
     
 '''
 end ExprRule
