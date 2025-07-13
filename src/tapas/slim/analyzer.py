@@ -3580,18 +3580,24 @@ result:
             for w in self.solver.solve_multi(inner_world, right_constraints)
             # for w in [inner_world]
         ]
-        is_single = (len(inner_schemas) == 1) 
-        # foreignids = foreignids.union(
-        #     pset(
-        #         id
-        #         for (inner_world, left_typ, right_typ) in inner_schemas
-        #         for id in extract_free_vars_from_typ(s(), left_typ).intersection(
-        #             extract_free_vars_from_typ(s(), right_typ)
-        #         )
-        #     )
-        #     if is_single else
-        #     pset()
-        # )
+
+        left_unstructured_vars = pset(
+            left_typ.id
+            for (inner_world, left_typ, right_typ) in inner_schemas
+            if (len(inner_schemas) == 1)
+            if isinstance(left_typ, TVar) 
+        )
+        foreignids = foreignids.union(left_unstructured_vars)
+
+        # TODO: 
+        # - extrude param type variables, and replace positive occurences in result 
+        # - replace pattern with extrusions.  
+        # - add constraint that the weakened inferred param type subtypes the extrusion
+
+
+        # LFP[W] EXI[T] (<succ> T <: W):T <: <succ> T' 
+        # LFP[W] EXI[T] T | <succ> W  <: <succ> T' 
+        #  EXI[T] T | <succ> <succ> T'  <: <succ> T' 
 
         induc_body = Bot()
         for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_schemas)):
@@ -3672,38 +3678,37 @@ rel_typ:
         # return Result(pid, outer_world, All(tuple([param_var.id]), tuple([param_constraint]), Imp(param_typ, return_typ)))
         ################################################
 
-        def is_unstructured(t : Typ) -> bool:
-            return isinstance(t, TVar) or (
-                isinstance(t, Exi) and
-                is_unstructured(t.body)
-            )
+        def weaken_to_decreasining_lfp(t : LeastFP) -> LeastFP:
+            # NOTE: weaken from an increasing LFP to a decreasing LFP
+            content = self.solver.simplify_typ(t.body)  
+            if isinstance(content, Exi) and isinstance(content.body, TVar):
+                choices = [
+                    self.solver.sub_polar_typ(True, st.lower, content.body.id, TVar(t.id))
+                    for st in content.constraints
+                    if isinstance(st.upper, TVar) and st.upper.id == t.id
+                ] + [content.body]
+                return LeastFP(t.id, make_unio(choices))
+            else:
+                return t
 
-        param_upper_bound = find_factor_from_label(rel_typ, "head")
-        assert param_upper_bound 
-        print(f"RAW: {param_upper_bound.body}")
-        if False: # is_single and is_unstructured(self.solver.simplify_typ(param_upper_bound.body)):
-            param_typ = param_upper_bound 
-            return_typ = find_factor_from_label(rel_typ, "tail")
-            assert param_typ and return_typ
-            return Result(pid, outer_world, Imp(param_typ, return_typ))
+        if bool(left_unstructured_vars):
             ################################################
             # Stream Type 
             ##################################################
-            # NOTE: if the upper bound has no structure,  
-            # then no actual upper bound constraint could have been inferred from recursion
-            ################################################
-            param_typ = self.solver.fresh_type_var()
-            return_typ = self.solver.fresh_type_var()
-            consq_constraints = [Subtyping(make_pair_typ(param_typ, return_typ), rel_typ)]
-            consq_typ = Exi(tuple([return_typ.id]), tuple(consq_constraints), return_typ)  
-            return Result(pid, outer_world, All(tuple([param_typ.id]), tuple(), Imp(param_typ, consq_typ)))
-            ################################################
-
+            (_, param_typ, _) = inner_schemas[0]
+            assert isinstance(param_typ, TVar)
+            param_upper_bound = find_factor_from_label(rel_typ, "head")
+            assert param_upper_bound
+            weakened_param_typ = weaken_to_decreasining_lfp(param_upper_bound)
+            return_typ = find_factor_from_label(rel_typ, "tail")
+            assert return_typ
+            strengthened_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, weakened_param_typ)
+            return Result(pid, outer_world, Imp(param_typ, strengthened_return_typ))
         else:
             ################################################
             # Factored Type
             ################################################
-            param_typ = param_upper_bound 
+            param_typ = find_factor_from_label(rel_typ, "head")
             return_typ = find_factor_from_label(rel_typ, "tail")
             assert param_typ and return_typ
             return Result(pid, outer_world, Imp(param_typ, return_typ))

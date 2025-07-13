@@ -35,15 +35,6 @@ LFP [R] (<zero> @) | (<succ> <succ> R)
     assert not bool(worlds)
 
 
-def test_diff():
-    worlds = solve_subtyping(f"""
-LFP [R] R -> @ 
-    """, f"""
-TOP \\ LFP [R] EXI [T] (T <: R) : R -> @ 
-    """
-    )
-    assert not bool(worlds)
-
 def test_union_is_not_zero():
     worlds = solve_subtyping(f"""
 (<zero> @) | (<succ> <zero> @)

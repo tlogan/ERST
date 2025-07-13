@@ -36,7 +36,10 @@ def test_succ_stream():
     ######################
     # expected: T ->  LFP[R] @ -> <pair> ((LFP[W] EXI[U](<succ> U <: W): U) * R)    
     # TODO: what is the rationale for why it's save to flip around the constraint into an LFP?
-    # does (LFP[W] EXI[U](<succ> U <: W): U) <: (LFP[W] T | <succ> W) ?
+    # does (LFP[W] EXI[](<succ> T <: W): T) <: (LFP[W] T | <succ> W) ?
+    # does (LFP[W] T | <succ> W) <: (LFP[W] EXI[](<succ> T <: W): T) ?
+    ######
+    # does (T | <succ> (LFP[W] EXI[](<succ> T <: W): T)) <: (LFP[W] EXI[](<succ> T <: W): T) ?
     ######################
     # expected: T ->  LFP[R] @ -> <pair> ((LFP[W] T | <succ> W) * R)    
     ######################
@@ -1092,6 +1095,29 @@ def test_typing_structures_6():
     assert infer_typ(code)
 
 
+def test_subtyping_increasing_recursion():
+    # INCOMPLETENESS
+    # the subtyping never halts with a contradiction, so should be accepted
+    # since this is actually rejected, but should be accepted,
+    # this form must NOT be allowed in negations of subtyping.
+    worlds = solve_subtyping(f"""
+@ 
+    """, f"""
+LFP [R] EXI [T] (<succ> T <: R) : T 
+    """
+    )
+    assert bool(worlds)
+
+def test_subtyping_decreasing_recursion():
+    worlds = solve_subtyping(f"""
+<succ> <nil> @ 
+    """, f"""
+LFP [R] <nil> @ | <succ> R 
+    """
+    )
+    assert bool(worlds)
+
+
 ###############################################################
 ###############################################################
 
@@ -1100,11 +1126,12 @@ if __name__ == '__main__':
     ##########################
     # test_max()
     # test_max_app()
-    test_succ_stream()
+    # test_succ_stream()
     # test_single_case_loop()
     # test_typing_G8A()
     # test_something_subtypes_non_decreasing_lfp()
     # test_something_subtypes_increasing_lfp()
+    test_subtyping_increasing_recursion()
 
 
 #######################################################################
