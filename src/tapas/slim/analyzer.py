@@ -3086,6 +3086,10 @@ SOLVABLE:
         #######################################
 
         elif isinstance(upper, Diff):
+            # NOTE: the soundness error was in 
+            # the derivation of model subtyping diff intro
+            # must ensure that the subtracted type does 
+            # not intersect with the lower type 
             # TODO: must ensure constraints are complete;
             if not bool(self.solve(world, lower, upper.negation)) and not bool(self.solve(world, upper.negation, lower)):
                 return self.solve(world, lower, upper.context)
