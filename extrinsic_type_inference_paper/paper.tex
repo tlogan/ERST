@@ -1026,10 +1026,10 @@ and then to use them in a subsequent expression via substitution
       \J{ALL[}\Theta\J{]} \Delta \J{:} \tau
     \end{array}
     \\
-    \com{negatable} &
+    \com{subtractable} &
     \nonterm{\eta} & \is 
     \begin{array}[t]{@{}l}
-      \J{EXI[}\Theta \J{]} \Omega \J{:} \eta \sep 
+      \J{EXI[}\Theta \J{]} \eta \sep 
       \rho
     \end{array}
     \\
@@ -1085,7 +1085,7 @@ A least fixed point \ms{\J{LFP[}\alpha \J{]}}
 represents an infinite space of structures, 
 such as natural numbers or lists. 
 A difference \ms{\tau \typdiff \eta} is a space without inhabitation by certain structures.
-The subtracted part is restricted to a negatable form,
+The subtracted part is restricted to a subtractable form,
 which is a form that our system can decide the inhabitation
 assuming additional semantics restrictions.
 
@@ -1130,7 +1130,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \com{schema seq} &
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
     \\
-    \com{negatable type seq} &
+    \com{subtractable type seq} &
     \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
     \\
     \com{negatable subtyping seq} &
@@ -1650,7 +1650,7 @@ and consolidates the results into a sequence of schemas \ms{\Pi}.
 It must consolidate all of the inferred types in order to
 ensure that the inferred type of each 
 path's pattern does not subtype the type of subsequent paths' patterns. 
-The sequence of negatable types \ms{\Xi} can be ignored, as it is only
+The sequence of subtractable types \ms{\Xi} can be ignored, as it is only
 exposed for the sake of being used recursively.
 Next, it leverage positive packing 
 \ms{\textbf{pack}^+(... \entails \Pi) = \tau}
@@ -2221,14 +2221,22 @@ akin to deriving the least fixed point elimination under the assumption of the i
   \nopad
   \begin{mathpar}
     \inferrule {
+      \TODO{Update proof, deriving that lower does not intersect with subtraction}
+      \\\\
       \Theta, \Delta \Vvdash \eta
-      \\
-      \Theta, \Delta \entails 
-      \tau_l \subtypes \tau_r \given \Theta', \Delta' 
       \\
       \nexists \Theta', \Delta' \qua  
       \Theta, \Delta \entails 
       \tau_l \subtypes \eta \given \Theta', \Delta'
+      \\\\
+      \Theta, \Delta \Vvdash \eta \subtypes  \tau_l
+      \\
+      \nexists \Theta', \Delta' \qua  
+      \Theta, \Delta \entails 
+      \eta \subtypes \tau_l \given \Theta', \Delta'
+      \\\\
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r \given \Theta', \Delta' 
     } {
       \Theta, \Delta \entails 
       \tau_l \subtypes \tau_r \typdiff \eta
@@ -2241,7 +2249,7 @@ akin to deriving the least fixed point elimination under the assumption of the i
 For difference introduction \ms{\tau \subtypes \tau_r \typdiff \eta}, 
 it checks that subtyping holds for the positive part 
 and fails for the subtracted part.
-Additionally, it requires that the subtracted part is negatable
+Additionally, it requires that the subtracted part is subtractable 
 \ms{\Theta, \Delta \Vvdash \eta}, 
 which ensures that its introduction is complete,
 thus failure of its introduction is sound. 

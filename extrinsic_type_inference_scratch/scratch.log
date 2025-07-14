@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  8 JUL 2025 04:25
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.5.13)  14 JUL 2025 11:55
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_supp/scratch.tex
-(/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_supp/scratch.tex
+**/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch/scratch.tex
+(/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch/scratch.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
 (/usr/local/texlive/2024/texmf-dist/tex/latex/acmart/acmart.cls
@@ -1639,206 +1639,197 @@ LaTeX Warning: Reference `def:proof_subtyping_lfp_elimination' on page 16 undefi
 LaTeX Warning: Reference `def:proof_subtyping_lfp_elimination' on page 16 undefined on input line 3203.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_difference_intro' on page 16 undefined on input line 3243.
+LaTeX Warning: Reference `def:proof_subtyping_lfp_intro' on page 16 undefined on input line 3294.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_difference_intro' on page 16 undefined on input line 3246.
-
-
-LaTeX Warning: Reference `def:proof_subtyping_difference_intro' on page 16 undefined on input line 3251.
+LaTeX Warning: Reference `def:proof_subtyping_lfp_intro' on page 16 undefined on input line 3299.
 
 
 Underfull \vbox (badness 1728) has occurred while \output is active []
 
  [16.16]
 
-LaTeX Warning: Reference `def:proof_subtyping_lfp_intro' on page 17 undefined on input line 3293.
+LaTeX Warning: Reference `def:model_typing' on page 17 undefined on input line 3339.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_lfp_intro' on page 17 undefined on input line 3298.
+LaTeX Warning: Reference `def:model_subtyping' on page 17 undefined on input line 3344.
 
 
-LaTeX Warning: Reference `def:model_typing' on page 17 undefined on input line 3338.
+LaTeX Warning: Reference `def:proof_subtyping_diff_elimination' on page 17 undefined on input line 3360.
 
 
-LaTeX Warning: Reference `def:model_subtyping' on page 17 undefined on input line 3343.
+LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3387.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_diff_elimination' on page 17 undefined on input line 3359.
+LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3414.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3386.
+LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3444.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3413.
+LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3447.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3443.
+LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 17 undefined on input line 3506.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_expansion_introduction' on page 17 undefined on input line 3446.
-
-
-LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 17 undefined on input line 3505.
+LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 17 undefined on input line 3533.
 
 
 Underfull \vbox (badness 2698) has occurred while \output is active []
 
  [17.17]
 
-LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 18 undefined on input line 3532.
+LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 18 undefined on input line 3564.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 18 undefined on input line 3563.
+LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 18 undefined on input line 3567.
 
 
-LaTeX Warning: Reference `def:proof_subtyping_refinement_elimination' on page 18 undefined on input line 3566.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 3628--3632
+Underfull \hbox (badness 10000) in paragraph at lines 3629--3633
 
  []
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3646.
+LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3647.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 3643--3647
+Underfull \hbox (badness 10000) in paragraph at lines 3644--3648
 
  []
 
 
-LaTeX Warning: Reference `def:model_typing' on page 18 undefined on input line 3665.
+LaTeX Warning: Reference `def:model_typing' on page 18 undefined on input line 3666.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 18 undefined on input line 3669.
+LaTeX Warning: Reference `def:expr_substitution' on page 18 undefined on input line 3670.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3679.
+LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3680.
 
 
-LaTeX Warning: Reference `def:model_typing_sequence' on page 18 undefined on input line 3691.
+LaTeX Warning: Reference `def:model_typing_sequence' on page 18 undefined on input line 3692.
 
 
-LaTeX Warning: Reference `def:model_typing' on page 18 undefined on input line 3709.
+LaTeX Warning: Reference `def:model_typing' on page 18 undefined on input line 3710.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 18 undefined on input line 3713.
+LaTeX Warning: Reference `def:expr_substitution' on page 18 undefined on input line 3714.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3723.
+LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3724.
+
+
+LaTeX Warning: Reference `def:proof_typing' on page 18 undefined on input line 3728.
 
 [18.18]
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3727.
+LaTeX Warning: Reference `def:model_typing' on page 19 undefined on input line 3799.
 
 
-LaTeX Warning: Reference `def:model_typing' on page 19 undefined on input line 3798.
+LaTeX Warning: Reference `def:expr_substitution' on page 19 undefined on input line 3803.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 19 undefined on input line 3802.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3813.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3812.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3817.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3816.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3821.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3820.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3852.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3851.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3856.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3855.
+LaTeX Warning: Reference `def:expr_substitution' on page 19 undefined on input line 3917.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 19 undefined on input line 3916.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3925.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3924.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3928.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3927.
-
-
-LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3930.
+LaTeX Warning: Reference `def:proof_typing' on page 19 undefined on input line 3931.
 
 [19.19]
 
-LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4030.
+LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4031.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4039.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4040.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4042.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4043.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4045.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4046.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4048.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4049.
 
 
-LaTeX Warning: Reference `def:model_typing_sequence' on page 20 undefined on input line 4137.
+LaTeX Warning: Reference `def:model_typing_sequence' on page 20 undefined on input line 4138.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4145.
+LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4146.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4153.
+LaTeX Warning: Reference `def:expr_substitution' on page 20 undefined on input line 4154.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4163.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4164.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4166.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4167.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4169.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4170.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4172.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4173.
 
 
-LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4175.
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4176.
 
 
-Underfull \vbox (badness 1077) has occurred while \output is active []
+LaTeX Warning: Reference `def:proof_typing' on page 20 undefined on input line 4179.
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [20.20]
 
-LaTeX Warning: Reference `def:proof_typing' on page 21 undefined on input line 4178.
+LaTeX Warning: Reference `...' on page 21 undefined on input line 4254.
 
 
-LaTeX Warning: Reference `...' on page 21 undefined on input line 4253.
+LaTeX Warning: Reference `thm:expression_congruence_typing' on page 21 undefined on input line 4308.
 
 
-LaTeX Warning: Reference `thm:expression_congruence_typing' on page 21 undefined on input line 4307.
+LaTeX Warning: Reference `def:expr_substitution' on page 21 undefined on input line 4316.
 
 
-LaTeX Warning: Reference `def:expr_substitution' on page 21 undefined on input line 4315.
-
-
-LaTeX Warning: Reference `...' on page 21 undefined on input line 5170.
+LaTeX Warning: Reference `...' on page 21 undefined on input line 5171.
 
 [21.21]
 
-LaTeX Warning: Reference `thm:model_typing_assignability' on page 22 undefined on input line 6151.
+LaTeX Warning: Reference `thm:model_typing_assignability' on page 22 undefined on input line 6152.
 
 
-LaTeX Warning: Reference `thm:model_typing_soundness' on page 22 undefined on input line 6152.
+LaTeX Warning: Reference `thm:model_typing_soundness' on page 22 undefined on input line 6153.
 
 
-LaTeX Warning: Reference `thm:model_typing_fully_reduced_implication_elimination' on page 22 undefined on input line 6157.
+LaTeX Warning: Reference `thm:model_typing_fully_reduced_implication_elimination' on page 22 undefined on input line 6158.
 
 
-LaTeX Warning: Reference `thm:reduction_closed' on page 22 undefined on input line 6165.
+LaTeX Warning: Reference `thm:reduction_closed' on page 22 undefined on input line 6166.
 
 
-LaTeX Warning: Reference `thm:closed_substitution' on page 22 undefined on input line 6166.
+LaTeX Warning: Reference `thm:closed_substitution' on page 22 undefined on input line 6167.
 
 
 Class acmart Warning: ACM keywords are mandatory for papers over two pages.
@@ -1870,18 +1861,18 @@ Package rerunfilecheck Info: File `scratch.out' has not changed.
 (rerunfilecheck)             Checksum: 8C543BCDA4C375FB38D892CC8B19EC7F;349.
  ) 
 Here is how much of TeX's memory you used:
- 24439 strings out of 474116
- 392776 string characters out of 5743682
+ 24438 strings out of 474116
+ 392747 string characters out of 5743682
  1964187 words of memory out of 5000000
- 45771 multiletter control sequences out of 15000+600000
+ 45770 multiletter control sequences out of 15000+600000
  739046 words of font info for 355 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 90i,16n,131p,1071b,726s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,16n,131p,1074b,727s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/stmaryrd/stmary9.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/txfonts/txsyc.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/newtx/txsys.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb>
-Output written on scratch.pdf (22 pages, 494346 bytes).
+Output written on scratch.pdf (22 pages, 494047 bytes).
 PDF statistics:
- 501 PDF objects out of 1000 (max. 8388607)
- 434 compressed objects within 5 object streams
+ 498 PDF objects out of 1000 (max. 8388607)
+ 431 compressed objects within 5 object streams
  121 named destinations out of 1000 (max. 500000)
  92201 words of extra memory for PDF output out of 106986 (max. 10000000)
 

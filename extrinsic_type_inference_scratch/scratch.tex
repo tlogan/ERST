@@ -1747,8 +1747,8 @@ The interested reader can find the actual the definition of packing in the appen
 \hfill
 
 \begin{theorem}
-  \label{thm:model_subtyping_difference_introduction}
-  Model Subtyping Difference Introduction 
+  \label{thm:model_subtyping_difference_elimination}
+  Model Subtyping Difference Elimination 
   \\
   \small
   \begin{mathpar}
@@ -1834,15 +1834,15 @@ The interested reader can find the actual the definition of packing in the appen
 \hfill
 
 \begin{theorem}
-  \label{thm:model_subtyping_difference_elimination}
-  Model Subtyping Difference Elimination 
+  \label{thm:model_subtyping_difference_introduction}
+  Model Subtyping Difference Introduction 
   \\
   \small
   \begin{mathpar}
     \inferrule {
-      \delta \satisfies \tau_0 \subtypes \tau_1
+      (\nexists e \qua \delta \satisfies e \hastype \tau_0 \up \delta \satisfies e \hastype \tau_2)
       \\
-      \neg (\delta \satisfies \tau_0 \subtypes \tau_2)
+      \delta \satisfies \tau_0 \subtypes \tau_1
     } {
       \delta \satisfies \tau_0 \subtypes \tau_1 \typdiff \tau_2
     } {
@@ -3237,49 +3237,50 @@ The interested reader can find the actual the definition of packing in the appen
     \tau \subtypes \rho \typdiff \eta
     \given \Theta', \Delta'
   )$
-  \item \I \N Derive $(
-    \Theta, \Delta \entails 
-    \tau \subtypes \rho \given \Theta', \Delta' 
-  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
-  \item \I \N And $(
-    \textbf{ftv}(\eta) \subseteq \emptyset
-  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
-  \item \I \N And $(
-    \nexists \Theta', \Delta' \qua  
-    \Theta, \Delta \entails 
-    \tau \subtypes \eta \given \Theta', \Delta'
-  )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+  \item \I \N \TODO{REDO} 
+  % \item \I \N Derive $(
+  %   \Theta, \Delta \entails 
+  %   \tau \subtypes \rho \given \Theta', \Delta' 
+  % )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+  % \item \I \N And $(
+  %   \textbf{ftv}(\eta) \subseteq \emptyset
+  % )$ [Def. \ref{def:proof_subtyping_difference_intro}]
+  % \item \I \N And $(
+  %   \nexists \Theta', \Delta' \qua  
+  %   \Theta, \Delta \entails 
+  %   \tau \subtypes \eta \given \Theta', \Delta'
+  % )$ [Def. \ref{def:proof_subtyping_difference_intro}]
 
-  \item \I \N Let $\delta'$ be, such that $(
-    \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta
-  )$ [IH]
+  % \item \I \N Let $\delta'$ be, such that $(
+  %   \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta
+  % )$ [IH]
 
-  \item \I \N And P: $(
-    \forall \delta \qua
-    \delta \oplus \delta' \satisfies \Delta'
-    \implies
-    \delta \oplus \delta' \satisfies \tau \subtypes \rho
-  )$ [IH]
+  % \item \I \N And P: $(
+  %   \forall \delta \qua
+  %   \delta \oplus \delta' \satisfies \Delta'
+  %   \implies
+  %   \delta \oplus \delta' \satisfies \tau \subtypes \rho
+  % )$ [IH]
 
-  \item \I \N For $\delta$, Assume $(
-    \delta \oplus \delta' \satisfies \Delta'
-  )$
+  % \item \I \N For $\delta$, Assume $(
+  %   \delta \oplus \delta' \satisfies \Delta'
+  % )$
 
-  \item \I\I \N Derive $(
-    \delta \oplus \delta' \satisfies \tau \subtypes \rho
-  )$ [P]
+  % \item \I\I \N Derive $(
+  %   \delta \oplus \delta' \satisfies \tau \subtypes \rho
+  % )$ [P]
 
-  \item \I\I \N Derive $(
-    \delta \oplus \delta' \satisfies \Delta
-  )$ [Thm. \ref{thm:proof_subtyping_containment}]
+  % \item \I\I \N Derive $(
+  %   \delta \oplus \delta' \satisfies \Delta
+  % )$ [Thm. \ref{thm:proof_subtyping_containment}]
 
-  \item \I\I \N Derive $(
-    \neg (\delta \oplus \delta' \satisfies \tau \subtypes \eta)
-  )$ [Thm \ref{thm:proof_decidable_subtyping_strong_existential_completeness}]
+  % \item \I\I \N Derive $(
+  %   \neg (\delta \oplus \delta' \satisfies \tau \subtypes \eta)
+  % )$ [Thm \ref{thm:proof_decidable_subtyping_strong_existential_completeness}]
 
-  \item \I\I \N Derive $(
-    \delta \oplus \delta' \satisfies \tau \subtypes \rho \typdiff \eta
-  )$ [Thm \ref{thm:model_subtyping_difference_introduction}]
+  % \item \I\I \N Derive $(
+  %   \delta \oplus \delta' \satisfies \tau \subtypes \rho \typdiff \eta
+  % )$ [Thm \ref{thm:model_subtyping_difference_introduction}]
 
 
   %%%%%%%%%%%%%%%%

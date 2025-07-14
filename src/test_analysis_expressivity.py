@@ -1117,7 +1117,6 @@ LFP [R] <nil> @ | <succ> R
     )
     assert bool(worlds)
 
-
 ###############################################################
 ###############################################################
 
@@ -1131,7 +1130,7 @@ if __name__ == '__main__':
     # test_typing_G8A()
     # test_something_subtypes_non_decreasing_lfp()
     # test_something_subtypes_increasing_lfp()
-    test_subtyping_increasing_recursion()
+    test_two_not_three()
 
 
 #######################################################################

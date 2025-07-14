@@ -1,8 +1,8 @@
-PWD /Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_supp
+PWD /Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch
 INPUT /usr/local/texlive/2024/texmf.cnf
 INPUT /usr/local/texlive/2024/texmf-dist/web2c/texmf.cnf
 INPUT /usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_supp/scratch.tex
+INPUT /Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch/scratch.tex
 OUTPUT scratch.log
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/acmart/acmart.cls
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/acmart/acmart.cls

@@ -224,7 +224,7 @@ class Inter:
 @dataclass(frozen=True, eq=True)
 class Diff:
     context : Typ 
-    negation : Typ # NOTE:, restrict to a tag/field pattern that is easy decide anti-unification
+    subtraction : Typ # NOTE:, restrict to a tag/field pattern that is easy decide anti-unification
 
 @dataclass(frozen=True, eq=True)
 class Imp:
@@ -376,7 +376,7 @@ def to_nameless(bound_ids : tuple[str, ...], typ : Typ) -> NL:
     elif isinstance(typ, Inter):
         return InterNL(to_nameless(bound_ids, typ.left), to_nameless(bound_ids, typ.right))
     elif isinstance(typ, Diff):
-        return DiffNL(to_nameless(bound_ids, typ.context), to_nameless(bound_ids, typ.negation))
+        return DiffNL(to_nameless(bound_ids, typ.context), to_nameless(bound_ids, typ.subtraction))
     elif isinstance(typ, Imp):
         return ImpNL(to_nameless(bound_ids, typ.antec), to_nameless(bound_ids, typ.consq))
     elif isinstance(typ, Exi):
@@ -492,7 +492,7 @@ def concretize_typ(typ : Typ) -> str:
             else:
                 plate_entry = ([control.left,control.right], lambda left, right : f"({left} & {right})")  
         elif isinstance(control, Diff):
-            plate_entry = ([control.context,control.negation], lambda context,negation : f"({context} \\ {negation})")  
+            plate_entry = ([control.context,control.subtraction], lambda context,negation : f"({context} \\ {negation})")  
         elif isinstance(control, Exi):
             constraints = concretize_constraints(control.constraints, inline=True)
             ids = concretize_ids(control.ids)
@@ -674,7 +674,7 @@ def diff_well_formed(diff : Diff) -> bool:
     '''
     restriction to avoid dealing with negating divergence (which would need to soundly fail under even negs, soundly pass under odd negs)
     '''
-    return negation_well_formed(diff.negation)
+    return negation_well_formed(diff.subtraction)
 
 
 def make_pair_typ(left : Typ, right : Typ) -> Typ:
@@ -730,7 +730,7 @@ def project_typ_recurse(t : Typ, path : Sequence[str]) -> Optional[Typ]:
         return None
     elif isinstance(t, Diff):
         context = project_typ_recurse(t.context, path)
-        negation = project_typ_recurse(t.negation, path)
+        negation = project_typ_recurse(t.subtraction, path)
         if context and negation:
             return Diff(context, negation)
         else:
@@ -1229,7 +1229,7 @@ def sub_typ(assignment_map : PMap[str, Typ], typ : Typ) -> Typ:
     elif isinstance(typ, Inter):  
         return make_inter([sub_typ(assignment_map, typ.left), sub_typ(assignment_map, typ.right)])
     elif isinstance(typ, Diff):  
-        return Diff(sub_typ(assignment_map, typ.context), sub_typ(assignment_map, typ.negation))
+        return Diff(sub_typ(assignment_map, typ.context), sub_typ(assignment_map, typ.subtraction))
     elif isinstance(typ, Imp):  
         return Imp(sub_typ(assignment_map, typ.antec), sub_typ(assignment_map, typ.consq))
     elif isinstance(typ, Exi):  
@@ -1289,7 +1289,7 @@ def extract_free_vars_from_typ(bound_vars : PSet[str], typ : Typ) -> PSet[str]:
         elif isinstance(typ, Inter):
             plate_entry = (pair_up(bound_vars, [typ.left, typ.right]), lambda set_left, set_right: set_left.union(set_right))
         elif isinstance(typ, Diff):
-            plate_entry = (pair_up(bound_vars, [typ.context, typ.negation]), lambda set_context, set_negation: set_context.union(set_negation))
+            plate_entry = (pair_up(bound_vars, [typ.context, typ.subtraction]), lambda set_context, set_negation: set_context.union(set_negation))
         elif isinstance(typ, Imp):
             plate_entry = (pair_up(bound_vars, [typ.antec, typ.consq]), lambda set_antec, set_consq: set_antec.union(set_consq))
 
@@ -1674,8 +1674,8 @@ class Solver:
                 else:
                     return make_unio([new_left, new_right])
         elif isinstance(typ, Diff): 
-            typ = Diff(self.simplify_typ(typ.context), self.simplify_typ(typ.negation))
-            if typ.negation == Bot():
+            typ = Diff(self.simplify_typ(typ.context), self.simplify_typ(typ.subtraction))
+            if typ.subtraction == Bot():
                 return typ.context
             else:
                 return typ
@@ -1739,7 +1739,7 @@ class Solver:
             return Inter(left_typ, right_typ)
         elif isinstance(t, Diff):
             context_typ = self.to_aliasing_typ(t.context)
-            neg_typ = self.to_aliasing_typ(t.negation)
+            neg_typ = self.to_aliasing_typ(t.subtraction)
             return Diff(context_typ, neg_typ)
         elif isinstance(t, Exi):
             constraints = self.to_aliasing_constraints(t.constraints)
@@ -1822,7 +1822,7 @@ class Solver:
             return (left_ids + right_ids, left_constraints + right_constraints, Inter(left_typ, right_typ))
         elif isinstance(t, Diff):
             (context_ids, context_constraints, context_typ) = self.flatten_index_unios(t.context)
-            return (context_ids, context_constraints, Diff(context_typ, t.negation))
+            return (context_ids, context_constraints, Diff(context_typ, t.subtraction))
         elif isinstance(t, Imp):
             (consq_ids, consq_constraints, consq_typ) = self.flatten_index_unios(t.consq)
             return (consq_ids, consq_constraints, Inter(t.antec, consq_typ))
@@ -2151,7 +2151,7 @@ class Solver:
         elif isinstance(src, Diff):  
             return Diff(
                 self.sub_polar_typ(greenlight, src.context, id, payload),
-                self.sub_polar_typ(not greenlight, src.negation, id, payload),
+                self.sub_polar_typ(not greenlight, src.subtraction, id, payload),
             )
         elif isinstance(src, Imp):  
             return Imp(
@@ -2221,7 +2221,7 @@ class Solver:
             )
         elif isinstance(src, Diff):  
             return self.extract_polar_vars_from_typ(greenlight, ignore, src.context).union(
-                self.extract_polar_vars_from_typ(not greenlight, ignore, src.negation)
+                self.extract_polar_vars_from_typ(not greenlight, ignore, src.subtraction)
             )
         elif isinstance(src, Imp):  
             return self.extract_polar_vars_from_typ(not greenlight, ignore, src.antec).union(
@@ -2295,9 +2295,9 @@ class Solver:
         elif isinstance(t2, Inter):
             return self.is_disjoint(world, t1, t2.left) or self.is_disjoint(world, t1, t2.right)
         elif isinstance(t1, Diff):
-            return self.check(world, t2, t1.negation)
+            return self.check(world, t2, t1.subtraction)
         elif isinstance(t2, Diff):
-            return self.check(world, t1, t2.negation)
+            return self.check(world, t1, t2.subtraction)
         # elif isinstance(t1, TTag) and isinstance(t2, TTag):
         #     return t1.label != t2.label or (
         #         self.is_disjoint(world, t1.body, t2.body)
@@ -2593,37 +2593,40 @@ SOLVABLE:
     def is_guarded_typ(self, t : Typ) -> bool:
         return isinstance(t, TUnit) or isinstance(t, TEntry)
 
-    def is_negatable_typ(self, world : World, t : Typ) -> bool:
+    def is_subtractable_typ(self, t : Typ) -> bool:
         return (
             (
                 self.is_pattern_typ(t) or
                 isinstance(t, Top) or
                 (
                     isinstance(t, Exi) and
-                    self.is_negatable_typ(world, t.body) and
-                    not self.are_negatable_constraints(world, t.constraints)
+                    self.is_pattern_typ(t.body) and
+                    # self.is_negatable_typ(world, t.body) and
+                    not bool(t.constraints)
+                    # not self.are_negatable_constraints(world, t.constraints)
                 )
             ) and
             not bool(extract_free_vars_from_typ(s(), t))
         )
 
+    def is_negatable_constraint(self, world : World, lower : Typ, upper : Typ) -> bool:
+            return (
+                self.is_subtractable_typ(upper) or 
+                (
+                    isinstance(lower, TVar) and
+                    lower not in world.closedids and
+                    all(
+                        wst.upper == Top()
+                        for wst in world.constraints
+                        if wst.lower == lower 
+                    )
+                ) or
+                (isinstance(upper, LeastFP) and is_inflatable(lower, upper))
+            )
+
     def are_negatable_constraints(self, world : World, constraints : Iterable[Subtyping]) -> bool:
         return all(
-            # NOTE: compatible check only necessary for relational reasoning 
-            # self.is_compatible(st.lower, st.upper)
-            # if isinstance(st.upper, LeastFP) else
-
-
-            # TODO: rethink the constraints
-            (self.is_negatable_typ(world, st.lower) and self.is_negatable_typ(world, st.upper)) or (
-                isinstance(st.lower, TVar) and
-                st.lower not in world.closedids and
-                all(
-                    wst.upper == Top()
-                    for wst in world.constraints
-                    if wst.lower == st.lower 
-                )
-            )
+            self.is_negatable_constraint(world, st.lower, st.upper)
             for st in constraints
         )
 
@@ -3086,12 +3089,21 @@ SOLVABLE:
         #######################################
 
         elif isinstance(upper, Diff):
-            # NOTE: the soundness error was in 
-            # the derivation of model subtyping diff intro
+            ######
+            # NOTE:
             # must ensure that the subtracted type does 
             # not intersect with the lower type 
-            # TODO: must ensure constraints are complete;
-            if not bool(self.solve(world, lower, upper.negation)) and not bool(self.solve(world, upper.negation, lower)):
+            ######
+            # if subtraction is subtractable, then it cannot partially overlap 
+            # therefore, checking subtyping in both directions is sufficient
+            ######
+            if (
+                self.is_subtractable_typ(upper.subtraction) and 
+                not bool(self.solve(world, lower, upper.subtraction)) and 
+                self.is_negatable_constraint(world, upper.subtraction, lower) and
+                not bool(self.solve(world, upper.subtraction, lower)) and
+                True
+            ):
                 return self.solve(world, lower, upper.context)
             else:
                 return []
@@ -3229,7 +3241,7 @@ SOLVABLE:
                 '''
                 A \\ B <: T === A <: T | B  
                 '''
-                return self.solve(world, lower.context, Unio(upper, lower.negation))
+                return self.solve(world, lower.context, Unio(upper, lower.subtraction))
             else:
                 return []
 
