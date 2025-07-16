@@ -42,13 +42,6 @@ inductive Expr
 deriving Repr
 
 
--- NOTE: think of a type class as a type that can compute instances from some dependencies
--- NOTE: think of a inductive type as a type that can compute dependencies from all instances
--- NOTE: type classes have the effect of refinement types with respect to relations,
-  -- where they refine the type of the dependency to the subtype where the dependent type is inhabited
-
--- NOTE: relational types subsumes both; makes no distinction between instances vs dependencies
--- NOTE: relational types can use constraint solving to infer missing arguments
 
 class RecordPatternOf (_ : List (String × Expr)) where
   default : List (String × Pat)
@@ -78,6 +71,26 @@ instance
 
 instance (e : Expr) [p : PatternOf e] : CoeDep Expr e Pat where
   coe := p.default
+
+
+-- NOTE: type classes perform two functions
+  -- first: they refine the type of the dependency
+  -- second: they compute instances from some dependencies
+
+-- NOTE: this is a really weird mechanism
+-- a better design would separate concerns
+-- use subtyping to allow refinements or expansions of types
+-- use general purpose functions to compute from the refinement to some new form
+-- use relational types to maintain the connection between forms
+
+-- Note: inductive types also contain runtime computation
+  -- they compute dependencies from all instances
+
+-- NOTE: this means the computation of the dependency is represented by a type annotation
+-- a better design would not allow type annotations to influence runtime behavior
+-- Instead, runtime computation should only be specified by the expression language
+-- types should be inferred from the expression language, rather than expressions being derived from types.
+
 
 def foo (p : Pat) : Bool := (
   true
