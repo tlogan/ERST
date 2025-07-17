@@ -1,2 +1,3 @@
-import Basic
-def hello := "world"
+-- TODO: define progression and dynamic typing
+-- TODO: create tactic to construct proof of progression to a value
+-- TODO: create tactic to construct proof of dynamic values for given expression and type
