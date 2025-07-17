@@ -1,8 +1,62 @@
+declare_syntax_cat subtra
+declare_syntax_cat typ
+declare_syntax_cat params
+declare_syntax_cat quals
+declare_syntax_cat obj
 
-def hello := "world"
 
-#check hello
 
+
+syntax "o[" obj "]" : term
+syntax "t[" typ "]" : term
+syntax "s[" subtra "]" : term
+syntax "ps[" params "]" : term
+syntax "qs[" quals "]" : term
+
+syntax typ : obj
+
+syntax "@" : subtra
+syntax "TOP" : subtra
+syntax "<" ident ">" subtra : subtra
+syntax subtra "&" subtra : subtra
+
+
+syntax ident : typ
+syntax "@" : typ
+syntax "<" ident ">" typ : typ
+syntax typ "|" typ : typ
+syntax typ "&" typ : typ
+syntax typ "->" typ : typ
+syntax typ "\\" typ : typ
+syntax "ALL" "[" params quals typ : typ
+syntax "EXI" "[" params quals typ : typ
+syntax "ALL" "[" params typ : typ
+syntax "EXI" "[" params typ : typ
+syntax "BOT" : typ
+syntax "TOP" : typ
+
+syntax "]" : params
+syntax ident params : params
+
+syntax ":" : quals
+syntax "(" typ "<:" typ ")" quals : quals
+
+macro_rules
+| `(o[ $t:typ ]) => `(t[ $t ])
+
+
+inductive Subtra
+| top
+| unit
+| entry : String → Subtra → Subtra
+| inter : Subtra → Subtra → Subtra
+deriving Repr
+
+macro_rules
+| `(s[ TOP ]) => `(Subtra.top)
+| `(s[ @ ]) => `(Subtra.unit)
+| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry $(Lean.quote (toString i.getId)) s[$s])
+| `(s[ $x:subtra & $y:subtra]) => `(Subtra.inter s[$x] s[$y])
 
 mutual
   inductive Typ
@@ -12,7 +66,7 @@ mutual
   | path : Typ → Typ → Typ
   | unio :  Typ → Typ → Typ
   | inter :  Typ → Typ → Typ
-  | diff :  Typ → Typ → Typ
+  | diff :  Typ → Subtra → Typ
   | all :  List String → List Constraint → Typ → Typ
   | exi :  List String → List Constraint → Typ → Typ
   | lfp :  String → Typ → Typ
@@ -24,12 +78,57 @@ mutual
 
 end
 
+macro_rules
+| `(t[ $i:ident ]) => `(Typ.var $(Lean.quote (toString i.getId)))
+| `(t[ @ ]) => `(Typ.unit)
+| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry $(Lean.quote (toString i.getId)) t[$t])
+| `(t[ $x:typ -> $y:typ]) => `(Typ.path t[$x] t[$y])
+| `(t[ $x:typ | $y:typ]) => `(Typ.unio t[$x] t[$y])
+| `(t[ $x:typ & $y:typ]) => `(Typ.inter t[$x] t[$y])
+| `(t[ $x:typ \ $y:typ]) => `(Typ.diff t[$x] t[$y])
+| `(t[ ALL [ $ps:params $qs:quals $t:typ]) => `(Typ.all ps[$ps] qs[$qs] t[$t])
+| `(t[ EXI [ $ps:params $qs:quals $t:typ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
+| `(t[ ALL [ $ps:params $t:typ]) => `(Typ.all ps[$ps] [] t[$t])
+| `(t[ EXI [ $ps:params $t:typ]) => `(Typ.exi ps[$ps] [] t[$t])
+| `(t[ BOT ]) => `(t[ALL[T]T])
+| `(t[ TOP ]) => `(t[EXI[T]T])
+
+
+macro_rules
+| `(ps[ ] ]) => `([])
+| `(ps[ $i:ident $ps:params ]) => `($(Lean.quote (toString i.getId)) :: ps[$ps])
+
+macro_rules
+| `(qs[ : ]) => `([])
+| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (Constraint.subtyping t[$x] t[$y]):: qs[$qs])
+
+
+
+class SubtraOf (_ : Typ) where
+  default : Subtra
+
+instance : SubtraOf t[TOP] where
+  default := s[TOP]
+
+instance : SubtraOf t[@] where
+  default := s[@]
+
+instance (label : String) (result : Typ) [s : SubtraOf result]
+: SubtraOf (Typ.entry label result)  where
+  default := Subtra.entry label s.default
+
+instance
+  (left : Typ) [l : SubtraOf left]
+  (right : Typ) [r : SubtraOf right]
+: SubtraOf (Typ.inter left right)  where
+  default := Subtra.inter l.default r.default
+
+
 inductive Pat
 | var : String → Pat
 | unit
 | record : List (String × Pat) → Pat
 deriving Repr
-
 
 inductive Expr
 | var : String → Expr
