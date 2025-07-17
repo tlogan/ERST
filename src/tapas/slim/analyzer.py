@@ -3716,6 +3716,7 @@ rel_typ:
             param_upper_bound = find_factor_from_label(rel_typ, "head")
             assert param_upper_bound
             weakened_param_typ = weaken_to_decreasining_lfp(param_upper_bound)
+            #TODO: reassociate antecedent out of LFP 
             return_typ = find_factor_from_label(rel_typ, "tail")
             assert return_typ
             strengthened_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, weakened_param_typ)

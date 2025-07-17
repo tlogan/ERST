@@ -725,7 +725,7 @@ For example, the \code{repeat} function can be rewritten.
   \\
   \I \J{]}
   \\
-  \J{])]}
+  \J{]])]}
 }
 
 \noindent
@@ -740,10 +740,37 @@ and no pattern matching, can rely on path sensitivity to simulate pattern matchi
 
 \TODO{...}
 
+\examp{
+  \J{loop([self => [x =>}
+  \\
+  \I\J{[@ => (x, self(succ;x))]}
+  \\
+  \J{]]}
+}
+
+\TODO{...}
+
+
+
+\examp{
+  \J{ALL[T] T -> @ ->}
+  \\
+  \I\J{LFP[U] (LFP[R] T | <succ> R) * (@ -> U)}
+}
+
+% (ALL[G009] (G009 -> (LFP[G007] (EXI[G010] (G010 <: G007)  : (@ -> ((LFP[G007] (<succ> G007 | G009)) * G010))))))
+
 \Par{Subtraction} 
 
 \TODO{...}
 
+\examp{
+  \J{LFP[R] (<zero> @) | (<succ> <succ> R)}
+  \\
+  \subtypes
+  \\
+  \J{TOP\typdiff (<succ> <succ> <succ> <zero> @)}
+}
 
 \section{Dynamic System}
 \label{sec:dynamic_system}

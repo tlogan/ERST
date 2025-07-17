@@ -50,7 +50,7 @@ def test_succ_stream():
     code = f"""
 loop([self => [seed => 
     [@ =>
-        pair;(seed, (self)(succ;seed))
+        (seed, self(succ;seed))
     ]
 ]])
     """
@@ -1130,7 +1130,8 @@ if __name__ == '__main__':
     # test_typing_G8A()
     # test_something_subtypes_non_decreasing_lfp()
     # test_something_subtypes_increasing_lfp()
-    test_two_not_three()
+    # test_two_not_three()
+    test_succ_stream()
 
 
 #######################################################################
