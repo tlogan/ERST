@@ -1,49 +1,9 @@
-declare_syntax_cat subtra
-declare_syntax_cat typ
-declare_syntax_cat params
-declare_syntax_cat quals
-declare_syntax_cat obj
+-- import Lean
 
-
-
-
-syntax "o[" obj "]" : term
-syntax "t[" typ "]" : term
-syntax "s[" subtra "]" : term
-syntax "ps[" params "]" : term
-syntax "qs[" quals "]" : term
-
-syntax typ : obj
-
-syntax "@" : subtra
-syntax "TOP" : subtra
-syntax "<" ident ">" subtra : subtra
-syntax subtra "&" subtra : subtra
-
-
-syntax ident : typ
-syntax "@" : typ
-syntax "<" ident ">" typ : typ
-syntax typ "|" typ : typ
-syntax typ "&" typ : typ
-syntax typ "->" typ : typ
-syntax typ "\\" typ : typ
-syntax "ALL" "[" params quals typ : typ
-syntax "EXI" "[" params quals typ : typ
-syntax "ALL" "[" params typ : typ
-syntax "EXI" "[" params typ : typ
-syntax "BOT" : typ
-syntax "TOP" : typ
-
-syntax "]" : params
-syntax ident params : params
-
-syntax ":" : quals
-syntax "(" typ "<:" typ ")" quals : quals
-
-macro_rules
-| `(o[ $t:typ ]) => `(t[ $t ])
-
+-- open Lean
+-- open Lean.Parser
+-- open Lean.Elab
+-- open Lean.Elab.Term
 
 inductive Subtra
 | top
@@ -52,13 +12,11 @@ inductive Subtra
 | inter : Subtra → Subtra → Subtra
 deriving Repr
 
-macro_rules
-| `(s[ TOP ]) => `(Subtra.top)
-| `(s[ @ ]) => `(Subtra.unit)
-| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry $(Lean.quote (toString i.getId)) s[$s])
-| `(s[ $x:subtra & $y:subtra]) => `(Subtra.inter s[$x] s[$y])
-
 mutual
+  inductive Constraint
+  | subtyping : Typ → Typ → Constraint
+  deriving Repr
+
   inductive Typ
   | var : String → Typ
   | unit
@@ -71,28 +29,108 @@ mutual
   | exi :  List String → List Constraint → Typ → Typ
   | lfp :  String → Typ → Typ
   deriving Repr
-
-  inductive Constraint
-  | subtyping : Typ → Typ → Constraint
-  deriving Repr
-
 end
 
-macro_rules
-| `(t[ $i:ident ]) => `(Typ.var $(Lean.quote (toString i.getId)))
-| `(t[ @ ]) => `(Typ.unit)
-| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry $(Lean.quote (toString i.getId)) t[$t])
-| `(t[ $x:typ -> $y:typ]) => `(Typ.path t[$x] t[$y])
-| `(t[ $x:typ | $y:typ]) => `(Typ.unio t[$x] t[$y])
-| `(t[ $x:typ & $y:typ]) => `(Typ.inter t[$x] t[$y])
-| `(t[ $x:typ \ $y:typ]) => `(Typ.diff t[$x] t[$y])
-| `(t[ ALL [ $ps:params $qs:quals $t:typ]) => `(Typ.all ps[$ps] qs[$qs] t[$t])
-| `(t[ EXI [ $ps:params $qs:quals $t:typ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
-| `(t[ ALL [ $ps:params $t:typ]) => `(Typ.all ps[$ps] [] t[$t])
-| `(t[ EXI [ $ps:params $t:typ]) => `(Typ.exi ps[$ps] [] t[$t])
-| `(t[ BOT ]) => `(t[ALL[T]T])
-| `(t[ TOP ]) => `(t[EXI[T]T])
 
+inductive Pat
+| var : String → Pat
+| unit
+| record : List (String × Pat) → Pat
+deriving Repr
+
+inductive Expr
+| var : String → Expr
+| unit
+| record : List (String × Expr) → Expr
+| function : List (Pat × Expr) → Expr
+| proj : Expr → String → Expr
+| app : Expr → Expr → Expr
+| anno : String → Option Typ → Expr → Expr → Expr
+deriving Repr
+
+declare_syntax_cat subtra
+declare_syntax_cat params
+declare_syntax_cat quals
+declare_syntax_cat typ
+
+declare_syntax_cat patrec
+declare_syntax_cat pat
+declare_syntax_cat exprrec
+declare_syntax_cat function
+declare_syntax_cat expr
+
+
+syntax "@" : subtra
+syntax "TOP" : subtra
+syntax "<" ident ">" subtra : subtra
+syntax subtra "&" subtra : subtra
+
+syntax "]" : params
+syntax ident params : params
+
+syntax ":" : quals
+syntax "(" typ "<:" typ ")" quals : quals
+
+syntax ident : typ
+syntax "@" : typ
+syntax "<" ident ">" typ : typ
+syntax:50 typ:51 "->" typ:50 : typ
+syntax:60 typ:61 "|" typ:60 : typ
+syntax:80 typ:81 "&" typ:80 : typ
+syntax typ "\\" subtra : typ
+syntax "ALL" "[" params quals typ : typ
+syntax "EXI" "[" params quals typ : typ
+syntax "ALL" "[" params typ : typ
+syntax "EXI" "[" params typ : typ
+syntax "BOT" : typ
+syntax "TOP" : typ
+syntax "(" typ ")" : typ
+
+
+syntax "<" ident ">" pat : patrec
+syntax "<" ident ">" pat patrec : patrec
+
+syntax ident : pat
+syntax "@" : pat
+syntax patrec : pat
+syntax ident ";" pat : pat
+
+
+syntax "<" ident ">" expr : exprrec
+syntax "<" ident ">" expr exprrec : exprrec
+
+syntax "[" pat "=>" expr "]" : function
+syntax "[" pat "=>" expr "]" function : function
+
+syntax ident : expr
+syntax "@" : expr
+syntax exprrec : expr
+syntax ident ";" expr : expr
+syntax:60 expr:61 "," expr:60 : expr
+syntax function : expr
+syntax:70 expr:70 "." ident : expr
+syntax:80 expr:80 "(" expr ")" : expr
+syntax "def" ident ":" typ "=" expr "in" expr : expr
+syntax "def" ident "=" expr "in" expr : expr
+syntax "(" expr ")" : expr
+
+
+syntax "s[" subtra "]" : term
+syntax "ps[" params "]" : term
+syntax "qs[" quals "]" : term
+syntax "t[" typ "]" : term
+syntax "pr[" patrec "]" : term
+syntax "p[" pat "]" : term
+syntax "er[" exprrec "]" : term
+syntax "f[" function "]" : term
+syntax "e[" expr "]" : term
+
+
+macro_rules
+| `(s[ TOP ]) => `(Subtra.top)
+| `(s[ @ ]) => `(Subtra.unit)
+| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry $(Lean.quote (toString i.getId)) s[$s])
+| `(s[ $x:subtra & $y:subtra]) => `(Subtra.inter s[$x] s[$y])
 
 macro_rules
 | `(ps[ ] ]) => `([])
@@ -102,7 +140,63 @@ macro_rules
 | `(qs[ : ]) => `([])
 | `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (Constraint.subtyping t[$x] t[$y]):: qs[$qs])
 
+macro_rules
+| `(t[ $i:ident ]) => `(Typ.var $(Lean.quote (toString i.getId)))
+| `(t[ @ ]) => `(Typ.unit)
+| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry $(Lean.quote (toString i.getId)) t[$t])
+| `(t[ $x:typ -> $y:typ ]) => `(Typ.path t[$x] t[$y])
+| `(t[ $x:typ | $y:typ ]) => `(Typ.unio t[$x] t[$y])
+| `(t[ $x:typ & $y:typ ]) => `(Typ.inter t[$x] t[$y])
+| `(t[ $x:typ \ $y:subtra ]) => `(Typ.diff t[$x] s[$y])
+| `(t[ ALL [ $ps:params $qs:quals $t:typ ]) => `(Typ.all ps[$ps] qs[$qs] t[$t])
+| `(t[ EXI [ $ps:params $qs:quals $t:typ ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
+| `(t[ ALL [ $ps:params $t:typ ]) => `(Typ.all ps[$ps] [] t[$t])
+| `(t[ EXI [ $ps:params $t:typ ]) => `(Typ.exi ps[$ps] [] t[$t])
+| `(t[ BOT ]) => `(Typ.all ["T"] [] (Typ.var "T"))
+| `(t[ TOP ]) => `(Typ.exi ["T"] [] (Typ.var "T"))
+| `(t[ ( $t:typ ) ]) => `(t[$t])
 
+
+macro_rules
+| `(pr[ <$i:ident> $p:pat ]) => `(($(Lean.quote (toString i.getId)), p[$p]) :: [])
+| `(pr[ <$i:ident> $p:pat $pr:patrec ]) => `(($(Lean.quote (toString i.getId)), p[$p]) :: pr[$pr])
+
+macro_rules
+| `(p[ $i:ident ]) => `(Pat.var $(Lean.quote (toString i.getId)))
+| `(p[ @ ]) => `(Pat.unit)
+| `(p[ $pr:patrec ]) => `(Pat.record pr[$pr])
+| `(p[ $i:ident ; $p:pat ]) => `(Pat.record ($(Lean.quote (toString i.getId)), p[$p]) :: [])
+
+macro_rules
+| `(er[ <$i:ident> $e:expr ]) => `(($(Lean.quote (toString i.getId)), e[$e]) :: [])
+| `(er[ <$i:ident> $e:expr $er:exprrec ]) => `(($(Lean.quote (toString i.getId)), e[$e]) :: er[$er])
+
+macro_rules
+| `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
+| `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
+
+macro_rules
+| `(e[ $i:ident ]) => `(Expr.var $(Lean.quote (toString i.getId)))
+| `(e[ @ ]) => `(Expr.unit)
+| `(e[ $er:exprrec ]) => `(Expr.record er[$er])
+| `(e[ $i:ident ; $e:expr ]) => `(Expr.record ($(Lean.quote (toString i.getId)), e[$e]) :: [])
+| `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
+| `(e[ $f:function ]) => `(Expr.function f[$f])
+| `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] $(Lean.quote (toString i.getId)))
+| `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])
+| `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) => `(Expr.anno
+    $(Lean.quote (toString i.getId))
+    (some t[$t])
+    (e[$a])
+    (e[$c])
+)
+| `(e[ def $i:ident = $a:expr in $c:expr  ]) => `(Expr.anno
+    $(Lean.quote (toString i.getId))
+    none
+    (e[$a])
+    (e[$c])
+)
+| `(e[ ( $e:expr ) ]) => `(e[$e])
 
 class SubtraOf (_ : Typ) where
   default : Subtra
@@ -122,24 +216,6 @@ instance
   (right : Typ) [r : SubtraOf right]
 : SubtraOf (Typ.inter left right)  where
   default := Subtra.inter l.default r.default
-
-
-inductive Pat
-| var : String → Pat
-| unit
-| record : List (String × Pat) → Pat
-deriving Repr
-
-inductive Expr
-| var : String → Expr
-| unit
-| record : List (String × Expr) → Expr
-| function : List (Pat × Expr) → Expr
-| proj : Expr → String → Expr
-| app : Expr → Expr → Expr
-| anno : String → Option Typ → Expr → Expr → Expr
-deriving Repr
-
 
 
 class RecordPatternOf (_ : List (String × Expr)) where
@@ -170,38 +246,3 @@ instance
 
 instance (e : Expr) [p : PatternOf e] : CoeDep Expr e Pat where
   coe := p.default
-
-
--- NOTE: type classes perform two functions
-  -- first: they refine the type of the dependency
-  -- second: they compute instances from some dependencies
-
--- NOTE: this is a really weird mechanism
--- a better design would separate concerns
--- use subtyping to allow refinements or expansions of types
--- use general purpose functions to compute from the refinement to some new form
--- use relational types to maintain the connection between forms
-
--- Note: inductive types also contain runtime computation
-  -- they compute dependencies from all instances
-
--- NOTE: this means the computation of the dependency is represented by a type annotation
--- a better design would not allow type annotations to influence runtime behavior
--- Instead, runtime computation should only be specified by the expression language
--- types should be inferred from the expression language, rather than expressions being derived from types.
-
-
-def foo (p : Pat) : Bool := (
-  true
-)
-
-#check PatternOf.mk
-
-#check foo
-
-#eval foo (Expr.unit)
-
-section
-open Typ
-#eval unit
-end
