@@ -52,7 +52,7 @@
 \newtheorem{experiment}{Experiment}[section]
 
 
-\title{Fully Extrinsic Type Inference (DRAFT 2025-06-17)}
+\title{Fully Extrinsic Type Inference (DRAFT 2025-06-20)}
 \author{Thomas Logan}
 
 
@@ -215,16 +215,10 @@ $
 
 \maketitle
 
-\TODO{lean uses the term "metavariable" for our concept of "plastic variable". Should we conform to Lean's terminology?}
+\TODO{lean uses the term "metavariable" for our concept of "placeholder variable". Should we conform to Lean's terminology?}
 
 \TODO{Metavariable term: the variable is meta in the sense that its interpretation is chosen by the metaprogram.
 Even though it's actually still a variable in the object language.}
-
-\TODO{We use the term "plastic variable" to avoid the potentially misleading terminology of "meta variable"}
-
-\TODO{Other options are "unknown", "hole", "logic variable", "placeholder", "localetic variable"}
-
-\TODO{replace "plastic" with "placeholder"}
 
 \TODO{Mention how reconstruction of recursive types is the last hurdle to fully extrinsic types}
 
@@ -1656,7 +1650,7 @@ The generated subtyping constraints must be satisfiable under every interpretati
 skolems for which the contextual constraints are satisfiable.  
 Proof typing may also generate additional skolems, which can be used to constrain
 subsequent sub-problems.
-If a variable is not in the set of skolems, then we consider it to be plastic,
+If a variable is not in the set of skolems, then we consider it to be placeholder,
 in that it can be constrained in any way that is consistent with the other subtyping constraints
 and the typing. 
 
@@ -1687,7 +1681,7 @@ exposed for the sake of being used recursively.
 Next, it leverage positive packing 
 \ms{\textbf{pack}^+(... \entails \Pi) = \tau}
 to rewrite each locale into a type,
-such that the skolems and plastics are converted to
+such that the skolems and placeholders are converted to
 existential and universal bindings,
 and then combine all the types by compounding intersection.
 Packing the path types together ensures that certain
@@ -1944,8 +1938,8 @@ Refinement introduction is the dual of expansion elimination, so its rules
 rely on analogous techniques.
 
 \begin{definition} 
-  \label{def:proof_subtyping_plastic_elimination}
-  \emph{proof subtyping (plastic elimination)}
+  \label{def:proof_subtyping_placeholder_elimination}
+  \emph{proof subtyping (placeholder elimination)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
@@ -1971,14 +1965,14 @@ rely on analogous techniques.
 \end{definition}
 
 \noindent
-For plastic elimination \ms{\alpha \subtypes \tau} where \ms{\alpha \notin \Theta}, 
-it ensures that the supertype is consistent with all lower bounds of the plastic,
+For placeholder elimination \ms{\alpha \subtypes \tau} where \ms{\alpha \notin \Theta}, 
+it ensures that the supertype is consistent with all lower bounds of the placeholder,
 solutions against those lower bounds. Then it learns that the supertype is an upper bound 
-of the plastic.
+of the placeholder.
 
 \begin{definition} 
-  \label{def:proof_subtyping_plastic_introduction}
-  \emph{proof subtyping (plastic introduction)}
+  \label{def:proof_subtyping_placeholder_introduction}
+  \emph{proof subtyping (placeholder introduction)}
   \hfill
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
@@ -2006,7 +2000,7 @@ of the plastic.
 \end{definition}
 
 \noindent
-Plastic introduction is the dual of plastic elimination, so its rule
+Placeholder introduction is the dual of placeholder elimination, so its rule
 relies on analogous techniques.
 
 \begin{definition} 
@@ -2054,15 +2048,15 @@ relies on analogous techniques.
 \noindent
 For skolem introduction \ms{\tau \subtypes \alpha} where \ms{\alpha \in \Theta},
 there are two possibilities.
-In the first scenario, the skolem has a plastic as a lower bound.
+In the first scenario, the skolem has a placeholder as a lower bound.
 If effect, this enables learning lower bounds on the skolem,
-so the solver uses the same techniques as it did for plastic elimination.
-I the second scenario, there is a lower bound that's not a plastic,
+so the solver uses the same techniques as it did for placeholder elimination.
+I the second scenario, there is a lower bound that's not a placeholder,
 so the solver ensures that the skolem introduction is weaker
 than the constraints by checking that the subtype subtypes the lower bound that
 was found. In practice, the solver avoids checking the subtype against the lower bound, 
-if the lower bound is a plastic, as that would cause the solver to diverge due to
-a mutual dependence between plastic elimination and skolem elimination.      
+if the lower bound is a placeholder, as that would cause the solver to diverge due to
+a mutual dependence between placeholder elimination and skolem elimination.      
 
 \begin{definition} 
   \label{def:proof_subtyping_skolem_elimination}
