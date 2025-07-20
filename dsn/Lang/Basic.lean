@@ -4,6 +4,7 @@
 -- open Lean.Parser
 -- open Lean.Elab
 -- open Lean.Elab.Term
+set_option pp.fieldNotation false
 
 inductive Subtra
 | top
@@ -43,9 +44,8 @@ inductive Expr
 | unit
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
-| proj : Expr → String → Expr
 | app : Expr → Expr → Expr
-| anno : String → Option Typ → Expr → Expr → Expr
+| anno : String → Typ → Expr → Expr → Expr
 deriving Repr
 
 declare_syntax_cat subtra
@@ -179,24 +179,36 @@ macro_rules
 | `(e[ $i:ident ]) => `(Expr.var $(Lean.quote (toString i.getId)))
 | `(e[ @ ]) => `(Expr.unit)
 | `(e[ $er:exprrec ]) => `(Expr.record er[$er])
-| `(e[ $i:ident ; $e:expr ]) => `(Expr.record ($(Lean.quote (toString i.getId)), e[$e]) :: [])
+| `(e[ $i:ident ; $e:expr ]) => `(Expr.record [($(Lean.quote (toString i.getId)), e[$e])])
 | `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
 | `(e[ $f:function ]) => `(Expr.function f[$f])
-| `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] $(Lean.quote (toString i.getId)))
+| `(e[ $e:expr . $i:ident ]) => `(Expr.app (
+    Expr.function [
+      (Pat.record [
+        ($(Lean.quote (toString i.getId)), Pat.var "x")
+      ], Expr.var "x")
+    ]
+) e[$e])
 | `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])
 | `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) => `(Expr.anno
     $(Lean.quote (toString i.getId))
-    (some t[$t])
+    t[$t]
     (e[$a])
     (e[$c])
 )
-| `(e[ def $i:ident = $a:expr in $c:expr  ]) => `(Expr.anno
-    $(Lean.quote (toString i.getId))
-    none
+| `(e[ def $i:ident = $a:expr in $c:expr  ]) => `(Expr.app
+    (Expr.function [
+      (Pat.var $(Lean.quote (toString i.getId)), (e[$c]))
+    ])
     (e[$a])
-    (e[$c])
 )
 | `(e[ ( $e:expr ) ]) => `(e[$e])
+
+#check e[(uno;@).uno]
+
+#check e[def x = @ in x]
+
+#check e[[<uno> x => x]]
 
 class SubtraOf (_ : Typ) where
   default : Subtra
