@@ -115,6 +115,7 @@ syntax "def" ident "=" expr "in" expr : expr
 syntax "(" expr ")" : expr
 
 
+syntax "i[" ident "]" : term
 syntax "s[" subtra "]" : term
 syntax "ps[" params "]" : term
 syntax "qs[" quals "]" : term
@@ -127,9 +128,12 @@ syntax "e[" expr "]" : term
 
 
 macro_rules
+| `(i[ $i:ident ]) => `($(Lean.quote (toString i.getId)))
+
+macro_rules
 | `(s[ TOP ]) => `(Subtra.top)
 | `(s[ @ ]) => `(Subtra.unit)
-| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry $(Lean.quote (toString i.getId)) s[$s])
+| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry i[$i] s[$s])
 | `(s[ $x:subtra & $y:subtra]) => `(Subtra.inter s[$x] s[$y])
 
 macro_rules
@@ -141,9 +145,9 @@ macro_rules
 | `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (Constraint.subtyping t[$x] t[$y]):: qs[$qs])
 
 macro_rules
-| `(t[ $i:ident ]) => `(Typ.var $(Lean.quote (toString i.getId)))
+| `(t[ $i:ident ]) => `(Typ.var i[$i])
 | `(t[ @ ]) => `(Typ.unit)
-| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry $(Lean.quote (toString i.getId)) t[$t])
+| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry i[$i] t[$t])
 | `(t[ $x:typ -> $y:typ ]) => `(Typ.path t[$x] t[$y])
 | `(t[ $x:typ | $y:typ ]) => `(Typ.unio t[$x] t[$y])
 | `(t[ $x:typ & $y:typ ]) => `(Typ.inter t[$x] t[$y])
@@ -158,25 +162,25 @@ macro_rules
 
 
 macro_rules
-| `(pr[ <$i:ident> $p:pat ]) => `(($(Lean.quote (toString i.getId)), p[$p]) :: [])
-| `(pr[ <$i:ident> $p:pat $pr:patrec ]) => `(($(Lean.quote (toString i.getId)), p[$p]) :: pr[$pr])
+| `(pr[ <$i:ident> $p:pat ]) => `((i[$i], p[$p]) :: [])
+| `(pr[ <$i:ident> $p:pat $pr:patrec ]) => `((i[$i], p[$p]) :: pr[$pr])
 
 macro_rules
-| `(p[ $i:ident ]) => `(Pat.var $(Lean.quote (toString i.getId)))
+| `(p[ $i:ident ]) => `(Pat.var i[$i])
 | `(p[ @ ]) => `(Pat.unit)
 | `(p[ $pr:patrec ]) => `(Pat.record pr[$pr])
-| `(p[ $i:ident ; $p:pat ]) => `(Pat.record ($(Lean.quote (toString i.getId)), p[$p]) :: [])
+| `(p[ $i:ident ; $p:pat ]) => `(Pat.record (i[$i], p[$p]) :: [])
 
 macro_rules
-| `(er[ <$i:ident> $e:expr ]) => `(($(Lean.quote (toString i.getId)), e[$e]) :: [])
-| `(er[ <$i:ident> $e:expr $er:exprrec ]) => `(($(Lean.quote (toString i.getId)), e[$e]) :: er[$er])
+| `(er[ <$i:ident> $e:expr ]) => `((i[$i], e[$e]) :: [])
+| `(er[ <$i:ident> $e:expr $er:exprrec ]) => `((i[$i], e[$e]) :: er[$er])
 
 macro_rules
 | `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
 | `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
 
 macro_rules
-| `(e[ $i:ident ]) => `(Expr.var $(Lean.quote (toString i.getId)))
+| `(e[ $i:ident ]) => `(Expr.var i[$i])
 | `(e[ @ ]) => `(Expr.unit)
 | `(e[ $er:exprrec ]) => `(Expr.record er[$er])
 | `(e[ $i:ident ; $e:expr ]) => `(Expr.record [($(Lean.quote (toString i.getId)), e[$e])])
@@ -198,11 +202,14 @@ macro_rules
 )
 | `(e[ def $i:ident = $a:expr in $c:expr  ]) => `(Expr.app
     (Expr.function [
-      (Pat.var $(Lean.quote (toString i.getId)), (e[$c]))
+      (Pat.var i[$i], (e[$c]))
     ])
     (e[$a])
 )
 | `(e[ ( $e:expr ) ]) => `(e[$e])
+
+-- TODO: replace macro for i[$i] with elab that disallows dots
+#check e[[x => x.uno]]
 
 #check e[(uno;@).uno]
 
