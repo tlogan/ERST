@@ -181,33 +181,27 @@ macro_rules
 | `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
 | `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
 
-partial def buildExprFromDotted (parts : List Lean.Ident) : Lean.Elab.TermElabM Lean.Expr :=
+partial def buildSyntaxFromDotted (parts : List Lean.Ident) : Lean.Elab.TermElabM (Lean.TSyntax `term) :=
   match parts with
   | [] => Lean.Elab.throwUnsupportedSyntax
-  | [x] => do
-    let s ← `(Expr.var i[$x])
-    let t ← Lean.Elab.Term.elabTerm s none
-    return t
+  | [x] => `(Expr.var i[$x])
   | x :: xs => do
-    let s ← `(
-        Expr.function [
+    let ys ← buildSyntaxFromDotted xs
+    `(Expr.app
+        (Expr.function [
           (Pat.record [
             (i[$x], Pat.var "x")
           ], Expr.var "x")
-        ]
+        ])
+        $ys
     )
-    let t ← Lean.Elab.Term.elabTerm (s : Lean.Syntax) none
-    let ys ← buildExprFromDotted xs
-    let appS ← `(Expr.app)
-    let appT ← Lean.Elab.Term.elabTerm appS none
-    let metaApp := Lean.mkAppN appT #[t, ys]
-    return metaApp
 
 elab_rules : term
-  | `(ei[ $i:ident ])  =>
+  | `(ei[ $i:ident ])  => do
     let name := i.getId
     let parts := name.components.map Lean.mkIdent
-    buildExprFromDotted parts.reverse
+    let s ← buildSyntaxFromDotted parts.reverse
+    Lean.Elab.Term.elabTerm s none
 
 macro_rules
 | `(e[ @ ]) => `(Expr.unit)
