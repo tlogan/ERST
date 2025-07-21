@@ -1,9 +1,5 @@
--- import Lean
+import Lean
 
--- open Lean
--- open Lean.Parser
--- open Lean.Elab
--- open Lean.Elab.Term
 set_option pp.fieldNotation false
 
 inductive Subtra
@@ -66,7 +62,7 @@ syntax "<" ident ">" subtra : subtra
 syntax subtra "&" subtra : subtra
 
 syntax "]" : params
-syntax ident params : params
+syntax:20 ident params : params
 
 syntax ":" : quals
 syntax "(" typ "<:" typ ")" quals : quals
@@ -90,7 +86,7 @@ syntax "(" typ ")" : typ
 syntax "<" ident ">" pat : patrec
 syntax "<" ident ">" pat patrec : patrec
 
-syntax ident : pat
+syntax:20 ident : pat
 syntax "@" : pat
 syntax patrec : pat
 syntax ident ";" pat : pat
@@ -102,7 +98,7 @@ syntax "<" ident ">" expr exprrec : exprrec
 syntax "[" pat "=>" expr "]" : function
 syntax "[" pat "=>" expr "]" function : function
 
-syntax ident : expr
+syntax:20 ident : expr
 syntax "@" : expr
 syntax exprrec : expr
 syntax ident ";" expr : expr
@@ -124,11 +120,17 @@ syntax "pr[" patrec "]" : term
 syntax "p[" pat "]" : term
 syntax "er[" exprrec "]" : term
 syntax "f[" function "]" : term
+syntax "ei[" ident "]" : term
 syntax "e[" expr "]" : term
 
 
-macro_rules
-| `(i[ $i:ident ]) => `($(Lean.quote (toString i.getId)))
+
+elab_rules : term
+  | `(i[ $i:ident ])  => do
+    let idStr := toString i.getId
+    if idStr.contains '.' then
+      Lean.Elab.throwUnsupportedSyntax
+    return (Lean.mkStrLit idStr)
 
 macro_rules
 | `(s[ TOP ]) => `(Subtra.top)
@@ -179,17 +181,45 @@ macro_rules
 | `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
 | `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
 
+partial def buildExprFromDotted (parts : List Lean.Ident) : Lean.Elab.TermElabM Lean.Expr :=
+  match parts with
+  | [] => Lean.Elab.throwUnsupportedSyntax
+  | [x] => do
+    let s ← `(Expr.var i[$x])
+    let t ← Lean.Elab.Term.elabTerm s none
+    return t
+  | x :: xs => do
+    let s ← `(
+        Expr.function [
+          (Pat.record [
+            (i[$x], Pat.var "x")
+          ], Expr.var "x")
+        ]
+    )
+    let t ← Lean.Elab.Term.elabTerm (s : Lean.Syntax) none
+    let ys ← buildExprFromDotted xs
+    let appS ← `(Expr.app)
+    let appT ← Lean.Elab.Term.elabTerm appS none
+    let metaApp := Lean.mkAppN appT #[t, ys]
+    return metaApp
+
+elab_rules : term
+  | `(ei[ $i:ident ])  =>
+    let name := i.getId
+    let parts := name.components.map Lean.mkIdent
+    buildExprFromDotted parts.reverse
+
 macro_rules
-| `(e[ $i:ident ]) => `(Expr.var i[$i])
 | `(e[ @ ]) => `(Expr.unit)
+| `(e[ $i:ident ]) => `(ei[$i])
 | `(e[ $er:exprrec ]) => `(Expr.record er[$er])
-| `(e[ $i:ident ; $e:expr ]) => `(Expr.record [($(Lean.quote (toString i.getId)), e[$e])])
+| `(e[ $i:ident ; $e:expr ]) => `(Expr.record [(i[$i], e[$e])])
 | `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
 | `(e[ $f:function ]) => `(Expr.function f[$f])
 | `(e[ $e:expr . $i:ident ]) => `(Expr.app (
     Expr.function [
       (Pat.record [
-        ($(Lean.quote (toString i.getId)), Pat.var "x")
+        (i[$i], Pat.var "x")
       ], Expr.var "x")
     ]
 ) e[$e])
@@ -208,7 +238,9 @@ macro_rules
 )
 | `(e[ ( $e:expr ) ]) => `(e[$e])
 
--- TODO: replace macro for i[$i] with elab that disallows dots
+
+#check ei[uno.dos.tres]
+
 #check e[[x => x.uno]]
 
 #check e[(uno;@).uno]
