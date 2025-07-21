@@ -770,6 +770,10 @@ and no pattern matching, can rely on path sensitivity to simulate pattern matchi
 \section{Dynamic System}
 \label{sec:dynamic_system}
 
+\TODO{factor out definitions common to both dynamic and static systems into basic system}
+
+\TODO{flip records, functions and other collections to associate right (matching Lean design)}
+
 \noindent
 To demonstrate the capabilities of our extrinsic type system, 
 we rely on an applicative programming language with pattern matching.
@@ -965,7 +969,7 @@ A value may be unit, a function, or a record consisting of only values.
     }
 
     \inferrule {
-      \exists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
+      \nexists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
       \\
       v  \simeq p \given \sigma 
     } {
