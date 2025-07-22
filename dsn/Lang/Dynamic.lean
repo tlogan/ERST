@@ -1,4 +1,5 @@
 import Lang.Basic
+import Mathlib.Data.Set.Basic
 
 
 mutual
@@ -47,6 +48,11 @@ mutual
   | (.record r), (.record p) => pattern_match_record r p
   | _, _ => none
 end
+
+def dom {α} {β} : List (α × β) → List α
+| .nil => .nil
+| (a, _) :: xs => a :: dom xs
+
 
 def remove {α} (id : String) : List (String × α) →  List (String × α)
 | .nil => .nil
@@ -134,6 +140,21 @@ inductive Progression : Expr → Expr → Prop
   Progression (.loop e) (.loop e')
 | loopinflate : ∀ {id e},
   Progression (.loop (.function [(.var id, e)])) (sub [(id, (.loop (.function [(.var id, e)])))] e)
+
+
+
+mutual
+
+  inductive Dynamic.Typing : List (String × Typ) → Expr → Typ → Prop
+  | expan : ∀ {δ e τ e'},
+    Progression e e' → Typing δ e' τ → Typing δ e τ
+  | record : ∀ {δ r l τ v},
+    IsValue (.record r) → (l, v) ∈ r → Typing δ v τ →
+    Typing δ (.record r) (.entry l τ)
+  | funhead : ∀ {δ p e f left right},
+    -- (∀ σ, Typing δ (sub σ (Pat.toExpr p)) left → Typing δ (sub σ e) right) →
+    Typing δ (.function ((p,e)::f)) (.path left right)
+end
 
 
 -- TODO: define progression and dynamic typing

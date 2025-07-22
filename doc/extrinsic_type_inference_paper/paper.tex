@@ -1301,12 +1301,16 @@ for type variables.
     } 
 
     \inferrule { 
+      \TODO{remove unflipped}
+      \\\\
       \delta \satisfies f \hastype \tau_l \J{->} \tau_r
     } {
       \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
     } 
 
     \inferrule { 
+      \TODO{remove unflipped}
+      \\\\
       \forall \sigma \qua
       \delta \satisfies p[\sigma] \hastype \tau_l
       \implies
@@ -1320,6 +1324,33 @@ for type variables.
       \delta \satisfies \tau_r' \subtypes \tau_r
     } {
       \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
+    }
+
+    \inferrule { 
+      \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+      \\\\
+      \forall \tau_l', \tau_r' \qua
+      \delta \satisfies \J{[}p \J{=>} e \J{]} \hastype \tau_l' \J{->} \tau_r'
+      \implies
+      \delta \satisfies \tau_l \subtypes \tau_l'
+      \implies
+      \delta \satisfies \tau_r' \subtypes \tau_r
+    } {
+      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \J{->} \tau_r
+    } 
+
+    \inferrule { 
+      \TODO{how to deal with recursive negative occurence?}
+      \\\\
+      \forall v \qua 
+      \delta \satisfies v \hastype \tau_l
+      \implies
+      \exists \sigma \qua
+      v \simeq p \given \sigma 
+      \up
+      \delta  \satisfies e[\sigma] \hastype \tau_r
+    } {
+      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
     }
 
     \inferrule { 

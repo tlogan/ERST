@@ -294,3 +294,18 @@ instance
 
 instance (e : Expr) [p : PatternOf e] : CoeDep Expr e Pat where
   coe := p.default
+
+
+mutual
+  def Pat.toRecordExpr : List (String × Pat) → List (String × Expr)
+  | .nil => .nil
+  | (l, p) :: r => (l, toExpr p) :: (toRecordExpr r)
+
+  def Pat.toExpr : Pat → Expr
+  | .var id => .var id
+  | .unit => .unit
+  | .record r => .record (toRecordExpr r)
+end
+
+instance : Coe Pat Expr where
+  coe := Pat.toExpr
