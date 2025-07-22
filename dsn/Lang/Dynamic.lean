@@ -9,32 +9,103 @@ mutual
     IsFreshLabel r l' →
     IsFreshLabel ((l,e)::r) l'
 
-  inductive IsRecordValue : List (String × Expr) -> Prop
+  inductive IsRecordValue : List (String × Expr) → Prop
   | nil : IsRecordValue []
   | cons : ∀ {l e r},
     IsFreshLabel r l → IsValue e →
     IsRecordValue ((l,e)::r)
 
-  inductive IsValue : Expr -> Prop
+  inductive IsValue : Expr → Prop
   | unit : IsValue (.unit)
   | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
   | function : ∀ {f}, IsValue (.function f)
-  -- TODO: check that there are no free variables
-  -- use decidable definition
 end
 
 
-def pattern_match : Expr → Pat → Option (List (String × Expr))
-| e, p => none
---TODO
--- use decidable definition
+mutual
+  def pattern_match_entry (label :String) (pat : Pat):
+  List (String × Expr) → Option (List (String × Expr))
+  | .nil => none
+  | (l, e) :: args =>
+    if l == label then
+      (pattern_match e pat)
+    else
+      pattern_match_entry label pat args
 
-def sub (m : List (String × Expr)): Expr → Expr
-| e => e
--- TODO
--- use decidable definition
+  def pattern_match_record (args : List (String × Expr)):
+  List (String × Pat) →
+  Option (List (String × Expr))
+  | .nil => some []
+  | (label, pat) :: pats => do
+    let m0 ← pattern_match_entry label pat args
+    let m1 ← pattern_match_record args pats
+    return (m0 ++ m1)
 
-inductive Progression : Expr -> Expr -> Prop
+  def pattern_match : Expr → Pat → Option (List (String × Expr))
+  | e, (.var id) => some [(id, e)]
+  | .unit, .unit => some []
+  | (.record r), (.record p) => pattern_match_record r p
+  | _, _ => none
+end
+
+def remove {α} (id : String) : List (String × α) →  List (String × α)
+| .nil => .nil
+| (key, e) :: m =>
+  if key == id then
+    m
+  else
+    (key, e) :: (remove id m)
+
+def remove_all {α} (m : List (String × α)) : (ids : List String) →  List (String × α)
+| .nil => m
+| id :: remainder => remove_all (remove id m) remainder
+
+
+def find {α} (id : String) : List (String × α) → Option α
+| .nil => none
+| (key, e) :: m =>
+  if key == id then
+    some e
+  else
+    find id m
+
+mutual
+  def ids_record_pattern : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (ids_pattern p) ++ (ids_record_pattern r)
+
+  def ids_pattern : Pat → List String
+  | .var id => [id]
+  | .unit => []
+  | .record r => ids_record_pattern r
+end
+
+mutual
+  def sub_record (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, sub m e) :: (sub_record m r)
+
+  def sub_function (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let ids := ids_pattern p
+    (p, sub (remove_all m ids) e) :: (sub_function m f)
+
+  def sub (m : List (String × Expr)): Expr → Expr
+  | .var id => match (find id m) with
+    | .none => (.var id)
+    | .some e => e
+  | .unit => .unit
+  | .record r => .record (sub_record m r)
+  | .function f => .function (sub_function m f)
+  | .app ef ea => .app (sub m ef) (sub m ea)
+  | .anno id t ea ec => .anno id t (sub m ea) (sub (remove id m) ec)
+  | .loop e => .loop (sub m e)
+end
+
+inductive Progression : Expr → Expr → Prop
 | entry : ∀ {r l e e'},
   Progression e e' →
   Progression (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
