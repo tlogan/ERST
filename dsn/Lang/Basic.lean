@@ -42,6 +42,7 @@ inductive Expr
 | function : List (Pat × Expr) → Expr
 | app : Expr → Expr → Expr
 | anno : String → Typ → Expr → Expr → Expr
+| loop : Expr → Expr
 deriving Repr
 
 declare_syntax_cat subtra
@@ -108,6 +109,7 @@ syntax:70 expr:70 "." ident : expr
 syntax:80 expr:80 "(" expr ")" : expr
 syntax "def" ident ":" typ "=" expr "in" expr : expr
 syntax "def" ident "=" expr "in" expr : expr
+syntax "loop" "(" expr ")" : expr
 syntax "(" expr ")" : expr
 
 
@@ -230,6 +232,7 @@ macro_rules
     ])
     (e[$a])
 )
+| `(e[ loop ( $e:expr ) ]) => `(Expr.loop e[$e])
 | `(e[ ( $e:expr ) ]) => `(e[$e])
 
 

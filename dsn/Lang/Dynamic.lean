@@ -20,16 +20,19 @@ mutual
   | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
   | function : ∀ {f}, IsValue (.function f)
   -- TODO: check that there are no free variables
+  -- use decidable definition
 end
 
 
-inductive PatternMatch : Expr → Pat → List (String × Expr) → Prop
+def pattern_match : Expr → Pat → Option (List (String × Expr))
+| e, p => none
 --TODO
+-- use decidable definition
 
 def sub (m : List (String × Expr)): Expr → Expr
 | e => e
 -- TODO
-
+-- use decidable definition
 
 inductive Progression : Expr -> Expr -> Prop
 | entry : ∀ {r l e e'},
@@ -47,8 +50,19 @@ inductive Progression : Expr -> Expr -> Prop
   Progression (.app (.function f) e) (.app (.function f) e')
 | appmatch : ∀ {p e f v m},
   IsValue v →
-  PatternMatch v p m →
+  pattern_match v p = some m →
   Progression (.app (.function ((p,e) :: f)) v) (sub m e)
+| appskip : ∀ {p e f v},
+  IsValue v →
+  pattern_match v p = none →
+  Progression (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
+| anno : ∀ {id t ea ec},
+  Progression (.anno id t ea ec) (.app (.function [(.var id, ec)]) ea)
+| loopbody : ∀ {e e'},
+  Progression e e' →
+  Progression (.loop e) (.loop e')
+| loopinflate : ∀ {id e},
+  Progression (.loop (.function [(.var id, e)])) (sub [(id, (.loop (.function [(.var id, e)])))] e)
 
 
 -- TODO: define progression and dynamic typing
