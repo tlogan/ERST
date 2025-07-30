@@ -145,19 +145,23 @@ inductive Multi : Expr → Expr → Prop
 | refl {e} : Multi e e
 | step {e e' e''} : Progression e e' → Multi e e'' → Multi e e''
 
+-- partial def multi (e1 e2 : Expr) : Prop :=
+--   (e1 = e2) ∨ (Progression e1 e2 ∧ multi e1 e2)
+
+
 -- TODO: separate out restricted version of model typing used in negations
 
-mutual
-  inductive Dynamic.Typing : List (String × Typ) → Expr → Typ → Prop
-  | expan : ∀ {δ e τ e'},
-    Progression e e' → Typing δ e' τ → Typing δ e τ
-  | record : ∀ {δ r l τ v},
-    IsValue (.record r) → (l, v) ∈ r → Typing δ v τ →
-    Typing δ (.record r) (.entry l τ)
-  -- | funhead : ∀ {δ v p e f left right},
-  --   (∀ {v}, Typing δ v left → ∃ σ, pattern_match v p = some σ ∧ Typing δ (sub σ e) right) →
-  --   Typing δ (.function ((p,e)::f)) (.path left right)
-end
+-- mutual
+--   inductive Dynamic.Typing : List (String × Typ) → Expr → Typ → Prop
+--   | expan : ∀ {δ e τ e'},
+--     Progression e e' → Typing δ e' τ → Typing δ e τ
+--   | record : ∀ {δ r l τ v},
+--     IsValue (.record r) → (l, v) ∈ r → Typing δ v τ →
+--     Typing δ (.record r) (.entry l τ)
+--   -- | funhead : ∀ {δ v p e f left right},
+--   --   (∀ {v}, Typing δ v left → ∃ σ, pattern_match v p = some σ ∧ Typing δ (sub σ e) right) →
+--   --   Typing δ (.function ((p,e)::f)) (.path left right)
+-- end
 
 
 ---------------------------------------------------------------
@@ -216,9 +220,18 @@ case succ n ih => sorry;
 
 #check WellFounded.fix
 
-inductive Even.F : ∀ x : Nat, (∀ x' : Nat, x' < x -> Prop) → Prop
-| z P : Even.F Nat.zero P
-| ss n P: P n (h n) -> Even.F (.succ (.succ n)) P
+-- inductive Even.F : ∀ x : Nat, (∀ x' : Nat, x' < x -> Prop) → Prop
+-- | z P : Even.F Nat.zero P
+-- | ss n P: P n (h n) -> Even.F (.succ (.succ n)) P
+
+--NOTE: well-founded defs should use def instead of inductive definition
+
+def Even.F (x : Nat) (P : ∀ x' : Nat, x' < x -> Prop) : Prop :=
+match x with
+| .zero => True
+| .succ .zero => False
+| .succ (.succ n)  =>
+    P n (h n)
 
 #check Nat.lt_wfRel
 #check Nat.lt_wfRel.wf

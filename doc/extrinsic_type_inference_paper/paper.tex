@@ -1334,34 +1334,32 @@ for type variables.
 
 \TODO{lift progression rule out to highest level for monotonic recursion}
 
-\begin{definition}
-  \label{def:model_core_typing}
-  \emph{model core typing}
-  \hfill
-  \small
-  \boxed{\delta \VDash e \hastype \tau}
-  \nopad
-  \begin{mathpar}
-    \inferrule { 
-      \alpha \wr^+ \tau
-      \\
-      \exists n \qua e \hastype \tau[\alpha \slash \J{BOT}]^n 
-    } {
-      \delta \VDash e \hastype \J{LFP[}\alpha\J{]}\tau 
-    } 
-  \end{mathpar}
-\end{definition}
+% \begin{definition}
+%   \label{def:model_progress_typing}
+%   \emph{model progressive typing}
+%   \hfill
+%   \small
+%   \boxed{\delta \satisfies e \hastype^* \tau}
+%   \nopad
+%   \begin{mathpar}
+%     \inferrule { 
+%       \downharpoonleft e
+%       \up
+%       \delta \satisfies e \hastype \tau 
+%     } {
+%       \delta \satisfies e \hastype^* \tau 
+%     } 
 
-\begin{definition}
-  \label{def:model_finite_typing}
-  \emph{model finite typing}
-  \hfill
-  \small
-  \boxed{e \hastype \tau}
-  \nopad
-  \begin{mathpar}
-  \end{mathpar}
-\end{definition}
+%     \inferrule { 
+%       e \rightsquigarrow e'
+%       \\
+%       \delta \satisfies e' \hastype^* \tau 
+%     } {
+%       \delta \satisfies e \hastype^* \tau 
+%     } 
+%   \end{mathpar}
+
+% \end{definition}
 
 \begin{definition}
   \label{def:model_typing}
@@ -1370,23 +1368,171 @@ for type variables.
   \small
   \boxed{\delta \satisfies e \hastype \tau}
   \nopad
+  \\\\
+  \TODO{well founded just on type}
+  \\\\
+  \TODO{should vacuous universal be prevented}
+  \[
+  \begin{array}[t]{rclcl}
+      \delta \satisfies e \hastype \alpha 
+      &\iff& 
+      \alpha \slash \tau \in \delta
+      \up
+      \VDash e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \J{@}
+      &\iff& 
+      e \rightsquigarrow^* \J{@}
+
+      \\
+
+      \delta \satisfies e \hastype \J{<} l \J{>} \tau
+      &\iff& 
+      \forall e' \qua
+      e\J{.}l \rightsquigarrow^* e' 
+      \implies
+      \delta \satisfies e' \hastype \tau 
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{->} \tau_r
+      &\iff& 
+      \begin{array}[t]{@{}l}
+        \forall e_f, e_l, e_r \qua
+        e \rightsquigarrow^* e_f
+        \up
+        e_f\J{(}e_l\J{)} \rightsquigarrow^* e_r
+        \implies
+        \delta \satisfies e_l \hastype \tau_l 
+        \implies
+        \delta \satisfies e_r \hastype \tau_r
+      \end{array}
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{|} \tau_r 
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \down
+      \delta \satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{\&} \tau_r 
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \up
+      \delta \satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
+      &\iff& 
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \subseteq \Theta
+      \up
+      \delta \oplus \delta' \satisfies \Delta 
+      \up
+      \delta \oplus \delta' \satisfies e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
+      &\iff& 
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \subseteq \Theta
+      \implies
+      \delta \oplus \delta' \satisfies \Delta 
+      \implies
+      \delta \oplus \delta' \satisfies e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \up
+      \delta \not\satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau 
+      &\iff& 
+      \alpha \wr^+ \tau
+      \up
+      \exists n \qua \delta \VDash e \hastype \tau[\alpha \slash \J{BOT}]^n
+
+      % \\
+
+      % \delta \satisfies e \hastype \tau 
+      % &\iff& 
+      % \VDash e \hastype \tau[\delta]
+
+      % \\
+
+      % \delta \satisfies r \hastype \J{<} l \J{>} \tau
+      % &\iff& 
+      % \J{<}l \J{>} e \in r 
+      % \up
+      % \delta \satisfies e \hastype \tau 
+
+      % \\
+
+      % \delta \satisfies \J{[}p \J{=>} e \J{]} \hastype \tau_l \J{->} \tau_r
+      % &\iff& 
+      % \forall \sigma \qua 
+      % \delta \satisfies p[\sigma] \hastype \tau_l
+      % \implies
+      % \delta  \satisfies e[\sigma] \hastype \tau_r
+
+      % \\
+
+      % \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
+      % &\iff& 
+      % \begin{array}[t]{@{}ll}
+      %   \nexists \sigma \qua \delta \satisfies p[\sigma] \hastype \tau_l
+      %   & \textbf{if } \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+      %   \\
+      %   \begin{array}[t]{@{}l}
+      %   \forall \tau_p, \tau_f, e' \qua 
+      %   \\
+      %   \delta \VDash \J{[}p \J{=>} e \J{]} \hastype \tau_p
+      %   \up
+      %   \delta \VDash f \hastype \tau_f
+      %   \implies
+      %   \\
+      %   \delta \satisfies e' \hastype \tau_l \J{->} \tau_r 
+      %   \implies
+      %   \delta \VDash e' \hastype \tau_p \J{\&} \tau_f
+      %   \end{array}
+      %   & \textbf{otherwise}
+      % \end{array}
+  \end{array}
+  \]
+\end{definition}
+
+\begin{definition}
+  \label{def:model_finite_typing}
+  \emph{model finite typing}
+  \hfill
+  \small
+  \boxed{\VDash e \hastype \tau}
+  \nopad
   \begin{mathpar}
-    % \inferrule { 
-    %   e \rightsquigarrow e'
-    %   \\
-    %   \delta \satisfies e' \hastype \tau 
-    % } {
-    %   \delta \satisfies e \hastype \tau 
-    % } 
+  \TODO{well founded on type}
+  \end{mathpar}
+\end{definition}
 
-    % \inferrule { 
-    %   \alpha \slash \tau \in \delta
-    %   \\
-    %   \delta \satisfies e \hastype \tau
-    % } {
-    %   \delta \satisfies e \hastype \alpha 
-    % } 
-
+\begin{definition}
+  \label{def:model_scratch_typing}
+  \emph{model scratch typing}
+  \hfill
+  \small
+  \boxed{\delta \satisfies e \hastype \tau}
+  \nopad
+  \begin{mathpar}
     % \inferrule { 
     %   \TODO{alt def}
     %   \\\\
@@ -1581,32 +1727,32 @@ for type variables.
     %   \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
     % }
 
-    % \inferrule { 
-    %   \delta \satisfies f \hastype \tau_l \J{->} \tau_r
-    %   \\\\
-    %   \forall \tau_l', \tau_r' \qua
-    %   \delta \satisfies \J{[}p \J{=>} e \J{]} \hastype \tau_l' \J{->} \tau_r'
-    %   \implies
-    %   \delta \satisfies \tau_l \subtypes \tau_l'
-    %   \implies
-    %   \delta \satisfies \tau_r' \subtypes \tau_r
-    % } {
-    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \J{->} \tau_r
-    % } 
+    \inferrule { 
+      \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+      \\\\
+      \forall \tau_l', \tau_r' \qua
+      \delta \satisfies \J{[}p \J{=>} e \J{]} \hastype \tau_l' \J{->} \tau_r'
+      \implies
+      \delta \satisfies \tau_l \subtypes \tau_l'
+      \implies
+      \delta \satisfies \tau_r' \subtypes \tau_r
+    } {
+      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \J{->} \tau_r
+    } 
 
-    % \inferrule { 
-    %   \TODO{how to deal with recursive negative occurence?}
-    %   \\\\
-    %   \forall v \qua 
-    %   \delta \satisfies v \hastype \tau_l
-    %   \implies
-    %   \exists \sigma \qua
-    %   v \simeq p \given \sigma 
-    %   \up
-    %   \delta  \satisfies e[\sigma] \hastype \tau_r
-    % } {
-    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
-    % }
+    \inferrule { 
+      \TODO{how to deal with recursive negative occurence?}
+      \\\\
+      \forall v \qua 
+      \delta \satisfies v \hastype \tau_l
+      \implies
+      \exists \sigma \qua
+      v \simeq p \given \sigma 
+      \up
+      \delta  \satisfies e[\sigma] \hastype \tau_r
+    } {
+      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
+    }
 
     % \inferrule { 
     %   \TODO{how to deal with recursive negative occurence?}
