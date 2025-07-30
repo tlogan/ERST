@@ -25,6 +25,14 @@ from tapas.slim.language import analyze, infer_typ, parse_typ, solve_subtyping
 from tapas.slim import exprlib as el, typlib as tl
 from tapas.slim.exprlib import ctx 
 
+def test_inf_loop():
+    code = f"""
+loop([self => 
+    [x => self(x)]
+])
+    """
+    assert infer_typ(code) 
+
 
 def test_succ_stream():
     ######################
@@ -1131,7 +1139,8 @@ if __name__ == '__main__':
     # test_something_subtypes_non_decreasing_lfp()
     # test_something_subtypes_increasing_lfp()
     # test_two_not_three()
-    test_succ_stream()
+    # test_succ_stream()
+    test_inf_loop()
 
 
 #######################################################################

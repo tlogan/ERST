@@ -1279,15 +1279,38 @@ for type variables.
   \emph{valuing}
   \hfill
   \small
-  \boxed{\Downarrow e}
+  \boxed{\downharpoonleft e}
   \nopad
   \begin{mathpar}
     \inferrule { 
       \TODO{...}
     } {
-      \Downarrow e 
+      \downharpoonleft 
+      e 
     } 
   \end{mathpar}
+\end{definition}
+
+\begin{definition} 
+  \label{def:type_sub_fold}
+  Type Substitution Fold 
+  \hfill
+  \small
+  \boxed{
+    \tau [\alpha \slash \tau']^n
+  }
+  \\
+  \[
+  \begin{array}[t]{rclcl}
+      \tau [\alpha \slash \tau']^0 
+      &=& 
+      \tau' 
+      \\
+      \tau [\alpha \slash \tau']^{(n + 1)} 
+      &=& 
+      \tau [\alpha \slash \tau[\alpha \slash \tau']^n]
+  \end{array}
+  \]
 \end{definition}
 
 
@@ -1297,6 +1320,49 @@ for type variables.
 
 \TODO{consider renaming to dynamic typing}
 
+\TODO{completely redo model typing with well founded recursion}
+
+\TODO{define monotonicity/antitonicity/polarity check}
+
+\TODO{create recursive definition of least fixed point check}
+
+\TODO{use separate typing for interpreting variables as finite types}
+
+\TODO{use non-syntactic description of implication}
+
+\TODO{remove implication antecedent rules}
+
+\TODO{lift progression rule out to highest level for monotonic recursion}
+
+\begin{definition}
+  \label{def:model_core_typing}
+  \emph{model core typing}
+  \hfill
+  \small
+  \boxed{\delta \VDash e \hastype \tau}
+  \nopad
+  \begin{mathpar}
+    \inferrule { 
+      \alpha \wr^+ \tau
+      \\
+      \exists n \qua e \hastype \tau[\alpha \slash \J{BOT}]^n 
+    } {
+      \delta \VDash e \hastype \J{LFP[}\alpha\J{]}\tau 
+    } 
+  \end{mathpar}
+\end{definition}
+
+\begin{definition}
+  \label{def:model_finite_typing}
+  \emph{model finite typing}
+  \hfill
+  \small
+  \boxed{e \hastype \tau}
+  \nopad
+  \begin{mathpar}
+  \end{mathpar}
+\end{definition}
+
 \begin{definition}
   \label{def:model_typing}
   \emph{model typing}
@@ -1305,178 +1371,189 @@ for type variables.
   \boxed{\delta \satisfies e \hastype \tau}
   \nopad
   \begin{mathpar}
-    \inferrule { 
-      e \rightsquigarrow e'
-      \\
-      \delta \satisfies e' \hastype \tau 
-    } {
-      \delta \satisfies e \hastype \tau 
-    } 
+    % \inferrule { 
+    %   e \rightsquigarrow e'
+    %   \\
+    %   \delta \satisfies e' \hastype \tau 
+    % } {
+    %   \delta \satisfies e \hastype \tau 
+    % } 
 
-    \inferrule { 
-      \alpha \slash \tau \in \delta
-      \\
-      \delta \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \alpha 
-    } 
+    % \inferrule { 
+    %   \alpha \slash \tau \in \delta
+    %   \\
+    %   \delta \satisfies e \hastype \tau
+    % } {
+    %   \delta \satisfies e \hastype \alpha 
+    % } 
 
-    \inferrule { 
-      \delta \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
-    } 
+    % \inferrule { 
+    %   \TODO{alt def}
+    %   \\\\
+    %   \forall \tau' \qua  
+    %   \delta \satisfies \tau[\alpha\slash\tau'] \subtypes \tau'
+    %   \implies
+    %   \delta \satisfies e \hastype \tau'
+    % } {
+    %   \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
+    % } 
 
-
-    \inferrule { 
-      \delta \satisfies e \hastype \tau_l
-    } {
-      \delta \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
-
-    \inferrule { 
-      \delta \satisfies e \hastype \tau_r
-    } {
-      \delta \satisfies e \hastype \tau_l \J{|} \tau_r
-    } 
+    % \inferrule { 
+    %   \delta \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
+    % } {
+    %   \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
+    % } 
 
 
-    \inferrule { 
-      \textbf{dom}(\delta') \subseteq \Theta
-      \\
-      \delta \oplus \delta' \satisfies \Delta 
-      \\
-      \delta \oplus \delta' \satisfies e \hastype \tau
-    } {
-      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
-    } 
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{|} \tau_r
+    % } 
 
-    \inferrule { 
-      \delta \satisfies e \hastype \tau_l
-      \\
-      \delta \satisfies e \hastype \tau_r
-    } {
-      \delta \satisfies e \hastype \tau_l \J{\&} \tau_r
-    } 
-
-    \inferrule { 
-      \forall \delta' \qua
-      \textbf{dom}(\delta') \subseteq \Theta \implies
-      \delta \oplus \delta' \VDash \Delta \implies 
-      \delta \oplus \delta' \satisfies e \hastype \tau
-      \\\\
-      \exists \delta' \qua 
-      \textbf{dom}(\delta') \subseteq \Theta \up 
-      \delta \oplus \delta' \satisfies \Delta
-    } {
-      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
-    } 
-
-    \inferrule { 
-      \J{<}l \J{>} v \in g
-      \\
-      \delta \satisfies v \hastype \tau 
-      \\
-      \forall v' \qua \J{<} l \J{>} v' \in g \implies v' = v
-    } {
-      \delta \satisfies g \hastype \J{<} l \J{>} \tau
-    } 
-
-    \inferrule { 
-      \TODO{diff antec}
-      \\\\
-      p \Uparrow \eta 
-      \\
-      \delta \satisfies f \hastype \tau_l \J{->} \tau_r
-    } {
-      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \typdiff \eta \J{->} \tau_r
-    } 
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_r
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{|} \tau_r
+    % } 
 
 
-    \inferrule { 
-      \TODO{needs separate inter antec}
-      \\\\
-      \forall \sigma \qua 
-      \delta \VDash p[\sigma] \hastype \tau_l
-      \implies
-      \delta  \satisfies e[\sigma] \hastype \tau_r
-    } {
-      \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
-    }
+    % \inferrule { 
+    %   \textbf{dom}(\delta') \subseteq \Theta
+    %   \\
+    %   \delta \oplus \delta' \satisfies \Delta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies e \hastype \tau
+    % } {
+    %   \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
+    % } 
 
-    \inferrule { 
-      \TODO{inter antec left}
-      \\\\
-      \delta \satisfies e \hastype \tau_l \J{->} \tau
-    } {
-      \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
-    }
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    %   \\
+    %   \delta \satisfies e \hastype \tau_r
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{\&} \tau_r
+    % } 
 
-    \inferrule { 
-      \TODO{inter antec right}
-      \\\\
-      \delta \satisfies e \hastype \tau_r \J{->} \tau
-    } {
-      \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
-    }
+    % \inferrule { 
+    %   \forall \delta' \qua
+    %   \textbf{dom}(\delta') \subseteq \Theta \implies
+    %   \delta \oplus \delta' \VDash \Delta \implies 
+    %   \delta \oplus \delta' \satisfies e \hastype \tau
+    %   \\\\
+    %   \exists \delta' \qua 
+    %   \textbf{dom}(\delta') \subseteq \Theta \up 
+    %   \delta \oplus \delta' \satisfies \Delta
+    % } {
+    %   \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
+    % } 
 
-    \inferrule { 
-      \TODO{all antec}
-      \\\\
-      \textbf{dom}(\delta') \subseteq \Theta 
-      \\
-      \delta \oplus \delta' \satisfies \Delta 
-      \\
-      \delta \oplus \delta' \satisfies e \hastype \tau_l \J{->} \tau_r
-    } {
-      \delta \satisfies e \hastype (\J{ALL[}\Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
-    }
+    % \inferrule { 
+    %   \J{<}l \J{>} v \in g
+    %   \\
+    %   \delta \satisfies v \hastype \tau 
+    %   \\
+    %   \forall v' \qua \J{<} l \J{>} v' \in g \implies v' = v
+    % } {
+    %   \delta \satisfies g \hastype \J{<} l \J{>} \tau
+    % } 
 
-    \inferrule { 
-      \TODO{union antec}
-      \\\\
-      \delta \satisfies e \hastype \tau_l \J{->} \tau
-      \\
-      \delta \satisfies e \hastype \tau_r \J{->} \tau
-    } {
-      \delta \satisfies e \hastype (\tau_l \J{|} \tau_r) \J{->} \tau
-    }
+    % \inferrule { 
+    %   \TODO{diff antec}
+    %   \\\\
+    %   p \Uparrow \eta 
+    %   \\
+    %   \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \typdiff \eta \J{->} \tau_r
+    % } 
 
-    \inferrule { 
-      \TODO{exi antec}
-      \\\\
-      \forall \delta' \qua 
-      \textbf{dom}(\delta') \subseteq \Theta
-      \implies
-      \delta \oplus \delta' \VDash \Delta 
-      \implies
-      \delta \satisfies e \hastype \tau_l \J{->} \tau_r
-    } {
-      \delta \satisfies e \hastype (\J{EXI[} \Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
-    }
 
-    \inferrule { 
-      \TODO{lfp antec}
-      \\\\
-      \alpha \notin \textbf{ftv}(\tau_l[\alpha\slash\J{@}]^+)
-      \\
-      \delta\ \alpha \slash (\J{LFP[}\alpha \J{]} \tau_l) \satisfies e \hastype \tau_l \J{->} \tau_r
-    } {
-      \delta \satisfies e \hastype (\J{LFP[}\alpha \J{]} \tau_l) \J{->} \tau_r
-    }
+    % \inferrule { 
+    %   \TODO{needs separate inter antec}
+    %   \\\\
+    %   \forall \sigma \qua 
+    %   \delta \VDash p[\sigma] \hastype \tau_l
+    %   \implies
+    %   \delta  \satisfies e[\sigma] \hastype \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
+    % }
 
-    \inferrule { 
-      \delta \satisfies e \hastype \tau_l
-      \\
-      \neg\ (\delta \satisfies e \hastype \tau_r)
-    } {
-      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
-    } 
+    % \inferrule { 
+    %   \TODO{inter antec left}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
+    % }
 
-    \inferrule { 
-    } {
-      \delta \satisfies \J{@} \hastype \J{@}
-    } 
+    % \inferrule { 
+    %   \TODO{inter antec right}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_r \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
+    % }
+
+    % \inferrule { 
+    %   \TODO{all antec}
+    %   \\\\
+    %   \textbf{dom}(\delta') \subseteq \Theta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies \Delta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{ALL[}\Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{union antec}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau
+    %   \\
+    %   \delta \satisfies e \hastype \tau_r \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{|} \tau_r) \J{->} \tau
+    % }
+
+    % \inferrule { 
+    %   \TODO{exi antec}
+    %   \\\\
+    %   \forall \delta' \qua 
+    %   \textbf{dom}(\delta') \subseteq \Theta
+    %   \implies
+    %   \delta \oplus \delta' \VDash \Delta 
+    %   \implies
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{EXI[} \Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{lfp antec}
+    %   \\\\
+    %   \alpha \notin \textbf{ftv}(\tau_l[\alpha\slash\J{@}]^+)
+    %   \\
+    %   \delta\ \alpha \slash (\J{LFP[}\alpha \J{]} \tau_l) \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{LFP[}\alpha \J{]} \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    %   \\
+    %   \neg\ (\delta \satisfies e \hastype \tau_r)
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \typdiff \tau_r
+    % } 
+
+    % \inferrule { 
+    % } {
+    %   \delta \satisfies \J{@} \hastype \J{@}
+    % } 
 
     % \inferrule { 
     %   \TODO{remove unflipped}
