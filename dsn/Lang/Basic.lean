@@ -3,30 +3,59 @@ import Lean
 set_option pp.fieldNotation false
 
 inductive Subtra
-| top
 | unit
 | entry : String → Subtra → Subtra
 | inter : Subtra → Subtra → Subtra
+| top
+deriving Repr
+
+def Subtra.size : Subtra → Nat
+| .unit => 0
+| .entry l body => size body + 1
+| .inter left right => size left + size right + 1
+| .top => 1
+
+inductive Typ
+| var : String → Typ
+| unit
+| entry : String → Typ → Typ
+| path : Typ → Typ → Typ
+| unio :  Typ → Typ → Typ
+| inter :  Typ → Typ → Typ
+| diff :  Typ → Subtra → Typ
+| all :  List String → List (Typ × Typ) → Typ → Typ
+| exi :  List String → List (Typ × Typ) → Typ → Typ
+| lfp :  String → Typ → Typ
 deriving Repr
 
 mutual
-  inductive Constraint
-  | subtyping : Typ → Typ → Constraint
-  deriving Repr
 
-  inductive Typ
-  | var : String → Typ
-  | unit
-  | entry : String → Typ → Typ
-  | path : Typ → Typ → Typ
-  | unio :  Typ → Typ → Typ
-  | inter :  Typ → Typ → Typ
-  | diff :  Typ → Subtra → Typ
-  | all :  List String → List Constraint → Typ → Typ
-  | exi :  List String → List Constraint → Typ → Typ
-  | lfp :  String → Typ → Typ
-  deriving Repr
+  def Typ.constraints_size : List (Typ × Typ) → Nat
+  | .nil => 0
+  | .cons (l, r) rest =>  Typ.size l + Typ.size r + constraints_size rest + 1
+
+  def Typ.size : Typ → Nat
+  | .var id => 0
+  | .unit => 0
+  | .entry l body => size body + 1
+  | .path left right => size left + size right + 1
+  | .unio left right => size left + size right + 1
+  | .inter left right => size left + size right + 1
+  | .diff pos neg => size pos + (Subtra.size neg) + 1
+  | .all ids quals body => constraints_size quals + size body + 1
+  | .exi ids quals body => constraints_size quals + size body + 1
+  | .lfp id body => size body + 1
 end
+
+instance : SizeOf Typ where
+  sizeOf := Typ.size
+
+
+def Subtra.toTyp : Subtra → Typ
+| .unit => .unit
+| .entry l body => .entry l (toTyp body)
+| .inter left right => .inter (toTyp left) (toTyp right)
+| .top => .all ["T"] [] (.var "T")
 
 
 inductive Pat
@@ -246,24 +275,24 @@ macro_rules
 
 #check e[[<uno> x => x]]
 
-class SubtraOf (_ : Typ) where
-  default : Subtra
+-- class SubtraOf (_ : Typ) where
+--   default : Subtra
 
-instance : SubtraOf t[TOP] where
-  default := s[TOP]
+-- instance : SubtraOf t[TOP] where
+--   default := s[TOP]
 
-instance : SubtraOf t[@] where
-  default := s[@]
+-- instance : SubtraOf t[@] where
+--   default := s[@]
 
-instance (label : String) (result : Typ) [s : SubtraOf result]
-: SubtraOf (Typ.entry label result)  where
-  default := Subtra.entry label s.default
+-- instance (label : String) (result : Typ) [s : SubtraOf result]
+-- : SubtraOf (Typ.entry label result)  where
+--   default := Subtra.entry label s.default
 
-instance
-  (left : Typ) [l : SubtraOf left]
-  (right : Typ) [r : SubtraOf right]
-: SubtraOf (Typ.inter left right)  where
-  default := Subtra.inter l.default r.default
+-- instance
+--   (left : Typ) [l : SubtraOf left]
+--   (right : Typ) [r : SubtraOf right]
+-- : SubtraOf (Typ.inter left right)  where
+--   default := Subtra.inter l.default r.default
 
 
 class RecordPatternOf (_ : List (String × Expr)) where
