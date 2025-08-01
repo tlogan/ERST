@@ -166,6 +166,16 @@ inductive Multi : Expr → Expr → Prop
 lemma subtra_typ_size {s : Subtra} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
 induction s;
 case unit => rfl;
+case entry l body ih =>
+  simp [Subtra.toTyp, Subtra.size];
+  rw [ih];
+  simp[Typ.size];
+case inter left right ihl ihr =>
+  simp [Subtra.toTyp, Subtra.size];
+  rw [ihl, ihr];
+  simp[Typ.size];
+case top =>
+  simp [Subtra.toTyp, Subtra.size, Typ.size, Typ.constraints_size];
 
 mutual
 
