@@ -4,19 +4,6 @@ import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 
-inductive Subtra
-| unit
-| entry : String → Subtra → Subtra
-| inter : Subtra → Subtra → Subtra
-| top
-deriving Repr
-
-def Subtra.size : Subtra → Nat
-| .unit => 1
-| .entry l body => size body + 1
-| .inter left right => size left + size right + 1
-| .top => 3
-
 inductive Typ
 | var : String → Typ
 | unit
@@ -24,7 +11,7 @@ inductive Typ
 | path : Typ → Typ → Typ
 | unio :  Typ → Typ → Typ
 | inter :  Typ → Typ → Typ
-| diff :  Typ → Subtra → Typ
+| diff :  Typ → Typ → Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
@@ -43,7 +30,7 @@ mutual
   | .path left right => Typ.size left + Typ.size right + 1
   | .unio left right => Typ.size left + Typ.size right + 1
   | .inter left right => Typ.size left + Typ.size right + 1
-  | .diff pos neg => Typ.size pos + (Subtra.size neg) + 1
+  | .diff left right => Typ.size left + Typ.size right + 1
   | .all ids quals body => ListPairTyp.size quals + Typ.size body + 1
   | .exi ids quals body => ListPairTyp.size quals + Typ.size body + 1
   | .lfp id body => Typ.size body + 1
@@ -53,36 +40,75 @@ end
 --   sizeOf := Typ.size
 
 
-def Subtra.toTyp : Subtra → Typ
-| .unit => .unit
-| .entry l body => .entry l (toTyp body)
-| .inter left right => .inter (toTyp left) (toTyp right)
-| .top => .all ["T"] [] (.var "T")
+-- theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
+-- cases t <;> simp [Typ.size]
 
-theorem subtra_typ_size {s} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
-induction s
-case unit => rfl
-case entry l body ih =>
-  simp [Subtra.toTyp, Subtra.size, ih, Typ.size]
-case inter left right ihl ihr =>
-  simp [Subtra.toTyp, Subtra.size, ihl, ihr, Typ.size]
-case top =>
-  simp [Subtra.toTyp, Typ.size, ListPairTyp.size, Subtra.size]
-
-theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
-cases t <;> simp [Typ.size]
-
-theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
-cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
+-- theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
+-- cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
 
 
 def Typ.sub (δ : List (String × Typ)) : Typ → Typ
 | t => t
 -- TODO
 
-def Typ.polar (id : String) (positive : Bool) : Typ → Bool
-| _ => true
--- TODO
+inductive Polarity
+| pos | neg | either | neither
+deriving BEq
+
+def Polarity.flip : Polarity → Polarity
+| .pos => .neg
+| .neg => .pos
+| p => p
+
+def Polarity.both : Polarity → Polarity → Polarity
+| .pos, .pos => .pos
+| .neg, .neg => .neg
+| .either, r => r
+| l, .either => l
+| _, _ => .neither
+
+mutual
+
+  def ListSubtyping.polarity_consistent (id : String) (t : Typ) : List (Typ × Typ) → Bool
+  | .nil => .true
+  | (l,r) :: remainder =>
+      let p := Polarity.both (.both (Typ.polar id l) (Typ.polar id r)) (Typ.polar id t)
+      p != Polarity.neither ∧ ListSubtyping.polarity_consistent id t remainder
+
+  def ListSubtyping.polarities_consistent (t : Typ) (pairs : List (Typ × Typ)) :  List String → Bool
+  | .nil => .true
+  | id :: remainder =>
+    ListSubtyping.polarity_consistent id t pairs ∧ ListSubtyping.polarities_consistent t pairs remainder
+
+  def Typ.polar (id : String) : Typ → Polarity
+  | .var id' => if id' = id then .pos else .either
+  | .unit => .either
+  | .entry _ body => Typ.polar id body
+  | .path left right =>
+    Polarity.both (Polarity.flip (Typ.polar id left)) (Typ.polar id right)
+  | .unio left right => Polarity.both (Typ.polar id left) (Typ.polar id right)
+  | .inter left right => Polarity.both (Typ.polar id left) (Typ.polar id right)
+  | .diff left right => Polarity.both (Typ.polar id left) (Polarity.flip (Typ.polar id right))
+  | .all ids quals body =>
+    if id ∈ ids then
+      .either
+    else if ListSubtyping.polarities_consistent body quals ids then
+      Typ.polar id body
+    else
+      .neither
+  | .exi ids quals body =>
+    if id ∈ ids then
+      .either
+    else if ListSubtyping.polarities_consistent (Typ.diff .unit body) quals ids then
+      Typ.polar id body
+    else
+      .neither
+  | .lfp id' body =>
+    if id' == id then
+      .either
+    else
+      Typ.polar id body
+end
 
 def Typ.subfold (id : String) (t : Typ): Nat → Typ
 | 0 => .exi ["T"] [] (.var "T")
@@ -105,7 +131,6 @@ inductive Expr
 | loop : Expr → Expr
 deriving Repr
 
-declare_syntax_cat subtra
 declare_syntax_cat params
 declare_syntax_cat quals
 declare_syntax_cat typ
@@ -116,11 +141,6 @@ declare_syntax_cat exprrec
 declare_syntax_cat function
 declare_syntax_cat expr
 
-
-syntax "@" : subtra
-syntax "TOP" : subtra
-syntax "<" ident ">" subtra : subtra
-syntax subtra "&" subtra : subtra
 
 syntax "]" : params
 syntax:20 ident params : params
@@ -134,7 +154,7 @@ syntax "<" ident ">" typ : typ
 syntax:50 typ:51 "->" typ:50 : typ
 syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
-syntax typ "\\" subtra : typ
+syntax typ "\\" typ : typ
 syntax "ALL" "[" params quals typ : typ
 syntax "EXI" "[" params quals typ : typ
 syntax "ALL" "[" params typ : typ
@@ -174,7 +194,6 @@ syntax "(" expr ")" : expr
 
 
 syntax "i[" ident "]" : term
-syntax "s[" subtra "]" : term
 syntax "ps[" params "]" : term
 syntax "qs[" quals "]" : term
 syntax "t[" typ "]" : term
@@ -194,11 +213,6 @@ elab_rules : term
       Lean.Elab.throwUnsupportedSyntax
     return (Lean.mkStrLit idStr)
 
-macro_rules
-| `(s[ TOP ]) => `(Subtra.top)
-| `(s[ @ ]) => `(Subtra.unit)
-| `(s[ < $i:ident > $s:subtra  ]) => `(Subtra.entry i[$i] s[$s])
-| `(s[ $x:subtra & $y:subtra]) => `(Subtra.inter s[$x] s[$y])
 
 macro_rules
 | `(ps[ ] ]) => `([])
@@ -215,7 +229,7 @@ macro_rules
 | `(t[ $x:typ -> $y:typ ]) => `(Typ.path t[$x] t[$y])
 | `(t[ $x:typ | $y:typ ]) => `(Typ.unio t[$x] t[$y])
 | `(t[ $x:typ & $y:typ ]) => `(Typ.inter t[$x] t[$y])
-| `(t[ $x:typ \ $y:subtra ]) => `(Typ.diff t[$x] s[$y])
+| `(t[ $x:typ \ $y:typ ]) => `(Typ.diff t[$x] t[$y])
 | `(t[ ALL [ $ps:params $qs:quals $t:typ ]) => `(Typ.all ps[$ps] qs[$qs] t[$t])
 | `(t[ EXI [ $ps:params $qs:quals $t:typ ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
 | `(t[ ALL [ $ps:params $t:typ ]) => `(Typ.all ps[$ps] [] t[$t])
@@ -305,25 +319,6 @@ macro_rules
 #check e[def x = @ in x]
 
 #check e[[<uno> x => x]]
-
--- class SubtraOf (_ : Typ) where
---   default : Subtra
-
--- instance : SubtraOf t[TOP] where
---   default := s[TOP]
-
--- instance : SubtraOf t[@] where
---   default := s[@]
-
--- instance (label : String) (result : Typ) [s : SubtraOf result]
--- : SubtraOf (Typ.entry label result)  where
---   default := Subtra.entry label s.default
-
--- instance
---   (left : Typ) [l : SubtraOf left]
---   (right : Typ) [r : SubtraOf right]
--- : SubtraOf (Typ.inter left right)  where
---   default := Subtra.inter l.default r.default
 
 
 class RecordPatternOf (_ : List (String × Expr)) where

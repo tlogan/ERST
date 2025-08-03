@@ -156,13 +156,8 @@ def Dynamic.FinTyping (e : Expr) : Typ → Prop
 | .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
 | .unio left right => FinTyping e left ∨ FinTyping e right
 | .inter left right => FinTyping e left ∧ FinTyping e right
-| .diff left right => FinTyping e left ∧ ¬ (FinTyping e (Subtra.toTyp right))
+| .diff left right => FinTyping e left ∧ ¬ (FinTyping e right)
 | _ => False
-termination_by t => (Typ.size t)
-decreasing_by
-  all_goals simp [Typ.size, subtra_typ_size]
-  all_goals try linarith
-
 
 mutual
   def Dynamic.Subtyping (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -184,7 +179,7 @@ mutual
   | .path left right => ∀ e' , Typing δ e' left → Typing δ (.app e e') right
   | .unio left right => Typing δ e left ∨ Typing δ e right
   | .inter left right => Typing δ e left ∧ Typing δ e right
-  | .diff left right => Typing δ e left ∧ ¬ (Typing δ e (Subtra.toTyp right))
+  | .diff left right => Typing δ e left ∧ ¬ (Typing δ e right)
   | .exi ids quals body =>
     ∃ δ' , (dom δ') ⊆ ids ∧
     (MultiSubtyping (δ ++ δ') quals) ∧
@@ -197,7 +192,7 @@ mutual
   | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
   termination_by t => (Typ.size t)
   decreasing_by
-    all_goals simp [Typ.size, subtra_typ_size]
+    all_goals simp [Typ.size]
     all_goals try linarith
 end
 
