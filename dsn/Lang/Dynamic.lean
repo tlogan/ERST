@@ -150,21 +150,6 @@ inductive Multi : Expr → Expr → Prop
 | step {e e' e''} : Progression e e' → Multi e e'' → Multi e e''
 
 
-
-lemma subtra_typ_size {s} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
-induction s
-case unit => rfl
-case entry l body ih =>
-  simp [Subtra.toTyp, Subtra.size]
-  rw [ih]
-  simp[Typ.size]
-case inter left right ihl ihr =>
-  simp [Subtra.toTyp, Subtra.size]
-  rw [ihl, ihr]
-  simp[Typ.size]
-case top =>
-  simp [Subtra.toTyp, Typ.size, Typ.constraints_size, Subtra.size]
-
 def Dynamic.FinTyping (e : Expr) : Typ → Prop
 | .unit => Multi e .unit
 | .entry l τ => FinTyping (.record [(l,e)]) τ
@@ -179,37 +164,19 @@ decreasing_by
   all_goals try linarith
 
 
-lemma zero_lt_typ_size {t : Typ} : 0 < Typ.size t := by
-cases t <;> simp [Typ.size]
-
-lemma zero_lt_typ_constraints_size {cs} : 0 < Typ.constraints_size cs := by
-cases cs <;> simp [Typ.constraints_size, zero_lt_typ_size]
-
-
-def Typ.sub (δ : List (String × Typ)) : Typ → Typ
-| t => t
--- TODO
-
-def Typ.polar (id : String) (positive : Bool) : Typ → Bool
-| _ => true
-
-def Typ.subfold (id : String) (t : Typ): Nat → Typ
-| 0 => .exi ["T"] [] (.var "T")
-| n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
-
 mutual
   def Dynamic.Subtyping (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing δ e left → Typing δ e right
   termination_by Typ.size left + Typ.size right
   decreasing_by
-    all_goals simp [zero_lt_typ_size]
+    all_goals simp [Typ.zero_lt_size]
 
   def Dynamic.MultiSubtyping (δ : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder => Subtyping δ left right ∧ MultiSubtyping δ remainder
-  termination_by sts => Typ.constraints_size sts
+  termination_by sts => ListPairTyp.size sts
   decreasing_by
-    all_goals simp [Typ.constraints_size, zero_lt_typ_constraints_size, zero_lt_typ_size]
+    all_goals simp [ListPairTyp.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
   def Dynamic.Typing (δ : List (String × Typ)) (e : Expr) : Typ → Prop
   | .unit => Multi e .unit

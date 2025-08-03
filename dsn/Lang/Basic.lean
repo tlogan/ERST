@@ -1,4 +1,6 @@
 import Lean
+import Mathlib.Data.Set.Basic
+import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 
@@ -30,25 +32,25 @@ deriving Repr
 
 mutual
 
-  def Typ.constraints_size : List (Typ × Typ) → Nat
+  def ListPairTyp.size : List (Typ × Typ) → Nat
   | .nil => 1
-  | .cons (l, r) rest =>  Typ.size l + Typ.size r + constraints_size rest
+  | .cons (l, r) rest =>  Typ.size l + Typ.size r + ListPairTyp.size rest
 
   def Typ.size : Typ → Nat
   | .var id => 1
   | .unit => 1
-  | .entry l body => size body + 1
-  | .path left right => size left + size right + 1
-  | .unio left right => size left + size right + 1
-  | .inter left right => size left + size right + 1
-  | .diff pos neg => size pos + (Subtra.size neg) + 1
-  | .all ids quals body => constraints_size quals + size body + 1
-  | .exi ids quals body => constraints_size quals + size body + 1
-  | .lfp id body => size body + 1
+  | .entry l body => Typ.size body + 1
+  | .path left right => Typ.size left + Typ.size right + 1
+  | .unio left right => Typ.size left + Typ.size right + 1
+  | .inter left right => Typ.size left + Typ.size right + 1
+  | .diff pos neg => Typ.size pos + (Subtra.size neg) + 1
+  | .all ids quals body => ListPairTyp.size quals + Typ.size body + 1
+  | .exi ids quals body => ListPairTyp.size quals + Typ.size body + 1
+  | .lfp id body => Typ.size body + 1
 end
 
-instance : SizeOf Typ where
-  sizeOf := Typ.size
+-- instance : SizeOf Typ where
+--   sizeOf := Typ.size
 
 
 def Subtra.toTyp : Subtra → Typ
@@ -56,6 +58,35 @@ def Subtra.toTyp : Subtra → Typ
 | .entry l body => .entry l (toTyp body)
 | .inter left right => .inter (toTyp left) (toTyp right)
 | .top => .all ["T"] [] (.var "T")
+
+theorem subtra_typ_size {s} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
+induction s
+case unit => rfl
+case entry l body ih =>
+  simp [Subtra.toTyp, Subtra.size, ih, Typ.size]
+case inter left right ihl ihr =>
+  simp [Subtra.toTyp, Subtra.size, ihl, ihr, Typ.size]
+case top =>
+  simp [Subtra.toTyp, Typ.size, ListPairTyp.size, Subtra.size]
+
+theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
+cases t <;> simp [Typ.size]
+
+theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
+cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
+
+
+def Typ.sub (δ : List (String × Typ)) : Typ → Typ
+| t => t
+-- TODO
+
+def Typ.polar (id : String) (positive : Bool) : Typ → Bool
+| _ => true
+-- TODO
+
+def Typ.subfold (id : String) (t : Typ): Nat → Typ
+| 0 => .exi ["T"] [] (.var "T")
+| n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
 
 
 inductive Pat
