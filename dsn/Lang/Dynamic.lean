@@ -149,43 +149,67 @@ inductive Multi : Expr → Expr → Prop
 | refl {e} : Multi e e
 | step {e e' e''} : Progression e e' → Multi e e'' → Multi e e''
 
-  def Dynamic.FinTyping (δ : List (String × Typ)) (e : Expr) : Typ → Prop
-  | _ => Multi e .unit
-  -- | .unit => Multi e .unit
-  -- | .entry l τ => Typing δ (.record [(l,e)]) τ
-  -- | .path left right => ∀ e' , Typing δ e' left → Typing δ (.app e e') right
-  -- | .unio left right => Typing δ e left ∨ Typing δ e right
-  -- | .inter left right => Typing δ e left ∧ Typing δ e right
-  -- -- | .diff left right => Typing δ e left ∧ ¬ (Typing δ e (Subtra.toTyp right))
-  -- | .exi ids quals body => ∃ δ' , (dom δ') ⊆ ids ∧ (.Subtyping (δ ++ δ') quals) ∧ (Typing (δ ++ δ') e body)
-  -- | .all ids quals body => ∀ δ' , (dom δ') ⊆ ids →  (.Subtyping (δ ++ δ') quals) → (Typing (δ ++ δ') e body)
-  -- | .lfp id body => polar(id, true, body) ∧ FinTyping e (sub (subfold id body n) δ)
-  -- | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
 
 
-lemma subtra_typ_size {s : Subtra} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
-induction s;
-case unit => rfl;
+lemma subtra_typ_size {s} : Subtra.size s = Typ.size (Subtra.toTyp s) := by
+induction s
+case unit => rfl
 case entry l body ih =>
-  simp [Subtra.toTyp, Subtra.size];
-  rw [ih];
-  simp[Typ.size];
+  simp [Subtra.toTyp, Subtra.size]
+  rw [ih]
+  simp[Typ.size]
 case inter left right ihl ihr =>
-  simp [Subtra.toTyp, Subtra.size];
-  rw [ihl, ihr];
-  simp[Typ.size];
+  simp [Subtra.toTyp, Subtra.size]
+  rw [ihl, ihr]
+  simp[Typ.size]
 case top =>
-  simp [Subtra.toTyp, Subtra.size, Typ.size, Typ.constraints_size];
+  simp [Subtra.toTyp, Typ.size, Typ.constraints_size, Subtra.size]
+
+def Dynamic.FinTyping (e : Expr) : Typ → Prop
+| .unit => Multi e .unit
+| .entry l τ => FinTyping (.record [(l,e)]) τ
+| .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
+| .unio left right => FinTyping e left ∨ FinTyping e right
+| .inter left right => FinTyping e left ∧ FinTyping e right
+| .diff left right => FinTyping e left ∧ ¬ (FinTyping e (Subtra.toTyp right))
+| _ => False
+termination_by t => (Typ.size t)
+decreasing_by
+  all_goals simp [Typ.size, subtra_typ_size]
+  all_goals try linarith
+
+
+lemma zero_lt_typ_size {t : Typ} : 0 < Typ.size t := by
+cases t <;> simp [Typ.size]
+
+lemma zero_lt_typ_constraints_size {cs} : 0 < Typ.constraints_size cs := by
+cases cs <;> simp [Typ.constraints_size, zero_lt_typ_size]
+
+
+def Typ.sub (δ : List (String × Typ)) : Typ → Typ
+| t => t
+-- TODO
+
+def Typ.polar (id : String) (positive : Bool) : Typ → Bool
+| _ => true
+
+def Typ.subfold (id : String) (t : Typ): Nat → Typ
+| 0 => .exi ["T"] [] (.var "T")
+| n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
 
 mutual
-
   def Dynamic.Subtyping (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing δ e left → Typing δ e right
+  termination_by Typ.size left + Typ.size right
+  decreasing_by
+    all_goals simp [zero_lt_typ_size]
 
   def Dynamic.MultiSubtyping (δ : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder => Subtyping δ left right ∧ MultiSubtyping δ remainder
-
+  termination_by sts => Typ.constraints_size sts
+  decreasing_by
+    all_goals simp [Typ.constraints_size, zero_lt_typ_constraints_size, zero_lt_typ_size]
 
   def Dynamic.Typing (δ : List (String × Typ)) (e : Expr) : Typ → Prop
   | .unit => Multi e .unit
@@ -194,19 +218,22 @@ mutual
   | .unio left right => Typing δ e left ∨ Typing δ e right
   | .inter left right => Typing δ e left ∧ Typing δ e right
   | .diff left right => Typing δ e left ∧ ¬ (Typing δ e (Subtra.toTyp right))
-  -- | .exi ids quals body => ∃ δ' , (dom δ') ⊆ ids ∧ (MultiSubtyping (δ ++ δ') quals) ∧ (Typing (δ ++ δ') e body)
-  -- | .all ids quals body => ∀ δ' , (dom δ') ⊆ ids →  (MultiSubtyping (δ ++ δ') quals) → (Typing (δ ++ δ') e body)
-  -- | .lfp id body => polar(id, true, body) ∧ FinTyping e (sub (subfold id body n) δ)
-  -- | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
-  | _ => Multi e .unit
+  | .exi ids quals body =>
+    ∃ δ' , (dom δ') ⊆ ids ∧
+    (MultiSubtyping (δ ++ δ') quals) ∧
+    (Typing (δ ++ δ') e body)
+  | .all ids quals body =>
+    ∀ δ' , (dom δ') ⊆ ids →
+    (MultiSubtyping (δ ++ δ') quals) →
+    (Typing (δ ++ δ') e body)
+  | .lfp id body => ∃ n, Typ.polar id true body ∧ FinTyping e (Typ.sub δ (Typ.subfold id body n))
+  | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
   termination_by t => (Typ.size t)
   decreasing_by
-    all_goals simp [Typ.size];
-    all_goals try linarith;
-    simp [subtra_typ_size];
-    linarith
-
+    all_goals simp [Typ.size, subtra_typ_size]
+    all_goals try linarith
 end
+
 
 
 

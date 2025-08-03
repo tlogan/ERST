@@ -3,6 +3,156 @@ import Mathlib.Data.Set.Basic
 ---------------------------------------------------------------
 ------ Experimental --------------------------------------------
 ---------------------------------------------------------------
+theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  case left => exact hp
+  case right =>
+    apply And.intro
+    case left => exact hq
+    case right => exact hp
+
+#check And.intro
+
+theorem testB (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  . exact hp
+  . apply And.intro
+    . exact hq
+    . exact hp
+
+example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    apply Or.elim (And.right h)
+    . intro hq
+      apply Or.inl
+      apply And.intro
+      . exact And.left h
+      . exact hq
+    . intro hr
+      apply Or.inr
+      apply And.intro
+      . exact And.left h
+      . exact hr
+  . intro h
+    apply Or.elim h
+    . intro hpq
+      apply And.intro
+      . exact And.left hpq
+      . apply Or.inl
+        exact And.right hpq
+    . intro hpr
+      apply And.intro
+      . exact And.left hpr
+      . apply Or.inr
+        exact And.right hpr
+
+example : ∀ a b c : Nat, a = b → a = c → c = b := by unhygienic
+  intros
+  apply Eq.trans
+  apply Eq.symm
+  exact a_2
+  exact a_1
+
+example : ∀ a b c : Nat, a = b → a = c → c = b := by
+  intros
+  apply Eq.trans
+  apply Eq.symm
+  . assumption
+  . assumption
+
+  repeat assumption
+
+example : ℕ := by
+exact 0
+
+example (x : Nat) : x = x := by
+  revert x
+  intro y
+  rfl
+
+example : 3 = 3 := by
+  generalize 3 = x
+  revert x
+  intro y
+  rfl
+example : 2 + 3 = 5 := by
+  generalize h : 3 = x
+  rw [← h]
+
+example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h with
+  | inl hp => apply Or.inr; exact hp
+  | inr hq => apply Or.inl; exact hq
+
+example {α} (p q : α → Prop) : (∃ x, p x ∨ q x) → ∃ x, q x ∨ p x := by
+  intro
+  | ⟨w, Or.inl h⟩ => exact ⟨w, Or.inr h⟩
+  | ⟨w, Or.inr h⟩ => exact ⟨w, Or.inl h⟩
+
+example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro
+  | Or.inl hp => apply Or.inr; exact hp
+  | Or.inr hq => apply Or.inl; exact hq
+
+example (p q : Nat → Prop) : (∃ x, p x) → ∃ x, p x ∨ q x := by
+
+  intro h
+  cases h with
+  | intro x px =>
+    constructor;
+    apply Or.inl;
+    exact px
+
+example (n : Nat) : n + 1 = Nat.succ n := by
+  -- show Nat.succ n = Nat.succ n
+  change Nat.succ n = Nat.succ n
+  rfl
+
+#check (Nat.add_comm)
+#check (fun b => (Nat.add_comm b))
+
+example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_comm b]
+  rw [ ← Nat.add_assoc]
+
+#check Nat.add_assoc
+
+example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_assoc, Nat.add_comm b]
+
+example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_assoc, Nat.add_comm _ b]
+
+def f (x y z : Nat) : Nat :=
+  match x, y, z with
+  | 5, _, _ => y
+  | _, 5, _ => y
+  | _, _, 5 => y
+  | _, _, _ => 1
+
+example (w x y z : Nat) : x ≠ 5 → y ≠ 5 → z ≠ 5 → z = w → f x y w = 1 := by
+  intros
+  simp [f]
+  split
+  . contradiction
+  . contradiction
+  . contradiction
+  . rfl
+
+example (w x y z : Nat) : x ≠ 5 → y ≠ 5 → z ≠ 5 → z = w → f x y w = 1 := by
+  intros
+  simp [f]
+  split
+  . contradiction
+  . contradiction
+  . contradiction
+  . rfl
+
+
+
+
 
 def x : List String := ["x"]
 def y := ["y"]

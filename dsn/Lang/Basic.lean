@@ -10,10 +10,10 @@ inductive Subtra
 deriving Repr
 
 def Subtra.size : Subtra → Nat
-| .unit => 0
+| .unit => 1
 | .entry l body => size body + 1
 | .inter left right => size left + size right + 1
-| .top => 1
+| .top => 3
 
 inductive Typ
 | var : String → Typ
@@ -31,12 +31,12 @@ deriving Repr
 mutual
 
   def Typ.constraints_size : List (Typ × Typ) → Nat
-  | .nil => 0
-  | .cons (l, r) rest =>  Typ.size l + Typ.size r + constraints_size rest + 1
+  | .nil => 1
+  | .cons (l, r) rest =>  Typ.size l + Typ.size r + constraints_size rest
 
   def Typ.size : Typ → Nat
-  | .var id => 0
-  | .unit => 0
+  | .var id => 1
+  | .unit => 1
   | .entry l body => size body + 1
   | .path left right => size left + size right + 1
   | .unio left right => size left + size right + 1
