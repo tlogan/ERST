@@ -235,9 +235,3 @@ lemma even_thing {n} : Even n → n ≠ 3 := by
 induction n;
 case zero => sorry;
 case succ n ih => sorry;
-
-
-inductive F : Nat → Prop
-| intro n : F (n + 1) → F n
-
-partial def n (x : Nat) := n x + 1
