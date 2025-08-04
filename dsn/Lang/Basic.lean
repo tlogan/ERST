@@ -20,6 +20,24 @@ inductive Typ
 | lfp :  String → Typ → Typ
 deriving Repr
 
+inductive Typ.Bruijn
+| bvar : Nat → Typ.Bruijn
+| fvar : String → Typ.Bruijn
+| unit
+| entry : String → Typ.Bruijn → Typ.Bruijn
+| path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
+| unio :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
+| inter :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
+| diff :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
+| all :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
+| exi :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
+| lfp :  Typ.Bruijn → Typ.Bruijn
+deriving Repr
+
+def Typ.toBruijn (base : Nat) : Typ → Typ.Bruijn
+-- TODO
+| _ => .unit
+
 mutual
 
   def ListPairTyp.size : List (Typ × Typ) → Nat
@@ -39,19 +57,67 @@ mutual
   | .lfp id body => Typ.size body + 1
 end
 
--- instance : SizeOf Typ where
---   sizeOf := Typ.size
-
-
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
 cases t <;> simp [Typ.size]
 
 theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
 cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
 
-def Typ.sub (δ : List (String × Typ)) : Typ → Typ
-| t => t
--- TODO
+
+-- instance : SizeOf Typ where
+--   sizeOf := Typ.size
+
+def dom {α} {β} : List (α × β) → List α
+| .nil => .nil
+| (a, _) :: xs => a :: dom xs
+
+
+def remove {α} (id : String) : List (String × α) →  List (String × α)
+| .nil => .nil
+| (key, e) :: m =>
+  if key == id then
+    m
+  else
+    (key, e) :: (remove id m)
+
+def remove_all {α} (m : List (String × α)) : (ids : List String) →  List (String × α)
+| .nil => m
+| id :: remainder => remove_all (remove id m) remainder
+
+def find {α} (id : String) : List (String × α) → Option α
+| .nil => none
+| (key, e) :: m =>
+  if key == id then
+    some e
+  else
+    find id m
+
+mutual
+
+  def ListPairTyp.sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
+  | .nil => .nil
+  | (l,r) :: remainder => (Typ.sub δ l, Typ.sub δ r) :: ListPairTyp.sub δ remainder
+
+  def Typ.sub (δ : List (String × Typ)) : Typ → Typ
+  | .var id => match find id δ with
+    | .none => .var id
+    | .some t => t
+  | .unit => .unit
+  | .entry l body => .entry l (Typ.sub δ body)
+  | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
+  | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
+  | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
+  | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
+  | .all ids quals body =>
+      let δ' := remove_all δ ids
+      .all ids (ListPairTyp.sub δ' quals) (Typ.sub δ' body)
+  | .exi ids quals body =>
+      let δ' := remove_all δ ids
+      .exi ids (ListPairTyp.sub δ' quals) (Typ.sub δ' body)
+  | .lfp id body =>
+      let δ' := remove id δ
+      .lfp id (Typ.sub δ' body)
+end
 
 
 mutual

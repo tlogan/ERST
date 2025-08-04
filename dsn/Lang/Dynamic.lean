@@ -52,32 +52,6 @@ mutual
   | _, _ => none
 end
 
-def dom {α} {β} : List (α × β) → List α
-| .nil => .nil
-| (a, _) :: xs => a :: dom xs
-
-
-def remove {α} (id : String) : List (String × α) →  List (String × α)
-| .nil => .nil
-| (key, e) :: m =>
-  if key == id then
-    m
-  else
-    (key, e) :: (remove id m)
-
-def remove_all {α} (m : List (String × α)) : (ids : List String) →  List (String × α)
-| .nil => m
-| id :: remainder => remove_all (remove id m) remainder
-
-
-def find {α} (id : String) : List (String × α) → Option α
-| .nil => none
-| (key, e) :: m =>
-  if key == id then
-    some e
-  else
-    find id m
-
 mutual
   def ids_record_pattern : List (String × Pat) → List String
   | .nil => .nil
@@ -188,7 +162,7 @@ mutual
     ∀ δ' , (dom δ') ⊆ ids →
     (MultiSubtyping (δ ++ δ') quals) →
     (Typing (δ ++ δ') e body)
-  | .lfp id body => ∃ n, Typ.polar id true body ∧ FinTyping e (Typ.sub δ (Typ.subfold id body n))
+  | .lfp id body => ∃ n, Typ.Polar id true body ∧ FinTyping e (Typ.sub δ (Typ.subfold id body n))
   | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
   termination_by t => (Typ.size t)
   decreasing_by
