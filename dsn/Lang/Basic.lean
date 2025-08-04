@@ -1,6 +1,9 @@
 import Lean
 import Mathlib.Data.Set.Basic
 import Mathlib.Tactic.Linarith
+import Mathlib.Algebra.Order.Ring.Defs
+-- import data.nat.basic
+-- import algebra.order.ring
 
 set_option pp.fieldNotation false
 
@@ -40,77 +43,82 @@ end
 --   sizeOf := Typ.size
 
 
--- theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
--- cases t <;> simp [Typ.size]
+theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
+cases t <;> simp [Typ.size]
 
--- theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
--- cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
-
+theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
+cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
 
 def Typ.sub (δ : List (String × Typ)) : Typ → Typ
 | t => t
 -- TODO
 
-inductive Polarity
-| pos | neg | either | neither
-deriving BEq
-
-def Polarity.flip : Polarity → Polarity
-| .pos => .neg
-| .neg => .pos
-| p => p
-
-def Polarity.both : Polarity → Polarity → Polarity
-| .pos, .pos => .pos
-| .neg, .neg => .neg
-| .either, r => r
-| l, .either => l
-| _, _ => .neither
 
 mutual
 
-  def ListSubtyping.polarity_consistent (id : String) (t : Typ) : List (Typ × Typ) → Bool
-  | .nil => .true
-  | (l,r) :: remainder =>
-      let p := Polarity.both (.both (Typ.polar id l) (Typ.polar id r)) (Typ.polar id t)
-      p != Polarity.neither ∧ ListSubtyping.polarity_consistent id t remainder
+  inductive ListSubtyping.Polar.Consistent : List String → List (Typ × Typ) → Typ → Prop
+  | nil {cs t} : ListSubtyping.Polar.Consistent [] cs t
+  | cons {id ids cs t b} :
+    ListSubtyping.Polar id b cs →
+    Typ.Polar id b t →
+    ListSubtyping.Polar.Consistent  ids cs t →
+    ListSubtyping.Polar.Consistent (id :: ids) cs t
 
-  def ListSubtyping.polarities_consistent (t : Typ) (pairs : List (Typ × Typ)) :  List String → Bool
-  | .nil => .true
-  | id :: remainder =>
-    ListSubtyping.polarity_consistent id t pairs ∧ ListSubtyping.polarities_consistent t pairs remainder
+  inductive ListSubtyping.Polar : String → Bool → List (Typ × Typ) → Prop
+  | nil {id b} : ListSubtyping.Polar id b []
+  | cons {id b l r remainder} :
+    Typ.Polar id (not b) l →
+    Typ.Polar id b r →
+    ListSubtyping.Polar id b ((l,r)::remainder)
 
-  def Typ.polar (id : String) : Typ → Polarity
-  | .var id' => if id' = id then .pos else .either
-  | .unit => .either
-  | .entry _ body => Typ.polar id body
-  | .path left right =>
-    Polarity.both (Polarity.flip (Typ.polar id left)) (Typ.polar id right)
-  | .unio left right => Polarity.both (Typ.polar id left) (Typ.polar id right)
-  | .inter left right => Polarity.both (Typ.polar id left) (Typ.polar id right)
-  | .diff left right => Polarity.both (Typ.polar id left) (Polarity.flip (Typ.polar id right))
-  | .all ids quals body =>
-    if id ∈ ids then
-      .either
-    else if ListSubtyping.polarities_consistent body quals ids then
-      Typ.polar id body
-    else
-      .neither
-  | .exi ids quals body =>
-    if id ∈ ids then
-      .either
-    else if ListSubtyping.polarities_consistent (Typ.diff .unit body) quals ids then
-      Typ.polar id body
-    else
-      .neither
-  | .lfp id' body =>
-    if id' == id then
-      .either
-    else
-      Typ.polar id body
+  inductive Typ.Polar : String → Bool → Typ → Prop
+  | var {id} : Typ.Polar id true (.var id)
+  | varskip {id id' b} : id ≠ id' → Typ.Polar id b (.var id')
+  | unit {id b}: Typ.Polar id b .unit
+  | entry {id b l body}: Typ.Polar id b body →  Typ.Polar id b (.entry l body)
+  | path {id b left right}:
+    Typ.Polar id (not b) left →
+    Typ.Polar id b right →
+    Typ.Polar id b (.path left right)
+  | unio {id b left right}:
+    Typ.Polar id b left →
+    Typ.Polar id b right →
+    Typ.Polar id b (.unio left right)
+  | inter {id b left right}:
+    Typ.Polar id b left →
+    Typ.Polar id b right →
+    Typ.Polar id b (.inter left right)
+  | diff {id b left right}:
+    Typ.Polar id b left →
+    Typ.Polar id (not b) right →
+    Typ.Polar id b (.diff left right)
+
+  | all {id b ids quals body} :
+    id ∉ ids →
+    ListSubtyping.Polar.Consistent ids quals body →
+    Typ.Polar id b body →
+    Typ.Polar id b (.all ids quals body)
+
+  | allskip {id b ids quals body} :
+    id ∈ ids →
+    Typ.Polar id b (.all ids quals body)
+
+  | exi {id b ids quals body} :
+    id ∉ ids →
+    ListSubtyping.Polar.Consistent ids quals (.diff .unit body) →
+    Typ.Polar id b body →
+    Typ.Polar id b (.exi ids quals body)
+
+  | exiskip {id b ids quals body} :
+    id ∈ ids →
+    Typ.Polar id b (.exi ids quals body)
+
+  | lfp {id b id' body}: id ≠ id' → Typ.Polar id b body → Typ.Polar id b (.lfp id' body)
+  | lfpskip {id b body}: Typ.Polar id b (.lfp id body)
 end
 
-def Typ.subfold (id : String) (t : Typ): Nat → Typ
+
+def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 | 0 => .exi ["T"] [] (.var "T")
 | n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
 
