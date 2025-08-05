@@ -34,9 +34,114 @@ inductive Typ.Bruijn
 | lfp :  Typ.Bruijn → Typ.Bruijn
 deriving Repr
 
-def Typ.toBruijn (base : Nat) : Typ → Typ.Bruijn
--- TODO
-| _ => .unit
+
+def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
+  let ns := List.indexesOf target l
+  if h : List.length ns > 0 then
+      let i : Fin (List.length ns) := {
+        val := 0,
+        isLt := by simp [h]
+      }
+      .some (List.get ns i)
+  else
+    .none
+
+
+mutual
+  def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
+  | .var id =>
+    if id ∈ bounds then [id] else []
+  | .unit => []
+  | .entry _ t =>
+    Typ.ordered_bound_vars bounds t
+  | .path left right =>
+    let a := Typ.ordered_bound_vars bounds left
+    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    a ∪ b
+  | .unio left right =>
+    let a := Typ.ordered_bound_vars bounds left
+    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    a ∪ b
+  | .inter left right =>
+    let a := Typ.ordered_bound_vars bounds left
+    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    a ∪ b
+  | .diff left right =>
+    let a := Typ.ordered_bound_vars bounds left
+    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    a ∪ b
+  | .all ids quals body =>
+    let bounds' := List.diff bounds ids
+    let a := ListPairTyp.ordered_bound_vars bounds' quals
+    let b := List.diff (Typ.ordered_bound_vars bounds' body) a
+    a ∪ b
+  | .exi ids quals body =>
+    let bounds' := List.diff bounds ids
+    let a := ListPairTyp.ordered_bound_vars bounds' quals
+    let b := List.diff (Typ.ordered_bound_vars bounds' body) a
+    a ∪ b
+  | .lfp id body =>
+    let bounds' := List.diff bounds [id]
+    Typ.ordered_bound_vars bounds' body
+
+  def ListPairTyp.ordered_bound_vars (bounds : List String)
+  : List (Typ × Typ) → List String
+  | .nil => .nil
+  | .cons (l,r) remainder =>
+    let a := (Typ.ordered_bound_vars bounds l)
+    let b := List.diff (Typ.ordered_bound_vars bounds r) a
+    let c := List.diff (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
+    a ∪ b ∪ c
+end
+
+mutual
+  def ListPairTyp.toBruijn (base : Nat) (bids : List String)
+  : List (Typ × Typ) → List (Typ.Bruijn × Typ.Bruijn)
+  | .nil => .nil
+  | .cons (l,r) remainder =>
+    .cons
+    (Typ.toBruijn base bids l, Typ.toBruijn base bids r)
+    (ListPairTyp.toBruijn base bids remainder)
+
+  def Typ.toBruijn (base : Nat) (bids : List String) : Typ → Typ.Bruijn
+  | .var id =>
+    match List.firstIndexOf id bids with
+    | .none => .fvar id
+    | .some i => .bvar (base + i)
+  | .unit => .unit
+  | .entry l body => .entry l (Typ.toBruijn base bids body)
+  | .path left right =>
+    .path
+    (Typ.toBruijn base bids left)
+    (Typ.toBruijn base bids right)
+  | .unio left right =>
+    .unio
+    (Typ.toBruijn base bids left)
+    (Typ.toBruijn base bids right)
+  | .inter left right =>
+    .inter
+    (Typ.toBruijn base bids left)
+    (Typ.toBruijn base bids right)
+  | .diff left right =>
+    .diff
+    (Typ.toBruijn base bids left)
+    (Typ.toBruijn base bids right)
+    | .all ids quals body =>
+      let bids' := ListPairTyp.ordered_bound_vars ids ((.unit, body) :: quals)
+      let n := (List.length bids')
+      .all n
+      (ListPairTyp.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    | .exi ids quals body =>
+      let bids' := ListPairTyp.ordered_bound_vars ids ((.unit, body) :: quals)
+      let n := (List.length bids')
+      .all n
+      (ListPairTyp.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    | .lfp id body =>
+      .lfp
+      (Typ.toBruijn (1 + base) (id :: bids) body)
+end
 
 mutual
 
