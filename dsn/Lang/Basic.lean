@@ -244,7 +244,7 @@ mutual
 
   inductive Typ.Polar : String → Bool → Typ → Prop
   | var {id} : Typ.Polar id true (.var id)
-  | varskip {id id' b} : id ≠ id' → Typ.Polar id b (.var id')
+  | varskip {id b id'} : id ≠ id' → Typ.Polar id b (.var id')
   | unit {id b}: Typ.Polar id b .unit
   | entry {id b l body}: Typ.Polar id b body →  Typ.Polar id b (.entry l body)
   | path {id b left right}:

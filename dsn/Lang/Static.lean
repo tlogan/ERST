@@ -14,6 +14,52 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
 | _ => false
 
+mutual
+  def Subtyping.restricted (lower upper : Typ) : Bool :=
+    false
+
+  def ListSubtyping.restricted : List (Typ × Typ) → Bool
+  | _ => false
+
+end
+
+mutual
+  inductive Static.ListSubtyping
+  : List String → List (Typ × Typ) → List (Typ × Typ) →
+    List String → List (Typ × Typ) → Prop
+
+
+  inductive Static.Subtyping
+  : List String → List (Typ × Typ) → Typ → Typ →
+    List String → List (Typ × Typ) → Prop
+  | refl {Θ Δ left right} :
+    (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] right) →
+    Static.Subtyping Θ Δ left right Θ Δ
+  | entry_pres {Θ Δ l left right Θ' Δ'} :
+    Static.Subtyping Θ Δ (.entry l left) (.entry l right) Θ' Δ'
+  | path_pres {Θ Δ p q  Θ' Δ' x y Θ'' Δ''} :
+    Static.Subtyping Θ Δ x p Θ' Δ' → Static.Subtyping Θ' Δ' q y Θ'' Δ'' →
+    Static.Subtyping Θ Δ (.path p q) (.path x y) Θ'' Δ''
+
+  | unio_elim {Θ Δ a t Θ' Δ' b Θ'' Δ''} :
+    Static.Subtyping Θ Δ a t Θ' Δ' → Static.Subtyping Θ' Δ' b t Θ'' Δ'' →
+    Static.Subtyping Θ Δ (.unio a b) t Θ'' Δ''
+
+  -- | exi_elim {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
+  --   Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
+  --   Static.Subtyping Θ Δ t (.all ids quals body) Θ'' Δ''
+
+  | inter_intro {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
+    Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
+    Static.Subtyping Θ Δ t (.inter a b) Θ'' Δ''
+
+  -- | all_intro {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
+  --   Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
+  --   Static.Subtyping Θ Δ t (.all ids quals body) Θ'' Δ''
+
+end
+
+
 -- namespace Typ
 -- inductive Pat
 -- | unit

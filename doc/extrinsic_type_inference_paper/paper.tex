@@ -2293,7 +2293,7 @@ then a solution to the qualifiers implies a solution to the constituent's elimin
     \inferrule {
       \Theta, \Delta \Vvdash \Omega
       \\
-      \Theta, \Delta \given \Omega \given \Theta', \Delta'
+      \Theta, \Delta \given \Omega \entails \Theta', \Delta'
       \\
       \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
     } {
@@ -2617,6 +2617,8 @@ akin to deriving the least fixed point elimination under the assumption of the i
   \begin{mathpar}
     \inferrule {
       \TODO{Update proof, deriving that lower does not intersect with subtraction}
+      \\\\
+      \TODO{in lean, prove that subtyping is equivalent to decidable definition under restricted subtyping form}
       \\\\
       \Theta, \Delta \Vvdash \eta
       \\
