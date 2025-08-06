@@ -15,47 +15,103 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | _ => false
 
 mutual
-  def Subtyping.restricted (lower upper : Typ) : Bool :=
+  def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
     false
 
-  def ListSubtyping.restricted : List (Typ × Typ) → Bool
+  def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
+  : List (Typ × Typ) → Bool
   | _ => false
+
+  def Typ.restricted (Θ : List String) (Δ : List (Typ × Typ)) (t : Typ) : Bool :=
+    false
 
 end
 
 mutual
-  inductive Static.ListSubtyping
+  inductive ListSubtyping.Static
   : List String → List (Typ × Typ) → List (Typ × Typ) →
     List String → List (Typ × Typ) → Prop
 
 
-  inductive Static.Subtyping
+  inductive Subtyping.Static
   : List String → List (Typ × Typ) → Typ → Typ →
     List String → List (Typ × Typ) → Prop
   | refl {Θ Δ left right} :
     (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] right) →
-    Static.Subtyping Θ Δ left right Θ Δ
+    Subtyping.Static Θ Δ left right Θ Δ
+
+  -- implication preservation
   | entry_pres {Θ Δ l left right Θ' Δ'} :
-    Static.Subtyping Θ Δ (.entry l left) (.entry l right) Θ' Δ'
+    Subtyping.Static Θ Δ (.entry l left) (.entry l right) Θ' Δ'
   | path_pres {Θ Δ p q  Θ' Δ' x y Θ'' Δ''} :
-    Static.Subtyping Θ Δ x p Θ' Δ' → Static.Subtyping Θ' Δ' q y Θ'' Δ'' →
-    Static.Subtyping Θ Δ (.path p q) (.path x y) Θ'' Δ''
+    Subtyping.Static Θ Δ x p Θ' Δ' → Subtyping.Static Θ' Δ' q y Θ'' Δ'' →
+    Subtyping.Static Θ Δ (.path p q) (.path x y) Θ'' Δ''
 
-  | unio_elim {Θ Δ a t Θ' Δ' b Θ'' Δ''} :
-    Static.Subtyping Θ Δ a t Θ' Δ' → Static.Subtyping Θ' Δ' b t Θ'' Δ'' →
-    Static.Subtyping Θ Δ (.unio a b) t Θ'' Δ''
+  -- expansion elimination
+  | unio_elim {Θ Δ a t b Θ' Δ' Θ'' Δ''} :
+    Subtyping.Static Θ Δ a t Θ' Δ' → Subtyping.Static Θ' Δ' b t Θ'' Δ'' →
+    Subtyping.Static Θ Δ (.unio a b) t Θ'' Δ''
+  | exi_elim {Θ Δ ids quals body t Θ' Δ' Θ'' Δ''} :
+    ListSubtyping.restricted Θ Δ quals →
+    ListSubtyping.Static Θ Δ quals Θ' Δ' →
+    Subtyping.Static (ids ∪ Θ') Δ' body t Θ'' Δ'' →
+    Subtyping.Static Θ Δ (.exi ids quals body) t Θ'' Δ''
 
-  -- | exi_elim {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
-  --   Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
-  --   Static.Subtyping Θ Δ t (.all ids quals body) Θ'' Δ''
+  -- refinement introduction
+  | inter_intro {Θ Δ t a  b Θ' Δ' Θ'' Δ''} :
+    Subtyping.Static Θ Δ t a Θ' Δ' → Subtyping.Static Θ' Δ' t b Θ'' Δ'' →
+    Subtyping.Static Θ Δ t (.inter a b) Θ'' Δ''
+  | all_intro {Θ Δ ids quals body t Θ' Δ' Θ'' Δ''} :
+    ListSubtyping.restricted Θ Δ quals →
+    ListSubtyping.Static Θ Δ quals Θ' Δ' →
+    Subtyping.Static (ids ∪ Θ') Δ' t body Θ'' Δ'' →
+    Subtyping.Static Θ Δ t (.all ids quals body) Θ'' Δ''
 
-  | inter_intro {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
-    Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
-    Static.Subtyping Θ Δ t (.inter a b) Θ'' Δ''
+  -- placeholder elimination
+  | placeholder_elim {Θ Δ id t trans Θ' Δ' } :
+    id ∉ Θ →
+    (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
+    ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
-  -- | all_intro {Θ Δ t a  Θ' Δ' b Θ'' Δ''} :
-  --   Static.Subtyping Θ Δ t a Θ' Δ' → Static.Subtyping Θ' Δ' t b Θ'' Δ'' →
-  --   Static.Subtyping Θ Δ t (.all ids quals body) Θ'' Δ''
+  -- placeholder introduction
+  | placeholder_intro {Θ Δ t id trans Θ' Δ' } :
+    id ∉ Θ →
+    (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+    ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+
+  -- skolem placeholder introduction
+  | skolem_placeholder_intro {Θ Δ t id trans Θ' Δ' } :
+    id ∈ Θ →
+    (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
+    (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+    ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+
+  -- skolem introduction
+  | skolem_intro {Θ Δ t id t' Θ' Δ' } :
+    id ∈ Θ →
+    (t', .var id) ∈ Δ →
+    (∀ id', (.var id') = t' → id ∈ Θ) →
+    Subtyping.Static Θ Δ t t' Θ' Δ' →
+    Subtyping.Static Θ Δ t (.var id) Θ' Δ'
+
+  -- skolem placeholder elimination
+  | skolem_placeholder_elim {Θ Δ id t trans Θ' Δ' } :
+    id ∈ Θ →
+    (∃ id', (.var id, .var id') ∈ Δ ∧ id' ∉ Θ) →
+    (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
+    ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+
+  -- skolem elimination
+  | skolem_elim {Θ Δ id t t' Θ' Δ' } :
+    id ∈ Θ →
+    (.var id, t') ∈ Δ →
+    (∀ id', (.var id') = t → id' ∈ Θ) →
+    Subtyping.Static Θ Δ t' t Θ' Δ' →
+    Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
 end
 

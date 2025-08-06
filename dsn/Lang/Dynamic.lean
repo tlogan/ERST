@@ -124,46 +124,49 @@ inductive Multi : Expr → Expr → Prop
 | step {e e' e''} : Progression e e' → Multi e e'' → Multi e e''
 
 
-def Dynamic.FinTyping (e : Expr) : Typ → Prop
+def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
 | .unit => Multi e .unit
-| .entry l τ => FinTyping (.record [(l,e)]) τ
-| .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
-| .unio left right => FinTyping e left ∨ FinTyping e right
-| .inter left right => FinTyping e left ∧ FinTyping e right
-| .diff left right => FinTyping e left ∧ ¬ (FinTyping e right)
+| .entry l τ => Typing.Dynamic.Fin (.record [(l,e)]) τ
+| .path left right => ∀ e' , Typing.Dynamic.Fin e' left → Typing.Dynamic.Fin (.app e e') right
+| .unio left right => Typing.Dynamic.Fin e left ∨ Typing.Dynamic.Fin e right
+| .inter left right => Typing.Dynamic.Fin e left ∧ Typing.Dynamic.Fin e right
+| .diff left right => Typing.Dynamic.Fin e left ∧ ¬ (Typing.Dynamic.Fin e right)
 | _ => False
 
 mutual
-  def Dynamic.Subtyping (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
-    ∀ e, Typing δ e left → Typing δ e right
+  def Subtyping.Dynamic (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
+    ∀ e, Typing.Dynamic δ e left → Typing.Dynamic δ e right
   termination_by Typ.size left + Typ.size right
   decreasing_by
     all_goals simp [Typ.zero_lt_size]
 
-  def Dynamic.MultiSubtyping (δ : List (String × Typ)) : List (Typ × Typ) → Prop
+  def MultiSubtyping.Dynamic (δ : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
-  | .cons (left, right) remainder => Subtyping δ left right ∧ MultiSubtyping δ remainder
+  | .cons (left, right) remainder =>
+    Subtyping.Dynamic δ left right ∧ MultiSubtyping.Dynamic δ remainder
   termination_by sts => ListPairTyp.size sts
   decreasing_by
     all_goals simp [ListPairTyp.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
-  def Dynamic.Typing (δ : List (String × Typ)) (e : Expr) : Typ → Prop
+  def Typing.Dynamic (δ : List (String × Typ)) (e : Expr) : Typ → Prop
   | .unit => Multi e .unit
-  | .entry l τ => Typing δ (.record [(l,e)]) τ
-  | .path left right => ∀ e' , Typing δ e' left → Typing δ (.app e e') right
-  | .unio left right => Typing δ e left ∨ Typing δ e right
-  | .inter left right => Typing δ e left ∧ Typing δ e right
-  | .diff left right => Typing δ e left ∧ ¬ (Typing δ e right)
+  | .entry l τ => Typing.Dynamic δ (.record [(l,e)]) τ
+  | .path left right => ∀ e' , Typing.Dynamic δ e' left → Typing.Dynamic δ (.app e e') right
+  | .unio left right => Typing.Dynamic δ e left ∨ Typing.Dynamic δ e right
+  | .inter left right => Typing.Dynamic δ e left ∧ Typing.Dynamic δ e right
+  | .diff left right => Typing.Dynamic δ e left ∧ ¬ (Typing.Dynamic δ e right)
   | .exi ids quals body =>
     ∃ δ' , (dom δ') ⊆ ids ∧
-    (MultiSubtyping (δ ++ δ') quals) ∧
-    (Typing (δ ++ δ') e body)
+    (MultiSubtyping.Dynamic (δ ++ δ') quals) ∧
+    (Typing.Dynamic (δ ++ δ') e body)
   | .all ids quals body =>
     ∀ δ' , (dom δ') ⊆ ids →
-    (MultiSubtyping (δ ++ δ') quals) →
-    (Typing (δ ++ δ') e body)
-  | .lfp id body => ∃ n, Typ.Polar id true body ∧ FinTyping e (Typ.sub δ (Typ.subfold id body n))
-  | .var id => ∃ τ, find id δ = some τ ∧ FinTyping e τ
+    (MultiSubtyping.Dynamic (δ ++ δ') quals) →
+    (Typing.Dynamic (δ ++ δ') e body)
+  | .lfp id body =>
+    ∃ n, Typ.Polar id true body ∧
+    Typing.Dynamic.Fin e (Typ.sub δ (Typ.subfold id body n))
+  | .var id => ∃ τ, find id δ = some τ ∧ Typing.Dynamic.Fin e τ
   termination_by t => (Typ.size t)
   decreasing_by
     all_goals simp [Typ.size]
