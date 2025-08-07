@@ -2548,9 +2548,9 @@ may need to be rewritten as two paths (or two entries).
   \nopad
   \begin{mathpar}
     \inferrule {
-      \Vdash \J{LFP[}\alpha\J{]}\tau_l \subtypes l \mapsto \tau_r' 
+      \Vdash \J{LFP[}\alpha\J{]}\tau_l \subtypes l \mapsto \tau_f 
       \\
-      \Theta, \Delta \entails \tau_r' \subtypes \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta \entails \tau_f \subtypes \tau_r \given \Theta', \Delta' 
     } {
       \Theta, \Delta \entails 
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \J{<} l \J{>} \tau_r 
@@ -2570,15 +2570,11 @@ may need to be rewritten as two paths (or two entries).
     }
 
     \inferrule {
-      \tau_l[\alpha \slash \tau_r]^+ = \tau^\dagger
+      \alpha \wr^+ \tau_l
       \\
       \Theta, \Delta \entails 
-      \tau^\dagger \subtypes \tau_r \given 
+      \tau_l[\alpha \slash \tau_r] \subtypes \tau_r \given 
       \Theta', \Delta'
-      \\
-      \alpha \not\in \textbf{ftv}(\tau^\dagger)
-      \\
-      \alpha \not\in \textbf{ftv}(\tau_r)
     } {
       \Theta, \Delta \entails 
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 

@@ -95,6 +95,12 @@ mutual
 end
 
 mutual
+  def Typ.free_vars : Typ → List String
+  | _ => []
+  --TODO
+end
+
+mutual
   def ListPairTyp.toBruijn (base : Nat) (bids : List String)
   : List (Typ × Typ) → List (Typ.Bruijn × Typ.Bruijn)
   | .nil => .nil

@@ -27,6 +27,10 @@ mutual
 
 end
 
+def factor_column (id : String) (t : Typ) (l : String) : Option Typ :=
+  .none
+--TODO
+
 mutual
   inductive ListSubtyping.Static
   : List String → List (Typ × Typ) → List (Typ × Typ) →
@@ -125,6 +129,20 @@ mutual
   | inter_entry {Θ Δ t l a b Θ' Δ'} :
     Subtyping.Static Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
     Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
+
+  -- least fixed point elimination
+  | lfp_factor_elim {Θ Δ id left l right fac Θ' Δ'} :
+    factor_column id left l = .some fac →
+    Subtyping.Static Θ Δ fac right Θ' Δ' →
+    Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
+  | lfp_skip_elim {Θ Δ id left right Θ' Δ'} :
+    id ∉ Typ.free_vars left →
+    Subtyping.Static Θ Δ left right Θ' Δ' →
+    Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
+  | lfp_induct_elim {Θ Δ id left right Θ' Δ'} :
+    Typ.Polar id True left →
+    Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
+    Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
 
 end
 
