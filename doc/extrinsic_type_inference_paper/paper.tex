@@ -141,6 +141,7 @@
 \newcommand{\multi}[1]{\widebar{\ #1\ }}
 \newcommand{\hastype}{:}
 \newcommand{\pattype}{\ \lozenge\ }
+\newcommand{\restricted}{\ \blacklozenge\ }
 \newcommand{\liftfun}{:}
 
 \newcommand{\sz}[1]{\text{\small #1}}
@@ -1505,7 +1506,7 @@ for type variables.
       &\iff& 
       \VDash e \hastype \tau_l
       \up
-      \delta \not\VDash e \hastype \tau_r
+      \not\VDash e \hastype \tau_r
   \end{array}
   \]
 \end{definition}
@@ -2608,7 +2609,7 @@ akin to deriving the least fixed point elimination under the assumption of the i
   \emph{proof subtyping (difference introduction)}
   \hfill
   \small
-  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \typdiff \eta \given \Theta', \Delta'}
+  \boxed{\Theta, \Delta \entails \tau \subtypes \tau_l \typdiff \tau_r \given \Theta', \Delta'}
   \nopad
   \begin{mathpar}
     \inferrule {
@@ -2616,23 +2617,18 @@ akin to deriving the least fixed point elimination under the assumption of the i
       \\\\
       \TODO{in lean, prove that subtyping is equivalent to decidable definition under restricted subtyping form}
       \\\\
-      \Theta, \Delta \Vvdash \eta
+      \epsilon \pattype \tau_r
       \\
-      \nexists \Theta', \Delta' \qua  
-      \Theta, \Delta \entails 
-      \tau_l \subtypes \eta \given \Theta', \Delta'
+      \Theta, \Delta \restricted \tau_r \subtypes  \tau
       \\\\
-      \Theta, \Delta \Vvdash \eta \subtypes  \tau_l
+      \Theta, \Delta \not\Vvdash \tau \subtypes \tau_r
       \\
-      \nexists \Theta', \Delta' \qua  
-      \Theta, \Delta \entails 
-      \eta \subtypes \tau_l \given \Theta', \Delta'
-      \\\\
-      \Theta, \Delta \entails 
-      \tau_l \subtypes \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta \not\Vvdash \tau_r \subtypes \tau
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
     } {
       \Theta, \Delta \entails 
-      \tau_l \subtypes \tau_r \typdiff \eta
+      \tau \subtypes \tau_l \typdiff \tau_r
       \given \Theta', \Delta'
     }
   \end{mathpar}

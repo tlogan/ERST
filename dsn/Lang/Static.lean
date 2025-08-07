@@ -21,15 +21,16 @@ mutual
   def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
   : List (Typ × Typ) → Bool
   | _ => false
-
-  def Typ.restricted (Θ : List String) (Δ : List (Typ × Typ)) (t : Typ) : Bool :=
-    false
-
 end
 
 def factor_column (id : String) (t : Typ) (l : String) : Option Typ :=
   .none
 --TODO
+
+mutual
+  def Subtyping.check (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Bool
+  | _, _ => false
+end
 
 mutual
   inductive ListSubtyping.Static
@@ -143,6 +144,14 @@ mutual
     Typ.Polar id True left →
     Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
+
+  -- difference introduction
+  | diff_intro {Θ Δ t l r Θ' Δ'} :
+    Typ.is_pattern [] r →
+    Subtyping.restricted Θ Δ r t →
+    ¬ Subtyping.check Θ Δ t r →
+    ¬ Subtyping.check Θ Δ r t →
+    Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
 
 end
 
