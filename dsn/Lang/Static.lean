@@ -106,12 +106,25 @@ mutual
     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
   -- skolem elimination
-  | skolem_elim {Θ Δ id t t' Θ' Δ' } :
+  | skolem_elim {Θ Δ id t t' Θ' Δ'} :
     id ∈ Θ →
     (.var id, t') ∈ Δ →
     (∀ id', (.var id') = t → id' ∈ Θ) →
     Subtyping.Static Θ Δ t' t Θ' Δ' →
     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+
+  -- implication rewriting
+  | unio_antec {Θ Δ l a b r Θ' Δ'} :
+    Subtyping.Static Θ Δ l (.inter (.path a r) (.path b r)) Θ' Δ' →
+    Subtyping.Static Θ Δ l (.path (.unio a b) r) Θ' Δ'
+
+  | inter_conseq {Θ Δ l a b r Θ' Δ'} :
+    Subtyping.Static Θ Δ l (.inter (.path r a) (.path r b)) Θ' Δ' →
+    Subtyping.Static Θ Δ l (.path r (.inter a b)) Θ' Δ'
+
+  | inter_entry {Θ Δ t l a b Θ' Δ'} :
+    Subtyping.Static Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
+    Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
 
 end
 
