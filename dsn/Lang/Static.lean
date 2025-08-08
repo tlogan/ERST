@@ -14,12 +14,27 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
 | _ => false
 
+def Subtyping.inflatable (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
+  --TODO
+  false
+
+def Typ.drop (id : String) : Typ → Option Typ
+--TODO
+| _ => .none
+
+def Typ.merge_paths : Typ → Option Typ
+--TODO
+| _ => .none
+
+
 mutual
   def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
+    --TODO
     false
 
   def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
   : List (Typ × Typ) → Bool
+  --TODO
   | _ => false
 end
 
@@ -152,6 +167,56 @@ mutual
     ¬ Subtyping.check Θ Δ t r →
     ¬ Subtyping.check Θ Δ r t →
     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
+
+  -- least fixed point introduction
+  | lfp_inflate_intro {Θ Δ l id r Θ' Δ'} :
+    Subtyping.inflatable Θ Δ l (.lfp id r) →
+    Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
+    Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
+
+  | lfp_drop_intro {Θ Δ l id r r' Θ' Δ'} :
+    Typ.drop id r = .some r' →
+    Subtyping.Static Θ Δ l r' Θ' Δ' →
+    Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
+
+  -- difference elimination
+  | diff_elim {Θ Δ l r t Θ' Δ'} :
+    Subtyping.Static Θ Δ l (.unio r t) Θ' Δ' →
+    Subtyping.Static Θ Δ (.diff l r) t Θ' Δ'
+
+  -- expansion introduction
+  | unio_left_intro {θ δ t l r θ' δ'} :
+    Subtyping.Static θ δ t l θ' δ' →
+    Subtyping.Static θ δ t (.unio l r) θ' δ'
+
+  | unio_right_intro {θ δ t l r θ' δ'} :
+    Subtyping.Static θ δ t r θ' δ' →
+    Subtyping.Static θ δ t (.unio l r) θ' δ'
+
+  | exi_intro {θ δ l ids quals r θ' δ' θ'' δ''} :
+    Subtyping.Static θ δ l r θ' δ' →
+    ListSubtyping.Static θ' δ' quals θ' δ' →
+    Subtyping.Static θ δ l (.exi ids quals r)  θ'' δ''
+
+  -- refinement elimination
+  | inter_left_elim {θ δ l r t θ' δ'} :
+    Subtyping.Static θ δ l t θ' δ' →
+    Subtyping.Static θ δ (.inter l r) t θ' δ'
+
+  | inter_right_elim {θ δ l r t θ' δ'} :
+    Subtyping.Static θ δ r t θ' δ' →
+    Subtyping.Static θ δ (.inter l r) t θ' δ'
+
+  | inter_merge_elim {θ δ l r p q t θ' δ'} :
+    Typ.merge_paths (.inter l r) = .some t →
+    Subtyping.Static θ δ t (.path p q) θ' δ' →
+    Subtyping.Static θ δ (.inter l r) (.path p q) θ' δ'
+
+  | all_elim {θ δ ids quals l r θ' δ' θ'' δ''} :
+    Subtyping.Static θ δ l r θ' δ' →
+    ListSubtyping.Static θ' δ' quals θ' δ' →
+    Subtyping.Static θ δ (.all ids quals l) r θ'' δ''
+
 
 end
 
