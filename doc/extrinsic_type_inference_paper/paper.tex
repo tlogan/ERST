@@ -116,9 +116,6 @@
 
 \newcommand{\unique}{\ \dagger}
 
-\newcommand{\factorsinto}{\Vdash}
-
-
 \newcommand{\allsafe}{\ \Re\checkmark}
 
 \newcommand{\qua}{\ .\ }
@@ -142,6 +139,7 @@
 \newcommand{\hastype}{:}
 \newcommand{\pattype}{\ \lozenge\ }
 \newcommand{\restricted}{\ \blacklozenge\ }
+\newcommand{\dentails}{\Vdash}
 \newcommand{\liftfun}{:}
 
 \newcommand{\sz}[1]{\text{\small #1}}
@@ -1992,9 +1990,9 @@ where the variables represent possible types of expressions.
       \\
       \textbf{pack}^-(\textbf{ftv}(\Delta')\ \alpha' \entails \Pi') = \tau'
       \\\\
-      \factorsinto \J{LFP[} \alpha' \J{]}\tau' \subtypes \J{left} \mapsto \tau_l
+      \textbf{factor}(\alpha' \entails \tau' \cdot \J{left}) = \tau_l
       \\
-      \factorsinto \J{LFP[} \alpha' \J{]}\tau' \subtypes \J{right} \mapsto \tau_r
+      \textbf{factor}(\alpha' \entails \tau' \cdot \J{right}) = \tau_r
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
@@ -2237,7 +2235,7 @@ is stronger than the consequent of the supertype.
     }
 
     \inferrule {
-      \Theta, \Delta \Vvdash \Omega
+      \Theta, \Delta \restricted \Omega
       \\
       \Theta, \Delta \entails \Omega \given \Theta', \Delta'
       \\
@@ -2292,7 +2290,7 @@ then a solution to the qualifiers implies a solution to the constituent's elimin
     }
 
     \inferrule {
-      \Theta, \Delta \Vvdash \Omega
+      \Theta, \Delta \restricted \Omega
       \\
       \Theta, \Delta \given \Omega \entails \Theta', \Delta'
       \\
@@ -2549,9 +2547,10 @@ may need to be rewritten as two paths (or two entries).
   \nopad
   \begin{mathpar}
     \inferrule {
-      \Vdash \J{LFP[}\alpha\J{]}\tau_l \subtypes l \mapsto \tau_f 
-      \\
-      \Theta, \Delta \entails \tau_f \subtypes \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta \entails 
+      \textbf{factor}(\alpha \entails \tau_l \cdot l) 
+      \subtypes 
+      \tau_r \given \Theta', \Delta' 
     } {
       \Theta, \Delta \entails 
       \J{LFP[}\alpha\J{]}\tau_l \subtypes \J{<} l \J{>} \tau_r 
@@ -2621,9 +2620,9 @@ akin to deriving the least fixed point elimination under the assumption of the i
       \\
       \Theta, \Delta \restricted \tau_r \subtypes  \tau
       \\\\
-      \Theta, \Delta \not\Vvdash \tau \subtypes \tau_r
+      \Theta, \Delta \not\dentails \tau \subtypes \tau_r
       \\
-      \Theta, \Delta \not\Vvdash \tau_r \subtypes \tau
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau
       \\
       \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
     } {
@@ -2682,7 +2681,7 @@ One option is to check for a syntactic guarantee that the least fixed point is i
 ... \circlearrowleft \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
 } and then solve the inflated introduction.
 Alternatively, it can strengthen the least fixed point
-with union drop \ms{\alpha \Vdash \tau_r \supertypes \tau_r'},
+with union drop \ms{\textbf{drop}(\alpha entails \tau_r) = \tau_r'},
 which drops any parts of the union containing the self reference. 
 
 \begin{definition} 
@@ -2806,8 +2805,8 @@ for eliminating an intersection and introducing an implication \ms{
 As we mentioned earlier when discussing packing together the inferred types of 
 multiple paths of functions, sometimes the argument type is weaker than each
 path type antecedent, yet could be stronger than union of all the path type antecedents.    
-As such, the solver may leverage function type factorization \ms{
-\Vdash \tau_l \J{\&} \tau_r \subtypes \tau_x \rightarrow \tau_y 
+As such, the solver may leverage path type merging \ms{
+\textbf{merge}(\tau_l \J{\&} \tau_r)
 } to weaken a function type
 into a single path type where the antecedent and the consequent may consist
 of compounded unions. 
@@ -3079,7 +3078,7 @@ to construct least fixed point types does not violate soundness.
   \small
   \begin{mathpar}
     \inferrule {
-      \Vdash \J{LFP[}\alpha\J{]}\tau \subtypes l \mapsto \tau'
+      \textbf{factor}(\alpha \entails \tau \cdot l) = \tau'
     } {
       \forall e' \qua
       e' \hastype \tau' 
