@@ -1914,9 +1914,8 @@ where the variables represent possible types of expressions.
     }
 
     \inferrule {
-      x:\tau \in \Gamma
     } {
-      \Theta, \Delta, \Gamma \entails x \hastype \tau \given \Theta, \Delta 
+      \Theta, \Delta, \Gamma \entails x \hastype \Gamma(x)  \given \Theta, \Delta 
     }
 
     \inferrule {
@@ -1970,7 +1969,7 @@ where the variables represent possible types of expressions.
       \\\\
       \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
       \\
-      \Theta', \Delta', \Gamma, x:\tau_a \entails e' \hastype \tau' \given \Theta'', \Delta''
+      \Theta', \Delta', x:\tau_a\ \Gamma \backslash x, \entails e' \hastype \tau' \given \Theta'', \Delta''
     } {
       \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''
     }

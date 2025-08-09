@@ -48,10 +48,6 @@ mutual
 end
 
 mutual
-  inductive ListSubtyping.Static
-  : List String → List (Typ × Typ) → List (Typ × Typ) →
-    List String → List (Typ × Typ) → Prop
-
 
   inductive Subtyping.Static
   : List String → List (Typ × Typ) → Typ → Typ →
@@ -216,6 +212,32 @@ mutual
     Subtyping.Static θ δ l r θ' δ' →
     ListSubtyping.Static θ' δ' quals θ' δ' →
     Subtyping.Static θ δ (.all ids quals l) r θ'' δ''
+
+  inductive ListSubtyping.Static
+  : List String → List (Typ × Typ) → List (Typ × Typ) →
+    List String → List (Typ × Typ) → Prop
+  | nil {Θ Δ Θ' Δ'} : ListSubtyping.Static Θ Δ [] Θ' Δ'
+  | cons {Θ Δ l r cs Θ' Δ' Θ'' Δ''} :
+    Subtyping.Static Θ Δ l r Θ' Δ' →
+    ListSubtyping.Static Θ' Δ' cs Θ'' Δ'' →
+    ListSubtyping.Static Θ Δ ((l,r) :: cs) Θ'' Δ''
+
+  inductive Typing.Static
+  : List String → List (Typ × Typ) → List (String × Typ) →
+    Expr → Typ →
+    List String → List (Typ × Typ) → Prop
+  | unit {Θ Δ Γ} : Typing.Static Θ Δ Γ .unit .unit Θ Δ
+  | var {Θ Δ Γ x t} :
+    find x Γ = .some t →
+    Typing.Static Θ Δ Γ (.var x) t Θ Δ
+
+  | record_nil {Θ Δ Γ} :
+    Typing.Static Θ Δ Γ (.record []) t[TOP] Θ Δ
+  | record_cons {Θ Δ Γ r l e t t'  Θ' Δ' Θ'' Δ''} :
+    Typing.Static Θ Δ Γ e t Θ' Δ' →
+    Typing.Static Θ Δ Γ (.record r) t' Θ'' Δ'' →
+    Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
+
 
 
 end
