@@ -319,12 +319,24 @@ inductive Expr
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
 | app : Expr → Expr → Expr
-| anno : String → Typ → Expr → Expr → Expr
+-- | anno : String → Typ → Expr → Expr → Expr
+| anno : Expr → Typ → Expr
 | loop : Expr → Expr
 deriving Repr
 
 def Expr.proj (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
+
+def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
+  Expr.app
+    (Expr.function [
+      (
+        Pat.var id, match top with
+        | .some t => .anno contin t
+        | .none => contin
+      )
+    ])
+    (target)
 
 declare_syntax_cat params
 declare_syntax_cat quals
@@ -386,6 +398,7 @@ syntax "def" ident ":" typ "=" expr "in" expr : expr
 syntax "def" ident "=" expr "in" expr : expr
 syntax "loop" "(" expr ")" : expr
 syntax "(" expr ")" : expr
+syntax  expr "as" typ : expr
 
 
 syntax "i[" ident "]" : term
@@ -482,26 +495,12 @@ macro_rules
 | `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
 | `(e[ $f:function ]) => `(Expr.function f[$f])
 | `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] i[$i])
---   `(Expr.app (
---     Expr.function [
---       (Pat.record [
---         (i[$i], Pat.var "x")
---       ], Expr.var "x")
---     ]
---   ) e[$e])
 | `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])
-| `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) => `(Expr.anno
-    $(Lean.quote (toString i.getId))
-    t[$t]
-    (e[$a])
-    (e[$c])
-)
-| `(e[ def $i:ident = $a:expr in $c:expr  ]) => `(Expr.app
-    (Expr.function [
-      (Pat.var i[$i], (e[$c]))
-    ])
-    (e[$a])
-)
+| `(e[ $e:expr as $t:typ ]) => `(Expr.anno e[$e] t[$t])
+| `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) =>
+  `(Expr.def i[$i] (.some t[$t]) e[$a] e[$c])
+| `(e[ def $i:ident = $a:expr in $c:expr  ]) =>
+  `(Expr.def i[$i] .none e[$a] e[$c])
 | `(e[ loop ( $e:expr ) ]) => `(Expr.loop e[$e])
 | `(e[ ( $e:expr ) ]) => `(e[$e])
 

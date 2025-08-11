@@ -84,7 +84,7 @@ mutual
   | .record r => .record (sub_record m r)
   | .function f => .function (sub_function m f)
   | .app ef ea => .app (sub m ef) (sub m ea)
-  | .anno id t ea ec => .anno id t (sub m ea) (sub (remove id m) ec)
+  | .anno e t => .anno (sub m e) t
   | .loop e => .loop (sub m e)
 end
 
@@ -110,8 +110,8 @@ inductive Progression : Expr → Expr → Prop
   IsValue v →
   pattern_match v p = none →
   Progression (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
-| anno : ∀ {id t ea ec},
-  Progression (.anno id t ea ec) (.app (.function [(.var id, ec)]) ea)
+| anno : ∀ {e t},
+  Progression (.anno  e t) e
 | loopbody : ∀ {e e'},
   Progression e e' →
   Progression (.loop e) (.loop e')

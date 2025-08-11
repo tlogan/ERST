@@ -1935,7 +1935,7 @@ where the variables represent possible types of expressions.
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\\\
-      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
+      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
@@ -2004,11 +2004,11 @@ where the variables represent possible types of expressions.
       \\
       \Theta, \Delta, \Gamma \entails e \hastype \Pi
       \\
-      \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau_e
+      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau_e
       \\\\
-      \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau_e \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau_e \subtypes \tau_a \given \Theta', \Delta'
     } {
-      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta'', \Delta''
+      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta', \Delta'
     }
   \end{mathpar}
 \end{definition}

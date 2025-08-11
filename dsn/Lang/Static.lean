@@ -247,6 +247,11 @@ mutual
     Typ → Typ → List Locale → Prop
   -- TODO
 
+  inductive Typing.ListLocale.Static
+  : List String → List (Typ × Typ) → List (String × Typ) →
+    Expr → List Locale → Prop
+  -- TODO
+
   inductive Typing.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ →
@@ -275,17 +280,24 @@ mutual
     Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
 
 
-  | loop {Θ Δ Γ e l r t α locales locales' t' Θ' Δ'} :
+  | loop {Θ Δ Γ e l r t id locales locales' t' Θ' Δ'} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
-    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var α) locales →
-    α ∉ (ListPairTyp.free_vars Δ') →
-    ListLocale.invert α locales = .some locales' →
-    ListLocale.pack False (α :: (ListPairTyp.free_vars Δ')) locales' = .some t' →
-    Typ.factor α t' "left" = .some l →
-    Typ.factor α t' "right" = .some r →
+    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) locales →
+    id ∉ (ListPairTyp.free_vars Δ') →
+    ListLocale.invert id locales = .some locales' →
+    ListLocale.pack False (id :: (ListPairTyp.free_vars Δ')) locales' = .some t' →
+    Typ.factor id t' "left" = .some l →
+    Typ.factor id t' "right" = .some r →
     Typing.Static Θ Δ Γ (.loop e) (.path l r) Θ' Δ'
 
   -- TODO: case for loop representing streams
+
+  | anno {Θ Δ Γ e ta locales te Θ' Δ'} :
+    Typ.free_vars ta ⊆ [] →
+    Typing.ListLocale.Static Θ Δ Γ e locales →
+    ListLocale.pack False (ListPairTyp.free_vars Δ) locales = .some te →
+    Subtyping.Static Θ Δ te ta Θ' Δ' →
+    Typing.Static Θ Δ Γ (.anno e ta) ta Θ Δ
 
 
 end
