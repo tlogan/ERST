@@ -20,6 +20,9 @@ inductive Typ
 | lfp :  String → Typ → Typ
 deriving Repr
 
+def Typ.bot := Typ.all ["T"] [] (Typ.var "T")
+def Typ.top := Typ.exi ["T"] [] (Typ.var "T")
+
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
 | fvar : String → Typ.Bruijn
@@ -95,6 +98,10 @@ mutual
 end
 
 mutual
+  def ListPairTyp.free_vars : List (Typ × Typ) → List String
+  --TODO
+  | _ => []
+
   def Typ.free_vars : Typ → List String
   | _ => []
   --TODO
@@ -316,6 +323,9 @@ inductive Expr
 | loop : Expr → Expr
 deriving Repr
 
+def Expr.proj (e : Expr) (l : String) : Expr :=
+  .app (.function [(.record [(l, .var "x")], .var "x")]) e
+
 declare_syntax_cat params
 declare_syntax_cat quals
 declare_syntax_cat typ
@@ -419,8 +429,8 @@ macro_rules
 | `(t[ EXI [ $ps:params $qs:quals $t:typ ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
 | `(t[ ALL [ $ps:params $t:typ ]) => `(Typ.all ps[$ps] [] t[$t])
 | `(t[ EXI [ $ps:params $t:typ ]) => `(Typ.exi ps[$ps] [] t[$t])
-| `(t[ BOT ]) => `(Typ.all ["T"] [] (Typ.var "T"))
-| `(t[ TOP ]) => `(Typ.exi ["T"] [] (Typ.var "T"))
+| `(t[ BOT ]) => `(Typ.bot)
+| `(t[ TOP ]) => `(Typ.top)
 | `(t[ ( $t:typ ) ]) => `(t[$t])
 
 
@@ -471,13 +481,14 @@ macro_rules
 | `(e[ $i:ident ; $e:expr ]) => `(Expr.record [(i[$i], e[$e])])
 | `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
 | `(e[ $f:function ]) => `(Expr.function f[$f])
-| `(e[ $e:expr . $i:ident ]) => `(Expr.app (
-    Expr.function [
-      (Pat.record [
-        (i[$i], Pat.var "x")
-      ], Expr.var "x")
-    ]
-) e[$e])
+| `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] i[$i])
+--   `(Expr.app (
+--     Expr.function [
+--       (Pat.record [
+--         (i[$i], Pat.var "x")
+--       ], Expr.var "x")
+--     ]
+--   ) e[$e])
 | `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])
 | `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) => `(Expr.anno
     $(Lean.quote (toString i.getId))

@@ -378,7 +378,7 @@
       \Delta' \backslash \Delta, 
       \tau_l \J{->} \tau_r \in \Pi'
       \implies
-      \Theta, \Delta, \Gamma \oplus \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta, \Gamma' \oplus \Gamma \backslash \textbf{dom}(\Gamma') \entails e \hastype \tau_r \given \Theta', \Delta' 
       )
       \\\\
       \text{capture}(\rho) = \eta

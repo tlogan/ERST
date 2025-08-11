@@ -4,7 +4,18 @@ import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 
+structure Locale where
+  Θ : List String
+  Δ : List (Typ × Typ)
+  t : Typ
+
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
+
+mutual
+  def ListLocale.invert (α : String) : List Locale → Option (List Locale)
+    --TODO
+  | _ => .none
+end
 
 def Typ.is_pattern (tops : List String) : Typ → Bool
 | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
@@ -26,6 +37,9 @@ def Typ.merge_paths : Typ → Option Typ
 --TODO
 | _ => .none
 
+def ListLocale.pack (b : Bool) (ignore : List String) : List Locale → Option Typ
+| _ => .none
+
 
 mutual
   def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
@@ -38,7 +52,7 @@ mutual
   | _ => false
 end
 
-def factor_column (id : String) (t : Typ) (l : String) : Option Typ :=
+def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
   .none
 --TODO
 
@@ -144,7 +158,7 @@ mutual
 
   -- least fixed point elimination
   | lfp_factor_elim {Θ Δ id left l right fac Θ' Δ'} :
-    factor_column id left l = .some fac →
+    Typ.factor id left l = .some fac →
     Subtyping.Static Θ Δ fac right Θ' Δ' →
     Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
   | lfp_skip_elim {Θ Δ id left right Θ' Δ'} :
@@ -222,6 +236,17 @@ mutual
     ListSubtyping.Static Θ' Δ' cs Θ'' Δ'' →
     ListSubtyping.Static Θ Δ ((l,r) :: cs) Θ'' Δ''
 
+
+  inductive ListPathTyp.Static
+  : List String → List (Typ × Typ) → List (String × Typ) →
+    List (Pat × Expr) → List Locale → List Typ → Prop
+  -- TODO
+
+  inductive Subtyping.GuardedListLocale.Static
+  : List String → List (Typ × Typ) →
+    Typ → Typ → List Locale → Prop
+  -- TODO
+
   inductive Typing.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ →
@@ -232,12 +257,35 @@ mutual
     Typing.Static Θ Δ Γ (.var x) t Θ Δ
 
   | record_nil {Θ Δ Γ} :
-    Typing.Static Θ Δ Γ (.record []) t[TOP] Θ Δ
+    Typing.Static Θ Δ Γ (.record []) .top Θ Δ
   | record_cons {Θ Δ Γ r l e t t'  Θ' Δ' Θ'' Δ''} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
     Typing.Static Θ Δ Γ (.record r) t' Θ'' Δ'' →
     Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
 
+  | function {Θ Δ Γ f locales t subtras} :
+    ListPathTyp.Static Θ Δ Γ f locales subtras →
+    ListLocale.pack True (ListPairTyp.free_vars Δ) locales = .some t →
+    Typing.Static Θ Δ Γ (.function f) t Θ Δ
+
+  | app {Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ'''} :
+    Typing.Static Θ Δ Γ ef tf Θ' Δ' →
+    Typing.Static Θ' Δ' Γ ea ta Θ'' Δ'' →
+    Subtyping.Static Θ Δ tf (.path ta (.var α)) Θ''' Δ''' →
+    Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
+
+
+  | loop {Θ Δ Γ e l r t α locales locales' t' Θ' Δ'} :
+    Typing.Static Θ Δ Γ e t Θ' Δ' →
+    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var α) locales →
+    α ∉ (ListPairTyp.free_vars Δ') →
+    ListLocale.invert α locales = .some locales' →
+    ListLocale.pack False (α :: (ListPairTyp.free_vars Δ')) locales' = .some t' →
+    Typ.factor α t' "left" = .some l →
+    Typ.factor α t' "right" = .some r →
+    Typing.Static Θ Δ Γ (.loop e) (.path l r) Θ' Δ'
+
+  -- TODO: case for loop representing streams
 
 
 end

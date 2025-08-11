@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1752512102.4982 "/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch/scratch.tex" "scratch.pdf" "scratch" 1752512104.32734 0
-  "/Users/thomas/tlogan@github.com/ERST/extrinsic_type_inference_scratch/scratch.tex" 1752512102.24823 211743 13b8457a0344f0ca4d600d6ad757869d ""
+["pdflatex"] 1754921612.34632 "/Users/thomas/tlogan@github.com/ERST/doc/extrinsic_type_inference_scratch/scratch.tex" "scratch.pdf" "scratch" 1754921614.26214 0
+  "/Users/thomas/tlogan@github.com/ERST/doc/extrinsic_type_inference_scratch/scratch.tex" 1754921612.12224 211776 4c2f1642044bc25498459a8bdc77dbad ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1490131464 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1490131464 2933 9ad527ce78d7c5fa0a642dead095f172 ""
@@ -240,9 +240,9 @@
   "/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1715614394.6337 5467645 128b85b7cde5f5edc5cb7f1dd7ff8736 ""
   "/usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt" 1715614389 8221427 c1e14827797dc57048b4fe582769dcbf ""
   "/usr/local/texlive/2024/texmf.cnf" 1710266656 577 e590dabc9e28c5b61546e15f63eebcdf ""
-  "scratch.aux" 1752512104.11034 7901 0d32e67af40b41fda036e7e03b07d365 "pdflatex"
-  "scratch.out" 1752512104.11113 349 8c543bcda4c375fb38d892cc8b19ec7f "pdflatex"
-  "scratch.tex" 1752512102.24823 211743 13b8457a0344f0ca4d600d6ad757869d ""
+  "scratch.aux" 1754921614.04579 7901 0d32e67af40b41fda036e7e03b07d365 "pdflatex"
+  "scratch.out" 1754921614.04667 349 8c543bcda4c375fb38d892cc8b19ec7f "pdflatex"
+  "scratch.tex" 1754921612.12224 211776 4c2f1642044bc25498459a8bdc77dbad ""
   (generated)
   "scratch.aux"
   "scratch.log"
