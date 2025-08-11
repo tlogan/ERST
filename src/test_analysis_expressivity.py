@@ -1140,7 +1140,8 @@ if __name__ == '__main__':
     # test_something_subtypes_increasing_lfp()
     # test_two_not_three()
     # test_succ_stream()
-    test_inf_loop()
+    # test_inf_loop()
+    test_succ_stream()
 
 
 #######################################################################

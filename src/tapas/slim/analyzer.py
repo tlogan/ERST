@@ -2783,6 +2783,19 @@ SOLVABLE:
     #         )
     #         for st in constraints
     #     )
+
+    def found(self, t : LeastFP) -> LeastFP:
+        # NOTE: weaken from an increasing LFP to a decreasing LFP
+        content = self.simplify_typ(t.body)  
+        if isinstance(content, Exi) and isinstance(content.body, TVar):
+            choices = [
+                self.sub_polar_typ(True, st.lower, content.body.id, TVar(t.id))
+                for st in content.constraints
+                if isinstance(st.upper, TVar) and st.upper.id == t.id
+            ] + [content.body]
+            return LeastFP(t.id, make_unio(choices))
+        else:
+            return t
             
 
     def solve(self, world : World, lower : Typ, upper : Typ, reset = False) -> list[World]:
@@ -3575,7 +3588,7 @@ result:
 
         foreignids = extract_free_vars_from_enviro(enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
 
-        inner_schemas = [
+        inner_locales = [
             (w, left_typ, right_typ) 
             for inner_world in self.solver.solve(outer_world, body_typ, Imp(self_typ, Imp(in_typ, out_typ)))
             for local_constraints in [inner_world.constraints.difference(world.constraints)]
@@ -3599,8 +3612,8 @@ result:
 
         left_unstructured_vars = pset(
             left_typ.id
-            for (inner_world, left_typ, right_typ) in inner_schemas
-            if (len(inner_schemas) == 1)
+            for (inner_world, left_typ, right_typ) in inner_locales
+            if (len(inner_locales) == 1)
             if isinstance(left_typ, TVar) 
         )
         foreignids = foreignids.union(left_unstructured_vars)
@@ -3616,7 +3629,7 @@ result:
         #  EXI[T] T | <succ> <succ> T'  <: <succ> T' 
 
         induc_body = Bot()
-        for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_schemas)):
+        for i, (inner_world, left_typ, right_typ) in enumerate(reversed(inner_locales)):
             ###### TODO: ensure that the assertion is invariant
             assert in_typ.id not in inner_world.relids
             local_constraints = inner_world.constraints.difference(world.constraints)
@@ -3694,32 +3707,28 @@ rel_typ:
         # return Result(pid, outer_world, All(tuple([param_var.id]), tuple([param_constraint]), Imp(param_typ, return_typ)))
         ################################################
 
-        def weaken_to_decreasining_lfp(t : LeastFP) -> LeastFP:
-            # NOTE: weaken from an increasing LFP to a decreasing LFP
-            content = self.solver.simplify_typ(t.body)  
-            if isinstance(content, Exi) and isinstance(content.body, TVar):
-                choices = [
-                    self.solver.sub_polar_typ(True, st.lower, content.body.id, TVar(t.id))
-                    for st in content.constraints
-                    if isinstance(st.upper, TVar) and st.upper.id == t.id
-                ] + [content.body]
-                return LeastFP(t.id, make_unio(choices))
-            else:
-                return t
-
         if bool(left_unstructured_vars):
             ################################################
             # Stream Type 
             ##################################################
-            (_, param_typ, _) = inner_schemas[0]
+            (_, param_typ, _) = inner_locales[0]
             assert isinstance(param_typ, TVar)
             param_upper_bound = find_factor_from_label(rel_typ, "head")
             assert param_upper_bound
-            weakened_param_typ = weaken_to_decreasining_lfp(param_upper_bound)
+            founded_lfp_typ = self.solver.found(param_upper_bound)
+
+            print(f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LFP CONVERSION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+before: {concretize_typ(param_upper_bound)}
+after: {concretize_typ(founded_lfp_typ)}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            """)
             #TODO: reassociate antecedent out of LFP 
             return_typ = find_factor_from_label(rel_typ, "tail")
             assert return_typ
-            strengthened_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, weakened_param_typ)
+            strengthened_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, founded_lfp_typ)
             return Result(pid, outer_world, Imp(param_typ, strengthened_return_typ))
         else:
             ################################################

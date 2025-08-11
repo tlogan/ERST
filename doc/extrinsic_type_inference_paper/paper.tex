@@ -1962,8 +1962,6 @@ where the variables represent possible types of expressions.
     }
 
     \inferrule {
-      \TODO{modify with case for non-recursive parameter type}
-      \\\\
       \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
       \\
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
@@ -1981,6 +1979,31 @@ where the variables represent possible types of expressions.
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
       \tau_l \J{->} \tau_r
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow (\Theta'', \Delta'', \alpha_l \J{->}\tau_r)
+      \\
+      \alpha \notin \textbf{ftv}(\Delta')
+      \\\\
+      \textbf{invert}(\alpha \entails \Delta'') = \Delta''' 
+      \\
+      \textbf{pack}^-(\alpha\ \alpha_l\ \textbf{ftv}(\Delta') \entails \Theta'', \Delta''', \alpha_l \J{*} \tau_r) = \tau'
+      \\\\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
+      \\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r
+      \\\\
+      \alpha_l \wr^+ \tau_r
+      \\
+      \tau_r[\alpha_l\slash \textbf{found}(\tau_l)] = \tau_r' 
+    } {
+      \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
+      \hastype 
+      \alpha_l \J{->} \tau_r'
       \given \Theta', \Delta'
     }
 
