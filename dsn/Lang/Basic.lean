@@ -22,6 +22,7 @@ deriving Repr
 
 def Typ.bot := Typ.all ["T"] [] (Typ.var "T")
 def Typ.top := Typ.exi ["T"] [] (Typ.var "T")
+def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right" right)
 
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
@@ -324,6 +325,9 @@ inductive Expr
 | loop : Expr → Expr
 deriving Repr
 
+def Expr.pair (left : Expr) (right : Expr) : Expr :=
+    .record [("left", left), ("right", right)]
+
 def Expr.proj (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
 
@@ -492,7 +496,7 @@ macro_rules
 | `(e[ $i:ident ]) => `(ei[$i])
 | `(e[ $er:exprrec ]) => `(Expr.record er[$er])
 | `(e[ $i:ident ; $e:expr ]) => `(Expr.record [(i[$i], e[$e])])
-| `(e[ $l:expr , $r:expr ]) => `(Expr.record [("left", e[$l]), ("right", e[$r])])
+| `(e[ $l:expr , $r:expr ]) => `(Expr.pair e[$l] e[$r])
 | `(e[ $f:function ]) => `(Expr.function f[$f])
 | `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] i[$i])
 | `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])

@@ -12,10 +12,18 @@ structure Locale where
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 
 mutual
-  def ListLocale.invert (α : String) : List Locale → Option (List Locale)
+  def ListLocale.invert (id : String) : List Locale → Option (List Locale)
+    --TODO
+  | _ => .none
+
+  def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
     --TODO
   | _ => .none
 end
+
+def Typ.found (id : String) : Typ → Option Typ
+-- TODO
+| _ => .none
 
 def Typ.is_pattern (tops : List String) : Typ → Bool
 | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
@@ -38,6 +46,9 @@ def Typ.merge_paths : Typ → Option Typ
 | _ => .none
 
 def ListLocale.pack (b : Bool) (ignore : List String) : List Locale → Option Typ
+| _ => .none
+
+def Locale.pack (b : Bool) (ignore : List String) : Locale → Option Typ
 | _ => .none
 
 
@@ -280,7 +291,7 @@ mutual
     Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
 
 
-  | loop {Θ Δ Γ e l r t id locales locales' t' Θ' Δ'} :
+  | loop {Θ Δ Γ e l r t id t' Θ' Δ' locales locales'} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
     Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) locales →
     id ∉ (ListPairTyp.free_vars Δ') →
@@ -288,7 +299,21 @@ mutual
     ListLocale.pack False (id :: (ListPairTyp.free_vars Δ')) locales' = .some t' →
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r →
-    Typing.Static Θ Δ Γ (.loop e) (.path l r) Θ' Δ'
+    Typing.Static Θ Δ Γ (.loop e) (.path (.lfp id l) (.lfp id r)) Θ' Δ'
+
+  | stream {Θ Δ Γ e t id Θ' Δ' Θ'' Δ''  idl r Δ''' t' l r' l' r''} :
+    Typing.Static Θ Δ Γ e t Θ' Δ' →
+    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) [⟨Θ'', Δ'', .path (.var idl) r⟩] →
+    id ∉ (ListPairTyp.free_vars Δ') →
+    id ≠ idl →
+    ListSubtyping.invert id Δ'' = .some Δ''' →
+    Locale.pack False (id :: (ListPairTyp.free_vars Δ')) ⟨Θ'', Δ''', .pair (.var idl) r⟩ = .some t' →
+    Typ.factor id t' "left" = .some l →
+    Typ.factor id t' "right" = .some r' →
+    Typ.Polar idl true r' →
+    Typ.found id l = .some l' →
+    Typ.sub [(idl, .lfp id l')] r' = r'' →
+    Typing.Static Θ Δ Γ (.loop e) (.path (.var idl) r'') Θ' Δ'
 
   -- TODO: case for loop representing streams
 

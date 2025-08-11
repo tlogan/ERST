@@ -3728,8 +3728,8 @@ after: {concretize_typ(founded_lfp_typ)}
             #TODO: reassociate antecedent out of LFP 
             return_typ = find_factor_from_label(rel_typ, "tail")
             assert return_typ
-            strengthened_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, founded_lfp_typ)
-            return Result(pid, outer_world, Imp(param_typ, strengthened_return_typ))
+            specialized_return_typ = self.solver.sub_polar_typ(True, return_typ, param_typ.id, founded_lfp_typ)
+            return Result(pid, outer_world, Imp(param_typ, specialized_return_typ))
         else:
             ################################################
             # Factored Type

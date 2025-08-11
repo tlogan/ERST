@@ -1978,7 +1978,7 @@ where the variables represent possible types of expressions.
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
-      \tau_l \J{->} \tau_r
+      \J{LFP[} \alpha \J{]} \tau_l \J{->} \J{LFP[} \alpha \J{]} \tau_r
       \given \Theta', \Delta'
     }
 
@@ -1988,6 +1988,8 @@ where the variables represent possible types of expressions.
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow (\Theta'', \Delta'', \alpha_l \J{->}\tau_r)
       \\
       \alpha \notin \textbf{ftv}(\Delta')
+      \\
+      \alpha \neq \alpha_l
       \\\\
       \textbf{invert}(\alpha \entails \Delta'') = \Delta''' 
       \\
@@ -1995,15 +1997,17 @@ where the variables represent possible types of expressions.
       \\\\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
       \\
-      \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r'
       \\\\
-      \alpha_l \wr^+ \tau_r
+      \alpha_l \wr^+ \tau_r'
       \\
-      \tau_r[\alpha_l\slash \textbf{found}(\tau_l)] = \tau_r' 
+      \textbf{found}(\alpha \entails \tau_l) = \tau_l'
+      \\
+      \tau_r'[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype 
-      \alpha_l \J{->} \tau_r'
+      \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
       \given \Theta', \Delta'
     }
 
