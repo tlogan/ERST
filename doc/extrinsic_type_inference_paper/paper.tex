@@ -101,22 +101,15 @@
 \newcommand{\entails}{\vdash}
 \newcommand{\satisfies}{\vDash}
 \newcommand{\given}{\dashv}
-\newcommand{\with}{\ \diamond\ }
-\newcommand{\notfree}{\ \#\ }
-\newcommand{\consis}{\ \star}
-\newcommand{\safe}{\ \checkmark}
-\newcommand{\relational}{\ \Re}
 
+% inflatable
+\newcommand{\inflatable}{\star}
 
-% \newcommand{\cmark}{\ding{51}}%
-% \newcommand{\xmark}{\ding{55}}%
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 \newcommand{\pass}{\text{\scriptsize \color{Green} \ding{51}}}
 \newcommand{\assisted}{\text{\scriptsize \color{Purple} \ding{45}}}
 \newcommand{\fail}{\text{\scriptsize \color{red} \ding{55}}}
-
-\newcommand{\unique}{\ \dagger}
-
-\newcommand{\allsafe}{\ \Re\checkmark}
 
 \newcommand{\qua}{\ .\ }
 
@@ -2671,7 +2664,8 @@ thus failure of its introduction is sound.
   \nopad
   \begin{mathpar}
     \inferrule {
-      \Theta, \Delta \circlearrowleft \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
+      % inflatable iff founded
+      \Theta, \Delta \inflatable \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
       \\
       \Theta, \Delta \entails
       \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
@@ -2698,7 +2692,7 @@ For least fixed point introduction \ms{
 }, the solver has a couple options.
 One option is to check for a syntactic guarantee that the least fixed point is inflatable without diverging 
 \ms{
-... \circlearrowleft \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
+... \inflatable \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
 } and then solve the inflated introduction.
 Alternatively, it can strengthen the least fixed point
 with union drop \ms{\textbf{drop}(\alpha entails \tau_r) = \tau_r'},
