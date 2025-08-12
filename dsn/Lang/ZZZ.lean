@@ -208,8 +208,6 @@ case zero => sorry;
 case succ n ih => sorry;
 
 
-#check WellFounded.fix
-
 -- inductive Even.F : ∀ x : Nat, (∀ x' : Nat, x' < x -> Prop) → Prop
 -- | z P : Even.F Nat.zero P
 -- | ss n P: P n (h n) -> Even.F (.succ (.succ n)) P
@@ -229,9 +227,24 @@ match x with
 #check measure id
 #check WellFoundedRelation
 #check WellFounded.fix
-noncomputable def Even := WellFounded.fix Nat.lt_wfRel.wf Even.F
+noncomputable def even := WellFounded.fix Nat.lt_wfRel.wf Even.F
 
 lemma even_thing {n} : Even n → n ≠ 3 := by
 induction n;
 case zero => sorry;
 case succ n ih => sorry;
+
+
+structure Thing where
+  mk ::
+  uno : String
+
+inductive T
+| base (base : String)
+| step (step : T)
+
+def p := T.base "uno"
+#eval p
+def pt : Thing := ⟨"uno"⟩
+#eval p.step
+#eval pt.uno

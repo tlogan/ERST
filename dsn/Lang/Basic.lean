@@ -100,12 +100,28 @@ end
 
 mutual
   def ListPairTyp.free_vars : List (Typ × Typ) → List String
-  --TODO
-  | _ => []
+  | .nil => []
+  | .cons (l,r) remainder =>
+    Typ.free_vars l ∪ Typ.free_vars r ∪ ListPairTyp.free_vars remainder
 
   def Typ.free_vars : Typ → List String
-  | _ => []
-  --TODO
+  | .var id => [id]
+  | .unit => []
+  | .entry _ body => Typ.free_vars body
+  | .path p q => Typ.free_vars p ∪ Typ.free_vars q
+  | .unio l r => Typ.free_vars l ∪ Typ.free_vars r
+  | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
+  | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
+  | .all ids quals body =>
+    List.diff (
+      ListPairTyp.free_vars quals ∪ Typ.free_vars body
+    ) ids
+  | .exi ids quals body =>
+    List.diff (
+      ListPairTyp.free_vars quals ∪ Typ.free_vars body
+    ) ids
+  | .lfp id body =>
+    List.diff (Typ.free_vars body) [id]
 end
 
 mutual

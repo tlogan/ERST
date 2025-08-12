@@ -172,24 +172,3 @@ mutual
     all_goals simp [Typ.size]
     all_goals try linarith
 end
-
-
-
-
--- partial def multi (e1 e2 : Expr) : Prop :=
---   (e1 = e2) ∨ (Progression e1 e2 ∧ multi e1 e2)
-
-
--- TODO: separate out restricted version of model typing used in negations
-
--- mutual
---   inductive Dynamic.Typing : List (String × Typ) → Expr → Typ → Prop
---   | expan : ∀ {δ e τ e'},
---     Progression e e' → Typing δ e' τ → Typing δ e τ
---   | record : ∀ {δ r l τ v},
---     IsValue (.record r) → (l, v) ∈ r → Typing δ v τ →
---     Typing δ (.record r) (.entry l τ)
---   -- | funhead : ∀ {δ v p e f left right},
---   --   (∀ {v}, Typing δ v left → ∃ σ, pattern_match v p = some σ ∧ Typing δ (sub σ e) right) →
---   --   Typing δ (.function ((p,e)::f)) (.path left right)
--- end
