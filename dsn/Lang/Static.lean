@@ -263,6 +263,28 @@ mutual
     Expr → List Locale → Prop
   -- TODO
 
+  inductive Subtyping.LoopListLocale.Static
+  : List String → String → List Locale → Typ → Prop
+  | batch {ignore id locales locales' t' l r} :
+    ListLocale.invert id locales = .some locales' →
+    ListLocale.pack False (id :: ignore) locales' = .some t' →
+    Typ.factor id t' "left" = .some l →
+    Typ.factor id t' "right" = .some r →
+    Subtyping.LoopListLocale.Static ignore id locales (.path (.lfp id l) (.lfp id r))
+
+  | stream {ignore id Θ Δ Δ' idl r t' l r' l' r''} :
+    id ≠ idl →
+    ListSubtyping.invert id Δ = .some Δ' →
+    Locale.pack False (id :: idl :: ignore) ⟨Θ, Δ', .pair (.var idl) r⟩ = .some t' →
+    Typ.factor id t' "left" = .some l →
+    Typ.factor id t' "right" = .some r' →
+    Typ.Polar idl true r' →
+    Typ.found id l = .some l' →
+    Typ.sub [(idl, .lfp id l')] r' = r'' →
+    Subtyping.LoopListLocale.Static
+    ignore id [⟨Θ, Δ, .path (.var idl) r⟩]
+    (.path (.var idl) (.lfp id r''))
+
   inductive Typing.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ →
@@ -290,32 +312,12 @@ mutual
     Subtyping.Static Θ Δ tf (.path ta (.var α)) Θ''' Δ''' →
     Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
 
-
-  | loop {Θ Δ Γ e l r t id t' Θ' Δ' locales locales'} :
+  | loop {Θ Δ Γ e t id locales t' Θ' Δ'} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
     Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) locales →
-    id ∉ (ListPairTyp.free_vars Δ') →
-    ListLocale.invert id locales = .some locales' →
-    ListLocale.pack False (id :: (ListPairTyp.free_vars Δ')) locales' = .some t' →
-    Typ.factor id t' "left" = .some l →
-    Typ.factor id t' "right" = .some r →
-    Typing.Static Θ Δ Γ (.loop e) (.path (.lfp id l) (.lfp id r)) Θ' Δ'
+    Subtyping.LoopListLocale.Static (ListPairTyp.free_vars Δ') id locales t' →
+    Typing.Static Θ Δ Γ (.loop e) t' Θ' Δ'
 
-  | stream {Θ Δ Γ e t id Θ' Δ' Θ'' Δ''  idl r Δ''' t' l r' l' r''} :
-    Typing.Static Θ Δ Γ e t Θ' Δ' →
-    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) [⟨Θ'', Δ'', .path (.var idl) r⟩] →
-    id ∉ (ListPairTyp.free_vars Δ') →
-    id ≠ idl →
-    ListSubtyping.invert id Δ'' = .some Δ''' →
-    Locale.pack False (id :: (ListPairTyp.free_vars Δ')) ⟨Θ'', Δ''', .pair (.var idl) r⟩ = .some t' →
-    Typ.factor id t' "left" = .some l →
-    Typ.factor id t' "right" = .some r' →
-    Typ.Polar idl true r' →
-    Typ.found id l = .some l' →
-    Typ.sub [(idl, .lfp id l')] r' = r'' →
-    Typing.Static Θ Δ Γ (.loop e) (.path (.var idl) r'') Θ' Δ'
-
-  -- TODO: case for loop representing streams
 
   | anno {Θ Δ Γ e ta locales te Θ' Δ'} :
     Typ.free_vars ta ⊆ [] →

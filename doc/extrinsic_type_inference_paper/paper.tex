@@ -1948,7 +1948,7 @@ where the variables represent possible types of expressions.
       \\
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
       \\
-      \alpha \circlearrowleft \Pi \subtypes \tau'
+      \textbf{ftv}(\Delta') \entails \alpha \circlearrowleft \Pi \subtypes \tau'
     } {
       \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
       \hastype \tau' 
@@ -1975,18 +1975,19 @@ where the variables represent possible types of expressions.
   \emph{loop subtyping}
   \hfill 
   \small
-  \boxed{\alpha \circlearrowleft \Pi \subtypes \tau}
+  \boxed{\Theta^\dagger \entails \alpha \circlearrowleft \Pi \subtypes \tau}
   \nopad
   \begin{mathpar}
     \inferrule {
       \textbf{invert}(\alpha \entails \Pi) = \Pi'
       \\
-      \textbf{pack}^-(\alpha\ \textbf{ftv}(\Delta') \entails \Pi') = \tau'
+      \textbf{pack}^-(\alpha\ \Theta^\dagger \entails \Pi') = \tau'
       \\\\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
       \\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r
     } {
+      \Theta^\dagger \entails 
       \alpha \circlearrowleft \Pi 
       \subtypes
       \J{LFP[} \alpha \J{]} \tau_l \J{->} \J{LFP[} \alpha \J{]} \tau_r
@@ -1995,9 +1996,9 @@ where the variables represent possible types of expressions.
     \inferrule {
       \alpha \neq \alpha_l
       \\\\
-      \textbf{invert}(\alpha \entails \Delta'') = \Delta''' 
+      \textbf{invert}(\alpha \entails \Delta) = \Delta' 
       \\
-      \textbf{pack}^-(\alpha\ \alpha_l\ \textbf{ftv}(\Delta') \entails \Theta'', \Delta''', \alpha_l \J{*} \tau_r) = \tau'
+      \textbf{pack}^-(\alpha\ \alpha_l\ \Theta^\dagger \entails \Theta, \Delta', \alpha_l \J{*} \tau_r) = \tau'
       \\\\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
       \\
@@ -2009,7 +2010,7 @@ where the variables represent possible types of expressions.
       \\
       \tau_r'[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
     } {
-      \alpha \circlearrowleft (\Theta'', \Delta'', \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
+      \Theta^\dagger \entails \alpha \circlearrowleft (\Theta, \Delta, \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
     }
   \end{mathpar}
 \end{definition}
