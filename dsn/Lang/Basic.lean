@@ -302,7 +302,6 @@ mutual
   | lfpskip {id b body}: Typ.Polar id b (.lfp id body)
 end
 
-
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 | 0 => .exi ["T"] [] (.var "T")
 | n + 1 => Typ.sub [(id, Typ.subfold id t n)] t

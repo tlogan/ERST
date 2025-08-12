@@ -1925,7 +1925,7 @@ where the variables represent possible types of expressions.
 
     \inferrule {
       \Theta, \Delta, \Gamma \entails r \hastype \tau \given \Theta', \Delta'  
-      \\\\
+      \\
       \Theta', \Delta', \Gamma \entails e \hastype \tau' \given \Theta'', \Delta'' 
     } {
       \Theta, \Delta, \Gamma \entails r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') 
@@ -1934,28 +1934,17 @@ where the variables represent possible types of expressions.
 
     \inferrule {
       \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
-      \\\\
+      \\
       \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau 
     } {
       \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
     }
 
-    %% projection is just syntactic sugar for application with pattern matching
-    % \inferrule {
-    %   \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta' 
-    %   \\\\
-    %   \Theta', \Delta' \entails 
-    %   \tau \subtypes  \J{<} l \J{>} \alpha 
-    %   \given \Theta'', \Delta'' 
-    % } {
-    %   \Theta, \Delta, \Gamma \entails e\J{.}l \hastype \alpha \given \Theta'', \Delta''
-    % }
-
     \inferrule {
       \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
       \\
       \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
-      \\\\
+      \\
       \Theta'', \Delta'' \entails \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta'''
     } {
       \Theta, \Delta, \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''
@@ -1966,8 +1955,37 @@ where the variables represent possible types of expressions.
       \\
       \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
       \\
-      \alpha \notin \textbf{ftv}(\Delta')
-      \\\\
+      \alpha \circlearrowleft \Pi \subtypes \tau'
+    } {
+      \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
+      \hastype \tau' 
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \textbf{ftv}(\tau_a) \subseteq \emptyset
+      \\
+      \Theta, \Delta, \Gamma \entails e \hastype \Pi
+      \\
+      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau_e
+      \\
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau_e \subtypes \tau_a \given \Theta', \Delta'
+    } {
+      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition} 
+  \label{def:loop_subtyping}
+  \emph{loop subtyping}
+  \hfill 
+  \small
+  \boxed{\alpha \circlearrowleft \Pi \subtypes \tau}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
       \textbf{invert}(\alpha \entails \Pi) = \Pi'
       \\
       \textbf{pack}^-(\alpha\ \textbf{ftv}(\Delta') \entails \Pi') = \tau'
@@ -1976,19 +1994,12 @@ where the variables represent possible types of expressions.
       \\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r
     } {
-      \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
-      \hastype 
+      \alpha \circlearrowleft \Pi 
+      \subtypes
       \J{LFP[} \alpha \J{]} \tau_l \J{->} \J{LFP[} \alpha \J{]} \tau_r
-      \given \Theta', \Delta'
     }
 
     \inferrule {
-      \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
-      \\
-      \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow (\Theta'', \Delta'', \alpha_l \J{->}\tau_r)
-      \\
-      \alpha \notin \textbf{ftv}(\Delta')
-      \\
       \alpha \neq \alpha_l
       \\\\
       \textbf{invert}(\alpha \entails \Delta'') = \Delta''' 
@@ -2005,40 +2016,11 @@ where the variables represent possible types of expressions.
       \\
       \tau_r'[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
     } {
-      \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
-      \hastype 
-      \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
-      \given \Theta', \Delta'
-    }
-
-    %% replaced by syntactic sugar over application and simpler annotation rule
-    % \inferrule {
-    %   \textbf{ftv}(\tau_a) \subseteq \emptyset
-    %   \\
-    %   \Theta, \Delta, \Gamma \entails e \hastype \Pi
-    %   \\
-    %   \textbf{pack}^+(\Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi) = \tau 
-    %   \\\\
-    %   \exists \Theta^\dagger, \Delta^\dagger \qua \Theta', \Delta' \entails \tau \subtypes \tau_a \given \Theta^\dagger, \Delta^\dagger
-    %   \\
-    %   \Theta', \Delta', x:\tau_a\ \Gamma \backslash x, \entails e' \hastype \tau' \given \Theta'', \Delta''
-    % } {
-    %   \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta'', \Delta''
-    % }
-
-    \inferrule {
-      \textbf{ftv}(\tau_a) \subseteq \emptyset
-      \\
-      \Theta, \Delta, \Gamma \entails e \hastype \Pi
-      \\
-      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau_e
-      \\\\
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau_e \subtypes \tau_a \given \Theta', \Delta'
-    } {
-      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta', \Delta'
+      \alpha \circlearrowleft (\Theta'', \Delta'', \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
     }
   \end{mathpar}
 \end{definition}
+
 
 \noindent
 For a given context and expression, 
