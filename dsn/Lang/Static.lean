@@ -9,6 +9,18 @@ structure Locale where
   Δ : List (Typ × Typ)
   t : Typ
 
+
+def Pat.lift (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) : Pat → (
+  List (Typ × Typ) × List (String × Typ) × Typ
+)
+--TODO
+| _ => ⟨[],[],.unit⟩
+
+
+def ListLocale.tidy (ids : List String) : List Locale → List Locale
+-- TODO
+| x => x
+
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 
 mutual
@@ -248,10 +260,22 @@ mutual
     ListSubtyping.Static Θ Δ ((l,r) :: cs) Θ'' Δ''
 
 
-  inductive ListPathTyp.Static
+  inductive ListPathTyping.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     List (Pat × Expr) → List Locale → List Typ → Prop
-  -- TODO
+  | nil {Θ Δ Γ} :
+    ListPathTyping.Static Θ Δ Γ [] [] []
+  | cons {Θ Δ Γ p e f locales subtras Δ' Γ' tp tl locales' locales'' subtra} :
+    ListPathTyping.Static Θ Δ Γ f locales subtras →
+    Pat.lift Δ Γ p = (Δ', Γ', tp) →
+    ListTyp.diff tp subtras = tl →
+    (∀ Θ' Δ'' tr,
+      ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ locales' →
+      Typing.Static Θ Δ' Γ' e tr Θ' Δ''
+    ) →
+    ListLocale.tidy (ListPairTyp.free_vars Δ) locales' = locales'' →
+    Typ.capture tp = subtra →
+    ListPathTyping.Static Θ Δ Γ ((p,e)::f) (locales'' ++ locales) (subtra :: subtras)
 
   inductive Subtyping.GuardedListLocale.Static
   : List String → List (Typ × Typ) →
@@ -302,7 +326,7 @@ mutual
     Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
 
   | function {Θ Δ Γ f locales t subtras} :
-    ListPathTyp.Static Θ Δ Γ f locales subtras →
+    ListPathTyping.Static Θ Δ Γ f locales subtras →
     ListLocale.pack True (ListPairTyp.free_vars Δ) locales = .some t →
     Typing.Static Θ Δ Γ (.function f) t Θ Δ
 

@@ -367,23 +367,24 @@
     \inferrule {
       \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
       \\
-      p \hastype \rho \given \Gamma'
+      % p \hastype \rho \given \Gamma'
+      % \\
+      % ensure \Ga 
+      \textbf{lift}(\Delta, \Gamma \entails p) = (\Delta', \Gamma', \rho)
       \\
-      \text{diff}(\rho, \Xi) = \tau_l
-      \\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) = \dTheta
+      \textbf{diff}(\rho, \Xi) = \tau_l
       \\\\
-      (\forall \Theta', \Delta', \tau_r  \qua 
+      (\forall \Theta', \Delta'', \tau_r  \qua 
       \Theta' \backslash \Theta, 
-      \Delta' \backslash \Delta, 
+      \Delta'' \backslash \Delta', 
       \tau_l \J{->} \tau_r \in \Pi'
       \implies
-      \Theta, \Delta, \Gamma' \oplus \Gamma \backslash \textbf{dom}(\Gamma') \entails e \hastype \tau_r \given \Theta', \Delta' 
+      \Theta, \Delta', \Gamma' \entails e \hastype \tau_r \given \Theta', \Delta'' 
       )
       \\\\
-      \text{capture}(\rho) = \eta
+      \textbf{capture}(\rho) = \eta
       \\
-      \Theta \cup \textbf{ftv}(\Delta) \cup \textbf{ftv}(\Gamma) \entails \Pi' \searrow \Pi'' 
+      \textbf{ftv}(\Delta) \entails \Pi' \searrow \Pi'' 
     } {
       \Theta, \Delta, \Gamma \entails f\ \J{?}p\J{=>}e \liftfun 
       \Pi \cup \Pi'' \sim \Xi\ \eta

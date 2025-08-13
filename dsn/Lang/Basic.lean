@@ -18,11 +18,16 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving Repr
+deriving Repr, BEq
 
 def Typ.bot := Typ.all ["T"] [] (Typ.var "T")
 def Typ.top := Typ.exi ["T"] [] (Typ.var "T")
 def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right" right)
+
+instance : BEq (Typ × Typ) where
+  -- beq a b := a.fst == b.fst && a.snd == b.snd
+  beq | (a,b), (c,d) => a == c && b == d
+
 
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
@@ -578,3 +583,12 @@ end
 
 instance : Coe Pat Expr where
   coe := Pat.toExpr
+
+
+def ListTyp.diff (t : Typ) : List Typ → Typ
+| .nil => t
+| .cons x xs => ListTyp.diff (Typ.diff t x) xs
+
+def Typ.capture (t : Typ) : Typ :=
+    let ids := Typ.free_vars t
+    .exi ids [] t
