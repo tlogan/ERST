@@ -7,6 +7,12 @@ import Mathlib.Algebra.Order.Ring.Defs
 
 set_option pp.fieldNotation false
 
+#check List.any
+-- The English word "any" does not hold quantification meaning; it is simply a predication of a collection.
+-- the quantification of "any" can be inferred to me either all or exists dependeing on context and inflection.
+def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.any l p
+
+
 inductive Typ
 | var : String → Typ
 | unit

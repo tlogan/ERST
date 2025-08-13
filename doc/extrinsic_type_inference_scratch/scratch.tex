@@ -324,24 +324,21 @@
 \hfill
 
 \begin{definition}
-  \label{def:loop_subtyping_consolidation}
-  Loop Subtyping Consolidation 
+  \label{def:subtyping_guarded_list_locale_static}
+  Subtyping Guarded List Locale Static 
   \hfill 
   \small
   \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi}
   \\
   \begin{mathpar}
     \inferrule {
-      (\forall \Theta', \Delta' \qua 
-      \Theta' \backslash \Theta, 
-      \Delta' \backslash \Delta, 
-      \alpha_l \J{->} \alpha_r 
-      \in \Pi
+      (\forall \Theta', \Delta', \tau' \qua 
+      (\Theta' \backslash \Theta, \Delta' \backslash \Delta, \tau') \in \Pi
       \implies
-      \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \alpha_l \J{->} \alpha_r \given \Theta', \Delta' 
+      \Theta, \Delta \entails \tau \subtypes \alpha \J{->} \tau' \given \Theta', \Delta' 
       )
       \\\\
-      \Theta \cup \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi'
+      \textbf{ftv}(\Delta) \entails \Pi \searrow \Pi' % tidy or prune
     } {
       \Theta, \Delta \entails \tau \subtypes \alpha \rightarrow \Pi'
     }
@@ -1046,15 +1043,19 @@ The interested reader can find the actual the definition of packing in the appen
     }
 
     \inferrule {
-      \exists \alpha .\ \alpha \in (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \cap \Theta
+      \Theta \cap (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \neq \epsilon
       \\
+      % \exists \alpha .\ \alpha \in (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) \cap \Theta
+      % \\
       \Theta \entails \Delta \dashrightarrow \Delta'
     } {
       \Theta \entails  \Delta \  \tau_l \J{<:} \tau_r\dashrightarrow \Delta' \  \tau_l \J{<:} \tau_r
     }
 
     \inferrule {
-      \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)
+      \Theta \cap (\textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)) = \epsilon 
+      % \\\\
+      % \forall \alpha .\ \alpha \in \Theta \implies \alpha \notin \textbf{ftv}(\tau_l) \cup \textbf{ftv}(\tau_r)
       \\
       \Theta \entails \Delta \dashrightarrow \Delta'
     } {

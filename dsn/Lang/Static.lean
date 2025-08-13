@@ -260,13 +260,13 @@ mutual
     ListSubtyping.Static Θ Δ ((l,r) :: cs) Θ'' Δ''
 
 
-  inductive ListPathTyping.Static
+  inductive Typing.ListPath.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     List (Pat × Expr) → List Locale → List Typ → Prop
   | nil {Θ Δ Γ} :
-    ListPathTyping.Static Θ Δ Γ [] [] []
+    Typing.ListPath.Static Θ Δ Γ [] [] []
   | cons {Θ Δ Γ p e f locales subtras Δ' Γ' tp tl locales' locales'' subtra} :
-    ListPathTyping.Static Θ Δ Γ f locales subtras →
+    Typing.ListPath.Static Θ Δ Γ f locales subtras →
     Pat.lift Δ Γ p = (Δ', Γ', tp) →
     ListTyp.diff tp subtras = tl →
     (∀ Θ' Δ'' tr,
@@ -275,17 +275,28 @@ mutual
     ) →
     ListLocale.tidy (ListPairTyp.free_vars Δ) locales' = locales'' →
     Typ.capture tp = subtra →
-    ListPathTyping.Static Θ Δ Γ ((p,e)::f) (locales'' ++ locales) (subtra :: subtras)
+    Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (locales'' ++ locales) (subtra :: subtras)
 
   inductive Subtyping.GuardedListLocale.Static
   : List String → List (Typ × Typ) →
     Typ → Typ → List Locale → Prop
-  -- TODO
+  | intro {Θ Δ t id locales locales'} :
+    (∀ Θ' Δ' t',
+      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ locales →
+      Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
+    ) →
+    ListLocale.tidy (ListPairTyp.free_vars Δ) locales = locales' →
+    Subtyping.GuardedListLocale.Static Θ Δ t (.var id) locales'
 
   inductive Typing.ListLocale.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → List Locale → Prop
-  -- TODO
+  | intro {Θ Δ Γ e locales} :
+    (∀ Θ' Δ' t,
+      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ locales →
+      Typing.Static Θ Δ Γ e t Θ' Δ'
+    ) →
+    Typing.ListLocale.Static Θ Δ Γ e locales
 
   inductive Subtyping.LoopListLocale.Static
   : List String → String → List Locale → Typ → Prop
@@ -326,7 +337,7 @@ mutual
     Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
 
   | function {Θ Δ Γ f locales t subtras} :
-    ListPathTyping.Static Θ Δ Γ f locales subtras →
+    Typing.ListPath.Static Θ Δ Γ f locales subtras →
     ListLocale.pack True (ListPairTyp.free_vars Δ) locales = .some t →
     Typing.Static Θ Δ Γ (.function f) t Θ Δ
 
@@ -352,7 +363,6 @@ mutual
 
 
 end
-
 
 -- namespace Typ
 -- inductive Pat
