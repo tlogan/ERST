@@ -50,11 +50,50 @@ def Typ.merge_paths : Typ → Option Typ
 --TODO
 | _ => .none
 
-def ListZone.pack (b : Bool) (ignore : List String) : List Zone → Option Typ
-| _ => .none
 
-def Zone.pack (b : Bool) (ignore : List String) : Zone → Option Typ
-| _ => .none
+def Bool.Typ.base : Bool → Typ
+| .true => .top
+| .false => .bot
+
+def Bool.Typ.rator : Bool → Typ → Typ → Typ
+| .true => .inter
+| .false => .unio
+
+def Bool.Typ.inner : Bool → List String → List (Typ × Typ) → Typ → Typ
+| .true => .all
+| .false => .exi
+
+def Bool.Typ.outer : Bool → List String → List (Typ × Typ) → Typ → Typ
+| .true => .exi
+| .false => .all
+
+def BiZone.wrap (b : Bool)
+: List String → List (Typ × Typ) → List String → List (Typ × Typ) → Typ → Typ
+| [], [], [], [], t => t
+| [], [], Θ', Δ', t => Bool.Typ.inner b Θ' Δ' t
+| Θ, Δ, [], [], t => Bool.Typ.outer b Θ Δ t
+| Θ, Δ, Θ', Δ', t => Bool.Typ.outer b Θ Δ (Bool.Typ.outer b Θ' Δ' t)
+
+
+def ListSubtyping.partition (ignore : List String) (Θ : List String)
+: List (Typ × Typ) → List (Typ × Typ) × List (Typ × Typ)
+-- TODO
+| _ => ([],[])
+
+def Zone.pack (ignore : List String) (b : Bool) : Zone → Typ
+| ⟨Θ, Δ, t⟩ =>
+  let fids := Typ.free_vars t
+  let (outer, inner) := ListSubtyping.partition ignore Θ Δ
+  let outer_ids := (ListPairTyp.free_vars Δ ∪ fids) ∩ Θ
+  let inner_ids := List.diff (ListPairTyp.free_vars inner ∪ fids) (Θ ∪ ignore)
+  BiZone.wrap b outer_ids outer inner_ids inner t
+
+def ListZone.pack (ignore : List String) (b : Bool) : List Zone → Typ
+| .nil => Bool.Typ.base b
+| .cons zone zones =>
+  let l := Zone.pack ignore .true zone
+  let r := ListZone.pack ignore .true zones
+  Bool.Typ.rator b l r
 
 
 mutual
@@ -197,7 +236,7 @@ mutual
     Subtyping.Static Θ Δ left right Θ' Δ' →
     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
   | lfp_induct_elim {Θ Δ id left right Θ' Δ'} :
-    Typ.Polar id True left →
+    Typ.Monotonic id .true left →
     Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
 
@@ -310,7 +349,7 @@ mutual
   : List String → String → List Zone → Typ → Prop
   | batch {ignore id zones zones' t' l r} :
     ListZone.invert id zones = .some zones' →
-    ListZone.pack False (id :: ignore) zones' = .some t' →
+    ListZone.pack (id :: ignore) .false zones' = t' →
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r →
     Subtyping.LoopListZone.Static ignore id zones (.path (.lfp id l) (.lfp id r))
@@ -318,10 +357,10 @@ mutual
   | stream {ignore id Θ Δ Δ' idl r t' l r' l' r''} :
     id ≠ idl →
     ListSubtyping.invert id Δ = .some Δ' →
-    Zone.pack False (id :: idl :: ignore) ⟨Θ, Δ', .pair (.var idl) r⟩ = .some t' →
+    Zone.pack (id :: idl :: ignore) .false ⟨Θ, Δ', .pair (.var idl) r⟩ = t' →
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r' →
-    Typ.Polar idl true r' →
+    Typ.Monotonic idl .true r' →
     Typ.found id l = .some l' →
     Typ.sub [(idl, .lfp id l')] r' = r'' →
     Subtyping.LoopListZone.Static
@@ -346,7 +385,7 @@ mutual
 
   | function {Θ Δ Γ f zones t subtras} :
     Typing.ListPath.Static Θ Δ Γ f zones subtras →
-    ListZone.pack True (ListPairTyp.free_vars Δ) zones = .some t →
+    ListZone.pack (ListPairTyp.free_vars Δ) .true zones = t →
     Typing.Static Θ Δ Γ (.function f) t Θ Δ
 
   | app {Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ'''} :
@@ -365,7 +404,7 @@ mutual
   | anno {Θ Δ Γ e ta zones te Θ' Δ'} :
     Typ.free_vars ta ⊆ [] →
     Typing.ListZone.Static Θ Δ Γ e zones →
-    ListZone.pack False (ListPairTyp.free_vars Δ) zones = .some te →
+    ListZone.pack (ListPairTyp.free_vars Δ) .false zones = te →
     Subtyping.Static Θ Δ te ta Θ' Δ' →
     Typing.Static Θ Δ Γ (.anno e ta) ta Θ Δ
 

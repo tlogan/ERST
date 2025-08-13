@@ -268,65 +268,65 @@ end
 
 mutual
 
-  inductive ListSubtyping.Polar.Consistent : List String → List (Typ × Typ) → Typ → Prop
-  | nil {cs t} : ListSubtyping.Polar.Consistent [] cs t
+  inductive ListSubtyping.Monotonic.Consistent : List String → List (Typ × Typ) → Typ → Prop
+  | nil {cs t} : ListSubtyping.Monotonic.Consistent [] cs t
   | cons {id ids cs t b} :
-    ListSubtyping.Polar id b cs →
-    Typ.Polar id b t →
-    ListSubtyping.Polar.Consistent  ids cs t →
-    ListSubtyping.Polar.Consistent (id :: ids) cs t
+    ListSubtyping.Monotonic id b cs →
+    Typ.Monotonic id b t →
+    ListSubtyping.Monotonic.Consistent  ids cs t →
+    ListSubtyping.Monotonic.Consistent (id :: ids) cs t
 
-  inductive ListSubtyping.Polar : String → Bool → List (Typ × Typ) → Prop
-  | nil {id b} : ListSubtyping.Polar id b []
+  inductive ListSubtyping.Monotonic : String → Bool → List (Typ × Typ) → Prop
+  | nil {id b} : ListSubtyping.Monotonic id b []
   | cons {id b l r remainder} :
-    Typ.Polar id (not b) l →
-    Typ.Polar id b r →
-    ListSubtyping.Polar id b ((l,r)::remainder)
+    Typ.Monotonic id (not b) l →
+    Typ.Monotonic id b r →
+    ListSubtyping.Monotonic id b ((l,r)::remainder)
 
-  inductive Typ.Polar : String → Bool → Typ → Prop
-  | var {id} : Typ.Polar id true (.var id)
-  | varskip {id b id'} : id ≠ id' → Typ.Polar id b (.var id')
-  | unit {id b}: Typ.Polar id b .unit
-  | entry {id b l body}: Typ.Polar id b body →  Typ.Polar id b (.entry l body)
+  inductive Typ.Monotonic : String → Bool → Typ → Prop
+  | var {id} : Typ.Monotonic id true (.var id)
+  | varskip {id b id'} : id ≠ id' → Typ.Monotonic id b (.var id')
+  | unit {id b}: Typ.Monotonic id b .unit
+  | entry {id b l body}: Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
   | path {id b left right}:
-    Typ.Polar id (not b) left →
-    Typ.Polar id b right →
-    Typ.Polar id b (.path left right)
+    Typ.Monotonic id (not b) left →
+    Typ.Monotonic id b right →
+    Typ.Monotonic id b (.path left right)
   | unio {id b left right}:
-    Typ.Polar id b left →
-    Typ.Polar id b right →
-    Typ.Polar id b (.unio left right)
+    Typ.Monotonic id b left →
+    Typ.Monotonic id b right →
+    Typ.Monotonic id b (.unio left right)
   | inter {id b left right}:
-    Typ.Polar id b left →
-    Typ.Polar id b right →
-    Typ.Polar id b (.inter left right)
+    Typ.Monotonic id b left →
+    Typ.Monotonic id b right →
+    Typ.Monotonic id b (.inter left right)
   | diff {id b left right}:
-    Typ.Polar id b left →
-    Typ.Polar id (not b) right →
-    Typ.Polar id b (.diff left right)
+    Typ.Monotonic id b left →
+    Typ.Monotonic id (not b) right →
+    Typ.Monotonic id b (.diff left right)
 
   | all {id b ids quals body} :
     id ∉ ids →
-    ListSubtyping.Polar.Consistent ids quals body →
-    Typ.Polar id b body →
-    Typ.Polar id b (.all ids quals body)
+    ListSubtyping.Monotonic.Consistent ids quals body →
+    Typ.Monotonic id b body →
+    Typ.Monotonic id b (.all ids quals body)
 
   | allskip {id b ids quals body} :
     id ∈ ids →
-    Typ.Polar id b (.all ids quals body)
+    Typ.Monotonic id b (.all ids quals body)
 
   | exi {id b ids quals body} :
     id ∉ ids →
-    ListSubtyping.Polar.Consistent ids quals (.diff .unit body) →
-    Typ.Polar id b body →
-    Typ.Polar id b (.exi ids quals body)
+    ListSubtyping.Monotonic.Consistent ids quals (.diff .unit body) →
+    Typ.Monotonic id b body →
+    Typ.Monotonic id b (.exi ids quals body)
 
   | exiskip {id b ids quals body} :
     id ∈ ids →
-    Typ.Polar id b (.exi ids quals body)
+    Typ.Monotonic id b (.exi ids quals body)
 
-  | lfp {id b id' body}: id ≠ id' → Typ.Polar id b body → Typ.Polar id b (.lfp id' body)
-  | lfpskip {id b body}: Typ.Polar id b (.lfp id body)
+  | lfp {id b id' body}: id ≠ id' → Typ.Monotonic id b body → Typ.Monotonic id b (.lfp id' body)
+  | lfpskip {id b body}: Typ.Monotonic id b (.lfp id body)
 end
 
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
