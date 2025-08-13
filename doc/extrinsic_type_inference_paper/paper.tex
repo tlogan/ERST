@@ -1149,7 +1149,7 @@ For any metalanguage statement or term containing sugar $\gamma$, we assume that
     \com{typing seq} &
     \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x \hastype \tau
     \\
-    \com{locale seq} &
+    \com{zone seq} &
     \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
     \\
     \com{subtractable type seq} &
@@ -2054,7 +2054,7 @@ it delegates the work to two helpers.
 First, it leverages function typing consolidation 
 \ms{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
 to infer as many types as possible
-and consolidates the results into a sequence of locales \ms{\Pi}.
+and consolidates the results into a sequence of zones \ms{\Pi}.
 It must consolidate all of the inferred types in order to
 ensure that the inferred type of each 
 path's pattern does not subtype the type of subsequent paths' patterns. 
@@ -2062,7 +2062,7 @@ The sequence of subtractable types \ms{\Xi} can be ignored, as it is only
 exposed for the sake of being used recursively.
 Next, it leverage positive packing 
 \ms{\textbf{pack}^+(... \entails \Pi) = \tau}
-to rewrite each locale into a type,
+to rewrite each zone into a type,
 such that the skolems and placeholders are converted to
 existential and universal bindings,
 and then combine all the types by compounding intersection.
@@ -2087,8 +2087,8 @@ it learns a lower bound on the type of the result \ms{\alpha}.
 For an annotation \ms{\J{def}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'}, 
 it first delegates to a few helpers. 
 First it leverages typing consolidation \ms{\Theta, \Delta, \Gamma \entails e \hastype \Pi}
-to infer as many possible locales for the source expression \ms{e}.
-Then it packs all the locales together and ensures that the packed type
+to infer as many possible zones for the source expression \ms{e}.
+Then it packs all the zones together and ensures that the packed type
 subtypes the type annotation.
 It assigns the annotated type to the defined variable in the contextual typing
 as it proceeds to infer the type of the continuation \ms{e'}, thereby
@@ -2104,14 +2104,14 @@ and it leverages loop subtyping consolidation
 \ms{\Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi^\nu}
 to ensure the argument has a  
 form compatible with looping and 
-to collect as many type locales of its paths as possible.  
-It leverage locale sequence duality 
+to collect as many type zones of its paths as possible.  
+It leverage zone sequence duality 
 \ms{
   \alpha_\nu \downarrow \Pi_\nu
   \fallingdotseq 
   \alpha_\mu \uparrow \Pi_\mu
-}, which rewrites the implicitly co-recursive path locales into
-implicitly recursive pair locales. 
+}, which rewrites the implicitly co-recursive path zones into
+implicitly recursive pair zones. 
 Then, it leverages negative packing \ms{\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu},
 and constructs an explicitly recursive type by wrapping it in a least fixed point
 \ms{\J{LFP[}\alpha_\mu\J{]}\tau_\mu}.
@@ -2893,8 +2893,8 @@ This property is necessary so that our proof typing rules can use positive subst
 as a proxy reasoning under the induction hypothesis without violating soundness. 
 
 \begin{requirement}
-  \label{req:locale_sequence_duality_correspondence}
-  \emph{locale sequence duality correspondence}
+  \label{req:zone_sequence_duality_correspondence}
+  \emph{zone sequence duality correspondence}
   \footnotesize
   \nopad
   \begin{mathpar}
@@ -2947,13 +2947,13 @@ as a proxy reasoning under the induction hypothesis without violating soundness.
 
 
 \noindent
-The requirement of locale sequence duality has an ungodly amount of symbolic clutter,
+The requirement of zone sequence duality has an ungodly amount of symbolic clutter,
 but the essence of its meaning is actually quite simple and natural.
-It says that a function inhabits all locales in some 
+It says that a function inhabits all zones in some 
 some collection if and only if for any input/ouput pair, if the pair inhabits some
-locale from the dual collection, then the function applied to the input
+zone from the dual collection, then the function applied to the input
 gives the output. 
-The requirement is essential to ensure that rewriting inferred locales
+The requirement is essential to ensure that rewriting inferred zones
 to construct least fixed point types does not violate soundness.
 
 

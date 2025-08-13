@@ -4,20 +4,20 @@ import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 
-structure Locale where
+structure Zone where
   Θ : List String
   Δ : List (Typ × Typ)
   t : Typ
 
 
-def ListLocale.tidy (ids : List String) : List Locale → List Locale
+def ListZone.tidy (ids : List String) : List Zone → List Zone
 -- TODO
 | x => x
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 
 mutual
-  def ListLocale.invert (id : String) : List Locale → Option (List Locale)
+  def ListZone.invert (id : String) : List Zone → Option (List Zone)
     --TODO
   | _ => .none
 
@@ -50,10 +50,10 @@ def Typ.merge_paths : Typ → Option Typ
 --TODO
 | _ => .none
 
-def ListLocale.pack (b : Bool) (ignore : List String) : List Locale → Option Typ
+def ListZone.pack (b : Bool) (ignore : List String) : List Zone → Option Typ
 | _ => .none
 
-def Locale.pack (b : Bool) (ignore : List String) : Locale → Option Typ
+def Zone.pack (b : Bool) (ignore : List String) : Zone → Option Typ
 | _ => .none
 
 
@@ -270,61 +270,61 @@ mutual
 
   inductive Typing.ListPath.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
-    List (Pat × Expr) → List Locale → List Typ → Prop
+    List (Pat × Expr) → List Zone → List Typ → Prop
   | nil {Θ Δ Γ} :
     Typing.ListPath.Static Θ Δ Γ [] [] []
-  | cons {Θ Δ Γ p e f locales subtras Δ' Γ' tp tl locales' locales'' subtra} :
-    Typing.ListPath.Static Θ Δ Γ f locales subtras →
+  | cons {Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra} :
+    Typing.ListPath.Static Θ Δ Γ f zones subtras →
     PatLifting.Static Δ Γ p tp Δ' Γ' →
     ListTyp.diff tp subtras = tl →
     (∀ Θ' Δ'' tr,
-      ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ locales' →
+      ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
       Typing.Static Θ Δ' Γ' e tr Θ' Δ''
     ) →
-    ListLocale.tidy (ListPairTyp.free_vars Δ) locales' = locales'' →
+    ListZone.tidy (ListPairTyp.free_vars Δ) zones' = zones'' →
     Typ.capture tp = subtra →
-    Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (locales'' ++ locales) (subtra :: subtras)
+    Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
-  inductive Subtyping.GuardedListLocale.Static
+  inductive Subtyping.GuardedListZone.Static
   : List String → List (Typ × Typ) →
-    Typ → Typ → List Locale → Prop
-  | intro {Θ Δ t id locales locales'} :
+    Typ → Typ → List Zone → Prop
+  | intro {Θ Δ t id zones zones'} :
     (∀ Θ' Δ' t',
-      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ locales →
+      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
       Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
     ) →
-    ListLocale.tidy (ListPairTyp.free_vars Δ) locales = locales' →
-    Subtyping.GuardedListLocale.Static Θ Δ t (.var id) locales'
+    ListZone.tidy (ListPairTyp.free_vars Δ) zones = zones' →
+    Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
 
-  inductive Typing.ListLocale.Static
+  inductive Typing.ListZone.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
-    Expr → List Locale → Prop
-  | intro {Θ Δ Γ e locales} :
+    Expr → List Zone → Prop
+  | intro {Θ Δ Γ e zones} :
     (∀ Θ' Δ' t,
-      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ locales →
+      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
       Typing.Static Θ Δ Γ e t Θ' Δ'
     ) →
-    Typing.ListLocale.Static Θ Δ Γ e locales
+    Typing.ListZone.Static Θ Δ Γ e zones
 
-  inductive Subtyping.LoopListLocale.Static
-  : List String → String → List Locale → Typ → Prop
-  | batch {ignore id locales locales' t' l r} :
-    ListLocale.invert id locales = .some locales' →
-    ListLocale.pack False (id :: ignore) locales' = .some t' →
+  inductive Subtyping.LoopListZone.Static
+  : List String → String → List Zone → Typ → Prop
+  | batch {ignore id zones zones' t' l r} :
+    ListZone.invert id zones = .some zones' →
+    ListZone.pack False (id :: ignore) zones' = .some t' →
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r →
-    Subtyping.LoopListLocale.Static ignore id locales (.path (.lfp id l) (.lfp id r))
+    Subtyping.LoopListZone.Static ignore id zones (.path (.lfp id l) (.lfp id r))
 
   | stream {ignore id Θ Δ Δ' idl r t' l r' l' r''} :
     id ≠ idl →
     ListSubtyping.invert id Δ = .some Δ' →
-    Locale.pack False (id :: idl :: ignore) ⟨Θ, Δ', .pair (.var idl) r⟩ = .some t' →
+    Zone.pack False (id :: idl :: ignore) ⟨Θ, Δ', .pair (.var idl) r⟩ = .some t' →
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r' →
     Typ.Polar idl true r' →
     Typ.found id l = .some l' →
     Typ.sub [(idl, .lfp id l')] r' = r'' →
-    Subtyping.LoopListLocale.Static
+    Subtyping.LoopListZone.Static
     ignore id [⟨Θ, Δ, .path (.var idl) r⟩]
     (.path (.var idl) (.lfp id r''))
 
@@ -344,9 +344,9 @@ mutual
     Typing.Static Θ Δ Γ (.record r) t' Θ'' Δ'' →
     Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
 
-  | function {Θ Δ Γ f locales t subtras} :
-    Typing.ListPath.Static Θ Δ Γ f locales subtras →
-    ListLocale.pack True (ListPairTyp.free_vars Δ) locales = .some t →
+  | function {Θ Δ Γ f zones t subtras} :
+    Typing.ListPath.Static Θ Δ Γ f zones subtras →
+    ListZone.pack True (ListPairTyp.free_vars Δ) zones = .some t →
     Typing.Static Θ Δ Γ (.function f) t Θ Δ
 
   | app {Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ'''} :
@@ -355,17 +355,17 @@ mutual
     Subtyping.Static Θ Δ tf (.path ta (.var α)) Θ''' Δ''' →
     Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
 
-  | loop {Θ Δ Γ e t id locales t' Θ' Δ'} :
+  | loop {Θ Δ Γ e t id zones t' Θ' Δ'} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
-    Subtyping.GuardedListLocale.Static Θ' Δ' t (.var id) locales →
-    Subtyping.LoopListLocale.Static (ListPairTyp.free_vars Δ') id locales t' →
+    Subtyping.GuardedListZone.Static Θ' Δ' t (.var id) zones →
+    Subtyping.LoopListZone.Static (ListPairTyp.free_vars Δ') id zones t' →
     Typing.Static Θ Δ Γ (.loop e) t' Θ' Δ'
 
 
-  | anno {Θ Δ Γ e ta locales te Θ' Δ'} :
+  | anno {Θ Δ Γ e ta zones te Θ' Δ'} :
     Typ.free_vars ta ⊆ [] →
-    Typing.ListLocale.Static Θ Δ Γ e locales →
-    ListLocale.pack False (ListPairTyp.free_vars Δ) locales = .some te →
+    Typing.ListZone.Static Θ Δ Γ e zones →
+    ListZone.pack False (ListPairTyp.free_vars Δ) zones = .some te →
     Subtyping.Static Θ Δ te ta Θ' Δ' →
     Typing.Static Θ Δ Γ (.anno e ta) ta Θ Δ
 
