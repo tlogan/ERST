@@ -10,13 +10,6 @@ structure Locale where
   t : Typ
 
 
-def Pat.lift (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) : Pat → (
-  List (Typ × Typ) × List (String × Typ) × Typ
-)
---TODO
-| _ => ⟨[],[],.unit⟩
-
-
 def ListLocale.tidy (ids : List String) : List Locale → List Locale
 -- TODO
 | x => x
@@ -83,6 +76,21 @@ mutual
   def Subtyping.check (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Bool
   | _, _ => false
 end
+
+-- the weakest type t such that every inhabitant matches pattern p
+inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) : Pat →
+  Typ → List (Typ × Typ) → List (String × Typ) → Prop
+| var {id id'}:
+  PatLifting.Static Δ Γ (.var id) (.var id') ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
+| unit :
+  PatLifting.Static Δ Γ .unit .unit Δ Γ
+| record_nil :
+  PatLifting.Static Δ Γ (.record []) .top Δ Γ
+| record_cons {l p remainder t t' Δ' Γ'} :
+  PatLifting.Static Δ Γ (.record remainder) t' Δ' Γ' →
+  Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
+  PatLifting.Static Δ Γ (.record ((l,p) :: remainder)) (.inter (.entry l t) t') Δ' Γ'
+
 
 mutual
 
@@ -267,7 +275,7 @@ mutual
     Typing.ListPath.Static Θ Δ Γ [] [] []
   | cons {Θ Δ Γ p e f locales subtras Δ' Γ' tp tl locales' locales'' subtra} :
     Typing.ListPath.Static Θ Δ Γ f locales subtras →
-    Pat.lift Δ Γ p = (Δ', Γ', tp) →
+    PatLifting.Static Δ Γ p tp Δ' Γ' →
     ListTyp.diff tp subtras = tl →
     (∀ Θ' Δ'' tr,
       ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ locales' →

@@ -213,7 +213,7 @@ cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
 -- instance : SizeOf Typ where
 --   sizeOf := Typ.size
 
-def dom {α} {β} : List (α × β) → List α
+def ListPair.dom {α} {β} : List (α × β) → List α
 | .nil => .nil
 | (a, _) :: xs => a :: dom xs
 
@@ -339,6 +339,20 @@ inductive Pat
 | unit
 | record : List (String × Pat) → Pat
 deriving Repr
+
+mutual
+  def ListPat.free_vars : List (String × Pat) → List String
+  | .nil => []
+  | .cons (l,p) remainder =>
+    Pat.free_vars p ∪ ListPat.free_vars remainder
+
+  def Pat.free_vars : Pat → List String
+  | .var id => [id]
+  | .unit => []
+  | .record ps => ListPat.free_vars ps
+end
+
+
 
 inductive Expr
 | var : String → Expr

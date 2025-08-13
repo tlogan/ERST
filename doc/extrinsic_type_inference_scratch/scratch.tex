@@ -367,7 +367,8 @@
       % p \hastype \rho \given \Gamma'
       % \\
       % ensure \Ga 
-      \textbf{lift}(\Delta, \Gamma \entails p) = (\Delta', \Gamma', \rho)
+      \Delta, \Gamma \entails p :: \rho \given \Delta', \Gamma' %lift pattern to type
+      % rhos is the weakest type where every value in rho matches pattern p
       \\
       \textbf{diff}(\rho, \Xi) = \tau_l
       \\\\

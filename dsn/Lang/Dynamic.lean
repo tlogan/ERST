@@ -27,7 +27,7 @@ end
 
 
 mutual
-  def pattern_match_entry (label :String) (pat : Pat):
+  def pattern_match_entry (label : String) (pat : Pat) :
   List (String × Expr) → Option (List (String × Expr))
   | .nil => none
   | (l, e) :: args =>
@@ -41,9 +41,12 @@ mutual
   Option (List (String × Expr))
   | .nil => some []
   | (label, pat) :: pats => do
-    let m0 ← pattern_match_entry label pat args
-    let m1 ← pattern_match_record args pats
-    return (m0 ++ m1)
+    if Pat.free_vars pat ∩ ListPat.free_vars pats = [] then
+      let m0 ← pattern_match_entry label pat args
+      let m1 ← pattern_match_record args pats
+      return (m0 ++ m1)
+    else
+      .none
 
   def pattern_match : Expr → Pat → Option (List (String × Expr))
   | e, (.var id) => some [(id, e)]
@@ -156,11 +159,11 @@ mutual
   | .inter left right => Typing.Dynamic δ e left ∧ Typing.Dynamic δ e right
   | .diff left right => Typing.Dynamic δ e left ∧ ¬ (Typing.Dynamic δ e right)
   | .exi ids quals body =>
-    ∃ δ' , (dom δ') ⊆ ids ∧
+    ∃ δ' , (ListPair.dom δ') ⊆ ids ∧
     (MultiSubtyping.Dynamic (δ ++ δ') quals) ∧
     (Typing.Dynamic (δ ++ δ') e body)
   | .all ids quals body =>
-    ∀ δ' , (dom δ') ⊆ ids →
+    ∀ δ' , (ListPair.dom δ') ⊆ ids →
     (MultiSubtyping.Dynamic (δ ++ δ') quals) →
     (Typing.Dynamic (δ ++ δ') e body)
   | .lfp id body =>
