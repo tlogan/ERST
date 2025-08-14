@@ -49,8 +49,12 @@ def Subtyping.bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
 
 def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
--- TODO
-| .cons st sts => []
+| .cons (l,r) sts =>
+  if (Typ.free_vars l) ∪ (Typ.free_vars r) ⊆ pids then
+    (l,r) :: ListSubtyping.prune pids sts
+  else
+    ListSubtyping.prune pids sts
+
 
 def ListTyp.combine (b : Bool) : List Typ → Typ
 | .nil => Typ.base b
@@ -86,8 +90,7 @@ def Zone.tidy (pids : List String) : Zone → Option Zone
   let δr := ListSubtyping.interpret_all .true Δ (List.diff (ListPairTyp.free_vars Δ) pids)
   let l' := Typ.sub δl l
   let r' := Typ.sub δr r
-  let pids' := pids ∪ (Typ.free_vars (.path l' r'))
-  let Δ' := ListSubtyping.prune pids' Δ
+  let Δ' := ListSubtyping.prune (pids ∪ Θ ∪ (Typ.free_vars (.path l' r'))) Δ
   .some ⟨Θ, Δ', .path l' r'⟩
 | _ => .none
 
@@ -97,8 +100,6 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let z ← (Zone.tidy pids zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
-
--- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 
 mutual
   def ListZone.invert (id : String) : List Zone → Option (List Zone)
@@ -114,6 +115,8 @@ def Typ.found (id : String) : Typ → Option Typ
 -- TODO
 | _ => .none
 
+
+-- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 def Typ.is_pattern (tops : List String) : Typ → Bool
 | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
 | .var id => id ∈ tops
