@@ -77,8 +77,14 @@ def BiZone.wrap (b : Bool)
 
 def ListSubtyping.partition (ignore : List String) (Θ : List String)
 : List (Typ × Typ) → List (Typ × Typ) × List (Typ × Typ)
--- TODO
-| _ => ([],[])
+| .nil => ([],[])
+| .cons (l,r) remainder =>
+    let (outer, inner) := ListSubtyping.partition ignore Θ remainder
+    let fids := Typ.free_vars l ∪  Typ.free_vars r
+    if fids ∩ Θ ≠ [] && fids ⊆ (ignore ∪ Θ) then
+      ((l,r) :: outer, inner)
+    else
+      (outer, (l,r) :: inner)
 
 def Zone.pack (ignore : List String) (b : Bool) : Zone → Typ
 | ⟨Θ, Δ, t⟩ =>
