@@ -1412,9 +1412,9 @@ for type variables.
       \exists \delta' \qua
       \textbf{dom}(\delta') \subseteq \Theta
       \up
-      \delta \oplus \delta' \satisfies \Delta 
+      \delta' \oplus \delta \satisfies \Delta 
       \up
-      \delta \oplus \delta' \satisfies e \hastype \tau
+      \delta' \oplus \delta \satisfies e \hastype \tau
 
       \\
 
@@ -1423,9 +1423,9 @@ for type variables.
       \forall \delta' \qua
       \textbf{dom}(\delta') \subseteq \Theta
       \implies
-      \delta \oplus \delta' \satisfies \Delta 
+      \delta' \oplus \delta \satisfies \Delta 
       \implies
-      \delta \oplus \delta' \satisfies e \hastype \tau
+      \delta' \oplus \delta \satisfies e \hastype \tau
 
       \\
 
@@ -1439,9 +1439,7 @@ for type variables.
 
       \delta \satisfies e \hastype \alpha 
       &\iff& 
-      \alpha \slash \tau \in \delta
-      \up
-      \VDash e \hastype \tau
+      \VDash e \hastype \delta(\alpha) 
   \end{array}
   \]
 \end{definition}
