@@ -9,17 +9,94 @@ structure Zone where
   Δ : List (Typ × Typ)
   t : Typ
 
+def Typ.base : Bool → Typ
+| .true => .top
+| .false => .bot
+
+def Typ.rator : Bool → Typ → Typ → Typ
+| .true => .inter
+| .false => .unio
+
+def Typ.inner : Bool → List String → List (Typ × Typ) → Typ → Typ
+| .true => .all
+| .false => .exi
+
+def Typ.outer : Bool → List String → List (Typ × Typ) → Typ → Typ
+| .true => .exi
+| .false => .all
+
+def BiZone.wrap (b : Bool)
+: List String → List (Typ × Typ) → List String → List (Typ × Typ) → Typ → Typ
+| [], [], [], [], t => t
+| [], [], Θ', Δ', t => Typ.inner b Θ' Δ' t
+| Θ, Δ, [], [], t => Typ.outer b Θ Δ t
+| Θ, Δ, Θ', Δ', t => Typ.outer b Θ Δ (Typ.outer b Θ' Δ' t)
 
 
-def Zone.tidy (pids : List String) : Zone → Zone
-| ⟨Θ, Δ, t⟩ =>
-  --TODO
-  ⟨Θ, Δ, t⟩
 
-def ListZone.tidy (pids : List String) : List Zone → List Zone
+def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
+| .false, (l,r) => (l,r)
+| .true, (l,r) => (r,l)
+
+def Subtyping.bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
+| [] => []
+| st :: sts =>
+    let (t,bd) := Subtyping.target_bound b st
+    if (.var id) == t then
+      bd :: Subtyping.bounds id b sts
+    else
+      Subtyping.bounds id b sts
+
+def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
-| .cons zone zones =>
-    (Zone.tidy pids zone) :: (ListZone.tidy pids zones)
+-- TODO
+| .cons st sts => []
+
+def ListTyp.combine (b : Bool) : List Typ → Typ
+| .nil => Typ.base b
+| [t] => t
+| t :: ts => Typ.rator b t (ListTyp.combine b ts)
+
+def ListSubtyping.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
+  let bds := Subtyping.bounds id b Δ
+  if bds == [] then
+    (.var id)
+  else
+    ListTyp.combine (!b) bds
+
+def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
+: (ids : List String) → List (String × Typ)
+| .nil => []
+| .cons id ids =>
+  (id, ListSubtyping.interpret_one id b Δ) ::
+  ListSubtyping.interpret_all b Δ ids
+
+
+-- def Zone.tidy (pids : List String) : Zone → Zone
+-- | ⟨Θ, Δ, t⟩ =>
+--   let δ := ListSubtyping.interpret_all .true Δ (List.diff (ListPairTyp.free_vars Δ) pids)
+--   let t' := Typ.sub δ t
+--   let pids' := pids ∪ (Typ.free_vars t')
+--   let Δ' := ListSubtyping.prune pids' Δ
+--   ⟨Θ, Δ', t'⟩
+
+def Zone.tidy (pids : List String) : Zone → Option Zone
+| ⟨Θ, Δ, .path l r⟩ =>
+  let δl := ListSubtyping.interpret_all .false Δ (List.diff (ListPairTyp.free_vars Δ) pids)
+  let δr := ListSubtyping.interpret_all .true Δ (List.diff (ListPairTyp.free_vars Δ) pids)
+  let l' := Typ.sub δl l
+  let r' := Typ.sub δr r
+  let pids' := pids ∪ (Typ.free_vars (.path l' r'))
+  let Δ' := ListSubtyping.prune pids' Δ
+  .some ⟨Θ, Δ', .path l' r'⟩
+| _ => .none
+
+def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
+| .nil => .some []
+| .cons zone zones => do
+    let z ← (Zone.tidy pids zone)
+    let zs ← (ListZone.tidy pids zones)
+    return z :: zs
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 
@@ -58,29 +135,6 @@ def Typ.merge_paths : Typ → Option Typ
 | _ => .none
 
 
-def Bool.Typ.base : Bool → Typ
-| .true => .top
-| .false => .bot
-
-def Bool.Typ.rator : Bool → Typ → Typ → Typ
-| .true => .inter
-| .false => .unio
-
-def Bool.Typ.inner : Bool → List String → List (Typ × Typ) → Typ → Typ
-| .true => .all
-| .false => .exi
-
-def Bool.Typ.outer : Bool → List String → List (Typ × Typ) → Typ → Typ
-| .true => .exi
-| .false => .all
-
-def BiZone.wrap (b : Bool)
-: List String → List (Typ × Typ) → List String → List (Typ × Typ) → Typ → Typ
-| [], [], [], [], t => t
-| [], [], Θ', Δ', t => Bool.Typ.inner b Θ' Δ' t
-| Θ, Δ, [], [], t => Bool.Typ.outer b Θ Δ t
-| Θ, Δ, Θ', Δ', t => Bool.Typ.outer b Θ Δ (Bool.Typ.outer b Θ' Δ' t)
-
 
 def ListSubtyping.partition (pids : List String) (Θ : List String)
 : List (Typ × Typ) → List (Typ × Typ) × List (Typ × Typ)
@@ -102,11 +156,11 @@ def Zone.pack (pids : List String) (b : Bool) : Zone → Typ
   BiZone.wrap b outer_ids outer inner_ids inner t
 
 def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
-| .nil => Bool.Typ.base b
+| .nil => Typ.base b
 | .cons zone zones =>
   let l := Zone.pack pids .true zone
   let r := ListZone.pack pids .true zones
-  Bool.Typ.rator b l r
+  Typ.rator b l r
 
 
 mutual
@@ -333,7 +387,7 @@ mutual
       ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
       Typing.Static Θ Δ' Γ' e tr Θ' Δ''
     ) →
-    ListZone.tidy (ListPairTyp.free_vars Δ) zones' = zones'' →
+    ListZone.tidy (ListPairTyp.free_vars Δ) zones' = .some zones'' →
     Typ.capture tp = subtra →
     Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
@@ -345,7 +399,7 @@ mutual
       ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
       Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
     ) →
-    ListZone.tidy (ListPairTyp.free_vars Δ) zones = zones' →
+    ListZone.tidy (ListPairTyp.free_vars Δ) zones = .some zones' →
     Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
 
   inductive Typing.ListZone.Static

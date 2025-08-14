@@ -3401,8 +3401,10 @@ class BaseRule(Rule):
 
             ######### TIDY UP #############
             # m_left = self.solver.interpret_ids_polar(False, foreignids.union(local_closedids), local_constraints)
-            m_right = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
-            imp = Imp(branch.pattern, sub_typ(m_right, branch.body))
+            # m_right = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
+            m = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
+            imp = Imp(branch.pattern, sub_typ(m, branch.body))
+            # imp = sub_typ(m, Imp(branch.pattern, branch.body))
 
             # imp = self.solver.interpret_polar_typ(
             #     True, 
