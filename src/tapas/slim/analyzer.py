@@ -2014,7 +2014,7 @@ class Solver:
         else:
             return self.interpret_ids_weakest(ignore, constraints)
 
-    def interpret_deep(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping], target : Typ) -> Typ:
+    def interpret_sub(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping], target : Typ) -> Typ:
         prev = Bot() if strongest else Top() 
         while prev != target:
             prev = target
@@ -3399,6 +3399,7 @@ class BaseRule(Rule):
             local_constraints = branch.world.constraints.difference(world.constraints)
             local_closedids = branch.world.closedids.difference(world.closedids)
 
+            ######### TIDY UP #############
             # m_left = self.solver.interpret_ids_polar(False, foreignids.union(local_closedids), local_constraints)
             m_right = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
             imp = Imp(branch.pattern, sub_typ(m_right, branch.body))
@@ -3411,6 +3412,7 @@ class BaseRule(Rule):
 
             influential_ids = foreignids.union(local_closedids).union(extract_free_vars_from_typ(s(), imp))
             influential_constraints = filter_constraints_by_all_variables(local_constraints, influential_ids)
+            ######### END TIDY UP #############
 
             generalized_case = self.solver.make_constraint_typ(True)( 
                 foreignids, 
@@ -3469,28 +3471,28 @@ class ExprRule(Rule):
 
 
     def combine_application(self, pid : int, world : World, cator_typ : Typ, arg_typs : list[Typ]) -> List[Result]: 
-        schemas = [(world, cator_typ)] 
+        zones = [(world, cator_typ)] 
         for arg_typ in arg_typs:
             result_var = self.solver.fresh_type_var()
-            new_schemas = []
-            for world, current_cator_typ in schemas:
+            new_zones = []
+            for world, current_cator_typ in zones:
                 # TODO: pass in enviro to get foreign vars 
                 # foreignids = extract_free_vars_from_enviro(world.enviro).union(extract_free_vars_from_constraints(s(), world.constraints))
-                foreignids = extract_free_vars_from_constraints(s(), world.constraints)
-                new_schemas.extend([
+                # foreignids = extract_free_vars_from_constraints(s(), world.constraints)
+                new_zones.extend([
                     (w, result_var)
                     for w in self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True)
-                    for local_constraints in [world.constraints.difference(world.constraints)]
+                    # for local_constraints in [world.constraints.difference(world.constraints)]
                     # for local_closedids in [world.closedids.difference(w.closedids)]
                     # for m in [self.solver.interpret_ids_polar(True, foreignids.union(w.closedids), w.constraints)]
                     # for t in [sub_typ(m, result_var)]
-                    for t in [self.solver.interpret_deep(True, foreignids.union(w.closedids), w.constraints, result_var)]
+                    # for t in [self.solver.interpret_sub(True, foreignids.union(w.closedids), w.constraints, result_var)]
                 ])
-                schemas = new_schemas
+                zones = new_zones
 
-        print(f"schemas found: {len(schemas)}")
+        print(f"zones found: {len(zones)}")
 
-        for i, (w, result) in enumerate(schemas):
+        for i, (w, result) in enumerate(zones):
 
             print(f"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3509,7 +3511,7 @@ result:
 
         return [
             Result(pid, world, t)
-            for world, t in schemas 
+            for world, t in zones 
         ]
 
 
