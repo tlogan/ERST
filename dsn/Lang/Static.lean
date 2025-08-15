@@ -55,6 +55,10 @@ def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ �
   else
     ListSubtyping.prune pids sts
 
+def Typ.break : Bool → Typ → List Typ
+| .false, .unio l r => [l, r]
+| .true, .inter l r => [l, r]
+| _, t => [t]
 
 def Typ.combine (b : Bool) : List Typ → Typ
 | .nil => Typ.base b
@@ -134,9 +138,22 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
 | _ => false
 
-def Subtyping.inflatable (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
-  --TODO
-  false
+-- neither sound nor complete; just a heuristic requirement to choose a subtyping rule
+def Subtyping.shallow_check : Typ → Typ → Bool
+| .var _, _ => .true
+| _, .var _ => .true
+| k, .diff left right =>
+  Subtyping.shallow_check k left && not (Subtyping.shallow_check k right)
+| .entry l k, .entry l' t =>
+  l == l' && Subtyping.shallow_check k t
+| k, .inter left right => Subtyping.shallow_check k left && Subtyping.shallow_check k right
+| .inter left right, t => Subtyping.shallow_check left t || Subtyping.shallow_check right t
+| k, .exi _ _ t => Subtyping.shallow_check k t
+| _,_ => .false
+
+def Subtyping.inflatable (key target : Typ) : Bool :=
+  let ts := Typ.break .false target
+  not (List.all ts (fun t => Subtyping.shallow_check key t))
 
 def Typ.drop (id : String) : Typ → Option Typ
 --TODO
@@ -185,11 +202,6 @@ mutual
   --TODO
   | _ => false
 end
-
-def Typ.break : Bool → Typ → List Typ
-| .false, .unio l r => [l, r]
-| .true, .inter l r => [l, r]
-| _, t => [t]
 
 mutual
   def Subtyping.proj (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
@@ -395,7 +407,7 @@ mutual
 
   -- least fixed point introduction
   | lfp_inflate_intro {Θ Δ l id r Θ' Δ'} :
-    Subtyping.inflatable Θ Δ l (.lfp id r) →
+    Subtyping.inflatable l r →
     Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
 
