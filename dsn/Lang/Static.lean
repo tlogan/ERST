@@ -101,15 +101,24 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
 
-mutual
-  def ListZone.invert (id : String) : List Zone → Option (List Zone)
-    --TODO
-  | _ => .none
 
-  def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
-    --TODO
-  | _ => .none
-end
+def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
+| .nil => return []
+| .cons (.var id', .path l r) sts =>
+    if id' == id then do
+      let sts' ← ListSubtyping.invert id sts
+      return (.pair l r, .var id') :: sts'
+    else
+      failure
+| _ => failure
+
+def ListZone.invert (id : String) : List Zone → Option (List Zone)
+| .nil => return []
+| .cons ⟨Θ, Δ, .path l r⟩ zones => do
+    let zones' ← ListZone.invert id zones
+    let Δ' ← ListSubtyping.invert id Δ
+    return ⟨Θ, Δ', .pair l r⟩ :: zones'
+| _ => failure
 
 def Typ.found (id : String) : Typ → Option Typ
 -- TODO
