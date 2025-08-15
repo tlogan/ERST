@@ -56,17 +56,17 @@ def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ �
     ListSubtyping.prune pids sts
 
 
-def ListTyp.combine (b : Bool) : List Typ → Typ
+def Typ.combine (b : Bool) : List Typ → Typ
 | .nil => Typ.base b
 | [t] => t
-| t :: ts => Typ.rator b t (ListTyp.combine b ts)
+| t :: ts => Typ.rator b t (Typ.combine b ts)
 
 def ListSubtyping.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
   let bds := Subtyping.bounds id b Δ
   if bds == [] then
     (.var id)
   else
-    ListTyp.combine (!b) bds
+    Typ.combine (!b) bds
 
 def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 : (ids : List String) → List (String × Typ)
@@ -186,9 +186,64 @@ mutual
   | _ => false
 end
 
+def Typ.break : Bool → Typ → List Typ
+| .false, .unio l r => [l, r]
+| .true, .inter l r => [l, r]
+| _, t => [t]
+
+mutual
+  def Subtyping.proj (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
+  | (key,.var id') =>
+    if id == id' then do
+      let p ← Typ.proj id l key
+      return (p, .var id)
+    else
+      failure
+  | st => return st
+
+  def ListSubtyping.proj (id : String) (l : String) : List (Typ × Typ) → Option (List (Typ × Typ))
+  | .nil => return []
+  | .cons st sts => do
+    let st' ← Subtyping.proj id l st
+    let sts' ← ListSubtyping.proj id l sts
+    return st' :: sts'
+
+  def Typ.proj (id : String) (l : String) : Typ → Option Typ
+  | .entry l' body =>
+    if l == l' then
+      return body
+    else
+      failure
+  | .inter left right =>
+    let ts := (Option.toList (Typ.proj id l left)) ++ (Option.toList (Typ.proj id l right))
+    return .combine .true ts
+  | .diff left right => do
+    let left' ← Typ.proj id l left
+    let right' ← Typ.proj id l right
+    return .diff left' right'
+  | .exi ids quals body =>
+    if id ∈ ids then
+      failure
+    else do
+      let quals' ← ListSubtyping.proj id l quals
+      let body' ← Typ.proj id l body
+      let ids' := ids ∩ (ListPairTyp.free_vars quals' ∪ Typ.free_vars body')
+      return .exi ids' quals' body'
+  | _ => .none
+end
+
+def ListTyp.factor (id : String) (l : String) : List Typ → Option (List Typ)
+| .nil => .some []
+| .cons t ts => do
+  let t' ← Typ.proj id l t
+  let ts' ← ListTyp.factor id l ts
+  return t' :: ts'
+
 def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
-  .none
---TODO
+  let cases := Typ.break .false t
+  do
+  let ts ← ListTyp.factor id l cases
+  return Typ.combine .false ts
 
 mutual
   def Subtyping.check (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Bool
@@ -199,7 +254,9 @@ end
 inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) : Pat →
   Typ → List (Typ × Typ) → List (String × Typ) → Prop
 | var {id id'}:
-  PatLifting.Static Δ Γ (.var id) (.var id') ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
+  PatLifting.Static
+  Δ Γ (.var id) (.var id')
+  ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
 | unit :
   PatLifting.Static Δ Γ .unit .unit Δ Γ
 | record_nil :
@@ -215,8 +272,17 @@ mutual
   inductive Subtyping.Static
   : List String → List (Typ × Typ) → Typ → Typ →
     List String → List (Typ × Typ) → Prop
-  | refl {Θ Δ left right} :
-    (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] right) →
+  | refl {Θ Δ t} :
+    Subtyping.Static Θ Δ t t Θ Δ
+
+  | rename_left {Θ Δ left left' right} :
+    (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
+    Subtyping.Static Θ Δ left' right Θ Δ →
+    Subtyping.Static Θ Δ left right Θ Δ
+
+  | rename_right {Θ Δ left right right'} :
+    (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
+    Subtyping.Static Θ Δ left right' Θ Δ →
     Subtyping.Static Θ Δ left right Θ Δ
 
   -- implication preservation
