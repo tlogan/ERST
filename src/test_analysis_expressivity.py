@@ -58,7 +58,7 @@ def test_succ_stream():
     code = f"""
 loop([self => [seed => 
     [@ =>
-        (seed, self(succ;seed))
+        ((seed, self(succ;seed)), self(succ;succ;seed))
     ]
 ]])
     """

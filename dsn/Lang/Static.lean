@@ -38,14 +38,14 @@ def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .false, (l,r) => (l,r)
 | .true, (l,r) => (r,l)
 
-def Subtyping.bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
+def ListSubtyping.bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
 | [] => []
 | st :: sts =>
     let (t,bd) := Subtyping.target_bound b st
     if (.var id) == t then
-      bd :: Subtyping.bounds id b sts
+      bd :: ListSubtyping.bounds id b sts
     else
-      Subtyping.bounds id b sts
+      ListSubtyping.bounds id b sts
 
 def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
@@ -56,8 +56,8 @@ def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ �
     ListSubtyping.prune pids sts
 
 def Typ.break : Bool → Typ → List Typ
-| .false, .unio l r => [l, r]
-| .true, .inter l r => [l, r]
+| .false, .unio l r => Typ.break .false l ++ Typ.break .false r
+| .true, .inter l r => Typ.break .true l ++ Typ.break .true r
 | _, t => [t]
 
 def Typ.combine (b : Bool) : List Typ → Typ
@@ -66,7 +66,7 @@ def Typ.combine (b : Bool) : List Typ → Typ
 | t :: ts => Typ.rator b t (Typ.combine b ts)
 
 def ListSubtyping.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
-  let bds := Subtyping.bounds id b Δ
+  let bds := ListSubtyping.bounds id b Δ
   if bds == [] then
     (.var id)
   else
@@ -88,6 +88,7 @@ def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 --   let Δ' := ListSubtyping.prune pids' Δ
 --   ⟨Θ, Δ', t'⟩
 
+-- TODO: test out the effect of interpretation in previous implementation
 def Zone.tidy (pids : List String) : Zone → Option Zone
 | ⟨Θ, Δ, .path l r⟩ =>
   let δl := ListSubtyping.interpret_all .false Δ (List.diff (ListPairTyp.free_vars Δ) pids)
@@ -124,9 +125,26 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
     return ⟨Θ, Δ', .pair l r⟩ :: zones'
 | _ => failure
 
-def Typ.found (id : String) : Typ → Option Typ
--- TODO
-| _ => .none
+
+-- def ListSubtyping.flows_into (id : String) : List (Typ × Typ) → Option (List Typ)
+-- | .nil => return []
+-- | .cons (l,r) sts =>
+--   if (r == .var id) then do
+--     let ls ← ListSubtyping.flows_into id sts
+--     return l::ls
+--   else
+--     failure
+
+-- ListSubtyping.flows_into id quals = .some cases →
+
+inductive Typ.Found (id : String) : Typ → Typ → Prop
+| intro {quals id' cases t t'} :
+  ListSubtyping.bounds id .true quals = cases →
+  List.length cases = List.length quals →
+  Typ.combine .false ((.var id') :: cases) = t →
+  Typ.Monotonic id' .true t →
+  Typ.sub [(id', .var id)] t = t' →
+  Typ.Found id (.exi [] quals (.var id')) (.unio (.var id') t')
 
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
@@ -155,13 +173,24 @@ def Subtyping.inflatable (key target : Typ) : Bool :=
   let ts := Typ.break .false target
   not (List.all ts (fun t => Subtyping.shallow_check key t))
 
-def Typ.drop (id : String) : Typ → Option Typ
---TODO
-| _ => .none
+def Typ.drop (id : String) (t : Typ) : Typ :=
+  let cases := Typ.break .false t
+  let cases' := List.filter (fun c => id ∉ Typ.free_vars c) cases
+  Typ.combine .false cases'
 
-def Typ.merge_paths : Typ → Option Typ
---TODO
-| _ => .none
+
+def Typ.break_paths : List Typ → Option (List Typ × List Typ)
+| .nil => return ([], [])
+| .cons (.path l r) ts => do
+  let (ls, rs) ← Typ.break_paths ts
+  return (l::ls, r::rs)
+| _ => failure
+
+def Typ.merge_paths (t : Typ) : Option Typ :=
+  let cases := Typ.break .true t
+  do
+  let (ls, rs) ← Typ.break_paths cases
+  return .path (Typ.combine .false ls) (Typ.combine .false rs)
 
 
 
@@ -407,12 +436,15 @@ mutual
 
   -- least fixed point introduction
   | lfp_inflate_intro {Θ Δ l id r Θ' Δ'} :
+    -- TODO: inflatable is a heuristic;
+    -- it's not necessary for soundness
+    -- consider merely using it in tactic
     Subtyping.inflatable l r →
     Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
 
   | lfp_drop_intro {Θ Δ l id r r' Θ' Δ'} :
-    Typ.drop id r = .some r' →
+    Typ.drop id r = r' →
     Subtyping.Static Θ Δ l r' Θ' Δ' →
     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
 
@@ -518,7 +550,7 @@ mutual
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r' →
     Typ.Monotonic idl .true r' →
-    Typ.found id l = .some l' →
+    Typ.Found id l l' →
     Typ.sub [(idl, .lfp id l')] r' = r'' →
     Subtyping.LoopListZone.Static
     pids id [⟨Θ, Δ, .path (.var idl) r⟩]
