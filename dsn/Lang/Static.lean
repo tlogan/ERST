@@ -232,14 +232,17 @@ mutual
         l == .var id && (Typ.toBruijn 0 [] r) == (Typ.toBruijn 0 [] .top)
       )
     | _, .lfp id body =>
+      -- NOTE: inflatable is a bit less restrictive than is_pattern check on lower
       Subtyping.inflatable lower body
     | _, _ => .false
     )
 
   def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
   : List (Typ × Typ) → Bool
-  --TODO
-  | _ => false
+  | .nil => .true
+  | .cons (l,r) sts =>
+    Subtyping.restricted Θ Δ l r &&
+    ListSubtyping.restricted Θ Δ  sts
 end
 
 mutual
@@ -297,7 +300,13 @@ def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
   return Typ.combine .false ts
 
 mutual
+  -- TODO: check needs to be complete and well founded
   def Subtyping.check (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Bool
+  -- TODO: only consider cases where left is pattern and right is anything
+  -- or right is pattern left is anything
+  -- TODO: if right is LFP; how to ensure well founded?
+  -- we know left is finite; prove that one of the two inputs is decreasing;
+  -- the left must be decreasing when we inflate the right
   | _, _ => false
 end
 
@@ -439,7 +448,6 @@ mutual
   -- difference introduction
   | diff_intro {Θ Δ t l r Θ' Δ'} :
     Typ.is_pattern [] r →
-    Subtyping.restricted Θ Δ r t →
     ¬ Subtyping.check Θ Δ t r →
     ¬ Subtyping.check Θ Δ r t →
     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
