@@ -2621,6 +2621,7 @@ SOLVABLE:
                         if wst.lower == lower 
                     )
                 ) or
+                # TODO: does inflatable imply completeness of subtyping?
                 (isinstance(upper, LeastFP) and is_inflatable(lower, upper))
             )
 

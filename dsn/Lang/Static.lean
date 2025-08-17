@@ -156,22 +156,23 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
 | _ => false
 
--- neither sound nor complete; just a heuristic requirement to choose a subtyping rule
-def Subtyping.shallow_check : Typ → Typ → Bool
-| .var _, _ => .true
-| _, .var _ => .true
-| k, .diff left right =>
-  Subtyping.shallow_check k left && not (Subtyping.shallow_check k right)
+-- NOTE: this should be complete, but not sound
+def Subtyping.shallow_match : Typ → Typ → Bool
 | .entry l k, .entry l' t =>
-  l == l' && Subtyping.shallow_check k t
-| k, .inter left right => Subtyping.shallow_check k left && Subtyping.shallow_check k right
-| .inter left right, t => Subtyping.shallow_check left t || Subtyping.shallow_check right t
-| k, .exi _ _ t => Subtyping.shallow_check k t
-| _,_ => .false
+  l == l' && Subtyping.shallow_match k t
+| k, .diff left right =>
+  Subtyping.shallow_match k left && not (Subtyping.shallow_match k right)
+| k, .exi _ _ t => Subtyping.shallow_match k t
+| k, .inter left right =>
+  Subtyping.shallow_match k left && Subtyping.shallow_match k right
+| .inter left right, t =>
+  Subtyping.shallow_match left t || Subtyping.shallow_match right t
+| _,_ => .true
 
+-- TODO: must prove that if inflatable holds then subtyping is sound and complete
 def Subtyping.inflatable (key target : Typ) : Bool :=
   let ts := Typ.break .false target
-  not (List.all ts (fun t => Subtyping.shallow_check key t))
+  not (List.all ts (fun t => Subtyping.shallow_match key t))
 
 def Typ.drop (id : String) (t : Typ) : Typ :=
   let cases := Typ.break .false t
@@ -220,11 +221,20 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
   let r := ListZone.pack pids .true zones
   Typ.rator b l r
 
-
 mutual
   def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
-    --TODO
-    false
+    .false ||
+    Typ.is_pattern [] upper ||
+    (match lower, upper with
+    | .var id, _ =>
+      id ∉ Θ && List.all Δ (fun (l,r) =>
+        (id ∉ Typ.free_vars l ∪ Typ.free_vars r) ||
+        l == .var id && (Typ.toBruijn 0 [] r) == (Typ.toBruijn 0 [] .top)
+      )
+    | _, .lfp id body =>
+      Subtyping.inflatable lower body
+    | _, _ => .false
+    )
 
   def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
   : List (Typ × Typ) → Bool

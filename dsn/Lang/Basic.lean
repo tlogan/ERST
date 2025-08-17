@@ -47,7 +47,7 @@ inductive Typ.Bruijn
 | all :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
 | exi :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
 | lfp :  Typ.Bruijn → Typ.Bruijn
-deriving Repr
+deriving Repr, BEq
 
 
 def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
