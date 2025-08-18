@@ -2630,8 +2630,6 @@ akin to deriving the least fixed point elimination under the assumption of the i
       \\\\
       \TODO{the pattern restriction on both sides is more restrictive than subtyping restriction}
       \\\\
-      % \Theta, \Delta \restricted \tau_r \subtypes  \tau
-      %\\
       \epsilon \pattype \tau_r
       \\
       \Theta, \Delta \not\dentails \tau \subtypes \tau_r
@@ -2642,6 +2640,20 @@ akin to deriving the least fixed point elimination under the assumption of the i
     } {
       \Theta, \Delta \entails 
       \tau \subtypes \tau_l \typdiff \tau_r
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \epsilon \pattype \tau_r
+      \\
+      \nexists n \qua \Theta, \Delta \dentails \tau[\alpha\slash\J{BOT}]^n \subtypes \tau_r
+      \\
+      \nexists n \qua \Theta, \Delta \dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^n
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[} \alpha \J{]} \tau \subtypes \tau_l \typdiff \tau_r
       \given \Theta', \Delta'
     }
   \end{mathpar}

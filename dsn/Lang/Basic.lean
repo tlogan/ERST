@@ -333,7 +333,6 @@ def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 | 0 => .exi ["T"] [] (.var "T")
 | n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
 
-
 inductive Pat
 | var : String → Pat
 | unit

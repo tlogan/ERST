@@ -65,19 +65,24 @@ def Typ.combine (b : Bool) : List Typ → Typ
 | [t] => t
 | t :: ts => Typ.rator b t (Typ.combine b ts)
 
-def ListSubtyping.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
+def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
   let bds := ListSubtyping.bounds id b Δ
   if bds == [] then
-    (.var id)
+    Typ.base (not b)
   else
-    Typ.combine (!b) bds
+    Typ.combine (not b) bds
 
 def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 : (ids : List String) → List (String × Typ)
 | .nil => []
 | .cons id ids =>
-  (id, ListSubtyping.interpret_one id b Δ) ::
-  ListSubtyping.interpret_all b Δ ids
+  let i := Typ.interpret_one id b Δ
+  if not b && (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top) then
+    ListSubtyping.interpret_all b Δ ids
+  else if b && (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot) then
+    ListSubtyping.interpret_all b Δ ids
+  else
+    (id, i) :: ListSubtyping.interpret_all b Δ ids
 
 
 -- def Zone.tidy (pids : List String) : Zone → Zone
@@ -91,10 +96,12 @@ def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 -- TODO: test out the effect of interpretation in previous implementation
 def Zone.tidy (pids : List String) : Zone → Option Zone
 | ⟨Θ, Δ, .path l r⟩ =>
-  let δl := ListSubtyping.interpret_all .false Δ (List.diff (ListPairTyp.free_vars Δ) pids)
-  let δr := ListSubtyping.interpret_all .true Δ (List.diff (ListPairTyp.free_vars Δ) pids)
+  let params := Typ.free_vars l
+  let δl := ListSubtyping.interpret_all .false Δ (List.diff params pids)
+  let δr := ListSubtyping.interpret_all .true Δ
+    (List.diff (List.diff (Typ.free_vars r) params) pids)
   let l' := Typ.sub δl l
-  let r' := Typ.sub δr r
+  let r' := Typ.sub (δl ∪ δr) r
   let Δ' := ListSubtyping.prune (pids ∪ Θ ∪ (Typ.free_vars (.path l' r'))) Δ
   .some ⟨Θ, Δ', .path l' r'⟩
 | _ => .none
@@ -227,12 +234,18 @@ mutual
     Typ.is_pattern [] upper ||
     (match lower, upper with
     | .var id, _ =>
-      id ∉ Θ && List.all Δ (fun (l,r) =>
-        (id ∉ Typ.free_vars l ∪ Typ.free_vars r) ||
-        l == .var id && (Typ.toBruijn 0 [] r) == (Typ.toBruijn 0 [] .top)
-      )
+      -- id ∉ Θ && List.all Δ (fun (l,r) =>
+      --   (id ∉ Typ.free_vars l ∪ Typ.free_vars r) ||
+      --   l == .var id && (Typ.toBruijn 0 [] r) == (Typ.toBruijn 0 [] .top)
+      -- )
+      if id ∉ Θ then
+        let i := Typ.interpret_one id .false Δ
+        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
+      else
+        .false
     | _, .lfp id body =>
       -- NOTE: inflatable is a bit less restrictive than is_pattern check on lower
+      -- TODO: toggle this: maybe use subfold instead?
       Subtyping.inflatable lower body
     | _, _ => .false
     )
@@ -307,7 +320,47 @@ mutual
   -- TODO: if right is LFP; how to ensure well founded?
   -- we know left is finite; prove that one of the two inputs is decreasing;
   -- the left must be decreasing when we inflate the right
-  | _, _ => false
+  --------------------------------------------------
+  | .unit, .unit => true
+  | .entry l body, .entry l' body' =>
+    l = l' && Subtyping.check Θ Δ body body'
+
+  | _, .var id =>
+    if id ∉ Θ then
+      let i := Typ.interpret_one id .false Δ
+      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
+    else
+      .false
+  | lower, .inter left right =>
+    Subtyping.check Θ Δ lower left && Subtyping.check Θ Δ lower right
+  | lower, .exi _ [] body => Subtyping.check Θ Δ lower body
+
+  | .var id, _ =>
+    if id ∈ Θ then
+      let i := Typ.interpret_one id .true Δ
+      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+    else
+      .false
+  | .inter left right, upper =>
+    Subtyping.check Θ Δ left upper || Subtyping.check Θ Δ right upper
+  | .exi ids [] body, upper => Subtyping.check (ids ∪ Θ) Δ body upper
+  --------------------------------------------------
+  -- TODO: handle LFP on rhs
+  --------------------------------------------------
+  -- | lower, .unit => true
+  -- | lower, .var id => false
+  -- | lower, .entry _ body => false
+  -- | lower, .inter left right => false
+  -- | lower, .exi ids [] body => false
+  --------------------------------------------------
+  -- | .unit, upper => true
+  -- | .var id, upper => false
+  -- | .entry _ body, upper => false
+  -- | .inter left right, upper => false
+  -- | .exi ids [] body, upper => false
+  --------------------------------------------------
+  | lower, _ =>  (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
+  -- | _, _ => false
 end
 
 -- the weakest type t such that every inhabitant matches pattern p
@@ -451,6 +504,13 @@ mutual
     ¬ Subtyping.check Θ Δ t r →
     ¬ Subtyping.check Θ Δ r t →
     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
+
+  -- difference introduction
+  | diff_fold_intro {Θ Δ id t l r Θ' Δ'} :
+    Typ.is_pattern [] r →
+    ¬ (∃ n, Subtyping.check Θ Δ (Typ.subfold id t n) r) →
+    ¬ (∃ n, Subtyping.check Θ Δ r (Typ.subfold id t n)) →
+    Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
   -- least fixed point introduction
   | lfp_inflate_intro {Θ Δ l id r Θ' Δ'} :
