@@ -1790,7 +1790,9 @@ class Solver:
 
         big_typ = base
         for result in results:
-            m = self.interpret_ids_polar(polarity, result.world.closedids, result.world.constraints)
+
+            ids = extract_free_vars_from_typ(result.world.closedids, result.typ)
+            m = self.interpret_ids_polar(polarity, ids, result.world.constraints)
             t = sub_typ(m, result.typ)
             # t = self.interpret_polar_typ(polarity, result.world.closedids, result.world.constraints, result.typ)
             influential_ids = result.world.closedids.union(extract_free_vars_from_typ(s(), t))
@@ -1994,25 +1996,23 @@ class Solver:
         )
 
     ###############################################3
-    def interpret_ids_strongest(self, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
-        fids = extract_free_vars_from_constraints(ignore, constraints)
+    def interpret_ids_strongest(self, ids : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
         return pmap({
-            fid : self.interpret_id_strongest(constraints, fid) 
-            for fid in fids
+            id : self.interpret_id_strongest(constraints, id) 
+            for id in ids
         })
 
-    def interpret_ids_weakest(self, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
-        fids = extract_free_vars_from_constraints(ignore, constraints)
+    def interpret_ids_weakest(self, ids : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
         return pmap({
-            fid : self.interpret_id_weakest(constraints, fid) 
-            for fid in fids
+            id : self.interpret_id_weakest(constraints, id) 
+            for id in ids
         })
 
-    def interpret_ids_polar(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
+    def interpret_ids_polar(self, strongest : bool, ids : PSet[str], constraints : PSet[Subtyping]) -> PMap[str, Typ]:
         if strongest:
-            return self.interpret_ids_strongest(ignore, constraints)
+            return self.interpret_ids_strongest(ids, constraints)
         else:
-            return self.interpret_ids_weakest(ignore, constraints)
+            return self.interpret_ids_weakest(ids, constraints)
 
     def interpret_sub(self, strongest : bool, ignore : PSet[str], constraints : PSet[Subtyping], target : Typ) -> Typ:
         prev = Bot() if strongest else Top() 
@@ -2044,9 +2044,9 @@ class Solver:
     #         assert False
     #     elif isinstance(src, TVar) and src.id not in ignore:  
     #         if positive:
-    #             return self.interpret_positive_id(constraints, src.id)
+    #             return self.interpret_id_strongest(constraints, src.id)
     #         else:
-    #             return self.interpret_negative_id(constraints, src.id)
+    #             return self.interpret_id_weakest(constraints, src.id)
     #     elif isinstance(src, TUnit):  
     #         return TUnit()
     #     elif isinstance(src, TEntry):  
@@ -2062,7 +2062,7 @@ class Solver:
     #         return Inter(left, right)
     #     elif isinstance(src, Diff):  
     #         context = self.interpret_polar_typ(positive, ignore, constraints, src.context)
-    #         return Diff(context, src.negation)
+    #         return Diff(context, src.subtraction)
     #     elif isinstance(src, Imp):  
     #         consq = self.interpret_polar_typ(positive, ignore, constraints, src.consq)
     #         antec = self.interpret_polar_typ(not positive, ignore, constraints, src.antec)
@@ -2457,7 +2457,9 @@ SOLVABLE:
                 """)
                 # LEARN (WRITE) 
                 # new_lower = self.interpret_polar_typ(True, world.closedids, world.constraints, lower)
-                m = self.interpret_ids_polar(True, world.closedids, world.constraints)
+
+                
+                m = self.interpret_ids_polar(True, extract_free_vars_from_constraints(world.closedids, world.constraints), world.constraints)
                 new_lower = sub_typ(m, lower)
                 if new_lower != lower:
                     lower_fvs = extract_free_vars_from_typ(s(), lower)  
@@ -3403,10 +3405,13 @@ class BaseRule(Rule):
             local_closedids = branch.world.closedids.difference(world.closedids)
 
             ######### TIDY UP #############
-            # m_left = self.solver.interpret_ids_polar(False, foreignids.union(local_closedids), local_constraints)
-            m_right = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
-            imp = Imp(branch.pattern, sub_typ(m_right, branch.body))
-            # imp = sub_typ(m, Imp(branch.pattern, branch.body))
+            param_ids = extract_free_vars_from_typ(foreignids.union(local_closedids), branch.pattern)
+            body_ids= extract_free_vars_from_typ(foreignids.union(local_closedids).union(param_ids), branch.body)
+            m_left = self.solver.interpret_ids_polar(False, param_ids, local_constraints)
+            m_right = self.solver.interpret_ids_polar(True, body_ids, local_constraints)
+            # imp = Imp(branch.pattern, sub_typ(m_right, branch.body))
+            imp = Imp(sub_typ(m_left, branch.pattern), sub_typ(m_right + m_left, branch.body))
+
 
             # imp = self.solver.interpret_polar_typ(
             #     True, 
@@ -3486,11 +3491,6 @@ class ExprRule(Rule):
                 new_zones.extend([
                     (w, result_var)
                     for w in self.solver.solve(world, current_cator_typ, Imp(arg_typ, result_var), reset=True)
-                    # for local_constraints in [world.constraints.difference(world.constraints)]
-                    # for local_closedids in [world.closedids.difference(w.closedids)]
-                    # for m in [self.solver.interpret_ids_polar(True, foreignids.union(w.closedids), w.constraints)]
-                    # for t in [sub_typ(m, result_var)]
-                    # for t in [self.solver.interpret_sub(True, foreignids.union(w.closedids), w.constraints, result_var)]
                 ])
                 zones = new_zones
 
@@ -3878,7 +3878,8 @@ class TargetRule(Rule):
                 #     foreignids.union(local_closedids), local_constraints, 
                 #     target_result.typ
                 # )
-                m = self.solver.interpret_ids_polar(True, foreignids.union(local_closedids), local_constraints)
+                ids = extract_free_vars_from_typ(foreignids.union(local_closedids), target_result.typ) 
+                m = self.solver.interpret_ids_polar(True, ids, local_constraints)
                 target = sub_typ(m, target_result.typ)
 
                 influential_ids = foreignids.union(local_closedids).union(extract_free_vars_from_typ(s(), target))
