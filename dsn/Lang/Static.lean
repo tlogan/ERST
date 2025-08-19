@@ -275,9 +275,10 @@ def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower uppe
       (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
     else
       .false
-  | _, .lfp _ body =>
+  -- | _, .lfp _ body =>
     -- NOTE: inflatable is a bit less restrictive than is_pattern check on lower
-    Subtyping.inflatable lower body
+    -- TODO: test if inflatable lfp is actually needed
+    -- Subtyping.inflatable lower body
   | _, _ => .false
   )
 
