@@ -34,6 +34,7 @@ def BiZone.wrap (b : Bool)
 
 inductive Typ.Decreasing (id : String) : Typ → Prop
 --TODO
+| intro {t} : Typ.Decreasing id t
 
 def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .false, (l,r) => (l,r)
