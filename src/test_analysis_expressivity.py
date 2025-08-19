@@ -1131,7 +1131,7 @@ LFP [R] <nil> @ | <succ> R
 if __name__ == '__main__':
     pass
     ##########################
-    test_max()
+    # test_max()
     # test_max_app()
     # test_succ_stream()
     # test_single_case_loop()
@@ -1142,6 +1142,7 @@ if __name__ == '__main__':
     # test_succ_stream()
     # test_inf_loop()
     # test_succ_stream()
+    test_induction_even_is_nat_not_three()
 
 
 #######################################################################
