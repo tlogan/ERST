@@ -2643,18 +2643,55 @@ akin to deriving the least fixed point elimination under the assumption of the i
       \given \Theta', \Delta'
     }
 
+
     \inferrule {
+      \TODO{proof rules should not require induction to construct premises}
+      \\\\
       \epsilon \pattype \tau_r
       \\
-      \nexists n \qua \Theta, \Delta \dentails \tau[\alpha\slash\J{BOT}]^n \subtypes \tau_r
+      \alpha \downarrow \tau
       \\
-      \nexists n \qua \Theta, \Delta \dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^n
+      \alpha \wr^+ \tau
+      \\\\
+      \Theta, \Delta \not\dentails \tau[\alpha\slash\J{BOT}]^1 \subtypes \tau_r
+      \\
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^{\textbf{height}(\tau_r)}
       \\
       \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
     } {
       \Theta, \Delta \entails 
       \J{LFP[} \alpha \J{]} \tau \subtypes \tau_l \typdiff \tau_r
       \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \TODO{meta-theory}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \alpha \downarrow \tau
+      \\
+      \alpha \wr^+ \tau
+      \\
+    } {
+      \Theta, \Delta \not\dentails \tau[\alpha\slash\J{BOT}]^1 \subtypes \tau_r
+      \implies
+      \nexists n \qua \Theta, \Delta \dentails \tau[\alpha\slash\J{BOT}]^n \subtypes \tau_r
+    }
+
+    \inferrule {
+      \TODO{meta-theory}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \alpha \downarrow \tau
+      \\
+      \alpha \wr^+ \tau
+      \\
+    } {
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^{\textbf{height}(\tau_r)}
+      \implies
+      \nexists n \qua \Theta, \Delta \dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^n
     }
   \end{mathpar}
 \end{definition}

@@ -32,7 +32,8 @@ def BiZone.wrap (b : Bool)
 | Θ, Δ, [], [], t => Typ.outer b Θ Δ t
 | Θ, Δ, Θ', Δ', t => Typ.outer b Θ Δ (Typ.outer b Θ' Δ' t)
 
-
+inductive Typ.Decreasing (id : String) : Typ → Prop
+--TODO
 
 def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .false, (l,r) => (l,r)
@@ -163,6 +164,10 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
 | _ => false
 
+def Typ.height : Typ → Option Nat
+-- TODO
+| _ => .none
+
 -- NOTE: this should be complete, but not sound
 def Subtyping.shallow_match : Typ → Typ → Bool
 | .entry l k, .entry l' t =>
@@ -228,35 +233,60 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
   let r := ListZone.pack pids .true zones
   Typ.rator b l r
 
-mutual
-  def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
-    .false ||
-    Typ.is_pattern [] upper ||
-    (match lower, upper with
-    | .var id, _ =>
-      -- id ∉ Θ && List.all Δ (fun (l,r) =>
-      --   (id ∉ Typ.free_vars l ∪ Typ.free_vars r) ||
-      --   l == .var id && (Typ.toBruijn 0 [] r) == (Typ.toBruijn 0 [] .top)
-      -- )
-      if id ∉ Θ then
-        let i := Typ.interpret_one id .false Δ
-        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
-      else
-        .false
-    | _, .lfp id body =>
-      -- NOTE: inflatable is a bit less restrictive than is_pattern check on lower
-      -- TODO: toggle this: maybe use subfold instead?
-      Subtyping.inflatable lower body
-    | _, _ => .false
-    )
+-- inductive Subtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Prop
+-- | pat_intro {lower upper}:
+--   Typ.is_pattern [] upper →
+--   Subtyping.Restricted Θ Δ lower upper
 
-  def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
-  : List (Typ × Typ) → Bool
-  | .nil => .true
-  | .cons (l,r) sts =>
-    Subtyping.restricted Θ Δ l r &&
-    ListSubtyping.restricted Θ Δ  sts
-end
+-- | var_elim {id i upper}:
+--   id ∉ Θ →
+--   Typ.interpret_one id .true Δ = i →
+--   (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot) →
+--   Subtyping.Restricted Θ Δ (.var id) upper
+
+-- | lfp_intro {lower fids id body }:
+--   Typ.free_vars lower = fids →
+--   Typ.is_pattern fids lower →
+--   ∀ fid, fid ∈ fids → (
+--     fid ∉ Θ ∧
+--     ∃ i, Typ.interpret_one fid .true Δ = i ∧
+--     (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot)
+--   ) →
+--   Typ.Monotonic id .true body →
+--   Typ.Decreasing id body →
+--   Subtyping.Restricted Θ Δ lower (.lfp id body)
+
+-- inductive ListSubtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ))
+-- : List (Typ × Typ) → Prop
+-- | nil :
+--   ListSubtyping.Restricted Θ Δ []
+-- | cons {l r sts} :
+--   Subtyping.Restricted Θ Δ l r →
+--   ListSubtyping.Restricted Θ Δ sts →
+--   ListSubtyping.Restricted Θ Δ ((l,r) :: sts)
+
+def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
+  .false ||
+  Typ.is_pattern [] upper ||
+  (match lower, upper with
+  | .var id, _ =>
+    if id ∉ Θ then
+      let i := Typ.interpret_one id .true Δ
+      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+    else
+      .false
+  | _, .lfp _ body =>
+    -- NOTE: inflatable is a bit less restrictive than is_pattern check on lower
+    Subtyping.inflatable lower body
+  | _, _ => .false
+  )
+
+def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
+: List (Typ × Typ) → Bool
+| .nil => .true
+| .cons (l,r) sts =>
+  Subtyping.restricted Θ Δ l r &&
+  ListSubtyping.restricted Θ Δ  sts
 
 mutual
   def Subtyping.proj (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
@@ -506,10 +536,13 @@ mutual
     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
 
   -- difference introduction
-  | diff_fold_intro {Θ Δ id t l r Θ' Δ'} :
+  | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
     Typ.is_pattern [] r →
-    ¬ (∃ n, Subtyping.check Θ Δ (Typ.subfold id t n) r) →
-    ¬ (∃ n, Subtyping.check Θ Δ r (Typ.subfold id t n)) →
+    Typ.Monotonic id .true t →
+    Typ.Decreasing id t →
+    ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
+    Typ.height r = .some h →
+    ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
     Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
   -- least fixed point introduction
