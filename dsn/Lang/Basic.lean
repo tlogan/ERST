@@ -268,19 +268,20 @@ end
 
 mutual
 
-  inductive ListSubtyping.Monotonic.Consistent : List String → List (Typ × Typ) → Typ → Prop
-  | nil cs t : ListSubtyping.Monotonic.Consistent [] cs t
+  inductive ListSubtyping.Monotonic.Either : List String → List (Typ × Typ) → Typ → Prop
+  | nil cs t : ListSubtyping.Monotonic.Either [] cs t
   | cons id ids cs t b :
     ListSubtyping.Monotonic id b cs →
     Typ.Monotonic id b t →
-    ListSubtyping.Monotonic.Consistent  ids cs t →
-    ListSubtyping.Monotonic.Consistent (id :: ids) cs t
+    ListSubtyping.Monotonic.Either ids cs t →
+    ListSubtyping.Monotonic.Either (id :: ids) cs t
 
   inductive ListSubtyping.Monotonic : String → Bool → List (Typ × Typ) → Prop
   | nil id b : ListSubtyping.Monotonic id b []
   | cons id b l r remainder :
     Typ.Monotonic id (not b) l →
     Typ.Monotonic id b r →
+    ListSubtyping.Monotonic id b remainder →
     ListSubtyping.Monotonic id b ((l,r)::remainder)
 
   inductive Typ.Monotonic : String → Bool → Typ → Prop
@@ -307,7 +308,7 @@ mutual
 
   | all id b ids quals body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Consistent ids quals body →
+    ListSubtyping.Monotonic.Either ids quals body →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.all ids quals body)
 
@@ -317,7 +318,7 @@ mutual
 
   | exi id b ids quals body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Consistent ids quals (.diff .unit body) →
+    ListSubtyping.Monotonic.Either ids quals (.diff .unit body) →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.exi ids quals body)
 
@@ -330,90 +331,84 @@ mutual
 end
 
 
-open Lean.Elab.Tactic
+syntax "prove_list_subtyping_monotonic_either" : tactic
+syntax "prove_list_subtyping_monotonic" : tactic
+syntax "prove_typ_monotonic" : tactic
 
-
-----------------------------------
-
-#check Lean.Expr
-
-elab "custom_let " n:ident " : " t:term " := " v:term : tactic =>
-  withMainContext do
-    let t ← elabTerm t none
-    let v ← elabTermEnsuringType v t
-    liftMetaTactic fun mvarId => do
-      let mvarIdNew ← mvarId.define n.getId t v
-      let (_, mvarIdNew) ← mvarIdNew.intro1P
-      return [mvarIdNew]
-
-open Lean.Elab.Tactic in
-elab "custom_have " n:ident " : " t:term " := " v:term : tactic =>
-  withMainContext do
-    let t ← elabTerm t none
-    let v ← elabTermEnsuringType v t
-    liftMetaTactic fun mvarId => do
-      let mvarIdNew ← mvarId.assert n.getId t v
-      let (_, mvarIdNew) ← mvarIdNew.intro1P
-      return [mvarIdNew]
-
-theorem test_faq_have : True := by
-  custom_let n : Nat := 5
-  custom_have h : n = n := rfl
--- n : Nat := 5
--- h : n = n
--- ⊢ True
-  trivial
-
-#check `(1)
-
-----------------------------------
-
-inductive Maybe (P : Prop) : Prop
-| some (p : P) : Maybe P
-| none : Maybe P
-
-def foo {P} : Maybe P → True
-| Maybe.some p => .intro
-| Maybe.none => .intro
-
-
-#check ListSubtyping.Monotonic.Consistent.cons
-
-syntax "prove_monotonic" : tactic
 macro_rules
-| `(tactic| prove_monotonic) => `(tactic| repeat (constructor ; try simp))
-
-syntax "prove_monotonic_consistent" : tactic
-macro_rules
-| `(tactic| prove_monotonic_consistent) => `(tactic|
-  first
-  | (apply ListSubtyping.Monotonic.Consistent.nil; prove_monotonic; fail)
-  | (apply ListSubtyping.Monotonic.Consistent.cons _ _ _ _ .true; prove_monotonic; fail)
-  | (apply ListSubtyping.Monotonic.Consistent.cons _ _ _ _ .false; prove_monotonic)
+| `(tactic| prove_list_subtyping_monotonic_either) => `(tactic|
+  (first
+  | apply ListSubtyping.Monotonic.Either.nil
+  | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .true
+    · prove_list_subtyping_monotonic
+    · prove_typ_monotonic
+    · prove_list_subtyping_monotonic_either
+  | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .false
+    · prove_list_subtyping_monotonic
+    · prove_typ_monotonic
+    · prove_list_subtyping_monotonic_either
+  ) <;> fail
 )
 
+| `(tactic| prove_list_subtyping_monotonic) => `(tactic|
+  (first
+  | apply ListSubtyping.Monotonic.nil
+  | apply ListSubtyping.Monotonic.Either.cons
+    · prove_typ_monotonic
+    · prove_typ_monotonic
+    · prove_list_subtyping_monotonic
+  ) <;> fail
+)
+| `(tactic| prove_typ_monotonic) => `(tactic|
+  (first
+  | apply Typ.Monotonic.var
+  | apply Typ.Monotonic.varskip; simp
+  | apply Typ.Monotonic.unit;
+  | apply Typ.Monotonic.entry; prove_typ_monotonic
+
+  | apply Typ.Monotonic.path
+    · prove_typ_monotonic
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.unio
+    · prove_typ_monotonic
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.inter
+    · prove_typ_monotonic
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.diff
+    · prove_typ_monotonic
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.all
+    · simp
+    · prove_list_subtyping_monotonic_either
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.allskip; simp
+  | apply Typ.Monotonic.exi
+    · simp
+    · prove_list_subtyping_monotonic_either
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.lfp
+    · simp
+    · prove_typ_monotonic
+  | apply Typ.Monotonic.lfpskip; simp
+  ) <;> fail
+)
+
+example : Typ.Monotonic "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
+  prove_typ_monotonic
+
 example : Typ.Monotonic "a" .true (.path .bot (.inter .unit (.var "a"))) := by
-  prove_monotonic
+  prove_typ_monotonic
+  -- repeat (constructor; try simp)
 
 -- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
---   prove_monotonic
+--   prove_typ_monotonic
 
 example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .bot) := by
-  prove_monotonic
+  prove_typ_monotonic
 
 example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .top) := by
-  constructor
-  constructor
-  constructor
-  constructor
-  constructor
-  simp
-  ---------------------------------------------
-  -- TODO: write tactic: prove_monotonic_consistent tactic that tries both false and true branches
-  -- use first tactic to use the first one that succeeds
-  prove_monotonic_consistent
-  -------------------------------------------------
-
+  prove_typ_monotonic
 
 
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
