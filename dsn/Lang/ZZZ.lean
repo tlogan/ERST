@@ -1,5 +1,8 @@
 import Lang.Basic
 import Mathlib.Data.Set.Basic
+
+set_option pp.fieldNotation false
+
 ---------------------------------------------------------------
 ------ Experimental --------------------------------------------
 ---------------------------------------------------------------
@@ -248,3 +251,48 @@ def p := T.base "uno"
 def pt : Thing := ⟨"uno"⟩
 #eval p.step
 #eval pt.uno
+
+elab "custom_sorry_1" : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let goal ← Lean.Elab.Tactic.getMainGoal
+    let goalDecl ← goal.getDecl
+    let goalType := goalDecl.type
+    dbg_trace f!"goal type: {goalType}"
+
+example : 1 = 2 := by
+  custom_sorry_1
+-- goal type: Eq.{1} Nat (OfNat.ofNat.{0} Nat 1 (instOfNatNat 1)) (OfNat.ofNat.{0} Nat 2 (instOfNatNat 2))
+-- unsolved goals: ⊢ 1 = 2
+  sorry
+
+
+open Lean.Elab.Tactic in
+elab "custom_let " n:ident " : " t:term " := " v:term : tactic =>
+  withMainContext do
+    let t ← elabTerm t none
+    let v ← elabTermEnsuringType v t
+    liftMetaTactic fun mvarId => do
+      let mvarIdNew ← mvarId.define n.getId t v
+      let (_, mvarIdNew) ← mvarIdNew.intro1P
+      return [mvarIdNew]
+
+
+open Lean.Elab.Tactic
+#check liftMetaTactic
+#check Lean.MVarId.assert
+
+#check List.get
+
+def foo (x : Nat) := x
+
+#check (foo <| 2 + 3)
+#check (2 + 3 |> foo)
+
+elab "remove_goals" : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let goals : List Lean.MVarId ← Lean.Elab.Tactic.getGoals
+    Lean.Elab.Tactic.setGoals []
+    if h : 0 < List.length goals then
+      Lean.Elab.Tactic.setGoals [List.get goals ⟨0, h⟩]
+    else
+      Lean.Elab.Tactic.setGoals []

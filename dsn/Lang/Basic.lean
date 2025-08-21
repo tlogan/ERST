@@ -269,65 +269,152 @@ end
 mutual
 
   inductive ListSubtyping.Monotonic.Consistent : List String → List (Typ × Typ) → Typ → Prop
-  | nil {cs t} : ListSubtyping.Monotonic.Consistent [] cs t
-  | cons {id ids cs t b} :
+  | nil cs t : ListSubtyping.Monotonic.Consistent [] cs t
+  | cons id ids cs t b :
     ListSubtyping.Monotonic id b cs →
     Typ.Monotonic id b t →
     ListSubtyping.Monotonic.Consistent  ids cs t →
     ListSubtyping.Monotonic.Consistent (id :: ids) cs t
 
   inductive ListSubtyping.Monotonic : String → Bool → List (Typ × Typ) → Prop
-  | nil {id b} : ListSubtyping.Monotonic id b []
-  | cons {id b l r remainder} :
+  | nil id b : ListSubtyping.Monotonic id b []
+  | cons id b l r remainder :
     Typ.Monotonic id (not b) l →
     Typ.Monotonic id b r →
     ListSubtyping.Monotonic id b ((l,r)::remainder)
 
   inductive Typ.Monotonic : String → Bool → Typ → Prop
-  | var {id} : Typ.Monotonic id true (.var id)
-  | varskip {id b id'} : id ≠ id' → Typ.Monotonic id b (.var id')
-  | unit {id b}: Typ.Monotonic id b .unit
-  | entry {id b l body}: Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
-  | path {id b left right}:
+  | var id : Typ.Monotonic id true (.var id)
+  | varskip id b id' : id ≠ id' → Typ.Monotonic id b (.var id')
+  | unit id b : Typ.Monotonic id b .unit
+  | entry id b l body : Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
+  | path id b left right :
     Typ.Monotonic id (not b) left →
     Typ.Monotonic id b right →
     Typ.Monotonic id b (.path left right)
-  | unio {id b left right}:
+  | unio id b left right :
     Typ.Monotonic id b left →
     Typ.Monotonic id b right →
     Typ.Monotonic id b (.unio left right)
-  | inter {id b left right}:
+  | inter id b left right :
     Typ.Monotonic id b left →
     Typ.Monotonic id b right →
     Typ.Monotonic id b (.inter left right)
-  | diff {id b left right}:
+  | diff id b left right :
     Typ.Monotonic id b left →
     Typ.Monotonic id (not b) right →
     Typ.Monotonic id b (.diff left right)
 
-  | all {id b ids quals body} :
+  | all id b ids quals body :
     id ∉ ids →
     ListSubtyping.Monotonic.Consistent ids quals body →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.all ids quals body)
 
-  | allskip {id b ids quals body} :
+  | allskip id b ids quals body :
     id ∈ ids →
     Typ.Monotonic id b (.all ids quals body)
 
-  | exi {id b ids quals body} :
+  | exi id b ids quals body :
     id ∉ ids →
     ListSubtyping.Monotonic.Consistent ids quals (.diff .unit body) →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.exi ids quals body)
 
-  | exiskip {id b ids quals body} :
+  | exiskip id b ids quals body :
     id ∈ ids →
     Typ.Monotonic id b (.exi ids quals body)
 
-  | lfp {id b id' body}: id ≠ id' → Typ.Monotonic id b body → Typ.Monotonic id b (.lfp id' body)
-  | lfpskip {id b body}: Typ.Monotonic id b (.lfp id body)
+  | lfp id b id' body : id ≠ id' → Typ.Monotonic id b body → Typ.Monotonic id b (.lfp id' body)
+  | lfpskip id b body : Typ.Monotonic id b (.lfp id body)
 end
+
+
+open Lean.Elab.Tactic
+
+
+----------------------------------
+
+#check Lean.Expr
+
+elab "custom_let " n:ident " : " t:term " := " v:term : tactic =>
+  withMainContext do
+    let t ← elabTerm t none
+    let v ← elabTermEnsuringType v t
+    liftMetaTactic fun mvarId => do
+      let mvarIdNew ← mvarId.define n.getId t v
+      let (_, mvarIdNew) ← mvarIdNew.intro1P
+      return [mvarIdNew]
+
+open Lean.Elab.Tactic in
+elab "custom_have " n:ident " : " t:term " := " v:term : tactic =>
+  withMainContext do
+    let t ← elabTerm t none
+    let v ← elabTermEnsuringType v t
+    liftMetaTactic fun mvarId => do
+      let mvarIdNew ← mvarId.assert n.getId t v
+      let (_, mvarIdNew) ← mvarIdNew.intro1P
+      return [mvarIdNew]
+
+theorem test_faq_have : True := by
+  custom_let n : Nat := 5
+  custom_have h : n = n := rfl
+-- n : Nat := 5
+-- h : n = n
+-- ⊢ True
+  trivial
+
+#check `(1)
+
+----------------------------------
+
+inductive Maybe (P : Prop) : Prop
+| some (p : P) : Maybe P
+| none : Maybe P
+
+def foo {P} : Maybe P → True
+| Maybe.some p => .intro
+| Maybe.none => .intro
+
+
+#check ListSubtyping.Monotonic.Consistent.cons
+
+syntax "prove_monotonic" : tactic
+macro_rules
+| `(tactic| prove_monotonic) => `(tactic| repeat (constructor ; try simp))
+
+syntax "prove_monotonic_consistent" : tactic
+macro_rules
+| `(tactic| prove_monotonic_consistent) => `(tactic|
+  first
+  | (apply ListSubtyping.Monotonic.Consistent.nil; prove_monotonic; fail)
+  | (apply ListSubtyping.Monotonic.Consistent.cons _ _ _ _ .true; prove_monotonic; fail)
+  | (apply ListSubtyping.Monotonic.Consistent.cons _ _ _ _ .false; prove_monotonic)
+)
+
+example : Typ.Monotonic "a" .true (.path .bot (.inter .unit (.var "a"))) := by
+  prove_monotonic
+
+-- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
+--   prove_monotonic
+
+example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .bot) := by
+  prove_monotonic
+
+example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .top) := by
+  constructor
+  constructor
+  constructor
+  constructor
+  constructor
+  simp
+  ---------------------------------------------
+  -- TODO: write tactic: prove_monotonic_consistent tactic that tries both false and true branches
+  -- use first tactic to use the first one that succeeds
+  prove_monotonic_consistent
+  -------------------------------------------------
+
+
 
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 | 0 => .exi ["T"] [] (.var "T")
