@@ -393,12 +393,6 @@ end
 -- the weakest type t such that every inhabitant matches pattern p
 inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
 : Pat → Typ → List (Typ × Typ) → List (String × Typ) → Prop
-
-| test id id' :
-  PatLifting.Static
-  Δ Γ (.var id) (.var id')
-  [(.var id', Typ.top)]  [(id, .var id')]
-
 | var id id' :
   PatLifting.Static
   Δ Γ (.var id) (.var id')
@@ -453,38 +447,42 @@ example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
   exact ""
 
 ---------------------------------------------------------------
+section
 -- NOTE: template for solving for predicate and using solution to construct proof
 inductive MyPredicate : String → String → Prop
 | intro x : MyPredicate x x
 
-syntax "satisfy_my_predicate" : tactic
+syntax "witness_my_predicate" : tactic
+syntax "prove_my_predicate" : tactic
+
 elab_rules : tactic
-| `(tactic| satisfy_my_predicate) =>
+| `(tactic| witness_my_predicate) =>
   open Lean Elab Tactic in
   open Lean.Expr in
   open Lean Elab Command in
+  open Lean Elab Term in
+  open Lean.Meta in
   Lean.Elab.Tactic.withMainContext do
     let goal ← Lean.Elab.Tactic.getMainGoal
     let goalDecl ← goal.getDecl
     let goalType := goalDecl.type
     match goalType with
     | app _ (lam _ _ (app (app _ input) _) _ ) => do
-      -- calculate output from input
-      let output := input
-      let id ← Lean.PrettyPrinter.delab output
+      let output ← Lean.PrettyPrinter.delab input
       evalTactic (← `(tactic|
-        exists $id ;
-        apply $(Lean.mkIdent `MyPredicate.intro)
+        exists $output ; prove_my_predicate
       ))
     | _ => dbg_trace f!"Other: goal type: {goalType}"
 
+macro_rules
+| `(tactic| prove_my_predicate) => `(tactic|
+  apply MyPredicate.intro
+)
+
 example : ∃ x , MyPredicate "x" x := by
-  satisfy_my_predicate
+  witness_my_predicate
+end
 ---------------------------------------------------------------
-
-
-
-
 
 
 mutual
