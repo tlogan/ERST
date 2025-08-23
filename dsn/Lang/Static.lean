@@ -391,9 +391,15 @@ mutual
 end
 
 -- the weakest type t such that every inhabitant matches pattern p
-inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) : Pat →
-  Typ → List (Typ × Typ) → List (String × Typ) → Prop
-| var {id id'}:
+inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+: Pat → Typ → List (Typ × Typ) → List (String × Typ) → Prop
+
+| test id id' :
+  PatLifting.Static
+  Δ Γ (.var id) (.var id')
+  [(.var id', Typ.top)]  [(id, .var id')]
+
+| var id id' :
   PatLifting.Static
   Δ Γ (.var id) (.var id')
   ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
@@ -401,10 +407,84 @@ inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   PatLifting.Static Δ Γ .unit .unit Δ Γ
 | record_nil :
   PatLifting.Static Δ Γ (.record []) .top Δ Γ
-| record_cons {l p remainder t t' Δ' Γ'} :
+| record_cons l p remainder t t' Δ' Γ' :
   PatLifting.Static Δ Γ (.record remainder) t' Δ' Γ' →
   Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
   PatLifting.Static Δ Γ (.record ((l,p) :: remainder)) (.inter (.entry l t) t') Δ' Γ'
+
+
+
+syntax "prove_pat_lifting_static" : tactic
+
+
+macro_rules
+| `(tactic| prove_pat_lifting_static) => `(tactic|
+  (first
+  | apply PatLifting.Static.var
+  ) <;> fail
+)
+example (p q : Nat → Prop) : (∃ x, p x ∧ q x) → ∃ x, q x ∧ p x := by
+  intro h
+  cases h with
+  | intro x hpq =>
+    cases hpq with
+    | intro hp hq =>
+      exists x
+
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
+
+  let t := (Typ.var "X")
+  let Δ' : List (Typ × Typ) := (Typ.var "X", Typ.top) :: Δ
+  let Γ' := ("x", Typ.var "X") :: (remove "x" Γ)
+
+  exists t, Δ', Γ'
+  apply PatLifting.Static.var "x" "X"
+
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
+
+  let t := (Typ.var ?X)
+  let Δ' : List (Typ × Typ) := (Typ.var ?X, Typ.top) :: Δ
+  let Γ' := ("x", Typ.var ?X) :: (remove "x" Γ)
+
+  exists t, Δ', Γ'
+  apply PatLifting.Static.var "x" ?X
+  exact ""
+
+---------------------------------------------------------------
+-- NOTE: template for solving for predicate and using solution to construct proof
+inductive MyPredicate : String → String → Prop
+| intro x : MyPredicate x x
+
+syntax "satisfy_my_predicate" : tactic
+elab_rules : tactic
+| `(tactic| satisfy_my_predicate) =>
+  open Lean Elab Tactic in
+  open Lean.Expr in
+  open Lean Elab Command in
+  Lean.Elab.Tactic.withMainContext do
+    let goal ← Lean.Elab.Tactic.getMainGoal
+    let goalDecl ← goal.getDecl
+    let goalType := goalDecl.type
+    match goalType with
+    | app _ (lam _ _ (app (app _ input) _) _ ) => do
+      -- calculate output from input
+      let output := input
+      let id ← Lean.PrettyPrinter.delab output
+      evalTactic (← `(tactic|
+        exists $id ;
+        apply $(Lean.mkIdent `MyPredicate.intro)
+      ))
+    | _ => dbg_trace f!"Other: goal type: {goalType}"
+
+example : ∃ x , MyPredicate "x" x := by
+  satisfy_my_predicate
+---------------------------------------------------------------
+
+
+
+
 
 
 mutual

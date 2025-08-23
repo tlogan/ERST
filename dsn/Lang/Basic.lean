@@ -590,7 +590,8 @@ macro_rules
 | `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
 | `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
 
-partial def buildSyntaxFromDotted (parts : List Lean.Ident) : Lean.Elab.TermElabM (Lean.TSyntax `term) :=
+partial def buildSyntaxFromDotted (parts : List Lean.Ident)
+: Lean.Elab.TermElabM (Lean.TSyntax `term) :=
   match parts with
   | [] => Lean.Elab.throwUnsupportedSyntax
   | [x] => `(Expr.var i[$x])
@@ -653,7 +654,8 @@ instance (id : String) : PatternOf (Expr.var id) where
 instance : PatternOf (Expr.unit) where
   default := Pat.unit
 
-instance (entries : List (String × Expr)) [d : RecordPatternOf entries] : PatternOf (Expr.record entries) where
+instance (entries : List (String × Expr)) [d : RecordPatternOf entries]
+: PatternOf (Expr.record entries) where
   default := Pat.record d.default
 
 
@@ -662,7 +664,7 @@ instance : RecordPatternOf [] where
 
 instance
   (label : String) (result : Expr) [pd : PatternOf result]
-  (remainder : List (String × Expr)) [rpd: RecordPatternOf remainder]
+  (remainder : List (String × Expr)) [rpd : RecordPatternOf remainder]
 : RecordPatternOf ((label, result) :: remainder) where
   default := (label, pd.default) :: rpd.default
 
