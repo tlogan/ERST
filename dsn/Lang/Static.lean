@@ -422,6 +422,7 @@ inductive PatLifting.Static
 
 
 syntax "prove_pat_lifting_static" : tactic
+syntax "witness_pat_lifting_static" : tactic
 
 macro_rules
 | `(tactic| prove_pat_lifting_static) => `(tactic|
@@ -437,6 +438,26 @@ macro_rules
     · simp [Pat.free_vars, ListPat.free_vars]; rfl
   ) <;> fail
 )
+
+elab_rules : tactic
+| `(tactic| witness_pat_lifting_static) =>
+  open Lean Elab Tactic in
+  open Lean.Expr in
+  open Lean Elab Command in
+  open Lean Elab Term in
+  open Lean.Meta in
+  Lean.Elab.Tactic.withMainContext do
+    let goal ← Lean.Elab.Tactic.getMainGoal
+    let goalDecl ← goal.getDecl
+    let goalType := goalDecl.type
+    match goalType with
+    ------------ TODO ----------------
+    | app _ (lam _ _ (app (app _ input) _) _ ) => do
+      let output ← Lean.PrettyPrinter.delab input
+      evalTactic (← `(tactic|
+        exists $output ; prove_pat_lifting_static)
+      )
+    | _ => dbg_trace f!"Other: goal type: {goalType}"
 
 example Δ Γ
 : PatLifting.Static Δ Γ p[x]
@@ -492,6 +513,7 @@ example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
   exists t, Δ', Γ'
   apply PatLifting.Static.var
 
+
 ---------------------------------------------------------------
 section
 -- NOTE: template for solving for predicate and using solution to construct proof
@@ -500,6 +522,37 @@ inductive MyPredicate : String → String → Prop
 
 syntax "witness_my_predicate" : tactic
 syntax "prove_my_predicate" : tactic
+
+def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSyntax cat) := do
+  let x ← Lean.getEnv
+  match Lean.Parser.runParserCategory x cat str with
+  | .ok stx => return Lean.TSyntax.mk stx
+  | .error err => throwError err
+
+#check Lean.Parser.parse
+
+-- def mk_witness_tactic
+--   (mk_witness : Lean.Expr → Lean.Expr)
+--   (tact : String)
+-- : Lean.Elab.Tactic.TacticM Unit
+-- :=
+--   open Lean Elab Tactic in
+--   open Lean.Expr in
+--   open Lean Elab Command in
+--   open Lean Elab Term in
+--   open Lean.Meta in
+--   Lean.Elab.Tactic.withMainContext do
+--     let goal ← Lean.Elab.Tactic.getMainGoal
+--     let goalDecl ← goal.getDecl
+--     let goalType := goalDecl.type
+--     match goalType with
+--     | app _ (lam _ _ (app (app _ input) _) _ ) => do
+--       let output ← Lean.PrettyPrinter.delab (mk_witness input)
+--       evalTactic (← `(tactic|
+--         exists $output ; $(← stringToSyntax `tactic tact)
+--       ))
+--     | _ => dbg_trace f!"Other: goal type: {goalType}"
+
 
 elab_rules : tactic
 | `(tactic| witness_my_predicate) =>
@@ -516,8 +569,8 @@ elab_rules : tactic
     | app _ (lam _ _ (app (app _ input) _) _ ) => do
       let output ← Lean.PrettyPrinter.delab input
       evalTactic (← `(tactic|
-        exists $output ; prove_my_predicate
-      ))
+        exists $output ; prove_my_predicate)
+      )
     | _ => dbg_trace f!"Other: goal type: {goalType}"
 
 macro_rules
