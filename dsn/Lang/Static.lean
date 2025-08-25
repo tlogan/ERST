@@ -421,7 +421,10 @@ def mk_witness_tactic
     let goalDecl ← goal.getDecl
     let goalType := goalDecl.type
     let inputs := extract_inputs goalType
-    -- dbg_trace f!"INPUT::: {repr input}"
+
+    inputs.forM fun input => do
+      dbg_trace f!"INPUT::: {repr input}"
+
     let outputs := (construct_outputs inputs)
     outputs.forM fun output => do
       let witness ← Lean.PrettyPrinter.delab output
@@ -451,22 +454,30 @@ macro_rules
   ) <;> fail
 )
 
+def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
+| 0, e => .some e
+| (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
+| _, _ => .none
+
+def linearize_application : Lean.Expr → List Lean.Expr
+| .app cator cand => cand :: (linearize_application cator)
+| target => [target]
+
 elab_rules : tactic
 | `(tactic| witness_pat_lifting_static) =>
-  mk_witness_tactic (fun
-    | .app _ (.lam _ _ (.app _ (.lam _ _ (.app _
-        (.lam _ _ (.app (.app (.app (.app _ input) _) _) _) _)
-      ) _)) _ ) => [input]
-    | _ => []
+  mk_witness_tactic (fun x =>
+    match extract_exists_body 3 x with
+    | .some body => linearize_application body
+    | .none => []
   ) (fun
-    | [x] => [x]
+    -- TODO
     | _ => []
   ) "prove_pat_lifting_static"
 
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
   witness_pat_lifting_static
-  sorry
+  -- sorry
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
   witness_pat_lifting_static
