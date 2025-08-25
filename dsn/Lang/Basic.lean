@@ -482,10 +482,10 @@ syntax "(" typ "<:" typ ")" quals : quals
 
 syntax ident : typ
 syntax "@" : typ
-syntax "<" ident ">" typ : typ
 syntax:50 typ:51 "->" typ:50 : typ
 syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
+syntax "<" ident ">" typ:90 : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" params quals typ : typ
 syntax "EXI" "[" params quals typ : typ
@@ -570,6 +570,9 @@ macro_rules
 | `(t[ BOT ]) => `(Typ.bot)
 | `(t[ TOP ]) => `(Typ.top)
 | `(t[ ( $t:typ ) ]) => `(t[$t])
+
+
+#eval t[<uno> @ & <dos> @]
 
 
 macro_rules

@@ -1,5 +1,6 @@
 import Lang.Basic
 import Mathlib.Data.Set.Basic
+import Mathlib.Data.List.Basic
 import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
@@ -391,60 +392,105 @@ mutual
 end
 
 -- the weakest type t such that every inhabitant matches pattern p
-inductive PatLifting.Static (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-: Pat → Typ → List (Typ × Typ) → List (String × Typ) → Prop
-| var id id' :
+inductive PatLifting.Static
+: List (Typ × Typ) → List (String × Typ) →
+  Pat → Typ → List (Typ × Typ) → List (String × Typ) → Prop
+
+| var Δ Γ id id' :
   PatLifting.Static
   Δ Γ (.var id) (.var id')
   ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
-| unit :
+
+| unit Δ Γ :
   PatLifting.Static Δ Γ .unit .unit Δ Γ
-| record_nil :
+
+| record_nil Δ Γ :
   PatLifting.Static Δ Γ (.record []) .top Δ Γ
-| record_cons l p remainder t t' Δ' Γ' :
-  PatLifting.Static Δ Γ (.record remainder) t' Δ' Γ' →
+
+| record_single Δ Γ l p t Δ' Γ' :
+  PatLifting.Static Δ Γ p t Δ' Γ' →
+  PatLifting.Static Δ Γ (.record ((l,p) :: []))
+    (.entry l t) Δ' Γ'
+
+| record_cons Δ Γ l p remainder t t' Δ' Γ' Δ'' Γ'' :
+  PatLifting.Static Δ Γ p t Δ' Γ' →
+  PatLifting.Static Δ' Γ' (.record remainder) t' Δ'' Γ'' →
   Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
-  PatLifting.Static Δ Γ (.record ((l,p) :: remainder)) (.inter (.entry l t) t') Δ' Γ'
+  PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
+    (.inter (.entry l t) t') Δ'' Γ''
 
 
 
 syntax "prove_pat_lifting_static" : tactic
 
-
 macro_rules
 | `(tactic| prove_pat_lifting_static) => `(tactic|
   (first
   | apply PatLifting.Static.var
+  | apply PatLifting.Static.unit
+  | apply PatLifting.Static.record_nil
+  | apply PatLifting.Static.record_single
+    · prove_pat_lifting_static
+  | apply PatLifting.Static.record_cons
+    · prove_pat_lifting_static
+    · prove_pat_lifting_static
+    · simp [Pat.free_vars, ListPat.free_vars]; rfl
   ) <;> fail
 )
-example (p q : Nat → Prop) : (∃ x, p x ∧ q x) → ∃ x, q x ∧ p x := by
-  intro h
-  cases h with
-  | intro x hpq =>
-    cases hpq with
-    | intro hp hq =>
-      exists x
 
+example Δ Γ
+: PatLifting.Static Δ Γ p[x]
+  (Typ.var "X")
+  ((Typ.var "X", Typ.top) :: Δ)
+  (("x", Typ.var "X") :: (remove "x" Γ))
+:= by
+  prove_pat_lifting_static
+
+example Δ Γ
+: PatLifting.Static Δ Γ .unit
+  Typ.unit
+  Δ
+  Γ
+:= by
+  prove_pat_lifting_static
+
+example Δ Γ
+: PatLifting.Static Δ Γ (.record [])
+  Typ.top
+  Δ
+  Γ
+:= by
+  prove_pat_lifting_static
+
+
+example Δ Γ
+: PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) (Typ.entry "dos" Typ.unit) Δ Γ
+:= by
+  prove_pat_lifting_static
+  -- apply PatLifting.Static.record_single
+  -- apply PatLifting.Static.unit
+
+example Δ Γ
+: PatLifting.Static Δ Γ p[<uno>@ <dos>@]
+  (.inter (.entry "uno" .unit) (.entry "dos" .unit))
+  Δ
+  Γ
+:= by
+  prove_pat_lifting_static
+  -- apply PatLifting.Static.record_cons
+  -- apply PatLifting.Static.unit
+  -- apply PatLifting.Static.record_single
+  -- apply PatLifting.Static.unit
+  -- simp [Pat.free_vars, ListPat.free_vars]
+  -- rfl
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
-
   let t := (Typ.var "X")
   let Δ' : List (Typ × Typ) := (Typ.var "X", Typ.top) :: Δ
   let Γ' := ("x", Typ.var "X") :: (remove "x" Γ)
 
   exists t, Δ', Γ'
-  apply PatLifting.Static.var "x" "X"
-
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
-
-  let t := (Typ.var ?X)
-  let Δ' : List (Typ × Typ) := (Typ.var ?X, Typ.top) :: Δ
-  let Γ' := ("x", Typ.var ?X) :: (remove "x" Γ)
-
-  exists t, Δ', Γ'
-  apply PatLifting.Static.var "x" ?X
-  exact ""
+  apply PatLifting.Static.var
 
 ---------------------------------------------------------------
 section
