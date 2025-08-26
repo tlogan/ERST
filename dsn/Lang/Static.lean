@@ -404,37 +404,36 @@ def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSynta
   | .ok stx => return Lean.TSyntax.mk stx
   | .error err => throwError err
 
+def seq_as_tactic (stx : Lean.TSyntax `tactic.seq) : Lean.TSyntax `tactic :=
+  ⟨Lean.TSyntax.raw stx⟩
+
+#check Lean.Syntax.prettyPrint
 
 def mk_witness_tactic
   (extract_inputs : Lean.Expr → List Lean.Expr)
-  (construct_outputs : (List Lean.Expr) → (List Lean.Expr))
-  (tact : String)
+  (construct_outputs : (List Lean.Expr) → (Lean.MetaM (List Lean.Term)))
+  (prove_tact : String)
 : Lean.Elab.Tactic.TacticM Unit
 :=
-  open Lean Elab Tactic in
-  open Lean.Expr in
-  open Lean Elab Command in
-  open Lean Elab Term in
-  open Lean.Meta in
   Lean.Elab.Tactic.withMainContext do
     let goal ← Lean.Elab.Tactic.getMainGoal
     let goalDecl ← goal.getDecl
     let goalType := goalDecl.type
     let inputs := extract_inputs goalType
 
-    inputs.forM fun input => do
-      dbg_trace f!"INPUT::: {repr input}"
+    let outputs ← (construct_outputs inputs)
 
-    let outputs := (construct_outputs inputs)
-    outputs.forM fun output => do
-      let witness ← Lean.PrettyPrinter.delab output
-      evalTactic (← `(tactic|
-        exists $witness ; $(← Lean.Parser.parse `tactic tact)
-      ))
-    evalTactic (← `(tactic| $(← Lean.Parser.parse `tactic tact)))
-    -- | [] => dbg_trace f!"Other: goal type: {goalType}"
+    let mut exists_tact ← `(tactic| skip)
+    for output in outputs do
+      -- dbg_trace f!"OUTPUT::: {repr output}"
+      exists_tact := seq_as_tactic (← `(tactic| $exists_tact ; exists $output))
 
+    dbg_trace f!"EXISTS TACT::: {Lean.Syntax.prettyPrint exists_tact}"
 
+    let full_tact ← `(tactic|
+      $exists_tact ; $(← Lean.Parser.parse `tactic prove_tact)
+    )
+    Lean.Elab.Tactic.evalTactic full_tact
 
 syntax "prove_pat_lifting_static" : tactic
 syntax "witness_pat_lifting_static" : tactic
@@ -454,6 +453,8 @@ macro_rules
   ) <;> fail
 )
 
+#check Lean.PrettyPrinter.delab
+
 def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
 | 0, e => .some e
 | (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
@@ -463,6 +464,11 @@ def linearize_application : Lean.Expr → List Lean.Expr
 | .app cator cand => cand :: (linearize_application cator)
 | target => [target]
 
+
+def delab := Lean.PrettyPrinter.delab
+
+#print Lean.Term
+
 elab_rules : tactic
 | `(tactic| witness_pat_lifting_static) =>
   mk_witness_tactic (fun x =>
@@ -470,9 +476,17 @@ elab_rules : tactic
     | .some body => linearize_application body
     | .none => []
   ) (fun
-    -- TODO
-    | _ => []
+    | [_, _, _, p, Γ, Δ, _] => match p with
+      | .const `Pat.unit [] => return [
+        -- (← `(term| Typ.unit)))
+        (← `(term| $(Lean.mkIdent `Typ.unit))),
+        (← delab Δ),
+        (← delab Γ)
+      ]
+      | _ => return []
+    | _ => return []
   ) "prove_pat_lifting_static"
+  -- let witness ← Lean.PrettyPrinter.delab output
 
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
@@ -534,46 +548,6 @@ example Δ Γ
   -- apply PatLifting.Static.unit
   -- simp [Pat.free_vars, ListPat.free_vars]
   -- rfl
-
-
----------------------------------------------------------------
-section
--- NOTE: template for solving for predicate and using solution to construct proof
-inductive MyPredicate : String → String → Prop
-| intro x : MyPredicate x x
-
-syntax "witness_my_predicate" : tactic
-syntax "prove_my_predicate" : tactic
-
-
-elab_rules : tactic
-| `(tactic| witness_my_predicate) =>
-  mk_witness_tactic (fun
-    | .app _ (.lam _ _ (.app (.app _ input) _) _ ) => [input]
-    | _ => []
-  ) (fun
-    | [x] => [x]
-    | _ => []
-  ) "prove_my_predicate"
-
-def x : Lean.Expr → Option Lean.Expr
-| .app _ (.lam _ _ (.app (.app _ input) _) _ ) => do
-  .some input
-| _ => .none
-  -- (extract_input : Lean.Expr → Option Lean.Expr)
-  -- (construct_outputs : Lean.Expr → List Lean.Expr)
-  -- (tact : String)
-
-macro_rules
-| `(tactic| prove_my_predicate) => `(tactic|
-  apply MyPredicate.intro
-)
-
-example : ∃ x , MyPredicate "x" x := by
-  witness_my_predicate
-
-end
----------------------------------------------------------------
 
 
 mutual
