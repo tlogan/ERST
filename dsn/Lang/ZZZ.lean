@@ -296,8 +296,3 @@ elab "remove_goals" : tactic =>
       Lean.Elab.Tactic.setGoals [List.get goals ⟨0, h⟩]
     else
       Lean.Elab.Tactic.setGoals []
-
-open Lean
-open Lean.Elab
-open Lean.Elab.Tactic
-open Lean.Meta

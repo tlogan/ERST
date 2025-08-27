@@ -375,10 +375,10 @@ inductive PatLifting.Static
 : List (Typ × Typ) → List (String × Typ) →
   Pat → Typ → List (Typ × Typ) → List (String × Typ) → Prop
 
-| var Δ Γ id id' :
+| var Δ Γ id tid :
   PatLifting.Static
-  Δ Γ (.var id) (.var id')
-  ((.var id', Typ.top) :: Δ)  ((id, .var id') :: (remove id Γ))
+  Δ Γ (.var id) (.var tid)
+  ((.var tid, Typ.top) :: Δ)  ((id, .var tid) :: (remove id Γ))
 
 | unit Δ Γ :
   PatLifting.Static Δ Γ .unit .unit Δ Γ
@@ -398,6 +398,32 @@ inductive PatLifting.Static
   PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
     (.inter (.entry l t) t') Δ'' Γ''
 
+mutual
+  def ListPatLifting.compute
+    (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : List (String × Pat) →  (Typ × List (Typ × Typ) × List (String × Typ))
+  | [] => (Typ.top, Δ, Γ)
+  | (l,p) :: [] =>
+    let (t, Δ', Γ') := PatLifting.compute base (count + 1) Δ Γ p
+    (Typ.entry l t, Δ', Γ')
+
+  | (l,p) :: remainder =>
+    let (t, Δ', Γ') := PatLifting.compute base (count + 1) Δ Γ p
+    let (t', Δ'', Γ'') := ListPatLifting.compute base (count + 1) Δ' Γ' remainder
+    (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
+
+  def PatLifting.compute
+    (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
+  | .var id =>
+    let t := Typ.var (base ++ (toString count))
+    let Δ' := (t, Typ.top) :: Δ
+    let Γ' := ((id, t) :: (remove id Γ))
+    (t, Δ', Γ')
+  | .unit => (Typ.unit, Δ, Γ)
+  | .record items => ListPatLifting.compute base (count + 1) Δ Γ items
+end
+
 def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSyntax cat) := do
   let x ← Lean.getEnv
   match Lean.Parser.runParserCategory x cat str with
@@ -407,12 +433,9 @@ def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSynta
 def seq_as_tactic (stx : Lean.TSyntax `tactic.seq) : Lean.TSyntax `tactic :=
   ⟨Lean.TSyntax.raw stx⟩
 
-#check Lean.Syntax.prettyPrint
-
 def mk_witness_tactic
   (extract_inputs : Lean.Expr → List Lean.Expr)
   (construct_outputs : (List Lean.Expr) → (Lean.MetaM (List Lean.Term)))
-  (prove_tact : String)
 : Lean.Elab.Tactic.TacticM Unit
 :=
   Lean.Elab.Tactic.withMainContext do
@@ -420,8 +443,8 @@ def mk_witness_tactic
     let goalDecl ← goal.getDecl
     let goalType := goalDecl.type
     let inputs := extract_inputs goalType
-    for input in inputs do
-      dbg_trace f!"INPUT::: {repr input}"
+    -- for input in inputs do
+    --   dbg_trace f!"INPUT::: {repr input}"
 
     let outputs ← (construct_outputs inputs)
 
@@ -430,12 +453,9 @@ def mk_witness_tactic
       -- dbg_trace f!"OUTPUT::: {repr output}"
       exists_tact := seq_as_tactic (← `(tactic| $exists_tact ; exists $output))
 
-    dbg_trace f!"EXISTS TACT::: {Lean.Syntax.prettyPrint exists_tact}"
+    -- dbg_trace f!"EXISTS TACT::: {Lean.Syntax.prettyPrint exists_tact}"
 
-    let full_tact ← `(tactic|
-      $exists_tact ; $(← Lean.Parser.parse `tactic prove_tact)
-    )
-    Lean.Elab.Tactic.evalTactic full_tact
+    Lean.Elab.Tactic.evalTactic (← `(tactic| $exists_tact))
 
 syntax "prove_pat_lifting_static" : tactic
 syntax "witness_pat_lifting_static" : tactic
@@ -482,61 +502,38 @@ elab_rules : tactic
     | .some body => linearize_application body
     | .none => []
   ) (fun
-    | [_, _, _, p, Γ, Δ, _] => match p with
-      | .app (.const `Pat.var []) id => do
-        let idd ← delab id
-        let tid ← delab (Lean.Expr.lit (Lean.Literal.strVal (← Lean.mkFreshId).toString))
-        let t ← `($(Lean.mkIdent `Typ.var) $tid)
-        let top ← `($(Lean.mkIdent `Typ.top))
-        return [
-          t,
-          ← `(($t, $top) :: $(← delab Δ)),
-          ← `(($idd, $t) :: (remove $idd $(← delab Γ)))
-        ]
-
-      | .const `Pat.unit [] =>
-        return [
-          (← `($(Lean.mkIdent `Typ.unit))),
-          (← delab Δ),
-          (← delab Γ)
-        ]
-
--- | record_nil Δ Γ :
---   PatLifting.Static Δ Γ (.record []) .top Δ Γ
-
--- | record_single Δ Γ l p t Δ' Γ' :
---   PatLifting.Static Δ Γ p t Δ' Γ' →
---   PatLifting.Static Δ Γ (.record ((l,p) :: []))
---     (.entry l t) Δ' Γ'
-
--- | record_cons Δ Γ l p remainder t t' Δ' Γ' Δ'' Γ'' :
---   PatLifting.Static Δ Γ p t Δ' Γ' →
---   PatLifting.Static Δ' Γ' (.record remainder) t' Δ'' Γ'' →
---   Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
---   PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
---     (.inter (.entry l t) t') Δ'' Γ''
-
-
-
-      | _ => return []
+    | [_, _, _, p, Γ, Δ, _] => do
+      let base := Lean.mkStrLit (← Lean.mkFreshId).toString
+      let triple ← `($(Lean.mkIdent `PatLifting.compute)
+        $(← delab base) 0 $(← delab Δ) $(← delab Γ) $(← delab p))
+      return [
+        ← `(($triple).fst),
+        ← `(($triple).snd.fst),
+        ← `(($triple).snd.snd)
+      ]
     | _ => return []
-  ) "prove_pat_lifting_static"
-  -- let witness ← Lean.PrettyPrinter.delab output
+  )
 
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
-  witness_pat_lifting_static
-  -- sorry
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
   witness_pat_lifting_static
-  -- sorry
-  -- let t := (Typ.var "X")
-  -- let Δ' : List (Typ × Typ) := (Typ.var "X", Typ.top) :: Δ
-  -- let Γ' := ("x", Typ.var "X") :: (remove "x" Γ)
+  prove_pat_lifting_static
 
-  -- exists t, Δ', Γ'
-  -- apply PatLifting.Static.var
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (.record []) t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
 
 example Δ Γ
 : PatLifting.Static Δ Γ p[x]
@@ -566,9 +563,9 @@ example Δ Γ
 example Δ Γ
 : PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) (Typ.entry "dos" Typ.unit) Δ Γ
 := by
-  prove_pat_lifting_static
-  -- apply PatLifting.Static.record_single
-  -- apply PatLifting.Static.unit
+  -- prove_pat_lifting_static
+  apply PatLifting.Static.record_single
+  apply PatLifting.Static.unit
 
 example Δ Γ
 : PatLifting.Static Δ Γ p[<uno>@ <dos>@]
