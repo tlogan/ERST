@@ -420,6 +420,8 @@ def mk_witness_tactic
     let goalDecl ← goal.getDecl
     let goalType := goalDecl.type
     let inputs := extract_inputs goalType
+    for input in inputs do
+      dbg_trace f!"INPUT::: {repr input}"
 
     let outputs ← (construct_outputs inputs)
 
@@ -469,6 +471,10 @@ def delab := Lean.PrettyPrinter.delab
 
 #print Lean.Term
 
+def fresh_placeholder := do
+  let u ← Lean.Meta.mkFreshLevelMVar
+  Lean.Meta.mkFreshExprMVar (.some (Lean.mkSort u))
+
 elab_rules : tactic
 | `(tactic| witness_pat_lifting_static) =>
   mk_witness_tactic (fun x =>
@@ -477,12 +483,41 @@ elab_rules : tactic
     | .none => []
   ) (fun
     | [_, _, _, p, Γ, Δ, _] => match p with
-      | .const `Pat.unit [] => return [
-        -- (← `(term| Typ.unit)))
-        (← `(term| $(Lean.mkIdent `Typ.unit))),
-        (← delab Δ),
-        (← delab Γ)
-      ]
+      | .app (.const `Pat.var []) id => do
+        let idd ← delab id
+        let tid ← delab (Lean.Expr.lit (Lean.Literal.strVal (← Lean.mkFreshId).toString))
+        let t ← `($(Lean.mkIdent `Typ.var) $tid)
+        let top ← `($(Lean.mkIdent `Typ.top))
+        return [
+          t,
+          ← `(($t, $top) :: $(← delab Δ)),
+          ← `(($idd, $t) :: (remove $idd $(← delab Γ)))
+        ]
+
+      | .const `Pat.unit [] =>
+        return [
+          (← `($(Lean.mkIdent `Typ.unit))),
+          (← delab Δ),
+          (← delab Γ)
+        ]
+
+-- | record_nil Δ Γ :
+--   PatLifting.Static Δ Γ (.record []) .top Δ Γ
+
+-- | record_single Δ Γ l p t Δ' Γ' :
+--   PatLifting.Static Δ Γ p t Δ' Γ' →
+--   PatLifting.Static Δ Γ (.record ((l,p) :: []))
+--     (.entry l t) Δ' Γ'
+
+-- | record_cons Δ Γ l p remainder t t' Δ' Γ' Δ'' Γ'' :
+--   PatLifting.Static Δ Γ p t Δ' Γ' →
+--   PatLifting.Static Δ' Γ' (.record remainder) t' Δ'' Γ'' →
+--   Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
+--   PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
+--     (.inter (.entry l t) t') Δ'' Γ''
+
+
+
       | _ => return []
     | _ => return []
   ) "prove_pat_lifting_static"
@@ -493,9 +528,9 @@ example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
   witness_pat_lifting_static
   -- sorry
 
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[x] t Δ' Γ' := by
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
   witness_pat_lifting_static
-  sorry
+  -- sorry
   -- let t := (Typ.var "X")
   -- let Δ' : List (Typ × Typ) := (Typ.var "X", Typ.top) :: Δ
   -- let Γ' := ("x", Typ.var "X") :: (remove "x" Γ)
