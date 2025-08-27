@@ -416,13 +416,14 @@ mutual
     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
   | .var id =>
-    let t := Typ.var (base ++ (toString count))
+    let t := Typ.var (base ++ "_" ++ (toString count))
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     (t, Δ', Γ')
   | .unit => (Typ.unit, Δ, Γ)
   | .record items => ListPatLifting.compute base (count + 1) Δ Γ items
 end
+
 
 def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSyntax cat) := do
   let x ← Lean.getEnv
@@ -532,6 +533,14 @@ example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.
   prove_pat_lifting_static
 
 example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", p[dos])]) t Δ' Γ' := by
+  witness_pat_lifting_static
+  prove_pat_lifting_static
+
+example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno> uno <dos> dos] t Δ' Γ' := by
   witness_pat_lifting_static
   prove_pat_lifting_static
 

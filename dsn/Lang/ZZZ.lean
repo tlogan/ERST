@@ -296,3 +296,11 @@ elab "remove_goals" : tactic =>
       Lean.Elab.Tactic.setGoals [List.get goals ⟨0, h⟩]
     else
       Lean.Elab.Tactic.setGoals []
+
+mutual
+  partial def ff (n : Nat) : Nat :=
+    if n == 0 then 0 else gg (n - 1)
+
+  partial def gg (n : Nat) : Nat :=
+    if n == 0 then 1 else ff (n - 1)
+end
