@@ -304,3 +304,12 @@ mutual
   partial def gg (n : Nat) : Nat :=
     if n == 0 then 1 else ff (n - 1)
 end
+
+partial def forever (n : Nat) : Nat :=  forever n
+
+inductive Beep : Nat → Prop
+| intro n : Beep n
+
+example : ∃ n, Beep n := by
+  exists (forever 0)
+  apply Beep.intro
