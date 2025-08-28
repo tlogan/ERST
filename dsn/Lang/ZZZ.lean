@@ -305,11 +305,20 @@ mutual
     if n == 0 then 1 else ff (n - 1)
 end
 
-partial def forever (n : Nat) : Nat :=  forever n
+partial def forever : Nat → Nat
+| 0 => 0
+| n + 1 => forever n + 2
+
+
+#eval (forever 0)
 
 inductive Beep : Nat → Prop
-| intro n : Beep n
+| intro : Beep 0
 
-example : ∃ n, Beep n := by
-  exists (forever 0)
-  apply Beep.intro
+-- lemma forever_eq : forever 0 = 0 := by
+--   native_decide
+
+-- example : ∃ n, Beep n := by
+--   exists (forever 0)
+--   simp [forever_eq]
+--   apply Beep.intro
