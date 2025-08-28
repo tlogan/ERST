@@ -320,5 +320,5 @@ inductive Beep : Nat → Prop
 
 -- example : ∃ n, Beep n := by
 --   exists (forever 0)
---   simp [forever_eq]
+--   -- simp [forever_eq]
 --   apply Beep.intro

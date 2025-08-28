@@ -4,7 +4,7 @@ import Lang.Basic
 -- import Mathlib.Data.List.Basic
 import Mathlib.Tactic.Linarith
 
-set_option pp.fieldNotation false
+-- set_option pp.fieldNotation false
 
 structure Zone where
   Θ : List String
@@ -399,29 +399,27 @@ inductive PatLifting.Static
     (.inter (.entry l t) t') Δ'' Γ''
 
 mutual
-  def ListPatLifting.compute
-    (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : List (String × Pat) →  (Typ × List (Typ × Typ) × List (String × Typ))
-  | [] => (Typ.top, Δ, Γ)
-  | (l,p) :: [] =>
-    let (t, Δ', Γ') := PatLifting.compute base (count + 1) Δ Γ p
-    (Typ.entry l t, Δ', Γ')
+  def ListPatLifting.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : List (String × Pat) →  Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
+  | [] => return (Typ.top, Δ, Γ)
+  | (l,p) :: [] => do
+    let (t, Δ', Γ') ← PatLifting.compute  Δ Γ p
+    return (Typ.entry l t, Δ', Γ')
 
-  | (l,p) :: remainder =>
-    let (t, Δ', Γ') := PatLifting.compute base (count + 1) Δ Γ p
-    let (t', Δ'', Γ'') := ListPatLifting.compute base (count + 1) Δ' Γ' remainder
-    (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
+  | (l,p) :: remainder => do
+    let (t, Δ', Γ') ← PatLifting.compute Δ Γ p
+    let (t', Δ'', Γ'') ← ListPatLifting.compute Δ' Γ' remainder
+    return (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
 
-  def PatLifting.compute
-    (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
-  | .var id =>
-    let t := Typ.var (base ++ "_" ++ (toString count))
+  def PatLifting.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : Pat → Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
+  | .var id => do
+    let t := Typ.var ((← Lean.mkFreshId).toString)
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
-    (t, Δ', Γ')
-  | .unit => (Typ.unit, Δ, Γ)
-  | .record items => ListPatLifting.compute base (count + 1) Δ Γ items
+    return (t, Δ', Γ')
+  | .unit => return (Typ.unit, Δ, Γ)
+  | .record items => ListPatLifting.compute Δ Γ items
 end
 
 
@@ -459,8 +457,6 @@ def mk_witness_tactic
     Lean.Elab.Tactic.evalTactic (← `(tactic| $exists_tact))
 
 syntax "prove_pat_lifting_static" : tactic
-syntax "witness_pat_lifting_static" : tactic
-
 macro_rules
 | `(tactic| prove_pat_lifting_static) => `(tactic|
   (first
@@ -476,74 +472,6 @@ macro_rules
   ) <;> fail
 )
 
-#check Lean.PrettyPrinter.delab
-
-def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
-| 0, e => .some e
-| (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
-| _, _ => .none
-
-def linearize_application : Lean.Expr → List Lean.Expr
-| .app cator cand => cand :: (linearize_application cator)
-| target => [target]
-
-
-def delab := Lean.PrettyPrinter.delab
-
-#print Lean.Term
-
-def fresh_placeholder := do
-  let u ← Lean.Meta.mkFreshLevelMVar
-  Lean.Meta.mkFreshExprMVar (.some (Lean.mkSort u))
-
-elab_rules : tactic
-| `(tactic| witness_pat_lifting_static) =>
-  mk_witness_tactic (fun x =>
-    match extract_exists_body 3 x with
-    | .some body => linearize_application body
-    | .none => []
-  ) (fun
-    | [_, _, _, p, Γ, Δ, _] => do
-      let base := Lean.mkStrLit (← Lean.mkFreshId).toString
-      let triple ← `($(Lean.mkIdent `PatLifting.compute)
-        $(← delab base) 0 $(← delab Δ) $(← delab Γ) $(← delab p))
-      return [
-        ← `(($triple).fst),
-        ← `(($triple).snd.fst),
-        ← `(($triple).snd.snd)
-      ]
-    | _ => return []
-  )
-
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (.record []) t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", p[dos])]) t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
-example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno> uno <dos> dos] t Δ' Γ' := by
-  witness_pat_lifting_static
-  prove_pat_lifting_static
-
 example Δ Γ
 : PatLifting.Static Δ Γ p[x]
   (Typ.var "X")
@@ -553,10 +481,7 @@ example Δ Γ
   prove_pat_lifting_static
 
 example Δ Γ
-: PatLifting.Static Δ Γ .unit
-  Typ.unit
-  Δ
-  Γ
+: PatLifting.Static Δ Γ .unit Typ.unit Δ Γ
 := by
   prove_pat_lifting_static
 
@@ -572,9 +497,9 @@ example Δ Γ
 example Δ Γ
 : PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) (Typ.entry "dos" Typ.unit) Δ Γ
 := by
-  -- prove_pat_lifting_static
-  apply PatLifting.Static.record_single
-  apply PatLifting.Static.unit
+  prove_pat_lifting_static
+  -- apply PatLifting.Static.record_single
+  -- apply PatLifting.Static.unit
 
 example Δ Γ
 : PatLifting.Static Δ Γ p[<uno>@ <dos>@]
@@ -589,6 +514,108 @@ example Δ Γ
   -- apply PatLifting.Static.unit
   -- simp [Pat.free_vars, ListPat.free_vars]
   -- rfl
+
+#eval PatLifting.compute [] [] p[<uno> uno <dos> dos]
+example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> uno <dos> dos] t Δ' Γ' := by
+  exists (Typ.inter (Typ.entry "uno" (Typ.var "_uniq.338591")) (Typ.entry "dos" (Typ.var "_uniq.338592")))
+  exists [(Typ.var "_uniq.338592", Typ.exi ["T"] [] (Typ.var "T")), (Typ.var "_uniq.338591", Typ.exi ["T"] [] (Typ.var "T"))]
+  exists [("dos", Typ.var "_uniq.338592"), ("uno", Typ.var "_uniq.338591")]
+  prove_pat_lifting_static
+
+-- syntax "witness_pat_lifting_static" : tactic
+-- #check Lean.PrettyPrinter.delab
+
+-- def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
+-- | 0, e => .some e
+-- | (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
+-- | _, _ => .none
+
+-- def linearize_application : Lean.Expr → List Lean.Expr
+-- | .app cator cand => cand :: (linearize_application cator)
+-- | target => [target]
+
+
+-- def delab := Lean.PrettyPrinter.delab
+
+-- def fresh_placeholder := do
+--   let u ← Lean.Meta.mkFreshLevelMVar
+--   Lean.Meta.mkFreshExprMVar (.some (Lean.mkSort u))
+
+-- mutual
+--   def ListPatLifting.static
+--     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+--   : List (String × Pat) →  (Typ × List (Typ × Typ) × List (String × Typ))
+--   | [] => (Typ.top, Δ, Γ)
+--   | (l,p) :: [] =>
+--     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
+--     (Typ.entry l t, Δ', Γ')
+
+--   | (l,p) :: remainder =>
+--     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
+--     let (t', Δ'', Γ'') := ListPatLifting.static base (count + 1) Δ' Γ' remainder
+--     (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
+
+--   def PatLifting.static
+--     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+--   : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
+--   | .var id =>
+--     let t := Typ.var (base ++ "_" ++ (toString count))
+--     let Δ' := (t, Typ.top) :: Δ
+--     let Γ' := ((id, t) :: (remove id Γ))
+--     (t, Δ', Γ')
+--   | .unit => (Typ.unit, Δ, Γ)
+--   | .record items => ListPatLifting.static base (count + 1) Δ Γ items
+-- end
+
+
+-- elab_rules : tactic
+-- | `(tactic| witness_pat_lifting_static) =>
+--   mk_witness_tactic (fun x =>
+--     match extract_exists_body 3 x with
+--     | .some body => linearize_application body
+--     | .none => []
+--   ) (fun
+--     | [_, _, _, p, Γ, Δ, _] => do
+--       let base := Lean.mkStrLit (← Lean.mkFreshId).toString
+--       let triple ← `($(Lean.mkIdent `PatLifting.static)
+--         $(← delab base) 0 $(← delab Δ) $(← delab Γ) $(← delab p))
+--       return [
+--         ← `(($triple).fst),
+--         ← `(($triple).snd.fst),
+--         ← `(($triple).snd.snd)
+--       ]
+--     | _ => return []
+--   )
+
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (.record []) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", p[dos])]) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno> uno <dos> dos] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
 
 
 mutual
