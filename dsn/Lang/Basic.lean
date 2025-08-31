@@ -12,7 +12,7 @@ set_option pp.fieldNotation false
 -- the quantification of "any" can be inferred to me either all or exists dependeing on context and inflection.
 def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.any l p
 
-
+#print repr
 inductive Typ
 | var : String → Typ
 | unit
@@ -24,7 +24,140 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving Repr, BEq
+deriving BEq
+
+
+open Std.Format
+
+-- syntax ident : typ
+-- syntax "@" : typ
+-- syntax:50 typ:51 "->" typ:50 : typ
+-- syntax:60 typ:61 "|" typ:60 : typ
+-- syntax:80 typ:81 "&" typ:80 : typ
+-- syntax "<" ident ">" typ:90 : typ
+-- syntax typ "\\" typ : typ
+-- syntax "ALL" "[" params quals typ : typ
+-- syntax "EXI" "[" params quals typ : typ
+-- syntax "ALL" "[" params typ : typ
+-- syntax "EXI" "[" params typ : typ
+-- syntax "BOT" : typ
+-- syntax "TOP" : typ
+-- syntax "(" typ ")" : typ
+
+def append_line : List Std.Format → Std.Format
+| .nil => ""
+| x :: xs => x ++ line ++ append_line xs
+
+def wrap (content : Std.Format) (p threshold : Nat) : Std.Format :=
+    if p > threshold then
+      "(" ++ content ++ ")"
+    else
+      content
+
+
+#print Fin
+
+#check List.map
+#eval (String.intercalate (" ") ["a", "b"])
+mutual
+  def ListSubtyping.repr : List (Typ × Typ) → Std.Format
+  | .nil => ""
+  | (l,r) :: [] =>
+      group (
+        "(" ++ (Typ.reprPrec l 0) ++ " <: " ++ (Typ.reprPrec r 0) ++ ")"
+      )
+  | (l,r) :: remainder =>
+      group (
+        "(" ++ (Typ.reprPrec l 0) ++ " <: " ++ (Typ.reprPrec r 0) ++ ")"
+        ++ line ++
+        ListSubtyping.repr remainder
+      )
+
+  def ListTyping.repr : List (String × Typ) → Std.Format
+  | .nil => ""
+  | (x,t) :: [] =>
+      group (
+        "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
+      )
+  | (x,t) :: remainder =>
+      group (
+        "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
+        ++ line ++
+        ListTyping.repr remainder
+      )
+
+  def Typ.reprPrec : Typ → Nat → Std.Format
+    | .var id, _ => id
+    | .unit, _ => "@"
+    | .entry l body, _  => "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
+    | .path left right, p =>
+      let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
+      group (wrap content p 50)
+
+    | .unio left right, p =>
+      let content := Typ.reprPrec left 61 ++ " |" ++ line ++ Typ.reprPrec right 60
+      group (wrap content p 60)
+    | .inter left right, p =>
+      let content := Typ.reprPrec left 81 ++ " &" ++ line ++ Typ.reprPrec right 80
+      group (wrap content p 80)
+    | .diff left right, _ =>
+      let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
+      group content
+    | .all ids quals body, _ =>
+      if quals.isEmpty then
+        let default := group (
+          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+        )
+        if h : ids.length = 1 then
+          if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
+            "BOT"
+          else
+            default
+        else
+          default
+      else
+        group (
+          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
+            nest 2 (ListSubtyping.repr quals)
+          ++ line ++ ":" ++ line ++
+            nest 2 (Typ.reprPrec body 0)
+        )
+    | .exi ids quals body, _ =>
+      if quals.isEmpty then
+        let default := group (
+          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+        )
+        if h : ids.length = 1 then
+          if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
+            "TOP"
+          else
+            default
+        else
+          default
+      else
+        group (
+          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
+            nest 2 (ListSubtyping.repr quals)
+          ++ line ++ ":" ++ line ++
+            nest 2 (Typ.reprPrec body 0)
+        )
+    | .lfp id body, _ =>
+      group (
+        "LFP[" ++ id ++ "]" ++ line ++
+          nest 2 (Typ.reprPrec body 0)
+      )
+end
+
+instance : Repr (List (Typ × Typ)) where
+  reprPrec t _ := group ("qs[" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " :]")
+
+instance : Repr (List (String × Typ)) where
+  reprPrec t _ := group ("ts[" ++ line ++ nest 2 (ListTyping.repr t) ++ " .]")
+
+instance : Repr Typ where
+  reprPrec t n := group ("t[" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
+
+
 
 def Typ.bot := Typ.all ["T"] [] (Typ.var "T")
 def Typ.top := Typ.exi ["T"] [] (Typ.var "T")
@@ -465,6 +598,7 @@ def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : 
 
 declare_syntax_cat params
 declare_syntax_cat quals
+declare_syntax_cat typings
 declare_syntax_cat typ
 
 declare_syntax_cat patrec
@@ -480,6 +614,9 @@ syntax:20 ident params : params
 syntax ":" : quals
 syntax "(" typ "<:" typ ")" quals : quals
 
+syntax "." : typings
+syntax "(" ident ":" typ ")" typings : typings
+
 syntax ident : typ
 syntax "@" : typ
 syntax:50 typ:51 "->" typ:50 : typ
@@ -494,6 +631,8 @@ syntax "EXI" "[" params typ : typ
 syntax "BOT" : typ
 syntax "TOP" : typ
 syntax "(" typ ")" : typ
+
+
 
 
 syntax "<" ident ">" pat : patrec
@@ -529,6 +668,7 @@ syntax  expr "as" typ : expr
 syntax "i[" ident "]" : term
 syntax "ps[" params "]" : term
 syntax "qs[" quals "]" : term
+syntax "ts[" typings "]" : term
 syntax "t[" typ "]" : term
 syntax "pr[" patrec "]" : term
 syntax "p[" pat "]" : term
@@ -536,7 +676,6 @@ syntax "er[" exprrec "]" : term
 syntax "f[" function "]" : term
 syntax "ei[" ident "]" : term
 syntax "e[" expr "]" : term
-
 
 
 elab_rules : term
@@ -553,7 +692,12 @@ macro_rules
 
 macro_rules
 | `(qs[ : ]) => `([])
-| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (Constraint.subtyping t[$x] t[$y]):: qs[$qs])
+| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (t[$x], t[$y]):: qs[$qs])
+
+macro_rules
+| `(ts[ . ]) => `([])
+| `(ts[ ( $x:ident : $y:typ ) $ts:typings ]) =>
+  `( ($(Lean.quote (toString x.getId)), t[$y]):: ts[$ts])
 
 macro_rules
 | `(t[ $i:ident ]) => `(Typ.var i[$i])

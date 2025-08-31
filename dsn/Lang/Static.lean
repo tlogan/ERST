@@ -1,4 +1,5 @@
 import Lang.Basic
+import Lang.Util
 
 -- import Mathlib.Data.Set.Basic
 -- import Mathlib.Data.List.Basic
@@ -411,50 +412,18 @@ mutual
     let (t', Δ'', Γ'') ← ListPatLifting.compute Δ' Γ' remainder
     return (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
 
+
+
   def PatLifting.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   : Pat → Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
   | .var id => do
-    let t := Typ.var ((← Lean.mkFreshId).toString)
+    let t := Typ.var (← fresh_string)
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     return (t, Δ', Γ')
   | .unit => return (Typ.unit, Δ, Γ)
   | .record items => ListPatLifting.compute Δ Γ items
 end
-
-
-def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSyntax cat) := do
-  let x ← Lean.getEnv
-  match Lean.Parser.runParserCategory x cat str with
-  | .ok stx => return Lean.TSyntax.mk stx
-  | .error err => throwError err
-
-def seq_as_tactic (stx : Lean.TSyntax `tactic.seq) : Lean.TSyntax `tactic :=
-  ⟨Lean.TSyntax.raw stx⟩
-
-def mk_witness_tactic
-  (extract_inputs : Lean.Expr → List Lean.Expr)
-  (construct_outputs : (List Lean.Expr) → (Lean.MetaM (List Lean.Term)))
-: Lean.Elab.Tactic.TacticM Unit
-:=
-  Lean.Elab.Tactic.withMainContext do
-    let goal ← Lean.Elab.Tactic.getMainGoal
-    let goalDecl ← goal.getDecl
-    let goalType := goalDecl.type
-    let inputs := extract_inputs goalType
-    -- for input in inputs do
-    --   dbg_trace f!"INPUT::: {repr input}"
-
-    let outputs ← (construct_outputs inputs)
-
-    let mut exists_tact ← `(tactic| skip)
-    for output in outputs do
-      -- dbg_trace f!"OUTPUT::: {repr output}"
-      exists_tact := seq_as_tactic (← `(tactic| $exists_tact ; exists $output))
-
-    -- dbg_trace f!"EXISTS TACT::: {Lean.Syntax.prettyPrint exists_tact}"
-
-    Lean.Elab.Tactic.evalTactic (← `(tactic| $exists_tact))
 
 syntax "prove_pat_lifting_static" : tactic
 macro_rules
@@ -515,11 +484,11 @@ example Δ Γ
   -- simp [Pat.free_vars, ListPat.free_vars]
   -- rfl
 
-#eval PatLifting.compute [] [] p[<uno> uno <dos> dos]
-example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> uno <dos> dos] t Δ' Γ' := by
-  exists (Typ.inter (Typ.entry "uno" (Typ.var "_uniq.338591")) (Typ.entry "dos" (Typ.var "_uniq.338592")))
-  exists [(Typ.var "_uniq.338592", Typ.exi ["T"] [] (Typ.var "T")), (Typ.var "_uniq.338591", Typ.exi ["T"] [] (Typ.var "T"))]
-  exists [("dos", Typ.var "_uniq.338592"), ("uno", Typ.var "_uniq.338591")]
+#eval PatLifting.compute [] [] p[<uno> x <dos> y]
+example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' := by
+  exists t[ <uno> X669 & <dos> X670 ]
+  exists qs[ (X670 <: TOP) (X669 <: TOP) :]
+  exists ts[ (y : X670) (x : X669) .]
   prove_pat_lifting_static
 
 -- syntax "witness_pat_lifting_static" : tactic

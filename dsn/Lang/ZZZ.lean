@@ -322,3 +322,21 @@ inductive Beep : Nat → Prop
 --   exists (forever 0)
 --   -- simp [forever_eq]
 --   apply Beep.intro
+
+
+
+
+syntax "dumb" : tactic
+elab_rules : tactic
+| `(tactic| dumb) =>
+  Lean.Elab.Tactic.withMainContext do
+    let goal ← Lean.Elab.Tactic.getMainGoal
+    let goalDecl ← goal.getDecl
+    let goalType := goalDecl.type
+    dbg_trace f!"INPUT::: {repr goalType}"
+
+
+inductive Four : Nat → Prop
+
+-- example : Four 4  := by
+--   dumb
