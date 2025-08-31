@@ -466,7 +466,7 @@ end
 
 syntax "prove_list_subtyping_monotonic_either" : tactic
 syntax "prove_list_subtyping_monotonic" : tactic
-syntax "prove_typ_monotonic" : tactic
+syntax "Typ_Monotonic_prove" : tactic
 
 macro_rules
 | `(tactic| prove_list_subtyping_monotonic_either) => `(tactic|
@@ -474,11 +474,11 @@ macro_rules
   | apply ListSubtyping.Monotonic.Either.nil
   | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .true
     · prove_list_subtyping_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
     · prove_list_subtyping_monotonic_either
   | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .false
     · prove_list_subtyping_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
     · prove_list_subtyping_monotonic_either
   ) <;> fail
 )
@@ -487,61 +487,61 @@ macro_rules
   (first
   | apply ListSubtyping.Monotonic.nil
   | apply ListSubtyping.Monotonic.Either.cons
-    · prove_typ_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
+    · Typ_Monotonic_prove
     · prove_list_subtyping_monotonic
   ) <;> fail
 )
-| `(tactic| prove_typ_monotonic) => `(tactic|
+| `(tactic| Typ_Monotonic_prove) => `(tactic|
   (first
   | apply Typ.Monotonic.var
   | apply Typ.Monotonic.varskip; simp
   | apply Typ.Monotonic.unit;
-  | apply Typ.Monotonic.entry; prove_typ_monotonic
+  | apply Typ.Monotonic.entry; Typ_Monotonic_prove
 
   | apply Typ.Monotonic.path
-    · prove_typ_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.unio
-    · prove_typ_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.inter
-    · prove_typ_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.diff
-    · prove_typ_monotonic
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.all
     · simp
     · prove_list_subtyping_monotonic_either
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.allskip; simp
   | apply Typ.Monotonic.exi
     · simp
     · prove_list_subtyping_monotonic_either
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.lfp
     · simp
-    · prove_typ_monotonic
+    · Typ_Monotonic_prove
   | apply Typ.Monotonic.lfpskip; simp
   ) <;> fail
 )
 
 example : Typ.Monotonic "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
-  prove_typ_monotonic
+  Typ_Monotonic_prove
 
 example : Typ.Monotonic "a" .true (.path .bot (.inter .unit (.var "a"))) := by
-  prove_typ_monotonic
+  Typ_Monotonic_prove
   -- repeat (constructor; try simp)
 
 -- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
---   prove_typ_monotonic
+--   Typ_Monotonic_prove
 
 example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .bot) := by
-  prove_typ_monotonic
+  Typ_Monotonic_prove
 
 example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .top) := by
-  prove_typ_monotonic
+  Typ_Monotonic_prove
 
 
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
@@ -628,6 +628,7 @@ syntax "ALL" "[" params quals typ : typ
 syntax "EXI" "[" params quals typ : typ
 syntax "ALL" "[" params typ : typ
 syntax "EXI" "[" params typ : typ
+syntax "LFP" "[" ident "]" typ : typ
 syntax "BOT" : typ
 syntax "TOP" : typ
 syntax "(" typ ")" : typ
@@ -688,7 +689,7 @@ elab_rules : term
 
 macro_rules
 | `(ps[ ] ]) => `([])
-| `(ps[ $i:ident $ps:params ]) => `($(Lean.quote (toString i.getId)) :: ps[$ps])
+| `(ps[ $i:ident $ps:params ]) => `(i[$i] :: ps[$ps])
 
 macro_rules
 | `(qs[ : ]) => `([])
@@ -697,7 +698,7 @@ macro_rules
 macro_rules
 | `(ts[ . ]) => `([])
 | `(ts[ ( $x:ident : $y:typ ) $ts:typings ]) =>
-  `( ($(Lean.quote (toString x.getId)), t[$y]):: ts[$ts])
+  `( (i[$x], t[$y]):: ts[$ts])
 
 macro_rules
 | `(t[ $i:ident ]) => `(Typ.var i[$i])
@@ -711,6 +712,7 @@ macro_rules
 | `(t[ EXI [ $ps:params $qs:quals $t:typ ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
 | `(t[ ALL [ $ps:params $t:typ ]) => `(Typ.all ps[$ps] [] t[$t])
 | `(t[ EXI [ $ps:params $t:typ ]) => `(Typ.exi ps[$ps] [] t[$t])
+| `(t[ LFP [ $i:ident ] $t:typ ]) => `(Typ.lfp i[$i] t[$t])
 | `(t[ BOT ]) => `(Typ.bot)
 | `(t[ TOP ]) => `(Typ.top)
 | `(t[ ( $t:typ ) ]) => `(t[$t])

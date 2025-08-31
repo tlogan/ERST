@@ -149,14 +149,46 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
 
 -- ListSubtyping.flows_into id quals = .some cases →
 
-inductive Typ.Found (id : String) : Typ → Typ → Prop
-| intro {quals id' cases t t'} :
+
+
+inductive Typ.UpperFounded (id : String) : Typ → Typ → Prop
+| intro quals id' cases t t' :
   ListSubtyping.bounds id .true quals = cases →
   List.length cases = List.length quals →
   Typ.combine .false ((.var id') :: cases) = t →
   Typ.Monotonic id' .true t →
   Typ.sub [(id', .var id)] t = t' →
-  Typ.Found id (.exi [] quals (.var id')) (.unio (.var id') t')
+  Typ.UpperFounded id (.exi [] quals (.var id')) (.unio (.var id') t')
+
+def Typ.UpperFounded.compute (id : String) : Typ → Lean.MetaM Typ
+| .exi [] quals (.var id') => do
+  let cases := ListSubtyping.bounds id .true quals
+  if List.length cases == List.length quals then
+    let t := Typ.combine .false cases
+    let t' := Typ.sub [(id', .var id)] t
+    return (.unio (.var id') t')
+  else
+    return .unit
+| _ => failure
+
+#eval  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+#eval Typ.UpperFounded.compute
+  "R"
+  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+
+syntax "Typ_UpperFounded_prove" : tactic
+macro_rules
+| `(tactic| Typ_UpperFounded_prove) => `(tactic|
+  -- TODO
+  apply Typ.UpperFounded.intro
+)
+
+example : Typ.UpperFounded "R"
+  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+  t[ G010 | <succ> R | <succ> <succ> R ]
+:= by
+  apply Typ.UpperFounded.intro
+  <;> sorry
 
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
@@ -236,38 +268,6 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
   let l := Zone.pack pids .true zone
   let r := ListZone.pack pids .true zones
   Typ.rator b l r
-
--- inductive Subtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Prop
--- | pat_intro {lower upper}:
---   Typ.is_pattern [] upper →
---   Subtyping.Restricted Θ Δ lower upper
-
--- | var_elim {id i upper}:
---   id ∉ Θ →
---   Typ.interpret_one id .true Δ = i →
---   (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot) →
---   Subtyping.Restricted Θ Δ (.var id) upper
-
--- | lfp_intro {lower fids id body }:
---   Typ.free_vars lower = fids →
---   Typ.is_pattern fids lower →
---   ∀ fid, fid ∈ fids → (
---     fid ∉ Θ ∧
---     ∃ i, Typ.interpret_one fid .true Δ = i ∧
---     (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot)
---   ) →
---   Typ.Monotonic id .true body →
---   Typ.Decreasing id body →
---   Subtyping.Restricted Θ Δ lower (.lfp id body)
-
--- inductive ListSubtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ))
--- : List (Typ × Typ) → Prop
--- | nil :
---   ListSubtyping.Restricted Θ Δ []
--- | cons {l r sts} :
---   Subtyping.Restricted Θ Δ l r →
---   ListSubtyping.Restricted Θ Δ sts →
---   ListSubtyping.Restricted Θ Δ ((l,r) :: sts)
 
 def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
   Typ.is_pattern [] upper ||
@@ -400,43 +400,43 @@ inductive PatLifting.Static
     (.inter (.entry l t) t') Δ'' Γ''
 
 mutual
-  def ListPatLifting.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  def ListPatLifting.Static.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   : List (String × Pat) →  Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
   | [] => return (Typ.top, Δ, Γ)
   | (l,p) :: [] => do
-    let (t, Δ', Γ') ← PatLifting.compute  Δ Γ p
+    let (t, Δ', Γ') ← PatLifting.Static.compute  Δ Γ p
     return (Typ.entry l t, Δ', Γ')
 
   | (l,p) :: remainder => do
-    let (t, Δ', Γ') ← PatLifting.compute Δ Γ p
-    let (t', Δ'', Γ'') ← ListPatLifting.compute Δ' Γ' remainder
+    let (t, Δ', Γ') ← PatLifting.Static.compute Δ Γ p
+    let (t', Δ'', Γ'') ← ListPatLifting.Static.compute Δ' Γ' remainder
     return (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
 
 
 
-  def PatLifting.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  def PatLifting.Static.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   : Pat → Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
   | .var id => do
-    let t := Typ.var (← fresh_string)
+    let t := Typ.var (← fresh_typ_id)
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     return (t, Δ', Γ')
   | .unit => return (Typ.unit, Δ, Γ)
-  | .record items => ListPatLifting.compute Δ Γ items
+  | .record items => ListPatLifting.Static.compute Δ Γ items
 end
 
-syntax "prove_pat_lifting_static" : tactic
+syntax "PatLifting_Static_prove" : tactic
 macro_rules
-| `(tactic| prove_pat_lifting_static) => `(tactic|
+| `(tactic| PatLifting_Static_prove) => `(tactic|
   (first
   | apply PatLifting.Static.var
   | apply PatLifting.Static.unit
   | apply PatLifting.Static.record_nil
   | apply PatLifting.Static.record_single
-    · prove_pat_lifting_static
+    · PatLifting_Static_prove
   | apply PatLifting.Static.record_cons
-    · prove_pat_lifting_static
-    · prove_pat_lifting_static
+    · PatLifting_Static_prove
+    · PatLifting_Static_prove
     · simp [Pat.free_vars, ListPat.free_vars]; rfl
   ) <;> fail
 )
@@ -447,12 +447,12 @@ example Δ Γ
   ((Typ.var "X", Typ.top) :: Δ)
   (("x", Typ.var "X") :: (remove "x" Γ))
 := by
-  prove_pat_lifting_static
+  PatLifting_Static_prove
 
 example Δ Γ
 : PatLifting.Static Δ Γ .unit Typ.unit Δ Γ
 := by
-  prove_pat_lifting_static
+  PatLifting_Static_prove
 
 example Δ Γ
 : PatLifting.Static Δ Γ (.record [])
@@ -460,13 +460,13 @@ example Δ Γ
   Δ
   Γ
 := by
-  prove_pat_lifting_static
+  PatLifting_Static_prove
 
 
 example Δ Γ
 : PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) (Typ.entry "dos" Typ.unit) Δ Γ
 := by
-  prove_pat_lifting_static
+  PatLifting_Static_prove
   -- apply PatLifting.Static.record_single
   -- apply PatLifting.Static.unit
 
@@ -476,7 +476,7 @@ example Δ Γ
   Δ
   Γ
 := by
-  prove_pat_lifting_static
+  PatLifting_Static_prove
   -- apply PatLifting.Static.record_cons
   -- apply PatLifting.Static.unit
   -- apply PatLifting.Static.record_single
@@ -484,106 +484,12 @@ example Δ Γ
   -- simp [Pat.free_vars, ListPat.free_vars]
   -- rfl
 
-#eval PatLifting.compute [] [] p[<uno> x <dos> y]
+#eval PatLifting.Static.compute [] [] p[<uno> x <dos> y]
 example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' := by
-  exists t[ <uno> X669 & <dos> X670 ]
-  exists qs[ (X670 <: TOP) (X669 <: TOP) :]
-  exists ts[ (y : X670) (x : X669) .]
-  prove_pat_lifting_static
-
--- syntax "witness_pat_lifting_static" : tactic
--- #check Lean.PrettyPrinter.delab
-
--- def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
--- | 0, e => .some e
--- | (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
--- | _, _ => .none
-
--- def linearize_application : Lean.Expr → List Lean.Expr
--- | .app cator cand => cand :: (linearize_application cator)
--- | target => [target]
-
-
--- def delab := Lean.PrettyPrinter.delab
-
--- def fresh_placeholder := do
---   let u ← Lean.Meta.mkFreshLevelMVar
---   Lean.Meta.mkFreshExprMVar (.some (Lean.mkSort u))
-
--- mutual
---   def ListPatLifting.static
---     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
---   : List (String × Pat) →  (Typ × List (Typ × Typ) × List (String × Typ))
---   | [] => (Typ.top, Δ, Γ)
---   | (l,p) :: [] =>
---     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
---     (Typ.entry l t, Δ', Γ')
-
---   | (l,p) :: remainder =>
---     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
---     let (t', Δ'', Γ'') := ListPatLifting.static base (count + 1) Δ' Γ' remainder
---     (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
-
---   def PatLifting.static
---     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
---   : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
---   | .var id =>
---     let t := Typ.var (base ++ "_" ++ (toString count))
---     let Δ' := (t, Typ.top) :: Δ
---     let Γ' := ((id, t) :: (remove id Γ))
---     (t, Δ', Γ')
---   | .unit => (Typ.unit, Δ, Γ)
---   | .record items => ListPatLifting.static base (count + 1) Δ Γ items
--- end
-
-
--- elab_rules : tactic
--- | `(tactic| witness_pat_lifting_static) =>
---   mk_witness_tactic (fun x =>
---     match extract_exists_body 3 x with
---     | .some body => linearize_application body
---     | .none => []
---   ) (fun
---     | [_, _, _, p, Γ, Δ, _] => do
---       let base := Lean.mkStrLit (← Lean.mkFreshId).toString
---       let triple ← `($(Lean.mkIdent `PatLifting.static)
---         $(← delab base) 0 $(← delab Δ) $(← delab Γ) $(← delab p))
---       return [
---         ← `(($triple).fst),
---         ← `(($triple).snd.fst),
---         ← `(($triple).snd.snd)
---       ]
---     | _ => return []
---   )
-
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (.record []) t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", p[dos])]) t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
-
--- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno> uno <dos> dos] t Δ' Γ' := by
---   witness_pat_lifting_static
---   prove_pat_lifting_static
+  exists t[ <uno> T669 & <dos> T670 ]
+  exists qs[ (T670 <: TOP) (T669 <: TOP) :]
+  exists ts[ (y : T670) (x : T669) .]
+  PatLifting_Static_prove
 
 
 
@@ -801,6 +707,8 @@ mutual
     Typ.capture tp = subtra →
     Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
+
+
   inductive Subtyping.GuardedListZone.Static
   : List String → List (Typ × Typ) →
     Typ → Typ → List Zone → Prop
@@ -838,7 +746,7 @@ mutual
     Typ.factor id t' "left" = .some l →
     Typ.factor id t' "right" = .some r' →
     Typ.Monotonic idl .true r' →
-    Typ.Found id l l' →
+    Typ.UpperFounded id l l' →
     Typ.sub [(idl, .lfp id l')] r' = r'' →
     Subtyping.LoopListZone.Static
     pids id [⟨Θ, Δ, .path (.var idl) r⟩]
@@ -887,69 +795,3 @@ mutual
 
 
 end
-
--- namespace Typ
--- inductive Pat
--- | unit
--- | entry : String → Pat → Pat
--- | inter : Pat → Pat → Pat
--- | top
--- deriving Repr
-
--- def Pat.size : Pat → Nat
--- | .unit => 1
--- | .entry l body => size body + 1
--- | .inter left right => size left + size right + 1
--- | .top => 3
-
--- def Pat.toTyp : Pat → Typ
--- | .unit => .unit
--- | .entry l body => .entry l (toTyp body)
--- | .inter left right => .inter (toTyp left) (toTyp right)
--- | .top => .all ["T"] [] (.var "T")
-
--- theorem stf_typ_size {s} : Pat.size s = Typ.size (Pat.toTyp s) := by
--- induction s
--- case unit => rfl
--- case entry l body ih =>
---   simp [Pat.toTyp, Pat.size, ih, Typ.size]
--- case inter left right ihl ihr =>
---   simp [Pat.toTyp, Pat.size, ihl, ihr, Typ.size]
--- case top =>
---   simp [Pat.toTyp, Typ.size, ListPairTyp.size, Pat.size]
-
-
--- declare_syntax_cat stf
-
--- syntax "@" : stf
--- syntax "TOP" : stf
--- syntax "<" ident ">" stf : stf
--- syntax stf "&" stf : stf
-
--- syntax "s[" stf "]" : term
-
--- macro_rules
--- | `(s[ TOP ]) => `(Pat.top)
--- | `(s[ @ ]) => `(Pat.unit)
--- | `(s[ < $i:ident > $s:stf  ]) => `(Pat.entry i[$i] s[$s])
--- | `(s[ $x:stf & $y:stf]) => `(Pat.inter s[$x] s[$y])
-
--- class PatOf (_ : Typ) where
---   default : Pat
-
--- instance : PatOf t[TOP] where
---   default := s[TOP]
-
--- instance : PatOf t[@] where
---   default := s[@]
-
--- instance (label : String) (result : Typ) [s : PatOf result]
--- : PatOf (Typ.entry label result)  where
---   default := Pat.entry label s.default
-
--- instance
---   (left : Typ) [l : PatOf left]
---   (right : Typ) [r : PatOf right]
--- : PatOf (Typ.inter left right)  where
---   default := Pat.inter l.default r.default
--- end Typ

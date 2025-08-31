@@ -5,10 +5,10 @@ import Lang.Basic
 import Mathlib.Tactic.Linarith
 
 #check Lean.mkFreshId
-def fresh_string {m : Type → Type} [Monad m] [Lean.MonadNameGenerator m] : m String :=
+def fresh_typ_id {m : Type → Type} [Monad m] [Lean.MonadNameGenerator m] : m String :=
   do
   let raw := (← Lean.mkFreshId).toString
-  let content :=  "X" ++ raw.drop ("_uniq.".length + 3)
+  let content :=  "T" ++ raw.drop ("_uniq.".length + 3)
   return content
 
 def Lean.Parser.parse (cat : Lean.Name) (str : String) : Lean.CoreM (Lean.TSyntax cat) := do

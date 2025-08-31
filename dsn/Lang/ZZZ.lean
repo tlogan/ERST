@@ -340,3 +340,198 @@ inductive Four : Nat → Prop
 
 -- example : Four 4  := by
 --   dumb
+
+
+-- syntax "witness_pat_lifting_static" : tactic
+-- #check Lean.PrettyPrinter.delab
+
+-- def extract_exists_body : Nat → Lean.Expr → Option Lean.Expr
+-- | 0, e => .some e
+-- | (n + 1), (.app _ (.lam _ _ target _)) => extract_exists_body n target
+-- | _, _ => .none
+
+-- def linearize_application : Lean.Expr → List Lean.Expr
+-- | .app cator cand => cand :: (linearize_application cator)
+-- | target => [target]
+
+
+-- def delab := Lean.PrettyPrinter.delab
+
+-- def fresh_placeholder := do
+--   let u ← Lean.Meta.mkFreshLevelMVar
+--   Lean.Meta.mkFreshExprMVar (.some (Lean.mkSort u))
+
+-- mutual
+--   def ListPatLifting.static
+--     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+--   : List (String × Pat) →  (Typ × List (Typ × Typ) × List (String × Typ))
+--   | [] => (Typ.top, Δ, Γ)
+--   | (l,p) :: [] =>
+--     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
+--     (Typ.entry l t, Δ', Γ')
+
+--   | (l,p) :: remainder =>
+--     let (t, Δ', Γ') := PatLifting.static base (count + 1) Δ Γ p
+--     let (t', Δ'', Γ'') := ListPatLifting.static base (count + 1) Δ' Γ' remainder
+--     (Typ.inter (Typ.entry l t) t', Δ'', Γ'')
+
+--   def PatLifting.static
+--     (base : String) (count : Nat) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+--   : Pat → (Typ × List (Typ × Typ) × List (String × Typ))
+--   | .var id =>
+--     let t := Typ.var (base ++ "_" ++ (toString count))
+--     let Δ' := (t, Typ.top) :: Δ
+--     let Γ' := ((id, t) :: (remove id Γ))
+--     (t, Δ', Γ')
+--   | .unit => (Typ.unit, Δ, Γ)
+--   | .record items => ListPatLifting.static base (count + 1) Δ Γ items
+-- end
+
+
+-- elab_rules : tactic
+-- | `(tactic| witness_pat_lifting_static) =>
+--   mk_witness_tactic (fun x =>
+--     match extract_exists_body 3 x with
+--     | .some body => linearize_application body
+--     | .none => []
+--   ) (fun
+--     | [_, _, _, p, Γ, Δ, _] => do
+--       let base := Lean.mkStrLit (← Lean.mkFreshId).toString
+--       let triple ← `($(Lean.mkIdent `PatLifting.static)
+--         $(← delab base) 0 $(← delab Δ) $(← delab Γ) $(← delab p))
+--       return [
+--         ← `(($triple).fst),
+--         ← `(($triple).snd.fst),
+--         ← `(($triple).snd.snd)
+--       ]
+--     | _ => return []
+--   )
+
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[myvar] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ .unit t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (.record []) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", Pat.unit)]) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno>@ <dos>@] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ (Pat.record [("dos", p[dos])]) t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+-- example Δ Γ : ∃ t Δ' Γ', PatLifting.Static Δ Γ p[<uno> uno <dos> dos] t Δ' Γ' := by
+--   witness_pat_lifting_static
+--   prove_pat_lifting_static
+
+
+-- namespace Typ
+-- inductive Pat
+-- | unit
+-- | entry : String → Pat → Pat
+-- | inter : Pat → Pat → Pat
+-- | top
+-- deriving Repr
+
+-- def Pat.size : Pat → Nat
+-- | .unit => 1
+-- | .entry l body => size body + 1
+-- | .inter left right => size left + size right + 1
+-- | .top => 3
+
+-- def Pat.toTyp : Pat → Typ
+-- | .unit => .unit
+-- | .entry l body => .entry l (toTyp body)
+-- | .inter left right => .inter (toTyp left) (toTyp right)
+-- | .top => .all ["T"] [] (.var "T")
+
+-- theorem stf_typ_size {s} : Pat.size s = Typ.size (Pat.toTyp s) := by
+-- induction s
+-- case unit => rfl
+-- case entry l body ih =>
+--   simp [Pat.toTyp, Pat.size, ih, Typ.size]
+-- case inter left right ihl ihr =>
+--   simp [Pat.toTyp, Pat.size, ihl, ihr, Typ.size]
+-- case top =>
+--   simp [Pat.toTyp, Typ.size, ListPairTyp.size, Pat.size]
+
+
+-- declare_syntax_cat stf
+
+-- syntax "@" : stf
+-- syntax "TOP" : stf
+-- syntax "<" ident ">" stf : stf
+-- syntax stf "&" stf : stf
+
+-- syntax "s[" stf "]" : term
+
+-- macro_rules
+-- | `(s[ TOP ]) => `(Pat.top)
+-- | `(s[ @ ]) => `(Pat.unit)
+-- | `(s[ < $i:ident > $s:stf  ]) => `(Pat.entry i[$i] s[$s])
+-- | `(s[ $x:stf & $y:stf]) => `(Pat.inter s[$x] s[$y])
+
+-- class PatOf (_ : Typ) where
+--   default : Pat
+
+-- instance : PatOf t[TOP] where
+--   default := s[TOP]
+
+-- instance : PatOf t[@] where
+--   default := s[@]
+
+-- instance (label : String) (result : Typ) [s : PatOf result]
+-- : PatOf (Typ.entry label result)  where
+--   default := Pat.entry label s.default
+
+-- instance
+--   (left : Typ) [l : PatOf left]
+--   (right : Typ) [r : PatOf right]
+-- : PatOf (Typ.inter left right)  where
+--   default := Pat.inter l.default r.default
+-- end Typ
+
+
+-- inductive Subtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Prop
+-- | pat_intro {lower upper}:
+--   Typ.is_pattern [] upper →
+--   Subtyping.Restricted Θ Δ lower upper
+
+-- | var_elim {id i upper}:
+--   id ∉ Θ →
+--   Typ.interpret_one id .true Δ = i →
+--   (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot) →
+--   Subtyping.Restricted Θ Δ (.var id) upper
+
+-- | lfp_intro {lower fids id body }:
+--   Typ.free_vars lower = fids →
+--   Typ.is_pattern fids lower →
+--   ∀ fid, fid ∈ fids → (
+--     fid ∉ Θ ∧
+--     ∃ i, Typ.interpret_one fid .true Δ = i ∧
+--     (Typ.toBruijn 0 [] i) = (Typ.toBruijn 0 [] .bot)
+--   ) →
+--   Typ.Monotonic id .true body →
+--   Typ.Decreasing id body →
+--   Subtyping.Restricted Θ Δ lower (.lfp id body)
+
+-- inductive ListSubtyping.Restricted (Θ : List String) (Δ : List (Typ × Typ))
+-- : List (Typ × Typ) → Prop
+-- | nil :
+--   ListSubtyping.Restricted Θ Δ []
+-- | cons {l r sts} :
+--   Subtyping.Restricted Θ Δ l r →
+--   ListSubtyping.Restricted Θ Δ sts →
+--   ListSubtyping.Restricted Θ Δ ((l,r) :: sts)

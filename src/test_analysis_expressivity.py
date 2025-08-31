@@ -1142,7 +1142,8 @@ if __name__ == '__main__':
     # test_succ_stream()
     # test_inf_loop()
     # test_succ_stream()
-    test_induction_even_is_nat_not_three()
+    # test_induction_even_is_nat_not_three()
+    test_succ_stream()
 
 
 #######################################################################
