@@ -27,18 +27,57 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 -- deriving BEq
 
 inductive Typ
-| var : String → Typ
-| unit
-| entry : String → Typ → Typ
-| path : Typ → Typ → Typ
-| unio :  Typ → Typ → Typ
-| inter :  Typ → Typ → Typ
-| diff :  Typ → Typ → Typ
-| all :  List String → List (Typ × Typ) → Typ → Typ
-| exi :  List String → List (Typ × Typ) → Typ → Typ
-| lfp :  String → Typ → Typ
+  | var : String → Typ
+  | unit
+  | entry : String → Typ → Typ
+  | path : Typ → Typ → Typ
+  | unio :  Typ → Typ → Typ
+  | inter :  Typ → Typ → Typ
+  | diff :  Typ → Typ → Typ
+  | all :  List String → List (Typ × Typ) → Typ → Typ
+  | exi :  List String → List (Typ × Typ) → Typ → Typ
+  | lfp :  String → Typ → Typ
 
--- Boolean equality function
+#print Decidable
+
+instance : DecidableEq Typ :=
+  fun left right => match left with
+    | .var idl => by cases right with
+      | var idr =>
+        have d : Decidable (idl = idr) := inferInstance
+        cases d with
+        | isFalse h => apply isFalse ; simp [h]
+        | isTrue h => apply isTrue; simp [h]
+      | _ => apply isFalse ; simp
+    | .unit => by cases right with
+      | unit => apply isTrue; simp
+      | _ => apply isFalse ; simp
+    | .entry ll bodyl => by cases right with
+      | entry lr bodyr => sorry
+      | _ => apply isFalse ; simp
+    | .path x y => by cases right with
+      | path p q => sorry
+      | _ => apply isFalse ; simp
+    | .unio a b => by cases right with
+      | unio c d => sorry
+      | _ => apply isFalse ; simp
+    | .inter a b => by cases right with
+      | inter c d => sorry
+      | _ => apply isFalse ; simp
+    | .diff a b => by cases right with
+      | diff c d => sorry
+      | _ => apply isFalse ; simp
+    | .all idsl qsl bodyl => by cases right with
+      | all idsr qsr bodyr => sorry
+      | _ => apply isFalse ; simp
+    | .exi idsl qsl bodyl => by cases right with
+      | exi idsr qsr bodyr => sorry
+      | _ => apply isFalse ; simp
+    | .lfp idl bodyl => by cases right with
+      | lfp idr bodyr => sorry
+      | _ => apply isFalse ; simp
+
+
 mutual
   def ListSubtyping.beq : List (Typ × Typ) → List (Typ × Typ) → Bool
   | .nil, .nil => .true
