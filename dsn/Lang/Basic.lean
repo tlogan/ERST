@@ -39,43 +39,128 @@ inductive Typ
   | lfp :  String → Typ → Typ
 
 #print Decidable
+mutual
+  instance ListSubtyping.decidable_eq : DecidableEq (List (Typ × Typ))
+    | [], [] => isTrue rfl
+    | l :: ls, [] => isFalse (by simp)
+    | [], r :: rs => isFalse (by simp)
+    | (al,bl) :: ls, (ar,br) :: rs =>
+      match Typ.decidable_eq al ar, Typ.decidable_eq bl br, ListSubtyping.decidable_eq ls rs with
+        | isTrue _, isTrue _, isTrue _ => isTrue (by simp [*])
+        | isFalse _, _, _ => isFalse (by simp [*])
+        | _, isFalse _, _ => isFalse (by simp [*])
+        | _, _, isFalse _ => isFalse (by simp [*])
 
-instance : DecidableEq Typ :=
-  fun left right => match left with
-    | .var idl => by cases right with
-      | var idr =>
-        have d : Decidable (idl = idr) := inferInstance
-        cases d with
-        | isFalse h => apply isFalse ; simp [h]
-        | isTrue h => apply isTrue; simp [h]
-      | _ => apply isFalse ; simp
-    | .unit => by cases right with
-      | unit => apply isTrue; simp
-      | _ => apply isFalse ; simp
-    | .entry ll bodyl => by cases right with
-      | entry lr bodyr => sorry
-      | _ => apply isFalse ; simp
-    | .path x y => by cases right with
-      | path p q => sorry
-      | _ => apply isFalse ; simp
-    | .unio a b => by cases right with
-      | unio c d => sorry
-      | _ => apply isFalse ; simp
-    | .inter a b => by cases right with
-      | inter c d => sorry
-      | _ => apply isFalse ; simp
-    | .diff a b => by cases right with
-      | diff c d => sorry
-      | _ => apply isFalse ; simp
-    | .all idsl qsl bodyl => by cases right with
-      | all idsr qsr bodyr => sorry
-      | _ => apply isFalse ; simp
-    | .exi idsl qsl bodyl => by cases right with
-      | exi idsr qsr bodyr => sorry
-      | _ => apply isFalse ; simp
-    | .lfp idl bodyl => by cases right with
-      | lfp idr bodyr => sorry
-      | _ => apply isFalse ; simp
+
+  instance Typ.decidable_eq : DecidableEq Typ :=
+    fun left right => match left with
+      | .var idl => by cases right with
+        | var idr =>
+          have d : Decidable (idl = idr) := inferInstance
+          cases d with
+            | isFalse => apply isFalse ; simp [*]
+            | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .unit => by cases right with
+        | unit => apply isTrue; simp
+        | _ => apply isFalse ; simp
+      | .entry ll bodyl => by cases right with
+        | entry lr bodyr =>
+            have dl : Decidable (ll = lr) := inferInstance
+            have dbody := Typ.decidable_eq bodyl bodyr
+            cases dl with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases dbody with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .path al bl => by cases right with
+        | path ar br =>
+            have da := Typ.decidable_eq al ar
+            have db := Typ.decidable_eq bl br
+            cases da with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases db with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .unio al bl => by cases right with
+        | unio ar br =>
+            have da := Typ.decidable_eq al ar
+            have db := Typ.decidable_eq bl br
+            cases da with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases db with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp[*]
+        | _ => apply isFalse ; simp
+      | .inter al bl => by cases right with
+        | inter ar br =>
+            have da := Typ.decidable_eq al ar
+            have db := Typ.decidable_eq bl br
+            cases da with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases db with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .diff al bl => by cases right with
+        | diff ar br =>
+            have da := Typ.decidable_eq al ar
+            have db := Typ.decidable_eq bl br
+            cases da with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases db with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .all idsl qsl bodyl => by cases right with
+        | all idsr qsr bodyr =>
+          have dids : Decidable (idsl = idsr) := inferInstance
+          have dqs := ListSubtyping.decidable_eq qsl qsr
+          have dbody := Typ.decidable_eq bodyl bodyr
+          cases dids with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases dqs with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases dbody with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .exi idsl qsl bodyl => by cases right with
+        | exi idsr qsr bodyr =>
+          have dids : Decidable (idsl = idsr) := inferInstance
+          have dqs := ListSubtyping.decidable_eq qsl qsr
+          have dbody := Typ.decidable_eq bodyl bodyr
+          cases dids with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases dqs with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases dbody with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+      | .lfp idl bodyl => by cases right with
+        | lfp idr bodyr =>
+            have did : Decidable (idl = idr) := inferInstance
+            have dbody := Typ.decidable_eq bodyl bodyr
+            cases did with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue =>
+                cases dbody with
+                | isFalse => apply isFalse; simp [*]
+                | isTrue => apply isTrue; simp [*]
+        | _ => apply isFalse ; simp
+end
 
 
 mutual
