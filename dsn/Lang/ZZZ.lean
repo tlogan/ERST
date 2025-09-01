@@ -535,3 +535,42 @@ inductive Four : Nat → Prop
 --   Subtyping.Restricted Θ Δ l r →
 --   ListSubtyping.Restricted Θ Δ sts →
 --   ListSubtyping.Restricted Θ Δ ((l,r) :: sts)
+
+
+
+universe u
+-- instance {α : Type u} [DecidableEq α] : DecidableEq (α × α)
+-- | (a1, a2), (b1, b2) =>
+--   if h1 : a1 = b1 then
+--     if h2 : a2 = b2 then
+--       isTrue (by simp_all)
+--     else
+--       isFalse (by simp_all)
+--   else
+--     isFalse (by simp_all)
+
+
+-- def List.mk_decidable {α : Type u} [DecidableEq α] : DecidableEq (List α)
+-- | [], l2 =>
+--   if h : l2 = [] then
+--     isTrue (by simp [*])
+--   else
+--     isFalse (by simp [*])
+-- | l1, [] =>
+--   if h : l1 = [] then
+--     isTrue (by simp [*])
+--   else
+--     isFalse (by simp [*])
+-- | x1::xs1, x2::xs2 =>
+--   if h1 : x1 = x2 then
+--     match List.mk_decidable xs1 xs2 with
+--     | isTrue h2 => isTrue (by simp [*])
+--     | isFalse h2 => isFalse (by simp [*])
+--   else
+--     isFalse (by simp [*])
+
+-- instance {α : Type u} [DecidableEq α] : DecidableEq (List α) := List.mk_decidable
+
+-- def x : DecidableEq (List (String × String)) := inferInstance
+
+-- #eval (x [("hello","hello")] [("hello","hello")])

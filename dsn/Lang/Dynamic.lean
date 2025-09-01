@@ -147,9 +147,9 @@ mutual
   | .nil => True
   | .cons (left, right) remainder =>
     Subtyping.Dynamic δ left right ∧ MultiSubtyping.Dynamic δ remainder
-  termination_by sts => ListPairTyp.size sts
+  termination_by sts => ListSubtyping.size sts
   decreasing_by
-    all_goals simp [ListPairTyp.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
+    all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
   def Typing.Dynamic (δ : List (String × Typ)) (e : Expr) : Typ → Prop
   | .unit => Multi e .unit

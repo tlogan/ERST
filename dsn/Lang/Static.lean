@@ -20,19 +20,19 @@ def Typ.rator : Bool → Typ → Typ → Typ
 | .true => .inter
 | .false => .unio
 
-def Typ.inner : Bool → List String → List (Typ × Typ) → Typ → Typ
+def Typ.inner : Bool → List String → ListSubtyping → Typ → Typ
 | .true => .all
 | .false => .exi
 
-def Typ.outer : Bool → List String → List (Typ × Typ) → Typ → Typ
+def Typ.outer : Bool → List String → ListSubtyping → Typ → Typ
 | .true => .exi
 | .false => .all
 
 def BiZone.wrap (b : Bool)
-: List String → List (Typ × Typ) → List String → List (Typ × Typ) → Typ → Typ
-| [], [], [], [], t => t
-| [], [], Θ', Δ', t => Typ.inner b Θ' Δ' t
-| Θ, Δ, [], [], t => Typ.outer b Θ Δ t
+: List String → ListSubtyping → List String → ListSubtyping → Typ → Typ
+| [], .nil, [], .nil, t => t
+| [], .nil, Θ', Δ', t => Typ.inner b Θ' Δ' t
+| Θ, Δ, [], .nil, t => Typ.outer b Θ Δ t
 | Θ, Δ, Θ', Δ', t => Typ.outer b Θ Δ (Typ.outer b Θ' Δ' t)
 
 inductive Typ.Decreasing (id : String) : Typ → Prop
@@ -43,14 +43,59 @@ def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .false, (l,r) => (l,r)
 | .true, (l,r) => (r,l)
 
-def ListSubtyping.bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
-| [] => []
-| st :: sts =>
+def ListSubtyping.bounds (id : String) (b : Bool) : ListSubtyping → List Typ
+| .nil => []
+| .cons st sts =>
     let (t,bd) := Subtyping.target_bound b st
     if (.var id) == t then
       bd :: ListSubtyping.bounds id b sts
     else
       ListSubtyping.bounds id b sts
+
+#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+#eval (ListSubtyping.bounds "R" .true qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :])
+
+
+example : (if ("hello" == "hello") = true then 1 else 2) = 1 := by
+  simp
+
+example : ∃ ts , ListSubtyping.bounds "R" .true .nil = ts := by
+  exists .nil
+
+
+def x : BEq Typ := inferInstance
+#eval (Typ.unit == Typ.unit)
+example : (Typ.unit == Typ.unit) = true := by
+  rfl
+
+example : (
+  if (Typ.var "R" == Typ.var "R") = true then
+    Typ.entry "succ" (Typ.var "G010") ::
+      if (Typ.var "R" == Typ.var "R") = true then
+        [Typ.entry "succ" (Typ.entry "succ" (Typ.var "G010"))]
+      else
+        []
+  else if (Typ.var "R" == Typ.var "R") = true then
+    [Typ.entry "succ" (Typ.entry "succ" (Typ.var "G010"))]
+  else
+    []) =
+  [Typ.entry "succ" (Typ.var "G010"), Typ.entry "succ" (Typ.entry "succ" (Typ.var "G010"))]
+:= by
+  simp_all
+  rfl
+
+
+example : ListSubtyping.bounds "R" .true
+  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+  =
+  [t[ <succ> G010 ], t[ <succ> <succ> G010 ]]
+:= by rfl
+
+example : ∃ ts , ListSubtyping.bounds "R" .true
+  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+  = ts
+:= by
+  exists [t[ <succ> G010 ], t[ <succ> <succ> G010 ]]
 
 def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
@@ -155,7 +200,7 @@ inductive Typ.UpperFounded (id : String) : Typ → Typ → Prop
 | intro quals id' cases t t' :
   ListSubtyping.bounds id .true quals = cases →
   List.length cases = List.length quals →
-  Typ.combine .false ((.var id') :: cases) = t →
+  Typ.combine .false cases = t →
   Typ.Monotonic id' .true t →
   Typ.sub [(id', .var id)] t = t' →
   Typ.UpperFounded id (.exi [] quals (.var id')) (.unio (.var id') t')
@@ -168,7 +213,7 @@ def Typ.UpperFounded.compute (id : String) : Typ → Lean.MetaM Typ
     let t' := Typ.sub [(id', .var id)] t
     return (.unio (.var id') t')
   else
-    return .unit
+    failure
 | _ => failure
 
 #eval  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
@@ -179,16 +224,20 @@ def Typ.UpperFounded.compute (id : String) : Typ → Lean.MetaM Typ
 syntax "Typ_UpperFounded_prove" : tactic
 macro_rules
 | `(tactic| Typ_UpperFounded_prove) => `(tactic|
-  -- TODO
+  (
   apply Typ.UpperFounded.intro
+  · rfl
+  · rfl
+  · rfl
+  · Typ_Monotonic_prove
+  · rfl
+  )
 )
 
 example : Typ.UpperFounded "R"
   t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
   t[ G010 | <succ> R | <succ> <succ> R ]
-:= by
-  apply Typ.UpperFounded.intro
-  <;> sorry
+:= by Typ_UpperFounded_prove
 
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
@@ -258,8 +307,8 @@ def Zone.pack (pids : List String) (b : Bool) : Zone → Typ
 | ⟨Θ, Δ, t⟩ =>
   let fids := Typ.free_vars t
   let (outer, inner) := ListSubtyping.partition pids Θ Δ
-  let outer_ids := (ListPairTyp.free_vars Δ ∪ fids) ∩ Θ
-  let inner_ids := List.diff (ListPairTyp.free_vars inner ∪ fids) (Θ ∪ pids)
+  let outer_ids := (ListSubtyping.free_vars Δ ∪ fids) ∩ Θ
+  let inner_ids := List.diff (ListSubtyping.free_vars inner ∪ fids) (Θ ∪ pids)
   BiZone.wrap b outer_ids outer inner_ids inner t
 
 def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
@@ -324,7 +373,7 @@ mutual
     else do
       let quals' ← ListSubtyping.proj id l quals
       let body' ← Typ.proj id l body
-      let ids' := ids ∩ (ListPairTyp.free_vars quals' ∪ Typ.free_vars body')
+      let ids' := ids ∩ (ListSubtyping.free_vars quals' ∪ Typ.free_vars body')
       return .exi ids' quals' body'
   | _ => .none
 end
@@ -703,7 +752,7 @@ mutual
       ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
       Typing.Static Θ Δ' Γ' e tr Θ' Δ''
     ) →
-    ListZone.tidy (ListPairTyp.free_vars Δ) zones' = .some zones'' →
+    ListZone.tidy (ListSubtyping.free_vars Δ) zones' = .some zones'' →
     Typ.capture tp = subtra →
     Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
@@ -717,7 +766,7 @@ mutual
       ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
       Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
     ) →
-    ListZone.tidy (ListPairTyp.free_vars Δ) zones = .some zones' →
+    ListZone.tidy (ListSubtyping.free_vars Δ) zones = .some zones' →
     Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
 
   inductive Typing.ListZone.Static
@@ -770,7 +819,7 @@ mutual
 
   | function {Θ Δ Γ f zones t subtras} :
     Typing.ListPath.Static Θ Δ Γ f zones subtras →
-    ListZone.pack (ListPairTyp.free_vars Δ) .true zones = t →
+    ListZone.pack (ListSubtyping.free_vars Δ) .true zones = t →
     Typing.Static Θ Δ Γ (.function f) t Θ Δ
 
   | app {Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ'''} :
@@ -782,14 +831,14 @@ mutual
   | loop {Θ Δ Γ e t id zones t' Θ' Δ'} :
     Typing.Static Θ Δ Γ e t Θ' Δ' →
     Subtyping.GuardedListZone.Static Θ' Δ' t (.var id) zones →
-    Subtyping.LoopListZone.Static (ListPairTyp.free_vars Δ') id zones t' →
+    Subtyping.LoopListZone.Static (ListSubtyping.free_vars Δ') id zones t' →
     Typing.Static Θ Δ Γ (.loop e) t' Θ' Δ'
 
 
   | anno {Θ Δ Γ e ta zones te Θ' Δ'} :
     Typ.free_vars ta ⊆ [] →
     Typing.ListZone.Static Θ Δ Γ e zones →
-    ListZone.pack (ListPairTyp.free_vars Δ) .false zones = te →
+    ListZone.pack (ListSubtyping.free_vars Δ) .false zones = te →
     Subtyping.Static Θ Δ te ta Θ' Δ' →
     Typing.Static Θ Δ Γ (.anno e ta) ta Θ Δ
 

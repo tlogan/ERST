@@ -12,7 +12,20 @@ set_option pp.fieldNotation false
 -- the quantification of "any" can be inferred to me either all or exists dependeing on context and inflection.
 def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.any l p
 
-#print repr
+
+-- inductive Typ
+-- | var : String → Typ
+-- | unit
+-- | entry : String → Typ → Typ
+-- | path : Typ → Typ → Typ
+-- | unio :  Typ → Typ → Typ
+-- | inter :  Typ → Typ → Typ
+-- | diff :  Typ → Typ → Typ
+-- | all :  List String → List (Typ × Typ) → Typ → Typ
+-- | exi :  List String → List (Typ × Typ) → Typ → Typ
+-- | lfp :  String → Typ → Typ
+-- deriving BEq
+
 inductive Typ
 | var : String → Typ
 | unit
@@ -24,25 +37,44 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving BEq
+
+-- Boolean equality function
+mutual
+  def ListSubtyping.beq : List (Typ × Typ) → List (Typ × Typ) → Bool
+  | .nil, .nil => .true
+  | (a,b) :: l, (c,d) :: r =>
+    Typ.beq a c &&
+    Typ.beq b d &&
+    ListSubtyping.beq l r
+  | _, _ => .false
+
+  def Typ.beq : Typ → Typ → Bool
+  | .unit, .unit => .true
+  | .var idl, .var idr => idl == idr
+  | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
+  | .path x y, .path p q => Typ.beq x p && Typ.beq y q
+  | .unio a b, .unio c d => Typ.beq a c && Typ.beq b d
+  | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
+  | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
+  | .all idsl qsl bodyl, .all idsr qsr bodyr =>
+      idsl == idsr &&
+      ListSubtyping.beq qsl qsr &&
+      Typ.beq bodyl bodyr
+  | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
+      idsl == idsr &&
+      ListSubtyping.beq qsl qsr &&
+      Typ.beq bodyl bodyr
+  | .lfp idl bodyl, .lfp idr bodyr =>
+      idl == idr && Typ.beq bodyl bodyr
+  | _, _ => false
+end
+
+instance : BEq Typ where
+  beq := Typ.beq
+
 
 
 open Std.Format
-
--- syntax ident : typ
--- syntax "@" : typ
--- syntax:50 typ:51 "->" typ:50 : typ
--- syntax:60 typ:61 "|" typ:60 : typ
--- syntax:80 typ:81 "&" typ:80 : typ
--- syntax "<" ident ">" typ:90 : typ
--- syntax typ "\\" typ : typ
--- syntax "ALL" "[" params quals typ : typ
--- syntax "EXI" "[" params quals typ : typ
--- syntax "ALL" "[" params typ : typ
--- syntax "EXI" "[" params typ : typ
--- syntax "BOT" : typ
--- syntax "TOP" : typ
--- syntax "(" typ ")" : typ
 
 def append_line : List Std.Format → Std.Format
 | .nil => ""
@@ -55,13 +87,14 @@ def wrap (content : Std.Format) (p threshold : Nat) : Std.Format :=
       content
 
 
+def ListSubtyping := List (Typ × Typ)
 #print Fin
 
 #check List.map
 #eval (String.intercalate (" ") ["a", "b"])
 mutual
-  def ListSubtyping.repr : List (Typ × Typ) → Std.Format
-  | .nil => ""
+  def ListSubtyping.repr : ListSubtyping → Std.Format
+  | [] => ""
   | (l,r) :: [] =>
       group (
         "(" ++ (Typ.reprPrec l 0) ++ " <: " ++ (Typ.reprPrec r 0) ++ ")"
@@ -148,7 +181,7 @@ mutual
       )
 end
 
-instance : Repr (List (Typ × Typ)) where
+instance : Repr (ListSubtyping) where
   reprPrec t _ := group ("qs[" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " :]")
 
 instance : Repr (List (String × Typ)) where
@@ -159,8 +192,8 @@ instance : Repr Typ where
 
 
 
-def Typ.bot := Typ.all ["T"] [] (Typ.var "T")
-def Typ.top := Typ.exi ["T"] [] (Typ.var "T")
+def Typ.bot := Typ.all ["T"] .nil (Typ.var "T")
+def Typ.top := Typ.exi ["T"] .nil (Typ.var "T")
 def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right" right)
 
 instance : BEq (Typ × Typ) where
@@ -233,7 +266,7 @@ mutual
     Typ.ordered_bound_vars bounds' body
 
   def ListPairTyp.ordered_bound_vars (bounds : List String)
-  : List (Typ × Typ) → List String
+  : ListSubtyping → List String
   | .nil => .nil
   | .cons (l,r) remainder =>
     let a := (Typ.ordered_bound_vars bounds l)
@@ -243,10 +276,10 @@ mutual
 end
 
 mutual
-  def ListPairTyp.free_vars : List (Typ × Typ) → List String
+  def ListSubtyping.free_vars : ListSubtyping → List String
   | .nil => []
   | .cons (l,r) remainder =>
-    Typ.free_vars l ∪ Typ.free_vars r ∪ ListPairTyp.free_vars remainder
+    Typ.free_vars l ∪ Typ.free_vars r ∪ ListSubtyping.free_vars remainder
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
@@ -258,24 +291,24 @@ mutual
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all ids quals body =>
     List.diff (
-      ListPairTyp.free_vars quals ∪ Typ.free_vars body
+      ListSubtyping.free_vars quals ∪ Typ.free_vars body
     ) ids
   | .exi ids quals body =>
     List.diff (
-      ListPairTyp.free_vars quals ∪ Typ.free_vars body
+      ListSubtyping.free_vars quals ∪ Typ.free_vars body
     ) ids
   | .lfp id body =>
     List.diff (Typ.free_vars body) [id]
 end
 
 mutual
-  def ListPairTyp.toBruijn (base : Nat) (bids : List String)
-  : List (Typ × Typ) → List (Typ.Bruijn × Typ.Bruijn)
+  def ListSubtyping.toBruijn (base : Nat) (bids : List String)
+  : ListSubtyping → List (Typ.Bruijn × Typ.Bruijn)
   | .nil => .nil
   | .cons (l,r) remainder =>
     .cons
     (Typ.toBruijn base bids l, Typ.toBruijn base bids r)
-    (ListPairTyp.toBruijn base bids remainder)
+    (ListSubtyping.toBruijn base bids remainder)
 
   def Typ.toBruijn (base : Nat) (bids : List String) : Typ → Typ.Bruijn
   | .var id =>
@@ -301,16 +334,16 @@ mutual
     (Typ.toBruijn base bids left)
     (Typ.toBruijn base bids right)
     | .all ids quals body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids ((.unit, body) :: quals)
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) quals)
       let n := (List.length bids')
       .all n
-      (ListPairTyp.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) quals)
       (Typ.toBruijn (n + base) (bids' ++ bids) body)
     | .exi ids quals body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids ((.unit, body) :: quals)
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) quals)
       let n := (List.length bids')
       .all n
-      (ListPairTyp.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) quals)
       (Typ.toBruijn (n + base) (bids' ++ bids) body)
     | .lfp id body =>
       .lfp
@@ -319,9 +352,9 @@ end
 
 mutual
 
-  def ListPairTyp.size : List (Typ × Typ) → Nat
+  def ListSubtyping.size : ListSubtyping → Nat
   | .nil => 1
-  | .cons (l, r) rest =>  Typ.size l + Typ.size r + ListPairTyp.size rest
+  | .cons (l,r) rest =>  Typ.size l + Typ.size r + ListSubtyping.size rest
 
   def Typ.size : Typ → Nat
   | .var id => 1
@@ -331,16 +364,16 @@ mutual
   | .unio left right => Typ.size left + Typ.size right + 1
   | .inter left right => Typ.size left + Typ.size right + 1
   | .diff left right => Typ.size left + Typ.size right + 1
-  | .all ids quals body => ListPairTyp.size quals + Typ.size body + 1
-  | .exi ids quals body => ListPairTyp.size quals + Typ.size body + 1
+  | .all ids quals body => ListSubtyping.size quals + Typ.size body + 1
+  | .exi ids quals body => ListSubtyping.size quals + Typ.size body + 1
   | .lfp id body => Typ.size body + 1
 end
 
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
 cases t <;> simp [Typ.size]
 
-theorem ListPairTyp.zero_lt_size {cs} : 0 < ListPairTyp.size cs := by
-cases cs <;> simp [ListPairTyp.size, Typ.zero_lt_size]
+theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
+cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
 
 
 -- instance : SizeOf Typ where
@@ -373,9 +406,9 @@ def find {α} (id : String) : List (String × α) → Option α
 
 mutual
 
-  def ListPairTyp.sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
+  def ListSubtyping.sub (δ : List (String × Typ)) : ListSubtyping → ListSubtyping
   | .nil => .nil
-  | (l,r) :: remainder => (Typ.sub δ l, Typ.sub δ r) :: ListPairTyp.sub δ remainder
+  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (ListSubtyping.sub δ remainder)
 
   def Typ.sub (δ : List (String × Typ)) : Typ → Typ
   | .var id => match find id δ with
@@ -389,10 +422,10 @@ mutual
   | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
   | .all ids quals body =>
       let δ' := remove_all δ ids
-      .all ids (ListPairTyp.sub δ' quals) (Typ.sub δ' body)
+      .all ids (ListSubtyping.sub δ' quals) (Typ.sub δ' body)
   | .exi ids quals body =>
       let δ' := remove_all δ ids
-      .exi ids (ListPairTyp.sub δ' quals) (Typ.sub δ' body)
+      .exi ids (ListSubtyping.sub δ' quals) (Typ.sub δ' body)
   | .lfp id body =>
       let δ' := remove id δ
       .lfp id (Typ.sub δ' body)
@@ -401,7 +434,7 @@ end
 
 mutual
 
-  inductive ListSubtyping.Monotonic.Either : List String → List (Typ × Typ) → Typ → Prop
+  inductive ListSubtyping.Monotonic.Either : List String → ListSubtyping → Typ → Prop
   | nil cs t : ListSubtyping.Monotonic.Either [] cs t
   | cons id ids cs t b :
     ListSubtyping.Monotonic id b cs →
@@ -409,13 +442,13 @@ mutual
     ListSubtyping.Monotonic.Either ids cs t →
     ListSubtyping.Monotonic.Either (id :: ids) cs t
 
-  inductive ListSubtyping.Monotonic : String → Bool → List (Typ × Typ) → Prop
-  | nil id b : ListSubtyping.Monotonic id b []
+  inductive ListSubtyping.Monotonic : String → Bool → ListSubtyping → Prop
+  | nil id b : ListSubtyping.Monotonic id b .nil
   | cons id b l r remainder :
     Typ.Monotonic id (not b) l →
     Typ.Monotonic id b r →
     ListSubtyping.Monotonic id b remainder →
-    ListSubtyping.Monotonic id b ((l,r)::remainder)
+    ListSubtyping.Monotonic id b (.cons (l,r) remainder)
 
   inductive Typ.Monotonic : String → Bool → Typ → Prop
   | var id : Typ.Monotonic id true (.var id)
@@ -545,7 +578,7 @@ example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .top) := by
 
 
 def Typ.subfold (id : String) (t : Typ) : Nat → Typ
-| 0 => .exi ["T"] [] (.var "T")
+| 0 => .exi ["T"] .nil (.var "T")
 | n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
 
 inductive Pat
@@ -693,7 +726,8 @@ macro_rules
 
 macro_rules
 | `(qs[ : ]) => `([])
-| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `( (t[$x], t[$y]):: qs[$qs])
+| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `((t[$x],t[$y]) :: qs[$qs])
+
 
 macro_rules
 | `(ts[ . ]) => `([])
@@ -719,6 +753,8 @@ macro_rules
 
 
 #eval t[<uno> @ & <dos> @]
+
+#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
 
 
 macro_rules
@@ -843,4 +879,4 @@ def ListTyp.diff (t : Typ) : List Typ → Typ
 
 def Typ.capture (t : Typ) : Typ :=
     let ids := Typ.free_vars t
-    .exi ids [] t
+    .exi ids .nil t
