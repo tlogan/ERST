@@ -35,10 +35,6 @@ def BiZone.wrap (b : Bool)
 | Θ, Δ, [], .nil, t => Typ.outer b Θ Δ t
 | Θ, Δ, Θ', Δ', t => Typ.outer b Θ Δ (Typ.outer b Θ' Δ' t)
 
-inductive Typ.Decreasing (id : String) : Typ → Prop
---TODO
-| intro {t} : Typ.Decreasing id t
-
 def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .false, (l,r) => (l,r)
 | .true, (l,r) => (r,l)
@@ -242,16 +238,71 @@ example : Typ.UpperFounded "R"
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 def Typ.is_pattern (tops : List String) : Typ → Bool
-| .exi ids [] body => Typ.is_pattern (tops ++ ids) body
-| .var id => id ∈ tops
-| .unit => true
-| .entry _ body => Typ.is_pattern tops body
-| .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
-| _ => false
+  | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
+  | .var id => id ∈ tops
+  | .unit => true
+  | .entry _ body => Typ.is_pattern tops body
+  | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
+  | _ => false
 
 def Typ.height : Typ → Option Nat
--- TODO
-| _ => .none
+  | .exi _ [] body => Typ.height body
+  | .var _ => return 1
+  | .unit => return 1
+  | .entry _ body => do
+    return 1 + (← Typ.height body)
+  | .inter left right => do
+    return Nat.max (← Typ.height left) (← Typ.height right)
+  | _ => failure
+
+
+def ListSubtyping.lfp_restricted (id : String) : List (Typ × Typ) → Bool
+  | [] => .true
+  | (l,r) :: remainder =>
+    id ∉ (Typ.free_vars l) &&
+    (r == (.var id) || id ∉ (Typ.free_vars r)) &&
+    ListSubtyping.lfp_restricted id remainder
+
+
+mutual
+  inductive ListTyp.StructWrap : List Typ → Typ → Prop
+    | nil : ListTyp.StructWrap [] _
+    | cons l ls r:
+      Typ.StructWrap l r →
+      ListTyp.StructWrap ls r →
+      ListTyp.StructWrap (l :: ls) r
+
+  inductive Typ.StructWrap : Typ → Typ → Prop
+    | trivial : Typ.StructWrap (.var _) .unit
+
+    | entry_base t l : Typ.StructWrap t (.entry l t)
+    | entry_match ta tb l : Typ.StructWrap ta tb → Typ.StructWrap (.entry l ta) (.entry l tb)
+    | entry_step ta tb l : Typ.StructWrap ta tb → Typ.StructWrap ta (.entry l tb)
+
+    | inter_smaller a b c :
+      Typ.StructWrap a c  →
+      Typ.StructWrap b c →
+      Typ.StructWrap (.inter a b) c
+
+    | inter_bigger_left a b c :
+      Typ.StructWrap a b  →
+      Typ.StructWrap a (.inter b c)
+
+    | inter_bigger_right a b c :
+      Typ.StructWrap a c  →
+      Typ.StructWrap a (.inter b c)
+
+    | unio_bigger a b c :
+      Typ.StructWrap a b  →
+      Typ.StructWrap a c  →
+      Typ.StructWrap a (.unio b c)
+
+    | exi id ids qs body bs :
+      ListSubtyping.lfp_restricted id qs →
+      ListSubtyping.bounds id .true qs = bs →
+      ListTyp.StructWrap bs body →
+      Typ.StructWrap (.var id) (.exi ids qs body)
+end
 
 -- NOTE: this should be complete, but not sound
 def Subtyping.shallow_match : Typ → Typ → Bool
@@ -671,7 +722,7 @@ mutual
   | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
     Typ.is_pattern [] r →
     Typ.Monotonic id .true t →
-    Typ.Decreasing id t →
+    Typ.StructWrap (.var id) t →
     ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
     Typ.height r = .some h →
     ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →

@@ -13,19 +13,6 @@ set_option pp.fieldNotation false
 def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.any l p
 
 
--- inductive Typ
--- | var : String → Typ
--- | unit
--- | entry : String → Typ → Typ
--- | path : Typ → Typ → Typ
--- | unio :  Typ → Typ → Typ
--- | inter :  Typ → Typ → Typ
--- | diff :  Typ → Typ → Typ
--- | all :  List String → List (Typ × Typ) → Typ → Typ
--- | exi :  List String → List (Typ × Typ) → Typ → Typ
--- | lfp :  String → Typ → Typ
--- deriving BEq
-
 inductive Typ
   | var : String → Typ
   | unit
