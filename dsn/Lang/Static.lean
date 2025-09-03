@@ -256,73 +256,37 @@ def Typ.height : Typ → Option Nat
   | _ => failure
 
 
-def ListSubtyping.lfp_restricted (id : String) : List (Typ × Typ) → Bool
+def ListSubtyping.var_restricted (id : String) : List (Typ × Typ) → Bool
   | [] => .true
   | (l,r) :: remainder =>
     id ∉ (Typ.free_vars l) &&
     (r == (.var id) || id ∉ (Typ.free_vars r)) &&
-    ListSubtyping.lfp_restricted id remainder
-
-
--- mutual
---   inductive ListTyp.StructWrap : List Typ → Typ → Prop
---     | nil : ListTyp.StructWrap [] _
---     | cons l ls r:
---       Typ.StructWrap l r →
---       ListTyp.StructWrap ls r →
---       ListTyp.StructWrap (l :: ls) r
-
---   inductive Typ.StructWrap : Typ → Typ → Prop
---     | trivial : Typ.StructWrap (.var _) .unit
-
---     | entry_base t l : Typ.StructWrap t (.entry l t)
---     | entry_match ta tb l : Typ.StructWrap ta tb → Typ.StructWrap (.entry l ta) (.entry l tb)
---     | entry_step ta tb l : Typ.StructWrap ta tb → Typ.StructWrap ta (.entry l tb)
-
---     | inter_smaller a b c :
---       Typ.StructWrap a c  →
---       Typ.StructWrap b c →
---       Typ.StructWrap (.inter a b) c
-
---     | inter_bigger_left a b c :
---       Typ.StructWrap a b  →
---       Typ.StructWrap a (.inter b c)
-
---     | inter_bigger_right a b c :
---       Typ.StructWrap a c  →
---       Typ.StructWrap a (.inter b c)
-
---     | unio_bigger a b c :
---       Typ.StructWrap a b  →
---       Typ.StructWrap a c  →
---       Typ.StructWrap a (.unio b c)
-
---     | exi id ids qs body bs :
---       ListSubtyping.lfp_restricted id qs →
---       ListSubtyping.bounds id .true qs = bs →
---       ListTyp.StructWrap bs body →
---       Typ.StructWrap (.var id) (.exi ids qs body)
--- end
+    ListSubtyping.var_restricted id remainder
 
 mutual
-  def ListTyp.struct_wrap : List Typ → Typ → Bool
+  def ListTyp.struct_less_than : List Typ → Typ → Bool
     | [], _ => .true
     | (l::ls), r =>
-      Typ.struct_wrap l r && ListTyp.struct_wrap ls r
+      Typ.struct_less_than l r && ListTyp.struct_less_than ls r
 
-  def Typ.struct_wrap : Typ → Typ → Bool
+  def Typ.struct_lte (smaller bigger : Typ) : Bool :=
+    smaller == bigger || Typ.struct_less_than smaller bigger
+
+  def Typ.struct_less_than : Typ → Typ → Bool
     | (.var _), .unit => .true
-    | (.entry ll tl), (.entry lr tr) => ll == lr && Typ.struct_wrap tl tr
-    | tl, (.entry _ tr) => tl == tr || Typ.struct_wrap tl tr
+    | (.entry ll tl), (.entry lr tr) => ll == lr && Typ.struct_less_than tl tr
+    | tl, (.entry _ tr) => tl == tr || Typ.struct_less_than tl tr
 
-    | (.inter a b), c => Typ.struct_wrap a c && Typ.struct_wrap b c
-    | a, (.inter b c) => Typ.struct_wrap a b || Typ.struct_wrap a c
-    | a, (.unio b c) => Typ.struct_wrap a b && Typ.struct_wrap a c
+    | (.inter a b), c =>
+      (Typ.struct_less_than a c && Typ.struct_lte b c) ||
+      (Typ.struct_lte a c && Typ.struct_less_than b c)
+    | a, (.inter b c) => Typ.struct_less_than a b || Typ.struct_less_than a c
+    | a, (.unio b c) => Typ.struct_less_than a b && Typ.struct_less_than a c
 
     | (.var id), (.exi _ qs body )  =>
       let bs := ListSubtyping.bounds id .true qs
-      ListSubtyping.lfp_restricted id qs &&
-      ListTyp.struct_wrap bs body
+      ListSubtyping.var_restricted id qs &&
+      ListTyp.struct_less_than bs body
     | _, _ => .false
 end
 
@@ -744,7 +708,7 @@ mutual
   | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
     Typ.is_pattern [] r →
     Typ.Monotonic id .true t →
-    Typ.struct_wrap (.var id) t →
+    Typ.struct_less_than (.var id) t →
     ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
     Typ.height r = .some h →
     ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
