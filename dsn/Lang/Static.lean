@@ -887,10 +887,10 @@ macro_rules
       | apply Subtyping.Static.diff_fold_intro
         · rfl
         · Typ_Monotonic_prove
+        · simp only [Typ.struct_less_than, Bool.or] ; rfl
+        · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
         · rfl
-        · simp [Subtyping.check, Typ.toBruijn]; rfl
-        · rfl
-        · simp [Subtyping.check, Typ.toBruijn]; rfl
+        · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
 
       | apply Subtyping.Static.lfp_inflate_intro
         · rfl
@@ -947,6 +947,34 @@ example : Subtyping.Static [] [] t[T] t[<uno> @] [] qs[ (T <: <uno> @) :] := by
   · simp
   · simp
   · apply ListSubtyping.Static.nil
+
+#eval (Typ.var "R").struct_less_than ((Typ.entry "zero" Typ.unit).unio (Typ.entry "succ" (Typ.entry "succ" (Typ.var "R"))))
+
+example : Subtyping.Static [] []
+  t[LFP[R] (
+      (<zero> @) |
+      (<succ> <succ> R)
+  )]
+  t[TOP \ (<succ> <zero> @)]
+  [] qs[ (T <: <uno> @) :]
+:= by
+  apply Subtyping.Static.diff_fold_intro
+  · rfl
+  · Typ_Monotonic_prove
+  · simp only [Typ.struct_less_than, Bool.or] ; rfl
+  · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+  · rfl
+  · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+
+
+    -- | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
+    --   Typ.is_pattern [] r →
+    --   Typ.Monotonic id .true t →
+    --   Typ.struct_less_than (.var id) t →
+    --   ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
+    --   Typ.height r = .some h →
+    --   ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
+    --   Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
 mutual
   inductive Typing.ListPath.Static
