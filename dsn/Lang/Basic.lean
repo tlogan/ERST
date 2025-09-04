@@ -324,7 +324,43 @@ inductive Typ.Bruijn
 | all :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
 | exi :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
 | lfp :  Typ.Bruijn → Typ.Bruijn
-deriving Repr, BEq
+deriving Repr
+
+mutual
+  def ListSubtyping.Bruijn.beq : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn) → Bool
+    | .nil, .nil => .true
+    | (a,b) :: l, (c,d) :: r =>
+      .true
+      -- TODO
+      -- Typ.beq a c &&
+      -- Typ.beq b d &&
+      -- ListSubtyping.beq l r
+    | _, _ => .false
+
+  def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
+    -- TODO
+    -- | .unit, .unit => .true
+    -- | .var idl, .var idr => idl == idr
+    -- | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
+    -- | .path x y, .path p q => Typ.beq x p && Typ.beq y q
+    -- | .unio a b, .unio c d => Typ.beq a c && Typ.beq b d
+    -- | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
+    -- | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
+    -- | .all idsl qsl bodyl, .all idsr qsr bodyr =>
+    --     idsl == idsr &&
+    --     ListSubtyping.beq qsl qsr &&
+    --     Typ.beq bodyl bodyr
+    -- | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
+    --     idsl == idsr &&
+    --     ListSubtyping.beq qsl qsr &&
+    --     Typ.beq bodyl bodyr
+    -- | .lfp idl bodyl, .lfp idr bodyr =>
+    --     idl == idr && Typ.beq bodyl bodyr
+    | _, _ => false
+end
+
+instance : BEq Typ.Bruijn where
+  beq := Typ.Bruijn.beq
 
 
 def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
