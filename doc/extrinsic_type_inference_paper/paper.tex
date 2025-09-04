@@ -49,7 +49,7 @@
 \newtheorem{property}{Property}[section]
 % \newtheorem{proof}{Proof}[section]
 
-\newtheorem{experiment}{Experiment}[section]
+\newtheorem{instances}{Instances}[section]
 
 
 \title{Fully Extrinsic Type Inference (DRAFT 2025-06-20)}
@@ -2903,8 +2903,8 @@ of compounded unions.
 Proof subtyping sequence very simply solves a sequence of subtyping goals
 and compounds their results, such that the solution from one constrains the next. 
 
-\section{Theory}
-\label{sec:theory}
+\section{General Theory}
+\label{sec:general_theory}
 
 Our design depends on numerous helpers to rewrite and check the syntax
 of types. The details of these helpers play a key role in 
@@ -3315,11 +3315,16 @@ but we can easily compose it with another property to do so.
 % the annotations are respected. 
 
 
-\section{Experiments}
-\label{sec:experiments}
+\section{Instance Theory}
+\label{sec:}
 
 \noindent
-We performed experiments to see how type inference performs on both functions and constructors. 
+From the declarative definitions, we extracted procedures to infer types and 
+solve subtyping.
+We constructed tactics to automatically prove 
+static typing on instances of expressions and their inferred types.
+
+We constructed and proved instances with both functions and constructors. 
 These two categories have historically been tackled independently of each other, where parametric types
 tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
 Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
@@ -3330,7 +3335,7 @@ presented thus far.
 To observe the expressiveness of our system on functions, 
 we evaluated our implementation on the same suite of programs 
 that SuperF was evaluated on, as presented in the paper on SuperF \cite{}.
-Based on these experiments, our system all programs admitted by SuperF, as well as some programs 
+Based on these instances, our system admits all reported be admitted by SuperF \cite{}, as well as some programs 
 that SuperF is unable to admit.
 Thus, our system appears to be more expressive on functions than the previous most expressive
 type inference system that we know of.
@@ -3347,8 +3352,8 @@ or simply can't admit the program.
 
 
 \begin{definition} 
-  \label{def:experimental_expressions_and_types}
-  \emph{experimental expressions and types} 
+  \label{def:expressions_and_type_instances}
+  \emph{expression and type instances} 
   \scriptsize
   \nopad
   \[
@@ -3402,8 +3407,8 @@ types and expressions used as inputs to our system.
 
 
 \begin{definition} 
-  \label{def:experimental_typing_context}
-  \emph{experimental typing context}
+  \label{def:tying_context_instance}
+  \emph{tying context instance}
   \tiny
   \nopad
   \[
@@ -3481,10 +3486,10 @@ types and expressions used as inputs to our system.
 \end{definition}
 
 \noindent
-Additionally, for the purpose of experiment, it is useful to assume that   
+Additionally, it is illustrative to assume that   
 the typing of some identifiers have already been learned or verified.
 
-\begin{experiment}
+\begin{instances}
   \label{exp:part_1}
   Something
   \hfill
@@ -3596,10 +3601,10 @@ the typing of some identifiers have already been learned or verified.
     \sbottomrule
   \end{tabular}
   \end{center}
-\end{experiment}
+\end{instances}
 
 \noindent
-In the experiment on functions, we 
+In the instances with functions, we 
 are interested to observe if our implementation (\textbf{Extrinsic})
 can admit various programs on functions. 
 For our implementation, we reject a program if the implementation
@@ -3613,7 +3618,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 
 % $\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{ctx} \entails e \hastype \tau \given \Theta, \Delta$ 
 
-\begin{experiment}
+\begin{instances}
   \label{experi:part_2}
   \hfill
   \scriptsize
@@ -3731,9 +3736,9 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \sbottomrule
   \end{tabular}
   \end{center}
-\end{experiment}
+\end{instances}
 
-\begin{experiment}
+\begin{instances}
   \label{experi:part_3}
   \hfill
   \scriptsize
@@ -3815,9 +3820,9 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     \sbottomrule
   \end{tabular}
   \end{center}
-\end{experiment}
+\end{instances}
 
-\begin{experiment}
+\begin{instances}
   \label{experi:part_4}
   \hfill
   \nopad
@@ -3968,10 +3973,10 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     
   \end{tabular}
   \end{center}
-\end{experiment}
+\end{instances}
 
 
-\begin{experiment}
+\begin{instances}
   \label{experi:part_5}
   \hfill
   \nopad
@@ -4082,7 +4087,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
     
   \end{tabular}
   \end{center}
-\end{experiment}
+\end{instances}
 
 
 \TODO{add more interesting examples and explain why they're interesting}
@@ -4094,7 +4099,7 @@ We compare our system to SuperF and Super without Distributivity (\textbf{SF no 
 \TODO{add example of a counter stream}
 
 \noindent
-The experiment on programs with constructors demonstrate
+The instances with constructors demonstrate
 that our system is roughly as expressive as untyped languages
 without sacrificing safety guarantees.
 Our system can easily mix structures together, reducing
