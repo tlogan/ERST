@@ -616,10 +616,16 @@ mutual
         (Subtyping.Static.solve Θ' Δ' b t)
       )
 
-    | (.exi ids quals body), t =>
+      -- TODO: need to create fresh type variables and rename
+    | (.exi ids quals body), t => do
       if ListSubtyping.restricted Θ Δ quals then do
-        (← ListSubtyping.Static.solve Θ Δ quals).flatMapM (fun (Θ',Δ') =>
-          (Subtyping.Static.solve (ids ∪ Θ') Δ' body t)
+        let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
+        let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
+        let ids' : List String := pairs.map (fun (_, id') => id')
+        let quals' := ListSubtyping.sub subs quals
+        let body' := Typ.sub subs body
+        (← ListSubtyping.Static.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
+          (Subtyping.Static.solve (ids' ∪ Θ') Δ' body' t)
         )
       else return []
 
@@ -631,8 +637,13 @@ mutual
 
     | t, (.all ids quals body) =>
       if ListSubtyping.restricted Θ Δ quals then do
-        (← ListSubtyping.Static.solve Θ Δ quals).flatMapM (fun (Θ',Δ') =>
-          (Subtyping.Static.solve (ids ∪ Θ') Δ' t body)
+        let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
+        let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
+        let ids' : List String := pairs.map (fun (_, id') => id')
+        let quals' := ListSubtyping.sub subs quals
+        let body' := Typ.sub subs body
+        (← ListSubtyping.Static.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
+          (Subtyping.Static.solve (ids' ∪ Θ') Δ' t body')
         )
       else return []
 
