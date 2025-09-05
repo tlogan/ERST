@@ -583,8 +583,6 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' :
   PatLifting_Static_prove
 
 
-#check List.flatMap
-
 mutual
 
 
@@ -594,103 +592,113 @@ mutual
     | [] => return [(Θ, Δ)]
     | (lower,upper) :: remainder => do
       let worlds ← Subtyping.Static.solve Θ Δ lower upper
-      (worlds.flatMapM (fun (Θ, Δ) =>
-        ListSubtyping.Static.solve Θ Δ remainder
+      (worlds.flatMapM (fun (Θ',Δ') =>
+        ListSubtyping.Static.solve Θ' Δ' remainder
       ))
 
-  partial def Subtyping.Static.solve (Θ : List String) (Δ : List (Typ × Typ))
-  : Typ → Typ -> Lean.MetaM (List (List String × List (Typ × Typ)))
-    | _, _ => failure
+  partial def Subtyping.Static.solve (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ )
+  : Lean.MetaM (List (List String × List (Typ × Typ)))
+  := if (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper) then
+    return [(Θ,Δ)]
+  else match lower, upper with
+    | (.entry ll lower), (.entry lu upper) =>
+      if ll == lu then
+        Subtyping.Static.solve Θ Δ lower upper
+      else return []
 
-  -- : List String → List (Typ × Typ) → Typ → Typ →
-  --   List String → List (Typ × Typ) → Prop
-  --   | refl Θ Δ t :
-  --     Subtyping.Static Θ Δ t t Θ Δ
+    | (.path p q), (.path x y) => do
+      (← Subtyping.Static.solve Θ Δ x p).flatMapM (fun (Θ',Δ') =>
+        (Subtyping.Static.solve Θ' Δ' q y)
+      )
 
-  --   | rename_left Θ Δ left left' right :
-  --     (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
-  --     Subtyping.Static Θ Δ left' right Θ Δ →
-  --     Subtyping.Static Θ Δ left right Θ Δ
+    | (.unio a b), t => do
+      (← Subtyping.Static.solve Θ Δ a t).flatMapM (fun (Θ',Δ') =>
+        (Subtyping.Static.solve Θ' Δ' b t)
+      )
 
-  --   | rename_right Θ Δ left right right' :
-  --     (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
-  --     Subtyping.Static Θ Δ left right' Θ Δ →
-  --     Subtyping.Static Θ Δ left right Θ Δ
+    | (.exi ids quals body), t =>
+      if ListSubtyping.restricted Θ Δ quals then do
+        (← ListSubtyping.Static.solve Θ Δ quals).flatMapM (fun (Θ',Δ') =>
+          (Subtyping.Static.solve (ids ∪ Θ') Δ' body t)
+        )
+      else return []
 
-  --   -- implication preservation
-  --   | entry_pres Θ Δ l left right Θ' Δ' :
-  --     Subtyping.Static Θ Δ left right Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.entry l left) (.entry l right) Θ' Δ'
 
-  --   | path_pres Θ Δ p q  Θ' Δ' x y Θ'' Δ'' :
-  --     Subtyping.Static Θ Δ x p Θ' Δ' → Subtyping.Static Θ' Δ' q y Θ'' Δ'' →
-  --     Subtyping.Static Θ Δ (.path p q) (.path x y) Θ'' Δ''
+    | (.inter a b), t => do
+      (← Subtyping.Static.solve Θ Δ t a).flatMapM (fun (Θ',Δ') =>
+        (Subtyping.Static.solve Θ' Δ' t b)
+      )
 
-  --   -- expansion elimination
-  --   | unio_elim Θ Δ a t b Θ' Δ' Θ'' Δ'' :
-  --     Subtyping.Static Θ Δ a t Θ' Δ' → Subtyping.Static Θ' Δ' b t Θ'' Δ'' →
-  --     Subtyping.Static Θ Δ (.unio a b) t Θ'' Δ''
-  --   | exi_elim Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
-  --     ListSubtyping.restricted Θ Δ quals →
-  --     ListSubtyping.Static Θ Δ quals Θ' Δ' →
-  --     Subtyping.Static (ids ∪ Θ') Δ' body t Θ'' Δ'' →
-  --     Subtyping.Static Θ Δ (.exi ids quals body) t Θ'' Δ''
+    | t, (.all ids quals body) =>
+      if ListSubtyping.restricted Θ Δ quals then do
+        (← ListSubtyping.Static.solve Θ Δ quals).flatMapM (fun (Θ',Δ') =>
+          (Subtyping.Static.solve (ids ∪ Θ') Δ' t body)
+        )
+      else return []
 
-  --   -- refinement introduction
-  --   | inter_intro Θ Δ t a  b Θ' Δ' Θ'' Δ'' :
-  --     Subtyping.Static Θ Δ t a Θ' Δ' → Subtyping.Static Θ' Δ' t b Θ'' Δ'' →
-  --     Subtyping.Static Θ Δ t (.inter a b) Θ'' Δ''
-  --   | all_intro Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
-  --     ListSubtyping.restricted Θ Δ quals →
-  --     ListSubtyping.Static Θ Δ quals Θ' Δ' →
-  --     Subtyping.Static (ids ∪ Θ') Δ' t body Θ'' Δ'' →
-  --     Subtyping.Static Θ Δ t (.all ids quals body) Θ'' Δ''
+    | (.var id), t => do
+      if id ∉ Θ then
+        let lower_ids := ListSubtyping.bounds id .true Δ
+        let trans := lower_ids.map (fun lower_id => (lower_id, t))
+        (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+          return (Θ', (.var id, t) :: Δ')
+        )
+      else if (Δ.exi (fun
+        | (.var idl, .var idu) => idl == id && idu ∉ Θ
+        | _ => .false
+      )) then
+        let lower_ids := ListSubtyping.bounds id .true Δ
+        let trans := lower_ids.map (fun lower_id => (lower_id, t))
+        (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+          return (Θ', (t, .var id) :: Δ')
+        )
+      else
+        let upper_ids := ListSubtyping.bounds id .false Δ
+        (upper_ids.flatMapM (fun upper_id =>
+          let pass := (match upper_id with
+            | .var id' => Θ.contains id'
+            | _ => true
+          )
+          (if pass then
+            (Subtyping.Static.solve Θ Δ upper_id t)
+          else
+            return []
+          )
+        ))
 
-  --   -- placeholder elimination
-  --   | placeholder_elim Θ Δ id t trans Θ' Δ'  :
-  --     id ∉ Θ →
-  --     (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
-  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+    | t, (.var id) => do
+      if not (Θ.contains id) then
+        let upper_ids := ListSubtyping.bounds id .false Δ
+        let trans := upper_ids.map (fun upper_id => (t,upper_id))
+        (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+          return (Θ', (t, .var id) :: Δ')
+        )
+      else if (Δ.exi (fun
+        | (.var idl, .var idu) => idu == id && idl ∉ Θ
+        | _ => .false
+      )) then
+        let upper_ids := ListSubtyping.bounds id .false Δ
+        let trans := upper_ids.map (fun upper_id => (t,upper_id))
+        (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+          return (Θ', (t, .var id) :: Δ')
+        )
+      else do
+        let lower_ids := ListSubtyping.bounds id .true Δ
+        (lower_ids.flatMapM (fun lower_id =>
+          let pass := (match lower_id with
+            | .var id' => Θ.contains id'
+            | _ => true
+          )
+          (if pass then
+            (Subtyping.Static.solve Θ Δ t lower_id)
+          else
+            return []
+          )
+        ))
 
-  --   -- placeholder introduction
-  --   | placeholder_intro Θ Δ t id trans Θ' Δ'  :
-  --     id ∉ Θ →
-  --     (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
-  --     Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
-  --   -- skolem placeholder introduction
-  --   | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
-  --     id ∈ Θ →
-  --     (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
-  --     (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
-  --     Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+    | _, _ => return []
 
-  --   -- skolem introduction
-  --   | skolem_intro Θ Δ t id t' Θ' Δ'  :
-  --     id ∈ Θ →
-  --     (t', .var id) ∈ Δ →
-  --     (∀ id', (.var id') = t' → id ∈ Θ) →
-  --     Subtyping.Static Θ Δ t t' Θ' Δ' →
-  --     Subtyping.Static Θ Δ t (.var id) Θ' Δ'
-
-  --   -- skolem placeholder elimination
-  --   | skolem_placeholder_elim Θ Δ id t trans Θ' Δ'  :
-  --     id ∈ Θ →
-  --     (∃ id', (.var id, .var id') ∈ Δ ∧ id' ∉ Θ) →
-  --     (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
-  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
-
-  --   -- skolem elimination
-  --   | skolem_elim Θ Δ id t t' Θ' Δ' :
-  --     id ∈ Θ →
-  --     (.var id, t') ∈ Δ →
-  --     (∀ id', (.var id') = t → id' ∈ Θ) →
-  --     Subtyping.Static Θ Δ t' t Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
   --   -- implication rewriting
   --   | unio_antec Θ Δ l a b r Θ' Δ' :
@@ -867,7 +875,7 @@ mutual
     | skolem_intro Θ Δ t id t' Θ' Δ'  :
       id ∈ Θ →
       (t', .var id) ∈ Δ →
-      (∀ id', (.var id') = t' → id ∈ Θ) →
+      (∀ id', (.var id') = t' → id' ∈ Θ) →
       Subtyping.Static Θ Δ t t' Θ' Δ' →
       Subtyping.Static Θ Δ t (.var id) Θ' Δ'
 
@@ -885,7 +893,7 @@ mutual
       (.var id, t') ∈ Δ →
       (∀ id', (.var id') = t → id' ∈ Θ) →
       Subtyping.Static Θ Δ t' t Θ' Δ' →
-      Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+      Subtyping.Static Θ Δ (.var id) t Θ' Δ'
 
     -- implication rewriting
     | unio_antec Θ Δ l a b r Θ' Δ' :
