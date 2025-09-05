@@ -574,3 +574,23 @@ universe u
 -- def x : DecidableEq (List (String × String)) := inferInstance
 
 -- #eval (x [("hello","hello")] [("hello","hello")])
+
+
+
+#eval (List.foldl (fun x y => x - y) 0 [1,2,3])
+
+def forSub (xs : List Nat) := Id.run do
+  let mut total := 0
+  for x in xs do
+    total := total - x
+  return total
+
+#eval forSub [1,2,3]
+
+def other (xs : List Nat) := Id.run do
+  let mut total := 0
+  for x in xs do
+    total := x - total
+  return total
+
+#eval other [1,2,3]

@@ -583,70 +583,280 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' :
   PatLifting_Static_prove
 
 
+#check List.flatMap
+
+mutual
+
+
+  partial def ListSubtyping.Static.solve
+    (Θ : List String) (Δ : List (Typ × Typ))
+  : List (Typ × Typ) → Lean.MetaM (List (List String × List (Typ × Typ)))
+    | [] => return [(Θ, Δ)]
+    | (lower,upper) :: remainder => do
+      let worlds ← Subtyping.Static.solve Θ Δ lower upper
+      (worlds.flatMapM (fun (Θ, Δ) =>
+        ListSubtyping.Static.solve Θ Δ remainder
+      ))
+
+  partial def Subtyping.Static.solve (Θ : List String) (Δ : List (Typ × Typ))
+  : Typ → Typ -> Lean.MetaM (List (List String × List (Typ × Typ)))
+    | _, _ => failure
+
+  -- : List String → List (Typ × Typ) → Typ → Typ →
+  --   List String → List (Typ × Typ) → Prop
+  --   | refl Θ Δ t :
+  --     Subtyping.Static Θ Δ t t Θ Δ
+
+  --   | rename_left Θ Δ left left' right :
+  --     (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
+  --     Subtyping.Static Θ Δ left' right Θ Δ →
+  --     Subtyping.Static Θ Δ left right Θ Δ
+
+  --   | rename_right Θ Δ left right right' :
+  --     (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
+  --     Subtyping.Static Θ Δ left right' Θ Δ →
+  --     Subtyping.Static Θ Δ left right Θ Δ
+
+  --   -- implication preservation
+  --   | entry_pres Θ Δ l left right Θ' Δ' :
+  --     Subtyping.Static Θ Δ left right Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.entry l left) (.entry l right) Θ' Δ'
+
+  --   | path_pres Θ Δ p q  Θ' Δ' x y Θ'' Δ'' :
+  --     Subtyping.Static Θ Δ x p Θ' Δ' → Subtyping.Static Θ' Δ' q y Θ'' Δ'' →
+  --     Subtyping.Static Θ Δ (.path p q) (.path x y) Θ'' Δ''
+
+  --   -- expansion elimination
+  --   | unio_elim Θ Δ a t b Θ' Δ' Θ'' Δ'' :
+  --     Subtyping.Static Θ Δ a t Θ' Δ' → Subtyping.Static Θ' Δ' b t Θ'' Δ'' →
+  --     Subtyping.Static Θ Δ (.unio a b) t Θ'' Δ''
+  --   | exi_elim Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
+  --     ListSubtyping.restricted Θ Δ quals →
+  --     ListSubtyping.Static Θ Δ quals Θ' Δ' →
+  --     Subtyping.Static (ids ∪ Θ') Δ' body t Θ'' Δ'' →
+  --     Subtyping.Static Θ Δ (.exi ids quals body) t Θ'' Δ''
+
+  --   -- refinement introduction
+  --   | inter_intro Θ Δ t a  b Θ' Δ' Θ'' Δ'' :
+  --     Subtyping.Static Θ Δ t a Θ' Δ' → Subtyping.Static Θ' Δ' t b Θ'' Δ'' →
+  --     Subtyping.Static Θ Δ t (.inter a b) Θ'' Δ''
+  --   | all_intro Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
+  --     ListSubtyping.restricted Θ Δ quals →
+  --     ListSubtyping.Static Θ Δ quals Θ' Δ' →
+  --     Subtyping.Static (ids ∪ Θ') Δ' t body Θ'' Δ'' →
+  --     Subtyping.Static Θ Δ t (.all ids quals body) Θ'' Δ''
+
+  --   -- placeholder elimination
+  --   | placeholder_elim Θ Δ id t trans Θ' Δ'  :
+  --     id ∉ Θ →
+  --     (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
+  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+
+  --   -- placeholder introduction
+  --   | placeholder_intro Θ Δ t id trans Θ' Δ'  :
+  --     id ∉ Θ →
+  --     (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
+  --     Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+
+  --   -- skolem placeholder introduction
+  --   | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
+  --     id ∈ Θ →
+  --     (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
+  --     (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
+  --     Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+
+  --   -- skolem introduction
+  --   | skolem_intro Θ Δ t id t' Θ' Δ'  :
+  --     id ∈ Θ →
+  --     (t', .var id) ∈ Δ →
+  --     (∀ id', (.var id') = t' → id ∈ Θ) →
+  --     Subtyping.Static Θ Δ t t' Θ' Δ' →
+  --     Subtyping.Static Θ Δ t (.var id) Θ' Δ'
+
+  --   -- skolem placeholder elimination
+  --   | skolem_placeholder_elim Θ Δ id t trans Θ' Δ'  :
+  --     id ∈ Θ →
+  --     (∃ id', (.var id, .var id') ∈ Δ ∧ id' ∉ Θ) →
+  --     (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
+  --     ListSubtyping.Static Θ Δ trans Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+
+  --   -- skolem elimination
+  --   | skolem_elim Θ Δ id t t' Θ' Δ' :
+  --     id ∈ Θ →
+  --     (.var id, t') ∈ Δ →
+  --     (∀ id', (.var id') = t → id' ∈ Θ) →
+  --     Subtyping.Static Θ Δ t' t Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+
+  --   -- implication rewriting
+  --   | unio_antec Θ Δ l a b r Θ' Δ' :
+  --     Subtyping.Static Θ Δ l (.inter (.path a r) (.path b r)) Θ' Δ' →
+  --     Subtyping.Static Θ Δ l (.path (.unio a b) r) Θ' Δ'
+
+  --   | inter_conseq Θ Δ l a b r Θ' Δ' :
+  --     Subtyping.Static Θ Δ l (.inter (.path r a) (.path r b)) Θ' Δ' →
+  --     Subtyping.Static Θ Δ l (.path r (.inter a b)) Θ' Δ'
+
+  --   | inter_entry Θ Δ t l a b Θ' Δ' :
+  --     Subtyping.Static Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
+  --     Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
+
+  --   -- least fixed point elimination
+  --   | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
+  --     Typ.factor id left l = .some fac →
+  --     Subtyping.Static Θ Δ fac right Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
+
+  --   | lfp_skip_elim Θ Δ id left right Θ' Δ' :
+  --     id ∉ Typ.free_vars left →
+  --     Subtyping.Static Θ Δ left right Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
+
+  --   | lfp_induct_elim Θ Δ id left right Θ' Δ' :
+  --     Typ.Monotonic id .true left →
+  --     Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
+
+  --   -- difference introduction
+  --   | diff_intro Θ Δ t l r Θ' Δ' :
+  --     Typ.is_pattern [] r →
+  --     ¬ Subtyping.check Θ Δ t r →
+  --     ¬ Subtyping.check Θ Δ r t →
+  --     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
+
+  --   -- difference introduction
+  --   | diff_fold_intro Θ Δ id t l r h Θ' Δ' :
+  --     Typ.is_pattern [] r →
+  --     Typ.Monotonic id .true t →
+  --     Typ.struct_less_than (.var id) t →
+  --     ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
+  --     Typ.height r = .some h →
+  --     ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
+  --     Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
+
+  --   -- least fixed point introduction
+  --   | lfp_inflate_intro Θ Δ l id r Θ' Δ' :
+  --     -- TODO: inflatable is a heuristic;
+  --     -- it's not necessary for soundness
+  --     -- consider merely using it in tactic
+  --     Subtyping.inflatable l r →
+  --     Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
+  --     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
+
+  --   | lfp_drop_intro Θ Δ l id r r' Θ' Δ' :
+  --     Typ.drop id r = r' →
+  --     Subtyping.Static Θ Δ l r' Θ' Δ' →
+  --     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
+
+  --   -- difference elimination
+  --   | diff_elim Θ Δ l r t Θ' Δ' :
+  --     Subtyping.Static Θ Δ l (.unio r t) Θ' Δ' →
+  --     Subtyping.Static Θ Δ (.diff l r) t Θ' Δ'
+
+  --   -- expansion introduction
+  --   | unio_left_intro θ δ t l r θ' δ' :
+  --     Subtyping.Static θ δ t l θ' δ' →
+  --     Subtyping.Static θ δ t (.unio l r) θ' δ'
+
+  --   | unio_right_intro θ δ t l r θ' δ' :
+  --     Subtyping.Static θ δ t r θ' δ' →
+  --     Subtyping.Static θ δ t (.unio l r) θ' δ'
+
+  --   | exi_intro θ δ l ids quals r θ' δ' θ'' δ'' :
+  --     Subtyping.Static θ δ l r θ' δ' →
+  --     ListSubtyping.Static θ' δ' quals θ' δ' →
+  --     Subtyping.Static θ δ l (.exi ids quals r)  θ'' δ''
+
+  --   -- refinement elimination
+  --   | inter_left_elim θ δ l r t θ' δ' :
+  --     Subtyping.Static θ δ l t θ' δ' →
+  --     Subtyping.Static θ δ (.inter l r) t θ' δ'
+
+  --   | inter_right_elim θ δ l r t θ' δ' :
+  --     Subtyping.Static θ δ r t θ' δ' →
+  --     Subtyping.Static θ δ (.inter l r) t θ' δ'
+
+  --   | inter_merge_elim θ δ l r p q t θ' δ' :
+  --     Typ.merge_paths (.inter l r) = .some t →
+  --     Subtyping.Static θ δ t (.path p q) θ' δ' →
+  --     Subtyping.Static θ δ (.inter l r) (.path p q) θ' δ'
+
+  --   | all_elim θ δ ids quals l r θ' δ' θ'' δ'' :
+  --     Subtyping.Static θ δ l r θ' δ' →
+  --     ListSubtyping.Static θ' δ' quals θ' δ' →
+  --     Subtyping.Static θ δ (.all ids quals l) r θ'' δ''
+
+end
+
+
 
 mutual
 
   inductive Subtyping.Static
   : List String → List (Typ × Typ) → Typ → Typ →
     List String → List (Typ × Typ) → Prop
-    | refl {Θ Δ t} :
+    | refl Θ Δ t :
       Subtyping.Static Θ Δ t t Θ Δ
 
-    | rename_left {Θ Δ left left' right} :
+    | rename_left Θ Δ left left' right :
       (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
       Subtyping.Static Θ Δ left' right Θ Δ →
       Subtyping.Static Θ Δ left right Θ Δ
 
-    | rename_right {Θ Δ left right right'} :
+    | rename_right Θ Δ left right right' :
       (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
       Subtyping.Static Θ Δ left right' Θ Δ →
       Subtyping.Static Θ Δ left right Θ Δ
 
     -- implication preservation
-    | entry_pres {Θ Δ l left right Θ' Δ'} :
+    | entry_pres Θ Δ l left right Θ' Δ' :
       Subtyping.Static Θ Δ left right Θ' Δ' →
       Subtyping.Static Θ Δ (.entry l left) (.entry l right) Θ' Δ'
 
-    | path_pres {Θ Δ p q  Θ' Δ' x y Θ'' Δ''} :
+    | path_pres Θ Δ p q  Θ' Δ' x y Θ'' Δ'' :
       Subtyping.Static Θ Δ x p Θ' Δ' → Subtyping.Static Θ' Δ' q y Θ'' Δ'' →
       Subtyping.Static Θ Δ (.path p q) (.path x y) Θ'' Δ''
 
     -- expansion elimination
-    | unio_elim {Θ Δ a t b Θ' Δ' Θ'' Δ''} :
+    | unio_elim Θ Δ a t b Θ' Δ' Θ'' Δ'' :
       Subtyping.Static Θ Δ a t Θ' Δ' → Subtyping.Static Θ' Δ' b t Θ'' Δ'' →
       Subtyping.Static Θ Δ (.unio a b) t Θ'' Δ''
-    | exi_elim {Θ Δ ids quals body t Θ' Δ' Θ'' Δ''} :
+    | exi_elim Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
       ListSubtyping.restricted Θ Δ quals →
       ListSubtyping.Static Θ Δ quals Θ' Δ' →
       Subtyping.Static (ids ∪ Θ') Δ' body t Θ'' Δ'' →
       Subtyping.Static Θ Δ (.exi ids quals body) t Θ'' Δ''
 
     -- refinement introduction
-    | inter_intro {Θ Δ t a  b Θ' Δ' Θ'' Δ''} :
+    | inter_intro Θ Δ t a  b Θ' Δ' Θ'' Δ'' :
       Subtyping.Static Θ Δ t a Θ' Δ' → Subtyping.Static Θ' Δ' t b Θ'' Δ'' →
       Subtyping.Static Θ Δ t (.inter a b) Θ'' Δ''
-    | all_intro {Θ Δ ids quals body t Θ' Δ' Θ'' Δ''} :
+    | all_intro Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
       ListSubtyping.restricted Θ Δ quals →
       ListSubtyping.Static Θ Δ quals Θ' Δ' →
       Subtyping.Static (ids ∪ Θ') Δ' t body Θ'' Δ'' →
       Subtyping.Static Θ Δ t (.all ids quals body) Θ'' Δ''
 
     -- placeholder elimination
-    | placeholder_elim {Θ Δ id t trans Θ' Δ' } :
+    | placeholder_elim Θ Δ id t trans Θ' Δ'  :
       id ∉ Θ →
       (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
       ListSubtyping.Static Θ Δ trans Θ' Δ' →
       Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
     -- placeholder introduction
-    | placeholder_intro {Θ Δ t id trans Θ' Δ' } :
+    | placeholder_intro Θ Δ t id trans Θ' Δ'  :
       id ∉ Θ →
       (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
       ListSubtyping.Static Θ Δ trans Θ' Δ' →
       Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
     -- skolem placeholder introduction
-    | skolem_placeholder_intro {Θ Δ t id trans Θ' Δ' } :
+    | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
       id ∈ Θ →
       (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
       (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
@@ -654,7 +864,7 @@ mutual
       Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
     -- skolem introduction
-    | skolem_intro {Θ Δ t id t' Θ' Δ' } :
+    | skolem_intro Θ Δ t id t' Θ' Δ'  :
       id ∈ Θ →
       (t', .var id) ∈ Δ →
       (∀ id', (.var id') = t' → id ∈ Θ) →
@@ -662,7 +872,7 @@ mutual
       Subtyping.Static Θ Δ t (.var id) Θ' Δ'
 
     -- skolem placeholder elimination
-    | skolem_placeholder_elim {Θ Δ id t trans Θ' Δ' } :
+    | skolem_placeholder_elim Θ Δ id t trans Θ' Δ'  :
       id ∈ Θ →
       (∃ id', (.var id, .var id') ∈ Δ ∧ id' ∉ Θ) →
       (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
@@ -670,7 +880,7 @@ mutual
       Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
     -- skolem elimination
-    | skolem_elim {Θ Δ id t t' Θ' Δ'} :
+    | skolem_elim Θ Δ id t t' Θ' Δ' :
       id ∈ Θ →
       (.var id, t') ∈ Δ →
       (∀ id', (.var id') = t → id' ∈ Θ) →
@@ -678,41 +888,43 @@ mutual
       Subtyping.Static Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
 
     -- implication rewriting
-    | unio_antec {Θ Δ l a b r Θ' Δ'} :
+    | unio_antec Θ Δ l a b r Θ' Δ' :
       Subtyping.Static Θ Δ l (.inter (.path a r) (.path b r)) Θ' Δ' →
       Subtyping.Static Θ Δ l (.path (.unio a b) r) Θ' Δ'
 
-    | inter_conseq {Θ Δ l a b r Θ' Δ'} :
+    | inter_conseq Θ Δ l a b r Θ' Δ' :
       Subtyping.Static Θ Δ l (.inter (.path r a) (.path r b)) Θ' Δ' →
       Subtyping.Static Θ Δ l (.path r (.inter a b)) Θ' Δ'
 
-    | inter_entry {Θ Δ t l a b Θ' Δ'} :
+    | inter_entry Θ Δ t l a b Θ' Δ' :
       Subtyping.Static Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
       Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
 
     -- least fixed point elimination
-    | lfp_factor_elim {Θ Δ id left l right fac Θ' Δ'} :
+    | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
       Typ.factor id left l = .some fac →
       Subtyping.Static Θ Δ fac right Θ' Δ' →
       Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
-    | lfp_skip_elim {Θ Δ id left right Θ' Δ'} :
+
+    | lfp_skip_elim Θ Δ id left right Θ' Δ' :
       id ∉ Typ.free_vars left →
       Subtyping.Static Θ Δ left right Θ' Δ' →
       Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
-    | lfp_induct_elim {Θ Δ id left right Θ' Δ'} :
+
+    | lfp_induct_elim Θ Δ id left right Θ' Δ' :
       Typ.Monotonic id .true left →
       Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
       Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
 
     -- difference introduction
-    | diff_intro {Θ Δ t l r Θ' Δ'} :
+    | diff_intro Θ Δ t l r Θ' Δ' :
       Typ.is_pattern [] r →
       ¬ Subtyping.check Θ Δ t r →
       ¬ Subtyping.check Θ Δ r t →
       Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
 
     -- difference introduction
-    | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
+    | diff_fold_intro Θ Δ id t l r h Θ' Δ' :
       Typ.is_pattern [] r →
       Typ.Monotonic id .true t →
       Typ.struct_less_than (.var id) t →
@@ -722,7 +934,7 @@ mutual
       Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
     -- least fixed point introduction
-    | lfp_inflate_intro {Θ Δ l id r Θ' Δ'} :
+    | lfp_inflate_intro Θ Δ l id r Θ' Δ' :
       -- TODO: inflatable is a heuristic;
       -- it's not necessary for soundness
       -- consider merely using it in tactic
@@ -730,45 +942,45 @@ mutual
       Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
       Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
 
-    | lfp_drop_intro {Θ Δ l id r r' Θ' Δ'} :
+    | lfp_drop_intro Θ Δ l id r r' Θ' Δ' :
       Typ.drop id r = r' →
       Subtyping.Static Θ Δ l r' Θ' Δ' →
       Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
 
     -- difference elimination
-    | diff_elim {Θ Δ l r t Θ' Δ'} :
+    | diff_elim Θ Δ l r t Θ' Δ' :
       Subtyping.Static Θ Δ l (.unio r t) Θ' Δ' →
       Subtyping.Static Θ Δ (.diff l r) t Θ' Δ'
 
     -- expansion introduction
-    | unio_left_intro {θ δ t l r θ' δ'} :
+    | unio_left_intro θ δ t l r θ' δ' :
       Subtyping.Static θ δ t l θ' δ' →
       Subtyping.Static θ δ t (.unio l r) θ' δ'
 
-    | unio_right_intro {θ δ t l r θ' δ'} :
+    | unio_right_intro θ δ t l r θ' δ' :
       Subtyping.Static θ δ t r θ' δ' →
       Subtyping.Static θ δ t (.unio l r) θ' δ'
 
-    | exi_intro {θ δ l ids quals r θ' δ' θ'' δ''} :
+    | exi_intro θ δ l ids quals r θ' δ' θ'' δ'' :
       Subtyping.Static θ δ l r θ' δ' →
       ListSubtyping.Static θ' δ' quals θ' δ' →
       Subtyping.Static θ δ l (.exi ids quals r)  θ'' δ''
 
     -- refinement elimination
-    | inter_left_elim {θ δ l r t θ' δ'} :
+    | inter_left_elim θ δ l r t θ' δ' :
       Subtyping.Static θ δ l t θ' δ' →
       Subtyping.Static θ δ (.inter l r) t θ' δ'
 
-    | inter_right_elim {θ δ l r t θ' δ'} :
+    | inter_right_elim θ δ l r t θ' δ' :
       Subtyping.Static θ δ r t θ' δ' →
       Subtyping.Static θ δ (.inter l r) t θ' δ'
 
-    | inter_merge_elim {θ δ l r p q t θ' δ'} :
+    | inter_merge_elim θ δ l r p q t θ' δ' :
       Typ.merge_paths (.inter l r) = .some t →
       Subtyping.Static θ δ t (.path p q) θ' δ' →
       Subtyping.Static θ δ (.inter l r) (.path p q) θ' δ'
 
-    | all_elim {θ δ ids quals l r θ' δ' θ'' δ''} :
+    | all_elim θ δ ids quals l r θ' δ' θ'' δ'' :
       Subtyping.Static θ δ l r θ' δ' →
       ListSubtyping.Static θ' δ' quals θ' δ' →
       Subtyping.Static θ δ (.all ids quals l) r θ'' δ''
@@ -776,8 +988,8 @@ mutual
   inductive ListSubtyping.Static
   : List String → List (Typ × Typ) → List (Typ × Typ) →
     List String → List (Typ × Typ) → Prop
-    | nil {Θ Δ Θ' Δ'} : ListSubtyping.Static Θ Δ [] Θ' Δ'
-    | cons {Θ Δ l r cs Θ' Δ' Θ'' Δ''} :
+    | nil Θ Δ Θ' Δ' : ListSubtyping.Static Θ Δ [] Θ' Δ'
+    | cons Θ Δ l r cs Θ' Δ' Θ'' Δ'' :
       Subtyping.Static Θ Δ l r Θ' Δ' →
       ListSubtyping.Static Θ' Δ' cs Θ'' Δ'' →
       ListSubtyping.Static Θ Δ ((l,r) :: cs) Θ'' Δ''
@@ -788,7 +1000,12 @@ syntax "ListSubtyping_Static_prove" : tactic
 syntax "Subtyping_Static_prove" : tactic
 macro_rules
   | `(tactic| ListSubtyping_Static_prove) => `(tactic|
-    sorry
+    (first
+      | apply ListSubtyping.Static.nil
+      | apply ListSubtyping.Static.cons
+        · Subtyping_Static_prove
+        · ListSubtyping_Static_prove
+    )
   )
   | `(tactic| Subtyping_Static_prove) => `(tactic|
     (first
@@ -948,7 +1165,8 @@ example : Subtyping.Static [] [] t[T] t[<uno> @] [] qs[ (T <: <uno> @) :] := by
   · simp
   · apply ListSubtyping.Static.nil
 
-#eval (Typ.var "R").struct_less_than ((Typ.entry "zero" Typ.unit).unio (Typ.entry "succ" (Typ.entry "succ" (Typ.var "R"))))
+#eval (Typ.var "R").struct_less_than
+((Typ.entry "zero" Typ.unit).unio (Typ.entry "succ" (Typ.entry "succ" (Typ.var "R"))))
 
 example : Subtyping.Static [] []
   t[LFP[R] (
@@ -966,15 +1184,30 @@ example : Subtyping.Static [] []
   · rfl
   · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
 
+example : Subtyping.Static ["T"] qs[(X <: T) :]
+  t[@]
+  t[T]
+  ["T"] qs[ (@ <: T) :]
+:= by
+  apply Subtyping.Static.skolem_placeholder_intro
+  · simp
+  · simp
+  · simp
+  · ListSubtyping_Static_prove
+    -- -- skolem placeholder introduction
+    -- | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
+    --   id ∈ Θ →
+    --   (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
+    --   (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+    --   ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
-    -- | diff_fold_intro {Θ Δ id t l r h Θ' Δ'} :
-    --   Typ.is_pattern [] r →
-    --   Typ.Monotonic id .true t →
-    --   Typ.struct_less_than (.var id) t →
-    --   ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
-    --   Typ.height r = .some h →
-    --   ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
-    --   Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
+
+    -- | placeholder_intro Θ Δ t id trans Θ' Δ'  :
+    --   id ∉ Θ →
+    --   (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
+    --   ListSubtyping.Static Θ Δ trans Θ' Δ' →
+    --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
 mutual
   inductive Typing.ListPath.Static
