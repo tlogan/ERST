@@ -582,7 +582,6 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' :
   exists ts[ (y : T670) (x : T669) .]
   PatLifting_Static_prove
 
-
 mutual
 
 
@@ -616,7 +615,6 @@ mutual
         (Subtyping.Static.solve Θ' Δ' b t)
       )
 
-      -- TODO: need to create fresh type variables and rename
     | (.exi ids quals body), t => do
       if ListSubtyping.restricted Θ Δ quals then do
         let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
@@ -708,37 +706,30 @@ mutual
         ))
 
 
+    | l, (.path (.unio a b) r) =>
+      Subtyping.Static.solve Θ Δ l (.inter (.path a r) (.path b r))
+
+
+    | l, (.path r (.inter a b)) =>
+      Subtyping.Static.solve Θ Δ l (.inter (.path r a) (.path r b))
+
+    | t, (.entry l (.inter a b)) =>
+      Subtyping.Static.solve Θ Δ t (.inter (.entry l a) (.entry l b))
+
+
+    | (.lfp id left), upper =>
+      if not (left.free_vars.contains id) then
+        Subtyping.Static.solve Θ Δ left upper
+      else if Typ.Monotonic.try id .true left then
+        Subtyping.Static.solve Θ Δ (Typ.sub [(id, upper)] left) upper
+      else match upper with
+        | (.entry l right) => match Typ.factor id left l with
+            | .some fac  => Subtyping.Static.solve Θ Δ fac right
+            | .none => failure
+        | _ => failure
+
+
     | _, _ => return []
-
-
-  --   -- implication rewriting
-  --   | unio_antec Θ Δ l a b r Θ' Δ' :
-  --     Subtyping.Static Θ Δ l (.inter (.path a r) (.path b r)) Θ' Δ' →
-  --     Subtyping.Static Θ Δ l (.path (.unio a b) r) Θ' Δ'
-
-  --   | inter_conseq Θ Δ l a b r Θ' Δ' :
-  --     Subtyping.Static Θ Δ l (.inter (.path r a) (.path r b)) Θ' Δ' →
-  --     Subtyping.Static Θ Δ l (.path r (.inter a b)) Θ' Δ'
-
-  --   | inter_entry Θ Δ t l a b Θ' Δ' :
-  --     Subtyping.Static Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
-  --     Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
-
-  --   -- least fixed point elimination
-  --   | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
-  --     Typ.factor id left l = .some fac →
-  --     Subtyping.Static Θ Δ fac right Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
-
-  --   | lfp_skip_elim Θ Δ id left right Θ' Δ' :
-  --     id ∉ Typ.free_vars left →
-  --     Subtyping.Static Θ Δ left right Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
-
-  --   | lfp_induct_elim Θ Δ id left right Θ' Δ' :
-  --     Typ.Monotonic id .true left →
-  --     Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
 
   --   -- difference introduction
   --   | diff_intro Θ Δ t l r Θ' Δ' :
@@ -920,11 +911,6 @@ mutual
       Subtyping.Static Θ Δ t (.entry l (.inter a b)) Θ' Δ'
 
     -- least fixed point elimination
-    | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
-      Typ.factor id left l = .some fac →
-      Subtyping.Static Θ Δ fac right Θ' Δ' →
-      Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
-
     | lfp_skip_elim Θ Δ id left right Θ' Δ' :
       id ∉ Typ.free_vars left →
       Subtyping.Static Θ Δ left right Θ' Δ' →
@@ -934,6 +920,11 @@ mutual
       Typ.Monotonic id .true left →
       Subtyping.Static Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
       Subtyping.Static Θ Δ (.lfp id left) right Θ' Δ'
+
+    | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
+      Typ.factor id left l = .some fac →
+      Subtyping.Static Θ Δ fac right Θ' Δ' →
+      Subtyping.Static Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
 
     -- difference introduction
     | diff_intro Θ Δ t l r Θ' Δ' :

@@ -580,6 +580,13 @@ end
 
 
 mutual
+  partial def Typ.Monotonic.try : String → Bool → Typ → Bool
+    -- TODO
+    | _, _, _ => .false
+end
+
+
+mutual
 
   inductive ListSubtyping.Monotonic.Either : List String → ListSubtyping → Typ → Prop
   | nil cs t : ListSubtyping.Monotonic.Either [] cs t
