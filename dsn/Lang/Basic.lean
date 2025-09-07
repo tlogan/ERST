@@ -580,7 +580,7 @@ end
 
 
 mutual
-  partial def Typ.Monotonic.try : String → Bool → Typ → Bool
+  partial def Typ.Monotonic.decide : String → Bool → Typ → Bool
     -- TODO
     | _, _, _ => .false
 end

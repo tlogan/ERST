@@ -720,33 +720,40 @@ mutual
     | (.lfp id left), upper =>
       if not (left.free_vars.contains id) then
         Subtyping.Static.solve Θ Δ left upper
-      else if Typ.Monotonic.try id .true left then
+      else if Typ.Monotonic.decide id .true left then
         Subtyping.Static.solve Θ Δ (Typ.sub [(id, upper)] left) upper
       else match upper with
         | (.entry l right) => match Typ.factor id left l with
             | .some fac  => Subtyping.Static.solve Θ Δ fac right
             | .none => failure
+        | (.diff l r) => match Typ.height r with
+            | .some h =>
+              if (
+                Typ.is_pattern [] r &&
+                Typ.Monotonic.decide id .true left &&
+                Typ.struct_less_than (.var id) left &&
+                not (Subtyping.check Θ Δ (Typ.subfold id left 1) r) &&
+                not (Subtyping.check Θ Δ r (Typ.subfold id left h))
+              ) then
+                Subtyping.Static.solve Θ Δ left l
+              else
+                failure
+            | .none => failure
         | _ => failure
 
 
+    | t, (.diff l r) =>
+      if (
+        Typ.is_pattern [] r &&
+        ¬ Subtyping.check Θ Δ t r &&
+        ¬ Subtyping.check Θ Δ r t
+      ) then
+        Subtyping.Static.solve Θ Δ t l
+      else
+        failure
+
     | _, _ => return []
 
-  --   -- difference introduction
-  --   | diff_intro Θ Δ t l r Θ' Δ' :
-  --     Typ.is_pattern [] r →
-  --     ¬ Subtyping.check Θ Δ t r →
-  --     ¬ Subtyping.check Θ Δ r t →
-  --     Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
-
-  --   -- difference introduction
-  --   | diff_fold_intro Θ Δ id t l r h Θ' Δ' :
-  --     Typ.is_pattern [] r →
-  --     Typ.Monotonic id .true t →
-  --     Typ.struct_less_than (.var id) t →
-  --     ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
-  --     Typ.height r = .some h →
-  --     ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
-  --     Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
   --   -- least fixed point introduction
   --   | lfp_inflate_intro Θ Δ l id r Θ' Δ' :
@@ -931,9 +938,9 @@ mutual
       Typ.is_pattern [] r →
       ¬ Subtyping.check Θ Δ t r →
       ¬ Subtyping.check Θ Δ r t →
+      Subtyping.Static Θ Δ t l Θ' Δ' →
       Subtyping.Static Θ Δ t (.diff l r) Θ' Δ'
 
-    -- difference introduction
     | diff_fold_intro Θ Δ id t l r h Θ' Δ' :
       Typ.is_pattern [] r →
       Typ.Monotonic id .true t →
@@ -941,6 +948,7 @@ mutual
       ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
       Typ.height r = .some h →
       ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
+      Subtyping.Static Θ Δ (.lfp id t) l Θ' Δ' →
       Subtyping.Static Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
 
     -- least fixed point introduction
@@ -1110,6 +1118,7 @@ macro_rules
         · rfl
         · simp [Subtyping.check, Typ.toBruijn]; rfl
         · simp [Subtyping.check, Typ.toBruijn]; rfl
+        · Subtyping_Static_prove
 
       | apply Subtyping.Static.diff_fold_intro
         · rfl
