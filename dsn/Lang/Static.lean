@@ -628,7 +628,7 @@ mutual
       else return []
 
 
-    | (.inter a b), t => do
+    | t, (.inter a b) => do
       (← Subtyping.Static.solve Θ Δ t a).flatMapM (fun (Θ',Δ') =>
         (Subtyping.Static.solve Θ' Δ' t b)
       )
@@ -752,60 +752,57 @@ mutual
       else
         failure
 
+    | l, (.lfp id r) =>
+      if Subtyping.inflatable l r then
+        Subtyping.Static.solve Θ Δ l (.sub [(id, .lfp id r)] r)
+      else
+        let r' := Typ.drop id r
+        Subtyping.Static.solve Θ Δ l r'
+
+    | (.diff l r), t =>
+      Subtyping.Static.solve Θ Δ l (.unio r t)
+
+
+    | t, (.unio l r) => do
+      return (
+        (← Subtyping.Static.solve Θ Δ t l) ++
+        (← Subtyping.Static.solve Θ Δ t r)
+      )
+
+    | l, (.exi ids quals r) => do
+      let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
+      let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
+      let r' := Typ.sub subs r
+      let quals' := ListSubtyping.sub subs quals
+      (← Subtyping.Static.solve Θ Δ l r').flatMapM (fun (θ',Δ') =>
+        ListSubtyping.Static.solve θ' Δ' quals'
+      )
+
+
+    | (.inter l r), t => match t with
+      | .path p q => match Typ.merge_paths (.inter l r) with
+        | .some t' => Subtyping.Static.solve Θ Δ t' (.path p q)
+        | .none => return (
+          (← Subtyping.Static.solve Θ Δ l t) ++
+          (← Subtyping.Static.solve Θ Δ r t)
+        )
+      | _ => return (
+        (← Subtyping.Static.solve Θ Δ l t) ++
+        (← Subtyping.Static.solve Θ Δ r t)
+      )
+
+
+
+    | (.all ids quals l), r  => do
+      let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
+      let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
+      let l' := Typ.sub subs l
+      let quals' := ListSubtyping.sub subs quals
+      (← Subtyping.Static.solve Θ Δ l' r).flatMapM (fun (θ',Δ') =>
+        ListSubtyping.Static.solve θ' Δ' quals'
+      )
+
     | _, _ => return []
-
-
-  --   -- least fixed point introduction
-  --   | lfp_inflate_intro Θ Δ l id r Θ' Δ' :
-  --     -- TODO: inflatable is a heuristic;
-  --     -- it's not necessary for soundness
-  --     -- consider merely using it in tactic
-  --     Subtyping.inflatable l r →
-  --     Subtyping.Static Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
-  --     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
-
-  --   | lfp_drop_intro Θ Δ l id r r' Θ' Δ' :
-  --     Typ.drop id r = r' →
-  --     Subtyping.Static Θ Δ l r' Θ' Δ' →
-  --     Subtyping.Static Θ Δ l (.lfp id r) Θ' Δ'
-
-  --   -- difference elimination
-  --   | diff_elim Θ Δ l r t Θ' Δ' :
-  --     Subtyping.Static Θ Δ l (.unio r t) Θ' Δ' →
-  --     Subtyping.Static Θ Δ (.diff l r) t Θ' Δ'
-
-  --   -- expansion introduction
-  --   | unio_left_intro θ δ t l r θ' δ' :
-  --     Subtyping.Static θ δ t l θ' δ' →
-  --     Subtyping.Static θ δ t (.unio l r) θ' δ'
-
-  --   | unio_right_intro θ δ t l r θ' δ' :
-  --     Subtyping.Static θ δ t r θ' δ' →
-  --     Subtyping.Static θ δ t (.unio l r) θ' δ'
-
-  --   | exi_intro θ δ l ids quals r θ' δ' θ'' δ'' :
-  --     Subtyping.Static θ δ l r θ' δ' →
-  --     ListSubtyping.Static θ' δ' quals θ' δ' →
-  --     Subtyping.Static θ δ l (.exi ids quals r)  θ'' δ''
-
-  --   -- refinement elimination
-  --   | inter_left_elim θ δ l r t θ' δ' :
-  --     Subtyping.Static θ δ l t θ' δ' →
-  --     Subtyping.Static θ δ (.inter l r) t θ' δ'
-
-  --   | inter_right_elim θ δ l r t θ' δ' :
-  --     Subtyping.Static θ δ r t θ' δ' →
-  --     Subtyping.Static θ δ (.inter l r) t θ' δ'
-
-  --   | inter_merge_elim θ δ l r p q t θ' δ' :
-  --     Typ.merge_paths (.inter l r) = .some t →
-  --     Subtyping.Static θ δ t (.path p q) θ' δ' →
-  --     Subtyping.Static θ δ (.inter l r) (.path p q) θ' δ'
-
-  --   | all_elim θ δ ids quals l r θ' δ' θ'' δ'' :
-  --     Subtyping.Static θ δ l r θ' δ' →
-  --     ListSubtyping.Static θ' δ' quals θ' δ' →
-  --     Subtyping.Static θ δ (.all ids quals l) r θ'' δ''
 
 end
 
