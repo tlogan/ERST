@@ -647,8 +647,8 @@ mutual
 
     | (.var id), t => do
       if id ∉ Θ then
-        let lower_ids := ListSubtyping.bounds id .true Δ
-        let trans := lower_ids.map (fun lower_id => (lower_id, t))
+        let lowers_id := ListSubtyping.bounds id .true Δ
+        let trans := lowers_id.map (fun lower_id => (lower_id, t))
         (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (.var id, t) :: Δ')
         )
@@ -656,14 +656,14 @@ mutual
         | (.var idl, .var idu) => idl == id && idu ∉ Θ
         | _ => .false
       )) then
-        let lower_ids := ListSubtyping.bounds id .true Δ
-        let trans := lower_ids.map (fun lower_id => (lower_id, t))
+        let lowers_id := ListSubtyping.bounds id .true Δ
+        let trans := lowers_id.map (fun lower_id => (lower_id, t))
         (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
       else
-        let upper_ids := ListSubtyping.bounds id .false Δ
-        (upper_ids.flatMapM (fun upper_id =>
+        let uppers_id := ListSubtyping.bounds id .false Δ
+        (uppers_id.flatMapM (fun upper_id =>
           let pass := (match upper_id with
             | .var id' => Θ.contains id'
             | _ => true
@@ -677,8 +677,8 @@ mutual
 
     | t, (.var id) => do
       if not (Θ.contains id) then
-        let upper_ids := ListSubtyping.bounds id .false Δ
-        let trans := upper_ids.map (fun upper_id => (t,upper_id))
+        let uppers_id := ListSubtyping.bounds id .false Δ
+        let trans := uppers_id.map (fun upper_id => (t,upper_id))
         (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
@@ -686,14 +686,14 @@ mutual
         | (.var idl, .var idu) => idu == id && idl ∉ Θ
         | _ => .false
       )) then
-        let upper_ids := ListSubtyping.bounds id .false Δ
-        let trans := upper_ids.map (fun upper_id => (t,upper_id))
+        let uppers_id := ListSubtyping.bounds id .false Δ
+        let trans := uppers_id.map (fun upper_id => (t,upper_id))
         (← ListSubtyping.Static.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
       else do
-        let lower_ids := ListSubtyping.bounds id .true Δ
-        (lower_ids.flatMapM (fun lower_id =>
+        let lowers_id := ListSubtyping.bounds id .true Δ
+        (lowers_id.flatMapM (fun lower_id =>
           let pass := (match lower_id with
             | .var id' => Θ.contains id'
             | _ => true
@@ -1124,6 +1124,7 @@ macro_rules
         · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
         · rfl
         · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+        · Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_inflate_intro
         · rfl
@@ -1199,6 +1200,7 @@ example : Subtyping.Static [] []
   · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
   · rfl
   · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+  · sorry
 
 example : Subtyping.Static ["T"] qs[(X <: T) :]
   t[@]

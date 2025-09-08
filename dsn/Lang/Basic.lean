@@ -580,21 +580,73 @@ end
 
 
 mutual
-  partial def Typ.Monotonic.decide : String → Bool → Typ → Bool
-    -- TODO
-    | _, _, _ => .false
+
+  partial def ListSubtyping.Monotonic.Either.decide (cs : ListSubtyping) (t : Typ)
+  : List String → Bool
+  | [] => .true
+  | id :: ids =>
+    (
+      (ListSubtyping.Monotonic.decide id .true cs && Typ.Monotonic.decide id .true t) ||
+      (ListSubtyping.Monotonic.decide id .false cs && Typ.Monotonic.decide id .false t)
+    ) &&
+    ListSubtyping.Monotonic.Either.decide cs t ids
+
+  partial def ListSubtyping.Monotonic.decide (id : String) (b : Bool) : ListSubtyping → Bool
+    | .nil => .true
+    | .cons (l,r) remainder =>
+      Typ.Monotonic.decide id (not b) l &&
+      Typ.Monotonic.decide id b r &&
+      ListSubtyping.Monotonic.decide id b remainder
+
+
+  partial def Typ.Monotonic.decide (id : String) (b : Bool) : Typ → Bool
+    | .var id' =>
+      if id == id' then
+        b == .true
+      else
+        .true
+    | .unit => .true
+    | .entry _ body =>
+      Typ.Monotonic.decide id b body
+    | .path left right =>
+      Typ.Monotonic.decide id (not b) left &&
+      Typ.Monotonic.decide id b right
+    | .unio left right =>
+      Typ.Monotonic.decide id b left &&
+      Typ.Monotonic.decide id b right
+    | .inter left right =>
+      Typ.Monotonic.decide id b left &&
+      Typ.Monotonic.decide id b right
+    | .diff left right =>
+      Typ.Monotonic.decide id b left &&
+      Typ.Monotonic.decide id (not b) right
+
+    | .all ids quals body =>
+      ids.contains id || (
+        ListSubtyping.Monotonic.Either.decide quals body ids &&
+        Typ.Monotonic.decide id b body
+      )
+
+    | .exi ids quals body =>
+      ids.contains id || (
+        ListSubtyping.Monotonic.Either.decide quals (.diff .unit body) ids &&
+        Typ.Monotonic.decide id b body
+      )
+
+    | .lfp id' body =>
+      id == id' || Typ.Monotonic.decide id b body
 end
 
 
 mutual
 
-  inductive ListSubtyping.Monotonic.Either : List String → ListSubtyping → Typ → Prop
-  | nil cs t : ListSubtyping.Monotonic.Either [] cs t
-  | cons id ids cs t b :
+  inductive ListSubtyping.Monotonic.Either : ListSubtyping → Typ → List String → Prop
+  | nil cs t : ListSubtyping.Monotonic.Either cs t []
+  | cons cs t b id ids :
     ListSubtyping.Monotonic id b cs →
     Typ.Monotonic id b t →
-    ListSubtyping.Monotonic.Either ids cs t →
-    ListSubtyping.Monotonic.Either (id :: ids) cs t
+    ListSubtyping.Monotonic.Either cs t ids →
+    ListSubtyping.Monotonic.Either cs t (id :: ids)
 
   inductive ListSubtyping.Monotonic : String → Bool → ListSubtyping → Prop
   | nil id b : ListSubtyping.Monotonic id b .nil
@@ -628,7 +680,7 @@ mutual
 
   | all id b ids quals body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Either ids quals body →
+    ListSubtyping.Monotonic.Either quals body ids →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.all ids quals body)
 
@@ -638,7 +690,7 @@ mutual
 
   | exi id b ids quals body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Either ids quals (.diff .unit body) →
+    ListSubtyping.Monotonic.Either quals (.diff .unit body) ids →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.exi ids quals body)
 
@@ -659,11 +711,11 @@ macro_rules
 | `(tactic| prove_list_subtyping_monotonic_either) => `(tactic|
   (first
   | apply ListSubtyping.Monotonic.Either.nil
-  | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .true
+  | apply ListSubtyping.Monotonic.Either.cons _ _ .true
     · prove_list_subtyping_monotonic
     · Typ_Monotonic_prove
     · prove_list_subtyping_monotonic_either
-  | apply ListSubtyping.Monotonic.Either.cons _ _ _ _ .false
+  | apply ListSubtyping.Monotonic.Either.cons _ _ .false
     · prove_list_subtyping_monotonic
     · Typ_Monotonic_prove
     · prove_list_subtyping_monotonic_either
