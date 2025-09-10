@@ -1253,14 +1253,16 @@ mutual
   partial def Subtyping.GuardedListZone.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ))
   : Typ → Typ → Lean.MetaM (List Zone)
-    | _, _ => return []
---     | intro {Θ Δ t id zones zones'} :
---       (∀ Θ' Δ' t',
---         ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
---         Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
---       ) →
---       ListZone.tidy (ListSubtyping.free_vars Δ) zones = .some zones' →
---       Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
+    | t, .var id => do
+      let id' ← fresh_typ_id
+      let t' := .var id'
+      let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) t')).map (fun (Θ', Δ') =>
+        ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩
+      )
+      match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
+        | .some zones' => return zones'
+        | .none => failure
+    | _, _ => failure
 
   partial def Typing.ListZone.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr)
