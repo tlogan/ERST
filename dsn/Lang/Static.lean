@@ -1227,6 +1227,8 @@ example : Subtyping.Static ["T"] qs[(X <: T) :]
     --   ListSubtyping.Static Θ Δ trans Θ' Δ' →
     --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
+#check Option.mapM
+
 mutual
   partial def Typing.ListPath.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
@@ -1261,40 +1263,48 @@ mutual
 --       Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
 
   partial def Typing.ListZone.Static.infer
-    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : Expr → Lean.MetaM (List Zone)
-    | _ => return []
---       | intro {Θ Δ Γ e zones} :
---         (∀ Θ' Δ' t,
---           ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
---           Typing.Static Θ Δ Γ e t Θ' Δ'
---         ) →
---         Typing.ListZone.Static Θ Δ Γ e zones
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr)
+  : Lean.MetaM (List Zone) := do
+    (← Typing.Static.infer Θ Δ Γ e).mapM (fun  ⟨Θ', Δ', t⟩ =>
+      return ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩
+    )
 
     partial def Subtyping.LoopListZone.Static.infer
-      (ignore : List String) (point : String)
+      (pids : List String) (id : String)
     : List Zone → Lean.MetaM Typ
-      | [] => return .top
-      | _ => return .bot
---     | batch {pids id zones zones' t' l r} :
---       ListZone.invert id zones = .some zones' →
---       ListZone.pack (id :: pids) .false zones' = t' →
---       Typ.factor id t' "left" = .some l →
---       Typ.factor id t' "right" = .some r →
---       Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
 
---     | stream {pids id Θ Δ Δ' idl r t' l r' l' r''} :
---       id ≠ idl →
---       ListSubtyping.invert id Δ = .some Δ' →
---       Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩ = t' →
---       Typ.factor id t' "left" = .some l →
---       Typ.factor id t' "right" = .some r' →
---       Typ.Monotonic idl .true r' →
---       Typ.UpperFounded id l l' →
---       Typ.sub [(idl, .lfp id l')] r' = r'' →
---       Subtyping.LoopListZone.Static
---       pids id [⟨Θ, Δ, .path (.var idl) r⟩]
---       (.path (.var idl) (.lfp id r''))
+      | [⟨Θ, Δ, .path (.var idl) r⟩] =>
+        if id != idl then do
+          match (
+            (ListSubtyping.invert id Δ).bind (fun Δ' =>
+              let t' := Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩
+              (Typ.factor id t' "left").bind (fun l =>
+              (Typ.factor id t' "right").map (fun r' => do
+                let l' ← Typ.UpperFounded.compute id l
+                let r'' := Typ.sub [(idl, .lfp id l')] r'
+                if Typ.Monotonic.decide idl .true r' then
+                  return (.path (.var idl) (.lfp id r''))
+                else
+                  failure
+              ))
+            )
+          ) with
+            | .some result => result
+            | .none => failure
+        else failure
+
+      | zones => match (
+        (ListZone.invert id zones).bind (fun zones' =>
+          let t' := ListZone.pack (id :: pids) .false zones'
+          (Typ.factor id t' "left").bind (fun l =>
+          (Typ.factor id t' "right").map (fun r =>
+            return (.path (.lfp id l) (.lfp id r))
+          ))
+        )
+      ) with
+        | .some result => result
+        | .none => failure
+
 
     partial def Typing.Static.infer
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
