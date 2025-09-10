@@ -1228,12 +1228,133 @@ example : Subtyping.Static ["T"] qs[(X <: T) :]
     --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
 mutual
+  partial def Typing.ListPath.Static.infer
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
+    | .nil => return ([], [])
+    | _ => return ([], [])
+--     | nil {Θ Δ Γ} :
+--       Typing.ListPath.Static Θ Δ Γ [] [] []
+--     | cons {Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra} :
+--       Typing.ListPath.Static Θ Δ Γ f zones subtras →
+--       PatLifting.Static Δ Γ p tp Δ' Γ' →
+--       ListTyp.diff tp subtras = tl →
+--       (∀ Θ' Δ'' tr,
+--         ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
+--         Typing.Static Θ Δ' Γ' e tr Θ' Δ''
+--       ) →
+--       ListZone.tidy (ListSubtyping.free_vars Δ) zones' = .some zones'' →
+--       Typ.capture tp = subtra →
+--       Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
+
+
+  partial def Subtyping.GuardedListZone.Static.infer
+    (Θ : List String) (Δ : List (Typ × Typ))
+  : Typ → Typ → Lean.MetaM (List Zone)
+    | _, _ => return []
+--     | intro {Θ Δ t id zones zones'} :
+--       (∀ Θ' Δ' t',
+--         ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
+--         Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
+--       ) →
+--       ListZone.tidy (ListSubtyping.free_vars Δ) zones = .some zones' →
+--       Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
+
+  partial def Typing.ListZone.Static.infer
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+  : Expr → Lean.MetaM (List Zone)
+    | _ => return []
+--       | intro {Θ Δ Γ e zones} :
+--         (∀ Θ' Δ' t,
+--           ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
+--           Typing.Static Θ Δ Γ e t Θ' Δ'
+--         ) →
+--         Typing.ListZone.Static Θ Δ Γ e zones
+
+    partial def Subtyping.LoopListZone.Static.infer
+      (ignore : List String) (point : String)
+    : List Zone → Lean.MetaM Typ
+      | [] => return .top
+      | _ => return .bot
+--     | batch {pids id zones zones' t' l r} :
+--       ListZone.invert id zones = .some zones' →
+--       ListZone.pack (id :: pids) .false zones' = t' →
+--       Typ.factor id t' "left" = .some l →
+--       Typ.factor id t' "right" = .some r →
+--       Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
+
+--     | stream {pids id Θ Δ Δ' idl r t' l r' l' r''} :
+--       id ≠ idl →
+--       ListSubtyping.invert id Δ = .some Δ' →
+--       Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩ = t' →
+--       Typ.factor id t' "left" = .some l →
+--       Typ.factor id t' "right" = .some r' →
+--       Typ.Monotonic idl .true r' →
+--       Typ.UpperFounded id l l' →
+--       Typ.sub [(idl, .lfp id l')] r' = r'' →
+--       Subtyping.LoopListZone.Static
+--       pids id [⟨Θ, Δ, .path (.var idl) r⟩]
+--       (.path (.var idl) (.lfp id r''))
+
+    partial def Typing.Static.infer
+      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+    : Expr → Lean.MetaM (List Zone)
+      | .unit => return [⟨Θ, Δ, .unit⟩]
+      | .var x =>  match find x Γ with
+        | .some t => return [⟨Θ, Δ, t⟩]
+        | .none => failure
+
+      | .record [] =>  return [⟨Θ, Δ, .top⟩]
+
+      | .record ((l,e) :: r) => do
+        (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+        (← (Typing.Static.infer Θ' Δ' Γ (.record r))).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
+          return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
+        ))
+
+      | (.function f) => do
+        let (zones, _) ← (Typing.ListPath.Static.infer Θ Δ Γ f)
+        let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
+        return [⟨Θ, Δ, t⟩]
+
+
+      | (.app ef ea) => do
+        let α ← fresh_typ_id
+        (← Typing.Static.infer Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
+        (← Typing.Static.infer Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
+        (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
+          return [⟨Θ''', Δ''', (.var α)⟩]
+         )))
+
+      | (.loop e) => do
+        let id ← fresh_typ_id
+        (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+          let zones ← Subtyping.GuardedListZone.Static.infer Θ' Δ' t (.var id)
+          let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones
+          return [⟨Θ', Δ', t'⟩]
+        )
+
+
+
+      | (.anno e ta) =>
+        if Typ.free_vars ta == [] then do
+          let zones ← Typing.ListZone.Static.infer Θ Δ Γ e
+          let te := ListZone.pack (ListSubtyping.free_vars Δ) .false zones
+          (← Subtyping.Static.solve Θ Δ te ta).flatMapM (fun (Θ', Δ') =>
+            return [⟨Θ', Δ', ta⟩]
+          )
+        else
+          return []
+
+end
+
+mutual
   inductive Typing.ListPath.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     List (Pat × Expr) → List Zone → List Typ → Prop
-    | nil {Θ Δ Γ} :
+    | nil Θ Δ Γ :
       Typing.ListPath.Static Θ Δ Γ [] [] []
-    | cons {Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra} :
+    | cons Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra :
       Typing.ListPath.Static Θ Δ Γ f zones subtras →
       PatLifting.Static Δ Γ p tp Δ' Γ' →
       ListTyp.diff tp subtras = tl →
@@ -1246,11 +1367,10 @@ mutual
       Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
 
-
   inductive Subtyping.GuardedListZone.Static
   : List String → List (Typ × Typ) →
     Typ → Typ → List Zone → Prop
-    | intro {Θ Δ t id zones zones'} :
+    | intro Θ Δ t id zones zones' :
       (∀ Θ' Δ' t',
         ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
         Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
@@ -1258,26 +1378,26 @@ mutual
       ListZone.tidy (ListSubtyping.free_vars Δ) zones = .some zones' →
       Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
 
-    inductive Typing.ListZone.Static
-    : List String → List (Typ × Typ) → List (String × Typ) →
-      Expr → List Zone → Prop
-      | intro {Θ Δ Γ e zones} :
-        (∀ Θ' Δ' t,
-          ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
-          Typing.Static Θ Δ Γ e t Θ' Δ'
-        ) →
-        Typing.ListZone.Static Θ Δ Γ e zones
+  inductive Typing.ListZone.Static
+  : List String → List (Typ × Typ) → List (String × Typ) →
+    Expr → List Zone → Prop
+    | intro Θ Δ Γ e zones :
+      (∀ Θ' Δ' t,
+        ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
+        Typing.Static Θ Δ Γ e t Θ' Δ'
+      ) →
+      Typing.ListZone.Static Θ Δ Γ e zones
 
   inductive Subtyping.LoopListZone.Static
   : List String → String → List Zone → Typ → Prop
-    | batch {pids id zones zones' t' l r} :
+    | batch pids id zones zones' t' l r :
       ListZone.invert id zones = .some zones' →
       ListZone.pack (id :: pids) .false zones' = t' →
       Typ.factor id t' "left" = .some l →
       Typ.factor id t' "right" = .some r →
       Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
 
-    | stream {pids id Θ Δ Δ' idl r t' l r' l' r''} :
+    | stream pids id Θ Δ Δ' idl r t' l r' l' r'' :
       id ≠ idl →
       ListSubtyping.invert id Δ = .some Δ' →
       Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩ = t' →
@@ -1294,42 +1414,43 @@ mutual
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ →
     List String → List (Typ × Typ) → Prop
-    | unit {Θ Δ Γ} : Typing.Static Θ Δ Γ .unit .unit Θ Δ
-    | var {Θ Δ Γ x t} :
+    | unit Θ Δ Γ : Typing.Static Θ Δ Γ .unit .unit Θ Δ
+    | var Θ Δ Γ x t :
       find x Γ = .some t →
       Typing.Static Θ Δ Γ (.var x) t Θ Δ
 
-    | record_nil {Θ Δ Γ} :
+    | record_nil Θ Δ Γ :
       Typing.Static Θ Δ Γ (.record []) .top Θ Δ
-    | record_cons {Θ Δ Γ r l e t t'  Θ' Δ' Θ'' Δ''} :
+
+    | record_cons Θ Δ Γ r l e t t'  Θ' Δ' Θ'' Δ'' :
       Typing.Static Θ Δ Γ e t Θ' Δ' →
-      Typing.Static Θ Δ Γ (.record r) t' Θ'' Δ'' →
+      Typing.Static Θ' Δ' Γ (.record r) t' Θ'' Δ'' →
       Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
 
-    | function {Θ Δ Γ f zones t subtras} :
+    | function Θ Δ Γ f zones t subtras :
       Typing.ListPath.Static Θ Δ Γ f zones subtras →
       ListZone.pack (ListSubtyping.free_vars Δ) .true zones = t →
       Typing.Static Θ Δ Γ (.function f) t Θ Δ
 
-    | app {Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ'''} :
+    | app Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ''' :
       Typing.Static Θ Δ Γ ef tf Θ' Δ' →
       Typing.Static Θ' Δ' Γ ea ta Θ'' Δ'' →
-      Subtyping.Static Θ Δ tf (.path ta (.var α)) Θ''' Δ''' →
+      Subtyping.Static Θ'' Δ'' tf (.path ta (.var α)) Θ''' Δ''' →
       Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
 
-    | loop {Θ Δ Γ e t id zones t' Θ' Δ'} :
+    | loop Θ Δ Γ e t id zones t' Θ' Δ' :
       Typing.Static Θ Δ Γ e t Θ' Δ' →
       Subtyping.GuardedListZone.Static Θ' Δ' t (.var id) zones →
       Subtyping.LoopListZone.Static (ListSubtyping.free_vars Δ') id zones t' →
       Typing.Static Θ Δ Γ (.loop e) t' Θ' Δ'
 
 
-    | anno {Θ Δ Γ e ta zones te Θ' Δ'} :
+    | anno Θ Δ Γ e ta zones te Θ' Δ' :
       Typ.free_vars ta ⊆ [] →
       Typing.ListZone.Static Θ Δ Γ e zones →
       ListZone.pack (ListSubtyping.free_vars Δ) .false zones = te →
       Subtyping.Static Θ Δ te ta Θ' Δ' →
-      Typing.Static Θ Δ Γ (.anno e ta) ta Θ Δ
+      Typing.Static Θ Δ Γ (.anno e ta) ta Θ' Δ'
 
 
 end
