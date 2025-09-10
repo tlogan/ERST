@@ -1421,9 +1421,8 @@ mutual
       (.path (.var idl) (.lfp id r''))
 
   inductive Typing.Static
-  : List String → List (Typ × Typ) → List (String × Typ) →
-    Expr → Typ →
-    List String → List (Typ × Typ) → Prop
+  : List String → List (Typ × Typ) → List (String × Typ)
+  → Expr → Typ → List String → List (Typ × Typ) → Prop
     | unit Θ Δ Γ : Typing.Static Θ Δ Γ .unit .unit Θ Δ
     | var Θ Δ Γ x t :
       find x Γ = .some t →
@@ -1464,3 +1463,95 @@ mutual
 
 
 end
+
+syntax "Typing_ListPath_Static_prove" : tactic
+syntax "Subtyping_GuardedListZone_Static_prove" : tactic
+syntax "Subtyping_ListZone_Static_prove" : tactic
+syntax "Subtyping_LoopListZone_Static_prove" : tactic
+syntax "Typing_Static_prove" : tactic
+
+
+
+macro_rules
+
+  | `(tactic| Typing_ListPath_Static_prove) => `(tactic|
+    (first
+      | apply Typing.ListPath.Static.nil
+      | apply Typing.ListPath.Static.cons
+        · Typing_ListPath_Static_prove
+        · PatLifting_Static_prove
+        · rfl
+        · intro
+          · Typing_Static_prove
+        · rfl
+        · rfl
+    ) <;> fail
+  )
+
+  | `(tactic| Subtyping_GuardedListZone_Static_prove) => `(tactic|
+    (apply Subtyping.ListZone.Static.intro
+      · intro
+        · Subtyping_Static_prove
+      · rfl
+    )
+  )
+
+  | `(tactic| Subtyping_ListZone_Static_prove) => `(tactic|
+    (apply Subtyping.ListZone.Static.intro
+      · intro
+        · Typing_Static_prove
+    )
+  )
+
+  | `(tactic| Subtyping_LoopListZone_Static_prove) => `(tactic|
+    (first
+      | apply Subtyping.LoopListZone.Static.batch
+        · rfl
+        · rfl
+        · rfl
+        · rfl
+      | apply Subtyping.LoopListZone.Static.stream
+        · simp
+        · rfl
+        · rfl
+        · rfl
+        · rfl
+        · Typ_Monotonic_prove
+        · Typ_UpperFounded_prove
+        · rfl
+    ) <;> fail
+  )
+
+  | `(tactic| Typing_Static_prove) => `(tactic|
+    (first
+      | apply Typing.Static.unit
+      | apply Typing.Static.var
+        · rfl
+      | apply Typing.Static.record_nil
+      | apply Typing.Static.record_cons
+        · Typing_Static_prove
+        · Typing_Static_prove
+
+
+      | apply Typing.Static.function
+        · Typing_ListPath_Static_prove
+        · rfl
+
+      | apply Typing.Static.app
+        · Typing_Static_prove
+        · Typing_Static_prove
+        · Subtyping_Static_prove
+
+      | apply Typing.Static.loop
+        · Typing_Static_prove
+        · Subtyping_GuardedListZone_Static_prove
+        · Subtyping_LoopListZone_Static_prove
+
+      | apply Typing.Static.anno
+        · simp
+        · Subtyping_ListZone_Static_prove
+        · rfl
+        · Subtyping_Static_prove
+
+    ) <;> fail
+  )
