@@ -1233,21 +1233,19 @@ mutual
   partial def Typing.ListPath.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
   : List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
-    | .nil => return ([], [])
-    | _ => return ([], [])
---     | nil {Θ Δ Γ} :
---       Typing.ListPath.Static Θ Δ Γ [] [] []
---     | cons {Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra} :
---       Typing.ListPath.Static Θ Δ Γ f zones subtras →
---       PatLifting.Static Δ Γ p tp Δ' Γ' →
---       ListTyp.diff tp subtras = tl →
---       (∀ Θ' Δ'' tr,
---         ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
---         Typing.Static Θ Δ' Γ' e tr Θ' Δ''
---       ) →
---       ListZone.tidy (ListSubtyping.free_vars Δ) zones' = .some zones'' →
---       Typ.capture tp = subtra →
---       Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
+      | [] => return ([], [])
+
+      | (p,e)::f => do
+        let (zones, subtras) ← Typing.ListPath.Static.infer Θ Δ Γ f
+        let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
+        let tl := ListTyp.diff tp subtras
+        let zones' := (← Typing.Static.infer Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
+          ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩
+        )
+        let subtra := Typ.capture tp
+        match ListZone.tidy (ListSubtyping.free_vars Δ) zones' with
+          | .some zones'' => return (zones'' ++ zones, subtra :: subtras)
+          | .none => failure
 
 
   partial def Subtyping.GuardedListZone.Static.infer
