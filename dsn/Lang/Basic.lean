@@ -850,7 +850,7 @@ declare_syntax_cat expr
 syntax "]" : params
 syntax:20 ident params : params
 
-syntax ":" : quals
+syntax "(" typ "<:" typ ")" : quals
 syntax "(" typ "<:" typ ")" quals : quals
 
 syntax "." : typings
@@ -931,7 +931,7 @@ macro_rules
 | `(ps[ $i:ident $ps:params ]) => `(i[$i] :: ps[$ps])
 
 macro_rules
-| `(qs[ : ]) => `([])
+| `(qs[ ( $x:typ <: $y:typ ) ]) => `((t[$x],t[$y]) :: [])
 | `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `((t[$x],t[$y]) :: qs[$qs])
 
 
@@ -960,7 +960,7 @@ macro_rules
 
 #eval t[<uno> @ & <dos> @]
 
-#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
 
 
 macro_rules

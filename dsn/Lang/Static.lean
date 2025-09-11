@@ -5,7 +5,7 @@ import Lang.Util
 -- import Mathlib.Data.List.Basic
 import Mathlib.Tactic.Linarith
 
--- set_option pp.fieldNotation false
+set_option pp.fieldNotation false
 
 structure Zone where
   Θ : List String
@@ -48,8 +48,8 @@ def ListSubtyping.bounds (id : String) (b : Bool) : ListSubtyping → List Typ
     else
       ListSubtyping.bounds id b sts
 
-#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
-#eval (ListSubtyping.bounds "R" .true qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :])
+#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
+#eval (ListSubtyping.bounds "R" .true qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
 
 
 example : (if ("hello" == "hello") = true then 1 else 2) = 1 := by
@@ -82,13 +82,13 @@ example : (
 
 
 example : ListSubtyping.bounds "R" .true
-  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
   =
   [t[ <succ> G010 ], t[ <succ> <succ> G010 ]]
 := by rfl
 
 example : ∃ ts , ListSubtyping.bounds "R" .true
-  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  :]
+  qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
   = ts
 := by
   exists [t[ <succ> G010 ], t[ <succ> <succ> G010 ]]
@@ -212,10 +212,10 @@ def Typ.UpperFounded.compute (id : String) : Typ → Lean.MetaM Typ
     failure
 | _ => failure
 
-#eval  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+#eval  t[ EXI[] (<succ> G010 <: R) (<succ> <succ> G010 <: R) G010 ]
 #eval Typ.UpperFounded.compute
   "R"
-  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R) G010 ]
 
 syntax "Typ_UpperFounded_prove" : tactic
 macro_rules
@@ -231,7 +231,7 @@ macro_rules
 )
 
 example : Typ.UpperFounded "R"
-  t[ EXI[] (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  : G010 ]
+  t[ EXI[] (<succ> G010 <: R) (<succ> <succ> G010 <: R) G010 ]
   t[ G010 | <succ> R | <succ> <succ> R ]
 := by Typ_UpperFounded_prove
 
@@ -578,7 +578,7 @@ example Δ Γ
 #eval PatLifting.Static.compute [] [] p[<uno> x <dos> y]
 example :  ∃ t Δ' Γ', PatLifting.Static [] [] p[<uno> x <dos> y] t Δ' Γ' := by
   exists t[ <uno> T669 & <dos> T670 ]
-  exists qs[ (T670 <: TOP) (T669 <: TOP) :]
+  exists qs[ (T670 <: TOP) (T669 <: TOP) ]
   exists ts[ (y : T670) (x : T669) .]
   PatLifting_Static_prove
 
@@ -849,6 +849,7 @@ mutual
     | inter_intro Θ Δ t a  b Θ' Δ' Θ'' Δ'' :
       Subtyping.Static Θ Δ t a Θ' Δ' → Subtyping.Static Θ' Δ' t b Θ'' Δ'' →
       Subtyping.Static Θ Δ t (.inter a b) Θ'' Δ''
+
     | all_intro Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
       ListSubtyping.restricted Θ Δ quals →
       ListSubtyping.Static Θ Δ quals Θ' Δ' →
@@ -1025,12 +1026,6 @@ macro_rules
   | `(tactic| Subtyping_Static_prove) => `(tactic|
     (first
       | apply Subtyping.Static.refl
-      | apply Subtyping.Static.rename_left
-        · rfl
-        · Subtyping_Static_prove
-      | apply Subtyping.Static.rename_right
-        · rfl
-        · Subtyping_Static_prove
       | apply Subtyping.Static.entry_pres
         · Subtyping_Static_prove
       | apply Subtyping.Static.path_pres
@@ -1059,6 +1054,7 @@ macro_rules
         · simp
         · simp
         · ListSubtyping_Static_prove
+        · exact []
 
       | apply Subtyping.Static.skolem_placeholder_intro
         · simp
@@ -1146,6 +1142,7 @@ macro_rules
       | apply Subtyping.Static.exi_intro
         · Subtyping_Static_prove
         · ListSubtyping_Static_prove
+        · exact []
 
       | apply Subtyping.Static.inter_left_elim
         · Subtyping_Static_prove
@@ -1175,8 +1172,8 @@ example : Subtyping.Static [] [] t[<uno> @] t[<uno> @ | <dos> @] [] [] := by
   apply Subtyping.Static.refl
 
 
-#eval qs[ (T <: <uno> @) :]
-example : Subtyping.Static [] [] t[T] t[<uno> @] [] qs[ (T <: <uno> @) :] := by
+#eval qs[ (T <: <uno> @) ]
+example : Subtyping.Static [] [] t[T] t[<uno> @] [] qs[ (T <: <uno> @) ] := by
   apply Subtyping.Static.placeholder_elim
   · simp
   · simp
@@ -1185,47 +1182,32 @@ example : Subtyping.Static [] [] t[T] t[<uno> @] [] qs[ (T <: <uno> @) :] := by
 #eval (Typ.var "R").struct_less_than
 ((Typ.entry "zero" Typ.unit).unio (Typ.entry "succ" (Typ.entry "succ" (Typ.var "R"))))
 
-example : Subtyping.Static [] []
-  t[LFP[R] (
-      (<zero> @) |
-      (<succ> <succ> R)
-  )]
-  t[TOP \ (<succ> <zero> @)]
-  [] qs[ (T <: <uno> @) :]
-:= by
-  apply Subtyping.Static.diff_fold_intro
-  · rfl
-  · Typ_Monotonic_prove
-  · simp only [Typ.struct_less_than, Bool.or] ; rfl
-  · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-  · rfl
-  · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-  · sorry
 
-example : Subtyping.Static ["T"] qs[(X <: T) :]
-  t[@]
-  t[T]
-  ["T"] qs[ (@ <: T) :]
+example : Subtyping.Static [] []
+  t[LFP[R] ( (<zero> @) | (<succ> <succ> R))]
+  t[TOP \ (<succ> <zero> @)]
+  [] qs[ (T <: <uno> @) ]
+:= by
+  Subtyping_Static_prove
+
+
+syntax "[" params quals "entails" typ "<:" typ "given" "[" params quals : term
+
+
+macro_rules
+| `([ $ps:params $qs:quals entails $l:typ <: $r:typ given [ $ps':params $qs':quals) => `(
+  Subtyping.Static ps[$ps] qs[$qs] t[$l] t[$r] ps[$ps'] qs[$qs']
+)
+
+example :
+[T] (X <: T) entails @ <: T
+given [T] (@ <: T) (X <: T)
 := by
   apply Subtyping.Static.skolem_placeholder_intro
   · simp
   · simp
   · simp
   · ListSubtyping_Static_prove
-    -- -- skolem placeholder introduction
-    -- | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
-    --   id ∈ Θ →
-    --   (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
-    --   (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-    --   ListSubtyping.Static Θ Δ trans Θ' Δ' →
-    --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
-
-
-    -- | placeholder_intro Θ Δ t id trans Θ' Δ'  :
-    --   id ∉ Θ →
-    --   (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-    --   ListSubtyping.Static Θ Δ trans Θ' Δ' →
-    --   Subtyping.Static Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
 
 #check Option.mapM
 
