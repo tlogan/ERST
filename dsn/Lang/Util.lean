@@ -1,8 +1,6 @@
-import Lang.Basic
-
+import Mathlib.Tactic.Linarith
 -- import Mathlib.Data.Set.Basic
 -- import Mathlib.Data.List.Basic
-import Mathlib.Tactic.Linarith
 
 #check Lean.mkFreshId
 def fresh_typ_id {m : Type → Type} [Monad m] [Lean.MonadNameGenerator m] : m String :=

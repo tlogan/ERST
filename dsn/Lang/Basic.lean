@@ -247,8 +247,8 @@ mutual
     | .diff left right, _ =>
       let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
       group content
-    | .all ids quals body, _ =>
-      if quals.isEmpty then
+    | .all ids subtypings body, _ =>
+      if subtypings.isEmpty then
         let default := group (
           "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
         )
@@ -262,12 +262,12 @@ mutual
       else
         group (
           "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            nest 2 (ListSubtyping.repr quals)
+            nest 2 (ListSubtyping.repr subtypings)
           ++ line ++ ":" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
-    | .exi ids quals body, _ =>
-      if quals.isEmpty then
+    | .exi ids subtypings body, _ =>
+      if subtypings.isEmpty then
         let default := group (
           "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
         )
@@ -281,7 +281,7 @@ mutual
       else
         group (
           "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            nest 2 (ListSubtyping.repr quals)
+            nest 2 (ListSubtyping.repr subtypings)
           ++ line ++ ":" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
@@ -293,13 +293,13 @@ mutual
 end
 
 instance : Repr (ListSubtyping) where
-  reprPrec t _ := group ("qs[" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " :]")
+  reprPrec t _ := group ("[subtypings|" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " ]")
 
 instance : Repr (List (String × Typ)) where
-  reprPrec t _ := group ("ts[" ++ line ++ nest 2 (ListTyping.repr t) ++ " .]")
+  reprPrec t _ := group ("[typings|" ++ line ++ nest 2 (ListTyping.repr t) ++ " ]")
 
 instance : Repr Typ where
-  reprPrec t n := group ("t[" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
+  reprPrec t n := group ("[typ|" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
 
 
 
@@ -327,7 +327,9 @@ inductive Typ.Bruijn
 deriving Repr
 
 mutual
-  def ListSubtyping.Bruijn.beq : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn) → Bool
+  def ListSubtyping.Bruijn.beq
+  : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn)
+  → Bool
     | .nil, .nil => .true
     | (a,b) :: l, (c,d) :: r =>
       .true
@@ -398,14 +400,14 @@ mutual
     let a := Typ.ordered_bound_vars bounds left
     let b := List.diff (Typ.ordered_bound_vars bounds right) a
     a ∪ b
-  | .all ids quals body =>
+  | .all ids subtypings body =>
     let bounds' := List.diff bounds ids
-    let a := ListPairTyp.ordered_bound_vars bounds' quals
+    let a := ListPairTyp.ordered_bound_vars bounds' subtypings
     let b := List.diff (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
-  | .exi ids quals body =>
+  | .exi ids subtypings body =>
     let bounds' := List.diff bounds ids
-    let a := ListPairTyp.ordered_bound_vars bounds' quals
+    let a := ListPairTyp.ordered_bound_vars bounds' subtypings
     let b := List.diff (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .lfp id body =>
@@ -436,13 +438,13 @@ mutual
   | .unio l r => Typ.free_vars l ∪ Typ.free_vars r
   | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
-  | .all ids quals body =>
+  | .all ids subtypings body =>
     List.diff (
-      ListSubtyping.free_vars quals ∪ Typ.free_vars body
+      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
-  | .exi ids quals body =>
+  | .exi ids subtypings body =>
     List.diff (
-      ListSubtyping.free_vars quals ∪ Typ.free_vars body
+      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .lfp id body =>
     List.diff (Typ.free_vars body) [id]
@@ -480,17 +482,17 @@ mutual
     .diff
     (Typ.toBruijn base bids left)
     (Typ.toBruijn base bids right)
-    | .all ids quals body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) quals)
+    | .all ids subtypings body =>
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) subtypings)
       let n := (List.length bids')
       .all n
-      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
       (Typ.toBruijn (n + base) (bids' ++ bids) body)
-    | .exi ids quals body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) quals)
+    | .exi ids subtypings body =>
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) subtypings)
       let n := (List.length bids')
       .all n
-      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) quals)
+      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
       (Typ.toBruijn (n + base) (bids' ++ bids) body)
     | .lfp id body =>
       .lfp
@@ -511,8 +513,8 @@ mutual
   | .unio left right => Typ.size left + Typ.size right + 1
   | .inter left right => Typ.size left + Typ.size right + 1
   | .diff left right => Typ.size left + Typ.size right + 1
-  | .all ids quals body => ListSubtyping.size quals + Typ.size body + 1
-  | .exi ids quals body => ListSubtyping.size quals + Typ.size body + 1
+  | .all ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
+  | .exi ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
   | .lfp id body => Typ.size body + 1
 end
 
@@ -567,12 +569,12 @@ mutual
   | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
   | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
   | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
-  | .all ids quals body =>
+  | .all ids subtypings body =>
       let δ' := remove_all δ ids
-      .all ids (ListSubtyping.sub δ' quals) (Typ.sub δ' body)
-  | .exi ids quals body =>
+      .all ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
+  | .exi ids subtypings body =>
       let δ' := remove_all δ ids
-      .exi ids (ListSubtyping.sub δ' quals) (Typ.sub δ' body)
+      .exi ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
   | .lfp id body =>
       let δ' := remove id δ
       .lfp id (Typ.sub δ' body)
@@ -621,15 +623,15 @@ mutual
       Typ.Monotonic.decide id b left &&
       Typ.Monotonic.decide id (not b) right
 
-    | .all ids quals body =>
+    | .all ids subtypings body =>
       ids.contains id || (
-        ListSubtyping.Monotonic.Either.decide quals body ids &&
+        ListSubtyping.Monotonic.Either.decide subtypings body ids &&
         Typ.Monotonic.decide id b body
       )
 
-    | .exi ids quals body =>
+    | .exi ids subtypings body =>
       ids.contains id || (
-        ListSubtyping.Monotonic.Either.decide quals (.diff .unit body) ids &&
+        ListSubtyping.Monotonic.Either.decide subtypings (.diff .unit body) ids &&
         Typ.Monotonic.decide id b body
       )
 
@@ -678,25 +680,25 @@ mutual
     Typ.Monotonic id (not b) right →
     Typ.Monotonic id b (.diff left right)
 
-  | all id b ids quals body :
+  | all id b ids subtypings body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Either quals body ids →
+    ListSubtyping.Monotonic.Either subtypings body ids →
     Typ.Monotonic id b body →
-    Typ.Monotonic id b (.all ids quals body)
+    Typ.Monotonic id b (.all ids subtypings body)
 
-  | allskip id b ids quals body :
+  | allskip id b ids subtypings body :
     id ∈ ids →
-    Typ.Monotonic id b (.all ids quals body)
+    Typ.Monotonic id b (.all ids subtypings body)
 
-  | exi id b ids quals body :
+  | exi id b ids subtypings body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Either quals (.diff .unit body) ids →
+    ListSubtyping.Monotonic.Either subtypings (.diff .unit body) ids →
     Typ.Monotonic id b body →
-    Typ.Monotonic id b (.exi ids quals body)
+    Typ.Monotonic id b (.exi ids subtypings body)
 
-  | exiskip id b ids quals body :
+  | exiskip id b ids subtypings body :
     id ∈ ids →
-    Typ.Monotonic id b (.exi ids quals body)
+    Typ.Monotonic id b (.exi ids subtypings body)
 
   | lfp id b id' body : id ≠ id' → Typ.Monotonic id b body → Typ.Monotonic id b (.lfp id' body)
   | lfpskip id b body : Typ.Monotonic id b (.lfp id body)
@@ -835,26 +837,41 @@ def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : 
     ])
     (target)
 
-declare_syntax_cat params
-declare_syntax_cat quals
+declare_syntax_cat ids
+-- declare_syntax_cat box_ids
+declare_syntax_cat subtypings
+-- declare_syntax_cat box_subtypings
 declare_syntax_cat typings
+-- declare_syntax_cat box_typings
 declare_syntax_cat typ
 
-declare_syntax_cat patrec
+declare_syntax_cat typs
+-- declare_syntax_cat box_typs
+
+declare_syntax_cat frame
 declare_syntax_cat pat
-declare_syntax_cat exprrec
+declare_syntax_cat record
 declare_syntax_cat function
 declare_syntax_cat expr
 
 
-syntax "]" : params
-syntax:20 ident params : params
+syntax:20 ident : ids
+syntax:20 ident ids : ids
 
-syntax "(" typ "<:" typ ")" : quals
-syntax "(" typ "<:" typ ")" quals : quals
+-- syntax "[" "]" : box_ids
+-- syntax "[" ids "]" : box_ids
 
-syntax "." : typings
+syntax "(" typ "<:" typ ")" : subtypings
+syntax "(" typ "<:" typ ")" subtypings : subtypings
+
+-- syntax "[" "]" : box_subtypings
+-- syntax "[" subtypings "]" : box_subtypings
+
+syntax "(" ident ":" typ ")" : typings
 syntax "(" ident ":" typ ")" typings : typings
+
+-- syntax "[" "]" : box_typings
+-- syntax "[" typings "]" : box_typings
 
 syntax ident : typ
 syntax "@" : typ
@@ -863,36 +880,42 @@ syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
 syntax "<" ident ">" typ:90 : typ
 syntax typ "\\" typ : typ
-syntax "ALL" "[" params quals typ : typ
-syntax "EXI" "[" params quals typ : typ
-syntax "ALL" "[" params typ : typ
-syntax "EXI" "[" params typ : typ
+syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
+syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
+syntax "ALL" "[" ids "]" typ : typ
+syntax "EXI" "[" ids "]" typ : typ
+syntax "ALL" "[" "]" "[" subtypings "]" typ : typ
+syntax "EXI" "[" "]" "[" subtypings "]" typ : typ
 syntax "LFP" "[" ident "]" typ : typ
 syntax "BOT" : typ
 syntax "TOP" : typ
 syntax "(" typ ")" : typ
 
+syntax typ : typs
+syntax typ typs : typs
+
+-- syntax "[" "]" : box_typs
+-- syntax "[" typs "]" : box_typs
 
 
-
-syntax "<" ident ">" pat : patrec
-syntax "<" ident ">" pat patrec : patrec
+syntax "<" ident ">" pat : frame
+syntax "<" ident ">" pat frame : frame
 
 syntax:20 ident : pat
 syntax "@" : pat
-syntax patrec : pat
+syntax frame : pat
 syntax ident ";" pat : pat
 
 
-syntax "<" ident ">" expr : exprrec
-syntax "<" ident ">" expr exprrec : exprrec
+syntax "<" ident ">" expr : record
+syntax "<" ident ">" expr record : record
 
 syntax "[" pat "=>" expr "]" : function
 syntax "[" pat "=>" expr "]" function : function
 
 syntax:20 ident : expr
 syntax "@" : expr
-syntax exprrec : expr
+syntax record : expr
 syntax ident ";" expr : expr
 syntax:60 expr:61 "," expr:60 : expr
 syntax function : expr
@@ -905,132 +928,180 @@ syntax "(" expr ")" : expr
 syntax  expr "as" typ : expr
 
 
-syntax "i[" ident "]" : term
-syntax "ps[" params "]" : term
-syntax "qs[" quals "]" : term
-syntax "ts[" typings "]" : term
-syntax "t[" typ "]" : term
-syntax "pr[" patrec "]" : term
-syntax "p[" pat "]" : term
-syntax "er[" exprrec "]" : term
-syntax "f[" function "]" : term
-syntax "ei[" ident "]" : term
-syntax "e[" expr "]" : term
+syntax "[eid|" ident "]" : term
+syntax "[id|" ident "]" : term
+
+syntax "[ids|" "]": term
+syntax "[ids|" ids "]": term
+-- syntax "[box_ids|" box_ids "]": term
+
+
+-- syntax "[subtyping|" typ "<:" typ "]" : term
+
+syntax "[subtypings|" "]" : term
+syntax "[subtypings|" subtypings "]" : term
+-- syntax "[box_subtypings|" box_subtypings "]" : term
+
+syntax "[typings|" "]" : term
+syntax "[typings|" typings "]": term
+-- syntax "[box_typings|" box_typings "]": term
+
+
+syntax "[typ|" typ "]" : term
+
+syntax "[typs|" "]" : term
+syntax "[typs|" typs "]" : term
+
+-- syntax "[box_typs|" "[""]" "]" : term
+-- syntax "[box_typs|" "[" typs "]" "]" : term
+
+syntax "[frame|" frame "]" : term
+syntax "[pattern|" pat "]" : term
+syntax "[record|" record "]" : term
+syntax "[function|" function "]" : term
+syntax "[expr|" expr "]" : term
+
+
 
 
 elab_rules : term
-  | `(i[ $i:ident ])  => do
+  | `([id| $i:ident ])  => do
     let idStr := toString i.getId
     if idStr.contains '.' then
       Lean.Elab.throwUnsupportedSyntax
     return (Lean.mkStrLit idStr)
 
-
-macro_rules
-| `(ps[ ] ]) => `([])
-| `(ps[ $i:ident $ps:params ]) => `(i[$i] :: ps[$ps])
-
-macro_rules
-| `(qs[ ( $x:typ <: $y:typ ) ]) => `((t[$x],t[$y]) :: [])
-| `(qs[ ( $x:typ <: $y:typ ) $qs:quals ]) => `((t[$x],t[$y]) :: qs[$qs])
-
-
-macro_rules
-| `(ts[ . ]) => `([])
-| `(ts[ ( $x:ident : $y:typ ) $ts:typings ]) =>
-  `( (i[$x], t[$y]):: ts[$ts])
-
-macro_rules
-| `(t[ $i:ident ]) => `(Typ.var i[$i])
-| `(t[ @ ]) => `(Typ.unit)
-| `(t[ < $i:ident > $t:typ  ]) => `(Typ.entry i[$i] t[$t])
-| `(t[ $x:typ -> $y:typ ]) => `(Typ.path t[$x] t[$y])
-| `(t[ $x:typ | $y:typ ]) => `(Typ.unio t[$x] t[$y])
-| `(t[ $x:typ & $y:typ ]) => `(Typ.inter t[$x] t[$y])
-| `(t[ $x:typ \ $y:typ ]) => `(Typ.diff t[$x] t[$y])
-| `(t[ ALL [ $ps:params $qs:quals $t:typ ]) => `(Typ.all ps[$ps] qs[$qs] t[$t])
-| `(t[ EXI [ $ps:params $qs:quals $t:typ ]) => `(Typ.exi ps[$ps] qs[$qs] t[$t])
-| `(t[ ALL [ $ps:params $t:typ ]) => `(Typ.all ps[$ps] [] t[$t])
-| `(t[ EXI [ $ps:params $t:typ ]) => `(Typ.exi ps[$ps] [] t[$t])
-| `(t[ LFP [ $i:ident ] $t:typ ]) => `(Typ.lfp i[$i] t[$t])
-| `(t[ BOT ]) => `(Typ.bot)
-| `(t[ TOP ]) => `(Typ.top)
-| `(t[ ( $t:typ ) ]) => `(t[$t])
-
-
-#eval t[<uno> @ & <dos> @]
-
-#eval qs[ (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
-
-
-macro_rules
-| `(pr[ <$i:ident> $p:pat ]) => `((i[$i], p[$p]) :: [])
-| `(pr[ <$i:ident> $p:pat $pr:patrec ]) => `((i[$i], p[$p]) :: pr[$pr])
-
-macro_rules
-| `(p[ $i:ident ]) => `(Pat.var i[$i])
-| `(p[ @ ]) => `(Pat.unit)
-| `(p[ $pr:patrec ]) => `(Pat.record pr[$pr])
-| `(p[ $i:ident ; $p:pat ]) => `(Pat.record (i[$i], p[$p]) :: [])
-
-macro_rules
-| `(er[ <$i:ident> $e:expr ]) => `((i[$i], e[$e]) :: [])
-| `(er[ <$i:ident> $e:expr $er:exprrec ]) => `((i[$i], e[$e]) :: er[$er])
-
-macro_rules
-| `(f[ [ $p:pat => $e:expr ] ]) => `((p[$p], e[$e]) :: [])
-| `(f[ [ $p:pat => $e:expr ] $f:function ]) => `((p[$p], e[$e]) :: f[$f])
-
 partial def buildSyntaxFromDotted (parts : List Lean.Ident)
 : Lean.Elab.TermElabM (Lean.TSyntax `term) :=
   match parts with
   | [] => Lean.Elab.throwUnsupportedSyntax
-  | [x] => `(Expr.var i[$x])
+  | [x] => `(Expr.var [id| $x])
   | x :: xs => do
     let ys ← buildSyntaxFromDotted xs
     `(Expr.app
         (Expr.function [
           (Pat.record [
-            (i[$x], Pat.var "x")
+            ([id| $x], Pat.var "x")
           ], Expr.var "x")
         ])
         $ys
     )
 
 elab_rules : term
-  | `(ei[ $i:ident ])  => do
+  | `([eid| $i:ident ])  => do
     let name := i.getId
     let parts := name.components.map Lean.mkIdent
     let s ← buildSyntaxFromDotted parts.reverse
     Lean.Elab.Term.elabTerm s none
 
+
 macro_rules
-| `(e[ @ ]) => `(Expr.unit)
-| `(e[ $i:ident ]) => `(ei[$i])
-| `(e[ $er:exprrec ]) => `(Expr.record er[$er])
-| `(e[ $i:ident ; $e:expr ]) => `(Expr.record [(i[$i], e[$e])])
-| `(e[ $l:expr , $r:expr ]) => `(Expr.pair e[$l] e[$r])
-| `(e[ $f:function ]) => `(Expr.function f[$f])
-| `(e[ $e:expr . $i:ident ]) => `(Expr.proj e[$e] i[$i])
-| `(e[ $f:expr ( $a:expr ) ]) => `(Expr.app e[$f] e[$a])
-| `(e[ $e:expr as $t:typ ]) => `(Expr.anno e[$e] t[$t])
-| `(e[ def $i:ident : $t:typ = $a:expr in $c:expr  ]) =>
-  `(Expr.def i[$i] (.some t[$t]) e[$a] e[$c])
-| `(e[ def $i:ident = $a:expr in $c:expr  ]) =>
-  `(Expr.def i[$i] .none e[$a] e[$c])
-| `(e[ loop ( $e:expr ) ]) => `(Expr.loop e[$e])
-| `(e[ ( $e:expr ) ]) => `(e[$e])
+| `([ids| ]) => `([])
+| `([ids| $i:ident ]) => `([id| $i] :: [])
+| `([ids| $i:ident $ps:ids ]) => `([id| $i] :: [ids| $ps])
+
+-- | `([box_ids| [] ]) => `([])
+-- | `([box_ids| [ $ps:ids ] ]) => `([ids| $ps])
+
+-- macro_rules
+-- | `([subtyping| $x:typ <: $y:typ ]) =>
+--   `(([typ| $x],[typ| $y]))
+
+macro_rules
+| `([subtypings| ]) => `([])
+| `([subtypings| ( $x:typ <: $y:typ ) ]) =>
+  `(([typ| $x],[typ| $y]) :: [])
+| `([subtypings| ( $x:typ <: $y:typ ) $qs:subtypings ]) =>
+  `(([typ| $x],[typ| $y]) :: [subtypings| $qs])
+-- | `([box_subtypings| [] ]) => `([])
+-- | `([box_subtypings| [ $qs:subtypings ] ]) => `([subtypings| $qs])
 
 
-#check ei[uno.dos.tres]
 
-#check e[[x => x.uno]]
+macro_rules
+| `([typings| ]) => `([])
+| `([typings| ( $x:ident : $y:typ ) ]) =>
+  `(([id| $x], [typ| $y]):: [])
+| `([typings| ( $x:ident : $y:typ ) $ts:typings ]) =>
+  `(([id| $x], [typ| $y]):: [typings| $ts])
 
-#check e[(uno;@).uno]
+-- | `([box_typings| [] ]) => `([])
+-- | `([box_typings| [ $ts:typings] ]) => `([ [typings| $ts]])
 
-#check e[def x = @ in x]
+macro_rules
+| `([typ| $i:ident ]) => `(Typ.var [id| $i])
+| `([typ| @ ]) => `(Typ.unit)
+| `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
+| `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
+| `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
+| `([typ| $x:typ & $y:typ ]) => `(Typ.inter [typ| $x] [typ| $y])
+| `([typ| $x:typ \ $y:typ ]) => `(Typ.diff [typ| $x] [typ| $y])
+| `([typ| ALL [ $ps:ids ] [ $qs:subtypings ] $t:typ ]) =>
+  `(Typ.all [ids| $ps] [subtypings| $qs] [typ| $t])
+| `([typ| EXI [ $ps:ids ] [ $qs:subtypings ] $t:typ ]) =>
+  `(Typ.exi [ids| $ps] [subtypings| $qs] [typ| $t])
+| `([typ| ALL [ $ps:ids ] $t:typ ]) => `(Typ.all [ids| $ps] [] [typ| $t])
+| `([typ| EXI [ $ps:ids ] $t:typ ]) => `(Typ.exi [ids| $ps] [] [typ| $t])
 
-#check e[[<uno> x => x]]
+| `([typ| ALL [ ] [ $qs:subtypings ] $t:typ ]) =>
+  `(Typ.all [] [subtypings| $qs] [typ| $t])
+| `([typ| EXI [  ] [ $qs:subtypings ] $t:typ ]) =>
+  `(Typ.exi [] [subtypings| $qs] [typ| $t])
+
+| `([typ| LFP [ $i:ident ] $t:typ ]) => `(Typ.lfp [id| $i] [typ| $t])
+| `([typ| BOT ]) => `(Typ.bot)
+| `([typ| TOP ]) => `(Typ.top)
+| `([typ| ( $t:typ ) ]) => `([typ| $t])
+
+macro_rules
+| `([typs| ]) => `([])
+| `([typs| $y:typ ]) =>
+  `([typ| $y]::[])
+| `([typs| $y:typ $ts:typs ]) =>
+  `([typ| $y] :: [typs| $ts])
+
+-- | `([box_typs| [] ]) => `([])
+-- | `([box_typs| [ $ts:typs] ]) => `([ [typs| $ts]])
+
+
+
+macro_rules
+| `([frame| <$i:ident> $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
+| `([frame| <$i:ident> $p:pat $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
+
+macro_rules
+| `([pattern| $i:ident ]) => `(Pat.var [id| $i])
+| `([pattern| @ ]) => `(Pat.unit)
+| `([pattern| $pr:frame ]) => `(Pat.record [frame| $pr])
+| `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
+
+macro_rules
+| `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
+| `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
+
+macro_rules
+| `([function| [ $p:pat => $e:expr ] ]) => `(([pattern| $p], [expr| $e]) :: [])
+| `([function| [ $p:pat => $e:expr ] $f:function ]) =>
+  `(([pattern| $p], [expr| $e]) :: [function| $f])
+
+
+macro_rules
+| `([expr| @ ]) => `(Expr.unit)
+| `([expr| $i:ident ]) => `([eid| $i])
+| `([expr| $er:record ]) => `(Expr.record [record| $er])
+| `([expr| $i:ident ; $e:expr ]) => `(Expr.record [([id| $i], [expr| $e])])
+| `([expr| $l:expr , $r:expr ]) => `(Expr.pair [expr| $l] [expr| $r])
+| `([expr| $f:function ]) => `(Expr.function [function| $f])
+| `([expr| $e:expr . $i:ident ]) => `(Expr.proj [expr| $e] [id| $i])
+| `([expr| $f:expr ( $a:expr ) ]) => `(Expr.app [expr| $f] [expr| $a])
+| `([expr| $e:expr as $t:typ ]) => `(Expr.anno [expr| $e] [typ| $t])
+| `([expr| def $i:ident : $t:typ = $a:expr in $c:expr  ]) =>
+  `(Expr.def [id| $i] (.some [typ| $t]) [expr| $a] [expr| $c])
+| `([expr| def $i:ident = $a:expr in $c:expr  ]) =>
+  `(Expr.def [id| $i] .none [expr| $a] [expr| $c])
+| `([expr| loop ( $e:expr ) ]) => `(Expr.loop [expr| $e])
+| `([expr| ( $e:expr ) ]) => `([expr| $e])
+
 
 
 class RecordPatternOf (_ : List (String × Expr)) where
