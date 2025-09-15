@@ -25,7 +25,8 @@ inductive Typ
   | exi :  List String → List (Typ × Typ) → Typ → Typ
   | lfp :  String → Typ → Typ
 
-#print Decidable
+def ListSubtyping := List (Typ × Typ)
+
 mutual
   instance ListSubtyping.decidable_eq : DecidableEq (List (Typ × Typ))
     | [], [] => isTrue rfl
@@ -187,6 +188,21 @@ instance : BEq Typ where
 
 open Std.Format
 
+def String.hasWhitespace (s : String) :=
+  (s.contains ' ') ||
+  s.contains '\t' ||
+  s.contains '\n'
+
+instance : Repr (List String) where
+  reprPrec ids _ :=
+    if ids.all (fun id => id.hasWhitespace) then
+      repr ids
+    else
+      let rec loop ids := match ids with
+        | [] => ""
+        | id :: ids => id ++ line ++ (loop ids)
+      group ("[ids|" ++ line ++ nest 2 (loop ids) ++ "]")
+
 def append_line : List Std.Format → Std.Format
 | .nil => ""
 | x :: xs => x ++ line ++ append_line xs
@@ -198,7 +214,7 @@ def wrap (content : Std.Format) (p threshold : Nat) : Std.Format :=
       content
 
 
-def ListSubtyping := List (Typ × Typ)
+
 #print Fin
 
 #check List.map
@@ -217,18 +233,6 @@ mutual
         ListSubtyping.repr remainder
       )
 
-  def ListTyping.repr : List (String × Typ) → Std.Format
-  | .nil => ""
-  | (x,t) :: [] =>
-      group (
-        "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
-      )
-  | (x,t) :: remainder =>
-      group (
-        "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
-        ++ line ++
-        ListTyping.repr remainder
-      )
 
   def Typ.reprPrec : Typ → Nat → Std.Format
     | .var id, _ => id
@@ -292,14 +296,49 @@ mutual
       )
 end
 
-instance : Repr (ListSubtyping) where
+instance : Repr ListSubtyping where
   reprPrec t _ := group ("[subtypings|" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " ]")
-
-instance : Repr (List (String × Typ)) where
-  reprPrec t _ := group ("[typings|" ++ line ++ nest 2 (ListTyping.repr t) ++ " ]")
 
 instance : Repr Typ where
   reprPrec t n := group ("[typ|" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
+
+
+def ListTyp := List Typ
+def ListTyp.repr : ListTyp → Std.Format
+| .nil => ""
+| t :: [] =>
+    group (
+      "(" ++ (Typ.reprPrec t 0) ++ ")"
+    )
+| t :: remainder =>
+    group (
+      "(" ++ (Typ.reprPrec t 0) ++ ")"
+      ++ line ++
+      ListTyp.repr remainder
+    )
+
+instance : Repr ListTyp where
+  reprPrec t _ := group ("[typs|" ++ line ++ nest 2 (ListTyp.repr t) ++ " ]")
+
+def ListTyping := List (String × Typ)
+
+def ListTyping.repr : ListTyping → Std.Format
+| .nil => ""
+| (x,t) :: [] =>
+    group (
+      "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
+    )
+| (x,t) :: remainder =>
+    group (
+      "(" ++ x ++ " : " ++ (Typ.reprPrec t 0) ++ ")"
+      ++ line ++
+      ListTyping.repr remainder
+    )
+
+instance : Repr ListTyping where
+  reprPrec t _ := group ("[typings|" ++ line ++ nest 2 (ListTyping.repr t) ++ " ]")
+
+
 
 
 

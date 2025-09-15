@@ -443,8 +443,8 @@ inductive PatLifting.Static
     (.inter (.entry l t) t') Δ'' Γ''
 
 mutual
-  def ListPatLifting.Static.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : List (String × Pat) →  Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
+  def ListPatLifting.Static.compute (Δ : ListSubtyping) (Γ : List (String × Typ))
+  : List (String × Pat) →  Lean.MetaM (Typ × ListSubtyping × List (String × Typ))
   | [] => return (Typ.top, Δ, Γ)
   | (l,p) :: [] => do
     let (t, Δ', Γ') ← PatLifting.Static.compute  Δ Γ p
@@ -457,8 +457,8 @@ mutual
 
 
 
-  def PatLifting.Static.compute (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : Pat → Lean.MetaM (Typ × List (Typ × Typ) × List (String × Typ))
+  def PatLifting.Static.compute (Δ : ListSubtyping) (Γ : ListTyping)
+  : Pat → Lean.MetaM (Typ × ListSubtyping × ListTyping)
   | .var id => do
     let t := Typ.var (← fresh_typ_id)
     let Δ' := (t, Typ.top) :: Δ
@@ -484,13 +484,12 @@ macro_rules
   ) <;> fail
 )
 
-
 mutual
 
 
   partial def ListStaticSubtyping.solve
-    (Θ : List String) (Δ : List (Typ × Typ))
-  : List (Typ × Typ) → Lean.MetaM (List (List String × List (Typ × Typ)))
+    (Θ : List String) (Δ : ListSubtyping)
+  : ListSubtyping → Lean.MetaM (List (List String × ListSubtyping))
     | [] => return [(Θ, Δ)]
     | (lower,upper) :: remainder => do
       let worlds ← StaticSubtyping.solve Θ Δ lower upper
@@ -498,8 +497,8 @@ mutual
         ListStaticSubtyping.solve Θ' Δ' remainder
       ))
 
-  partial def StaticSubtyping.solve (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ )
-  : Lean.MetaM (List (List String × List (Typ × Typ)))
+  partial def StaticSubtyping.solve (Θ : List String) (Δ : ListSubtyping) (lower upper : Typ )
+  : Lean.MetaM (List (List String × ListSubtyping))
   := if (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper) then
     return [(Θ,Δ)]
   else match lower, upper with

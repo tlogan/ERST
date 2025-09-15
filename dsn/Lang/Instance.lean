@@ -61,7 +61,6 @@ example : ListSubtyping.bounds "R" .true
   [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
   =
   [typs| (<succ> G010) (<succ> <succ> G010)]
-  -- [seq typ| (<succ> G010) (<succ> <succ> G010) ]
 := by rfl
 
 example : ∃ ts , ListSubtyping.bounds "R" .true
@@ -106,29 +105,23 @@ example Δ Γ
 
 example Δ Γ
 : PatLifting.Static Δ Γ
-  [pattern| <dos> @] -- (Pat.record [("dos", Pat.unit)])
-  [typ| <dos> @] -- (Typ.entry "dos" Typ.unit)
+  [pattern| <dos> @]
+  [typ| <dos> @]
   Δ Γ
 := by
   PatLifting_Static_prove
-  -- apply PatLifting.Static.record_single
-  -- apply PatLifting.Static.unit
 
 example Δ Γ
-: PatLifting.Static Δ Γ [pattern| <uno>@ <dos>@]
-  (.inter (.entry "uno" .unit) (.entry "dos" .unit))
+: PatLifting.Static Δ Γ
+  [pattern| <uno>@ <dos>@]
+  [typ| <uno>@ & <dos>@]
   Δ Γ
 := by
   PatLifting_Static_prove
-  -- apply PatLifting.Static.record_cons
-  -- apply PatLifting.Static.unit
-  -- apply PatLifting.Static.record_single
-  -- apply PatLifting.Static.unit
-  -- simp [Pat.free_vars, ListPat.free_vars]
-  -- rfl
 
 #eval PatLifting.Static.compute [] [] [pattern| <uno> x <dos> y]
-example :  ∃ t Δ' Γ', PatLifting.Static [] [] [pattern| <uno> x <dos> y] t Δ' Γ' := by
+example :  ∃ t Δ' Γ', PatLifting.Static [] []
+  [pattern| <uno> x <dos> y] t Δ' Γ' := by
   exists [typ| <uno> T669 & <dos> T670 ]
   exists [subtypings| (T670 <: TOP) (T669 <: TOP) ]
   exists [typings| (y : T670) (x : T669) ]
@@ -144,20 +137,14 @@ example : StaticSubtyping [] []
 
 #eval [typ| <uno> @ | <dos> @]
 example : StaticSubtyping [] [] [typ| <uno> @] [typ| <uno> @ | <dos> @] [] [] := by
-  apply StaticSubtyping.unio_left_intro
-  apply StaticSubtyping.refl
-  rfl
-
+  Subtyping_Static_prove
 
 #eval [subtypings| (T <: <uno> @) ]
 example : StaticSubtyping [] []
   [typ| T] [typ| <uno> @]
   [ids| ] [subtypings| (T <: <uno> @) ]
 := by
-  apply StaticSubtyping.placeholder_elim
-  · simp
-  · simp
-  · apply ListStaticSubtyping.nil
+  Subtyping_Static_prove
 
 example : StaticSubtyping [] []
   [typ| LFP[R] ( (<zero> @) | (<succ> <succ> R))]
@@ -167,14 +154,15 @@ example : StaticSubtyping [] []
   Subtyping_Static_prove
 
 
-example :
-StaticSubtyping [ids| T] [subtypings| (X <: T)]
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| (X <: T)]
+  [typ| @]
+  [typ| T]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| (X <: T)]
   [typ| @]
   [typ| T]
   [ids| T] [subtypings| (@ <: T) (X <: T)]
 := by
-  apply StaticSubtyping.skolem_placeholder_intro
-  · simp
-  · simp
-  · simp
-  · ListSubtyping_Static_prove
+  Subtyping_Static_prove
