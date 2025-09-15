@@ -924,7 +924,7 @@ macro_rules
       | apply ListStaticSubtyping.cons
         · Subtyping_Static_prove
         · ListSubtyping_Static_prove
-    )
+    ) <;> fail
   )
   | `(tactic| Subtyping_Static_prove) => `(tactic|
     (first
@@ -1027,8 +1027,8 @@ macro_rules
         · Subtyping_Static_prove
 
       | apply StaticSubtyping.lfp_inflate_intro
-        · rfl
-        · Subtyping_Static_prove
+        · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
+        · simp [Typ.sub, find] ; Subtyping_Static_prove
 
       | apply StaticSubtyping.lfp_drop_intro
         · rfl
@@ -1061,7 +1061,7 @@ macro_rules
       | apply StaticSubtyping.all_elim
         · Subtyping_Static_prove
         · ListSubtyping_Static_prove
-    )
+    ) <;> fail
   )
 
 

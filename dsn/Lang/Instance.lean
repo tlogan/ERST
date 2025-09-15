@@ -66,8 +66,7 @@ example : ListSubtyping.bounds "R" .true
 example : ∃ ts , ListSubtyping.bounds "R" .true
   [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
   = ts
-:= by
-  exists [typs| (<succ> G010) (<succ> <succ> G010) ]
+:= by exists [typs| (<succ> G010) (<succ> <succ> G010) ]
 
 
 example : Typ.UpperFounded "R"
@@ -164,8 +163,7 @@ example : StaticSubtyping
   [typ| @]
   [typ| T]
   [ids| T] [subtypings| (@ <: T) (X <: T)]
-:= by
-  Subtyping_Static_prove
+:= by Subtyping_Static_prove
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
@@ -177,7 +175,24 @@ example : StaticSubtyping
   [typ| @]
   [typ| @]
   [ids| ] [subtypings|  ]
-:= by
-  Subtyping_Static_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| <succ> <succ> <zero> @]
+  [typ| LFP[R]
+    <zero> @ |
+    <succ> R
+  ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| <succ> <succ> <zero> @]
+  [typ| LFP[R]
+    <zero> @ |
+    <succ> R
+  ]
+  [ids| ] [subtypings|  ]
+:= by Subtyping_Static_prove
