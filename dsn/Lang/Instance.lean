@@ -166,3 +166,18 @@ example : StaticSubtyping
   [ids| T] [subtypings| (@ <: T) (X <: T)]
 := by
   Subtyping_Static_prove
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| @]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| @]
+  [ids| ] [subtypings|  ]
+:= by
+  Subtyping_Static_prove
+
+---------------------------------------

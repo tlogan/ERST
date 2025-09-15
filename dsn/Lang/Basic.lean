@@ -188,14 +188,14 @@ instance : BEq Typ where
 
 open Std.Format
 
-def String.hasWhitespace (s : String) :=
+def String.has_whitespace (s : String) :=
   (s.contains ' ') ||
   s.contains '\t' ||
   s.contains '\n'
 
 instance : Repr (List String) where
   reprPrec ids _ :=
-    if ids.all (fun id => id.hasWhitespace) then
+    if ids.exi (fun id => id.has_whitespace) then
       repr ids
     else
       let rec loop ids := match ids with
@@ -369,35 +369,33 @@ mutual
   def ListSubtyping.Bruijn.beq
   : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn)
   → Bool
-    | .nil, .nil => .true
-    | (a,b) :: l, (c,d) :: r =>
-      .true
-      -- TODO
-      -- Typ.beq a c &&
-      -- Typ.beq b d &&
-      -- ListSubtyping.beq l r
-    | _, _ => .false
+  | .nil, .nil => .true
+  | (a,b) :: l, (c,d) :: r =>
+    Typ.Bruijn.beq a c &&
+    Typ.Bruijn.beq b d &&
+    ListSubtyping.Bruijn.beq l r
+  | _, _ => .false
 
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
-    -- TODO
-    -- | .unit, .unit => .true
-    -- | .var idl, .var idr => idl == idr
-    -- | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
-    -- | .path x y, .path p q => Typ.beq x p && Typ.beq y q
-    -- | .unio a b, .unio c d => Typ.beq a c && Typ.beq b d
-    -- | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
-    -- | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
-    -- | .all idsl qsl bodyl, .all idsr qsr bodyr =>
-    --     idsl == idsr &&
-    --     ListSubtyping.beq qsl qsr &&
-    --     Typ.beq bodyl bodyr
-    -- | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
-    --     idsl == idsr &&
-    --     ListSubtyping.beq qsl qsr &&
-    --     Typ.beq bodyl bodyr
-    -- | .lfp idl bodyl, .lfp idr bodyr =>
-    --     idl == idr && Typ.beq bodyl bodyr
-    | _, _ => false
+  | .unit, .unit => .true
+  | .bvar il, .bvar ir => il == ir
+  | .fvar idl, .fvar idr => idl == idr
+  | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
+  | .path x y, .path p q => Typ.Bruijn.beq x p && Typ.Bruijn.beq y q
+  | .unio a b, .unio c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
+  | .inter a b, .inter c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
+  | .diff a b, .diff c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
+  | .all idsl qsl bodyl, .all idsr qsr bodyr =>
+      idsl == idsr &&
+      ListSubtyping.Bruijn.beq qsl qsr &&
+      Typ.Bruijn.beq bodyl bodyr
+  | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
+      idsl == idsr &&
+      ListSubtyping.Bruijn.beq qsl qsr &&
+      Typ.Bruijn.beq bodyl bodyr
+  | .lfp bodyl, .lfp bodyr =>
+      Typ.Bruijn.beq bodyl bodyr
+  | _, _ => false
 end
 
 instance : BEq Typ.Bruijn where
