@@ -196,3 +196,42 @@ example : StaticSubtyping
   ]
   [ids| ] [subtypings|  ]
 := by Subtyping_Static_prove
+
+---------------------------------------
+-- #print List.Mem
+
+-- example :  StaticSubtyping []
+--   [(Typ.unit, Typ.var "T")]
+--   (Typ.var "T") Typ.unit
+--   [] [(Typ.var "T", Typ.unit), (Typ.unit, Typ.var "T")]
+-- := by
+--   apply StaticSubtyping.placeholder_elim
+--   · simp
+--   · sorry
+--   · ListSubtyping_Static_prove
+
+-- example :  ListStaticSubtyping []
+--   [(Typ.unit, Typ.var "T")]
+--   [(Typ.var "T", Typ.unit)]
+--   [] [(Typ.unit, Typ.var "T")]
+-- := by
+--   sorry
+
+-- #eval [subtypings| (T33 <: @) (@ <: T33) ]
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| EXI[T] [(T <: @)] T ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| EXI[T] [(T <: @)] T ]
+  [ids| ] [subtypings| (T33 <: @) (@ <: T33) ]
+:= by
+  Subtyping_Static_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
+  apply StaticSubtyping.exi_intro
+  · Subtyping_Static_prove
+  · sorry -- ListSubtyping_Static_prove
+  · sorry

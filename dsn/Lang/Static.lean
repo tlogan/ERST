@@ -714,210 +714,227 @@ mutual
   inductive ListStaticSubtyping
   : List String → List (Typ × Typ) → List (Typ × Typ)
   → List String → List (Typ × Typ) → Prop
-    | nil Θ Δ Θ' Δ' : ListStaticSubtyping Θ Δ [] Θ' Δ'
-    | cons Θ Δ l r cs Θ' Δ' Θ'' Δ'' :
-      StaticSubtyping Θ Δ l r Θ' Δ' →
-      ListStaticSubtyping Θ' Δ' cs Θ'' Δ'' →
-      ListStaticSubtyping Θ Δ ((l,r) :: cs) Θ'' Δ''
+    | nil skolems assums skolems' assums' : ListStaticSubtyping skolems assums [] skolems' assums'
+    | cons skolems assums l r cs skolems' assums' skolems'' assums'' :
+      StaticSubtyping skolems assums l r skolems' assums' →
+      ListStaticSubtyping skolems' assums' cs skolems'' assums'' →
+      ListStaticSubtyping skolems assums ((l,r) :: cs) skolems'' assums''
+
 
   inductive StaticSubtyping
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-    | refl Θ Δ lower upper :
+    | refl skolems assums lower upper :
       (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
-      StaticSubtyping Θ Δ lower upper Θ Δ
+      StaticSubtyping skolems assums lower upper skolems assums
 
-    | rename_left Θ Δ left left' right :
+    | rename_left skolems assums left left' right skolems' assums':
       (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
-      StaticSubtyping Θ Δ left' right Θ Δ →
-      StaticSubtyping Θ Δ left right Θ Δ
+      StaticSubtyping skolems assums left' right skolems' assums' →
+      StaticSubtyping skolems assums left right skolems' assums'
 
-    | rename_right Θ Δ left right right' :
+    | rename_right skolems assums left right right' skolems' assums' :
       (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
-      StaticSubtyping Θ Δ left right' Θ Δ →
-      StaticSubtyping Θ Δ left right Θ Δ
+      StaticSubtyping skolems assums left right' skolems' assums' →
+      StaticSubtyping skolems assums left right skolems' assums'
 
     -- implication preservation
-    | entry_pres Θ Δ l left right Θ' Δ' :
-      StaticSubtyping Θ Δ left right Θ' Δ' →
-      StaticSubtyping Θ Δ (.entry l left) (.entry l right) Θ' Δ'
+    | entry_pres skolems assums l left right skolems' assums' :
+      StaticSubtyping skolems assums left right skolems' assums' →
+      StaticSubtyping skolems assums (.entry l left) (.entry l right) skolems' assums'
 
-    | path_pres Θ Δ p q  Θ' Δ' x y Θ'' Δ'' :
-      StaticSubtyping Θ Δ x p Θ' Δ' → StaticSubtyping Θ' Δ' q y Θ'' Δ'' →
-      StaticSubtyping Θ Δ (.path p q) (.path x y) Θ'' Δ''
+    | path_pres skolems assums p q  skolems' assums' x y skolems'' assums'' :
+      StaticSubtyping skolems assums x p skolems' assums' →
+      StaticSubtyping skolems' assums' q y skolems'' assums'' →
+      StaticSubtyping skolems assums (.path p q) (.path x y) skolems'' assums''
 
     -- expansion elimination
-    | unio_elim Θ Δ a t b Θ' Δ' Θ'' Δ'' :
-      StaticSubtyping Θ Δ a t Θ' Δ' → StaticSubtyping Θ' Δ' b t Θ'' Δ'' →
-      StaticSubtyping Θ Δ (.unio a b) t Θ'' Δ''
-    | exi_elim Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
-      ListSubtyping.restricted Θ Δ quals →
-      ListStaticSubtyping Θ Δ quals Θ' Δ' →
-      StaticSubtyping (ids ∪ Θ') Δ' body t Θ'' Δ'' →
-      StaticSubtyping Θ Δ (.exi ids quals body) t Θ'' Δ''
+    | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
+      StaticSubtyping skolems assums a t skolems' assums' →
+      StaticSubtyping skolems' assums' b t skolems'' assums'' →
+      StaticSubtyping skolems assums (.unio a b) t skolems'' assums''
+
+    | exi_elim skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+      ListSubtyping.restricted skolems assums quals →
+      ListStaticSubtyping skolems assums quals skolems' assums' →
+      StaticSubtyping (ids ∪ skolems') assums' body t skolems'' assums'' →
+      StaticSubtyping skolems assums (.exi ids quals body) t skolems'' assums''
 
     -- refinement introduction
-    | inter_intro Θ Δ t a  b Θ' Δ' Θ'' Δ'' :
-      StaticSubtyping Θ Δ t a Θ' Δ' → StaticSubtyping Θ' Δ' t b Θ'' Δ'' →
-      StaticSubtyping Θ Δ t (.inter a b) Θ'' Δ''
+    | inter_intro skolems assums t a  b skolems' assums' skolems'' assums'' :
+      StaticSubtyping skolems assums t a skolems' assums' →
+      StaticSubtyping skolems' assums' t b skolems'' assums'' →
+      StaticSubtyping skolems assums t (.inter a b) skolems'' assums''
 
-    | all_intro Θ Δ ids quals body t Θ' Δ' Θ'' Δ'' :
-      ListSubtyping.restricted Θ Δ quals →
-      ListStaticSubtyping Θ Δ quals Θ' Δ' →
-      StaticSubtyping (ids ∪ Θ') Δ' t body Θ'' Δ'' →
-      StaticSubtyping Θ Δ t (.all ids quals body) Θ'' Δ''
+    | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+      ListSubtyping.restricted skolems assums quals →
+      ListStaticSubtyping skolems assums quals skolems' assums' →
+      StaticSubtyping (ids ∪ skolems') assums' t body skolems'' assums'' →
+      StaticSubtyping skolems assums t (.all ids quals body) skolems'' assums''
 
     -- placeholder elimination
-    | placeholder_elim Θ Δ id t trans Θ' Δ'  :
-      id ∉ Θ →
-      (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
-      ListStaticSubtyping Θ Δ trans Θ' Δ' →
-      StaticSubtyping Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+    | placeholder_elim skolems assums id t trans skolems' assums'  :
+      id ∉ skolems →
+      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
+      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticSubtyping skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- placeholder introduction
-    | placeholder_intro Θ Δ t id trans Θ' Δ'  :
-      id ∉ Θ →
-      (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-      ListStaticSubtyping Θ Δ trans Θ' Δ' →
-      StaticSubtyping Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+    | placeholder_intro skolems assums t id trans skolems' assums'  :
+      id ∉ skolems →
+      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
+      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticSubtyping skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem placeholder introduction
-    | skolem_placeholder_intro Θ Δ t id trans Θ' Δ'  :
-      id ∈ Θ →
-      (∃ id', (.var id', .var id) ∈ Δ ∧ id' ∉ Θ) →
-      (∀ t', (.var id, t') ∈ Δ → (t, t') ∈ trans) →
-      ListStaticSubtyping Θ Δ trans Θ' Δ' →
-      StaticSubtyping Θ Δ t (.var id) Θ' ((t, .var id) :: Δ')
+    | skolem_placeholder_intro skolems assums t id trans skolems' assums'  :
+      id ∈ skolems →
+      (∃ id', (.var id', .var id) ∈ assums ∧ id' ∉ skolems) →
+      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
+      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticSubtyping skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem introduction
-    | skolem_intro Θ Δ t id t' Θ' Δ'  :
-      id ∈ Θ →
-      (t', .var id) ∈ Δ →
-      (∀ id', (.var id') = t' → id' ∈ Θ) →
-      StaticSubtyping Θ Δ t t' Θ' Δ' →
-      StaticSubtyping Θ Δ t (.var id) Θ' Δ'
+    | skolem_intro skolems assums t id t' skolems' assums'  :
+      id ∈ skolems →
+      (t', .var id) ∈ assums →
+      (∀ id', (.var id') = t' → id' ∈ skolems) →
+      StaticSubtyping skolems assums t t' skolems' assums' →
+      StaticSubtyping skolems assums t (.var id) skolems' assums'
 
     -- skolem placeholder elimination
-    | skolem_placeholder_elim Θ Δ id t trans Θ' Δ'  :
-      id ∈ Θ →
-      (∃ id', (.var id, .var id') ∈ Δ ∧ id' ∉ Θ) →
-      (∀ t', (t', .var id) ∈ Δ → (t', t) ∈ trans) →
-      ListStaticSubtyping Θ Δ trans Θ' Δ' →
-      StaticSubtyping Θ Δ (.var id) t Θ' ((.var id, t) :: Δ')
+    | skolem_placeholder_elim skolems assums id t trans skolems' assums'  :
+      id ∈ skolems →
+      (∃ id', (.var id, .var id') ∈ assums ∧ id' ∉ skolems) →
+      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
+      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticSubtyping skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- skolem elimination
-    | skolem_elim Θ Δ id t t' Θ' Δ' :
-      id ∈ Θ →
-      (.var id, t') ∈ Δ →
-      (∀ id', (.var id') = t → id' ∈ Θ) →
-      StaticSubtyping Θ Δ t' t Θ' Δ' →
-      StaticSubtyping Θ Δ (.var id) t Θ' Δ'
+    | skolem_elim skolems assums id t t' skolems' assums' :
+      id ∈ skolems →
+      (.var id, t') ∈ assums →
+      (∀ id', (.var id') = t → id' ∈ skolems) →
+      StaticSubtyping skolems assums t' t skolems' assums' →
+      StaticSubtyping skolems assums (.var id) t skolems' assums'
 
     -- implication rewriting
-    | unio_antec Θ Δ l a b r Θ' Δ' :
-      StaticSubtyping Θ Δ l (.inter (.path a r) (.path b r)) Θ' Δ' →
-      StaticSubtyping Θ Δ l (.path (.unio a b) r) Θ' Δ'
+    | unio_antec skolems assums l a b r skolems' assums' :
+      StaticSubtyping skolems assums l (.inter (.path a r) (.path b r)) skolems' assums' →
+      StaticSubtyping skolems assums l (.path (.unio a b) r) skolems' assums'
 
-    | inter_conseq Θ Δ l a b r Θ' Δ' :
-      StaticSubtyping Θ Δ l (.inter (.path r a) (.path r b)) Θ' Δ' →
-      StaticSubtyping Θ Δ l (.path r (.inter a b)) Θ' Δ'
+    | inter_conseq skolems assums l a b r skolems' assums' :
+      StaticSubtyping skolems assums l (.inter (.path r a) (.path r b)) skolems' assums' →
+      StaticSubtyping skolems assums l (.path r (.inter a b)) skolems' assums'
 
-    | inter_entry Θ Δ t l a b Θ' Δ' :
-      StaticSubtyping Θ Δ t (.inter (.entry l a) (.entry l b)) Θ' Δ' →
-      StaticSubtyping Θ Δ t (.entry l (.inter a b)) Θ' Δ'
+    | inter_entry skolems assums t l a b skolems' assums' :
+      StaticSubtyping skolems assums t (.inter (.entry l a) (.entry l b)) skolems' assums' →
+      StaticSubtyping skolems assums t (.entry l (.inter a b)) skolems' assums'
 
     -- least fixed point elimination
-    | lfp_skip_elim Θ Δ id left right Θ' Δ' :
+    | lfp_skip_elim skolems assums id left right skolems' assums' :
       id ∉ Typ.free_vars left →
-      StaticSubtyping Θ Δ left right Θ' Δ' →
-      StaticSubtyping Θ Δ (.lfp id left) right Θ' Δ'
+      StaticSubtyping skolems assums left right skolems' assums' →
+      StaticSubtyping skolems assums (.lfp id left) right skolems' assums'
 
-    | lfp_induct_elim Θ Δ id left right Θ' Δ' :
+    | lfp_induct_elim skolems assums id left right skolems' assums' :
       Typ.Monotonic id .true left →
-      StaticSubtyping Θ Δ (Typ.sub [(id, right)] left) right Θ' Δ' →
-      StaticSubtyping Θ Δ (.lfp id left) right Θ' Δ'
+      StaticSubtyping skolems assums (Typ.sub [(id, right)] left) right skolems' assums' →
+      StaticSubtyping skolems assums (.lfp id left) right skolems' assums'
 
-    | lfp_factor_elim Θ Δ id left l right fac Θ' Δ' :
+    | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
       Typ.factor id left l = .some fac →
-      StaticSubtyping Θ Δ fac right Θ' Δ' →
-      StaticSubtyping Θ Δ (.lfp id left) (.entry l right) Θ' Δ'
+      StaticSubtyping skolems assums fac right skolems' assums' →
+      StaticSubtyping skolems assums (.lfp id left) (.entry l right) skolems' assums'
 
     -- difference introduction
-    | diff_intro Θ Δ t l r Θ' Δ' :
+    | diff_intro skolems assums t l r skolems' assums' :
       Typ.is_pattern [] r →
-      ¬ Subtyping.check Θ Δ t r →
-      ¬ Subtyping.check Θ Δ r t →
-      StaticSubtyping Θ Δ t l Θ' Δ' →
-      StaticSubtyping Θ Δ t (.diff l r) Θ' Δ'
+      ¬ Subtyping.check skolems assums t r →
+      ¬ Subtyping.check skolems assums r t →
+      StaticSubtyping skolems assums t l skolems' assums' →
+      StaticSubtyping skolems assums t (.diff l r) skolems' assums'
 
-    | diff_fold_intro Θ Δ id t l r h Θ' Δ' :
+    | diff_fold_intro skolems assums id t l r h skolems' assums' :
       Typ.is_pattern [] r →
       Typ.Monotonic id .true t →
       Typ.struct_less_than (.var id) t →
-      ¬ (Subtyping.check Θ Δ (Typ.subfold id t 1) r) →
+      ¬ (Subtyping.check skolems assums (Typ.subfold id t 1) r) →
       Typ.height r = .some h →
-      ¬ (Subtyping.check Θ Δ r (Typ.subfold id t h)) →
-      StaticSubtyping Θ Δ (.lfp id t) l Θ' Δ' →
-      StaticSubtyping Θ Δ (.lfp id t) (.diff l r) Θ' Δ'
+      ¬ (Subtyping.check skolems assums r (Typ.subfold id t h)) →
+      StaticSubtyping skolems assums (.lfp id t) l skolems' assums' →
+      StaticSubtyping skolems assums (.lfp id t) (.diff l r) skolems' assums'
 
     -- least fixed point introduction
-    | lfp_inflate_intro Θ Δ l id r Θ' Δ' :
+    | lfp_inflate_intro skolems assums l id r skolems' assums' :
       -- TODO: inflatable is a heuristic;
       -- it's not necessary for soundness
       -- consider merely using it in tactic
       Subtyping.inflatable l r →
-      StaticSubtyping Θ Δ l (.sub [(id, .lfp id r)] r) Θ' Δ' →
-      StaticSubtyping Θ Δ l (.lfp id r) Θ' Δ'
+      StaticSubtyping skolems assums l (.sub [(id, .lfp id r)] r) skolems' assums' →
+      StaticSubtyping skolems assums l (.lfp id r) skolems' assums'
 
-    | lfp_drop_intro Θ Δ l id r r' Θ' Δ' :
+    | lfp_drop_intro skolems assums l id r r' skolems' assums' :
       Typ.drop id r = r' →
-      StaticSubtyping Θ Δ l r' Θ' Δ' →
-      StaticSubtyping Θ Δ l (.lfp id r) Θ' Δ'
+      StaticSubtyping skolems assums l r' skolems' assums' →
+      StaticSubtyping skolems assums l (.lfp id r) skolems' assums'
 
     -- difference elimination
-    | diff_elim Θ Δ l r t Θ' Δ' :
-      StaticSubtyping Θ Δ l (.unio r t) Θ' Δ' →
-      StaticSubtyping Θ Δ (.diff l r) t Θ' Δ'
+    | diff_elim skolems assums l r t skolems' assums' :
+      StaticSubtyping skolems assums l (.unio r t) skolems' assums' →
+      StaticSubtyping skolems assums (.diff l r) t skolems' assums'
 
     -- expansion introduction
-    | unio_left_intro θ δ t l r θ' δ' :
-      StaticSubtyping θ δ t l θ' δ' →
-      StaticSubtyping θ δ t (.unio l r) θ' δ'
+    | unio_left_intro skolems assums t l r skolems' assums' :
+      StaticSubtyping skolems assums t l skolems' assums' →
+      StaticSubtyping skolems assums t (.unio l r) skolems' assums'
 
-    | unio_right_intro θ δ t l r θ' δ' :
-      StaticSubtyping θ δ t r θ' δ' →
-      StaticSubtyping θ δ t (.unio l r) θ' δ'
+    | unio_right_intro skolems assums t l r skolems' assums' :
+      StaticSubtyping skolems assums t r skolems' assums' →
+      StaticSubtyping skolems assums t (.unio l r) skolems' assums'
 
-    | exi_intro θ δ l ids quals r θ' δ' θ'' δ'' :
-      StaticSubtyping θ δ l r θ' δ' →
-      ListStaticSubtyping θ' δ' quals θ' δ' →
-      StaticSubtyping θ δ l (.exi ids quals r)  θ'' δ''
+    | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
+      StaticSubtyping skolems assums l r skolems' assums' →
+      ListStaticSubtyping skolems' assums' quals skolems'' assums'' →
+      StaticSubtyping skolems assums l (.exi ids quals r)  skolems'' assums''
 
     -- refinement elimination
-    | inter_left_elim θ δ l r t θ' δ' :
-      StaticSubtyping θ δ l t θ' δ' →
-      StaticSubtyping θ δ (.inter l r) t θ' δ'
+    | inter_left_elim skolems assums l r t skolems' assums' :
+      StaticSubtyping skolems assums l t skolems' assums' →
+      StaticSubtyping skolems assums (.inter l r) t skolems' assums'
 
-    | inter_right_elim θ δ l r t θ' δ' :
-      StaticSubtyping θ δ r t θ' δ' →
-      StaticSubtyping θ δ (.inter l r) t θ' δ'
+    | inter_right_elim skolems assums l r t skolems' assums' :
+      StaticSubtyping skolems assums r t skolems' assums' →
+      StaticSubtyping skolems assums (.inter l r) t skolems' assums'
 
-    | inter_merge_elim θ δ l r p q t θ' δ' :
+    | inter_merge_elim skolems assums l r p q t skolems' assums' :
       Typ.merge_paths (.inter l r) = .some t →
-      StaticSubtyping θ δ t (.path p q) θ' δ' →
-      StaticSubtyping θ δ (.inter l r) (.path p q) θ' δ'
+      StaticSubtyping skolems assums t (.path p q) skolems' assums' →
+      StaticSubtyping skolems assums (.inter l r) (.path p q) skolems' assums'
 
-    | all_elim θ δ ids quals l r θ' δ' θ'' δ'' :
-      StaticSubtyping θ δ l r θ' δ' →
-      ListStaticSubtyping θ' δ' quals θ' δ' →
-      StaticSubtyping θ δ (.all ids quals l) r θ'' δ''
+    | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
+      StaticSubtyping skolems assums l r skolems' assums' →
+      ListStaticSubtyping skolems' assums' quals skolems'' assums'' →
+      StaticSubtyping skolems assums (.all ids quals l) r skolems'' assums''
+
 
 end
 
 syntax "ListSubtyping_Static_prove" : tactic
 syntax "Subtyping_Static_prove" : tactic
+syntax "Subtyping_Static_rename_left" term : tactic
+syntax "Subtyping_Static_rename_right" term: tactic
+
 macro_rules
+  | `(tactic| Subtyping_Static_rename_left $t:term) => `(tactic|
+    (apply StaticSubtyping.rename_left _ _ _ $t:term ; rfl)
+  )
+
+  | `(tactic| Subtyping_Static_rename_right $t:term) => `(tactic|
+    (apply StaticSubtyping.rename_right  _ _ _ _ $t:term; rfl)
+  )
+
   | `(tactic| ListSubtyping_Static_prove) => `(tactic|
     (first
       | apply ListStaticSubtyping.nil
@@ -951,7 +968,7 @@ macro_rules
         · Subtyping_Static_prove
       | apply StaticSubtyping.placeholder_elim
         · simp
-        · simp
+        · sorry
         · ListSubtyping_Static_prove
 
       | apply StaticSubtyping.placeholder_intro
