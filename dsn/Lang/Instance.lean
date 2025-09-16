@@ -132,26 +132,23 @@ example : StaticSubtyping [] []
   [typ| @]
   [] []
 := by
-  Subtyping_Static_prove
+  StaticSubtyping_prove
 
 #eval [typ| <uno> @ | <dos> @]
 example : StaticSubtyping [] [] [typ| <uno> @] [typ| <uno> @ | <dos> @] [] [] := by
-  Subtyping_Static_prove
+  StaticSubtyping_prove
 
 #eval [subtypings| (T <: <uno> @) ]
 example : StaticSubtyping [] []
   [typ| T] [typ| <uno> @]
   [ids| ] [subtypings| (T <: <uno> @) ]
-:= by
-  Subtyping_Static_prove
+:= by StaticSubtyping_prove
 
 example : StaticSubtyping [] []
   [typ| LFP[R] ( (<zero> @) | (<succ> <succ> R))]
   [typ| TOP \ (<succ> <zero> @)]
-  [ids| ] [subtypings| (T <: <uno> @) ]
-:= by
-  Subtyping_Static_prove
-
+  [ids| ] [subtypings| (LFP[R] ( (<zero> @) | (<succ> <succ> R)) <: T) ]
+:= by StaticSubtyping_prove
 
 #eval StaticSubtyping.solve
   [ids| T] [subtypings| (X <: T)]
@@ -163,7 +160,7 @@ example : StaticSubtyping
   [typ| @]
   [typ| T]
   [ids| T] [subtypings| (@ <: T) (X <: T)]
-:= by Subtyping_Static_prove
+:= by StaticSubtyping_prove
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
@@ -175,7 +172,7 @@ example : StaticSubtyping
   [typ| @]
   [typ| @]
   [ids| ] [subtypings|  ]
-:= by Subtyping_Static_prove
+:= by StaticSubtyping_prove
 
 ---------------------------------------
 
@@ -195,29 +192,9 @@ example : StaticSubtyping
     <succ> R
   ]
   [ids| ] [subtypings|  ]
-:= by Subtyping_Static_prove
+:= by StaticSubtyping_prove
 
 ---------------------------------------
--- #print List.Mem
-
--- example :  StaticSubtyping []
---   [(Typ.unit, Typ.var "T")]
---   (Typ.var "T") Typ.unit
---   [] [(Typ.var "T", Typ.unit), (Typ.unit, Typ.var "T")]
--- := by
---   apply StaticSubtyping.placeholder_elim
---   · simp
---   · sorry
---   · ListSubtyping_Static_prove
-
--- example :  ListStaticSubtyping []
---   [(Typ.unit, Typ.var "T")]
---   [(Typ.var "T", Typ.unit)]
---   [] [(Typ.unit, Typ.var "T")]
--- := by
---   sorry
-
--- #eval [subtypings| (T33 <: @) (@ <: T33) ]
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
@@ -230,8 +207,5 @@ example : StaticSubtyping
   [typ| EXI[T] [(T <: @)] T ]
   [ids| ] [subtypings| (T33 <: @) (@ <: T33) ]
 := by
-  Subtyping_Static_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
-  apply StaticSubtyping.exi_intro
-  · Subtyping_Static_prove
-  · sorry -- ListSubtyping_Static_prove
-  · sorry
+  StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
+  StaticSubtyping_prove

@@ -487,14 +487,14 @@ macro_rules
 mutual
 
 
-  partial def ListStaticSubtyping.solve
-    (Θ : List String) (Δ : ListSubtyping)
+  partial def StaticListSubtyping.solve
+    (skolems : List String) (assums : ListSubtyping)
   : ListSubtyping → Lean.MetaM (List (List String × ListSubtyping))
-    | [] => return [(Θ, Δ)]
+    | [] => return [(skolems, assums)]
     | (lower,upper) :: remainder => do
-      let worlds ← StaticSubtyping.solve Θ Δ lower upper
-      (worlds.flatMapM (fun (Θ',Δ') =>
-        ListStaticSubtyping.solve Θ' Δ' remainder
+      let worlds ← StaticSubtyping.solve skolems assums lower upper
+      (worlds.flatMapM (fun (skolems',assums') =>
+        StaticListSubtyping.solve skolems' assums' remainder
       ))
 
   partial def StaticSubtyping.solve (Θ : List String) (Δ : ListSubtyping) (lower upper : Typ )
@@ -524,7 +524,7 @@ mutual
         let ids' : List String := pairs.map (fun (_, id') => id')
         let quals' := ListSubtyping.sub subs quals
         let body' := Typ.sub subs body
-        (← ListStaticSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
           (StaticSubtyping.solve (ids' ∪ Θ') Δ' body' t)
         )
       else return []
@@ -542,7 +542,7 @@ mutual
         let ids' : List String := pairs.map (fun (_, id') => id')
         let quals' := ListSubtyping.sub subs quals
         let body' := Typ.sub subs body
-        (← ListStaticSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
           (StaticSubtyping.solve (ids' ∪ Θ') Δ' t body')
         )
       else return []
@@ -551,7 +551,7 @@ mutual
       if id ∉ Θ then
         let lowers_id := ListSubtyping.bounds id .true Δ
         let trans := lowers_id.map (fun lower_id => (lower_id, t))
-        (← ListStaticSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (.var id, t) :: Δ')
         )
       else if (Δ.exi (fun
@@ -560,7 +560,7 @@ mutual
       )) then
         let lowers_id := ListSubtyping.bounds id .true Δ
         let trans := lowers_id.map (fun lower_id => (lower_id, t))
-        (← ListStaticSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
       else
@@ -581,7 +581,7 @@ mutual
       if not (Θ.contains id) then
         let uppers_id := ListSubtyping.bounds id .false Δ
         let trans := uppers_id.map (fun upper_id => (t,upper_id))
-        (← ListStaticSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
       else if (Δ.exi (fun
@@ -590,7 +590,7 @@ mutual
       )) then
         let uppers_id := ListSubtyping.bounds id .false Δ
         let trans := uppers_id.map (fun upper_id => (t,upper_id))
-        (← ListStaticSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
+        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
           return (Θ', (t, .var id) :: Δ')
         )
       else do
@@ -677,7 +677,7 @@ mutual
       let r' := Typ.sub subs r
       let quals' := ListSubtyping.sub subs quals
       (← StaticSubtyping.solve Θ Δ l r').flatMapM (fun (θ',Δ') =>
-        ListStaticSubtyping.solve θ' Δ' quals'
+        StaticListSubtyping.solve θ' Δ' quals'
       )
 
 
@@ -701,7 +701,7 @@ mutual
       let l' := Typ.sub subs l
       let quals' := ListSubtyping.sub subs quals
       (← StaticSubtyping.solve Θ Δ l' r).flatMapM (fun (θ',Δ') =>
-        ListStaticSubtyping.solve θ' Δ' quals'
+        StaticListSubtyping.solve θ' Δ' quals'
       )
 
     | _, _ => return []
@@ -710,15 +710,25 @@ end
 
 
 
+lemma lower_bound_map id (assums : List (Typ × Typ)) ts (t : Typ) :
+      ListSubtyping.bounds id .true assums = ts →
+      (∀ t', (t', Typ.var id) ∈ assums → (t', t) ∈ ts.map (fun t' => (t', t)))
+:= by sorry
+
+lemma upper_bound_map id (assums : List (Typ × Typ)) ts (t : Typ) :
+      ListSubtyping.bounds id .false assums = ts →
+      (∀ t', (Typ.var id, t') ∈ assums → (t, t') ∈ ts.map (fun t' => (t, t')))
+:= by sorry
+
 mutual
-  inductive ListStaticSubtyping
+  inductive StaticListSubtyping
   : List String → List (Typ × Typ) → List (Typ × Typ)
   → List String → List (Typ × Typ) → Prop
-    | nil skolems assums skolems' assums' : ListStaticSubtyping skolems assums [] skolems' assums'
+    | nil skolems assums : StaticListSubtyping skolems assums [] skolems assums
     | cons skolems assums l r cs skolems' assums' skolems'' assums'' :
       StaticSubtyping skolems assums l r skolems' assums' →
-      ListStaticSubtyping skolems' assums' cs skolems'' assums'' →
-      ListStaticSubtyping skolems assums ((l,r) :: cs) skolems'' assums''
+      StaticListSubtyping skolems' assums' cs skolems'' assums'' →
+      StaticListSubtyping skolems assums ((l,r) :: cs) skolems'' assums''
 
 
   inductive StaticSubtyping
@@ -757,7 +767,7 @@ mutual
 
     | exi_elim skolems assums ids quals body t skolems' assums' skolems'' assums'' :
       ListSubtyping.restricted skolems assums quals →
-      ListStaticSubtyping skolems assums quals skolems' assums' →
+      StaticListSubtyping skolems assums quals skolems' assums' →
       StaticSubtyping (ids ∪ skolems') assums' body t skolems'' assums'' →
       StaticSubtyping skolems assums (.exi ids quals body) t skolems'' assums''
 
@@ -769,7 +779,7 @@ mutual
 
     | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
       ListSubtyping.restricted skolems assums quals →
-      ListStaticSubtyping skolems assums quals skolems' assums' →
+      StaticListSubtyping skolems assums quals skolems' assums' →
       StaticSubtyping (ids ∪ skolems') assums' t body skolems'' assums'' →
       StaticSubtyping skolems assums t (.all ids quals body) skolems'' assums''
 
@@ -777,14 +787,14 @@ mutual
     | placeholder_elim skolems assums id t trans skolems' assums'  :
       id ∉ skolems →
       (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
-      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticListSubtyping skolems assums trans skolems' assums' →
       StaticSubtyping skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- placeholder introduction
     | placeholder_intro skolems assums t id trans skolems' assums'  :
       id ∉ skolems →
       (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
-      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticListSubtyping skolems assums trans skolems' assums' →
       StaticSubtyping skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem placeholder introduction
@@ -792,7 +802,7 @@ mutual
       id ∈ skolems →
       (∃ id', (.var id', .var id) ∈ assums ∧ id' ∉ skolems) →
       (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
-      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticListSubtyping skolems assums trans skolems' assums' →
       StaticSubtyping skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem introduction
@@ -808,7 +818,7 @@ mutual
       id ∈ skolems →
       (∃ id', (.var id, .var id') ∈ assums ∧ id' ∉ skolems) →
       (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
-      ListStaticSubtyping skolems assums trans skolems' assums' →
+      StaticListSubtyping skolems assums trans skolems' assums' →
       StaticSubtyping skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- skolem elimination
@@ -896,7 +906,7 @@ mutual
 
     | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
       StaticSubtyping skolems assums l r skolems' assums' →
-      ListStaticSubtyping skolems' assums' quals skolems'' assums'' →
+      StaticListSubtyping skolems' assums' quals skolems'' assums'' →
       StaticSubtyping skolems assums l (.exi ids quals r)  skolems'' assums''
 
     -- refinement elimination
@@ -915,124 +925,125 @@ mutual
 
     | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
       StaticSubtyping skolems assums l r skolems' assums' →
-      ListStaticSubtyping skolems' assums' quals skolems'' assums'' →
+      StaticListSubtyping skolems' assums' quals skolems'' assums'' →
       StaticSubtyping skolems assums (.all ids quals l) r skolems'' assums''
 
 
 end
 
-syntax "ListSubtyping_Static_prove" : tactic
-syntax "Subtyping_Static_prove" : tactic
-syntax "Subtyping_Static_rename_left" term : tactic
-syntax "Subtyping_Static_rename_right" term: tactic
+syntax "StaticListSubtyping_prove" : tactic
+syntax "StaticSubtyping_prove" : tactic
+syntax "StaticSubtyping_rename_left" term : tactic
+syntax "StaticSubtyping_rename_right" term: tactic
 
 macro_rules
-  | `(tactic| Subtyping_Static_rename_left $t:term) => `(tactic|
+  | `(tactic| StaticSubtyping_rename_left $t:term) => `(tactic|
     (apply StaticSubtyping.rename_left _ _ _ $t:term ; rfl)
   )
 
-  | `(tactic| Subtyping_Static_rename_right $t:term) => `(tactic|
+  | `(tactic| StaticSubtyping_rename_right $t:term) => `(tactic|
     (apply StaticSubtyping.rename_right  _ _ _ _ $t:term; rfl)
   )
 
-  | `(tactic| ListSubtyping_Static_prove) => `(tactic|
+  | `(tactic| StaticListSubtyping_prove) => `(tactic|
     (first
-      | apply ListStaticSubtyping.nil
-      | apply ListStaticSubtyping.cons
-        · Subtyping_Static_prove
-        · ListSubtyping_Static_prove
+      | apply StaticListSubtyping.nil
+      | apply StaticListSubtyping.cons
+        · StaticSubtyping_prove
+        · StaticListSubtyping_prove
     ) <;> fail
   )
-  | `(tactic| Subtyping_Static_prove) => `(tactic|
+  | `(tactic| StaticSubtyping_prove) => `(tactic|
     (first
       | apply StaticSubtyping.refl
         · rfl
       | apply StaticSubtyping.entry_pres
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.path_pres
-        · Subtyping_Static_prove
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.unio_elim
-        · Subtyping_Static_prove
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.exi_elim
         · rfl
-        · ListSubtyping_Static_prove
-        · Subtyping_Static_prove
+        · StaticListSubtyping_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.inter_intro
-        · Subtyping_Static_prove
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.all_intro
         · rfl
-        · ListSubtyping_Static_prove
-        · Subtyping_Static_prove
+        · StaticListSubtyping_prove
+        · StaticSubtyping_prove
       | apply StaticSubtyping.placeholder_elim
         · simp
-        · sorry
-        · ListSubtyping_Static_prove
+        · apply lower_bound_map
+          · simp only [ListSubtyping.bounds, Subtyping.target_bound]; rfl
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.placeholder_intro
         · simp
-        · simp
-        · ListSubtyping_Static_prove
-        · exact []
+        · apply upper_bound_map
+          · simp only [ListSubtyping.bounds, Subtyping.target_bound]; rfl
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_placeholder_intro
         · simp
         · simp
         · simp
-        · ListSubtyping_Static_prove
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_placeholder_intro
         · simp
         · simp
         · simp
-        · ListSubtyping_Static_prove
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_intro
         · simp
         · simp
         · simp
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.skolem_placeholder_elim
         · simp
         · simp
         · simp
-        · ListSubtyping_Static_prove
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_elim
         · simp
         · simp
         · simp
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.unio_antec
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.inter_conseq
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.inter_entry
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_factor_elim
         · rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_skip_elim
         · simp
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_induct_elim
         · Typ_Monotonic_prove
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.diff_intro
         · rfl
         · simp [Subtyping.check, Typ.toBruijn]; rfl
         · simp [Subtyping.check, Typ.toBruijn]; rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.diff_fold_intro
         · rfl
@@ -1041,43 +1052,42 @@ macro_rules
         · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
         · rfl
         · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_inflate_intro
         · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
-        · simp [Typ.sub, find] ; Subtyping_Static_prove
+        · simp [Typ.sub, find] ; StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_drop_intro
         · rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.diff_elim
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.unio_left_intro
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.unio_right_intro
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.exi_intro
-        · Subtyping_Static_prove
-        · ListSubtyping_Static_prove
-        · exact []
+        · StaticSubtyping_prove
+        · StaticListSubtyping_prove
 
       | apply StaticSubtyping.inter_left_elim
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.inter_right_elim
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.inter_merge_elim
         · rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply StaticSubtyping.all_elim
-        · Subtyping_Static_prove
-        · ListSubtyping_Static_prove
+        · StaticSubtyping_prove
+        · StaticListSubtyping_prove
     ) <;> fail
   )
 
@@ -1349,7 +1359,7 @@ macro_rules
   | `(tactic| Subtyping_GuardedListZone_Static_prove) => `(tactic|
     (apply Subtyping.ListZone.Static.intro
       · intro
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
       · rfl
     )
   )
@@ -1398,7 +1408,7 @@ macro_rules
       | apply Typing.Static.app
         · Typing_Static_prove
         · Typing_Static_prove
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
       | apply Typing.Static.loop
         · Typing_Static_prove
@@ -1409,7 +1419,7 @@ macro_rules
         · simp
         · Subtyping_ListZone_Static_prove
         · rfl
-        · Subtyping_Static_prove
+        · StaticSubtyping_prove
 
     ) <;> fail
   )
