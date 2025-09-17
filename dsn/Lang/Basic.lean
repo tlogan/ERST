@@ -49,8 +49,8 @@ mutual
       | var idr =>
         have d : Decidable (idl = idr) := inferInstance
         cases d with
-          | isFalse => apply isFalse ; simp [*]
-          | isTrue => apply isTrue; simp [*]
+        | isFalse => apply isFalse ; simp [*]
+        | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .unit => by cases right with
       | unit => apply isTrue; simp
@@ -60,55 +60,55 @@ mutual
           have dl : Decidable (ll = lr) := inferInstance
           have dbody := Typ.decidable_eq bodyl bodyr
           cases dl with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases dbody with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases dbody with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .path al bl => by cases right with
       | path ar br =>
           have da := Typ.decidable_eq al ar
           have db := Typ.decidable_eq bl br
           cases da with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases db with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases db with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .unio al bl => by cases right with
       | unio ar br =>
           have da := Typ.decidable_eq al ar
           have db := Typ.decidable_eq bl br
           cases da with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases db with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases db with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp[*]
+            | isTrue => apply isTrue; simp[*]
       | _ => apply isFalse ; simp
     | .inter al bl => by cases right with
       | inter ar br =>
           have da := Typ.decidable_eq al ar
           have db := Typ.decidable_eq bl br
           cases da with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases db with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases db with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .diff al bl => by cases right with
       | diff ar br =>
           have da := Typ.decidable_eq al ar
           have db := Typ.decidable_eq bl br
           cases da with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases db with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases db with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .all idsl qsl bodyl => by cases right with
       | all idsr qsr bodyr =>
@@ -116,14 +116,14 @@ mutual
         have dqs := ListSubtyping.decidable_eq qsl qsr
         have dbody := Typ.decidable_eq bodyl bodyr
         cases dids with
+        | isFalse => apply isFalse; simp [*]
+        | isTrue =>
+          cases dqs with
           | isFalse => apply isFalse; simp [*]
           | isTrue =>
-            cases dqs with
+            cases dbody with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases dbody with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .exi idsl qsl bodyl => by cases right with
       | exi idsr qsr bodyr =>
@@ -131,25 +131,25 @@ mutual
         have dqs := ListSubtyping.decidable_eq qsl qsr
         have dbody := Typ.decidable_eq bodyl bodyr
         cases dids with
+        | isFalse => apply isFalse; simp [*]
+        | isTrue =>
+          cases dqs with
           | isFalse => apply isFalse; simp [*]
           | isTrue =>
-            cases dqs with
+            cases dbody with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases dbody with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .lfp idl bodyl => by cases right with
       | lfp idr bodyr =>
           have did : Decidable (idl = idr) := inferInstance
           have dbody := Typ.decidable_eq bodyl bodyr
           cases did with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases dbody with
             | isFalse => apply isFalse; simp [*]
-            | isTrue =>
-              cases dbody with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue => apply isTrue; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
 end
 
@@ -258,16 +258,116 @@ end
 
 
 mutual
+
+  lemma ListSubtyping.beq_implies_eq : ∀ ls rs, ListSubtyping.beq ls rs = true → ls = rs
+  | [], [] => by simp
+  | l :: ls, [] => by
+    simp [ListSubtyping.beq]
+  | [], r :: rs => by
+    simp [ListSubtyping.beq]
+  | (al,bl) :: ls, (ar,br) :: rs => by
+    simp [ListSubtyping.beq]
+    intros uno dos tres
+    apply Typ.beq_implies_eq at uno
+    apply Typ.beq_implies_eq at dos
+    apply ListSubtyping.beq_implies_eq at tres
+    simp [*]
+
   -- TODO: use mututual recursion
-  lemma Typ.BEq_implies_eq (l r : Typ) : (l == r) = true → l = r := by
-    sorry
+  lemma Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
+    fun left right => match left with
+    | .var idl => by cases right with
+      | var idr => unfold Typ.beq; simp
+      | _ => unfold Typ.beq; simp
+    | .unit => by cases right with
+      | unit => unfold Typ.beq; simp
+      | _ => unfold Typ.beq; simp
+    | .entry ll bodyl => by cases right with
+      | entry lr bodyr =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .path al bl => by cases right with
+      | path ar br =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at uno
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .unio al bl => by cases right with
+      | unio ar br =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at uno
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .inter al bl => by cases right with
+      | inter ar br =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at uno
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .diff al bl => by cases right with
+      | diff ar br =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at uno
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .all idsl qsl bodyl => by cases right with
+      | all idsr qsr bodyr =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        intro tres
+        apply ListSubtyping.beq_implies_eq at dos
+        apply Typ.beq_implies_eq at tres
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .exi idsl qsl bodyl => by cases right with
+      | exi idsr qsr bodyr =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        intro tres
+        apply ListSubtyping.beq_implies_eq at dos
+        apply Typ.beq_implies_eq at tres
+        simp [*]
+      | _ => unfold Typ.beq; simp
+    | .lfp idl bodyl => by cases right with
+      | lfp idr bodyr =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at dos
+        simp [*]
+      | _ => unfold Typ.beq; simp
 end
 
+
 lemma Typ.BEq_eq_true : ∀ t : Typ, (t == t) = true := by
-    intro t
-    apply Typ.beq_eq_true
+  apply Typ.beq_eq_true
+
+lemma Typ.BEq_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
+  apply Typ.beq_implies_eq
 
 
+lemma Typ.eq_implies_BEq : ∀  l r : Typ, (l = r) → (l == r) = true := by
+  intros l r p
+  simp [*]
+  apply Typ.BEq_eq_true
 
 
 open Std.Format

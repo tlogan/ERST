@@ -775,7 +775,33 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
 lemma lower_bound_mem id cs t : ∀ ts,
   ListSubtyping.bounds id .true cs = ts →
   t ∈ ts → (t, .var id) ∈ cs
-:= by sorry
+:= by induction cs with
+| nil =>
+  simp [ListSubtyping.bounds]
+| cons head tail ih =>
+  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  let (lower,upper) := head
+  simp_all
+  cases b : (Typ.var id == upper) with
+  | true =>
+    apply Typ.BEq_implies_eq at b
+    simp [*]
+    intro c
+    cases c with
+    | inl d =>
+      rw [d]
+      apply List.mem_cons_self
+    | inr d =>
+      apply ih at d
+      rw [← b]
+      apply List.mem_cons_of_mem
+      assumption
+  | false =>
+    simp
+    intro h
+    apply ih at h
+    apply List.mem_cons_of_mem
+    assumption
 
 lemma upper_bound_mem id cs t : ∀ ts,
   ListSubtyping.bounds id .false cs = ts →
