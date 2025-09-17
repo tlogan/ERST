@@ -218,3 +218,33 @@ example : StaticSubtyping
 := by
   StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
   StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| (T <: <uno> @) ]
+  [typ| T]
+  [typ| <uno> @ | <dos> @]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| (T <: <uno> @) ]
+  [typ| T]
+  [typ| <uno> @ | <dos> @]
+  [ids| T ] [subtypings| (T <: <uno> @) ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| ( <uno> @ <: T) ]
+  [typ| <uno> @ & <dos> @]
+  [typ| T]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| (<uno> @ <: T) ]
+  [typ| <uno> @ & <dos> @]
+  [typ| T]
+  [ids| T ] [subtypings| (<uno> @ <: T) ]
+:= by StaticSubtyping_prove
+
+---------------------------------------

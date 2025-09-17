@@ -744,6 +744,43 @@ lemma lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
 lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       ListSubtyping.bounds id .false cs = ts →
       (∀ t', (Typ.var id, t') ∈ cs → (t, t') ∈ ts.map (fun t' => (t, t')))
+:= by induction cs with
+| nil =>
+  simp [ListSubtyping.bounds]
+  intros
+  intro
+  contradiction
+| cons head tail ih =>
+  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  let (lower,upper) := head
+  simp_all
+  intro t'
+  intro m
+  cases m with
+  | head =>
+    simp [Typ.BEq_eq_true]
+  | tail _ m'' =>
+    cases b : (Typ.var id == lower) with
+      | false =>
+        apply ih
+        assumption
+      | true =>
+        simp
+        apply Or.inr
+        apply ih
+        assumption
+
+
+
+
+lemma lower_bound_mem id cs ts t :
+  ListSubtyping.bounds id .true cs = ts →
+  t ∈ ts → (t, .var id) ∈ cs
+:= by sorry
+
+lemma upper_bound_mem id cs ts t :
+  ListSubtyping.bounds id .false cs = ts →
+  t ∈ ts → (.var id, t) ∈ cs
 := by sorry
 
 mutual
@@ -1023,7 +1060,9 @@ macro_rules
 
       | apply StaticSubtyping.skolem_intro
         · simp
-        · simp
+        · apply lower_bound_mem
+          · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
+          · simp [Typ.BEq_eq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
@@ -1036,7 +1075,9 @@ macro_rules
 
       | apply StaticSubtyping.skolem_elim
         · simp
-        · simp
+        · apply upper_bound_mem
+          · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
+          · simp [Typ.BEq_eq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
