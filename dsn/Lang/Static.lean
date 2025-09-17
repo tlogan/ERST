@@ -991,13 +991,8 @@ macro_rules
       | apply StaticSubtyping.skolem_placeholder_intro
         · simp
         · simp
-        · simp
-        · StaticListSubtyping_prove
-
-      | apply StaticSubtyping.skolem_placeholder_intro
-        · simp
-        · simp
-        · simp
+        · apply upper_bound_map
+          · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
         · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_intro
@@ -1009,7 +1004,8 @@ macro_rules
       | apply StaticSubtyping.skolem_placeholder_elim
         · simp
         · simp
-        · simp
+        · apply lower_bound_map
+          · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
         · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_elim

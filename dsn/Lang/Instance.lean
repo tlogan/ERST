@@ -160,7 +160,16 @@ example : StaticSubtyping
   [typ| @]
   [typ| T]
   [ids| T] [subtypings| (@ <: T) (X <: T)]
-:= by StaticSubtyping_prove
+:= by
+  StaticSubtyping_prove
+
+example : StaticSubtyping
+  [ids| T] [subtypings| (T <: X)]
+  [typ| T]
+  [typ| @]
+  [ids| T] [subtypings| (T <: @) (T <: X)]
+:= by
+  StaticSubtyping_prove
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
