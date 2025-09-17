@@ -257,6 +257,12 @@ mutual
 end
 
 
+mutual
+  -- TODO: use mututual recursion
+  lemma Typ.BEq_implies_eq (l r : Typ) : (l == r) = true → l = r := by
+    sorry
+end
+
 lemma Typ.BEq_eq_true : ∀ t : Typ, (t == t) = true := by
     intro t
     apply Typ.beq_eq_true
