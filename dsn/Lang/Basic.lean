@@ -14,140 +14,143 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 
 inductive Typ
-  | var : String → Typ
-  | unit
-  | entry : String → Typ → Typ
-  | path : Typ → Typ → Typ
-  | unio :  Typ → Typ → Typ
-  | inter :  Typ → Typ → Typ
-  | diff :  Typ → Typ → Typ
-  | all :  List String → List (Typ × Typ) → Typ → Typ
-  | exi :  List String → List (Typ × Typ) → Typ → Typ
-  | lfp :  String → Typ → Typ
+| var : String → Typ
+| unit
+| entry : String → Typ → Typ
+| path : Typ → Typ → Typ
+| unio :  Typ → Typ → Typ
+| inter :  Typ → Typ → Typ
+| diff :  Typ → Typ → Typ
+| all :  List String → List (Typ × Typ) → Typ → Typ
+| exi :  List String → List (Typ × Typ) → Typ → Typ
+| lfp :  String → Typ → Typ
 
 def ListSubtyping := List (Typ × Typ)
 
+instance : Membership (Typ × Typ) ListSubtyping where
+  mem (xs : List (Typ × Typ)) x := x ∈ xs
+
 mutual
   instance ListSubtyping.decidable_eq : DecidableEq (List (Typ × Typ))
-    | [], [] => isTrue rfl
-    | l :: ls, [] => isFalse (by simp)
-    | [], r :: rs => isFalse (by simp)
-    | (al,bl) :: ls, (ar,br) :: rs =>
-      match Typ.decidable_eq al ar, Typ.decidable_eq bl br, ListSubtyping.decidable_eq ls rs with
-        | isTrue _, isTrue _, isTrue _ => isTrue (by simp [*])
-        | isFalse _, _, _ => isFalse (by simp [*])
-        | _, isFalse _, _ => isFalse (by simp [*])
-        | _, _, isFalse _ => isFalse (by simp [*])
+  | [], [] => isTrue rfl
+  | l :: ls, [] => isFalse (by simp)
+  | [], r :: rs => isFalse (by simp)
+  | (al,bl) :: ls, (ar,br) :: rs =>
+    match Typ.decidable_eq al ar, Typ.decidable_eq bl br, ListSubtyping.decidable_eq ls rs with
+    | isTrue _, isTrue _, isTrue _ => isTrue (by simp [*])
+    | isFalse _, _, _ => isFalse (by simp [*])
+    | _, isFalse _, _ => isFalse (by simp [*])
+    | _, _, isFalse _ => isFalse (by simp [*])
 
 
   instance Typ.decidable_eq : DecidableEq Typ :=
     fun left right => match left with
-      | .var idl => by cases right with
-        | var idr =>
-          have d : Decidable (idl = idr) := inferInstance
-          cases d with
-            | isFalse => apply isFalse ; simp [*]
-            | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .unit => by cases right with
-        | unit => apply isTrue; simp
-        | _ => apply isFalse ; simp
-      | .entry ll bodyl => by cases right with
-        | entry lr bodyr =>
-            have dl : Decidable (ll = lr) := inferInstance
-            have dbody := Typ.decidable_eq bodyl bodyr
-            cases dl with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases dbody with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .path al bl => by cases right with
-        | path ar br =>
-            have da := Typ.decidable_eq al ar
-            have db := Typ.decidable_eq bl br
-            cases da with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases db with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .unio al bl => by cases right with
-        | unio ar br =>
-            have da := Typ.decidable_eq al ar
-            have db := Typ.decidable_eq bl br
-            cases da with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases db with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp[*]
-        | _ => apply isFalse ; simp
-      | .inter al bl => by cases right with
-        | inter ar br =>
-            have da := Typ.decidable_eq al ar
-            have db := Typ.decidable_eq bl br
-            cases da with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases db with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .diff al bl => by cases right with
-        | diff ar br =>
-            have da := Typ.decidable_eq al ar
-            have db := Typ.decidable_eq bl br
-            cases da with
-              | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases db with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .all idsl qsl bodyl => by cases right with
-        | all idsr qsr bodyr =>
-          have dids : Decidable (idsl = idsr) := inferInstance
-          have dqs := ListSubtyping.decidable_eq qsl qsr
+    | .var idl => by cases right with
+      | var idr =>
+        have d : Decidable (idl = idr) := inferInstance
+        cases d with
+          | isFalse => apply isFalse ; simp [*]
+          | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .unit => by cases right with
+      | unit => apply isTrue; simp
+      | _ => apply isFalse ; simp
+    | .entry ll bodyl => by cases right with
+      | entry lr bodyr =>
+          have dl : Decidable (ll = lr) := inferInstance
           have dbody := Typ.decidable_eq bodyl bodyr
-          cases dids with
+          cases dl with
             | isFalse => apply isFalse; simp [*]
             | isTrue =>
-              cases dqs with
+              cases dbody with
               | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases dbody with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .exi idsl qsl bodyl => by cases right with
-        | exi idsr qsr bodyr =>
-          have dids : Decidable (idsl = idsr) := inferInstance
-          have dqs := ListSubtyping.decidable_eq qsl qsr
-          have dbody := Typ.decidable_eq bodyl bodyr
-          cases dids with
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .path al bl => by cases right with
+      | path ar br =>
+          have da := Typ.decidable_eq al ar
+          have db := Typ.decidable_eq bl br
+          cases da with
             | isFalse => apply isFalse; simp [*]
             | isTrue =>
-              cases dqs with
+              cases db with
               | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases dbody with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
-      | .lfp idl bodyl => by cases right with
-        | lfp idr bodyr =>
-            have did : Decidable (idl = idr) := inferInstance
-            have dbody := Typ.decidable_eq bodyl bodyr
-            cases did with
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .unio al bl => by cases right with
+      | unio ar br =>
+          have da := Typ.decidable_eq al ar
+          have db := Typ.decidable_eq bl br
+          cases da with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases db with
               | isFalse => apply isFalse; simp [*]
-              | isTrue =>
-                cases dbody with
-                | isFalse => apply isFalse; simp [*]
-                | isTrue => apply isTrue; simp [*]
-        | _ => apply isFalse ; simp
+              | isTrue => apply isTrue; simp[*]
+      | _ => apply isFalse ; simp
+    | .inter al bl => by cases right with
+      | inter ar br =>
+          have da := Typ.decidable_eq al ar
+          have db := Typ.decidable_eq bl br
+          cases da with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases db with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .diff al bl => by cases right with
+      | diff ar br =>
+          have da := Typ.decidable_eq al ar
+          have db := Typ.decidable_eq bl br
+          cases da with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases db with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .all idsl qsl bodyl => by cases right with
+      | all idsr qsr bodyr =>
+        have dids : Decidable (idsl = idsr) := inferInstance
+        have dqs := ListSubtyping.decidable_eq qsl qsr
+        have dbody := Typ.decidable_eq bodyl bodyr
+        cases dids with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases dqs with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases dbody with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .exi idsl qsl bodyl => by cases right with
+      | exi idsr qsr bodyr =>
+        have dids : Decidable (idsl = idsr) := inferInstance
+        have dqs := ListSubtyping.decidable_eq qsl qsr
+        have dbody := Typ.decidable_eq bodyl bodyr
+        cases dids with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases dqs with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases dbody with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .lfp idl bodyl => by cases right with
+      | lfp idr bodyr =>
+          have did : Decidable (idl = idr) := inferInstance
+          have dbody := Typ.decidable_eq bodyl bodyr
+          cases did with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue =>
+              cases dbody with
+              | isFalse => apply isFalse; simp [*]
+              | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
 end
 
 
@@ -181,8 +184,83 @@ mutual
   | _, _ => false
 end
 
-instance : BEq Typ where
+instance : BEq (List (Typ × Typ)) where
+  beq := ListSubtyping.beq
+
+instance : BEq ListSubtyping where
+  beq := ListSubtyping.beq
+
+instance Typ.instanceBEq : BEq Typ where
   beq := Typ.beq
+
+
+mutual
+  lemma ListSubtyping.beq_eq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
+  | .nil => rfl
+  | (lower,upper) :: cs' => by
+    simp [ListSubtyping.beq]
+    simp [Typ.beq_eq_true]
+    apply ListSubtyping.beq_eq_true
+
+  lemma Typ.beq_eq_true : ∀ t : Typ, Typ.beq t t = true
+  | .unit => by rfl
+  | .var id => by
+    unfold Typ.beq
+    simp
+  | .entry l body => by
+    unfold Typ.beq
+    simp
+    apply Typ.beq_eq_true
+  | .path x y => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    ·  apply Typ.beq_eq_true
+    ·  apply Typ.beq_eq_true
+  | .unio a b => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    · apply Typ.beq_eq_true
+    · apply Typ.beq_eq_true
+  | .inter a b => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    · apply Typ.beq_eq_true
+    · apply Typ.beq_eq_true
+  | .diff a b => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    · apply Typ.beq_eq_true
+    · apply Typ.beq_eq_true
+
+  | .all ids qs body => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    · apply ListSubtyping.beq_eq_true
+    · apply Typ.beq_eq_true
+
+  | .exi ids qs body => by
+    unfold Typ.beq
+    simp
+    apply And.intro
+    · apply ListSubtyping.beq_eq_true
+    · apply Typ.beq_eq_true
+
+  | .lfp id body => by
+    unfold Typ.beq
+    simp
+    apply Typ.beq_eq_true
+end
+
+
+lemma Typ.BEq_eq_true : ∀ t : Typ, (t == t) = true := by
+    intro t
+    apply Typ.beq_eq_true
+
 
 
 
@@ -235,65 +313,65 @@ mutual
 
 
   def Typ.reprPrec : Typ → Nat → Std.Format
-    | .var id, _ => id
-    | .unit, _ => "@"
-    | .entry l body, _  => "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
-    | .path left right, p =>
-      let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
-      group (wrap content p 50)
+  | .var id, _ => id
+  | .unit, _ => "@"
+  | .entry l body, _  => "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
+  | .path left right, p =>
+    let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
+    group (wrap content p 50)
 
-    | .unio left right, p =>
-      let content := Typ.reprPrec left 61 ++ " |" ++ line ++ Typ.reprPrec right 60
-      group (wrap content p 60)
-    | .inter left right, p =>
-      let content := Typ.reprPrec left 81 ++ " &" ++ line ++ Typ.reprPrec right 80
-      group (wrap content p 80)
-    | .diff left right, _ =>
-      let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
-      group content
-    | .all ids subtypings body, _ =>
-      if subtypings.isEmpty then
-        let default := group (
-          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
-        )
-        if h : ids.length = 1 then
-          if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
-            "BOT"
-          else
-            default
+  | .unio left right, p =>
+    let content := Typ.reprPrec left 61 ++ " |" ++ line ++ Typ.reprPrec right 60
+    group (wrap content p 60)
+  | .inter left right, p =>
+    let content := Typ.reprPrec left 81 ++ " &" ++ line ++ Typ.reprPrec right 80
+    group (wrap content p 80)
+  | .diff left right, _ =>
+    let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
+    group content
+  | .all ids subtypings body, _ =>
+    if subtypings.isEmpty then
+      let default := group (
+        "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+      )
+      if h : ids.length = 1 then
+        if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
+          "BOT"
         else
           default
       else
-        group (
-          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            nest 2 (ListSubtyping.repr subtypings)
-          ++ line ++ ":" ++ line ++
-            nest 2 (Typ.reprPrec body 0)
-        )
-    | .exi ids subtypings body, _ =>
-      if subtypings.isEmpty then
-        let default := group (
-          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
-        )
-        if h : ids.length = 1 then
-          if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
-            "TOP"
-          else
-            default
-        else
-          default
-      else
-        group (
-          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            nest 2 (ListSubtyping.repr subtypings)
-          ++ line ++ ":" ++ line ++
-            nest 2 (Typ.reprPrec body 0)
-        )
-    | .lfp id body, _ =>
+        default
+    else
       group (
-        "LFP[" ++ id ++ "]" ++ line ++
+        "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
+          nest 2 (ListSubtyping.repr subtypings)
+        ++ line ++ ":" ++ line ++
           nest 2 (Typ.reprPrec body 0)
       )
+  | .exi ids subtypings body, _ =>
+    if subtypings.isEmpty then
+      let default := group (
+        "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+      )
+      if h : ids.length = 1 then
+        if (Typ.var (ids.get ⟨0, by simp [h]⟩)) == body then
+          "TOP"
+        else
+          default
+      else
+        default
+    else
+      group (
+        "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
+          nest 2 (ListSubtyping.repr subtypings)
+        ++ line ++ ":" ++ line ++
+          nest 2 (Typ.reprPrec body 0)
+      )
+  | .lfp id body, _ =>
+    group (
+      "LFP[" ++ id ++ "]" ++ line ++
+        nest 2 (Typ.reprPrec body 0)
+    )
 end
 
 instance : Repr ListSubtyping where
@@ -631,49 +709,49 @@ mutual
     ListSubtyping.Monotonic.Either.decide cs t ids
 
   partial def ListSubtyping.Monotonic.decide (id : String) (b : Bool) : ListSubtyping → Bool
-    | .nil => .true
-    | .cons (l,r) remainder =>
-      Typ.Monotonic.decide id (not b) l &&
-      Typ.Monotonic.decide id b r &&
-      ListSubtyping.Monotonic.decide id b remainder
+  | .nil => .true
+  | .cons (l,r) remainder =>
+    Typ.Monotonic.decide id (not b) l &&
+    Typ.Monotonic.decide id b r &&
+    ListSubtyping.Monotonic.decide id b remainder
 
 
   partial def Typ.Monotonic.decide (id : String) (b : Bool) : Typ → Bool
-    | .var id' =>
-      if id == id' then
-        b == .true
-      else
-        .true
-    | .unit => .true
-    | .entry _ body =>
+  | .var id' =>
+    if id == id' then
+      b == .true
+    else
+      .true
+  | .unit => .true
+  | .entry _ body =>
+    Typ.Monotonic.decide id b body
+  | .path left right =>
+    Typ.Monotonic.decide id (not b) left &&
+    Typ.Monotonic.decide id b right
+  | .unio left right =>
+    Typ.Monotonic.decide id b left &&
+    Typ.Monotonic.decide id b right
+  | .inter left right =>
+    Typ.Monotonic.decide id b left &&
+    Typ.Monotonic.decide id b right
+  | .diff left right =>
+    Typ.Monotonic.decide id b left &&
+    Typ.Monotonic.decide id (not b) right
+
+  | .all ids subtypings body =>
+    ids.contains id || (
+      ListSubtyping.Monotonic.Either.decide subtypings body ids &&
       Typ.Monotonic.decide id b body
-    | .path left right =>
-      Typ.Monotonic.decide id (not b) left &&
-      Typ.Monotonic.decide id b right
-    | .unio left right =>
-      Typ.Monotonic.decide id b left &&
-      Typ.Monotonic.decide id b right
-    | .inter left right =>
-      Typ.Monotonic.decide id b left &&
-      Typ.Monotonic.decide id b right
-    | .diff left right =>
-      Typ.Monotonic.decide id b left &&
-      Typ.Monotonic.decide id (not b) right
+    )
 
-    | .all ids subtypings body =>
-      ids.contains id || (
-        ListSubtyping.Monotonic.Either.decide subtypings body ids &&
-        Typ.Monotonic.decide id b body
-      )
+  | .exi ids subtypings body =>
+    ids.contains id || (
+      ListSubtyping.Monotonic.Either.decide subtypings (.diff .unit body) ids &&
+      Typ.Monotonic.decide id b body
+    )
 
-    | .exi ids subtypings body =>
-      ids.contains id || (
-        ListSubtyping.Monotonic.Either.decide subtypings (.diff .unit body) ids &&
-        Typ.Monotonic.decide id b body
-      )
-
-    | .lfp id' body =>
-      id == id' || Typ.Monotonic.decide id b body
+  | .lfp id' body =>
+    id == id' || Typ.Monotonic.decide id b body
 end
 
 
