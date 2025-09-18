@@ -128,7 +128,6 @@ inductive Multi : Expr → Expr → Prop
 
 
 def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
-| .unit => Multi e .unit
 | .entry l τ => Typing.Dynamic.Fin (.record [(l,e)]) τ
 | .path left right => ∀ e' , Typing.Dynamic.Fin e' left → Typing.Dynamic.Fin (.app e e') right
 | .unio left right => Typing.Dynamic.Fin e left ∨ Typing.Dynamic.Fin e right
@@ -152,7 +151,6 @@ mutual
     all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
   def Typing.Dynamic (δ : List (String × Typ)) (e : Expr) : Typ → Prop
-  | .unit => Multi e .unit
   | .entry l τ => Typing.Dynamic δ (.record [(l,e)]) τ
   | .path left right => ∀ e' , Typing.Dynamic δ e' left → Typing.Dynamic δ (.app e e') right
   | .unio left right => Typing.Dynamic δ e left ∨ Typing.Dynamic δ e right

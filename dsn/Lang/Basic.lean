@@ -15,7 +15,6 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 inductive Typ
 | var : String → Typ
-| unit -- TODO: remove this type; replace with TOP
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
 | unio :  Typ → Typ → Typ
@@ -51,9 +50,6 @@ mutual
         cases d with
         | isFalse => apply isFalse ; simp [*]
         | isTrue => apply isTrue; simp [*]
-      | _ => apply isFalse ; simp
-    | .unit => by cases right with
-      | unit => apply isTrue; simp
       | _ => apply isFalse ; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -164,7 +160,6 @@ mutual
   | _, _ => .false
 
   def Typ.beq : Typ → Typ → Bool
-  | .unit, .unit => .true
   | .var idl, .var idr => idl == idr
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .path x y, .path p q => Typ.beq x p && Typ.beq y q
@@ -203,7 +198,6 @@ mutual
     apply ListSubtyping.beq_eq_true
 
   lemma Typ.beq_eq_true : ∀ t : Typ, Typ.beq t t = true
-  | .unit => by rfl
   | .var id => by
     unfold Typ.beq
     simp
@@ -278,9 +272,6 @@ mutual
     fun left right => match left with
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .unit => by cases right with
-      | unit => unfold Typ.beq; simp
       | _ => unfold Typ.beq; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -401,10 +392,29 @@ def wrap (content : Std.Format) (p threshold : Nat) : Std.Format :=
 
 #print Fin
 
+
+def Typ.bot := Typ.all ["T"] .nil (Typ.var "T")
+def Typ.top := Typ.exi ["T"] .nil (Typ.var "T")
+
+def Typ.is_top : Typ → Bool
+| .exi [id] [] (.var id') => id == id'
+| _ => .false
+
+def Typ.is_bot : Typ → Bool
+| .all [id] [] (.var id') => id == id'
+| _ => .false
+
+def Typ.is_pair : Typ → Bool
+| .inter (.entry "left" _) (.entry "right" _) => .true
+| .inter (.entry "right" _) (.entry "left" _) => .true
+| _ => .false
+
+def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right" right)
+
 #check List.map
 #eval (String.intercalate (" ") ["a", "b"])
 mutual
-  def ListSubtyping.repr : ListSubtyping → Std.Format
+  partial def ListSubtyping.repr : ListSubtyping → Std.Format
   | [] => ""
   | (l,r) :: [] =>
       group (
@@ -418,10 +428,13 @@ mutual
       )
 
 
-  def Typ.reprPrec : Typ → Nat → Std.Format
+  partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .unit, _ => "@" -- TODO: replace with "()"
-  | .entry l body, _  => "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
+  | .entry l body, _  =>
+    if (Typ.is_top body) then
+      "<" ++ l ++ "/>"
+    else
+      "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
   | .path left right, p =>
     let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
     group (wrap content p 50)
@@ -430,8 +443,16 @@ mutual
     let content := Typ.reprPrec left 61 ++ " |" ++ line ++ Typ.reprPrec right 60
     group (wrap content p 60)
   | .inter left right, p =>
-    let content := Typ.reprPrec left 81 ++ " &" ++ line ++ Typ.reprPrec right 80
-    group (wrap content p 80)
+    match left, right with
+    | (.entry "left" l), (.entry "right" r) =>
+      let content := Typ.reprPrec l 91 ++ " *" ++ line ++ Typ.reprPrec r 90
+      group (wrap content p 90)
+    | (.entry "right" r), (.entry "left" l) =>
+      let content := Typ.reprPrec l 91 ++ " *" ++ line ++ Typ.reprPrec r 90
+      group (wrap content p 90)
+    | _, _ =>
+      let content := Typ.reprPrec left 81 ++ " &" ++ line ++ Typ.reprPrec right 80
+      group (wrap content p 80)
   | .diff left right, _ =>
     let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
     group content
@@ -523,13 +544,6 @@ instance : Repr ListTyping where
   reprPrec t _ := group ("[typings|" ++ line ++ nest 2 (ListTyping.repr t) ++ " ]")
 
 
-
-
-
-def Typ.bot := Typ.all ["T"] .nil (Typ.var "T")
-def Typ.top := Typ.exi ["T"] .nil (Typ.var "T")
-def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right" right)
-
 instance : BEq (Typ × Typ) where
   -- beq a b := a.fst == b.fst && a.snd == b.snd
   beq | (a,b), (c,d) => a == c && b == d
@@ -538,7 +552,6 @@ instance : BEq (Typ × Typ) where
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
 | fvar : String → Typ.Bruijn
-| unit
 | entry : String → Typ.Bruijn → Typ.Bruijn
 | path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
 | unio :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
@@ -561,7 +574,6 @@ mutual
   | _, _ => .false
 
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
-  | .unit, .unit => .true
   | .bvar il, .bvar ir => il == ir
   | .fvar idl, .fvar idr => idl == idr
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
@@ -602,7 +614,6 @@ mutual
   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
   | .var id =>
     if id ∈ bounds then [id] else []
-  | .unit => []
   | .entry _ t =>
     Typ.ordered_bound_vars bounds t
   | .path left right =>
@@ -653,7 +664,6 @@ mutual
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
-  | .unit => []
   | .entry _ body => Typ.free_vars body
   | .path p q => Typ.free_vars p ∪ Typ.free_vars q
   | .unio l r => Typ.free_vars l ∪ Typ.free_vars r
@@ -685,7 +695,6 @@ mutual
     match List.firstIndexOf id bids with
     | .none => .fvar id
     | .some i => .bvar (base + i)
-  | .unit => .unit
   | .entry l body => .entry l (Typ.toBruijn base bids body)
   | .path left right =>
     .path
@@ -704,13 +713,13 @@ mutual
     (Typ.toBruijn base bids left)
     (Typ.toBruijn base bids right)
     | .all ids subtypings body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) subtypings)
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
       let n := (List.length bids')
       .all n
       (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
       (Typ.toBruijn (n + base) (bids' ++ bids) body)
     | .exi ids subtypings body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.unit,body) subtypings)
+      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
       let n := (List.length bids')
       .all n
       (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
@@ -728,7 +737,6 @@ mutual
 
   def Typ.size : Typ → Nat
   | .var id => 1
-  | .unit => 1
   | .entry l body => Typ.size body + 1
   | .path left right => Typ.size left + Typ.size right + 1
   | .unio left right => Typ.size left + Typ.size right + 1
@@ -784,7 +792,6 @@ mutual
   | .var id => match find id δ with
     | .none => .var id
     | .some t => t
-  | .unit => .unit
   | .entry l body => .entry l (Typ.sub δ body)
   | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
   | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
@@ -828,7 +835,6 @@ mutual
       b == .true
     else
       .true
-  | .unit => .true
   | .entry _ body =>
     Typ.Monotonic.decide id b body
   | .path left right =>
@@ -852,7 +858,7 @@ mutual
 
   | .exi ids subtypings body =>
     ids.contains id || (
-      ListSubtyping.Monotonic.Either.decide subtypings (.diff .unit body) ids &&
+      ListSubtyping.Monotonic.Either.decide subtypings (.diff .top body) ids &&
       Typ.Monotonic.decide id b body
     )
 
@@ -882,7 +888,6 @@ mutual
   inductive Typ.Monotonic : String → Bool → Typ → Prop
   | var id : Typ.Monotonic id true (.var id)
   | varskip id b id' : id ≠ id' → Typ.Monotonic id b (.var id')
-  | unit id b : Typ.Monotonic id b .unit
   | entry id b l body : Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
   | path id b left right :
     Typ.Monotonic id (not b) left →
@@ -911,9 +916,13 @@ mutual
     id ∈ ids →
     Typ.Monotonic id b (.all ids subtypings body)
 
+  | bot id b t :
+    Typ.is_bot t →
+    Typ.Monotonic id b t
+
   | exi id b ids subtypings body :
     id ∉ ids →
-    ListSubtyping.Monotonic.Either subtypings (.diff .unit body) ids →
+    ListSubtyping.Monotonic.Either subtypings (.diff .top body) ids →
     Typ.Monotonic id b body →
     Typ.Monotonic id b (.exi ids subtypings body)
 
@@ -921,8 +930,13 @@ mutual
     id ∈ ids →
     Typ.Monotonic id b (.exi ids subtypings body)
 
+  | top id b t :
+    Typ.is_top t →
+    Typ.Monotonic id b t
+
   | lfp id b id' body : id ≠ id' → Typ.Monotonic id b body → Typ.Monotonic id b (.lfp id' body)
   | lfpskip id b body : Typ.Monotonic id b (.lfp id body)
+
 end
 
 
@@ -958,7 +972,6 @@ macro_rules
   (first
   | apply Typ.Monotonic.var
   | apply Typ.Monotonic.varskip; simp
-  | apply Typ.Monotonic.unit;
   | apply Typ.Monotonic.entry; Typ_Monotonic_prove
 
   | apply Typ.Monotonic.path
@@ -978,10 +991,14 @@ macro_rules
     · prove_list_subtyping_monotonic_either
     · Typ_Monotonic_prove
   | apply Typ.Monotonic.allskip; simp
+  | apply Typ.Monotonic.bot
+    · rfl
   | apply Typ.Monotonic.exi
     · simp
     · prove_list_subtyping_monotonic_either
     · Typ_Monotonic_prove
+  | apply Typ.Monotonic.top
+    · rfl
   | apply Typ.Monotonic.lfp
     · simp
     · Typ_Monotonic_prove
@@ -992,17 +1009,24 @@ macro_rules
 example : Typ.Monotonic "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
   Typ_Monotonic_prove
 
-example : Typ.Monotonic "a" .true (.path .bot (.inter .unit (.var "a"))) := by
+example : Typ.Monotonic "a" .true (.path .bot (.inter .bot (.var "a"))) := by
+  Typ_Monotonic_prove
+
+
+example : Typ.Monotonic "a" .true (.exi ["G"] [] (.var "G")) := by
+  Typ_Monotonic_prove
+
+example : Typ.Monotonic "a" .true (.path .bot (.inter .top (.var "a"))) := by
   Typ_Monotonic_prove
   -- repeat (constructor; try simp)
 
 -- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
 --   Typ_Monotonic_prove
 
-example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .bot) := by
+example : Typ.Monotonic "a" .false (.path (.inter .bot (.var "a")) .bot) := by
   Typ_Monotonic_prove
 
-example : Typ.Monotonic "a" .false (.path (.inter .unit (.var "a")) .top) := by
+example : Typ.Monotonic "a" .false (.path (.inter .top (.var "a")) .top) := by
   Typ_Monotonic_prove
 
 
@@ -1043,6 +1067,12 @@ deriving Repr
 
 def Expr.pair (left : Expr) (right : Expr) : Expr :=
     .record [("left", left), ("right", right)]
+
+def Expr.is_pair : Expr → Bool
+| .record [( "left", _), ("right", _)] => .true
+| .record [( "right", _), ("left", _)] => .true
+| _ => .false
+
 
 def Expr.proj (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
@@ -1095,11 +1125,13 @@ syntax "(" ident ":" typ ")" typings : typings
 -- syntax "[" typings "]" : box_typings
 
 syntax ident : typ
-syntax "@" : typ -- TODO: replace with "()"
 syntax:50 typ:51 "->" typ:50 : typ
 syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
+syntax:90 typ:91 "*" typ:90 : typ
+
 syntax "<" ident ">" typ:90 : typ
+syntax "<" ident "/>" : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
 syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
@@ -1119,6 +1151,9 @@ syntax typ typs : typs
 -- syntax "[" typs "]" : box_typs
 
 
+
+syntax "<" ident "/>" : frame
+syntax "<" ident "/>" frame : frame
 syntax "<" ident ">" pat : frame
 syntax "<" ident ">" pat frame : frame
 
@@ -1128,6 +1163,8 @@ syntax frame : pat
 syntax ident ";" pat : pat
 
 
+syntax "<" ident "/>" : record
+syntax "<" ident "/>" record : record
 syntax "<" ident ">" expr : record
 syntax "<" ident ">" expr record : record
 
@@ -1251,11 +1288,12 @@ macro_rules
 
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
-| `([typ| @ ]) => `(Typ.unit)
+| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] [typ| TOP])
 | `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
 | `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
 | `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
 | `([typ| $x:typ & $y:typ ]) => `(Typ.inter [typ| $x] [typ| $y])
+| `([typ| $x:typ * $y:typ ]) => `(Typ.pair [typ| $x] [typ| $y])
 | `([typ| $x:typ \ $y:typ ]) => `(Typ.diff [typ| $x] [typ| $y])
 | `([typ| ALL [ $ps:ids ] [ $qs:subtypings ] $t:typ ]) =>
   `(Typ.all [ids| $ps] [subtypings| $qs] [typ| $t])
@@ -1287,6 +1325,8 @@ macro_rules
 
 
 macro_rules
+| `([frame| <$i:ident/> ]) => `(([id| $i], [pattern| @]) :: [])
+| `([frame| <$i:ident/> $pr:frame ]) => `(([id| $i], [pattern| @]) :: [frame| $pr])
 | `([frame| <$i:ident> $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
 | `([frame| <$i:ident> $p:pat $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
 
@@ -1297,6 +1337,8 @@ macro_rules
 | `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
 
 macro_rules
+| `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])
+| `([record| <$i:ident/> $er:record ]) => `(([id| $i], [expr| @]) :: [record| $er])
 | `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
 | `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
 

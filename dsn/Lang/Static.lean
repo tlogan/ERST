@@ -196,7 +196,6 @@ macro_rules
 def Typ.is_pattern (tops : List String) : Typ → Bool
   | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
   | .var id => id ∈ tops
-  | .unit => true
   | .entry _ body => Typ.is_pattern tops body
   | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
   | _ => false
@@ -204,7 +203,6 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 def Typ.height : Typ → Option Nat
   | .exi _ [] body => Typ.height body
   | .var _ => return 1
-  | .unit => return 1
   | .entry _ body => do
     return 1 + (← Typ.height body)
   | .inter left right => do
@@ -229,7 +227,6 @@ mutual
     smaller == bigger || Typ.struct_less_than smaller bigger
 
   def Typ.struct_less_than : Typ → Typ → Bool
-    | (.var _), .unit => .true
     | (.entry ll tl), (.entry lr tr) => ll == lr && Typ.struct_less_than tl tr
     | tl, (.entry _ tr) => tl == tr || Typ.struct_less_than tl tr
 
@@ -243,6 +240,7 @@ mutual
       let bs := ListSubtyping.bounds id .true qs
       ListSubtyping.var_restricted id qs &&
       ListTyp.struct_less_than bs body
+    | (.var _), t => Typ.is_top t
     | _, _ => .false
 end
 
@@ -392,31 +390,34 @@ def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
 
 mutual
   -- NOTE: check needs to be complete and well founded
-  def Subtyping.check (Θ : List String) (Δ : List (Typ × Typ)) : Typ → Typ → Bool
-  | .unit, .unit => true
-  | .entry l body, .entry l' body' =>
-    l = l' && Subtyping.check Θ Δ body body'
+  def Subtyping.check
+    (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
+  :=
+    ((Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper)) || match lower, upper with
+    | .entry l body, .entry l' body' =>
+      l = l' && Subtyping.check skolems assums body body'
 
-  | _, .var id =>
-    if id ∉ Θ then
-      let i := Typ.interpret_one id .false Δ
-      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
-    else
-      .false
-  | lower, .inter left right =>
-    Subtyping.check Θ Δ lower left && Subtyping.check Θ Δ lower right
-  | lower, .exi _ [] body => Subtyping.check Θ Δ lower body
+    | _, .var id =>
+      if id ∉ skolems then
+        let i := Typ.interpret_one id .false assums
+        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
+      else
+        .false
+    | lower, .inter left right =>
+      Subtyping.check skolems assums lower left && Subtyping.check skolems assums lower right
+    | lower, .exi _ [] body => Subtyping.check skolems assums lower body
 
-  | .var id, _ =>
-    if id ∈ Θ then
-      let i := Typ.interpret_one id .true Δ
-      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
-    else
-      .false
-  | .inter left right, upper =>
-    Subtyping.check Θ Δ left upper || Subtyping.check Θ Δ right upper
-  | .exi ids [] body, upper => Subtyping.check (ids ∪ Θ) Δ body upper
-  | lower, _ =>  (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
+    | .var id, _ =>
+      if id ∈ skolems then
+        let i := Typ.interpret_one id .true assums
+        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+      else
+        .false
+    | .inter left right, upper =>
+      Subtyping.check skolems assums left upper || Subtyping.check skolems assums right upper
+    | .exi ids [] body, upper => Subtyping.check (ids ∪ skolems) assums body upper
+    | lower, _ =>
+      (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
 end
 
 
@@ -431,7 +432,7 @@ inductive PatLifting.Static
   ((.var tid, Typ.top) :: Δ)  ((id, .var tid) :: (remove id Γ))
 
 | unit Δ Γ :
-  PatLifting.Static Δ Γ .unit .unit Δ Γ
+  PatLifting.Static Δ Γ .unit .top Δ Γ
 
 | record_nil Δ Γ :
   PatLifting.Static Δ Γ (.record []) .top Δ Γ
@@ -470,7 +471,7 @@ mutual
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     return (t, Δ', Γ')
-  | .unit => return (Typ.unit, Δ, Γ)
+  | .unit => return (Typ.top, Δ, Γ)
   | .record items => ListPatLifting.Static.compute Δ Γ items
 end
 
@@ -1161,8 +1162,14 @@ macro_rules
 
       | apply StaticSubtyping.diff_intro
         · rfl
-        · simp [Subtyping.check, Typ.toBruijn]; rfl
-        · simp [Subtyping.check, Typ.toBruijn]; rfl
+        · simp [Subtyping.check, Typ.toBruijn]
+          · apply And.intro
+            · rfl
+            · rfl
+        · simp [Subtyping.check, Typ.toBruijn]
+          · apply And.intro
+            · rfl
+            · rfl
         · StaticSubtyping_prove
 
       | apply StaticSubtyping.diff_fold_intro
@@ -1297,7 +1304,7 @@ mutual
     partial def Typing.Static.infer
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
     : Expr → Lean.MetaM (List Zone)
-      | .unit => return [⟨Θ, Δ, .unit⟩]
+      | .unit => return [⟨Θ, Δ, .top⟩]
       | .var x =>  match find x Γ with
         | .some t => return [⟨Θ, Δ, t⟩]
         | .none => failure
@@ -1411,7 +1418,7 @@ mutual
   inductive Typing.Static
   : List String → List (Typ × Typ) → List (String × Typ)
   → Expr → Typ → List String → List (Typ × Typ) → Prop
-    | unit Θ Δ Γ : Typing.Static Θ Δ Γ .unit .unit Θ Δ
+    | unit Θ Δ Γ : Typing.Static Θ Δ Γ .unit .top Θ Δ
     | var Θ Δ Γ x t :
       find x Γ = .some t →
       Typing.Static Θ Δ Γ (.var x) t Θ Δ
