@@ -311,13 +311,19 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
   let r := ListZone.pack pids .true zones
   Typ.rator b l r
 
-def Subtyping.restricted (Θ : List String) (Δ : List (Typ × Typ)) (lower upper : Typ) : Bool :=
+def Subtyping.restricted (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool :=
   Typ.is_pattern [] upper ||
   (match lower, upper with
   | .var id, _ =>
-    if id ∉ Θ then
-      let i := Typ.interpret_one id .true Δ
+    if id ∉ skolems then
+      let i := Typ.interpret_one id .true assums
       (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+    else
+      .false
+  | _, .var id =>
+    if id ∉ skolems then
+      let i := Typ.interpret_one id .false assums
+      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
     else
       .false
   | _, _ => .false
@@ -561,7 +567,7 @@ mutual
         let lowers_id := ListSubtyping.bounds id .true Δ
         let trans := lowers_id.map (fun lower_id => (lower_id, t))
         (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
-          return (Θ', (t, .var id) :: Δ')
+          return (Θ', (.var id, t) :: Δ')
         )
       else
         let uppers_id := ListSubtyping.bounds id .false Δ
@@ -1110,7 +1116,7 @@ macro_rules
         · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_intro
-        · simp
+        · apply List.mem_of_elem_eq_true; rfl
         · apply lower_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
           · simp [Typ.BEq_eq_true]; rfl
@@ -1125,7 +1131,7 @@ macro_rules
         · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_elim
-        · simp
+        · apply List.mem_of_elem_eq_true; rfl
         · apply upper_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
           · simp [Typ.BEq_eq_true]; rfl

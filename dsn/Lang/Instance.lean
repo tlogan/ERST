@@ -127,19 +127,11 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] []
   PatLifting_Static_prove
 
 
-example : StaticSubtyping [] []
-  [typ| @]
-  [typ| @]
-  [] []
-:= by
-  StaticSubtyping_prove
-
-#eval [typ| <uno> @ | <dos> @]
-example : StaticSubtyping [] [] [typ| <uno> @] [typ| <uno> @ | <dos> @] [] [] := by
-  StaticSubtyping_prove
+----------------------------------------------------
 
 #eval [subtypings| (T <: <uno> @) ]
-example : StaticSubtyping [] []
+example : StaticSubtyping
+  [] []
   [typ| T] [typ| <uno> @]
   [ids| ] [subtypings| (T <: <uno> @) ]
 := by StaticSubtyping_prove
@@ -150,10 +142,162 @@ example : StaticSubtyping [] []
   [ids| ] [subtypings| (LFP[R] ( (<zero> @) | (<succ> <succ> R)) <: T) ]
 := by StaticSubtyping_prove
 
+----------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| @]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| @]
+  [ids| ] [subtypings|  ]
+:= by StaticSubtyping_prove
+
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| <label> <uno> @ ]
+  [typ| <label> (<uno> @ | <dos> @) ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| <label> <uno> @ ]
+  [typ| <label> (<uno> @ | <dos> @) ]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| (<uno> @ | <dos> @) -> <tres> @ ]
+  [typ| <uno> @  -> (<dos> @ | <tres> @)]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| (<uno> @ | <dos> @) -> <tres> @ ]
+  [typ| <uno> @  -> (<dos> @ | <tres> @)]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @  -> (<dos> @ & <tres> @)]
+  [typ| (<uno> @ & <dos> @) -> <tres> @]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @  -> (<dos> @ & <tres> @)]
+  [typ| (<uno> @ & <dos> @) -> <tres> @]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| (<uno> @ & <dos> @) | (<uno> @ & <tres> @)]
+  [typ| <uno> @ ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| (<uno> @ & <dos> @) | (<uno> @ & <tres> @)]
+  [typ| <uno> @ ]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| EXI[T] [(T <: <uno> @)] T]
+  [typ| <uno> @ | <dos> @]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| EXI[T] [(T <: <uno> @)] T]
+  [typ| <uno> @ | <dos> @]
+  [ids| T] [subtypings| (T <: <uno> @)]
+:= by
+  StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @ ]
+  [typ| (<uno> @ | <dos> @) & (<uno> @ | <tres> @)]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @ ]
+  [typ| (<uno> @ | <dos> @) & (<uno> @ | <tres> @)]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval Subtyping.restricted [] [] [typ| <uno> @] [typ| T]
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @ & <dos> @]
+  [typ| ALL[T] [(<uno> @ <: T)] T]
+
+example : StaticSubtyping
+  [ids| ] [subtypings|  ]
+  [typ| <uno> @ & <dos> @]
+  [typ| ALL[T] [(<uno> @ <: T)] T]
+  [ids| T] [subtypings| (<uno> @ <: T)]
+:= by
+  StaticSubtyping_prove
+
+-----------------------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| (<uno> @ & <dos> @ <: T) (T <: <uno> @)]
+  [typ| T]
+  [typ| <dos> @]
+
+
+example : StaticSubtyping
+  [ids| ] [subtypings| (<uno> @ & <dos> @ <: T) (T <: <uno> @)]
+  [typ| T]
+  [typ| <dos> @]
+  [ids| ] [subtypings| (T <: <dos> @) (<uno> @ & <dos> @ <: T) (T <: <uno> @)]
+:= by
+  StaticSubtyping_prove
+
+
+-----------------------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| (<uno> @ <: T) (T <: <uno> @ | <dos> @)]
+  [typ| <dos> @]
+  [typ| T]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| (<uno> @ <: T) (T <: <uno> @ | <dos> @)]
+  [typ| <dos> @]
+  [typ| T]
+  [ids| ] [subtypings| (<dos> @ <: T) (<uno> @ <: T) (T <: <uno> @ | <dos> @)]
+:= by
+  StaticSubtyping_prove
+
+-----------------------------------------------------
+
 #eval StaticSubtyping.solve
   [ids| T] [subtypings| (X <: T)]
   [typ| @]
   [typ| T]
+
 
 example : StaticSubtyping
   [ids| T] [subtypings| (X <: T)]
@@ -163,60 +307,19 @@ example : StaticSubtyping
 := by
   StaticSubtyping_prove
 
+-----------------------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| (T <: X)]
+  [typ| T]
+  [typ| @]
+
 example : StaticSubtyping
   [ids| T] [subtypings| (T <: X)]
   [typ| T]
   [typ| @]
   [ids| T] [subtypings| (T <: @) (T <: X)]
 := by
-  StaticSubtyping_prove
-
-#eval StaticSubtyping.solve
-  [ids| ] [subtypings| ]
-  [typ| @]
-  [typ| @]
-
-example : StaticSubtyping
-  [ids| ] [subtypings| ]
-  [typ| @]
-  [typ| @]
-  [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
-
----------------------------------------
-
-#eval StaticSubtyping.solve
-  [ids| ] [subtypings| ]
-  [typ| <succ> <succ> <zero> @]
-  [typ| LFP[R]
-    <zero> @ |
-    <succ> R
-  ]
-
-example : StaticSubtyping
-  [ids| ] [subtypings| ]
-  [typ| <succ> <succ> <zero> @]
-  [typ| LFP[R]
-    <zero> @ |
-    <succ> R
-  ]
-  [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
-
----------------------------------------
-
-#eval StaticSubtyping.solve
-  [ids| ] [subtypings| ]
-  [typ| @]
-  [typ| EXI[T] [(T <: @)] T ]
-
-example : StaticSubtyping
-  [ids| ] [subtypings| ]
-  [typ| @]
-  [typ| EXI[T] [(T <: @)] T ]
-  [ids| ] [subtypings| (T33 <: @) (@ <: T33) ]
-:= by
-  StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
   StaticSubtyping_prove
 
 ---------------------------------------
@@ -248,3 +351,35 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
+
+-- TODO: more subtyping instances
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| <succ> <succ> <zero> @]
+  [typ| LFP[R] <zero> @ | <succ> R ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| <succ> <succ> <zero> @]
+  [typ| LFP[R] <zero> @ | <succ> R ]
+  [ids| ] [subtypings|  ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| EXI[T] [(T <: @)] T ]
+
+example : StaticSubtyping
+  [ids| ] [subtypings| ]
+  [typ| @]
+  [typ| EXI[T] [(T <: @)] T ]
+  [ids| ] [subtypings| (T33 <: @) (@ <: T33) ]
+:= by
+  StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
+  StaticSubtyping_prove
