@@ -15,7 +15,7 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 inductive Typ
 | var : String → Typ
-| unit
+| unit -- TODO: remove this type; replace with TOP
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
 | unio :  Typ → Typ → Typ
@@ -420,7 +420,7 @@ mutual
 
   def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .unit, _ => "@"
+  | .unit, _ => "@" -- TODO: replace with "()"
   | .entry l body, _  => "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
   | .path left right, p =>
     let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
@@ -1095,7 +1095,7 @@ syntax "(" ident ":" typ ")" typings : typings
 -- syntax "[" typings "]" : box_typings
 
 syntax ident : typ
-syntax "@" : typ
+syntax "@" : typ -- TODO: replace with "()"
 syntax:50 typ:51 "->" typ:50 : typ
 syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ

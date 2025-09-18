@@ -127,22 +127,9 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] []
   PatLifting_Static_prove
 
 
-----------------------------------------------------
-
-#eval [subtypings| (T <: <uno> @) ]
-example : StaticSubtyping
-  [] []
-  [typ| T] [typ| <uno> @]
-  [ids| ] [subtypings| (T <: <uno> @) ]
-:= by StaticSubtyping_prove
-
-example : StaticSubtyping [] []
-  [typ| LFP[R] ( (<zero> @) | (<succ> <succ> R))]
-  [typ| TOP \ (<succ> <zero> @)]
-  [ids| ] [subtypings| (LFP[R] ( (<zero> @) | (<succ> <succ> R)) <: T) ]
-:= by StaticSubtyping_prove
-
-----------------------------------------
+---------------------------------------
+----- reflexivity
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
@@ -157,6 +144,8 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 
+---------------------------------------
+----- entry preservation (over union)
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -172,6 +161,8 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
+----- implication preservation (over union)
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings|  ]
@@ -185,6 +176,8 @@ example : StaticSubtyping
   [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
 
+---------------------------------------
+----- implication preservation (over intersection)
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -200,6 +193,8 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
+----- union elim
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings|  ]
@@ -213,6 +208,8 @@ example : StaticSubtyping
   [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
 
+---------------------------------------
+----- existential elim
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -225,9 +222,10 @@ example : StaticSubtyping
   [typ| EXI[T] [(T <: <uno> @)] T]
   [typ| <uno> @ | <dos> @]
   [ids| T] [subtypings| (T <: <uno> @)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
+---------------------------------------
+----- intersection intro
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -242,6 +240,8 @@ example : StaticSubtyping
   [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
 
+---------------------------------------
+----- universal intro
 ---------------------------------------
 
 #eval Subtyping.restricted [] [] [typ| <uno> @] [typ| T]
@@ -256,10 +256,11 @@ example : StaticSubtyping
   [typ| <uno> @ & <dos> @]
   [typ| ALL[T] [(<uno> @ <: T)] T]
   [ids| T] [subtypings| (<uno> @ <: T)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
------------------------------------------------------
+---------------------------------------
+----- placeholder elim
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| (<uno> @ & <dos> @ <: T) (T <: <uno> @)]
@@ -272,11 +273,12 @@ example : StaticSubtyping
   [typ| T]
   [typ| <dos> @]
   [ids| ] [subtypings| (T <: <dos> @) (<uno> @ & <dos> @ <: T) (T <: <uno> @)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
 
------------------------------------------------------
+---------------------------------------
+----- placeholder intro
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| (<uno> @ <: T) (T <: <uno> @ | <dos> @)]
@@ -288,10 +290,11 @@ example : StaticSubtyping
   [typ| <dos> @]
   [typ| T]
   [ids| ] [subtypings| (<dos> @ <: T) (<uno> @ <: T) (T <: <uno> @ | <dos> @)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
------------------------------------------------------
+---------------------------------------
+----- skolem placeholder intro
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| T] [subtypings| (X <: T)]
@@ -304,10 +307,11 @@ example : StaticSubtyping
   [typ| @]
   [typ| T]
   [ids| T] [subtypings| (@ <: T) (X <: T)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
------------------------------------------------------
+---------------------------------------
+----- skolem placeholder elim
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| T] [subtypings| (T <: X)]
@@ -319,9 +323,10 @@ example : StaticSubtyping
   [typ| T]
   [typ| @]
   [ids| T] [subtypings| (T <: @) (T <: X)]
-:= by
-  StaticSubtyping_prove
+:= by StaticSubtyping_prove
 
+---------------------------------------
+----- skolem elim
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -337,6 +342,8 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
+----- skolem intro
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| T] [subtypings| ( <uno> @ <: T) ]
@@ -347,13 +354,15 @@ example : StaticSubtyping
   [ids| T] [subtypings| (<uno> @ <: T) ]
   [typ| <uno> @ & <dos> @]
   [typ| T]
-  [ids| T ] [subtypings| (<uno> @ <: T) ]
+  [ids| T] [subtypings| (<uno> @ <: T) ]
 := by StaticSubtyping_prove
 
 ---------------------------------------
 
 -- TODO: more subtyping instances
 
+---------------------------------------
+----- least fixed point inflate intro
 ---------------------------------------
 
 #eval StaticSubtyping.solve
@@ -369,6 +378,8 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
+----- existential intro
+---------------------------------------
 
 #eval StaticSubtyping.solve
   [ids| ] [subtypings| ]
@@ -383,3 +394,20 @@ example : StaticSubtyping
 := by
   StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: @)] T33 ]
   StaticSubtyping_prove
+
+---------------------------------------
+----- difference intro
+---------------------------------------
+
+example : StaticSubtyping
+  [] []
+  [typ| T] [typ| <uno> @]
+  [ids| ] [subtypings| (T <: <uno> @) ]
+:= by StaticSubtyping_prove
+
+example : StaticSubtyping
+  [] []
+  [typ| LFP[R] ( (<zero> @) | (<succ> <succ> R))]
+  [typ| TOP \ (<succ> <zero> @)]
+  [ids| ] [subtypings| (LFP[R] ( (<zero> @) | (<succ> <succ> R)) <: T) ]
+:= by StaticSubtyping_prove
