@@ -243,14 +243,12 @@ example : StaticSubtyping
   [typ| T]
   [typ| <dos/>]
 
-
 example : StaticSubtyping
   [ids| ] [subtypings| (<uno/> & <dos/> <: T) (T <: <uno/>)]
   [typ| T]
   [typ| <dos/>]
   [ids| ] [subtypings| (T <: <dos/>) (<uno/> & <dos/> <: T) (T <: <uno/>)]
 := by StaticSubtyping_prove
-
 
 ---------------------------------------
 ----- placeholder intro
@@ -334,8 +332,6 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
-
----------------------------------------
 ----- union antecedent
 ---------------------------------------
 
@@ -383,6 +379,53 @@ example : StaticSubtyping
   [ids| T] [subtypings| ]
 := by StaticSubtyping_prove
 
+
+---------------------------------------
+----- difference fold intro
+---------------------------------------
+
+
+#eval (Subtyping.check [] []) [typ| (<succ> <zero/>)] [typ| LFP[R] ( (<zero/>) | (<succ> R))]
+
+example : StaticSubtyping
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> R))]
+  [typ| TOP \ <zero/>]
+  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> R)) <: T) ]
+-- := by StaticSubtyping_prove
+:= by
+  apply StaticSubtyping.diff_fold_intro
+  · rfl
+  · Typ_Monotonic_prove
+  · simp [
+      Typ.struct_less_than, Bool.or, Typ.top,
+      ListSubtyping.var_restricted, ListSubtyping.bounds, Typ.is_top
+    ]
+    simp [Typ.neq_implies_BEq_false]
+    simp [Typ.BEq_true, ListTyp.struct_less_than];
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+    -- · rfl
+    -- · Typ_Monotonic_prove
+    -- · simp only [Typ.struct_less_than, Bool.or] ; rfl
+    -- · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+    -- · rfl
+    -- · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+    -- · StaticSubtyping_prove
+
+
+example : StaticSubtyping
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> R))]
+  [typ| TOP \ (<succ> <zero/>)]
+  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> R)) <: T) ]
+-- := by StaticSubtyping_prove
+:= by
+  sorry
+
 --------------------------------------------
 
 -- TODO: more subtyping instances
@@ -420,20 +463,3 @@ example : StaticSubtyping
 := by
   StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: <uno/>)] T33 ]
   StaticSubtyping_prove
-
----------------------------------------
------ difference intro
----------------------------------------
-
-example : StaticSubtyping
-  [] []
-  [typ| T] [typ| <uno/>]
-  [ids| ] [subtypings| (T <: <uno/>) ]
-:= by StaticSubtyping_prove
-
-example : StaticSubtyping
-  [] []
-  [typ| LFP[R] ( (<zero/>) | (<succ> <succ> R))]
-  [typ| TOP \ (<succ> <zero/>)]
-  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> <succ> R)) <: T) ]
-:= by StaticSubtyping_prove

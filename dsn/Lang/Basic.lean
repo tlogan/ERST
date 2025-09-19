@@ -348,17 +348,25 @@ mutual
 end
 
 
-lemma Typ.BEq_eq_true : ∀ t : Typ, (t == t) = true := by
+
+lemma Typ.BEq_true : ∀ t : Typ, (t == t) = true := by
   apply Typ.beq_eq_true
 
-lemma Typ.BEq_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
+lemma Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
+  simp [Typ.BEq_true]
+
+
+lemma Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
   apply Typ.beq_implies_eq
 
+lemma Typ.neq_implies_BEq_false : ∀ l r : Typ, l ≠ r → (l == r) = false := by
+  intros l r h
+  contrapose h
+  simp_all
+  apply Typ.BEq_true_implies_eq
+  assumption
 
-lemma Typ.eq_implies_BEq : ∀  l r : Typ, (l = r) → (l == r) = true := by
-  intros l r p
-  simp [*]
-  apply Typ.BEq_eq_true
+
 
 
 open Std.Format

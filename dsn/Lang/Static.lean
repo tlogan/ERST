@@ -389,7 +389,7 @@ def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
   return Typ.combine .false ts
 
 mutual
-  -- NOTE: check needs to be complete and well founded
+  -- NOTE: check needs to be complete and well founded, but not sound
   def Subtyping.check
     (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
   :=
@@ -397,27 +397,28 @@ mutual
     | .entry l body, .entry l' body' =>
       l = l' && Subtyping.check skolems assums body body'
 
-    | _, .var id =>
-      if id ∉ skolems then
-        let i := Typ.interpret_one id .false assums
-        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
-      else
-        .false
+    -- | _, .var id =>
+    --   if id ∉ skolems then
+    --     let i := Typ.interpret_one id .false assums
+    --     (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
+    --   else
+    --     .true
     | lower, .inter left right =>
       Subtyping.check skolems assums lower left && Subtyping.check skolems assums lower right
     | lower, .exi _ [] body => Subtyping.check skolems assums lower body
 
-    | .var id, _ =>
-      if id ∈ skolems then
-        let i := Typ.interpret_one id .true assums
-        (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
-      else
-        .false
+    -- | .var id, _ =>
+    --   if id ∈ skolems then
+    --     let i := Typ.interpret_one id .true assums
+    --     (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+    --   else
+    --     .true
     | .inter left right, upper =>
       Subtyping.check skolems assums left upper || Subtyping.check skolems assums right upper
     | .exi ids [] body, upper => Subtyping.check (ids ∪ skolems) assums body upper
-    | lower, _ =>
-      (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
+    | _, _ => .true
+    -- | lower, _ =>
+    --   (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
 end
 
 
@@ -735,7 +736,7 @@ lemma lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
   intro m
   cases m with
   | head =>
-    simp [Typ.BEq_eq_true]
+    simp [Typ.BEq_true]
   | tail _ m'' =>
     cases (Typ.var id == upper) with
       | false =>
@@ -765,7 +766,7 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
   intro m
   cases m with
   | head =>
-    simp [Typ.BEq_eq_true]
+    simp [Typ.BEq_true]
   | tail _ m'' =>
     cases (Typ.var id == lower) with
     | false =>
@@ -791,7 +792,7 @@ lemma lower_bound_mem id cs t : ∀ ts,
   simp_all
   cases b : (Typ.var id == upper) with
   | true =>
-    apply Typ.BEq_implies_eq at b
+    apply Typ.BEq_true_implies_eq at b
     simp [*]
     intro c
     cases c with
@@ -822,7 +823,7 @@ lemma upper_bound_mem id cs t : ∀ ts,
   simp_all
   cases b : (Typ.var id == lower) with
   | true =>
-    apply Typ.BEq_implies_eq at b
+    apply Typ.BEq_true_implies_eq at b
     simp [*]
     intro c
     cases c with
@@ -1120,7 +1121,7 @@ macro_rules
         · apply List.mem_of_elem_eq_true; rfl
         · apply lower_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
-          · simp [Typ.BEq_eq_true]; rfl
+          · simp [Typ.BEq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
@@ -1135,7 +1136,7 @@ macro_rules
         · apply List.mem_of_elem_eq_true; rfl
         · apply upper_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
-          · simp [Typ.BEq_eq_true]; rfl
+          · simp [Typ.BEq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
