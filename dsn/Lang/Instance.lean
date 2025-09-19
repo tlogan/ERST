@@ -334,9 +334,56 @@ example : StaticSubtyping
 := by StaticSubtyping_prove
 
 ---------------------------------------
--- STYLE : @ : TOP
--- STYLE : <zero/> for <zero/>
--- [typ| LFP[R] <zero/> | <succ> R ]
+
+---------------------------------------
+----- union antecedent
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| ]
+  [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
+  [typ| <uno/> | <dos/> -> <tres/>]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| ]
+  [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
+  [typ| <uno/> | <dos/> -> <tres/>]
+  [ids| T] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+----- inter consequent
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| ]
+  [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
+  [typ| <uno/> -> <dos/> & <tres/>]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| ]
+  [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
+  [typ| <uno/> -> <dos/> & <tres/>]
+  [ids| T] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+----- entry inter content
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [ids| T] [subtypings| ]
+  [typ| <label> <uno/> & (<label> <dos/>)]
+  [typ| <label> (<uno/> & <dos/>)]
+
+example : StaticSubtyping
+  [ids| T] [subtypings| ]
+  [typ| <label> <uno/> & (<label> <dos/>)]
+  [typ| <label> (<uno/> & <dos/>)]
+  [ids| T] [subtypings| ]
+:= by StaticSubtyping_prove
+
+--------------------------------------------
 
 -- TODO: more subtyping instances
 
