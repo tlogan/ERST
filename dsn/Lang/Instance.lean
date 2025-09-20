@@ -384,47 +384,21 @@ example : StaticSubtyping
 ----- difference fold intro
 ---------------------------------------
 
-
-#eval (Subtyping.check [] []) [typ| (<succ> <zero/>)] [typ| LFP[R] ( (<zero/>) | (<succ> R))]
-
+--- if x is an even number then x ≠ 1
 example : StaticSubtyping
   [] []
-  [typ| LFP[R] ((<zero/>) | (<succ> R))]
-  [typ| TOP \ <zero/>]
-  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> R)) <: T) ]
--- := by StaticSubtyping_prove
-:= by
-  apply StaticSubtyping.diff_fold_intro
-  · rfl
-  · Typ_Monotonic_prove
-  · simp [
-      Typ.struct_less_than, Bool.or, Typ.top,
-      ListSubtyping.var_restricted, ListSubtyping.bounds, Typ.is_top
-    ]
-    simp [Typ.neq_implies_BEq_false]
-    simp [Typ.BEq_true, ListTyp.struct_less_than];
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-    -- · rfl
-    -- · Typ_Monotonic_prove
-    -- · simp only [Typ.struct_less_than, Bool.or] ; rfl
-    -- · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-    -- · rfl
-    -- · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-    -- · StaticSubtyping_prove
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| TOP \ <succ> <zero/>]
+  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> <succ> R)) <: T) ]
+:= by StaticSubtyping_prove
 
-
+--- if x is an even number then x ≠ 3
 example : StaticSubtyping
   [] []
-  [typ| LFP[R] ((<zero/>) | (<succ> R))]
-  [typ| TOP \ (<succ> <zero/>)]
-  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> R)) <: T) ]
--- := by StaticSubtyping_prove
-:= by
-  sorry
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| TOP \ <succ> <succ> <succ> <zero/>]
+  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> <succ> R)) <: T) ]
+:= by StaticSubtyping_prove
 
 --------------------------------------------
 

@@ -190,64 +190,64 @@ instance Typ.instanceBEq : BEq Typ where
 
 
 mutual
-  lemma ListSubtyping.beq_eq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
+  lemma ListSubtyping.refl_beq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
   | .nil => rfl
   | (lower,upper) :: cs' => by
     simp [ListSubtyping.beq]
-    simp [Typ.beq_eq_true]
-    apply ListSubtyping.beq_eq_true
+    simp [Typ.refl_beq_true]
+    apply ListSubtyping.refl_beq_true
 
-  lemma Typ.beq_eq_true : ∀ t : Typ, Typ.beq t t = true
+  lemma Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
   | .var id => by
     unfold Typ.beq
     simp
   | .entry l body => by
     unfold Typ.beq
     simp
-    apply Typ.beq_eq_true
+    apply Typ.refl_beq_true
   | .path x y => by
     unfold Typ.beq
     simp
     apply And.intro
-    ·  apply Typ.beq_eq_true
-    ·  apply Typ.beq_eq_true
+    ·  apply Typ.refl_beq_true
+    ·  apply Typ.refl_beq_true
   | .unio a b => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply Typ.beq_eq_true
-    · apply Typ.beq_eq_true
+    · apply Typ.refl_beq_true
+    · apply Typ.refl_beq_true
   | .inter a b => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply Typ.beq_eq_true
-    · apply Typ.beq_eq_true
+    · apply Typ.refl_beq_true
+    · apply Typ.refl_beq_true
   | .diff a b => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply Typ.beq_eq_true
-    · apply Typ.beq_eq_true
+    · apply Typ.refl_beq_true
+    · apply Typ.refl_beq_true
 
   | .all ids qs body => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply ListSubtyping.beq_eq_true
-    · apply Typ.beq_eq_true
+    · apply ListSubtyping.refl_beq_true
+    · apply Typ.refl_beq_true
 
   | .exi ids qs body => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply ListSubtyping.beq_eq_true
-    · apply Typ.beq_eq_true
+    · apply ListSubtyping.refl_beq_true
+    · apply Typ.refl_beq_true
 
   | .lfp id body => by
     unfold Typ.beq
     simp
-    apply Typ.beq_eq_true
+    apply Typ.refl_beq_true
 end
 
 
@@ -349,11 +349,11 @@ end
 
 
 
-lemma Typ.BEq_true : ∀ t : Typ, (t == t) = true := by
-  apply Typ.beq_eq_true
+lemma Typ.refl_BEq_true : ∀ t : Typ, (t == t) = true := by
+  apply Typ.refl_beq_true
 
 lemma Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
-  simp [Typ.BEq_true]
+  simp [Typ.refl_BEq_true]
 
 
 lemma Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by

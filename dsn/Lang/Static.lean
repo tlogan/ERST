@@ -405,6 +405,7 @@ mutual
     --     .true
     | lower, .inter left right =>
       Subtyping.check skolems assums lower left && Subtyping.check skolems assums lower right
+
     | lower, .exi _ [] body => Subtyping.check skolems assums lower body
 
     -- | .var id, _ =>
@@ -413,8 +414,17 @@ mutual
     --     (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
     --   else
     --     .true
+
+    | .unio left right, upper =>
+      (Subtyping.check skolems assums left upper) && (Subtyping.check skolems assums right upper)
+
+
     | .inter left right, upper =>
       Subtyping.check skolems assums left upper || Subtyping.check skolems assums right upper
+
+    | lower, .unio left right =>
+      Subtyping.check skolems assums lower left || Subtyping.check skolems assums lower right
+
     | .exi ids [] body, upper => Subtyping.check (ids ∪ skolems) assums body upper
     | _, _ => .true
     -- | lower, _ =>
@@ -736,7 +746,7 @@ lemma lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
   intro m
   cases m with
   | head =>
-    simp [Typ.BEq_true]
+    simp [Typ.refl_BEq_true]
   | tail _ m'' =>
     cases (Typ.var id == upper) with
       | false =>
@@ -766,7 +776,7 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
   intro m
   cases m with
   | head =>
-    simp [Typ.BEq_true]
+    simp [Typ.refl_BEq_true]
   | tail _ m'' =>
     cases (Typ.var id == lower) with
     | false =>
@@ -1121,7 +1131,7 @@ macro_rules
         · apply List.mem_of_elem_eq_true; rfl
         · apply lower_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
-          · simp [Typ.BEq_true]; rfl
+          · simp [Typ.refl_BEq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
@@ -1136,7 +1146,7 @@ macro_rules
         · apply List.mem_of_elem_eq_true; rfl
         · apply upper_bound_mem
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
-          · simp [Typ.BEq_true]; rfl
+          · simp [Typ.refl_BEq_true]; rfl
         · simp
         · StaticSubtyping_prove
 
@@ -1174,12 +1184,26 @@ macro_rules
         · StaticSubtyping_prove
 
       | apply StaticSubtyping.diff_fold_intro
-        · rfl
+        · reduce; rfl
         · Typ_Monotonic_prove
-        · simp only [Typ.struct_less_than, Bool.or] ; rfl
-        · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
-        · rfl
-        · simp [Typ.subfold, Typ.sub, Subtyping.check, Typ.toBruijn]; rfl
+        · simp [
+            Typ.struct_less_than, Typ.top, ListSubtyping.var_restricted,
+            ListSubtyping.bounds, ListTyp.struct_less_than, Typ.is_top,
+            Typ.refl_BEq_true
+          ]
+        · simp; reduce
+          simp [
+            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
+            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
+          ]; reduce
+          simp
+        · reduce; rfl
+        · simp; reduce
+          simp [
+            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
+            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
+          ]; reduce
+          simp
         · StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_inflate_intro
