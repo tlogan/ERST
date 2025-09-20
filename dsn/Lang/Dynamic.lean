@@ -154,6 +154,8 @@ mutual
   | .entry l τ => Typing.Dynamic δ (.record [(l,e)]) τ
   | .path left right => ∀ e' , Typing.Dynamic δ e' left → Typing.Dynamic δ (.app e e') right
   | .unio left right => Typing.Dynamic δ e left ∨ Typing.Dynamic δ e right
+  | .bot => False
+  | .top => True
   | .inter left right => Typing.Dynamic δ e left ∧ Typing.Dynamic δ e right
   | .diff left right => Typing.Dynamic δ e left ∧ ¬ (Typing.Dynamic δ e right)
   | .exi ids quals body =>

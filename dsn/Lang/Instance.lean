@@ -28,6 +28,31 @@ set_option pp.fieldNotation false
 
 #eval [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
 
+
+example : Typ.Monotonic "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
+  Typ_Monotonic_prove
+
+example : Typ.Monotonic "a" .true (.path .bot (.inter .bot (.var "a"))) := by
+  Typ_Monotonic_prove
+
+
+example : Typ.Monotonic "a" .true (.exi ["G"] [] (.var "G")) := by
+  Typ_Monotonic_prove
+
+example : Typ.Monotonic "a" .true (.path .bot (.inter .top (.var "a"))) := by
+  Typ_Monotonic_prove
+  -- repeat (constructor; try simp)
+
+-- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
+--   Typ_Monotonic_prove
+
+example : Typ.Monotonic "a" .false (.path (.inter .bot (.var "a")) .bot) := by
+  Typ_Monotonic_prove
+
+example : Typ.Monotonic "a" .false (.path (.inter .top (.var "a")) .top) := by
+  Typ_Monotonic_prove
+
+
 example : (if ("hello" == "hello") = true then 1 else 2) = 1 := by
   simp
 
@@ -193,12 +218,19 @@ example : StaticSubtyping
   [typ| EXI[T] [(T <: <uno/>)] T]
   [typ| <uno/> | <dos/>]
 
+#eval Typ.interpret_one "T" .true []
+
 example : StaticSubtyping
   [ids| ] [subtypings|  ]
   [typ| EXI[T] [(T <: <uno/>)] T]
   [typ| <uno/> | <dos/>]
   [ids| T] [subtypings| (T <: <uno/>)]
-:= by StaticSubtyping_prove
+-- := by StaticSubtyping_prove
+:= by
+  apply StaticSubtyping.exi_elim
+  · rfl
+  · StaticListSubtyping_prove
+  · StaticSubtyping_prove
 
 ---------------------------------------
 ----- intersection intro
@@ -379,17 +411,26 @@ example : StaticSubtyping
   [ids| T] [subtypings| ]
 := by StaticSubtyping_prove
 
+--------------------------------------------
+
+-- TODO: more subtyping instances
+-- TODO: lfp elim instances
 
 ---------------------------------------
------ difference fold intro
+----- lfp diff
 ---------------------------------------
+
+#eval StaticSubtyping.solve
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| TOP \ <succ> <zero/>]
 
 --- if x is an even number then x ≠ 1
 example : StaticSubtyping
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| TOP \ <succ> <zero/>]
-  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> <succ> R)) <: T) ]
+  [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
 
 --- if x is an even number then x ≠ 3
@@ -397,12 +438,19 @@ example : StaticSubtyping
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| TOP \ <succ> <succ> <succ> <zero/>]
-  [ids| ] [subtypings| (LFP[R] ( (<zero/>) | (<succ> <succ> R)) <: T) ]
+  [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
 
---------------------------------------------
+---------------------------------------
+----- diff intro
+---------------------------------------
 
--- TODO: more subtyping instances
+example : StaticSubtyping
+  [] []
+  [typ|(<zero/>) | (<succ> <succ> (TOP \ <succ> <zero/>))]
+  [typ| TOP \ <succ> <zero/>]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
 
 ---------------------------------------
 ----- least fixed point inflate intro

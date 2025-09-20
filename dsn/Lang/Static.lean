@@ -194,6 +194,7 @@ macro_rules
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 def Typ.is_pattern (tops : List String) : Typ → Bool
+  | .top => true
   | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
   | .var id => id ∈ tops
   | .entry _ body => Typ.is_pattern tops body
@@ -201,6 +202,7 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
   | _ => false
 
 def Typ.height : Typ → Option Nat
+  | .top => return 1
   | .exi _ [] body => Typ.height body
   | .var _ => return 1
   | .entry _ body => do
@@ -240,7 +242,7 @@ mutual
       let bs := ListSubtyping.bounds id .true qs
       ListSubtyping.var_restricted id qs &&
       ListTyp.struct_less_than bs body
-    | (.var _), t => Typ.is_top t
+    | (.var _), .top => .true
     | _, _ => .false
 end
 
@@ -309,7 +311,9 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
   let r := ListZone.pack pids .true zones
   Typ.rator b l r
 
-def Subtyping.restricted (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool :=
+def Subtyping.restricted
+  (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
+:=
   Typ.is_pattern [] upper ||
   (match lower, upper with
   | .var id, _ =>
@@ -529,6 +533,9 @@ mutual
       (← StaticSubtyping.solve Θ Δ x p).flatMapM (fun (Θ',Δ') =>
         (StaticSubtyping.solve Θ' Δ' q y)
       )
+
+    | .bot, _ => return [(Θ,Δ)]
+    | _, .top => return [(Θ,Δ)]
 
     | (.unio a b), t => do
       (← StaticSubtyping.solve Θ Δ a t).flatMapM (fun (Θ',Δ') =>
@@ -891,6 +898,14 @@ mutual
       StaticSubtyping skolems' assums' q y skolems'' assums'' →
       StaticSubtyping skolems assums (.path p q) (.path x y) skolems'' assums''
 
+    -- bottom elimination
+    | bot_elim skolems assums t :
+      StaticSubtyping skolems assums .bot t skolems assums
+
+    -- top introduction
+    | top_intro skolems assums t :
+      StaticSubtyping skolems assums t .top skolems assums
+
     -- expansion elimination
     | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
       StaticSubtyping skolems assums a t skolems' assums' →
@@ -990,15 +1005,7 @@ mutual
       StaticSubtyping skolems assums fac right skolems' assums' →
       StaticSubtyping skolems assums (.lfp id left) (.entry l right) skolems' assums'
 
-    -- difference introduction
-    | diff_intro skolems assums t l r skolems' assums' :
-      Typ.is_pattern [] r →
-      ¬ Subtyping.check skolems assums t r →
-      ¬ Subtyping.check skolems assums r t →
-      StaticSubtyping skolems assums t l skolems' assums' →
-      StaticSubtyping skolems assums t (.diff l r) skolems' assums'
-
-    | diff_fold_intro skolems assums id t l r h skolems' assums' :
+    | lfp_diff skolems assums id t l r h skolems' assums' :
       Typ.is_pattern [] r →
       Typ.Monotonic id .true t →
       Typ.struct_less_than (.var id) t →
@@ -1007,6 +1014,15 @@ mutual
       ¬ (Subtyping.check skolems assums r (Typ.subfold id t h)) →
       StaticSubtyping skolems assums (.lfp id t) l skolems' assums' →
       StaticSubtyping skolems assums (.lfp id t) (.diff l r) skolems' assums'
+
+    -- difference introduction
+    | diff_intro skolems assums t l r skolems' assums' :
+      Typ.is_pattern [] r →
+      ¬ Subtyping.check skolems assums t r →
+      ¬ Subtyping.check skolems assums r t →
+      StaticSubtyping skolems assums t l skolems' assums' →
+      StaticSubtyping skolems assums t (.diff l r) skolems' assums'
+
 
     -- least fixed point introduction
     | lfp_inflate_intro skolems assums l id r skolems' assums' :
@@ -1060,7 +1076,6 @@ mutual
       StaticListSubtyping skolems' assums' quals skolems'' assums'' →
       StaticSubtyping skolems assums (.all ids quals l) r skolems'' assums''
 
-
 end
 
 syntax "StaticListSubtyping_prove" : tactic
@@ -1094,6 +1109,8 @@ macro_rules
       | apply StaticSubtyping.path_pres
         · StaticSubtyping_prove
         · StaticSubtyping_prove
+      | apply StaticSubtyping.bot_elim
+      | apply StaticSubtyping.top_intro
       | apply StaticSubtyping.unio_elim
         · StaticSubtyping_prove
         · StaticSubtyping_prove
@@ -1171,24 +1188,12 @@ macro_rules
         · Typ_Monotonic_prove
         · StaticSubtyping_prove
 
-      | apply StaticSubtyping.diff_intro
-        · rfl
-        · simp [Subtyping.check, Typ.toBruijn]
-          · apply And.intro
-            · rfl
-            · rfl
-        · simp [Subtyping.check, Typ.toBruijn]
-          · apply And.intro
-            · rfl
-            · rfl
-        · StaticSubtyping_prove
-
-      | apply StaticSubtyping.diff_fold_intro
+      | apply StaticSubtyping.lfp_diff
         · reduce; rfl
         · Typ_Monotonic_prove
         · simp [
             Typ.struct_less_than, Typ.top, ListSubtyping.var_restricted,
-            ListSubtyping.bounds, ListTyp.struct_less_than, Typ.is_top,
+            ListSubtyping.bounds, ListTyp.struct_less_than,
             Typ.refl_BEq_true
           ]
         · simp; reduce
@@ -1205,6 +1210,23 @@ macro_rules
           ]; reduce
           simp
         · StaticSubtyping_prove
+
+      | apply StaticSubtyping.diff_intro
+        · rfl
+        · simp; reduce
+          simp [
+            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
+            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
+          ]; reduce
+          simp
+        · simp; reduce
+          simp [
+            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
+            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
+          ]; reduce
+          simp
+        · StaticSubtyping_prove
+
 
       | apply StaticSubtyping.lfp_inflate_intro
         · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
