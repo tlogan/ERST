@@ -519,114 +519,114 @@ mutual
         StaticListSubtyping.solve skolems' assums' remainder
       ))
 
-  partial def StaticSubtyping.solve (Θ : List String) (Δ : ListSubtyping) (lower upper : Typ )
+  partial def StaticSubtyping.solve (skolems : List String) (assums : ListSubtyping) (lower upper : Typ )
   : Lean.MetaM (List (List String × ListSubtyping))
   := if (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper) then
-    return [(Θ,Δ)]
+    return [(skolems,assums)]
   else match lower, upper with
     | (.entry ll lower), (.entry lu upper) =>
       if ll == lu then
-        StaticSubtyping.solve Θ Δ lower upper
+        StaticSubtyping.solve skolems assums lower upper
       else return []
 
     | (.path p q), (.path x y) => do
-      (← StaticSubtyping.solve Θ Δ x p).flatMapM (fun (Θ',Δ') =>
-        (StaticSubtyping.solve Θ' Δ' q y)
+      (← StaticSubtyping.solve skolems assums x p).flatMapM (fun (skolems',assums') =>
+        (StaticSubtyping.solve skolems' assums' q y)
       )
 
-    | .bot, _ => return [(Θ,Δ)]
-    | _, .top => return [(Θ,Δ)]
+    | .bot, _ => return [(skolems,assums)]
+    | _, .top => return [(skolems,assums)]
 
     | (.unio a b), t => do
-      (← StaticSubtyping.solve Θ Δ a t).flatMapM (fun (Θ',Δ') =>
-        (StaticSubtyping.solve Θ' Δ' b t)
+      (← StaticSubtyping.solve skolems assums a t).flatMapM (fun (skolems',assums') =>
+        (StaticSubtyping.solve skolems' assums' b t)
       )
 
     | (.exi ids quals body), t => do
-      if ListSubtyping.restricted Θ Δ quals then do
+      if ListSubtyping.restricted skolems assums quals then do
         let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
         let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
         let ids' : List String := pairs.map (fun (_, id') => id')
         let quals' := ListSubtyping.sub subs quals
         let body' := Typ.sub subs body
-        (← StaticListSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
-          (StaticSubtyping.solve (ids' ∪ Θ') Δ' body' t)
+        (← StaticListSubtyping.solve skolems assums quals').flatMapM (fun (skolems',assums') =>
+          (StaticSubtyping.solve (ids' ∪ skolems') assums' body' t)
         )
       else return []
 
 
     | t, (.inter a b) => do
-      (← StaticSubtyping.solve Θ Δ t a).flatMapM (fun (Θ',Δ') =>
-        (StaticSubtyping.solve Θ' Δ' t b)
+      (← StaticSubtyping.solve skolems assums t a).flatMapM (fun (skolems',assums') =>
+        (StaticSubtyping.solve skolems' assums' t b)
       )
 
     | t, (.all ids quals body) =>
-      if ListSubtyping.restricted Θ Δ quals then do
+      if ListSubtyping.restricted skolems assums quals then do
         let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
         let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
         let ids' : List String := pairs.map (fun (_, id') => id')
         let quals' := ListSubtyping.sub subs quals
         let body' := Typ.sub subs body
-        (← StaticListSubtyping.solve Θ Δ quals').flatMapM (fun (Θ',Δ') =>
-          (StaticSubtyping.solve (ids' ∪ Θ') Δ' t body')
+        (← StaticListSubtyping.solve skolems assums quals').flatMapM (fun (skolems',assums') =>
+          (StaticSubtyping.solve (ids' ∪ skolems') assums' t body')
         )
       else return []
 
     | (.var id), t => do
-      if id ∉ Θ then
-        let lowers_id := ListSubtyping.bounds id .true Δ
+      if id ∉ skolems then
+        let lowers_id := ListSubtyping.bounds id .true assums
         let trans := lowers_id.map (fun lower_id => (lower_id, t))
-        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
-          return (Θ', (.var id, t) :: Δ')
+        (← StaticListSubtyping.solve skolems assums trans).mapM (fun (skolems',assums') =>
+          return (skolems', (.var id, t) :: assums')
         )
-      else if (Δ.exi (fun
-        | (.var idl, .var idu) => idl == id && idu ∉ Θ
+      else if (assums.exi (fun
+        | (.var idl, .var idu) => idl == id && idu ∉ skolems
         | _ => .false
       )) then
-        let lowers_id := ListSubtyping.bounds id .true Δ
+        let lowers_id := ListSubtyping.bounds id .true assums
         let trans := lowers_id.map (fun lower_id => (lower_id, t))
-        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
-          return (Θ', (.var id, t) :: Δ')
+        (← StaticListSubtyping.solve skolems assums trans).mapM (fun (skolems',assums') =>
+          return (skolems', (.var id, t) :: assums')
         )
       else
-        let uppers_id := ListSubtyping.bounds id .false Δ
+        let uppers_id := ListSubtyping.bounds id .false assums
         (uppers_id.flatMapM (fun upper_id =>
           let pass := (match upper_id with
-            | .var id' => Θ.contains id'
+            | .var id' => skolems.contains id'
             | _ => true
           )
           (if pass then
-            (StaticSubtyping.solve Θ Δ upper_id t)
+            (StaticSubtyping.solve skolems assums upper_id t)
           else
             return []
           )
         ))
 
     | t, (.var id) => do
-      if not (Θ.contains id) then
-        let uppers_id := ListSubtyping.bounds id .false Δ
+      if not (skolems.contains id) then
+        let uppers_id := ListSubtyping.bounds id .false assums
         let trans := uppers_id.map (fun upper_id => (t,upper_id))
-        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
-          return (Θ', (t, .var id) :: Δ')
+        (← StaticListSubtyping.solve skolems assums trans).mapM (fun (skolems',assums') =>
+          return (skolems', (t, .var id) :: assums')
         )
-      else if (Δ.exi (fun
-        | (.var idl, .var idu) => idu == id && idl ∉ Θ
+      else if (assums.exi (fun
+        | (.var idl, .var idu) => idu == id && idl ∉ skolems
         | _ => .false
       )) then
-        let uppers_id := ListSubtyping.bounds id .false Δ
+        let uppers_id := ListSubtyping.bounds id .false assums
         let trans := uppers_id.map (fun upper_id => (t,upper_id))
-        (← StaticListSubtyping.solve Θ Δ trans).mapM (fun (Θ',Δ') =>
-          return (Θ', (t, .var id) :: Δ')
+        (← StaticListSubtyping.solve skolems assums trans).mapM (fun (skolems',assums') =>
+          return (skolems', (t, .var id) :: assums')
         )
       else do
-        let lowers_id := ListSubtyping.bounds id .true Δ
+        let lowers_id := ListSubtyping.bounds id .true assums
         (lowers_id.flatMapM (fun lower_id =>
           let pass := (match lower_id with
-            | .var id' => Θ.contains id'
+            | .var id' => skolems.contains id'
             | _ => true
           )
           (if pass then
-            (StaticSubtyping.solve Θ Δ t lower_id)
+            (StaticSubtyping.solve skolems assums t lower_id)
           else
             return []
           )
@@ -634,66 +634,68 @@ mutual
 
 
     | l, (.path (.unio a b) r) =>
-      StaticSubtyping.solve Θ Δ l (.inter (.path a r) (.path b r))
+      StaticSubtyping.solve skolems assums l (.inter (.path a r) (.path b r))
 
 
     | l, (.path r (.inter a b)) =>
-      StaticSubtyping.solve Θ Δ l (.inter (.path r a) (.path r b))
+      StaticSubtyping.solve skolems assums l (.inter (.path r a) (.path r b))
 
     | t, (.entry l (.inter a b)) =>
-      StaticSubtyping.solve Θ Δ t (.inter (.entry l a) (.entry l b))
+      StaticSubtyping.solve skolems assums t (.inter (.entry l a) (.entry l b))
 
 
     | (.lfp id left), upper =>
       if not (left.free_vars.contains id) then
-        StaticSubtyping.solve Θ Δ left upper
-      else if Typ.Monotonic.decide id .true left then
-        StaticSubtyping.solve Θ Δ (Typ.sub [(id, upper)] left) upper
-      else match upper with
-        | (.entry l right) => match Typ.factor id left l with
-            | .some fac  => StaticSubtyping.solve Θ Δ fac right
-            | .none => failure
-        | (.diff l r) => match Typ.height r with
-            | .some h =>
-              if (
-                Typ.is_pattern [] r &&
-                Typ.Monotonic.decide id .true left &&
-                Typ.struct_less_than (.var id) left &&
-                not (Subtyping.check Θ Δ (Typ.subfold id left 1) r) &&
-                not (Subtyping.check Θ Δ r (Typ.subfold id left h))
-              ) then
-                StaticSubtyping.solve Θ Δ left l
-              else
-                failure
-            | .none => failure
-        | _ => failure
-
+        StaticSubtyping.solve skolems assums left upper
+      else if Typ.Monotonic.decide id .true left then do
+        let result ← StaticSubtyping.solve skolems assums (Typ.sub [(id, upper)] left) upper
+        if not result.isEmpty then
+          return result
+        else
+          match upper with
+          | (.entry l right) => match Typ.factor id left l with
+              | .some fac  => StaticSubtyping.solve skolems assums (.lfp id fac) right
+              | .none => return []
+          | (.diff l r) => match Typ.height r with
+              | .some h =>
+                if (
+                  Typ.is_pattern [] r &&
+                  Typ.Monotonic.decide id .true left &&
+                  Typ.struct_less_than (.var id) left &&
+                  not (Subtyping.check skolems assums (Typ.subfold id left 1) r) &&
+                  not (Subtyping.check skolems assums r (Typ.subfold id left h))
+                ) then
+                  StaticSubtyping.solve skolems assums left l
+                else return []
+              | .none => return []
+          | _ => return []
+      else return []
 
     | t, (.diff l r) =>
       if (
         Typ.is_pattern [] r &&
-        ¬ Subtyping.check Θ Δ t r &&
-        ¬ Subtyping.check Θ Δ r t
+        ¬ Subtyping.check skolems assums t r &&
+        ¬ Subtyping.check skolems assums r t
       ) then
-        StaticSubtyping.solve Θ Δ t l
+        StaticSubtyping.solve skolems assums t l
       else
         failure
 
     | l, (.lfp id r) =>
       if Subtyping.inflatable l r then
-        StaticSubtyping.solve Θ Δ l (.sub [(id, .lfp id r)] r)
+        StaticSubtyping.solve skolems assums l (.sub [(id, .lfp id r)] r)
       else
         let r' := Typ.drop id r
-        StaticSubtyping.solve Θ Δ l r'
+        StaticSubtyping.solve skolems assums l r'
 
     | (.diff l r), t =>
-      StaticSubtyping.solve Θ Δ l (.unio r t)
+      StaticSubtyping.solve skolems assums l (.unio r t)
 
 
     | t, (.unio l r) => do
       return (
-        (← StaticSubtyping.solve Θ Δ t l) ++
-        (← StaticSubtyping.solve Θ Δ t r)
+        (← StaticSubtyping.solve skolems assums t l) ++
+        (← StaticSubtyping.solve skolems assums t r)
       )
 
     | l, (.exi ids quals r) => do
@@ -701,21 +703,21 @@ mutual
       let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
       let r' := Typ.sub subs r
       let quals' := ListSubtyping.sub subs quals
-      (← StaticSubtyping.solve Θ Δ l r').flatMapM (fun (θ',Δ') =>
-        StaticListSubtyping.solve θ' Δ' quals'
+      (← StaticSubtyping.solve skolems assums l r').flatMapM (fun (θ',assums') =>
+        StaticListSubtyping.solve θ' assums' quals'
       )
 
 
     | (.inter l r), t => match t with
       | .path p q => match Typ.merge_paths (.inter l r) with
-        | .some t' => StaticSubtyping.solve Θ Δ t' (.path p q)
+        | .some t' => StaticSubtyping.solve skolems assums t' (.path p q)
         | .none => return (
-          (← StaticSubtyping.solve Θ Δ l t) ++
-          (← StaticSubtyping.solve Θ Δ r t)
+          (← StaticSubtyping.solve skolems assums l t) ++
+          (← StaticSubtyping.solve skolems assums r t)
         )
       | _ => return (
-        (← StaticSubtyping.solve Θ Δ l t) ++
-        (← StaticSubtyping.solve Θ Δ r t)
+        (← StaticSubtyping.solve skolems assums l t) ++
+        (← StaticSubtyping.solve skolems assums r t)
       )
 
 
@@ -725,8 +727,8 @@ mutual
       let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
       let l' := Typ.sub subs l
       let quals' := ListSubtyping.sub subs quals
-      (← StaticSubtyping.solve Θ Δ l' r).flatMapM (fun (θ',Δ') =>
-        StaticListSubtyping.solve θ' Δ' quals'
+      (← StaticSubtyping.solve skolems assums l' r).flatMapM (fun (θ',assums') =>
+        StaticListSubtyping.solve θ' assums' quals'
       )
 
     | _, _ => return []

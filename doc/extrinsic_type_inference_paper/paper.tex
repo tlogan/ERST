@@ -2560,8 +2560,10 @@ may need to be rewritten as two paths (or two entries).
   \nopad
   \begin{mathpar}
     \inferrule {
+      \textbf{factor}(\alpha \entails \tau_l \cdot l) = \tau
+      \\
       \Theta, \Delta \entails 
-      \textbf{factor}(\alpha \entails \tau_l \cdot l) 
+      \J{LFP[}\alpha\J{]} \tau
       \subtypes 
       \tau_r \given \Theta', \Delta' 
     } {
