@@ -247,12 +247,14 @@ mutual
 end
 
 -- NOTE: this should be complete, but not sound
+-- TODO: see if Subtyping.shallow_match and Subtyping.check can become one
 def Subtyping.shallow_match : Typ → Typ → Bool
 | .entry l k, .entry l' t =>
   l == l' && Subtyping.shallow_match k t
 | k, .diff left right =>
   Subtyping.shallow_match k left && not (Subtyping.shallow_match k right)
 | k, .exi _ _ t => Subtyping.shallow_match k t
+| .exi _ _ k, t => Subtyping.shallow_match k t
 | k, .inter left right =>
   Subtyping.shallow_match k left && Subtyping.shallow_match k right
 | .inter left right, t =>
@@ -263,6 +265,7 @@ def Subtyping.shallow_match : Typ → Typ → Bool
 def Subtyping.inflatable (key target : Typ) : Bool :=
   let ts := Typ.break .false target
   not (List.all ts (fun t => Subtyping.shallow_match key t))
+  -- not (List.all ts (fun t => Subtyping.check [] [] key t))
 
 def Typ.drop (id : String) (t : Typ) : Typ :=
   let cases := Typ.break .false t

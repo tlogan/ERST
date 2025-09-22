@@ -454,16 +454,80 @@ example : StaticSubtyping
   -- [typ| <left> LFP[R] (<zero/> | EXI[N] [ (N <: R) ] <succ> N) ]
   [typ| <left> LFP[R] (<zero/> | <succ> R) ]
 
+
+-- #eval Subtyping.inflatable
+--   [typ| EXI[N] [ (N <: R) ] <succ> N ]
+--   [typ| <zero/> | <succ> R ]
+
+-- #eval Typ.break .false [typ| <zero/> | <succ> R ]
+
+-- #eval Subtyping.shallow_match
+--   [typ| EXI[N] [ (N <: R) ] <succ> N ]
+--   [typ| <zero/> ]
+
+#eval (Typ.exi ["N"] [(Typ.var "N", Typ.var "R")] (Typ.entry "succ" (Typ.var "N")))
+
+#eval (Typ.unio (Typ.entry "zero" Typ.top)
+    (Typ.entry "succ" (Typ.lfp "R" (Typ.unio (Typ.entry "zero" Typ.top) (Typ.entry "succ" (Typ.var "R"))))))
+
+example : StaticSubtyping [] []
+  [typ| <succ> R]
+  [typ| <succ> LFP[R] <zero/> | <succ> R ]
+  [] [subtypings| (R <: LFP[R] <zero/> | <succ> R)]
+:= by StaticSubtyping_prove
+
+#eval StaticSubtyping.solve [] []
+  [typ| EXI[N] [ (N <: R) ] <succ> N ]
+  [typ| <succ> LFP[R] <zero/> | <succ> R ]
+
+example : StaticSubtyping [] []
+  [typ| EXI[N] [ (N <: R) ] N ]
+  [typ| <whatev/> ]
+  [ids| N] [subtypings| (N <: <whatev/>) (N <: R)]
+-- := by StaticSubtyping_prove
+:= by
+  apply StaticSubtyping.exi_elim
+  · reduce; rfl
+  · StaticListSubtyping_prove
+  · apply StaticSubtyping.skolem_placeholder_elim
+    · apply List.Mem.head
+    · sorry -- consider upper_bound_mem/lower_bound_mem and use of existential
+    · apply lower_bound_map
+      · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
+    · StaticListSubtyping_prove
+
+
+
+example : StaticSubtyping [] []
+  [typ| <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
+  [typ| LFP[R] <zero/> | <succ> R ]
+  -- [typ| LFP[R] <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
+  [] []
+:= by
+  apply StaticSubtyping.unio_elim
+  · apply StaticSubtyping.lfp_inflate_intro
+    · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
+    · simp [Typ.sub, find] ; StaticSubtyping_prove
+  · apply StaticSubtyping.lfp_inflate_intro
+    · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
+    · simp [Typ.sub, find] ; reduce; StaticSubtyping_prove
+
+
 example : StaticSubtyping
   [] []
   [typ| LFP[R]  (
       (<zero/> * <nil/>) |
       EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L)
   )]
-  -- [typ| <left> LFP[R] (<zero/> | EXI[N] [ (N <: R) ] <succ> N) ]
-  [typ| <left> LFP[R] (<zero/> | <succ> R) ]
+  [typ| <left> LFP[R] (<zero/> | EXI[N] [ (N <: R) ] <succ> N) ]
+  -- [typ| <left> LFP[R] (<zero/> | <succ> R) ]
   [ids| ] [subtypings| ]
 := by StaticSubtyping_prove
+-- := by
+--   apply StaticSubtyping.lfp_factor_elim
+--   · rfl
+--   · reduce
+
 
 --------------------------------------------
 
