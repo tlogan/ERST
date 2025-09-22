@@ -800,7 +800,57 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       apply ih
       assumption
 
+lemma skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
+  assums.exi (fun
+  | (.var idl, .var idu) => idl == id && idu ∉ skolems
+  | _ => .false
+  )
+  →
+  ∃ idu, (Typ.var id, Typ.var idu) ∈ assums ∧ idu ∉ skolems
+:= by
+  simp_all [List.exi]
+  intros l u m
+  cases l with
+  | var idl => cases u with
+    | var idu =>
+      simp [*]
+      intro e
+      intro p
+      exists idu
+      simp [*]
+      rw [← e]
+      assumption
+    | _ => simp
+  | _ => simp
 
+
+lemma skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
+  assums.exi (fun
+  | (.var idl, .var idu) => idu == id && idl ∉ skolems
+  | _ => .false
+  )
+  →
+  ∃ idl, (Typ.var idl, Typ.var id) ∈ assums ∧ idl ∉ skolems
+:= by
+  simp_all [List.exi]
+  intros l u m
+  cases l with
+  | var idl => cases u with
+    | var idu =>
+      simp [*]
+      intro e
+      intro p
+      exists idl
+      simp [*]
+      rw [← e]
+      assumption
+    | _ => simp
+  | _ => simp
+
+      -- else if (assums.exi (fun
+      --   | (.var idl, .var idu) => idu == id && idl ∉ skolems
+      --   | _ => .false
+      -- )) then
 
 lemma lower_bound_mem id cs t : ∀ ts,
   ListSubtyping.bounds id .true cs = ts →
@@ -1143,8 +1193,11 @@ macro_rules
         · StaticListSubtyping_prove
 
       | apply StaticSubtyping.skolem_placeholder_intro
-        · simp
-        · simp
+        -- · simp
+        -- · simp
+        · apply List.Mem.head
+        · apply skolem_upper_bound
+          · reduce; simp
         · apply upper_bound_map
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
         · StaticListSubtyping_prove
@@ -1158,11 +1211,18 @@ macro_rules
         · StaticSubtyping_prove
 
       | apply StaticSubtyping.skolem_placeholder_elim
-        · simp
-        · simp
+        · apply List.Mem.head
+        · apply skolem_lower_bound
+          · reduce; simp
         · apply lower_bound_map
           · simp [ListSubtyping.bounds, Subtyping.target_bound]; rfl
         · StaticListSubtyping_prove
+
+
+
+
+
+
 
       | apply StaticSubtyping.skolem_elim
         · apply List.mem_of_elem_eq_true; rfl
