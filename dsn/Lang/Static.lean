@@ -583,7 +583,7 @@ mutual
           return (skolems', (.var id, t) :: assums')
         )
       else if (assums.exi (fun
-        | (.var idl, .var idu) => idl == id && idu ∉ skolems
+        | (.var idl, .var idu) => idl == id && not (skolems.contains idu)
         | _ => .false
       )) then
         let lowers_id := ListSubtyping.bounds id .true assums
@@ -613,7 +613,7 @@ mutual
           return (skolems', (t, .var id) :: assums')
         )
       else if (assums.exi (fun
-        | (.var idl, .var idu) => idu == id && idl ∉ skolems
+        | (.var idl, .var idu) => idu == id && not (skolems.contains idl)
         | _ => .false
       )) then
         let uppers_id := ListSubtyping.bounds id .false assums
@@ -802,7 +802,7 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
 
 lemma skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
   assums.exi (fun
-  | (.var idl, .var idu) => idl == id && idu ∉ skolems
+  | (.var idl, .var idu) => idl == id && not (skolems.contains idu)
   | _ => .false
   )
   →
@@ -826,7 +826,7 @@ lemma skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
 
 lemma skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
   assums.exi (fun
-  | (.var idl, .var idu) => idu == id && idl ∉ skolems
+  | (.var idl, .var idu) => idu == id && not (skolems.contains idl)
   | _ => .false
   )
   →
