@@ -1243,7 +1243,7 @@ macro_rules
 
       | apply StaticSubtyping.lfp_factor_elim
         · rfl
-        · StaticSubtyping_prove
+        · reduce; StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_skip_elim
         · simp
