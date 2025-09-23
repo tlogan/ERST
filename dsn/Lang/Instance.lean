@@ -445,6 +445,37 @@ example : StaticSubtyping
   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
 := by StaticSubtyping_prove
 
+---------------------------------------
+----- lfp skip elim
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [] []
+  [typ| LFP[R] <uno/> | <dos/>]
+  [typ| <uno/> | <dos/> | <tres/>]
+
+example : StaticSubtyping
+  [] []
+  [typ| LFP[R] <uno/> | <dos/>]
+  [typ| <uno/> | <dos/> | <tres/>]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
+
+---------------------------------------
+----- lfp induct elim
+---------------------------------------
+
+#eval StaticSubtyping.solve
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| LFP[R] ((<zero/>) | (<succ> R))]
+
+example : StaticSubtyping
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| LFP[R] ((<zero/>) | (<succ> R))]
+  [ids| ] [subtypings| ]
+:= by StaticSubtyping_prove
 
 --------------------------------------------
 

@@ -1251,7 +1251,7 @@ macro_rules
 
       | apply StaticSubtyping.lfp_induct_elim
         · Typ_Monotonic_prove
-        · StaticSubtyping_prove
+        · reduce; StaticSubtyping_prove
 
       | apply StaticSubtyping.lfp_diff
         · reduce; rfl
