@@ -2844,11 +2844,12 @@ It then attempts to solve the qualifiers by leveraging the witnesses.
       \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
     }
 
-    \inferrule {
-      \Theta, \Delta \entails \textbf{merge}(\tau_{l}\J{\&}\tau_{r}) \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
-    } {
-      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
-    }
+    %% TODO: remove merge rule. Should be subsumed by antecedent union
+    % \inferrule {
+    %   \Theta, \Delta \entails \textbf{merge}(\tau_{l}\J{\&}\tau_{r}) \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
+    % } {
+    %   \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
+    % }
 
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'

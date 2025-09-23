@@ -280,11 +280,11 @@ def Typ.break_paths : List Typ → Option (List Typ × List Typ)
   return (l::ls, r::rs)
 | _ => failure
 
-def Typ.merge_paths (t : Typ) : Option Typ :=
-  let cases := Typ.break .true t
-  do
-  let (ls, rs) ← Typ.break_paths cases
-  return .path (Typ.combine .false ls) (Typ.combine .false rs)
+-- def Typ.merge_paths (t : Typ) : Option Typ :=
+--   let cases := Typ.break .true t
+--   do
+--   let (ls, rs) ← Typ.break_paths cases
+--   return .path (Typ.combine .false ls) (Typ.combine .false rs)
 
 
 
@@ -711,19 +711,24 @@ mutual
       )
 
 
-    | (.inter l r), t => match t with
-      | .path p q => match Typ.merge_paths (.inter l r) with
-        | .some t' => StaticSubtyping.solve skolems assums t' (.path p q)
-        | .none => return (
-          (← StaticSubtyping.solve skolems assums l t) ++
-          (← StaticSubtyping.solve skolems assums r t)
-        )
-      | _ => return (
+    -- TODO: consider removing path merging. union antecedent rule should be sufficient
+    -- | (.inter l r), t => match t with
+    --   | .path p q => match Typ.merge_paths (.inter l r) with
+    --     | .some t' => StaticSubtyping.solve skolems assums t' (.path p q)
+    --     | .none => return (
+    --       (← StaticSubtyping.solve skolems assums l t) ++
+    --       (← StaticSubtyping.solve skolems assums r t)
+    --     )
+    --   | _ => return (
+    --     (← StaticSubtyping.solve skolems assums l t) ++
+    --     (← StaticSubtyping.solve skolems assums r t)
+    --   )
+
+    | (.inter l r), t => do
+      return (
         (← StaticSubtyping.solve skolems assums l t) ++
         (← StaticSubtyping.solve skolems assums r t)
       )
-
-
 
     | (.all ids quals l), r  => do
       let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
@@ -1060,7 +1065,7 @@ mutual
       StaticSubtyping skolems assums fac right skolems' assums' →
       StaticSubtyping skolems assums (.lfp id left) (.entry l right) skolems' assums'
 
-    | lfp_diff skolems assums id t l r h skolems' assums' :
+    | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
       Typ.is_pattern [] r →
       Typ.Monotonic id .true t →
       Typ.struct_less_than (.var id) t →
@@ -1121,10 +1126,10 @@ mutual
       StaticSubtyping skolems assums r t skolems' assums' →
       StaticSubtyping skolems assums (.inter l r) t skolems' assums'
 
-    | inter_merge_elim skolems assums l r p q t skolems' assums' :
-      Typ.merge_paths (.inter l r) = .some t →
-      StaticSubtyping skolems assums t (.path p q) skolems' assums' →
-      StaticSubtyping skolems assums (.inter l r) (.path p q) skolems' assums'
+    -- | inter_merge_elim skolems assums l r p q t skolems' assums' :
+    --   Typ.merge_paths (.inter l r) = .some t →
+    --   StaticSubtyping skolems assums t (.path p q) skolems' assums' →
+    --   StaticSubtyping skolems assums (.inter l r) (.path p q) skolems' assums'
 
     | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
       StaticSubtyping skolems assums l r skolems' assums' →
@@ -1253,7 +1258,7 @@ macro_rules
         · Typ_Monotonic_prove
         · reduce; StaticSubtyping_prove
 
-      | apply StaticSubtyping.lfp_diff
+      | apply StaticSubtyping.lfp_elim_diff_intro
         · reduce; rfl
         · Typ_Monotonic_prove
         · simp [
@@ -1320,9 +1325,9 @@ macro_rules
       | apply StaticSubtyping.inter_right_elim
         · StaticSubtyping_prove
 
-      | apply StaticSubtyping.inter_merge_elim
-        · rfl
-        · StaticSubtyping_prove
+      -- | apply StaticSubtyping.inter_merge_elim
+      --   · rfl
+      --   · StaticSubtyping_prove
 
       | apply StaticSubtyping.all_elim
         · StaticSubtyping_prove
