@@ -132,131 +132,126 @@ example :  ∃ t Δ' Γ', PatLifting.Static [] []
 ----- reflexivity
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <uno/>]
   [typ| <uno/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/>]
   [typ| <uno/>]
   [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 
 ---------------------------------------
 ----- entry preservation (over union)
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| <label> <uno/> ]
   [typ| <label> (<uno/> | <dos/>) ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| <label> <uno/> ]
   [typ| <label> (<uno/> | <dos/>) ]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- implication preservation (over union)
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| (<uno/> | <dos/>) -> <tres/> ]
   [typ| <uno/>  -> (<dos/> | <tres/>)]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| (<uno/> | <dos/>) -> <tres/> ]
   [typ| <uno/>  -> (<dos/> | <tres/>)]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- implication preservation (over intersection)
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| <uno/> -> (<dos/> & <tres/>)]
   [typ| (<uno/> & <dos/>) -> <tres/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| <uno/> -> (<dos/> & <tres/>)]
   [typ| (<uno/> & <dos/>) -> <tres/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- union elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| (<uno/> & <dos/>) | (<uno/> & <tres/>)]
   [typ| <uno/> ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| (<uno/> & <dos/>) | (<uno/> & <tres/>)]
   [typ| <uno/> ]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- existential elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| EXI[T] [(T <: <uno/>)] T]
   [typ| <uno/> | <dos/>]
 
 #eval Typ.interpret_one "T" .true []
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| EXI[T] [(T <: <uno/>)] T]
   [typ| <uno/> | <dos/>]
   [ids| T] [subtypings| (T <: <uno/>)]
--- := by StaticSubtyping_prove
-:= by
-  apply StaticSubtyping.exi_elim
-  · rfl
-  · StaticListSubtyping_prove
-  · StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- existential skolem placeholder elim
 ---------------------------------------
 
-example : StaticSubtyping [] []
+example : Subtyping.Static [] []
   [typ| EXI[N] [ (N <: R) ] N ]
   [typ| <whatev/> ]
   [ids| N] [subtypings| (N <: <whatev/>) (N <: R)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- intersection intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| <uno/> ]
   [typ| (<uno/> | <dos/>) & (<uno/> | <tres/>)]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| <uno/> ]
   [typ| (<uno/> | <dos/>) & (<uno/> | <tres/>)]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- universal intro
@@ -264,169 +259,169 @@ example : StaticSubtyping
 
 #eval Subtyping.restricted [] [] [typ| <uno/>] [typ| T]
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings|  ]
   [typ| <uno/> & <dos/>]
   [typ| ALL[T] [(<uno/> <: T)] T]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| <uno/> & <dos/>]
   [typ| ALL[T] [(<uno/> <: T)] T]
   [ids| T] [subtypings| (<uno/> <: T)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- placeholder elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| (<uno/> & <dos/> <: T) (T <: <uno/>)]
   [typ| T]
   [typ| <dos/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| (<uno/> & <dos/> <: T) (T <: <uno/>)]
   [typ| T]
   [typ| <dos/>]
   [ids| ] [subtypings| (T <: <dos/>) (<uno/> & <dos/> <: T) (T <: <uno/>)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- placeholder intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| (<uno/> <: T) (T <: <uno/> | <dos/>)]
   [typ| <dos/>]
   [typ| T]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| (<uno/> <: T) (T <: <uno/> | <dos/>)]
   [typ| <dos/>]
   [typ| T]
   [ids| ] [subtypings| (<dos/> <: T) (<uno/> <: T) (T <: <uno/> | <dos/>)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- skolem placeholder intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| (X <: T)]
   [typ| <uno/>]
   [typ| T]
 
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| (X <: T)]
   [typ| <uno/>]
   [typ| T]
   [ids| T] [subtypings| (<uno/> <: T) (X <: T)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- skolem placeholder elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| (T <: X)]
   [typ| T]
   [typ| <uno/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| (T <: X)]
   [typ| T]
   [typ| <uno/>]
   [ids| T] [subtypings| (T <: <uno/>) (T <: X)]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- skolem elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| (T <: <uno/>) ]
   [typ| T]
   [typ| <uno/> | <dos/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| (T <: <uno/>) ]
   [typ| T]
   [typ| <uno/> | <dos/>]
   [ids| T ] [subtypings| (T <: <uno/>) ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- skolem intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| ( <uno/> <: T) ]
   [typ| <uno/> & <dos/>]
   [typ| T]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| (<uno/> <: T) ]
   [typ| <uno/> & <dos/>]
   [typ| T]
   [ids| T] [subtypings| (<uno/> <: T) ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- union antecedent
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| ]
   [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
   [typ| <uno/> | <dos/> -> <tres/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| ]
   [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
   [typ| <uno/> | <dos/> -> <tres/>]
   [ids| T] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- inter consequent
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| ]
   [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
   [typ| <uno/> -> <dos/> & <tres/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| ]
   [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
   [typ| <uno/> -> <dos/> & <tres/>]
   [ids| T] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- entry inter content
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| T] [subtypings| ]
   [typ| <label> <uno/> & (<label> <dos/>)]
   [typ| <label> (<uno/> & <dos/>)]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| T] [subtypings| ]
   [typ| <label> <uno/> & (<label> <dos/>)]
   [typ| <label> (<uno/> & <dos/>)]
   [ids| T] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 
 ---------------------------------------
 ----- lfp factor elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [] []
   [typ| LFP[R]  (
       (<zero/> * <nil/>) |
@@ -435,7 +430,7 @@ example : StaticSubtyping
   [typ| <left> LFP[R] (<zero/> | <succ> R) ]
 
 
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ| LFP[R]  (
       (<zero/> * <nil/>) |
@@ -443,223 +438,223 @@ example : StaticSubtyping
   )]
   [typ| <left> LFP[R] (<zero/> | <succ> R) ]
   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp skip elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [] []
   [typ| LFP[R] <uno/> | <dos/>]
   [typ| <uno/> | <dos/> | <tres/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ| LFP[R] <uno/> | <dos/>]
   [typ| <uno/> | <dos/> | <tres/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp induct elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| LFP[R] ((<zero/>) | (<succ> R))]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| LFP[R] ((<zero/>) | (<succ> R))]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp elim diff intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| TOP \ <succ> <zero/>]
 
 --- if x is an even number then x ≠ 1
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| TOP \ <succ> <zero/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 --- if x is an even number then x ≠ 3
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
   [typ| TOP \ <succ> <succ> <succ> <zero/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- diff intro
 ---------------------------------------
 
-example : StaticSubtyping
+example : Subtyping.Static
   [] []
   [typ|(<zero/>) | (<succ> <succ> (TOP \ <succ> <zero/>))]
   [typ| TOP \ <succ> <zero/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- least fixed point inflate intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <succ> <succ> <zero/>]
   [typ| LFP[R] <zero/> | <succ> R ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <succ> <succ> <zero/>]
   [typ| LFP[R] <zero/> | <succ> R ]
   [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- least fixed point drop intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <zero/>]
   [typ| LFP[R] <zero/> | (R -> <uno/>) ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <zero/>]
   [typ| LFP[R] <zero/> | (R -> <uno/>) ]
   [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- diff elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| (<uno/> | <dos/>) \ <dos/>]
   [typ| <uno/> ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| (<uno/> | <dos/>) \ <dos/>]
   [typ| <uno/> ]
   [ids| ] [subtypings|  ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- union left intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <uno/> ]
   [typ| <uno/> | <dos/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/> ]
   [typ| <uno/> | <dos/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- union right intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <dos/> ]
   [typ| <uno/> | <dos/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <dos/> ]
   [typ| <uno/> | <dos/>]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- existential intro
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <uno/>]
   [typ| EXI[T] [(T <: <uno/>)] T ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/>]
   [typ| EXI[T] [(T <: <uno/>)] T ]
   [ids| ] [subtypings| (T33 <: <uno/>) (<uno/> <: T33) ]
 := by
-  StaticSubtyping_rename_right [typ| EXI[T33] [(T33 <: <uno/>)] T33 ]
-  StaticSubtyping_prove
+  Subtyping_Static_rename_right [typ| EXI[T33] [(T33 <: <uno/>)] T33 ]
+  Subtyping_Static_prove
 
 ---------------------------------------
 ----- inter left elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <uno/> & <dos/>]
   [typ| <uno/> ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/> & <dos/>]
   [typ| <uno/> ]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- inter right elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| <uno/> & <dos/>]
   [typ| <dos/> ]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/> & <dos/>]
   [typ| <dos/> ]
   [ids| ] [subtypings| ]
-:= by StaticSubtyping_prove
+:= by Subtyping_Static_prove
 
 ---------------------------------------
 ----- universal elim
 ---------------------------------------
 
-#eval StaticSubtyping.solve
+#eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| ALL[T] [(<uno/> <: T)] T ]
   [typ| <uno/>]
 
-example : StaticSubtyping
+example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| ALL[T] [(<uno/> <: T)] T ]
   [typ| <uno/>]
   [ids| ] [subtypings| (<uno/> <: T33) (T33 <: <uno/>) ]
 := by
-  StaticSubtyping_rename_left [typ| ALL[T33] [(<uno/> <: T33)] T33 ]
-  StaticSubtyping_prove
+  Subtyping_Static_rename_left [typ| ALL[T33] [(<uno/> <: T33)] T33 ]
+  Subtyping_Static_prove
 
 --------------------------------------------
 

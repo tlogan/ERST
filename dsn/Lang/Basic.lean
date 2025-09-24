@@ -769,9 +769,6 @@ theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
 cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
 
 
--- instance : SizeOf Typ where
---   sizeOf := Typ.size
-
 def ListPair.dom {α} {β} : List (α × β) → List α
 | .nil => .nil
 | (a, _) :: xs => a :: dom xs
