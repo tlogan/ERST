@@ -594,3 +594,41 @@ def other (xs : List Nat) := Id.run do
   return total
 
 #eval other [1,2,3]
+
+inductive GEven : Nat → Prop where
+  | zero : GEven 0
+  | step nn : GEven nn → GEven (nn + 2)
+
+open Even
+
+def add_preserves_even : ∀ {n}, GEven n → GEven (n + 2) :=
+  fun {n} h =>
+    match h with
+    | .zero => by
+      exact .step 0 .zero     -- case: n = 0
+    | .step nn hn => by
+      exact .step (nn + 2) (.step nn hn) -- case: n = k+2
+
+
+inductive NN
+| zero : NN
+| succ (n : NN) : NN
+deriving Repr
+
+#eval (NN.succ NN.zero)
+#eval (NN.succ (NN.succ NN.zero))
+
+def add : NN -> NN -> NN
+| .zero, n => n
+| .succ n, n' => .succ (add n n')
+
+
+#eval add (NN.zero) (NN.succ NN.zero)
+#eval add (NN.succ NN.zero) (NN.succ NN.zero)
+
+
+theorem one_one_two :
+  add (NN.succ NN.zero) (NN.succ NN.zero) = NN.succ (NN.succ NN.zero)
+:= Eq.refl (NN.succ (NN.succ NN.zero))
+
+#check Eq.refl (NN.succ (NN.succ NN.zero))

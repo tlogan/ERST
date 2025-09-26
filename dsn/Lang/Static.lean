@@ -919,12 +919,13 @@ lemma upper_bound_mem id cs t : ∀ ts,
     apply List.mem_cons_of_mem
     assumption
 
+
 mutual
   inductive ListSubtyping.Static
   : List String → List (Typ × Typ) → List (Typ × Typ)
   → List String → List (Typ × Typ) → Prop
-    | nil skolems assums : ListSubtyping.Static skolems assums [] skolems assums
-    | cons skolems assums l r cs skolems' assums' skolems'' assums'' :
+    | nil {skolems assums} : ListSubtyping.Static skolems assums [] skolems assums
+    | cons {skolems assums skolems'' assums''} l r cs skolems' assums' :
       Subtyping.Static skolems assums l r skolems' assums' →
       ListSubtyping.Static skolems' assums' cs skolems'' assums'' →
       ListSubtyping.Static skolems assums ((l,r) :: cs) skolems'' assums''
