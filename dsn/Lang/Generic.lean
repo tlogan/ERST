@@ -64,9 +64,17 @@ ListPair.dom (am1 ++ am0) ⊆ List.diff xs' xs
   induction am1 with
   | nil =>
     simp [*]
-    sorry
+    have ss1' : List.diff xs_im xs ⊆ List.diff xs' xs := by
+      apply diff_preservation; simp [*]
+    intro x p
+    apply ss1'
+    apply dd0
+    simp [*]
   |cons head tail ih =>
-    sorry
+    simp [ListPair.dom]
+    apply And.intro
+    case left => sorry
+    case right => sorry
 
 #print List.concat
 
