@@ -49,6 +49,9 @@ lemma diff_preservation (xs : List String) :
       apply ih
       exact erase_preservation xs0 xs1 ss x h0 (ss h0)
 
+lemma ListPair.mem_concat_disj {β}
+  (x : String) (am1 am0 : List (String × β)): x ∈ ListPair.dom (am1 ++ am0)
+:= by sorry
 
 lemma
 dom_diff_concat {β} (am0 am1 : List (String × β))
@@ -70,11 +73,26 @@ ListPair.dom (am1 ++ am0) ⊆ List.diff xs' xs
     apply ss1'
     apply dd0
     simp [*]
-  |cons head tail ih =>
+  |cons a am1' ih =>
+    let (x, v) := a
     simp [ListPair.dom]
     apply And.intro
-    case left => sorry
-    case right => sorry
+    case left =>
+      have ss2 : xs ⊆ xs' := by
+        intro x p
+        apply ss1
+        apply ss0
+        apply p
+      have h : ListPair.dom am1' ⊆ List.diff xs' xs_im := by
+        intro x p
+        apply dd1
+        simp [ListPair.dom]
+        simp [*]
+      apply ih h
+      apply ListPair.mem_concat_disj
+    case right =>
+
+      sorry
 
 #print List.concat
 
