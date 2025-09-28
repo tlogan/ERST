@@ -136,40 +136,41 @@ def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
 | _ => False
 
 mutual
-  def Subtyping.Dynamic (δ : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
-    ∀ e, Typing.Dynamic δ e left → Typing.Dynamic δ e right
+  def Subtyping.Dynamic (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
+    ∀ e, Typing.Dynamic am e left → Typing.Dynamic am e right
   termination_by Typ.size left + Typ.size right
   decreasing_by
     all_goals simp [Typ.zero_lt_size]
 
-  def MultiSubtyping.Dynamic (δ : List (String × Typ)) : List (Typ × Typ) → Prop
+  def MultiSubtyping.Dynamic (am : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder =>
-    Subtyping.Dynamic δ left right ∧ MultiSubtyping.Dynamic δ remainder
+    Subtyping.Dynamic am left right ∧ MultiSubtyping.Dynamic am remainder
   termination_by sts => ListSubtyping.size sts
   decreasing_by
     all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
-  def Typing.Dynamic (δ : List (String × Typ)) (e : Expr) : Typ → Prop
-  | .entry l τ => Typing.Dynamic δ (.record [(l,e)]) τ
-  | .path left right => ∀ e' , Typing.Dynamic δ e' left → Typing.Dynamic δ (.app e e') right
-  | .unio left right => Typing.Dynamic δ e left ∨ Typing.Dynamic δ e right
+  def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
+  | .entry l τ => Typing.Dynamic am (.record [(l,e)]) τ
+  | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
+  | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
   | .bot => False
   | .top => True
-  | .inter left right => Typing.Dynamic δ e left ∧ Typing.Dynamic δ e right
-  | .diff left right => Typing.Dynamic δ e left ∧ ¬ (Typing.Dynamic δ e right)
+  | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right
+  | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
   | .exi ids quals body =>
-    ∃ δ' , (ListPair.dom δ') ⊆ ids ∧
-    (MultiSubtyping.Dynamic (δ ++ δ') quals) ∧
-    (Typing.Dynamic (δ ++ δ') e body)
+    -- TODO: consider adding new pairs on left, eg. am' ++ am
+    ∃ am' , (ListPair.dom am') ⊆ ids ∧
+    (MultiSubtyping.Dynamic (am ++ am') quals) ∧
+    (Typing.Dynamic (am ++ am') e body)
   | .all ids quals body =>
-    ∀ δ' , (ListPair.dom δ') ⊆ ids →
-    (MultiSubtyping.Dynamic (δ ++ δ') quals) →
-    (Typing.Dynamic (δ ++ δ') e body)
+    ∀ am' , (ListPair.dom am') ⊆ ids →
+    (MultiSubtyping.Dynamic (am ++ am') quals) →
+    (Typing.Dynamic (am ++ am') e body)
   | .lfp id body =>
     ∃ n, Typ.Monotonic id true body ∧
-    Typing.Dynamic.Fin e (Typ.sub δ (Typ.subfold id body n))
-  | .var id => ∃ τ, find id δ = some τ ∧ Typing.Dynamic.Fin e τ
+    Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
+  | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
   termination_by t => (Typ.size t)
   decreasing_by
     all_goals simp [Typ.size]

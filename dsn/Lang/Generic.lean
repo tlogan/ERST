@@ -177,9 +177,34 @@ lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs
     }
 
 
-lemma Subtyping.Static.skoelms_subseteq skolems assums l r skolems' assums' :
+lemma Subtyping.Static.skolems_subseteq skolems assums l r skolems' assums' :
   Subtyping.Static skolems assums l r skolems' assums' →
   skolems ⊆ skolems'
+:= by sorry
+
+
+lemma Subtyping.Dynamic.dom_extension am1 am0 lower upper :
+  (ListPair.dom am1) ∩ Typ.free_vars lower = [] →
+  (ListPair.dom am1) ∩ Typ.free_vars upper = [] →
+  Subtyping.Dynamic am0 lower upper →
+  Subtyping.Dynamic (am1 ++ am0) lower upper
+:= by sorry
+
+lemma MultiSubtyping.Dynamic.dom_reduction am1 am0 cs :
+  (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
+  MultiSubtyping.Dynamic (am1 ++ am0) cs →
+  MultiSubtyping.Dynamic am0 cs
+:= by sorry
+
+lemma MultiSubtyping.Dynamic.reduction am cs cs' :
+  cs ⊆ cs' →
+  MultiSubtyping.Dynamic am cs'  →
+  MultiSubtyping.Dynamic am cs
+:= by sorry
+
+lemma ListSubtyping.Static.assums_subseteq skolems assums cs skolems' assums' :
+  ListSubtyping.Static skolems assums cs skolems' assums' →
+  assums ⊆ assums'
 := by sorry
 
 
@@ -213,17 +238,25 @@ mutual
     apply And.intro
     {
       apply dom_concat_mdiff_subseteq _ _ _ skolems_im
-      · exact Subtyping.Static.skoelms_subseteq skolems assums l r skolems_im assums_im ss
+      · exact Subtyping.Static.skolems_subseteq skolems assums l r skolems_im assums_im ss
       · sorry
       · sorry
       · simp [*]
     }
     {
-      intro am' msd0
+      intro am' p0
       simp [MultiSubtyping.Dynamic]
       apply And.intro
       {
-        sorry
+        have p1 : (ListPair.dom am1) ∩ Typ.free_vars l = [] := by sorry
+        have p2 : (ListPair.dom am1) ∩ Typ.free_vars r = [] := by sorry
+        apply Subtyping.Dynamic.dom_extension am1 (am0 ++ am') l r p1 p2
+        apply h0r am'
+        have p3 : assums_im ⊆ assums' := by
+          exact ListSubtyping.Static.assums_subseteq skolems_im assums_im cs' skolems' assums' lss
+        apply MultiSubtyping.Dynamic.reduction _ assums_im assums' p3
+        have p4 : (ListPair.dom am1) ∩ ListSubtyping.free_vars assums' = [] := by sorry
+        exact MultiSubtyping.Dynamic.dom_reduction am1 (am0 ++ am') assums' p4 p0
       }
       {
         sorry
