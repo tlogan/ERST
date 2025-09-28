@@ -56,114 +56,89 @@ lemma diff_increasing_preservation (xs : List String) :
 #check ListPair.dom
 
 
--- lemma ListPair.mem_concat_disj {β}
---   (x : String) (am1 am0 : List (String × β))
--- :
---   x ∈ ListPair.dom (am1 ++ am0) →
---   x ∈ ListPair.dom am1 ∨ x ∈ ListPair.dom am0
--- := by induction am1 with
---   | nil =>
---     simp [dom]
---   | cons a am1' ih =>
---     simp [dom]
---     intro p
---     cases p with
---     | inl h =>
---       simp [*]
---     | inr h =>
---       apply ih at h
---       cases h with
---       | inl h' =>
---         simp [*]
---       | inr h' =>
---         simp [*]
+lemma ListPair.mem_concat_disj {β}
+  (x : String) (am0 am1 : List (String × β))
+:
+  x ∈ ListPair.dom (am1 ++ am0) →
+  x ∈ ListPair.dom am1 ∨ x ∈ ListPair.dom am0
+:= by induction am1 with
+  | nil =>
+    simp [dom]
+  | cons a am1' ih =>
+    simp [dom]
+    intro p
+    cases p with
+    | inl h =>
+      simp [*]
+    | inr h =>
+      apply ih at h
+      cases h with
+      | inl h' =>
+        simp [*]
+      | inr h' =>
+        simp [*]
 
--- lemma ListPair.mem_disj_concat_left {β}
---   (x : String) (am1 am0 : List (String × β))
--- :
---   x ∈ ListPair.dom am1 →
---   x ∈ ListPair.dom (am1 ++ am0)
--- := by induction am1 with
---   | nil => simp [dom]
---   | cons a am1' ih =>
---     simp [dom]
---     intro p
---     cases p with
---     | inl h =>
---       simp [*]
---     | inr h =>
---       apply ih at h
---       simp [*]
+lemma ListPair.mem_disj_concat_left {β}
+  (x : String) (am0 am1 : List (String × β))
+:
+  x ∈ ListPair.dom am1 →
+  x ∈ ListPair.dom (am1 ++ am0)
+:= by induction am1 with
+  | nil => simp [dom]
+  | cons a am1' ih =>
+    simp [dom]
+    intro p
+    cases p with
+    | inl h =>
+      simp [*]
+    | inr h =>
+      apply ih at h
+      simp [*]
 
--- lemma ListPair.mem_disj_concat_right {β}
---   (x : String) (am1 am0 : List (String × β))
--- :
---   x ∈ ListPair.dom am0 →
---   x ∈ ListPair.dom (am1 ++ am0)
--- := by induction am1 with
---   | nil => simp
---   | cons a am1' ih =>
---     simp [dom]
---     intro p
---     apply ih at p
---     simp [*]
+lemma ListPair.mem_disj_concat_right {β}
+  (x : String) (am0 am1 : List (String × β))
+:
+  x ∈ ListPair.dom am0 →
+  x ∈ ListPair.dom (am1 ++ am0)
+:= by induction am1 with
+  | nil => simp
+  | cons a am1' ih =>
+    simp [dom]
+    intro p
+    apply ih at p
+    simp [*]
 
-
-
-lemma diff_concat_preservation (xs ys zs : List String) :
-  List.diff xs (ys ++ zs) ⊆ List.diff xs ys
+lemma diff_concat_preservation (xs ys ys' : List String) :
+  List.diff xs (ys' ++ ys) ⊆ List.diff xs ys
 := by sorry
 
-
-lemma diff_erase_right_preservation (xs zs : List String) y :
-List.diff xs zs ⊆ List.diff xs (List.erase zs y)
-:= by sorry
-
-
-lemma diff_concat_diff_preservation (ys : List String) :
-∀ xs zs, ys ⊆ zs → List.diff xs zs ⊆ List.diff xs (ys ++ List.diff zs ys)
+lemma diff_concat_eq (xs ys: List String) :
+  ∀ zs, ys ⊆ zs →
+  List.diff xs zs = List.diff xs (List.diff zs ys ++ ys)
 := by induction ys with
   | nil =>
-    simp [List.diff]
-  | cons y ys' ih =>
-    simp [List.diff]
-    intro xs zs yzs ss x m
-    have dx : Decidable (y ∈ xs) := inferInstance
-    have dz : Decidable (y ∈ zs) := inferInstance
+    sorry
+  | cons =>
     sorry
 
 
+#print List.eq_nil_of_subset_nil
 lemma diff_decreasing_preservation (xs ys zs : List String) :
-  ys ⊆ zs → List.diff xs zs ⊆ List.diff xs ys
+ys ⊆ zs → List.diff xs zs ⊆ List.diff xs ys
 := by
   intro ss
   intro x dz
   apply diff_concat_preservation xs ys (List.diff zs ys)
-  apply diff_concat_diff_preservation ys xs zs ss
-  simp [*]
+  rw [← diff_concat_eq] <;> assumption
 
 
 
 
 
-  -- ys ⊆ zs → List.diff xs zs ⊆ List.diff xs ys
-
-  -- List.diff xs zs ⊆ List.diff xs (ys ++ List.diff zs ys)
-  -- List.diff xs (ys ++ zs') ⊆ List.diff xs ys
-
-
-
-
-
-lemma
-dom_diff_concat {β} (am0 am1 : List (String × β))
-  xs xs_im xs'
-:
-xs ⊆ xs_im →
-ListPair.dom am0 ⊆ List.diff xs_im xs →
-xs_im ⊆ xs' →
-ListPair.dom am1 ⊆ List.diff xs' xs_im →
-ListPair.dom (am1 ++ am0) ⊆ List.diff xs' xs
+lemma dom_diff_concat {β} (am0 am1 : List (String × β)) xs xs_im xs' :
+  xs ⊆ xs_im → ListPair.dom am0 ⊆ List.diff xs_im xs →
+  xs_im ⊆ xs' → ListPair.dom am1 ⊆ List.diff xs' xs_im →
+  ListPair.dom (am1 ++ am0) ⊆ List.diff xs' xs
 := by
   intros ss0 dd0 ss1 dd1
   induction am1 with
