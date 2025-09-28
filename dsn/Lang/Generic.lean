@@ -108,18 +108,62 @@ lemma ListPair.mem_disj_concat_right {β}
     apply ih at p
     simp [*]
 
-lemma diff_concat_preservation (xs ys ys' : List String) :
-  List.diff xs (ys' ++ ys) ⊆ List.diff xs ys
+lemma diff_concat_preservation (xs ys zs : List String) :
+  List.diff xs (ys ++ zs) ⊆ List.diff xs ys
 := by sorry
 
-lemma diff_concat_eq (xs ys: List String) :
-  ∀ zs, ys ⊆ zs →
-  List.diff xs zs = List.diff xs (List.diff zs ys ++ ys)
+
+lemma  List.diff_cons_eq z (xs ys zs: List String) :
+  List.diff xs zs = List.diff ys zs →
+  List.diff (z :: xs) zs = List.diff (z :: ys) zs
+:= by sorry
+
+lemma diff_cons_sub_eq z (xs ys : List String) :
+  z ∈ ys → List.diff (z :: xs) ys = List.diff xs ys
+:= by sorry
+
+
+lemma diff_erase_eq z (xs ys : List String) :
+  z ∈ ys →
+  List.diff xs ys = List.diff (List.erase xs z) ys
+:= by induction xs with
+  | nil => simp
+  | cons x xs' ih =>
+    intro my
+    simp [List.erase, *]
+    have d : Decidable (x = z) := inferInstance
+    cases d with
+    | isFalse h =>
+      have b : (x == z) = false := by exact beq_false_of_ne h
+      simp [*]
+      apply List.diff_cons_eq
+      apply ih
+      assumption
+    | isTrue h =>
+      simp [*]
+      rw [← ih my]
+      exact diff_cons_sub_eq z xs' ys my
+
+lemma diff_concat_eq (xs ys zs : List String) :
+  ys ⊆ zs →
+  List.diff xs zs = List.diff xs (ys ++ zs)
 := by induction ys with
   | nil =>
-    sorry
-  | cons =>
-    sorry
+    simp
+  | cons y ys' ih =>
+    intros m
+    have p0 : y ∈ zs := by apply m; simp [*]
+    have p1 : ys' ⊆ zs := by intros y' m'; apply m; simp [*]
+
+    simp [List.diff]
+    have d : Decidable (y ∈ xs) := inferInstance
+    cases d with
+    | isFalse h =>
+      simp [*]
+    | isTrue h =>
+      simp [*]
+      have p2 : y ∈ (ys' ++ zs) := by exact List.mem_append_right ys' p0
+      exact diff_erase_eq y xs (ys' ++ zs) p2
 
 
 #print List.eq_nil_of_subset_nil
@@ -128,11 +172,8 @@ ys ⊆ zs → List.diff xs zs ⊆ List.diff xs ys
 := by
   intro ss
   intro x dz
-  apply diff_concat_preservation xs ys (List.diff zs ys)
+  apply diff_concat_preservation xs ys zs
   rw [← diff_concat_eq] <;> assumption
-
-
-
 
 
 lemma dom_diff_concat {β} (am0 am1 : List (String × β)) xs xs_im xs' :
