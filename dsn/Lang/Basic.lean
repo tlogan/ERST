@@ -769,6 +769,19 @@ theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
 cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
 
 
+def List.merase {α} [BEq α] (x : α) : List α → List α
+| .nil => .nil
+| .cons y ys =>
+  if x == y then
+    List.merase x ys
+  else
+    y :: (List.merase x ys)
+
+def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
+| .nil => .nil
+| .cons y ys =>
+  List.mdiff (List.merase y xs) ys
+
 def ListPair.dom {α} {β} : List (α × β) → List α
 | .nil => .nil
 | (a, _) :: xs => a :: dom xs
