@@ -143,7 +143,7 @@ lemma mdiff_increasing_subseteq (xs : List String) :
     assumption
 
 
-lemma dom_concat_concat_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs' :
+lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs' :
   xs ⊆ xs_im → ListPair.dom am0 ⊆ List.mdiff xs_im xs →
   xs_im ⊆ xs' → ListPair.dom am1 ⊆ List.mdiff xs' xs_im →
   ListPair.dom (am1 ++ am0) ⊆ List.mdiff xs' xs
@@ -160,48 +160,21 @@ lemma dom_concat_concat_subseteq {β} (am0 am1 : List (String × β)) xs xs_im x
     simp [*]
   |cons a am1' ih =>
     let (x, v) := a
-    intro y0 p0
-    apply ih
+    simp [ListPair.dom]
+    apply And.intro
     {
+      apply mdiff_decreasing_subseteq xs' xs xs_im ss0
+      apply dd1
+      simp [ListPair.dom]
+    }
+    {
+      apply ih
       intro y1 p1
       apply dd1
       simp [ListPair.dom]
       apply Or.inr
       assumption
     }
-    {
-      simp [ListPair.dom] at p0
-      cases p0 with
-      | inl h =>
-        rw [h]
-
-        sorry
-      | inr h =>
-        assumption
-    }
-    -- simp [ListPair.dom]
-    -- apply And.intro
-    -- case left =>
-    --   apply ih
-    --   {
-    --     intro x0 p0
-    --     apply dd1
-    --     simp [ListPair.dom]
-    --     apply Or.inr
-    --     assumption
-    --   }
-    --   {
-
-    --     sorry
-    --   }
-    -- case right =>
-    --   simp [ListPair.dom] at dd1
-    --   cases dd1 with | intro dd1l dd1r =>
-    --   intro x h
-    --   apply ih dd1r
-    --   simp [*]
-
-#print List.concat
 
 
 lemma Subtyping.Static.skoelms_subseteq skolems assums l r skolems' assums' :
@@ -239,7 +212,7 @@ mutual
     simp [*]
     apply And.intro
     {
-      apply dom_concat_concat_subseteq _ _ _ skolems_im
+      apply dom_concat_mdiff_subseteq _ _ _ skolems_im
       · exact Subtyping.Static.skoelms_subseteq skolems assums l r skolems_im assums_im ss
       · sorry
       · sorry
