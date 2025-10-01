@@ -248,6 +248,7 @@ mutual
       simp [MultiSubtyping.Dynamic]
       apply And.intro
       {
+        -- TODO: create lemmas with various properties of subtyping static params
         have p1 : (ListPair.dom am1) ∩ Typ.free_vars l = [] := by sorry
         have p2 : (ListPair.dom am1) ∩ Typ.free_vars r = [] := by sorry
         apply Subtyping.Dynamic.dom_extension am1 (am0 ++ am') l r p1 p2
