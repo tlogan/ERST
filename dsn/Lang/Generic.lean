@@ -88,18 +88,18 @@ lemma mdiff_concat_eq (xs ys zs : List String) :
     apply mdiff_right_sub_cons_eq
     exact List.mem_append_right ys' p0
 
-lemma mdiff_concat_subseteq (xs ys zs : List String) :
+lemma mdiff_concat_containment (xs ys zs : List String) :
   List.mdiff xs (ys ++ zs) ⊆ List.mdiff xs ys
 := by sorry
 
 
 #print List.eq_nil_of_subset_nil
-lemma mdiff_decreasing_subseteq (xs ys zs : List String) :
+lemma mdiff_decreasing_containment (xs ys zs : List String) :
 ys ⊆ zs → List.mdiff xs zs ⊆ List.mdiff xs ys
 := by
   intro ss
   intro x dz
-  apply mdiff_concat_subseteq xs ys zs
+  apply mdiff_concat_containment xs ys zs
   rw [← mdiff_concat_eq] <;> assumption
 
 
@@ -108,7 +108,7 @@ y ∈ zs → x ≠ y → y ∈ List.merase x zs
 := by sorry
 
 
-lemma merase_subseteq x (ys zs : List String) :
+lemma merase_containment x (ys zs : List String) :
   ys ⊆ zs → List.merase x ys ⊆ List.merase x zs
 := by induction ys with
   | nil =>
@@ -130,7 +130,7 @@ lemma merase_subseteq x (ys zs : List String) :
       apply ih
       assumption
 
-lemma mdiff_increasing_subseteq (xs : List String) :
+lemma mdiff_increasing_containment (xs : List String) :
   ∀ ys zs, ys ⊆ zs → List.mdiff ys xs ⊆ List.mdiff zs xs
 := by induction xs with
   | nil =>
@@ -139,11 +139,11 @@ lemma mdiff_increasing_subseteq (xs : List String) :
     intro ys zs ss
     simp [List.mdiff]
     apply ih
-    apply merase_subseteq
+    apply merase_containment
     assumption
 
 
-lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs' :
+lemma dom_concat_mdiff_containment {β} (am0 am1 : List (String × β)) xs xs_im xs' :
   xs ⊆ xs_im → ListPair.dom am0 ⊆ List.mdiff xs_im xs →
   xs_im ⊆ xs' → ListPair.dom am1 ⊆ List.mdiff xs' xs_im →
   ListPair.dom (am1 ++ am0) ⊆ List.mdiff xs' xs
@@ -153,7 +153,7 @@ lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs
   | nil =>
     simp [*]
     have ss1' : List.mdiff xs_im xs ⊆ List.mdiff xs' xs := by
-      apply mdiff_increasing_subseteq; simp [*]
+      apply mdiff_increasing_containment; simp [*]
     intro x p
     apply ss1'
     apply dd0
@@ -163,7 +163,7 @@ lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs
     simp [ListPair.dom]
     apply And.intro
     {
-      apply mdiff_decreasing_subseteq xs' xs xs_im ss0
+      apply mdiff_decreasing_containment xs' xs xs_im ss0
       apply dd1
       simp [ListPair.dom]
     }
@@ -175,12 +175,6 @@ lemma dom_concat_mdiff_subseteq {β} (am0 am1 : List (String × β)) xs xs_im xs
       apply Or.inr
       assumption
     }
-
-
-lemma Subtyping.Static.skolems_subseteq skolems assums l r skolems' assums' :
-  Subtyping.Static skolems assums l r skolems' assums' →
-  skolems ⊆ skolems'
-:= by sorry
 
 
 lemma Subtyping.Dynamic.dom_extension am1 am0 lower upper :
@@ -202,11 +196,94 @@ lemma MultiSubtyping.Dynamic.reduction am cs cs' :
   MultiSubtyping.Dynamic am cs
 := by sorry
 
-lemma ListSubtyping.Static.assums_subseteq skolems assums cs skolems' assums' :
+lemma List.cons_containment {α} [BEq α] (x : α) (xs ys : List α) :
+  x :: xs  ⊆ ys → x ∈ ys ∧ xs ⊆ ys
+:= by
+  intro p0
+  apply And.intro
+  {
+    apply p0
+    simp [*]
+  }
+  {
+    intro y p1
+    apply p0
+    simp [*]
+  }
+
+#print List.inter
+
+set_option pp.notation false in
+#check (1 :: [1,2,3]) ∩ [4] = []
+
+lemma List.disjoint_preservation {α} [BEq α] (xs ys zs : List α) :
+  ys ∩ zs = [] → xs ⊆ ys → xs ∩ zs = []
+:= by
+  simp [Inter.inter, List.inter]
+  intro p0
+  induction xs with
+  | nil =>
+    intro p1; intro a;
+    intro p2
+    cases p2
+  | cons x xs' ih =>
+    intro p1
+    have ⟨p2, p3⟩ := List.cons_containment x xs' ys p1
+    intro a
+    intro p4
+    cases p4 with
+    | head =>
+      exact p0 x p2
+    | tail _ p5 =>
+      apply ih p3
+      apply p5
+
+
+lemma Subtyping.Static.assums_skolems_freshness skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars assums = []
+:= by sorry
+
+lemma Subtyping.Static.lower_skolems_freshness skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  (List.mdiff skolems' skolems) ∩ Typ.free_vars lower = []
+:= by sorry
+
+lemma Subtyping.Static.upper_skolems_freshness skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
+:= by sorry
+
+
+lemma Subtyping.Static.skolems_containment skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  skolems ⊆ skolems'
+:= by sorry
+
+lemma Subtyping.Static.assums_containment skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  assums ⊆ assums'
+:= by sorry
+
+lemma Subtyping.Static.lower_containment skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  Typ.free_vars lower ⊆ ListSubtyping.free_vars assums'
+:= by sorry
+
+lemma Subtyping.Static.upper_containment skolems assums lower upper skolems' assums' :
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  Typ.free_vars lower ⊆ ListSubtyping.free_vars assums'
+:= by sorry
+
+lemma ListSubtyping.Static.assums_containment skolems assums cs skolems' assums' :
   ListSubtyping.Static skolems assums cs skolems' assums' →
   assums ⊆ assums'
 := by sorry
 
+lemma ListSubtyping.Static.conclusions_containment skolems assums cs skolems' assums' :
+  ListSubtyping.Static skolems assums cs skolems' assums' →
+  ListSubtyping.free_vars cs ⊆ ListSubtyping.free_vars assums'
+:= by sorry
 
 mutual
   theorem ListSubtyping.soundness skolems assums cs skolems' assums' :
@@ -227,18 +304,14 @@ mutual
       intro md
       simp [MultiSubtyping.Dynamic]
   | .cons l r cs' skolems_im assums_im ss lss => by
-    have ih0 := Subtyping.soundness skolems assums l r skolems_im assums_im ss
-    have ih1 := ListSubtyping.soundness skolems_im assums_im cs' skolems' assums' lss
-    cases ih0 with | intro am0 h0 =>
-    cases h0 with | intro h0l h0r =>
-    cases ih1 with | intro am1 h1 =>
-    cases h1 with | intro h1l h1r =>
+    have ⟨am0,⟨h0l, h0r⟩⟩ := Subtyping.soundness skolems assums l r skolems_im assums_im ss
+    have ⟨am1,⟨h1l, h1r⟩⟩ := ListSubtyping.soundness skolems_im assums_im cs' skolems' assums' lss
     exists (am1 ++ am0)
     simp [*]
     apply And.intro
     {
-      apply dom_concat_mdiff_subseteq _ _ _ skolems_im
-      · exact Subtyping.Static.skolems_subseteq skolems assums l r skolems_im assums_im ss
+      apply dom_concat_mdiff_containment _ _ _ skolems_im
+      · exact Subtyping.Static.skolems_containment skolems assums l r skolems_im assums_im ss
       · sorry
       · sorry
       · simp [*]
@@ -249,12 +322,16 @@ mutual
       apply And.intro
       {
         -- TODO: create lemmas with various properties of subtyping static params
-        have p1 : (ListPair.dom am1) ∩ Typ.free_vars l = [] := by sorry
+        have p1 : (ListPair.dom am0) ∩ Typ.free_vars l = [] := by
+          apply List.disjoint_preservation (ListPair.dom am0) _ (Typ.free_vars l) _ h0l
+          apply Subtyping.Static.lower_skolems_freshness skolems assums l r skolems_im assums_im
+          apply ss
         have p2 : (ListPair.dom am1) ∩ Typ.free_vars r = [] := by sorry
         apply Subtyping.Dynamic.dom_extension am1 (am0 ++ am') l r p1 p2
         apply h0r am'
         have p3 : assums_im ⊆ assums' := by
-          exact ListSubtyping.Static.assums_subseteq skolems_im assums_im cs' skolems' assums' lss
+          exact ListSubtyping.Static.assums_containment
+            skolems_im assums_im cs' skolems' assums' lss
         apply MultiSubtyping.Dynamic.reduction _ assums_im assums' p3
         have p4 : (ListPair.dom am1) ∩ ListSubtyping.free_vars assums' = [] := by sorry
         exact MultiSubtyping.Dynamic.dom_reduction am1 (am0 ++ am') assums' p4 p0
@@ -266,7 +343,7 @@ mutual
 
   theorem Subtyping.soundness skolems assums lower upper skolems' assums' :
     Subtyping.Static skolems assums lower upper skolems' assums' →
-    ∃ am, ListPair.dom am ⊆ (List.diff skolems' skolems) ∧
+    ∃ am, ListPair.dom am ⊆ (List.mdiff skolems' skolems) ∧
     (∀ am',
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper
