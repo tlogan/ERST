@@ -216,7 +216,7 @@ lemma List.cons_containment {α} [BEq α] (x : α) (xs ys : List α) :
 set_option pp.notation false in
 #check (1 :: [1,2,3]) ∩ [4] = []
 
-lemma List.disjoint_preservation {α} [BEq α] (xs ys zs : List α) :
+lemma List.disjoint_preservation_left {α} [BEq α] (xs ys zs : List α) :
   ys ∩ zs = [] → xs ⊆ ys → xs ∩ zs = []
 := by
   simp [Inter.inter, List.inter]
@@ -238,6 +238,20 @@ lemma List.disjoint_preservation {α} [BEq α] (xs ys zs : List α) :
       apply ih p3
       apply p5
 
+lemma List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
+  xs ∩ zs = [] → ys ⊆ zs → xs ∩ ys = []
+:= by
+  simp [Inter.inter, List.inter]
+  intro p0
+  induction xs with
+  | nil =>
+    intro p1; intro a;
+    intro p2
+    cases p2
+  | cons x xs' ih =>
+    intro p1
+    sorry
+
 
 lemma Subtyping.Static.assums_skolems_freshness skolems assums lower upper skolems' assums' :
   Subtyping.Static skolems assums lower upper skolems' assums' →
@@ -252,6 +266,11 @@ lemma Subtyping.Static.lower_skolems_freshness skolems assums lower upper skolem
 lemma Subtyping.Static.upper_skolems_freshness skolems assums lower upper skolems' assums' :
   Subtyping.Static skolems assums lower upper skolems' assums' →
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
+:= by sorry
+
+lemma ListSubtyping.Static.assums_skolems_freshness skolems assums cs skolems' assums' :
+  ListSubtyping.Static skolems assums cs skolems' assums' →
+  (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars assums = []
 := by sorry
 
 
@@ -321,12 +340,16 @@ mutual
       simp [MultiSubtyping.Dynamic]
       apply And.intro
       {
-        -- TODO: create lemmas with various properties of subtyping static params
-        have p1 : (ListPair.dom am0) ∩ Typ.free_vars l = [] := by
-          apply List.disjoint_preservation (ListPair.dom am0) _ (Typ.free_vars l) _ h0l
-          apply Subtyping.Static.lower_skolems_freshness skolems assums l r skolems_im assums_im
-          apply ss
+
+        have p1 : (ListPair.dom am1) ∩ Typ.free_vars l = [] := by
+          apply List.disjoint_preservation_left (ListPair.dom am1) _ (Typ.free_vars l) _ h1l
+          have p2 : Typ.free_vars l ⊆ ListSubtyping.free_vars assums_im := by
+            exact Subtyping.Static.lower_containment skolems assums l r skolems_im assums_im ss
+          apply List.disjoint_preservation_right _ p2
+          exact ListSubtyping.Static.assums_skolems_freshness
+              skolems_im assums_im cs' skolems' assums' lss
         have p2 : (ListPair.dom am1) ∩ Typ.free_vars r = [] := by sorry
+
         apply Subtyping.Dynamic.dom_extension am1 (am0 ++ am') l r p1 p2
         apply h0r am'
         have p3 : assums_im ⊆ assums' := by
