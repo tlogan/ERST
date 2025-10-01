@@ -938,7 +938,7 @@ mutual
   inductive Typ.Monotonic : String → Bool → Typ → Prop
   | var id : Typ.Monotonic id true (.var id)
   | varskip id b id' : id ≠ id' → Typ.Monotonic id b (.var id')
-  | unit id b : Typ.Monotonic id b .unit
+    | unit id b : Typ.Monotonic id b .unit
   | entry id b l body : Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
   | path id b left right :
     Typ.Monotonic id (not b) left →

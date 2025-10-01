@@ -525,7 +525,8 @@ mutual
         ListSubtyping.Static.solve skolems' assums' remainder
       ))
 
-  partial def Subtyping.Static.solve (skolems : List String) (assums : ListSubtyping) (lower upper : Typ )
+  partial def Subtyping.Static.solve
+    (skolems : List String) (assums : ListSubtyping) (lower upper : Typ )
   : Lean.MetaM (List (List String × ListSubtyping))
   := if (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper) then
     return [(skolems,assums)]
@@ -938,7 +939,7 @@ mutual
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-    | refl skolems assums lower upper :
+    | refl {skolems assums lower upper} :
       (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
       Subtyping.Static skolems assums lower upper skolems assums
 

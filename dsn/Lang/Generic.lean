@@ -292,6 +292,56 @@ lemma Subtyping.Static.upper_containment {skolems assums lower upper skolems' as
   have ⟨p0, p1, p2, p3,_,_,_⟩ := Subtyping.Static.attributes h
   apply p3
 
+#eval Typ.toBruijn 0 [] (Typ.var "hello")
+lemma Typ.bruijn_var_eq {idl idu} :
+  Typ.toBruijn 0 [] (Typ.var idl) = Typ.toBruijn 0 [] (Typ.var idu)
+  →
+  idl = idu
+:= by sorry
+
+-- lemma Typ.bruijn_var_eq {idl idu} :
+--   Typ.toBruijn 0 [] (Typ.var idl) = Typ.toBruijn 0 [] (Typ.var idu)
+-- := by sorry
+
+
+lemma Subtyping.refl_dynamic {am t} :
+  Subtyping.Dynamic am t t
+:= by sorry
+
+mutual
+
+  lemma Subtyping.bruijn_eq_imp_dynamic {am} :
+    ∀ {lower upper},
+    Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] upper →
+    Subtyping.Dynamic am lower upper
+  := fun {lower upper} => match lower with
+    | .var idl => by
+      cases upper with
+      | var idu =>
+        intro p0
+        apply Typ.bruijn_var_eq at p0
+        simp [*]
+        exact refl_dynamic
+      | _ =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf idl [])) := inferInstance
+        cases d with
+        | isFalse h => simp [*]
+        | isTrue h => simp [*]
+    -- | unit : Typ
+    -- | entry : String → Typ → Typ
+    -- | path : Typ → Typ → Typ
+    -- | bot :  Typ
+    -- | top :  Typ
+    -- | unio :  Typ → Typ → Typ
+    -- | inter :  Typ → Typ → Typ
+    -- | diff :  Typ → Typ → Typ
+    -- | all :  List String → List (Typ × Typ) → Typ → Typ
+    -- | exi :  List String → List (Typ × Typ) → Typ → Typ
+    -- | lfp :  String → Typ → Typ
+    | _ => by sorry
+end
+
 
 
 mutual
@@ -313,38 +363,38 @@ mutual
       intro md
       simp [MultiSubtyping.Dynamic]
   | .cons l r cs' skolems_im assums_im ss lss => by
-    have ⟨am0,h0l,h0r⟩ := Subtyping.soundness ss
-    have ⟨am1,h1l,h1r⟩ := ListSubtyping.soundness lss
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness ss
+    have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.soundness lss
     have ⟨p0,p1,p2,p3,p4,p5,p6⟩ := Subtyping.Static.attributes ss
     have ⟨p7,p8,p9,p10,p11⟩ := ListSubtyping.Static.attributes lss
     exists (am1 ++ am0)
     simp [*]
     apply And.intro
-    · exact dom_concat_mdiff_containment p0 h0l p7 h1l
+    · exact dom_concat_mdiff_containment p0 ih0l p7 ih1l
     {
       intro am' p12
       simp [MultiSubtyping.Dynamic]
       apply And.intro
       {
         apply Subtyping.Dynamic.dom_extension
-        {
-          apply List.disjoint_preservation_left _ h1l
+        · {
+          apply List.disjoint_preservation_left _ ih1l
           apply List.disjoint_preservation_right _ p2
           apply p10
         }
-        {
-          apply List.disjoint_preservation_left _ h1l
+        · {
+          apply List.disjoint_preservation_left _ ih1l
           apply List.disjoint_preservation_right _ p3
           apply p10
         }
-        {
-          apply h0r
+        · {
+          apply ih0r
           apply MultiSubtyping.Dynamic.dom_reduction
-          · exact List.disjoint_preservation_left p10 h1l
+          · exact List.disjoint_preservation_left p10 ih1l
           · exact MultiSubtyping.Dynamic.reduction p8 p12
         }
       }
-      · exact h1r (am0 ++ am') p12
+      · exact ih1r (am0 ++ am') p12
     }
 
   theorem Subtyping.soundness {skolems assums lower upper skolems' assums'} :
@@ -354,6 +404,47 @@ mutual
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper
     )
-  := by sorry
+  | .refl p0 => by
+    exists []
+    simp [*]
+    apply And.intro
+    · simp [ListPair.dom]
+    · {
+      intros am p1
+      exact Subtyping.bruijn_eq_imp_dynamic p0
+    }
+  -- | rename_right skolems assums left right right' skolems' assums' :
+  -- | entry_pres skolems assums l left right skolems' assums' :
+  -- | path_pres skolems assums p q  skolems' assums' x y skolems'' assums'' :
+  -- | bot_elim skolems assums t :
+  -- | top_intro skolems assums t :
+  -- | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
+  -- | exi_elim skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+  -- | inter_intro skolems assums t a  b skolems' assums' skolems'' assums'' :
+  -- | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+  -- | placeholder_elim skolems assums id t trans skolems' assums'  :
+  -- | placeholder_intro skolems assums t id trans skolems' assums'  :
+  -- | skolem_placeholder_intro skolems assums t id trans skolems' assums'  :
+  -- | skolem_intro skolems assums t id t' skolems' assums'  :
+  -- | skolem_placeholder_elim skolems assums id t trans skolems' assums'  :
+  -- | skolem_elim skolems assums id t t' skolems' assums' :
+  -- | unio_antec skolems assums l a b r skolems' assums' :
+  -- | inter_conseq skolems assums l a b r skolems' assums' :
+  -- | inter_entry skolems assums t l a b skolems' assums' :
+  -- | lfp_skip_elim skolems assums id left right skolems' assums' :
+  -- | lfp_induct_elim skolems assums id left right skolems' assums' :
+  -- | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
+  -- | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
+  -- | diff_intro skolems assums t l r skolems' assums' :
+  -- | lfp_inflate_intro skolems assums l id r skolems' assums' :
+  -- | lfp_drop_intro skolems assums l id r r' skolems' assums' :
+  -- | diff_elim skolems assums l r t skolems' assums' :
+  -- | unio_left_intro skolems assums t l r skolems' assums' :
+  -- | unio_right_intro skolems assums t l r skolems' assums' :
+  -- | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
+  -- | inter_left_elim skolems assums l r t skolems' assums' :
+  -- | inter_right_elim skolems assums l r t skolems' assums' :
+  -- | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
+  | _ => by sorry
 
 end
