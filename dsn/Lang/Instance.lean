@@ -90,7 +90,7 @@ example Δ Γ
   PatLifting_Static_prove
 
 example Δ Γ
-: PatLifting.Static Δ Γ .unit Typ.top Δ Γ
+: PatLifting.Static Δ Γ .unit .unit Δ Γ
 := by
   PatLifting_Static_prove
 
@@ -455,6 +455,10 @@ example : Subtyping.Static
   [typ| <uno/> | <dos/> | <tres/>]
   [ids| ] [subtypings| ]
 := by Subtyping_Static_prove
+-- := by
+--   apply Subtyping.Static.lfp_skip_elim
+--   · exact Iff.mp List.count_eq_zero rfl
+--   · Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp induct elim
@@ -471,6 +475,10 @@ example : Subtyping.Static
   [typ| LFP[R] ((<zero/>) | (<succ> R))]
   [ids| ] [subtypings| ]
 := by Subtyping_Static_prove
+-- := by
+--   apply Subtyping.Static.lfp_induct_elim
+--   · Typ_Monotonic_prove
+--   · reduce; Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp elim diff intro

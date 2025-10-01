@@ -194,6 +194,7 @@ macro_rules
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 def Typ.is_pattern (tops : List String) : Typ → Bool
+  | .unit => true
   | .top => true
   | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
   | .var id => id ∈ tops
@@ -203,6 +204,7 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 
 def Typ.height : Typ → Option Nat
   | .top => return 1
+  | .unit => return 1
   | .exi _ [] body => Typ.height body
   | .var _ => return 1
   | .entry _ body => do
@@ -243,6 +245,7 @@ mutual
       ListSubtyping.var_restricted id qs &&
       ListTyp.struct_less_than bs body
     | (.var _), .top => .true
+    | (.var _), .unit => .true
     | _, _ => .false
 end
 
@@ -450,7 +453,7 @@ inductive PatLifting.Static
   ((.var tid, Typ.top) :: Δ)  ((id, .var tid) :: (remove id Γ))
 
 | unit Δ Γ :
-  PatLifting.Static Δ Γ .unit .top Δ Γ
+  PatLifting.Static Δ Γ .unit .unit Δ Γ
 
 | record_nil Δ Γ :
   PatLifting.Static Δ Γ (.record []) .top Δ Γ
@@ -682,8 +685,8 @@ mutual
       ) then
         Subtyping.Static.solve skolems assums t l
       else
-        failure
-
+        return []
+--
     | l, (.lfp id r) =>
       if Subtyping.inflatable l r then
         Subtyping.Static.solve skolems assums l (.sub [(id, .lfp id r)] r)
@@ -1252,7 +1255,7 @@ macro_rules
         · reduce; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_skip_elim
-        · simp
+        · exact Iff.mp List.count_eq_zero rfl
         · Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_induct_elim

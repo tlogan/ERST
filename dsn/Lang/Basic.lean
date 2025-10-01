@@ -15,6 +15,7 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 inductive Typ
 | var : String → Typ
+| unit : Typ
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
 | bot :  Typ
@@ -52,6 +53,9 @@ mutual
         cases d with
         | isFalse => apply isFalse ; simp [*]
         | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .unit => by cases right with
+      | unit => apply isTrue; simp
       | _ => apply isFalse ; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -169,6 +173,7 @@ mutual
 
   def Typ.beq : Typ → Typ → Bool
   | .var idl, .var idr => idl == idr
+  | .unit, .unit => .true
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .path x y, .path p q => Typ.beq x p && Typ.beq y q
   | .bot, .bot => .true
@@ -209,6 +214,9 @@ mutual
 
   lemma Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
   | .var id => by
+    unfold Typ.beq
+    simp
+  | .unit => by
     unfold Typ.beq
     simp
   | .entry l body => by
@@ -288,6 +296,9 @@ mutual
     fun left right => match left with
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
+      | _ => unfold Typ.beq; simp
+    | .unit => by cases right with
+      | unit => unfold Typ.beq; simp
       | _ => unfold Typ.beq; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -449,7 +460,8 @@ mutual
 
   partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .entry l .top, _  => "<" ++ l ++ "/>"
+  | .unit, _ => "@"
+  | .entry l .unit, _  => "<" ++ l ++ "/>"
   | .entry l body, _  =>
     "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
   | .path left right, p =>
@@ -555,6 +567,7 @@ instance : BEq (Typ × Typ) where
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
 | fvar : String → Typ.Bruijn
+| unit : Typ.Bruijn
 | entry : String → Typ.Bruijn → Typ.Bruijn
 | path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
 | bot : Typ.Bruijn
@@ -581,6 +594,7 @@ mutual
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
   | .bvar il, .bvar ir => il == ir
   | .fvar idl, .fvar idr => idl == idr
+  | .unit, .unit => .true
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
   | .path x y, .path p q => Typ.Bruijn.beq x p && Typ.Bruijn.beq y q
   | .top, .top => .true
@@ -621,6 +635,8 @@ mutual
   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
   | .var id =>
     if id ∈ bounds then [id] else []
+  | .unit =>
+    []
   | .entry _ t =>
     Typ.ordered_bound_vars bounds t
   | .path left right =>
@@ -673,6 +689,7 @@ mutual
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
+  | .unit => []
   | .entry _ body => Typ.free_vars body
   | .path p q => Typ.free_vars p ∪ Typ.free_vars q
   | .bot => []
@@ -706,6 +723,7 @@ mutual
     match List.firstIndexOf id bids with
     | .none => .fvar id
     | .some i => .bvar (base + i)
+  | .unit => .unit
   | .entry l body => .entry l (Typ.toBruijn base bids body)
   | .path left right =>
     .path
@@ -750,6 +768,7 @@ mutual
 
   def Typ.size : Typ → Nat
   | .var id => 1
+  | .unit => 1
   | .entry l body => Typ.size body + 1
   | .path left right => Typ.size left + Typ.size right + 1
   | .bot => 1
@@ -817,6 +836,7 @@ mutual
   | .var id => match find id δ with
     | .none => .var id
     | .some t => t
+  | .unit => .unit
   | .entry l body => .entry l (Typ.sub δ body)
   | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
   | .bot => .bot
@@ -862,6 +882,7 @@ mutual
       b == .true
     else
       .true
+  | .unit => .true
   | .entry _ body =>
     Typ.Monotonic.decide id b body
   | .path left right =>
@@ -917,6 +938,7 @@ mutual
   inductive Typ.Monotonic : String → Bool → Typ → Prop
   | var id : Typ.Monotonic id true (.var id)
   | varskip id b id' : id ≠ id' → Typ.Monotonic id b (.var id')
+  | unit id b : Typ.Monotonic id b .unit
   | entry id b l body : Typ.Monotonic id b body →  Typ.Monotonic id b (.entry l body)
   | path id b left right :
     Typ.Monotonic id (not b) left →
@@ -1001,6 +1023,7 @@ macro_rules
   (first
   | apply Typ.Monotonic.var
   | apply Typ.Monotonic.varskip; simp
+  | apply Typ.Monotonic.unit
   | apply Typ.Monotonic.entry; Typ_Monotonic_prove
 
   | apply Typ.Monotonic.path
@@ -1140,6 +1163,7 @@ syntax:90 typ:91 "*" typ:90 : typ
 
 syntax "<" ident ">" typ:90 : typ
 syntax "<" ident "/>" : typ
+syntax "@" : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
 syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
@@ -1296,7 +1320,8 @@ macro_rules
 
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
-| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] [typ| TOP])
+| `([typ| @ ]) => `(Typ.unit)
+| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] [typ| @])
 | `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
 | `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
 | `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
