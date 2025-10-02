@@ -756,21 +756,21 @@ mutual
     .diff
     (Typ.toBruijn base bids left)
     (Typ.toBruijn base bids right)
-    | .all ids subtypings body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
-      let n := (List.length bids')
-      .all n
-      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
-      (Typ.toBruijn (n + base) (bids' ++ bids) body)
-    | .exi ids subtypings body =>
-      let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
-      let n := (List.length bids')
-      .all n
-      (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
-      (Typ.toBruijn (n + base) (bids' ++ bids) body)
-    | .lfp id body =>
-      .lfp
-      (Typ.toBruijn (1 + base) (id :: bids) body)
+  | .all ids subtypings body =>
+    let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
+    let n := (List.length bids')
+    .all n
+    (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
+    (Typ.toBruijn (n + base) (bids' ++ bids) body)
+  | .exi ids subtypings body =>
+    let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
+    let n := (List.length bids')
+    .exi n
+    (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
+    (Typ.toBruijn (n + base) (bids' ++ bids) body)
+  | .lfp id body =>
+    .lfp
+    (Typ.toBruijn (1 + base) (id :: bids) body)
 end
 
 mutual
