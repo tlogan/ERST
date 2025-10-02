@@ -512,7 +512,7 @@ mutual
           · apply Dynamic.unio_left_intro
             · apply Subtyping.bruijn_eq_imp_dynamic p0
         · exact Dynamic.not_diff_elim p1
-        · exact Dynamic.not_diff_elim p2
+        · apply Dynamic.not_diff_intro (Eq.symm p1)
       | var id =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
