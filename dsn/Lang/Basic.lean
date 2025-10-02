@@ -630,6 +630,19 @@ def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
   else
     .none
 
+def List.merase {α} [BEq α] (x : α) : List α → List α
+| .nil => .nil
+| .cons y ys =>
+  if x == y then
+    List.merase x ys
+  else
+    y :: (List.merase x ys)
+
+def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
+| .nil => .nil
+| .cons y ys =>
+  List.mdiff (List.merase y xs) ys
+
 
 mutual
   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
@@ -641,34 +654,34 @@ mutual
     Typ.ordered_bound_vars bounds t
   | .path left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .bot => []
   | .top => []
   | .unio left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .inter left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .diff left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.diff (Typ.ordered_bound_vars bounds right) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .all ids subtypings body =>
-    let bounds' := List.diff bounds ids
+    let bounds' := List.mdiff bounds ids
     let a := ListPairTyp.ordered_bound_vars bounds' subtypings
-    let b := List.diff (Typ.ordered_bound_vars bounds' body) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .exi ids subtypings body =>
-    let bounds' := List.diff bounds ids
+    let bounds' := List.mdiff bounds ids
     let a := ListPairTyp.ordered_bound_vars bounds' subtypings
-    let b := List.diff (Typ.ordered_bound_vars bounds' body) a
+    let b := List.mdiff (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .lfp id body =>
-    let bounds' := List.diff bounds [id]
+    let bounds' := List.mdiff bounds [id]
     Typ.ordered_bound_vars bounds' body
 
   def ListPairTyp.ordered_bound_vars (bounds : List String)
@@ -676,8 +689,8 @@ mutual
   | .nil => .nil
   | .cons (l,r) remainder =>
     let a := (Typ.ordered_bound_vars bounds l)
-    let b := List.diff (Typ.ordered_bound_vars bounds r) a
-    let c := List.diff (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
+    let b := List.mdiff (Typ.ordered_bound_vars bounds r) a
+    let c := List.mdiff (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
     a ∪ b ∪ c
 end
 
@@ -698,15 +711,15 @@ mutual
   | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all ids subtypings body =>
-    List.diff (
+    List.mdiff (
       ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .exi ids subtypings body =>
-    List.diff (
+    List.mdiff (
       ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .lfp id body =>
-    List.diff (Typ.free_vars body) [id]
+    List.mdiff (Typ.free_vars body) [id]
 end
 
 mutual
@@ -787,19 +800,6 @@ cases t <;> simp [Typ.size]
 theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
 cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
 
-
-def List.merase {α} [BEq α] (x : α) : List α → List α
-| .nil => .nil
-| .cons y ys =>
-  if x == y then
-    List.merase x ys
-  else
-    y :: (List.merase x ys)
-
-def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
-| .nil => .nil
-| .cons y ys =>
-  List.mdiff (List.merase y xs) ys
 
 def ListPair.dom {α} {β} : List (α × β) → List α
 | .nil => .nil

@@ -381,6 +381,42 @@ lemma Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
   ¬ Dynamic am t0 (Typ.diff t1 t2)
 := by sorry
 
+
+lemma Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
+  ListPair.dom am' ⊆ ids →
+  Subtyping.Dynamic (am' ++ am) t body →
+  MultiSubtyping.Dynamic (am' ++ am) quals →
+  Subtyping.Dynamic am t (Typ.exi ids quals body)
+:= by sorry
+
+lemma Subtyping.Dynamic.exi_elim {am ids quals body t} :
+  (∀ am',
+    ListPair.dom am' ⊆ ids →
+    MultiSubtyping.Dynamic (am' ++ am) quals →
+    Subtyping.Dynamic (am' ++ am) body t
+  ) →
+  ids ∩ Typ.free_vars body = [] →
+  Subtyping.Dynamic am (Typ.exi ids quals body) t
+:= by sorry
+
+
+lemma Subtyping.Dynamic.all_elim {am am' ids quals body t} :
+  ListPair.dom am' ⊆ ids →
+  Subtyping.Dynamic (am' ++ am) body t →
+  MultiSubtyping.Dynamic (am' ++ am) quals →
+  Subtyping.Dynamic am (Typ.all ids quals body) t
+:= by sorry
+
+lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
+  (∀ am',
+    ListPair.dom am' ⊆ ids →
+    MultiSubtyping.Dynamic (am' ++ am) quals →
+    Subtyping.Dynamic (am' ++ am) t body
+  ) →
+  ids ∩ Typ.free_vars body = [] →
+  Subtyping.Dynamic am t (Typ.all ids quals body)
+:= by sorry
+
 mutual
 
   lemma Subtyping.bruijn_eq_imp_dynamic {am} :
@@ -523,8 +559,19 @@ mutual
     | .all idsl qualsl bodyl => by
       cases upper with
       | all idsu qualsu bodyu =>
-        simp [Typ.toBruijn]
-        sorry
+        intros p0
+        reduce at p0
+        injection p0 with p1 p2 p3
+        apply Dynamic.all_intro
+        · {
+          intros am' p4 p5
+          apply Dynamic.all_elim _ _
+          · sorry
+          · sorry
+          · sorry
+          · sorry
+        }
+        · sorry
       | _ =>
         sorry
 
