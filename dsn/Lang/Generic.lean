@@ -419,6 +419,13 @@ lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
 
 mutual
 
+  lemma ListSubtyping.bruijn_eq_imp_dynamic {am} :
+    ∀ {lower upper},
+    ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
+    MultiSubtyping.Dynamic am lower →
+    MultiSubtyping.Dynamic am upper
+  := by sorry
+
   lemma Subtyping.bruijn_eq_imp_dynamic {am} :
     ∀ {lower upper},
     Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] upper →
@@ -430,7 +437,7 @@ mutual
         intro p0
         apply Typ.bruijn_var_eq at p0
         simp [*]
-        exact refl_dynamic
+        exact Subtyping.refl_dynamic
       | _ =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf idl [])) := inferInstance
@@ -439,7 +446,7 @@ mutual
       cases upper with
       | unit =>
         simp [Typ.toBruijn]
-        exact refl_dynamic
+        exact Subtyping.refl_dynamic
       | var id =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
@@ -478,7 +485,7 @@ mutual
       cases upper with
       | bot =>
         simp [Typ.toBruijn]
-        exact refl_dynamic
+        exact Subtyping.refl_dynamic
       | var id =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
@@ -489,7 +496,7 @@ mutual
       cases upper with
       | top =>
         simp [Typ.toBruijn]
-        exact refl_dynamic
+        exact Subtyping.refl_dynamic
       | var id =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
@@ -502,13 +509,13 @@ mutual
       | unio leftu rightu =>
         simp [Typ.toBruijn]
         intro p0 p1
-        apply Dynamic.unio_elim
+        apply Subtyping.Dynamic.unio_elim
         · {
-          apply Dynamic.unio_left_intro
+          apply Subtyping.Dynamic.unio_left_intro
           apply Subtyping.bruijn_eq_imp_dynamic p0
         }
         · {
-          apply Dynamic.unio_right_intro
+          apply Subtyping.Dynamic.unio_right_intro
           apply Subtyping.bruijn_eq_imp_dynamic p1
         }
       | var id =>
@@ -523,13 +530,13 @@ mutual
       | inter leftu rightu =>
         simp [Typ.toBruijn]
         intro p0 p1
-        apply Dynamic.inter_intro
+        apply Subtyping.Dynamic.inter_intro
         · {
-          apply Dynamic.inter_left_elim
+          apply Subtyping.Dynamic.inter_left_elim
           apply Subtyping.bruijn_eq_imp_dynamic p0
         }
         · {
-          apply Dynamic.inter_right_elim
+          apply Subtyping.Dynamic.inter_right_elim
           apply Subtyping.bruijn_eq_imp_dynamic p1
         }
       | var id =>
@@ -543,12 +550,12 @@ mutual
       | diff leftu rightu =>
         simp [Typ.toBruijn]
         intro p0 p1
-        apply Dynamic.diff_intro
-        · apply Dynamic.diff_elim
-          · apply Dynamic.unio_left_intro
+        apply Subtyping.Dynamic.diff_intro
+        · apply Subtyping.Dynamic.diff_elim
+          · apply Subtyping.Dynamic.unio_left_intro
             · apply Subtyping.bruijn_eq_imp_dynamic p0
-        · exact Dynamic.not_diff_elim p1
-        · apply Dynamic.not_diff_intro (Eq.symm p1)
+        · exact Subtyping.Dynamic.not_diff_elim p1
+        · apply Subtyping.Dynamic.not_diff_intro (Eq.symm p1)
       | var id =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
@@ -562,14 +569,21 @@ mutual
         intros p0
         reduce at p0
         injection p0 with p1 p2 p3
-        apply Dynamic.all_intro
+        apply Subtyping.Dynamic.all_intro
         · {
           intros am' p4 p5
-          apply Dynamic.all_elim _ _
-          · sorry
-          · sorry
-          · sorry
-          · sorry
+          have p6 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsl := by
+            intros id p6
+            cases p6
+          apply Subtyping.Dynamic.all_elim p6
+          · {
+            simp [*]
+            apply Subtyping.bruijn_eq_imp_dynamic p3
+          }
+          · {
+            simp [*]
+            apply ListSubtyping.bruijn_eq_imp_dynamic (Eq.symm p2) p5
+          }
         }
         · sorry
       | _ =>
