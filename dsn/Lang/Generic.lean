@@ -308,6 +308,18 @@ lemma Subtyping.refl_dynamic {am t} :
   Subtyping.Dynamic am t t
 := by sorry
 
+
+lemma Subtyping.Dynamic.entry_pres {am l bodyl bodyu} :
+  Subtyping.Dynamic am bodyl bodyu →
+  Subtyping.Dynamic am (Typ.entry l bodyl) (Typ.entry l bodyu)
+:= by sorry
+
+lemma Subtyping.Dynamic.path_pres {am p q x y} :
+  Subtyping.Dynamic am x p →
+  Subtyping.Dynamic am q y →
+  Subtyping.Dynamic am (Typ.path p q) (Typ.path x y)
+:= by sorry
+
 mutual
 
   lemma Subtyping.bruijn_eq_imp_dynamic {am} :
@@ -325,11 +337,46 @@ mutual
       | _ =>
         simp [Typ.toBruijn, List.firstIndexOf]
         have d : Decidable (0 < List.length (List.indexesOf idl [])) := inferInstance
-        cases d with
-        | isFalse h => simp [*]
-        | isTrue h => simp [*]
-    -- | unit : Typ
-    -- | entry : String → Typ → Typ
+        cases d <;> simp [*]
+    | .unit => by
+      cases upper with
+      | unit =>
+        simp [Typ.toBruijn]
+        exact refl_dynamic
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+    | .entry ll bodyl => by
+      cases upper with
+      | entry lu bodyu =>
+        simp [Typ.toBruijn]
+        intro p0 p1
+        simp [*]
+        apply Subtyping.Dynamic.entry_pres
+        apply Subtyping.bruijn_eq_imp_dynamic p1
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+    | .path p q => by
+      cases upper with
+      | path x y =>
+        simp [Typ.toBruijn]
+        intro p0 p1
+        apply Subtyping.Dynamic.path_pres
+        apply Subtyping.bruijn_eq_imp_dynamic (Eq.symm p0)
+        apply Subtyping.bruijn_eq_imp_dynamic p1
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
     -- | path : Typ → Typ → Typ
     -- | bot :  Typ
     -- | top :  Typ
@@ -371,11 +418,11 @@ mutual
     simp [*]
     apply And.intro
     · exact dom_concat_mdiff_containment p0 ih0l p7 ih1l
-    {
+    · {
       intro am' p12
       simp [MultiSubtyping.Dynamic]
       apply And.intro
-      {
+      · {
         apply Subtyping.Dynamic.dom_extension
         · {
           apply List.disjoint_preservation_left _ ih1l
