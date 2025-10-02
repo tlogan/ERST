@@ -519,10 +519,30 @@ mutual
         cases d <;> simp [*]
       | _ =>
         simp [Typ.toBruijn]
-    -- | all :  List String → List (Typ × Typ) → Typ → Typ
-    -- | exi :  List String → List (Typ × Typ) → Typ → Typ
-    -- | lfp :  String → Typ → Typ
-    | _ => by sorry
+
+    | .all idsl qualsl bodyl => by
+      cases upper with
+      | all idsu qualsu bodyu =>
+        simp [Typ.toBruijn]
+        sorry
+      | _ =>
+        sorry
+
+    | .exi idsl qualsl bodyl => by
+      cases upper with
+      | exi idsu qualsu bodyu =>
+        simp [Typ.toBruijn]
+        sorry
+      | _ =>
+        sorry
+
+    | .lfp idl bodyl => by
+      cases upper with
+      | lfp idu bodyu =>
+        simp [Typ.toBruijn]
+        sorry
+      | _ =>
+        sorry
 end
 
 
