@@ -320,6 +320,67 @@ lemma Subtyping.Dynamic.path_pres {am p q x y} :
   Subtyping.Dynamic am (Typ.path p q) (Typ.path x y)
 := by sorry
 
+
+lemma Subtyping.Dynamic.unio_left_intro {am t left right} :
+  Subtyping.Dynamic am t left →
+  Subtyping.Dynamic am t (Typ.unio left right)
+:= by sorry
+
+lemma Subtyping.Dynamic.unio_right_intro {am t left right} :
+  Subtyping.Dynamic am t right →
+  Subtyping.Dynamic am t (Typ.unio left right)
+:= by sorry
+
+lemma Subtyping.Dynamic.unio_elim {am left right t} :
+  Subtyping.Dynamic am left t →
+  Subtyping.Dynamic am right t →
+  Subtyping.Dynamic am (Typ.unio left right) t
+:= by sorry
+
+
+
+
+lemma Subtyping.Dynamic.inter_left_elim {am left right t} :
+  Subtyping.Dynamic am left t →
+  Subtyping.Dynamic am (Typ.inter left right) t
+:= by sorry
+
+lemma Subtyping.Dynamic.inter_right_elim {am left right t} :
+  Subtyping.Dynamic am right t →
+  Subtyping.Dynamic am (Typ.inter left right) t
+:= by sorry
+
+lemma Subtyping.Dynamic.inter_intro {am t left right} :
+  Subtyping.Dynamic am t left →
+  Subtyping.Dynamic am t right →
+  Subtyping.Dynamic am t (Typ.inter left right)
+:= by sorry
+
+
+
+lemma Subtyping.Dynamic.diff_elim {am left right t} :
+  Subtyping.Dynamic am left (Typ.unio t right) →
+  Subtyping.Dynamic am (Typ.diff left right) t
+:= by sorry
+
+lemma Subtyping.Dynamic.diff_intro {am t left right} :
+  Subtyping.Dynamic am t left →
+  ¬ (Subtyping.Dynamic am t right) →
+  ¬ (Subtyping.Dynamic am right t) →
+  Subtyping.Dynamic am t (Typ.diff left right)
+:= by sorry
+
+
+lemma Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
+  Typ.toBruijn 0 [] t1 = Typ.toBruijn 0 [] t2 →
+  ¬ Dynamic am (Typ.diff t0 t1) t2
+:= by sorry
+
+lemma Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
+  Typ.toBruijn 0 [] t0 = Typ.toBruijn 0 [] t2 →
+  ¬ Dynamic am t0 (Typ.diff t1 t2)
+:= by sorry
+
 mutual
 
   lemma Subtyping.bruijn_eq_imp_dynamic {am} :
@@ -377,12 +438,87 @@ mutual
         cases d <;> simp [*]
       | _ =>
         simp [Typ.toBruijn]
-    -- | path : Typ → Typ → Typ
-    -- | bot :  Typ
-    -- | top :  Typ
-    -- | unio :  Typ → Typ → Typ
-    -- | inter :  Typ → Typ → Typ
-    -- | diff :  Typ → Typ → Typ
+    | .bot => by
+      cases upper with
+      | bot =>
+        simp [Typ.toBruijn]
+        exact refl_dynamic
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+    | .top => by
+      cases upper with
+      | top =>
+        simp [Typ.toBruijn]
+        exact refl_dynamic
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+
+    | .unio leftl rightl => by
+      cases upper with
+      | unio leftu rightu =>
+        simp [Typ.toBruijn]
+        intro p0 p1
+        apply Dynamic.unio_elim
+        · {
+          apply Dynamic.unio_left_intro
+          apply Subtyping.bruijn_eq_imp_dynamic p0
+        }
+        · {
+          apply Dynamic.unio_right_intro
+          apply Subtyping.bruijn_eq_imp_dynamic p1
+        }
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+
+    | .inter leftl rightl => by
+      cases upper with
+      | inter leftu rightu =>
+        simp [Typ.toBruijn]
+        intro p0 p1
+        apply Dynamic.inter_intro
+        · {
+          apply Dynamic.inter_left_elim
+          apply Subtyping.bruijn_eq_imp_dynamic p0
+        }
+        · {
+          apply Dynamic.inter_right_elim
+          apply Subtyping.bruijn_eq_imp_dynamic p1
+        }
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
+    | .diff leftl rightl => by
+      cases upper with
+      | diff leftu rightu =>
+        simp [Typ.toBruijn]
+        intro p0 p1
+        apply Dynamic.diff_intro
+        · apply Dynamic.diff_elim
+          · apply Dynamic.unio_left_intro
+            · apply Subtyping.bruijn_eq_imp_dynamic p0
+        · exact Dynamic.not_diff_elim p1
+        · exact Dynamic.not_diff_elim p2
+      | var id =>
+        simp [Typ.toBruijn, List.firstIndexOf]
+        have d : Decidable (0 < List.length (List.indexesOf id [])) := inferInstance
+        cases d <;> simp [*]
+      | _ =>
+        simp [Typ.toBruijn]
     -- | all :  List String → List (Typ × Typ) → Typ → Typ
     -- | exi :  List String → List (Typ × Typ) → Typ → Typ
     -- | lfp :  String → Typ → Typ
