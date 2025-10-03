@@ -304,7 +304,7 @@ lemma Typ.bruijn_var_eq {idl idu} :
 -- := by sorry
 
 
-lemma Subtyping.Dynamic.eq am t :
+lemma Subtyping.Dynamic.refl am t :
   Subtyping.Dynamic am t t
 := by sorry
 
@@ -485,7 +485,7 @@ lemma Subtyping.Dynamic.bruijn_eq {lower upper} am :
 := by
   intro p0
   apply Subtyping.Dynamic.rename_upper p0
-  apply Subtyping.Dynamic.eq am lower
+  apply Subtyping.Dynamic.refl am lower
 
 
 
