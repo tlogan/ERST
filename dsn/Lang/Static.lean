@@ -953,11 +953,11 @@ mutual
       Subtyping.Static skolems assums lower upper' skolems' assums'
 
     -- implication preservation
-    | entry_pres skolems assums l left right skolems' assums' :
-      Subtyping.Static skolems assums left right skolems' assums' →
-      Subtyping.Static skolems assums (.entry l left) (.entry l right) skolems' assums'
+    | entry_pres {skolems assums skolems' assums' } l lower upper :
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums (.entry l lower) (.entry l upper) skolems' assums'
 
-    | path_pres skolems assums p q  skolems' assums' x y skolems'' assums'' :
+    | path_pres {skolems assums skolems'' assums''} p q x y  skolems' assums' :
       Subtyping.Static skolems assums x p skolems' assums' →
       Subtyping.Static skolems' assums' q y skolems'' assums'' →
       Subtyping.Static skolems assums (.path p q) (.path x y) skolems'' assums''

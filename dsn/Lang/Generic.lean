@@ -224,7 +224,7 @@ set_option pp.notation false in
 #check (1 :: [1,2,3]) ∩ [4] = []
 
 lemma List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
-  ys ∩ zs = [] → xs ⊆ ys → xs ∩ zs = []
+  xs ⊆ ys → ys ∩ zs = [] → xs ∩ zs = []
 := by
   simp [Inter.inter, List.inter]
   intro p0
@@ -235,18 +235,18 @@ lemma List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
     cases p2
   | cons x xs' ih =>
     intro p1
-    have ⟨p2, p3⟩ := List.cons_containment p1
+    have ⟨p2, p3⟩ := List.cons_containment p0
     intro a
     intro p4
     cases p4 with
     | head =>
-      exact p0 x p2
+      exact p1 x p2
     | tail _ p5 =>
-      apply ih p3
-      apply p5
+      apply ih p3 p1
+      exact p5
 
 lemma List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
-  xs ∩ zs = [] → ys ⊆ zs → xs ∩ ys = []
+  ys ⊆ zs → xs ∩ zs = [] → xs ∩ ys = []
 := by
   simp [Inter.inter, List.inter]
   intro p0
@@ -525,20 +525,20 @@ mutual
       · {
         apply Subtyping.Dynamic.dom_extension
         · {
-          apply List.disjoint_preservation_left _ ih1l
-          apply List.disjoint_preservation_right _ p2
+          apply List.disjoint_preservation_left ih1l
+          apply List.disjoint_preservation_right p2
           apply p10
         }
         · {
-          apply List.disjoint_preservation_left _ ih1l
-          apply List.disjoint_preservation_right _ p3
+          apply List.disjoint_preservation_left ih1l
+          apply List.disjoint_preservation_right p3
           apply p10
         }
         · {
           apply ih0r
           apply MultiSubtyping.Dynamic.dom_reduction
-          · exact List.disjoint_preservation_left p10 ih1l
-          · exact MultiSubtyping.Dynamic.reduction p8 p12
+          · apply List.disjoint_preservation_left ih1l p10
+          · apply MultiSubtyping.Dynamic.reduction p8 p12
         }
       }
       · exact ih1r p12
@@ -564,8 +564,7 @@ mutual
     exists am0
     simp [*]
     intros am' p9
-    apply Subtyping.Dynamic.rename_lower p0
-    exact ih0r p9
+    apply Subtyping.Dynamic.rename_lower p0 (ih0r p9)
 
   | .rename_upper upper0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
@@ -573,13 +572,44 @@ mutual
     exists am0
     simp [*]
     intros am' p9
-    apply Subtyping.Dynamic.rename_upper p0
-    exact ih0r p9
+    apply Subtyping.Dynamic.rename_upper p0 (ih0r p9)
 
-  -- | rename_lower skolems assums left right right' skolems' assums' :
-  -- | rename_upper skolems assums left right right' skolems' assums' :
-  -- | entry_pres skolems assums l left right skolems' assums' :
-  -- | path_pres skolems assums p q  skolems' assums' x y skolems'' assums'' :
+  | .entry_pres l lower0 upper0 p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.Dynamic.entry_pres l (ih0r p9)
+
+  | .path_pres lower0 lower1 upper0 upper1 skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨am1, ih1l, ih1r⟩ := Subtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.Dynamic.path_pres
+    · {
+      apply Subtyping.Dynamic.dom_extension
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13
+      }
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13
+      }
+      · {
+        apply ih0r
+        apply MultiSubtyping.Dynamic.dom_reduction
+        · apply List.disjoint_preservation_left ih1l p13
+        · apply MultiSubtyping.Dynamic.reduction p10 p16
+      }
+    }
+    · exact ih1r p16
   -- | bot_elim skolems assums t :
   -- | top_intro skolems assums t :
   -- | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
