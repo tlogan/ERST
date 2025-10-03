@@ -605,10 +605,30 @@ mutual
     | .exi idsl qualsl bodyl => by
       cases upper with
       | exi idsu qualsu bodyu =>
-        simp [Typ.toBruijn]
-        sorry
+        intro p0
+        have ⟨idsl', p1, p2⟩ := Typ.fresh_ids (idsl.length) (Typ.exi idsu qualsu bodyu)
+        have ⟨qualsl', bodyl', p3⟩ := Typ.exi_rename qualsl bodyl p1
+        apply Subtyping.Dynamic.rename_lower p3
+        rw [← p3] at p0
+        reduce at p0
+        injection p0 with p4 p5 p6
+        apply Subtyping.Dynamic.exi_elim p2
+        intros am' p7 p8
+        have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsu := by
+          intros id p9
+          cases p9
+        apply Subtyping.Dynamic.exi_intro p9
+        · {
+          simp [*]
+          apply Subtyping.bruijn_eq_imp_dynamic p6
+        }
+        · {
+          simp [*]
+          apply ListSubtyping.bruijn_eq_imp_dynamic p5 p8
+        }
       | _ =>
-        sorry
+        intro p0
+        injection p0
 
     | .lfp idl bodyl => by
       cases upper with
