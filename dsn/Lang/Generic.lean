@@ -109,8 +109,9 @@ y ∈ zs → x ≠ y → y ∈ List.merase x zs
 
 
 lemma merase_containment x {ys zs : List String} :
-  ys ⊆ zs → List.merase x ys ⊆ List.merase x zs
-:= by induction ys with
+ ys ⊆ zs → List.merase x ys ⊆ List.merase x zs
+:= by
+  induction ys with
   | nil =>
     intro ss
     simp [List.merase]
@@ -127,8 +128,8 @@ lemma merase_containment x {ys zs : List String} :
     | isTrue h =>
       simp [*]
       rw [← h]
-      apply ih
-      assumption
+      intro y' p2
+      apply ih p1 p2
 
 lemma mdiff_increasing_containment {xs : List String} :
   ∀ ys zs, ys ⊆ zs → List.mdiff ys xs ⊆ List.mdiff zs xs
@@ -550,14 +551,14 @@ mutual
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper
     )
-  | .refl skolems0 assums0 p0 => by
+  | .refl skolems0 assums0 t => by
     exists []
     simp [*]
     apply And.intro
     · simp [ListPair.dom]
     · {
       intros am p1
-      apply Subtyping.Dynamic.bruijn_eq am p0
+      exact Subtyping.Dynamic.refl am t
     }
   -- | rename_right skolems assums left right right' skolems' assums' :
   -- | entry_pres skolems assums l left right skolems' assums' :

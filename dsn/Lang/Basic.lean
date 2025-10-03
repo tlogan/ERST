@@ -634,14 +634,18 @@ def List.merase {α} [BEq α] (x : α) : List α → List α
 | .nil => .nil
 | .cons y ys =>
   if x == y then
-    List.merase x ys
+    (List.merase x ys)
   else
     y :: (List.merase x ys)
 
 def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
-| .nil => .nil
+| .nil => xs
 | .cons y ys =>
   List.mdiff (List.merase y xs) ys
+
+#eval List.merase 3 [1,2,3,3]
+#eval List.mdiff [1,2, 3] [2]
+
 
 
 mutual
@@ -693,6 +697,8 @@ mutual
     let c := List.mdiff (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
     a ∪ b ∪ c
 end
+
+#eval List.mdiff [1,2,3] [1]
 
 mutual
   def ListSubtyping.free_vars : ListSubtyping → List String
@@ -759,15 +765,17 @@ mutual
   | .all ids subtypings body =>
     let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
     let n := (List.length bids')
-    .all n
-    (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
-    (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    (.all n
+      (ListSubtyping.toBruijn (n + base) (bids' ++ bids) subtypings)
+      (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    )
   | .exi ids subtypings body =>
     let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
     let n := (List.length bids')
-    .exi n
-    (ListSubtyping.toBruijn (n + base + n) (bids' ++ bids) subtypings)
-    (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    (.exi n
+      (ListSubtyping.toBruijn (n + base) (bids' ++ bids) subtypings)
+      (Typ.toBruijn (n + base) (bids' ++ bids) body)
+    )
   | .lfp id body =>
     .lfp
     (Typ.toBruijn (1 + base) (id :: bids) body)

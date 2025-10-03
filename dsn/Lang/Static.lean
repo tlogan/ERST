@@ -939,19 +939,18 @@ mutual
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-    | refl {lower upper} skolems assums :
-      (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
-      Subtyping.Static skolems assums lower upper skolems assums
+    | refl skolems assums t :
+      Subtyping.Static skolems assums t t skolems assums
 
-    | rename_left skolems assums left left' right skolems' assums':
-      (Typ.toBruijn 0 [] left) = (Typ.toBruijn 0 [] left') →
-      Subtyping.Static skolems assums left' right skolems' assums' →
-      Subtyping.Static skolems assums left right skolems' assums'
+    | rename_lower {skolems assums lower' upper skolems' assums'} lower :
+      (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] lower') →
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums lower' upper skolems' assums'
 
-    | rename_right skolems assums left right right' skolems' assums' :
-      (Typ.toBruijn 0 [] right) = (Typ.toBruijn 0 [] right') →
-      Subtyping.Static skolems assums left right' skolems' assums' →
-      Subtyping.Static skolems assums left right skolems' assums'
+    | rename_upper {skolems assums lower upper' skolems' assums'} upper :
+      (Typ.toBruijn 0 [] upper) = (Typ.toBruijn 0 [] upper') →
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums lower upper' skolems' assums'
 
     -- implication preservation
     | entry_pres skolems assums l left right skolems' assums' :
@@ -1143,20 +1142,19 @@ mutual
 
 end
 
+lemma Subtyping.Static.bruijn_eq {lower upper} skolems assums :
+    (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
+    Subtyping.Static skolems assums lower upper skolems assums
+:= by
+  intro p0
+  apply Subtyping.Static.rename_upper _ p0
+  exact Subtyping.Static.refl skolems assums lower
+
+
 syntax "ListSubtyping_Static_prove" : tactic
 syntax "Subtyping_Static_prove" : tactic
-syntax "Subtyping_Static_rename_left" term : tactic
-syntax "Subtyping_Static_rename_right" term: tactic
 
 macro_rules
-  | `(tactic| Subtyping_Static_rename_left $t:term) => `(tactic|
-    (apply Subtyping.Static.rename_left _ _ _ $t:term ; rfl)
-  )
-
-  | `(tactic| Subtyping_Static_rename_right $t:term) => `(tactic|
-    (apply Subtyping.Static.rename_right  _ _ _ _ $t:term; rfl)
-  )
-
   | `(tactic| ListSubtyping_Static_prove) => `(tactic|
     (first
       | apply ListSubtyping.Static.nil
@@ -1168,7 +1166,6 @@ macro_rules
   | `(tactic| Subtyping_Static_prove) => `(tactic|
     (first
       | apply Subtyping.Static.refl
-        · rfl
       | apply Subtyping.Static.entry_pres
         · Subtyping_Static_prove
       | apply Subtyping.Static.path_pres
