@@ -304,12 +304,12 @@ lemma Typ.bruijn_var_eq {idl idu} :
 -- := by sorry
 
 
-lemma Subtyping.refl_dynamic {am t} :
+lemma Subtyping.Dynamic.eq am t :
   Subtyping.Dynamic am t t
 := by sorry
 
 
-lemma Subtyping.Dynamic.entry_pres {am l bodyl bodyu} :
+lemma Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
   Subtyping.Dynamic am bodyl bodyu →
   Subtyping.Dynamic am (Typ.entry l bodyl) (Typ.entry l bodyu)
 := by sorry
@@ -417,10 +417,41 @@ lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
   Subtyping.Dynamic am t (Typ.all ids quals body)
 := by sorry
 
+lemma Subtyping.Dynamic.lfp_intro {am t id body} :
+  Typ.Monotonic id true body →
+  Subtyping.Dynamic ((id, (Typ.lfp id body)) :: am) t body →
+  Subtyping.Dynamic am t (Typ.lfp id body)
+:= by sorry
+
+lemma Subtyping.Dynamic.lfp_elim {am id body t} :
+  Typ.Monotonic id true body →
+  id ∉ Typ.free_vars t →
+  Subtyping.Dynamic ((id, t) :: am) t body →
+  Subtyping.Dynamic am (Typ.lfp id body) t
+:= by sorry
+
+
+lemma Subtyping.Dynamic.rename_lower {am lower lower' upper} :
+  Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] lower' →
+  Subtyping.Dynamic am lower upper →
+  Subtyping.Dynamic am lower' upper
+:= by sorry
+
+lemma Subtyping.Dynamic.rename_upper {am lower upper upper'} :
+  Typ.toBruijn 0 [] upper = Typ.toBruijn 0 [] upper' →
+  Subtyping.Dynamic am lower upper →
+  Subtyping.Dynamic am lower upper'
+:= by sorry
+
+
 lemma Typ.fresh_ids n t :
   ∃ ids , ids.length = n ∧ ids ∩ Typ.free_vars t = []
 := by sorry
 -- TODO: concat all the existing strings together and add numbers
+
+lemma Typ.fresh_id t :
+  ∃ id ,id ∉ Typ.free_vars t
+:= by sorry
 
 
 lemma Typ.all_rename {ids' ids} quals body :
@@ -436,208 +467,26 @@ lemma Typ.exi_rename {ids' ids} quals body :
   Typ.toBruijn 0 [] (Typ.exi ids' quals' body') = Typ.toBruijn 0 [] (Typ.exi ids quals body)
 := by sorry
 
-
-
-
-
-
-lemma Subtyping.Dynamic.rename_lower {am lower lower' upper} :
-  Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] lower' →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am lower' upper
+lemma Typ.lfp_rename id' id body :
+  ∃ body',
+  Typ.toBruijn 0 [] (Typ.lfp id' body') = Typ.toBruijn 0 [] (Typ.lfp id body)
 := by sorry
 
-lemma Subtyping.Dynamic.rename_upper {am lower upper upper'} :
-  Typ.toBruijn 0 [] upper = Typ.toBruijn 0 [] upper' →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am lower upper'
-:= by sorry
+  -- lemma ListSubtyping.bruijn_eq_imp_dynamic {am} :
+  --   ∀ {lower upper},
+  --   ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
+  --   MultiSubtyping.Dynamic am lower →
+  --   MultiSubtyping.Dynamic am upper
+  -- := by sorry
 
-mutual
+lemma Subtyping.Dynamic.bruijn_eq {lower upper} am :
+  Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] upper →
+  Subtyping.Dynamic am lower upper
+:= by
+  intro p0
+  apply Subtyping.Dynamic.rename_upper p0
+  apply Subtyping.Dynamic.eq am lower
 
-  lemma ListSubtyping.bruijn_eq_imp_dynamic {am} :
-    ∀ {lower upper},
-    ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
-    MultiSubtyping.Dynamic am lower →
-    MultiSubtyping.Dynamic am upper
-  := by sorry
-
-  lemma Subtyping.bruijn_eq_imp_dynamic {am} :
-    ∀ {lower upper},
-    Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] upper →
-    Subtyping.Dynamic am lower upper
-  := fun {lower upper} => match lower with
-    | .var idl => by
-      cases upper with
-      | var idu =>
-        intro p0
-        apply Typ.bruijn_var_eq at p0
-        simp [*]
-        exact Subtyping.refl_dynamic
-      | _ =>
-        intro p0
-        injection p0
-    | .unit => by
-      cases upper with
-      | unit =>
-        simp [Typ.toBruijn]
-        exact Subtyping.refl_dynamic
-      | _ =>
-        intro p0
-        injection p0
-    | .entry ll bodyl => by
-      cases upper with
-      | entry lu bodyu =>
-        simp [Typ.toBruijn]
-        intro p0 p1
-        simp [*]
-        apply Subtyping.Dynamic.entry_pres
-        apply Subtyping.bruijn_eq_imp_dynamic p1
-      | _ =>
-        intro p0
-        injection p0
-    | .path p q => by
-      cases upper with
-      | path x y =>
-        simp [Typ.toBruijn]
-        intro p0 p1
-        apply Subtyping.Dynamic.path_pres
-        apply Subtyping.bruijn_eq_imp_dynamic (Eq.symm p0)
-        apply Subtyping.bruijn_eq_imp_dynamic p1
-      | _ =>
-        intro p0
-        injection p0
-    | .bot => by
-      cases upper with
-      | bot =>
-        simp [Typ.toBruijn]
-        exact Subtyping.refl_dynamic
-      | _ =>
-        intro p0
-        injection p0
-    | .top => by
-      cases upper with
-      | top =>
-        simp [Typ.toBruijn]
-        exact Subtyping.refl_dynamic
-      | _ =>
-        intro p0
-        injection p0
-
-    | .unio leftl rightl => by
-      cases upper with
-      | unio leftu rightu =>
-        simp [Typ.toBruijn]
-        intro p0 p1
-        apply Subtyping.Dynamic.unio_elim
-        · {
-          apply Subtyping.Dynamic.unio_left_intro
-          apply Subtyping.bruijn_eq_imp_dynamic p0
-        }
-        · {
-          apply Subtyping.Dynamic.unio_right_intro
-          apply Subtyping.bruijn_eq_imp_dynamic p1
-        }
-      | _ =>
-        intro p0
-        injection p0
-
-    | .inter leftl rightl => by
-      cases upper with
-      | inter leftu rightu =>
-        simp [Typ.toBruijn]
-        intro p0 p1
-        apply Subtyping.Dynamic.inter_intro
-        · {
-          apply Subtyping.Dynamic.inter_left_elim
-          apply Subtyping.bruijn_eq_imp_dynamic p0
-        }
-        · {
-          apply Subtyping.Dynamic.inter_right_elim
-          apply Subtyping.bruijn_eq_imp_dynamic p1
-        }
-      | _ =>
-        intro p0
-        injection p0
-    | .diff leftl rightl => by
-      cases upper with
-      | diff leftu rightu =>
-        simp [Typ.toBruijn]
-        intro p0 p1
-        apply Subtyping.Dynamic.diff_intro
-        · apply Subtyping.Dynamic.diff_elim
-          · apply Subtyping.Dynamic.unio_left_intro
-            · apply Subtyping.bruijn_eq_imp_dynamic p0
-        · exact Subtyping.Dynamic.not_diff_elim p1
-        · apply Subtyping.Dynamic.not_diff_intro (Eq.symm p1)
-      | _ =>
-        intro p0
-        injection p0
-
-    | .all idsl qualsl bodyl => by
-      cases upper with
-      | all idsu qualsu bodyu =>
-        intro p0
-        have ⟨idsu', p1, p2⟩ := Typ.fresh_ids (idsu.length) (Typ.all idsl qualsl bodyl)
-        have ⟨qualsu', bodyu', p3⟩ := Typ.all_rename qualsu bodyu p1
-        apply Subtyping.Dynamic.rename_upper p3
-        rw [← p3] at p0
-        reduce at p0
-        injection p0 with p4 p5 p6
-        apply Subtyping.Dynamic.all_intro p2
-        intros am' p7 p8
-        have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsl := by
-          intros id p9
-          cases p9
-        apply Subtyping.Dynamic.all_elim p9
-        · {
-          simp [*]
-          apply Subtyping.bruijn_eq_imp_dynamic p6
-        }
-        · {
-          simp [*]
-          apply ListSubtyping.bruijn_eq_imp_dynamic (Eq.symm p5) p8
-        }
-      | _ =>
-        intro p0
-        injection p0
-
-    | .exi idsl qualsl bodyl => by
-      cases upper with
-      | exi idsu qualsu bodyu =>
-        intro p0
-        have ⟨idsl', p1, p2⟩ := Typ.fresh_ids (idsl.length) (Typ.exi idsu qualsu bodyu)
-        have ⟨qualsl', bodyl', p3⟩ := Typ.exi_rename qualsl bodyl p1
-        apply Subtyping.Dynamic.rename_lower p3
-        rw [← p3] at p0
-        reduce at p0
-        injection p0 with p4 p5 p6
-        apply Subtyping.Dynamic.exi_elim p2
-        intros am' p7 p8
-        have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsu := by
-          intros id p9
-          cases p9
-        apply Subtyping.Dynamic.exi_intro p9
-        · {
-          simp [*]
-          apply Subtyping.bruijn_eq_imp_dynamic p6
-        }
-        · {
-          simp [*]
-          apply ListSubtyping.bruijn_eq_imp_dynamic p5 p8
-        }
-      | _ =>
-        intro p0
-        injection p0
-
-    | .lfp idl bodyl => by
-      cases upper with
-      | lfp idu bodyu =>
-        simp [Typ.toBruijn]
-        sorry
-      | _ =>
-        sorry
-end
 
 
 
@@ -701,14 +550,14 @@ mutual
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper
     )
-  | .refl p0 => by
+  | .refl skolems0 assums0 p0 => by
     exists []
     simp [*]
     apply And.intro
     · simp [ListPair.dom]
     · {
       intros am p1
-      exact Subtyping.bruijn_eq_imp_dynamic p0
+      apply Subtyping.Dynamic.bruijn_eq am p0
     }
   -- | rename_right skolems assums left right right' skolems' assums' :
   -- | entry_pres skolems assums l left right skolems' assums' :
@@ -745,3 +594,178 @@ mutual
   | _ => by sorry
 
 end
+
+
+  -- fun {lower upper} => match lower with
+  --   | .var idl => by
+  --     cases upper with
+  --     | var idu =>
+  --       intro p0
+  --       apply Typ.bruijn_var_eq at p0
+  --       simp [*]
+  --       exact Subtyping.refl_dynamic
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .unit => by
+  --     cases upper with
+  --     | unit =>
+  --       simp [Typ.toBruijn]
+  --       exact Subtyping.refl_dynamic
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .entry ll bodyl => by
+  --     cases upper with
+  --     | entry lu bodyu =>
+  --       simp [Typ.toBruijn]
+  --       intro p0 p1
+  --       simp [*]
+  --       apply Subtyping.Dynamic.entry_pres
+  --       apply Subtyping.bruijn_eq_imp_dynamic p1
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .path p q => by
+  --     cases upper with
+  --     | path x y =>
+  --       simp [Typ.toBruijn]
+  --       intro p0 p1
+  --       apply Subtyping.Dynamic.path_pres
+  --       apply Subtyping.bruijn_eq_imp_dynamic (Eq.symm p0)
+  --       apply Subtyping.bruijn_eq_imp_dynamic p1
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .bot => by
+  --     cases upper with
+  --     | bot =>
+  --       simp [Typ.toBruijn]
+  --       exact Subtyping.refl_dynamic
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .top => by
+  --     cases upper with
+  --     | top =>
+  --       simp [Typ.toBruijn]
+  --       exact Subtyping.refl_dynamic
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+
+  --   | .unio leftl rightl => by
+  --     cases upper with
+  --     | unio leftu rightu =>
+  --       simp [Typ.toBruijn]
+  --       intro p0 p1
+  --       apply Subtyping.Dynamic.unio_elim
+  --       · {
+  --         apply Subtyping.Dynamic.unio_left_intro
+  --         apply Subtyping.bruijn_eq_imp_dynamic p0
+  --       }
+  --       · {
+  --         apply Subtyping.Dynamic.unio_right_intro
+  --         apply Subtyping.bruijn_eq_imp_dynamic p1
+  --       }
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+
+  --   | .inter leftl rightl => by
+  --     cases upper with
+  --     | inter leftu rightu =>
+  --       simp [Typ.toBruijn]
+  --       intro p0 p1
+  --       apply Subtyping.Dynamic.inter_intro
+  --       · {
+  --         apply Subtyping.Dynamic.inter_left_elim
+  --         apply Subtyping.bruijn_eq_imp_dynamic p0
+  --       }
+  --       · {
+  --         apply Subtyping.Dynamic.inter_right_elim
+  --         apply Subtyping.bruijn_eq_imp_dynamic p1
+  --       }
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+  --   | .diff leftl rightl => by
+  --     cases upper with
+  --     | diff leftu rightu =>
+  --       simp [Typ.toBruijn]
+  --       intro p0 p1
+  --       apply Subtyping.Dynamic.diff_intro
+  --       · apply Subtyping.Dynamic.diff_elim
+  --         · apply Subtyping.Dynamic.unio_left_intro
+  --           · apply Subtyping.bruijn_eq_imp_dynamic p0
+  --       · exact Subtyping.Dynamic.not_diff_elim p1
+  --       · apply Subtyping.Dynamic.not_diff_intro (Eq.symm p1)
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+
+  --   | .all idsl qualsl bodyl => by
+  --     cases upper with
+  --     | all idsu qualsu bodyu =>
+  --       intro p0
+  --       have ⟨idsu', p1, p2⟩ := Typ.fresh_ids (idsu.length) (Typ.all idsl qualsl bodyl)
+  --       have ⟨qualsu', bodyu', p3⟩ := Typ.all_rename qualsu bodyu p1
+  --       apply Subtyping.Dynamic.rename_upper p3
+  --       rw [← p3] at p0
+  --       reduce at p0
+  --       injection p0 with p4 p5 p6
+  --       apply Subtyping.Dynamic.all_intro p2
+  --       intros am' p7 p8
+  --       have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsl := by
+  --         intros id p9
+  --         cases p9
+  --       apply Subtyping.Dynamic.all_elim p9
+  --       · {
+  --         simp [*]
+  --         apply Subtyping.bruijn_eq_imp_dynamic p6
+  --       }
+  --       · {
+  --         simp [*]
+  --         apply ListSubtyping.bruijn_eq_imp_dynamic (Eq.symm p5) p8
+  --       }
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+
+  --   | .exi idsl qualsl bodyl => by
+  --     cases upper with
+  --     | exi idsu qualsu bodyu =>
+  --       intro p0
+  --       have ⟨idsl', p1, p2⟩ := Typ.fresh_ids (idsl.length) (Typ.exi idsu qualsu bodyu)
+  --       have ⟨qualsl', bodyl', p3⟩ := Typ.exi_rename qualsl bodyl p1
+  --       apply Subtyping.Dynamic.rename_lower p3
+  --       rw [← p3] at p0
+  --       reduce at p0
+  --       injection p0 with p4 p5 p6
+  --       apply Subtyping.Dynamic.exi_elim p2
+  --       intros am' p7 p8
+  --       have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsu := by
+  --         intros id p9
+  --         cases p9
+  --       apply Subtyping.Dynamic.exi_intro p9
+  --       · {
+  --         simp [*]
+  --         apply Subtyping.bruijn_eq_imp_dynamic p6
+  --       }
+  --       · {
+  --         simp [*]
+  --         apply ListSubtyping.bruijn_eq_imp_dynamic p5 p8
+  --       }
+  --     | _ =>
+  --       intro p0
+  --       injection p0
+
+  --   | .lfp idl bodyl => by
+  --     cases upper with
+  --     | lfp idu bodyu =>
+  --       intro p0
+  --       apply Subtyping.Dynamic.rename_upper p0
+  --       exact Subtyping.refl_dynamic
+  --     | _ =>
+  --       intro p0
+  --       injection p0

@@ -169,8 +169,8 @@ mutual
     (MultiSubtyping.Dynamic (am ++ am') quals) →
     (Typing.Dynamic (am ++ am') e body)
   | .lfp id body =>
-    ∃ n, Typ.Monotonic id true body ∧
-    Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
+    Typ.Monotonic id true body ∧
+    ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
   | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
   termination_by t => (Typ.size t)
   decreasing_by

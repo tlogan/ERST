@@ -939,7 +939,7 @@ mutual
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-    | refl {skolems assums lower upper} :
+    | refl {lower upper} skolems assums :
       (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
       Subtyping.Static skolems assums lower upper skolems assums
 
