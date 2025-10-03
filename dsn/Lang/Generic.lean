@@ -495,7 +495,7 @@ mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
     ListSubtyping.Static skolems assums cs skolems' assums' →
     ∃ am, ListPair.dom am ⊆ (List.mdiff skolems' skolems) ∧
-    (∀ am',
+    (∀ {am'},
       MultiSubtyping.Dynamic (am ++ am') assums' →
       MultiSubtyping.Dynamic (am ++ am') cs
     )
@@ -541,26 +541,43 @@ mutual
           · exact MultiSubtyping.Dynamic.reduction p8 p12
         }
       }
-      · exact ih1r (am0 ++ am') p12
+      · exact ih1r p12
     }
 
   theorem Subtyping.soundness {skolems assums lower upper skolems' assums'} :
     Subtyping.Static skolems assums lower upper skolems' assums' →
     ∃ am, ListPair.dom am ⊆ (List.mdiff skolems' skolems) ∧
-    (∀ am',
+    (∀ {am'},
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper
     )
   | .refl skolems0 assums0 t => by
     exists []
     simp [*]
-    apply And.intro
-    · simp [ListPair.dom]
-    · {
-      intros am p1
-      exact Subtyping.Dynamic.refl am t
-    }
-  -- | rename_right skolems assums left right right' skolems' assums' :
+    apply And.intro (by simp [ListPair.dom])
+    intros am0 p1
+    exact Subtyping.Dynamic.refl am0 t
+
+  | .rename_lower lower0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p9
+    apply Subtyping.Dynamic.rename_lower p0
+    exact ih0r p9
+
+  | .rename_upper upper0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p9
+    apply Subtyping.Dynamic.rename_upper p0
+    exact ih0r p9
+
+  -- | rename_lower skolems assums left right right' skolems' assums' :
+  -- | rename_upper skolems assums left right right' skolems' assums' :
   -- | entry_pres skolems assums l left right skolems' assums' :
   -- | path_pres skolems assums p q  skolems' assums' x y skolems'' assums'' :
   -- | bot_elim skolems assums t :
