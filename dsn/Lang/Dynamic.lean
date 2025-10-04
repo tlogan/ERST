@@ -162,12 +162,12 @@ mutual
   | .exi ids quals body =>
     -- TODO: consider adding new pairs on left, eg. am' ++ am
     ∃ am' , (ListPair.dom am') ⊆ ids ∧
-    (MultiSubtyping.Dynamic (am ++ am') quals) ∧
-    (Typing.Dynamic (am ++ am') e body)
+    (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
+    (Typing.Dynamic (am' ++ am) e body)
   | .all ids quals body =>
     ∀ am' , (ListPair.dom am') ⊆ ids →
-    (MultiSubtyping.Dynamic (am ++ am') quals) →
-    (Typing.Dynamic (am ++ am') e body)
+    (MultiSubtyping.Dynamic (am' ++ am) quals) →
+    (Typing.Dynamic (am' ++ am) e body)
   | .lfp id body =>
     Typ.Monotonic id true body ∧
     ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))

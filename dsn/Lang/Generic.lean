@@ -271,6 +271,10 @@ lemma List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
     intro p1
     sorry
 
+lemma List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
+  xs ∩ (ys ++ zs) = [] → xs ∩ ys = [] ∧ xs ∩ zs = []
+:= by sorry
+
 
 
 lemma ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
@@ -304,17 +308,6 @@ lemma Subtyping.Static.upper_containment {skolems assums lower upper skolems' as
   intro h
   have ⟨p0, p1, p2, p3,_,_,_⟩ := Subtyping.Static.attributes h
   apply p3
-
-#eval Typ.toBruijn 0 [] (Typ.var "hello")
-lemma Typ.bruijn_var_eq {idl idu} :
-  Typ.toBruijn 0 [] (Typ.var idl) = Typ.toBruijn 0 [] (Typ.var idu)
-  →
-  idl = idu
-:= by sorry
-
--- lemma Typ.bruijn_var_eq {idl idu} :
---   Typ.toBruijn 0 [] (Typ.var idl) = Typ.toBruijn 0 [] (Typ.var idu)
--- := by sorry
 
 
 lemma Subtyping.Dynamic.refl am t :
@@ -385,12 +378,12 @@ lemma Subtyping.Dynamic.diff_intro {am t left right} :
 
 
 lemma Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
-  Typ.toBruijn 0 [] t1 = Typ.toBruijn 0 [] t2 →
+  Typ.toBruijn [] t1 = Typ.toBruijn [] t2 →
   ¬ Dynamic am (Typ.diff t0 t1) t2
 := by sorry
 
 lemma Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
-  Typ.toBruijn 0 [] t0 = Typ.toBruijn 0 [] t2 →
+  Typ.toBruijn [] t0 = Typ.toBruijn [] t2 →
   ¬ Dynamic am t0 (Typ.diff t1 t2)
 := by sorry
 
@@ -445,13 +438,13 @@ lemma Subtyping.Dynamic.lfp_elim {am id body t} :
 
 
 lemma Subtyping.Dynamic.rename_lower {am lower lower' upper} :
-  Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] lower' →
+  Typ.toBruijn [] lower = Typ.toBruijn [] lower' →
   Subtyping.Dynamic am lower upper →
   Subtyping.Dynamic am lower' upper
 := by sorry
 
 lemma Subtyping.Dynamic.rename_upper {am lower upper upper'} :
-  Typ.toBruijn 0 [] upper = Typ.toBruijn 0 [] upper' →
+  Typ.toBruijn [] upper = Typ.toBruijn [] upper' →
   Subtyping.Dynamic am lower upper →
   Subtyping.Dynamic am lower upper'
 := by sorry
@@ -465,32 +458,32 @@ lemma Subtyping.Dynamic.top_intro {am lower} :
 := by sorry
 
 
-lemma Typ.fresh_ids n t :
-  ∃ ids , ids.length = n ∧ ids ∩ Typ.free_vars t = []
+lemma fresh_ids n (ignore : List String) :
+  ∃ ids , ids.length = n ∧ ids ∩ ignore = []
 := by sorry
 -- TODO: concat all the existing strings together and add numbers
 
-lemma Typ.fresh_id t :
-  ∃ id ,id ∉ Typ.free_vars t
+lemma fresh_id (ignore : List String) :
+  ∃ id ,id ∉ ignore
 := by sorry
 
 
 lemma Typ.all_rename {ids' ids} quals body :
   ids'.length = ids.length →
   ∃ quals' body',
-  Typ.toBruijn 0 [] (Typ.all ids' quals' body') = Typ.toBruijn 0 [] (Typ.all ids quals body)
+  Typ.toBruijn [] (Typ.all ids' quals' body') = Typ.toBruijn [] (Typ.all ids quals body)
 := by sorry
 -- TODO: construct subbing map and sub in
 
 lemma Typ.exi_rename {ids' ids} quals body :
   ids'.length = ids.length →
   ∃ quals' body',
-  Typ.toBruijn 0 [] (Typ.exi ids' quals' body') = Typ.toBruijn 0 [] (Typ.exi ids quals body)
+  Typ.toBruijn [] (Typ.exi ids' quals' body') = Typ.toBruijn [] (Typ.exi ids quals body)
 := by sorry
 
 lemma Typ.lfp_rename id' id body :
   ∃ body',
-  Typ.toBruijn 0 [] (Typ.lfp id' body') = Typ.toBruijn 0 [] (Typ.lfp id body)
+  Typ.toBruijn [] (Typ.lfp id' body') = Typ.toBruijn [] (Typ.lfp id body)
 := by sorry
 
   -- lemma ListSubtyping.bruijn_eq_imp_dynamic {am} :
@@ -501,13 +494,31 @@ lemma Typ.lfp_rename id' id body :
   -- := by sorry
 
 lemma Subtyping.Dynamic.bruijn_eq {lower upper} am :
-  Typ.toBruijn 0 [] lower = Typ.toBruijn 0 [] upper →
+  Typ.toBruijn [] lower = Typ.toBruijn [] upper →
   Subtyping.Dynamic am lower upper
 := by
   intro p0
   apply Subtyping.Dynamic.rename_upper p0
   apply Subtyping.Dynamic.refl am lower
 
+
+
+lemma ListSubtyping.toBruijn_exi_injection {ids' quals' body' ids quals body} :
+  Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
+  ListSubtyping.toBruijn ids' quals' = ListSubtyping.toBruijn ids quals
+:= by sorry
+
+lemma Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
+  Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
+  Typ.toBruijn ids' body' = Typ.toBruijn ids body
+:= by sorry
+
+
+lemma ListSubtyping.restricted_rename {skolems assums ids quals ids' quals'} :
+  ListSubtyping.toBruijn ids quals = ListSubtyping.toBruijn ids' quals' →
+  ListSubtyping.restricted skolems assums quals →
+  ListSubtyping.restricted skolems assums quals'
+:= by sorry
 
 
 
@@ -564,6 +575,7 @@ mutual
       · exact ih1r p12
     }
 
+
   theorem Subtyping.soundness {skolems assums lower upper skolems' assums'} :
     Subtyping.Static skolems assums lower upper skolems' assums' →
     ∃ am, ListPair.dom am ⊆ (List.mdiff skolems' skolems) ∧
@@ -578,21 +590,23 @@ mutual
     intros am0 p1
     exact Subtyping.Dynamic.refl am0 t
 
-  | .rename_lower lower0 p0 p1 => by
-    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
-    exists am0
-    simp [*]
-    intros am' p9
-    apply Subtyping.Dynamic.rename_lower p0 (ih0r p9)
+  | .rename_skolems_lower ids0 lower0 p0 p1 p2 => by
+    sorry
+    -- have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
+    -- have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
+    -- exists am0
+    -- simp [*]
+    -- intros am' p9
+    -- apply Subtyping.Dynamic.rename_lower p0 (ih0r p9)
 
-  | .rename_upper upper0 p0 p1 => by
-    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
-    exists am0
-    simp [*]
-    intros am' p9
-    apply Subtyping.Dynamic.rename_upper p0 (ih0r p9)
+  | .rename_skolems_upper ids0 upper0 p0 p1 p2 => by
+    sorry
+    -- have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
+    -- have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
+    -- exists am0
+    -- simp [*]
+    -- intros am' p9
+    -- apply Subtyping.Dynamic.rename_upper p0 (ih0r p9)
 
   | .entry_pres l lower0 upper0 p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
@@ -674,21 +688,65 @@ mutual
     · exact ih1r p16
 
   | .exi_elim ids quals body t skolems0 assums0 p0 p1 p2 => by
+    have ⟨ids', p3, p4⟩ := fresh_ids (ids.length) (
+        (skolems ++ ListSubtyping.free_vars assums) ++
+        (skolems0 ++ ListSubtyping.free_vars assums0) ++
+        Typ.free_vars t
+    )
+    have ⟨quals', body', p5⟩ := Typ.exi_rename quals body p3
+    have p6 := ListSubtyping.toBruijn_exi_injection p5
+    have p7 := Typ.toBruijn_exi_injection p5
+    have ⟨p8,p9⟩ := List.disjoint_concat_right p4
+    have ⟨p10,p11⟩ := List.disjoint_concat_right p8
 
-    have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
-    have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
+    have p0 := ListSubtyping.restricted_rename (Eq.symm p6) p0
+    have p1 := ListSubtyping.Static.rename_drop p10 (Eq.symm p6) p1
+    have p2 := Subtyping.Static.rename_skolems_lower  _ _ p11 (Eq.symm p7) p2
 
-    have ⟨p3,p4,p5,p6,p7⟩ := ListSubtyping.Static.attributes p1
-    have ⟨p8,p9,p10,p11,p12,p13,p14⟩ := Subtyping.Static.attributes p2
-    exists (am1 ++ am0)
-    simp [*]
-    apply And.intro
-    · {
-      apply dom_concat_mdiff_containment p3 ih0l (concat_right_containment p8)
-      intros x p15
-      apply mdiff_concat_containment_right (ih1l p15)
-    }
-    · sorry
+    -----------------------------------------------------------------
+    sorry
+    -----------------------------------------------------------------
+
+    -- have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
+    -- have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
+
+    -- have ⟨p3,p4,p5,p6,p7⟩ := ListSubtyping.Static.attributes p1
+    -- have ⟨p8,p9,p10,p11,p12,p13,p14⟩ := Subtyping.Static.attributes p2
+    -- exists (am1 ++ am0)
+    -- simp [*]
+    -- apply And.intro
+    -- · {
+    --   apply dom_concat_mdiff_containment p3 ih0l (concat_right_containment p8)
+    --   intros x p15
+    --   apply mdiff_concat_containment_right (ih1l p15)
+    -- }
+    -- · {
+    --   intros am' p16
+
+    --   have ⟨ids', p17, p18⟩ := Typ.fresh_ids (ids.length) t
+    --   have ⟨quals', body', p19⟩ := Typ.exi_rename quals body p17
+    --   apply Subtyping.Dynamic.rename_lower p19
+    --   apply Subtyping.Dynamic.exi_elim p18
+    --   intro am2 p20 p21
+    --   apply Subtyping.Dynamic.dom_extension
+    --   · {
+    --     sorry
+    --     -- apply List.disjoint_preservation_l ih1l p18
+    --     -- apply List.disjoint_preservation_right p4 p13
+    --   }
+    --   · {
+    --     sorry
+    --     -- apply List.disjoint_preservation_left ih1l
+    --     -- apply List.disjoint_preservation_right p5 p13
+    --   }
+    --   · {
+    --     sorry
+    --     -- apply ih0r
+    --     -- apply MultiSubtyping.Dynamic.dom_reduction
+    --     -- · apply List.disjoint_preservation_left ih1l p13
+    --     -- · apply MultiSubtyping.Dynamic.reduction p10 p16
+    --   }
+    -- }
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0

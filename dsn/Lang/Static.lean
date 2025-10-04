@@ -83,9 +83,9 @@ def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 | .nil => []
 | .cons id ids =>
   let i := Typ.interpret_one id b Δ
-  if not b && (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top) then
+  if not b && (Typ.toBruijn [] i) == (Typ.toBruijn [] .top) then
     ListSubtyping.interpret_all b Δ ids
-  else if b && (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot) then
+  else if b && (Typ.toBruijn [] i) == (Typ.toBruijn [] .bot) then
     ListSubtyping.interpret_all b Δ ids
   else
     (id, i) :: ListSubtyping.interpret_all b Δ ids
@@ -325,13 +325,13 @@ def Subtyping.restricted
   | .var id, _ =>
     if id ∉ skolems then
       let i := Typ.interpret_one id .true assums
-      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
+      (Typ.toBruijn [] i) == (Typ.toBruijn [] .bot)
     else
       .false
   | _, .var id =>
     if id ∉ skolems then
       let i := Typ.interpret_one id .false assums
-      (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
+      (Typ.toBruijn [] i) == (Typ.toBruijn [] .top)
     else
       .false
   | _, _ => .false
@@ -403,7 +403,7 @@ mutual
   def Subtyping.check
     (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
   :=
-    ((Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper)) || match lower, upper with
+    ((Typ.toBruijn [] lower) == (Typ.toBruijn [] upper)) || match lower, upper with
     | .entry l body, .entry l' body' =>
       l = l' && Subtyping.check skolems assums body body'
 
@@ -528,7 +528,7 @@ mutual
   partial def Subtyping.Static.solve
     (skolems : List String) (assums : ListSubtyping) (lower upper : Typ )
   : Lean.MetaM (List (List String × ListSubtyping))
-  := if (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] upper) then
+  := if (Typ.toBruijn [] lower) == (Typ.toBruijn [] upper) then
     return [(skolems,assums)]
   else match lower, upper with
     | (.entry ll lower), (.entry lu upper) =>
@@ -942,15 +942,17 @@ mutual
     | refl skolems assums t :
       Subtyping.Static skolems assums t t skolems assums
 
-    | rename_lower {skolems assums lower' upper skolems' assums'} lower :
-      (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] lower') →
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums lower' upper skolems' assums'
+    | rename_skolems_lower {ids' skolems assums lower' upper skolems' assums'} ids lower :
+      ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
+      (Typ.toBruijn ids lower) = (Typ.toBruijn ids' lower') →
+      Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
+      Subtyping.Static (ids' ++ skolems) assums lower' upper skolems' assums'
 
-    | rename_upper {skolems assums lower upper' skolems' assums'} upper :
-      (Typ.toBruijn 0 [] upper) = (Typ.toBruijn 0 [] upper') →
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums lower upper' skolems' assums'
+    | rename_skolems_upper {ids' skolems assums lower upper' skolems' assums'} ids upper :
+      ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
+      (Typ.toBruijn ids upper) = (Typ.toBruijn ids' upper') →
+      Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
+      Subtyping.Static (ids' ++ skolems) assums lower upper' skolems' assums'
 
     -- implication preservation
     | entry_pres {skolems assums skolems' assums' } l lower upper :
@@ -1142,8 +1144,38 @@ mutual
 
 end
 
+
+lemma Subtyping.Static.rename_lower {skolems assums lower' upper skolems' assums'} lower :
+  (Typ.toBruijn [] lower) = (Typ.toBruijn [] lower') →
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  Subtyping.Static skolems assums lower' upper skolems' assums'
+:= by sorry
+
+lemma Subtyping.Static.rename_upper {skolems assums lower upper' skolems' assums'} upper :
+  (Typ.toBruijn [] upper) = (Typ.toBruijn [] upper') →
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  Subtyping.Static skolems assums lower upper' skolems' assums'
+:= by sorry
+
+
+lemma ListSubtyping.Static.rename_skolems {ids' skolems assums cs' skolems' assums' ids cs } :
+  ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
+  (ListSubtyping.toBruijn ids cs) = (ListSubtyping.toBruijn ids' cs') →
+  ListSubtyping.Static (ids ++ skolems) assums cs skolems' assums' →
+  ListSubtyping.Static (ids' ++ skolems) assums cs' skolems' assums'
+:= by sorry
+
+lemma ListSubtyping.Static.rename_drop {ids skolems assums cs ids' skolems' assums' cs'} :
+  ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
+  (ListSubtyping.toBruijn ids cs) = (ListSubtyping.toBruijn ids' cs') →
+  ListSubtyping.Static skolems assums cs skolems' assums' →
+  ListSubtyping.Static skolems assums cs' skolems' assums'
+:= by sorry
+
+
+
 lemma Subtyping.Static.bruijn_eq {lower upper} skolems assums :
-    (Typ.toBruijn 0 [] lower) = (Typ.toBruijn 0 [] upper) →
+    (Typ.toBruijn [] lower) = (Typ.toBruijn [] upper) →
     Subtyping.Static skolems assums lower upper skolems assums
 := by
   intro p0
