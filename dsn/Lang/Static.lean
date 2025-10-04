@@ -971,22 +971,22 @@ mutual
       Subtyping.Static skolems assums t .top skolems assums
 
     -- expansion elimination
-    | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
-      Subtyping.Static skolems assums a t skolems' assums' →
-      Subtyping.Static skolems' assums' b t skolems'' assums'' →
-      Subtyping.Static skolems assums (.unio a b) t skolems'' assums''
+    | unio_elim {skolems assums skolems'' assums''} left right t skolems' assums' :
+      Subtyping.Static skolems assums left t skolems' assums' →
+      Subtyping.Static skolems' assums' right t skolems'' assums'' →
+      Subtyping.Static skolems assums (.unio left right) t skolems'' assums''
 
-    | exi_elim skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+    | exi_elim {skolems assums skolems'' assums''} ids quals body t skolems' assums' :
       ListSubtyping.restricted skolems assums quals →
       ListSubtyping.Static skolems assums quals skolems' assums' →
-      Subtyping.Static (ids ∪ skolems') assums' body t skolems'' assums'' →
+      Subtyping.Static (ids ++ skolems') assums' body t skolems'' assums'' →
       Subtyping.Static skolems assums (.exi ids quals body) t skolems'' assums''
 
     -- refinement introduction
-    | inter_intro skolems assums t a  b skolems' assums' skolems'' assums'' :
-      Subtyping.Static skolems assums t a skolems' assums' →
-      Subtyping.Static skolems' assums' t b skolems'' assums'' →
-      Subtyping.Static skolems assums t (.inter a b) skolems'' assums''
+    | inter_intro {skolems assums skolems'' assums''} t left right skolems' assums' :
+      Subtyping.Static skolems assums t left skolems' assums' →
+      Subtyping.Static skolems' assums' t right skolems'' assums'' →
+      Subtyping.Static skolems assums t (.inter left right) skolems'' assums''
 
     | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
       ListSubtyping.restricted skolems assums quals →

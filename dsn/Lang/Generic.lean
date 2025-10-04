@@ -88,18 +88,30 @@ lemma mdiff_concat_eq {xs ys zs : List String} :
     apply mdiff_right_sub_cons_eq
     exact List.mem_append_right ys' p0
 
-lemma mdiff_concat_containment {xs ys zs : List String} :
+lemma mdiff_concat_containment_left {xs ys zs : List String} :
   List.mdiff xs (ys ++ zs) ⊆ List.mdiff xs ys
 := by sorry
 
+lemma mdiff_concat_containment_right {xs ys zs : List String} :
+  List.mdiff xs (ys ++ zs) ⊆ List.mdiff xs zs
+:= by sorry
 
-#print List.eq_nil_of_subset_nil
+
+lemma concat_right_containment {xs ys zs : List String} :
+  (xs ++ ys) ⊆ zs → ys ⊆ zs
+:= by
+  intro p0
+  intro a p1
+  apply p0
+  exact List.mem_append_right xs p1
+
+
 lemma mdiff_decreasing_containment {xs ys zs : List String} :
 ys ⊆ zs → List.mdiff xs zs ⊆ List.mdiff xs ys
 := by
   intro ss
   intro x dz
-  apply mdiff_concat_containment
+  apply mdiff_concat_containment_left
   rw [← mdiff_concat_eq] <;> assumption
 
 
@@ -444,6 +456,14 @@ lemma Subtyping.Dynamic.rename_upper {am lower upper upper'} :
   Subtyping.Dynamic am lower upper'
 := by sorry
 
+lemma Subtyping.Dynamic.bot_elim {am upper} :
+  Subtyping.Dynamic am Typ.bot upper
+:= by sorry
+
+lemma Subtyping.Dynamic.top_intro {am lower} :
+  Subtyping.Dynamic am lower Typ.top
+:= by sorry
+
 
 lemma Typ.fresh_ids n t :
   ∃ ids , ids.length = n ∧ ids ∩ Typ.free_vars t = []
@@ -610,11 +630,95 @@ mutual
       }
     }
     · exact ih1r p16
-  -- | bot_elim skolems assums t :
-  -- | top_intro skolems assums t :
-  -- | unio_elim skolems assums a t b skolems' assums' skolems'' assums'' :
-  -- | exi_elim skolems assums ids quals body t skolems' assums' skolems'' assums'' :
-  -- | inter_intro skolems assums t a  b skolems' assums' skolems'' assums'' :
+  | .bot_elim skolems0 assums0 t => by
+    exists []
+    simp [*]
+    apply And.intro; simp [ListPair.dom]
+    intros am' p0
+    exact Subtyping.Dynamic.bot_elim
+
+  | .top_intro skolems0 assums0 t => by
+    exists []
+    simp [*]
+    apply And.intro; simp [ListPair.dom]
+    intros am' p0
+    exact Subtyping.Dynamic.top_intro
+
+  | .unio_elim left right t skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨am1, ih1l, ih1r⟩ := Subtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.Dynamic.unio_elim
+    · {
+      apply Subtyping.Dynamic.dom_extension
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13
+      }
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13
+      }
+      · {
+        apply ih0r
+        apply MultiSubtyping.Dynamic.dom_reduction
+        · apply List.disjoint_preservation_left ih1l p13
+        · apply MultiSubtyping.Dynamic.reduction p10 p16
+      }
+    }
+    · exact ih1r p16
+
+  | .exi_elim ids quals body t skolems0 assums0 p0 p1 p2 => by
+
+    have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
+    have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
+
+    have ⟨p3,p4,p5,p6,p7⟩ := ListSubtyping.Static.attributes p1
+    have ⟨p8,p9,p10,p11,p12,p13,p14⟩ := Subtyping.Static.attributes p2
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro
+    · {
+      apply dom_concat_mdiff_containment p3 ih0l (concat_right_containment p8)
+      intros x p15
+      apply mdiff_concat_containment_right (ih1l p15)
+    }
+    · sorry
+
+  | .inter_intro t left right skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨am1, ih1l, ih1r⟩ := Subtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.Dynamic.inter_intro
+    · {
+      apply Subtyping.Dynamic.dom_extension
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13
+      }
+      · {
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13
+      }
+      · {
+        apply ih0r
+        apply MultiSubtyping.Dynamic.dom_reduction
+        · apply List.disjoint_preservation_left ih1l p13
+        · apply MultiSubtyping.Dynamic.reduction p10 p16
+      }
+    }
+    · exact ih1r p16
+
   -- | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
   -- | placeholder_elim skolems assums id t trans skolems' assums'  :
   -- | placeholder_intro skolems assums t id trans skolems' assums'  :
