@@ -525,7 +525,7 @@ lemma ListSubtyping.restricted_rename {skolems assums ids quals ids' quals'} :
 := by sorry
 
 
-lemma ListSubtyping.solution_completeness {skolems assums cs skolems' assums'} am' am :
+lemma ListSubtyping.solution_completeness {skolems assums cs skolems' assums' am am'} :
   ListSubtyping.restricted skolems assums cs →
   ListSubtyping.Static skolems assums cs skolems' assums' →
   MultiSubtyping.Dynamic am assums' →
@@ -587,31 +587,22 @@ mutual
     exists (am1 ++ am0)
     simp [*]
     apply And.intro
-    · exact dom_concat_mdiff_containment p0 ih0l p7 ih1l
-    · {
-      intro am' p12
+    { exact dom_concat_mdiff_containment p0 ih0l p7 ih1l }
+    { intro am' p12
       simp [MultiSubtyping.Dynamic]
       apply And.intro
-      · {
-        apply Subtyping.Dynamic.dom_extension
-        · {
-          apply List.disjoint_preservation_left ih1l
+      { apply Subtyping.Dynamic.dom_extension
+        { apply List.disjoint_preservation_left ih1l
           apply List.disjoint_preservation_right p2
-          apply p10
-        }
-        · {
-          apply List.disjoint_preservation_left ih1l
+          apply p10 }
+        { apply List.disjoint_preservation_left ih1l
           apply List.disjoint_preservation_right p3
-          apply p10
-        }
-        · {
-          apply ih0r
+          apply p10 }
+        { apply ih0r
           apply MultiSubtyping.Dynamic.dom_reduction
-          · apply List.disjoint_preservation_left ih1l p10
-          · apply MultiSubtyping.Dynamic.reduction p8 p12
-        }
-      }
-      · exact ih1r p12
+          { apply List.disjoint_preservation_left ih1l p10 }
+          { apply MultiSubtyping.Dynamic.reduction p8 p12 } } }
+      { exact ih1r p12 }
     }
 
 
@@ -620,8 +611,7 @@ mutual
     ∃ am, ListPair.dom am ⊆ (List.mdiff skolems' skolems) ∧
     (∀ {am'},
       MultiSubtyping.Dynamic (am ++ am') assums' →
-      Subtyping.Dynamic (am ++ am') lower upper
-    )
+      Subtyping.Dynamic (am ++ am') lower upper)
   | .refl skolems0 assums0 t => by
     exists []
     simp [*]
@@ -664,23 +654,15 @@ mutual
     apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
     intros am' p16
     apply Subtyping.Dynamic.path_pres
-    {
-      apply Subtyping.Dynamic.dom_extension
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p4 p13
-      }
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p5 p13
-      }
-      {
-        apply ih0r
+    { apply Subtyping.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
         apply MultiSubtyping.Dynamic.dom_reduction
         { apply List.disjoint_preservation_left ih1l p13 }
-        { apply MultiSubtyping.Dynamic.reduction p10 p16 }
-      }
-    }
+        { apply MultiSubtyping.Dynamic.reduction p10 p16 } } }
     { exact ih1r p16 }
   | .bot_elim skolems0 assums0 t => by
     exists []
@@ -706,24 +688,16 @@ mutual
     apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
     intros am' p16
     apply Subtyping.Dynamic.unio_elim
-    {
-      apply Subtyping.Dynamic.dom_extension
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p4 p13
-      }
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p5 p13
-      }
-      {
-        apply ih0r
+    { apply Subtyping.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
         apply MultiSubtyping.Dynamic.dom_reduction
         { apply List.disjoint_preservation_left ih1l p13 }
-        { apply MultiSubtyping.Dynamic.reduction p10 p16 }
-      }
-    }
-    · exact ih1r p16
+        { apply MultiSubtyping.Dynamic.reduction p10 p16 } } }
+    { exact ih1r p16 }
 
   | .exi_elim ids quals body t skolems0 assums0 p0 p1 p2 => by
     have ⟨ids', p3, p4⟩ := fresh_ids (ids.length) (
@@ -776,12 +750,12 @@ mutual
       apply ListSubtyping.Dynamic.dom_disjoint_concat_reorder (List.disjoint_swap p27)
 
       apply Subtyping.assumptions_independence p2 p24
-      {
-        have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by sorry
+      { have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by sorry
         intros x p28
         apply p29
         exact p25 p28 }
-      { sorry }
+      { apply ListSubtyping.solution_completeness p0 p1
+          (MultiSubtyping.Dynamic.reduction p18 p24) p26 }
     }
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
@@ -791,26 +765,18 @@ mutual
     have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
     exists (am1 ++ am0)
     simp [*]
-    apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
+    apply And.intro (dom_concat_mdiff_containment p2 ih0l p9 ih1l)
     intros am' p16
     apply Subtyping.Dynamic.inter_intro
-    {
-      apply Subtyping.Dynamic.dom_extension
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p4 p13
-      }
-      {
-        apply List.disjoint_preservation_left ih1l
-        apply List.disjoint_preservation_right p5 p13
-      }
-      {
-        apply ih0r
+    { apply Subtyping.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
         apply MultiSubtyping.Dynamic.dom_reduction
         { apply List.disjoint_preservation_left ih1l p13 }
-        { apply MultiSubtyping.Dynamic.reduction p10 p16 }
-      }
-    }
+        { apply MultiSubtyping.Dynamic.reduction p10 p16 } } }
     { exact ih1r p16 }
 
   -- | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
@@ -840,178 +806,3 @@ mutual
   | _ => by sorry
 
 end
-
-
-  -- fun {lower upper} => match lower with
-  --   | .var idl => by
-  --     cases upper with
-  --     | var idu =>
-  --       intro p0
-  --       apply Typ.bruijn_var_eq at p0
-  --       simp [*]
-  --       exact Subtyping.refl_dynamic
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .unit => by
-  --     cases upper with
-  --     | unit =>
-  --       simp [Typ.toBruijn]
-  --       exact Subtyping.refl_dynamic
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .entry ll bodyl => by
-  --     cases upper with
-  --     | entry lu bodyu =>
-  --       simp [Typ.toBruijn]
-  --       intro p0 p1
-  --       simp [*]
-  --       apply Subtyping.Dynamic.entry_pres
-  --       apply Subtyping.bruijn_eq_imp_dynamic p1
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .path p q => by
-  --     cases upper with
-  --     | path x y =>
-  --       simp [Typ.toBruijn]
-  --       intro p0 p1
-  --       apply Subtyping.Dynamic.path_pres
-  --       apply Subtyping.bruijn_eq_imp_dynamic (Eq.symm p0)
-  --       apply Subtyping.bruijn_eq_imp_dynamic p1
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .bot => by
-  --     cases upper with
-  --     | bot =>
-  --       simp [Typ.toBruijn]
-  --       exact Subtyping.refl_dynamic
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .top => by
-  --     cases upper with
-  --     | top =>
-  --       simp [Typ.toBruijn]
-  --       exact Subtyping.refl_dynamic
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-
-  --   | .unio leftl rightl => by
-  --     cases upper with
-  --     | unio leftu rightu =>
-  --       simp [Typ.toBruijn]
-  --       intro p0 p1
-  --       apply Subtyping.Dynamic.unio_elim
-  --       · {
-  --         apply Subtyping.Dynamic.unio_left_intro
-  --         apply Subtyping.bruijn_eq_imp_dynamic p0
-  --       }
-  --       · {
-  --         apply Subtyping.Dynamic.unio_right_intro
-  --         apply Subtyping.bruijn_eq_imp_dynamic p1
-  --       }
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-
-  --   | .inter leftl rightl => by
-  --     cases upper with
-  --     | inter leftu rightu =>
-  --       simp [Typ.toBruijn]
-  --       intro p0 p1
-  --       apply Subtyping.Dynamic.inter_intro
-  --       · {
-  --         apply Subtyping.Dynamic.inter_left_elim
-  --         apply Subtyping.bruijn_eq_imp_dynamic p0
-  --       }
-  --       · {
-  --         apply Subtyping.Dynamic.inter_right_elim
-  --         apply Subtyping.bruijn_eq_imp_dynamic p1
-  --       }
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-  --   | .diff leftl rightl => by
-  --     cases upper with
-  --     | diff leftu rightu =>
-  --       simp [Typ.toBruijn]
-  --       intro p0 p1
-  --       apply Subtyping.Dynamic.diff_intro
-  --       · apply Subtyping.Dynamic.diff_elim
-  --         · apply Subtyping.Dynamic.unio_left_intro
-  --           · apply Subtyping.bruijn_eq_imp_dynamic p0
-  --       · exact Subtyping.Dynamic.not_diff_elim p1
-  --       · apply Subtyping.Dynamic.not_diff_intro (Eq.symm p1)
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-
-  --   | .all idsl qualsl bodyl => by
-  --     cases upper with
-  --     | all idsu qualsu bodyu =>
-  --       intro p0
-  --       have ⟨idsu', p1, p2⟩ := Typ.fresh_ids (idsu.length) (Typ.all idsl qualsl bodyl)
-  --       have ⟨qualsu', bodyu', p3⟩ := Typ.all_rename qualsu bodyu p1
-  --       apply Subtyping.Dynamic.rename_upper p3
-  --       rw [← p3] at p0
-  --       reduce at p0
-  --       injection p0 with p4 p5 p6
-  --       apply Subtyping.Dynamic.all_intro p2
-  --       intros am' p7 p8
-  --       have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsl := by
-  --         intros id p9
-  --         cases p9
-  --       apply Subtyping.Dynamic.all_elim p9
-  --       · {
-  --         simp [*]
-  --         apply Subtyping.bruijn_eq_imp_dynamic p6
-  --       }
-  --       · {
-  --         simp [*]
-  --         apply ListSubtyping.bruijn_eq_imp_dynamic (Eq.symm p5) p8
-  --       }
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-
-  --   | .exi idsl qualsl bodyl => by
-  --     cases upper with
-  --     | exi idsu qualsu bodyu =>
-  --       intro p0
-  --       have ⟨idsl', p1, p2⟩ := Typ.fresh_ids (idsl.length) (Typ.exi idsu qualsu bodyu)
-  --       have ⟨qualsl', bodyl', p3⟩ := Typ.exi_rename qualsl bodyl p1
-  --       apply Subtyping.Dynamic.rename_lower p3
-  --       rw [← p3] at p0
-  --       reduce at p0
-  --       injection p0 with p4 p5 p6
-  --       apply Subtyping.Dynamic.exi_elim p2
-  --       intros am' p7 p8
-  --       have p9 : ListPair.dom ([] :  List (String × Typ)) ⊆ idsu := by
-  --         intros id p9
-  --         cases p9
-  --       apply Subtyping.Dynamic.exi_intro p9
-  --       · {
-  --         simp [*]
-  --         apply Subtyping.bruijn_eq_imp_dynamic p6
-  --       }
-  --       · {
-  --         simp [*]
-  --         apply ListSubtyping.bruijn_eq_imp_dynamic p5 p8
-  --       }
-  --     | _ =>
-  --       intro p0
-  --       injection p0
-
-  --   | .lfp idl bodyl => by
-  --     cases upper with
-  --     | lfp idu bodyu =>
-  --       intro p0
-  --       apply Subtyping.Dynamic.rename_upper p0
-  --       exact Subtyping.refl_dynamic
-  --     | _ =>
-  --       intro p0
-  --       injection p0
