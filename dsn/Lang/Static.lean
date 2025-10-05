@@ -942,6 +942,15 @@ mutual
     | refl skolems assums t :
       Subtyping.Static skolems assums t t skolems assums
 
+    -- TODO: neeed to redo renaming with renaming of skolems and assums
+    -- | rename_skolems_lower {ids' skolems assums lower' upper skolems' assums' skolems'' assums''} ids lower :
+    --   ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
+    --   (Typ.toBruijn ids lower) = (Typ.toBruijn ids' lower') →
+    --   Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
+    --   List.toBruijn ids skolems' = List.toBruijn ids' skolems'' →
+    --   ListSubtyping.toBruijn ids assums' = ListSubtyping.toBruijn ids' assums'' →
+    --   Subtyping.Static (ids' ++ skolems) assums lower' upper skolems'' assums''
+
     | rename_skolems_lower {ids' skolems assums lower' upper skolems' assums'} ids lower :
       ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
       (Typ.toBruijn ids lower) = (Typ.toBruijn ids' lower') →

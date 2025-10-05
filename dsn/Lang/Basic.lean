@@ -728,6 +728,19 @@ mutual
     List.mdiff (Typ.free_vars body) [id]
 end
 
+inductive Token
+| num : Nat → Token
+| str : String → Token
+deriving BEq
+
+
+def List.toBruijn (bids : List String) : List String → List Token
+| .nil => .nil
+| .cons x xs =>
+    match List.firstIndexOf x bids with
+    | .none => (Token.str x) :: List.toBruijn bids xs
+    | .some n => Token.num (bids.length + n) :: List.toBruijn bids xs
+
 mutual
   def ListSubtyping.toBruijn (bids : List String)
   : ListSubtyping → List (Typ.Bruijn × Typ.Bruijn)

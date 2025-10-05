@@ -560,6 +560,13 @@ lemma Subtyping.assumptions_independence
   MultiSubtyping.Dynamic (am' ++ am) assums'
 := by sorry
 
+lemma Subtyping.Static.exi_elim_bounds_ids_containment
+  {skolems assums ids quals body t skolems' assums'}
+:
+  Subtyping.Static skolems assums (.exi ids quals body) t skolems' assums' →
+  ids ⊆ ListSubtyping.free_vars quals
+:= by sorry
+
 
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
@@ -706,6 +713,7 @@ mutual
         (skolems' ++ ListSubtyping.free_vars assums') ++
         Typ.free_vars t
     )
+    -- TODO: need to rename assums0 to assums0' and assums' to assums''
     have ⟨quals', body', p5⟩ := Typ.exi_rename quals body p3
     have p6 := ListSubtyping.toBruijn_exi_injection p5
     have p7 := Typ.toBruijn_exi_injection p5
@@ -750,7 +758,9 @@ mutual
       apply ListSubtyping.Dynamic.dom_disjoint_concat_reorder (List.disjoint_swap p27)
 
       apply Subtyping.assumptions_independence p2 p24
-      { have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by sorry
+      { have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by
+        -- apply Subtyping.Static.exi_elim_bounds_ids_containment
+          sorry
         intros x p28
         apply p29
         exact p25 p28 }
