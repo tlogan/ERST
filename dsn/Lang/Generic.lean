@@ -65,8 +65,12 @@ lemma ListPair.mem_disj_concat_right {β}
     simp [*]
 
 
-lemma mdiff_right_sub_cons_eq y {xs ys : List String}:
+lemma mdiff_right_sub_cons_eq y {xs ys : List String} :
   y ∈ ys → List.mdiff xs ys = List.mdiff xs (y :: ys)
+:= by sorry
+
+lemma mdiff_left_sub_refl_disjoint {xs ys : List String} :
+  List.mdiff xs ys ∩ ys = []
 := by sorry
 
 lemma mdiff_concat_eq {xs ys zs : List String} :
@@ -521,6 +525,41 @@ lemma ListSubtyping.restricted_rename {skolems assums ids quals ids' quals'} :
 := by sorry
 
 
+lemma ListSubtyping.solution_completeness {skolems assums cs skolems' assums'} am' am :
+  ListSubtyping.restricted skolems assums cs →
+  ListSubtyping.Static skolems assums cs skolems' assums' →
+  MultiSubtyping.Dynamic am assums' →
+  MultiSubtyping.Dynamic (am' ++ am) cs →
+  MultiSubtyping.Dynamic (am' ++ am) assums'
+:= by sorry
+
+
+lemma List.disjoint_swap {α} [BEq α] {xs ys : List α} :
+  xs ∩ ys = [] → ys ∩ xs = []
+:= by sorry
+
+lemma ListSubtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' cs} :
+  ListPair.dom am ∩ ListPair.dom am' = [] →
+  MultiSubtyping.Dynamic (am ++ (am' ++ am'')) cs →
+  MultiSubtyping.Dynamic (am' ++ (am ++ am'')) cs
+:= by sorry
+
+lemma Subtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' lower upper} :
+  ListPair.dom am ∩ ListPair.dom am' = [] →
+  Subtyping.Dynamic (am ++ (am' ++ am'')) lower upper →
+  Subtyping.Dynamic (am' ++ (am ++ am'')) lower upper
+:= by sorry
+
+lemma Subtyping.assumptions_independence
+  {skolems assums lower upper skolems' assums' am am'}
+:
+  Subtyping.Static skolems assums lower upper skolems' assums' →
+  MultiSubtyping.Dynamic am assums' →
+  ListPair.dom am' ⊆ ListSubtyping.free_vars assums →
+  MultiSubtyping.Dynamic (am' ++ am) assums →
+  MultiSubtyping.Dynamic (am' ++ am) assums'
+:= by sorry
+
 
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
@@ -699,6 +738,7 @@ mutual
     have ⟨p8,p9⟩ := List.disjoint_concat_right p4
     have ⟨p10,p11⟩ := List.disjoint_concat_right p8
     have ⟨p30,p31⟩ := List.disjoint_concat_right p10
+    have ⟨p40,p41⟩ := List.disjoint_concat_right p11
 
     have p0 := ListSubtyping.restricted_rename (Eq.symm p6) p0
     have p1 := ListSubtyping.Static.rename_drop p30 (Eq.symm p6) p1
@@ -716,28 +756,32 @@ mutual
     simp [*]
 
     apply And.intro
-    {
-      apply dom_concat_mdiff_containment p12 ih0l (concat_right_containment p17)
+    { apply dom_concat_mdiff_containment p12 ih0l (concat_right_containment p17)
       intros x p24
-      apply mdiff_concat_containment_right (ih1l p24)
-    }
-    {
-      intros am' p24
+      apply mdiff_concat_containment_right (ih1l p24) }
+    { intros am' p24
       apply Subtyping.Dynamic.rename_lower p5
       apply Subtyping.Dynamic.exi_elim p9
       intros am2 p25 p26
-      apply Subtyping.Dynamic.dom_extension
+
+      have p27 : ListPair.dom am1 ∩ ListPair.dom am2 = [] := by
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p25
+        apply List.disjoint_preservation_left
+        apply mdiff_concat_containment_left
+        apply mdiff_left_sub_refl_disjoint
+
+      apply Subtyping.Dynamic.dom_disjoint_concat_reorder p27
+      apply ih1r
+      apply ListSubtyping.Dynamic.dom_disjoint_concat_reorder (List.disjoint_swap p27)
+
+      apply Subtyping.assumptions_independence p2 p24
       {
-        apply List.disjoint_preservation_left p25
-        have ⟨p40,p41⟩ := List.disjoint_concat_right p11
-        apply List.disjoint_preservation_right p19 p41
-      }
-      {
-        sorry
-      }
-      {
-        sorry
-      }
+        have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by sorry
+        intros x p28
+        apply p29
+        exact p25 p28 }
+      { sorry }
     }
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
