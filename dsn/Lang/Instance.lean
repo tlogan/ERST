@@ -608,10 +608,9 @@ example : Subtyping.Static
 example : Subtyping.Static
   [ids| ] [subtypings| ]
   [typ| <uno/>]
-  [typ| EXI[T] [(T <: <uno/>)] T ]
+  [typ| EXI[T] [(T33 <: <uno/>)] T33]
   [ids| ] [subtypings| (T33 <: <uno/>) (<uno/> <: T33) ]
 := by
-  apply Subtyping.Static.rename_upper [typ| EXI[T33] [(T33 <: <uno/>)] T33 ] (by rfl)
   Subtyping_Static_prove
 
 ---------------------------------------
@@ -657,11 +656,11 @@ example : Subtyping.Static
 
 example : Subtyping.Static
   [ids| ] [subtypings| ]
-  [typ| ALL[T] [(<uno/> <: T)] T ]
+  [typ| ALL[T33] [(<uno/> <: T33)] T33 ]
   [typ| <uno/>]
   [ids| ] [subtypings| (<uno/> <: T33) (T33 <: <uno/>) ]
 := by
-  apply Subtyping.Static.rename_lower [typ| ALL[T33] [(<uno/> <: T33)] T33 ] (by rfl)
+  -- TODO: remove renaming
   Subtyping_Static_prove
 
 --------------------------------------------

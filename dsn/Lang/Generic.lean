@@ -617,23 +617,6 @@ mutual
     apply And.intro (by simp [ListPair.dom])
     intros am0 p1
     exact Subtyping.Dynamic.refl am0 t
-  | .rename_skolems_lower ids0 lower0 p0 p1 p2 => by
-    sorry
-    -- have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
-    -- have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
-    -- exists am0
-    -- simp [*]
-    -- intros am' p9
-    -- apply Subtyping.Dynamic.rename_lower p0 (ih0r p9)
-
-  | .rename_skolems_upper ids0 upper0 p0 p1 p2 => by
-    sorry
-    -- have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p1
-    -- have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p1
-    -- exists am0
-    -- simp [*]
-    -- intros am' p9
-    -- apply Subtyping.Dynamic.rename_upper p0 (ih0r p9)
 
   | .entry_pres l lower0 upper0 p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0

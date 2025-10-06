@@ -942,27 +942,6 @@ mutual
     | refl skolems assums t :
       Subtyping.Static skolems assums t t skolems assums
 
-    -- TODO: neeed to redo renaming with renaming of skolems and assums
-    -- | rename_skolems_lower {ids' skolems assums lower' upper skolems' assums' skolems'' assums''} ids lower :
-    --   ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
-    --   (Typ.toBruijn ids lower) = (Typ.toBruijn ids' lower') →
-    --   Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
-    --   List.toBruijn ids skolems' = List.toBruijn ids' skolems'' →
-    --   ListSubtyping.toBruijn ids assums' = ListSubtyping.toBruijn ids' assums'' →
-    --   Subtyping.Static (ids' ++ skolems) assums lower' upper skolems'' assums''
-
-    | rename_skolems_lower {ids' skolems assums lower' upper skolems' assums'} ids lower :
-      ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
-      (Typ.toBruijn ids lower) = (Typ.toBruijn ids' lower') →
-      Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
-      Subtyping.Static (ids' ++ skolems) assums lower' upper skolems' assums'
-
-    | rename_skolems_upper {ids' skolems assums lower upper' skolems' assums'} ids upper :
-      ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
-      (Typ.toBruijn ids upper) = (Typ.toBruijn ids' upper') →
-      Subtyping.Static (ids ++ skolems) assums lower upper skolems' assums' →
-      Subtyping.Static (ids' ++ skolems) assums lower upper' skolems' assums'
-
     -- implication preservation
     | entry_pres {skolems assums skolems' assums' } l lower upper :
       Subtyping.Static skolems assums lower upper skolems' assums' →
@@ -1155,44 +1134,6 @@ mutual
       Subtyping.Static skolems assums (.all ids quals l) r skolems'' assums''
 
 end
-
-
-
-lemma Subtyping.Static.rename_lower {skolems assums lower' upper skolems' assums'} lower :
-  (Typ.toBruijn [] lower) = (Typ.toBruijn [] lower') →
-  Subtyping.Static skolems assums lower upper skolems' assums' →
-  Subtyping.Static skolems assums lower' upper skolems' assums'
-:= by sorry
-
-lemma Subtyping.Static.rename_upper {skolems assums lower upper' skolems' assums'} upper :
-  (Typ.toBruijn [] upper) = (Typ.toBruijn [] upper') →
-  Subtyping.Static skolems assums lower upper skolems' assums' →
-  Subtyping.Static skolems assums lower upper' skolems' assums'
-:= by sorry
-
-
-lemma ListSubtyping.Static.rename_skolems {ids' skolems assums cs' skolems' assums' ids cs } :
-  ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
-  (ListSubtyping.toBruijn ids cs) = (ListSubtyping.toBruijn ids' cs') →
-  ListSubtyping.Static (ids ++ skolems) assums cs skolems' assums' →
-  ListSubtyping.Static (ids' ++ skolems) assums cs' skolems' assums'
-:= by sorry
-
-lemma ListSubtyping.Static.rename_drop {ids skolems assums cs ids' skolems' assums' cs'} :
-  ids' ∩ (skolems ++ ListSubtyping.free_vars assums) = [] →
-  (ListSubtyping.toBruijn ids cs) = (ListSubtyping.toBruijn ids' cs') →
-  ListSubtyping.Static skolems assums cs skolems' assums' →
-  ListSubtyping.Static skolems assums cs' skolems' assums'
-:= by sorry
-
-
-lemma Subtyping.Static.bruijn_eq {lower upper} skolems assums :
-    (Typ.toBruijn [] lower) = (Typ.toBruijn [] upper) →
-    Subtyping.Static skolems assums lower upper skolems assums
-:= by
-  intro p0
-  apply Subtyping.Static.rename_upper _ p0
-  exact Subtyping.Static.refl skolems assums lower
 
 
 syntax "ListSubtyping_Static_prove" : tactic
