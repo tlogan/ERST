@@ -560,14 +560,6 @@ lemma Subtyping.assumptions_independence
   MultiSubtyping.Dynamic (am' ++ am) assums'
 := by sorry
 
-lemma Subtyping.Static.exi_elim_bounds_ids_containment
-  {skolems assums ids quals body t skolems' assums'}
-:
-  Subtyping.Static skolems assums (.exi ids quals body) t skolems' assums' →
-  ids ⊆ ListSubtyping.free_vars quals
-:= by sorry
-
-
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
     ListSubtyping.Static skolems assums cs skolems' assums' →
@@ -706,26 +698,7 @@ mutual
         { apply MultiSubtyping.Dynamic.reduction p10 p16 } } }
     { exact ih1r p16 }
 
-  | .exi_elim ids quals body t skolems0 assums0 p0 p1 p2 => by
-    have ⟨ids', p3, p4⟩ := fresh_ids (ids.length) (
-        (skolems ++ ListSubtyping.free_vars assums) ++
-        (skolems0 ++ ListSubtyping.free_vars assums0) ++
-        (skolems' ++ ListSubtyping.free_vars assums') ++
-        Typ.free_vars t
-    )
-    -- TODO: need to rename assums0 to assums0' and assums' to assums''
-    have ⟨quals', body', p5⟩ := Typ.exi_rename quals body p3
-    have p6 := ListSubtyping.toBruijn_exi_injection p5
-    have p7 := Typ.toBruijn_exi_injection p5
-    have ⟨p8,p9⟩ := List.disjoint_concat_right p4
-    have ⟨p10,p11⟩ := List.disjoint_concat_right p8
-    have ⟨p30,p31⟩ := List.disjoint_concat_right p10
-    have ⟨p40,p41⟩ := List.disjoint_concat_right p11
-
-    have p0 := ListSubtyping.restricted_rename (Eq.symm p6) p0
-    have p1 := ListSubtyping.Static.rename_drop p30 (Eq.symm p6) p1
-    have p2 := Subtyping.Static.rename_skolems_lower  _ _ p31 (Eq.symm p7) p2
-
+  | .exi_elim ids quals body t skolems0 assums0 p0 p4 p5 p1 p2 => by
 
     have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
     have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
@@ -742,8 +715,7 @@ mutual
       intros x p24
       apply mdiff_concat_containment_right (ih1l p24) }
     { intros am' p24
-      apply Subtyping.Dynamic.rename_lower p5
-      apply Subtyping.Dynamic.exi_elim p9
+      apply Subtyping.Dynamic.exi_elim p4
       intros am2 p25 p26
 
       have p27 : ListPair.dom am1 ∩ ListPair.dom am2 = [] := by
@@ -758,12 +730,8 @@ mutual
       apply ListSubtyping.Dynamic.dom_disjoint_concat_reorder (List.disjoint_swap p27)
 
       apply Subtyping.assumptions_independence p2 p24
-      { have p29 : ids' ⊆ ListSubtyping.free_vars assums0 := by
-        -- apply Subtyping.Static.exi_elim_bounds_ids_containment
-          sorry
-        intros x p28
-        apply p29
-        exact p25 p28 }
+      { intros x p28
+        exact p14 (p5 (p25 p28)) }
       { apply ListSubtyping.solution_completeness p0 p1
           (MultiSubtyping.Dynamic.reduction p18 p24) p26 }
     }
@@ -816,3 +784,26 @@ mutual
   | _ => by sorry
 
 end
+
+
+--------------------------------------------------------------------
+    -- have ⟨ids', p3, p4⟩ := fresh_ids (ids.length) (
+    --     (skolems ++ ListSubtyping.free_vars assums) ++
+    --     (skolems0 ++ ListSubtyping.free_vars assums0) ++
+    --     (skolems' ++ ListSubtyping.free_vars assums') ++
+    --     Typ.free_vars t
+    -- )
+    -- -- TODO: need to rename assums0 to assums0' and assums' to assums''
+    -- have ⟨quals', body', p5⟩ := Typ.exi_rename quals body p3
+    -- have p6 := ListSubtyping.toBruijn_exi_injection p5
+    -- have p7 := Typ.toBruijn_exi_injection p5
+    -- have ⟨p8,p9⟩ := List.disjoint_concat_right p4
+    -- have ⟨p10,p11⟩ := List.disjoint_concat_right p8
+    -- have ⟨p30,p31⟩ := List.disjoint_concat_right p10
+    -- have ⟨p40,p41⟩ := List.disjoint_concat_right p11
+
+    -- have p0 := ListSubtyping.restricted_rename (Eq.symm p6) p0
+    -- have p1 := ListSubtyping.Static.rename_drop p30 (Eq.symm p6) p1
+    -- have p2 := Subtyping.Static.rename_skolems_lower  _ _ p31 (Eq.symm p7) p2
+
+    -----------------------------------------------------

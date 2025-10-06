@@ -989,6 +989,9 @@ mutual
 
     | exi_elim {skolems assums skolems'' assums''} ids quals body t skolems' assums' :
       ListSubtyping.restricted skolems assums quals →
+      ids ∩ Typ.free_vars t = [] →
+      -- NOTE: require quals to contain all bound variables so we can use it for freshness guarantees
+      ids ⊆ ListSubtyping.free_vars quals →
       ListSubtyping.Static skolems assums quals skolems' assums' →
       Subtyping.Static (ids ++ skolems') assums' body t skolems'' assums'' →
       Subtyping.Static skolems assums (.exi ids quals body) t skolems'' assums''
@@ -1154,6 +1157,7 @@ mutual
 end
 
 
+
 lemma Subtyping.Static.rename_lower {skolems assums lower' upper skolems' assums'} lower :
   (Typ.toBruijn [] lower) = (Typ.toBruijn [] lower') →
   Subtyping.Static skolems assums lower upper skolems' assums' →
@@ -1180,7 +1184,6 @@ lemma ListSubtyping.Static.rename_drop {ids skolems assums cs ids' skolems' assu
   ListSubtyping.Static skolems assums cs skolems' assums' →
   ListSubtyping.Static skolems assums cs' skolems' assums'
 := by sorry
-
 
 
 lemma Subtyping.Static.bruijn_eq {lower upper} skolems assums :
