@@ -981,10 +981,12 @@ mutual
       Subtyping.Static skolems' assums' t right skolems'' assums'' →
       Subtyping.Static skolems assums t (.inter left right) skolems'' assums''
 
-    | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
+    | all_intro {skolems assums skolems'' assums''} t ids quals body skolems' assums' :
       ListSubtyping.restricted skolems assums quals →
+      ids ∩ Typ.free_vars t = [] →
+      ids ⊆ ListSubtyping.free_vars quals →
       ListSubtyping.Static skolems assums quals skolems' assums' →
-      Subtyping.Static (ids ∪ skolems') assums' t body skolems'' assums'' →
+      Subtyping.Static (ids ++ skolems') assums' t body skolems'' assums'' →
       Subtyping.Static skolems assums t (.all ids quals body) skolems'' assums''
 
     -- placeholder elimination

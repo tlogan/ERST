@@ -716,8 +716,7 @@ mutual
       { intros x p28
         exact p14 (p5 (p25 p28)) }
       { apply ListSubtyping.solution_completeness p0 p1
-          (MultiSubtyping.Dynamic.reduction p18 p24) p26 }
-    }
+          (MultiSubtyping.Dynamic.reduction p18 p24) p26 } }
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
@@ -739,6 +738,43 @@ mutual
         { apply List.disjoint_preservation_left ih1l p13 }
         { apply MultiSubtyping.Dynamic.reduction p10 p16 } } }
     { exact ih1r p16 }
+
+  | .all_intro t ids quals body skolems0 assums0 p0 p4 p5 p1 p2 => by
+
+    have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
+    have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
+
+    have ⟨p12,p13,p14,p15,p16⟩ := ListSubtyping.Static.attributes p1
+
+    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := Subtyping.Static.attributes p2
+
+    exists (am1 ++ am0)
+    simp [*]
+
+    apply And.intro
+    { apply dom_concat_mdiff_containment p12 ih0l (concat_right_containment p17)
+      intros x p24
+      apply mdiff_concat_containment_right (ih1l p24) }
+    { intros am' p24
+      apply Subtyping.Dynamic.all_intro p4
+      intros am2 p25 p26
+
+      have p27 : ListPair.dom am1 ∩ ListPair.dom am2 = [] := by
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p25
+        apply List.disjoint_preservation_left
+        apply mdiff_concat_containment_left
+        apply mdiff_left_sub_refl_disjoint
+
+      apply Subtyping.Dynamic.dom_disjoint_concat_reorder p27
+      apply ih1r
+      apply ListSubtyping.Dynamic.dom_disjoint_concat_reorder (List.disjoint_swap p27)
+
+      apply Subtyping.assumptions_independence p2 p24
+      { intros x p28
+        exact p14 (p5 (p25 p28)) }
+      { apply ListSubtyping.solution_completeness p0 p1
+          (MultiSubtyping.Dynamic.reduction p18 p24) p26 } }
 
   -- | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
   -- | placeholder_elim skolems assums id t trans skolems' assums'  :
