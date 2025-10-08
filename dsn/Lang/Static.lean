@@ -1105,11 +1105,11 @@ mutual
       Subtyping.Static skolems assums (.diff l r) t skolems' assums'
 
     -- expansion introduction
-    | unio_left_intro skolems assums t l r skolems' assums' :
+    | unio_left_intro {skolems assums skolems' assums'} t l r:
       Subtyping.Static skolems assums t l skolems' assums' →
       Subtyping.Static skolems assums t (.unio l r) skolems' assums'
 
-    | unio_right_intro skolems assums t l r skolems' assums' :
+    | unio_right_intro {skolems assums skolems' assums'} t l r :
       Subtyping.Static skolems assums t r skolems' assums' →
       Subtyping.Static skolems assums t (.unio l r) skolems' assums'
 
@@ -1119,11 +1119,11 @@ mutual
       Subtyping.Static skolems assums l (.exi ids quals r)  skolems'' assums''
 
     -- refinement elimination
-    | inter_left_elim skolems assums l r t skolems' assums' :
+    | inter_left_elim {skolems assums skolems' assums'} l r t :
       Subtyping.Static skolems assums l t skolems' assums' →
       Subtyping.Static skolems assums (.inter l r) t skolems' assums'
 
-    | inter_right_elim skolems assums l r t skolems' assums' :
+    | inter_right_elim {skolems assums skolems' assums'} l r t :
       Subtyping.Static skolems assums r t skolems' assums' →
       Subtyping.Static skolems assums (.inter l r) t skolems' assums'
 

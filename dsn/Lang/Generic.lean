@@ -318,6 +318,27 @@ lemma Subtyping.Dynamic.refl am t :
   Subtyping.Dynamic am t t
 := by sorry
 
+lemma Subtyping.Dynamic.unio_left_intro {am t l r} :
+  Subtyping.Dynamic am t l →
+  Subtyping.Dynamic am t (Typ.unio l r)
+:= by sorry
+
+
+lemma Subtyping.Dynamic.unio_right_intro {am t l r} :
+  Subtyping.Dynamic am t r →
+  Subtyping.Dynamic am t (Typ.unio l r)
+:= by sorry
+
+lemma Subtyping.Dynamic.inter_left_elim {am l r t} :
+  Subtyping.Dynamic am l t →
+  Subtyping.Dynamic am (Typ.inter l r) t
+:= by sorry
+
+lemma Subtyping.Dynamic.inter_right_elim {am l r t} :
+  Subtyping.Dynamic am r t →
+  Subtyping.Dynamic am (Typ.inter l r) t
+:= by sorry
+
 
 lemma Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
   Subtyping.Dynamic am bodyl bodyu →
@@ -933,11 +954,41 @@ mutual
   -- | lfp_drop_intro skolems assums l id r r' skolems' assums' :
   -- | diff_elim skolems assums l r t skolems' assums' :
   -------------------------------------------------------------------
-  -- | unio_left_intro skolems assums t l r skolems' assums' :
-  -- | unio_right_intro skolems assums t l r skolems' assums' :
+  | .unio_left_intro t l r p0  => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.Dynamic.unio_left_intro (ih0r p9)
+
+  | .unio_right_intro t l r p0  => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p9
+
+    exact Subtyping.Dynamic.unio_right_intro (ih0r p9)
+
   -- | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
-  -- | inter_left_elim skolems assums l r t skolems' assums' :
-  -- | inter_right_elim skolems assums l r t skolems' assums' :
+
+  | .inter_left_elim l r t p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp[*]
+    intros am' p9
+    exact Subtyping.Dynamic.inter_left_elim (ih0r p9)
+
+  | .inter_right_elim l r t p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.Dynamic.inter_right_elim (ih0r p9)
+
   -- | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
   | _ => by sorry
 
