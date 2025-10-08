@@ -1035,18 +1035,20 @@ mutual
       Subtyping.Static skolems assums t' t skolems' assums' →
       Subtyping.Static skolems assums (.var id) t skolems' assums'
 
-    -- implication rewriting
-    | unio_antec skolems assums l a b r skolems' assums' :
-      Subtyping.Static skolems assums l (.inter (.path a r) (.path b r)) skolems' assums' →
-      Subtyping.Static skolems assums l (.path (.unio a b) r) skolems' assums'
+    | unio_antec {skolems assums l skolems'' assums''} a b upper assums' skolems' :
+      Subtyping.Static skolems assums l (.path a upper) skolems' assums' →
+      Subtyping.Static skolems' assums' l (.path b upper) skolems'' assums'' →
+      Subtyping.Static skolems assums l (.path (.unio a b) upper) skolems'' assums''
 
-    | inter_conseq skolems assums l a b r skolems' assums' :
-      Subtyping.Static skolems assums l (.inter (.path r a) (.path r b)) skolems' assums' →
-      Subtyping.Static skolems assums l (.path r (.inter a b)) skolems' assums'
+    | inter_conseq {skolems assums l skolems'' assums''} upper a b skolems' assums':
+      Subtyping.Static skolems assums l (.path upper a) skolems' assums' →
+      Subtyping.Static skolems' assums' l (.path upper b) skolems'' assums'' →
+      Subtyping.Static skolems assums l (.path upper (.inter a b)) skolems'' assums''
 
-    | inter_entry skolems assums t l a b skolems' assums' :
-      Subtyping.Static skolems assums t (.inter (.entry l a) (.entry l b)) skolems' assums' →
-      Subtyping.Static skolems assums t (.entry l (.inter a b)) skolems' assums'
+    | inter_entry {skolems assums t skolems'' assums''} l a b skolems' assums':
+      Subtyping.Static skolems assums t (.entry l a) skolems' assums' →
+      Subtyping.Static skolems' assums' t (.entry l b) skolems'' assums'' →
+      Subtyping.Static skolems assums t (.entry l (.inter a b)) skolems'' assums''
 
     -- least fixed point elimination
     | lfp_skip_elim skolems assums id left right skolems' assums' :
