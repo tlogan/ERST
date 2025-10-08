@@ -352,34 +352,12 @@ lemma Subtyping.Dynamic.path_pres {am p q x y} :
 := by sorry
 
 
-lemma Subtyping.Dynamic.unio_left_intro {am t left right} :
-  Subtyping.Dynamic am t left →
-  Subtyping.Dynamic am t (Typ.unio left right)
-:= by sorry
-
-lemma Subtyping.Dynamic.unio_right_intro {am t left right} :
-  Subtyping.Dynamic am t right →
-  Subtyping.Dynamic am t (Typ.unio left right)
-:= by sorry
-
 lemma Subtyping.Dynamic.unio_elim {am left right t} :
   Subtyping.Dynamic am left t →
   Subtyping.Dynamic am right t →
   Subtyping.Dynamic am (Typ.unio left right) t
 := by sorry
 
-
-
-
-lemma Subtyping.Dynamic.inter_left_elim {am left right t} :
-  Subtyping.Dynamic am left t →
-  Subtyping.Dynamic am (Typ.inter left right) t
-:= by sorry
-
-lemma Subtyping.Dynamic.inter_right_elim {am left right t} :
-  Subtyping.Dynamic am right t →
-  Subtyping.Dynamic am (Typ.inter left right) t
-:= by sorry
 
 lemma Subtyping.Dynamic.inter_intro {am t left right} :
   Subtyping.Dynamic am t left →
@@ -403,18 +381,6 @@ lemma Subtyping.Dynamic.inter_entry {am t l left right} :
   Subtyping.Dynamic am t (Typ.entry l left) →
   Subtyping.Dynamic am t (Typ.entry l right) →
   Subtyping.Dynamic am t (Typ.entry l (Typ.inter left right))
-:= by sorry
-
-lemma Subtyping.Dynamic.exi_intro {am lower ids quals upper} :
-  MultiSubtyping.Dynamic am quals →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am lower (Typ.exi ids quals upper)
-:= by sorry
-
-lemma Subtyping.Dynamic.all_elim {am ids quals lower upper} :
-  MultiSubtyping.Dynamic am quals →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am (Typ.all ids quals lower) upper
 := by sorry
 
 
@@ -444,10 +410,28 @@ lemma Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
 := by sorry
 
 
-lemma Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
-  ListPair.dom am' ⊆ ids →
-  Subtyping.Dynamic (am' ++ am) t body →
-  MultiSubtyping.Dynamic (am' ++ am) quals →
+
+lemma Subtyping.Dynamic.diff_sub_elim {am lower upper} sub:
+  Subtyping.Dynamic am lower sub →
+  Subtyping.Dynamic am (Typ.diff lower sub) upper
+:= by sorry
+
+lemma Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
+  Subtyping.Dynamic am lower upper →
+  Subtyping.Dynamic am (Typ.diff lower sub) upper
+:= by sorry
+
+
+-- lemma Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
+--   ListPair.dom am' ⊆ ids →
+--   MultiSubtyping.Dynamic (am' ++ am) quals →
+--   Subtyping.Dynamic (am' ++ am) t body →
+--   Subtyping.Dynamic am t (Typ.exi ids quals body)
+-- := by sorry
+
+lemma Subtyping.Dynamic.exi_intro {am t ids quals body} :
+  MultiSubtyping.Dynamic am quals →
+  Subtyping.Dynamic am t body →
   Subtyping.Dynamic am t (Typ.exi ids quals body)
 := by sorry
 
@@ -461,11 +445,16 @@ lemma Subtyping.Dynamic.exi_elim {am ids quals body t} :
   Subtyping.Dynamic am (Typ.exi ids quals body) t
 := by sorry
 
+-- lemma Subtyping.Dynamic.all_elim {am am' ids quals body t} :
+--   ListPair.dom am' ⊆ ids →
+--   MultiSubtyping.Dynamic (am' ++ am) quals →
+--   Subtyping.Dynamic (am' ++ am) body t →
+--   Subtyping.Dynamic am (Typ.all ids quals body) t
+-- := by sorry
 
-lemma Subtyping.Dynamic.all_elim {am am' ids quals body t} :
-  ListPair.dom am' ⊆ ids →
-  Subtyping.Dynamic (am' ++ am) body t →
-  MultiSubtyping.Dynamic (am' ++ am) quals →
+lemma Subtyping.Dynamic.all_elim {am ids quals body t} :
+  MultiSubtyping.Dynamic am quals →
+  Subtyping.Dynamic am body t →
   Subtyping.Dynamic am (Typ.all ids quals body) t
 := by sorry
 
@@ -961,11 +950,29 @@ mutual
   -- | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
   -- | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
   -- | diff_intro skolems assums t l r skolems' assums' :
+
   -------------------------------------------------------------------
   -- | lfp_inflate_intro skolems assums l id r skolems' assums' :
   -- | lfp_drop_intro skolems assums l id r r' skolems' assums' :
-  -- | diff_elim skolems assums l r t skolems' assums' :
   -------------------------------------------------------------------
+
+  | .diff_sub_elim lower sub upper p0  => by
+
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p10
+    apply Subtyping.Dynamic.diff_sub_elim sub (ih0r p10)
+
+  | .diff_upper_elim lower sub p0  => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p10
+    apply Subtyping.Dynamic.diff_upper_elim sub (ih0r p10)
+
   | .unio_left_intro t l r p0  => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
     have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
@@ -980,7 +987,6 @@ mutual
     exists am0
     simp [*]
     intros am' p9
-
     exact Subtyping.Dynamic.unio_right_intro (ih0r p9)
 
   | .exi_intro ids quals upper skolems0 assums0 p0 p1 => by

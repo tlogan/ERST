@@ -1099,10 +1099,16 @@ mutual
       Subtyping.Static skolems assums l r' skolems' assums' →
       Subtyping.Static skolems assums l (.lfp id r) skolems' assums'
 
-    -- difference elimination
-    | diff_elim skolems assums l r t skolems' assums' :
-      Subtyping.Static skolems assums l (.unio r t) skolems' assums' →
-      Subtyping.Static skolems assums (.diff l r) t skolems' assums'
+    -- difference sub elimination
+    | diff_sub_elim {skolems assums skolems' assums'} lower sub upper :
+      Subtyping.Static skolems assums lower sub skolems' assums' →
+      Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
+
+    -- difference upper elimination
+    | diff_upper_elim {skolems assums upper skolems' assums'} lower sub :
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
+
 
     -- expansion introduction
     | unio_left_intro {skolems assums skolems' assums'} t l r:
