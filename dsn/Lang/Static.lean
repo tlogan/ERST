@@ -1113,10 +1113,10 @@ mutual
       Subtyping.Static skolems assums t r skolems' assums' →
       Subtyping.Static skolems assums t (.unio l r) skolems' assums'
 
-    | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
-      Subtyping.Static skolems assums l r skolems' assums' →
+    | exi_intro {skolems assums lower skolems'' assums''} ids quals upper skolems' assums' :
+      Subtyping.Static skolems assums lower upper skolems' assums' →
       ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
-      Subtyping.Static skolems assums l (.exi ids quals r)  skolems'' assums''
+      Subtyping.Static skolems assums lower (.exi ids quals upper)  skolems'' assums''
 
     -- refinement elimination
     | inter_left_elim {skolems assums skolems' assums'} l r t :
@@ -1132,10 +1132,10 @@ mutual
     --   Subtyping.Static skolems assums t (.path p q) skolems' assums' →
     --   Subtyping.Static skolems assums (.inter l r) (.path p q) skolems' assums'
 
-    | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
-      Subtyping.Static skolems assums l r skolems' assums' →
+    | all_elim {skolems assums upper skolems'' assums''} ids quals lower skolems' assums' :
+      Subtyping.Static skolems assums lower upper skolems' assums' →
       ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
-      Subtyping.Static skolems assums (.all ids quals l) r skolems'' assums''
+      Subtyping.Static skolems assums (.all ids quals lower) upper skolems'' assums''
 
 end
 

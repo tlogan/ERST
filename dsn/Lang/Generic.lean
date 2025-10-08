@@ -405,6 +405,18 @@ lemma Subtyping.Dynamic.inter_entry {am t l left right} :
   Subtyping.Dynamic am t (Typ.entry l (Typ.inter left right))
 := by sorry
 
+lemma Subtyping.Dynamic.exi_intro {am lower ids quals upper} :
+  MultiSubtyping.Dynamic am quals →
+  Subtyping.Dynamic am lower upper →
+  Subtyping.Dynamic am lower (Typ.exi ids quals upper)
+:= by sorry
+
+lemma Subtyping.Dynamic.all_elim {am ids quals lower upper} :
+  MultiSubtyping.Dynamic am quals →
+  Subtyping.Dynamic am lower upper →
+  Subtyping.Dynamic am (Typ.all ids quals lower) upper
+:= by sorry
+
 
 
 
@@ -971,7 +983,26 @@ mutual
 
     exact Subtyping.Dynamic.unio_right_intro (ih0r p9)
 
-  -- | exi_intro skolems assums l ids quals r skolems' assums' skolems'' assums'' :
+  | .exi_intro ids quals upper skolems0 assums0 p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.soundness p1
+    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.attributes p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_mdiff_containment p5 ih0l p6 ih1l)
+    intros am' p40
+    apply Subtyping.Dynamic.exi_intro (ih1r p40)
+    apply Subtyping.Dynamic.dom_extension
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p15 p21
+     }
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p20 p21 }
+    { apply ih0r
+      apply MultiSubtyping.Dynamic.dom_reduction
+      { apply List.disjoint_preservation_left ih1l p21 }
+      { apply MultiSubtyping.Dynamic.reduction p11 p40 } }
 
   | .inter_left_elim l r t p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p0
@@ -989,7 +1020,27 @@ mutual
     intros am' p9
     exact Subtyping.Dynamic.inter_right_elim (ih0r p9)
 
-  -- | all_elim skolems assums ids quals l r skolems' assums' skolems'' assums'' :
+  | .all_elim ids quals lower skolems0 assums0 p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.soundness p1
+    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.attributes p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_mdiff_containment p5 ih0l p6 ih1l)
+    intros am' p40
+    apply Subtyping.Dynamic.all_elim (ih1r p40)
+    apply Subtyping.Dynamic.dom_extension
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p15 p21
+     }
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p20 p21 }
+    { apply ih0r
+      apply MultiSubtyping.Dynamic.dom_reduction
+      { apply List.disjoint_preservation_left ih1l p21 }
+      { apply MultiSubtyping.Dynamic.reduction p11 p40 } }
+
   | _ => by sorry
 
 end
