@@ -1012,7 +1012,7 @@ mutual
       Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem introduction
-    | skolem_intro skolems assums t id t' skolems' assums'  :
+    | skolem_intro {skolems assums t skolems' assums'} t' id :
       id ∈ skolems →
       (t', .var id) ∈ assums →
       (∀ id', (.var id') = t' → id' ∈ skolems) →
@@ -1028,7 +1028,7 @@ mutual
       Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- skolem elimination
-    | skolem_elim skolems assums id t t' skolems' assums' :
+    | skolem_elim {skolems assums t skolems' assums'} t' id :
       id ∈ skolems →
       (.var id, t') ∈ assums →
       (∀ id', (.var id') = t → id' ∈ skolems) →

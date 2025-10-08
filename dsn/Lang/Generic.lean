@@ -560,6 +560,23 @@ lemma Subtyping.assumptions_independence
   MultiSubtyping.Dynamic (am' ++ am) assums'
 := by sorry
 
+lemma Subtyping.Dynamic.pluck {am cs lower upper} :
+  MultiSubtyping.Dynamic am cs →
+  (lower, upper) ∈ cs →
+  Subtyping.Dynamic am lower upper
+:= by sorry
+
+lemma Subtyping.Dynamic.trans {am lower upper} t :
+  Subtyping.Dynamic am lower t → Subtyping.Dynamic am t upper →
+  Subtyping.Dynamic am lower upper
+:= by
+  simp [Subtyping.Dynamic]
+  intros p0 p1
+  intros e p5
+  apply p1
+  apply p0
+  assumption
+
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
     ListSubtyping.Static skolems assums cs skolems' assums' →
@@ -802,6 +819,22 @@ mutual
     intros am' p30
     simp [MultiSubtyping.Dynamic] at p30
     simp [*]
+
+  | .skolem_intro t' id p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.trans t' (ih0r p40) (Subtyping.Dynamic.pluck p40 (p10 p1))
+
+  | .skolem_elim t' id p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.trans t' (Subtyping.Dynamic.pluck p40 (p10 p1)) (ih0r p40)
 
   -- | skolem_intro skolems assums t id t' skolems' assums'  :
   -- | skolem_elim skolems assums id t t' skolems' assums' :
