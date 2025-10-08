@@ -1004,11 +1004,11 @@ mutual
       Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem placeholder introduction
-    | skolem_placeholder_intro skolems assums t id trans skolems' assums'  :
+    | skolem_placeholder_intro {skolems assums t skolems'} id cs assums' :
       id ∈ skolems →
       (∃ id', (.var id', .var id) ∈ assums ∧ id' ∉ skolems) →
-      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
-      ListSubtyping.Static skolems assums trans skolems' assums' →
+      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
+      ListSubtyping.Static skolems assums cs skolems' assums' →
       Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem introduction
@@ -1020,11 +1020,11 @@ mutual
       Subtyping.Static skolems assums t (.var id) skolems' assums'
 
     -- skolem placeholder elimination
-    | skolem_placeholder_elim skolems assums id t trans skolems' assums'  :
+    | skolem_placeholder_elim {skolems assums t skolems'} id cs assums':
       id ∈ skolems →
       (∃ id', (.var id, .var id') ∈ assums ∧ id' ∉ skolems) →
-      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
-      ListSubtyping.Static skolems assums trans skolems' assums' →
+      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
+      ListSubtyping.Static skolems assums cs skolems' assums' →
       Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- skolem elimination

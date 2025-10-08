@@ -789,9 +789,21 @@ mutual
     simp [MultiSubtyping.Dynamic] at p30
     simp [*]
 
-  -- | skolem_placeholder_intro skolems assums t id trans skolems' assums'  :
+  | .skolem_placeholder_elim id cs assums' p0 p1 p2 p3 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping.Dynamic] at p30
+    simp [*]
+
+  | .skolem_placeholder_intro id cs assums' p0 p1 p2 p3 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping.Dynamic] at p30
+    simp [*]
+
   -- | skolem_intro skolems assums t id t' skolems' assums'  :
-  -- | skolem_placeholder_elim skolems assums id t trans skolems' assums'  :
   -- | skolem_elim skolems assums id t t' skolems' assums' :
   -------------------------------------------------------------------
   -- | unio_antec skolems assums l a b r skolems' assums' :
