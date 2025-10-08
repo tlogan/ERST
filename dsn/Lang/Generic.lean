@@ -740,7 +740,6 @@ mutual
     { exact ih1r p16 }
 
   | .all_intro t ids quals body skolems0 assums0 p0 p4 p5 p1 p2 => by
-
     have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.soundness p1
     have ⟨am1,ih1l,ih1r⟩ := Subtyping.soundness p2
 
@@ -776,13 +775,25 @@ mutual
       { apply ListSubtyping.solution_completeness p0 p1
           (MultiSubtyping.Dynamic.reduction p18 p24) p26 } }
 
-  -- | all_intro skolems assums ids quals body t skolems' assums' skolems'' assums'' :
-  -- | placeholder_elim skolems assums id t trans skolems' assums'  :
-  -- | placeholder_intro skolems assums t id trans skolems' assums'  :
+  | .placeholder_elim id cs assums' p0 p1 p2 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping.Dynamic] at p30
+    simp [*]
+
+  | .placeholder_intro id cs assums' p0 p1 p2 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping.Dynamic] at p30
+    simp [*]
+
   -- | skolem_placeholder_intro skolems assums t id trans skolems' assums'  :
   -- | skolem_intro skolems assums t id t' skolems' assums'  :
   -- | skolem_placeholder_elim skolems assums id t trans skolems' assums'  :
   -- | skolem_elim skolems assums id t t' skolems' assums' :
+  -------------------------------------------------------------------
   -- | unio_antec skolems assums l a b r skolems' assums' :
   -- | inter_conseq skolems assums l a b r skolems' assums' :
   -- | inter_entry skolems assums t l a b skolems' assums' :

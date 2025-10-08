@@ -990,17 +990,17 @@ mutual
       Subtyping.Static skolems assums t (.all ids quals body) skolems'' assums''
 
     -- placeholder elimination
-    | placeholder_elim skolems assums id t trans skolems' assums'  :
+    | placeholder_elim {skolems assums t skolems'} id cs assums' :
       id ∉ skolems →
-      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ trans) →
-      ListSubtyping.Static skolems assums trans skolems' assums' →
+      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
+      ListSubtyping.Static skolems assums cs skolems' assums' →
       Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
     -- placeholder introduction
-    | placeholder_intro skolems assums t id trans skolems' assums'  :
+    | placeholder_intro {skolems assums t skolems'} id cs assums' :
       id ∉ skolems →
-      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ trans) →
-      ListSubtyping.Static skolems assums trans skolems' assums' →
+      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
+      ListSubtyping.Static skolems assums cs skolems' assums' →
       Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
     -- skolem placeholder introduction
