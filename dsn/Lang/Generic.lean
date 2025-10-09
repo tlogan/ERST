@@ -1157,4 +1157,12 @@ end
 
 set_option maxHeartbeats 500000 in
 mutual
+
+  theorem Typing.soundness {skolems assums context e t skolems' assums'} :
+    Typing.Static skolems assums context e t skolems' assums' →
+    ∃ tam, ListPair.dom tam ⊆ (List.mdiff skolems' skolems) ∧
+    (∀ {eam}, MultiTyping.Dynamic tam eam context →
+      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
+        Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t ) )
+  | _ => sorry
 end

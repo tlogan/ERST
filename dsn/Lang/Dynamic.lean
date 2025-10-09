@@ -68,27 +68,27 @@ mutual
 end
 
 mutual
-  def sub_record (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  def Expr.Record.sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
   | .nil => .nil
   | (l, e) :: r =>
-    (l, sub m e) :: (sub_record m r)
+    (l, Expr.sub m e) :: (Expr.Record.sub m r)
 
-  def sub_function (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  def Expr.Function.sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
   | .nil => .nil
   | (p, e) :: f =>
     let ids := ids_pattern p
-    (p, sub (remove_all m ids) e) :: (sub_function m f)
+    (p, Expr.sub (remove_all m ids) e) :: (Expr.Function.sub m f)
 
-  def sub (m : List (String × Expr)): Expr → Expr
+  def Expr.sub (m : List (String × Expr)): Expr → Expr
   | .var id => match (find id m) with
     | .none => (.var id)
     | .some e => e
   | .unit => .unit
-  | .record r => .record (sub_record m r)
-  | .function f => .function (sub_function m f)
-  | .app ef ea => .app (sub m ef) (sub m ea)
-  | .anno e t => .anno (sub m e) t
-  | .loop e => .loop (sub m e)
+  | .record r => .record (Expr.Record.sub m r)
+  | .function f => .function (Expr.Function.sub m f)
+  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
+  | .anno e t => .anno (Expr.sub m e) t
+  | .loop e => .loop (Expr.sub m e)
 end
 
 inductive Progression : Expr → Expr → Prop
@@ -108,7 +108,7 @@ inductive Progression : Expr → Expr → Prop
 | appmatch : ∀ {p e f v m},
   IsValue v →
   pattern_match v p = some m →
-  Progression (.app (.function ((p,e) :: f)) v) (sub m e)
+  Progression (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
 | appskip : ∀ {p e f v},
   IsValue v →
   pattern_match v p = none →
@@ -119,7 +119,9 @@ inductive Progression : Expr → Expr → Prop
   Progression e e' →
   Progression (.loop e) (.loop e')
 | looppeel : ∀ {id e},
-  Progression (.loop (.function [(.var id, e)])) (sub [(id, (.loop (.function [(.var id, e)])))] e)
+  Progression
+    (.loop (.function [(.var id, e)]))
+    (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
 
 
 inductive Multi : Expr → Expr → Prop
@@ -177,3 +179,7 @@ mutual
     all_goals simp [Typ.size]
     all_goals try linarith
 end
+
+def MultiTyping.Dynamic
+  (tam : List (String × Typ)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
+:= ∀ id t, (id,t) ∈ context → ∃ e, (find id eam) = .some e → Typing.Dynamic tam e t
