@@ -391,13 +391,6 @@ lemma Subtyping.Dynamic.diff_elim {am left right t} :
   Subtyping.Dynamic am (Typ.diff left right) t
 := by sorry
 
-lemma Subtyping.Dynamic.diff_intro {am t left right} :
-  Subtyping.Dynamic am t left →
-  ¬ (Subtyping.Dynamic am t right) →
-  ¬ (Subtyping.Dynamic am right t) →
-  Subtyping.Dynamic am t (Typ.diff left right)
-:= by sorry
-
 
 lemma Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
   Typ.toBruijn [] t1 = Typ.toBruijn [] t2 →
@@ -428,6 +421,41 @@ lemma Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
 --   Subtyping.Dynamic (am' ++ am) t body →
 --   Subtyping.Dynamic am t (Typ.exi ids quals body)
 -- := by sorry
+
+lemma Subtyping.Dynamic.lfp_skip_elim {am id body t} :
+  id ∉ Typ.free_vars body →
+  Subtyping.Dynamic am body t →
+  Subtyping.Dynamic am (Typ.lfp id body) t
+:= by sorry
+
+lemma Subtyping.Dynamic.lfp_induct_elim {am id body t} :
+  Typ.Monotonic id .true body →
+  Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
+  Subtyping.Dynamic am (Typ.lfp id body) t
+:= by sorry
+
+lemma Subtyping.Dynamic.lfp_factor_elim {am id lower upper l fac} :
+  Typ.factor id lower l = .some fac →
+  Subtyping.Dynamic am fac upper →
+  Subtyping.Dynamic am (Typ.lfp id lower) (.entry l upper)
+:= by sorry
+
+
+lemma Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
+  Typ.Monotonic id .true lower →
+  Subtyping.Dynamic am (Typ.lfp id lower) upper →
+  ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
+  ¬ Subtyping.Dynamic am sub (Typ.subfold id lower n) →
+  Subtyping.Dynamic am (Typ.lfp id lower) (.diff upper sub)
+:= by sorry
+
+lemma Subtyping.Dynamic.diff_intro {am t left right} :
+  Subtyping.Dynamic am t left →
+  ¬ (Subtyping.Dynamic am t right) →
+  ¬ (Subtyping.Dynamic am right t) →
+  Subtyping.Dynamic am t (Typ.diff left right)
+:= by sorry
+
 
 lemma Subtyping.Dynamic.lfp_peel_intro {am t id body} :
   Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
@@ -961,11 +989,44 @@ mutual
     { exact ih1r p16 }
 
   -------------------------------------------------------------------
-  -- | lfp_skip_elim skolems assums id left right skolems' assums' :
-  -- | lfp_induct_elim skolems assums id left right skolems' assums' :
-  -- | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
-  -- | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
-  -------------------------------------------------------------------
+  | .lfp_skip_elim id body p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.lfp_skip_elim p0 (ih0r p40)
+
+  | .lfp_induct_elim id lower p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.lfp_induct_elim p0 (ih0r p40)
+
+  | .lfp_factor_elim id lower upper fac p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.lfp_factor_elim p0 (ih0r p40)
+
+  | .lfp_elim_diff_intro id lower upper sub h p0 p1 p2 p3 p4 p5 p6 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p4
+    have ⟨p10,p15,p20,p25,p30,p35,p40⟩ := Subtyping.Static.attributes p4
+    exists am0
+    simp [*]
+    intros am' p45
+
+    apply Subtyping.Dynamic.lfp_elim_diff_intro p3 (ih0r p45)
+    { contrapose p5 ; simp [*] ; simp at p5
+      apply Subtyping.check_completeness skolems
+        (MultiSubtyping.Dynamic.reduction p15 p45) p5 }
+    { contrapose p6 ; simp [*] ; simp at p6
+      apply Subtyping.check_completeness skolems
+        (MultiSubtyping.Dynamic.reduction p15 p45) p6 }
 
   | .diff_intro upper sub p0 p1 p2 p3 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p3

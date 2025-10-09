@@ -222,6 +222,8 @@ def ListSubtyping.var_restricted (id : String) : List (Typ × Typ) → Bool
     ListSubtyping.var_restricted id remainder
 
 mutual
+  -- NOTE: check that recursive type is structurally decreasing
+  -- NOTE: not necessary for soundness
   def ListTyp.struct_less_than : List Typ → Typ → Bool
     | [], _ => .true
     | (l::ls), r =>
@@ -1051,30 +1053,32 @@ mutual
       Subtyping.Static skolems assums t (.entry l (.inter a b)) skolems'' assums''
 
     -- least fixed point elimination
-    | lfp_skip_elim skolems assums id left right skolems' assums' :
-      id ∉ Typ.free_vars left →
-      Subtyping.Static skolems assums left right skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id left) right skolems' assums'
+    | lfp_skip_elim {skolems assums right skolems' assums'} id body :
+      id ∉ Typ.free_vars body →
+      Subtyping.Static skolems assums body right skolems' assums' →
+      Subtyping.Static skolems assums (.lfp id body) right skolems' assums'
 
-    | lfp_induct_elim skolems assums id left right skolems' assums' :
-      Typ.Monotonic id .true left →
-      Subtyping.Static skolems assums (Typ.sub [(id, right)] left) right skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id left) right skolems' assums'
+    | lfp_induct_elim {skolems assums upper skolems' assums'} id lower :
+      Typ.Monotonic id .true lower →
+      Subtyping.Static skolems assums (Typ.sub [(id, upper)] lower) upper skolems' assums' →
+      Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums'
 
-    | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
-      Typ.factor id left l = .some fac →
-      Subtyping.Static skolems assums fac right skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id left) (.entry l right) skolems' assums'
+    | lfp_factor_elim {skolems assums l skolems' assums'} id lower upper fac :
+      Typ.factor id lower l = .some fac →
+      Subtyping.Static skolems assums fac upper skolems' assums' →
+      Subtyping.Static skolems assums (.lfp id lower) (.entry l upper) skolems' assums'
 
-    | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
-      Typ.is_pattern [] r →
-      Typ.Monotonic id .true t →
-      Typ.struct_less_than (.var id) t →
-      ¬ (Subtyping.check skolems assums (Typ.subfold id t 1) r) →
-      Typ.height r = .some h →
-      ¬ (Subtyping.check skolems assums r (Typ.subfold id t h)) →
-      Subtyping.Static skolems assums (.lfp id t) l skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id t) (.diff l r) skolems' assums'
+    | lfp_elim_diff_intro {skolems assums skolems' assums'} id lower upper sub h :
+      -- TODO: check if is_pattern is subsumed by check
+      Typ.is_pattern [] sub →
+      -- TODO: struct_less_than might not be necessary
+      Typ.struct_less_than (.var id) lower →
+      Typ.height sub = .some h →
+      Typ.Monotonic id .true lower →
+      Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums' →
+      ¬ (Subtyping.check skolems assums (Typ.subfold id lower 1) sub) →
+      ¬ (Subtyping.check skolems assums sub (Typ.subfold id lower h)) →
+      Subtyping.Static skolems assums (.lfp id lower) (.diff upper sub) skolems' assums'
 
     -- difference introduction
     | diff_intro {skolems assums lower skolems' assums'} upper sub:
