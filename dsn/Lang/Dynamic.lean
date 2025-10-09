@@ -118,7 +118,7 @@ inductive Progression : Expr → Expr → Prop
 | loopbody : ∀ {e e'},
   Progression e e' →
   Progression (.loop e) (.loop e')
-| loopinflate : ∀ {id e},
+| looppeel : ∀ {id e},
   Progression (.loop (.function [(.var id, e)])) (sub [(id, (.loop (.function [(.var id, e)])))] e)
 
 

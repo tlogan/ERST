@@ -264,8 +264,8 @@ def Subtyping.shallow_match : Typ → Typ → Bool
   Subtyping.shallow_match left t || Subtyping.shallow_match right t
 | _,_ => .true
 
--- TODO: must prove that if inflatable holds then subtyping is sound and complete
-def Subtyping.inflatable (key target : Typ) : Bool :=
+-- TODO: must prove that if peelable holds then subtyping is sound and complete
+def Subtyping.peelable (key target : Typ) : Bool :=
   let ts := Typ.break .false target
   not (List.all ts (fun t => Subtyping.shallow_match key t))
   -- not (List.all ts (fun t => Subtyping.check [] [] key t))
@@ -689,7 +689,7 @@ mutual
         return []
 --
     | l, (.lfp id r) =>
-      if Subtyping.inflatable l r then
+      if Subtyping.peelable l r then
         Subtyping.Static.solve skolems assums l (.sub [(id, .lfp id r)] r)
       else
         let r' := Typ.drop id r
@@ -1086,18 +1086,17 @@ mutual
 
 
     -- least fixed point introduction
-    | lfp_inflate_intro skolems assums l id r skolems' assums' :
-      -- TODO: inflatable is a heuristic;
+    | lfp_peel_intro {skolems assums lower skolems' assums'} id body :
+      -- TODO: peelable is a heuristic;
       -- it's not necessary for soundness
       -- consider merely using it in tactic
-      Subtyping.inflatable l r →
-      Subtyping.Static skolems assums l (.sub [(id, .lfp id r)] r) skolems' assums' →
-      Subtyping.Static skolems assums l (.lfp id r) skolems' assums'
+      Subtyping.peelable lower body →
+      Subtyping.Static skolems assums lower (.sub [(id, .lfp id body)] body) skolems' assums' →
+      Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
 
-    | lfp_drop_intro skolems assums l id r r' skolems' assums' :
-      Typ.drop id r = r' →
-      Subtyping.Static skolems assums l r' skolems' assums' →
-      Subtyping.Static skolems assums l (.lfp id r) skolems' assums'
+    | lfp_drop_intro {skolems assums lower skolems' assums'} id body :
+      Subtyping.Static skolems assums lower (Typ.drop id body) skolems' assums' →
+      Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
 
     -- difference sub elimination
     | diff_sub_elim {skolems assums skolems' assums'} lower sub upper :
@@ -1295,8 +1294,8 @@ macro_rules
         · Subtyping_Static_prove
 
 
-      | apply Subtyping.Static.lfp_inflate_intro
-        · simp [Subtyping.inflatable, Typ.break, Subtyping.shallow_match]
+      | apply Subtyping.Static.lfp_peel_intro
+        · simp [Subtyping.peelable, Typ.break, Subtyping.shallow_match]
         · simp [Typ.sub, find] ; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_drop_intro

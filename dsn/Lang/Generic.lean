@@ -429,6 +429,16 @@ lemma Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
 --   Subtyping.Dynamic am t (Typ.exi ids quals body)
 -- := by sorry
 
+lemma Subtyping.Dynamic.lfp_peel_intro {am t id body} :
+  Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
+  Subtyping.Dynamic am t (Typ.lfp id body)
+:= by sorry
+
+lemma Subtyping.Dynamic.lfp_drop_intro {am t id body} :
+  Subtyping.Dynamic am t (Typ.drop id body) →
+  Subtyping.Dynamic am t (Typ.lfp id body)
+:= by sorry
+
 lemma Subtyping.Dynamic.exi_intro {am t ids quals body} :
   MultiSubtyping.Dynamic am quals →
   Subtyping.Dynamic am t body →
@@ -972,8 +982,21 @@ mutual
         (MultiSubtyping.Dynamic.reduction p10 p40) p2 }
 
   -------------------------------------------------------------------
-  -- | lfp_inflate_intro skolems assums l id r skolems' assums' :
-  -- | lfp_drop_intro skolems assums l id r r' skolems' assums' :
+  | .lfp_peel_intro id body p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.lfp_peel_intro (ih0r p40)
+
+  | .lfp_drop_intro id body p0 => by
+    have ⟨am0,ih0l,ih0r⟩ := Subtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.Dynamic.lfp_drop_intro (ih0r p40)
   -------------------------------------------------------------------
 
   | .diff_sub_elim lower sub upper p0  => by
@@ -1070,26 +1093,3 @@ mutual
   | _ => by sorry
 
 end
-
-
---------------------------------------------------------------------
-    -- have ⟨ids', p3, p4⟩ := fresh_ids (ids.length) (
-    --     (skolems ++ ListSubtyping.free_vars assums) ++
-    --     (skolems0 ++ ListSubtyping.free_vars assums0) ++
-    --     (skolems' ++ ListSubtyping.free_vars assums') ++
-    --     Typ.free_vars t
-    -- )
-    -- -- TODO: need to rename assums0 to assums0' and assums' to assums''
-    -- have ⟨quals', body', p5⟩ := Typ.exi_rename quals body p3
-    -- have p6 := ListSubtyping.toBruijn_exi_injection p5
-    -- have p7 := Typ.toBruijn_exi_injection p5
-    -- have ⟨p8,p9⟩ := List.disjoint_concat_right p4
-    -- have ⟨p10,p11⟩ := List.disjoint_concat_right p8
-    -- have ⟨p30,p31⟩ := List.disjoint_concat_right p10
-    -- have ⟨p40,p41⟩ := List.disjoint_concat_right p11
-
-    -- have p0 := ListSubtyping.restricted_rename (Eq.symm p6) p0
-    -- have p1 := ListSubtyping.Static.rename_drop p30 (Eq.symm p6) p1
-    -- have p2 := Subtyping.Static.rename_skolems_lower  _ _ p31 (Eq.symm p7) p2
-
-    -----------------------------------------------------

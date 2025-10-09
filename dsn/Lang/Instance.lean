@@ -517,7 +517,7 @@ example : Subtyping.Static
 := by Subtyping_Static_prove
 
 ---------------------------------------
------ least fixed point inflate intro
+----- least fixed point peel intro
 ---------------------------------------
 
 #eval Subtyping.Static.solve
