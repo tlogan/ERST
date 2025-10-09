@@ -1455,41 +1455,41 @@ mutual
   inductive Typing.ListPath.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     List (Pat × Expr) → List Zone → List Typ → Prop
-    | nil Θ Δ Γ :
-      Typing.ListPath.Static Θ Δ Γ [] [] []
-    | cons Θ Δ Γ p e f zones subtras Δ' Γ' tp tl zones' zones'' subtra :
-      Typing.ListPath.Static Θ Δ Γ f zones subtras →
-      PatLifting.Static Δ Γ p tp Δ' Γ' →
+    | nil skolems assums context :
+      Typing.ListPath.Static skolems assums context [] [] []
+    | cons skolems assums context p e f zones subtras assums' context' tp tl zones' zones'' subtra :
+      Typing.ListPath.Static skolems assums context f zones subtras →
+      PatLifting.Static assums context p tp assums' context' →
       ListTyp.diff tp subtras = tl →
-      (∀ Θ' Δ'' tr,
-        ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ ∈ zones' →
-        Typing.Static Θ Δ' Γ' e tr Θ' Δ''
+      (∀ skolems' assums'' tr,
+        ⟨List.diff skolems' skolems, List.diff assums'' assums', (.path tl tr)⟩ ∈ zones' →
+        Typing.Static skolems assums' context' e tr skolems' assums''
       ) →
-      ListZone.tidy (ListSubtyping.free_vars Δ) zones' = .some zones'' →
+      ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
       Typ.capture tp = subtra →
-      Typing.ListPath.Static Θ Δ Γ ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
+      Typing.ListPath.Static skolems assums context ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
 
   inductive Subtyping.GuardedListZone.Static
   : List String → List (Typ × Typ) →
     Typ → Typ → List Zone → Prop
-    | intro Θ Δ t id zones zones' :
-      (∀ Θ' Δ' t',
-        ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩ ∈ zones →
-        Subtyping.Static Θ Δ t (.path (.var id) t') Θ' Δ'
+    | intro skolems assums t id zones zones' :
+      (∀ skolems' assums' t',
+        ⟨List.diff skolems' skolems, List.diff assums' assums, t'⟩ ∈ zones →
+        Subtyping.Static skolems assums t (.path (.var id) t') skolems' assums'
       ) →
-      ListZone.tidy (ListSubtyping.free_vars Δ) zones = .some zones' →
-      Subtyping.GuardedListZone.Static Θ Δ t (.var id) zones'
+      ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones' →
+      Subtyping.GuardedListZone.Static skolems assums t (.var id) zones'
 
   inductive Typing.ListZone.Static
   : List String → List (Typ × Typ) → List (String × Typ) →
     Expr → List Zone → Prop
-    | intro Θ Δ Γ e zones :
-      (∀ Θ' Δ' t,
-        ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩ ∈ zones →
-        Typing.Static Θ Δ Γ e t Θ' Δ'
+    | intro skolems assums context e zones :
+      (∀ skolems' assums' t,
+        ⟨List.diff skolems' skolems, List.diff assums' assums, t⟩ ∈ zones →
+        Typing.Static skolems assums context e t skolems' assums'
       ) →
-      Typing.ListZone.Static Θ Δ Γ e zones
+      Typing.ListZone.Static skolems assums context e zones
 
   inductive Subtyping.LoopListZone.Static
   : List String → String → List Zone → Typ → Prop
@@ -1500,59 +1500,62 @@ mutual
       Typ.factor id t' "right" = .some r →
       Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
 
-    | stream pids id Θ Δ Δ' idl r t' l r' l' r'' :
+    | stream pids id skolems assums assums' idl r t' l r' l' r'' :
       id ≠ idl →
-      ListSubtyping.invert id Δ = .some Δ' →
-      Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩ = t' →
+      ListSubtyping.invert id assums = .some assums' →
+      Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
       Typ.factor id t' "left" = .some l →
       Typ.factor id t' "right" = .some r' →
       Typ.Monotonic idl .true r' →
       Typ.UpperFounded id l l' →
       Typ.sub [(idl, .lfp id l')] r' = r'' →
       Subtyping.LoopListZone.Static
-      pids id [⟨Θ, Δ, .path (.var idl) r⟩]
+      pids id [⟨skolems, assums, .path (.var idl) r⟩]
       (.path (.var idl) (.lfp id r''))
 
   inductive Typing.Static
   : List String → List (Typ × Typ) → List (String × Typ)
   → Expr → Typ → List String → List (Typ × Typ) → Prop
-    | unit Θ Δ Γ : Typing.Static Θ Δ Γ .unit .top Θ Δ
-    | var Θ Δ Γ x t :
-      find x Γ = .some t →
-      Typing.Static Θ Δ Γ (.var x) t Θ Δ
+    | unit {skolems assums context} :
+      Typing.Static skolems assums context .unit .unit skolems assums
+    | var {t} skolems assums context x :
+      find x context = .some t →
+      Typing.Static skolems assums context (.var x) t skolems assums
 
-    | record_nil Θ Δ Γ :
-      Typing.Static Θ Δ Γ (.record []) .top Θ Δ
+    | record_nil {skolems assums context} :
+      Typing.Static skolems assums context (.record []) .top skolems assums
 
-    | record_cons Θ Δ Γ r l e t t'  Θ' Δ' Θ'' Δ'' :
-      Typing.Static Θ Δ Γ e t Θ' Δ' →
-      Typing.Static Θ' Δ' Γ (.record r) t' Θ'' Δ'' →
-      Typing.Static Θ Δ Γ (.record ((l,e) :: r)) (.inter (.entry l t) (t')) Θ'' Δ''
+    | record_cons {skolems assums context  skolems' assums' skolems'' assums''} l e r  body t :
+      Typing.Static skolems assums context e t skolems' assums' →
+      Typing.Static skolems' assums' context (.record r) t skolems'' assums'' →
+      Typing.Static skolems assums context
+        (.record ((l,e) :: r)) (.inter (.entry l body) (t))
+        skolems'' assums''
 
-    | function Θ Δ Γ f zones t subtras :
-      Typing.ListPath.Static Θ Δ Γ f zones subtras →
-      ListZone.pack (ListSubtyping.free_vars Δ) .true zones = t →
-      Typing.Static Θ Δ Γ (.function f) t Θ Δ
+    | function {skolems assums context t} f zones subtras :
+      Typing.ListPath.Static skolems assums context f zones subtras →
+      ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
+      Typing.Static skolems assums context (.function f) t skolems assums
 
-    | app Θ Δ Γ ef ea α tf Θ' Δ' ta Θ'' Δ'' Θ''' Δ''' :
-      Typing.Static Θ Δ Γ ef tf Θ' Δ' →
-      Typing.Static Θ' Δ' Γ ea ta Θ'' Δ'' →
-      Subtyping.Static Θ'' Δ'' tf (.path ta (.var α)) Θ''' Δ''' →
-      Typing.Static Θ Δ Γ (.app ef ea) (.var α) Θ''' Δ'''
+    | app {skolems assums context assums'' skolems''' assums'''}
+      ef ea id tf skolems' assums' ta skolems'' :
+      Typing.Static skolems assums context ef tf skolems' assums' →
+      Typing.Static skolems' assums' context ea ta skolems'' assums'' →
+      Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
+      Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
-    | loop Θ Δ Γ e t id zones t' Θ' Δ' :
-      Typing.Static Θ Δ Γ e t Θ' Δ' →
-      Subtyping.GuardedListZone.Static Θ' Δ' t (.var id) zones →
-      Subtyping.LoopListZone.Static (ListSubtyping.free_vars Δ') id zones t' →
-      Typing.Static Θ Δ Γ (.loop e) t' Θ' Δ'
+    | loop {skolems assums context t' skolems' assums'} e t id zones :
+      Typing.Static skolems assums context e t skolems' assums' →
+      Subtyping.GuardedListZone.Static skolems' assums' t (.var id) zones →
+      Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums') id zones t' →
+      Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
-
-    | anno Θ Δ Γ e ta zones te Θ' Δ' :
+    | anno {skolems assums context skolems' assums'} e ta zones te :
       Typ.free_vars ta ⊆ [] →
-      Typing.ListZone.Static Θ Δ Γ e zones →
-      ListZone.pack (ListSubtyping.free_vars Δ) .false zones = te →
-      Subtyping.Static Θ Δ te ta Θ' Δ' →
-      Typing.Static Θ Δ Γ (.anno e ta) ta Θ' Δ'
+      Typing.ListZone.Static skolems assums context e zones →
+      ListZone.pack (ListSubtyping.free_vars assums) .false zones = te →
+      Subtyping.Static skolems assums te ta skolems' assums' →
+      Typing.Static skolems assums context (.anno e ta) ta skolems' assums'
 
 
 end

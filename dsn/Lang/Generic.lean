@@ -1153,3 +1153,8 @@ mutual
       { apply MultiSubtyping.Dynamic.reduction p11 p40 } }
 
 end
+
+
+set_option maxHeartbeats 500000 in
+mutual
+end
