@@ -656,12 +656,14 @@ lemma Subtyping.Dynamic.trans {am lower upper} t :
   apply p0
   assumption
 
-lemma Subtyping.check_completeness {am assums lower upper} skolems :
-  MultiSubtyping.Dynamic am assums →
+lemma Subtyping.check_completeness {am lower upper} :
   Subtyping.Dynamic am lower upper →
-  Subtyping.check skolems assums lower upper
+  Subtyping.check lower upper
 := by sorry
 
+
+
+set_option maxHeartbeats 500000 in
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
     ListSubtyping.Static skolems assums cs skolems' assums' →
@@ -1019,14 +1021,13 @@ mutual
     exists am0
     simp [*]
     intros am' p45
-
     apply Subtyping.Dynamic.lfp_elim_diff_intro p3 (ih0r p45)
-    { contrapose p5 ; simp [*] ; simp at p5
-      apply Subtyping.check_completeness skolems
-        (MultiSubtyping.Dynamic.reduction p15 p45) p5 }
-    { contrapose p6 ; simp [*] ; simp at p6
-      apply Subtyping.check_completeness skolems
-        (MultiSubtyping.Dynamic.reduction p15 p45) p6 }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
 
   | .diff_intro upper sub p0 p1 p2 p3 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p3
@@ -1035,12 +1036,12 @@ mutual
     simp [*]
     intro am' p40
     apply Subtyping.Dynamic.diff_intro (ih0r p40)
-    { contrapose p1 ; simp [*] ; simp at p1
-      apply Subtyping.check_completeness skolems
-        (MultiSubtyping.Dynamic.reduction p10 p40) p1 }
-    { contrapose p2 ; simp [*] ; simp at p2
-      apply Subtyping.check_completeness skolems
-        (MultiSubtyping.Dynamic.reduction p10 p40) p2 }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
 
   -------------------------------------------------------------------
   | .lfp_peel_intro id body p0 p1 => by
@@ -1150,7 +1151,5 @@ mutual
       apply MultiSubtyping.Dynamic.dom_reduction
       { apply List.disjoint_preservation_left ih1l p21 }
       { apply MultiSubtyping.Dynamic.reduction p11 p40 } }
-
-  | _ => by sorry
 
 end

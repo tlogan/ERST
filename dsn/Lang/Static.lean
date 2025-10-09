@@ -251,25 +251,49 @@ mutual
     | _, _ => .false
 end
 
+  -- def Subtyping.check
+  --   (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
+  -- :=
+  --   ((Typ.toBruijn [] lower) == (Typ.toBruijn [] upper)) || match lower, upper with
+  --   | .entry l body, .entry l' body' =>
+  --     l = l' && Subtyping.check skolems assums body body'
+  --   | lower, .inter left right =>
+  --     Subtyping.check skolems assums lower left && Subtyping.check skolems assums lower right
+  --   | lower, .exi _ [] body => Subtyping.check skolems assums lower body
+  --   | .unio left right, upper =>
+  --     (Subtyping.check skolems assums left upper) && (Subtyping.check skolems assums right upper)
+  --   | .inter left right, upper =>
+  --     Subtyping.check skolems assums left upper || Subtyping.check skolems assums right upper
+  --   | lower, .unio left right =>
+  --     Subtyping.check skolems assums lower left || Subtyping.check skolems assums lower right
+  --   | .exi ids [] body, upper => Subtyping.check (ids ∪ skolems) assums body upper
+  --   | _, _ => .true
+
 -- NOTE: this should be complete, but not sound
--- TODO: see if Subtyping.shallow_match and Subtyping.check can become one
-def Subtyping.shallow_match : Typ → Typ → Bool
+-- TODO: see if Subtyping.check and Subtyping.check can become one
+def Subtyping.check : Typ → Typ → Bool
 | .entry l k, .entry l' t =>
-  l == l' && Subtyping.shallow_match k t
+  l == l' && Subtyping.check k t
 | k, .diff left right =>
-  Subtyping.shallow_match k left && not (Subtyping.shallow_match k right)
-| k, .exi _ _ t => Subtyping.shallow_match k t
-| .exi _ _ k, t => Subtyping.shallow_match k t
+  Subtyping.check k left && not (Subtyping.check k right)
+| k, .exi _ _ t => Subtyping.check k t
+| .exi _ _ k, t => Subtyping.check k t
 | k, .inter left right =>
-  Subtyping.shallow_match k left && Subtyping.shallow_match k right
+  Subtyping.check k left && Subtyping.check k right
+| .unio left right, t =>
+  Subtyping.check left t && Subtyping.check right t
 | .inter left right, t =>
-  Subtyping.shallow_match left t || Subtyping.shallow_match right t
+  Subtyping.check left t || Subtyping.check right t
+| k, .unio left right =>
+  Subtyping.check k left || Subtyping.check k right
 | _,_ => .true
+
+
 
 -- TODO: must prove that if peelable holds then subtyping is sound and complete
 def Subtyping.peelable (key target : Typ) : Bool :=
   let ts := Typ.break .false target
-  not (List.all ts (fun t => Subtyping.shallow_match key t))
+  not (List.all ts (fun t => Subtyping.check key t))
   -- not (List.all ts (fun t => Subtyping.check [] [] key t))
 
 def Typ.drop (id : String) (t : Typ) : Typ :=
@@ -399,49 +423,6 @@ def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
   do
   let ts ← ListTyp.factor id l cases
   return Typ.combine .false ts
-
-mutual
-  -- NOTE: check needs to be complete and well founded, but not sound
-  def Subtyping.check
-    (skolems : List String) (assums : List (Typ × Typ)) (lower upper : Typ) : Bool
-  :=
-    ((Typ.toBruijn [] lower) == (Typ.toBruijn [] upper)) || match lower, upper with
-    | .entry l body, .entry l' body' =>
-      l = l' && Subtyping.check skolems assums body body'
-
-    -- | _, .var id =>
-    --   if id ∉ skolems then
-    --     let i := Typ.interpret_one id .false assums
-    --     (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .top)
-    --   else
-    --     .true
-    | lower, .inter left right =>
-      Subtyping.check skolems assums lower left && Subtyping.check skolems assums lower right
-
-    | lower, .exi _ [] body => Subtyping.check skolems assums lower body
-
-    -- | .var id, _ =>
-    --   if id ∈ skolems then
-    --     let i := Typ.interpret_one id .true assums
-    --     (Typ.toBruijn 0 [] i) == (Typ.toBruijn 0 [] .bot)
-    --   else
-    --     .true
-
-    | .unio left right, upper =>
-      (Subtyping.check skolems assums left upper) && (Subtyping.check skolems assums right upper)
-
-
-    | .inter left right, upper =>
-      Subtyping.check skolems assums left upper || Subtyping.check skolems assums right upper
-
-    | lower, .unio left right =>
-      Subtyping.check skolems assums lower left || Subtyping.check skolems assums lower right
-
-    | .exi ids [] body, upper => Subtyping.check (ids ∪ skolems) assums body upper
-    | _, _ => .true
-    -- | lower, _ =>
-    --   (Typ.toBruijn 0 [] lower) == (Typ.toBruijn 0 [] .bot)
-end
 
 
 -- the weakest type t such that every inhabitant matches pattern p
@@ -671,8 +652,8 @@ mutual
                   Typ.is_pattern [] r &&
                   Typ.Monotonic.decide id .true left &&
                   Typ.struct_less_than (.var id) left &&
-                  not (Subtyping.check skolems assums (Typ.subfold id left 1) r) &&
-                  not (Subtyping.check skolems assums r (Typ.subfold id left h))
+                  not (Subtyping.check (Typ.subfold id left 1) r) &&
+                  not (Subtyping.check r (Typ.subfold id left h))
                 ) then
                   Subtyping.Static.solve skolems assums left l
                 else return []
@@ -683,8 +664,8 @@ mutual
     | t, (.diff l r) =>
       if (
         Typ.is_pattern [] r &&
-        ¬ Subtyping.check skolems assums t r &&
-        ¬ Subtyping.check skolems assums r t
+        ¬ Subtyping.check t r &&
+        ¬ Subtyping.check r t
       ) then
         Subtyping.Static.solve skolems assums t l
       else
@@ -1076,15 +1057,15 @@ mutual
       Typ.height sub = .some h →
       Typ.Monotonic id .true lower →
       Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums' →
-      ¬ (Subtyping.check skolems assums (Typ.subfold id lower 1) sub) →
-      ¬ (Subtyping.check skolems assums sub (Typ.subfold id lower h)) →
+      ¬ (Subtyping.check (Typ.subfold id lower 1) sub) →
+      ¬ (Subtyping.check sub (Typ.subfold id lower h)) →
       Subtyping.Static skolems assums (.lfp id lower) (.diff upper sub) skolems' assums'
 
     -- difference introduction
     | diff_intro {skolems assums lower skolems' assums'} upper sub:
       Typ.is_pattern [] sub →
-      ¬ Subtyping.check skolems assums lower sub →
-      ¬ Subtyping.check skolems assums sub lower →
+      ¬ Subtyping.check lower sub →
+      ¬ Subtyping.check sub lower →
       Subtyping.Static skolems assums lower upper skolems' assums' →
       Subtyping.Static skolems assums lower (.diff upper sub) skolems' assums'
 
@@ -1299,7 +1280,7 @@ macro_rules
 
 
       | apply Subtyping.Static.lfp_peel_intro
-        · simp [Subtyping.peelable, Typ.break, Subtyping.shallow_match]
+        · simp [Subtyping.peelable, Typ.break, Subtyping.check]
         · simp [Typ.sub, find] ; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_drop_intro
