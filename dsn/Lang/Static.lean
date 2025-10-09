@@ -1077,12 +1077,12 @@ mutual
       Subtyping.Static skolems assums (.lfp id t) (.diff l r) skolems' assums'
 
     -- difference introduction
-    | diff_intro skolems assums t l r skolems' assums' :
-      Typ.is_pattern [] r →
-      ¬ Subtyping.check skolems assums t r →
-      ¬ Subtyping.check skolems assums r t →
-      Subtyping.Static skolems assums t l skolems' assums' →
-      Subtyping.Static skolems assums t (.diff l r) skolems' assums'
+    | diff_intro {skolems assums lower skolems' assums'} upper sub:
+      Typ.is_pattern [] sub →
+      ¬ Subtyping.check skolems assums lower sub →
+      ¬ Subtyping.check skolems assums sub lower →
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums lower (.diff upper sub) skolems' assums'
 
 
     -- least fixed point introduction

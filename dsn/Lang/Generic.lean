@@ -618,6 +618,12 @@ lemma Subtyping.Dynamic.trans {am lower upper} t :
   apply p0
   assumption
 
+lemma Subtyping.check_completeness {am assums lower upper} skolems :
+  MultiSubtyping.Dynamic am assums →
+  Subtyping.Dynamic am lower upper →
+  Subtyping.check skolems assums lower upper
+:= by sorry
+
 mutual
   theorem ListSubtyping.soundness {skolems assums cs skolems' assums'} :
     ListSubtyping.Static skolems assums cs skolems' assums' →
@@ -949,7 +955,21 @@ mutual
   -- | lfp_induct_elim skolems assums id left right skolems' assums' :
   -- | lfp_factor_elim skolems assums id left l right fac skolems' assums' :
   -- | lfp_elim_diff_intro skolems assums id t l r h skolems' assums' :
-  -- | diff_intro skolems assums t l r skolems' assums' :
+  -------------------------------------------------------------------
+
+  | .diff_intro upper sub p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    exists am0
+    simp [*]
+    intro am' p40
+    apply Subtyping.Dynamic.diff_intro (ih0r p40)
+    { contrapose p1 ; simp [*] ; simp at p1
+      apply Subtyping.check_completeness skolems
+        (MultiSubtyping.Dynamic.reduction p10 p40) p1 }
+    { contrapose p2 ; simp [*] ; simp at p2
+      apply Subtyping.check_completeness skolems
+        (MultiSubtyping.Dynamic.reduction p10 p40) p2 }
 
   -------------------------------------------------------------------
   -- | lfp_inflate_intro skolems assums l id r skolems' assums' :
