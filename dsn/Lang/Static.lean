@@ -1324,130 +1324,132 @@ macro_rules
 
 mutual
   partial def Typing.ListPath.Static.infer
-    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-  : List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
-      | [] => return ([], [])
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
+    List (Pat × Expr) →
+  Lean.MetaM (List Zone × List Typ)
+  | [] => return ([], [])
 
-      | (p,e)::f => do
-        let (zones, subtras) ← Typing.ListPath.Static.infer Θ Δ Γ f
-        let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
-        let tl := ListTyp.diff tp subtras
-        let zones' := (← Typing.Static.infer Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
-          ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩
-        )
-        let subtra := Typ.capture tp
-        match ListZone.tidy (ListSubtyping.free_vars Δ) zones' with
-          | .some zones'' => return (zones'' ++ zones, subtra :: subtras)
-          | .none => failure
+  | (p,e)::f => do
+    let (zones, subtras) ← Typing.ListPath.Static.infer Θ Δ Γ f
+    let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
+    let tl := ListTyp.diff tp subtras
+    let zones' := (← Typing.Static.infer Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
+      ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ )
+    let subtra := Typ.capture tp
+    match ListZone.tidy (ListSubtyping.free_vars Δ) zones' with
+    | .some zones'' => return (zones'' ++ zones, subtra :: subtras)
+    | .none => failure
 
 
   partial def Subtyping.GuardedListZone.Static.infer
-    (Θ : List String) (Δ : List (Typ × Typ))
-  : Typ → Typ → Lean.MetaM (List Zone)
-    | t, .var id => do
-      let id' ← fresh_typ_id
-      let t' := .var id'
-      let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) t')).map (fun (Θ', Δ') =>
-        ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩
-      )
-      match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
-        | .some zones' => return zones'
-        | .none => failure
-    | _, _ => failure
+    (Θ : List String) (Δ : List (Typ × Typ)) :
+    Typ → Typ →
+  Lean.MetaM (List Zone)
+  | t, .var id => do
+    let id' ← fresh_typ_id
+    let t' := .var id'
+    let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) t')).map (fun (Θ', Δ') =>
+      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩
+    )
+    match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
+      | .some zones' => return zones'
+      | .none => failure
+  | _, _ => failure
 
   partial def Typing.ListZone.Static.infer
-    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr)
-  : Lean.MetaM (List Zone) := do
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr) :
+  Lean.MetaM (List Zone) := do
     (← Typing.Static.infer Θ Δ Γ e).mapM (fun  ⟨Θ', Δ', t⟩ =>
       return ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩
     )
 
     partial def Subtyping.LoopListZone.Static.infer
-      (pids : List String) (id : String)
-    : List Zone → Lean.MetaM Typ
+      (pids : List String) (id : String) :
+      List Zone →
+    Lean.MetaM Typ
+    | [⟨Θ, Δ, .path (.var idl) r⟩] =>
+      if id != idl then do
+        match (
+          (ListSubtyping.invert id Δ).bind (fun Δ' =>
+            let t' := Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩
+            (Typ.factor id t' "left").bind (fun l =>
+            (Typ.factor id t' "right").map (fun r' => do
+              let l' ← Typ.UpperFounded.compute id l
+              let r'' := Typ.sub [(idl, .lfp id l')] r'
+              if Typ.Monotonic.decide idl .true r' then
+                return (.path (.var idl) (.lfp id r''))
+              else
+                failure
+            ))
+          )
+        ) with
+          | .some result => result
+          | .none => failure
+      else failure
 
-      | [⟨Θ, Δ, .path (.var idl) r⟩] =>
-        if id != idl then do
-          match (
-            (ListSubtyping.invert id Δ).bind (fun Δ' =>
-              let t' := Zone.pack (id :: idl :: pids) .false ⟨Θ, Δ', .pair (.var idl) r⟩
-              (Typ.factor id t' "left").bind (fun l =>
-              (Typ.factor id t' "right").map (fun r' => do
-                let l' ← Typ.UpperFounded.compute id l
-                let r'' := Typ.sub [(idl, .lfp id l')] r'
-                if Typ.Monotonic.decide idl .true r' then
-                  return (.path (.var idl) (.lfp id r''))
-                else
-                  failure
-              ))
-            )
-          ) with
-            | .some result => result
-            | .none => failure
-        else failure
-
-      | zones => match (
-        (ListZone.invert id zones).bind (fun zones' =>
-          let t' := ListZone.pack (id :: pids) .false zones'
-          (Typ.factor id t' "left").bind (fun l =>
-          (Typ.factor id t' "right").map (fun r =>
-            return (.path (.lfp id l) (.lfp id r))
-          ))
-        )
-      ) with
-        | .some result => result
-        | .none => failure
+    | zones => match (
+      (ListZone.invert id zones).bind (fun zones' =>
+        let t' := ListZone.pack (id :: pids) .false zones'
+        (Typ.factor id t' "left").bind (fun l =>
+        (Typ.factor id t' "right").map (fun r =>
+          return (.path (.lfp id l) (.lfp id r))
+        ))
+      )
+    ) with
+      | .some result => result
+      | .none => failure
 
 
     partial def Typing.Static.infer
-      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
-    : Expr → Lean.MetaM (List Zone)
-      | .unit => return [⟨Θ, Δ, .top⟩]
-      | .var x =>  match find x Γ with
-        | .some t => return [⟨Θ, Δ, t⟩]
-        | .none => failure
+      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
+      Expr →
+    Lean.MetaM (List Zone)
+    | .unit => return [⟨Θ, Δ, .top⟩]
+    | .var x =>  match find x Γ with
+      | .some t => return [⟨Θ, Δ, t⟩]
+      | .none => failure
 
-      | .record [] =>  return [⟨Θ, Δ, .top⟩]
+    | .record [] =>  return [⟨Θ, Δ, .top⟩]
 
-      | .record ((l,e) :: r) => do
-        (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-        (← (Typing.Static.infer Θ' Δ' Γ (.record r))).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
-          return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
-        ))
+    | .record ((l,e) :: r) => do
+      (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+      (← (Typing.Static.infer Θ' Δ' Γ (.record r))).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
+        return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
+      ))
 
-      | (.function f) => do
-        let (zones, _) ← (Typing.ListPath.Static.infer Θ Δ Γ f)
-        let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
-        return [⟨Θ, Δ, t⟩]
+    | (.function f) => do
+      let (zones, _) ← (Typing.ListPath.Static.infer Θ Δ Γ f)
+      let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
+      return [⟨Θ, Δ, t⟩]
 
 
-      | (.app ef ea) => do
-        let α ← fresh_typ_id
-        (← Typing.Static.infer Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
-        (← Typing.Static.infer Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
-        (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
-          return [⟨Θ''', Δ''', (.var α)⟩]
-         )))
+    | (.app ef ea) => do
+      let α ← fresh_typ_id
+      (← Typing.Static.infer Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
+      (← Typing.Static.infer Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
+      (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
+        return [⟨Θ''', Δ''', (.var α)⟩]
+        )))
 
-      | (.loop e) => do
-        let id ← fresh_typ_id
-        (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-          let zones ← Subtyping.GuardedListZone.Static.infer Θ' Δ' t (.var id)
-          let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones
-          return [⟨Θ', Δ', t'⟩]
+    | (.loop e) => do
+      let id ← fresh_typ_id
+      (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+        let zones ← Subtyping.GuardedListZone.Static.infer Θ' Δ' t (.var id)
+        let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones
+        return [⟨Θ', Δ', t'⟩]
+      )
+
+
+
+    | (.anno e ta) =>
+      if Typ.free_vars ta == [] then do
+        let zones ← Typing.ListZone.Static.infer Θ Δ Γ e
+        let te := ListZone.pack (ListSubtyping.free_vars Δ) .false zones
+        (← Subtyping.Static.solve Θ Δ te ta).flatMapM (fun (Θ', Δ') =>
+          return [⟨Θ', Δ', ta⟩]
         )
-
-
-
-      | (.anno e ta) =>
-        if Typ.free_vars ta == [] then do
-          let zones ← Typing.ListZone.Static.infer Θ Δ Γ e
-          let te := ListZone.pack (ListSubtyping.free_vars Δ) .false zones
-          (← Subtyping.Static.solve Θ Δ te ta).flatMapM (fun (Θ', Δ') =>
-            return [⟨Θ', Δ', ta⟩]
-          )
-        else
-          return []
+      else
+        return []
 
 end
 
@@ -1494,85 +1496,68 @@ mutual
       Typing.Function.Static skolems assums context
         ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
-
-  inductive Subtyping.GuardedListZone.Static :
-    List String → List (Typ × Typ) →
-    Typ → Typ → List Zone →
-  Prop
-    | intro skolems assums t id zones zones' :
-      (∀ skolems' assums' t',
-        ⟨List.diff skolems' skolems, List.diff assums' assums, t'⟩ ∈ zones →
-        Subtyping.Static skolems assums t (.path (.var id) t') skolems' assums'
-      ) →
-      ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones' →
-      Subtyping.GuardedListZone.Static skolems assums t (.var id) zones'
-
-  inductive Typing.ListZone.Static :
-    List String → List (Typ × Typ) → List (String × Typ) →
-    Expr → List Zone →
-  Prop
-    | intro skolems assums context e zones :
-      (∀ skolems' assums' t,
-        ⟨List.diff skolems' skolems, List.diff assums' assums, t⟩ ∈ zones →
-        Typing.Static skolems assums context e t skolems' assums'
-      ) →
-      Typing.ListZone.Static skolems assums context e zones
-
   inductive Typing.Record.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
     List (String × Expr) → Typ → List String → List (Typ × Typ) →
   Prop
-    | nil {skolems assums context} :
-      Typing.Record.Static skolems assums context [] .top skolems assums
+  | nil {skolems assums context} :
+    Typing.Record.Static skolems assums context [] .top skolems assums
 
-    | cons {skolems assums context  skolems' assums' skolems'' assums''} l e r body t :
-      Typing.Static skolems assums context e t skolems' assums' →
-      Typing.Record.Static skolems' assums' context r t skolems'' assums'' →
-      Typing.Record.Static skolems assums context
-        ((l,e) :: r) (.inter (.entry l body) (t))
-        skolems'' assums''
+  | cons {skolems assums context  skolems' assums' skolems'' assums''} l e r body t :
+    Typing.Static skolems assums context e t skolems' assums' →
+    Typing.Record.Static skolems' assums' context r t skolems'' assums'' →
+    Typing.Record.Static skolems assums context
+      ((l,e) :: r) (.inter (.entry l body) (t))
+      skolems'' assums''
 
   inductive Typing.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ → List String → List (Typ × Typ) →
   Prop
-    -- TODO: remove unit and replace remap @ to empty record
+  -- TODO: remove unit and replace remap @ to empty record
 
-    -- | unit {skolems assums context} :
-    --   Typing.Static skolems assums context .unit .unit skolems assums
+  -- | unit {skolems assums context} :
+  --   Typing.Static skolems assums context .unit .unit skolems assums
 
-    | var {t} skolems assums context x :
-      find x context = .some t →
-      Typing.Static skolems assums context (.var x) t skolems assums
+  | var {t} skolems assums context x :
+    find x context = .some t →
+    Typing.Static skolems assums context (.var x) t skolems assums
 
-    | record {skolems assums context} r t :
-      Typing.Record.Static skolems assums context r t skolems assums →
-      Typing.Static skolems assums context (.record r) t skolems assums
+  | record {skolems assums context} r t :
+    Typing.Record.Static skolems assums context r t skolems assums →
+    Typing.Static skolems assums context (.record r) t skolems assums
 
-    | function {skolems assums context t} f zones subtras :
-      Typing.Function.Static skolems assums context f zones subtras →
-      ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
-      Typing.Static skolems assums context (.function f) t skolems assums
+  | function {skolems assums context t} f zones subtras :
+    Typing.Function.Static skolems assums context f zones subtras →
+    ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
+    Typing.Static skolems assums context (.function f) t skolems assums
 
-    | app {skolems assums context assums'' skolems''' assums'''}
-      ef ea id tf skolems' assums' ta skolems'' :
-      Typing.Static skolems assums context ef tf skolems' assums' →
-      Typing.Static skolems' assums' context ea ta skolems'' assums'' →
-      Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
-      Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
+  | app {skolems assums context assums'' skolems''' assums'''}
+    ef ea id tf skolems' assums' ta skolems'' :
+    Typing.Static skolems assums context ef tf skolems' assums' →
+    Typing.Static skolems' assums' context ea ta skolems'' assums'' →
+    Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
+    Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
-    | loop {skolems assums context t' skolems' assums'} e t id zones :
-      Typing.Static skolems assums context e t skolems' assums' →
-      Subtyping.GuardedListZone.Static skolems' assums' t (.var id) zones →
-      Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums') id zones t' →
-      Typing.Static skolems assums context (.loop e) t' skolems' assums'
+  | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
+    Typing.Static skolems assums context e t skolems' assums' →
+    (∀ skolems' assums' t',
+      ⟨List.diff skolems' skolems, List.diff assums' assums, t'⟩ ∈ zones →
+      Subtyping.Static skolems assums t (.path (.var id) t') skolems' assums'
+    ) →
+    ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones' →
+    Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums') id zones' t' →
+    Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
-    | anno {skolems assums context skolems' assums'} e ta zones te :
-      Typ.free_vars ta ⊆ [] →
-      Typing.ListZone.Static skolems assums context e zones →
-      ListZone.pack (ListSubtyping.free_vars assums) .false zones = te →
-      Subtyping.Static skolems assums te ta skolems' assums' →
-      Typing.Static skolems assums context (.anno e ta) ta skolems' assums'
+  | anno {skolems assums context skolems' assums'} e ta zones te :
+    Typ.free_vars ta ⊆ [] →
+    (∀ skolems' assums' t,
+      ⟨List.diff skolems' skolems, List.diff assums' assums, t⟩ ∈ zones →
+      Typing.Static skolems assums context e t skolems' assums'
+    ) →
+    ListZone.pack (ListSubtyping.free_vars assums) .false zones = te →
+    Subtyping.Static skolems assums te ta skolems' assums' →
+    Typing.Static skolems assums context (.anno e ta) ta skolems' assums'
 
 
 end
