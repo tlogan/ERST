@@ -1125,6 +1125,17 @@ def Expr.is_pair : Expr → Bool
 | .record [( "right", _), ("left", _)] => .true
 | _ => .false
 
+mutual
+  def Expr.Record.is_value : List (String × Expr) → Bool
+  | .nil => .true
+  | .cons (l,e) r =>  Expr.is_value e && Expr.Record.is_value r
+
+  def Expr.is_value : Expr → Bool
+  | .record r => Expr.Record.is_value r
+  | .function _ => .true
+  | _ => .false
+end
+
 
 def Expr.proj (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
