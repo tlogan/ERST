@@ -1158,11 +1158,20 @@ end
 set_option maxHeartbeats 500000 in
 mutual
 
+  theorem Typing.Function.soundness {skolems assums context f zones subtrahends} :
+    Typing.Function.Static skolems assums context f zones subtrahends →
+    (∀ {skolems' assums' t}, ⟨skolems, assums', t⟩ ∈ zones →
+      ∃ tam, ListPair.dom tam ⊆ skolems' ∧
+      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums ++ assums') →
+        (∀ {eam}, MultiTyping.Dynamic tam' eam context →
+          Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) ) )
+  | _ => sorry
+
   theorem Typing.Record.soundness {skolems assums context r t skolems' assums'} :
     Typing.Record.Static skolems assums context r t skolems' assums' →
     ∃ tam, ListPair.dom tam ⊆ (List.mdiff skolems' skolems) ∧
-    (∀ {eam}, MultiTyping.Dynamic tam eam context →
-      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
+    (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
+      (∀ {eam}, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.record r)) t ) )
   | _ => sorry
 
@@ -1170,8 +1179,8 @@ mutual
   theorem Typing.soundness {skolems assums context e t skolems' assums'} :
     Typing.Static skolems assums context e t skolems' assums' →
     ∃ tam, ListPair.dom tam ⊆ (List.mdiff skolems' skolems) ∧
-    (∀ {eam}, MultiTyping.Dynamic tam eam context →
-      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
+    (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
+      (∀ {eam}, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t ) )
   | _ => sorry
 

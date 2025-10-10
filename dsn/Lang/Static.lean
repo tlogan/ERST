@@ -1325,8 +1325,7 @@ macro_rules
 mutual
   partial def Typing.ListPath.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
-    List (Pat × Expr) →
-  Lean.MetaM (List Zone × List Typ)
+    List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
   | [] => return ([], [])
 
   | (p,e)::f => do
@@ -1343,8 +1342,7 @@ mutual
 
   partial def Subtyping.GuardedListZone.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) :
-    Typ → Typ →
-  Lean.MetaM (List Zone)
+    Typ → Typ → Lean.MetaM (List Zone)
   | t, .var id => do
     let id' ← fresh_typ_id
     let t' := .var id'
@@ -1402,8 +1400,7 @@ mutual
 
     partial def Typing.Static.infer
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
-      Expr →
-    Lean.MetaM (List Zone)
+      Expr → Lean.MetaM (List Zone)
     | .unit => return [⟨Θ, Δ, .top⟩]
     | .var x =>  match find x Γ with
       | .some t => return [⟨Θ, Δ, t⟩]
@@ -1454,52 +1451,49 @@ mutual
 end
 
 
-inductive Subtyping.LoopListZone.Static
-: List String → String → List Zone → Typ → Prop
-  | batch pids id zones zones' t' l r :
-    ListZone.invert id zones = .some zones' →
-    ListZone.pack (id :: pids) .false zones' = t' →
-    Typ.factor id t' "left" = .some l →
-    Typ.factor id t' "right" = .some r →
-    Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
+inductive Subtyping.LoopListZone.Static : List String → String → List Zone → Typ → Prop
+| batch pids id zones zones' t' l r :
+  ListZone.invert id zones = .some zones' →
+  ListZone.pack (id :: pids) .false zones' = t' →
+  Typ.factor id t' "left" = .some l →
+  Typ.factor id t' "right" = .some r →
+  Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
 
-  | stream pids id skolems assums assums' idl r t' l r' l' r'' :
-    id ≠ idl →
-    ListSubtyping.invert id assums = .some assums' →
-    Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
-    Typ.factor id t' "left" = .some l →
-    Typ.factor id t' "right" = .some r' →
-    Typ.Monotonic idl .true r' →
-    Typ.UpperFounded id l l' →
-    Typ.sub [(idl, .lfp id l')] r' = r'' →
-    Subtyping.LoopListZone.Static
-    pids id [⟨skolems, assums, .path (.var idl) r⟩]
-    (.path (.var idl) (.lfp id r''))
+| stream pids id skolems assums assums' idl r t' l r' l' r'' :
+  id ≠ idl →
+  ListSubtyping.invert id assums = .some assums' →
+  Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
+  Typ.factor id t' "left" = .some l →
+  Typ.factor id t' "right" = .some r' →
+  Typ.Monotonic idl .true r' →
+  Typ.UpperFounded id l l' →
+  Typ.sub [(idl, .lfp id l')] r' = r'' →
+  Subtyping.LoopListZone.Static
+  pids id [⟨skolems, assums, .path (.var idl) r⟩]
+  (.path (.var idl) (.lfp id r''))
 
 mutual
   inductive Typing.Function.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
-    List (Pat × Expr) → List Zone → List Typ →
-  Prop
-    | nil skolems assums context :
-      Typing.Function.Static skolems assums context [] [] []
-    | cons skolems assums context p e f zones subtras assums' context' tp tl zones' zones'' subtra :
-      Typing.Function.Static skolems assums context f zones subtras →
-      PatLifting.Static assums context p tp assums' context' →
-      ListTyp.diff tp subtras = tl →
-      (∀ skolems' assums'' tr,
-        ⟨List.diff skolems' skolems, List.diff assums'' assums', (.path tl tr)⟩ ∈ zones' →
-        Typing.Static skolems assums' context' e tr skolems' assums''
-      ) →
-      ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
-      Typ.capture tp = subtra →
-      Typing.Function.Static skolems assums context
-        ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
+    List (Pat × Expr) → List Zone → List Typ → Prop
+  | nil skolems assums context :
+    Typing.Function.Static skolems assums context [] [] []
+  | cons skolems assums context p e f zones subtras assums' context' tp tl zones' zones'' subtra :
+    Typing.Function.Static skolems assums context f zones subtras →
+    PatLifting.Static assums context p tp assums' context' →
+    ListTyp.diff tp subtras = tl →
+    (∀ skolems' assums'' tr,
+      ⟨List.diff skolems' skolems, List.diff assums'' assums', (.path tl tr)⟩ ∈ zones' →
+      Typing.Static skolems assums' context' e tr skolems' assums''
+    ) →
+    ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
+    Typ.capture tp = subtra →
+    Typing.Function.Static skolems assums context
+      ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
 
   inductive Typing.Record.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
-    List (String × Expr) → Typ → List String → List (Typ × Typ) →
-  Prop
+    List (String × Expr) → Typ → List String → List (Typ × Typ) → Prop
   | nil {skolems assums context} :
     Typing.Record.Static skolems assums context [] .top skolems assums
 
