@@ -182,4 +182,4 @@ end
 
 def MultiTyping.Dynamic
   (tam : List (String × Typ)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
-:= ∀ id t, (id,t) ∈ context → ∃ e, (find id eam) = .some e → Typing.Dynamic tam e t
+:= ∀ {x t}, find x context = .some t → ∃ e, (find x eam) = .some e ∧ Typing.Dynamic tam e t

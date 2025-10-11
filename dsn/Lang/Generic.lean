@@ -1154,7 +1154,6 @@ mutual
 
 end
 
-
 set_option maxHeartbeats 500000 in
 mutual
 
@@ -1182,6 +1181,21 @@ mutual
     (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
       (∀ {eam}, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t ) )
+
+  | .var skolems assums context x p0 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros tam' p1
+    intros eam p2
+    unfold MultiTyping.Dynamic at p2
+    have ⟨e,p3,p4⟩ := p2 p0
+    simp [Expr.sub, p3, p4]
+
+  -- | record {skolems assums context} r t :
+  -- | function {skolems assums context t} f zones subtras :
+  -- | app {skolems assums context assums'' skolems''' assums'''}
+  -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
+  -- | anno {skolems assums context skolems' assums'} e ta zones te :
   | _ => sorry
 
   -- TODO: consider removing unit and using @ syntax to mean empty record.
