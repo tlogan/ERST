@@ -194,6 +194,19 @@ lemma dom_concat_mdiff_containment {β} {am0 am1 : List (String × β)} {xs xs_i
     }
 
 
+lemma Typing.Dynamic.dom_reduction {tam1 tam0 e t} :
+  (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
+  Typing.Dynamic (tam1 ++ tam0) e t →
+  Typing.Dynamic tam0 e t
+:= by sorry
+
+lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
+  (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
+  Typing.Dynamic tam0 e t →
+  Typing.Dynamic (tam1 ++ tam0) e t
+:= by sorry
+
+
 lemma Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
   (ListPair.dom am1) ∩ Typ.free_vars lower = [] →
   (ListPair.dom am1) ∩ Typ.free_vars upper = [] →
@@ -1154,6 +1167,15 @@ mutual
 
 end
 
+lemma ListZone.pack_positive_soundness {pids zones t} :
+  ListZone.pack pids .true zones = t →
+  (∀ {skolems0 assums0 t0}, ⟨skolems0, assums0, t0⟩ ∈ zones →
+    ∃ am, ListPair.dom am ⊆ skolems0 ∧
+    (∀ {am' assums},
+      MultiSubtyping.Dynamic (am ++ am') (assums0 ++ assums) →
+      Subtyping.Dynamic (am ++ am') t t0 ) )
+:= by sorry
+
 set_option maxHeartbeats 500000 in
 mutual
 
@@ -1199,16 +1221,29 @@ mutual
     | nil =>
       exists []
       simp [*, ListPair.dom]
-      simp [ListZone.pack, Typ.base] at p1
       intros tam' p2
       intros eam p3
+      simp [ListZone.pack, Typ.base] at p1
       rw [← p1]
       simp [Typing.Dynamic]
       exists (Expr.sub eam (Expr.function f))
       simp [Expr.is_value, Expr.sub]
       apply MultiProgression.refl
     | cons zone zones' =>
-      -- have p2 := Typing.Function.soundness p0
+      exists []
+      simp [*, ListPair.dom]
+      intros tam' p2
+      intros eam p3
+      have ⟨skolems0,assums0,t0⟩ := zone
+      have p2 : ⟨skolems0,assums0,t0⟩ ∈ ⟨skolems0,assums0,t0⟩ :: zones' := List.mem_cons_self
+      have ⟨tam0, ihl, ihr⟩ := Typing.Function.soundness p0 p2
+      apply ListZone.pack_positive_soundness at p1
+
+      -- apply Typing.Dynamic.dom_reduction
+
+      -- simp [ListZone.pack, Typ.rator] at p1
+      -- simp [Expr.sub]
+
       sorry
   -- | app {skolems assums context assums'' skolems''' assums'''}
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :

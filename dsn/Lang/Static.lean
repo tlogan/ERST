@@ -8,9 +8,9 @@ import Mathlib.Tactic.Linarith
 set_option pp.fieldNotation false
 
 structure Zone where
-  Θ : List String
-  Δ : List (Typ × Typ)
-  t : Typ
+  skolems : List String
+  assums : List (Typ × Typ)
+  typ : Typ
 
 def Typ.base : Bool → Typ
 | .true => .top
@@ -1478,6 +1478,7 @@ mutual
     List (Pat × Expr) → List Zone → List Typ → Prop
   | nil skolems assums context :
     Typing.Function.Static skolems assums context [] [] []
+
   | cons {skolems assums context }
     p e f assums' context' tp tl zones zones' zones'' subtra subtras
   :
