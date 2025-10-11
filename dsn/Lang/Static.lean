@@ -1478,7 +1478,9 @@ mutual
     List (Pat × Expr) → List Zone → List Typ → Prop
   | nil skolems assums context :
     Typing.Function.Static skolems assums context [] [] []
-  | cons skolems assums context p e f zones subtras assums' context' tp tl zones' zones'' subtra :
+  | cons {skolems assums context }
+    p e f assums' context' tp tl zones zones' zones'' subtra subtras
+  :
     Typing.Function.Static skolems assums context f zones subtras →
     PatLifting.Static assums context p tp assums' context' →
     ListTyp.diff tp subtras = tl →
@@ -1506,13 +1508,9 @@ mutual
 
   inductive Typing.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
-    Expr → Typ → List String → List (Typ × Typ) →
-  Prop
-  -- TODO: remove unit and replace remap @ to empty record
-
+    Expr → Typ → List String → List (Typ × Typ) → Prop
   -- | unit {skolems assums context} :
   --   Typing.Static skolems assums context .unit .unit skolems assums
-
   | var {t} skolems assums context x :
     find x context = .some t →
     Typing.Static skolems assums context (.var x) t skolems assums
@@ -1521,7 +1519,7 @@ mutual
     Typing.Record.Static skolems assums context r t skolems assums →
     Typing.Static skolems assums context (.record r) t skolems assums
 
-  | function {skolems assums context t} f zones subtras :
+  | function {skolems assums context} f zones subtras t :
     Typing.Function.Static skolems assums context f zones subtras →
     ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
     Typing.Static skolems assums context (.function f) t skolems assums

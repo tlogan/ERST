@@ -1157,11 +1157,11 @@ end
 set_option maxHeartbeats 500000 in
 mutual
 
-  theorem Typing.Function.soundness {skolems assums context f zones subtrahends} :
-    Typing.Function.Static skolems assums context f zones subtrahends →
-    (∀ {skolems' assums' t}, ⟨skolems, assums', t⟩ ∈ zones →
+  theorem Typing.Function.soundness {skolems assums context f zones subtras} :
+    Typing.Function.Static skolems assums context f zones subtras →
+    (∀ {skolems' assums' t}, ⟨skolems', assums', t⟩ ∈ zones →
       ∃ tam, ListPair.dom tam ⊆ skolems' ∧
-      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums ++ assums') →
+      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
         (∀ {eam}, MultiTyping.Dynamic tam' eam context →
           Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) ) )
   | _ => sorry
@@ -1191,8 +1191,25 @@ mutual
     have ⟨e,p3,p4⟩ := p2 p0
     simp [Expr.sub, p3, p4]
 
-  -- | record {skolems assums context} r t :
-  -- | function {skolems assums context t} f zones subtras :
+  | .record r t p0 => by
+    apply Typing.Record.soundness p0
+
+  | .function f zones subtras t p0 p1 => by
+    cases zones with
+    | nil =>
+      exists []
+      simp [*, ListPair.dom]
+      simp [ListZone.pack, Typ.base] at p1
+      intros tam' p2
+      intros eam p3
+      rw [← p1]
+      simp [Typing.Dynamic]
+      exists (Expr.sub eam (Expr.function f))
+      simp [Expr.is_value, Expr.sub]
+      apply MultiProgression.refl
+    | cons zone zones' =>
+      -- have p2 := Typing.Function.soundness p0
+      sorry
   -- | app {skolems assums context assums'' skolems''' assums'''}
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
   -- | anno {skolems assums context skolems' assums'} e ta zones te :
