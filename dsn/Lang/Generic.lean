@@ -1167,13 +1167,28 @@ mutual
 
 end
 
-lemma ListZone.pack_positive_soundness {pids zones t} :
-  ListZone.pack pids .true zones = t →
+-- lemma ListZone.pack_positive_correspondence {pids zones t} :
+--   ListZone.pack pids .true zones = t →
+--   (∀ {skolems0 assums0 t0}, ⟨skolems0, assums0, t0⟩ ∈ zones →
+--     ∃ am, ListPair.dom am ⊆ skolems0 ∧
+--     (∀ {am' assums},
+--       MultiSubtyping.Dynamic (am ++ am') (assums0 ++ assums) →
+--       Subtyping.Dynamic (am ++ am') t t0 ) )
+-- := by sorry
+
+lemma ListZone.pack_positive_correspondence {pids zones t am assums} :
+  ListZone.pack pids .true zones = t → pids ⊆ ListPair.dom am →
+  MultiSubtyping.Dynamic am assums →
+  ∀ e ,
   (∀ {skolems0 assums0 t0}, ⟨skolems0, assums0, t0⟩ ∈ zones →
-    ∃ am, ListPair.dom am ⊆ skolems0 ∧
-    (∀ {am' assums},
-      MultiSubtyping.Dynamic (am ++ am') (assums0 ++ assums) →
-      Subtyping.Dynamic (am ++ am') t t0 ) )
+    (∃ am0, ListPair.dom am0 ⊆ skolems0 ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+        MultiSubtyping.Dynamic (am0 ++ am' ++ am) assums0 →
+        Typing.Dynamic (am0 ++ am' ++ am) e t0 ) ) )
+  ↔ Typing.Dynamic am e t
+
+
 := by sorry
 
 set_option maxHeartbeats 500000 in
@@ -1235,14 +1250,9 @@ mutual
       intros tam' p2
       intros eam p3
       have ⟨skolems0,assums0,t0⟩ := zone
-      have p2 : ⟨skolems0,assums0,t0⟩ ∈ ⟨skolems0,assums0,t0⟩ :: zones' := List.mem_cons_self
-      have ⟨tam0, ihl, ihr⟩ := Typing.Function.soundness p0 p2
-      apply ListZone.pack_positive_soundness at p1
+      have p4 : ⟨skolems0,assums0,t0⟩ ∈ ⟨skolems0,assums0,t0⟩ :: zones' := List.mem_cons_self
 
-      -- apply Typing.Dynamic.dom_reduction
-
-      -- simp [ListZone.pack, Typ.rator] at p1
-      -- simp [Expr.sub]
+      -- have ⟨tam0, ihl, ihr⟩ := Typing.Function.soundness p0 p2
 
       sorry
   -- | app {skolems assums context assums'' skolems''' assums'''}
