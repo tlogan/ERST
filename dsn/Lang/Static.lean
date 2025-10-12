@@ -1525,8 +1525,8 @@ mutual
     ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
     Typing.Static skolems assums context (.function f) t skolems assums
 
-  | app {skolems assums context assums'' skolems''' assums'''}
-    ef ea id tf skolems' assums' ta skolems'' :
+  | app {skolems assums context skolems''' assums'''}
+    ef ea id tf skolems' assums' ta skolems'' assums'' :
     Typing.Static skolems assums context ef tf skolems' assums' →
     Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →

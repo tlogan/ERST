@@ -320,6 +320,15 @@ lemma Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} 
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
 
+lemma Typing.Static.attributes {skolems assums context e t skolems' assums'} :
+  Typing.Static skolems assums context e t skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  Typ.free_vars t ⊆ ListSubtyping.free_vars assums'  ∧
+  (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars assums = [] ∧
+  (List.mdiff skolems' skolems) ∩ Typ.free_vars t = []
+:= by sorry
+
 
 lemma Typing.Function.Static.attributes
   {skolems assums context f zones subtras skolems' assums' t}
@@ -1278,7 +1287,22 @@ mutual
         { apply List.disjoint_preservation_right p13 p5 }
         { apply p3 } }
 
-  -- | app {skolems assums context assums'' skolems''' assums'''}
+  | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 p0 p1 p2 => by
+    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
+    have ⟨p5,p6,p7,p8,p9⟩ := Typing.Static.attributes p0
+    have ⟨tam1,ih1l,ih1r⟩ := Typing.Static.soundness p1
+    have ⟨p10,p11,p12,p13,p14⟩ := Typing.Static.attributes p1
+    have ⟨tam2,ih2l,ih2r⟩ := Subtyping.Static.soundness p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.attributes p2
+    exists tam2 ++ (tam1 ++ tam0)
+    simp [*]
+    apply And.intro
+    { apply dom_concat_mdiff_containment
+      { intro a p30 ; apply p10 (p5 p30) }
+      { apply dom_concat_mdiff_containment p5 ih0l p10 ih1l }
+      { apply p15 }
+      { apply ih2l } }
+    { sorry }
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
   -- | anno {skolems assums context skolems' assums'} e ta zones te :
   | _ => sorry
