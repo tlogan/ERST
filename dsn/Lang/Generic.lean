@@ -206,6 +206,12 @@ lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
   Typing.Dynamic (tam1 ++ tam0) e t
 := by sorry
 
+lemma MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
+  (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
+  MultiTyping.Dynamic tam0 eam cs →
+  MultiTyping.Dynamic (tam1 ++ tam0) eam cs
+:= by sorry
+
 
 lemma Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
   (ListPair.dom am1) ∩ Typ.free_vars lower = [] →
@@ -313,6 +319,19 @@ lemma Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} 
   (List.mdiff skolems' skolems) ∩ Typ.free_vars lower = [] ∧
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
+
+
+lemma Typing.Function.Static.attributes
+  {skolems assums context f zones subtras skolems' assums' t}
+:
+  Typing.Function.Static skolems assums context f zones subtras →
+  ⟨skolems',assums',t⟩ ∈ zones →
+  skolems' ∩ skolems = [] ∧
+  skolems' ∩ ListSubtyping.free_vars assums = [] ∧
+  skolems' ∩ ListTyping.free_vars context = [] ∧
+  ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums
+:= by sorry
+
 
 lemma ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → ListSubtyping.free_vars xs ⊆ ListSubtyping.free_vars ys
@@ -1176,20 +1195,25 @@ end
 --       Subtyping.Dynamic (am ++ am') t t0 ) )
 -- := by sorry
 
-lemma ListZone.pack_positive_correspondence {pids zones t am assums} :
+lemma ListZone.pack_positive_soundness {pids zones t am assums e} :
   ListZone.pack pids .true zones = t → pids ⊆ ListPair.dom am →
   MultiSubtyping.Dynamic am assums →
-  ∀ e ,
-  (∀ {skolems0 assums0 t0}, ⟨skolems0, assums0, t0⟩ ∈ zones →
-    (∃ am0, ListPair.dom am0 ⊆ skolems0 ∧
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
         ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
-        MultiSubtyping.Dynamic (am0 ++ am' ++ am) assums0 →
-        Typing.Dynamic (am0 ++ am' ++ am) e t0 ) ) )
-  ↔ Typing.Dynamic am e t
-
-
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
+        Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
+  Typing.Dynamic am e t
 := by sorry
+
+lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
+  MultiSubtyping.Dynamic am cs →
+  MultiSubtyping.Dynamic am cs' →
+  MultiSubtyping.Dynamic am (cs ++ cs')
+:= by sorry
+
+
 
 set_option maxHeartbeats 500000 in
 mutual
@@ -1232,27 +1256,56 @@ mutual
     apply Typing.Record.soundness p0
 
   | .function f zones subtras t p0 p1 => by
-    cases zones with
-    | nil =>
       exists []
       simp [*, ListPair.dom]
       intros tam' p2
       intros eam p3
-      simp [ListZone.pack, Typ.base] at p1
-      rw [← p1]
-      simp [Typing.Dynamic]
-      exists (Expr.sub eam (Expr.function f))
-      simp [Expr.is_value, Expr.sub]
-      apply MultiProgression.refl
-    | cons zone zones' =>
-      exists []
-      simp [*, ListPair.dom]
-      intros tam' p2
-      intros eam p3
-      have ⟨skolems0,assums0,t0⟩ := zone
-      have p4 : ⟨skolems0,assums0,t0⟩ ∈ ⟨skolems0,assums0,t0⟩ :: zones' := List.mem_cons_self
 
-      -- have ⟨tam0, ihl, ihr⟩ := Typing.Function.soundness p0 p2
+      apply ListZone.pack_positive_soundness p1 _ p2
+      intros skolesm0 assums0 t0 p4
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.soundness p0 p4
+      have ⟨p10,p11,p12,p13⟩ := Typing.Function.Static.attributes p0 p4
+      exists tam0
+      simp [*]
+      intro tam''
+      intros p5 p6
+      apply ih0r
+      { apply MultiSubtyping.Dynamic.concat  p6
+        apply MultiSubtyping.Dynamic.dom_extension
+        { apply List.disjoint_preservation_left ih0l p11 }
+        { apply MultiSubtyping.Dynamic.dom_extension p5 p2 }
+      }
+      { apply MultiTyping.Dynamic.dom_extension
+        { apply List.disjoint_preservation_right p13 p5 }
+        { apply p3 }
+      }
+      ---------------------
+
+      sorry
+
+    -- cases zones with
+    -- | nil =>
+    --   exists []
+    --   simp [*, ListPair.dom]
+    --   intros tam' p2
+    --   intros eam p3
+    --   simp [ListZone.pack, Typ.base] at p1
+    --   rw [← p1]
+    --   simp [Typing.Dynamic]
+    --   exists (Expr.sub eam (Expr.function f))
+    --   simp [Expr.is_value, Expr.sub]
+    --   apply MultiProgression.refl
+    -- | cons zone zones' =>
+    --   exists []
+    --   simp [*, ListPair.dom]
+    --   intros tam' p2
+    --   intros eam p3
+    --   have ⟨skolems0,assums0,t0⟩ := zone
+    --   have p4 : ⟨skolems0,assums0,t0⟩ ∈ ⟨skolems0,assums0,t0⟩ :: zones' := List.mem_cons_self
+
+    --   apply ListZone.pack_positive_soundness p1 _ p2
+    --   simp [*]
+    --   -- have ⟨tam0, ihl, ihr⟩ := Typing.Function.soundness p0 p2
 
       sorry
   -- | app {skolems assums context assums'' skolems''' assums'''}

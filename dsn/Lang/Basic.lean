@@ -728,6 +728,11 @@ mutual
     List.mdiff (Typ.free_vars body) [id]
 end
 
+
+def ListTyping.free_vars : List (String × Typ) → List String
+| [] => []
+| (_,t) :: ts => Typ.free_vars t ∪ ListTyping.free_vars ts
+
 inductive Token
 | num : Nat → Token
 | str : String → Token
