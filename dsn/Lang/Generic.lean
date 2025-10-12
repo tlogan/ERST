@@ -123,7 +123,6 @@ lemma merase_mem x y (zs : List String) :
 y ∈ zs → x ≠ y → y ∈ List.merase x zs
 := by sorry
 
-
 lemma merase_containment x {ys zs : List String} :
  ys ⊆ zs → List.merase x ys ⊆ List.merase x zs
 := by
@@ -324,6 +323,7 @@ lemma Typing.Static.attributes {skolems assums context e t skolems' assums'} :
   Typing.Static skolems assums context e t skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
+  ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums ∧
   Typ.free_vars t ⊆ ListSubtyping.free_vars assums'  ∧
   (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars assums = [] ∧
   (List.mdiff skolems' skolems) ∩ Typ.free_vars t = []
@@ -579,6 +579,12 @@ lemma Subtyping.Dynamic.bot_elim {am upper} :
 
 lemma Subtyping.Dynamic.top_intro {am lower} :
   Subtyping.Dynamic am lower Typ.top
+:= by sorry
+
+lemma Typing.Dynamic.path_elim {am ef ea t t'} :
+  Typing.Dynamic am ef (.path t t') →
+  Typing.Dynamic am ea t →
+  Typing.Dynamic am (.app ef ea) t'
 := by sorry
 
 
@@ -1223,8 +1229,7 @@ lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
 := by sorry
 
 
-
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 800000 in
 mutual
 
   theorem Typing.Function.Static.soundness {skolems assums context f zones subtras} :
@@ -1289,9 +1294,9 @@ mutual
 
   | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p6,p7,p8,p9⟩ := Typing.Static.attributes p0
+    have ⟨p5,p6,p105,p7,p8,p9⟩ := Typing.Static.attributes p0
     have ⟨tam1,ih1l,ih1r⟩ := Typing.Static.soundness p1
-    have ⟨p10,p11,p12,p13,p14⟩ := Typing.Static.attributes p1
+    have ⟨p10,p11,p107,p12,p13,p14⟩ := Typing.Static.attributes p1
     have ⟨tam2,ih2l,ih2r⟩ := Subtyping.Static.soundness p2
     have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.attributes p2
     exists tam2 ++ (tam1 ++ tam0)
@@ -1302,7 +1307,66 @@ mutual
       { apply dom_concat_mdiff_containment p5 ih0l p10 ih1l }
       { apply p15 }
       { apply ih2l } }
-    { sorry }
+
+    { intro tam' p30 eam p31
+      apply Typing.Dynamic.path_elim
+      {
+        unfold Subtyping.Dynamic at ih2r
+        apply ih2r p30
+        apply Typing.Dynamic.dom_extension
+        { apply List.disjoint_preservation_left ih2l p20 }
+        {
+          apply Typing.Dynamic.dom_extension
+          {
+            apply List.disjoint_preservation_left ih1l
+            apply List.disjoint_preservation_right p7 p13
+          }
+          {
+            apply ih0r
+            {
+              apply MultiSubtyping.Dynamic.dom_reduction
+              { apply List.disjoint_preservation_left ih1l p13 }
+              {
+                apply MultiSubtyping.Dynamic.dom_reduction
+                { apply List.disjoint_preservation_left ih2l
+                  apply List.disjoint_preservation_right
+                  { apply ListSubtyping.free_vars_containment p11  }
+                  { exact p19 }
+                }
+                { apply MultiSubtyping.Dynamic.reduction p11
+                  apply MultiSubtyping.Dynamic.reduction p16 p30
+                }
+              }
+            }
+            {
+              apply p31
+            }
+          }
+        }
+      }
+      {
+        apply Typing.Dynamic.dom_extension
+        {
+          apply List.disjoint_preservation_left ih2l
+          apply List.disjoint_preservation_right p12 p19
+        }
+        {
+          apply ih1r
+          {
+            apply MultiSubtyping.Dynamic.dom_reduction
+            { apply List.disjoint_preservation_left ih2l p19 }
+            { apply MultiSubtyping.Dynamic.reduction p16 p30 }
+          }
+          {
+            apply MultiTyping.Dynamic.dom_extension
+            { apply List.disjoint_preservation_right p105
+              exact List.disjoint_preservation_left ih0l p8 }
+            { apply p31 }
+          }
+        }
+      }
+    }
+
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
   -- | anno {skolems assums context skolems' assums'} e ta zones te :
   | _ => sorry

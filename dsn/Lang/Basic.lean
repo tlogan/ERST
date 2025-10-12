@@ -704,25 +704,25 @@ mutual
   def ListSubtyping.free_vars : ListSubtyping → List String
   | .nil => []
   | .cons (l,r) remainder =>
-    Typ.free_vars l ∪ Typ.free_vars r ∪ ListSubtyping.free_vars remainder
+    Typ.free_vars l ++ Typ.free_vars r ++ ListSubtyping.free_vars remainder
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
   | .unit => []
   | .entry _ body => Typ.free_vars body
-  | .path p q => Typ.free_vars p ∪ Typ.free_vars q
+  | .path p q => Typ.free_vars p ++ Typ.free_vars q
   | .bot => []
   | .top => []
-  | .unio l r => Typ.free_vars l ∪ Typ.free_vars r
-  | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
-  | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
+  | .unio l r => Typ.free_vars l ++ Typ.free_vars r
+  | .inter l r => Typ.free_vars l ++ Typ.free_vars r
+  | .diff l r => Typ.free_vars l ++ Typ.free_vars r
   | .all ids subtypings body =>
     List.mdiff (
-      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
+      ListSubtyping.free_vars subtypings ++ Typ.free_vars body
     ) ids
   | .exi ids subtypings body =>
     List.mdiff (
-      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
+      ListSubtyping.free_vars subtypings ++ Typ.free_vars body
     ) ids
   | .lfp id body =>
     List.mdiff (Typ.free_vars body) [id]
@@ -731,7 +731,7 @@ end
 
 def ListTyping.free_vars : List (String × Typ) → List String
 | [] => []
-| (_,t) :: ts => Typ.free_vars t ∪ ListTyping.free_vars ts
+| (_,t) :: ts => Typ.free_vars t ++ ListTyping.free_vars ts
 
 inductive Token
 | num : Nat → Token
