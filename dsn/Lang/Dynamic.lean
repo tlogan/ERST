@@ -140,11 +140,6 @@ def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
 def Subtyping.Dynamic.Fin (left right : Typ) : Prop :=
   ∀ e, Typing.Dynamic.Fin e left → Typing.Dynamic.Fin e right
 
-def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
-  (∀ t0 t1,
-    Subtyping.Dynamic.Fin t0 t1 →
-    Subtyping.Dynamic.Fin (Typ.sub ((id,t0):: am) body) (Typ.sub ((id,t0):: am) body)
-  )
 
 mutual
   def Subtyping.Dynamic (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -161,6 +156,15 @@ mutual
   decreasing_by
     all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
+def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
+  (∀ t0 t1,
+    Subtyping.Dynamic am t0 t1 →
+    ∀ e, Typing.Dynamic ((id,t0):: am) e body → Typing.Dynamic ((id,t1):: am) e body
+  )
+  termination_by Typ.size body
+  decreasing_by
+    all_goals sorry
+
   def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ MultiProgression e e'
@@ -171,7 +175,6 @@ mutual
   | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right
   | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
   | .exi ids quals body =>
-    -- TODO: consider adding new pairs on left, eg. am' ++ am
     ∃ am' , (ListPair.dom am') ⊆ ids ∧
     (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
     (Typing.Dynamic (am' ++ am) e body)
@@ -182,9 +185,13 @@ mutual
   | .lfp id body =>
     Typ.Dynamic.Monotonic am id body ∧
     (∃ t ,
-      Subtyping.Dynamic.Fin t (Typ.sub ((id,t) :: am) body) ∧
-      Typing.Dynamic.Fin e (Typ.sub ((id,t) :: am) body)
+      (∀ e', Typ.size t < Typ.size (.lfp id body) →
+        Typing.Dynamic am e' t →
+        Typing.Dynamic ((id,t) :: am) e' body
+      ) ∧
+      Typing.Dynamic ((id,t) :: am) e  body
     )
+  -----------------------
   -- TODO: remove old lfp case
   -- | .lfp id body =>
   --   Typ.Monotonic id true body ∧
@@ -192,7 +199,7 @@ mutual
   | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
   termination_by t => (Typ.size t)
   decreasing_by
-    all_goals simp [Typ.size]
+    all_goals simp_all [Typ.size]
     all_goals try linarith
 end
 

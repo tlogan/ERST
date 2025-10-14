@@ -1431,9 +1431,12 @@ for type variables.
 
       \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau 
       &\iff& 
-      \alpha \wr^+ \tau
+      \alpha \wr \tau
       \up
-      \exists n \qua \VDash e \hastype (\tau[\alpha \slash \J{BOT}]^n)[\delta]
+      \exists \tau' \qua
+        \delta \satisfies \tau' \subtypes \tau \cdot \alpha \slash \tau'
+        \up
+        \alpha \slash \tau'\ \delta \satisfies e \hastype \tau
 
       \\
 

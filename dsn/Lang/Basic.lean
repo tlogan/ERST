@@ -817,7 +817,7 @@ mutual
   | .diff left right => Typ.size left + Typ.size right + 1
   | .all ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
   | .exi ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
-  | .lfp id body => Typ.size body + 1
+  | .lfp id body => (Typ.size body) * 600 + 1
 end
 
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
