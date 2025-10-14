@@ -184,8 +184,8 @@ def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ)
     (Typing.Dynamic (am' ++ am) e body)
   | .lfp id body =>
     Typ.Dynamic.Monotonic am id body ∧
-    (∃ t ,
-      (∀ e', Typ.size t < Typ.size (.lfp id body) →
+    (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
+      (∀ e',
         Typing.Dynamic am e' t →
         Typing.Dynamic ((id,t) :: am) e' body
       ) ∧
