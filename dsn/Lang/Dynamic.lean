@@ -137,6 +137,15 @@ def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
 | .diff left right => Typing.Dynamic.Fin e left ∧ ¬ (Typing.Dynamic.Fin e right)
 | _ => False
 
+def Subtyping.Dynamic.Fin (left right : Typ) : Prop :=
+  ∀ e, Typing.Dynamic.Fin e left → Typing.Dynamic.Fin e right
+
+def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
+  (∀ t0 t1,
+    Subtyping.Dynamic.Fin t0 t1 →
+    Subtyping.Dynamic.Fin (Typ.sub ((id,t0):: am) body) (Typ.sub ((id,t0):: am) body)
+  )
+
 mutual
   def Subtyping.Dynamic (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing.Dynamic am e left → Typing.Dynamic am e right
@@ -171,8 +180,15 @@ mutual
     (MultiSubtyping.Dynamic (am' ++ am) quals) →
     (Typing.Dynamic (am' ++ am) e body)
   | .lfp id body =>
-    Typ.Monotonic id true body ∧
-    ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
+    Typ.Dynamic.Monotonic am id body ∧
+    (∃ t ,
+      Subtyping.Dynamic.Fin t (Typ.sub ((id,t) :: am) body) ∧
+      Typing.Dynamic.Fin e (Typ.sub ((id,t) :: am) body)
+    )
+  -- TODO: remove old lfp case
+  -- | .lfp id body =>
+  --   Typ.Monotonic id true body ∧
+  --   ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
   | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
   termination_by t => (Typ.size t)
   decreasing_by

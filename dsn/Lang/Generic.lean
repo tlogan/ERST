@@ -470,7 +470,7 @@ lemma Subtyping.Dynamic.lfp_skip_elim {am id body t} :
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_induct_elim {am id body t} :
-  Typ.Monotonic id .true body →
+  Typ.Static.Monotonic id .true body →
   Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry
@@ -483,7 +483,7 @@ lemma Subtyping.Dynamic.lfp_factor_elim {am id lower upper l fac} :
 
 
 lemma Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
-  Typ.Monotonic id .true lower →
+  Typ.Static.Monotonic id .true lower →
   Subtyping.Dynamic am (Typ.lfp id lower) upper →
   ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
   ¬ Subtyping.Dynamic am sub (Typ.subfold id lower n) →
@@ -548,13 +548,13 @@ lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_intro {am t id body} :
-  Typ.Monotonic id true body →
+  Typ.Static.Monotonic id true body →
   Subtyping.Dynamic ((id, (Typ.lfp id body)) :: am) t body →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_elim {am id body t} :
-  Typ.Monotonic id true body →
+  Typ.Static.Monotonic id true body →
   id ∉ Typ.free_vars t →
   Subtyping.Dynamic ((id, t) :: am) t body →
   Subtyping.Dynamic am (Typ.lfp id body) t
