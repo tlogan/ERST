@@ -1959,13 +1959,11 @@ where the variables represent possible types of expressions.
     \inferrule {
       \textbf{ftv}(\tau_a) \subseteq \emptyset
       \\
-      \Theta, \Delta, \Gamma \entails e \hastype \Pi
+      \Theta, \Delta, \Gamma \entails e \hastype \tau_e \given \Theta', \Delta'
       \\
-      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau_e
-      \\
-      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau_e \subtypes \tau_a \given \Theta', \Delta'
+      \Theta', \Delta' \entails \tau_e \subtypes \tau_a \given \Theta'', \Delta''
     } {
-      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta', \Delta'
+      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta'', \Delta''
     }
   \end{mathpar}
 \end{definition}

@@ -1219,18 +1219,6 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
-lemma ListZone.pack_negative_soundness {zones t am assums e} :
-  ListZone.pack (ListSubtyping.free_vars assums) .false zones = t →
-  MultiSubtyping.Dynamic am assums →
-  (∃ skolems' assums' t', ⟨skolems', assums', t'⟩ ∈ zones ∧
-    (∀ am'', ListPair.dom am'' ⊆ skolems' →
-      (∃ am',
-        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
-        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' ∧
-        Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
-  Typing.Dynamic am e t
-:= by sorry
-
 lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
   MultiSubtyping.Dynamic am cs' →
@@ -1383,16 +1371,24 @@ mutual
 
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
 
-  | .anno e ta zones te p0 p1 p2 p3 => by
-    have ⟨tam0,ihl,ihr⟩ := Subtyping.Static.soundness p3
-    have ⟨p5,p6,p7,p8,p9,p10,p11⟩ := Subtyping.Static.attributes p3
-    exists tam0
+  | .anno e ta te skolems0 assums0 p0 p1 p2 => by
+    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.attributes p1
+    have ⟨tam1,ih1l,ih1r⟩ := Subtyping.Static.soundness p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.attributes p2
+    exists (tam1 ++ tam0)
     simp [*]
-    intros tam' p15
-    intros eam p20
-    apply Typing.Dynamic.anno_intro (ihr p15)
-    apply ListZone.pack_negative_soundness p2 (MultiSubtyping.Dynamic.reduction p6 p15)
-    sorry
+    apply And.intro (dom_concat_mdiff_containment p5 ih0l p15 ih1l)
+    intros am' p40
+    intros eam p42
+    apply Typing.Dynamic.anno_intro (ih1r p40)
+    apply Typing.Dynamic.dom_extension
+    { apply List.disjoint_preservation_left ih1l p20 }
+    { apply ih0r
+      { apply MultiSubtyping.Dynamic.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p19 }
+        { apply MultiSubtyping.Dynamic.reduction p16 p40 } }
+      { apply p42 } }
 
   | _ => sorry
 

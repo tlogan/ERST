@@ -1749,18 +1749,11 @@ mutual
     Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums') id zones' t' →
     Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
-  | anno {skolems assums context skolems' assums'} e ta zones te :
+  | anno {skolems assums context skolems'' assums''} e ta te skolems' assums' :
     Typ.free_vars ta ⊆ [] →
-    (∀ skolems' assums' t,
-      -- TODO: double check this requirement
-      -- if zones is empty it's vacuously met, te is BOT,
-      -- and we have can derive absurd inhabitation of BOT
-      ⟨List.diff skolems' skolems, List.diff assums' assums, t⟩ ∈ zones →
-      Typing.Static skolems assums context e t skolems' assums'
-    ) →
-    ListZone.pack (ListSubtyping.free_vars assums) .false zones = te →
-    Subtyping.Static skolems assums te ta skolems' assums' →
-    Typing.Static skolems assums context (.anno e ta) ta skolems' assums'
+    Typing.Static skolems assums context e te skolems' assums' →
+    Subtyping.Static skolems' assums' te ta skolems'' assums'' →
+    Typing.Static skolems assums context (.anno e ta) ta skolems'' assums''
 
 
 end
