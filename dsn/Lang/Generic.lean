@@ -1219,6 +1219,31 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
+lemma Subtyping.LoopListZone.Static.soundnnes {id zones t am assums e} :
+ Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
+  MultiSubtyping.Dynamic am assums →
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
+        Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
+  Typing.Dynamic am e t
+:= by sorry
+
+lemma ListZone.tidy_soundness {pids zones zones'} :
+  ListZone.tidy pids zones = .some zones' →
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones' →
+    ∃ assums'' t'',
+      ⟨skolems', assums'', t''⟩ ∈ zones ∧
+      (∀ am, MultiSubtyping.Dynamic am assums'' →  MultiSubtyping.Dynamic am assums') ∧
+      (∀ am, Subtyping.Dynamic am t' t'') )
+:= by sorry
+-- Δ  : X <: M, M <: 8, X <: 8
+-- Δ' : X <: 8
+-- ∃ δ, dom(δ) ⊆ Θ' . ∀ δ',  δ' ++ δ |= Δ → δ |= Δ'
+
+
 lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
   MultiSubtyping.Dynamic am cs' →
@@ -1369,7 +1394,9 @@ mutual
       }
     }
 
-  -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
+  | .loop body t0 id zones zones' p0 p1 p2 p3 => by
+
+    sorry
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
@@ -1389,8 +1416,6 @@ mutual
         { apply List.disjoint_preservation_left ih1l p19 }
         { apply MultiSubtyping.Dynamic.reduction p16 p40 } }
       { apply p42 } }
-
-  | _ => sorry
 
   -- TODO: consider removing unit and using @ syntax to mean empty record.
 end
