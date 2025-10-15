@@ -156,7 +156,7 @@ mutual
   decreasing_by
     all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
-def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
+def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
   (∀ t0 t1,
     Subtyping.Dynamic am t0 t1 →
     ∀ e, Typing.Dynamic ((id,t0):: am) e body → Typing.Dynamic ((id,t1):: am) e body
@@ -183,7 +183,7 @@ def Typ.Dynamic.Monotonic (am : List (String × Typ)) (id : String) (body : Typ)
     (MultiSubtyping.Dynamic (am' ++ am) quals) →
     (Typing.Dynamic (am' ++ am) e body)
   | .lfp id body =>
-    Typ.Dynamic.Monotonic am id body ∧
+    Typ.Monotonic.Dynamic am id body ∧
     (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
       (∀ e',
         Typing.Dynamic am e' t →

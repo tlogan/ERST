@@ -470,7 +470,7 @@ lemma Subtyping.Dynamic.lfp_skip_elim {am id body t} :
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_induct_elim {am id body t} :
-  Typ.Static.Monotonic id .true body →
+  Typ.Monotonic.Dynamic am id body →
   Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry
@@ -483,7 +483,7 @@ lemma Subtyping.Dynamic.lfp_factor_elim {am id lower upper l fac} :
 
 
 lemma Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
-  Typ.Static.Monotonic id .true lower →
+  Typ.Monotonic.Dynamic am id lower →
   Subtyping.Dynamic am (Typ.lfp id lower) upper →
   ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
   ¬ Subtyping.Dynamic am sub (Typ.subfold id lower n) →
@@ -548,13 +548,13 @@ lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_intro {am t id body} :
-  Typ.Static.Monotonic id true body →
+  Typ.Monotonic.Dynamic am id body →
   Subtyping.Dynamic ((id, (Typ.lfp id body)) :: am) t body →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
 lemma Subtyping.Dynamic.lfp_elim {am id body t} :
-  Typ.Static.Monotonic id true body →
+  Typ.Monotonic.Dynamic am id body →
   id ∉ Typ.free_vars t →
   Subtyping.Dynamic ((id, t) :: am) t body →
   Subtyping.Dynamic am (Typ.lfp id body) t
@@ -585,6 +585,12 @@ lemma Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am ef (.path t t') →
   Typing.Dynamic am ea t →
   Typing.Dynamic am (.app ef ea) t'
+:= by sorry
+
+lemma Typing.Dynamic.anno_intro {am e t ta} :
+  Subtyping.Dynamic am t ta →
+  Typing.Dynamic am e t →
+  Typing.Dynamic am (.anno e ta) ta
 := by sorry
 
 
@@ -1201,15 +1207,6 @@ mutual
 
 end
 
--- lemma ListZone.pack_positive_correspondence {pids zones t} :
---   ListZone.pack pids .true zones = t →
---   (∀ {skolems0 assums0 t0}, ⟨skolems0, assums0, t0⟩ ∈ zones →
---     ∃ am, ListPair.dom am ⊆ skolems0 ∧
---     (∀ {am' assums},
---       MultiSubtyping.Dynamic (am ++ am') (assums0 ++ assums) →
---       Subtyping.Dynamic (am ++ am') t t0 ) )
--- := by sorry
-
 lemma ListZone.pack_positive_soundness {zones t am assums e} :
   ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
   MultiSubtyping.Dynamic am assums →
@@ -1222,6 +1219,18 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
+lemma ListZone.pack_negative_soundness {zones t am assums e} :
+  ListZone.pack (ListSubtyping.free_vars assums) .false zones = t →
+  MultiSubtyping.Dynamic am assums →
+  (∃ skolems' assums' t', ⟨skolems', assums', t'⟩ ∈ zones ∧
+    (∀ am'', ListPair.dom am'' ⊆ skolems' →
+      (∃ am',
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' ∧
+        Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
+  Typing.Dynamic am e t
+:= by sorry
+
 lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
   MultiSubtyping.Dynamic am cs' →
@@ -1229,7 +1238,12 @@ lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
 := by sorry
 
 
-set_option maxHeartbeats 800000 in
+theorem Typ.Monotonic.Static.soundness {id t} am :
+  Typ.Monotonic.Static id true t →
+  Typ.Monotonic.Dynamic am id t
+:= by sorry
+
+-- set_option maxHeartbeats 1000000 in
 mutual
 
   theorem Typing.Function.Static.soundness {skolems assums context f zones subtras} :
@@ -1368,7 +1382,18 @@ mutual
     }
 
   -- | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
-  -- | anno {skolems assums context skolems' assums'} e ta zones te :
+
+  | .anno e ta zones te p0 p1 p2 p3 => by
+    have ⟨tam0,ihl,ihr⟩ := Subtyping.Static.soundness p3
+    have ⟨p5,p6,p7,p8,p9,p10,p11⟩ := Subtyping.Static.attributes p3
+    exists tam0
+    simp [*]
+    intros tam' p15
+    intros eam p20
+    apply Typing.Dynamic.anno_intro (ihr p15)
+    apply ListZone.pack_negative_soundness p2 (MultiSubtyping.Dynamic.reduction p6 p15)
+    sorry
+
   | _ => sorry
 
   -- TODO: consider removing unit and using @ syntax to mean empty record.

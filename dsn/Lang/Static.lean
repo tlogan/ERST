@@ -153,25 +153,25 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
 
 mutual
 
-  partial def ListSubtyping.Static.Monotonic.Either.decide (cs : ListSubtyping) (t : Typ)
+  partial def ListSubtyping.Monotonic.Static.Either.decide (cs : ListSubtyping) (t : Typ)
   : List String → Bool
   | [] => .true
   | id :: ids =>
     (
-      (ListSubtyping.Static.Monotonic.decide id .true cs && Typ.Static.Monotonic.decide id .true t) ||
-      (ListSubtyping.Static.Monotonic.decide id .false cs && Typ.Static.Monotonic.decide id .false t)
+      (ListSubtyping.Monotonic.Static.decide id .true cs && Typ.Monotonic.Static.decide id .true t) ||
+      (ListSubtyping.Monotonic.Static.decide id .false cs && Typ.Monotonic.Static.decide id .false t)
     ) &&
-    ListSubtyping.Static.Monotonic.Either.decide cs t ids
+    ListSubtyping.Monotonic.Static.Either.decide cs t ids
 
-  partial def ListSubtyping.Static.Monotonic.decide (id : String) (b : Bool) : ListSubtyping → Bool
+  partial def ListSubtyping.Monotonic.Static.decide (id : String) (b : Bool) : ListSubtyping → Bool
   | .nil => .true
   | .cons (l,r) remainder =>
-    Typ.Static.Monotonic.decide id (not b) l &&
-    Typ.Static.Monotonic.decide id b r &&
-    ListSubtyping.Static.Monotonic.decide id b remainder
+    Typ.Monotonic.Static.decide id (not b) l &&
+    Typ.Monotonic.Static.decide id b r &&
+    ListSubtyping.Monotonic.Static.decide id b remainder
 
 
-  partial def Typ.Static.Monotonic.decide (id : String) (b : Bool) : Typ → Bool
+  partial def Typ.Monotonic.Static.decide (id : String) (b : Bool) : Typ → Bool
   | .var id' =>
     if id == id' then
       b == .true
@@ -179,179 +179,179 @@ mutual
       .true
   | .unit => .true
   | .entry _ body =>
-    Typ.Static.Monotonic.decide id b body
+    Typ.Monotonic.Static.decide id b body
   | .path left right =>
-    Typ.Static.Monotonic.decide id (not b) left &&
-    Typ.Static.Monotonic.decide id b right
+    Typ.Monotonic.Static.decide id (not b) left &&
+    Typ.Monotonic.Static.decide id b right
   | .bot => .true
   | .top => .true
   | .unio left right =>
-    Typ.Static.Monotonic.decide id b left &&
-    Typ.Static.Monotonic.decide id b right
+    Typ.Monotonic.Static.decide id b left &&
+    Typ.Monotonic.Static.decide id b right
   | .inter left right =>
-    Typ.Static.Monotonic.decide id b left &&
-    Typ.Static.Monotonic.decide id b right
+    Typ.Monotonic.Static.decide id b left &&
+    Typ.Monotonic.Static.decide id b right
   | .diff left right =>
-    Typ.Static.Monotonic.decide id b left &&
-    Typ.Static.Monotonic.decide id (not b) right
+    Typ.Monotonic.Static.decide id b left &&
+    Typ.Monotonic.Static.decide id (not b) right
 
   | .all ids subtypings body =>
     ids.contains id || (
-      ListSubtyping.Static.Monotonic.Either.decide subtypings body ids &&
-      Typ.Static.Monotonic.decide id b body
+      ListSubtyping.Monotonic.Static.Either.decide subtypings body ids &&
+      Typ.Monotonic.Static.decide id b body
     )
 
   | .exi ids subtypings body =>
     ids.contains id || (
-      ListSubtyping.Static.Monotonic.Either.decide subtypings (.diff .top body) ids &&
-      Typ.Static.Monotonic.decide id b body
+      ListSubtyping.Monotonic.Static.Either.decide subtypings (.diff .top body) ids &&
+      Typ.Monotonic.Static.decide id b body
     )
 
   | .lfp id' body =>
-    id == id' || Typ.Static.Monotonic.decide id b body
+    id == id' || Typ.Monotonic.Static.decide id b body
 end
 
 
 mutual
 
-  inductive ListSubtyping.Static.Monotonic.Either : ListSubtyping → Typ → List String → Prop
-  | nil cs t : ListSubtyping.Static.Monotonic.Either cs t []
+  inductive ListSubtyping.Monotonic.Static.Either : ListSubtyping → Typ → List String → Prop
+  | nil cs t : ListSubtyping.Monotonic.Static.Either cs t []
   | cons cs t b id ids :
-    ListSubtyping.Static.Monotonic id b cs →
-    Typ.Static.Monotonic id b t →
-    ListSubtyping.Static.Monotonic.Either cs t ids →
-    ListSubtyping.Static.Monotonic.Either cs t (id :: ids)
+    ListSubtyping.Monotonic.Static id b cs →
+    Typ.Monotonic.Static id b t →
+    ListSubtyping.Monotonic.Static.Either cs t ids →
+    ListSubtyping.Monotonic.Static.Either cs t (id :: ids)
 
-  inductive ListSubtyping.Static.Monotonic : String → Bool → ListSubtyping → Prop
-  | nil id b : ListSubtyping.Static.Monotonic id b .nil
+  inductive ListSubtyping.Monotonic.Static : String → Bool → ListSubtyping → Prop
+  | nil id b : ListSubtyping.Monotonic.Static id b .nil
   | cons id b l r remainder :
-    Typ.Static.Monotonic id (not b) l →
-    Typ.Static.Monotonic id b r →
-    ListSubtyping.Static.Monotonic id b remainder →
-    ListSubtyping.Static.Monotonic id b (.cons (l,r) remainder)
+    Typ.Monotonic.Static id (not b) l →
+    Typ.Monotonic.Static id b r →
+    ListSubtyping.Monotonic.Static id b remainder →
+    ListSubtyping.Monotonic.Static id b (.cons (l,r) remainder)
 
-  inductive Typ.Static.Monotonic : String → Bool → Typ → Prop
-  | var id : Typ.Static.Monotonic id true (.var id)
-  | varskip id b id' : id ≠ id' → Typ.Static.Monotonic id b (.var id')
-    | unit id b : Typ.Static.Monotonic id b .unit
-  | entry id b l body : Typ.Static.Monotonic id b body →  Typ.Static.Monotonic id b (.entry l body)
+  inductive Typ.Monotonic.Static : String → Bool → Typ → Prop
+  | var id : Typ.Monotonic.Static id true (.var id)
+  | varskip id b id' : id ≠ id' → Typ.Monotonic.Static id b (.var id')
+    | unit id b : Typ.Monotonic.Static id b .unit
+  | entry id b l body : Typ.Monotonic.Static id b body →  Typ.Monotonic.Static id b (.entry l body)
   | path id b left right :
-    Typ.Static.Monotonic id (not b) left →
-    Typ.Static.Monotonic id b right →
-    Typ.Static.Monotonic id b (.path left right)
+    Typ.Monotonic.Static id (not b) left →
+    Typ.Monotonic.Static id b right →
+    Typ.Monotonic.Static id b (.path left right)
 
   | bot id b:
-    Typ.Static.Monotonic id b .bot
+    Typ.Monotonic.Static id b .bot
 
   | top id b :
-    Typ.Static.Monotonic id b .top
+    Typ.Monotonic.Static id b .top
 
   | unio id b left right :
-    Typ.Static.Monotonic id b left →
-    Typ.Static.Monotonic id b right →
-    Typ.Static.Monotonic id b (.unio left right)
+    Typ.Monotonic.Static id b left →
+    Typ.Monotonic.Static id b right →
+    Typ.Monotonic.Static id b (.unio left right)
   | inter id b left right :
-    Typ.Static.Monotonic id b left →
-    Typ.Static.Monotonic id b right →
-    Typ.Static.Monotonic id b (.inter left right)
+    Typ.Monotonic.Static id b left →
+    Typ.Monotonic.Static id b right →
+    Typ.Monotonic.Static id b (.inter left right)
   | diff id b left right :
-    Typ.Static.Monotonic id b left →
-    Typ.Static.Monotonic id (not b) right →
-    Typ.Static.Monotonic id b (.diff left right)
+    Typ.Monotonic.Static id b left →
+    Typ.Monotonic.Static id (not b) right →
+    Typ.Monotonic.Static id b (.diff left right)
 
   | all id b ids subtypings body :
     id ∉ ids →
-    ListSubtyping.Static.Monotonic.Either subtypings body ids →
-    Typ.Static.Monotonic id b body →
-    Typ.Static.Monotonic id b (.all ids subtypings body)
+    ListSubtyping.Monotonic.Static.Either subtypings body ids →
+    Typ.Monotonic.Static id b body →
+    Typ.Monotonic.Static id b (.all ids subtypings body)
 
   | allskip id b ids subtypings body :
     id ∈ ids →
-    Typ.Static.Monotonic id b (.all ids subtypings body)
+    Typ.Monotonic.Static id b (.all ids subtypings body)
 
   | exi id b ids subtypings body :
     id ∉ ids →
-    ListSubtyping.Static.Monotonic.Either subtypings (.diff .top body) ids →
-    Typ.Static.Monotonic id b body →
-    Typ.Static.Monotonic id b (.exi ids subtypings body)
+    ListSubtyping.Monotonic.Static.Either subtypings (.diff .top body) ids →
+    Typ.Monotonic.Static id b body →
+    Typ.Monotonic.Static id b (.exi ids subtypings body)
 
   | exiskip id b ids subtypings body :
     id ∈ ids →
-    Typ.Static.Monotonic id b (.exi ids subtypings body)
+    Typ.Monotonic.Static id b (.exi ids subtypings body)
 
 
-  | lfp id b id' body : id ≠ id' → Typ.Static.Monotonic id b body → Typ.Static.Monotonic id b (.lfp id' body)
-  | lfpskip id b body : Typ.Static.Monotonic id b (.lfp id body)
+  | lfp id b id' body : id ≠ id' → Typ.Monotonic.Static id b body → Typ.Monotonic.Static id b (.lfp id' body)
+  | lfpskip id b body : Typ.Monotonic.Static id b (.lfp id body)
 
 end
 
 
 syntax "prove_list_subtyping_monotonic_either" : tactic
 syntax "prove_list_subtyping_monotonic" : tactic
-syntax "Typ_Static_Monotonic_prove" : tactic
+syntax "Typ_Monotonic_Static_prove" : tactic
 
 macro_rules
 | `(tactic| prove_list_subtyping_monotonic_either) => `(tactic|
   (first
-  | apply ListSubtyping.Static.Monotonic.Either.nil
-  | apply ListSubtyping.Static.Monotonic.Either.cons _ _ .true
+  | apply ListSubtyping.Monotonic.Static.Either.nil
+  | apply ListSubtyping.Monotonic.Static.Either.cons _ _ .true
     · prove_list_subtyping_monotonic
-    · Typ_Static_Monotonic_prove
+    · Typ_Monotonic_Static_prove
     · prove_list_subtyping_monotonic_either
-  | apply ListSubtyping.Static.Monotonic.Either.cons _ _ .false
+  | apply ListSubtyping.Monotonic.Static.Either.cons _ _ .false
     · prove_list_subtyping_monotonic
-    · Typ_Static_Monotonic_prove
+    · Typ_Monotonic_Static_prove
     · prove_list_subtyping_monotonic_either
   ) <;> fail
 )
 
 | `(tactic| prove_list_subtyping_monotonic) => `(tactic|
   (first
-  | apply ListSubtyping.Static.Monotonic.nil
-  | apply ListSubtyping.Static.Monotonic.Either.cons
-    · Typ_Static_Monotonic_prove
-    · Typ_Static_Monotonic_prove
+  | apply ListSubtyping.Monotonic.Static.nil
+  | apply ListSubtyping.Monotonic.Static.Either.cons
+    · Typ_Monotonic_Static_prove
+    · Typ_Monotonic_Static_prove
     · prove_list_subtyping_monotonic
   ) <;> fail
 )
-| `(tactic| Typ_Static_Monotonic_prove) => `(tactic|
+| `(tactic| Typ_Monotonic_Static_prove) => `(tactic|
   (first
-  | apply Typ.Static.Monotonic.var
-  | apply Typ.Static.Monotonic.varskip; simp
-  | apply Typ.Static.Monotonic.unit
-  | apply Typ.Static.Monotonic.entry; Typ_Static_Monotonic_prove
+  | apply Typ.Monotonic.Static.var
+  | apply Typ.Monotonic.Static.varskip; simp
+  | apply Typ.Monotonic.Static.unit
+  | apply Typ.Monotonic.Static.entry; Typ_Monotonic_Static_prove
 
-  | apply Typ.Static.Monotonic.path
-    · Typ_Static_Monotonic_prove
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.bot
-  | apply Typ.Static.Monotonic.top
-  | apply Typ.Static.Monotonic.unio
-    · Typ_Static_Monotonic_prove
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.inter
-    · Typ_Static_Monotonic_prove
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.diff
-    · Typ_Static_Monotonic_prove
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.all
+  | apply Typ.Monotonic.Static.path
+    · Typ_Monotonic_Static_prove
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.bot
+  | apply Typ.Monotonic.Static.top
+  | apply Typ.Monotonic.Static.unio
+    · Typ_Monotonic_Static_prove
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.inter
+    · Typ_Monotonic_Static_prove
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.diff
+    · Typ_Monotonic_Static_prove
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.all
     · simp
     · prove_list_subtyping_monotonic_either
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.allskip; simp
-  | apply Typ.Static.Monotonic.bot
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.allskip; simp
+  | apply Typ.Monotonic.Static.bot
     · rfl
-  | apply Typ.Static.Monotonic.exi
+  | apply Typ.Monotonic.Static.exi
     · simp
     · prove_list_subtyping_monotonic_either
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.top
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.top
     · rfl
-  | apply Typ.Static.Monotonic.lfp
+  | apply Typ.Monotonic.Static.lfp
     · simp
-    · Typ_Static_Monotonic_prove
-  | apply Typ.Static.Monotonic.lfpskip; simp
+    · Typ_Monotonic_Static_prove
+  | apply Typ.Monotonic.Static.lfpskip; simp
   ) <;> fail
 )
 
@@ -364,7 +364,7 @@ inductive Typ.UpperFounded (id : String) : Typ → Typ → Prop
   ListSubtyping.bounds id .true quals = cases →
   List.length cases = List.length quals →
   Typ.combine .false cases = t →
-  Typ.Static.Monotonic id' .true t →
+  Typ.Monotonic.Static id' .true t →
   Typ.sub [(id', .var id)] t = t' →
   Typ.UpperFounded id (.exi [] quals (.var id')) (.unio (.var id') t')
 
@@ -392,7 +392,7 @@ macro_rules
   · rfl
   · rfl
   · rfl
-  · Typ_Static_Monotonic_prove
+  · Typ_Monotonic_Static_prove
   · rfl
   )
 )
@@ -844,7 +844,7 @@ mutual
     | (.lfp id left), upper =>
       if not (left.free_vars.contains id) then
         Subtyping.Static.solve skolems assums left upper
-      else if Typ.Static.Monotonic.decide id .true left then do
+      else if Typ.Monotonic.Static.decide id .true left then do
         let result ← Subtyping.Static.solve skolems assums (Typ.sub [(id, upper)] left) upper
         if not result.isEmpty then
           return result
@@ -857,7 +857,7 @@ mutual
               | .some h =>
                 if (
                   Typ.is_pattern [] r &&
-                  Typ.Static.Monotonic.decide id .true left &&
+                  Typ.Monotonic.Static.decide id .true left &&
                   Typ.struct_less_than (.var id) left &&
                   not (Subtyping.check (Typ.subfold id left 1) r) &&
                   not (Subtyping.check r (Typ.subfold id left h))
@@ -1247,7 +1247,7 @@ mutual
       Subtyping.Static skolems assums (.lfp id body) right skolems' assums'
 
     | lfp_induct_elim {skolems assums upper skolems' assums'} id lower :
-      Typ.Static.Monotonic id .true lower →
+      Typ.Monotonic.Static id .true lower →
       Subtyping.Static skolems assums (Typ.sub [(id, upper)] lower) upper skolems' assums' →
       Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums'
 
@@ -1262,7 +1262,7 @@ mutual
       -- TODO: struct_less_than might not be necessary
       Typ.struct_less_than (.var id) lower →
       Typ.height sub = .some h →
-      Typ.Static.Monotonic id .true lower →
+      Typ.Monotonic.Static id .true lower →
       Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums' →
       ¬ (Subtyping.check (Typ.subfold id lower 1) sub) →
       ¬ (Subtyping.check sub (Typ.subfold id lower h)) →
@@ -1443,12 +1443,12 @@ macro_rules
         · Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_induct_elim
-        · Typ_Static_Monotonic_prove
+        · Typ_Monotonic_Static_prove
         · reduce; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_elim_diff_intro
         · reduce; rfl
-        · Typ_Static_Monotonic_prove
+        · Typ_Monotonic_Static_prove
         · simp [
             Typ.struct_less_than, Typ.top, ListSubtyping.var_restricted,
             ListSubtyping.bounds, ListTyp.struct_less_than,
@@ -1581,7 +1581,7 @@ mutual
             (Typ.factor id t' "right").map (fun r' => do
               let l' ← Typ.UpperFounded.compute id l
               let r'' := Typ.sub [(idl, .lfp id l')] r'
-              if Typ.Static.Monotonic.decide idl .true r' then
+              if Typ.Monotonic.Static.decide idl .true r' then
                 return (.path (.var idl) (.lfp id r''))
               else
                 failure
@@ -1672,7 +1672,7 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
   Typ.factor id t' "left" = .some l →
   Typ.factor id t' "right" = .some r' →
-  Typ.Static.Monotonic idl .true r' →
+  Typ.Monotonic.Static idl .true r' →
   Typ.UpperFounded id l l' →
   Typ.sub [(idl, .lfp id l')] r' = r'' →
   Subtyping.LoopListZone.Static
@@ -1752,6 +1752,9 @@ mutual
   | anno {skolems assums context skolems' assums'} e ta zones te :
     Typ.free_vars ta ⊆ [] →
     (∀ skolems' assums' t,
+      -- TODO: double check this requirement
+      -- if zones is empty it's vacuously met, te is BOT,
+      -- and we have can derive absurd inhabitation of BOT
       ⟨List.diff skolems' skolems, List.diff assums' assums, t⟩ ∈ zones →
       Typing.Static skolems assums context e t skolems' assums'
     ) →
@@ -1814,7 +1817,7 @@ macro_rules
         · rfl
         · rfl
         · rfl
-        · Typ_Static_Monotonic_prove
+        · Typ_Monotonic_Static_prove
         · Typ_UpperFounded_prove
         · rfl
     ) <;> fail
