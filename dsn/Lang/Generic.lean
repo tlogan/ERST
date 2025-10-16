@@ -65,6 +65,11 @@ lemma ListPair.mem_disj_concat_right {β}
     simp [*]
 
 
+lemma containment_mdiff_concat_elim {α} [BEq α] {xs ys : List α}:
+   List.mdiff (xs ++ ys) ys ⊆ xs
+:= by sorry
+
+
 lemma mdiff_right_sub_cons_eq y {xs ys : List String} :
   y ∈ ys → List.mdiff xs ys = List.mdiff xs (y :: ys)
 := by sorry
@@ -587,6 +592,11 @@ lemma Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am (.app ef ea) t'
 := by sorry
 
+lemma Typing.Dynamic.loop_path_elim {am e t} id :
+  Typing.Dynamic am e (.path (.var id) t) →
+  Typing.Dynamic am (.loop e) t
+:= by sorry
+
 lemma Typing.Dynamic.anno_intro {am e t ta} :
   Subtyping.Dynamic am t ta →
   Typing.Dynamic am e t →
@@ -714,7 +724,10 @@ lemma Subtyping.check_completeness {am lower upper} :
   Subtyping.check lower upper
 := by sorry
 
-
+theorem Typ.Monotonic.Static.soundness {id t} am :
+  Typ.Monotonic.Static id true t →
+  Typ.Monotonic.Dynamic am id t
+:= by sorry
 
 set_option maxHeartbeats 500000 in
 mutual
@@ -1058,7 +1071,7 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Subtyping.Dynamic.lfp_induct_elim p0 (ih0r p40)
+    apply Subtyping.Dynamic.lfp_induct_elim (Typ.Monotonic.Static.soundness (am0 ++ am') p0) (ih0r p40)
 
   | .lfp_factor_elim id lower upper fac p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
@@ -1074,7 +1087,7 @@ mutual
     exists am0
     simp [*]
     intros am' p45
-    apply Subtyping.Dynamic.lfp_elim_diff_intro p3 (ih0r p45)
+    apply Subtyping.Dynamic.lfp_elim_diff_intro (Typ.Monotonic.Static.soundness (am0 ++ am') p3) (ih0r p45)
     { intros p50
       apply Subtyping.check_completeness at p50
       contradiction }
@@ -1219,7 +1232,7 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
-lemma Subtyping.LoopListZone.Static.soundnnes {id zones t am assums e} :
+lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
  Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
@@ -1250,11 +1263,6 @@ lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am (cs ++ cs')
 := by sorry
 
-
-theorem Typ.Monotonic.Static.soundness {id t} am :
-  Typ.Monotonic.Static id true t →
-  Typ.Monotonic.Dynamic am id t
-:= by sorry
 
 -- set_option maxHeartbeats 1000000 in
 mutual
@@ -1394,9 +1402,37 @@ mutual
       }
     }
 
-  | .loop body t0 id zones zones' p0 p1 p2 p3 => by
+  | .loop body t0 id zones p0 p1 p3 => by
+  -- | .loop body t0 id zones zones' p0 p1 p2 p3 => by
+    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.attributes p0
+    exists tam0
+    simp [*]
+    intros tam' p20
+    intros eam p30
+    apply Subtyping.LoopListZone.Static.soundness p3 p20
+    intros skolems1 assums1 t1 p40
+    -- have ⟨assums2, t2, p41,p42,p43⟩ := ListZone.tidy_soundness p2 p40
 
-    sorry
+    apply p1 at p40
+    have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness p40
+    have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.attributes p40
+    exists tam1
+    simp [*]
+    apply And.intro (fun _ p50 => containment_mdiff_concat_elim (h33l p50))
+    intros tam' p55 p56
+    apply Typing.Dynamic.loop_path_elim id
+    unfold Subtyping.Dynamic at h33r
+    apply h33r
+    { apply MultiSubtyping.Dynamic.concat p56
+      apply MultiSubtyping.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left h33l p45 }
+      { apply MultiSubtyping.Dynamic.dom_extension
+        { apply List.disjoint_preservation_right
+            (ListSubtyping.free_vars_containment p6) p55 }
+        { apply MultiSubtyping.Dynamic.reduction p6 p20 } }
+    }
+    { sorry }
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
