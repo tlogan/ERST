@@ -1707,8 +1707,8 @@ mutual
   | nil {skolems assums context} :
     Typing.Record.Static skolems assums context [] .top skolems assums
 
-  | cons {skolems assums context  skolems' assums' skolems'' assums''} l e r body t :
-    Typing.Static skolems assums context e t skolems' assums' →
+  | cons {skolems assums context  skolems'' assums''} l e r body t skolems' assums' :
+    Typing.Static skolems assums context e body skolems' assums' →
     Typing.Record.Static skolems' assums' context r t skolems'' assums'' →
     Typing.Record.Static skolems assums context
       ((l,e) :: r) (.inter (.entry l body) (t))

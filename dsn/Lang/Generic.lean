@@ -346,6 +346,18 @@ lemma Typing.Function.Static.attributes
   ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums
 := by sorry
 
+lemma Typing.Record.Static.attributes
+  {skolems assums context r t skolems' assums'}
+:
+  Typing.Record.Static skolems assums context r t skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums ∧
+  Typ.free_vars t ⊆ ListSubtyping.free_vars assums'  ∧
+  (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars assums = [] ∧
+  (List.mdiff skolems' skolems) ∩ Typ.free_vars t = []
+:= by sorry
+
 
 lemma ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → ListSubtyping.free_vars xs ⊆ ListSubtyping.free_vars ys
@@ -585,6 +597,19 @@ lemma Subtyping.Dynamic.bot_elim {am upper} :
 lemma Subtyping.Dynamic.top_intro {am lower} :
   Subtyping.Dynamic am lower Typ.top
 := by sorry
+
+
+lemma Typing.Dynamic.empty_record_top am :
+  Typing.Dynamic am (Expr.record []) Typ.top
+:= by sorry
+
+lemma Typing.Dynamic.inter_entry_intro {am l e r body t} :
+  Typing.Dynamic am e body →
+  Typing.Dynamic am (.record r) t  →
+  Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
+:= by sorry
+
+
 
 lemma Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am ef (.path t t') →
@@ -1287,7 +1312,41 @@ mutual
     (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
       (∀ {eam}, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.record r)) t ) )
-  | _ => sorry
+  | .nil => by
+    exists []
+    simp [*, ListPair.dom]
+    intros tam' p10
+    intros eam p20
+    simp [Expr.sub, Expr.Record.sub]
+    apply Typing.Dynamic.empty_record_top
+
+  | .cons l e r body t skolems0 assums0 p0 p1 => by
+
+    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.attributes p0
+    have ⟨tam1,ih1l,ih1r⟩ := Typing.Record.Static.soundness p1
+    have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
+
+    exists (tam1 ++ tam0)
+    simp [*]
+    apply And.intro (dom_concat_mdiff_containment p5 ih0l p6 ih1l)
+
+    intros tam' p40
+    intros eam p50
+    apply Typing.Dynamic.inter_entry_intro
+    { apply Typing.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p20 p26 }
+      { apply ih0r
+        { apply MultiSubtyping.Dynamic.dom_reduction
+          { apply List.disjoint_preservation_left ih1l p26 }
+          { apply MultiSubtyping.Dynamic.reduction p11 p40 } }
+        { apply p50 } } }
+    { apply ih1r p40
+      apply MultiTyping.Dynamic.dom_extension
+      { apply List.disjoint_preservation_left ih0l
+        apply List.disjoint_preservation_right p15 p25 }
+      { apply p50 } }
 
 
   theorem Typing.Static.soundness {skolems assums context e t skolems' assums'} :
