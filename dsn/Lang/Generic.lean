@@ -1244,18 +1244,23 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
-lemma ListZone.tidy_soundness {pids zones zones'} :
-  ListZone.tidy pids zones = .some zones' →
-  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones' →
-    ∃ assums'' t'',
-      ⟨skolems', assums'', t''⟩ ∈ zones ∧
-      (∀ am, MultiSubtyping.Dynamic am assums'' →  MultiSubtyping.Dynamic am assums') ∧
-      (∀ am, Subtyping.Dynamic am t' t'') )
-:= by sorry
--- Δ  : X <: M, M <: 8, X <: 8
--- Δ' : X <: 8
--- ∃ δ, dom(δ) ⊆ Θ' . ∀ δ',  δ' ++ δ |= Δ → δ |= Δ'
+lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
+  ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
+  MultiSubtyping.Dynamic am assums →
+  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0 →
+        Typing.Dynamic (am'' ++ am' ++ am) e t0 ) ) ) →
 
+  (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums1 →
+        Typing.Dynamic (am'' ++ am' ++ am) e t1 ) ) )
+:= by sorry
 
 lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
@@ -1402,18 +1407,18 @@ mutual
       }
     }
 
-  | .loop body t0 id zones p0 p1 p3 => by
-  -- | .loop body t0 id zones zones' p0 p1 p2 p3 => by
+  | .loop body t0 id zones zones' p0 p1 p2 p3 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
     have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.attributes p0
     exists tam0
     simp [*]
+
     intros tam' p20
     intros eam p30
     apply Subtyping.LoopListZone.Static.soundness p3 p20
-    intros skolems1 assums1 t1 p40
-    -- have ⟨assums2, t2, p41,p42,p43⟩ := ListZone.tidy_soundness p2 p40
-    -----------------------------------------------------------------
+    apply ListZone.tidy_soundness p2 p20
+    intros skolems0 assums0 t0 p40
+
     apply p1 at p40
     have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness p40
     have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.attributes p40
