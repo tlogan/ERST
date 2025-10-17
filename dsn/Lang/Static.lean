@@ -1683,23 +1683,21 @@ mutual
   inductive Typing.Function.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
     List (Pat × Expr) → List Zone → List Typ → Prop
-  | nil skolems assums context :
+  | nil {skolems assums context} :
     Typing.Function.Static skolems assums context [] [] []
 
   | cons {skolems assums context }
-    p e f assums' context' tp tl zones zones' zones'' subtra subtras
+    p e f assums' context' tp zones zones' zones'' subtras
   :
     Typing.Function.Static skolems assums context f zones subtras →
     PatLifting.Static assums context p tp assums' context' →
-    ListTyp.diff tp subtras = tl →
     (∀ skolems' assums'' tr,
-      ⟨skolems', assums'', (.path tl tr)⟩ ∈ zones' →
+      ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones' →
       Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums')
     ) →
     ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
-    Typ.capture tp = subtra →
     Typing.Function.Static skolems assums context
-      ((p,e)::f) (zones'' ++ zones) (subtra :: subtras)
+      ((p,e)::f) (zones'' ++ zones) ((Typ.capture tp) :: subtras)
 
   inductive Typing.Record.Static :
     List String → List (Typ × Typ) → List (String × Typ) →

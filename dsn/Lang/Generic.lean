@@ -1294,17 +1294,46 @@ lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
 := by sorry
 
 
+
+lemma PatLifting.Static.soundness {assums context p t assums' context' am e} :
+  PatLifting.Static assums context p t assums' context' →
+  MultiSubtyping.Dynamic am assums' →
+  IsValue e →
+  Typing.Dynamic am e t →
+  ∃ eam , pattern_match e p = .some eam
+:= by sorry
+
+lemma PatLifting.Static.attributes {assums context p t assums' context'} :
+  PatLifting.Static assums context p t assums' context' →
+  assums ⊆ assums' ∧
+  Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
+  ListTyping.free_vars context'  ⊆ ListSubtyping.free_vars assums'
+:= by sorry
+
 -- set_option maxHeartbeats 1000000 in
 mutual
 
-  theorem Typing.Function.Static.soundness {skolems assums context f zones subtras} :
+  theorem Typing.Function.Static.soundness {
+    skolems assums context f zones subtras skolems' assums' t
+  } :
     Typing.Function.Static skolems assums context f zones subtras →
-    (∀ {skolems' assums' t}, ⟨skolems', assums', t⟩ ∈ zones →
-      ∃ tam, ListPair.dom tam ⊆ skolems' ∧
-      (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
-        (∀ {eam}, MultiTyping.Dynamic tam' eam context →
-          Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) ) )
-  | _ => sorry
+    ⟨skolems', assums', t⟩ ∈ zones →
+    ∃ tam, ListPair.dom tam ⊆ skolems' ∧
+    (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
+      (∀ {eam}, MultiTyping.Dynamic tam' eam context →
+        Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) )
+  | .nil => by intros ; contradiction
+  | .cons
+      p e f assums' context' tp zones zones' zones'' subtras
+      p0 p1 p2 p3
+  => by
+    intro p10
+    -- TODO: split membership on concat (++)
+    -- have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0
+    -- have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.attributes p0
+    -- have ⟨tam1,ih1l,ih1r⟩ := PatLifting.Static.soundness p1
+    -- have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
+    sorry
 
   theorem Typing.Record.Static.soundness {skolems assums context r t skolems' assums'} :
     Typing.Record.Static skolems assums context r t skolems' assums' →
