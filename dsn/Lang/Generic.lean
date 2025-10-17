@@ -1413,7 +1413,7 @@ mutual
     apply Subtyping.LoopListZone.Static.soundness p3 p20
     intros skolems1 assums1 t1 p40
     -- have ⟨assums2, t2, p41,p42,p43⟩ := ListZone.tidy_soundness p2 p40
-
+    -----------------------------------------------------------------
     apply p1 at p40
     have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness p40
     have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.attributes p40
@@ -1432,7 +1432,11 @@ mutual
             (ListSubtyping.free_vars_containment p6) p55 }
         { apply MultiSubtyping.Dynamic.reduction p6 p20 } }
     }
-    { sorry }
+    {
+      apply Typing.Dynamic.dom_extension (List.disjoint_preservation_left h33l p46)
+      apply Typing.Dynamic.dom_extension (List.disjoint_preservation_right p8 p55)
+      apply ih0r p20 p30
+    }
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
